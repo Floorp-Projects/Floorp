@@ -2834,6 +2834,7 @@ Gecko_ContentList_AppendAll(
   const Element** aElements,
   size_t aLength)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aElements);
   MOZ_ASSERT(aLength);
   MOZ_ASSERT(aList);

@@ -10,7 +10,7 @@
    xmlns:html="http://www.w3.org/1999/xhtml">
 
   <!-- bound to <description>s -->
-  <binding id="text-base" role="xul:text">
+  <binding id="text-base">
     <implementation implements="nsIDOMXULDescriptionElement">
       <property name="disabled" onset="if (val) this.setAttribute('disabled', 'true');
                                        else this.removeAttribute('disabled');
@@ -287,7 +287,7 @@
     </handlers>
   </binding>
 
-  <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label" role="xul:link">
+  <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
     <implementation>
       <property name="href" onget="return this.getAttribute('href');"
                             onset="this.setAttribute('href', val); return val;" />

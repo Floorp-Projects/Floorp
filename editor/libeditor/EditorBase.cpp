@@ -454,7 +454,7 @@ EditorBase::GetDesiredSpellCheckState()
     // Some of the page content might be editable and some not, if spellcheck=
     // is explicitly set anywhere, so if there's anything editable on the page,
     // return true and let the spellchecker figure it out.
-    nsCOMPtr<nsIHTMLDocument> doc = do_QueryInterface(content->GetUncomposedDoc());
+    nsCOMPtr<nsIHTMLDocument> doc = do_QueryInterface(content->GetComposedDoc());
     return doc && doc->IsEditingOn();
   }
 
@@ -5089,6 +5089,13 @@ EditorBase::FindSelectionRoot(nsINode* aNode)
   return rootContent.forget();
 }
 
+void
+EditorBase::InitializeSelectionAncestorLimit(Selection& aSelection,
+                                             nsIContent& aAncestorLimit)
+{
+  aSelection.SetAncestorLimiter(&aAncestorLimit);
+}
+
 nsresult
 EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
 {
@@ -5098,10 +5105,6 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   if (!selectionRootContent) {
     return NS_OK;
   }
-
-  bool isTargetDoc =
-    targetNode->NodeType() == nsINode::DOCUMENT_NODE &&
-    targetNode->HasFlag(NODE_IS_EDITABLE);
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
@@ -5130,22 +5133,16 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
                          nsISelectionDisplay::DISPLAY_ALL);
   selectionController->RepaintSelection(
                          nsISelectionController::SELECTION_NORMAL);
+
   // If the computed selection root isn't root content, we should set it
   // as selection ancestor limit.  However, if that is root element, it means
   // there is not limitation of the selection, then, we must set nullptr.
   // NOTE: If we set a root element to the ancestor limit, some selection
   // methods don't work fine.
   if (selectionRootContent->GetParent()) {
-    selection->SetAncestorLimiter(selectionRootContent);
+    InitializeSelectionAncestorLimit(*selection, *selectionRootContent);
   } else {
     selection->SetAncestorLimiter(nullptr);
-  }
-
-  // XXX What case needs this?
-  if (isTargetDoc) {
-    if (!selection->RangeCount()) {
-      BeginningOfDocument();
-    }
   }
 
   // If there is composition when this is called, we may need to restore IME

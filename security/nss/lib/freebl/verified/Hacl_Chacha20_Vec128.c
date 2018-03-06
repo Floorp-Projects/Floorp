@@ -225,19 +225,6 @@ Hacl_Impl_Chacha20_Vec128_update_last(uint8_t *output, uint8_t *plain, uint32_t 
 }
 
 static void
-Hacl_Impl_Chacha20_Vec128_store_4_vec(uint8_t *output, vec v0, vec v1, vec v2, vec v3)
-{
-    uint8_t *o0 = output;
-    uint8_t *o1 = output + (uint32_t)16U;
-    uint8_t *o2 = output + (uint32_t)32U;
-    uint8_t *o3 = output + (uint32_t)48U;
-    vec_store_le(o0, v0);
-    vec_store_le(o1, v1);
-    vec_store_le(o2, v2);
-    vec_store_le(o3, v3);
-}
-
-static void
 Hacl_Impl_Chacha20_Vec128_xor_block(uint8_t *output, uint8_t *plain, vec *st)
 {
     vec p0 = vec_load_le(plain);
@@ -248,11 +235,18 @@ Hacl_Impl_Chacha20_Vec128_xor_block(uint8_t *output, uint8_t *plain, vec *st)
     vec k1 = st[1U];
     vec k2 = st[2U];
     vec k3 = st[3U];
-    vec o0 = vec_xor(p0, k0);
-    vec o1 = vec_xor(p1, k1);
-    vec o2 = vec_xor(p2, k2);
-    vec o3 = vec_xor(p3, k3);
-    Hacl_Impl_Chacha20_Vec128_store_4_vec(output, o0, o1, o2, o3);
+    vec o00 = vec_xor(p0, k0);
+    vec o10 = vec_xor(p1, k1);
+    vec o20 = vec_xor(p2, k2);
+    vec o30 = vec_xor(p3, k3);
+    uint8_t *o0 = output;
+    uint8_t *o1 = output + (uint32_t)16U;
+    uint8_t *o2 = output + (uint32_t)32U;
+    uint8_t *o3 = output + (uint32_t)48U;
+    vec_store_le(o0, o00);
+    vec_store_le(o1, o10);
+    vec_store_le(o2, o20);
+    vec_store_le(o3, o30);
 }
 
 static void

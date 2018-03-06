@@ -4536,18 +4536,67 @@ extern JS_PUBLIC_API(void)
 ShutdownAsyncTasks(JSContext* cx);
 
 /**
- * This class can be used to store a pointer to the youngest frame of a saved
- * stack in the specified JSContext. This reference will be picked up by any new
- * calls performed until the class is destroyed, with the specified asyncCause,
- * that must not be empty.
+ * Supply an alternative stack to incorporate into captured SavedFrame
+ * backtraces as the imputed caller of asynchronous JavaScript calls, like async
+ * function resumptions and DOM callbacks.
  *
- * Any stack capture initiated during these new calls will go through the async
- * stack instead of the current stack.
+ * When one async function awaits the result of another, it's natural to think
+ * of that as a sort of function call: just as execution resumes from an
+ * ordinary call expression when the callee returns, with the return value
+ * providing the value of the call expression, execution resumes from an 'await'
+ * expression after the awaited asynchronous function call returns, passing the
+ * return value along.
  *
- * Capturing the stack before a new call is performed will not be affected.
+ * Call the two async functions in such a situation the 'awaiter' and the
+ * 'awaitee'.
  *
- * The provided chain of SavedFrame objects can live in any compartment,
- * although it will be copied to the compartment where the stack is captured.
+ * As an async function, the awaitee contains 'await' expressions of its own.
+ * Whenever it executes after its first 'await', there are never any actual
+ * frames on the JavaScript stack under it; its awaiter is certainly not there.
+ * An await expression's continuation is invoked as a promise callback, and
+ * those are always called directly from the event loop in their own microtick.
+ * (Ignore unusual cases like nested event loops.)
+ *
+ * But because await expressions bear such a strong resemblance to calls (and
+ * deliberately so!), it would be unhelpful for stacks captured within the
+ * awaitee to be empty; instead, they should present the awaiter as the caller.
+ *
+ * The AutoSetAsyncStackForNewCalls RAII class supplies a SavedFrame stack to
+ * treat as the caller of any JavaScript invocations that occur within its
+ * lifetime. Any SavedFrame stack captured during such an invocation uses the
+ * SavedFrame passed to the constructor's 'stack' parameter as the 'asyncParent'
+ * property of the SavedFrame for the invocation's oldest frame. Its 'parent'
+ * property will be null, so stack-walking code can distinguish this
+ * awaiter/awaitee transition from an ordinary caller/callee transition.
+ *
+ * The constructor's 'asyncCause' parameter supplies a string explaining what
+ * sort of asynchronous call caused 'stack' to be spliced into the backtrace;
+ * for example, async function resumptions use the string "async". This appears
+ * as the 'asyncCause' property of the 'asyncParent' SavedFrame.
+ *
+ * Async callers are distinguished in the string form of a SavedFrame chain by
+ * including the 'asyncCause' string in the frame. It appears before the
+ * function name, with the two separated by a '*'.
+ *
+ * Note that, as each compartment has its own set of SavedFrames, the
+ * 'asyncParent' may actually point to a copy of 'stack', rather than the exact
+ * SavedFrame object passed.
+ *
+ * The youngest frame of 'stack' is not mutated to take the asyncCause string as
+ * its 'asyncCause' property; SavedFrame objects are immutable. Rather, a fresh
+ * clone of the frame is created with the needed 'asyncCause' property.
+ *
+ * The 'kind' argument specifies how aggressively 'stack' supplants any
+ * JavaScript frames older than this AutoSetAsyncStackForNewCalls object. If
+ * 'kind' is 'EXPLICIT', then all captured SavedFrame chains take on 'stack' as
+ * their 'asyncParent' where the chain crosses this object's scope. If 'kind' is
+ * 'IMPLICIT', then 'stack' is only included in captured chains if there are no
+ * other JavaScript frames on the stack --- that is, only if the stack would
+ * otherwise end at that point.
+ *
+ * AutoSetAsyncStackForNewCalls affects only SavedFrame chains; it does not
+ * affect Debugger.Frame or js::FrameIter. SavedFrame chains are used for
+ * Error.stack, allocation profiling, Promise debugging, and so on.
  *
  * See also `js/src/doc/SavedFrame/SavedFrame.md` for documentation on async
  * stack frames.

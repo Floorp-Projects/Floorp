@@ -9,11 +9,13 @@
     <title>console.count() test</title>
     <script src="test-console-count-external-file.js"></script>
     <script tyoe="text/javascript">
+      /* eslint-disable */
       function counterSeperateScriptTag() {
         console.count("console.count() testcounter");
       }
     </script>
     <script type="text/javascript">
+      /* eslint-disable */
       function counterNoLabel() {
         console.count();
       }

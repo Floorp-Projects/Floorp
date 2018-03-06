@@ -1934,7 +1934,11 @@ nsPrintJob::SetupToPrintContent()
 
   PR_PL(("****************** Begin Document ************************\n"));
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_ABORT,
+                         "Failed to begin document for printing");
+    return rv;
+  }
 
   // This will print the docshell document
   // when it completes asynchronously in the DonePrintingPages method
@@ -2041,7 +2045,8 @@ nsPrintJob::AfterNetworkPrint(bool aHandleError)
 
   /* cleaup on failure + notify user */
   if (aHandleError && NS_FAILED(rv)) {
-    NS_WARNING("nsPrintJob::AfterNetworkPrint failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_ABORT,
+                         "nsPrintJob::AfterNetworkPrint failed");
     CleanupOnFailure(rv, !mIsDoingPrinting);
   }
 
@@ -3522,16 +3527,18 @@ nsPrintJob::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO)
 NS_IMETHODIMP
 nsPrintJob::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  // Only process a null topic which means the progress dialog is open.
+  if (aTopic) {
+    return NS_OK;
+  }
 
-  rv = InitPrintDocConstruction(true);
+  nsresult rv = InitPrintDocConstruction(true);
   if (!mIsDoingPrinting && mPrtPreview) {
     RefPtr<nsPrintData> printDataOfPrintPreview = mPrtPreview;
     printDataOfPrintPreview->OnEndPrinting();
   }
 
   return rv;
-
 }
 
 //---------------------------------------------------------------

@@ -146,6 +146,10 @@ public:
         MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CharMayHaveEmphasisMark();
     }
+    bool CharIsFormattingControl(uint32_t aPos) const {
+        MOZ_ASSERT(aPos < GetLength());
+        return mCharacterGlyphs[aPos].CharIsFormattingControl();
+    }
 
     // All offsets are in terms of the string passed into MakeTextRun.
 
@@ -588,6 +592,9 @@ public:
     }
     void SetNoEmphasisMark(uint32_t aIndex) {
         EnsureComplexGlyph(aIndex).SetNoEmphasisMark();
+    }
+    void SetIsFormattingControl(uint32_t aIndex) {
+        EnsureComplexGlyph(aIndex).SetIsFormattingControl();
     }
 
     /**

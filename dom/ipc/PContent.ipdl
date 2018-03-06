@@ -49,7 +49,6 @@ include protocol PScriptCache;
 include DOMTypes;
 include JavaScriptTypes;
 include IPCBlob;
-include IPCStream;
 include PTabContext;
 include URIParams;
 include PluginTypes;
@@ -99,6 +98,7 @@ using mozilla::Telemetry::DynamicScalarDefinition from "mozilla/TelemetryComms.h
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
+using nsCOMPtr<nsIInputStream> from "mozilla/ipc/IPCStreamUtils.h";
 
 union ChromeRegistryItem
 {
@@ -872,7 +872,7 @@ parent:
     async DeviceReset();
 
     sync KeywordToURI(nsCString keyword)
-        returns (nsString providerName, OptionalIPCStream postData, OptionalURIParams uri);
+        returns (nsString providerName, nsCOMPtr<nsIInputStream> postData, OptionalURIParams uri);
 
     sync NotifyKeywordSearchLoading(nsString providerName, nsString keyword);
 

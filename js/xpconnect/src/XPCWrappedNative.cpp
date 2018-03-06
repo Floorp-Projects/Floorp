@@ -1675,9 +1675,12 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     // indirectly, regardless of in/out-ness.
     if (type_tag == nsXPTType::T_JSVAL) {
         // Root the value.
-        dp->val.j.setUndefined();
-        if (!js::AddRawValueRoot(mCallContext, &dp->val.j, "XPCWrappedNative::CallMethod param"))
+        dp->val.j.asValueRef().setUndefined();
+        if (!js::AddRawValueRoot(mCallContext, &dp->val.j.asValueRef(),
+                                 "XPCWrappedNative::CallMethod param"))
+        {
             return false;
+        }
     }
 
     // Flag cleanup for anything that isn't self-contained.

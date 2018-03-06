@@ -3991,10 +3991,10 @@ ContentParent::SendPBrowserConstructor(PBrowserParent* aActor,
 mozilla::ipc::IPCResult
 ContentParent::RecvKeywordToURI(const nsCString& aKeyword,
                                 nsString* aProviderName,
-                                OptionalIPCStream* aPostData,
+                                nsCOMPtr<nsIInputStream>* aPostData,
                                 OptionalURIParams* aURI)
 {
-  *aPostData = void_t();
+  *aPostData = nullptr;
   *aURI = void_t();
 
   nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
@@ -4002,21 +4002,13 @@ ContentParent::RecvKeywordToURI(const nsCString& aKeyword,
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIInputStream> postData;
   nsCOMPtr<nsIURIFixupInfo> info;
 
-  if (NS_FAILED(fixup->KeywordToURI(aKeyword, getter_AddRefs(postData),
+  if (NS_FAILED(fixup->KeywordToURI(aKeyword, getter_AddRefs(*aPostData),
                                     getter_AddRefs(info)))) {
     return IPC_OK();
   }
   info->GetKeywordProviderName(*aProviderName);
-
-  AutoIPCStream autoStream;
-  if (NS_WARN_IF(!autoStream.Serialize(postData, this))) {
-    NS_ENSURE_SUCCESS(NS_ERROR_FAILURE, IPC_FAIL_NO_REASON(this));
-  }
-
-  *aPostData = autoStream.TakeOptionalValue();
 
   nsCOMPtr<nsIURI> uri;
   info->GetPreferredURI(getter_AddRefs(uri));

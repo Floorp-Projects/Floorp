@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Make sure that the Web Console output does not break after we try to call
 // console.dir() for objects that are not inspectable.
 

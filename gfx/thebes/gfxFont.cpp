@@ -3059,6 +3059,8 @@ gfxFont::ShapeTextWithoutWordCache(DrawTarget *aDrawTarget,
             aTextRun->SetIsTab(aOffset + i);
         } else if (ch == '\n') {
             aTextRun->SetIsNewline(aOffset + i);
+        } else if (GetGeneralCategory(ch) == HB_UNICODE_GENERAL_CATEGORY_FORMAT) {
+            aTextRun->SetIsFormattingControl(aOffset + i);
         } else if (IsInvalidControlChar(ch) &&
             !(aTextRun->GetFlags() & gfx::ShapedTextFlags::TEXT_HIDE_CONTROL_CHARACTERS)) {
             if (GetFontEntry()->IsUserFont() && HasCharacter(ch)) {
@@ -3277,6 +3279,8 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
             aTextRun->SetIsTab(aRunStart + i);
         } else if (ch == '\n') {
             aTextRun->SetIsNewline(aRunStart + i);
+        } else if (GetGeneralCategory(ch) == HB_UNICODE_GENERAL_CATEGORY_FORMAT) {
+            aTextRun->SetIsFormattingControl(aRunStart + i);
         } else if (IsInvalidControlChar(ch) &&
             !(aTextRun->GetFlags() & gfx::ShapedTextFlags::TEXT_HIDE_CONTROL_CHARACTERS)) {
             if (GetFontEntry()->IsUserFont() && HasCharacter(ch)) {

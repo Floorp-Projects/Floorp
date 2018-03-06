@@ -8,9 +8,7 @@
 
 #topBar {
   -moz-appearance: toolbar;
-}
-
-.viewGroupWrapper {
+  -moz-window-dragging: drag;
   -moz-box-align: center;
   -moz-box-pack: center;
 }

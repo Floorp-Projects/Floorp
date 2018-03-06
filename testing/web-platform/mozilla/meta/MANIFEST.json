@@ -469,6 +469,12 @@
      {}
     ]
    ],
+   "editor/initial_selection_on_focus.html": [
+    [
+     "/_mozilla/editor/initial_selection_on_focus.html",
+     {}
+    ]
+   ],
    "fetch/api/redirect/redirect-referrer.https.html": [
     [
      "/_mozilla/fetch/api/redirect/redirect-referrer.https.html",
@@ -1020,6 +1026,10 @@
   ],
   "dom/throttling/throttling-ws.window.js": [
    "67a981ba2a4d08b684947ed42aba6648dcd262b4",
+   "testharness"
+  ],
+  "editor/initial_selection_on_focus.html": [
+   "da3d0ff5305658e18f51a4f19b34927fb2691e60",
    "testharness"
   ],
   "fetch/api/redirect/redirect-referrer-mixed-content.js": [

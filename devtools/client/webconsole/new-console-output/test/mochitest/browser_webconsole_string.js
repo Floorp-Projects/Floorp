@@ -5,9 +5,10 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-console.html";
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
+                 "new-console-output/test/mochitest/test-console.html";
 
-add_task(async function() {
+add_task(async function () {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   info("console.log with a string argument");

@@ -3,12 +3,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests that the input box expands as the user types long lines.
 
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-console.html";
+                 "new-console-output/test/mochitest/test-console.html";
 
 add_task(async function () {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);

@@ -3,13 +3,16 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests all filters persist.
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-console-filters.html";
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
+                 "new-console-output/test/mochitest/test-console-filters.html";
 
-add_task(async function() {
+add_task(async function () {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   let filterButtons = await getFilterButtons(hud);

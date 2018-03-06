@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test the "Copy object" menu item of the webconsole is enabled only when
 // clicking on messages that are associated with an object actor.
 
@@ -22,7 +24,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<script>
 </script>`;
 const copyObjectMenuItemId = "#console-menu-copy-object";
 
-add_task(async function() {
+add_task(async function () {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   let [msgWithText, msgWithObj, msgNested] =

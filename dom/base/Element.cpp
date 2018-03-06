@@ -1760,10 +1760,12 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (!hadParent) {
       uint32_t editableDescendantChange = EditableInclusiveDescendantCount(this);
       if (editableDescendantChange != 0) {
-      // If we are binding a subtree root to the document, we need to update
-      // the editable descendant count of all the ancestors.
+        // If we are binding a subtree root to the document, we need to update
+        // the editable descendant count of all the ancestors.
+        // But we don't cross Shadow DOM boundary.
+        // (The expected behavior with Shadow DOM is unclear)
         nsIContent* parent = GetParent();
-        while (parent) {
+        while (parent && parent->IsElement()) {
           parent->ChangeEditableDescendantCount(editableDescendantChange);
           parent = parent->GetParent();
         }

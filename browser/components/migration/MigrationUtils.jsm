@@ -57,7 +57,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
     return ["firefox", "safari", "chrome", "chromium", "canary"];
   }
   if (AppConstants.XP_UNIX) {
-    return ["firefox", "chrome", "chromium"];
+    return ["firefox", "chrome", "chrome-beta", "chrome-dev", "chromium"];
   }
   return [];
 });
@@ -518,7 +518,7 @@ var MigrationUtils = Object.freeze({
    * @see nsIStringBundle
    */
   getLocalizedString: function MU_getLocalizedString(aKey, aReplacements) {
-    aKey = aKey.replace(/_(canary|chromium)$/, "_chrome");
+    aKey = aKey.replace(/_(canary|chromium|chrome-beta|chrome-dev)$/, "_chrome");
 
     const OVERRIDES = {
       "4_firefox": "4_firefox_history_and_bookmarks",
@@ -544,6 +544,10 @@ var MigrationUtils = Object.freeze({
         return "sourceNameCanary";
       case "chrome":
         return "sourceNameChrome";
+      case "chrome-beta":
+        return "sourceNameChromeBeta";
+      case "chrome-dev":
+        return "sourceNameChromeDev";
       case "chromium":
         return "sourceNameChromium";
       case "firefox":

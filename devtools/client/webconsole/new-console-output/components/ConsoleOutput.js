@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createElement, createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
 const {initialize} = require("devtools/client/webconsole/new-console-output/actions/ui");
 
 const {
@@ -18,7 +18,6 @@ const {
   getAllRepeatById,
 } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const MessageContainer = createFactory(require("devtools/client/webconsole/new-console-output/components/MessageContainer").MessageContainer);
-const VisibilityHandler = createFactory(require("devtools/client/shared/components/VisibilityHandler"));
 const {
   MESSAGE_TYPE,
 } = require("devtools/client/webconsole/new-console-output/constants");
@@ -195,9 +194,4 @@ function mapStateToProps(state, props) {
   };
 }
 
-module.exports = connect(mapStateToProps)(props =>
-  VisibilityHandler(
-    null,
-    createElement(ConsoleOutput, props)
-  )
-);
+module.exports = connect(mapStateToProps)(ConsoleOutput);

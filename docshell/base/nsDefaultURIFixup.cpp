@@ -421,7 +421,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    ipc::OptionalIPCStream postData;
+    nsCOMPtr<nsIInputStream> postData;
     ipc::OptionalURIParams uri;
     nsAutoString providerName;
     if (!contentChild->SendKeywordToURI(keyword, &providerName, &postData,
@@ -433,8 +433,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     info->mKeywordProviderName = providerName;
 
     if (aPostData) {
-      nsCOMPtr<nsIInputStream> temp = ipc::DeserializeIPCStream(postData);
-      temp.forget(aPostData);
+      postData.forget(aPostData);
     }
 
     nsCOMPtr<nsIURI> temp = DeserializeURI(uri);

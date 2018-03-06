@@ -22,6 +22,10 @@ exclude = [
   "servo",
   "third_party/rust",
 
+  # Excluded because this is a standalone tool for developers and not intended
+  # to be built as part of mozilla-central and is not shipped to users.
+  "gfx/wrench",
+
   # Excluded because these crates have their own Cargo workspaces so they can't
   # be included in the top-level one.
   "media/audioipc",

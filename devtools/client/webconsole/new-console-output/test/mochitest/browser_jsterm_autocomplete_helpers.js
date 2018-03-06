@@ -3,11 +3,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests that the autocompletion results contain the names of JSTerm helpers.
 // See Bug 686937.
 
 "use strict";
-
 
 const TEST_URI = "data:text/html;charset=utf8,<p>test JSTerm Helpers autocomplete";
 

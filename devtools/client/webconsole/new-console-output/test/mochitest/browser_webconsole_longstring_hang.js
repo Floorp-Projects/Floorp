@@ -3,12 +3,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test that very long strings do not hang the browser.
 
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-bug-859170-longstring-hang.html";
+                 "new-console-output/test/mochitest/" +
+                 "test-bug-859170-longstring-hang.html";
 
 add_task(function* () {
   yield loadTab(TEST_URI);

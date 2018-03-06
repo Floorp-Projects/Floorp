@@ -255,11 +255,10 @@ caption {
 
 %ifndef MOZ_WIDGET_GTK
 titlebar,
-toolbar:not([nowindowdrag="true"]):not([customizing="true"]),
-%endif
-windowdragbox {
+toolbar:not([nowindowdrag="true"]):not([customizing="true"]) {
   -moz-window-dragging: drag;
 }
+%endif
 
 /* The list below is non-comprehensive and will probably need some tweaking. */
 toolbaritem,
@@ -819,10 +818,6 @@ colorpicker {
 
 colorpicker[type="button"] {
   -moz-binding: url("chrome://global/content/bindings/colorpicker.xml#colorpicker-button");
-}
-
-.colorpickertile {
-  -moz-binding: url("chrome://global/content/bindings/colorpicker.xml#colorpickertile");
 }
 
 /********** menulist **********/

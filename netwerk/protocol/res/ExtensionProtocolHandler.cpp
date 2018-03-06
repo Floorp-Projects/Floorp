@@ -239,12 +239,8 @@ ExtensionStreamGetter::GetAsync(nsIStreamListener* aListener,
   gNeckoChild->SendGetExtensionStream(uri)->Then(
     mMainThreadEventTarget,
     __func__,
-    [self] (const OptionalIPCStream& stream) {
-      nsCOMPtr<nsIInputStream> inputStream;
-      if (stream.type() == OptionalIPCStream::OptionalIPCStream::TIPCStream) {
-        inputStream = ipc::DeserializeIPCStream(stream);
-      }
-      self->OnStream(inputStream.forget());
+    [self] (const nsCOMPtr<nsIInputStream>& stream) {
+      self->OnStream(do_AddRef(stream));
     },
     [self] (const mozilla::ipc::ResponseRejectReason) {
       self->OnStream(nullptr);

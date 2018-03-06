@@ -114,7 +114,8 @@ InputQueue::ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
       block->SetDuringFastFling();
       block->SetConfirmedTargetApzc(aTarget,
           InputBlockState::TargetConfirmationState::eConfirmed,
-          nullptr /* the block was just created so it has no events */);
+          nullptr /* the block was just created so it has no events */,
+          false /* not a scrollbar drag */);
       if (gfxPrefs::TouchActionEnabled()) {
         block->SetAllowedTouchBehaviors(currentBehaviors);
       }
@@ -642,7 +643,12 @@ InputQueue::MainThreadTimeout(uint64_t aInputBlockId) {
     success |= block->SetConfirmedTargetApzc(
         block->GetTargetApzc(),
         InputBlockState::TargetConfirmationState::eTimedOut,
-        firstInput);
+        firstInput,
+        // This actually could be a scrollbar drag, but we pass
+        // aForScrollbarDrag=false because for scrollbar drags,
+        // SetConfirmedTargetApzc() will also be called by ConfirmDragBlock(),
+        // and we pass aForScrollbarDrag=true there.
+        false);
   } else if (inputBlock) {
     NS_WARNING("input block is not a cancelable block");
   }
@@ -683,7 +689,12 @@ InputQueue::SetConfirmedTargetApzc(uint64_t aInputBlockId, const RefPtr<AsyncPan
     CancelableBlockState* block = inputBlock->AsCancelableBlock();
     success = block->SetConfirmedTargetApzc(aTargetApzc,
         InputBlockState::TargetConfirmationState::eConfirmed,
-        firstInput);
+        firstInput,
+        // This actually could be a scrollbar drag, but we pass
+        // aForScrollbarDrag=false because for scrollbar drags,
+        // SetConfirmedTargetApzc() will also be called by ConfirmDragBlock(),
+        // and we pass aForScrollbarDrag=true there.
+        false);
     block->RecordContentResponseTime();
   } else if (inputBlock) {
     NS_WARNING("input block is not a cancelable block");
@@ -709,7 +720,8 @@ InputQueue::ConfirmDragBlock(uint64_t aInputBlockId, const RefPtr<AsyncPanZoomCo
     block->SetDragMetrics(aDragMetrics);
     success = block->SetConfirmedTargetApzc(aTargetApzc,
         InputBlockState::TargetConfirmationState::eConfirmed,
-        firstInput);
+        firstInput,
+        /* aForScrollbarDrag = */ true);
     block->RecordContentResponseTime();
   }
   if (success) {
