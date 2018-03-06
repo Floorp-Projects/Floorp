@@ -1178,12 +1178,14 @@ class LiveSavedFrameCache
 
         Ptr ptr;
 
+        template<typename Frame>
+        explicit FramePtr(Frame ptr) : ptr(ptr) { }
+
         struct HasCachedMatcher;
         struct SetHasCachedMatcher;
 
       public:
-        explicit FramePtr(AbstractFramePtr ptr) : ptr(ptr) { }
-        explicit FramePtr(jit::CommonFrameLayout* ptr) : ptr(ptr) { }
+        static inline mozilla::Maybe<FramePtr> create(const FrameIter& iter);
 
         inline bool hasCachedSavedFrame() const;
         inline void setHasCachedSavedFrame();
@@ -1252,7 +1254,6 @@ class LiveSavedFrameCache
         return true;
     }
 
-    static mozilla::Maybe<FramePtr> getFramePtr(const FrameIter& iter);
     void trace(JSTracer* trc);
 
     void find(JSContext* cx, FramePtr& frameptr, const jsbytecode* pc,
