@@ -1133,59 +1133,6 @@ class GeneratedFile(ContextDerived):
         self.required_for_compile = any(f.endswith(suffixes) for f in self.outputs)
 
 
-class AndroidResDirs(ContextDerived):
-    """Represents Android resource directories."""
-
-    __slots__ = (
-        'paths',
-    )
-
-    def __init__(self, context, paths):
-        ContextDerived.__init__(self, context)
-        self.paths = paths
-
-
-class AndroidAssetsDirs(ContextDerived):
-    """Represents Android assets directories."""
-
-    __slots__ = (
-        'paths',
-    )
-
-    def __init__(self, context, paths):
-        ContextDerived.__init__(self, context)
-        self.paths = paths
-
-
-class AndroidExtraResDirs(ContextDerived):
-    """Represents Android extra resource directories.
-
-    Extra resources are resources provided by libraries and including in a
-    packaged APK, but not otherwise redistributed.  In practice, this means
-    resources included in Fennec but not in GeckoView.
-    """
-
-    __slots__ = (
-        'paths',
-    )
-
-    def __init__(self, context, paths):
-        ContextDerived.__init__(self, context)
-        self.paths = paths
-
-
-class AndroidExtraPackages(ContextDerived):
-    """Represents Android extra packages."""
-
-    __slots__ = (
-        'packages',
-    )
-
-    def __init__(self, context, packages):
-        ContextDerived.__init__(self, context)
-        self.packages = packages
-
-
 class ChromeManifestEntry(ContextDerived):
     """Represents a chrome.manifest entry."""
 
