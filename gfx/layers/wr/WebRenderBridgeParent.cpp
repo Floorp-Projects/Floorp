@@ -177,6 +177,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mPaused(false)
   , mDestroyed(false)
   , mForceRendering(false)
+  , mReceivedDisplayList(false)
 {
   MOZ_ASSERT(mAsyncImageManager);
   MOZ_ASSERT(mAnimStorage);
@@ -197,6 +198,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
   , mPaused(false)
   , mDestroyed(true)
   , mForceRendering(false)
+  , mReceivedDisplayList(false)
 {
 }
 
@@ -596,6 +598,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn)) {
     return IPC_FAIL(this, "Failed to deserialize resource updates");
   }
+
+  mReceivedDisplayList = true;
 
   wr::Vec<uint8_t> dlData(Move(dl));
 
@@ -1180,7 +1184,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   MOZ_ASSERT(aRect == nullptr);
 
   AUTO_PROFILER_TRACING("Paint", "CompositeToTraget");
-  if (mPaused) {
+  if (mPaused || !mReceivedDisplayList) {
     return;
   }
 
@@ -1372,6 +1376,7 @@ WebRenderBridgeParent::ClearResources()
 
   wr::TransactionBuilder txn;
   txn.ClearDisplayList(wr::NewEpoch(wrEpoch), mPipelineId);
+  mReceivedDisplayList = false;
 
   // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();
