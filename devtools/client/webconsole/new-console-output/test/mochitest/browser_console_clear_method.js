@@ -5,6 +5,9 @@
 
 /* import-globals-from head.js */
 
+// XXX Remove this when the file is migrated to the new frontend.
+/* eslint-disable no-undef */
+
 // Check that console.clear() does not clear the output of the browser console.
 
 "use strict";
