@@ -8,6 +8,8 @@
   <string name="feedback_erase">S\'ha borrau lo suyo historial de navegación.</string>
   <string name="search_hint">Buscar %1$s</string>
   <string name="menu_share">Compartir…</string>
+  <string name="menu_open_with_default_browser2">Ubrir en %1$s</string>
+  <string name="menu_open_with_a_browser2">Ubrir en…</string>
   <string name="menu_add_to_home_screen">Anyader a la pantalla d\'inicio</string>
   <string name="menu_whats_new">Novedatz</string>
   <string name="menu_settings">Achustes</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["No tiens atorgau garra dreito u licencia sobre las marcas rechistradas d\'a Fundación Mozilla u de garra atra parte, incluyindo los nombres u logos de Mozilla, Firefox u %1$s. Puetz trobar mas información "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Lo codigo fuent adicional pa %1$s ye disponible baixo atras "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencias</a>" libres y de codigo ubierto."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s tamién fa servir listas de blocache fornidas per Disconnect, Inc. como un treballo deseparau y independient, baixo la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", y disponible "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
+  <string name="gv_prompt_username_hint">Nombre d\'usuario</string>
+  <string name="gv_prompt_password_hint">Clau</string>
+  <string name="gv_prompt_clear">Borrar</string>
 </resources>

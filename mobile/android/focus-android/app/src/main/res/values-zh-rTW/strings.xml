@@ -8,6 +8,8 @@
   <string name="feedback_erase">已清除您的瀏覽紀錄。</string>
   <string name="search_hint">搜尋 %1$s</string>
   <string name="menu_share">分享…</string>
+  <string name="menu_open_with_default_browser2">使用 %1$s 開啟</string>
+  <string name="menu_open_with_a_browser2">開啟於…</string>
   <string name="menu_add_to_home_screen">新增至裝置主畫面</string>
   <string name="menu_whats_new">有什麼新鮮事</string>
   <string name="menu_settings">選項</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["您並未被授權使用 Mozilla 基金會或任何相關部門的商標，包含但不限於 Mozilla、Firefox、%1$s 的商標。您可以在 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#36889;&#35041;</a>找到更多資訊。]]></string>
   <string name="your_rights_content4"><![CDATA[%1$s 其他的原始碼則使用其他自由與開放原始碼的<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#25480;&#27402;&#26781;&#27454;</a>提供。]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s 還使用由 Disconnect, Inc. 提供的封鎖清單，該清單是一份依照 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" 提供的獨立作品，可在"<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#27492;&#34389;</a>取得。]]></string>
+  <string name="gv_prompt_username_hint">使用者名稱</string>
+  <string name="gv_prompt_password_hint">密碼</string>
+  <string name="gv_prompt_clear">清除</string>
 </resources>

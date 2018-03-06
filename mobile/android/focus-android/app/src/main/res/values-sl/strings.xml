@@ -8,6 +8,8 @@
   <string name="feedback_erase">Vaša zgodovina brskanja je bila izbrisana.</string>
   <string name="search_hint">Išči %1$s</string>
   <string name="menu_share">Deli …</string>
+  <string name="menu_open_with_default_browser2">Odpri v %1$s</string>
+  <string name="menu_open_with_a_browser2">Odpri v …</string>
   <string name="menu_add_to_home_screen">Dodaj na domač zaslon</string>
   <string name="menu_whats_new">Kaj je novega</string>
   <string name="menu_settings">Nastavitve</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Nikakršne pravice niti licence nimate za uporabo blagovnih znamk Fundacije Mozilla ali kateregakoli od izdelkov, vključno z imeni in logotipi Mozille, Firefoxa ali %1$sa. Dodatne informacije lahko najdete "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tukaj</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Dodatna izvorna koda za %1$s je na voljo pod raznimi drugimi prostimi in odprtokodnimi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencami</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s uporablja tudi sezname za zavračanje podjetja Disconnect Inc. kot ločena in neodvisna dela, ki so na voljo pod licenco "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tukaj</a>.]]></string>
+  <string name="gv_prompt_username_hint">Uporabniško ime</string>
+  <string name="gv_prompt_password_hint">Geslo</string>
+  <string name="gv_prompt_clear">Počisti</string>
 </resources>

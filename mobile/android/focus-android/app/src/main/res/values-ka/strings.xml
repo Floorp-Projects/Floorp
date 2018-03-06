@@ -8,6 +8,8 @@
   <string name="feedback_erase">მონახულებული გვერდების ისტორია წაიშალა.</string>
   <string name="search_hint">მოძებნა: %1$s</string>
   <string name="menu_share">გვერდის გაზიარება…</string>
+  <string name="menu_open_with_default_browser2">%1$s-ში გახსნა</string>
+  <string name="menu_open_with_a_browser2">გახსნა…</string>
   <string name="menu_add_to_home_screen">მთავარ ეკრანზე დამატება</string>
   <string name="menu_whats_new">რა სიახლეებია</string>
   <string name="menu_settings">პარამეტრები</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["თქვენ არ გეძლევათ რამე სახის უფლება ან ლიცენზია, Mozilla ფონდის სავაჭრო ნიშნებსა და სხვა საკუთრებაზე, მათ შორის დასახელებებზე Mozilla, Firefox, ან %1$s-ის სხვა სახელებსა და ლოგოებზე. დამატებითი ინფორმაცია შეგიძლიათ იხილოთ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#4304;&#4325;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["%1$s-ის დამატებითი პირველწყარო კოდი ვრცელდება სხვადასხვა უფასო და ღია წყაროს მქონე "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#4314;&#4312;&#4330;&#4308;&#4316;&#4310;&#4312;&#4308;&#4305;&#4312;&#4311;</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s ასევე იყენებს შეზღუდვის სიებს, რომლის მომწოდებელია Disconnect Inc. როგორც ცალკეული და დამოუკიდებელი ნამუშევრები, ვრცელდება "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" ლიცენზიით და ხელმისაწვდომია "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#4304;&#4315; &#4305;&#4315;&#4323;&#4314;&#4310;&#4308;</a>.]]></string>
+  <string name="gv_prompt_username_hint">სახელი</string>
+  <string name="gv_prompt_password_hint">პაროლი</string>
+  <string name="gv_prompt_clear">გასუფთავება</string>
 </resources>

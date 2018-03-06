@@ -8,6 +8,8 @@
   <string name="feedback_erase">Sejarah pelayaran anda telah dibuang.</string>
   <string name="search_hint">Cari %1$s</string>
   <string name="menu_share">Kongsi…</string>
+  <string name="menu_open_with_default_browser2">Buka dalam %1$s</string>
+  <string name="menu_open_with_a_browser2">Buka dalam…</string>
   <string name="menu_add_to_home_screen">Tambah ke Skrin Halaman utama</string>
   <string name="menu_whats_new">Perkembangan Terbaru</string>
   <string name="menu_settings">Tetapan</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Anda tidak diberikan sebarang hak atau lesen untuk tanda dagangan Yayasan Mozilla atau mana-mana pihak, termasuk menggunakan nama atau logo Mozilla, Firefox atau %1$s. Maklumat tambahan boleh didapati "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">di sini</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Kod sumber tambahan untuk %1$s tersedia di bawah pelbagai "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lesen</a>" sumber percuma dan sumber terbuka lain."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s uga menggunakan senarai sekatan yang disediakan oleh Disconnect, Inc sebagai hasil kerja yang berasingan dan bebas di bawah "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dan tersedia "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">di sini</a>.]]></string>
+  <string name="gv_prompt_username_hint">Nama pengguna</string>
+  <string name="gv_prompt_password_hint">Kata laluan</string>
+  <string name="gv_prompt_clear">Buang</string>
 </resources>

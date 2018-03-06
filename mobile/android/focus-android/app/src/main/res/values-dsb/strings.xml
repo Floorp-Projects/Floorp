@@ -8,6 +8,8 @@
   <string name="feedback_erase">Waša pśeglědowańska historija jo se wulašowała.</string>
   <string name="search_hint">Pytanje za %1$s</string>
   <string name="menu_share">Źěliś…</string>
+  <string name="menu_open_with_default_browser2">W %1$s wócyniś</string>
+  <string name="menu_open_with_a_browser2">Wócyniś w…</string>
   <string name="menu_add_to_home_screen">Startowej wobrazowce pśidaś</string>
   <string name="menu_whats_new">Co jo nowe</string>
   <string name="menu_settings">Nastajenja</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Njedaju wam žedne pšawa abo licence na wikowych markow załožby Mozilla Foundation abo tśeśich, inkluziwnje mjenja abo loga Mozilla, Firefox abo %1$s. Dalšne informacije namakajośo "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">how</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Pśidatny žrědłowy kod za %1$s jo pód wšakich drugich lichych "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencach</a>" wótwórjonego žrědła k dispoziciji."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s teke blokěrowańske lisćiny póbitowane wót Disconnect, Inc. ako separatne a njewótwisne źěła pód licencu "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">General Public Licence v3</a>" wužywa, kótarež su "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">how</a>" k dispoziciji."]]></string>
+  <string name="gv_prompt_username_hint">Wužywarske mě</string>
+  <string name="gv_prompt_password_hint">Gronidło</string>
+  <string name="gv_prompt_clear">Wuprozniś</string>
 </resources>

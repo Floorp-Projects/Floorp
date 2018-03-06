@@ -8,6 +8,8 @@
   <string name="feedback_erase">您的浏览记录已清除。</string>
   <string name="search_hint">搜索 %1$s</string>
   <string name="menu_share">分享…</string>
+  <string name="menu_open_with_default_browser2">在 %1$s 中打开</string>
+  <string name="menu_open_with_a_browser2">打开方式…</string>
   <string name="menu_add_to_home_screen">添加到主屏幕</string>
   <string name="menu_whats_new">新版变化</string>
   <string name="menu_settings">设置</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA[您没有取得 Mozilla 基金会或任何一方的商标的任何权利或许可，包括 Mozilla、Firefox 和 %1$s 名称或徽标的许可。有关信息请查阅<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#27492;&#22788;</a>。]]></string>
   <string name="your_rights_content4"><![CDATA[%1$s 其他源代码以各类自由和开源<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#35768;&#21487;&#35777;</a>开放。]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s 还使用 Disconnect 公司提供的阻止列表，它是以 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU &#36890;&#29992;&#20844;&#20849;&#35768;&#21487;&#35777; v3</a>" 提供的一个独立的作品，可在"<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#36825;&#37324;</a>找到。]]></string>
+  <string name="gv_prompt_username_hint">用户名</string>
+  <string name="gv_prompt_password_hint">密码</string>
+  <string name="gv_prompt_clear">清除</string>
 </resources>

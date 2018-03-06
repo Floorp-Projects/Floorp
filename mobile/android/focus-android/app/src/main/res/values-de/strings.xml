@@ -8,6 +8,8 @@
   <string name="feedback_erase">Die Surf-Chronik wurde gelöscht.</string>
   <string name="search_hint">Suchen nach %1$s</string>
   <string name="menu_share">Teilen …</string>
+  <string name="menu_open_with_default_browser2">In %1$s öffnen</string>
+  <string name="menu_open_with_a_browser2">Öffnen in…</string>
   <string name="menu_add_to_home_screen">Zum Startbildschirm hinzufügen</string>
   <string name="menu_whats_new">Was ist neu</string>
   <string name="menu_settings">Einstellungen</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Ihnen werden keine Rechte oder Lizenzen an den Markenrechten der Mozilla Foundation oder einer anderen Partei eingeräumt, dazu zählen die Namen und Logos von Mozilla, Firefox oder %1$s. Weitere Informationen finden Sie "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hier</a>.]]></string>
   <string name="your_rights_content4"><![CDATA[Sonstiger Quelltext für %1$s steht unter diversen anderen freien und Open-Source-<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lizenzen</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s nutzt auch von Disconnect, Inc. angebotene Blockierlisten als separate und unabhängige Werke unter der "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License3</a>", die "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hier</a>" verfügbar sind."]]></string>
+  <string name="gv_prompt_username_hint">Benutzername</string>
+  <string name="gv_prompt_password_hint">Passwort</string>
+  <string name="gv_prompt_clear">Löschen</string>
 </resources>

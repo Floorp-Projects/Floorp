@@ -8,6 +8,8 @@
   <string name="feedback_erase">Ri runatab\'al okem pa k\'amaya\'l xyuj el.</string>
   <string name="search_hint">Tikanöx %1$s</string>
   <string name="menu_share">Tikomonïx…</string>
+  <string name="menu_open_with_default_browser2">Tijaq pa %1$s</string>
+  <string name="menu_open_with_a_browser2">Tijaq pa…</string>
   <string name="menu_add_to_home_screen">Titz\'aqatisäx pa ri Nïm tzuwäch</string>
   <string name="menu_whats_new">Achike Natzijoj</string>
   <string name="menu_settings">Nuk’ulem</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Man nisuj taq kich\'ojib\'al chuqa\' ya\'oj q\'ij chi ke ri etz\'ib\'an taq b\'i\'aj richin Mozilla Moloj ni xa ta chi ke ri taq ruch\'akulal achi\'el Mozilla, Firefox o %1$s taq b\'i\'aj o taq wachaj. Nawïl rutz\'aqat na\'oj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">wawe\'</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Rutz\'aqat ruxe\'el b\'itz\'ib\' richin %1$s wachel kik\'in ch\'aqa\' chik jalajöj sipan taq kema\' chuqa\' jaqäl b\'itz\'ib\' "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">taq ya\'oj q\'ij</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s chuqa\' nrokisaj kicholonem tanaj ya\'on ruma Disconnect, Inc. achi\'el jachon chuqa\' alaj ruk\'aslem nimawuj ruma "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", chuqa\' wachel "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">wawe\'</a>.]]></string>
+  <string name="gv_prompt_username_hint">Rub\'i\' okisanel</string>
+  <string name="gv_prompt_password_hint">Ewan tzij</string>
+  <string name="gv_prompt_clear">Tijosq\'ïx</string>
 </resources>

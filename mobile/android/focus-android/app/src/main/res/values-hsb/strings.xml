@@ -8,6 +8,8 @@
   <string name="feedback_erase">Waša přehladowanska historija je so zhašała.</string>
   <string name="search_hint">Pytanje za %1$s</string>
   <string name="menu_share">Dźělić…</string>
+  <string name="menu_open_with_default_browser2">W %1$s wočinić</string>
+  <string name="menu_open_with_a_browser2">Wočinić w…</string>
   <string name="menu_add_to_home_screen">Startowej wobrazowce přidać</string>
   <string name="menu_whats_new">Što je nowe</string>
   <string name="menu_settings">Nastajenja</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Njedadźa wam žane prawa abo licency na wikowanskich znamjenjach załožby Mozilla Foundation abo třećich, inkluziwnje mjena abo loga Mozilla, Firefox abo %1$s. Dalše informacije namakaće "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tu</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Přidatny žórłowy kod za %1$s je pod wšelakich druhich swobodnych "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencach</a>" wotewrjeneho žórła k dispoziciji."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s tež blokowanske lisćiny poskićene wot Disconnect, Inc. jako separatne a njewotwisne dźěła pod licencu "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">General Public Licence v3</a>" wužiwa, kotrež su "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tu</a>" k dispoziciji."]]></string>
+  <string name="gv_prompt_username_hint">Wužiwarske mjeno</string>
+  <string name="gv_prompt_password_hint">Hesło</string>
+  <string name="gv_prompt_clear">Zhašeć</string>
 </resources>

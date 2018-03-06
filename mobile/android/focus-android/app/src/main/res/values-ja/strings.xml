@@ -8,6 +8,8 @@
   <string name="feedback_erase">閲覧履歴が消去されました。</string>
   <string name="search_hint">%1$s を検索</string>
   <string name="menu_share">共有...</string>
+  <string name="menu_open_with_default_browser2">%1$s で開く</string>
+  <string name="menu_open_with_a_browser2">他のアプリで開く…</string>
   <string name="menu_add_to_home_screen">ホーム画面に追加</string>
   <string name="menu_whats_new">新着情報</string>
   <string name="menu_settings">設定</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Mozilla、Firefox、%1$s の名称やロゴを含む、Mozilla Foundation や第三者の商標に関するいかなる権利やライセンスもあなたには与えられていません。詳しい情報は "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#12371;&#12385;&#12425;</a>" をご覧ください。"]]></string>
   <string name="your_rights_content4"><![CDATA["%1$s の追加ソースコードは様々な他のフリーでオープンソースの "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#12521;&#12452;&#12475;&#12531;&#12473;</a>" に基いて公開されています。"]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s は Disconnect, Inc. によって提供されているブロックリストも "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" の下で単独のリソースとして使用しており、それらは "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#12371;&#12385;&#12425;</a>" から入手可能です。"]]></string>
+  <string name="gv_prompt_username_hint">ユーザー名</string>
+  <string name="gv_prompt_password_hint">パスワード</string>
+  <string name="gv_prompt_clear">クリア</string>
 </resources>

@@ -8,6 +8,8 @@
   <string name="feedback_erase">আপনার ব্রাউজিংয়ের পূর্ববর্তী তথ্য মুছে ফেলা হয়েছে।</string>
   <string name="search_hint">%1$s এর জন্যে অনুসন্ধান করুন</string>
   <string name="menu_share">শেয়ার…</string>
+  <string name="menu_open_with_default_browser2">%1$s এ খুলুন</string>
+  <string name="menu_open_with_a_browser2">খুলুন…</string>
   <string name="menu_add_to_home_screen">নীড় স্ক্রিনে যোগ</string>
   <string name="menu_whats_new">নতুন কি আছে</string>
   <string name="menu_settings">সেটিং</string>
@@ -86,6 +88,9 @@
   <string name="search_add_manually_example">উদাহরণ: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">অনুসন্ধান ইঞ্জিন যোগ</string>
   <string name="search_add_confirmation">নতুন অনুসন্ধান ইঞ্জিন যোগ হয়েছে।</string>
+  <string name="search_add_error_empty_name">অনুসন্ধান ইঞ্জিনের নাম দিন</string>
+  <string name="search_add_error_duplicate_name">ইনস্টল করা কোন অনুসন্ধান ইঞ্জিন ইতিমধ্যে এই নাম ব্যবহার করছে।</string>
+  <string name="search_add_error_empty_search">অনুসন্ধান বাক্য দিন</string>
   <string name="content_description_clear_input">ইনপুট পরিস্কার</string>
   <string name="content_description_dismiss_input">খারিজ</string>
   <string name="content_description_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
@@ -154,4 +159,7 @@
   <string name="notification_browsing_session_channel_name">ব্যক্তিগত ব্রাউজিং সেশন</string>
   <string name="tabs_tray_action_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
   <string name="download_firefox">Firefox ডাউনলোড করুন</string>
+  <string name="gv_prompt_username_hint">ব্যবহারকারীর নাম</string>
+  <string name="gv_prompt_password_hint">পাসওয়ার্ড</string>
+  <string name="gv_prompt_clear">পরিষ্কার</string>
 </resources>

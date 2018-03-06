@@ -8,6 +8,8 @@
   <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
   <string name="search_hint">Chwilio am %1$s</string>
   <string name="menu_share">Rhannu…</string>
+  <string name="menu_open_with_default_browser2">Agor gyda %1$s</string>
+  <string name="menu_open_with_a_browser2">Agor yn…</string>
   <string name="menu_add_to_home_screen">Ychwanegu i\'r sgrin Cartref</string>
   <string name="menu_whats_new">Be sy\'n Newydd</string>
   <string name="menu_settings">Gosodiadau</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Nid oes gennych unrhyw hawliau na thrwyddedau i nodau masnach y Mozilla Foudation nag o unrhyw barti, gan gynnwys enwau na logos Mozilla, Firefox na %1$s. Mae manylion pellach i\'w cael "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">yma</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Mae cod ffynhonnell ychwanegol ar gyfer %1$s ar gael o dan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">drwyddedau</a>" cod agored a rhydd eraill."]]></string>
   <string name="your_rights_content5"><![CDATA["Mae %1$s hefyd yn defnyddio rhestrau rhwystro sy\'n cael eu darparu gan Disconnect, Inc. fel gwaith annibynnol ac ar wahân o dan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", ac ar gael "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">yma</a>.]]></string>
+  <string name="gv_prompt_username_hint">Enw Defnyddiwr</string>
+  <string name="gv_prompt_password_hint">Cyfrinair</string>
+  <string name="gv_prompt_clear">Clirio</string>
 </resources>
