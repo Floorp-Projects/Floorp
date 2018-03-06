@@ -538,11 +538,18 @@ the Windows registry.
 
 #### `--connect-existing`
 
-Connecting to an existing Firefox instance.  The instance must have
-Marionette enabled.
+Connect geckodriver to an existing Firefox instance.  This means
+geckodriver will abstain from the default of starting a new Firefox
+session.
 
-To enable the Marionette remote protocol you can pass the `--marionette`
-flag to Firefox.
+The existing Firefox instance must have [Marionette] enabled.
+To enable the remote protocol in Firefox, you can pass the
+`-marionette` flag.  Unless the `marionette.port` preference
+has been user-set, Marionette will listen on port 2828.  So when
+using `--connect-existing` it is likely you will also have to use
+[`--marionette-port`] to set the correct port.
+
+[`--marionette-port`]: #marionette-port
 
 
 #### <code>--host <var>HOST</var></code>
