@@ -33,7 +33,6 @@ function run_test() {
   checkService("dirsvc", Ci.nsIProperties);
   checkService("DOMRequest", Ci.nsIDOMRequestService);
   checkService("domStorageManager", Ci.nsIDOMStorageManager);
-  checkService("downloads", Ci.nsIDownloadManager);
   checkService("droppedLinkHandler", Ci.nsIDroppedLinkHandler);
   checkService("eTLD", Ci.nsIEffectiveTLDService);
   checkService("focus", Ci.nsIFocusManager);

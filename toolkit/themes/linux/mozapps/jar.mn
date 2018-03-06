@@ -4,7 +4,6 @@
 
 toolkit.jar:
 #include ../../shared/mozapps.inc.mn
-  skin/classic/mozapps/downloads/downloadIcon.png          (downloads/downloadIcon.png)
 * skin/classic/mozapps/extensions/extensions.css           (extensions/extensions.css)
 * skin/classic/mozapps/extensions/newaddon.css             (extensions/newaddon.css)
   skin/classic/mozapps/extensions/heart.png                (extensions/heart.png)
