@@ -8,6 +8,7 @@
 
 #include "mozilla/PresShell.h"
 
+#include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -4056,6 +4057,13 @@ nsIPresShell::IsSafeToFlush() const
   return true;
 }
 
+void
+nsIPresShell::NotifyFontFaceSetOnRefresh()
+{
+  if (FontFaceSet* set = mDocument->GetFonts()) {
+    set->DidRefresh();
+  }
+}
 
 void
 PresShell::DoFlushPendingNotifications(FlushType aType)
