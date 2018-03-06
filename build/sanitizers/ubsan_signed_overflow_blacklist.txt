@@ -149,10 +149,6 @@ fun:*OT*collect_glyphs*
 # These look like harmless layouting-related overflows
 src:*/gfx/cairo/libpixman/src/pixman-region.c
 
-# Sorting code in layout/style/nsCSSProps.cpp that probably doesn't
-# care about overflows.
-fun:*SortPropertyAndCount*
-
 # Code in ipc/chromium/src/base/file_path.cc where a function returns -1
 # being cast to unsigned and then overflowed.
 fun:*FilePath*Append*
