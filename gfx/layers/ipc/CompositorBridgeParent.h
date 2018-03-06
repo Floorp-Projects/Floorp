@@ -114,6 +114,12 @@ public:
                                  const TimeStamp& aTime) { return true; }
   virtual void LeaveTestMode(const uint64_t& aId) { }
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) = 0;
+  virtual void SetTestAsyncScrollOffset(const uint64_t& aLayersId,
+                                        const FrameMetrics::ViewID& aScrollId,
+                                        const CSSPoint& aPoint) = 0;
+  virtual void SetTestAsyncZoom(const uint64_t& aLayersId,
+                                const FrameMetrics::ViewID& aScrollId,
+                                const LayerToParentLayerScale& aZoom) = 0;
   virtual void FlushApzRepaints(const uint64_t& aLayersId) = 0;
   virtual void GetAPZTestData(const uint64_t& aLayersId,
                               APZTestData* aOutData) { }
@@ -248,6 +254,12 @@ public:
   void LeaveTestMode(const uint64_t& aId) override;
   void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) override;
   CompositorAnimationStorage* GetAnimationStorage();
+  void SetTestAsyncScrollOffset(const uint64_t& aLayersId,
+                                const FrameMetrics::ViewID& aScrollId,
+                                const CSSPoint& aPoint) override;
+  void SetTestAsyncZoom(const uint64_t& aLayersId,
+                        const FrameMetrics::ViewID& aScrollId,
+                        const LayerToParentLayerScale& aZoom) override;
   void FlushApzRepaints(const uint64_t& aLayersId) override;
   void GetAPZTestData(const uint64_t& aLayersId,
                       APZTestData* aOutData) override;

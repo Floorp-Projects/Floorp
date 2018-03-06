@@ -1379,6 +1379,30 @@ CompositorBridgeParent::RecvGetFrameUniformity(FrameUniformityData* aOutData)
 }
 
 void
+CompositorBridgeParent::SetTestAsyncScrollOffset(
+    const uint64_t& aLayersId,
+    const FrameMetrics::ViewID& aScrollId,
+    const CSSPoint& aPoint)
+{
+  if (mApzSampler) {
+    uint64_t layersId = (aLayersId == 0 ? mRootLayerTreeID : aLayersId);
+    mApzSampler->SetTestAsyncScrollOffset(layersId, aScrollId, aPoint);
+  }
+}
+
+void
+CompositorBridgeParent::SetTestAsyncZoom(
+    const uint64_t& aLayersId,
+    const FrameMetrics::ViewID& aScrollId,
+    const LayerToParentLayerScale& aZoom)
+{
+  if (mApzSampler) {
+    uint64_t layersId = (aLayersId == 0 ? mRootLayerTreeID : aLayersId);
+    mApzSampler->SetTestAsyncZoom(layersId, aScrollId, aZoom);
+  }
+}
+
+void
 CompositorBridgeParent::FlushApzRepaints(const uint64_t& aLayersId)
 {
   MOZ_ASSERT(mApzcTreeManager);

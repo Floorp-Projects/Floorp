@@ -6,7 +6,6 @@
 
 #include "mozilla/layers/WebRenderBridgeParent.h"
 
-#include "apz/src/AsyncPanZoomController.h"
 #include "CompositableHost.h"
 #include "gfxEnv.h"
 #include "gfxPrefs.h"
@@ -16,7 +15,6 @@
 #include "GLContextProvider.h"
 #include "mozilla/Range.h"
 #include "mozilla/layers/AnimationHelper.h"
-#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -1017,18 +1015,6 @@ WebRenderBridgeParent::RecvCapture()
   return IPC_OK();
 }
 
-already_AddRefed<AsyncPanZoomController>
-WebRenderBridgeParent::GetTargetAPZC(const FrameMetrics::ViewID& aScrollId)
-{
-  RefPtr<AsyncPanZoomController> apzc;
-  if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
-    if (RefPtr<APZCTreeManager> apzctm = cbp->GetAPZCTreeManager()) {
-      apzc = apzctm->GetTargetAPZC(GetLayersId(), aScrollId);
-    }
-  }
-  return apzc.forget();
-}
-
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
                                                   nsTArray<ScrollableLayerGuid>&& aTargets)
@@ -1106,11 +1092,7 @@ WebRenderBridgeParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScr
   if (mDestroyed) {
     return IPC_OK();
   }
-  RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aScrollId);
-  if (!apzc) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  apzc->SetTestAsyncScrollOffset(CSSPoint(aX, aY));
+  mCompositorBridge->SetTestAsyncScrollOffset(GetLayersId(), aScrollId, CSSPoint(aX, aY));
   return IPC_OK();
 }
 
@@ -1121,11 +1103,7 @@ WebRenderBridgeParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollId,
   if (mDestroyed) {
     return IPC_OK();
   }
-  RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aScrollId);
-  if (!apzc) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  apzc->SetTestAsyncZoom(LayerToParentLayerScale(aZoom));
+  mCompositorBridge->SetTestAsyncZoom(GetLayersId(), aScrollId, LayerToParentLayerScale(aZoom));
   return IPC_OK();
 }
 

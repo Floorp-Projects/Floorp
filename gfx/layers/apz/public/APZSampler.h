@@ -63,6 +63,13 @@ public:
 
   bool GetAPZTestData(uint64_t aLayersId, APZTestData* aOutData);
 
+  void SetTestAsyncScrollOffset(uint64_t aLayersId,
+                                const FrameMetrics::ViewID& aScrollId,
+                                const CSSPoint& aOffset);
+  void SetTestAsyncZoom(uint64_t aLayersId,
+                        const FrameMetrics::ViewID& aScrollId,
+                        const LayerToParentLayerScale& aZoom);
+
 protected:
   virtual ~APZSampler();
 
