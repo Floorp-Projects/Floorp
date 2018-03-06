@@ -84,7 +84,7 @@ registerCleanupFunction(function () {
 const ConsoleObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  observe: function (subject, topic, data) {
+  observe: function (subject) {
     let message = subject.wrappedJSObject.arguments[0];
 
     if (message && /Failed propType/.test(message.toString())) {
@@ -443,12 +443,12 @@ var openNewTabAndToolbox = Task.async(function* (url, toolId, hostType) {
  * closed.
  */
 var closeTabAndToolbox = Task.async(function* (tab = gBrowser.selectedTab) {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  let target = TargetFactory.forTab(tab);
   if (target) {
     yield gDevTools.closeToolbox(target);
   }
 
-  yield removeTab(gBrowser.selectedTab);
+  yield removeTab(tab);
 });
 
 /**
@@ -658,8 +658,7 @@ function stopRecordingTelemetryLogs(Telemetry) {
  * Windows (see Bug 666254).
  */
 function emptyClipboard() {
-  let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
-    .getService(SpecialPowers.Ci.nsIClipboard);
+  let clipboard = Services.clipboard;
   clipboard.emptyClipboard(clipboard.kGlobalClipboard);
 }
 
