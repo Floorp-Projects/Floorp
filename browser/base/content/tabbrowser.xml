@@ -9,48 +9,6 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <!--
-  This binding is bound to <toolbox id="navigator-toolbox"> so that
-  the #tabbrowser binding is initialized before the #tabs binding.
-  Remove after bug 1392352.
-  -->
-  <binding id="empty"/>
-
-  <binding id="tabbrowser">
-    <resources>
-      <stylesheet src="chrome://browser/content/tabbrowser.css"/>
-    </resources>
-
-    <content>
-      <xul:tabbox anonid="tabbox" class="tabbrowser-tabbox"
-                  flex="1" eventnode="document" xbl:inherits="tabcontainer"
-                  onselect="if (event.target.localName == 'tabpanels') gBrowser.updateCurrentBrowser();">
-        <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
-          <xul:notificationbox flex="1" notificationside="top">
-            <xul:hbox flex="1" class="browserSidebarContainer">
-              <xul:vbox flex="1" class="browserContainer">
-                <xul:stack flex="1" class="browserStack" anonid="browserStack">
-                  <xul:browser anonid="initialBrowser" type="content" message="true" messagemanagergroup="browsers"
-                               primary="true" blank="true"
-                               xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup,selectmenulist,datetimepicker"/>
-                </xul:stack>
-              </xul:vbox>
-            </xul:hbox>
-          </xul:notificationbox>
-        </xul:tabpanels>
-      </xul:tabbox>
-      <children/>
-    </content>
-    <implementation>
-      <constructor>
-        gBrowser = new TabBrowser(this);
-      </constructor>
-      <destructor>
-        gBrowser.disconnectedCallback();
-      </destructor>
-    </implementation>
-  </binding>
-
   <binding id="tabbrowser-arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox-clicktoscroll">
     <implementation>
       <!-- Override scrollbox.xml method, since our scrollbox's children are
@@ -1847,6 +1805,11 @@
         <parameter name="aMuteReason"/>
         <body>
         <![CDATA[
+          // Do not attempt to toggle mute state if browser is lazy.
+          if (!this.linkedPanel) {
+            return;
+          }
+
           let tabContainer = this.parentNode;
           let browser = this.linkedBrowser;
           let modifiedAttrs = [];
@@ -1861,18 +1824,12 @@
             this.finishMediaBlockTimer();
           } else {
             if (browser.audioMuted) {
-              if (this.linkedPanel) {
-                // "Lazy Browser" should not invoke its unmute method
-                browser.unmute();
-              }
+              browser.unmute();
               this.removeAttribute("muted");
               BrowserUITelemetry.countTabMutingEvent("unmute", aMuteReason);
               hist.add(1 /* unmute */);
             } else {
-              if (this.linkedPanel) {
-                // "Lazy Browser" should not invoke its mute method
-                browser.mute();
-              }
+              browser.mute();
               this.setAttribute("muted", "true");
               BrowserUITelemetry.countTabMutingEvent("mute", aMuteReason);
               hist.add(0 /* mute */);

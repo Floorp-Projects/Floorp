@@ -1550,8 +1550,11 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
   cluster_tc = ctx->cluster_timecode;
 
   abs_timecode = timecode + cluster_tc;
-  if (abs_timecode < 0)
-    return -1;
+  if (abs_timecode < 0) {
+      /* Ignore the spec and negative timestamps */
+      ctx->log(ctx, NESTEGG_LOG_WARNING, "ignoring negative timecode: %lld", abs_timecode);
+      abs_timecode = 0;
+  }
 
   pkt = ne_alloc(sizeof(*pkt));
   if (!pkt)
@@ -1686,6 +1689,7 @@ ne_read_block_additions(nestegg * ctx, uint64_t block_size, struct block_additio
     add_id = 1;
     data = NULL;
     has_data = 0;
+    data_size = 0;
     r = ne_read_element(ctx, &id, &size);
     if (r != 1)
       return r;

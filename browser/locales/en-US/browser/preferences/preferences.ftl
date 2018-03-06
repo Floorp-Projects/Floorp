@@ -25,6 +25,12 @@ pref-page =
 search-input =
     .style = width: 15.4em
 
+policies-notice =
+    { PLATFORM() ->
+        [windows] Your organization has disabled the ability to change some options.
+       *[other] Your organization has disabled the ability to change some preferences.
+    }
+
 pane-general-title = General
 category-general =
     .tooltiptext = { pane-general-title }

@@ -10083,27 +10083,6 @@
     "description": "On page load, record the number of CSS Grid elements present on a page when the DevTools is open",
     "releaseChannelCollection": "opt-out"
   },
-  "VIEW_SOURCE_IN_BROWSER_OPENED_BOOLEAN": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["mozilla-dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
-    "expires_in_version": "53",
-    "kind": "boolean",
-    "description": "How many times has view source in browser / tab been opened?"
-  },
-  "VIEW_SOURCE_IN_WINDOW_OPENED_BOOLEAN": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["mozilla-dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
-    "expires_in_version": "53",
-    "kind": "boolean",
-    "description": "How many times has view source in a new window been opened?"
-  },
-  "VIEW_SOURCE_EXTERNAL_RESULT_BOOLEAN": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["mozilla-dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
-    "expires_in_version": "53",
-    "kind": "boolean",
-    "description": "How many times has view source in an external editor been opened, and did it succeed?"
-  },
   "BROWSER_IS_USER_DEFAULT": {
     "record_in_processes": ["main"],
     "expires_in_version": "never",

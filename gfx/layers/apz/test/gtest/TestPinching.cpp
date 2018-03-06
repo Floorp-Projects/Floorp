@@ -51,6 +51,8 @@ protected:
           aShouldTriggerPinch);
     }
 
+    apzc->AssertStateIsReset();
+
     FrameMetrics fm = apzc->GetFrameMetrics();
 
     if (aShouldTriggerPinch) {
@@ -80,6 +82,8 @@ protected:
       PinchWithPinchInputAndCheckStatus(apzc, ScreenIntPoint(250, 300), 0.5,
           aShouldTriggerPinch);
     }
+
+    apzc->AssertStateIsReset();
 
     fm = apzc->GetFrameMetrics();
 
