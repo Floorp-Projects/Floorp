@@ -29,11 +29,11 @@ const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.conca
   { url: "sjs_content-type-test-server.sjs?fmt=ws" },
 ]);
 
-add_task(function* () {
+add_task(async function () {
   Services.prefs.setCharPref("devtools.netmonitor.filters",
                              '["bogus", "js", "alsobogus"]');
 
-  let { monitor } = yield initNetMonitor(FILTERING_URL);
+  let { monitor } = await initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -49,8 +49,8 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 9);
   loadCommonFrameScript();
-  yield performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
-  yield wait;
+  await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
+  await wait;
 
   testFilterButtons(monitor, "js");
   ok(true, "Only the correct filter type was taken into consideration.");
@@ -63,5 +63,5 @@ add_task(function* () {
     "The filters preferences were saved directly after the click and only" +
     " with the valid.");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

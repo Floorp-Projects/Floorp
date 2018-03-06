@@ -7,8 +7,8 @@
  * Test if custom request headers are not ignored (bug 1270096 and friends)
  */
 
-add_task(function* () {
-  let { monitor } = yield initNetMonitor(SIMPLE_SJS);
+add_task(async function () {
+  let { monitor } = await initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
   let { store, windowRequire, connector } = monitor.panelWin;
@@ -37,7 +37,7 @@ add_task(function* () {
     headers: requestHeaders,
     body: "Hello"
   });
-  yield wait;
+  await wait;
 
   let item = getSortedRequests(store.getState()).get(0);
 
@@ -48,7 +48,7 @@ add_task(function* () {
   }
 
   // Wait until requestHeaders packet gets updated.
-  yield waitUntil(() => {
+  await waitUntil(() => {
     item = getSortedRequests(store.getState()).get(0);
     return item.requestHeaders;
   });

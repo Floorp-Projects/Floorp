@@ -7,8 +7,8 @@
  * Tests if the network monitor panes collapse properly.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document, windowRequire } = monitor.panelWin;
@@ -17,7 +17,7 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
-  yield wait;
+  await wait;
 
   ok(!document.querySelector(".network-details-panel") &&
      detailsPaneToggleButton.classList.contains("pane-collapsed"),
@@ -47,5 +47,5 @@ add_task(function* () {
      !detailsPaneToggleButton.classList.contains("pane-collapsed"),
     "The details panel should be visible again after uncollapsing.");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

@@ -7,10 +7,10 @@
  * Verifies that truncated response bodies still have the correct reported size.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { RESPONSE_BODY_LIMIT } = require("devtools/shared/webconsole/network-monitor");
   let URL = EXAMPLE_URL + "sjs_truncate-test-server.sjs?limit=" + RESPONSE_BODY_LIMIT;
-  let { monitor, tab } = yield initNetMonitor(URL);
+  let { monitor, tab } = await initNetMonitor(URL);
 
   info("Starting test... ");
 
@@ -20,13 +20,13 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
-  yield wait;
+  await wait;
 
   // Response content will be updated asynchronously, we should make sure data is updated
   // on DOM before asserting.
-  yield waitUntil(() => document.querySelector(".request-list-item"));
+  await waitUntil(() => document.querySelector(".request-list-item"));
   let item = document.querySelectorAll(".request-list-item")[0];
-  yield waitUntil(() => item.querySelector(".requests-list-type").title);
+  await waitUntil(() => item.querySelector(".requests-list-type").title);
 
   let type = item.querySelector(".requests-list-type").textContent;
   let fullMimeType = item.querySelector(".requests-list-type").title;

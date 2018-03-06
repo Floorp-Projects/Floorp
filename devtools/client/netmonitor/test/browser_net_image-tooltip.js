@@ -9,8 +9,8 @@ const IMAGE_TOOLTIP_REQUESTS = 1;
 /**
  * Tests if image responses show a popup in the requests menu when hovered.
  */
-add_task(function* test() {
-  let { tab, monitor } = yield initNetMonitor(IMAGE_TOOLTIP_URL);
+add_task(async function test() {
+  let { tab, monitor } = await initNetMonitor(IMAGE_TOOLTIP_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire, connector } = monitor.panelWin;
@@ -22,38 +22,38 @@ add_task(function* test() {
   store.dispatch(Actions.batchEnable(false));
 
   let onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS);
-  yield performRequests();
-  yield onEvents;
+  await performRequests();
+  await onEvents;
 
   info("Checking the image thumbnail after a few requests were made...");
-  yield showTooltipAndVerify(document.querySelectorAll(".request-list-item")[0]);
+  await showTooltipAndVerify(document.querySelectorAll(".request-list-item")[0]);
 
   // Hide tooltip before next test, to avoid the situation that tooltip covers
   // the icon for the request of the next test.
   info("Checking the image thumbnail gets hidden...");
-  yield hideTooltipAndVerify(document.querySelectorAll(".request-list-item")[0]);
+  await hideTooltipAndVerify(document.querySelectorAll(".request-list-item")[0]);
 
   // +1 extra document reload
   onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS + 1);
 
   info("Reloading the debuggee and performing all requests again...");
-  yield triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
-  yield performRequests();
-  yield onEvents;
+  await triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
+  await performRequests();
+  await onEvents;
 
   info("Checking the image thumbnail after a reload.");
-  yield showTooltipAndVerify(document.querySelectorAll(".request-list-item")[1]);
+  await showTooltipAndVerify(document.querySelectorAll(".request-list-item")[1]);
 
   info("Checking if the image thumbnail is hidden when mouse leaves the menu widget");
   let requestsListContents = document.querySelector(".requests-list-contents");
   EventUtils.synthesizeMouse(requestsListContents, 0, 0, { type: "mousemove" },
                              monitor.panelWin);
-  yield waitUntil(() => !toolboxDoc.querySelector(".tooltip-container.tooltip-visible"));
+  await waitUntil(() => !toolboxDoc.querySelector(".tooltip-container.tooltip-visible"));
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   function performRequests() {
-    return ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    return ContentTask.spawn(tab.linkedBrowser, {}, async function () {
       content.wrappedJSObject.performRequests();
     });
   }
@@ -62,9 +62,9 @@ add_task(function* test() {
    * Show a tooltip on the {target} and verify that it was displayed
    * with the expected content.
    */
-  function* showTooltipAndVerify(target) {
+  async function showTooltipAndVerify(target) {
     let anchor = target.querySelector(".requests-list-file");
-    yield showTooltipOn(anchor);
+    await showTooltipOn(anchor);
 
     info("Tooltip was successfully opened for the image request.");
     is(toolboxDoc.querySelector(".tooltip-panel img").src, TEST_IMAGE_DATA_URI,
@@ -75,22 +75,22 @@ add_task(function* test() {
    * Trigger a tooltip over an element by sending mousemove event.
    * @return a promise that resolves when the tooltip is shown
    */
-  function* showTooltipOn(element) {
+  async function showTooltipOn(element) {
     let win = element.ownerDocument.defaultView;
     EventUtils.synthesizeMouseAtCenter(element, { type: "mousemove" }, win);
-    yield waitUntil(() => toolboxDoc.querySelector(".tooltip-panel img"));
+    await waitUntil(() => toolboxDoc.querySelector(".tooltip-panel img"));
   }
 
   /**
    * Hide a tooltip on the {target} and verify that it was closed.
    */
-  function* hideTooltipAndVerify(target) {
+  async function hideTooltipAndVerify(target) {
     // Hovering over the "method" column hides the tooltip.
     let anchor = target.querySelector(".requests-list-method");
     let win = anchor.ownerDocument.defaultView;
     EventUtils.synthesizeMouseAtCenter(anchor, { type: "mousemove" }, win);
 
-    yield waitUntil(
+    await waitUntil(
       () => !toolboxDoc.querySelector(".tooltip-container.tooltip-visible"));
     info("Tooltip was successfully closed.");
   }

@@ -7,8 +7,8 @@
  * Tests if keyboard and mouse navigation works in the network requests menu.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on Ubuntu builds running on ec2.
@@ -31,10 +31,10 @@ add_task(function* () {
   }
 
   let wait = waitForNetworkEvents(monitor, 2);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests(2);
   });
-  yield wait;
+  await wait;
 
   document.querySelector(".requests-list-contents").focus();
 
@@ -56,10 +56,10 @@ add_task(function* () {
   check(0, true);
 
   wait = waitForNetworkEvents(monitor, 18);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests(18);
   });
-  yield wait;
+  await wait;
 
   EventUtils.sendKey("DOWN", window);
   check(1, true);
@@ -127,5 +127,5 @@ add_task(function* () {
     document.querySelector(".request-list-item"));
   check(0, true);
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

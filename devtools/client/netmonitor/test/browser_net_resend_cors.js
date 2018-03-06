@@ -8,8 +8,8 @@
  * a preflight OPTIONS request (bug 1270096 and friends)
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CORS_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CORS_URL);
   info("Starting test... ");
 
   let { store, windowRequire, connector } = monitor.panelWin;
@@ -25,10 +25,10 @@ add_task(function* () {
 
   info("Waiting for OPTIONS, then POST");
   let wait = waitForNetworkEvents(monitor, 2);
-  yield ContentTask.spawn(tab.linkedBrowser, requestUrl, function* (url) {
+  await ContentTask.spawn(tab.linkedBrowser, requestUrl, async function (url) {
     content.wrappedJSObject.performRequests(url, "triggering/preflight", "post-data");
   });
-  yield wait;
+  await wait;
 
   const METHODS = ["OPTIONS", "POST"];
   const ITEMS = METHODS.map((val, i) => getSortedRequests(store.getState()).get(i));
@@ -48,7 +48,7 @@ add_task(function* () {
 
     // Wait for requestHeaders and responseHeaders are required when fetching data
     // from back-end.
-    yield waitUntil(() => {
+    await waitUntil(() => {
       item = getRequestById(store.getState(), item.id);
       return item.requestHeaders && item.responseHeaders;
     });
@@ -61,11 +61,11 @@ add_task(function* () {
     info("Sending the cloned request (without change)");
     store.dispatch(Actions.sendCustomRequest(connector));
 
-    yield waitUntil(() => getSortedRequests(store.getState()).size === size + 1);
+    await waitUntil(() => getSortedRequests(store.getState()).size === size + 1);
   }
 
   info("Waiting for both resent requests");
-  yield onRequests;
+  await onRequests;
 
   // Check the resent requests
   for (let i = 0; i < ITEMS.length; i++) {
@@ -79,14 +79,14 @@ add_task(function* () {
 
       // Trigger responseContent update requires to wait until
       // responseContentAvailable set true
-      yield waitUntil(() => {
+      await waitUntil(() => {
         item = getRequestById(store.getState(), item.id);
         return item.responseContentAvailable;
       });
-      yield connector.requestData(item.id, "responseContent");
+      await connector.requestData(item.id, "responseContent");
 
       // Wait for both requestPostData & responseContent payloads arrived.
-      yield waitUntil(() => {
+      await waitUntil(() => {
         item = getRequestById(store.getState(), item.id);
         return item.responseContent && item.requestPostData;
       });
