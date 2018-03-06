@@ -10,6 +10,7 @@
 #include "mozilla/Preferences.h"
 #include "MediaContainerType.h"
 #include "MediaPrefs.h"
+#include "nsMimeTypes.h"
 #ifdef XP_WIN
 #include "WMFDecoderModule.h"
 #endif
@@ -340,13 +341,13 @@ GetSupportedKeySystems()
       } DataForValidation;
 
       DataForValidation validationList[] = {
-        { nsCString("video/mp4"), EME_CODEC_H264, MediaDrmProxy::AVC, &widevine.mMP4 },
-        { nsCString("video/mp4"), EME_CODEC_VP9, MediaDrmProxy::AVC, &widevine.mMP4 },
-        { nsCString("audio/mp4"), EME_CODEC_AAC, MediaDrmProxy::AAC, &widevine.mMP4 },
-        { nsCString("video/webm"), EME_CODEC_VP8, MediaDrmProxy::VP8, &widevine.mWebM },
-        { nsCString("video/webm"), EME_CODEC_VP9, MediaDrmProxy::VP9, &widevine.mWebM},
-        { nsCString("audio/webm"), EME_CODEC_VORBIS, MediaDrmProxy::VORBIS, &widevine.mWebM},
-        { nsCString("audio/webm"), EME_CODEC_OPUS, MediaDrmProxy::OPUS, &widevine.mWebM},
+        { nsCString(VIDEO_MP4), EME_CODEC_H264, MediaDrmProxy::AVC, &widevine.mMP4 },
+        { nsCString(VIDEO_MP4), EME_CODEC_VP9, MediaDrmProxy::AVC, &widevine.mMP4 },
+        { nsCString(AUDIO_MP4), EME_CODEC_AAC, MediaDrmProxy::AAC, &widevine.mMP4 },
+        { nsCString(VIDEO_WEBM), EME_CODEC_VP8, MediaDrmProxy::VP8, &widevine.mWebM },
+        { nsCString(VIDEO_WEBM), EME_CODEC_VP9, MediaDrmProxy::VP9, &widevine.mWebM},
+        { nsCString(AUDIO_WEBM), EME_CODEC_VORBIS, MediaDrmProxy::VORBIS, &widevine.mWebM},
+        { nsCString(AUDIO_WEBM), EME_CODEC_OPUS, MediaDrmProxy::OPUS, &widevine.mWebM},
       };
 
       for (const auto& data: validationList) {
