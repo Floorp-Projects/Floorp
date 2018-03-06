@@ -979,25 +979,22 @@ LiveSavedFrameCache::FramePtr::create(const FrameIter& iter)
     if (iter.done())
         return mozilla::Nothing();
 
-    if (iter.hasUsableAbstractFramePtr()) {
-        auto afp = iter.abstractFramePtr();
+    if (iter.isPhysicalJitFrame())
+        return mozilla::Some(FramePtr(iter.physicalJitFrame()));
 
-        if (afp.isInterpreterFrame())
-            return mozilla::Some(FramePtr(afp.asInterpreterFrame()));
-        if (afp.isBaselineFrame())
-            return mozilla::Some(FramePtr(afp.asBaselineFrame()));
-        if (afp.isWasmDebugFrame())
-            return mozilla::Some(FramePtr(afp.asWasmDebugFrame()));
-        if (afp.isRematerializedFrame())
-            return mozilla::Some(FramePtr(afp.asRematerializedFrame()));
-
+    if (!iter.hasUsableAbstractFramePtr())
         return mozilla::Nothing();
-    }
 
-    if (iter.isPhysicalIonFrame())
-        return mozilla::Some(FramePtr(iter.physicalIonFrame()));
+    auto afp = iter.abstractFramePtr();
 
-    return mozilla::Nothing();
+    if (afp.isInterpreterFrame())
+        return mozilla::Some(FramePtr(afp.asInterpreterFrame()));
+    if (afp.isWasmDebugFrame())
+        return mozilla::Some(FramePtr(afp.asWasmDebugFrame()));
+    if (afp.isRematerializedFrame())
+        return mozilla::Some(FramePtr(afp.asRematerializedFrame()));
+
+    MOZ_CRASH("unexpected frame type");
 }
 
 struct LiveSavedFrameCache::FramePtr::HasCachedMatcher {
