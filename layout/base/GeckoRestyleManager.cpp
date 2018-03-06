@@ -3665,7 +3665,7 @@ AutoDisplayContentsAncestorPusher::AutoDisplayContentsAncestorPusher(
   , mPresContext(aPresContext)
 {
   if (aParent) {
-    nsFrameManager* fm = mPresContext->FrameManager();
+    nsFrameManager* fm = mPresContext->FrameConstructor();
     // Push display:contents mAncestors onto mTreeMatchContext.
     for (nsIContent* p = aParent; p && fm->GetDisplayContentsStyleFor(p);
          p = p->GetParent()) {
