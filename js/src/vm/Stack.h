@@ -1173,14 +1173,27 @@ class LiveSavedFrameCache
     using FramePtr = mozilla::Variant<AbstractFramePtr, jit::CommonFrameLayout*>;
 
   private:
+    // A key in the cache: the address of a frame, live or dead, for which we
+    // can cache SavedFrames. Since the pointer may not be live, the only
+    // operation this type permits is comparison.
+    class Key {
+        FramePtr framePtr;
+
+      public:
+        MOZ_IMPLICIT Key(const FramePtr& framePtr) : framePtr(framePtr) { }
+
+        bool operator==(const Key& rhs) const { return rhs.framePtr == this->framePtr; }
+        bool operator!=(const Key& rhs) const { return !(rhs == *this); }
+    };
+
     struct Entry
     {
-        const FramePtr       framePtr;
+        const Key            key;
         const jsbytecode*    pc;
         HeapPtr<SavedFrame*> savedFrame;
 
-        Entry(const FramePtr& framePtr, const jsbytecode* pc, SavedFrame* savedFrame)
-          : framePtr(framePtr)
+        Entry(const Key& key, const jsbytecode* pc, SavedFrame* savedFrame)
+          : key(key)
           , pc(pc)
           , savedFrame(savedFrame)
         { }
