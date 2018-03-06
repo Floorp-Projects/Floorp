@@ -35,6 +35,7 @@
 #include "nsILineInputStream.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Types.h"
 #include "mozilla/PeerIdentity.h"
@@ -156,7 +157,6 @@ typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
 struct DeviceState {
   DeviceState(const RefPtr<MediaDevice>& aDevice, bool aOffWhileDisabled)
     : mOffWhileDisabled(aOffWhileDisabled)
-    , mDisableTimer(new MediaTimer())
     , mDevice(aDevice)
   {
     MOZ_ASSERT(mDevice);
@@ -168,11 +168,15 @@ struct DeviceState {
 
   // true if mDevice is currently enabled, i.e., turned on and capturing.
   // MainThread only.
-  bool mDeviceEnabled = true;
+  bool mDeviceEnabled = false;
 
   // true if the application has currently enabled mDevice.
   // MainThread only.
-  bool mTrackEnabled = true;
+  bool mTrackEnabled = false;
+
+  // Time when the application last enabled mDevice.
+  // MainThread only.
+  TimeStamp mTrackEnabledTime;
 
   // true if an operation to Start() or Stop() mDevice has been dispatched to
   // the media thread and is not finished yet.
@@ -188,7 +192,7 @@ struct DeviceState {
   // disabled. When the timer fires we initiate Stop()ing mDevice.
   // If set we allow dynamically stopping and starting mDevice.
   // Any thread.
-  const RefPtr<MediaTimer> mDisableTimer;
+  const RefPtr<MediaTimer> mDisableTimer = new MediaTimer();
 
   // The underlying device we keep state for. Always non-null.
   // Threadsafe access, but see method declarations for individual constraints.
@@ -239,6 +243,8 @@ FromCaptureState(CaptureState aState)
  */
 class SourceListener : public SupportsWeakPtr<SourceListener> {
 public:
+  typedef MozPromise<bool /* aIgnored */, RefPtr<MediaMgrError>, true> InitPromise;
+
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SourceListener)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(SourceListener)
 
@@ -255,6 +261,11 @@ public:
   void Activate(SourceMediaStream* aStream,
                 MediaDevice* aAudioDevice,
                 MediaDevice* aVideoDevice);
+
+  /**
+   * Posts a task to initialize and start all associated devices.
+   */
+  RefPtr<InitPromise> InitializeAsync();
 
   /**
    * Stops all live tracks, finishes the associated MediaStream and cleans up.
@@ -1374,89 +1385,32 @@ public:
     // because that can take a while.
     // Pass ownership of domStream through the lambda to the nested chrome
     // notification lambda to ensure it's kept alive until that lambda runs or is discarded.
-    RefPtr<GetUserMediaStreamRunnable> self = this;
-    MediaManager::PostTask(NewTaskFrom([self, domStream, callback]() mutable {
-      MOZ_ASSERT(MediaManager::IsInMediaThread());
-      RefPtr<SourceMediaStream> source =
-        self->mSourceListener->GetSourceStream();
-
-      RefPtr<MediaMgrError> error = nullptr;
-      if (self->mAudioDevice) {
-        nsresult rv = self->mAudioDevice->SetTrack(source,
-                                                   kAudioTrack,
-                                                   self->mSourceListener->GetPrincipalHandle());
-        if (NS_SUCCEEDED(rv)) {
-          rv = self->mAudioDevice->Start();
-        } else {
-          nsString log;
-          if (rv == NS_ERROR_NOT_AVAILABLE) {
-            log.AssignASCII("Concurrent mic process limit.");
-            error = new MediaMgrError(NS_LITERAL_STRING("NotReadableError"), log);
-          } else {
-            log.AssignASCII("Starting audio failed");
-            error = new MediaMgrError(NS_LITERAL_STRING("InternalError"), log);
-          }
-        }
-      }
-
-      if (!error && self->mVideoDevice) {
-        nsresult rv = self->mVideoDevice->SetTrack(source,
-                                                   kVideoTrack,
-                                                   self->mSourceListener->GetPrincipalHandle());
-        if (NS_SUCCEEDED(rv)) {
-          rv = self->mVideoDevice->Start();
-        }
-        if (NS_FAILED(rv)) {
-          nsString log;
-          log.AssignASCII("Starting video failed");
-          error = new MediaMgrError(NS_LITERAL_STRING("InternalError"), log);
-        }
-      }
-
-      if (error) {
-        // Dispatch the error callback on main thread.
-        NS_DispatchToMainThread(MakeAndAddRef<ErrorCallbackRunnable>(
-          self->mOnFailure, *error, self->mWindowID));
-        return NS_OK;
-      }
-
-      // Start() queued the tracks to be added synchronously to avoid races
-      source->FinishAddTracks();
-
-      source->AdvanceKnownTracksTime(STREAM_TIME_MAX);
-
-      LOG(("started all sources"));
-
-      // onTracksAvailableCallback must be added to domStream on the main thread.
-      uint64_t windowID = self->mWindowID;
-      NS_DispatchToMainThread(NS_NewRunnableFunction("MediaManager::NotifyChromeOfStart",
-                                                     [source, domStream, callback, windowID]() mutable {
-        source->SetPullEnabled(true);
-
-        MediaManager* manager = MediaManager::GetIfExists();
-        if (!manager) {
-          return;
-        }
-
-        nsGlobalWindowInner* window =
-          nsGlobalWindowInner::GetInnerWindowWithId(windowID);
-        if (!window) {
-          MOZ_ASSERT_UNREACHABLE("Should have window");
-          return;
-        }
-
+    mSourceListener->InitializeAsync()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [manager = mManager, domStream, callback,
+       windowListener = mWindowListener]()
+      {
+        // Initiating and starting devices succeeded.
+        // onTracksAvailableCallback must be added to domStream on main thread.
         domStream->OnTracksAvailable(callback->release());
+        windowListener->ChromeAffectingStateChanged();
+        manager->SendPendingGUMRequest();
+      },[manager = mManager, windowID = mWindowID,
+         onFailure = Move(mOnFailure)](const RefPtr<MediaMgrError>& error)
+      {
+        // Initiating and starting devices failed.
 
-        nsresult rv = MediaManager::NotifyRecordingStatusChange(window->AsInner());
-        if (NS_FAILED(rv)) {
-          MOZ_ASSERT_UNREACHABLE("Should be able to notify chrome");
+        // Only run if the window is still active for our window listener.
+        if (!(manager->IsWindowStillActive(windowID))) {
           return;
         }
-
-        manager->SendPendingGUMRequest();
-      }));
-      return NS_OK;
-    }));
+        // This is safe since we're on main-thread, and the windowlist can only
+        // be invalidated from the main-thread (see OnNavigation)
+        if (auto* window = nsGlobalWindowInner::GetInnerWindowWithId(windowID)) {
+          auto streamError = MakeRefPtr<MediaStreamError>(window->AsInner(), *error);
+          onFailure->OnError(streamError);
+        }
+      });
 
     if (!IsPincipalInfoPrivate(mPrincipalInfo)) {
       // Call GetPrincipalKey again, this time w/persist = true, to promote
@@ -2147,6 +2101,20 @@ MediaManager::PostTask(already_AddRefed<Runnable> task)
   NS_ASSERTION(Get(), "MediaManager singleton?");
   NS_ASSERTION(Get()->mMediaThread, "No thread yet");
   Get()->mMediaThread->message_loop()->PostTask(Move(task));
+}
+
+template<typename MozPromiseType, typename FunctionType>
+/* static */ RefPtr<MozPromiseType>
+MediaManager::PostTask(const char* aName, FunctionType&& aFunction)
+{
+  MozPromiseHolder<MozPromiseType> holder;
+  RefPtr<MozPromiseType> promise = holder.Ensure(aName);
+  MediaManager::PostTask(NS_NewRunnableFunction(aName,
+        [h = Move(holder), func = Forward<FunctionType>(aFunction)]() mutable
+        {
+          func(h);
+        }));
+  return promise;
 }
 
 /* static */ nsresult
@@ -3824,6 +3792,110 @@ SourceListener::Activate(SourceMediaStream* aStream,
   mStream->AddListener(mStreamListener);
 }
 
+RefPtr<SourceListener::InitPromise>
+SourceListener::InitializeAsync()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
+  MOZ_DIAGNOSTIC_ASSERT(!mStopped);
+
+  RefPtr<InitPromise> init = MediaManager::PostTask<InitPromise>(__func__,
+    [ stream = mStream
+    , principal = GetPrincipalHandle()
+    , audioDevice = mAudioDeviceState ? mAudioDeviceState->mDevice : nullptr
+    , videoDevice = mVideoDeviceState ? mVideoDeviceState->mDevice : nullptr
+    ](MozPromiseHolder<InitPromise>& aHolder)
+    {
+      if (audioDevice) {
+        nsresult rv = audioDevice->SetTrack(stream, kAudioTrack, principal);
+        if (NS_SUCCEEDED(rv)) {
+          rv = audioDevice->Start();
+        }
+        if (NS_FAILED(rv)) {
+          nsString log;
+          if (rv == NS_ERROR_NOT_AVAILABLE) {
+            log.AssignASCII("Concurrent mic process limit.");
+            aHolder.Reject(MakeRefPtr<MediaMgrError>(
+                  NS_LITERAL_STRING("NotReadableError"), log), __func__);
+            return;
+          }
+          log.AssignASCII("Starting audio failed");
+          aHolder.Reject(MakeRefPtr<MediaMgrError>(
+                NS_LITERAL_STRING("InternalError"), log), __func__);
+          return;
+        }
+      }
+
+      if (videoDevice) {
+        nsresult rv = videoDevice->SetTrack(stream, kVideoTrack, principal);
+        if (NS_SUCCEEDED(rv)) {
+          rv = videoDevice->Start();
+        }
+        if (NS_FAILED(rv)) {
+          if (audioDevice) {
+            if (NS_WARN_IF(NS_FAILED(audioDevice->Stop()))) {
+              MOZ_ASSERT_UNREACHABLE("Stopping audio failed");
+            }
+          }
+          nsString log;
+          log.AssignASCII("Starting video failed");
+          aHolder.Reject(MakeRefPtr<MediaMgrError>(NS_LITERAL_STRING("InternalError"), log), __func__);
+          return;
+        }
+      }
+
+      // Start() queued the tracks to be added synchronously to avoid races
+      stream->FinishAddTracks();
+      stream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
+      LOG(("started all sources"));
+
+      aHolder.Resolve(true, __func__);
+    });
+
+  return init->Then(GetMainThreadSerialEventTarget(), __func__,
+    [self = RefPtr<SourceListener>(this), this]()
+    {
+      if (mStopped) {
+        // We were shut down during the async init
+        return InitPromise::CreateAndResolve(true, __func__);
+      }
+
+      mStream->SetPullEnabled(true);
+
+      for (DeviceState* state : {mAudioDeviceState.get(),
+                                 mVideoDeviceState.get()}) {
+        if (!state) {
+          continue;
+        }
+        MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
+        MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
+        MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
+
+        state->mDeviceEnabled = true;
+        state->mTrackEnabled = true;
+        state->mTrackEnabledTime = TimeStamp::Now();
+      }
+      return InitPromise::CreateAndResolve(true, __func__);
+    }, [self = RefPtr<SourceListener>(this), this](RefPtr<MediaMgrError>&& aResult)
+    {
+      if (mStopped) {
+        return InitPromise::CreateAndReject(Move(aResult), __func__);
+      }
+
+      for (DeviceState* state : {mAudioDeviceState.get(),
+                                 mVideoDeviceState.get()}) {
+        if (!state) {
+          continue;
+        }
+        MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
+        MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
+        MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
+
+        state->mStopped = true;
+      }
+      return InitPromise::CreateAndReject(Move(aResult), __func__);
+    });
+}
+
 void
 SourceListener::Stop()
 {
@@ -3956,7 +4028,6 @@ SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable)
     return;
   }
 
-
   if (state.mOperationInProgress) {
     // If a timer is in progress, it needs to be canceled now so the next
     // DisableTrack() gets a fresh start. Canceling will trigger another
@@ -3977,20 +4048,26 @@ SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable)
   RefPtr<MediaTimerPromise> timerPromise;
   if (aEnable) {
     timerPromise = MediaTimerPromise::CreateAndResolve(true, __func__);
+    state.mTrackEnabledTime = TimeStamp::Now();
   } else {
-    const TimeDuration offDelay = TimeDuration::FromMilliseconds(
+    const TimeDuration maxDelay = TimeDuration::FromMilliseconds(
       Preferences::GetUint(
         aTrackID == kAudioTrack
           ? "media.getusermedia.microphone.off_while_disabled.delay_ms"
           : "media.getusermedia.camera.off_while_disabled.delay_ms",
         3000));
-    timerPromise = state.mDisableTimer->WaitFor(offDelay, __func__);
+    const TimeDuration durationEnabled =
+      TimeStamp::Now() - state.mTrackEnabledTime;
+    const TimeDuration delay =
+      TimeDuration::Max(TimeDuration::FromMilliseconds(0),
+                        maxDelay - durationEnabled);
+    timerPromise = state.mDisableTimer->WaitFor(delay, __func__);
   }
 
   typedef MozPromise<nsresult, bool, /* IsExclusive = */ true> DeviceOperationPromise;
   RefPtr<SourceListener> self = this;
   timerPromise->Then(GetMainThreadSerialEventTarget(), __func__,
-    [self, this, &state, aTrackID, aEnable](bool aDummy) mutable {
+    [self, this, &state, aTrackID, aEnable]() mutable {
       MOZ_ASSERT(state.mDeviceEnabled != aEnable,
                  "Device operation hasn't started");
       MOZ_ASSERT(state.mOperationInProgress,
@@ -4014,15 +4091,12 @@ SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable)
         return DeviceOperationPromise::CreateAndResolve(NS_OK, __func__);
       }
 
-      RefPtr<DeviceOperationPromise::Private> promise =
-        new DeviceOperationPromise::Private(__func__);
-      MediaManager::PostTask(NewTaskFrom([self, device = state.mDevice,
-                                          aEnable, promise]() mutable {
-        promise->Resolve(aEnable ? device->Start() : device->Stop(), __func__);
-      }));
-      RefPtr<DeviceOperationPromise> result = promise.get();
-      return result;
-    }, [](bool aDummy) {
+      return MediaManager::PostTask<DeviceOperationPromise>(__func__,
+          [self, device = state.mDevice, aEnable]
+          (MozPromiseHolder<DeviceOperationPromise>& h) {
+            h.Resolve(aEnable ? device->Start() : device->Stop(), __func__);
+          });
+    }, []() {
       // Timer was canceled by us. We signal this with NS_ERROR_ABORT.
       return DeviceOperationPromise::CreateAndResolve(NS_ERROR_ABORT, __func__);
     })->Then(GetMainThreadSerialEventTarget(), __func__,
@@ -4082,7 +4156,7 @@ SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable)
       } else {
         SetEnabledFor(aTrackID, false);
       }
-    }, [](bool aDummy) {
+    }, []() {
       MOZ_ASSERT_UNREACHABLE("Unexpected and unhandled reject");
     });
 }
