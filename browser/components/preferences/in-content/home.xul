@@ -1,0 +1,15 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- Home panel -->
+
+<script type="application/javascript"
+        src="chrome://browser/content/preferences/in-content/home.js"/>
+
+<hbox id="firefoxHomeCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneHome">
+  <label class="header-name" flex="1" data-l10n-id="pane-home-title" />
+</hbox>
