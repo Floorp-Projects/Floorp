@@ -6,7 +6,7 @@
 
 #include "mozilla/layers/APZSampler.h"
 
-#include "mozilla/layers/APZCTreeManager.h"
+#include "APZCTreeManager.h"
 #include "mozilla/layers/CompositorThread.h"
 
 namespace mozilla {
