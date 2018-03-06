@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test mid-flight cross site redirects are blocked</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="manifest.js"></script>
+  </head>
+  <body>
+    <pre id='test'>
+    <script class="testbody" type='application/javascript'>
+
+      function testIfLoadsToMetadata(test, useCors) {
+        return new Promise(function(resolve, reject) {
+          var elemType = getMajorMimeType(test.type);
+          var element = document.createElement(elemType);
+
+          if (useCors) {
+            element.crossOrigin = "anonymous";
+          }
+
+          // Log events for debugging.
+          [
+            "suspend", "play", "canplay", "canplaythrough", "loadstart",
+            "loadedmetadata", "loadeddata", "playing", "ended", "error",
+            "stalled", "emptied", "abort", "waiting", "pause"
+          ].forEach((eventName) => {
+            element.addEventListener(eventName, (event)=> {
+              info(test.name + " " + event.type);
+            });
+          });
+
+          element.addEventListener("loadedmetadata", ()=>{
+            resolve(true);
+            removeNodeAndSource(element);
+          }, false);
+
+          element.addEventListener("error", ()=>{
+            resolve(false);
+            removeNodeAndSource(element);
+          }, false);
+
+          let suffix = useCors ? "&cors" : "";
+          element.src = "midflight-redirect.sjs?resource=" + test.name + suffix;
+          element.preload = "metadata";
+          document.body.appendChild(element);
+          element.load()
+        });
+      }
+
+      let v = document.createElement("video");
+      const testCases = gSmallTests.filter(t => v.canPlayType(t.type));
+
+      function testMediaLoad(expectedToLoad, message, useCors) {
+        return new Promise(async function(resolve, reject) {
+          for (let test of testCases) {
+            let loaded = await testIfLoadsToMetadata(test, useCors);
+            is(loaded, expectedToLoad, test.name + " " + message);
+          }
+          resolve();
+        });
+      }
+
+      async function runTest() {
+        try {
+          SimpleTest.info("Allowing midflight redirects...");
+          await SpecialPowers.pushPrefEnv({'set': [["media.block-midflight-redirects", false]]});
+
+          SimpleTest.info("Test that all media plays...");
+          await testMediaLoad(true, "expected to load", false);
+
+          SimpleTest.info("Blocking midflight redirects...");
+          await SpecialPowers.pushPrefEnv({'set': [["media.block-midflight-redirects", true]]});
+
+          SimpleTest.info("Test that all media no longer play...");
+          await testMediaLoad(false, "expected to be blocked", false);
+
+          SimpleTest.info("Test that all media play if CORS used...");
+          await testMediaLoad(true, "expected to play with CORS", true);
+        } catch (e) {
+          info("Exception " + e.message);
+          ok(false, "Threw exception " + e.message);
+        }
+        SimpleTest.finish();
+      }
+
+      SimpleTest.waitForExplicitFinish();
+
+      addLoadEvent(runTest);
+
+    </script>
+    </pre>
+  </body>
+</html>
