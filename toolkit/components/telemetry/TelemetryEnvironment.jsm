@@ -200,7 +200,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["browser.cache.offline.enable", {what: RECORD_PREF_VALUE}],
   ["browser.formfill.enable", {what: RECORD_PREF_VALUE}],
   ["browser.newtabpage.enabled", {what: RECORD_PREF_VALUE}],
-  ["browser.newtabpage.enhanced", {what: RECORD_PREF_VALUE}],
   ["browser.shell.checkDefaultBrowser", {what: RECORD_PREF_VALUE}],
   ["browser.search.ignoredJAREngines", {what: RECORD_DEFAULTPREF_VALUE}],
   ["browser.search.region", {what: RECORD_PREF_VALUE}],
