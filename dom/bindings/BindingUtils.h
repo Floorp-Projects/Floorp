@@ -3203,7 +3203,7 @@ class PinnedStringId
   jsid id;
 
  public:
-  PinnedStringId() : id(JSID_VOID) {}
+  constexpr PinnedStringId() : id(JSID_VOID) {}
 
   bool init(JSContext *cx, const char *string) {
     JSString* str = JS_AtomizeAndPinString(cx, string);
