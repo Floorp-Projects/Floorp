@@ -15,6 +15,7 @@ from taskgraph.util.scriptworker import (
     get_signing_cert_scope_per_platform,
     get_worker_type_for_scope,
 )
+from taskgraph.util.taskcluster import get_artifact_path
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
@@ -96,7 +97,7 @@ def make_repackage_signing_description(config, jobs):
             "taskId": {"task-reference": "<repackage>"},
             "taskType": "repackage",
             "paths": [
-                "public/build/{}target.complete.mar".format(locale_str),
+                get_artifact_path(dep_job, "{}target.complete.mar".format(locale_str)),
             ],
             "formats": ["mar_sha384"]
         }]
@@ -105,7 +106,7 @@ def make_repackage_signing_description(config, jobs):
                 "taskId": {"task-reference": "<repackage>"},
                 "taskType": "repackage",
                 "paths": [
-                    "public/build/{}target.installer.exe".format(locale_str),
+                    get_artifact_path(dep_job, "{}target.installer.exe".format(locale_str)),
                 ],
                 "formats": ["sha2signcode"]
             })
@@ -117,7 +118,9 @@ def make_repackage_signing_description(config, jobs):
                     "taskId": {"task-reference": "<repackage>"},
                     "taskType": "repackage",
                     "paths": [
-                        "public/build/{}target.stub-installer.exe".format(locale_str),
+                        get_artifact_path(
+                            dep_job, "{}target.stub-installer.exe".format(locale_str)
+                        ),
                     ],
                     "formats": ["sha2signcodestub"]
                 })
