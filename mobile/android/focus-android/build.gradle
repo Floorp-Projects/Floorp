@@ -4,7 +4,7 @@ buildscript {
     ext.architecture_components_version = '1.1.0'
     ext.support_libraries_version = '27.0.2'
     ext.espresso_version = '3.0.1'
-    ext.kotlin_version = '1.2.21'
+    ext.kotlin_version = '1.2.30'
 
     repositories {
         google()
@@ -29,7 +29,7 @@ plugins {
     // other methods involve using undocumented APIs
     // https://docs.gradle.org/current/userguide/plugins.html#plugins_dsl_limitations
     id "io.gitlab.arturbosch.detekt" version "1.0.0.RC6-3"
-    id "org.jetbrains.kotlin.kapt" version "1.2.0"
+    id "org.jetbrains.kotlin.kapt" version "1.2.30"
 }
 
 detekt {
