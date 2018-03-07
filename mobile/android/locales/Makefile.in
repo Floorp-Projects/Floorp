@@ -41,12 +41,12 @@ clobber-stage:
 # the current value of AB_CD
 libs-%: AB_CD=$*
 libs-%:
-	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
-	@$(MAKE) -C $(DEPTH)/mobile/locales libs-$*
-	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
-	@$(MAKE) multilocale.txt-$* AB_CD=$* XPI_NAME=locale-$*
+	$(if $(filter en-US,$(AB_CD)),, $(MAKE) merge-$*)
+	$(MAKE) -C $(DEPTH)/mobile/locales libs-$*
+	$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
+	$(MAKE) multilocale.txt-$* AB_CD=$* XPI_NAME=locale-$*
 ifeq ($(OS_TARGET),Android)
-	@$(MAKE) -C $(DEPTH)/mobile/android/base/locales AB_CD=$* XPI_NAME=locale-$*
+	$(MAKE) -C $(DEPTH)/mobile/android/base/locales AB_CD=$* XPI_NAME=locale-$*
 endif
 
 # Tailored target to just add the chrome processing for multi-locale builds
@@ -55,11 +55,11 @@ endif
 chrome-%: AB_CD=$*
 chrome-%: IS_LANGUAGE_REPACK=1
 chrome-%:
-	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
-	@$(MAKE) -C $(DEPTH)/mobile/locales chrome-$*
-	@$(MAKE) chrome AB_CD=$*
+	$(if $(filter en-US,$(AB_CD)),, $(MAKE) merge-$*)
+	$(MAKE) -C $(DEPTH)/mobile/locales chrome-$*
+	$(MAKE) chrome AB_CD=$*
 ifeq ($(OS_TARGET),Android)
-	@$(MAKE) -C $(DEPTH)/mobile/android/base/locales chrome-$*
+	$(MAKE) -C $(DEPTH)/mobile/android/base/locales chrome-$*
 endif
 
 langpack: langpack-$(AB_CD)
@@ -69,10 +69,10 @@ langpack: langpack-$(AB_CD)
 
 installers-%: IS_LANGUAGE_REPACK=1
 installers-%:
-	@$(MAKE) clobber-stage
-	@$(MAKE) libs-$*
-	@$(MAKE) package-langpack-$*
-	@$(MAKE) repackage-zip-$*
+	$(MAKE) clobber-stage
+	$(MAKE) libs-$*
+	$(MAKE) package-langpack-$*
+	$(MAKE) repackage-zip-$*
 	@echo 'repackaging done'
 
 # When we unpack fennec on MacOS X the platform.ini and application.ini are in slightly
