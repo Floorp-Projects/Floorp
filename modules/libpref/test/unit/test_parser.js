@@ -10,7 +10,7 @@ function run_test() {
   var prefs = ps.getBranch(null);
 
   ps.resetPrefs();
-  ps.readUserPrefsFromFile(do_get_file('data/testParser.js'));
+  ps.readDefaultPrefsFromFile(do_get_file('data/testParser.js'));
 
   Assert.equal(ps.getBoolPref("comment1"), true);
   Assert.equal(ps.getBoolPref("comment2"), true);
@@ -19,6 +19,11 @@ function run_test() {
   Assert.equal(ps.getBoolPref("pref"), true);
   Assert.equal(ps.getBoolPref("sticky_pref"), true);
   Assert.equal(ps.getBoolPref("user_pref"), true);
+  Assert.equal(ps.getBoolPref("sticky_pref2"), true);
+  Assert.equal(ps.getBoolPref("locked_pref"), true);
+  Assert.equal(ps.getBoolPref("locked_sticky_pref"), true);
+  Assert.equal(ps.prefIsLocked("locked_pref"), true);
+  Assert.equal(ps.prefIsLocked("locked_sticky_pref"), true);
 
   Assert.equal(ps.getBoolPref("bool.true"), true);
   Assert.equal(ps.getBoolPref("bool.false"), false);
