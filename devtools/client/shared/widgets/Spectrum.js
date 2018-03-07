@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -14,7 +14,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  *
  * const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
  * let s = new Spectrum(containerElement, [255, 126, 255, 1]);
- * s.on("changed", (event, rgba, color) => {
+ * s.on("changed", (rgba, color) => {
  *   console.log("rgba(" + rgba[0] + ", " + rgba[1] + ", " + rgba[2] + ", " +
  *     rgba[3] + ")");
  * });
