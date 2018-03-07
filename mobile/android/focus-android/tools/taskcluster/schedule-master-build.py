@@ -63,7 +63,7 @@ def generate_ui_test_task(dependencies):
 		})
 
 
-def generate_release_task(uiTestTaskId):
+def generate_release_task(dependencies):
 	return taskcluster.slugId(), generate_task(
 		name = "(Focus for Android) Preview release",
 		description = "Build preview versions for testing Focus/Klar for Android.",
@@ -72,7 +72,7 @@ def generate_release_task(uiTestTaskId):
 			       ' && python tools/taskcluster/sign-preview-builds.py'
 			       ' && touch /opt/focus-android/builds/`date +"%Y-%m-%d-%H-%M"`'
 			       ' && touch /opt/focus-android/builds/' + COMMIT),
-		dependencies = [ uiTestTaskId ],
+		dependencies = dependencies,
 		scopes = [
 			"secrets:get:project/focus/preview-key-store",
 			"queue:route:index.project.focus.android.preview-builds"],
@@ -153,6 +153,6 @@ if __name__ == "__main__":
 	uiTestTaskId, uiTestTask = generate_ui_test_task([unitTestTaskId, codeQualityTaskId])
 	schedule_task(queue, uiTestTaskId, uiTestTask)
 
-	releaseTaskId, releaseTask = generate_release_task(uiTestTaskId)
+	releaseTaskId, releaseTask = generate_release_task([unitTestTaskId, codeQualityTaskId])
 	schedule_task(queue, releaseTaskId, releaseTask)
 
