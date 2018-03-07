@@ -51,11 +51,12 @@ public:
   void ToString(nsAString& aString) const;
   void ToUTF8String(nsACString& aString) const;
 
-  // This is only valid for dynamic atoms.
+  // This is not valid for static atoms. The caller must *not* mutate the
+  // string buffer, otherwise all hell will break loose.
   nsStringBuffer* GetStringBuffer() const
   {
     // See the comment on |mString|'s declaration.
-    MOZ_ASSERT(IsDynamicAtom());
+    MOZ_ASSERT(IsDynamicAtom() || IsHTML5Atom());
     return nsStringBuffer::FromData(mString);
   }
 
@@ -98,7 +99,7 @@ protected:
   // non-static atoms it points to the chars in an nsStringBuffer. This means
   // that nsStringBuffer::FromData(mString) calls are only valid for non-static
   // atoms.
-  char16_t* mString;
+  char16_t* const mString;
 };
 
 // A trivial subclass of nsAtom that can be used for known static atoms. The

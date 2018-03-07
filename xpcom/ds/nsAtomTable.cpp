@@ -92,38 +92,47 @@ private:
   mozilla::ThreadSafeAutoRefCnt mRefCnt;
 };
 
+static char16_t*
+FromStringBuffer(const nsAString& aString)
+{
+  char16_t* str;
+  size_t length = aString.Length();
+  RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
+  if (buf) {
+    str = static_cast<char16_t*>(buf->Data());
+  } else {
+    const size_t size = (length + 1) * sizeof(char16_t);
+    buf = nsStringBuffer::Alloc(size);
+    if (MOZ_UNLIKELY(!buf)) {
+      NS_ABORT_OOM(size); // OOM because atom allocations should be small.
+    }
+    str = static_cast<char16_t*>(buf->Data());
+    CopyUnicodeTo(aString, 0, str, length);
+    str[length] = char16_t(0);
+  }
+
+  MOZ_ASSERT(buf && buf->StorageSize() >= (length + 1) * sizeof(char16_t),
+             "enough storage");
+
+  // Take ownership of the string buffer.
+  mozilla::Unused << buf.forget();
+
+  return str;
+}
+
 // This constructor is for dynamic atoms and HTML5 atoms.
 nsAtom::nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash)
   : mLength(aString.Length())
   , mKind(static_cast<uint32_t>(aKind))
   , mHash(aHash)
+  , mString(FromStringBuffer(aString))
 {
   MOZ_ASSERT(aKind == AtomKind::DynamicAtom || aKind == AtomKind::HTML5Atom);
-  RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
-  if (buf) {
-    mString = static_cast<char16_t*>(buf->Data());
-  } else {
-    const size_t size = (mLength + 1) * sizeof(char16_t);
-    buf = nsStringBuffer::Alloc(size);
-    if (MOZ_UNLIKELY(!buf)) {
-      // We OOM because atom allocations should be small and it's hard to
-      // handle them more gracefully in a constructor.
-      NS_ABORT_OOM(size);
-    }
-    mString = static_cast<char16_t*>(buf->Data());
-    CopyUnicodeTo(aString, 0, mString, mLength);
-    mString[mLength] = char16_t(0);
-  }
 
   MOZ_ASSERT_IF(!IsHTML5Atom(), mHash == HashString(mString, mLength));
 
   MOZ_ASSERT(mString[mLength] == char16_t(0), "null terminated");
-  MOZ_ASSERT(buf && buf->StorageSize() >= (mLength + 1) * sizeof(char16_t),
-             "enough storage");
   MOZ_ASSERT(Equals(aString), "correct data");
-
-  // Take ownership of buffer
-  mozilla::Unused << buf.forget();
 }
 
 // This constructor is for static atoms.
@@ -143,7 +152,7 @@ nsAtom::~nsAtom()
 {
   if (!IsStaticAtom()) {
     MOZ_ASSERT(IsDynamicAtom() || IsHTML5Atom());
-    nsStringBuffer::FromData(mString)->Release();
+    GetStringBuffer()->Release();
   }
 }
 
@@ -157,7 +166,7 @@ nsAtom::ToString(nsAString& aString) const
     // which is what's important.
     aString.AssignLiteral(mString, mLength);
   } else {
-    nsStringBuffer::FromData(mString)->ToString(mLength, aString);
+    GetStringBuffer()->ToString(mLength, aString);
   }
 }
 
@@ -182,8 +191,7 @@ nsAtom::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, AtomsSizes& aSizes)
   } else {
     aSizes.mDynamicAtomObjects += thisSize;
     aSizes.mDynamicUnsharedBuffers +=
-      nsStringBuffer::FromData(mString)->SizeOfIncludingThisIfUnshared(
-        aMallocSizeOf);
+      GetStringBuffer()->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
   }
 }
 
