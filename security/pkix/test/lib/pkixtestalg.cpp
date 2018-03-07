@@ -137,14 +137,14 @@ static const uint8_t DSS_G_RAW[] =
 } // namespace
 
 TestSignatureAlgorithm::TestSignatureAlgorithm(
-  const TestPublicKeyAlgorithm& publicKeyAlg,
-  TestDigestAlgorithmID digestAlg,
-  const ByteString& algorithmIdentifier,
-  bool accepted)
-  : publicKeyAlg(publicKeyAlg)
-  , digestAlg(digestAlg)
-  , algorithmIdentifier(algorithmIdentifier)
-  , accepted(accepted)
+  const TestPublicKeyAlgorithm& aPublicKeyAlg,
+  TestDigestAlgorithmID aDigestAlg,
+  const ByteString& aAlgorithmIdentifier,
+  bool aAccepted)
+  : publicKeyAlg(aPublicKeyAlg)
+  , digestAlg(aDigestAlg)
+  , algorithmIdentifier(aAlgorithmIdentifier)
+  , accepted(aAccepted)
 {
 }
 

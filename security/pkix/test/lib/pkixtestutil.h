@@ -87,8 +87,8 @@ enum class TestDigestAlgorithmID
 
 struct TestPublicKeyAlgorithm
 {
-  explicit TestPublicKeyAlgorithm(const ByteString& algorithmIdentifier)
-    : algorithmIdentifier(algorithmIdentifier) { }
+  explicit TestPublicKeyAlgorithm(const ByteString& aAlgorithmIdentifier)
+    : algorithmIdentifier(aAlgorithmIdentifier) { }
   bool operator==(const TestPublicKeyAlgorithm& other) const
   {
     return algorithmIdentifier == other.algorithmIdentifier;

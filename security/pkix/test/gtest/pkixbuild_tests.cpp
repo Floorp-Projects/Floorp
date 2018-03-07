@@ -255,8 +255,8 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 class SingleRootTrustDomain : public DefaultCryptoTrustDomain
 {
 public:
-  explicit SingleRootTrustDomain(ByteString rootDER)
-    : rootDER(rootDER)
+  explicit SingleRootTrustDomain(ByteString aRootDER)
+    : rootDER(aRootDER)
   {
   }
 
@@ -311,8 +311,8 @@ private:
 class ExpiredCertTrustDomain final : public SingleRootTrustDomain
 {
 public:
-  explicit ExpiredCertTrustDomain(ByteString rootDER)
-    : SingleRootTrustDomain(rootDER)
+  explicit ExpiredCertTrustDomain(ByteString aRootDER)
+    : SingleRootTrustDomain(aRootDER)
   {
   }
 
@@ -410,9 +410,9 @@ TEST_F(pkixbuild_DSS, DSSEndEntityKeyNotAccepted)
 class IssuerNameCheckTrustDomain final : public DefaultCryptoTrustDomain
 {
 public:
-  IssuerNameCheckTrustDomain(const ByteString& issuer, bool expectedKeepGoing)
-    : issuer(issuer)
-    , expectedKeepGoing(expectedKeepGoing)
+  IssuerNameCheckTrustDomain(const ByteString& aIssuer, bool aExpectedKeepGoing)
+    : issuer(aIssuer)
+    , expectedKeepGoing(aExpectedKeepGoing)
   {
   }
 
@@ -520,8 +520,8 @@ INSTANTIATE_TEST_CASE_P(pkixbuild_IssuerNameCheck, pkixbuild_IssuerNameCheck,
 class EmbeddedSCTListTestTrustDomain final : public SingleRootTrustDomain
 {
 public:
-  explicit EmbeddedSCTListTestTrustDomain(ByteString rootDER)
-    : SingleRootTrustDomain(rootDER)
+  explicit EmbeddedSCTListTestTrustDomain(ByteString aRootDER)
+    : SingleRootTrustDomain(aRootDER)
   {
   }
 

@@ -135,10 +135,10 @@ enum class AuxiliaryExtension
 struct CertID final
 {
 public:
-  CertID(Input issuer, Input issuerSubjectPublicKeyInfo, Input serialNumber)
-    : issuer(issuer)
-    , issuerSubjectPublicKeyInfo(issuerSubjectPublicKeyInfo)
-    , serialNumber(serialNumber)
+  CertID(Input aIssuer, Input aIssuerSubjectPublicKeyInfo, Input aSerialNumber)
+    : issuer(aIssuer)
+    , issuerSubjectPublicKeyInfo(aIssuerSubjectPublicKeyInfo)
+    , serialNumber(aSerialNumber)
   {
   }
   const Input issuer;
