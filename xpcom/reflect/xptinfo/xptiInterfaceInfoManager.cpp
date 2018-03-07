@@ -140,7 +140,7 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry
     // The number of maximum methods is not arbitrary. It is the same value as
     // in xpcom/reflect/xptcall/genstubs.pl; do not change this value
     // without changing that one or you WILL see problems.
-    if (iface->mInterfaceDescriptor->num_methods > 250 &&
+    if (iface->mInterfaceDescriptor->mNumMethods > 250 &&
             !iface->mInterfaceDescriptor->IsBuiltinClass()) {
         NS_ASSERTION(0, "Too many methods to handle for the stub, cannot load");
         fprintf(stderr, "ignoring too large interface: %s\n", iface->mName);

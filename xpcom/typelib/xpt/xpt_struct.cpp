@@ -212,9 +212,9 @@ InterfaceDescriptorAddType(XPTArena *arena,
                            XPTInterfaceDescriptor *id,
                            XPTTypeDescriptor *td)
 {
-    const XPTTypeDescriptor *old = id->additional_types;
+    const XPTTypeDescriptor *old = id->mAdditionalTypes;
     XPTTypeDescriptor *new_;
-    size_t old_size = id->num_additional_types * sizeof(XPTTypeDescriptor);
+    size_t old_size = id->mNumAdditionalTypes * sizeof(XPTTypeDescriptor);
     size_t new_size = old_size + sizeof(XPTTypeDescriptor);
 
     /* XXX should grow in chunks to minimize alloc overhead */
@@ -225,13 +225,13 @@ InterfaceDescriptorAddType(XPTArena *arena,
         memcpy(new_, old, old_size);
     }
 
-    new_[id->num_additional_types] = *td;
-    id->additional_types = new_;
+    new_[id->mNumAdditionalTypes] = *td;
+    id->mAdditionalTypes = new_;
 
-    if (id->num_additional_types == UINT8_MAX)
+    if (id->mNumAdditionalTypes == UINT8_MAX)
         return false;
 
-    id->num_additional_types += 1;
+    id->mNumAdditionalTypes += 1;
     return true;
 }
 
@@ -258,51 +258,51 @@ DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
         *idp = NULL;
         return true;
     }
-    if(!XPT_Do16(cursor, &id->parent_interface) ||
-       !XPT_Do16(cursor, &id->num_methods)) {
+    if(!XPT_Do16(cursor, &id->mParentInterface) ||
+       !XPT_Do16(cursor, &id->mNumMethods)) {
         return false;
     }
 
     XPTMethodDescriptor* method_descriptors = nullptr;
 
-    if (id->num_methods) {
-        size_t n = id->num_methods * sizeof(XPTMethodDescriptor);
+    if (id->mNumMethods) {
+        size_t n = id->mNumMethods * sizeof(XPTMethodDescriptor);
         method_descriptors =
             static_cast<XPTMethodDescriptor*>(XPT_CALLOC8(arena, n));
         if (!method_descriptors)
             return false;
     }
 
-    for (i = 0; i < id->num_methods; i++) {
+    for (i = 0; i < id->mNumMethods; i++) {
         if (!DoMethodDescriptor(arena, cursor, &method_descriptors[i], id))
             return false;
     }
 
-    id->method_descriptors = method_descriptors;
+    id->mMethodDescriptors = method_descriptors;
 
-    if (!XPT_Do16(cursor, &id->num_constants)) {
+    if (!XPT_Do16(cursor, &id->mNumConstants)) {
         return false;
     }
 
     XPTConstDescriptor* const_descriptors = nullptr;
 
-    if (id->num_constants) {
-        size_t n = id->num_constants * sizeof(XPTConstDescriptor);
+    if (id->mNumConstants) {
+        size_t n = id->mNumConstants * sizeof(XPTConstDescriptor);
         const_descriptors =
             static_cast<XPTConstDescriptor*>(XPT_CALLOC8(arena, n));
         if (!const_descriptors)
             return false;
     }
 
-    for (i = 0; i < id->num_constants; i++) {
+    for (i = 0; i < id->mNumConstants; i++) {
         if (!DoConstDescriptor(arena, cursor, &const_descriptors[i], id)) {
             return false;
         }
     }
 
-    id->const_descriptors = const_descriptors;
+    id->mConstDescriptors = const_descriptors;
 
-    if (!XPT_Do8(cursor, &id->flags)) {
+    if (!XPT_Do8(cursor, &id->mFlags)) {
         return false;
     }
 
@@ -430,7 +430,7 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
             return false;
         if (!InterfaceDescriptorAddType(arena, id, &elementTypeDescriptor))
             return false;
-        td->u.array.additional_type = id->num_additional_types - 1;
+        td->u.array.additional_type = id->mNumAdditionalTypes - 1;
 
         break;
       }
