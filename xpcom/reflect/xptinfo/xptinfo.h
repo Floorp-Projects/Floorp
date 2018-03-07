@@ -123,10 +123,10 @@ public:
         {*(XPTParamDescriptor*)this = desc;}
 
 
-    bool IsIn() const {return !!(flags & kInMask);}
-    bool IsOut() const {return !!(flags & kOutMask);}
-    bool IsRetval() const {return !!(flags & kRetvalMask);}
-    bool IsShared() const {return !!(flags & kSharedMask);}
+    bool IsIn() const {return !!(mFlags & kInMask);}
+    bool IsOut() const {return !!(mFlags & kOutMask);}
+    bool IsRetval() const {return !!(mFlags & kRetvalMask);}
+    bool IsShared() const {return !!(mFlags & kSharedMask);}
 
     // Dipper types are one of the more inscrutable aspects of xpidl. In a
     // nutshell, dippers are empty container objects, created and passed by
@@ -145,9 +145,9 @@ public:
     // masquerading as in'. The burden of maintaining this illusion falls mostly
     // on XPConnect, which creates the empty containers, and harvest the results
     // after the call.
-    bool IsDipper() const {return !!(flags & kDipperMask);}
-    bool IsOptional() const {return !!(flags & kOptionalMask);}
-    const nsXPTType GetType() const {return type.mPrefix;}
+    bool IsDipper() const {return !!(mFlags & kDipperMask);}
+    bool IsOptional() const {return !!(mFlags & kOptionalMask);}
+    const nsXPTType GetType() const {return mType.mPrefix;}
 
     bool IsStringClass() const {
       switch (GetType().TagPart()) {

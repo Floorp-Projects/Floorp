@@ -384,8 +384,8 @@ bool
 DoParamDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
                   XPTParamDescriptor *pd, XPTInterfaceDescriptor *id)
 {
-    if (!XPT_Do8(cursor, &pd->flags) ||
-        !DoTypeDescriptor(arena, cursor, &pd->type, id))
+    if (!XPT_Do8(cursor, &pd->mFlags) ||
+        !DoTypeDescriptor(arena, cursor, &pd->mType, id))
         return false;
 
     return true;
