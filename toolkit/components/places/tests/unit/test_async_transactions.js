@@ -8,7 +8,6 @@ const bmsvc    = PlacesUtils.bookmarks;
 const tagssvc  = PlacesUtils.tagging;
 const annosvc  = PlacesUtils.annotations;
 const PT       = PlacesTransactions;
-const rootGuid = PlacesUtils.bookmarks.rootGuid;
 const menuGuid = PlacesUtils.bookmarks.menuGuid;
 
 Cu.importGlobalProperties(["URL"]);
@@ -514,7 +513,7 @@ add_task(async function test_new_folder_with_children() {
 });
 
 add_task(async function test_new_bookmark() {
-  let bm_info = { parentGuid: rootGuid,
+  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                   url:        NetUtil.newURI("http://test_create_item.com"),
                   index:      bmStartIndex,
                   title:      "Test creating an item" };
@@ -976,7 +975,7 @@ add_task(async function test_creating_and_removing_a_separator() {
 add_task(async function test_add_and_remove_livemark() {
   let createLivemarkTxn = PT.NewLivemark(
     { feedUrl: NetUtil.newURI("http://test.remove.livemark"),
-      parentGuid: rootGuid,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "Test Remove Livemark" });
   let guid = await createLivemarkTxn.transact();
   let originalInfo = await PlacesUtils.promiseBookmarksTree(guid);
@@ -1018,7 +1017,7 @@ add_task(async function test_add_and_remove_livemark() {
 });
 
 add_task(async function test_edit_title() {
-  let bm_info = { parentGuid: rootGuid,
+  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                   url:        NetUtil.newURI("http://test_create_item.com"),
                   title:      "Original Title" };
 
@@ -1056,7 +1055,7 @@ add_task(async function test_edit_title() {
 add_task(async function test_edit_url() {
   let oldURI = NetUtil.newURI("http://old.test_editing_item_uri.com/");
   let newURI = NetUtil.newURI("http://new.test_editing_item_uri.com/");
-  let bm_info = { parentGuid: rootGuid, url: oldURI, tags: ["TestTag"] };
+  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid, url: oldURI, tags: ["TestTag"] };
   function ensureURIAndTags(aPreChangeURI, aPostChangeURI, aOLdURITagsPreserved) {
     ensureItemsChanged({ guid: bm_info.guid,
                          property: "uri",
@@ -1118,7 +1117,7 @@ add_task(async function test_edit_url() {
 });
 
 add_task(async function test_edit_keyword() {
-  let bm_info = { parentGuid: rootGuid,
+  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                   url: NetUtil.newURI("http://test.edit.keyword") };
   const KEYWORD = "test_keyword";
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
@@ -1162,7 +1161,7 @@ add_task(async function test_edit_keyword() {
 });
 
 add_task(async function test_edit_keyword_null_postData() {
-  let bm_info = { parentGuid: rootGuid,
+  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                   url: NetUtil.newURI("http://test.edit.keyword") };
   const KEYWORD = "test_keyword";
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
@@ -1206,7 +1205,7 @@ add_task(async function test_edit_keyword_null_postData() {
 });
 
 add_task(async function test_edit_specific_keyword() {
-  let bm_info = { parentGuid: rootGuid,
+  let bm_info = { parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                   url: NetUtil.newURI("http://test.edit.keyword") };
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
   function ensureKeywordChange(aCurrentKeyword = "", aPreviousKeyword = "") {
@@ -1270,9 +1269,9 @@ add_task(async function test_edit_specific_keyword() {
 add_task(async function test_tag_uri() {
   // This also tests passing uri specs.
   let bm_info_a = { url: "http://bookmarked.uri",
-                    parentGuid: rootGuid };
+                    parentGuid: PlacesUtils.bookmarks.unfiledGuid };
   let bm_info_b = { url: NetUtil.newURI("http://bookmarked2.uri"),
-                    parentGuid: rootGuid };
+                    parentGuid: PlacesUtils.bookmarks.unfiledGuid };
   let unbookmarked_uri = NetUtil.newURI("http://un.bookmarked.uri");
 
   await PT.batch(async function() {
@@ -1338,10 +1337,10 @@ add_task(async function test_tag_uri() {
 
 add_task(async function test_untag_uri() {
   let bm_info_a = { url: NetUtil.newURI("http://bookmarked.uri"),
-                    parentGuid: rootGuid,
+                    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                     tags: ["A", "B"] };
   let bm_info_b = { url: NetUtil.newURI("http://bookmarked2.uri"),
-                    parentGuid: rootGuid,
+                    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                     tag: "B" };
 
   await PT.batch(async function() {
@@ -1413,7 +1412,7 @@ add_task(async function test_untag_uri() {
 
 add_task(async function test_annotate() {
   let bm_info = { url: NetUtil.newURI("http://test.item.annotation"),
-                  parentGuid: rootGuid };
+                  parentGuid: PlacesUtils.bookmarks.unfiledGuid };
   let anno_info = { name: "TestAnno", value: "TestValue" };
   function ensureAnnoState(aSet) {
     ensureAnnotationsSet(bm_info.guid,
@@ -1558,7 +1557,7 @@ add_task(async function test_sort_folder_by_name() {
 add_task(async function test_livemark_txns() {
   let livemark_info =
     { feedUrl: NetUtil.newURI("http://test.feed.uri"),
-      parentGuid: rootGuid,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "Test Livemark" };
   function ensureLivemarkAdded() {
     ensureItemsAdded({ guid:       livemark_info.guid,
@@ -1606,7 +1605,9 @@ add_task(async function test_livemark_txns() {
 
 add_task(async function test_copy() {
   async function duplicate_and_test(aOriginalGuid) {
-    let txn = PT.Copy({ guid: aOriginalGuid, newParentGuid: rootGuid });
+    let txn = PT.Copy({
+      guid: aOriginalGuid, newParentGuid: PlacesUtils.bookmarks.unfiledGuid
+    });
     let duplicateGuid = await txn.transact();
     let originalInfo = await PlacesUtils.promiseBookmarksTree(aOriginalGuid);
     let duplicateInfo = await PlacesUtils.promiseBookmarksTree(duplicateGuid);
@@ -1645,12 +1646,15 @@ add_task(async function test_copy() {
 
   // Test duplicating leafs (bookmark, separator, empty folder)
   PT.NewBookmark({ url: new URL("http://test.item.duplicate"),
-                   parentGuid: rootGuid,
+                   parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                    annos: [{ name: "Anno", value: "AnnoValue"}] });
-  let sepTxn = PT.NewSeparator({ parentGuid: rootGuid, index: 1 });
+  let sepTxn = PT.NewSeparator({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 1
+  });
   let livemarkTxn = PT.NewLivemark(
     { feedUrl: new URL("http://test.feed.uri"),
-      parentGuid: rootGuid,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "Test Livemark", index: 1 });
   let emptyFolderTxn = PT.NewFolder(createTestFolderInfo());
   for (let txn of [livemarkTxn, sepTxn, emptyFolderTxn]) {
@@ -1730,13 +1734,13 @@ add_task(async function test_copy_excluding_annotations() {
 
   let excluding_a_dupeGuid =
     await PT.Copy({ guid: folderGuid,
-                    newParentGuid: rootGuid,
+                    newParentGuid: PlacesUtils.bookmarks.unfiledGuid,
                     excludingAnnotation: "a" }).transact();
   await ensureAnnosSet(excluding_a_dupeGuid, "b", "c");
 
   let excluding_ac_dupeGuid =
     await PT.Copy({ guid: folderGuid,
-                    newParentGuid: rootGuid,
+                    newParentGuid: PlacesUtils.bookmarks.unfiledGuid,
                     excludingAnnotations: ["a", "c"] }).transact();
   await ensureAnnosSet(excluding_ac_dupeGuid, "b");
 
@@ -1749,7 +1753,7 @@ add_task(async function test_copy_excluding_annotations() {
 
 add_task(async function test_invalid_uri_spec_throws() {
   Assert.throws(() =>
-    PT.NewBookmark({ parentGuid: rootGuid,
+    PT.NewBookmark({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                      url:        "invalid uri spec",
                      title:      "test bookmark" }));
   Assert.throws(() =>
