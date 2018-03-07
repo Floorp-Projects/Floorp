@@ -104,7 +104,6 @@ xptiInterfaceEntry::ResolveLocked()
             parent->mDescriptor->num_constants;
 
     }
-    LOG_RESOLVE(("+ complete resolve of %s\n", mName));
 
     SetResolvedState(FULLY_RESOLVED);
     return true;
