@@ -44,8 +44,8 @@
       is(win.screenX, 80, "The window should be placed now at x=80px");
       is(win.screenY, 80, "The window should be placed now at y=80px");
     }
-    is(win.outerHeight, 300, "The window size should be height=300px");
-    is(win.outerWidth, 300, "The window size should be width=300px");
+    is(win.innerHeight, 300, "The window size should be height=300px");
+    is(win.innerWidth, 300, "The window size should be width=300px");
     win.close();
     SimpleTest.finish();
   }

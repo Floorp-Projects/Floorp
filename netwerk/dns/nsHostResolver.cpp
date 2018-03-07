@@ -1527,6 +1527,13 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
                 return LOOKUP_OK;
             }
 
+            if (rec->mTrrA && (!gTRRService || !gTRRService->EarlyAAAA())) {
+                // This is an early AAAA with a pending A response. Allowed
+                // only by pref.
+                LOG(("CompleteLookup: avoiding early use of TRR AAAA!\n"));
+                return LOOKUP_OK;
+            }
+
             // we can do some callbacks with this partial result which requires
             // a deep copy
             newRRSet = new AddrInfo(rec->mFirstTRR);

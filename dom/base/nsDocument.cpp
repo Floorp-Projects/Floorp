@@ -1480,6 +1480,10 @@ nsIDocument::nsIDocument()
     mIsShadowDOMEnabled(false),
     mIsSVGGlyphsDocument(false),
     mAllowUnsafeHTML(false),
+    mInDestructor(false),
+    mIsGoingAway(false),
+    mInXBLUpdate(false),
+    mNeedsReleaseAfterStackRefCntRelease(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -1512,6 +1516,8 @@ nsIDocument::nsIDocument()
     mIncCounters(),
     mUserHasInteracted(false),
     mUserHasActivatedInteraction(false),
+    mStackRefCnt(0),
+    mUpdateNestLevel(0),
     mServoRestyleRootDirtyBits(0),
     mThrowOnDynamicMarkupInsertionCounter(0),
     mIgnoreOpensDuringUnloadCounter(0)
@@ -1527,13 +1533,10 @@ nsDocument::nsDocument(const char* aContentType)
   , mSubDocuments(nullptr)
   , mFlashClassification(FlashClassification::Unclassified)
   , mHeaderData(nullptr)
-  , mIsGoingAway(false)
-  , mInDestructor(false)
   , mMayHaveTitleElement(false)
   , mHasWarnedAboutBoxObjects(false)
   , mDelayFrameLoaderInitialization(false)
   , mSynchronousDOMContentLoaded(false)
-  , mInXBLUpdate(false)
   , mParserAborted(false)
   , mCurrentOrientationAngle(0)
   , mCurrentOrientationType(OrientationType::Portrait_primary)
@@ -1543,7 +1546,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mPendingFullscreenRequests(0)
   , mXMLDeclarationBits(0)
   , mBoxObjectTable(nullptr)
-  , mUpdateNestLevel(0)
   , mOnloadBlockCount(0)
   , mAsyncOnloadBlockCount(0)
 #ifdef DEBUG
@@ -1562,8 +1564,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mValidMaxScale(false)
   , mScaleStrEmpty(false)
   , mWidthStrEmpty(false)
-  , mStackRefCnt(0)
-  , mNeedsReleaseAfterStackRefCntRelease(false)
   , mMaybeServiceWorkerControlled(false)
 #ifdef DEBUG
   , mWillReparent(false)
@@ -3070,13 +3070,6 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
   ApplySettingsFromCSP(false);
   return NS_OK;
-}
-
-already_AddRefed<nsIParser>
-nsDocument::CreatorParserOrNull()
-{
-  nsCOMPtr<nsIParser> parser = mParser;
-  return parser.forget();
 }
 
 void
@@ -5129,7 +5122,7 @@ nsDocument::InternalAllowXULXBL()
 // Note: We don't hold a reference to the document observer; we assume
 // that it has a live reference to the document.
 void
-nsDocument::AddObserver(nsIDocumentObserver* aObserver)
+nsIDocument::AddObserver(nsIDocumentObserver* aObserver)
 {
   NS_ASSERTION(mObservers.IndexOf(aObserver) == nsTArray<int>::NoIndex,
                "Observer already in the list");
@@ -5138,7 +5131,7 @@ nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 }
 
 bool
-nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
+nsIDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 {
   // If we're in the process of destroying the document (and we're
   // informing the observers of the destruction), don't remove the
@@ -5174,7 +5167,7 @@ nsDocument::MaybeEndOutermostXBLUpdate()
 }
 
 void
-nsDocument::BeginUpdate(nsUpdateType aUpdateType)
+nsIDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
   // If the document is going away, then it's probably okay to do things to it
   // in the wrong DocGroup. We're unlikely to run JS or do anything else
@@ -5487,7 +5480,7 @@ nsDocument::UnblockDOMContentLoaded()
 }
 
 void
-nsDocument::ContentStateChanged(nsIContent* aContent, EventStates aStateMask)
+nsIDocument::ContentStateChanged(nsIContent* aContent, EventStates aStateMask)
 {
   NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
                   "Someone forgot a scriptblocker");
@@ -5496,14 +5489,14 @@ nsDocument::ContentStateChanged(nsIContent* aContent, EventStates aStateMask)
 }
 
 void
-nsDocument::DocumentStatesChanged(EventStates aStateMask)
+nsIDocument::DocumentStatesChanged(EventStates aStateMask)
 {
   UpdateDocumentStates(aStateMask);
   NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentStatesChanged, (this, aStateMask));
 }
 
 void
-nsDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
+nsIDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
   if (!StyleSheetChangeEventsEnabled()) {
     return;
@@ -5516,7 +5509,7 @@ nsDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
 }
 
 void
-nsDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
+nsIDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
   if (!StyleSheetChangeEventsEnabled()) {
     return;
@@ -5529,7 +5522,7 @@ nsDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
 }
 
 void
-nsDocument::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule)
+nsIDocument::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
   if (!StyleSheetChangeEventsEnabled()) {
     return;
@@ -7603,7 +7596,7 @@ nsIDocument::CreateEvent(const nsAString& aEventType, CallerType aCallerType,
 }
 
 void
-nsDocument::FlushPendingNotifications(FlushType aType, FlushTarget aTarget)
+nsIDocument::FlushPendingNotifications(FlushType aType)
 {
   nsDocumentOnStack dos(this);
 
@@ -7653,13 +7646,11 @@ nsDocument::FlushPendingNotifications(FlushType aType, FlushTarget aTarget)
     FlushType parentType = aType;
     if (aType >= FlushType::Style)
       parentType = std::max(FlushType::Layout, aType);
-    mParentDocument->FlushPendingNotifications(parentType, FlushTarget::Normal);
+    mParentDocument->FlushPendingNotifications(parentType);
   }
 
-  if (aTarget == FlushTarget::Normal) {
-    if (nsIPresShell* shell = GetShell()) {
-      shell->FlushPendingNotifications(aType);
-    }
+  if (nsIPresShell* shell = GetShell()) {
+    shell->FlushPendingNotifications(aType);
   }
 }
 
@@ -8034,7 +8025,7 @@ nsDocument::CreateElem(const nsAString& aName, nsAtom *aPrefix,
 }
 
 bool
-nsDocument::IsSafeToFlush() const
+nsIDocument::IsSafeToFlush() const
 {
   nsIPresShell* shell = GetShell();
   if (!shell)

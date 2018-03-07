@@ -15,6 +15,7 @@
 #include "base/basictypes.h"
 
 #include "nsCOMPtr.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
@@ -34,7 +35,6 @@
 #include "nsHTMLDocument.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
-#include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
 #ifdef MOZ_OLD_STYLE
@@ -730,8 +730,7 @@ nsPresContext::InvalidatePaintedLayers()
 {
   if (!mShell)
     return;
-  nsIFrame* rootFrame = mShell->FrameManager()->GetRootFrame();
-  if (rootFrame) {
+  if (nsIFrame* rootFrame = mShell->GetRootFrame()) {
     // FrameLayerBuilder caches invalidation-related values that depend on the
     // appunits-per-dev-pixel ratio, so ensure that all PaintedLayer drawing
     // is completely flushed.
@@ -3193,7 +3192,7 @@ nsRootPresContext::ComputePluginGeometryUpdates(nsIFrame* aFrame,
 
   if (aBuilder) {
     MOZ_ASSERT(aList);
-    nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+    nsIFrame* rootFrame = mShell->GetRootFrame();
 
     if (rootFrame && aBuilder->ContainsPluginItem()) {
       aBuilder->SetForPluginGeometry(true);

@@ -28,7 +28,7 @@
 #include "nsStringFwd.h"
 #include "nsCoord.h"
 #include "nsColor.h"
-#include "nsFrameManagerBase.h"
+#include "nsFrameManager.h"
 #include "nsRect.h"
 #include "nsRegionFwd.h"
 #include "nsWeakReference.h"
@@ -281,13 +281,6 @@ public:
   mozilla::StyleSetHandle StyleSet() const { return mStyleSet; }
 
   nsCSSFrameConstructor* FrameConstructor() const { return mFrameConstructor; }
-
-  nsFrameManager* FrameManager() const {
-    // reinterpret_cast is valid since nsFrameManager does not add
-    // any members over nsFrameManagerBase.
-    return reinterpret_cast<nsFrameManager*>
-                           (const_cast<nsIPresShell*>(this)->mFrameManager);
-  }
 
   /* Enable/disable author style level. Disabling author style disables the entire
    * author level of the cascade, including the HTML preshint level.
@@ -1674,9 +1667,9 @@ protected:
   nsViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsPresArena               mFrameArena;
   RefPtr<nsFrameSelection> mSelection;
-  // Pointer into mFrameConstructor - this is purely so that FrameManager() and
-  // GetRootFrame() can be inlined:
-  nsFrameManagerBase*       mFrameManager;
+  // Pointer into mFrameConstructor - this is purely so that GetRootFrame() can
+  // be inlined:
+  nsFrameManager*       mFrameManager;
   mozilla::WeakPtr<nsDocShell>                 mForwardingContainer;
 #ifdef ACCESSIBILITY
   mozilla::a11y::DocAccessible* mDocAccessible;
