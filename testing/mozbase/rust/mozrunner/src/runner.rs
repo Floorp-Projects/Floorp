@@ -47,10 +47,13 @@ pub trait Runner {
 
 pub trait RunnerProcess {
     fn status(&mut self) -> IoResult<Option<process::ExitStatus>>;
-    fn stop(&mut self) -> IoResult<process::ExitStatus>;
 
     /// Determine if the process is still running.
     fn running(&mut self) -> bool;
+
+    /// Forces the process to exit and returns the exit status.  This is
+    /// equivalent to sending a SIGKILL on Unix platforms.
+    fn kill(&mut self) -> IoResult<process::ExitStatus>;
 }
 
 #[derive(Debug)]
@@ -113,7 +116,7 @@ impl RunnerProcess for FirefoxProcess {
         self.status().unwrap().is_none()
     }
 
-    fn stop(&mut self) -> IoResult<process::ExitStatus> {
+    fn kill(&mut self) -> IoResult<process::ExitStatus> {
         self.process.kill()?;
         self.process.wait()
     }
