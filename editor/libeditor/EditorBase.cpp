@@ -624,13 +624,6 @@ EditorBase::GetIsDocumentEditable(bool* aIsDocumentEditable)
   return NS_OK;
 }
 
-already_AddRefed<nsIDocument>
-EditorBase::GetDocument()
-{
-  nsCOMPtr<nsIDocument> document = mDocument;
-  return document.forget();
-}
-
 already_AddRefed<nsIDOMDocument>
 EditorBase::GetDOMDocument()
 {
@@ -643,17 +636,6 @@ EditorBase::GetDocument(nsIDOMDocument** aDoc)
 {
   *aDoc = GetDOMDocument().take();
   return *aDoc ? NS_OK : NS_ERROR_NOT_INITIALIZED;
-}
-
-already_AddRefed<nsIPresShell>
-EditorBase::GetPresShell()
-{
-  nsCOMPtr<nsIDocument> document = GetDocument();
-  if (NS_WARN_IF(!document)) {
-    return nullptr;
-  }
-  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-  return presShell.forget();
 }
 
 already_AddRefed<nsIWidget>
