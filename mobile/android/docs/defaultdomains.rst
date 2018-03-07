@@ -67,6 +67,13 @@ list of domains:
 * Remove any URL shorteners and redirecters.
 * Remove any content/CDN domains. Some sites use separate domains to store images and other static
   content.
+* Remove any site that routinely publish fake or misleading content.
+* Remove any site that degrades, intimidates, incites violence against, or encourages prejudicial
+  action against someone or a group based on age, gender, race, ethnicity, national origin,
+  religion, sexual orientation, disability, religion, geographic location or other protected
+  category or constitutes hate speech.
+* Remove any site that harms users such as by using viruses, spyware or malware, worms, trojan
+  horses, time bombs or any other such malicious codes or instructions.
 
 Guidelines for Adult Content
 ============================
