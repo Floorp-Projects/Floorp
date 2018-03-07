@@ -432,6 +432,7 @@ LocaleService::FilterMatches(const nsTArray<nsCString>& aRequested,
 
   for (auto& requested : aRequested) {
     if (requested.IsEmpty()) {
+      MOZ_ASSERT(!requested.IsEmpty(), "Locale string cannot be empty.");
       continue;
     }
 
@@ -504,32 +505,41 @@ LocaleService::FilterMatches(const nsTArray<nsCString>& aRequested,
   }
 }
 
-bool
+void
 LocaleService::NegotiateLanguages(const nsTArray<nsCString>& aRequested,
                                   const nsTArray<nsCString>& aAvailable,
                                   const nsACString& aDefaultLocale,
                                   LangNegStrategy aStrategy,
                                   nsTArray<nsCString>& aRetVal)
 {
-  // If the strategy is Lookup, we require the defaultLocale to be set.
+  MOZ_ASSERT(aDefaultLocale.IsEmpty() || Locale(aDefaultLocale).IsValid(),
+    "If specified, default locale must be a valid BCP47 language tag.");
+
   if (aStrategy == LangNegStrategy::Lookup && aDefaultLocale.IsEmpty()) {
-    return false;
+    NS_WARNING("Default locale should be specified when using lookup strategy.");
   }
 
   FilterMatches(aRequested, aAvailable, aStrategy, aRetVal);
 
   if (aStrategy == LangNegStrategy::Lookup) {
+    // If the strategy is Lookup and Filtering returned no matches, use
+    // the default locale.
     if (aRetVal.Length() == 0) {
-      // If the strategy is Lookup and Filtering returned no matches, use
-      // the default locale.
-      aRetVal.AppendElement(aDefaultLocale);
+      // If the default locale is empty, we already issued a warning, so
+      // now we will just pick up the LocaleService's defaultLocale.
+      if (aDefaultLocale.IsEmpty()) {
+        nsAutoCString defaultLocale;
+        GetDefaultLocale(defaultLocale);
+        aRetVal.AppendElement(defaultLocale);
+      } else {
+        aRetVal.AppendElement(aDefaultLocale);
+      }
     }
   } else if (!aDefaultLocale.IsEmpty() && !aRetVal.Contains(aDefaultLocale)) {
     // If it's not a Lookup strategy, add the default locale only if it's
     // set and it's not in the results already.
     aRetVal.AppendElement(aDefaultLocale);
   }
-  return true;
 }
 
 bool
@@ -835,12 +845,8 @@ LocaleService::NegotiateLanguages(const char** aRequested,
   LangNegStrategy strategy = ToLangNegStrategy(aStrategy);
 
   AutoTArray<nsCString, 100> supportedLocales;
-  bool result = NegotiateLanguages(requestedLocales, availableLocales,
-                                   defaultLocale, strategy, supportedLocales);
-
-  if (!result) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NegotiateLanguages(requestedLocales, availableLocales,
+                     defaultLocale, strategy, supportedLocales);
 
   *aRetVal =
     static_cast<char**>(moz_xmalloc(sizeof(char*) * supportedLocales.Length()));
