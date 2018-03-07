@@ -17,7 +17,6 @@ var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 var flags = require("devtools/shared/flags");
-var SyncPromise = require("devtools/shared/deprecated-sync-thenables");
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
   let { DebuggerSocket } = require("devtools/shared/security/socket");
@@ -1631,15 +1630,23 @@ DebuggerServerConnection.prototype = {
   },
 
   _queueResponse: function (from, type, responseOrPromise) {
-    let pendingResponse = this._actorResponses.get(from) || SyncPromise.resolve(null);
+    let pendingResponse = this._actorResponses.get(from) || Promise.resolve(null);
     let responsePromise = pendingResponse.then(() => {
       return responseOrPromise;
     }).then(response => {
+      if (!this.transport) {
+        throw new Error(`Connection closed, pending response from ${from}, ` +
+                        `type ${type} failed`);
+      }
       if (!response.from) {
         response.from = from;
       }
       this.transport.send(response);
     }).catch((e) => {
+      if (!this.transport) {
+        throw new Error(`Connection closed, pending error from ${from}, ` +
+                        `type ${type} failed`);
+      }
       let errorPacket = this._unknownError(
         "error occurred while processing '" + type, e);
       errorPacket.from = from;
@@ -1661,7 +1668,7 @@ DebuggerServerConnection.prototype = {
   setAddonOptions(id, options) {
     let addonList = this.rootActor._parameters.addonList;
     if (!addonList) {
-      return SyncPromise.resolve();
+      return Promise.resolve();
     }
     return addonList.getList().then((addonActors) => {
       for (let actor of addonActors) {
