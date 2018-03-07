@@ -53,9 +53,9 @@ function check_all_feedback_commands_hidden(url) {
 }
 
 add_task(async function test_normal_page() {
-  return check_all_feedback_commands_hidden(NORMAL_PAGE)
+  return check_all_feedback_commands_hidden(NORMAL_PAGE);
 });
 
 add_task(async function test_phishing_page() {
-  return check_all_feedback_commands_hidden(PHISH_PAGE)
+  return check_all_feedback_commands_hidden(PHISH_PAGE);
 });
