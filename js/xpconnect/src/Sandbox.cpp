@@ -215,11 +215,13 @@ SandboxImport(JSContext* cx, unsigned argc, Value* vp)
 
     // We need to resolve the this object, because this function is used
     // unbound and should still work and act on the original sandbox.
-    RootedObject thisObject(cx, JS_THIS_OBJECT(cx, vp));
-    if (!thisObject) {
+
+    RootedValue thisv(cx, args.computeThis(cx));
+    if (!thisv.isObject()) {
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
         return false;
     }
+    RootedObject thisObject(cx, &thisv.toObject());
     if (!JS_SetPropertyById(cx, thisObject, id, args[0]))
         return false;
 
