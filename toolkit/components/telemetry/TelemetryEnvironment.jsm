@@ -247,6 +247,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["layers.prefer-opengl", {what: RECORD_PREF_VALUE}],
   ["layout.css.devPixelsPerPx", {what: RECORD_PREF_VALUE}],
   ["layout.css.servo.enabled", {what: RECORD_PREF_VALUE}],
+  ["marionette.enabled", {what: RECORD_PREF_VALUE}],
   ["network.proxy.autoconfig_url", {what: RECORD_PREF_STATE}],
   ["network.proxy.http", {what: RECORD_PREF_STATE}],
   ["network.proxy.ssl", {what: RECORD_PREF_STATE}],
