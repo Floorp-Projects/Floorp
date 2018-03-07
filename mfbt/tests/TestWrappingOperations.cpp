@@ -12,6 +12,7 @@
 using mozilla::WrappingAdd;
 using mozilla::WrappingMultiply;
 using mozilla::WrapToSigned;
+using mozilla::WrappingSubtract;
 
 // NOTE: In places below |-FOO_MAX - 1| is used instead of |-FOO_MIN| because
 //       in C++ numeric literals are full expressions -- the |-| in a negative
@@ -224,6 +225,160 @@ TestWrappingAdd()
 }
 
 static void
+TestWrappingSubtract8()
+{
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint8_t(0), uint8_t(128)),
+                               uint8_t(128)),
+                     "zero minus half is half");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint8_t(17), uint8_t(42)),
+                               uint8_t(231)),
+                     "17 - 42 == -25 added to 256 is 231");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint8_t(0), uint8_t(1)),
+                               uint8_t(255)),
+                     "zero underflows to all bits");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint8_t(128), uint8_t(127)),
+                               uint8_t(1)),
+                     "128 - 127 == 1");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint8_t(128), uint8_t(193)),
+                               uint8_t(191)),
+                     "128 - 193 is -65 so -65 + 256 == 191");
+
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int8_t(0), int8_t(-128)),
+                               int8_t(-128)),
+                     "zero minus high bit wraps to high bit");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int8_t(-126), int8_t(4)),
+                               int8_t(126)),
+                     "underflow to positive");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int8_t(5), int8_t(-123)),
+                               int8_t(-128)),
+                     "overflow to negative");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int8_t(-85), int8_t(-73)),
+                               int8_t(-12)),
+                     "negative minus smaller negative");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int8_t(-128), int8_t(127)),
+                               int8_t(1)),
+                     "underflow to 1");
+}
+
+static void
+TestWrappingSubtract16()
+{
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint16_t(0), uint16_t(32768)),
+                               uint16_t(32768)),
+                     "zero minus half is half");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint16_t(24389), uint16_t(2682)),
+                               uint16_t(21707)),
+                     "24389 - 2682 == 21707");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint16_t(0), uint16_t(1)),
+                               uint16_t(65535)),
+                     "zero underflows to all bits");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint16_t(32768), uint16_t(32767)),
+                               uint16_t(1)),
+                     "high bit minus all lower bits is one");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint16_t(32768), uint16_t(47582)),
+                               uint16_t(50722)),
+                     "32768 - 47582 + 65536 is 50722");
+
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int16_t(0), int16_t(-32768)),
+                               int16_t(-32768)),
+                     "zero minus high bit wraps to high bit");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int16_t(-32766), int16_t(4)),
+                               int16_t(32766)),
+                     "underflow to positive");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int16_t(5), int16_t(-28933)),
+                               int16_t(28938)),
+                     "5 - -28933 is 28938");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int16_t(-23892), int16_t(-12893)),
+                               int16_t(-10999)),
+                     "negative minus smaller negative");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int16_t(-32768), int16_t(32767)),
+                               int16_t(1)),
+                     "underflow to 1");
+}
+
+static void
+TestWrappingSubtract32()
+{
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint32_t(0), uint32_t(2147483648)),
+                               uint32_t(2147483648)),
+                     "zero minus half is half");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint32_t(1398742328), uint32_t(714192829)),
+                               uint32_t(684549499)),
+                     "1398742328 - 714192829 == 684549499");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint32_t(0), uint32_t(1)),
+                               uint32_t(4294967295)),
+                     "zero underflows to all bits");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint32_t(2147483648), uint32_t(2147483647)),
+                               uint32_t(1)),
+                     "high bit minus all lower bits is one");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint32_t(2147483648), uint32_t(3146492712)),
+                               uint32_t(3295958232)),
+                     "2147483648 - 3146492712 + 4294967296 is 3295958232");
+
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int32_t(0), int32_t(-2147483647 - 1)),
+                               int32_t(-2147483647 - 1)),
+                     "zero minus high bit wraps to high bit");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int32_t(-2147483646), int32_t(4)),
+                               int32_t(2147483646)),
+                     "underflow to positive");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int32_t(257), int32_t(-23947248)),
+                               int32_t(23947505)),
+                     "257 - -23947248 is 23947505");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int32_t(-2147483220), int32_t(-12893)),
+                               int32_t(-2147470327)),
+                     "negative minus smaller negative");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int32_t(-2147483647 - 1), int32_t(2147483647)),
+                               int32_t(1)),
+                     "underflow to 1");
+}
+
+static void
+TestWrappingSubtract64()
+{
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint64_t(0), uint64_t(9223372036854775808ULL)),
+                               uint64_t(9223372036854775808ULL)),
+                     "zero minus half is half");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint64_t(70368744177664), uint64_t(3740873592)),
+                               uint64_t(70365003304072)),
+                     "70368744177664 - 3740873592 == 70365003304072");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint64_t(0), uint64_t(1)),
+                               uint64_t(18446744073709551615ULL)),
+                     "zero underflows to all bits");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint64_t(9223372036854775808ULL),
+                                                uint64_t(9223372036854775807ULL)),
+                               uint64_t(1)),
+                     "high bit minus all lower bits is one");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(uint64_t(14552598638644786479ULL), uint64_t(3894174382537247221ULL)),
+                               uint64_t(10658424256107539258ULL)),
+                     "14552598638644786479 - 39763621533397112216 is 10658424256107539258L");
+
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int64_t(0), int64_t(-9223372036854775807LL - 1)),
+                               int64_t(-9223372036854775807LL - 1)),
+                     "zero minus high bit wraps to high bit");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int64_t(-9223372036854775802LL), int64_t(8)),
+                               int64_t(9223372036854775806LL)),
+                     "overflow to negative");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int64_t(37482739294298742LL), int64_t(-437843573929483498LL)),
+                               int64_t(475326313223782240)),
+                     "37482739294298742 - -437843573929483498 is 475326313223782240");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int64_t(-9127837934058953374LL), int64_t(-4173572032144775807LL)),
+                               int64_t(-4954265901914177567LL)),
+                     "negative minus smaller negative");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingSubtract(int64_t(-9223372036854775807LL - 1), int64_t(9223372036854775807LL)),
+                               int64_t(1)),
+                     "underflow to 1");
+}
+
+static void
+TestWrappingSubtract()
+{
+  TestWrappingSubtract8();
+  TestWrappingSubtract16();
+  TestWrappingSubtract32();
+  TestWrappingSubtract64();
+}
+
+static void
 TestWrappingMultiply8()
 {
   MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint8_t(0), uint8_t(128)),
@@ -405,6 +560,7 @@ int
 main()
 {
   TestWrappingAdd();
+  TestWrappingSubtract();
   TestWrappingMultiply();
   return 0;
 }
