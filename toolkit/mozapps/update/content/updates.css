@@ -4,7 +4,7 @@
   display: none;
 }
 
-/* Hide the wizard's header so the size of the billboard can size the window
+/* Hide the wizard's header so the size of the billboard can size the window 
    on creation. A custom header will be used in its place when a header is
    needed. */
 .wizard-header {
@@ -26,7 +26,7 @@ updateheader {
 }
 
 /* Update History Window */
-richlistitem.update {
+update {
   -moz-binding: url("chrome://mozapps/content/update/updates.xml#update");
   display: -moz-box;
   -moz-box-orient: vertical;
