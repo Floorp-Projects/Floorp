@@ -1,6 +1,5 @@
 use mozprofile::prefreader::PrefReaderError;
 use mozprofile::profile::Profile;
-use std::ascii::AsciiExt;
 use std::collections::HashMap;
 use std::convert::From;
 use std::env;
