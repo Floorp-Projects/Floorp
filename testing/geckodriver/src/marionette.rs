@@ -625,7 +625,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
         if let Some(ref mut runner) = self.browser {
             if runner.running() {
                 info!("Forcing a shutdown of the browser process");
-                if runner.stop().is_err() {
+                if runner.kill().is_err() {
                     error!("Failed to kill browser process");
                 };
             }
