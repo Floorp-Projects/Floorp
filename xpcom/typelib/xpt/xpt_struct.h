@@ -266,11 +266,11 @@ struct XPTParamDescriptor {
  * interface method.
  */
 struct XPTMethodDescriptor {
-  const char* name;
-  const XPTParamDescriptor* params;
-  //XPTParamDescriptor result; // Present on disk, omitted here.
-  uint8_t flags;
-  uint8_t num_args;
+  const char* mName;
+  const XPTParamDescriptor* mParams;
+  //XPTParamDescriptor mResult; // Present on disk, omitted here.
+  uint8_t mFlags;
+  uint8_t mNumArgs;
 };
 
 #endif /* xpt_struct_h */
