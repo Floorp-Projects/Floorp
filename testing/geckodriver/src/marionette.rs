@@ -985,10 +985,10 @@ impl MarionetteSession {
             let expiry = try!(
                 Nullable::from_json(x.find("expiry").unwrap_or(&Json::Null),
                                     |x| {
-                                        Ok(Date::new((try_opt!(
+                                        Ok(Date::new(try_opt!(
                                             x.as_u64(),
                                             ErrorStatus::UnknownError,
-                                            "Cookie expiry must be a positive integer"))))
+                                            "Cookie expiry must be a positive integer")))
                                     }));
             let secure = try_opt!(
                 x.find("secure").map_or(Some(false), |x| x.as_boolean()),
