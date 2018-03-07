@@ -47,7 +47,17 @@ pub trait Runner {
 }
 
 pub trait RunnerProcess {
-    fn status(&mut self) -> io::Result<Option<process::ExitStatus>>;
+    /// Attempts to collect the exit status of the process if it has already exited.
+    ///
+    /// This function will not block the calling thread and will only advisorily check to see if
+    /// the child process has exited or not.  If the process has exited then on Unix the process ID
+    /// is reaped.  This function is guaranteed to repeatedly return a successful exit status so
+    /// long as the child has already exited.
+    ///
+    /// If the process has exited, then `Ok(Some(status))` is returned.  If the exit status is not
+    /// available at this time then `Ok(None)` is returned.  If an error occurs, then that error is
+    /// returned.
+    fn try_wait(&mut self) -> io::Result<Option<process::ExitStatus>>;
 
     /// Determine if the process is still running.
     fn running(&mut self) -> bool;
@@ -109,12 +119,12 @@ pub struct FirefoxProcess {
 }
 
 impl RunnerProcess for FirefoxProcess {
-    fn status(&mut self) -> io::Result<Option<process::ExitStatus>> {
+    fn try_wait(&mut self) -> io::Result<Option<process::ExitStatus>> {
         self.process.try_wait()
     }
 
     fn running(&mut self) -> bool {
-        self.status().unwrap().is_none()
+        self.try_wait().unwrap().is_none()
     }
 
     fn kill(&mut self) -> io::Result<process::ExitStatus> {
