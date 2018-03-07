@@ -71,14 +71,14 @@ struct XPTHeader {
  * using its IID.  No interface should appear more than once in the array.
  */
 struct XPTInterfaceDirectoryEntry {
-  nsID iid;
-  const char* name;
+  nsID mIID;
+  const char* mName;
 
   // This field exists in the on-disk format. But it isn't used so we don't
   // allocate space for it in memory.
-  //const char* name_space;
+  //const char* mNameSpace;
 
-  const XPTInterfaceDescriptor* interface_descriptor;
+  const XPTInterfaceDescriptor* mInterfaceDescriptor;
 };
 
 /*
