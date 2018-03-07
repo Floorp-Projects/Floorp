@@ -1961,7 +1961,7 @@ Debugger::slowPathOnNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> w
 Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
 {
     FrameIter iter(cx);
-    JS::AutoSaveExceptionState saveExc(cx);
+    JS::AutoSaveExceptionState savedExc(cx);
     Rooted<GlobalObject*> global(cx);
     BreakpointSite* site;
     bool isJS; // true when iter.hasScript(), false when iter.isWasm()
@@ -2028,8 +2028,10 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
             bool ok = CallMethodIfPresent(cx, handler, "hit", 1, scriptFrame.address(), &rv);
             ResumeMode resumeMode = dbg->processHandlerResult(ac, ok, rv,  iter.abstractFramePtr(),
                                                               iter.pc(), vp);
-            if (resumeMode != ResumeMode::Continue)
+            if (resumeMode != ResumeMode::Continue) {
+                savedExc.drop();
                 return resumeMode;
+            }
 
             /* Calling JS code invalidates site. Reload it. */
             if (isJS)
@@ -2059,7 +2061,7 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
      * onStep handlers mess with that (other than by returning a resumption
      * value).
      */
-    JS::AutoSaveExceptionState saveExc(cx);
+    JS::AutoSaveExceptionState savedExc(cx);
 
     /*
      * Build list of Debugger.Frame instances referring to this frame with
@@ -2120,8 +2122,10 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
         bool success = handler->onStep(cx, frame, resumeMode, vp);
         resumeMode = dbg->processParsedHandlerResult(ac, iter.abstractFramePtr(), iter.pc(), success,
                                                      resumeMode, vp);
-        if (resumeMode != ResumeMode::Continue)
+        if (resumeMode != ResumeMode::Continue) {
+            savedExc.drop();
             return resumeMode;
+        }
     }
 
     vp.setUndefined();
