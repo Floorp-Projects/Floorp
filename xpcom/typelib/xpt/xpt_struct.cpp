@@ -110,20 +110,20 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
     }
 
     uint8_t minor_version;
-    if (!XPT_Do8(cursor, &header->major_version) ||
+    if (!XPT_Do8(cursor, &header->mMajorVersion) ||
         !XPT_Do8(cursor, &minor_version)) {
         return false;
     }
 
-    if (header->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
+    if (header->mMajorVersion >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
         /* This file is newer than we are and set to an incompatible version
          * number. We must set the header state thusly and return.
          */
-        header->num_interfaces = 0;
+        header->mNumInterfaces = 0;
         return true;
     }
 
-    if (!XPT_Do16(cursor, &header->num_interfaces) ||
+    if (!XPT_Do16(cursor, &header->mNumInterfaces) ||
         !XPT_Do32(cursor, &file_length) ||
         !XPT_Do32(cursor, &ide_offset)) {
         return false;
@@ -148,8 +148,8 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
 
     XPTInterfaceDirectoryEntry* interface_directory = nullptr;
 
-    if (header->num_interfaces) {
-        size_t n = header->num_interfaces * sizeof(XPTInterfaceDirectoryEntry);
+    if (header->mNumInterfaces) {
+        size_t n = header->mNumInterfaces * sizeof(XPTInterfaceDirectoryEntry);
         interface_directory =
             static_cast<XPTInterfaceDirectoryEntry*>(XPT_CALLOC8(arena, n));
         if (!interface_directory)
@@ -170,13 +170,13 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
     /* shouldn't be necessary now, but maybe later */
     XPT_SeekTo(cursor, ide_offset);
 
-    for (i = 0; i < header->num_interfaces; i++) {
+    for (i = 0; i < header->mNumInterfaces; i++) {
         if (!DoInterfaceDirectoryEntry(arena, cursor,
                                        &interface_directory[i]))
             return false;
     }
 
-    header->interface_directory = interface_directory;
+    header->mInterfaceDirectory = interface_directory;
 
     return true;
 }

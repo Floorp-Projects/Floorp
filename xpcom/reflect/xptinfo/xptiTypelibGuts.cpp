@@ -24,7 +24,7 @@ xptiTypelibGuts::Create(const XPTHeader* aHeader)
 {
     NS_ASSERTION(aHeader, "bad param");
     size_t n = sizeof(xptiTypelibGuts) +
-               sizeof(xptiInterfaceEntry*) * (aHeader->num_interfaces - 1);
+               sizeof(xptiInterfaceEntry*) * (aHeader->mNumInterfaces - 1);
     void* place = XPT_CALLOC8(gXPTIStructArena, n);
     if (!place)
         return nullptr;
@@ -44,7 +44,7 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
     if (r)
         return r;
 
-    const XPTInterfaceDirectoryEntry* iface = mHeader->interface_directory + i;
+    const XPTInterfaceDirectoryEntry* iface = mHeader->mInterfaceDirectory + i;
 
     XPTInterfaceInfoManager::xptiWorkingSet& set =
         XPTInterfaceInfoManager::GetSingleton()->mWorkingSet;
@@ -69,7 +69,7 @@ xptiTypelibGuts::GetEntryNameAt(uint16_t i)
     NS_ASSERTION(mHeader, "bad state");
     NS_ASSERTION(i < GetEntryCount(), "bad index");
 
-    const XPTInterfaceDirectoryEntry* iface = mHeader->interface_directory + i;
+    const XPTInterfaceDirectoryEntry* iface = mHeader->mInterfaceDirectory + i;
 
     return iface->name;
 }
