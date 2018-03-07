@@ -409,9 +409,20 @@ class RequestListContextMenu {
   }
 
   getDefaultHarOptions(sortedRequests) {
+    let {
+      getLongString,
+      getTabTarget,
+      requestData,
+      getTimingMarker,
+    } = this.props.connector;
+    let { form: { title, url } } = getTabTarget();
+
     return {
-      connector: this.props.connector,
+      getString: getLongString,
       items: sortedRequests,
+      requestData,
+      getTimingMarker,
+      title: title || url,
     };
   }
 }
