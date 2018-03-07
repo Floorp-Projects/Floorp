@@ -222,9 +222,9 @@ nsPreflightCache::CacheEntry::CheckRequest(const nsCString& aMethod,
 
   for (uint32_t i = 0; i < aHeaders.Length(); ++i) {
     uint32_t j;
+    const auto& comparator = nsCaseInsensitiveCStringComparator();
     for (j = 0; j < mHeaders.Length(); ++j) {
-      if (aHeaders[i].Equals(mHeaders[j].token,
-                             nsCaseInsensitiveCStringComparator())) {
+      if (aHeaders[i].Equals(mHeaders[j].token, comparator)) {
         break;
       }
     }
@@ -1375,8 +1375,8 @@ nsCORSPreflightListener::CheckPreflightRequestApproved(nsIRequest* aRequest)
     headers.AppendElement(header);
   }
   for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
-    if (!headers.Contains(mPreflightHeaders[i],
-                          nsCaseInsensitiveCStringArrayComparator())) {
+    const auto& comparator = nsCaseInsensitiveCStringArrayComparator();
+    if (!headers.Contains(mPreflightHeaders[i], comparator)) {
       LogBlockedRequest(aRequest, "CORSMissingAllowHeaderFromPreflight",
                         NS_ConvertUTF8toUTF16(mPreflightHeaders[i]).get(), parentHttpChannel);
       return NS_ERROR_DOM_BAD_URI;
