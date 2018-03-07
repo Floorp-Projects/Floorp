@@ -1371,6 +1371,11 @@ Inspector.prototype = {
   },
 
   _openMenu: function({ target, screenX = 0, screenY = 0 } = { }) {
+    if (this.selection.isSlotted()) {
+      // Slotted elements should not show any context menu.
+      return null;
+    }
+
     let markupContainer = this.markup.getContainer(this.selection.nodeFront);
 
     this.contextMenuTarget = target;
