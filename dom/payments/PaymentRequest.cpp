@@ -743,14 +743,9 @@ PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
     return;
   }
 
-  // When the user agent has opted to redact the shipping address
-  // in earlier steps, the spec doesn't update the request with
-  // the unredacted address at this point. Maybe, to reduce the
-  // number of footguns, it should (without an event).
-
   RefPtr<PaymentResponse> paymentResponse =
     new PaymentResponse(GetOwner(), mInternalId, mId, aMethodName,
-                        mShippingOption, mFullShippingAddress, aDetails,
+                        mShippingOption, mShippingAddress, aDetails,
                         aPayerName, aPayerEmail, aPayerPhone);
   mResponse = paymentResponse;
   mAcceptPromise->MaybeResolve(paymentResponse);
@@ -945,15 +940,11 @@ PaymentRequest::UpdateShippingAddress(const nsAString& aCountry,
                                       const nsAString& aRecipient,
                                       const nsAString& aPhone)
 {
-  nsTArray<nsString> emptyArray;
-  mShippingAddress = new PaymentAddress(GetOwner(), aCountry, emptyArray,
+  mShippingAddress = new PaymentAddress(GetOwner(), aCountry, aAddressLine,
                                         aRegion, aCity, aDependentLocality,
                                         aPostalCode, aSortingCode, aLanguageCode,
-                                        EmptyString(), EmptyString(), EmptyString());
-  mFullShippingAddress = new PaymentAddress(GetOwner(), aCountry, aAddressLine,
-                                            aRegion, aCity, aDependentLocality,
-                                            aPostalCode, aSortingCode, aLanguageCode,
-                                            aOrganization, aRecipient, aPhone);
+                                        aOrganization, aRecipient, aPhone);
+
   // Fire shippingaddresschange event
   return DispatchUpdateEvent(NS_LITERAL_STRING("shippingaddresschange"));
 }

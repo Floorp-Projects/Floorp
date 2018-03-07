@@ -21,11 +21,11 @@ shippingAddress.init("USA",              // country
                      addressLine,        // address line
                      "CA",               // region
                      "San Bruno",        // city
-                     "Test locality",    // dependent locality
+                     "",                 // dependent locality
                      "94066",            // postal code
                      "123456",           // sorting code
                      "en",               // language code
-                     "Testing Org",      // organization
+                     "",                 // organization
                      "Bill A. Pacheco",  // recipient
                      "+1-434-441-3879"); // phone
 
