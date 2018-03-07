@@ -44,6 +44,7 @@ using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::CanRecordInProcess;
 using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::Common::IsValidIdentifierString;
+using mozilla::Telemetry::Common::ToJSString;
 using mozilla::Telemetry::EventExtraEntry;
 using mozilla::Telemetry::ChildEventData;
 using mozilla::Telemetry::ProcessID;
@@ -577,23 +578,26 @@ SerializeEventsArray(const EventRecordArray& events,
     }
 
     // Add category, method, object.
-    nsCString strings[3];
+    auto addCategoryMethodObjectValues = [&](const nsACString& category,
+                                             const nsACString& method,
+                                             const nsACString& object) -> bool {
+      return items.append(JS::StringValue(ToJSString(cx, category))) &&
+             items.append(JS::StringValue(ToJSString(cx, method))) &&
+             items.append(JS::StringValue(ToJSString(cx, object)));
+    };
+      
     const EventKey& eventKey = record.GetEventKey();
     if (!eventKey.dynamic) {
       const EventInfo& info = gEventInfo[eventKey.id];
-      strings[0] = info.common_info.category();
-      strings[1] = info.method();
-      strings[2] = info.object();
+      if (!addCategoryMethodObjectValues(info.common_info.category(),
+                                         info.method(),
+                                         info.object())) {
+        return NS_ERROR_FAILURE;
+      }
     } else if (gDynamicEventInfo) {
       const DynamicEventInfo& info = (*gDynamicEventInfo)[eventKey.id];
-      strings[0] = info.category;
-      strings[1] = info.method;
-      strings[2] = info.object;
-    }
-
-    for (const nsCString& s : strings) {
-      const NS_ConvertUTF8toUTF16 wide(s);
-      if (!items.append(JS::StringValue(JS_NewUCStringCopyN(cx, wide.Data(), wide.Length())))) {
+      if (!addCategoryMethodObjectValues(info.category, info.method,
+                                         info.object)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -603,8 +607,7 @@ SerializeEventsArray(const EventRecordArray& events,
     // We still need to submit a null value if extra is set, to match the form:
     // [ts, category, method, object, null, extra]
     if (record.Value()) {
-      const NS_ConvertUTF8toUTF16 wide(record.Value().value());
-      if (!items.append(JS::StringValue(JS_NewUCStringCopyN(cx, wide.Data(), wide.Length())))) {
+      if (!items.append(JS::StringValue(ToJSString(cx, record.Value().value())))) {
         return NS_ERROR_FAILURE;
       }
     } else if (!record.Extra().IsEmpty()) {
@@ -624,9 +627,8 @@ SerializeEventsArray(const EventRecordArray& events,
       // Add extra key & value entries.
       const ExtraArray& extra = record.Extra();
       for (uint32_t i = 0; i < extra.Length(); ++i) {
-        const NS_ConvertUTF8toUTF16 wide(extra[i].value);
         JS::Rooted<JS::Value> value(cx);
-        value.setString(JS_NewUCStringCopyN(cx, wide.Data(), wide.Length()));
+        value.setString(ToJSString(cx, extra[i].value));
 
         if (!JS_DefineProperty(cx, obj, extra[i].key.get(), value, JSPROP_ENUMERATE)) {
           return NS_ERROR_FAILURE;
