@@ -272,6 +272,7 @@ private:
   bool mPaused;
   bool mDestroyed;
   bool mForceRendering;
+  bool mReceivedDisplayList;
 
   // Can only be accessed on the compositor thread.
   WebRenderScrollData mScrollData;

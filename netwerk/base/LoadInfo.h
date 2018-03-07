@@ -159,7 +159,8 @@ private:
   void SetIncludeCookiesSecFlag();
   friend class mozilla::dom::XMLHttpRequestMainThread;
 
-  // if you add a member, please also update the copy constructor
+  // if you add a member, please also update the copy constructor and consider if
+  // it should be merged from parent channel through ParentLoadInfoForwarderArgs.
   nsCOMPtr<nsIPrincipal>           mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal>           mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal>           mPrincipalToInherit;
