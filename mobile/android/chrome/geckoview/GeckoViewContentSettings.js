@@ -21,11 +21,14 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
   init() {
     debug("init");
     this._useTrackingProtection = false;
+    this._useDesktopMode = false;
   }
 
   onSettingsUpdate() {
     debug("onSettingsUpdate");
+
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
+    this.useDesktopMode = !!this.settings.useDesktopMode;
   }
 
   get useTrackingProtection() {
@@ -37,6 +40,20 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
       docShell.useTrackingProtection = aUse;
       this._useTrackingProtection = aUse;
     }
+  }
+
+  get useDesktopMode() {
+    return this._useDesktopMode;
+  }
+
+  set useDesktopMode(aUse) {
+    if (this.useDesktopMode === aUse) {
+      return;
+    }
+    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIDOMWindowUtils);
+    utils.setDesktopModeViewport(aUse);
+    this._useDesktopMode = aUse;
   }
 }
 
