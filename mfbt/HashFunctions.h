@@ -352,20 +352,19 @@ private:
       return mV0 ^ mV1 ^ mV2 ^ mV3;
     }
 
-    MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
     void sipRound()
     {
-      mV0 += mV1;
+      mV0 = WrappingAdd(mV0, mV1);
       mV1 = RotateLeft(mV1, 13);
       mV1 ^= mV0;
       mV0 = RotateLeft(mV0, 32);
-      mV2 += mV3;
+      mV2 = WrappingAdd(mV2, mV3);
       mV3 = RotateLeft(mV3, 16);
       mV3 ^= mV2;
-      mV0 += mV3;
+      mV0 = WrappingAdd(mV0, mV3);
       mV3 = RotateLeft(mV3, 21);
       mV3 ^= mV0;
-      mV2 += mV1;
+      mV2 = WrappingAdd(mV2, mV1);
       mV1 = RotateLeft(mV1, 17);
       mV1 ^= mV2;
       mV2 = RotateLeft(mV2, 32);
