@@ -14,7 +14,7 @@ from taskgraph.util.schema import Schema
 from voluptuous import Any, Optional, Required
 
 from taskgraph.transforms.job import run_job_using
-from taskgraph.transforms.job.common import add_public_artifacts
+from taskgraph.transforms.job.common import add_artifacts
 
 from taskgraph.util.hash import hash_path
 from taskgraph import GECKO
@@ -71,7 +71,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         dist=run['dist'],
         date=run['snapshot'][:8])
 
-    add_public_artifacts(config, job, taskdesc, path='/tmp/artifacts')
+    add_artifacts(config, job, taskdesc, path='/tmp/artifacts')
 
     env = worker.setdefault('env', {})
     env['DEBFULLNAME'] = 'Mozilla build team'
