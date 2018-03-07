@@ -149,10 +149,10 @@ struct XPTInterfaceDescriptor {
 struct XPTTypeDescriptorPrefix {
   uint8_t TagPart() const {
     static const uint8_t kFlagMask = 0xe0;
-    return (uint8_t) (flags & ~kFlagMask);
+    return (uint8_t) (mFlags & ~kFlagMask);
   }
 
-  uint8_t flags;
+  uint8_t mFlags;
 };
 
 /*

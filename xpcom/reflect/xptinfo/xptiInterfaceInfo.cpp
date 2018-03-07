@@ -245,7 +245,7 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
     JS::Rooted<JS::Value> v(cx);
     v.setUndefined();
 
-    switch (c.type.prefix.flags) {
+    switch (c.type.prefix.mFlags) {
       case nsXPTType::T_I16:
       {
         v.setInt32(c.value.i16);
