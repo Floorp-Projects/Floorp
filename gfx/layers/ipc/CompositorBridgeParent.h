@@ -491,10 +491,6 @@ public:
   gfx::IntSize GetEGLSurfaceSize() {
     return mEGLSurfaceSize;
   }
-
-  uint64_t GetRootLayerTreeId() {
-    return mRootLayerTreeID;
-  }
 #endif // defined(MOZ_WIDGET_ANDROID)
 
 private:
