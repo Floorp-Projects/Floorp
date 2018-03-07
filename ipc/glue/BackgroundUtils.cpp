@@ -582,5 +582,35 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
    return NS_OK;
 }
 
+void
+LoadInfoToParentLoadInfoForwarder(nsILoadInfo* aLoadInfo,
+                                  ParentLoadInfoForwarderArgs* outLoadInfoChildForwardArgs)
+{
+  if (!aLoadInfo) {
+    return;
+  }
+
+  *outLoadInfoChildForwardArgs = ParentLoadInfoForwarderArgs(
+    aLoadInfo->GetAllowInsecureRedirectToDataURI()
+  );
+}
+
+nsresult
+MergeParentLoadInfoForwarder(ParentLoadInfoForwarderArgs const& outLoadInfoChildForwardArgs,
+                             nsILoadInfo* aLoadInfo)
+{
+  if (!aLoadInfo) {
+    return NS_OK;
+  }
+
+  nsresult rv;
+
+  rv = aLoadInfo->SetAllowInsecureRedirectToDataURI(
+    outLoadInfoChildForwardArgs.allowInsecureRedirectToDataURI());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 } // namespace ipc
 } // namespace mozilla

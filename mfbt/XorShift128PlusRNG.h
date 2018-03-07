@@ -61,6 +61,7 @@ class XorShift128PlusRNG {
   /**
    * Return a pseudo-random 64-bit number.
    */
+  MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
   uint64_t next() {
     /*
      * The offsetOfState*() methods below are provided so that exceedingly-rare

@@ -17,6 +17,7 @@ import android.os.Environment;
 import android.os.Process;
 import android.os.SystemClock;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -102,7 +103,7 @@ public class GeckoApplication extends Application
         return sSessionUUID;
     }
 
-    public static String addDefaultGeckoArgs(String args) {
+    public static @Nullable String[] getDefaultGeckoArgs() {
         if (!AppConstants.MOZILLA_OFFICIAL) {
             // In un-official builds, we want to load Javascript resources fresh
             // with each build.  In official builds, the startup cache is purged by
@@ -110,9 +111,9 @@ public class GeckoApplication extends Application
             // buildid, so we purge here instead.
             Log.w(LOG_TAG, "STARTUP PERFORMANCE WARNING: un-official build: purging the " +
                            "startup (JavaScript) caches.");
-            args = (args != null) ? (args + " -purgecaches") : "-purgecaches";
+            return new String[] { "-purgecaches" };
         }
-        return args;
+        return null;
     }
 
     public static String getDefaultUAString() {

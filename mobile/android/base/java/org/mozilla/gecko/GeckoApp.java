@@ -969,11 +969,6 @@ public abstract class GeckoApp extends GeckoActivity
 
         earlyStartJavaSampler(intent);
 
-        // GeckoLoader wants to dig some environment variables out of the
-        // incoming intent, so pass it in here. GeckoLoader will do its
-        // business later and dispose of the reference.
-        GeckoLoader.setLastIntent(intent);
-
         // Workaround for <http://code.google.com/p/android/issues/detail?id=20915>.
         try {
             Class.forName("android.os.AsyncTask");
@@ -1012,12 +1007,12 @@ public abstract class GeckoApp extends GeckoActivity
 
         } else {
             final String action = intent.getAction();
-            final String args = GeckoApplication.addDefaultGeckoArgs(
-                    intent.getStringExtra("args"));
+            final String[] args = GeckoApplication.getDefaultGeckoArgs();
             final int flags = ACTION_DEBUG.equals(action) ? GeckoThread.FLAG_DEBUGGING : 0;
 
             sAlreadyLoaded = true;
-            GeckoThread.initMainProcess(/* profile */ null, args, flags);
+            GeckoThread.initMainProcess(/* profile */ null, args,
+                                        intent.getExtras(), flags);
 
             // Speculatively pre-fetch the profile in the background.
             ThreadUtils.postToBackgroundThread(new Runnable() {

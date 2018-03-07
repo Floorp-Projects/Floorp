@@ -203,7 +203,6 @@
 #endif
 
 #include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "InputData.h"

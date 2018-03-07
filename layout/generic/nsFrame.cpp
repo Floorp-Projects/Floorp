@@ -5064,8 +5064,8 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
   return FrameTarget(aFrame, false, false);
 }
 
-nsIFrame::ContentOffsets OffsetsForSingleFrame(nsIFrame* aFrame,
-                                               const nsPoint& aPoint)
+static nsIFrame::ContentOffsets
+OffsetsForSingleFrame(nsIFrame* aFrame, const nsPoint& aPoint)
 {
   nsIFrame::ContentOffsets offsets;
   FrameContentRange range = GetRangeForFrame(aFrame);
@@ -6990,7 +6990,7 @@ static void InvalidateRenderingObservers(nsIFrame* aDisplayRoot, nsIFrame* aFram
   aFrame->MarkNeedsDisplayItemRebuild();
 }
 
-void
+static void
 SchedulePaintInternal(nsIFrame* aDisplayRoot, nsIFrame* aFrame,
                       nsIFrame::PaintType aType = nsIFrame::PAINT_DEFAULT)
 {

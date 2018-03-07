@@ -19,13 +19,13 @@ add_task(async function() {
   is(urlbarBox.checked, INITIAL_URLBAR_SUGGEST_VALUE,
      "Checkbox should match initial pref value: " + INITIAL_URLBAR_SUGGEST_VALUE);
 
-  urlbarBox.doCommand();
+  await BrowserTestUtils.synthesizeMouseAtCenter("#urlBarSuggestion", {}, gBrowser.selectedBrowser);
   is(urlbarBox.checked, !INITIAL_URLBAR_SUGGEST_VALUE,
      "Checkbox should be flipped after clicking it");
   let prefValue = Services.prefs.getBoolPref(URLBAR_SUGGEST_PREF_NAME);
   is(prefValue, urlbarBox.checked, "Pref should match checkbox. Pref: " + prefValue);
 
-  urlbarBox.doCommand();
+  await BrowserTestUtils.synthesizeMouseAtCenter("#urlBarSuggestion", {}, gBrowser.selectedBrowser);
   is(urlbarBox.checked, INITIAL_URLBAR_SUGGEST_VALUE,
      "Checkbox should be back to initial value after clicking it");
   prefValue = Services.prefs.getBoolPref(URLBAR_SUGGEST_PREF_NAME);

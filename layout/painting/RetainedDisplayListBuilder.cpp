@@ -40,7 +40,8 @@
 
 using namespace mozilla;
 
-void MarkFramesWithItemsAndImagesModified(nsDisplayList* aList)
+static void
+MarkFramesWithItemsAndImagesModified(nsDisplayList* aList)
 {
   for (nsDisplayItem* i = aList->GetBottom(); i != nullptr; i = i->GetAbove()) {
     if (!i->HasDeletedFrame() && i->CanBeReused() && !i->Frame()->IsFrameModified()) {
@@ -69,7 +70,8 @@ void MarkFramesWithItemsAndImagesModified(nsDisplayList* aList)
   }
 }
 
-bool IsAnyAncestorModified(nsIFrame* aFrame)
+static bool
+IsAnyAncestorModified(nsIFrame* aFrame)
 {
   nsIFrame* f = aFrame;
   while (f) {
@@ -146,7 +148,8 @@ RetainedDisplayListBuilder::PreProcessDisplayList(nsDisplayList* aList,
   return modified;
 }
 
-bool IsSameItem(nsDisplayItem* aFirst, nsDisplayItem* aSecond)
+static bool
+IsSameItem(nsDisplayItem* aFirst, nsDisplayItem* aSecond)
 {
   if (!aFirst || !aSecond) {
     return aFirst == aSecond;
@@ -309,8 +312,9 @@ RetainedDisplayListBuilder::IncrementSubDocPresShellPaintCount(nsDisplayItem* aI
   mBuilder.IncrementPresShellPaintCount(presShell);
 }
 
-void UpdateASR(nsDisplayItem* aItem,
-               Maybe<const ActiveScrolledRoot*>& aContainerASR)
+static void
+UpdateASR(nsDisplayItem* aItem,
+          Maybe<const ActiveScrolledRoot*>& aContainerASR)
 {
   if (!aContainerASR) {
     return;

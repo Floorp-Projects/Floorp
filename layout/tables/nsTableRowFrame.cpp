@@ -308,7 +308,7 @@ nsTableRowFrame::GetUsedPadding() const
   return nsMargin(0,0,0,0);
 }
 
-nscoord
+static nscoord
 GetBSizeOfRowsSpannedBelowFirst(nsTableCellFrame& aTableCellFrame,
                                 nsTableFrame&     aTableFrame,
                                 const WritingMode aWM)
@@ -691,7 +691,7 @@ CalcAvailISize(nsTableFrame&     aTableFrame,
   return cellAvailISize;
 }
 
-nscoord
+static nscoord
 GetSpaceBetween(int32_t       aPrevColIndex,
                 int32_t       aColIndex,
                 int32_t       aColSpan,

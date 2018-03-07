@@ -21,9 +21,6 @@
 #define NS_AUTOCOMPLETEMDBRESULT_CONTRACTID \
   "@mozilla.org/autocomplete/mdb-result;1"
 
-#define NS_DOWNLOADMANAGER_CONTRACTID \
-  "@mozilla.org/download-manager;1"
-
 #define NS_DOWNLOADPLATFORM_CONTRACTID \
   "@mozilla.org/toolkit/download-platform;1"
 
@@ -116,9 +113,6 @@
 // {7A6F70B6-2BBD-44b5-9304-501352D44AB5}
 #define NS_AUTOCOMPLETEMDBRESULT_CID \
 { 0x7a6f70b6, 0x2bbd, 0x44b5, { 0x93, 0x4, 0x50, 0x13, 0x52, 0xd4, 0x4a, 0xb5 } }
-
-#define NS_DOWNLOADMANAGER_CID \
-    { 0xedb0490e, 0x1dd1, 0x11b2, { 0x83, 0xb8, 0xdb, 0xf8, 0xd8, 0x59, 0x06, 0xa6 } }
 
 #define NS_DOWNLOADPLATFORM_CID \
     { 0x649a14c9, 0xfe5c, 0x48ec, { 0x9c, 0x85, 0x00, 0xca, 0xd9, 0xcc, 0xf3, 0x2e } }

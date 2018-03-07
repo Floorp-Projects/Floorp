@@ -25,13 +25,6 @@ add_task(async function setup() {
 
   // Setup the FxA identity manager and cluster manager.
   Status.__authManager = Service.identity = new BrowserIDManager();
-
-  // None of the failures in this file should result in a UI error.
-  function onUIError() {
-    do_throw("Errors should not be presented in the UI.");
-  }
-  Svc.Obs.add("weave:ui:login:error", onUIError);
-  Svc.Obs.add("weave:ui:sync:error", onUIError);
 });
 
 

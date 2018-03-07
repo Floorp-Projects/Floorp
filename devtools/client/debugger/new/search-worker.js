@@ -267,20 +267,95 @@ module.exports = arrayMap;
 /***/ 1284:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(1631);
+module.exports = __webpack_require__(3587);
 
 
 /***/ }),
 
-/***/ 1363:
+/***/ 14:
+/***/ (function(module, exports) {
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return value != null && typeof value == 'object';
+}
+
+module.exports = isObjectLike;
+
+
+/***/ }),
+
+/***/ 259:
+/***/ (function(module, exports, __webpack_require__) {
+
+var toString = __webpack_require__(108);
+
+/**
+ * Used to match `RegExp`
+ * [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
+ */
+var reRegExpChar = /[\\^$.*+?()[\]{}|]/g,
+    reHasRegExpChar = RegExp(reRegExpChar.source);
+
+/**
+ * Escapes the `RegExp` special characters "^", "$", "\", ".", "*", "+",
+ * "?", "(", ")", "[", "]", "{", "}", and "|" in `string`.
+ *
+ * @static
+ * @memberOf _
+ * @since 3.0.0
+ * @category String
+ * @param {string} [string=''] The string to escape.
+ * @returns {string} Returns the escaped string.
+ * @example
+ *
+ * _.escapeRegExp('[lodash](https://lodash.com/)');
+ * // => '\[lodash\]\(https://lodash\.com/\)'
+ */
+function escapeRegExp(string) {
+  string = toString(string);
+  return (string && reHasRegExpChar.test(string))
+    ? string.replace(reRegExpChar, '\\$&')
+    : string;
+}
+
+module.exports = escapeRegExp;
+
+
+/***/ }),
+
+/***/ 3204:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const networkRequest = __webpack_require__(1367);
-const workerUtils = __webpack_require__(1368);
+const networkRequest = __webpack_require__(3212);
+const workerUtils = __webpack_require__(3213);
 
 module.exports = {
   networkRequest,
@@ -289,7 +364,36 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1367:
+/***/ 3208:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var g;
+
+// This works in non-strict mode
+g = function () {
+	return this;
+}();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1, eval)("this");
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+/***/ }),
+
+/***/ 3212:
 /***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -311,7 +415,7 @@ module.exports = networkRequest;
 
 /***/ }),
 
-/***/ 1368:
+/***/ 3213:
 /***/ (function(module, exports) {
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
@@ -450,43 +554,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 14:
-/***/ (function(module, exports) {
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-function isObjectLike(value) {
-  return value != null && typeof value == 'object';
-}
-
-module.exports = isObjectLike;
-
-
-/***/ }),
-
-/***/ 1402:
+/***/ 3258:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -568,19 +636,19 @@ function buildQuery(originalQuery, modifiers, { isGlobal = false, ignoreSpaces =
 
 /***/ }),
 
-/***/ 1631:
+/***/ 3587:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _getMatches = __webpack_require__(1632);
+var _getMatches = __webpack_require__(3588);
 
 var _getMatches2 = _interopRequireDefault(_getMatches);
 
-var _projectSearch = __webpack_require__(1633);
+var _projectSearch = __webpack_require__(3589);
 
-var _devtoolsUtils = __webpack_require__(1363);
+var _devtoolsUtils = __webpack_require__(3204);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -592,7 +660,7 @@ self.onmessage = workerHandler({ getMatches: _getMatches2.default, findSourceMat
 
 /***/ }),
 
-/***/ 1632:
+/***/ 3588:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -603,7 +671,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = getMatches;
 
-var _buildQuery = __webpack_require__(1402);
+var _buildQuery = __webpack_require__(3258);
 
 var _buildQuery2 = _interopRequireDefault(_buildQuery);
 
@@ -632,7 +700,7 @@ function getMatches(query, text, modifiers) {
 
 /***/ }),
 
-/***/ 1633:
+/***/ 3589:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -677,45 +745,6 @@ function findSourceMatches(source, queryText) {
   matches = [].concat(...matches);
   return matches;
 }
-
-/***/ }),
-
-/***/ 259:
-/***/ (function(module, exports, __webpack_require__) {
-
-var toString = __webpack_require__(108);
-
-/**
- * Used to match `RegExp`
- * [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
- */
-var reRegExpChar = /[\\^$.*+?()[\]{}|]/g,
-    reHasRegExpChar = RegExp(reRegExpChar.source);
-
-/**
- * Escapes the `RegExp` special characters "^", "$", "\", ".", "*", "+",
- * "?", "(", ")", "[", "]", "{", "}", and "|" in `string`.
- *
- * @static
- * @memberOf _
- * @since 3.0.0
- * @category String
- * @param {string} [string=''] The string to escape.
- * @returns {string} Returns the escaped string.
- * @example
- *
- * _.escapeRegExp('[lodash](https://lodash.com/)');
- * // => '\[lodash\]\(https://lodash\.com/\)'
- */
-function escapeRegExp(string) {
-  string = toString(string);
-  return (string && reHasRegExpChar.test(string))
-    ? string.replace(reRegExpChar, '\\$&')
-    : string;
-}
-
-module.exports = escapeRegExp;
-
 
 /***/ }),
 
@@ -836,34 +865,6 @@ module.exports = isSymbol;
 
 /***/ }),
 
-/***/ 792:
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-
 /***/ 8:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -888,7 +889,7 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 
 module.exports = freeGlobal;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(792)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3208)))
 
 /***/ })
 

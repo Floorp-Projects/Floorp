@@ -190,6 +190,14 @@ var Policies = {
     }
   },
 
+  "DisableSysAddonUpdate": {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        manager.disallowFeature("SysAddonUpdate");
+      }
+    }
+  },
+
   "DisplayBookmarksToolbar": {
     onBeforeUIStartup(manager, param) {
       if (param) {

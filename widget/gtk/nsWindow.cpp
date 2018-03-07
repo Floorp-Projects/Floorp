@@ -134,8 +134,6 @@ using namespace mozilla::widget;
 
 #include <dlfcn.h>
 
-#include "mozilla/layers/APZCTreeManager.h"
-
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;

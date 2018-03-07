@@ -37,22 +37,22 @@ static uint8_t sWinThemeId = LookAndFeel::eWindowsTheme_Generic;
 #endif
 
 static const nsCSSProps::KTableEntry kOrientationKeywords[] = {
-  { eCSSKeyword_portrait,                 NS_STYLE_ORIENTATION_PORTRAIT },
-  { eCSSKeyword_landscape,                NS_STYLE_ORIENTATION_LANDSCAPE },
+  { eCSSKeyword_portrait,                 StyleOrientation::Portrait },
+  { eCSSKeyword_landscape,                StyleOrientation::Landscape },
   { eCSSKeyword_UNKNOWN,                  -1 }
 };
 
 static const nsCSSProps::KTableEntry kScanKeywords[] = {
-  { eCSSKeyword_progressive,              NS_STYLE_SCAN_PROGRESSIVE },
-  { eCSSKeyword_interlace,                NS_STYLE_SCAN_INTERLACE },
+  { eCSSKeyword_progressive,              StyleScan::Progressive },
+  { eCSSKeyword_interlace,                StyleScan::Interlace },
   { eCSSKeyword_UNKNOWN,                  -1 }
 };
 
 static const nsCSSProps::KTableEntry kDisplayModeKeywords[] = {
-  { eCSSKeyword_browser,                 NS_STYLE_DISPLAY_MODE_BROWSER },
-  { eCSSKeyword_minimal_ui,              NS_STYLE_DISPLAY_MODE_MINIMAL_UI },
-  { eCSSKeyword_standalone,              NS_STYLE_DISPLAY_MODE_STANDALONE },
-  { eCSSKeyword_fullscreen,              NS_STYLE_DISPLAY_MODE_FULLSCREEN },
+  { eCSSKeyword_browser,                 StyleDisplayMode::Browser },
+  { eCSSKeyword_minimal_ui,              StyleDisplayMode::MinimalUi },
+  { eCSSKeyword_standalone,              StyleDisplayMode::Standalone },
+  { eCSSKeyword_fullscreen,              StyleDisplayMode::Fullscreen },
   { eCSSKeyword_UNKNOWN,                 -1 }
 };
 
@@ -189,9 +189,9 @@ GetOrientation(nsIDocument* aDocument, const nsMediaFeature*,
 {
   nsSize size = GetSize(aDocument);
   // Per spec, square viewports should be 'portrait'
-  int32_t orientation = size.width > size.height
-    ?  NS_STYLE_ORIENTATION_LANDSCAPE : NS_STYLE_ORIENTATION_PORTRAIT;
-  aResult.SetIntValue(orientation, eCSSUnit_Enumerated);
+  auto orientation = size.width > size.height
+    ? StyleOrientation::Landscape : StyleOrientation::Portrait;
+  aResult.SetEnumValue(orientation);
 }
 
 static void
@@ -200,9 +200,9 @@ GetDeviceOrientation(nsIDocument* aDocument, const nsMediaFeature*,
 {
   nsSize size = GetDeviceSize(aDocument);
   // Per spec, square viewports should be 'portrait'
-  int32_t orientation = size.width > size.height
-    ? NS_STYLE_ORIENTATION_LANDSCAPE : NS_STYLE_ORIENTATION_PORTRAIT;
-  aResult.SetIntValue(orientation, eCSSUnit_Enumerated);
+  auto orientation = size.width > size.height
+    ? StyleOrientation::Landscape : StyleOrientation::Portrait;
+  aResult.SetEnumValue(orientation);
 }
 
 static void
@@ -351,28 +351,27 @@ GetDisplayMode(nsIDocument* aDocument, const nsMediaFeature*,
     nsCOMPtr<nsIWidget> mainWidget;
     baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
     if (mainWidget && mainWidget->SizeMode() == nsSizeMode_Fullscreen) {
-      aResult.SetIntValue(NS_STYLE_DISPLAY_MODE_FULLSCREEN, eCSSUnit_Enumerated);
+      aResult.SetEnumValue(StyleDisplayMode::Fullscreen);
       return;
     }
   }
 
-  static_assert(nsIDocShell::DISPLAY_MODE_BROWSER == NS_STYLE_DISPLAY_MODE_BROWSER &&
-                nsIDocShell::DISPLAY_MODE_MINIMAL_UI == NS_STYLE_DISPLAY_MODE_MINIMAL_UI &&
-                nsIDocShell::DISPLAY_MODE_STANDALONE == NS_STYLE_DISPLAY_MODE_STANDALONE &&
-                nsIDocShell::DISPLAY_MODE_FULLSCREEN == NS_STYLE_DISPLAY_MODE_FULLSCREEN,
+  static_assert(nsIDocShell::DISPLAY_MODE_BROWSER == static_cast<int32_t>(StyleDisplayMode::Browser) &&
+                nsIDocShell::DISPLAY_MODE_MINIMAL_UI == static_cast<int32_t>(StyleDisplayMode::MinimalUi) &&
+                nsIDocShell::DISPLAY_MODE_STANDALONE == static_cast<int32_t>(StyleDisplayMode::Standalone) &&
+                nsIDocShell::DISPLAY_MODE_FULLSCREEN == static_cast<int32_t>(StyleDisplayMode::Fullscreen),
                 "nsIDocShell display modes must mach nsStyleConsts.h");
 
-  uint32_t displayMode = NS_STYLE_DISPLAY_MODE_BROWSER;
+  uint32_t displayMode = nsIDocShell::DISPLAY_MODE_BROWSER;
   if (nsIDocShell* docShell = rootDocument->GetDocShell()) {
     docShell->GetDisplayMode(&displayMode);
   }
 
-  aResult.SetIntValue(displayMode, eCSSUnit_Enumerated);
+  aResult.SetEnumValue(static_cast<StyleDisplayMode>(displayMode));
 }
 
 static void
-GetGrid(nsIDocument* aDocument, const nsMediaFeature*,
-        nsCSSValue& aResult)
+GetGrid(nsIDocument* aDocument, const nsMediaFeature*, nsCSSValue& aResult)
 {
   // Gecko doesn't support grid devices (e.g., ttys), so the 'grid'
   // feature is always 0.

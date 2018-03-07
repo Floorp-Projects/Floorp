@@ -512,7 +512,10 @@ class ViewPopup extends BasePopup {
     this.browser.swapDocShells(browser);
     this.destroyBrowser(browser);
 
-    if (this.dimensions && !this.fixedWidth) {
+    if (this.dimensions) {
+      if (this.fixedWidth) {
+        delete this.dimensions.width;
+      }
       this.resizeBrowser(this.dimensions);
     }
 

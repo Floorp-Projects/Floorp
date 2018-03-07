@@ -156,10 +156,6 @@ fun:*OT*collect_glyphs*
 # These look like harmless layouting-related overflows
 src:*/gfx/cairo/libpixman/src/pixman-region.c
 
-# Sorting code in layout/style/nsCSSProps.cpp that probably doesn't
-# care about overflows.
-fun:*SortPropertyAndCount*
-
 # Code in ipc/chromium/src/base/file_path.cc where a function returns -1
 # being cast to unsigned and then overflowed.
 fun:*FilePath*Append*
@@ -235,7 +231,6 @@ src:*/mozglue/misc/TimeStamp.h
 #
 src:*/dom/canvas/MurmurHash3.cpp
 src:*/gfx/skia/skia/include/private/SkChecksum.h
-src:*/HashFunctions.h
 src:*/intl/icu/source/common/unifiedcache.h
 src:*/mfbt/SHA1.cpp
 src:*/modules/zlib/src/adler32.c
@@ -249,7 +244,6 @@ src:*/security/manager/ssl/md4.c
 src:*/security/nss/lib/dbm/src/h_func.c
 src:*/security/nss/lib/freebl/sha512.c
 src:*/security/nss/lib/freebl/md5.c
-src:*/XorShift128PlusRNG.h
 src:*/xpcom/ds/PLDHashTable.cpp
 
 # Hash/Cache function in Skia
@@ -260,9 +254,6 @@ fun:*_hash_matrix_fnv*
 fun:*_hash_mix_bits*
 fun:*_cairo_hash_string*
 fun:*_cairo_hash_bytes*
-
-# Hash function in modules/libjar/nsZipArchive.cpp
-fun:*HashName*
 
 # intl code hashing functions
 fun:*ustr_hash*CharsN*

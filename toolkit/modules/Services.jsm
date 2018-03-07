@@ -76,7 +76,6 @@ var initTable = {
   cpmm: ["@mozilla.org/childprocessmessagemanager;1", "nsIMessageSender"],
   console: ["@mozilla.org/consoleservice;1", "nsIConsoleService"],
   cookies: ["@mozilla.org/cookiemanager;1", "nsICookieManager"],
-  downloads: ["@mozilla.org/download-manager;1", "nsIDownloadManager"],
   droppedLinkHandler: ["@mozilla.org/content/dropped-link-handler;1", "nsIDroppedLinkHandler"],
   els: ["@mozilla.org/eventlistenerservice;1", "nsIEventListenerService"],
   eTLD: ["@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService"],

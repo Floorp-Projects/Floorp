@@ -158,6 +158,15 @@
       "enum": [true]
     },
 
+    "DisableSysAddonUpdate": {
+      "description": "Prevent the browser from installing and updating system addons.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "DisplayBookmarksToolbar": {
       "description": "Causes the bookmarks toolbar to be displayed by default.",
       "first_available": "60.0",

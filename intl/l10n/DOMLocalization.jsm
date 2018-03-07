@@ -107,9 +107,9 @@ function overlayElement(targetElement, translation) {
   }
 
   if (translation.attrs) {
-    for (const [name, val] of translation.attrs) {
+    for (const {name, value} of translation.attrs) {
       if (isAttrNameLocalizable(name, targetElement, explicitlyAllowed)) {
-        targetElement.setAttribute(name, val);
+        targetElement.setAttribute(name, value);
       }
     }
   }
@@ -304,6 +304,47 @@ function shiftNamedElement(element, localName) {
   return null;
 }
 
+/**
+ * Sanitizes a translation before passing them to Node.localize API.
+ *
+ * It returns `false` if the translation contains DOM Overlays and should
+ * not go into Node.localize.
+ *
+ * Note: There's a third item of work that JS DOM Overlays do - removal
+ * of attributes from the previous translation.
+ * This is not trivial to implement for Node.localize scenario, so
+ * at the moment it is not supported.
+ *
+ * @param {{
+ *          localName: string,
+ *          namespaceURI: string,
+ *          type: string || null
+ *          l10nId: string,
+ *          l10nArgs: Array<Object> || null,
+ *          l10nAttrs: string ||null,
+ *        }}                                     l10nItems
+ * @param {{value: string, attrs: Object}} translations
+ * @returns boolean
+ * @private
+ */
+function sanitizeTranslationForNodeLocalize(l10nItem, translation) {
+  if (reOverlay.test(translation.value)) {
+    return false;
+  }
+
+  if (translation.attrs) {
+    const explicitlyAllowed = l10nItem.l10nAttrs === null ? null :
+      l10nItem.l10nAttrs.split(",").map(i => i.trim());
+    for (const [j, {name}] of translation.attrs.entries()) {
+      if (!isAttrNameLocalizable(name, l10nItem, explicitlyAllowed)) {
+        translation.attrs.splice(j, 1);
+      }
+    }
+  }
+  return true;
+}
+
+
 const L10NID_ATTR_NAME = "data-l10n-id";
 const L10NARGS_ATTR_NAME = "data-l10n-args";
 
@@ -468,7 +509,7 @@ class DOMLocalization extends Localization {
   translateRoots() {
     const roots = Array.from(this.roots);
     return Promise.all(
-      roots.map(root => this.translateElements(this.getTranslatables(root)))
+      roots.map(root => this.translateFragment(root))
     );
   }
 
@@ -533,7 +574,6 @@ class DOMLocalization extends Localization {
     }
   }
 
-
   /**
    * Translate a DOM element or fragment asynchronously using this
    * `DOMLocalization` object.
@@ -548,6 +588,59 @@ class DOMLocalization extends Localization {
    * @returns {Promise}
    */
   translateFragment(frag) {
+    if (frag.localize) {
+      // This is a temporary fast-path offered by Gecko to workaround performance
+      // issues coming from Fluent and XBL+Stylo performing unnecesary
+      // operations during startup.
+      // For details see bug 1441037, bug 1442262, and bug 1363862.
+
+      // A sparse array which will store translations separated out from
+      // all translations that is needed for DOM Overlay.
+      const overlayTranslations = [];
+
+      const getTranslationsForItems = async l10nItems => {
+        const keys = l10nItems.map(l10nItem => [l10nItem.l10nId, l10nItem.l10nArgs]);
+        const translations = await this.formatMessages(keys);
+
+        // Here we want to separate out elements that require DOM Overlays.
+        // Those elements will have to be translated using our JS
+        // implementation, while everything else is going to use the fast-path.
+        for (const [i, translation] of translations.entries()) {
+          if (translation === undefined) {
+            continue;
+          }
+
+          const hasOnlyText =
+            sanitizeTranslationForNodeLocalize(l10nItems[i], translation);
+          if (!hasOnlyText) {
+            // Removing from translations to make Node.localize skip it.
+            // We will translate it below using JS DOM Overlays.
+            overlayTranslations[i] = translations[i];
+            translations[i] = undefined;
+          }
+        }
+
+        // We pause translation observing here because Node.localize
+        // will translate the whole DOM next, using the `translations`.
+        //
+        // The observer will be resumed after DOM Overlays are localized
+        // in the next microtask.
+        this.pauseObserving();
+        return translations;
+      };
+
+      return frag.localize(getTranslationsForItems.bind(this))
+        .then(untranslatedElements => {
+          for (let i = 0; i < overlayTranslations.length; i++) {
+            if (overlayTranslations[i] !== undefined &&
+                untranslatedElements[i] !== undefined) {
+              overlayElement(untranslatedElements[i], overlayTranslations[i]);
+            }
+          }
+          this.resumeObserving();
+        })
+        .catch(() => this.resumeObserving());
+    }
     return this.translateElements(this.getTranslatables(frag));
   }
 
@@ -585,7 +678,9 @@ class DOMLocalization extends Localization {
     this.pauseObserving();
 
     for (let i = 0; i < elements.length; i++) {
-      overlayElement(elements[i], translations[i]);
+      if (translations[i] !== undefined) {
+        overlayElement(elements[i], translations[i]);
+      }
     }
 
     this.resumeObserving();

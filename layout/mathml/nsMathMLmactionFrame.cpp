@@ -246,7 +246,7 @@ NS_IMPL_ISUPPORTS(nsMathMLmactionFrame::MouseListener,
 
 // helper to show a msg on the status bar
 // curled from nsPluginFrame.cpp ...
-void
+static void
 ShowStatus(nsPresContext* aPresContext, nsString& aStatusMsg)
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellItem(aPresContext->GetDocShell());

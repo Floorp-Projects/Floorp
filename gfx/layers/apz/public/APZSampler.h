@@ -9,8 +9,17 @@
 
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/Maybe.h"
+#include "nsTArray.h"
 
 namespace mozilla {
+
+class TimeStamp;
+
+namespace wr {
+class TransactionBuilder;
+struct WrTransformProperty;
+} // namespace wr
+
 namespace layers {
 
 class APZCTreeManager;
@@ -48,7 +57,18 @@ public:
                               const RefPtr<APZSampler>& aOldSampler);
   void NotifyLayerTreeRemoved(uint64_t aLayersId);
 
+  bool PushStateToWR(wr::TransactionBuilder& aTxn,
+                     const TimeStamp& aSampleTime,
+                     nsTArray<wr::WrTransformProperty>& aTransformArray);
+
   bool GetAPZTestData(uint64_t aLayersId, APZTestData* aOutData);
+
+  void SetTestAsyncScrollOffset(uint64_t aLayersId,
+                                const FrameMetrics::ViewID& aScrollId,
+                                const CSSPoint& aOffset);
+  void SetTestAsyncZoom(uint64_t aLayersId,
+                        const FrameMetrics::ViewID& aScrollId,
+                        const LayerToParentLayerScale& aZoom);
 
 protected:
   virtual ~APZSampler();

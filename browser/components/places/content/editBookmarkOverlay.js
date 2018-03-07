@@ -1072,7 +1072,7 @@ var gEditItemOverlay = {
 
     switch (aProperty) {
     case "uri":
-      let newURI = Services.ui.newURI(aValue);
+      let newURI = Services.io.newURI(aValue);
       if (!newURI.equals(this._paneInfo.uri)) {
         this._paneInfo.uri = newURI;
         if (this._paneInfo.visibleRows.has("locationRow"))

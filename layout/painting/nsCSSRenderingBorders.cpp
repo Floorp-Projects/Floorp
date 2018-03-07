@@ -2618,7 +2618,8 @@ nsCSSBorderRenderer::AllBordersSolid()
   return true;
 }
 
-bool IsVisible(int aStyle)
+static bool
+IsVisible(int aStyle)
 {
   if (aStyle != NS_STYLE_BORDER_STYLE_NONE &&
       aStyle != NS_STYLE_BORDER_STYLE_HIDDEN) {

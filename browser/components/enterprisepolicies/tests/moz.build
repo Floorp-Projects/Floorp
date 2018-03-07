@@ -12,3 +12,7 @@ BROWSER_CHROME_MANIFESTS += [
     'browser/disable_app_update/browser.ini',
     'browser/disable_developer_tools/browser.ini',
 ]
+
+TESTING_JS_MODULES += [
+    'EnterprisePolicyTesting.jsm',
+]

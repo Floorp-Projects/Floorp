@@ -645,6 +645,7 @@ WEBIDL_FILES = [
     'KeyframeAnimationOptions.webidl',
     'KeyframeEffect.webidl',
     'KeyIdsInitData.webidl',
+    'L10nUtils.webidl',
     'LegacyQueryInterface.webidl',
     'LinkStyle.webidl',
     'ListBoxObject.webidl',

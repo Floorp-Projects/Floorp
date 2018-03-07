@@ -106,8 +106,7 @@ nsImageBoxFrameEvent::Run()
 // cache the notifications come back synchronously, but if the image
 // is loaded from the network the notifications come back
 // asynchronously.
-
-void
+static void
 FireImageDOMEvent(nsIContent* aContent, EventMessage aMessage)
 {
   NS_ASSERTION(aMessage == eLoad || aMessage == eLoadError,

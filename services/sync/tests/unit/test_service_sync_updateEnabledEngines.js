@@ -220,11 +220,8 @@ add_task(async function test_disabledLocally_wipe503() {
   Service._ignorePrefObserver = false;
   engine.enabled = false;
 
-  let promiseObserved = promiseOneObserver("weave:ui:sync:error");
-
   _("Sync.");
-  Service.errorHandler.syncAndReportErrors();
-  await promiseObserved;
+  await Service.sync();
   Assert.equal(Service.status.sync, SERVER_MAINTENANCE);
 
   await Service.startOver();

@@ -110,7 +110,8 @@ AST_MATCHER(QualType, isFloat) { return Node->isRealFloatingType(); }
 /// This matcher will match locations in system headers.  This is adopted from
 /// isExpansionInSystemHeader in newer clangs, but modified in order to work
 /// with old clangs that we use on infra.
-AST_MATCHER(BinaryOperator, isInSystemHeader) {
+AST_POLYMORPHIC_MATCHER(isInSystemHeader,                                      \
+                        AST_POLYMORPHIC_SUPPORTED_TYPES(Decl, Stmt)) {
   return ASTIsInSystemHeader(Finder->getASTContext(), Node);
 }
 

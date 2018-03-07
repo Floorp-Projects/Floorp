@@ -464,7 +464,7 @@ CalcValueToCSSValue(const PixelCalcValue& aCalc, nsCSSValue& aValue)
   aValue.SetArrayValue(arr, eCSSUnit_Calc);
 }
 
-double
+static double
 CalcPositionSquareDistance(const nsCSSValue& aPos1,
                            const nsCSSValue& aPos2)
 {
@@ -520,7 +520,7 @@ CalcBackgroundCoord(const nsCSSValue& aCoord)
   return ExtractCalcValue(array->Item(1));
 }
 
-double
+static double
 CalcPositionCoordSquareDistance(const nsCSSValue& aPos1,
                                 const nsCSSValue& aPos2)
 {
@@ -2031,7 +2031,7 @@ AddWeightedColorsAndClamp(double aCoeff1, const RGBAColorData& aValue1,
     : AddWeightedColors(aCoeff1, aValue1, aCoeff2, aValue2).ToColor();
 }
 
-void
+static void
 AppendToCSSValueList(UniquePtr<nsCSSValueList>& aHead,
                      UniquePtr<nsCSSValueList>&& aValueToAppend,
                      nsCSSValueList** aTail)
@@ -2047,7 +2047,7 @@ AppendToCSSValueList(UniquePtr<nsCSSValueList>& aHead,
   }
 }
 
-void
+static void
 AppendToCSSValuePairList(UniquePtr<nsCSSValuePairList>& aHead,
                          UniquePtr<nsCSSValuePairList>&& aValueToAppend,
                          nsCSSValuePairList** aTail)
@@ -3419,7 +3419,7 @@ StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
   return result;
 }
 
-already_AddRefed<css::StyleRule>
+static already_AddRefed<css::StyleRule>
 BuildStyleRule(nsCSSPropertyID aProperty,
                dom::Element* aTargetElement,
                const nsAString& aSpecifiedValue,
@@ -3454,7 +3454,7 @@ BuildStyleRule(nsCSSPropertyID aProperty,
   return rule.forget();
 }
 
-already_AddRefed<css::StyleRule>
+static already_AddRefed<css::StyleRule>
 BuildStyleRule(nsCSSPropertyID aProperty,
                dom::Element* aTargetElement,
                const nsCSSValue& aSpecifiedValue,

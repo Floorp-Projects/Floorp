@@ -170,6 +170,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mSheetAlreadyComplete(false)
   , mIsCrossOriginNoCORS(false)
   , mBlockResourceTiming(false)
+  , mLoadFailed(false)
   , mOwningElement(aOwningElement)
   , mObserver(aObserver)
   , mLoaderPrincipal(aLoaderPrincipal)
@@ -205,6 +206,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mSheetAlreadyComplete(false)
   , mIsCrossOriginNoCORS(false)
   , mBlockResourceTiming(false)
+  , mLoadFailed(false)
   , mOwningElement(nullptr)
   , mObserver(aObserver)
   , mLoaderPrincipal(aLoaderPrincipal)
@@ -250,6 +252,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mSheetAlreadyComplete(false)
   , mIsCrossOriginNoCORS(false)
   , mBlockResourceTiming(false)
+  , mLoadFailed(false)
   , mOwningElement(nullptr)
   , mObserver(aObserver)
   , mLoaderPrincipal(aLoaderPrincipal)
@@ -316,9 +319,9 @@ SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread)
 
   nsContentUtils::DispatchTrustedEvent(node->OwnerDoc(),
                                        node,
-                                       NS_SUCCEEDED(mStatus) ?
-                                         NS_LITERAL_STRING("load") :
-                                         NS_LITERAL_STRING("error"),
+                                       mLoadFailed ?
+                                         NS_LITERAL_STRING("error") :
+                                         NS_LITERAL_STRING("load"),
                                        false, false);
 
   // And unblock onload
@@ -326,13 +329,11 @@ SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread)
 }
 
 void
-SheetLoadData::ScheduleLoadEventIfNeeded(nsresult aStatus)
+SheetLoadData::ScheduleLoadEventIfNeeded()
 {
   if (!mOwningElement) {
     return;
   }
-
-  mStatus = aStatus;
 
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
   nsCOMPtr<nsIThreadInternal> internalThread = do_QueryInterface(thread);
@@ -1815,13 +1816,21 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
 void
 Loader::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
 {
-  LOG(("css::Loader::SheetComplete"));
+  LOG(("css::Loader::SheetComplete, status: 0x%" PRIx32, static_cast<uint32_t>(aStatus)));
+
+  // If aStatus is a failure we need to mark this data failed.  We also need to
+  // mark any ancestors of a failing data as failed and any sibling of a
+  // failing data as failed.  Note that SheetComplete is never called on a
+  // SheetLoadData that is the mNext of some other SheetLoadData.
+  if (NS_FAILED(aStatus)) {
+    MarkLoadTreeFailed(aLoadData);
+  }
 
   // 8 is probably big enough for all our common cases.  It's not likely that
   // imports will nest more than 8 deep, and multiple sheets with the same URI
   // are rare.
   AutoTArray<RefPtr<SheetLoadData>, 8> datasToNotify;
-  DoSheetComplete(aLoadData, aStatus, datasToNotify);
+  DoSheetComplete(aLoadData, datasToNotify);
 
   // Now it's safe to go ahead and notify observers
   uint32_t count = datasToNotify.Length();
@@ -1855,15 +1864,12 @@ Loader::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
 }
 
 void
-Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
-                        LoadDataArray& aDatasToNotify)
+Loader::DoSheetComplete(SheetLoadData* aLoadData, LoadDataArray& aDatasToNotify)
 {
   LOG(("css::Loader::DoSheetComplete"));
   NS_PRECONDITION(aLoadData, "Must have a load data!");
   NS_PRECONDITION(aLoadData->mSheet, "Must have a sheet");
   NS_ASSERTION(mSheets, "mLoadingDatas should be initialized by now.");
-
-  LOG(("Load completed, status: 0x%" PRIx32, static_cast<uint32_t>(aStatus)));
 
   // Twiddle the hashtables
   if (aLoadData->mURI) {
@@ -1897,7 +1903,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       MOZ_ASSERT(!data->mSheet->HasForcedUniqueInner(),
                  "should not get a forced unique inner during parsing");
       data->mSheet->SetComplete();
-      data->ScheduleLoadEventIfNeeded(aStatus);
+      data->ScheduleLoadEventIfNeeded();
     }
     if (data->mMustNotify && (data->mObserver || !mObservers.IsEmpty())) {
       // Don't notify here so we don't trigger script.  Remember the
@@ -1920,17 +1926,17 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
     if (data->mParentData &&
         --(data->mParentData->mPendingChildren) == 0 &&
         !data->mParentData->mIsBeingParsed) {
-      DoSheetComplete(data->mParentData, aStatus, aDatasToNotify);
+      DoSheetComplete(data->mParentData, aDatasToNotify);
     }
 
     data = data->mNext;
   }
 
   // Now that it's marked complete, put the sheet in our cache.
-  // If we ever start doing this for failure aStatus, we'll need to
+  // If we ever start doing this for failed loads, we'll need to
   // adjust the PostLoadEvent code that thinks anything already
   // complete must have loaded succesfully.
-  if (NS_SUCCEEDED(aStatus) && aLoadData->mURI) {
+  if (!aLoadData->mLoadFailed && aLoadData->mURI) {
     // Pick our sheet to cache carefully.  Ideally, we want to cache
     // one of the sheets that will be kept alive by a document or
     // parent sheet anyway, so that if someone then accesses it via
@@ -1971,6 +1977,24 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
   }
 
   NS_RELEASE(aLoadData);  // this will release parents and siblings and all that
+}
+
+void
+Loader::MarkLoadTreeFailed(SheetLoadData* aLoadData)
+{
+  if (aLoadData->mURI) {
+    LOG_URI("  Load failed: '%s'", aLoadData->mURI);
+  }
+
+  do {
+    aLoadData->mLoadFailed = true;
+
+    if (aLoadData->mParentData) {
+      MarkLoadTreeFailed(aLoadData->mParentData);
+    }
+
+    aLoadData = aLoadData->mNext;
+  } while (aLoadData);
 }
 
 nsresult
@@ -2249,7 +2273,12 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
 
   nsIPrincipal* principal = aParentSheet->Principal();
   nsresult rv = CheckContentPolicy(loadingPrincipal, principal, aURL, context, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (aParentData) {
+      MarkLoadTreeFailed(aParentData);
+    }
+    return rv;
+  }
 
   nsCOMPtr<nsICSSLoaderObserver> observer;
 
@@ -2538,10 +2567,12 @@ Loader::PostLoadEvent(nsIURI* aURI,
     evt->mSheetAlreadyComplete = true;
 
     // If we get to this code, aSheet loaded correctly at some point, so
-    // we can just use NS_OK for the status.  Note that we do this here
-    // and not from inside our SheetComplete so that we don't end up
-    // running the load event async.
-    evt->ScheduleLoadEventIfNeeded(NS_OK);
+    // we can just schedule a load event and don't need to touch the
+    // data's mLoadFailed.  Note that we do this here and not from
+    // inside our SheetComplete so that we don't end up running the load
+    // event async.
+    MOZ_ASSERT(!evt->mLoadFailed, "Why are we marked as failed?");
+    evt->ScheduleLoadEventIfNeeded();
   }
 
   return rv;

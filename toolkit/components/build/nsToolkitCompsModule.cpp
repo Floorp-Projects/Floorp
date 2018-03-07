@@ -19,7 +19,6 @@
 #include "mozilla/AlertNotification.h"
 #include "nsAlertsService.h"
 
-#include "nsDownloadManager.h"
 #include "DownloadPlatform.h"
 #include "rdf.h"
 
@@ -84,8 +83,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(AlertNotification)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDownloadManager,
-                                         nsDownloadManager::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DownloadPlatform)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
@@ -144,7 +141,6 @@ NS_DEFINE_NAMED_CID(NS_ALERTSSERVICE_CID);
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
 NS_DEFINE_NAMED_CID(NS_PARENTALCONTROLSSERVICE_CID);
 #endif
-NS_DEFINE_NAMED_CID(NS_DOWNLOADMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOWNLOADPLATFORM_CID);
 NS_DEFINE_NAMED_CID(NS_FIND_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TYPEAHEADFIND_CID);
@@ -180,7 +176,6 @@ static const Module::CIDEntry kToolkitCIDs[] = {
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { &kNS_PARENTALCONTROLSSERVICE_CID, false, nullptr, nsParentalControlsServiceConstructor },
 #endif
-  { &kNS_DOWNLOADMANAGER_CID, false, nullptr, nsDownloadManagerConstructor },
   { &kNS_DOWNLOADPLATFORM_CID, false, nullptr, DownloadPlatformConstructor },
   { &kNS_FIND_SERVICE_CID, false, nullptr, nsFindServiceConstructor },
   { &kNS_TYPEAHEADFIND_CID, false, nullptr, nsTypeAheadFindConstructor },
@@ -218,7 +213,6 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { NS_PARENTALCONTROLSSERVICE_CONTRACTID, &kNS_PARENTALCONTROLSSERVICE_CID },
 #endif
-  { NS_DOWNLOADMANAGER_CONTRACTID, &kNS_DOWNLOADMANAGER_CID },
   { NS_DOWNLOADPLATFORM_CONTRACTID, &kNS_DOWNLOADPLATFORM_CID },
   { NS_FIND_SERVICE_CONTRACTID, &kNS_FIND_SERVICE_CID },
   { NS_TYPEAHEADFIND_CONTRACTID, &kNS_TYPEAHEADFIND_CID },
