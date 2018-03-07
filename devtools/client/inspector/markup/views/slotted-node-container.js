@@ -18,6 +18,34 @@ function SlottedNodeContainer(markupView, node) {
 }
 
 SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
+  _onMouseDown: function(event) {
+    if (event.target.classList.contains("reveal-link")) {
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+    MarkupContainer.prototype._onMouseDown.call(this, event);
+  },
+
+  /**
+   * Slotted node containers never display children and should not react to toggle.
+   */
+  _onToggle: function(event) {
+    event.stopPropagation();
+  },
+
+  onContainerClick: async function(event) {
+    if (!event.target.classList.contains("reveal-link")) {
+      return;
+    }
+
+    let selection = this.markup.inspector.selection;
+    if (selection.nodeFront != this.node || selection.isSlotted()) {
+      let reason = "reveal-from-slot";
+      this.markup.inspector.selection.setNodeFront(this.node, { reason });
+    }
+  },
+
   isDraggable: function() {
     return false;
   },
