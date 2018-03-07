@@ -25,18 +25,21 @@ struct IPDLParamTraits
   // This is the default impl which discards the actor parameter and calls into
   // ParamTraits. Types which want to use the actor parameter must specialize
   // IPDLParamTraits.
-  static inline void Write(IPC::Message* aMsg, IProtocol*, const P& aParam) {
-    IPC::ParamTraits<P>::Write(aMsg, aParam);
-  }
-  // Some types which implement ParamTraits require non-const references, as
-  // they move their data into the IPC layer. This overload supports these
-  // types.
-  static inline void Write(IPC::Message* aMsg, IProtocol*, P& aParam) {
-    IPC::ParamTraits<P>::Write(aMsg, aParam);
+  template<typename R>
+  static inline void Write(IPC::Message* aMsg, IProtocol*, R&& aParam)
+  {
+    static_assert(IsSame<P, typename IPC::ParamTraitsSelector<R>::Type>::value,
+                  "IPDLParamTraits::Write only forwards calls which work via WriteParam");
+
+    IPC::ParamTraits<P>::Write(aMsg, Forward<R>(aParam));
   }
 
+  template<typename R>
   static inline bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                          IProtocol*, P* aResult) {
+                          IProtocol*, R* aResult) {
+    static_assert(IsSame<P, typename IPC::ParamTraitsSelector<R>::Type>::value,
+                  "IPDLParamTraits::Read only forwards calls which work via ReadParam");
+
     return IPC::ParamTraits<P>::Read(aMsg, aIter, aResult);
   }
 };
@@ -57,7 +60,8 @@ WriteIPDLParam(IPC::Message* aMsg,
                IProtocol* aActor,
                P&& aParam)
 {
-  IPDLParamTraits<typename Decay<P>::Type>::Write(aMsg, aActor, Forward<P>(aParam));
+  IPDLParamTraits<typename IPC::ParamTraitsSelector<P>::Type>
+    ::Write(aMsg, aActor, Forward<P>(aParam));
 }
 
 template<typename P>
@@ -67,7 +71,8 @@ ReadIPDLParam(const IPC::Message* aMsg,
               IProtocol* aActor,
               P* aResult)
 {
-  return IPDLParamTraits<P>::Read(aMsg, aIter, aActor, aResult);
+  return IPDLParamTraits<typename IPC::ParamTraitsSelector<P>::Type>
+    ::Read(aMsg, aIter, aActor, aResult);
 }
 
 // nsTArray support for IPDLParamTraits
