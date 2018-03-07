@@ -6,7 +6,7 @@
 
 using mozilla::void_t from "ipc/IPCMessageUtils.h";
 using nsPoint from "mozilla/GfxMessageUtils.h";
-using mozilla::dom::IPCBlobUtils::BlobImplPtr from "mozilla/dom/IPCBlobUtils.h";
+using refcounted class mozilla::dom::BlobImpl from "mozilla/dom/IPCBlobUtils.h";
 
 namespace mozilla {
 
@@ -20,7 +20,7 @@ struct CheckedContentData {
 };
 
 union FileContentData {
-  BlobImplPtr;
+  BlobImpl;
   nsString;
 };
 

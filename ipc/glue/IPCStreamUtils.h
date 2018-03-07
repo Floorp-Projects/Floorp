@@ -189,14 +189,12 @@ private:
 };
 
 template<>
-struct IPDLParamTraits<nsCOMPtr<nsIInputStream>>
+struct IPDLParamTraits<nsIInputStream>
 {
-  typedef nsCOMPtr<nsIInputStream> paramType;
-
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    const paramType& aParam);
+                    nsIInputStream* aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, paramType* aResult);
+                   IProtocol* aActor, RefPtr<nsIInputStream>* aResult);
 };
 
 } // namespace ipc

@@ -392,7 +392,7 @@ public:
                                                    const IPC::Principal& aPrincipal,
                                                    const ClonedMessageData& aData) override;
 
-  virtual mozilla::ipc::IPCResult RecvGeolocationUpdate(const GeoPosition& somewhere) override;
+  virtual mozilla::ipc::IPCResult RecvGeolocationUpdate(nsIDOMGeoPosition* aPosition) override;
 
   virtual mozilla::ipc::IPCResult RecvGeolocationError(const uint16_t& errorCode) override;
 

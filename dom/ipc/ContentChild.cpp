@@ -2535,15 +2535,14 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvGeolocationUpdate(const GeoPosition& somewhere)
+ContentChild::RecvGeolocationUpdate(nsIDOMGeoPosition* aPosition)
 {
   nsCOMPtr<nsIGeolocationUpdate> gs =
     do_GetService("@mozilla.org/geolocation/service;1");
   if (!gs) {
     return IPC_OK();
   }
-  nsCOMPtr<nsIDOMGeoPosition> position = somewhere;
-  gs->Update(position);
+  gs->Update(aPosition);
   return IPC_OK();
 }
 
