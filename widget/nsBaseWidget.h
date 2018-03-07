@@ -7,6 +7,7 @@
 
 #include "InputData.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WidgetUtils.h"
@@ -679,7 +680,10 @@ protected:
   RefPtr<LayerManager> mLayerManager;
   RefPtr<CompositorSession> mCompositorSession;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
+
+  mozilla::UniquePtr<mozilla::Mutex> mCompositorVsyncDispatcherLock;
   RefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
+
   RefPtr<IAPZCTreeManager> mAPZC;
   RefPtr<GeckoContentController> mRootContentController;
   RefPtr<APZEventState> mAPZEventState;
