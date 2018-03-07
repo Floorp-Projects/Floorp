@@ -354,8 +354,12 @@ class Clobber(MachCommandBase):
         to remove the object directory in its entirety, run with `--full`.
 
         The `python` target will clean up various generated Python files from
-        the source directory. Run this to remove .pyc files, compiled C
-        extensions, etc.
+        the source directory and will remove untracked files from well-known
+        directories containing Python packages. Run this to remove .pyc files,
+        compiled C extensions, etc. Note: all files not tracked or ignored by
+        version control in well-known Python package directories will be
+        deleted. Run the `status` command of your VCS to see if any untracked
+        files you haven't committed yet will be deleted.
         """
         invalid = set(what) - set(self.CLOBBER_CHOICES)
         if invalid:
@@ -378,11 +382,16 @@ class Clobber(MachCommandBase):
 
         if 'python' in what:
             if conditions.is_hg(self):
-                cmd = ['hg', 'purge', '--all', '-I', 'glob:**.py[cdo]']
+                cmd = ['hg', 'purge', '--all', '-I', 'glob:**.py[cdo]',
+                       '-I', 'path:python/', '-I', 'path:third_party/python/']
             elif conditions.is_git(self):
-                cmd = ['git', 'clean', '-f', '-x', '*.py[cdo]']
+                cmd = ['git', 'clean', '-f', '-x', '*.py[cdo]', 'python/',
+                       'third_party/python/']
             else:
-                cmd = ['find', '.', '-type', 'f', '-name', '*.py[cdo]', '-delete']
+                # We don't know what is tracked/untracked if we don't have VCS.
+                # So we can't clean python/ and third_party/python/.
+                cmd = ['find', '.', '-type', 'f', '-name', '*.py[cdo]',
+                       '-delete']
             ret = subprocess.call(cmd, cwd=self.topsrcdir)
         return ret
 
