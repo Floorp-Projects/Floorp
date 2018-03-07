@@ -9,5 +9,6 @@ geckoview.jar:
   content/geckoview.xul
   content/geckoview.js
   content/GeckoViewContent.js
+  content/GeckoViewContentSettings.js
   content/GeckoViewNavigationContent.js
   content/GeckoViewScrollContent.js

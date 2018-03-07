@@ -9,8 +9,10 @@ var EXPORTED_SYMBOLS = ["GeckoViewSettings"];
 ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "SafeBrowsing",
-  "resource://gre/modules/SafeBrowsing.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
+  UserAgentOverrides: "resource://gre/modules/UserAgentOverrides.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
     ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
@@ -21,42 +23,26 @@ function debug(aMsg) {
 }
 
 // Handles GeckoView settings including:
-// * tracking protection
 // * multiprocess
+// * user agent override
 class GeckoViewSettings extends GeckoViewModule {
   init() {
     this._isSafeBrowsingInit = false;
-    this._useTrackingProtection = false;
 
     // We only allow to set this setting during initialization, further updates
     // will be ignored.
     this.useMultiprocess = !!this.settings.useMultiprocess;
     this._displayMode = Ci.nsIDocShell.DISPLAY_MODE_BROWSER;
+
+    this.messageManager.loadFrameScript(
+      "chrome://geckoview/content/GeckoViewContentSettings.js", true);
   }
 
   onSettingsUpdate() {
     debug("onSettingsUpdate: " + JSON.stringify(this.settings));
 
-    this.useTrackingProtection = !!this.settings.useTrackingProtection;
     this.displayMode = this.settings.displayMode;
-  }
-
-  get useTrackingProtection() {
-    return this._useTrackingProtection;
-  }
-
-  set useTrackingProtection(aUse) {
-    if (aUse && !this._isSafeBrowsingInit) {
-      SafeBrowsing.init();
-      this._isSafeBrowsingInit = true;
-    }
-    if (aUse != this._useTrackingProtection) {
-      this.messageManager.loadFrameScript("data:," +
-        `docShell.useTrackingProtection = ${aUse}`,
-        true
-      );
-      this._useTrackingProtection = aUse;
-    }
+    this.useTrackingProtection = !!this.settings.useTrackingProtection;
   }
 
   get useMultiprocess() {
@@ -76,6 +62,13 @@ class GeckoViewSettings extends GeckoViewModule {
       this.browser.removeAttribute("remote");
     }
     parentNode.appendChild(this.browser);
+  }
+
+  set useTrackingProtection(aUse) {
+    if (aUse && !this._isSafeBrowsingInit) {
+      SafeBrowsing.init();
+      this._isSafeBrowsingInit = true;
+    }
   }
 
   get displayMode() {
