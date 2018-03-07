@@ -1190,7 +1190,8 @@ SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame,
 
 bool
 SavedStacks::copyAsyncStack(JSContext* cx, HandleObject asyncStack, HandleString asyncCause,
-                            MutableHandleSavedFrame adoptedStack, uint32_t maxFrameCount)
+                            MutableHandleSavedFrame adoptedStack,
+                            const Maybe<size_t>& maxFrameCount)
 {
     MOZ_ASSERT(initialized());
     MOZ_RELEASE_ASSERT(cx->compartment());
@@ -1411,10 +1412,10 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
     // rest of the synchronous stack chain.
     RootedSavedFrame parentFrame(cx, cachedFrame);
     if (asyncStack && !capture.is<JS::FirstSubsumedFrame>()) {
-        uint32_t maxAsyncFrames = capture.is<JS::MaxFrames>()
+        size_t maxAsyncFrames = capture.is<JS::MaxFrames>()
             ? capture.as<JS::MaxFrames>().maxFrames
             : ASYNC_STACK_MAX_FRAME_COUNT;
-        if (!adoptAsyncStack(cx, asyncStack, asyncCause, &parentFrame, maxAsyncFrames))
+        if (!adoptAsyncStack(cx, asyncStack, asyncCause, &parentFrame, Some(maxAsyncFrames)))
             return false;
     }
 
@@ -1442,17 +1443,17 @@ bool
 SavedStacks::adoptAsyncStack(JSContext* cx, HandleSavedFrame asyncStack,
                              HandleString asyncCause,
                              MutableHandleSavedFrame adoptedStack,
-                             uint32_t maxFrameCount)
+                             const Maybe<size_t>& maxFrameCount)
 {
     RootedAtom asyncCauseAtom(cx, AtomizeString(cx, asyncCause));
     if (!asyncCauseAtom)
         return false;
 
-    // If maxFrameCount is zero, the caller asked for an unlimited number of
+    // If maxFrameCount is Nothing, the caller asked for an unlimited number of
     // stack frames, but async stacks are not limited by the available stack
     // memory, so we need to set an arbitrary limit when collecting them. We
     // still don't enforce an upper limit if the caller requested more frames.
-    uint32_t maxFrames = maxFrameCount > 0 ? maxFrameCount : ASYNC_STACK_MAX_FRAME_COUNT;
+    size_t maxFrames = maxFrameCount.valueOr(ASYNC_STACK_MAX_FRAME_COUNT);
 
     // Accumulate the vector of Lookup objects in |stackChain|.
     SavedFrame::AutoLookupVector stackChain(cx);
@@ -1485,7 +1486,7 @@ SavedStacks::adoptAsyncStack(JSContext* cx, HandleSavedFrame asyncStack,
         // existing chain and change the asyncCause on the younger frame.
         oldestFramePosition = 1;
         parentFrame = firstSavedFrameParent;
-    } else if (maxFrameCount == 0 &&
+    } else if (maxFrameCount.isNothing() &&
                oldestFramePosition == ASYNC_STACK_MAX_FRAME_COUNT) {
         // If we captured the maximum number of frames and the caller requested
         // no specific limit, we only return half of them. This means that for
