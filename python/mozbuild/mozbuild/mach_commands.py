@@ -362,11 +362,11 @@ class Clobber(MachCommandBase):
 
         if 'python' in what:
             if conditions.is_hg(self):
-                cmd = ['hg', 'purge', '--all', '-I', 'glob:**.py[co]']
+                cmd = ['hg', 'purge', '--all', '-I', 'glob:**.py[cdo]']
             elif conditions.is_git(self):
-                cmd = ['git', 'clean', '-f', '-x', '*.py[co]']
+                cmd = ['git', 'clean', '-f', '-x', '*.py[cdo]']
             else:
-                cmd = ['find', '.', '-type', 'f', '-name', '*.py[co]', '-delete']
+                cmd = ['find', '.', '-type', 'f', '-name', '*.py[cdo]', '-delete']
             ret = subprocess.call(cmd, cwd=self.topsrcdir)
         return ret
 
