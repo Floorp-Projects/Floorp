@@ -199,37 +199,37 @@ private:
 };
 
 // Implements the methods for EventInfo.
-const nsCString
+const nsDependentCString
 EventInfo::method() const
 {
-  return nsCString(&gEventsStringTable[this->method_offset]);
+  return nsDependentCString(&gEventsStringTable[this->method_offset]);
 }
 
-const nsCString
+const nsDependentCString
 EventInfo::object() const
 {
-  return nsCString(&gEventsStringTable[this->object_offset]);
+  return nsDependentCString(&gEventsStringTable[this->object_offset]);
 }
 
 // Implements the methods for CommonEventInfo.
-const nsCString
+const nsDependentCString
 CommonEventInfo::category() const
 {
-  return nsCString(&gEventsStringTable[this->category_offset]);
+  return nsDependentCString(&gEventsStringTable[this->category_offset]);
 }
 
-const nsCString
+const nsDependentCString
 CommonEventInfo::expiration_version() const
 {
-  return nsCString(&gEventsStringTable[this->expiration_version_offset]);
+  return nsDependentCString(&gEventsStringTable[this->expiration_version_offset]);
 }
 
-const nsCString
+const nsDependentCString
 CommonEventInfo::extra_key(uint32_t index) const
 {
   MOZ_ASSERT(index < this->extra_count);
   uint32_t key_index = gExtraKeysTable[this->extra_index + index];
-  return nsCString(&gEventsStringTable[key_index]);
+  return nsDependentCString(&gEventsStringTable[key_index]);
 }
 
 // Implementation for the EventRecord class.
