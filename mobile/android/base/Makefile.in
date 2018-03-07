@@ -30,6 +30,7 @@ generated_resources := \
   $(NULL)
 
 generated_files := \
+  ../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java \
   AndroidManifest.xml \
   generated/preprocessed/org/mozilla/gecko/AdjustConstants.java \
   generated/preprocessed/org/mozilla/gecko/AppConstants.java \
