@@ -362,7 +362,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                 final ModifiableChoice item = getItem(position);
                 return !item.choice.separator && !item.choice.disabled &&
                         ((type != Choice.CHOICE_TYPE_SINGLE && type != Choice.CHOICE_TYPE_MULTIPLE)
-                                || item.choice.items != null);
+                                || item.choice.items == null);
             }
 
             @Override
