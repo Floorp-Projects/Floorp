@@ -88,11 +88,6 @@ EXPORTS.mozilla += [
     'UndisplayedNode.h',
 ]
 
-if CONFIG['MOZ_OLD_STYLE']:
-    EXPORTS.mozilla += [
-        'GeckoRestyleManager.h',
-    ]
-
 UNIFIED_SOURCES += [
     'AccessibleCaret.cpp',
     'AccessibleCaretEventHub.cpp',
@@ -129,12 +124,6 @@ UNIFIED_SOURCES += [
     'TouchManager.cpp',
     'ZoomConstraintsClient.cpp',
 ]
-
-if CONFIG['MOZ_OLD_STYLE']:
-    UNIFIED_SOURCES += [
-        'GeckoRestyleManager.cpp',
-        'RestyleTracker.cpp',
-    ]
 
 # nsRefreshDriver.cpp needs to be built separately because of name clashes in the OS X headers
 SOURCES += [

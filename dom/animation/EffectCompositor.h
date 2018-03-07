@@ -21,7 +21,6 @@
 class nsCSSPropertyIDSet;
 class nsAtom;
 class nsIFrame;
-class nsIStyleRule;
 class nsPresContext;
 class nsStyleContext;
 struct RawServoAnimationValueMap;
