@@ -174,6 +174,56 @@ WrappingAdd(T aX, T aY)
 namespace detail {
 
 template<typename T>
+struct WrappingSubtractHelper
+{
+private:
+  using UnsignedT = typename MakeUnsigned<T>::Type;
+
+public:
+  MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
+  static T compute(T aX, T aY)
+  {
+    return ToResult<T>(static_cast<UnsignedT>(aX) - static_cast<UnsignedT>(aY));
+  }
+};
+
+} // namespace detail
+
+/**
+ * Subtract two integers of the same type and return the result converted to
+ * that type using wraparound semantics, without triggering overflow sanitizers.
+ *
+ * For N-bit unsigned integer types, this is equivalent to subtracting the two
+ * numbers, then taking the result mod 2**N:
+ *
+ *   WrappingSubtract(uint32_t(42), uint32_t(17)) is 29 (29 mod 2**32);
+ *   WrappingSubtract(uint8_t(5), uint8_t(20)) is 241 (-15 mod 2**8).
+ *
+ * Unsigned WrappingSubtract acts exactly like C++ unsigned subtraction.
+ *
+ * For N-bit signed integer types, this is equivalent to subtracting the two
+ * numbers wrapped to unsigned, then wrapping the difference mod 2**N to the
+ * signed range:
+ *
+ *   WrappingSubtract(int16_t(32767), int16_t(-5)) is -32764 ((32772 mod 2**16) - 2**16);
+ *   WrappingSubtract(int8_t(-128), int8_t(127)) is 1 (-255 mod 2**8);
+ *   WrappingSubtract(int32_t(-17), int32_t(-42)) is 25 (25 mod 2**32).
+ *
+ * There's no equivalent to this operation in C++, as C++ signed subtraction
+ * that overflows has undefined behavior.  But it's how such subtraction *tends*
+ * to behave with most compilers, unless an optimization or similar -- quite
+ * permissibly -- triggers different behavior.
+ */
+template<typename T>
+inline T
+WrappingSubtract(T aX, T aY)
+{
+  return detail::WrappingSubtractHelper<T>::compute(aX, aY);
+}
+
+namespace detail {
+
+template<typename T>
 struct WrappingMultiplyHelper
 {
 private:
