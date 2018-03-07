@@ -383,7 +383,10 @@ HarCollector.prototype = {
   onEventTimings: function (response) {
     let file = this.getFile(response.from);
     file.eventTimings = response;
-    file.totalTime = response.totalTime;
+
+    let totalTime = response.totalTime;
+    file.totalTime = totalTime;
+    file.endedMillis = file.startedMillis + totalTime;
   },
 
   // Helpers
