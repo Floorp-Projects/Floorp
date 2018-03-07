@@ -10,6 +10,7 @@
 
 html {
   background: -moz-Dialog;
+  color: -moz-DialogText;
   font: message-box;
 }
 
@@ -31,6 +32,7 @@ div.section {
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
   background: -moz-Field;
+  color: -moz-FieldText;
 }
 
 div.opsRow {
@@ -40,6 +42,7 @@ div.opsRow {
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
   background: -moz-Field;
+  color: -moz-FieldText;
   display: inline-block;
 }
 
@@ -65,39 +68,50 @@ h1 {
 }
 
 h2 {
-  background: #ddd;
   padding-left: .1em;
 }
 
+.accuracyWarning, .badInputWarning, .invalid {
+  /*
+   * Technically this should be used with the default background colour,
+   * instead we're using the default field background colour,
+   * I hope this will be okay.
+   */
+  color: -moz-activehyperlinktext;
+}
+
+/*
+ * Very the colour a little bit idealy without changing how it contrasts
+ * with the background too much
+ */
 .accuracyWarning {
-  color: #d22;
+  filter: hue-rotate(30);
 }
 
 .badInputWarning {
-  color: #f00;
+  filter: hue-rotate(-30);
 }
 
 .treeline {
-  color: #888;
+  color: -moz-FieldText;
+  opacity: 50%;
+}
+
+/*
+ * We might like to style these but cannot find a colour that always
+ * contrasts with the background colour.
+ */
+.mrValue, .mrName, .mrNote {
 }
 
 .mrValue {
   font-weight: bold;
-  color: #400;
 }
 
 .mrPerc {
 }
 
 .mrSep {
-}
-
-.mrName {
-  color: #004;
-}
-
-.mrNote {
-  color: #604;
 }
 
 .hasKids {
@@ -128,11 +142,6 @@ h2 {
 
 .hidden {
   display: none;
-}
-
-.invalid {
-  color: #fff;
-  background-color: #f00;
 }
 
 /* Mobile-specific parts go here. */
