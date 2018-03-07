@@ -2644,7 +2644,7 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
   }
 
   nsIFrame* newFrame = nsLayoutUtils::GetCrossDocParentFrame(
-      aTargetFrame->PresContext()->FrameManager()->GetRootFrame());
+      aTargetFrame->PresShell()->GetRootFrame());
   aOptions =
     static_cast<ComputeScrollTargetOptions>(aOptions & ~START_FROM_PARENT);
   return newFrame ? ComputeScrollTarget(newFrame, aEvent, aOptions) : nullptr;

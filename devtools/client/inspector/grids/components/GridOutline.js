@@ -74,12 +74,12 @@ class GridOutline extends PureComponent {
     // Store the height of the grid container in the component state to prevent overflow
     // issues. We want to store the width of the grid container as well so that the
     // viewbox is only the calculated width of the grid outline.
-    let { width, height } = selectedGrid
+    let { width, height } = selectedGrid && selectedGrid.gridFragments.length
                             ? this.getTotalWidthAndHeight(selectedGrid)
                             : { width: 0, height: 0 };
     let showOutline;
 
-    if (selectedGrid) {
+    if (selectedGrid && selectedGrid.gridFragments.length) {
       const { cols, rows } = selectedGrid.gridFragments[0];
 
       // Show the grid outline if both the rows/columns are less than or equal
@@ -387,7 +387,7 @@ class GridOutline extends PureComponent {
   render() {
     const { selectedGrid } = this.state;
 
-    return selectedGrid ?
+    return selectedGrid && selectedGrid.gridFragments.length ?
       dom.div(
         {
           id: "grid-outline-container",

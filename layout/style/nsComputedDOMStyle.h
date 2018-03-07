@@ -723,7 +723,7 @@ private:
 
   // Find out if we can safely skip flushing for aDocument (i.e. pending
   // restyles does not affect mContent).
-  mozilla::FlushTarget GetFlushTarget(nsIDocument* aDocument) const;
+  bool NeedsToFlush(nsIDocument* aDocument) const;
 
 
   static nsComputedStyleMap* GetComputedStyleMap();

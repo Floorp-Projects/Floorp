@@ -12,7 +12,7 @@
 #include "RestyleTracker.h"
 
 #include "GeckoProfiler.h"
-#include "nsFrameManager.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsStyleChangeList.h"
@@ -311,7 +311,7 @@ RestyleTracker::DoProcessRestyles()
             (element->GetFlattenedTreeParent() &&
              (!element->GetFlattenedTreeParent()->GetPrimaryFrame() ||
               element->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf() ||
-              element->GetComposedDoc()->GetShell()->FrameManager()
+              element->GetComposedDoc()->GetShell()->FrameConstructor()
                 ->GetDisplayContentsStyleFor(element))) ||
             // Or not reachable due to an async reinsert we have
             // pending?  If so, we'll have a reframe hint around.

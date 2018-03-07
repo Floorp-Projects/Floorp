@@ -1075,7 +1075,7 @@ nsFrameConstructorState::nsFrameConstructorState(
   already_AddRefed<nsILayoutHistoryState> aHistoryState)
   : mPresContext(aPresShell->GetPresContext()),
     mPresShell(aPresShell),
-    mFrameManager(aPresShell->FrameManager()),
+    mFrameManager(aPresShell->FrameConstructor()),
 #ifdef MOZ_XUL
     mPopupItems(nullptr),
 #endif
