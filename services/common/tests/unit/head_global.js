@@ -3,6 +3,7 @@
 
 var Cm = Components.manager;
 
+var gSyncProfile = do_get_profile();
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
