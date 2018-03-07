@@ -299,7 +299,7 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    const XPTTypeDescriptor *td = &param->type;
+    const XPTTypeDescriptor *td = &param->mType;
 
     while (td->Tag() == TD_ARRAY) {
         td = &mDescriptor->mAdditionalTypes[td->u.mArray.mAdditionalType];
@@ -436,7 +436,7 @@ xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
 {
     NS_ASSERTION(IsFullyResolved(), "bad state");
 
-    const XPTTypeDescriptor *td = &param->type;
+    const XPTTypeDescriptor *td = &param->mType;
     const XPTTypeDescriptor *additional_types =
                 mDescriptor->mAdditionalTypes;
 
@@ -480,7 +480,7 @@ xptiInterfaceEntry::GetTypeForParam(uint16_t methodIndex,
             return rv;
     }
     else
-        td = &param->type;
+        td = &param->mType;
 
     *type = nsXPTType(td->mPrefix);
     return NS_OK;
@@ -514,7 +514,7 @@ xptiInterfaceEntry::GetSizeIsArgNumberForParam(uint16_t methodIndex,
             return rv;
     }
     else
-        td = &param->type;
+        td = &param->mType;
 
     // verify that this is a type that has size_is
     switch (td->Tag()) {
@@ -552,7 +552,7 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    const XPTTypeDescriptor *td = &param->type;
+    const XPTTypeDescriptor *td = &param->mType;
 
     while (td->Tag() == TD_ARRAY) {
         td = &mDescriptor->mAdditionalTypes[td->u.mArray.mAdditionalType];
