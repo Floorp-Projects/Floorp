@@ -172,6 +172,18 @@
               "popup_border": {
                 "$ref": "ThemeColor",
                 "optional": true
+              },
+              "toolbar_field_focus": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "toolbar_field_text_focus": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "toolbar_field_border_focus": {
+                "$ref": "ThemeColor",
+                "optional": true
               }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }
