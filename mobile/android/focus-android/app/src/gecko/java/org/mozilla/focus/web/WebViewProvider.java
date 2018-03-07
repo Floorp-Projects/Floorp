@@ -98,7 +98,7 @@ public class WebViewProvider {
 
         @Override
         public void destroy() {
-
+            geckoSession.closeWindow();
         }
 
         @Override
