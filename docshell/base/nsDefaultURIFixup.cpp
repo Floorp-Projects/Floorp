@@ -421,7 +421,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    nsCOMPtr<nsIInputStream> postData;
+    RefPtr<nsIInputStream> postData;
     ipc::OptionalURIParams uri;
     nsAutoString providerName;
     if (!contentChild->SendKeywordToURI(keyword, &providerName, &postData,

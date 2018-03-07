@@ -1892,8 +1892,12 @@ class _ParamTraits():
 
     @classmethod
     def generateDecl(cls, fortype, write, read, constin=1):
+        # IPDLParamTraits impls are selected ignoring constness, references,
+        # and pointers.
         pt = Class('IPDLParamTraits',
-                   specializes=fortype,
+                   specializes=Type(fortype.name,
+                                    T=fortype.T,
+                                    inner=fortype.inner),
                    struct=True)
 
         # typedef T paramType;

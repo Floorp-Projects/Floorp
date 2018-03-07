@@ -11,17 +11,13 @@
 #include "nsGeoPosition.h"
 #include "nsIDOMGeoPosition.h"
 
-typedef nsIDOMGeoPosition* GeoPosition;
-
 namespace IPC {
 
 template <>
-struct ParamTraits<nsIDOMGeoPositionCoords*>
+struct ParamTraits<nsIDOMGeoPositionCoords>
 {
-  typedef nsIDOMGeoPositionCoords* paramType;
-
   // Function to serialize a geoposition
-  static void Write(Message *aMsg, const paramType& aParam)
+  static void Write(Message *aMsg, nsIDOMGeoPositionCoords* aParam)
   {
     bool isNull = !aParam;
     WriteParam(aMsg, isNull);
@@ -53,14 +49,15 @@ struct ParamTraits<nsIDOMGeoPositionCoords*>
   }
 
   // Function to de-serialize a geoposition
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   RefPtr<nsIDOMGeoPositionCoords>* aResult)
   {
     // Check if it is the null pointer we have transfered
     bool isNull;
     if (!ReadParam(aMsg, aIter, &isNull)) return false;
 
     if (isNull) {
-      *aResult = 0;
+      *aResult = nullptr;
       return true;
     }
 
@@ -91,18 +88,15 @@ struct ParamTraits<nsIDOMGeoPositionCoords*>
                                        speed             /* aSpeed   */
                                       );
     return true;
-
   }
 
 };
 
 template <>
-struct ParamTraits<nsIDOMGeoPosition*>
+struct ParamTraits<nsIDOMGeoPosition>
 {
-  typedef nsIDOMGeoPosition* paramType;
-
   // Function to serialize a geoposition
-  static void Write(Message *aMsg, const paramType& aParam)
+  static void Write(Message *aMsg, nsIDOMGeoPosition* aParam)
   {
     bool isNull = !aParam;
     WriteParam(aMsg, isNull);
@@ -115,28 +109,28 @@ struct ParamTraits<nsIDOMGeoPosition*>
 
     nsCOMPtr<nsIDOMGeoPositionCoords> coords;
     aParam->GetCoords(getter_AddRefs(coords));
-    WriteParam(aMsg, coords.get());
+    WriteParam(aMsg, coords);
   }
 
   // Function to de-serialize a geoposition
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   RefPtr<nsIDOMGeoPosition>* aResult)
   {
     // Check if it is the null pointer we have transfered
     bool isNull;
     if (!ReadParam(aMsg, aIter, &isNull)) return false;
 
     if (isNull) {
-      *aResult = 0;
+      *aResult = nullptr;
       return true;
     }
 
     DOMTimeStamp timeStamp;
-    nsIDOMGeoPositionCoords* coords = nullptr;
+    RefPtr<nsIDOMGeoPositionCoords> coords;
 
     // It's not important to us where it fails, but rather if it fails
     if (!ReadParam(aMsg, aIter, &timeStamp) ||
         !ReadParam(aMsg, aIter, &coords)) {
-      nsCOMPtr<nsIDOMGeoPositionCoords> tmpcoords = coords;
       return false;
     }
 

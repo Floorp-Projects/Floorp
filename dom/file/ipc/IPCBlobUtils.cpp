@@ -304,9 +304,9 @@ SerializeUntyped(BlobImpl* aBlobImpl, IProtocol* aActor, IPCBlob& aIPCBlob)
 
 namespace ipc {
 void
-IPDLParamTraits<RefPtr<mozilla::dom::BlobImpl>>::Write(
+IPDLParamTraits<mozilla::dom::BlobImpl>::Write(
   IPC::Message* aMsg, IProtocol* aActor,
-  const RefPtr<mozilla::dom::BlobImpl>& aParam)
+  mozilla::dom::BlobImpl* aParam)
 {
   nsresult rv;
   mozilla::dom::IPCBlob ipcblob;
@@ -322,7 +322,7 @@ IPDLParamTraits<RefPtr<mozilla::dom::BlobImpl>>::Write(
 }
 
 bool
-IPDLParamTraits<RefPtr<mozilla::dom::BlobImpl>>::Read(
+IPDLParamTraits<mozilla::dom::BlobImpl>::Read(
   const IPC::Message* aMsg, PickleIterator* aIter,
   IProtocol* aActor, RefPtr<mozilla::dom::BlobImpl>* aResult)
 {

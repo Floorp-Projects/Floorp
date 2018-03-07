@@ -227,10 +227,6 @@ class nsIContentParent;
 
 namespace IPCBlobUtils {
 
-// Typedef for use within ipdl files, as the full type cannot be written
-// currently.
-typedef RefPtr<BlobImpl> BlobImplPtr;
-
 already_AddRefed<BlobImpl>
 Deserialize(const IPCBlob& aIPCBlob);
 
@@ -264,10 +260,10 @@ namespace ipc {
 // sent over the wire. When Read()-ing a BlobImpl,
 // __always make sure to handle null!__
 template<>
-struct IPDLParamTraits<RefPtr<mozilla::dom::BlobImpl>>
+struct IPDLParamTraits<mozilla::dom::BlobImpl>
 {
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    const RefPtr<mozilla::dom::BlobImpl>& aParam);
+                    mozilla::dom::BlobImpl* aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
                    IProtocol* aActor, RefPtr<mozilla::dom::BlobImpl>* aResult);
 };

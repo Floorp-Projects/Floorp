@@ -6514,13 +6514,13 @@ RestoreFileContentData(nsPIDOMWindowInner* aWindow,
 {
   nsTArray<OwningFileOrDirectory> res(aData.Length());
   for (auto& it : aData) {
-    if (it.type() == FileContentData::TBlobImplPtr) {
-      if (!it.get_BlobImplPtr()) {
+    if (it.type() == FileContentData::TBlobImpl) {
+      if (!it.get_BlobImpl()) {
         // Serialization failed, skip this file.
         continue;
       }
 
-      RefPtr<File> file = File::Create(aWindow, it.get_BlobImplPtr());
+      RefPtr<File> file = File::Create(aWindow, it.get_BlobImpl());
       MOZ_ASSERT(file);
 
       OwningFileOrDirectory* element = res.AppendElement();
