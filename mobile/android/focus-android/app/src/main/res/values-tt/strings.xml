@@ -144,11 +144,21 @@
   <string name="error_unsupportedprotocol_title">Адрес аңлашылмады</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1041;&#1091; &#1072;&#1076;&#1088;&#1077;&#1089;&#1085;&#1099; &#1072;&#1095;&#1091; &#1257;&#1095;&#1077;&#1085; &#1073;&#1072;&#1096;&#1082;&#1072; &#1073;&#1077;&#1088; &#1087;&#1088;&#1086;&#1075;&#1088;&#1072;&#1084;&#1084;&#1072; &#1091;&#1088;&#1085;&#1072;&#1096;&#1090;&#1099;&#1088;&#1091;&#1099;&#1075;&#1099;&#1079; &#1082;&#1080;&#1088;&#1241;&#1082; &#1073;&#1091;&#1083;&#1099;&#1088;&#1075;&#1072; &#1084;&#1257;&#1084;&#1082;&#1080;&#1085;.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Хәвефсез бәйләнеш кору уңышсыз тәмамланды</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1041;&#1091; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1085;&#1099;&#1187; &#1093;&#1072;&#1090;&#1072;&#1089;&#1099; &#1073;&#1091;&#1083;&#1091;&#1099; &#1084;&#1257;&#1084;&#1082;&#1080;&#1085;, &#1103;&#1080;&#1089;&#1241; &#1082;&#1077;&#1084;&#1085;&#1077;&#1187;&#1076;&#1077;&#1088; &#1057;&#1077;&#1079;&#1075;&#1241; &#1082;&#1080;&#1088;&#1241;&#1082; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1085;&#1099; &#1073;&#1072;&#1096;&#1082;&#1072;&#1089;&#1099; &#1073;&#1077;&#1083;&#1241;&#1085; &#1072;&#1083;&#1099;&#1096;&#1090;&#1099;&#1088;&#1072;&#1089;&#1099; &#1082;&#1080;&#1083;&#1241;.</li>"\n  "<li>&#1052;&#1086;&#1187;&#1072; &#1082;&#1072;&#1076;&#1241;&#1088; &#1073;&#1091; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1075;&#1072; &#1091;&#1187;&#1099;&#1096;&#1083;&#1099; &#1090;&#1086;&#1090;&#1072;&#1096;&#1082;&#1072;&#1085; &#1073;&#1091;&#1083;&#1089;&#1072;&#1075;&#1099;&#1079;, &#1073;&#1091; &#1093;&#1072;&#1090;&#1072; &#1074;&#1072;&#1082;&#1099;&#1090;&#1083;&#1099;&#1095;&#1072; &#1075;&#1099;&#1085;&#1072; &#1073;&#1091;&#1083;&#1099;&#1088;&#1075;&#1072; &#1084;&#1257;&#1084;&#1082;&#1080;&#1085;. &#1041;&#1077;&#1088;&#1241;&#1079;&#1076;&#1241;&#1085; &#1103;&#1085;&#1241;&#1076;&#1241;&#1085; &#1090;&#1099;&#1088;&#1099;&#1096;&#1099;&#1087; &#1082;&#1072;&#1088;&#1072;&#1075;&#1099;&#1079;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Абау</string>
+  <string name="error_generic_message">Билгесез сәбәпләрдән бу сәхифәне йөкли алмадык.</string>
   <string name="contextmenu_link_share">Сылтаманы уртаклашу</string>
+  <string name="contextmenu_link_copy">Сылтаманың адресын копияләү</string>
   <string name="contextmenu_image_share">Рәсемне уртаклашу</string>
+  <string name="contextmenu_image_copy">Рәсемнең адресын копияләү</string>
   <string name="contextmenu_image_save">Рәсемне саклау</string>
   <string name="contextmenu_open_in_new_tab">Сылтаманы яңа биттә ачу</string>
+  <string name="contextmenu_image_warning"><![CDATA["%1$s тарихын бетергәндә, сакланган яки уртаклашынган рәсемнәр "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1073;&#1077;&#1090;&#1077;&#1088;&#1077;&#1083;&#1084;&#1241;&#1103;&#1095;&#1241;&#1082;</b>.]]></string>
+  <string name="firstrun_defaultbrowser_title">Хосусыйлыгызны көчәйтегез</string>
+  <string name="firstrun_defaultbrowser_text2">Яшерен гизүне яңа дәрәҗәгә күтәрегез. Сайтлар аша Сезне күзәтүче һәм сәхифәләрнең йөкләнү вакытын арттыручы рекламаларны һәм башка эчтәлекләрне блоклагыз.</string>
+  <string name="firstrun_search_title">Сезнең эзләү, Сезнең кагыйдәләр</string>
+  <string name="firstrun_search_text">Башка берәр нәрсә эзлисезме? Көйләүләр менюсына кереп, стандарт итеп башка бер эзләү системасын сайлый аласыз.</string>
+  <string name="firstrun_shortcut_title">Өй экранына ярлыклар өстәгез</string>
   <string name="firstrun_privacy_title">Хосусыйлыкны гадәткә кертү</string>
   <string name="firstrun_close_button">Яхшы, аңладым!</string>
   <string name="firstrun_skip_button">Кичү</string>
@@ -157,6 +167,14 @@
   <string name="dialog_addtohomescreen_title">Өй экранына кую</string>
   <string name="dialog_addtohomescreen_action_add">Өстәү</string>
   <string name="dialog_addtohomescreen_action_cancel">Баш тарту</string>
+  <string name="dialog_opentab_title">Сылтаманы сайланган табта ачу</string>
   <string name="dialog_opentab_action_open">Ачу</string>
+  <string name="notification_browsing_session_channel_name">Яшерен гизү утырышы</string>
+  <string name="notification_browsing_session_channel_description">Бердерүләр аша %1$s утырышыгызны бер орыну белән бетерә аласыз. Сезгә кулланманы ачуның яисә гизгечтә нәрсә ачык икәнен күрүнең кирәге калмый.</string>
+  <string name="tabs_tray_action_erase">Гизү тарихын бетерү</string>
   <string name="download_firefox">Firefox\'ны йөкләп алу</string>
+  <string name="your_rights_content1">%1$s — Mozilla һәм башка катнашучылар ясаган ирекле һәм ачык чыганаклы программа.</string>
+  <string name="gv_prompt_username_hint">Кулланучы исеме</string>
+  <string name="gv_prompt_password_hint">Серсүз</string>
+  <string name="gv_prompt_clear">Чистарту</string>
 </resources>

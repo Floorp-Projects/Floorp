@@ -8,6 +8,8 @@
   <string name="feedback_erase">Gezinti geçmişiniz silinmiştir.</string>
   <string name="search_hint">%1$s terimini ara</string>
   <string name="menu_share">Paylaş…</string>
+  <string name="menu_open_with_default_browser2">%1$s ile aç</string>
+  <string name="menu_open_with_a_browser2">Birlikte aç…</string>
   <string name="menu_add_to_home_screen">Ana ekrana ekle</string>
   <string name="menu_whats_new">Yeni neler var?</string>
   <string name="menu_settings">Ayarlar</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Mozilla Foundation’ın tescilli markaları olan Mozilla, Firefox, %1$s adları ve logoları da dahil olmak üzere, tescilli markalarımızın hakları ve lisansları sizinle paylaşılmamaktadır. Daha fazla bilgi almak isterseniz "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">buraya</a>" bakabilirsiniz."]]></string>
   <string name="your_rights_content4"><![CDATA["Bazı ek %1$s kaynak kodları çeşitli özgür lisanslar ve açık kaynak "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisanslar&#305;</a>" ile sunulmaktadır."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s ayrıca Disconnect, Inc. tarafından sağlanan engelleme listelerini kullanır. %1$s’tan ayrı ve bağımsız olan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">bu &#231;al&#305;&#351;malar</a>" "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU Kamu Lisans&#305; v3</a>" ile sunulmaktadır."]]></string>
+  <string name="gv_prompt_username_hint">Kullanıcı adı</string>
+  <string name="gv_prompt_password_hint">Parola</string>
+  <string name="gv_prompt_clear">Temizle</string>
 </resources>

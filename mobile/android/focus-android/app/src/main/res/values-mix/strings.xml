@@ -8,6 +8,8 @@
   <string name="feedback_erase">Sto\'i ña ntsinu.</string>
   <string name="search_hint">Ndukù %1$s</string>
   <string name="menu_share">Stucha…</string>
+  <string name="menu_open_with_default_browser2">Kuna tsi %1$s</string>
+  <string name="menu_open_with_a_browser2">Kuna tsi…</string>
   <string name="menu_add_to_home_screen">Chika\'a nu pantalla xina</string>
   <string name="menu_whats_new">Ña tsa\'a</string>
   <string name="menu_settings">Nu samu</string>
@@ -56,6 +58,7 @@
   <string name="preference_privacy_block_analytics_summary">Kuachu\'un ña tava satutuku tsi chikuau ña sau tana katavu tsi samu</string>
   <string name="preference_privacy_block_social">Kasi ña ndukuyo</string>
   <string name="preference_privacy_block_content">Kasi ña ndukuyo inka tsio</string>
+  <string name="preference_privacy_block_content_summary2">Tatu na Kuachu\'un ña ku kueva\'a nuna pàguina</string>
   <string name="preference_privacy_secure_mode">Sèè kivu</string>
   <string name="preference_privacy_stealth_summary">Chika sèè pagina ta ku ndasamu aplicaciòn</string>
   <string name="preference_category_performance">Nixi sachu\'in</string>
@@ -179,4 +182,7 @@
   <string name="your_rights_content3"><![CDATA["Koo licencia kuachu\'na marca Fundación Mozilla ni Firefox a inkana, tsi logotipo a sivi Mozilla, Firefox a %1$s ku ndukuku tu\'un "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">yo\'o</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Inka "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencia</a>ña código abierto tsi gratuitassani inka código fuente kuachu\'un tsi %1$s.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s kuu kuachu\'un listas ña tsasi DIsconnect, Inc. tana inka chu\'un tsi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia P&#250;blica General de GNU v3</a>", cha ku ntaneu ña "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">yo\'o</a>.]]></string>
+  <string name="gv_prompt_username_hint">Sivìi</string>
+  <string name="gv_prompt_password_hint">Tu\'un seè</string>
+  <string name="gv_prompt_clear">Stòo</string>
 </resources>

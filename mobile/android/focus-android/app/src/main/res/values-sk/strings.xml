@@ -8,6 +8,8 @@
   <string name="feedback_erase">Vaša história prehliadania bola vymazaná.</string>
   <string name="search_hint">Vyhľadať %1$s</string>
   <string name="menu_share">Zdieľať…</string>
+  <string name="menu_open_with_default_browser2">Otvoriť v aplikácii %1$s</string>
+  <string name="menu_open_with_a_browser2">Otvoriť pomocou…</string>
   <string name="menu_add_to_home_screen">Pridať na úvodnú obrazovku</string>
   <string name="menu_whats_new">Čo je nové</string>
   <string name="menu_settings">Nastavenia</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Nie sú vám udelené žiadne práva či licencie súvisiace s ochrannými známkami Mozilla Foundation alebo akejkoľvek inej strany,vrátane názvov a log Mozilla, Firefox alebo %1$s. Ďalšie informácie nájdete "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tu</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Ďalšie zdrojové kódy aplikácie %1$s sú dostupné za podmienok iných slobodných a open source "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenci&#237;</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s taktiež používa zoznam blokovania, ktorý poskytuje spoločnosť Disconnect ako oddelené a nezávislé dielo za podmienok licencie "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dostupné "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tu</a>.]]></string>
+  <string name="gv_prompt_username_hint">Používateľské meno</string>
+  <string name="gv_prompt_password_hint">Heslo</string>
+  <string name="gv_prompt_clear">Vymazať</string>
 </resources>

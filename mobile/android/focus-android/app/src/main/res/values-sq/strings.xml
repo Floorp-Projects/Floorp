@@ -73,8 +73,8 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla rreket të grumbullojë vetëm sa na duhen për të ofruar dhe përmirësuar %1$s-in për këdo.</string>
   <string name="preference_privacy_notice">Shënim Mbi Privatësinë</string>
   <string name="preference_about">Mbi %1$s-in</string>
-  <string name="preference_search_installed_search_engines">Motorë të instaluar kërkimesh</string>
-  <string name="preference_search_restore">Rikthe motorët parazgjedhje të kërkimeve</string>
+  <string name="preference_search_installed_search_engines">Motorë të instaluar</string>
+  <string name="preference_search_restore">Rikthe motorë parazgjedhje kërkimi</string>
   <string name="preference_search_add2">+ Shtoni motor tjetër kërkimesh</string>
   <string name="preference_search_remove_title">Hiqni motorë kërkimesh</string>
   <string name="preference_search_remove">Hiqe</string>
@@ -157,11 +157,11 @@
   <string name="contextmenu_open_in_new_tab">Hape lidhjen në skedë të re</string>
   <string name="contextmenu_image_warning"><![CDATA["Figurat e ruajtura dhe ato të ndara me të tjerët "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">s&#8217;do t&#235; fshihen</b>, kur të fshini historikun e %1$s-it.]]></string>
   <string name="firstrun_defaultbrowser_title">Fuqizoni privatësinë tuaj</string>
-  <string name="firstrun_defaultbrowser_text2">Kalojeni shfletimin privat në nivelin pasues. Bllokoni reklama dhe lëndë tjetër që mund t’ju gjurmojë nga sajti në sajt dhe të ulë kohën e ngarkimit të faqeve.</string>
+  <string name="firstrun_defaultbrowser_text2">Kalojeni shfletimin privat një shkallë më sipër. Bllokoni reklama dhe lëndë tjetër që mund t’ju gjurmojë nga sajti në sajt dhe të ulë kohën e ngarkimit të faqeve.</string>
   <string name="firstrun_search_title">Kërkimi juaj, me mënyrën tuaj</string>
   <string name="firstrun_search_text">Po kërkoni për diçka tjetër? Zgjidhni te Rregullimet një tjetër motor parazgjedhje kërkimesh.</string>
   <string name="firstrun_shortcut_title">Shtoni shkurtore te skena juaj e kreut</string>
-  <string name="firstrun_shortcut_text">Rikthehuni shpejt te sajtet tuaj të parapëlqyer, me %1$s. Thjesht përzgjidhni \"Shtoje te skena e Kreut\" që nga menuja e %1$s-it.</string>
+  <string name="firstrun_shortcut_text">Rikthehuni shpejt te sajtet tuaj të parapëlqyer, me %1$s. Thjesht përzgjidhni \"Shtoje te skena e Kreut\", që nga menuja e %1$s-it.</string>
   <string name="firstrun_privacy_title">Bëjeni zakon privatësinë</string>
   <string name="firstrun_privacy_text">Vëreni %1$s-in si shfletuesin tuaj parazgjedhje dhe përfitoni të mirat e shfletimit privat, kur hapni faqe në web që nga aplikacione të tjera.</string>
   <string name="firstrun_close_button">OK, e mora vesh!</string>

@@ -8,6 +8,8 @@
   <string name="feedback_erase">Դիտարկումների պատմությունը ջնջվել է:</string>
   <string name="search_hint">Որոնել %1$s-ի համար</string>
   <string name="menu_share">Համօգտագործել</string>
+  <string name="menu_open_with_default_browser2">Բացել %1$s-ում</string>
+  <string name="menu_open_with_a_browser2">Բացել հետևյալում՝</string>
   <string name="menu_add_to_home_screen">Ավելացնել Տուն էկրանին</string>
   <string name="menu_whats_new">Ինչն է նոր</string>
   <string name="menu_settings">Կարգավորումներ</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Դուք արտոնություն չունեք Mozilla Foundation-ի կողմից որևէ իրավունքի կամ արտոնագրի, ներառյալ՝ Mozilla, Firefox կամ %1$s անունների կամ պատկերանշանների: Լրացուցիչ տեղեկություններ կարող եք գտնել "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1377;&#1397;&#1405;&#1407;&#1381;&#1394;</a>:]]></string>
   <string name="your_rights_content4"><![CDATA["Լրացուցիչ աղբյուր կոդը %1$s-ի համար մատչելի է այլ անվճար և բաց աղբյուրով "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1377;&#1408;&#1407;&#1400;&#1398;&#1377;&#1379;&#1408;&#1381;&#1408;&#1400;&#1406;</a>:]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s-ը նաև օգտագործում է արգելացուցակ՝ տրամադրված Disconnect-ի կողմից և անկախ աշխատանքներ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">General Public License v3</a>"-ի ներքո և մատչելի է "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1377;&#1397;&#1405;&#1407;&#1381;&#1394;</a>:]]></string>
+  <string name="gv_prompt_username_hint">Օգտվողի անուն</string>
+  <string name="gv_prompt_password_hint">Գաղտնաբառ</string>
+  <string name="gv_prompt_clear">Մաքրել</string>
 </resources>

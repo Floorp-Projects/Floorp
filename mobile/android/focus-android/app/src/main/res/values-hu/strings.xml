@@ -8,6 +8,8 @@
   <string name="feedback_erase">A böngészési előzmények törölve.</string>
   <string name="search_hint">Keresés erre: %1$s</string>
   <string name="menu_share">Megosztás…</string>
+  <string name="menu_open_with_default_browser2">Megnyitás ezzel: %1$s</string>
+  <string name="menu_open_with_a_browser2">Megnyitás a következővel…</string>
   <string name="menu_add_to_home_screen">Kezdőképernyőhöz adás</string>
   <string name="menu_whats_new">Újdonságok</string>
   <string name="menu_settings">Beállítások</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Nem kap semmiféle jogot vagy licencet a Mozilla Foundation vagy bármely más fél védjegyeihez, köztük a Mozilla, Firefox vagy %1$s nevekhez vagy logókhoz. További információkat "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">itt</a>" találhat."]]></string>
   <string name="your_rights_content4"><![CDATA["További %1$s forráskód érhető el különféle szabad szoftver vagy nyílt forráskódú "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencek</a>" alatt."]]></string>
   <string name="your_rights_content5"><![CDATA["A %1$s a Disconnect, Inc. által biztosított blokkolási listákat használ, különálló munkaként, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public Licence v3</a>" alatt, ez "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">itt</a>" érhető el."]]></string>
+  <string name="gv_prompt_username_hint">Felhasználónév</string>
+  <string name="gv_prompt_password_hint">Jelszó</string>
+  <string name="gv_prompt_clear">Törlés</string>
 </resources>

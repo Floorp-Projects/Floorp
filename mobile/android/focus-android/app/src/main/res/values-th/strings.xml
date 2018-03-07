@@ -8,6 +8,8 @@
   <string name="feedback_erase">ล้างประวัติการท่องเว็บของคุณแล้ว</string>
   <string name="search_hint">ค้นหา %1$s</string>
   <string name="menu_share">แบ่งปัน…</string>
+  <string name="menu_open_with_default_browser2">เปิดใน %1$s</string>
+  <string name="menu_open_with_a_browser2">เปิดใน…</string>
   <string name="menu_add_to_home_screen">เพิ่มไปยังหน้าจอหลัก</string>
   <string name="menu_whats_new">มีอะไรใหม่</string>
   <string name="menu_settings">การตั้งค่า</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["คุณไม่ได้รับสิทธิหรือสัญญาอนุญาตใด ๆ ในเครื่องหมายการค้าของมูลนิธิ Mozilla หรือบุคคลใด ๆ รวมทั้งชื่อหรือโลโก้ Mozilla, Firefox หรือ %1$s ข้อมูลเพิ่มเติมอาจพบได้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#3607;&#3637;&#3656;&#3609;&#3637;&#3656;</a>]]></string>
   <string name="your_rights_content4"><![CDATA["โค้ดต้นฉบับเพิ่มเติมสำหรับ %1$s ใช้งานได้ภายใต้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#3626;&#3633;&#3597;&#3597;&#3634;&#3629;&#3609;&#3640;&#3597;&#3634;&#3605;</a>" ฟรีและเปิดต้นฉบับต่าง ๆ"]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s ยังใช้รายการปิดกั้นที่จัดหาโดย Disconnect, Inc. ซึ่งเป็นงานแยกและเป็นอิสระภายใต้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" และใช้งานได้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#3607;&#3637;&#3656;&#3609;&#3637;&#3656;</a>]]></string>
+  <string name="gv_prompt_username_hint">ชื่อผู้ใช้</string>
+  <string name="gv_prompt_password_hint">รหัสผ่าน</string>
+  <string name="gv_prompt_clear">ล้าง</string>
 </resources>

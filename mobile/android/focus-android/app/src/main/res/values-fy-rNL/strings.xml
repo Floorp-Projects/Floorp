@@ -8,6 +8,8 @@
   <string name="feedback_erase">Jo sneupskiednis is wiske.</string>
   <string name="search_hint">Sykje nei %1$s</string>
   <string name="menu_share">Diele…</string>
+  <string name="menu_open_with_default_browser2">Iepenje yn %1$s</string>
+  <string name="menu_open_with_a_browser2">Iepenje yn…</string>
   <string name="menu_add_to_home_screen">Tafoegje oan startskerm</string>
   <string name="menu_whats_new">Wat is nij</string>
   <string name="menu_settings">Ynstellingen</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Der wurde jo gjin rjochten of lisinsjes ferliend op de hannelsmerken fan de Mozilla Foundation of iennige oare partij, mei ynbegryp fan de nammen of logo’s fan Mozilla, Firefox of %1$s. Oanfoljende ynformaasje is "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hjir</a>" te finen."]]></string>
   <string name="your_rights_content4"><![CDATA[Oanfoljende boarnekoade foar %1$s is beskikber ûnder ferskate oare frije en iepenboarne-<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisinsjes</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s brûkt ek blokkearlisten dy\'t troch Disconnect, Inc. beskikber steld wurde as ôfsûnderlike en ûnôfhinklike wurken ûnder de "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", en dy "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hjir</a>" beskikber binne."]]></string>
+  <string name="gv_prompt_username_hint">Brûkersnamme</string>
+  <string name="gv_prompt_password_hint">Wachtwurd</string>
+  <string name="gv_prompt_clear">Wiskje</string>
 </resources>

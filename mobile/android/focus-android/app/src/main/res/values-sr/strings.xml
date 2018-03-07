@@ -8,6 +8,8 @@
   <string name="feedback_erase">Ваш историјат прегледања је обрисан.</string>
   <string name="search_hint">Претражи %1$s</string>
   <string name="menu_share">Подели…</string>
+  <string name="menu_open_with_default_browser2">Отвори у %1$s</string>
+  <string name="menu_open_with_a_browser2">Отвори у…</string>
   <string name="menu_add_to_home_screen">Додај на почетни екран</string>
   <string name="menu_whats_new">Шта је ново</string>
   <string name="menu_settings">Поставке</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Немате никаква права нити лиценцу на заштитне знакове Mozilla фондације нити било шта слично, укључујући и Mozilla, Firefox или %1$s имена или логотипе. Додатне информације можете пронаћи "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1086;&#1074;&#1076;&#1077;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Додатни изворни код за %1$s је доступан под различитим бесплатним и "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1094;&#1072;&#1084;&#1072;</a>" отвореног кода."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s такође користи блок-листе пружане од стране Disconnect инкорпорације као одвојени и независни радови под "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" и доступним "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1086;&#1074;&#1076;&#1077;</a>.]]></string>
+  <string name="gv_prompt_username_hint">Корисничко име</string>
+  <string name="gv_prompt_password_hint">Лозинка</string>
+  <string name="gv_prompt_clear">Обриши</string>
 </resources>

@@ -8,6 +8,8 @@
   <string name="feedback_erase">היסטוריית הגלישה שלך נמחקה.</string>
   <string name="search_hint">חיפוש עבור %1$s</string>
   <string name="menu_share">שיתוף…</string>
+  <string name="menu_open_with_default_browser2">פתיחה ב־%1$s</string>
+  <string name="menu_open_with_a_browser2">פתיחה ב…</string>
   <string name="menu_add_to_home_screen">הוספה למסך הבית</string>
   <string name="menu_whats_new">מה חדש</string>
   <string name="menu_settings">הגדרות</string>
@@ -97,6 +99,7 @@
   <string name="accessibility_announcement_search">הוספת מנוע חיפוש</string>
   <string name="search_add_confirmation">נוסף מנוע חיפוש חדש.</string>
   <string name="search_add_error_empty_name">נא להקליד שם למנוע החיפוש</string>
+  <string name="search_add_error_duplicate_name">קיים מנוע חיפוש מותקן בעל שם זהה.</string>
   <string name="search_add_error_empty_search">נא להקליד מחרוזת חיפוש</string>
   <string name="search_add_error_format">יש לבדוק שמחרוזת החיפוש תואמת לתבנית שבדוגמה</string>
   <string name="content_description_clear_input">מחיקת קלט</string>
@@ -180,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["אין לך כל זכות או רשיונות על סימני המסחר של קרן Mozilla או לכל גוף שהוא, לרבות Mozilla,‏ Firefox או השמות והלוגואים של %1$s. ניתן למצוא מידע נוסף "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1499;&#1488;&#1503;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["קוד מקור נוסף עבור %1$s זמין תחת מגוון "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1512;&#1497;&#1513;&#1497;&#1493;&#1504;&#1493;&#1514;</a>" קוד פתוח נוספים."]]></string>
   <string name="your_rights_content5"><![CDATA["ב־%1$s נעשה גם שימוש ברשימות חסימה מאת Disconnect בע״מ כעבודות נפרדות ועצמריות תחת "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1490;&#1512;&#1505;&#1492; 3 &#1513;&#1500; &#1492;&#1512;&#1513;&#1497;&#1493;&#1503; &#1492;&#1510;&#1497;&#1489;&#1493;&#1512;&#1497; &#1492;&#1499;&#1500;&#1500;&#1497; &#1513;&#1500;GNU</a>", והוא זמין "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1499;&#1488;&#1503;</a>.]]></string>
+  <string name="gv_prompt_username_hint">שם משתמש</string>
+  <string name="gv_prompt_password_hint">ססמה</string>
+  <string name="gv_prompt_clear">ניקוי</string>
 </resources>
