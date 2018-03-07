@@ -348,26 +348,26 @@ DoMethodDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
 {
     int i;
 
-    if (!XPT_Do8(cursor, &md->flags) ||
-        !XPT_DoCString(arena, cursor, &md->name) ||
-        !XPT_Do8(cursor, &md->num_args))
+    if (!XPT_Do8(cursor, &md->mFlags) ||
+        !XPT_DoCString(arena, cursor, &md->mName) ||
+        !XPT_Do8(cursor, &md->mNumArgs))
         return false;
 
     XPTParamDescriptor* params = nullptr;
 
-    if (md->num_args) {
-        size_t n = md->num_args * sizeof(XPTParamDescriptor);
+    if (md->mNumArgs) {
+        size_t n = md->mNumArgs * sizeof(XPTParamDescriptor);
         params = static_cast<XPTParamDescriptor*>(XPT_CALLOC8(arena, n));
         if (!params)
             return false;
     }
 
-    for(i = 0; i < md->num_args; i++) {
+    for(i = 0; i < md->mNumArgs; i++) {
         if (!DoParamDescriptor(arena, cursor, &params[i], id))
             return false;
     }
 
-    md->params = params;
+    md->mParams = params;
 
     // |result| appears in the on-disk format but it isn't used,
     // because a method is either notxpcom, in which case it can't be
