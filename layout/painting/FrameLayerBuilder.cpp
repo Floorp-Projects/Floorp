@@ -2012,19 +2012,6 @@ FrameLayerBuilder::DidBeginRetainedLayerTransaction(LayerManager* aManager)
 }
 
 void
-FrameLayerBuilder::StoreOptimizedLayerForFrame(nsDisplayItem* aItem, Layer* aLayer)
-{
-  if (!mRetainingManager) {
-    return;
-  }
-
-  DisplayItemData* data = GetDisplayItemDataForManager(aItem, aLayer->Manager());
-  NS_ASSERTION(data, "Must have already stored data for this item!");
-  data->mOptLayer = aLayer;
-  data->mItem = nullptr;
-}
-
-void
 FrameLayerBuilder::DidEndTransaction()
 {
   GetMaskLayerImageCache()->Sweep();
@@ -3192,16 +3179,6 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     mNewChildLayers[data->mNewChildLayersIndex].mLayer = paintedLayer.forget();
   }
 
-  for (auto& item : data->mAssignedDisplayItems) {
-    MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS);
-    MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO);
-
-    InvalidateForLayerChange(item.mItem, data->mLayer, item.mDisplayItemData);
-    mLayerBuilder->AddPaintedDisplayItem(data, item, *this,
-                                         data->mAnimatedGeometryRootOffset);
-    item.mDisplayItemData = nullptr;
-  }
-
   PaintedDisplayItemLayerUserData* userData = GetPaintedDisplayItemLayerUserData(data->mLayer);
   NS_ASSERTION(userData, "where did our user data go?");
   userData->mLastItemCount = data->mAssignedDisplayItems.Length();
@@ -3246,10 +3223,6 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       data->mLayer->SetVisibleRegion(LayerIntRegion());
       data->mLayer->InvalidateWholeLayer();
       data->mLayer->SetEventRegions(EventRegions());
-
-      for (auto& item : data->mAssignedDisplayItems) {
-        mLayerBuilder->StoreOptimizedLayerForFrame(item.mItem, layer);
-      }
     }
   }
 
@@ -3258,6 +3231,15 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     layer = data->mLayer;
     layer->SetClipRect(Nothing());
     FLB_LOG_PAINTED_LAYER_DECISION(data, "  Selected painted layer=%p\n", layer.get());
+  }
+
+  for (auto& item : data->mAssignedDisplayItems) {
+    MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS);
+    MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO);
+
+    InvalidateForLayerChange(item.mItem, data->mLayer, item.mDisplayItemData);
+    mLayerBuilder->AddPaintedDisplayItem(data, item, *this, layer);
+    item.mDisplayItemData = nullptr;
   }
 
   if (mLayerBuilder->IsBuildingRetainedLayers()) {
@@ -4785,7 +4767,7 @@ void
 FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
                                          AssignedDisplayItem& aItem,
                                          ContainerState& aContainerState,
-                                         const nsPoint& aTopLeft)
+                                         Layer* aLayer)
 {
   PaintedLayer* layer = aLayerData->mLayer;
   PaintedDisplayItemLayerUserData* paintedData =
@@ -4801,7 +4783,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       // We need to grab these before updating the DisplayItemData because it will overwrite them.
       nsRegion clip;
       if (aItem.mClip.ComputeRegionInClips(&aItem.mDisplayItemData->GetClip(),
-                                     aTopLeft - paintedData->mLastAnimatedGeometryRootOrigin,
+                                     aLayerData->mAnimatedGeometryRootOffset - paintedData->mLastAnimatedGeometryRootOrigin,
                                      &clip)) {
         intClip = clip.GetBounds().ScaleToOutsidePixels(paintedData->mXScale,
                                                         paintedData->mYScale,
@@ -4823,6 +4805,12 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       data = StoreDataForFrame(aItem.mItem, layer, aItem.mLayerState, nullptr);
     }
     data->mInactiveManager = tempManager;
+    // We optimized this PaintedLayer into a ColorLayer/ImageLayer. Store the optimized
+    // layer here.
+    if (aLayer != layer) {
+      data->mOptLayer = aLayer;
+      data->mItem = nullptr;
+    }
   }
 
   if (tempManager) {
