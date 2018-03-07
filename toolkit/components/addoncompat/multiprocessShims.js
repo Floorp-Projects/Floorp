@@ -109,22 +109,8 @@ AddonInterpositionService.prototype = {
       return Cu.getCrossProcessWrapperTag(target);
     }
 
-    if (target instanceof Ci.nsIDOMXULElement) {
-      if (target.localName == "browser" && target.isRemoteBrowser) {
-        return "RemoteBrowserElement";
-      }
-    }
-
     if (target.ownerGlobal && target === target.ownerGlobal.gBrowser) {
       return "TabBrowserElement";
-    }
-
-    if (target instanceof Ci.nsIDOMChromeWindow && target.gMultiProcessBrowser) {
-      return "ChromeWindow";
-    }
-
-    if (target instanceof Ci.nsIDOMEventTarget) {
-      return "EventTarget";
     }
 
     return "generic";
