@@ -187,15 +187,18 @@ static bool EnsurePreflightCache()
 void
 nsPreflightCache::CacheEntry::PurgeExpired(TimeStamp now)
 {
-  uint32_t i;
-  for (i = 0; i < mMethods.Length(); ++i) {
+  for (uint32_t i = 0, len = mMethods.Length(); i < len; ++i) {
     if (now >= mMethods[i].expirationTime) {
-      mMethods.RemoveElementAt(i--);
+      mMethods.UnorderedRemoveElementAt(i);
+      --i; // Examine the element again, if necessary.
+      --len;
     }
   }
-  for (i = 0; i < mHeaders.Length(); ++i) {
+  for (uint32_t i = 0, len = mHeaders.Length(); i < len; ++i) {
     if (now >= mHeaders[i].expirationTime) {
-      mHeaders.RemoveElementAt(i--);
+      mHeaders.UnorderedRemoveElementAt(i);
+      --i; // Examine the element again, if necessary.
+      --len;
     }
   }
 }
