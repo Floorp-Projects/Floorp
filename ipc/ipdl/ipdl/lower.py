@@ -467,7 +467,10 @@ class _ConvertToCxxType(TypeVisitor):
         return thing.name()
 
     def visitImportedCxxType(self, t):
-        return Type(self.typename(t))
+        cxxtype = Type(self.typename(t))
+        if t.isRefcounted():
+            cxxtype = _refptr(cxxtype)
+        return cxxtype
 
     def visitActorType(self, a):
         return Type(_actorName(self.typename(a.protocol), self.side), ptr=1)
@@ -521,6 +524,11 @@ def _cxxConstRefType(ipdltype, side):
         # Keep same constness as inner type.
         t.const = _cxxConstRefType(ipdltype.basetype, side).const
         t.ref = 1
+        return t
+    if ipdltype.isCxx() and ipdltype.isRefcounted():
+        # Use T* instead of const RefPtr<T>&
+        t = t.T
+        t.ptr = 1
         return t
     t.const = 1
     t.ref = 1
