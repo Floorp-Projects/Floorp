@@ -104,7 +104,7 @@ protected:
 
   nsresult FillNoCheckRangeFromAnchor(mozInlineSpellWordUtil& aWordUtil);
 
-  already_AddRefed<nsIDocument> GetDocument();
+  nsIDocument* GetDocument() const;
   already_AddRefed<nsRange> PositionToCollapsedRange(nsINode* aNode,
                                                      uint32_t aOffset);
 };
