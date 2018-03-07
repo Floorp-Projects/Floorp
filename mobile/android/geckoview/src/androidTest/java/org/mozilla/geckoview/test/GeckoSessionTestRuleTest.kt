@@ -22,7 +22,7 @@ import org.junit.Test
 import org.junit.rules.ErrorCollector
 import org.junit.runner.RunWith
 
-inline fun GeckoSession.loadTestPath(path: String) =
+fun GeckoSession.loadTestPath(path: String) =
         this.loadUri(GeckoSessionTestRule.APK_URI_PREFIX + path.removePrefix("/"))
 
 /**
