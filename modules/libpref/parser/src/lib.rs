@@ -4,10 +4,12 @@
 
 //! This crate implements a prefs file parser.
 //!
-//! Pref files have the following grammar.
+//! Pref files have the following grammar. Note that there are slight
+//! differences between the grammar for a default prefs files and a user prefs
+//! file.
 //!
 //! <pref-file>   = <pref>*
-//! <pref>        = <pref-spec> "(" <pref-name> "," <pref-value> ")" ";"
+//! <pref>        = <pref-spec> "(" <pref-name> "," <pref-value> <pref-attrs> ")" ";"
 //! <pref-spec>   = "user_pref" | "pref" | "sticky_pref"
 //! <pref-name>   = <string-literal>
 //! <pref-value>  = <string-literal> | "true" | "false" | <int-value>
@@ -21,6 +23,9 @@
 //!   gives a UTF-16 code unit that is converted to UTF-8 before being copied
 //!   into an 8-bit string value. \x00 and \u0000 are disallowed because they
 //!   would cause C++ code handling such strings to misbehave.
+//! <pref-attrs>  = ("," <pref-attr>)*      // in default pref files
+//!               = <empty>                 // in user pref files
+//! <pref-attr>   = "sticky" | "locked"     // default pref files only
 //!
 //! Comments can take three forms:
 //! - # Python-style comments
@@ -94,7 +99,7 @@ pub enum PrefType {
 }
 
 /// Keep this in sync with PrefValueKind in Preferences.h.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u8)]
 pub enum PrefValueKind {
     Default,
@@ -112,7 +117,7 @@ pub union PrefValue {
 /// Keep this in sync with PrefsParserPrefFn in Preferences.cpp.
 type PrefFn = unsafe extern "C" fn(pref_name: *const c_char, pref_type: PrefType,
                                    pref_value_kind: PrefValueKind, pref_value: PrefValue,
-                                   is_sticky: bool);
+                                   is_sticky: bool, is_locked: bool);
 
 /// Keep this in sync with PrefsParserErrorFn in Preferences.cpp.
 type ErrorFn = unsafe extern "C" fn(msg: *const c_char);
@@ -129,8 +134,8 @@ type ErrorFn = unsafe extern "C" fn(msg: *const c_char);
 /// Keep this in sync with the prefs_parser_parse() declaration in
 /// Preferences.cpp.
 #[no_mangle]
-pub extern "C" fn prefs_parser_parse(path: *const c_char, buf: *const c_char, len: usize,
-                                     pref_fn: PrefFn, error_fn: ErrorFn) -> bool {
+pub extern "C" fn prefs_parser_parse(path: *const c_char, kind: PrefValueKind, buf: *const c_char,
+                                     len: usize, pref_fn: PrefFn, error_fn: ErrorFn) -> bool {
     let path = unsafe { std::ffi::CStr::from_ptr(path).to_string_lossy().into_owned() };
 
     // Make sure `buf` ends in a '\0', and include that in the length, because
@@ -138,7 +143,7 @@ pub extern "C" fn prefs_parser_parse(path: *const c_char, buf: *const c_char, le
     let buf = unsafe { std::slice::from_raw_parts(buf as *const c_uchar, len + 1) };
     assert!(buf.last() == Some(&EOF));
 
-    let mut parser = Parser::new(&path, &buf, pref_fn, error_fn);
+    let mut parser = Parser::new(&path, kind, &buf, pref_fn, error_fn);
     parser.parse()
 }
 
@@ -157,6 +162,8 @@ enum Token {
     UserPref,   // user_pref
     True,       // true
     False,      // false
+    Sticky,     // sticky
+    Locked,     // locked
 
     // String literal, e.g. '"string"'. The value is stored elsewhere.
     String,
@@ -272,36 +279,41 @@ struct KeywordInfo {
   token: Token,
 }
 
-const KEYWORD_INFOS: &[KeywordInfo; 5] = &[
+const KEYWORD_INFOS: [KeywordInfo; 7] = [
   // These are ordered by frequency.
   KeywordInfo { string: b"pref",        token: Token::Pref },
   KeywordInfo { string: b"true",        token: Token::True },
   KeywordInfo { string: b"false",       token: Token::False },
   KeywordInfo { string: b"user_pref",   token: Token::UserPref },
+  KeywordInfo { string: b"sticky",      token: Token::Sticky },
+  KeywordInfo { string: b"locked",      token: Token::Locked },
   KeywordInfo { string: b"sticky_pref", token: Token::StickyPref },
 ];
 
 struct Parser<'t> {
-    path: &'t str,      // Path to the file being parsed. Used in error messages.
-    buf: &'t [u8],      // Text being parsed.
-    i: usize,           // Index of next char to be read.
-    line_num: u32,      // Current line number within the text.
-    pref_fn: PrefFn,    // Callback for processing each pref.
-    error_fn: ErrorFn,  // Callback for parse errors.
-    has_errors: bool,   // Have we encountered errors?
+    path: &'t str,       // Path to the file being parsed. Used in error messages.
+    kind: PrefValueKind, // Default prefs file or user prefs file?
+    buf: &'t [u8],       // Text being parsed.
+    i: usize,            // Index of next char to be read.
+    line_num: u32,       // Current line number within the text.
+    pref_fn: PrefFn,     // Callback for processing each pref.
+    error_fn: ErrorFn,   // Callback for parse errors.
+    has_errors: bool,    // Have we encountered errors?
 }
 
 // As described above, we use 0 to represent EOF.
 const EOF: u8 = b'\0';
 
 impl<'t> Parser<'t> {
-    fn new(path: &'t str, buf: &'t [u8], pref_fn: PrefFn, error_fn: ErrorFn) -> Parser<'t> {
+    fn new(path: &'t str, kind: PrefValueKind, buf: &'t [u8], pref_fn: PrefFn, error_fn: ErrorFn)
+        -> Parser<'t> {
         // Make sure these tables take up 1 byte per entry.
         assert!(std::mem::size_of_val(&CHAR_KINDS) == 256);
         assert!(std::mem::size_of_val(&SPECIAL_STRING_CHARS) == 256);
 
         Parser {
             path: path,
+            kind: kind,
             buf: buf,
             i: 0,
             line_num: 1,
@@ -323,7 +335,7 @@ impl<'t> Parser<'t> {
         // this will be either the first token of a new pref, or EOF.
         loop {
             // <pref-spec>
-            let (pref_value_kind, is_sticky) = match token {
+            let (pref_value_kind, mut is_sticky) = match token {
                 Token::Pref => (PrefValueKind::Default, false),
                 Token::StickyPref => (PrefValueKind::Default, true),
                 Token::UserPref => (PrefValueKind::User, false),
@@ -370,7 +382,6 @@ impl<'t> Parser<'t> {
                 Token::String => {
                     (PrefType::String,
                      PrefValue { string_val: value_str.as_ptr() as *const c_char })
-
                 }
                 Token::Int(u) => {
                     // Accept u <= 2147483647; anything larger will overflow i32.
@@ -425,10 +436,49 @@ impl<'t> Parser<'t> {
                 }
             };
 
+            // ("," <pref-attr>)*   // default pref files only
+            let mut is_locked = false;
+            let mut has_attrs = false;
+            if self.kind == PrefValueKind::Default {
+                let ok = loop {
+                    // ","
+                    token = self.get_token(&mut none_str);
+                    if token != Token::SingleChar(b',') {
+                        break true;
+                    }
+
+                    // <pref-attr>
+                    token = self.get_token(&mut none_str);
+                    match token {
+                        Token::Sticky => is_sticky = true,
+                        Token::Locked => is_locked = true,
+                        _ => {
+                            token =
+                              self.error_and_recover(token, "expected pref attribute after ','");
+                            break false;
+                        }
+                    }
+                    has_attrs = true;
+                };
+                if !ok {
+                    continue;
+                }
+            } else {
+                token = self.get_token(&mut none_str);
+            }
+
             // ")"
-            token = self.get_token(&mut none_str);
             if token != Token::SingleChar(b')') {
-                token = self.error_and_recover(token, "expected ')' after pref value");
+                let expected_msg = if self.kind == PrefValueKind::Default {
+                    if has_attrs {
+                        "expected ',' or ')' after pref attribute"
+                    } else {
+                        "expected ',' or ')' after pref value"
+                    }
+                } else {
+                    "expected ')' after pref value"
+                };
+                token = self.error_and_recover(token, expected_msg);
                 continue;
             }
 
@@ -440,7 +490,7 @@ impl<'t> Parser<'t> {
             }
 
             unsafe { (self.pref_fn)(pref_name.as_ptr() as *const c_char, pref_type, pref_value_kind,
-                                    pref_value, is_sticky) };
+                                    pref_value, is_sticky, is_locked) };
 
             token = self.get_token(&mut none_str);
         }

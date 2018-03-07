@@ -1242,9 +1242,10 @@ pref("services.sync.syncedTabs.showRemoteIcons", true);
 
 // Developer edition preferences
 #ifdef MOZ_DEV_EDITION
-sticky_pref("lightweightThemes.selectedThemeID", "firefox-compact-dark@mozilla.org");
+pref("lightweightThemes.selectedThemeID", "firefox-compact-dark@mozilla.org",
+     sticky);
 #else
-sticky_pref("lightweightThemes.selectedThemeID", "");
+pref("lightweightThemes.selectedThemeID", "", sticky);
 #endif
 
 // Whether the character encoding menu is under the main Firefox button. This
@@ -1266,7 +1267,7 @@ pref("browser.newtabpage.introShown", false);
 pref("browser.newtabpage.enabled", true);
 
 // Toggles the directory tiles content of 'about:newtab'.
-sticky_pref("browser.newtabpage.enhanced", true);
+pref("browser.newtabpage.enhanced", true, sticky);
 
 // enables Activity Stream inspired layout
 pref("browser.newtabpage.compact", false);
