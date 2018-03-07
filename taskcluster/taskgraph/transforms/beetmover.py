@@ -13,6 +13,7 @@ from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
                                          get_phase)
+from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -400,14 +401,14 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(signing_task_ref, build_task_ref, platform,
+def generate_upstream_artifacts(job, signing_task_ref, build_task_ref, platform,
                                 locale=None):
     build_mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
     signing_mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
 
-    artifact_prefix = 'public/build'
+    artifact_prefix = get_artifact_prefix(job)
     if locale:
-        artifact_prefix = 'public/build/{}'.format(locale)
+        artifact_prefix = '{}/{}'.format(artifact_prefix, locale)
         platform = "{}-l10n".format(platform)
 
     upstream_artifacts = []
@@ -498,7 +499,7 @@ def make_task_worker(config, jobs):
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
             'upstream-artifacts': generate_upstream_artifacts(
-                signing_task_ref, build_task_ref, platform, locale
+                job, signing_task_ref, build_task_ref, platform, locale
             )
         }
 
