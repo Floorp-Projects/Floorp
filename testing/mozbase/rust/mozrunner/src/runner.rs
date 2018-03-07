@@ -48,7 +48,9 @@ pub trait Runner {
 pub trait RunnerProcess {
     fn status(&mut self) -> IoResult<Option<process::ExitStatus>>;
     fn stop(&mut self) -> IoResult<process::ExitStatus>;
-    fn is_running(&mut self) -> bool;
+
+    /// Determine if the process is still running.
+    fn running(&mut self) -> bool;
 }
 
 #[derive(Debug)]
@@ -99,7 +101,7 @@ impl From<PrefReaderError> for RunnerError {
 #[derive(Debug)]
 pub struct FirefoxProcess {
     process: Child,
-    profile: Profile
+    profile: Profile,
 }
 
 impl RunnerProcess for FirefoxProcess {
@@ -107,7 +109,7 @@ impl RunnerProcess for FirefoxProcess {
         self.process.try_wait()
     }
 
-    fn is_running(&mut self) -> bool {
+    fn running(&mut self) -> bool {
         self.status().unwrap().is_none()
     }
 
