@@ -168,3 +168,5 @@ libs:: FennecJNIWrappers.cpp
 
 endif # ifneq (multi,$(AB_CD))
 endif # ifeq (,$(IS_LANGUAGE_REPACK))
+
+export:: android_apks
