@@ -658,14 +658,11 @@ var Printing = {
       };
 
       // Here we QI the docShell into a nsIWebProgress passing our web progress listener in.
-      let webProgress =  docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebProgress);
+      let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIWebProgress);
       webProgress.addProgressListener(webProgressListener, Ci.nsIWebProgress.NOTIFY_STATE_REQUEST);
 
       content.document.head.innerHTML = "";
-
-      // Set title of document
-      content.document.title = article.title;
 
       // Set base URI of document. Print preview code will read this value to
       // populate the URL field in print settings so that it doesn't show
@@ -695,47 +692,68 @@ var Printing = {
       containerElement.setAttribute("id", "container");
       content.document.body.appendChild(containerElement);
 
-      // Create header div and append it to container
-      let headerElement = content.document.createElement("div");
-      headerElement.setAttribute("id", "reader-header");
-      headerElement.setAttribute("class", "header");
-      containerElement.appendChild(headerElement);
+      // Reader Mode might return null if there's a failure when parsing the document.
+      // We'll render the error message for the Simplify Page document when that happens.
+      if (article) {
+        // Set title of document
+        content.document.title = article.title;
 
-      // Jam the article's title and byline into header div
-      let titleElement = content.document.createElement("h1");
-      titleElement.setAttribute("id", "reader-title");
-      titleElement.textContent = article.title;
-      headerElement.appendChild(titleElement);
+        // Create header div and append it to container
+        let headerElement = content.document.createElement("div");
+        headerElement.setAttribute("id", "reader-header");
+        headerElement.setAttribute("class", "header");
+        containerElement.appendChild(headerElement);
 
-      let bylineElement = content.document.createElement("div");
-      bylineElement.setAttribute("id", "reader-credits");
-      bylineElement.setAttribute("class", "credits");
-      bylineElement.textContent = article.byline;
-      headerElement.appendChild(bylineElement);
+        // Jam the article's title and byline into header div
+        let titleElement = content.document.createElement("h1");
+        titleElement.setAttribute("id", "reader-title");
+        titleElement.textContent = article.title;
+        headerElement.appendChild(titleElement);
 
-      // Display header element
-      headerElement.style.display = "block";
+        let bylineElement = content.document.createElement("div");
+        bylineElement.setAttribute("id", "reader-credits");
+        bylineElement.setAttribute("class", "credits");
+        bylineElement.textContent = article.byline;
+        headerElement.appendChild(bylineElement);
 
-      // Create content div and append it to container
-      let contentElement = content.document.createElement("div");
-      contentElement.setAttribute("class", "content");
-      containerElement.appendChild(contentElement);
+        // Display header element
+        headerElement.style.display = "block";
 
-      // Jam the article's content into content div
-      let readerContent = content.document.createElement("div");
-      readerContent.setAttribute("id", "moz-reader-content");
-      contentElement.appendChild(readerContent);
+        // Create content div and append it to container
+        let contentElement = content.document.createElement("div");
+        contentElement.setAttribute("class", "content");
+        containerElement.appendChild(contentElement);
 
-      let articleUri = Services.io.newURI(article.url);
-      let parserUtils = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils);
-      let contentFragment = parserUtils.parseFragment(article.content,
-        Ci.nsIParserUtils.SanitizerDropForms | Ci.nsIParserUtils.SanitizerAllowStyle,
-        false, articleUri, readerContent);
+        // Jam the article's content into content div
+        let readerContent = content.document.createElement("div");
+        readerContent.setAttribute("id", "moz-reader-content");
+        contentElement.appendChild(readerContent);
 
-      readerContent.appendChild(contentFragment);
+        let articleUri = Services.io.newURI(article.url);
+        let parserUtils = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils);
+        let contentFragment = parserUtils.parseFragment(article.content,
+          Ci.nsIParserUtils.SanitizerDropForms | Ci.nsIParserUtils.SanitizerAllowStyle,
+          false, articleUri, readerContent);
 
-      // Display reader content element
-      readerContent.style.display = "block";
+        readerContent.appendChild(contentFragment);
+
+        // Display reader content element
+        readerContent.style.display = "block";
+      } else {
+        let aboutReaderStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
+        let errorMessage = aboutReaderStrings.GetStringFromName("aboutReader.loadError");
+
+        content.document.title = errorMessage;
+
+        // Create reader message div and append it to body
+        let readerMessageElement = content.document.createElement("div");
+        readerMessageElement.setAttribute("class", "reader-message");
+        readerMessageElement.textContent = errorMessage;
+        containerElement.appendChild(readerMessageElement);
+
+        // Display reader message element
+        readerMessageElement.style.display = "block";
+      }
     });
   },
 
