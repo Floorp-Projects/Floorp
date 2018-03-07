@@ -40,14 +40,18 @@
         @media (-moz-windows-accent-color-in-titlebar: 0) {
           :root[tabsintitlebar]:not(:-moz-lwtheme) {
             background-color: hsl(235,33%,19%);
-            --titlebar-text-color: hsl(240,9%,98%);
+          }
+          :root[tabsintitlebar] .titlebar-color:not(:-moz-lwtheme) {
+            color: hsl(240,9%,98%);
           }
         }
 
         @media (-moz-windows-accent-color-in-titlebar) {
           :root[tabsintitlebar]:not(:-moz-window-inactive):not(:-moz-lwtheme) {
             background-color: -moz-win-accentcolor;
-            --titlebar-text-color: -moz-win-accentcolortext;
+          }
+          :root[tabsintitlebar] .titlebar-color:not(:-moz-window-inactive):not(:-moz-lwtheme) {
+            color: -moz-win-accentcolortext;
           }
         }
 
@@ -82,7 +86,7 @@
         margin: 0 !important;
         padding: 8px 17px;
         -moz-context-properties: stroke;
-        stroke: var(--titlebar-text-color);
+        stroke: currentColor;
       }
 
       .titlebar-button > .toolbarbutton-icon {
@@ -279,8 +283,8 @@
     }
   }
 
-  :root[darkwindowframe="true"]:not(:-moz-lwtheme):not(:-moz-window-inactive) {
-    --titlebar-text-color: white;
+  :root[darkwindowframe="true"] .titlebar-color:not(:-moz-window-inactive):not(:-moz-lwtheme) {
+    color: white;
   }
 
   /* Show borders on Win 7 & 8, but not on 10 and later: */
