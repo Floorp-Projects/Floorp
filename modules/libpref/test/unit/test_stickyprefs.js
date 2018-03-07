@@ -6,12 +6,17 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ps = Services.prefs;
 
-// A little helper to reset the service and load some pref files
-function resetAndLoad(filenames) {
+// A little helper to reset the service and load one pref file.
+function resetAndLoadDefaults() {
   ps.resetPrefs();
-  for (let filename of filenames) {
-    ps.readUserPrefsFromFile(do_get_file(filename));
-  }
+  ps.readDefaultPrefsFromFile(do_get_file("data/testPrefSticky.js"));
+}
+
+// A little helper to reset the service and load two pref files.
+function resetAndLoadAll() {
+  ps.resetPrefs();
+  ps.readDefaultPrefsFromFile(do_get_file("data/testPrefSticky.js"));
+  ps.readUserPrefsFromFile(do_get_file("data/testPrefStickyUser.js"));
 }
 
 // A little helper that saves the current state to a file in the profile
@@ -39,7 +44,7 @@ function run_test() {
 
 // A sticky pref should not be written if the value is unchanged.
 add_test(function notWrittenWhenUnchanged() {
-  resetAndLoad(["data/testPrefSticky.js"]);
+  resetAndLoadDefaults();
   Assert.strictEqual(ps.getBoolPref("testPref.unsticky.bool"), true);
   Assert.strictEqual(ps.getBoolPref("testPref.sticky.bool"), false);
 
@@ -55,13 +60,13 @@ add_test(function notWrittenWhenUnchanged() {
   run_next_test();
 });
 
-// Loading a sticky_pref then a user_pref for the same pref means it should
+// Loading a sticky `pref` then a `user_pref` for the same pref means it should
 // always be written.
 add_test(function writtenOnceLoadedWithoutChange() {
   // Load the same pref file *as well as* a pref file that has a user_pref for
   // our sticky with the default value. It should be re-written without us
   // touching it.
-  resetAndLoad(["data/testPrefSticky.js", "data/testPrefStickyUser.js"]);
+  resetAndLoadAll();
   // reset and re-read what we just wrote - it should be written.
   saveAndReload();
   Assert.strictEqual(ps.getBoolPref("testPref.sticky.bool"), false,
@@ -73,7 +78,7 @@ add_test(function writtenOnceLoadedWithoutChange() {
 add_test(function writtenOnceLoadedWithChangeNonDefault() {
   // Load the same pref file *as well as* a pref file that has a user_pref for
   // our sticky - then change the pref. It should be written.
-  resetAndLoad(["data/testPrefSticky.js", "data/testPrefStickyUser.js"]);
+  resetAndLoadAll();
   // Set a new val and check we wrote it.
   ps.setBoolPref("testPref.sticky.bool", false);
   saveAndReload();
@@ -86,7 +91,7 @@ add_test(function writtenOnceLoadedWithChangeNonDefault() {
 add_test(function writtenOnceLoadedWithChangeNonDefault() {
   // Load the same pref file *as well as* a pref file that has a user_pref for
   // our sticky - then change the pref. It should be written.
-  resetAndLoad(["data/testPrefSticky.js", "data/testPrefStickyUser.js"]);
+  resetAndLoadAll();
   // Set a new val and check we wrote it.
   ps.setBoolPref("testPref.sticky.bool", true);
   saveAndReload();
@@ -102,7 +107,7 @@ add_test(function writtenOnceLoadedWithChangeNonDefault() {
 // the pref had never changed.)
 add_test(function hasUserValue() {
   // sticky pref without user value.
-  resetAndLoad(["data/testPrefSticky.js"]);
+  resetAndLoadDefaults();
   Assert.strictEqual(ps.getBoolPref("testPref.sticky.bool"), false);
   Assert.ok(!ps.prefHasUserValue("testPref.sticky.bool"),
             "should not initially reflect a user value");
@@ -121,7 +126,7 @@ add_test(function hasUserValue() {
   ps.setBoolPref("testPref.sticky.bool", false, "expected default");
 
   // And make sure the pref immediately reflects a user value after load.
-  resetAndLoad(["data/testPrefSticky.js", "data/testPrefStickyUser.js"]);
+  resetAndLoadAll();
   Assert.strictEqual(ps.getBoolPref("testPref.sticky.bool"), false);
   Assert.ok(ps.prefHasUserValue("testPref.sticky.bool"),
             "should have a user value when loaded value is the default");
@@ -132,7 +137,7 @@ add_test(function hasUserValue() {
 add_test(function clearUserPref() {
   // load things such that we have a sticky value which is the same as the
   // default.
-  resetAndLoad(["data/testPrefSticky.js", "data/testPrefStickyUser.js"]);
+  resetAndLoadAll();
   ps.clearUserPref("testPref.sticky.bool");
 
   // Once we save prefs the sticky pref should no longer be written.
@@ -153,7 +158,7 @@ add_test(function clearUserPref() {
 // even if the value has not)
 add_test(function observerFires() {
   // load things so there's no sticky value.
-  resetAndLoad(["data/testPrefSticky.js"]);
+  resetAndLoadDefaults();
 
   function observe(subject, topic, data) {
     Assert.equal(data, "testPref.sticky.bool");

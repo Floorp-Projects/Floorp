@@ -335,7 +335,6 @@ private:
 #endif
 
     static HIMC WINAPI ImmGetContextProc(HWND aWND);
-    static BOOL WINAPI ImmReleaseContextProc(HWND aWND, HIMC aIMC);
     static LONG WINAPI ImmGetCompositionStringProc(HIMC aIMC, DWORD aIndex,
                                                    LPVOID aBuf, DWORD aLen);
     static BOOL WINAPI ImmSetCandidateWindowProc(HIMC hIMC,
