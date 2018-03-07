@@ -424,6 +424,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                     const nsHttpResponseHead& aResponseHead,
                     const bool& aUseResponseHead,
                     const nsHttpHeaderArray& aRequestHeaders,
+                    const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                     const bool& aIsFromCache,
                     const bool& aCacheEntryAvailable,
                     const uint64_t& aCacheEntryId,
@@ -457,13 +458,15 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   , mAltDataType(altDataType)
   , mAltDataLen(altDataLen)
   , mController(Move(aController))
+  , mLoadInfoForwarder(loadInfoForwarder)
   {}
 
   void Run() override
   {
     LOG(("StartRequestEvent [this=%p]\n", mChild));
     mChild->OnStartRequest(mChannelStatus, mResponseHead, mUseResponseHead,
-                           mRequestHeaders, mIsFromCache, mCacheEntryAvailable,
+                           mRequestHeaders, mLoadInfoForwarder,
+                           mIsFromCache, mCacheEntryAvailable,
                            mCacheEntryId, mCacheFetchCount,
                            mCacheExpirationTime, mCachedCharset,
                            mSecurityInfoSerialization, mSelfAddr, mPeerAddr,
@@ -490,6 +493,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   nsCString mAltDataType;
   int64_t mAltDataLen;
   Maybe<ServiceWorkerDescriptor> mController;
+  ParentLoadInfoForwarderArgs mLoadInfoForwarder;
 };
 
 mozilla::ipc::IPCResult
@@ -497,6 +501,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const nsHttpResponseHead& responseHead,
                                      const bool& useResponseHead,
                                      const nsHttpHeaderArray& requestHeaders,
+                                     const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                                      const bool& isFromCache,
                                      const bool& cacheEntryAvailable,
                                      const uint64_t& cacheEntryId,
@@ -531,6 +536,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
 
   mEventQ->RunOrEnqueue(new StartRequestEvent(this, channelStatus, responseHead,
                                               useResponseHead, requestHeaders,
+                                              loadInfoForwarder,
                                               isFromCache, cacheEntryAvailable,
                                               cacheEntryId, cacheFetchCount,
                                               cacheExpirationTime, cachedCharset,
@@ -567,6 +573,7 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
                                  const nsHttpResponseHead& responseHead,
                                  const bool& useResponseHead,
                                  const nsHttpHeaderArray& requestHeaders,
+                                 const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                                  const bool& isFromCache,
                                  const bool& cacheEntryAvailable,
                                  const uint64_t& cacheEntryId,
@@ -602,6 +609,8 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
     NS_DeserializeObject(securityInfoSerialization,
                          getter_AddRefs(mSecurityInfo));
   }
+
+  ipc::MergeParentLoadInfoForwarder(loadInfoForwarder, mLoadInfo);
 
   mIsFromCache = isFromCache;
   mCacheEntryAvailable = cacheEntryAvailable;
@@ -1653,7 +1662,7 @@ class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild>
                  const uint32_t& registrarId,
                  const URIParams& newURI,
                  const uint32_t& redirectFlags,
-                 const bool& allowInsecureRedirectToDataURI,
+                 const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                  const nsHttpResponseHead& responseHead,
                  const nsACString& securityInfoSerialization,
                  const uint64_t& channelId)
@@ -1661,33 +1670,34 @@ class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild>
   , mRegistrarId(registrarId)
   , mNewURI(newURI)
   , mRedirectFlags(redirectFlags)
-  , mAllowInsecureRedirectToDataURI(allowInsecureRedirectToDataURI)
   , mResponseHead(responseHead)
   , mSecurityInfoSerialization(securityInfoSerialization)
-  , mChannelId(channelId) {}
+  , mChannelId(channelId)
+  , mLoadInfoForwarder(loadInfoForwarder)
+  {
+  }
 
   void Run() override
   {
-    mChild->Redirect1Begin(mRegistrarId, mNewURI, mRedirectFlags,
-                           mAllowInsecureRedirectToDataURI, mResponseHead,
-                           mSecurityInfoSerialization, mChannelId);
+    mChild->Redirect1Begin(mRegistrarId, mNewURI, mRedirectFlags, mLoadInfoForwarder,
+                           mResponseHead, mSecurityInfoSerialization, mChannelId);
   }
 
  private:
   uint32_t            mRegistrarId;
   URIParams           mNewURI;
   uint32_t            mRedirectFlags;
-  bool                mAllowInsecureRedirectToDataURI;
   nsHttpResponseHead  mResponseHead;
   nsCString           mSecurityInfoSerialization;
   uint64_t            mChannelId;
+  ParentLoadInfoForwarderArgs mLoadInfoForwarder;
 };
 
 mozilla::ipc::IPCResult
 HttpChannelChild::RecvRedirect1Begin(const uint32_t& registrarId,
                                      const URIParams& newUri,
                                      const uint32_t& redirectFlags,
-                                     const bool& allowInsecureRedirectToDataURI,
+                                     const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                                      const nsHttpResponseHead& responseHead,
                                      const nsCString& securityInfoSerialization,
                                      const uint64_t& channelId,
@@ -1700,7 +1710,7 @@ HttpChannelChild::RecvRedirect1Begin(const uint32_t& registrarId,
   mPeerAddr = oldPeerAddr;
 
   mEventQ->RunOrEnqueue(new Redirect1Event(this, registrarId, newUri,
-                                           redirectFlags, allowInsecureRedirectToDataURI,
+                                           redirectFlags, loadInfoForwarder,
                                            responseHead, securityInfoSerialization,
                                            channelId));
   return IPC_OK();
@@ -1773,7 +1783,7 @@ void
 HttpChannelChild::Redirect1Begin(const uint32_t& registrarId,
                                  const URIParams& newOriginalURI,
                                  const uint32_t& redirectFlags,
-                                 const bool& allowInsecureRedirectToDataURI,
+                                 const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                                  const nsHttpResponseHead& responseHead,
                                  const nsACString& securityInfoSerialization,
                                  const uint64_t& channelId)
@@ -1782,7 +1792,7 @@ HttpChannelChild::Redirect1Begin(const uint32_t& registrarId,
 
   LOG(("HttpChannelChild::Redirect1Begin [this=%p]\n", this));
 
-  mLoadInfo->SetAllowInsecureRedirectToDataURI(allowInsecureRedirectToDataURI);
+  ipc::MergeParentLoadInfoForwarder(loadInfoForwarder, mLoadInfo);
 
   nsCOMPtr<nsIURI> uri = DeserializeURI(newOriginalURI);
 
@@ -2344,7 +2354,8 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
 NS_IMETHODIMP
 HttpChannelChild::Cancel(nsresult status)
 {
-  LOG(("HttpChannelChild::Cancel [this=%p]\n", this));
+  LOG(("HttpChannelChild::Cancel [this=%p, status=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(status)));
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mCanceled) {

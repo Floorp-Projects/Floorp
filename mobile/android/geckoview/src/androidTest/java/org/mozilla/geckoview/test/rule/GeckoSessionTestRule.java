@@ -3,6 +3,7 @@
 
 package org.mozilla.geckoview.test.rule;
 
+import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.test.util.Callbacks;
@@ -17,14 +18,19 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import android.app.Instrumentation;
+import android.graphics.Point;
+import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.UiThreadTestRule;
+import android.view.MotionEvent;
+import android.view.Surface;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -68,6 +74,16 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface TimeoutMillis {
         long value();
+    }
+
+    /**
+     * Specify the display size for the GeckoSession in device pixels
+     */
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface WithDisplay {
+        int width();
+        int height();
     }
 
     /**
@@ -421,6 +437,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     protected ErrorCollector mErrorCollector;
     protected GeckoSession mSession;
+    protected Point mDisplaySize;
     protected Object mCallbackProxy;
     protected List<CallRecord> mCallRecords;
     protected CallbackDelegates mWaitScopeDelegates;
@@ -429,6 +446,9 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected int mLastWaitEnd;
     protected MethodCall mCurrentMethodCall;
     protected long mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
+    protected SurfaceTexture mDisplayTexture;
+    protected Surface mDisplaySurface;
+    protected GeckoDisplay mDisplay;
 
     public GeckoSessionTestRule() {
         mDefaultSettings = new GeckoSessionSettings();
@@ -524,8 +544,20 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 for (final Setting setting : ((Setting.List) annotation).value()) {
                     setting.key().set(settings, setting.value());
                 }
+            } else if (WithDisplay.class.equals(annotation.annotationType())) {
+                final WithDisplay displaySize = (WithDisplay)annotation;
+                mDisplaySize = new Point(displaySize.width(), displaySize.height());
             }
         }
+    }
+
+    private static RuntimeException unwrapRuntimeException(Throwable e) {
+        final Throwable cause = e.getCause();
+        if (cause != null && cause instanceof RuntimeException) {
+            return (RuntimeException)cause;
+        }
+
+        return new RuntimeException(cause);
     }
 
     protected void prepareSession(final Description description) throws Throwable {
@@ -562,7 +594,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     return method.invoke((call != null) ? call.target
                                                         : Callbacks.Default.INSTANCE, args);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e.getCause() != null ? e.getCause() : e);
+                    throw unwrapRuntimeException(e);
                 } finally {
                     mCurrentMethodCall = null;
                 }
@@ -574,6 +606,13 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                                                 classes, recorder);
 
         mSession = new GeckoSession(settings);
+
+        if (mDisplaySize != null) {
+            mDisplayTexture = new SurfaceTexture(0);
+            mDisplaySurface = new Surface(mDisplayTexture);
+            mDisplay = mSession.acquireDisplay();
+            mDisplay.surfaceChanged(mDisplaySurface, mDisplaySize.x, mDisplaySize.y);
+        }
 
         for (final Class<?> cls : CALLBACK_CLASSES) {
             if (cls != null) {
@@ -601,6 +640,17 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         if (mSession.isOpen()) {
             mSession.closeWindow();
         }
+
+        if (mDisplay != null) {
+            mDisplay.surfaceDestroyed();
+            mSession.releaseDisplay(mDisplay);
+            mDisplaySurface.release();
+            mDisplayTexture.release();
+            mDisplay = null;
+            mDisplayTexture = null;
+            mDisplaySurface = null;
+        }
+
         mSession = null;
         mCallbackProxy = null;
         mCallRecords = null;
@@ -681,7 +731,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 try {
                     msg = (Message) getNextMessage.invoke(queue);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e.getCause() != null ? e.getCause() : e);
+                    throw unwrapRuntimeException(e);
                 }
                 if (msg.getTarget() == handler && msg.obj == handler) {
                     // Our idle signal.
@@ -827,7 +877,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                            getCallbackGetter(ifce).invoke(mSession), sameInstance(mCallbackProxy));
             } catch (final NoSuchMethodException | IllegalAccessException |
                            InvocationTargetException e) {
-                throw new RuntimeException(e.getCause() != null ? e.getCause() : e);
+                throw unwrapRuntimeException(e);
             }
         }
 
@@ -913,7 +963,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 mCurrentMethodCall = methodCall;
                 record.method.invoke(callback, record.args);
             } catch (final IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e.getCause() != null ? e.getCause() : e);
+                throw unwrapRuntimeException(e);
             } finally {
                 mCurrentMethodCall = null;
             }
@@ -965,5 +1015,17 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      */
     public void delegateDuringNextWait(final Object callback) {
         mWaitScopeDelegates.delegate(callback);
+    }
+
+    public void synthesizeTap(int x, int y) {
+        final long downTime = SystemClock.uptimeMillis();
+        final MotionEvent down = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
+            MotionEvent.ACTION_DOWN, x, y, 0);
+
+        mSession.getPanZoomController().onTouchEvent(down);
+
+        final MotionEvent up = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
+                MotionEvent.ACTION_UP, x, y, 0);
+        mSession.getPanZoomController().onTouchEvent(up);
     }
 }
