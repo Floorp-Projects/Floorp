@@ -66,7 +66,7 @@ class SwatchFilterTooltip extends SwatchBasedEditorTooltip {
     }
   }
 
-  _onUpdate(event, filters) {
+  _onUpdate(filters) {
     if (!this.activeSwatch) {
       return;
     }

@@ -4,7 +4,7 @@
 "use strict";
 
 const Services = require("Services");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * Shortcuts for lazily accessing and setting various preferences.
@@ -23,7 +23,7 @@ const EventEmitter = require("devtools/shared/old-event-emitter");
  *
  * Observe:
  *   prefs.registerObserver();
- *   prefs.on("pref-changed", (prefName, prefValue) => {
+ *   prefs.on("pref-changed", (prefValue) => {
  *     ...
  *   });
  *

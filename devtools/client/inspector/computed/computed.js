@@ -184,8 +184,8 @@ function CssComputedView(inspector, document, pageStyle) {
 
   this.shortcuts = new KeyShortcuts({ window: this.styleWindow });
   this._onShortcut = this._onShortcut.bind(this);
-  this.shortcuts.on("CmdOrCtrl+F", this._onShortcut);
-  this.shortcuts.on("Escape", this._onShortcut);
+  this.shortcuts.on("CmdOrCtrl+F", event => this._onShortcut("CmdOrCtrl+F", event));
+  this.shortcuts.on("Escape", event => this._onShortcut("Escape", event));
   this.styleDocument.addEventListener("copy", this._onCopy);
   this.styleDocument.addEventListener("mousedown", this.focusWindow);
   this.element.addEventListener("click", this._onClick);
@@ -975,14 +975,14 @@ PropertyView.prototype = {
       window: this.tree.styleWindow,
       target: this.element
     });
-    this.shortcuts.on("F1", (name, event) => {
+    this.shortcuts.on("F1", event => {
       this.mdnLinkClick(event);
       // Prevent opening the options panel
       event.preventDefault();
       event.stopPropagation();
     });
-    this.shortcuts.on("Return", (name, event) => this.onMatchedToggle(event));
-    this.shortcuts.on("Space", (name, event) => this.onMatchedToggle(event));
+    this.shortcuts.on("Return", this.onMatchedToggle);
+    this.shortcuts.on("Space", this.onMatchedToggle);
 
     let nameContainer = doc.createElementNS(HTML_NS, "span");
     nameContainer.className = "computed-property-name-container";

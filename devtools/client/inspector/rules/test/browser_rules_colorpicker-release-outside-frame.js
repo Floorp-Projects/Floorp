@@ -33,7 +33,7 @@ add_task(function* () {
   // If the mousemove below fails to detect that the button is no longer pressed
   // the spectrum will update and emit changed event synchronously after calling
   // synthesizeMouse so this handler is executed before the test ends.
-  spectrum.once("changed", (event, newValue) => {
+  spectrum.once("changed", newValue => {
     is(newValue, value, "Value changed on mousemove without a button pressed.");
   });
 

@@ -28,7 +28,7 @@ add_task(function* () {
   let D = B.getChild();
 
   let linkEvent = null;
-  let handler = (_, e) => {
+  let handler = (e) => {
     linkEvent = e;
   };
 
