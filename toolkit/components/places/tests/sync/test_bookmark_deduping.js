@@ -75,6 +75,13 @@ add_task(async function test_duping() {
       }],
     }],
   });
+
+  // Make sure we still dedupe this even though it doesn't have SYNC_STATUS.NEW
+  PlacesTestUtils.setBookmarkSyncFields({
+    guid: "folderBBBBBB",
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN
+  });
+
   // Not a candidate for `bookmarkH111` because we didn't dupe `folderAAAAAA`.
   await PlacesUtils.bookmarks.insert({
     parentGuid: "folderAAAAAA",
@@ -237,6 +244,12 @@ add_task(async function test_duping() {
       title: MobileBookmarksTitle,
     }],
   }, "Should dedupe matching NEW bookmarks");
+
+  ok((await PlacesTestUtils.fetchBookmarkSyncFields(
+    "menu________", "folderB11111", "bookmarkC222", "separatorF11",
+    "folderA11111", "bookmarkG111", "separatorE11", "queryD111111"))
+    .every(info => info.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL));
+
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
