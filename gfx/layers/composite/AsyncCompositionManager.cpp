@@ -39,7 +39,6 @@
 #include "gfxPrefs.h"
 #if defined(MOZ_WIDGET_ANDROID)
 # include <android/log.h>
-# include "apz/src/APZCTreeManager.h"
 # include "mozilla/layers/UiCompositorControllerParent.h"
 # include "mozilla/widget/AndroidCompositorWidget.h"
 #endif
@@ -940,7 +939,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
               mRootScrollableId = metrics.GetScrollId();
               Compositor* compositor = mLayerManager->GetCompositor();
               if (CompositorBridgeParent* bridge = compositor->GetCompositorBridgeParent()) {
-                AndroidDynamicToolbarAnimator* animator = bridge->GetAPZCTreeManager()->GetAndroidDynamicToolbarAnimator();
+                AndroidDynamicToolbarAnimator* animator = bridge->GetAndroidDynamicToolbarAnimator();
                 MOZ_ASSERT(animator);
                 if (mIsFirstPaint) {
                   animator->UpdateRootFrameMetrics(metrics);
@@ -1407,7 +1406,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
 #if defined(MOZ_WIDGET_ANDROID)
   Compositor* compositor = mLayerManager->GetCompositor();
   if (CompositorBridgeParent* bridge = compositor->GetCompositorBridgeParent()) {
-    AndroidDynamicToolbarAnimator* animator = bridge->GetAPZCTreeManager()->GetAndroidDynamicToolbarAnimator();
+    AndroidDynamicToolbarAnimator* animator = bridge->GetAndroidDynamicToolbarAnimator();
     MOZ_ASSERT(animator);
     wantNextFrame |= animator->UpdateAnimation(nextFrame);
   }
