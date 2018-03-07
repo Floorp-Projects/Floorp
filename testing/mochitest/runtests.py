@@ -1649,6 +1649,11 @@ toolbar#nav-bar {
         if options.dmd:
             browserEnv["DMD"] = os.environ.get('DMD', '1')
 
+        # bug 1443327: do not set MOZ_CRASHREPORTER_SHUTDOWN during browser-chrome
+        # tests, since some browser-chrome tests test content process crashes
+        if options.flavor == 'browser':
+            del browserEnv["MOZ_CRASHREPORTER_SHUTDOWN"]
+
         # These variables are necessary for correct application startup; change
         # via the commandline at your own risk.
         browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
