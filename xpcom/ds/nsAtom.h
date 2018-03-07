@@ -40,9 +40,9 @@ public:
 
   AtomKind Kind() const { return static_cast<AtomKind>(mKind); }
 
-  bool IsDynamicAtom() const { return Kind() == AtomKind::DynamicAtom; }
-  bool IsHTML5Atom()   const { return Kind() == AtomKind::HTML5Atom; }
-  bool IsStaticAtom()  const { return Kind() == AtomKind::StaticAtom; }
+  bool IsDynamic() const { return Kind() == AtomKind::DynamicAtom; }
+  bool IsHTML5()   const { return Kind() == AtomKind::HTML5Atom; }
+  bool IsStatic()  const { return Kind() == AtomKind::StaticAtom; }
 
   char16ptr_t GetUTF16String() const { return mString; }
 
@@ -56,7 +56,7 @@ public:
   nsStringBuffer* GetStringBuffer() const
   {
     // See the comment on |mString|'s declaration.
-    MOZ_ASSERT(IsDynamicAtom() || IsHTML5Atom());
+    MOZ_ASSERT(IsDynamic() || IsHTML5());
     return nsStringBuffer::FromData(const_cast<char16_t*>(mString));
   }
 
@@ -67,7 +67,7 @@ public:
   //
   uint32_t hash() const
   {
-    MOZ_ASSERT(!IsHTML5Atom());
+    MOZ_ASSERT(!IsHTML5());
     return mHash;
   }
 
