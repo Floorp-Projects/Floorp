@@ -8,6 +8,7 @@ from voluptuous import Required
 from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.transforms.job import run_job_using
 from taskgraph.util.schema import Schema
+from taskgraph.util.taskcluster import get_artifact_path
 from taskgraph.transforms.tests import (
     test_description_schema,
     normpath
@@ -86,7 +87,7 @@ mozharness_test_run_schema = Schema({
 
 def test_packages_url(taskdesc):
     """Account for different platforms that name their test packages differently"""
-    return get_artifact_url('<build>', 'public/build/target.test_packages.json')
+    return get_artifact_url('<build>', get_artifact_path(taskdesc, 'target.test_packages.json'))
 
 
 @run_job_using('docker-engine', 'mozharness-test', schema=mozharness_test_run_schema)
@@ -113,7 +114,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
     mozharness_url = get_artifact_url('<build>',
-                                      'public/build/mozharness.zip')
+                                      get_artifact_path(taskdesc, 'mozharness.zip'))
 
     worker['artifacts'] = [{
         'name': prefix,
@@ -321,7 +322,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     worker['mounts'] = [{
         'directory': '.',
         'content': {
-            'artifact': 'public/build/mozharness.zip',
+            'artifact': get_artifact_path(taskdesc, 'mozharness.zip'),
             'task-id': {
                 'task-reference': '<build>'
             }
@@ -352,7 +353,7 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
 
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
     mozharness_url = get_artifact_url('<build>',
-                                      'public/build/mozharness.zip')
+                                      get_artifact_path(taskdesc, 'mozharness.zip'))
 
     worker['artifacts'] = [{
         'name': prefix.rstrip('/'),
