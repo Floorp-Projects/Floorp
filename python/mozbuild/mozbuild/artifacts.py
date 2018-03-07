@@ -778,6 +778,7 @@ class ArtifactCache(object):
         self._persist_limit = ArtifactPersistLimit(log)
         self._download_manager = DownloadManager(
             self._cache_dir, persist_limit=self._persist_limit)
+        self._last_dl_update = -1
 
     def log(self, *args, **kwargs):
         if self._log:
@@ -790,7 +791,6 @@ class ArtifactCache(object):
             if len(fname) not in (32, 40, 56, 64, 96, 128):
                 raise TypeError()
             binascii.unhexlify(fname)
-            basename = fname
         except TypeError:
             # We download to a temporary name like HASH[:16]-basename to
             # differentiate among URLs with the same basenames.  We used to then
@@ -812,34 +812,36 @@ class ArtifactCache(object):
         self.log(logging.INFO, 'artifact',
             {'path': path},
             'Downloading to temporary location {path}')
-        dl = self._download_manager.download(url, fname)
+        try:
+            dl = self._download_manager.download(url, fname)
 
-        _last_dl_update = [-1]
+            def download_progress(dl, bytes_so_far, total_size):
+                if not total_size:
+                    return
+                percent = (float(bytes_so_far) / total_size) * 100
+                now = int(percent / 5)
+                if now == self._last_dl_update:
+                    return
+                self._last_dl_update = now
+                self.log(logging.INFO, 'artifact',
+                         {'bytes_so_far': bytes_so_far, 'total_size': total_size, 'percent': percent},
+                         'Downloading... {percent:02.1f} %')
 
-        def download_progress(dl, bytes_so_far, total_size):
-            if not total_size:
-                return
-            percent = (float(bytes_so_far) / total_size) * 100
-            now = int(percent / 10)
-            if now == _last_dl_update[0]:
-                return
-            _last_dl_update[0] = now
+            if dl:
+                dl.set_progress(download_progress)
+                dl.wait()
+            else:
+                # Avoid the file being removed if it was in the cache already.
+                path = os.path.join(self._cache_dir, fname)
+                self._persist_limit.register_file(path)
+
             self.log(logging.INFO, 'artifact',
-                     {'bytes_so_far': bytes_so_far, 'total_size': total_size, 'percent': percent, 'basename': basename},
-                     'Downloading {basename}... {percent:02.1f} %')
-
-        if dl:
-            dl.set_progress(download_progress)
-            dl.wait()
-        else:
-            # Avoid the file being removed if it was in the cache already.
-            path = os.path.join(self._cache_dir, fname)
-            self._persist_limit.register_file(path)
-
-        self.log(logging.INFO, 'artifact',
-            {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
-            'Downloaded artifact to {path}')
-        return os.path.abspath(mozpath.join(self._cache_dir, fname))
+                {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
+                'Downloaded artifact to {path}')
+            return os.path.abspath(mozpath.join(self._cache_dir, fname))
+        finally:
+            # Cancel any background downloads in progress.
+            self._download_manager.cancel()
 
     def clear_cache(self):
         if self._skip_cache:
