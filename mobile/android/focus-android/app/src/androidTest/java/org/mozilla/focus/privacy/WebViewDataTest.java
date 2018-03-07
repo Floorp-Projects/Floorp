@@ -75,7 +75,9 @@ public class WebViewDataTest {
                 "app_dxmaker_cache",
                 "telemetry",
                 "databases",
-                "app_webview"
+                "app_webview",
+                "files",
+                "app_screengrab" // The folder we store our screenshots in.
         ));
 
         // These profiler files should only be present local builds and we don't want to risk breaking the profiler
