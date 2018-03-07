@@ -1484,6 +1484,8 @@ nsIDocument::nsIDocument()
     mIsGoingAway(false),
     mInXBLUpdate(false),
     mNeedsReleaseAfterStackRefCntRelease(false),
+    mStyleSetFilled(false),
+    mSSApplicableStateNotificationPending(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -1540,9 +1542,7 @@ nsDocument::nsDocument(const char* aContentType)
   , mParserAborted(false)
   , mCurrentOrientationAngle(0)
   , mCurrentOrientationType(OrientationType::Portrait_primary)
-  , mSSApplicableStateNotificationPending(false)
   , mReportedUseCounters(false)
-  , mStyleSetFilled(false)
   , mPendingFullscreenRequests(0)
   , mXMLDeclarationBits(0)
   , mBoxObjectTable(nullptr)
@@ -2482,7 +2482,7 @@ nsDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
 }
 
 void
-nsDocument::RemoveDocStyleSheetsFromStyleSets()
+nsIDocument::RemoveDocStyleSheetsFromStyleSets()
 {
   // The stylesheets should forget us
   for (StyleSheet* sheet : Reversed(mStyleSheets)) {
@@ -2499,7 +2499,7 @@ nsDocument::RemoveDocStyleSheetsFromStyleSets()
 }
 
 void
-nsDocument::RemoveStyleSheetsFromStyleSets(
+nsIDocument::RemoveStyleSheetsFromStyleSets(
     const nsTArray<RefPtr<StyleSheet>>& aSheets,
     SheetType aType)
 {
@@ -2518,7 +2518,7 @@ nsDocument::RemoveStyleSheetsFromStyleSets(
 }
 
 void
-nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
+nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
 {
   MOZ_ASSERT(aURI);
 
@@ -2583,7 +2583,7 @@ AppendSheetsToStyleSet(StyleSetHandle aStyleSet,
 
 
 void
-nsDocument::FillStyleSet(StyleSetHandle aStyleSet)
+nsIDocument::FillStyleSet(StyleSetHandle aStyleSet)
 {
   NS_PRECONDITION(aStyleSet, "Must have a style set");
   NS_PRECONDITION(aStyleSet->SheetCount(SheetType::Doc) == 0,
@@ -4349,7 +4349,7 @@ nsDocument::RemoveChildNode(nsIContent* aKid, bool aNotify)
 }
 
 void
-nsDocument::EnsureOnDemandBuiltInUASheet(StyleSheet* aSheet)
+nsIDocument::EnsureOnDemandBuiltInUASheet(StyleSheet* aSheet)
 {
   if (mOnDemandBuiltInUASheets.Contains(aSheet)) {
     return;
@@ -4360,7 +4360,7 @@ nsDocument::EnsureOnDemandBuiltInUASheet(StyleSheet* aSheet)
 }
 
 void
-nsDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
+nsIDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
 {
   MOZ_ASSERT(!mOnDemandBuiltInUASheets.Contains(aSheet));
   MOZ_DIAGNOSTIC_ASSERT(aSheet->IsServo() == IsStyledByServo());
@@ -4385,7 +4385,7 @@ nsDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
 }
 
 void
-nsDocument::AddStyleSheetToStyleSets(StyleSheet* aSheet)
+nsIDocument::AddStyleSheetToStyleSets(StyleSheet* aSheet)
 {
   MOZ_DIAGNOSTIC_ASSERT(aSheet->IsServo() == IsStyledByServo());
   nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -4413,7 +4413,7 @@ nsDocument::AddStyleSheetToStyleSets(StyleSheet* aSheet)
   } while (0);
 
 void
-nsDocument::NotifyStyleSheetAdded(StyleSheet* aSheet, bool aDocumentSheet)
+nsIDocument::NotifyStyleSheetAdded(StyleSheet* aSheet, bool aDocumentSheet)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetAdded, (aSheet, aDocumentSheet));
 
@@ -4426,7 +4426,7 @@ nsDocument::NotifyStyleSheetAdded(StyleSheet* aSheet, bool aDocumentSheet)
 }
 
 void
-nsDocument::NotifyStyleSheetRemoved(StyleSheet* aSheet, bool aDocumentSheet)
+nsIDocument::NotifyStyleSheetRemoved(StyleSheet* aSheet, bool aDocumentSheet)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetRemoved, (aSheet, aDocumentSheet));
 
@@ -4439,9 +4439,9 @@ nsDocument::NotifyStyleSheetRemoved(StyleSheet* aSheet, bool aDocumentSheet)
 }
 
 void
-nsDocument::AddStyleSheet(StyleSheet* aSheet)
+nsIDocument::AddStyleSheet(StyleSheet* aSheet)
 {
-  NS_PRECONDITION(aSheet, "null arg");
+  MOZ_ASSERT(aSheet);
   MOZ_DIAGNOSTIC_ASSERT(aSheet->IsServo() == IsStyledByServo());
   mStyleSheets.AppendElement(aSheet);
   aSheet->SetAssociatedDocument(this, StyleSheet::OwnedByDocument);
@@ -4454,7 +4454,7 @@ nsDocument::AddStyleSheet(StyleSheet* aSheet)
 }
 
 void
-nsDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
+nsIDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
 {
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
@@ -4463,7 +4463,7 @@ nsDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
 }
 
 void
-nsDocument::RemoveStyleSheet(StyleSheet* aSheet)
+nsIDocument::RemoveStyleSheet(StyleSheet* aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
   RefPtr<StyleSheet> sheet = aSheet; // hold ref so it won't die too soon
@@ -4485,8 +4485,8 @@ nsDocument::RemoveStyleSheet(StyleSheet* aSheet)
 }
 
 void
-nsDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
-                              nsTArray<RefPtr<StyleSheet>>& aNewSheets)
+nsIDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
+                               nsTArray<RefPtr<StyleSheet>>& aNewSheets)
 {
   BeginUpdate(UPDATE_STYLE);
 
@@ -4523,7 +4523,7 @@ nsDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
 }
 
 void
-nsDocument::InsertStyleSheetAt(StyleSheet* aSheet, size_t aIndex)
+nsIDocument::InsertStyleSheetAt(StyleSheet* aSheet, size_t aIndex)
 {
   MOZ_ASSERT(aSheet);
   MOZ_DIAGNOSTIC_ASSERT(aSheet->IsServo() == IsStyledByServo());
@@ -4543,8 +4543,7 @@ nsDocument::InsertStyleSheetAt(StyleSheet* aSheet, size_t aIndex)
 
 
 void
-nsDocument::SetStyleSheetApplicableState(StyleSheet* aSheet,
-                                         bool aApplicable)
+nsIDocument::SetStyleSheetApplicableState(StyleSheet* aSheet, bool aApplicable)
 {
   NS_PRECONDITION(aSheet, "null arg");
 
@@ -4576,9 +4575,9 @@ nsDocument::SetStyleSheetApplicableState(StyleSheet* aSheet,
   if (!mSSApplicableStateNotificationPending) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> notification =
-      NewRunnableMethod("nsDocument::NotifyStyleSheetApplicableStateChanged",
+      NewRunnableMethod("nsIDocument::NotifyStyleSheetApplicableStateChanged",
                         this,
-                        &nsDocument::NotifyStyleSheetApplicableStateChanged);
+                        &nsIDocument::NotifyStyleSheetApplicableStateChanged);
     mSSApplicableStateNotificationPending =
       NS_SUCCEEDED(
         Dispatch(TaskCategory::Other, notification.forget()));
@@ -4586,13 +4585,13 @@ nsDocument::SetStyleSheetApplicableState(StyleSheet* aSheet,
 }
 
 void
-nsDocument::NotifyStyleSheetApplicableStateChanged()
+nsIDocument::NotifyStyleSheetApplicableStateChanged()
 {
   mSSApplicableStateNotificationPending = false;
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->NotifyObservers(static_cast<nsIDocument*>(this),
+    observerService->NotifyObservers(this,
                                      "style-sheet-applicable-state-changed",
                                      nullptr);
   }
@@ -4630,8 +4629,8 @@ FindSheet(const nsTArray<RefPtr<StyleSheet>>& aSheets, nsIURI* aSheetURI)
 }
 
 nsresult
-nsDocument::LoadAdditionalStyleSheet(additionalSheetType aType,
-                                     nsIURI* aSheetURI)
+nsIDocument::LoadAdditionalStyleSheet(additionalSheetType aType,
+                                      nsIURI* aSheetURI)
 {
   NS_PRECONDITION(aSheetURI, "null arg");
 
@@ -4672,7 +4671,7 @@ nsDocument::LoadAdditionalStyleSheet(additionalSheetType aType,
 }
 
 nsresult
-nsDocument::AddAdditionalStyleSheet(additionalSheetType aType, StyleSheet* aSheet)
+nsIDocument::AddAdditionalStyleSheet(additionalSheetType aType, StyleSheet* aSheet)
 {
   if (mAdditionalSheets[aType].Contains(aSheet))
     return NS_ERROR_INVALID_ARG;
@@ -4697,7 +4696,7 @@ nsDocument::AddAdditionalStyleSheet(additionalSheetType aType, StyleSheet* aShee
 }
 
 void
-nsDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetURI)
+nsIDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetURI)
 {
   MOZ_ASSERT(aSheetURI);
 
@@ -4725,12 +4724,6 @@ nsDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheet
 
     sheetRef->ClearAssociatedDocument();
   }
-}
-
-StyleSheet*
-nsDocument::GetFirstAdditionalAuthorSheet()
-{
-  return mAdditionalSheets[eAuthorSheet].SafeElementAt(0);
 }
 
 nsIGlobalObject*
@@ -5979,19 +5972,7 @@ nsIDocument::AllowUnsafeHTML() const
 }
 
 void
-nsDocument::ScheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG)
-{
-  mLazySVGPresElements.PutEntry(aSVG);
-}
-
-void
-nsDocument::UnscheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG)
-{
-  mLazySVGPresElements.RemoveEntry(aSVG);
-}
-
-void
-nsDocument::ResolveScheduledSVGPresAttrs()
+nsIDocument::ResolveScheduledSVGPresAttrs()
 {
   for (auto iter = mLazySVGPresElements.Iter(); !iter.Done(); iter.Next()) {
     nsSVGElement* svg = iter.Get()->GetKey();
@@ -6058,7 +6039,7 @@ nsIDocument::GetSelectedStyleSheetSet(nsAString& aSheetSet)
 }
 
 void
-nsDocument::SetSelectedStyleSheetSet(const nsAString& aSheetSet)
+nsIDocument::SetSelectedStyleSheetSet(const nsAString& aSheetSet)
 {
   if (DOMStringIsNull(aSheetSet)) {
     return;
@@ -6071,7 +6052,7 @@ nsDocument::SetSelectedStyleSheetSet(const nsAString& aSheetSet)
 }
 
 void
-nsDocument::GetLastStyleSheetSet(nsAString& aSheetSet)
+nsIDocument::GetLastStyleSheetSet(nsAString& aSheetSet)
 {
   aSheetSet = mLastStyleSheetSet;
 }
@@ -6083,7 +6064,7 @@ nsIDocument::GetPreferredStyleSheetSet(nsAString& aSheetSet)
 }
 
 DOMStringList*
-nsDocument::StyleSheetSets()
+nsIDocument::StyleSheetSets()
 {
   if (!mStyleSheetSetList) {
     mStyleSheetSetList = new nsDOMStyleSheetSetList(this);
@@ -6092,7 +6073,7 @@ nsDocument::StyleSheetSets()
 }
 
 void
-nsDocument::EnableStyleSheetsForSet(const nsAString& aSheetSet)
+nsIDocument::EnableStyleSheetsForSet(const nsAString& aSheetSet)
 {
   // Per spec, passing in null is a no-op.
   if (!DOMStringIsNull(aSheetSet)) {
@@ -6105,7 +6086,7 @@ nsDocument::EnableStyleSheetsForSet(const nsAString& aSheetSet)
 }
 
 void
-nsDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
+nsIDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
                                             bool aUpdateCSSLoader)
 {
   BeginUpdate(UPDATE_STYLE);
@@ -9275,11 +9256,11 @@ NS_IMPL_ISUPPORTS(StubCSSLoaderObserver, nsICSSLoaderObserver)
 } // namespace
 
 void
-nsDocument::PreloadStyle(nsIURI* uri,
-                         const Encoding* aEncoding,
-                         const nsAString& aCrossOriginAttr,
-                         const ReferrerPolicy aReferrerPolicy,
-                         const nsAString& aIntegrity)
+nsIDocument::PreloadStyle(nsIURI* uri,
+                          const Encoding* aEncoding,
+                          const nsAString& aCrossOriginAttr,
+                          const enum ReferrerPolicy aReferrerPolicy,
+                          const nsAString& aIntegrity)
 {
   // The CSSLoader will retain this object after we return.
   nsCOMPtr<nsICSSLoaderObserver> obs = new StubCSSLoaderObserver();
@@ -9296,7 +9277,7 @@ nsDocument::PreloadStyle(nsIURI* uri,
 }
 
 nsresult
-nsDocument::LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
+nsIDocument::LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
                                 RefPtr<mozilla::StyleSheet>* aSheet)
 {
   css::SheetParsingMode mode =

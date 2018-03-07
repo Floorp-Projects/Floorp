@@ -434,30 +434,6 @@ public:
   virtual Element* FindContentForSubDocument(nsIDocument *aDocument) const override;
   virtual Element* GetRootElementInternal() const override;
 
-  virtual void EnsureOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet) override;
-
-  virtual void AddStyleSheet(mozilla::StyleSheet* aSheet) override;
-  virtual void RemoveStyleSheet(mozilla::StyleSheet* aSheet) override;
-
-  virtual void UpdateStyleSheets(
-      nsTArray<RefPtr<mozilla::StyleSheet>>& aOldSheets,
-      nsTArray<RefPtr<mozilla::StyleSheet>>& aNewSheets) override;
-  virtual void AddStyleSheetToStyleSets(mozilla::StyleSheet* aSheet);
-  virtual void RemoveStyleSheetFromStyleSets(mozilla::StyleSheet* aSheet);
-
-  virtual void InsertStyleSheetAt(mozilla::StyleSheet* aSheet,
-                                  size_t aIndex) override;
-  virtual void SetStyleSheetApplicableState(mozilla::StyleSheet* aSheet,
-                                            bool aApplicable) override;
-
-  virtual nsresult LoadAdditionalStyleSheet(additionalSheetType aType,
-                                            nsIURI* aSheetURI) override;
-  virtual nsresult AddAdditionalStyleSheet(additionalSheetType aType,
-                                           mozilla::StyleSheet* aSheet) override;
-  virtual void RemoveAdditionalStyleSheet(additionalSheetType aType,
-                                          nsIURI* sheetURI) override;
-  virtual mozilla::StyleSheet* GetFirstAdditionalAuthorSheet() override;
-
   virtual nsIChannel* GetChannel() const override {
     return mChannel;
   }
@@ -584,9 +560,6 @@ public:
 
   virtual void NotifyLayerManagerRecreated() override;
 
-  virtual void ScheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) override;
-  virtual void UnscheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) override;
-  virtual void ResolveScheduledSVGPresAttrs() override;
   bool IsSynthesized();
 
   // Check whether shadow DOM is enabled for the global of aObject.
@@ -594,7 +567,6 @@ public:
   // Check whether shadow DOM is enabled for the document this node belongs to.
   static bool IsShadowDOMEnabled(const nsINode* aNode);
 private:
-  void AddOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet);
   void SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages);
 
 public:
@@ -749,15 +721,6 @@ public:
   virtual void MaybePreconnect(nsIURI* uri,
                                mozilla::CORSMode aCORSMode) override;
 
-  virtual void PreloadStyle(nsIURI* uri,
-                            const mozilla::Encoding* aEncoding,
-                            const nsAString& aCrossOriginAttr,
-                            ReferrerPolicy aReferrerPolicy,
-                            const nsAString& aIntegrity) override;
-
-  virtual nsresult LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
-                                       RefPtr<mozilla::StyleSheet>* aSheet) override;
-
   virtual nsISupports* GetCurrentContentSink() override;
 
   // Only BlockOnload should call this!
@@ -902,10 +865,6 @@ public:
   virtual mozilla::dom::DOMImplementation*
     GetImplementation(mozilla::ErrorResult& rv) override;
 
-  virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) override;
-  virtual void GetLastStyleSheetSet(nsAString& aSheetSet) override;
-  virtual mozilla::dom::DOMStringList* StyleSheetSets() override;
-  virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) override;
   virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,
                                                   const mozilla::dom::ElementCreationOptionsOrString& aOptions,
                                                   ErrorResult& rv) override;
@@ -976,12 +935,6 @@ public:
   bool ContainsMSEContent();
 
 protected:
-  void RemoveDocStyleSheetsFromStyleSets();
-  void RemoveStyleSheetsFromStyleSets(
-      const nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets,
-      mozilla::SheetType aType);
-  void ResetStylesheetsToURI(nsIURI* aURI);
-  void FillStyleSet(mozilla::StyleSetHandle aStyleSet);
 
   void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
                               const nsAString& aType,
@@ -1015,8 +968,6 @@ protected:
 
   void EnsureOnloadBlocker();
 
-  void NotifyStyleSheetApplicableStateChanged();
-
   // Apply the fullscreen state to the document, and trigger related
   // events. It returns false if the fullscreen element ready check
   // fails and nothing gets changed.
@@ -1034,9 +985,6 @@ protected:
 
   // Array of owning references to all children
   nsAttrAndChildArray mChildren;
-
-  nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
-  nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
 
   // Array of intersection observers
   nsTHashtable<nsPtrHashKey<mozilla::dom::DOMIntersectionObserver>>
@@ -1068,7 +1016,6 @@ protected:
 
 public:
   RefPtr<mozilla::EventListenerManager> mListenerManager;
-  RefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
   RefPtr<mozilla::dom::ScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
 
@@ -1100,10 +1047,6 @@ public:
   uint16_t mCurrentOrientationAngle;
   mozilla::dom::OrientationType mCurrentOrientationType;
 
-  // Keeps track of whether we have a pending
-  // 'style-sheet-applicable-state-changed' notification.
-  bool mSSApplicableStateNotificationPending:1;
-
   // Whether we have reported use counters for this document with Telemetry yet.
   // Normally this is only done at document destruction time, but for image
   // documents (SVG documents) that are not guaranteed to be destroyed, we
@@ -1111,10 +1054,6 @@ public:
   // pointing to them.  We track whether we ever reported use counters so
   // that we only report them once for the document.
   bool mReportedUseCounters:1;
-
-  // Whether we have filled our pres shell's style set with the document's
-  // additional sheets and sheets from the nsStyleSheetService.
-  bool mStyleSetFilled:1;
 
   uint8_t mPendingFullscreenRequests;
 
@@ -1137,19 +1076,11 @@ private:
   friend class nsUnblockOnloadEvent;
   // Recomputes the visibility state but doesn't set the new value.
   mozilla::dom::VisibilityState GetVisibilityState() const;
-  void NotifyStyleSheetAdded(mozilla::StyleSheet* aSheet, bool aDocumentSheet);
-  void NotifyStyleSheetRemoved(mozilla::StyleSheet* aSheet, bool aDocumentSheet);
 
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();
 
   nsresult InitCSP(nsIChannel* aChannel);
-
-  // Just like EnableStyleSheetsForSet, but doesn't check whether
-  // aSheetSet is null and allows the caller to control whether to set
-  // aSheetSet as the preferred set in the CSSLoader.
-  void EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
-                                       bool aUpdateCSSLoader);
 
   void ClearAllBoxObjects();
 
@@ -1183,9 +1114,6 @@ private:
 
   // A set of responsive images keyed by address pointer.
   nsTHashtable< nsPtrHashKey<nsIContent> > mResponsiveContent;
-
-  // Member to store out last-selected stylesheet set.
-  nsString mLastStyleSheetSet;
 
   nsTArray<RefPtr<nsFrameLoader> > mInitializableFrameLoaders;
   nsTArray<nsCOMPtr<nsIRunnable> > mFrameLoaderFinalizers;
@@ -1252,11 +1180,6 @@ private:
   // Set to true when the document is possibly controlled by the ServiceWorker.
   // Used to prevent multiple requests to ServiceWorkerManager.
   bool mMaybeServiceWorkerControlled;
-
-  // We lazily calculate declaration blocks for SVG elements
-  // with mapped attributes in Servo mode. This list contains all elements which
-  // need lazy resolution
-  nsTHashtable<nsPtrHashKey<nsSVGElement>> mLazySVGPresElements;
 
 #ifdef DEBUG
 public:
