@@ -13,7 +13,7 @@ from taskgraph.util.schema import (
     Schema,
     validate_schema,
 )
-from taskgraph.util.taskcluster import get_artifact_url
+from taskgraph.util.taskcluster import get_artifact_path, get_artifact_url
 from voluptuous import (
     Any,
     Optional,
@@ -107,7 +107,7 @@ def fill_template(config, tasks):
             if previous_artifact is not None and previous_artifact != artifact:
                 raise Exception(
                     'Cannot compare builds from different OSes')
-            url = get_artifact_url(task_id, 'public/build/{}'.format(artifact))
+            url = get_artifact_url(task_id, get_artifact_path(task, artifact))
             urls[k] = {'task-reference': url}
             previous_artifact = artifact
 
