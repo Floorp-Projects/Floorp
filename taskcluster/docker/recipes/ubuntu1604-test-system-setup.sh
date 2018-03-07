@@ -167,6 +167,10 @@ apt-get -q -y -f install \
     libdbus-glib-1-2:i386 \
     openjdk-8-jdk:i386
 
+# use fc-cache:i386 to pre-build the font cache for i386 binaries
+apt-get -q -y -f install \
+    fontconfig:i386 \
+
 # revert the list of repos
 cp sources.list.orig /etc/apt/sources.list
 apt-get update
