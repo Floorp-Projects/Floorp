@@ -20,6 +20,8 @@ import org.junit.runners.model.Statement;
 import android.app.Instrumentation;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
+import android.os.Bundle;
+import android.os.Debug;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -64,6 +66,7 @@ import kotlin.reflect.KClass;
 public class GeckoSessionTestRule extends UiThreadTestRule {
 
     private static final long DEFAULT_TIMEOUT_MILLIS = 10000;
+    private static final long DEFAULT_DEBUG_TIMEOUT_MILLIS = 86400000;
     public static final String APK_URI_PREFIX = "resource://android/";
 
     /**
@@ -328,6 +331,51 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
     }
 
+    protected static class CallRecord {
+        public final Method method;
+        public final MethodCall methodCall;
+        public final Object[] args;
+
+        public CallRecord(final Method method, final Object[] args) {
+            this.method = method;
+            this.methodCall = new MethodCall(method, /* requirement */ null);
+            this.args = args;
+        }
+    }
+
+    public class Environment {
+        /* package */ Environment() {
+        }
+
+        private String getEnvVar(final String name) {
+            final int nameLen = name.length();
+            final Bundle args = InstrumentationRegistry.getArguments();
+            String env = args.getString("env0", null);
+            for (int i = 1; env != null; i++) {
+                if (env.length() >= nameLen + 1 &&
+                        env.startsWith(name) &&
+                        env.charAt(nameLen) == '=') {
+                    return env.substring(nameLen + 1);
+                }
+                env = args.getString("env" + i, null);
+            }
+            return "";
+        }
+
+        public boolean isAutomation() {
+            return !getEnvVar("MOZ_IN_AUTOMATION").isEmpty();
+        }
+
+        public boolean isE10s() {
+            return mSession.getSettings().getBoolean(
+                    GeckoSessionSettings.USE_MULTIPROCESS);
+        }
+
+        public boolean isDebugging() {
+            return Debug.isDebuggerConnected();
+        }
+    }
+
     protected class CallbackDelegates {
         private final Map<Method, MethodCall> mDelegates = new HashMap<>();
         private int mOrder;
@@ -378,18 +426,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
     }
 
-    protected static class CallRecord {
-        public final Method method;
-        public final MethodCall methodCall;
-        public final Object[] args;
-
-        public CallRecord(final Method method, final Object[] args) {
-            this.method = method;
-            this.methodCall = new MethodCall(method, /* requirement */ null);
-            this.args = args;
-        }
-    }
-
     /* package */ static AssertCalled getAssertCalled(final Method method, final Object callback) {
         final AssertCalled annotation = method.getAnnotation(AssertCalled.class);
         if (annotation != null) {
@@ -431,6 +467,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     private static final List<Class<?>> CALLBACK_CLASSES = Arrays.asList(getCallbackClasses());
 
+    public final Environment env = new Environment();
+
     protected final Instrumentation mInstrumentation =
             InstrumentationRegistry.getInstrumentation();
     protected final GeckoSessionSettings mDefaultSettings;
@@ -445,7 +483,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected int mLastWaitStart;
     protected int mLastWaitEnd;
     protected MethodCall mCurrentMethodCall;
-    protected long mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
+    protected long mTimeoutMillis;
     protected SurfaceTexture mDisplayTexture;
     protected Surface mDisplaySurface;
     protected GeckoDisplay mDisplay;
@@ -562,6 +600,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     protected void prepareSession(final Description description) throws Throwable {
         final GeckoSessionSettings settings = new GeckoSessionSettings(mDefaultSettings);
+        mTimeoutMillis = !env.isDebugging() ? DEFAULT_TIMEOUT_MILLIS
+                                            : DEFAULT_DEBUG_TIMEOUT_MILLIS;
 
         applyAnnotations(Arrays.asList(description.getTestClass().getAnnotations()), settings);
         applyAnnotations(description.getAnnotations(), settings);
@@ -658,7 +698,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mTestScopeDelegates = null;
         mLastWaitStart = 0;
         mLastWaitEnd = 0;
-        mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
+        mTimeoutMillis = 0;
     }
 
     @Override
