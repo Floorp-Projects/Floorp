@@ -14,7 +14,7 @@ from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
     docker_worker_setup_secrets,
-    docker_worker_add_public_artifacts,
+    docker_worker_add_artifacts,
     docker_worker_add_tooltool,
     support_vcs_checkout,
 )
@@ -44,7 +44,7 @@ def docker_worker_hazard(config, job, taskdesc):
     worker = taskdesc['worker']
     worker['artifacts'] = []
 
-    docker_worker_add_public_artifacts(config, job, taskdesc)
+    docker_worker_add_artifacts(config, job, taskdesc)
     docker_worker_add_workspace_cache(config, job, taskdesc)
     docker_worker_add_tooltool(config, job, taskdesc)
     docker_worker_setup_secrets(config, job, taskdesc)
