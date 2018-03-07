@@ -592,6 +592,11 @@ info needed by later passes, along with a basic name for the decl."""
     def var(self):
         return ExprVar(self.name)
 
+    def mayMoveExpr(self):
+        if self.isCopyable():
+            return self.var()
+        return ExprMove(self.var())
+
     def bareType(self, side, fq=0):
         """Return this decl's unqualified C++ type."""
         return _cxxBareType(self.ipdltype, side, fq=fq)
@@ -998,7 +1003,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
         cxxargs = [ ]
 
         if paramsems is 'move':
-            cxxargs.extend([ ExprMove(p.var()) for p in self.params ])
+            cxxargs.extend([ p.mayMoveExpr() for p in self.params ])
         elif paramsems is 'in':
             cxxargs.extend([ p.var() for p in self.params ])
         else:
