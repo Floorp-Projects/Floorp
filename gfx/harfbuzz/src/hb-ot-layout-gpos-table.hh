@@ -99,7 +99,7 @@ struct ValueFormat : HBUINT16
 #endif
 
   inline unsigned int get_len (void) const
-  { return _hb_popcount32 ((unsigned int) *this); }
+  { return _hb_popcount ((unsigned int) *this); }
   inline unsigned int get_size (void) const
   { return get_len () * Value::static_size; }
 
@@ -248,8 +248,8 @@ struct AnchorFormat1
 
   protected:
   HBUINT16	format;			/* Format identifier--format = 1 */
-  HBINT16		xCoordinate;		/* Horizontal value--in design units */
-  HBINT16		yCoordinate;		/* Vertical value--in design units */
+  FWORD		xCoordinate;		/* Horizontal value--in design units */
+  FWORD		yCoordinate;		/* Vertical value--in design units */
   public:
   DEFINE_SIZE_STATIC (6);
 };
@@ -279,8 +279,8 @@ struct AnchorFormat2
 
   protected:
   HBUINT16	format;			/* Format identifier--format = 2 */
-  HBINT16		xCoordinate;		/* Horizontal value--in design units */
-  HBINT16		yCoordinate;		/* Vertical value--in design units */
+  FWORD		xCoordinate;		/* Horizontal value--in design units */
+  FWORD		yCoordinate;		/* Vertical value--in design units */
   HBUINT16	anchorPoint;		/* Index to glyph contour point */
   public:
   DEFINE_SIZE_STATIC (8);
@@ -309,8 +309,8 @@ struct AnchorFormat3
 
   protected:
   HBUINT16	format;			/* Format identifier--format = 3 */
-  HBINT16		xCoordinate;		/* Horizontal value--in design units */
-  HBINT16		yCoordinate;		/* Vertical value--in design units */
+  FWORD		xCoordinate;		/* Horizontal value--in design units */
+  FWORD		yCoordinate;		/* Vertical value--in design units */
   OffsetTo<Device>
 		xDeviceTable;		/* Offset to Device table for X
 					 * coordinate-- from beginning of
@@ -1072,9 +1072,17 @@ struct MarkBasePosFormat1
     skippy_iter.set_lookup_props (LookupFlag::IgnoreMarks);
     do {
       if (!skippy_iter.prev ()) return_trace (false);
-      /* We only want to attach to the first of a MultipleSubst sequence.  Reject others. */
+      /* We only want to attach to the first of a MultipleSubst sequence.
+       * https://github.com/harfbuzz/harfbuzz/issues/740
+       * Reject others. */
       if (!_hb_glyph_info_multiplied (&buffer->info[skippy_iter.idx]) ||
-	  0 == _hb_glyph_info_get_lig_comp (&buffer->info[skippy_iter.idx]))
+	  0 == _hb_glyph_info_get_lig_comp (&buffer->info[skippy_iter.idx]) ||
+	  (skippy_iter.idx == 0 ||
+	   _hb_glyph_info_get_lig_id (&buffer->info[skippy_iter.idx]) !=
+	   _hb_glyph_info_get_lig_id (&buffer->info[skippy_iter.idx - 1]) ||
+	   _hb_glyph_info_get_lig_comp (&buffer->info[skippy_iter.idx]) !=
+	   _hb_glyph_info_get_lig_comp (&buffer->info[skippy_iter.idx - 1]) + 1
+	   ))
 	break;
       skippy_iter.reject ();
     } while (1);

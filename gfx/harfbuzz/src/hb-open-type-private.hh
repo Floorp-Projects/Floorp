@@ -134,7 +134,17 @@ static inline Type& StructAfter(TObject &X)
 
 #define HB_NULL_POOL_SIZE 264
 static_assert (HB_NULL_POOL_SIZE % sizeof (void *) == 0, "Align HB_NULL_POOL_SIZE.");
-extern HB_INTERNAL const void * const _hb_NullPool[HB_NULL_POOL_SIZE / sizeof (void *)];
+
+#ifdef HB_NO_VISIBILITY
+static
+#else
+extern HB_INTERNAL
+#endif
+const void * const _hb_NullPool[HB_NULL_POOL_SIZE / sizeof (void *)]
+#ifdef HB_NO_VISIBILITY
+= {}
+#endif
+;
 
 /* Generic nul-content Null objects. */
 template <typename Type>
@@ -179,6 +189,12 @@ struct hb_dispatch_context_t
 #ifndef HB_SANITIZE_MAX_EDITS
 #define HB_SANITIZE_MAX_EDITS 32
 #endif
+#ifndef HB_SANITIZE_MAX_OPS_FACTOR
+#define HB_SANITIZE_MAX_OPS_FACTOR 8
+#endif
+#ifndef HB_SANITIZE_MAX_OPS_MIN
+#define HB_SANITIZE_MAX_OPS_MIN 16384
+#endif
 
 struct hb_sanitize_context_t :
        hb_dispatch_context_t<hb_sanitize_context_t, bool, HB_DEBUG_SANITIZE>
@@ -186,7 +202,7 @@ struct hb_sanitize_context_t :
   inline hb_sanitize_context_t (void) :
 	debug_depth (0),
 	start (nullptr), end (nullptr),
-	writable (false), edit_count (0),
+	writable (false), edit_count (0), max_ops (0),
 	blob (nullptr),
 	num_glyphs (0) {}
 
@@ -211,6 +227,8 @@ struct hb_sanitize_context_t :
     this->start = hb_blob_get_data (this->blob, nullptr);
     this->end = this->start + hb_blob_get_length (this->blob);
     assert (this->start <= this->end); /* Must not overflow. */
+    this->max_ops = MAX ((unsigned int) (this->end - this->start) * HB_SANITIZE_MAX_OPS_FACTOR,
+			 (unsigned) HB_SANITIZE_MAX_OPS_MIN);
     this->edit_count = 0;
     this->debug_depth = 0;
 
@@ -234,7 +252,10 @@ struct hb_sanitize_context_t :
   inline bool check_range (const void *base, unsigned int len) const
   {
     const char *p = (const char *) base;
-    bool ok = this->start <= p && p <= this->end && (unsigned int) (this->end - p) >= len;
+    bool ok = this->max_ops-- > 0 &&
+	      this->start <= p &&
+	      p <= this->end &&
+	      (unsigned int) (this->end - p) >= len;
 
     DEBUG_MSG_LEVEL (SANITIZE, p, this->debug_depth+1, 0,
        "check_range [%p..%p] (%d bytes) in [%p..%p] -> %s",
@@ -298,6 +319,7 @@ struct hb_sanitize_context_t :
   const char *start, *end;
   bool writable;
   unsigned int edit_count;
+  mutable int max_ops;
   hb_blob_t *blob;
   unsigned int num_glyphs;
 };
@@ -499,23 +521,25 @@ struct hb_serialize_context_t
 template <typename Type>
 struct Supplier
 {
-  inline Supplier (const Type *array, unsigned int len_)
+  inline Supplier (const Type *array, unsigned int len_, unsigned int stride_=sizeof(Type))
   {
     head = array;
     len = len_;
+    stride = stride_;
   }
   inline const Type operator [] (unsigned int i) const
   {
     if (unlikely (i >= len)) return Type ();
-    return head[i];
+    return * (const Type *) (const void *) ((const char *) head + stride * i);
   }
 
-  inline void advance (unsigned int count)
+  inline Supplier<Type> & operator += (unsigned int count)
   {
     if (unlikely (count > len))
       count = len;
     len -= count;
-    head += count;
+    head = (const Type *) (const void *) ((const char *) head + stride * count);
+    return *this;
   }
 
   private:
@@ -523,6 +547,7 @@ struct Supplier
   inline Supplier<Type>& operator= (const Supplier<Type> &); /* Disallow copy */
 
   unsigned int len;
+  unsigned int stride;
   const Type *head;
 };
 
@@ -667,8 +692,8 @@ struct F2DOT14 : HBINT16
 /* 32-bit signed fixed-point number (16.16). */
 struct Fixed: HBINT32
 {
-  //inline float to_float (void) const { return ???; }
-  //inline void set_float (float f) { v.set (f * ???); }
+  inline float to_float (void) const { return ((int32_t) v) / 65536.0; }
+  inline void set_float (float f) { v.set (round (f * 65536.0)); }
   public:
   DEFINE_SIZE_STATIC (4);
 };
@@ -715,6 +740,14 @@ template <typename Type>
 struct Offset : Type
 {
   inline bool is_null (void) const { return 0 == *this; }
+
+  inline void *serialize (hb_serialize_context_t *c, const void *base)
+  {
+    void *t = c->start_embed<void> ();
+    this->set ((char *) t - (char *) base); /* TODO(serialize) Overflow? */
+    return t;
+  }
+
   public:
   DEFINE_SIZE_STATIC (sizeof(Type));
 };
@@ -730,7 +763,8 @@ struct CheckSum : HBUINT32
   static inline uint32_t CalcTableChecksum (const HBUINT32 *Table, uint32_t Length)
   {
     uint32_t Sum = 0L;
-    const HBUINT32 *EndPtr = Table+((Length+3) & ~3) / HBUINT32::static_size;
+    assert (0 == (Length & 3));
+    const HBUINT32 *EndPtr = Table + Length / HBUINT32::static_size;
 
     while (Table < EndPtr)
       Sum += *Table++;
@@ -786,9 +820,7 @@ struct OffsetTo : Offset<OffsetType>
 
   inline Type& serialize (hb_serialize_context_t *c, const void *base)
   {
-    Type *t = c->start_embed<Type> ();
-    this->set ((char *) t - (char *) base); /* TODO(serialize) Overflow? */
-    return *t;
+    return * (Type *) Offset<OffsetType>::serialize (c, base);
   }
 
   inline bool sanitize (hb_sanitize_context_t *c, const void *base) const
@@ -876,7 +908,7 @@ struct ArrayOf
     if (unlikely (!serialize (c, items_len))) return_trace (false);
     for (unsigned int i = 0; i < items_len; i++)
       array[i] = items[i];
-    items.advance (items_len);
+    items += items_len;
     return_trace (true);
   }
 
@@ -926,6 +958,11 @@ struct ArrayOf
       if (!this->array[i].cmp (x))
         return i;
     return -1;
+  }
+
+  inline void qsort (void)
+  {
+    ::qsort (array, len, sizeof (Type), Type::cmp);
   }
 
   private:
@@ -994,7 +1031,7 @@ struct HeadlessArrayOf
     if (unlikely (!c->extend (*this))) return_trace (false);
     for (unsigned int i = 0; i < items_len - 1; i++)
       array[i] = items[i];
-    items.advance (items_len - 1);
+    items += items_len - 1;
     return_trace (true);
   }
 
@@ -1070,6 +1107,17 @@ struct BinSearchHeader
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this));
+  }
+
+  inline void set (unsigned int v)
+  {
+    len.set (v);
+    assert (len == v);
+    entrySelectorZ.set (MAX (1u, _hb_bit_storage (v)) - 1);
+    searchRangeZ.set (16 * (1u << entrySelectorZ));
+    rangeShiftZ.set (v * 16 > searchRangeZ
+                     ? 16 * v - searchRangeZ
+                     : 0);
   }
 
   protected:
