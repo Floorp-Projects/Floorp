@@ -75,7 +75,49 @@ struct MOZ_TEMPORARY_CLASS MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
   already_AddRefed(const already_AddRefed<T>& aOther) = delete;
   already_AddRefed<T>& operator=(const already_AddRefed<T>& aOther) = delete;
 
-  already_AddRefed(already_AddRefed<T>&& aOther) : mRawPtr(aOther.take()) {}
+  // WARNING: sketchiness ahead.
+  //
+  // The x86-64 ABI for Unix-like operating systems requires structures to be
+  // returned via invisible reference if they are non-trivial for the purposes
+  // of calls according to the C++ ABI[1].  For our consideration here, that
+  // means that if we have a non-trivial move constructor or destructor,
+  // already_AddRefed must be returned by invisible reference.  But
+  // already_AddRefed is small enough and so commonly used that it would be
+  // beneficial to return it via registers instead.  So we need to figure out
+  // a way to make the move constructor and the destructor trivial.
+  //
+  // Our destructor is normally non-trivial, because it asserts that the
+  // stored pointer has been taken by somebody else prior to destruction.
+  // However, since the assert in question is compiled only for DEBUG builds,
+  // we can make the destructor trivial in non-DEBUG builds by simply defining
+  // it with `= default`.
+  //
+  // We now have to make the move constructor trivial as well.  It is normally
+  // non-trivial, because the incoming object has its pointer null-ed during
+  // the move. This null-ing is done to satisfy the assert in the destructor.
+  // But since that destructor has no assert in non-DEBUG builds, the clearing
+  // is unnecessary in such builds; all we really need to perform is a copy of
+  // the pointer from the incoming object.  So we can let the compiler define
+  // a trivial move constructor for us, and already_AddRefed can now be
+  // returned in registers rather than needing to allocate a stack slot for
+  // an invisible reference.
+  //
+  // The above considerations apply to Unix-like operating systems only; the
+  // conditions for the same optimization to apply on x86-64 Windows are much
+  // more strigent and are basically impossible for already_AddRefed to
+  // satisfy[2].  But we do get some benefit from this optimization on Windows
+  // because we removed the nulling of the pointer during the move, so that's
+  // a codesize win.
+  //
+  // [1] https://itanium-cxx-abi.github.io/cxx-abi/abi.html#non-trivial
+  // [2] https://docs.microsoft.com/en-us/cpp/build/return-values-cpp
+
+  already_AddRefed(already_AddRefed<T>&& aOther)
+#ifdef DEBUG
+    : mRawPtr(aOther.take()) {}
+#else
+    = default;
+#endif
 
   already_AddRefed<T>& operator=(already_AddRefed<T>&& aOther)
   {
@@ -103,7 +145,12 @@ struct MOZ_TEMPORARY_CLASS MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
   template <typename U>
   MOZ_IMPLICIT already_AddRefed(already_AddRefed<U>&& aOther) : mRawPtr(aOther.take()) {}
 
-  ~already_AddRefed() { MOZ_ASSERT(!mRawPtr); }
+  ~already_AddRefed()
+#ifdef DEBUG
+     { MOZ_ASSERT(!mRawPtr); }
+#else
+     = default;
+#endif
 
   // Specialize the unused operator<< for already_AddRefed, to allow
   // nsCOMPtr<nsIFoo> foo;
