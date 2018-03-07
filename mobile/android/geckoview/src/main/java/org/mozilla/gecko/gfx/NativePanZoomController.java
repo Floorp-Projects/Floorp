@@ -9,10 +9,10 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.InputDevice;
 
@@ -20,6 +20,9 @@ import java.util.ArrayList;
 
 public final class NativePanZoomController extends JNIObject {
     private static final String LOGTAG = "GeckoNPZC";
+    private static final int EVENT_SOURCE_SCROLL = 0;
+    private static final int EVENT_SOURCE_MOTION = 1;
+    private static final int EVENT_SOURCE_MOUSE = 2;
 
     private final LayerSession mSession;
     private final Rect mTempRect = new Rect();
@@ -28,6 +31,8 @@ public final class NativePanZoomController extends JNIObject {
     private long mLastDownTime;
 
     private SynthesizedEventState mPointerState;
+
+    private ArrayList<Pair<Integer, MotionEvent>> mQueuedEvents;
 
     @WrapForJNI(calledFrom = "ui")
     private native boolean handleMotionEvent(
@@ -48,6 +53,7 @@ public final class NativePanZoomController extends JNIObject {
 
     private boolean handleMotionEvent(MotionEvent event) {
         if (!mAttached) {
+            mQueuedEvents.add(new Pair(EVENT_SOURCE_MOTION, event));
             return false;
         }
 
@@ -92,6 +98,7 @@ public final class NativePanZoomController extends JNIObject {
 
     private boolean handleScrollEvent(MotionEvent event) {
         if (!mAttached) {
+            mQueuedEvents.add(new Pair(EVENT_SOURCE_SCROLL, event));
             return false;
         }
 
@@ -120,6 +127,7 @@ public final class NativePanZoomController extends JNIObject {
 
     private boolean handleMouseEvent(MotionEvent event) {
         if (!mAttached) {
+            mQueuedEvents.add(new Pair(EVENT_SOURCE_MOUSE, event));
             return false;
         }
 
@@ -143,6 +151,7 @@ public final class NativePanZoomController extends JNIObject {
 
     /* package */ NativePanZoomController(final LayerSession session) {
         mSession = session;
+        enableEventQueue();
     }
 
     /**
@@ -225,13 +234,44 @@ public final class NativePanZoomController extends JNIObject {
         }
     }
 
+    private void enableEventQueue() {
+        if (mQueuedEvents != null) {
+            throw new IllegalStateException("Already have an event queue");
+        }
+        mQueuedEvents = new ArrayList<>();
+    }
+
+    private void flushEventQueue() {
+        if (mQueuedEvents == null) {
+            return;
+        }
+
+        ArrayList<Pair<Integer, MotionEvent>> events = mQueuedEvents;
+        mQueuedEvents = null;
+        for (Pair<Integer, MotionEvent> pair : events) {
+            switch (pair.first) {
+                case EVENT_SOURCE_MOTION:
+                    handleMotionEvent(pair.second);
+                    break;
+                case EVENT_SOURCE_SCROLL:
+                    handleScrollEvent(pair.second);
+                    break;
+                case EVENT_SOURCE_MOUSE:
+                    handleMouseEvent(pair.second);
+                    break;
+            }
+        }
+    }
+
     @WrapForJNI(calledFrom = "ui")
     private void setAttached(final boolean attached) {
         if (attached) {
             mAttached = true;
+            flushEventQueue();
         } else if (mAttached) {
             mAttached = false;
             disposeNative();
+            enableEventQueue();
         }
     }
 

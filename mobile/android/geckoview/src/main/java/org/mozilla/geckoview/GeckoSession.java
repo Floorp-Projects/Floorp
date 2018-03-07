@@ -153,11 +153,17 @@ public class GeckoSession extends LayerSession
                         new Response<GeckoSession>() {
                             @Override
                             public void respond(GeckoSession session) {
-                                if (session != null && session.isOpen() && session.isReady()) {
-                                    throw new IllegalArgumentException("Must use a new GeckoSession instance");
+                                if (session == null) {
+                                    callback.sendSuccess(null);
+                                    return;
                                 }
 
-                                callback.sendSuccess(session != null ? session.getId() : null);
+                                if (session.isOpen()) {
+                                    throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
+                                }
+
+                                session.openWindow(null);
+                                callback.sendSuccess(session.getId());
                             }
                         });
                 }
