@@ -845,9 +845,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      */
     public void waitUntilCalled(final @NonNull Class<?> callback,
                                 final @Nullable String... methods) {
-        assertThat("Class should be a GeckoSession interface",
-                   callback, isIn(CALLBACK_CLASSES));
-
         final int length = (methods != null) ? methods.length : 0;
         final Pattern[] patterns = new Pattern[length];
         for (int i = 0; i < length; i++) {
@@ -855,14 +852,26 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
 
         final List<MethodCall> waitMethods = new ArrayList<>();
+        boolean isSessionCallback = false;
 
-        for (final Method method : callback.getDeclaredMethods()) {
-            for (final Pattern pattern : patterns) {
-                if (pattern.matcher(method.getName()).matches()) {
+        for (final Class<?> ifce : CALLBACK_CLASSES) {
+            if (!ifce.isAssignableFrom(callback)) {
+                continue;
+            }
+            for (final Method method : ifce.getMethods()) {
+                for (final Pattern pattern : patterns) {
+                    if (!pattern.matcher(method.getName()).matches()) {
+                        continue;
+                    }
                     waitMethods.add(new MethodCall(method, /* requirement */ null));
+                    break;
                 }
             }
+            isSessionCallback = true;
         }
+
+        assertThat("Class should be a GeckoSession interface",
+                   isSessionCallback, equalTo(true));
 
         waitUntilCalled(callback, waitMethods);
     }
