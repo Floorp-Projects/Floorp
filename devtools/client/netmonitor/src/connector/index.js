@@ -71,6 +71,10 @@ class Connector {
     return this.connector.resume();
   }
 
+  enableActions() {
+    this.connector.enableActions(...arguments);
+  }
+
   // Public API
 
   getLongString() {
