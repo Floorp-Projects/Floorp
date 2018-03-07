@@ -245,25 +245,25 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
     JS::Rooted<JS::Value> v(cx);
     v.setUndefined();
 
-    switch (c.type.prefix.mFlags) {
+    switch (c.mType.mPrefix.mFlags) {
       case nsXPTType::T_I16:
       {
-        v.setInt32(c.value.i16);
+        v.setInt32(c.mValue.i16);
         break;
       }
       case nsXPTType::T_U16:
       {
-        v.setInt32(c.value.ui16);
+        v.setInt32(c.mValue.ui16);
         break;
       }
       case nsXPTType::T_I32:
       {
-        v = JS_NumberValue(c.value.i32);
+        v = JS_NumberValue(c.mValue.i32);
         break;
       }
       case nsXPTType::T_U32:
       {
-        v = JS_NumberValue(c.value.ui32);
+        v = JS_NumberValue(c.mValue.ui32);
         break;
       }
       default:
@@ -273,7 +273,7 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
     }
 
     constant.set(v);
-    *name = ToNewCString(nsDependentCString(c.name));
+    *name = ToNewCString(nsDependentCString(c.mName));
 
     return NS_OK;
 }
@@ -302,7 +302,7 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->type;
 
     while (td->Tag() == TD_ARRAY) {
-        td = &mDescriptor->mAdditionalTypes[td->u.array.additional_type];
+        td = &mDescriptor->mAdditionalTypes[td->u.mArray.mAdditionalType];
     }
 
     if (td->Tag() != TD_INTERFACE_TYPE) {
@@ -310,7 +310,7 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    *interfaceIndex = (td->u.iface.iface_hi8 << 8) | td->u.iface.iface_lo8;
+    *interfaceIndex = (td->u.mIface.mIfaceHi8 << 8) | td->u.mIface.mIfaceLo8;
     return NS_OK;
 }
 
@@ -445,7 +445,7 @@ xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
             NS_ERROR("bad dimension");
             return NS_ERROR_INVALID_ARG;
         }
-        td = &additional_types[td->u.array.additional_type];
+        td = &additional_types[td->u.mArray.mAdditionalType];
     }
 
     *type = td;
@@ -482,7 +482,7 @@ xptiInterfaceEntry::GetTypeForParam(uint16_t methodIndex,
     else
         td = &param->type;
 
-    *type = nsXPTType(td->prefix);
+    *type = nsXPTType(td->mPrefix);
     return NS_OK;
 }
 
@@ -519,11 +519,11 @@ xptiInterfaceEntry::GetSizeIsArgNumberForParam(uint16_t methodIndex,
     // verify that this is a type that has size_is
     switch (td->Tag()) {
       case TD_ARRAY:
-        *argnum = td->u.array.argnum;
+        *argnum = td->u.mArray.mArgNum;
         break;
       case TD_PSTRING_SIZE_IS:
       case TD_PWSTRING_SIZE_IS:
-        *argnum = td->u.pstring_is.argnum;
+        *argnum = td->u.mPStringIs.mArgNum;
         break;
       default:
         NS_ERROR("not a size_is");
@@ -555,7 +555,7 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->type;
 
     while (td->Tag() == TD_ARRAY) {
-        td = &mDescriptor->mAdditionalTypes[td->u.array.additional_type];
+        td = &mDescriptor->mAdditionalTypes[td->u.mArray.mAdditionalType];
     }
 
     if (td->Tag() != TD_INTERFACE_IS_TYPE) {
@@ -563,7 +563,7 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    *argnum = td->u.interface_is.argnum;
+    *argnum = td->u.mInterfaceIs.mArgNum;
     return NS_OK;
 }
 
