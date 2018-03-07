@@ -203,7 +203,7 @@ public:
    * Returns |this| if it is not chrome-only/native anonymous, otherwise
    * first non chrome-only/native anonymous ancestor.
    */
-  virtual nsIContent* FindFirstNonChromeOnlyAccessContent() const;
+  nsIContent* FindFirstNonChromeOnlyAccessContent() const;
 
   /**
    * Returns true if and only if this node has a parent, but is not in
@@ -264,7 +264,7 @@ public:
   /**
    * Returns true if in a chrome document
    */
-  virtual bool IsInChromeDocument() const;
+  bool IsInChromeDocument() const;
 
   /**
    * Get the namespace that this element's tag is defined in
