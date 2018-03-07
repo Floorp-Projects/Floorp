@@ -93,6 +93,7 @@ JitContext* MaybeGetJitContext();
 void SetJitContext(JitContext* ctx);
 
 bool CanIonCompileScript(JSContext* cx, JSScript* script);
+bool CanIonInlineScript(JSScript* script);
 
 MOZ_MUST_USE bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode* pc);
 
