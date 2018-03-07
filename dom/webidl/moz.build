@@ -139,6 +139,9 @@ with Files("HTML*"):
 with Files("HashChangeEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
+with Files("HeapSnapshot.webidl"):
+    BUG_COMPONENT = ("Firefox", "Developer Tools: Memory")
+
 with Files("HiddenPluginEvent.webidl"):
     BUG_COMPONENT = ("Core", "Plug-ins")
 
@@ -159,6 +162,9 @@ with Files("InputEvent.webidl"):
 
 with Files("InstallTrigger.webidl"):
     BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
+
+with Files("InspectorUtils.webidl"):
+    BUG_COMPONENT = ("Firefox", "Developer Tools: Inspector")
 
 with Files("KeyAlgorithm.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Security")
@@ -354,6 +360,7 @@ GENERATED_WEBIDL_FILES = [
 ]
 
 PREPROCESSED_WEBIDL_FILES = [
+    'ChromeUtils.webidl',
     'Node.webidl',
     'Window.webidl',
 ]
@@ -411,6 +418,7 @@ WEBIDL_FILES = [
     'CDATASection.webidl',
     'ChannelMergerNode.webidl',
     'ChannelSplitterNode.webidl',
+    'ChannelWrapper.webidl',
     'CharacterData.webidl',
     'CheckerboardReportService.webidl',
     'ChildNode.webidl',
@@ -475,6 +483,7 @@ WEBIDL_FILES = [
     'DOMError.webidl',
     'DOMException.webidl',
     'DOMImplementation.webidl',
+    'DominatorTree.webidl',
     'DOMMatrix.webidl',
     'DOMParser.webidl',
     'DOMPoint.webidl',
@@ -527,6 +536,7 @@ WEBIDL_FILES = [
     'GetUserMediaRequest.webidl',
     'Grid.webidl',
     'Headers.webidl',
+    'HeapSnapshot.webidl',
     'History.webidl',
     'HTMLAllCollection.webidl',
     'HTMLAnchorElement.webidl',
@@ -625,6 +635,7 @@ WEBIDL_FILES = [
     'ImageData.webidl',
     'ImageDocument.webidl',
     'InputEvent.webidl',
+    'InspectorUtils.webidl',
     'IntersectionObserver.webidl',
     'IntlUtils.webidl',
     'IterableIterator.webidl',
@@ -640,6 +651,8 @@ WEBIDL_FILES = [
     'ListBoxObject.webidl',
     'LocalMediaStream.webidl',
     'Location.webidl',
+    'MatchGlob.webidl',
+    'MatchPattern.webidl',
     'MediaDeviceInfo.webidl',
     'MediaDevices.webidl',
     'MediaElementAudioSourceNode.webidl',
@@ -680,6 +693,9 @@ WEBIDL_FILES = [
     'MimeTypeArray.webidl',
     'MouseEvent.webidl',
     'MouseScrollEvent.webidl',
+    'MozStorageAsyncStatementParams.webidl',
+    'MozStorageStatementParams.webidl',
+    'MozStorageStatementRow.webidl',
     'MutationEvent.webidl',
     'MutationObserver.webidl',
     'NamedNodeMap.webidl',
@@ -726,6 +742,7 @@ WEBIDL_FILES = [
     'PopupBoxObject.webidl',
     'Position.webidl',
     'PositionError.webidl',
+    'PrecompiledScript.webidl',
     'Presentation.webidl',
     'PresentationAvailability.webidl',
     'PresentationConnection.webidl',
@@ -735,6 +752,7 @@ WEBIDL_FILES = [
     'ProcessingInstruction.webidl',
     'ProfileTimelineMarker.webidl',
     'Promise.webidl',
+    'PromiseDebugging.webidl',
     'PushEvent.webidl',
     'PushManager.webidl',
     'PushManager.webidl',
@@ -772,6 +790,7 @@ WEBIDL_FILES = [
     'StorageType.webidl',
     'StreamFilter.webidl',
     'StreamFilterDataEvent.webidl',
+    'StructuredCloneHolder.webidl',
     'StyleSheet.webidl',
     'StyleSheetList.webidl',
     'SubtleCrypto.webidl',
@@ -926,6 +945,8 @@ WEBIDL_FILES = [
     'WaveShaperNode.webidl',
     'WebAuthentication.webidl',
     'WebComponents.webidl',
+    'WebExtensionContentScript.webidl',
+    'WebExtensionPolicy.webidl',
     'WebGL2RenderingContext.webidl',
     'WebGLRenderingContext.webidl',
     'WebKitCSSMatrix.webidl',
