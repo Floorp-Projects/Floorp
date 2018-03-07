@@ -84,7 +84,7 @@ registerCleanupFunction(function () {
 const ConsoleObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  observe: function (subject) {
+  observe: function (subject, topic, data) {
     let message = subject.wrappedJSObject.arguments[0];
 
     if (message && /Failed propType/.test(message.toString())) {
@@ -117,10 +117,9 @@ if (DEBUG_ALLOCATIONS) {
 
 var waitForTime = DevToolsUtils.waitForTime;
 
-function loadFrameScriptUtils(browser = gBrowser.selectedBrowser) {
-  let mm = browser.messageManager;
-  let frameURL = "chrome://mochitests/content/browser/devtools/client/shared/test/frame-script-utils.js";
-  info("Loading the helper frame script " + frameURL);
+function getFrameScript() {
+  let mm = gBrowser.selectedBrowser.messageManager;
+  let frameURL = "chrome://devtools/content/shared/frame-script-utils.js";
   mm.loadFrameScript(frameURL, false);
   SimpleTest.registerCleanupFunction(() => {
     mm = null;
@@ -279,9 +278,9 @@ function waitForNEvents(target, eventName, numTimes, useCapture = false) {
   let count = 0;
 
   for (let [add, remove] of [
-    ["on", "off"],
     ["addEventListener", "removeEventListener"],
     ["addListener", "removeListener"],
+    ["on", "off"]
   ]) {
     if ((add in target) && (remove in target)) {
       target[add](eventName, function onEvent(...aArgs) {
@@ -383,10 +382,7 @@ function waitForTick() {
  * @return A promise that resolves when the time is passed
  */
 function wait(ms) {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-    info("Waiting " + ms / 1000 + " seconds.");
-  });
+  return new promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -443,12 +439,12 @@ var openNewTabAndToolbox = Task.async(function* (url, toolId, hostType) {
  * closed.
  */
 var closeTabAndToolbox = Task.async(function* (tab = gBrowser.selectedTab) {
-  let target = TargetFactory.forTab(tab);
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
   if (target) {
     yield gDevTools.closeToolbox(target);
   }
 
-  yield removeTab(tab);
+  yield removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -486,10 +482,9 @@ function waitUntil(predicate, interval = 10) {
  * in potentially a different process.
  */
 let MM_INC_ID = 0;
-function evalInDebuggee(script, browser = gBrowser.selectedBrowser) {
-  return new Promise(resolve => {
+function evalInDebuggee(mm, script) {
+  return new Promise(function (resolve, reject) {
     let id = MM_INC_ID++;
-    let mm = browser.messageManager;
     mm.sendAsyncMessage("devtools:test:eval", { script, id });
     mm.addMessageListener("devtools:test:eval:response", handler);
 
@@ -658,7 +653,8 @@ function stopRecordingTelemetryLogs(Telemetry) {
  * Windows (see Bug 666254).
  */
 function emptyClipboard() {
-  let clipboard = Services.clipboard;
+  let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
+    .getService(SpecialPowers.Ci.nsIClipboard);
   clipboard.emptyClipboard(clipboard.kGlobalClipboard);
 }
 

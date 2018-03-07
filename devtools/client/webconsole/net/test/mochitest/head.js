@@ -10,6 +10,9 @@
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/webconsole/test/head.js", this);
 
+const FRAME_SCRIPT_UTILS_URL =
+  "chrome://devtools/content/shared/frame-script-utils.js";
+
 const NET_INFO_PREF = "devtools.webconsole.filter.networkinfo";
 const NET_XHR_PREF = "devtools.webconsole.filter.netxhr";
 
@@ -40,8 +43,8 @@ function addTestTab(url) {
   return Task.spawn(function* () {
     let tab = yield addTab(url);
 
-    // Load devtools/shared/test/frame-script-utils.js
-    loadFrameScriptUtils(tab.linkedBrowser);
+    // Load devtools/shared/frame-script-utils.js
+    loadCommonFrameScript(tab);
 
     // Open the Console panel
     let hud = yield openConsole();
@@ -198,4 +201,9 @@ function waitForContentMessage(name) {
       resolve(msg.data);
     });
   });
+}
+
+function loadCommonFrameScript(tab) {
+  let browser = tab ? tab.linkedBrowser : gBrowser.selectedBrowser;
+  browser.messageManager.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
 }

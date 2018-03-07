@@ -1,7 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-/* import-globals-from ../../shared/test/shared-head.js */
+/* import-globals-from ../../framework/test/shared-head.js */
 /* exported promiseWaitForFocus, setup, ch, teardown, loadHelperScript,
             limit, ch, read, codemirrorSetStatus */
 
@@ -9,7 +9,7 @@
 
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");

@@ -42,7 +42,7 @@ add_task(function* () {
   let mediaPermissionPref = Services.prefs.getBoolPref(MEDIA_PERMISSION);
   Services.prefs.setBoolPref(MEDIA_PERMISSION, true);
 
-  yield loadFrameScriptUtils();
+  yield loadFrameScripts();
 
   let events = Promise.all([
     getN(gFront, "create-node", 4),

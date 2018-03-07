@@ -97,7 +97,7 @@ function reloadTab(tabX) {
   });
 
   info("Reloading tab " + tabX.title);
-  let mm = loadFrameScriptUtils();
+  let mm = getFrameScript();
   mm.sendAsyncMessage("devtools:test:reload");
 
   return def.promise;
