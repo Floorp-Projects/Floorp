@@ -24,13 +24,20 @@ XPIDL_MODULE = 'widget_android'
 
 EXPORTS += [
     'AndroidBridge.h',
-    'GeneratedJNINatives.h',
-    'GeneratedJNIWrappers.h',
+]
+
+EXPORTS += [
+    '!GeneratedJNINatives.h',
+    '!GeneratedJNIWrappers.h',
 ]
 
 EXPORTS.mozilla.widget += [
     'AndroidCompositorWidget.h',
     'AndroidUiThread.h',
+]
+
+SOURCES += [
+    '!GeneratedJNIWrappers.cpp',
 ]
 
 UNIFIED_SOURCES += [
@@ -42,7 +49,6 @@ UNIFIED_SOURCES += [
     'ANRReporter.cpp',
     'EventDispatcher.cpp',
     'GeckoEditableSupport.cpp',
-    'GeneratedJNIWrappers.cpp',
     'GfxInfo.cpp',
     'nsAndroidProtocolHandler.cpp',
     'nsAppShell.cpp',
@@ -58,6 +64,18 @@ UNIFIED_SOURCES += [
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+# The recursive make backend treats the first output specially: it's passed as
+# an open FileAvoidWrite to the invoked script.  That doesn't work well with
+# the Gradle task that generates all of the outputs, so we add a dummy first
+# output.
+t = ('generated_jni_wrappers',
+     'GeneratedJNINatives.h',
+     'GeneratedJNIWrappers.h',
+     'GeneratedJNIWrappers.cpp')
+
+GENERATED_FILES += [t]
+GENERATED_FILES[t].script = '/mobile/android/gradle.py:generate_generated_jni_wrappers'
 
 FINAL_LIBRARY = 'xul'
 
