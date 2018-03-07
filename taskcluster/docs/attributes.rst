@@ -203,3 +203,10 @@ Using the "snowman model", we depend on previous graphs if they're defined. So i
 ask for a ``push`` (the head of the snowman) and point at the body and base, we only
 build the head. If we don't point at the body and base, we build the whole snowman
 (build, promote, push).
+
+artifact_prefix
+===============
+Most taskcluster artifacts are public, so we've hardcoded ``public/build`` in a
+lot of places. To support private artifacts, we've moved this to the
+``artifact_prefix`` attribute. It will default to ``public/build`` but will be
+overrideable per-task.
