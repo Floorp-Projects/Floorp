@@ -101,6 +101,16 @@ def gradle_android_app_tasks(build_config):
 set_config('GRADLE_ANDROID_APP_TASKS', gradle_android_app_tasks)
 
 
+@dependable
+def gradle_android_generate_sdk_bindings_tasks():
+    '''Gradle tasks run by |mach android generate-sdk-bindings|.'''
+    return [
+        'geckoview:generateSDKBindings',
+    ]
+
+set_config('GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS', gradle_android_generate_sdk_bindings_tasks)
+
+
 @depends(gradle_android_build_config, check_build_environment)
 @imports(_from='itertools', _import='imap')
 def gradle_android_app_apks(build_config, build_env):
@@ -204,6 +214,7 @@ set_config('GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS', gradle_android_archive_geck
     gradle_android_checkstyle_tasks,
     gradle_android_findbugs_tasks,
     gradle_android_archive_geckoview_tasks,
+    gradle_android_generate_sdk_bindings_tasks,
 )
 @imports(_from='itertools', _import='imap')
 @imports(_from='itertools', _import='chain')

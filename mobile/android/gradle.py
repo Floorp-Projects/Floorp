@@ -37,3 +37,7 @@ def android(verb, *args):
 
 def assemble_app(dummy_output_file, *inputs):
     return android('assemble-app')
+
+
+def generate_sdk_bindings(dummy_output_file, *args):
+    return android('generate-sdk-bindings', *args)

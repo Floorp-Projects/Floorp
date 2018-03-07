@@ -8,6 +8,9 @@
 // :omnijar project for more context.
 evaluationDependsOn(':omnijar')
 
+// The JNI wrapper generation tasks depend on the JAR creation task of the :annotations project.
+evaluationDependsOn(':annotations')
+
 task buildOmnijars(type:Exec) {
     dependsOn rootProject.generateCodeAndResources
 
