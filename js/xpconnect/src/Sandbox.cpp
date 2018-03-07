@@ -1144,9 +1144,11 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     if (options.addonId) {
         addonId = JS::NewAddonId(cx, options.addonId);
         NS_ENSURE_TRUE(addonId, NS_ERROR_FAILURE);
-    } else if (JSObject* obj = JS::CurrentGlobalOrNull(cx)) {
-        if (JSAddonId* id = JS::AddonIdOfObject(obj))
-            addonId = id;
+    } else if (principal == nsXPConnect::SystemPrincipal()) {
+        if (JSObject* obj = JS::CurrentGlobalOrNull(cx)) {
+            if (JSAddonId* id = JS::AddonIdOfObject(obj))
+                addonId = id;
+        }
     }
 
     creationOptions.setAddonId(addonId);
