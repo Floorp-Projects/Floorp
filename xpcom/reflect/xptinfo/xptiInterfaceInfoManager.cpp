@@ -118,15 +118,15 @@ XPTInterfaceInfoManager::RegisterBuffer(char *buf, uint32_t length)
 void
 XPTInterfaceInfoManager::RegisterXPTHeader(const XPTHeader* aHeader)
 {
-    if (aHeader->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
-        NS_ASSERTION(!aHeader->num_interfaces,"bad libxpt");
+    if (aHeader->mMajorVersion >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
+        MOZ_ASSERT(!aHeader->mNumInterfaces, "bad libxpt");
     }
 
     xptiTypelibGuts* typelib = xptiTypelibGuts::Create(aHeader);
 
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    for(uint16_t k = 0; k < aHeader->num_interfaces; k++)
-        VerifyAndAddEntryIfNew(aHeader->interface_directory + k, k, typelib);
+    for(uint16_t k = 0; k < aHeader->mNumInterfaces; k++)
+        VerifyAndAddEntryIfNew(aHeader->mInterfaceDirectory + k, k, typelib);
 }
 
 void

@@ -43,13 +43,13 @@ struct XPTHeader {
   // stored in memory (other than very briefly, which can be done with local
   // variables).
 
-  //uint8_t magic[16];
-  uint8_t major_version;
-  //uint8_t minor_version;
-  uint16_t num_interfaces;
-  //uint32_t file_length;
-  const XPTInterfaceDirectoryEntry* interface_directory;
-  //uint32_t data_pool;
+  //uint8_t mMagic[16];
+  uint8_t mMajorVersion;
+  //uint8_t mMinorVersion;
+  uint16_t mNumInterfaces;
+  //uint32_t mFileLength;
+  const XPTInterfaceDirectoryEntry* mInterfaceDirectory;
+  //uint32_t mDataPool;
 };
 
 /*
@@ -66,7 +66,7 @@ struct XPTHeader {
 
 /*
  * A contiguous array of fixed-size InterfaceDirectoryEntry records begins at
- * the byte offset identified by the interface_directory field in the file
+ * the byte offset identified by the mInterfaceDirectory field in the file
  * header.  The array is used to quickly locate an interface description
  * using its IID.  No interface should appear more than once in the array.
  */
