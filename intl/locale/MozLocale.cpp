@@ -18,6 +18,8 @@ using namespace mozilla::intl;
  */
 Locale::Locale(const nsACString& aLocale)
 {
+  MOZ_ASSERT(!aLocale.IsEmpty(), "Locale string cannot be empty");
+
   int32_t position = 0;
 
   if (!IsASCII(aLocale)) {
