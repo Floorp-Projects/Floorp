@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1520338780397" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1520358450708" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2216,6 +2216,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="0cd723fe-d33d-43a0-b84f-7a3cad253212" id="{42baa93e-0cff-4289-b79e-6ae88df668c4}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="f58729ec-f93c-41d9-870d-dd9c9fd811b6" id="/^(addon@fasterweb\.com|\{5f398d3f-25db-47f5-b422-aa2364ff6c0b\}|addon@fasterp\.com|addon@calculator)$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
