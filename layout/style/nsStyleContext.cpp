@@ -18,7 +18,6 @@
 #include "nsStyleStructInlines.h"
 #include "nsString.h"
 #include "nsPresContext.h"
-#include "nsIStyleRule.h"
 
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
