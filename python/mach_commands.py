@@ -66,10 +66,6 @@ class MachCommands(MachCommandBase):
                      default=False,
                      action='store_true',
                      help='Verbose output.')
-    @CommandArgument('--stop',
-                     default=False,
-                     action='store_true',
-                     help='Stop running tests after the first error or failure.')
     @CommandArgument('-j', '--jobs',
                      default=1,
                      type=int,
@@ -95,7 +91,6 @@ class MachCommands(MachCommandBase):
                          test_objects=None,
                          subsuite=None,
                          verbose=False,
-                         stop=False,
                          jobs=1,
                          **kwargs):
         self._activate_virtualenv()
