@@ -24,8 +24,8 @@
  * Google Author(s): Seigo Nonaka
  */
 
-#ifndef HB_OT_CBDT_TABLE_HH
-#define HB_OT_CBDT_TABLE_HH
+#ifndef HB_OT_COLOR_CBDT_TABLE_HH
+#define HB_OT_COLOR_CBDT_TABLE_HH
 
 #include "hb-open-type-private.hh"
 
@@ -377,7 +377,7 @@ struct CBDT
   {
     inline void init (hb_face_t *face)
     {
-      upem = face->get_upem();
+      upem = hb_face_get_upem (face);
 
       cblc_blob = Sanitizer<CBLC>().sanitize (face->reference_table (HB_OT_TAG_CBLC));
       cbdt_blob = Sanitizer<CBDT>().sanitize (face->reference_table (HB_OT_TAG_CBDT));
@@ -468,4 +468,4 @@ struct CBDT
 
 } /* namespace OT */
 
-#endif /* HB_OT_CBDT_TABLE_HH */
+#endif /* HB_OT_COLOR_CBDT_TABLE_HH */

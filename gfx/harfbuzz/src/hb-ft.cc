@@ -58,7 +58,7 @@
  *
  *   - In the future, we should add constructors to create fonts in font space?
  *
- *   - FT_Load_Glyph() is exteremely costly.  Do something about it?
+ *   - FT_Load_Glyph() is extremely costly.  Do something about it?
  */
 
 
