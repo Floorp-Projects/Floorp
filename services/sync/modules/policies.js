@@ -20,6 +20,8 @@ ChromeUtils.defineModuleGetter(this, "Status",
                                "resource://services-sync/status.js");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "fxAccounts",
+                               "resource://gre/modules/FxAccounts.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "IdleService",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
@@ -531,6 +533,11 @@ SyncScheduler.prototype = {
       return;
     }
     Services.tm.dispatchToMainThread(() => {
+      // Terrible hack below: we do the fxa messages polling in the sync
+      // scheduler to get free post-wake/link-state etc detection.
+      fxAccounts.messages.consumeRemoteMessages().catch(e => {
+        this._log.error("Error while polling for FxA messages.", e);
+      });
       this.service.sync({engines, why});
     });
   },
