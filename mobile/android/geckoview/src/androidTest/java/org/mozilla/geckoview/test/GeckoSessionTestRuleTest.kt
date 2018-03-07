@@ -171,6 +171,11 @@ class GeckoSessionTestRuleTest {
         sessionRule.waitUntilCalled(CharSequence::class)
     }
 
+    fun waitUntilCalled_notThrowOnCallbackInterface() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitUntilCalled(Callbacks.ProgressDelegate::class)
+    }
+
     @Test fun waitUntilCalled_anyObjectMethod() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
 
