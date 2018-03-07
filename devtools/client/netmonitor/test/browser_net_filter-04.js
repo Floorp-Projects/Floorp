@@ -48,7 +48,7 @@ add_task(function* () {
     "The first filter type is invalid, but loaded anyway.");
 
   let wait = waitForNetworkEvents(monitor, 9);
-  loadFrameScriptUtils();
+  loadCommonFrameScript();
   yield performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   yield wait;
 

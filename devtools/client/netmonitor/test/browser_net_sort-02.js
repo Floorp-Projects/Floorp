@@ -29,7 +29,7 @@ add_task(function* () {
 
   // Loading the frame script and preparing the xhr request URLs so we can
   // generate some requests later.
-  loadFrameScriptUtils();
+  loadCommonFrameScript();
   let requests = [{
     url: "sjs_sorting-test-server.sjs?index=1&" + Math.random(),
     method: "GET1"

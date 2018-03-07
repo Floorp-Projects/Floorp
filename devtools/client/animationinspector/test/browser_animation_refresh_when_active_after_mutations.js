@@ -29,7 +29,8 @@ add_task(function* () {
   });
 
   info("Make animation by eval in content");
-  yield evalInDebuggee(`document.querySelector('#target').animate(
+  yield evalInDebuggee(gBrowser.selectedBrowser.messageManager,
+                       `document.querySelector('#target').animate(
                         { transform: 'translate(100px)' },
                         { duration: 100000, easing: 'steps(2)' });`);
   info("Wait for animation mutations event");

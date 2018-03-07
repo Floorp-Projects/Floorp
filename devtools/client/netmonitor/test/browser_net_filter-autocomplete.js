@@ -46,7 +46,7 @@ add_task(async function () {
   // Let the requests load completely before the autocomplete tests begin
   // as autocomplete values also rely on the network requests.
   let waitNetwork = waitForNetworkEvents(monitor, REQUESTS.length);
-  loadFrameScriptUtils();
+  loadCommonFrameScript();
   await performRequestsInContent(REQUESTS);
   await waitNetwork;
 

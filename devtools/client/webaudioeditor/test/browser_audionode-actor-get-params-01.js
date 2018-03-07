@@ -12,7 +12,7 @@ add_task(function* () {
     getN(front, "create-node", 15)
   ]);
 
-  yield loadFrameScriptUtils();
+  yield loadFrameScripts();
 
   let allNodeParams = yield Promise.all(nodes.map(node => node.getParams()));
   let nodeTypes = [

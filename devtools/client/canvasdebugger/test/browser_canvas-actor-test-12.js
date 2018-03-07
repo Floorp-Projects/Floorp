@@ -8,7 +8,7 @@
 
 function* ifTestingSupported() {
   let { target, front } = yield initCanvasDebuggerBackend(NO_CANVAS_URL);
-  loadFrameScriptUtils();
+  loadFrameScripts();
 
   let navigated = once(target, "navigate");
 

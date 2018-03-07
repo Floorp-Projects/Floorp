@@ -31,7 +31,7 @@ function test() {
 }
 
 function startReloadTest(aToolbox) {
-  loadFrameScriptUtils(); // causes frame-script-utils to be loaded into the child.
+  getFrameScript(); // causes frame-script-utils to be loaded into the child.
   toolbox = aToolbox;
 
   reloadsSent = 0;

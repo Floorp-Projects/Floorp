@@ -6,7 +6,7 @@
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* globals registerTestActor, getTestActor, Task, openToolboxForTab, gBrowser */
-/* import-globals-from ../../shared/test/shared-head.js */
+/* import-globals-from ../../framework/test/shared-head.js */
 
 var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 

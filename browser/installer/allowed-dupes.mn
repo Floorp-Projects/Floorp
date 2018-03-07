@@ -31,6 +31,7 @@ browser/chrome/devtools/content/inspector/fonts/fonts.js
 browser/chrome/devtools/content/inspector/inspector.xhtml
 browser/chrome/devtools/content/memory/initializer.js
 browser/chrome/devtools/content/projecteditor/lib/helpers/readdir.js
+browser/chrome/devtools/content/shared/frame-script-utils.js
 browser/chrome/devtools/content/shared/theme-switching.js
 browser/chrome/devtools/modules/devtools/client/dom/content/dom-view.css
 browser/chrome/devtools/modules/devtools/client/dom/dom.html
@@ -42,6 +43,7 @@ browser/chrome/devtools/modules/devtools/client/jsonview/css/controls.png
 browser/chrome/devtools/modules/devtools/client/jsonview/css/controls@2x.png
 browser/chrome/devtools/modules/devtools/client/memory/initializer.js
 browser/chrome/devtools/modules/devtools/client/projecteditor/lib/helpers/readdir.js
+browser/chrome/devtools/modules/devtools/client/shared/frame-script-utils.js
 browser/chrome/devtools/modules/devtools/client/shared/theme-switching.js
 browser/chrome/devtools/modules/devtools/client/themes/common.css
 browser/chrome/devtools/modules/devtools/client/themes/toolbars.css
