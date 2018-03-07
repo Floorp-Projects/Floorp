@@ -81,8 +81,7 @@ public:
   // Apply this |DisplayItemClip| to the given gfxContext.  Any saving of state
   // or clearing of other clips must be done by the caller.
   // See aBegin/aEnd note on ApplyRoundedRectsTo.
-  void ApplyTo(gfxContext* aContext, int32_t A2D,
-               uint32_t aBegin = 0, uint32_t aEnd = UINT32_MAX);
+  void ApplyTo(gfxContext* aContext, int32_t A2D);
 
   void ApplyRectTo(gfxContext* aContext, int32_t A2D) const;
   // Applies the rounded rects in this Clip to aContext
@@ -94,9 +93,7 @@ public:
   // Draw (fill) the rounded rects in this clip to aContext
   void FillIntersectionOfRoundedRectClips(gfxContext* aContext,
                                           const Color& aColor,
-                                          int32_t aAppUnitsPerDevPixel,
-                                          uint32_t aBegin,
-                                          uint32_t aEnd) const;
+                                          int32_t aAppUnitsPerDevPixel) const;
   // 'Draw' (create as a path, does not stroke or fill) aRoundRect to aContext
   already_AddRefed<Path> MakeRoundedRectPath(DrawTarget& aDrawTarget,
                                                   int32_t A2D,
@@ -148,8 +145,8 @@ public:
 
   // Adds the difference between Intersect(*this + aPoint, aBounds) and
   // Intersect(aOther, aOtherBounds) to aDifference (or a bounding-box thereof).
-  void AddOffsetAndComputeDifference(uint32_t aStart, const nsPoint& aPoint, const nsRect& aBounds,
-                                     const DisplayItemClip& aOther, uint32_t aOtherStart, const nsRect& aOtherBounds,
+  void AddOffsetAndComputeDifference(const nsPoint& aPoint, const nsRect& aBounds,
+                                     const DisplayItemClip& aOther, const nsRect& aOtherBounds,
                                      nsRegion* aDifference);
 
   bool operator==(const DisplayItemClip& aOther) const {
@@ -172,14 +169,8 @@ public:
 
   nsCString ToString() const;
 
-  /**
-   * Find the largest N such that the first N rounded rects in 'this' are
-   * equal to the first N rounded rects in aOther, and N <= aMax.
-   */
-  uint32_t GetCommonRoundedRectCount(const DisplayItemClip& aOther,
-                                     uint32_t aMax) const;
   uint32_t GetRoundedRectCount() const { return mRoundedClipRects.Length(); }
-  void AppendRoundedRects(nsTArray<RoundedRect>* aArray, uint32_t aCount) const;
+  void AppendRoundedRects(nsTArray<RoundedRect>* aArray) const;
 
   void ToComplexClipRegions(int32_t aAppUnitsPerDevPixel,
                               const layers::StackingContextHelper& aSc,
