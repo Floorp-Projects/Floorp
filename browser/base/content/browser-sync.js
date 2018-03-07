@@ -565,7 +565,7 @@ var gSync = {
     const state = UIState.get();
     if (state.status == UIState.STATUS_SIGNED_IN) {
       this.updateSyncStatus({ syncing: true });
-      setTimeout(() => Weave.Service.errorHandler.syncAndReportErrors(), 0);
+      Services.tm.dispatchToMainThread(() => Weave.Service.sync());
     }
   },
 

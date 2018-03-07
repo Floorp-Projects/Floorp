@@ -74,6 +74,26 @@ public:
   static HRESULT Create(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink,
                         REFIID aInitialIid, void** aOutInterface);
 
+  /**
+   * Disconnect all remote clients for a given target.
+   * Because Interceptors disable COM garbage collection to improve
+   * performance, they never receive Release calls from remote clients. If
+   * the object can be shut down while clients still hold a reference, this
+   * function can be used to force COM to disconnect all remote connections
+   * (using CoDisconnectObject) and thus release the associated references to
+   * the Interceptor, its target and any objects associated with the
+   * HandlerProvider.
+   * Note that the specified target must be the same IUnknown pointer used to
+   * create the Interceptor. Where there is multiple inheritance, querying for
+   * IID_IUnknown and calling this function with that pointer alone will not
+   * disconnect remotes for all interfaces. If you expect that the same object
+   * may be fetched with different initial interfaces, you should call this
+   * function once for each possible IUnknown pointer.
+   * @return S_OK if there was an Interceptor for the given target,
+   *         S_FALSE if there was not.
+   */
+  static HRESULT DisconnectRemotesForTarget(IUnknown* aTarget);
+
   // IUnknown
   STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override;
   STDMETHODIMP_(ULONG) AddRef() override;

@@ -464,6 +464,13 @@ HandlerProvider::MarshalAs(REFIID aIid)
   return aIid;
 }
 
+HRESULT
+HandlerProvider::DisconnectHandlerRemotes()
+{
+  IUnknown* unk = static_cast<IGeckoBackChannel*>(this);
+  return ::CoDisconnectObject(unk, 0);
+}
+
 REFIID
 HandlerProvider::GetEffectiveOutParamIid(REFIID aCallIid,
                                          ULONG aCallMethod)

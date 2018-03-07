@@ -202,7 +202,6 @@ impl IOHIDDeviceMatcher {
                 string.len() as CFIndex,
                 kCFStringEncodingUTF8,
                 false as Boolean,
-                kCFAllocatorNull,
             )
         }
     }
