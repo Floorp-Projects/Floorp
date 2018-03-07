@@ -496,7 +496,7 @@ clean.doLast {
 findbugs {
     ignoreFailures = false
 
-    effort = "max"
+    effort = "min"
     // This selects what level of bugs to report: low means low priority issues will be reported
     // (in addition to medium+high), which corresponds to warning about everything.
     // TODO: boost this to low once low priority issues are fixed.
