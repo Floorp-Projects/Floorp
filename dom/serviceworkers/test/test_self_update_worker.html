@@ -3,6 +3,19 @@
 <!--
   Test that a self updating service worker can't keep running forever when the
   script changes.
+
+  - self_update_worker.sjs is a stateful server-side js script that returns a
+  SW script with a different version every time it's invoked. (version=1..n)
+  - The SW script will trigger an update when it reaches the activating state,
+  which, if not for the update delaying mechanism, would result in an iterative
+  cycle.
+  - We currently delay registration.update() calls originating from SWs not currently
+  controlling any clients. The delay is: 0s, 30s, 900s etc, but for the purpose of
+  this test, the delay is: 0s, infinite etc.
+  - We assert that the SW script never reaches version 3, meaning it will only
+  successfully update once.
+  - We give the worker reasonable time to self update by repeatedly registering
+  and unregistering an empty service worker.
   -->
 <head>
   <title>Test for Bug 1432846</title>
@@ -47,7 +60,6 @@ add_task(async function test_update() {
   }
 
   await SpecialPowers.pushPrefEnv({"set": [
-    ["dom.serviceWorkers.idle_timeout", 0],
     ["dom.serviceWorkers.update_delay", 30000],
     ["dom.serviceWorkers.idle_extended_timeout", 299999]]});
 
@@ -60,7 +72,10 @@ add_task(async function test_update() {
     { scope: "./test_self_update_worker.html?random=" + Date.now()})
     .then(function(registration) {
       worker = registration.installing;
-      return waitForState(worker, 'activated', registration);
+      // We can't wait for 'activated' here, since it's possible for
+      // the update process to kill the worker before it activates.
+      // See: https://github.com/w3c/ServiceWorker/issues/1285
+      return waitForState(worker, 'activating', registration);
     });
 
   // We need to wait a reasonable time to give the self updating worker a chance
