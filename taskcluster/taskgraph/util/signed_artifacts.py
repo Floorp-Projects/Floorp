@@ -6,22 +6,25 @@ Defines artifacts to sign before repackage.
 """
 
 from __future__ import absolute_import, print_function, unicode_literals
+from taskgraph.util.taskcluster import get_artifact_path
 
 
 def generate_specifications_of_artifacts_to_sign(
-    build_platform, is_nightly=False, keep_locale_template=True, kind=None
+    task, keep_locale_template=True, kind=None
 ):
+    build_platform = task.attributes.get('build_platform')
+    is_nightly = task.attributes.get('nightly')
     if kind == 'release-source-signing':
         artifacts_specifications = [{
             'artifacts': [
-                'public/build/source.tar.xz'
+                get_artifact_path(task, 'source.tar.xz')
             ],
             'formats': ['gpg'],
         }]
     elif 'android' in build_platform:
         artifacts_specifications = [{
             'artifacts': [
-                'public/build/{locale}/target.apk',
+                get_artifact_path(task, '{locale}/target.apk'),
             ],
             'formats': ['jar'],
         }]
@@ -29,26 +32,28 @@ def generate_specifications_of_artifacts_to_sign(
     # signed at after this stage of the release
     elif 'macosx' in build_platform:
         artifacts_specifications = [{
-            'artifacts': ['public/build/{locale}/target.dmg'],
+            'artifacts': [get_artifact_path(task, '{locale}/target.dmg')],
             'formats': ['macapp', 'widevine'],
         }]
     elif 'win' in build_platform:
         artifacts_specifications = [{
             'artifacts': [
-                'public/build/{locale}/setup.exe',
+                get_artifact_path(task, '{locale}/setup.exe'),
             ],
             'formats': ['sha2signcode'],
         }, {
             'artifacts': [
-                'public/build/{locale}/target.zip',
+                get_artifact_path(task, '{locale}/target.zip'),
             ],
             'formats': ['sha2signcode', 'widevine'],
         }]
         if 'win32' in build_platform and is_nightly:
-            artifacts_specifications[0]['artifacts'] += ['public/build/{locale}/setup-stub.exe']
+            artifacts_specifications[0]['artifacts'] += [
+                get_artifact_path(task, '{locale}/setup-stub.exe')
+            ]
     elif 'linux' in build_platform:
         artifacts_specifications = [{
-            'artifacts': ['public/build/{locale}/target.tar.bz2'],
+            'artifacts': [get_artifact_path(task, '{locale}/target.tar.bz2')],
             'formats': ['gpg', 'widevine'],
         }]
     else:
