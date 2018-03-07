@@ -92,6 +92,83 @@ WrapToSigned(UnsignedType aValue)
 namespace detail {
 
 template<typename T>
+struct WrappingAddHelper
+{
+private:
+  using UnsignedT = typename MakeUnsigned<T>::Type;
+
+  static T
+  toResult(UnsignedT aSum)
+  {
+    // We could always return WrapToSigned and rely on unsigned conversion
+    // undoing the wrapping when |T| is unsigned, but this seems clearer.
+    return IsSigned<T>::value
+           ? WrapToSigned(aSum)
+           : aSum;
+  }
+
+public:
+  MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
+  static T compute(T aX, T aY)
+  {
+    // |mozilla::WrappingAdd| isn't constexpr because MSVC warns about well-
+    // defined unsigned integer overflows that may happen here.
+    // https://msdn.microsoft.com/en-us/library/4kze989h.aspx  And constexpr
+    // seems to cause the warning to be emitted at |WrappingAdd| call *sites*
+    // instead of here, so #pragmas are ineffective.
+    //
+    // https://stackoverflow.com/questions/37658794/integer-constant-overflow-warning-in-constexpr
+    //
+    // If/when MSVC fix this bug, we should make these functions constexpr.
+    return toResult(static_cast<UnsignedT>(aX) + static_cast<UnsignedT>(aY));
+  }
+};
+
+} // namespace detail
+
+/**
+ * Add two integers of the same type, and return the result converted to
+ * that type using wraparound semantics.  This function:
+ *
+ *   1) makes explicit the desire for and dependence upon wraparound semantics,
+ *   2) provides wraparound semantics *safely* with no signed integer overflow
+ *      that would have undefined behavior, and
+ *   3) won't trip up {,un}signed-integer overflow sanitizers (see
+ *      build/autoconf/sanitize.m4) at runtime.
+ *
+ * For N-bit unsigned integer types, this is equivalent to adding the two
+ * numbers, then taking the result mod 2**N:
+ *
+ *   WrappingAdd(uint32_t(42), uint32_t(17)) is 59 (59 mod 2**32);
+ *   WrappingAdd(uint8_t(240), uint8_t(20)) is 4 (260 mod 2**8).
+ *
+ * Use this function for any unsigned addition that can wrap (instead of normal
+ * C++ addition) to play nice with the sanitizers.  WrappingAdd on unsigned
+ * types is otherwise the same as C++ addition.
+ *
+ * For N-bit signed integer types, this is equivalent to adding the two numbers
+ * wrapped to unsigned, taking the sum mod 2**N, then wrapping that number to
+ * the signed range:
+ *
+ *   WrappingAdd(int16_t(32767), int16_t(3)) is -32766 ((32770 mod 2**16) - 2**16);
+ *   WrappingAdd(int8_t(-128), int8_t(-128)) is 0 (256 mod 2**8);
+ *   WrappingAdd(int32_t(-42), int32_t(-17)) is -59 ((8589934533 mod 2**32) - 2**32).
+ *
+ * There is no ready equivalent to this operation in C++, as C++ addition of
+ * signed integers that triggers overflow has undefined behavior.  But it's how
+ * addition *tends* to behave with most compilers, unless an optimization or
+ * similar happens to -- quite permissibly -- trigger different behavior.
+ */
+template<typename T>
+inline T
+WrappingAdd(T aX, T aY)
+{
+  return detail::WrappingAddHelper<T>::compute(aX, aY);
+}
+
+namespace detail {
+
+template<typename T>
 struct WrappingMultiplyHelper
 {
 private:
