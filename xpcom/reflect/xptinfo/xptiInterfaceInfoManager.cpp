@@ -134,21 +134,21 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry
                                                 uint16_t idx,
                                                 xptiTypelibGuts* typelib)
 {
-    if (!iface->interface_descriptor)
+    if (!iface->mInterfaceDescriptor)
         return;
 
     // The number of maximum methods is not arbitrary. It is the same value as
     // in xpcom/reflect/xptcall/genstubs.pl; do not change this value
     // without changing that one or you WILL see problems.
-    if (iface->interface_descriptor->num_methods > 250 &&
-            !iface->interface_descriptor->IsBuiltinClass()) {
+    if (iface->mInterfaceDescriptor->num_methods > 250 &&
+            !iface->mInterfaceDescriptor->IsBuiltinClass()) {
         NS_ASSERTION(0, "Too many methods to handle for the stub, cannot load");
-        fprintf(stderr, "ignoring too large interface: %s\n", iface->name);
+        fprintf(stderr, "ignoring too large interface: %s\n", iface->mName);
         return;
     }
 
     mWorkingSet.mTableReentrantMonitor.AssertCurrentThreadIn();
-    xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(iface->iid);
+    xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(iface->mIID);
     if (entry) {
         // XXX validate this info to find possible inconsistencies
         return;
@@ -156,18 +156,18 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry
 
     // Build a new xptiInterfaceEntry object and hook it up.
 
-    entry = xptiInterfaceEntry::Create(iface->name,
-                                       iface->iid,
-                                       iface->interface_descriptor,
+    entry = xptiInterfaceEntry::Create(iface->mName,
+                                       iface->mIID,
+                                       iface->mInterfaceDescriptor,
                                        typelib);
     if (!entry)
         return;
 
     //XXX  We should SetHeader too as part of the validation, no?
-    entry->SetScriptableFlag(iface->interface_descriptor->IsScriptable());
-    entry->SetBuiltinClassFlag(iface->interface_descriptor->IsBuiltinClass());
+    entry->SetScriptableFlag(iface->mInterfaceDescriptor->IsScriptable());
+    entry->SetBuiltinClassFlag(iface->mInterfaceDescriptor->IsBuiltinClass());
     entry->SetMainProcessScriptableOnlyFlag(
-      iface->interface_descriptor->IsMainProcessScriptableOnly());
+      iface->mInterfaceDescriptor->IsMainProcessScriptableOnly());
 
     mWorkingSet.mIIDTable.Put(entry->IID(), entry);
     mWorkingSet.mNameTable.Put(entry->GetTheName(), entry);
