@@ -1203,7 +1203,7 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
     crashAnnotationFd = it->first;
     it++;
   }
-  int32_t handle = java::GeckoProcessManager::Start(type, jargs, crashFd, ipcFd, crashAnnotationFd);
+  int32_t handle = java::GeckoProcessManager::Start(type, jargs, ipcFd, crashFd, crashAnnotationFd);
 
   if (process_handle) {
     *process_handle = handle;

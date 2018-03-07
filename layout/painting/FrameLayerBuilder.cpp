@@ -1838,7 +1838,8 @@ private:
   RefPtr<TextureClient> mTextureClient;
 };
 
-PaintedDisplayItemLayerUserData* GetPaintedDisplayItemLayerUserData(Layer* aLayer)
+static PaintedDisplayItemLayerUserData*
+GetPaintedDisplayItemLayerUserData(Layer* aLayer)
 {
   return static_cast<PaintedDisplayItemLayerUserData*>(
     aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
@@ -1891,7 +1892,8 @@ FrameLayerBuilder::GetDisplayItemData(nsIFrame* aFrame, uint32_t aKey)
   return nullptr;
 }
 
-nsACString&
+#ifdef MOZ_DUMP_PAINTING
+static nsACString&
 AppendToString(nsACString& s, const nsIntRect& r,
                const char* pfx="", const char* sfx="")
 {
@@ -1902,7 +1904,7 @@ AppendToString(nsACString& s, const nsIntRect& r,
   return s += sfx;
 }
 
-nsACString&
+static nsACString&
 AppendToString(nsACString& s, const nsIntRegion& r,
                const char* pfx="", const char* sfx="")
 {
@@ -1916,6 +1918,7 @@ AppendToString(nsACString& s, const nsIntRegion& r,
 
   return s += sfx;
 }
+#endif // MOZ_DUMP_PAINTING
 
 /**
  * Invalidate aRegion in aLayer. aLayer is in the coordinate system
@@ -4038,7 +4041,7 @@ GetASRForPerspective(const ActiveScrolledRoot* aASR, nsIFrame* aPerspectiveFrame
   return nullptr;
 }
 
-CSSMaskLayerUserData*
+static CSSMaskLayerUserData*
 GetCSSMaskLayerUserData(Layer* aMaskLayer)
 {
   if (!aMaskLayer) {
@@ -4048,7 +4051,7 @@ GetCSSMaskLayerUserData(Layer* aMaskLayer)
   return static_cast<CSSMaskLayerUserData*>(aMaskLayer->GetUserData(&gCSSMaskLayerUserData));
 }
 
-void
+static void
 SetCSSMaskLayerUserData(Layer* aMaskLayer)
 {
   MOZ_ASSERT(aMaskLayer);
@@ -5132,8 +5135,9 @@ FindOpaqueRegionEntry(nsTArray<OpaqueRegionEntry>& aEntries,
   return nullptr;
 }
 
-const ActiveScrolledRoot*
-FindDirectChildASR(const ActiveScrolledRoot* aParent, const ActiveScrolledRoot* aDescendant)
+static const ActiveScrolledRoot*
+FindDirectChildASR(const ActiveScrolledRoot* aParent,
+                   const ActiveScrolledRoot* aDescendant)
 {
   MOZ_ASSERT(aDescendant, "can't start at the root when looking for a child");
   MOZ_ASSERT(ActiveScrolledRoot::IsAncestor(aParent, aDescendant));
@@ -6361,7 +6365,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
   return aRoundedRectClipCount;
 }
 
-MaskLayerUserData*
+static MaskLayerUserData*
 GetMaskLayerUserData(Layer* aMaskLayer)
 {
   if (!aMaskLayer) {
@@ -6371,7 +6375,7 @@ GetMaskLayerUserData(Layer* aMaskLayer)
   return static_cast<MaskLayerUserData*>(aMaskLayer->GetUserData(&gMaskLayerUserData));
 }
 
-void
+static void
 SetMaskLayerUserData(Layer* aMaskLayer)
 {
   MOZ_ASSERT(aMaskLayer);

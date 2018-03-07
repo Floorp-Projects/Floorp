@@ -93,7 +93,6 @@ public class TestRunnerActivity extends Activity {
 
         final GeckoSession session = new GeckoSession(settings);
         session.setNavigationDelegate(mNavigationDelegate);
-        session.openWindow(this);
         return session;
     }
 
@@ -101,16 +100,14 @@ public class TestRunnerActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Intent intent = getIntent();
-        GeckoLoader.setLastIntent(new SafeIntent(getIntent()));
-
-        final String intentArgs = intent.getStringExtra("args");
-        final String args = intentArgs != null ? "-purgecaches " + intentArgs : "-purgecaches";
-        GeckoSession.preload(this, args, false /* no multiprocess, see below */);
+        final Intent intent = getIntent();
+        GeckoSession.preload(this, new String[] { "-purgecaches" },
+                             intent.getExtras(), false /* no multiprocess, see below */);
 
         // We can't use e10s because we get deadlocked when quickly creating and
         // destroying sessions. Bug 1348361.
         mSession = createSession();
+        mSession.openWindow(this);
 
         // If we were passed a URI in the Intent, open it
         final Uri uri = intent.getData();

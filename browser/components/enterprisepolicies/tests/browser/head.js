@@ -4,43 +4,14 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "FileTestUtils",
-                               "resource://testing-common/FileTestUtils.jsm");
+const {EnterprisePolicyTesting} = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", {});
 
 async function setupPolicyEngineWithJson(json, customSchema) {
-  let filePath;
-  if (typeof(json) == "object") {
-    filePath = FileTestUtils.getTempFile("policies.json").path;
-
-    // This file gets automatically deleted by FileTestUtils
-    // at the end of the test run.
-    await OS.File.writeAtomic(filePath, JSON.stringify(json), {
-      encoding: "utf-8",
-    });
-  } else {
-    filePath = getTestFilePath(json ? json : "non-existing-file.json");
+  if (typeof(json) != "object") {
+    let filePath = getTestFilePath(json ? json : "non-existing-file.json");
+    return EnterprisePolicyTesting.setupPolicyEngineWithJson(filePath, customSchema);
   }
-
-  Services.prefs.setStringPref("browser.policies.alternatePath", filePath);
-
-  let resolve = null;
-  let promise = new Promise((r) => resolve = r);
-
-  Services.obs.addObserver(function observer() {
-    Services.obs.removeObserver(observer, "EnterprisePolicies:AllPoliciesApplied");
-    resolve();
-  }, "EnterprisePolicies:AllPoliciesApplied");
-
-  // Clear any previously used custom schema
-  Cu.unload("resource:///modules/policies/schema.jsm");
-
-  if (customSchema) {
-    let schemaModule = ChromeUtils.import("resource:///modules/policies/schema.jsm", {});
-    schemaModule.schema = customSchema;
-  }
-
-  Services.obs.notifyObservers(null, "EnterprisePolicies:Restart");
-  return promise;
+  return EnterprisePolicyTesting.setupPolicyEngineWithJson(json, customSchema);
 }
 
 add_task(async function policies_headjs_startWithCleanSlate() {

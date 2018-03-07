@@ -590,6 +590,16 @@ MainThreadHandoff::MarshalAs(REFIID aIid)
 }
 
 HRESULT
+MainThreadHandoff::DisconnectHandlerRemotes()
+{
+  if (!mHandlerProvider) {
+    return E_NOTIMPL;
+  }
+
+  return mHandlerProvider->DisconnectHandlerRemotes();
+}
+
+HRESULT
 MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
                                    BOOL aIsInParam, BOOL aIsOutParam)
 {

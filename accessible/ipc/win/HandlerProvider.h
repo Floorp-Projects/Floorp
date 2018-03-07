@@ -47,6 +47,7 @@ public:
   STDMETHODIMP WriteHandlerPayload(NotNull<mscom::IInterceptor*> aInterceptor,
                                    NotNull<IStream*> aStream) override;
   STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) override;
+  STDMETHODIMP DisconnectHandlerRemotes() override;
   STDMETHODIMP_(REFIID) GetEffectiveOutParamIid(REFIID aCallIid,
                                                 ULONG aCallMethod) override;
   STDMETHODIMP NewInstance(REFIID aIid,

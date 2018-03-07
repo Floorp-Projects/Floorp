@@ -29,7 +29,6 @@ DIRS += [
     'crashes',
     'crashmonitor',
     'diskspacewatcher',
-    'downloads',
     'enterprisepolicies',
     'extensions',
     'filewatcher',

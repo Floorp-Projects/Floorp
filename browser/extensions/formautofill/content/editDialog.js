@@ -13,14 +13,14 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "profileStorage",
+ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
                                "resource://formautofill/FormAutofillStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "MasterPassword",
                                "resource://formautofill/MasterPassword.jsm");
 
 class EditDialog {
   constructor(subStorageName, elements, record) {
-    this._storageInitPromise = profileStorage.initialize();
+    this._storageInitPromise = formAutofillStorage.initialize();
     this._subStorageName = subStorageName;
     this._elements = elements;
     this._record = record;
@@ -75,7 +75,7 @@ class EditDialog {
    */
   async getStorage() {
     await this._storageInitPromise;
-    return profileStorage[this._subStorageName];
+    return formAutofillStorage[this._subStorageName];
   }
 
   /**

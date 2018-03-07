@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's DOMOverlay functionality</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { DOMLocalization } =
+    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
+  const { MessageContext } =
+    ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+
+  async function* mockGenerateMessages(locales, resourceIds) {
+    const mc = new MessageContext(locales);
+    // No translations!
+    yield mc;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(async () => {
+
+    const domLoc = new DOMLocalization(
+      window,
+      [],
+      mockGenerateMessages
+    );
+
+    await domLoc.translateFragment(document.body);
+
+    // we just care that it doesn't throw here.
+    ok(1);
+
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+  <p data-l10n-id="title">
+    <a href="http://www.mozilla.org"></a>
+    <a href="http://www.firefox.com"></a>
+    <a href="http://www.w3.org"></a>
+  </p>
+</body>
+</html>

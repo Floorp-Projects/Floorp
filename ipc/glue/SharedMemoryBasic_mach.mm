@@ -552,9 +552,11 @@ SharedMemoryBasic::Create(size_t size)
                                  VM_PROT_DEFAULT,
                                  &mPort,
                                  MACH_PORT_NULL);
-  if (kr != KERN_SUCCESS) {
+  if (kr != KERN_SUCCESS || memoryObjectSize < round_page(size)) {
     LOG_ERROR("Failed to make memory entry (%zu bytes). %s (%x)\n",
               size, mach_error_string(kr), kr);
+    CloseHandle();
+    mach_vm_deallocate(mach_task_self(), address, round_page(size));
     return false;
   }
 

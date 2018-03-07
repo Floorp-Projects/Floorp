@@ -885,11 +885,12 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
           capability.codecType = static_cast<webrtc::VideoCodecType>(ipcCaps.codecType());
           capability.interlaced = ipcCaps.interlaced();
 
-#ifdef DEBUG
-          auto deviceUniqueID = sDeviceUniqueIDs.find(capnum);
-          MOZ_ASSERT(deviceUniqueID == sDeviceUniqueIDs.end());
-#endif
+          MOZ_DIAGNOSTIC_ASSERT(sDeviceUniqueIDs.find(capnum) ==
+                                sDeviceUniqueIDs.end());
           sDeviceUniqueIDs.emplace(capnum, cap.VideoCapture()->CurrentDeviceName());
+
+          MOZ_DIAGNOSTIC_ASSERT(sAllRequestedCapabilities.find(capnum) ==
+                                sAllRequestedCapabilities.end());
           sAllRequestedCapabilities.emplace(capnum, capability);
 
           if (aCapEngine == CameraEngine) {
@@ -949,6 +950,9 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
           if (!error) {
             cap.VideoCapture()->RegisterCaptureDataCallback(
               static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(*cbh));
+          } else {
+            sDeviceUniqueIDs.erase(capnum);
+            sAllRequestedCapabilities.erase(capnum);
           }
         });
       }

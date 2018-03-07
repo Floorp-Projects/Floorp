@@ -228,10 +228,6 @@ private:
   bool PushAPZStateToWR(wr::TransactionBuilder& aTxn,
                         nsTArray<wr::WrTransformProperty>& aTransformArray);
 
-  // Helper method to get an APZC reference from a scroll id. Uses the layers
-  // id of this bridge, and may return null if the APZC wasn't found.
-  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const FrameMetrics::ViewID& aId);
-
   uint32_t GetNextWrEpoch();
 
 private:
@@ -276,6 +272,7 @@ private:
   bool mPaused;
   bool mDestroyed;
   bool mForceRendering;
+  bool mReceivedDisplayList;
 
   // Can only be accessed on the compositor thread.
   WebRenderScrollData mScrollData;

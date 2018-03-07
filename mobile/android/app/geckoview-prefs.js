@@ -7,3 +7,4 @@
 #include mobile.js
 
 pref("privacy.trackingprotection.pbmode.enabled", false);
+pref("dom.ipc.processCount", 1);

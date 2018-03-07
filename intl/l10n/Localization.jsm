@@ -24,6 +24,7 @@
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 
 /*
  * CachedIterable caches the elements yielded by an iterable.
@@ -91,24 +92,6 @@ class CachedIterable {
 }
 
 /**
- * Specialized version of an Error used to indicate errors that are result
- * of a problem during the localization process.
- *
- * We use them to identify the class of errors the require a fallback
- * mechanism to be triggered vs errors that should be reported, but
- * do not prevent the message from being used.
- *
- * An example of an L10nError is a missing entry.
- */
-class L10nError extends Error {
-  constructor(message) {
-    super();
-    this.name = "L10nError";
-    this.message = message;
-  }
-}
-
- /**
  * The default localization strategy for Gecko. It comabines locales
  * available in L10nRegistry, with locales requested by the user to
  * generate the iterator over MessageContexts.
@@ -156,17 +139,26 @@ class Localization {
    */
   async formatWithFallback(keys, method) {
     const translations = [];
+
     for await (let ctx of this.ctxs) {
       // This can operate on synchronous and asynchronous
       // contexts coming from the iterator.
       if (typeof ctx.then === "function") {
         ctx = await ctx;
       }
-      const errors = keysFromContext(method, ctx, keys, translations);
-      if (!errors) {
+      const missingIds = keysFromContext(method, ctx, keys, translations);
+
+      if (missingIds.size === 0) {
         break;
       }
+
+      if (AppConstants.NIGHTLY_BUILD) {
+        const locale = ctx.locales[0];
+        const ids = Array.from(missingIds).join(", ");
+        console.warn(`Missing translations in ${locale}: ${ids}`);
+      }
     }
+
     return translations;
   }
 
@@ -312,11 +304,6 @@ Localization.prototype.QueryInterface = XPCOMUtils.generateQI([
 function valueFromContext(ctx, errors, id, args) {
   const msg = ctx.getMessage(id);
 
-  if (msg === undefined) {
-    errors.push(new L10nError(`Unknown entity: ${id}`));
-    return id;
-  }
-
   return ctx.format(msg, args, errors);
 }
 
@@ -345,11 +332,6 @@ function valueFromContext(ctx, errors, id, args) {
 function messageFromContext(ctx, errors, id, args) {
   const msg = ctx.getMessage(id);
 
-  if (msg === undefined) {
-    errors.push(new L10nError(`Unknown message: ${id}`));
-    return { value: id, attrs: null };
-  }
-
   const formatted = {
     value: ctx.format(msg, args, errors),
     attrs: null,
@@ -357,13 +339,10 @@ function messageFromContext(ctx, errors, id, args) {
 
   if (msg.attrs) {
     formatted.attrs = [];
-    for (const attrName in msg.attrs) {
-      const formattedAttr = ctx.format(msg.attrs[attrName], args, errors);
-      if (formattedAttr !== null) {
-        formatted.attrs.push([
-          attrName,
-          formattedAttr
-        ]);
+    for (const name in msg.attrs) {
+      const value = ctx.format(msg.attrs[name], args, errors);
+      if (value !== null) {
+        formatted.attrs.push({ name, value });
       }
     }
   }
@@ -375,7 +354,7 @@ function messageFromContext(ctx, errors, id, args) {
  * This function is an inner function for `Localization.formatWithFallback`.
  *
  * It takes a `MessageContext`, list of l10n-ids and a method to be used for
- * key resolution (either `valueFromContext` or `entityFromContext`) and
+ * key resolution (either `valueFromContext` or `messageFromContext`) and
  * optionally a value returned from `keysFromContext` executed against
  * another `MessageContext`.
  *
@@ -390,8 +369,8 @@ function messageFromContext(ctx, errors, id, args) {
  * we return it. If it does, we'll try to resolve the key using the passed
  * `MessageContext`.
  *
- * In the end, we fill the translations array, and return if we
- * encountered at least one error.
+ * In the end, we fill the translations array, and return the Set with
+ * missing ids.
  *
  * See `Localization.formatWithFallback` for more info on how this is used.
  *
@@ -400,34 +379,28 @@ function messageFromContext(ctx, errors, id, args) {
  * @param {Array<string>}  keys
  * @param {{Array<{value: string, attrs: Object}>}} translations
  *
- * @returns {Boolean}
+ * @returns {Set<string>}
  * @private
  */
 function keysFromContext(method, ctx, keys, translations) {
   const messageErrors = [];
-  let hasErrors = false;
+  const missingIds = new Set();
 
   keys.forEach((key, i) => {
     if (translations[i] !== undefined) {
       return;
     }
 
-    messageErrors.length = 0;
-    const translation = method(ctx, messageErrors, key[0], key[1]);
-
-    if (messageErrors.length === 0 ||
-        !messageErrors.some(e => e instanceof L10nError)) {
-      translations[i] = translation;
+    if (ctx.hasMessage(key[0])) {
+      messageErrors.length = 0;
+      translations[i] = method(ctx, messageErrors, key[0], key[1]);
+      // XXX: Report resolver errors
     } else {
-      hasErrors = true;
-    }
-
-    if (messageErrors.length) {
-      messageErrors.forEach(error => console.warn(error));
+      missingIds.add(key[0]);
     }
   });
 
-  return hasErrors;
+  return missingIds;
 }
 
 this.Localization = Localization;

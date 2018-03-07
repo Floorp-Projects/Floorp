@@ -2,15 +2,30 @@
 Marionette
 ==========
 
-Marionette is the remote protocol that lets OOP programs communicate
-with, instrument, and control Gecko.
+Marionette is the remote protocol that lets out-of-process programs
+communicate with, instrument, and control Gecko-based browsers.
 
-It can remotely control either the UI or the internal JavaScript of
-Gecko-based browsers, such as Firefox and Fennec.  It can control
-both the chrome and the content document, giving a high level of
-control and ability to replicate user interaction.  In addition
-to performing actions on the browser, Marionette can also ready
-properties and attributes of the DOM.
+It provides interfaces for interacting with both the internal
+JavaScript runtime and UI elements of Gecko-based browsers, such
+as Firefox and Fennec.  It can control both the chrome- and content
+documents, giving a high level of control and ability to replicate,
+or emulate, user interaction.
+
+
+Usage
+=====
+
+Marionette can be activated by passing the `-marionette` flag. To
+start Firefox with the remote protocol turned on::
+
+	% firefox -marionette
+	…
+	1491228343089   Marionette  INFO    Listening on port 2828
+
+This binds to a TCP socket, over which clients can communicate with
+Marionette using the `protocol`_.
+
+.. _protocol: Protocol.html
 
 
 For users
@@ -19,9 +34,9 @@ For users
 .. toctree::
    :maxdepth: 1
 
-   `Marionette README`_
    Intro.md
    Protocol.md
+   PythonTests.md
 
 See also:
 
@@ -30,7 +45,6 @@ See also:
 * Documentation for `Firefox Puppeteer`_, which is used to in-tree
   to write Firefox UI tests.
 
-.. _Marionette README: https://searchfox.org/mozilla-central/source/testing/marionette/README.md
 .. _Marionette Python client: http://marionette-client.readthedocs.io
 .. _Firefox Puppeteer: http://firefox-puppeteer.readthedocs.io
 
@@ -41,14 +55,13 @@ For developers
 .. toctree::
    :maxdepth: 1
 
-   `Contributing to Marionette`_
-   NewContributors.md
+   Contributing.md
    Debugging.md
-   PythonTests.md
+   Testing.md
+   CodeStyle.md
+   Patching.md
    SeleniumAtoms.md
    internals/index
-
-.. _Contributing to Marionette: https://searchfox.org/mozilla-central/source/testing/marionette/CONTRIBUTING.md
 
 
 Bugs
@@ -60,11 +73,12 @@ Bugs are tracked in the `Testing :: Marionette` component.
 Communication
 =============
 
-The mailing list for discussion is tools-marionette@lists.mozilla.org
-(subscribe_, archive_).  If you prefer real-time chat, there
-is often someone in the #ateam IRC channel on irc.mozilla.org.
-Don’t ask if you can ask a question, just ask, and please wait
-for an answer as we might not be in your timezone.
+The mailing list for Marionette discussion is
+tools-marionette@lists.mozilla.org (`subscribe`_, `archive`_).
+
+If you prefer real-time chat, there is often someone in the #ateam IRC
+channel on irc.mozilla.org.  Don’t ask if you can ask a question, just
+ask, and please wait for an answer as we might not be in your timezone.
 
 .. _subscribe: https://lists.mozilla.org/listinfo/tools-marionette
 .. _archive: https://groups.google.com/group/mozilla.tools.marionette

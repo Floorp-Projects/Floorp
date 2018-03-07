@@ -36,10 +36,6 @@ plugs:
     allow-sandbox: true
 
 parts:
-  desktop-gtk3:
-    prime:
-      - -usr/share/mime
-
   firefox:
     plugin: dump
     source: source
@@ -72,14 +68,9 @@ parts:
   shared-mime-info:
     after: [xdg-open]
     plugin: nil
-    source: .
-    build-packages:
+    stage-packages:
       - shared-mime-info
     build-attributes: [no-system-libraries]
     install: |
       set -eux
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/mime/packages
-      install -m 644 mime-handler.xml $SNAPCRAFT_PART_INSTALL/usr/share/mime/packages
       update-mime-database $SNAPCRAFT_PART_INSTALL/usr/share/mime
-    stage:
-      - usr/share/mime

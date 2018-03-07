@@ -41,7 +41,7 @@ add_task(async function() {
   Assert.deepEqual(msg, {
     value: null,
     attrs: [
-      ["label", elem.getAttribute("label")]
+      {name: "label", value: elem.getAttribute("label")}
     ]
   });
 

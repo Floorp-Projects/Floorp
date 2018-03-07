@@ -1498,6 +1498,11 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   // while destructors are running.
   JS::Rooted<JS::Value> value(aCx);
   {
+#ifdef FUZZING
+    if (aIndex >= aClonedSurfaces.Length()) {
+      return nullptr;
+    }
+#endif
     RefPtr<layers::Image> img = CreateImageFromSurface(aClonedSurfaces[aIndex]);
     RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(aParent, img, alphaType);
 

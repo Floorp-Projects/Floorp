@@ -7,88 +7,58 @@
 
 // Check that exceptions from scripts loaded with the addon-sdk loader are
 // opened correctly in View Source from the Browser Console.
-// See bug 866950.
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,<p>hello world from bug 866950";
+const TEST_URI =
+  "data:text/html;charset=utf8,<p>browser_console_addonsdk_loader_exception.js</p>";
 
-function test() {
-  requestLongerTimeout(2);
+add_task(async function () {
+  let wcHud = await openNewTabAndConsole(TEST_URI);
+  ok(wcHud, "web console opened");
 
-  let webconsole, browserconsole;
+  let bcHud = await HUDService.toggleBrowserConsole();
+  ok(bcHud, "browser console opened");
 
-  Task.spawn(runner).then(finishTest);
+  // Cause an exception in a script loaded with the addon-sdk loader.
+  let toolbox = gDevTools.getToolbox(wcHud.target);
+  let oldPanels = toolbox._toolPanels;
+  // non-iterable
+  toolbox._toolPanels = {};
 
-  function* runner() {
-    let {tab} = yield loadTab(TEST_URI);
-    webconsole = yield openConsole(tab);
-    ok(webconsole, "web console opened");
-
-    browserconsole = yield HUDService.toggleBrowserConsole();
-    ok(browserconsole, "browser console opened");
-
-    // Cause an exception in a script loaded with the addon-sdk loader.
-    let toolbox = gDevTools.getToolbox(webconsole.target);
-    let oldPanels = toolbox._toolPanels;
-    // non-iterable
-    toolbox._toolPanels = {};
-
-    function fixToolbox() {
-      toolbox._toolPanels = oldPanels;
-    }
-
-    info("generate exception and wait for message");
-
-    executeSoon(() => {
-      executeSoon(fixToolbox);
-      expectUncaughtException();
-      toolbox.getToolPanels();
-    });
-
-    let [result] = yield waitForMessages({
-      webconsole: browserconsole,
-      messages: [{
-        text: "TypeError: this._toolPanels is not iterable",
-        category: CATEGORY_JS,
-        severity: SEVERITY_ERROR,
-      }],
-    });
-
-    fixToolbox();
-
-    let msg = [...result.matched][0];
-    ok(msg, "message element found");
-    let locationNode = msg
-      .querySelector(".message .message-location > .frame-link");
-    ok(locationNode, "message location element found");
-
-    let url = locationNode.getAttribute("data-url");
-    info("location node url: " + url);
-    ok(url.indexOf("resource://") === 0, "error comes from a subscript");
-
-    let viewSource = browserconsole.viewSource;
-    let URL = null;
-    let clickPromise = defer();
-    browserconsole.viewSourceInDebugger = (sourceURL) => {
-      info("browserconsole.viewSourceInDebugger() was invoked: " + sourceURL);
-      URL = sourceURL;
-      clickPromise.resolve(null);
-    };
-
-    msg.scrollIntoView();
-    EventUtils.synthesizeMouse(locationNode, 2, 2, {},
-                               browserconsole.iframeWindow);
-
-    info("wait for click on locationNode");
-    yield clickPromise.promise;
-
-    info("view-source url: " + URL);
-    ok(URL, "we have some source URL after the click");
-    isnot(URL.indexOf("toolbox.js"), -1,
-      "we have the expected view source URL");
-    is(URL.indexOf("->"), -1, "no -> in the URL given to view-source");
-
-    browserconsole.viewSourceInDebugger = viewSource;
+  function fixToolbox() {
+    toolbox._toolPanels = oldPanels;
   }
-}
+
+  info("generate exception and wait for message");
+
+  executeSoon(() => {
+    expectUncaughtException();
+    executeSoon(fixToolbox);
+    toolbox.getToolPanels();
+  });
+
+  let msg = await waitFor(() => findMessage(bcHud,
+    "TypeError: this._toolPanels is not iterable"));
+
+  fixToolbox();
+
+  ok(msg, `Message found: "TypeError: this._toolPanels is not iterable"`);
+
+  let locationNode = msg.querySelector(".message-location .frame-link-source");
+  ok(locationNode, "Message location link element found");
+
+  let url = locationNode.href;
+  info("view-source url: " + url);
+  ok(url, "we have some source URL after the click");
+  ok(url.includes("toolbox.js"), "we have the expected view source URL");
+  ok(!url.includes("->"), "no -> in the URL given to view-source");
+
+  let onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  locationNode.click();
+
+  let newTab = await onTabOpen;
+  ok(true, "The view source tab was opened in response to clicking the link");
+
+  await BrowserTestUtils.removeTab(newTab);
+});

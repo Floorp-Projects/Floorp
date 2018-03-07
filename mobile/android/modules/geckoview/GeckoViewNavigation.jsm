@@ -80,7 +80,9 @@ class GeckoViewNavigation extends GeckoViewModule {
       const handler = {
         observe(aSubject, aTopic, aData) {
           if (aTopic === "geckoview-window-created" && aSubject.name === aSessionId) {
-            aSubject.browser.presetOpenerWindow(aOpener);
+            if (aOpener) {
+              aSubject.browser.presetOpenerWindow(aOpener);
+            }
             Services.obs.removeObserver(handler, "geckoview-window-created");
             resolve(aSubject);
           }
@@ -108,7 +110,8 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     let browser = undefined;
     this.eventDispatcher.sendRequestForResult(message).then(sessionId => {
-      return this.waitAndSetOpener(sessionId, aOpener);
+      return this.waitAndSetOpener(sessionId,
+        (aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_OPENER) ? null : aOpener);
     }).then(window => {
       browser = (window && window.browser);
     }, () => {

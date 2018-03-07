@@ -177,8 +177,10 @@ class SyncedBookmarksMirror {
         }
       }
       await db.execute(`PRAGMA foreign_keys = ON`);
-      await migrateMirrorSchema(db);
-      await initializeTempMirrorEntities(db);
+      await db.executeTransaction(async function() {
+        await migrateMirrorSchema(db);
+        await initializeTempMirrorEntities(db);
+      });
     } catch (ex) {
       options.recordTelemetryEvent("mirror", "open", "error",
                                    { why: "initialize" });
@@ -1494,7 +1496,7 @@ class SyncedBookmarksMirror {
     // tracked "weakly": if the upload is interrupted or fails, we won't
     // reupload the record on the next sync.
     await this.db.execute(`
-      INSERT INTO itemsToWeaklyReupload(id)
+      INSERT OR IGNORE INTO itemsToWeaklyReupload(id)
       SELECT b.id FROM moz_bookmarks b
       JOIN mergeStates r ON r.mergedGuid = b.guid
       JOIN items v ON v.guid = r.mergedGuid
@@ -1626,6 +1628,23 @@ class SyncedBookmarksMirror {
    */
   async fetchLocalChangeRecords() {
     let changeRecords = {};
+    let childRecordIdsByLocalParentId = new Map();
+
+    let childGuidRows = await this.db.execute(`
+      SELECT parentId, guid FROM structureToUpload
+      ORDER BY parentId, position`);
+
+    for (let row of childGuidRows) {
+      let localParentId = row.getResultByName("parentId");
+      let childRecordId = PlacesSyncUtils.bookmarks.guidToRecordId(
+        row.getResultByName("guid"));
+      if (childRecordIdsByLocalParentId.has(localParentId)) {
+        let childRecordIds = childRecordIdsByLocalParentId.get(localParentId);
+        childRecordIds.push(childRecordId);
+      } else {
+        childRecordIdsByLocalParentId.set(localParentId, [childRecordId]);
+      }
+    }
 
     let itemRows = await this.db.execute(`
       SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
@@ -1763,15 +1782,9 @@ class SyncedBookmarksMirror {
           if (description) {
             folderCleartext.description = description;
           }
-          let childGuidRows = await this.db.executeCached(`
-            SELECT guid FROM structureToUpload
-            WHERE parentId = :id
-            ORDER BY position`,
-            { id: row.getResultByName("id") });
-          folderCleartext.children = childGuidRows.map(row => {
-            let childGuid = row.getResultByName("guid");
-            return PlacesSyncUtils.bookmarks.guidToRecordId(childGuid);
-          });
+          let localId = row.getResultByName("id");
+          let childRecordIds = childRecordIdsByLocalParentId.get(localId);
+          folderCleartext.children = childRecordIds || [];
           changeRecords[recordId] = new BookmarkChangeRecord(
             syncChangeCounter, folderCleartext);
           continue;
@@ -1854,17 +1867,15 @@ function isDatabaseCorrupt(error) {
  * @param {Sqlite.OpenedConnection} db
  *        The mirror database connection.
  */
-function migrateMirrorSchema(db) {
-  return db.executeTransaction(async function() {
-    let currentSchemaVersion = await db.getSchemaVersion("mirror");
-    if (currentSchemaVersion < 1) {
-      await initializeMirrorDatabase(db);
-    }
-    // Downgrading from a newer profile to an older profile rolls back the
-    // schema version, but leaves all new columns in place. We'll run the
-    // migration logic again on the next upgrade.
-    await db.setSchemaVersion(MIRROR_SCHEMA_VERSION, "mirror");
-  });
+async function migrateMirrorSchema(db) {
+  let currentSchemaVersion = await db.getSchemaVersion("mirror");
+  if (currentSchemaVersion < 1) {
+    await initializeMirrorDatabase(db);
+  }
+  // Downgrading from a newer profile to an older profile rolls back the
+  // schema version, but leaves all new columns in place. We'll run the
+  // migration logic again on the next upgrade.
+  await db.setSchemaVersion(MIRROR_SCHEMA_VERSION, "mirror");
 }
 
 /**

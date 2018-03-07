@@ -964,6 +964,13 @@ ArrayBufferObject::dataPointerShared() const
     return SharedMem<uint8_t*>::unshared(getSlot(DATA_SLOT).toPrivate());
 }
 
+ArrayBufferObject::RefcountInfo*
+ArrayBufferObject::refcountInfo() const
+{
+    MOZ_ASSERT(isExternal());
+    return reinterpret_cast<RefcountInfo*>(inlineDataPointer());
+}
+
 void
 ArrayBufferObject::releaseData(FreeOp* fop)
 {
@@ -979,8 +986,16 @@ ArrayBufferObject::releaseData(FreeOp* fop)
       case WASM:
         WasmArrayRawBuffer::Release(dataPointer());
         break;
-      case KIND_MASK:
-        MOZ_CRASH("bad bufferKind()");
+      case EXTERNAL:
+        if (refcountInfo()->unref) {
+            // The analyzer can't know for sure whether the embedder-supplied
+            // unref function will GC. We give the analyzer a hint here.
+            // (Doing a GC in the unref function is considered a programmer
+            // error.)
+            JS::AutoSuppressGCAnalysis nogc;
+            refcountInfo()->unref(dataPointer(), refcountInfo()->refUserData);
+        }
+        break;
     }
 }
 
@@ -990,6 +1005,18 @@ ArrayBufferObject::setDataPointer(BufferContents contents, OwnsState ownsData)
     setSlot(DATA_SLOT, PrivateValue(contents.data()));
     setOwnsData(ownsData);
     setFlags((flags() & ~KIND_MASK) | contents.kind());
+
+    if (isExternal()) {
+        auto info = refcountInfo();
+        info->ref = contents.refFunc();
+        info->unref = contents.unrefFunc();
+        info->refUserData = contents.refUserData();
+        if (info->ref) {
+            // See comment in releaseData() for the explanation for this.
+            JS::AutoSuppressGCAnalysis nogc;
+            info->ref(dataPointer(), info->refUserData);
+        }
+    }
 }
 
 uint32_t
@@ -1158,13 +1185,23 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
     bool allocated = false;
     if (contents) {
         if (ownsState == OwnsData) {
-            // The ABO is taking ownership, so account the bytes against the zone.
-            size_t nAllocated = nbytes;
-            if (contents.kind() == MAPPED)
-                nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
-            else if (contents.kind() == WASM)
-                nAllocated = contents.wasmBuffer()->allocatedBytes();
-            cx->updateMallocCounter(nAllocated);
+            if (contents.kind() == EXTERNAL) {
+                // Store the RefcountInfo in the inline data slots so that we
+                // don't use up slots for it in non-refcounted array buffers.
+                size_t refcountInfoSlots = JS_HOWMANY(sizeof(RefcountInfo), sizeof(Value));
+                MOZ_ASSERT(reservedSlots + refcountInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
+                           "RefcountInfo must fit in inline slots");
+                nslots += refcountInfoSlots;
+            } else {
+                // The ABO is taking ownership, so account the bytes against
+                // the zone.
+                size_t nAllocated = nbytes;
+                if (contents.kind() == MAPPED)
+                    nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
+                else if (contents.kind() == WASM)
+                    nAllocated = contents.wasmBuffer()->allocatedBytes();
+                cx->updateMallocCounter(nAllocated);
+            }
         }
     } else {
         MOZ_ASSERT(ownsState == OwnsData);
@@ -1263,7 +1300,7 @@ ArrayBufferObject::externalizeContents(JSContext* cx, Handle<ArrayBufferObject*>
     MOZ_ASSERT(!buffer->isDetached(), "must have contents to externalize");
     MOZ_ASSERT_IF(hasStealableContents, buffer->hasStealableContents());
 
-    BufferContents contents(buffer->dataPointer(), buffer->bufferKind());
+    BufferContents contents = buffer->contents();
 
     if (hasStealableContents) {
         buffer->setOwnsData(DoesntOwnData);
@@ -1291,7 +1328,7 @@ ArrayBufferObject::stealContents(JSContext* cx, Handle<ArrayBufferObject*> buffe
                                         (buffer->isWasm() && !buffer->isPreparedForAsmJS()));
     assertSameCompartment(cx, buffer);
 
-    BufferContents oldContents(buffer->dataPointer(), buffer->bufferKind());
+    BufferContents oldContents = buffer->contents();
 
     if (hasStealableContents) {
         // Return the old contents and reset the detached buffer's data
@@ -1803,8 +1840,26 @@ JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
     MOZ_ASSERT_IF(!data, nbytes == 0);
+
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(data);
+    return ArrayBufferObject::create(cx, nbytes, contents, ArrayBufferObject::OwnsData,
+                                     /* proto = */ nullptr, TenuredObject);
+}
+
+JS_PUBLIC_API(JSObject*)
+JS_NewExternalArrayBuffer(JSContext* cx, size_t nbytes, void* data,
+                          JS::BufferContentsRefFunc ref, JS::BufferContentsRefFunc unref,
+                          void* refUserData)
+{
+    AssertHeapIsIdle();
+    CHECK_REQUEST(cx);
+
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(nbytes > 0);
+
+    ArrayBufferObject::BufferContents contents =
+        ArrayBufferObject::BufferContents::createExternal(data, ref, unref, refUserData);
     return ArrayBufferObject::create(cx, nbytes, contents, ArrayBufferObject::OwnsData,
                                      /* proto = */ nullptr, TenuredObject);
 }
