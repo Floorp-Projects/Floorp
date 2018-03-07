@@ -406,6 +406,36 @@ add_test(function observePushTopicPasswordReset() {
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
 
+add_task(async function messagesTickle() {
+  let msg = {
+    data: {
+      json: () => ({
+        topic: "sendtab"
+      })
+    },
+    QueryInterface() {
+      return this;
+    }
+  };
+
+  let fxAccountsMock = {};
+  const promiseConsumeRemoteMessagesCalled = new Promise(res => {
+    fxAccountsMock.messages = {
+      consumeRemoteMessages() {
+        res();
+      }
+    };
+  });
+
+  let pushService = new FxAccountsPushService({
+    pushService: mockPushService,
+    fxAccounts: fxAccountsMock,
+  });
+
+  pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+  await promiseConsumeRemoteMessagesCalled;
+});
+
 add_test(function observeSubscriptionChangeTopic() {
   let customAccounts = Object.assign(mockFxAccounts, {
     updateDeviceRegistration() {

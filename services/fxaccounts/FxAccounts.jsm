@@ -30,6 +30,9 @@ ChromeUtils.defineModuleGetter(this, "jwcrypto",
 ChromeUtils.defineModuleGetter(this, "FxAccountsOAuthGrantClient",
   "resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 
+ChromeUtils.defineModuleGetter(this, "FxAccountsMessages",
+  "resource://gre/modules/FxAccountsMessages.js");
+
 ChromeUtils.defineModuleGetter(this, "FxAccountsProfile",
   "resource://gre/modules/FxAccountsProfile.jsm");
 
@@ -41,6 +44,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "FXA_ENABLED",
 
 // All properties exposed by the public FxAccounts API.
 var publicProperties = [
+  "_withCurrentAccountState", // fxaccounts package only!
   "accountStatus",
   "canGetKeys",
   "checkVerificationStatus",
@@ -51,6 +55,7 @@ var publicProperties = [
   "getKeys",
   "getOAuthToken",
   "getProfileCache",
+  "getPushSubscription",
   "getSignedInUser",
   "getSignedInUserProfile",
   "handleAccountDestroyed",
@@ -60,6 +65,7 @@ var publicProperties = [
   "invalidateCertificate",
   "loadAndPoll",
   "localtimeOffsetMsec",
+  "messages",
   "notifyDevices",
   "now",
   "removeCachedOAuthToken",
@@ -410,11 +416,35 @@ FxAccountsInternal.prototype = {
     return this._profile;
   },
 
+  _messages: null,
+  get messages() {
+    if (!this._messages) {
+      this._messages = new FxAccountsMessages(this);
+    }
+    return this._messages;
+  },
+
   // A hook-point for tests who may want a mocked AccountState or mocked storage.
   newAccountState(credentials) {
     let storage = new FxAccountsStorageManager();
     storage.initialize(credentials);
     return new AccountState(storage);
+  },
+
+  // "Friend" classes of FxAccounts (e.g. FxAccountsMessages) know about the
+  // "current account state" system. This method allows them to read and write
+  // safely in it.
+  // Example of usage:
+  // fxAccounts._withCurrentAccountState(async (getUserData, updateUserData) => {
+  //   const userData = await getUserData(['device']);
+  //   ...
+  //   await updateUserData({device: null});
+  // });
+  _withCurrentAccountState(func) {
+    const state = this.currentAccountState;
+    const getUserData = (fields) => state.getUserAccountData(fields);
+    const updateUserData = (data) => state.updateUserAccountData(data);
+    return func(getUserData, updateUserData);
   },
 
   /**
@@ -741,6 +771,9 @@ FxAccountsInternal.prototype = {
       this._profile.tearDown();
       this._profile = null;
     }
+    if (this._messages) {
+      this._messages = null;
+    }
     // We "abort" the accountState and assume our caller is about to throw it
     // away and replace it with a new one.
     return this.currentAccountState.abort();
@@ -994,7 +1027,7 @@ FxAccountsInternal.prototype = {
       throw new Error("Signed in user changed while fetching keys!");
     }
 
-    // Next statements must be synchronous until we setUserAccountData
+    // Next statements must be synchronous until we updateUserAccountData
     // so that we don't risk getting into a weird state.
     let kBbytes = CryptoUtils.xor(CommonUtils.hexToBytes(data.unwrapBKey),
                                   wrapKB);
@@ -1649,6 +1682,20 @@ FxAccountsInternal.prototype = {
     });
   },
 
+  // @returns Promise<Subscription>.
+  getPushSubscription() {
+    return this.fxaPushService.getSubscription();
+  },
+
+  // Once FxA messages is stable, remove this, hardcode the capabilities,
+  // and reset the device registration version.
+  get deviceCapabilities() {
+    if (Services.prefs.getBoolPref("identity.fxaccounts.messages.enabled", true)) {
+      return [CAPABILITY_MESSAGES, CAPABILITY_MESSAGES_SENDTAB];
+    }
+    return [];
+  },
+
   // If you change what we send to the FxA servers during device registration,
   // you'll have to bump the DEVICE_REGISTRATION_VERSION number to force older
   // devices to re-register when Firefox updates
@@ -1673,6 +1720,7 @@ FxAccountsInternal.prototype = {
           deviceOptions.pushAuthKey = urlsafeBase64Encode(authKey);
         }
       }
+      deviceOptions.capabilities = this.deviceCapabilities;
 
       let device;
       if (currentDevice && currentDevice.id) {
@@ -1687,6 +1735,7 @@ FxAccountsInternal.prototype = {
 
       await this.currentAccountState.updateUserAccountData({
         device: {
+          ...currentDevice, // Copy the other properties (e.g. messagesIndex).
           id: device.id,
           registrationVersion: this.DEVICE_REGISTRATION_VERSION
         }
