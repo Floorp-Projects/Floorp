@@ -137,6 +137,11 @@ public:
   void SetShippingType(const Nullable<PaymentShippingType>& aShippingType);
   Nullable<PaymentShippingType> GetShippingType() const;
 
+  inline void ShippingWasRequested()
+  {
+    mRequestShipping = true;
+  }
+
   IMPL_EVENT_HANDLER(shippingaddresschange);
   IMPL_EVENT_HANDLER(shippingoptionchange);
 
@@ -173,6 +178,10 @@ protected:
   // "true" when there is a pending updateWith() call to update the payment request
   // and "false" otherwise.
   bool mUpdating;
+
+  // Whether shipping was requested. This models [[options]].requestShipping,
+  // but we don't actually store the full [[options]] internal slot.
+  bool mRequestShipping;
   // The error is set in AbortUpdate(). The value is NS_OK by default.
   nsresult mUpdateError;
 
