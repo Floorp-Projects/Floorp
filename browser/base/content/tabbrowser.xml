@@ -115,8 +115,12 @@
           let { restoreTabsButton } = this;
           restoreTabsButton.setAttribute("label", gTabBrowserBundle.GetStringFromName("tabs.restoreLastTabs"));
 
+          let strId = PrivateBrowsingUtils.isWindowPrivate(window) ?
+              "emptyPrivateTabTitle" : "emptyTabTitle";
+          this.emptyTabTitle = gTabBrowserBundle.GetStringFromName("tabs." + strId);
+
           var tab = this.firstChild;
-          tab.label = gTabBrowserBundle.GetStringFromName("tabs.emptyTabTitle");
+          tab.label = this.emptyTabTitle;
           tab.setAttribute("onerror", "this.removeAttribute('image');");
 
           window.addEventListener("resize", this);

@@ -1322,7 +1322,7 @@ window._gBrowser = {
         } catch (ex) { /* Do nothing. */ }
       } else {
         // Still no title? Fall back to our untitled string.
-        title = gTabBrowserBundle.GetStringFromName("tabs.emptyTabTitle");
+        title = this.tabContainer.emptyTabTitle;
       }
     }
 
@@ -2254,7 +2254,7 @@ window._gBrowser = {
 
     if (!aNoInitialLabel) {
       if (isBlankPageURL(aURI)) {
-        t.setAttribute("label", gTabBrowserBundle.GetStringFromName("tabs.emptyTabTitle"));
+        t.setAttribute("label", this.tabContainer.emptyTabTitle);
       } else {
         // Set URL as label so that the tab isn't empty initially.
         this.setInitialTabTitle(t, aURI, { beforeTabOpen: true });
