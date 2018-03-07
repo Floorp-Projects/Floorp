@@ -743,4 +743,246 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         // Make sure we don't have unexpected pending callbacks after opening a session.
         sessionRule.waitUntilCalled(object : Callbacks.All {})
     }
+
+    @Test fun waitForPageStop_withSpecificSession() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitForPageStop()
+    }
+
+    @Test fun waitForPageStop_withAllSessions() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+    }
+
+    @Test(expected = AssertionError::class)
+    fun waitForPageStop_throwOnNotWrapped() {
+        GeckoSession(sessionRule.session.settings).waitForPageStop()
+    }
+
+    @Test fun waitForPageStops_withSpecificSessions() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.reload()
+        newSession.waitForPageStops(2)
+    }
+
+    @Test fun waitForPageStops_withAllSessions() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStops(2)
+    }
+
+    @Test fun waitForPageStops_acrossSessionCreation() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        val session = sessionRule.createOpenSession()
+        sessionRule.session.reload()
+        session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStops(3)
+    }
+
+    @Test fun waitUntilCalled_interfaceWithSpecificSession() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitUntilCalled(Callbacks.ProgressDelegate::class, "onPageStop")
+    }
+
+    @Test fun waitUntilCalled_interfaceWithAllSessions() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitUntilCalled(Callbacks.ProgressDelegate::class, "onPageStop")
+    }
+
+    @Test fun waitUntilCalled_callbackWithSpecificSession() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitUntilCalled(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
+    }
+
+    @Test fun waitUntilCalled_callbackWithAllSessions() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 2)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
+    }
+
+    @Test fun forCallbacksDuringWait_withSpecificSession() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitForPageStop()
+
+        var counter = 0
+
+        newSession.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        sessionRule.session.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(false)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        assertThat("Callback count should be correct", counter, equalTo(1))
+    }
+
+    @Test fun forCallbacksDuringWait_withAllSessions() {
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStops(2)
+
+        var counter = 0
+
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 2)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        assertThat("Callback count should be correct", counter, equalTo(2))
+    }
+
+    @Test fun forCallbacksDuringWait_limitedToLastSessionWait() {
+        val newSession = sessionRule.createOpenSession()
+
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitForPageStop()
+
+        // forCallbacksDuringWait calls strictly apply to the last wait, session-specific or not.
+        var counter = 0
+
+        sessionRule.session.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(false)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        newSession.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        assertThat("Callback count should be correct", counter, equalTo(2))
+    }
+
+    @Test fun delegateUntilTestEnd_withSpecificSession() {
+        val newSession = sessionRule.createOpenSession()
+
+        var counter = 0
+
+        newSession.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
+            @AssertCalled(false)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitForPageStop()
+
+        assertThat("Callback count should be correct", counter, equalTo(1))
+    }
+
+    @Test fun delegateUntilTestEnd_withAllSessions() {
+        var counter = 0
+
+        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitForPageStop()
+
+        assertThat("Callback count should be correct", counter, equalTo(1))
+    }
+
+    @Test fun delegateDuringNextWait_hasPrecedenceWithSpecificSession() {
+        var newSession = sessionRule.createOpenSession()
+        var counter = 0
+
+        newSession.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        newSession.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
+            @AssertCalled(false)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStops(2)
+
+        assertThat("Callback count should be correct", counter, equalTo(1))
+    }
+
+    @Test fun delegateDuringNextWait_specificSessionOverridesAll() {
+        var newSession = sessionRule.createOpenSession()
+        var counter = 0
+
+        newSession.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStops(2)
+
+        assertThat("Callback count should be correct", counter, equalTo(2))
+    }
 }
