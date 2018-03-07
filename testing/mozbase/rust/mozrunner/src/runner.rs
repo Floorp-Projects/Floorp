@@ -6,7 +6,8 @@ use std::env;
 use std::error::Error;
 use std::ffi::{OsStr, OsString};
 use std::fmt;
-use std::io::{Error as IoError, ErrorKind, Result as IoResult};
+use std::io;
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::process;
@@ -46,19 +47,19 @@ pub trait Runner {
 }
 
 pub trait RunnerProcess {
-    fn status(&mut self) -> IoResult<Option<process::ExitStatus>>;
+    fn status(&mut self) -> io::Result<Option<process::ExitStatus>>;
 
     /// Determine if the process is still running.
     fn running(&mut self) -> bool;
 
     /// Forces the process to exit and returns the exit status.  This is
     /// equivalent to sending a SIGKILL on Unix platforms.
-    fn kill(&mut self) -> IoResult<process::ExitStatus>;
+    fn kill(&mut self) -> io::Result<process::ExitStatus>;
 }
 
 #[derive(Debug)]
 pub enum RunnerError {
-    Io(IoError),
+    Io(io::Error),
     PrefReader(PrefReaderError),
 }
 
@@ -89,8 +90,8 @@ impl Error for RunnerError {
     }
 }
 
-impl From<IoError> for RunnerError {
-    fn from(value: IoError) -> RunnerError {
+impl From<io::Error> for RunnerError {
+    fn from(value: io::Error) -> RunnerError {
         RunnerError::Io(value)
     }
 }
@@ -108,7 +109,7 @@ pub struct FirefoxProcess {
 }
 
 impl RunnerProcess for FirefoxProcess {
-    fn status(&mut self) -> IoResult<Option<process::ExitStatus>> {
+    fn status(&mut self) -> io::Result<Option<process::ExitStatus>> {
         self.process.try_wait()
     }
 
@@ -116,7 +117,7 @@ impl RunnerProcess for FirefoxProcess {
         self.status().unwrap().is_none()
     }
 
-    fn kill(&mut self) -> IoResult<process::ExitStatus> {
+    fn kill(&mut self) -> io::Result<process::ExitStatus> {
         self.process.kill()?;
         self.process.wait()
     }
