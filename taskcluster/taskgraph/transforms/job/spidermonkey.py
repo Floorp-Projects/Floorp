@@ -12,8 +12,8 @@ from voluptuous import Required, Any
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
-    docker_worker_add_public_artifacts,
-    generic_worker_add_public_artifacts,
+    docker_worker_add_artifacts,
+    generic_worker_add_artifacts,
     docker_worker_add_gecko_vcs_env_vars,
     docker_worker_add_tooltool,
     support_vcs_checkout,
@@ -47,7 +47,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         'skip-untrusted': True,
     })
 
-    docker_worker_add_public_artifacts(config, job, taskdesc)
+    docker_worker_add_artifacts(config, job, taskdesc)
     docker_worker_add_tooltool(config, job, taskdesc)
 
     env = worker.setdefault('env', {})
@@ -86,7 +86,7 @@ def generic_worker_spidermonkey(config, job, taskdesc):
 
     worker = taskdesc['worker']
 
-    generic_worker_add_public_artifacts(config, job, taskdesc)
+    generic_worker_add_artifacts(config, job, taskdesc)
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
 
     env = worker.setdefault('env', {})
