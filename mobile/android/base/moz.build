@@ -112,11 +112,15 @@ with Files('../app/src/*/res/menu/browsersearch_contextmenu.xml'):
 DIRS += ['locales']
 
 GENERATED_FILES += [
+    '../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java',
     'AndroidManifest.xml',
     'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
     'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
     'generated/preprocessed/org/mozilla/gecko/MmaConstants.java',
 ]
+w = GENERATED_FILES['../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java']
+w.script = 'generate_build_config.py:generate_java'
+w.inputs += ['../geckoview/BuildConfig.java.in']
 x = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AdjustConstants.java']
 x.script = 'generate_build_config.py:generate_java'
 x.inputs += ['AdjustConstants.java.in']

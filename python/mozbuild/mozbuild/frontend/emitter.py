@@ -23,6 +23,10 @@ import mozinfo
 import pytoml
 
 from .data import (
+    AndroidAssetsDirs,
+    AndroidExtraPackages,
+    AndroidExtraResDirs,
+    AndroidResDirs,
     BaseRustProgram,
     BaseSources,
     ChromeManifestEntry,
