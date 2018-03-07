@@ -224,19 +224,6 @@ addTest(function testObjectNodeChildren() {
     .then(runNextTest));
 });
 
-addTest(function testSiblings() {
-  promiseDone(gWalker.querySelector(gWalker.rootNode, "#a").then(a => {
-    return gWalker.siblings(a, { maxNodes: 5, center: a })
-           .then(nodeArrayChecker(true, false, "abcde"));
-  }).then(() => {
-    return gWalker.siblings(gWalker.rootNode).then(response => {
-      ok(response.hasFirst && response.hasLast, "Has first and last.");
-      is(response.nodes.length, 1, "Has only the document element.");
-      ok(response.nodes[0] === gWalker.rootNode, "Document element is its own sibling.");
-    });
-  }).then(runNextTest));
-});
-
 addTest(function testNextSibling() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#y").then(y => {
     is(y.id, "y", "Got the right node.");
@@ -269,16 +256,6 @@ addTest(function testFrameTraversal() {
     is(nodes.length, 1, "There should be only one child of the iframe");
     is(nodes[0].nodeType, Node.DOCUMENT_NODE, "iframe child should be a document node");
     return gWalker.querySelector(nodes[0], "#z");
-  }).then(childDocumentZ => {
-    return gWalker.parents(childDocumentZ);
-  }).then(parents => {
-    // Expected set of parent tag names for this item:
-    let expectedParents = ["DIV", "BODY", "HTML", "#document", "IFRAME", "BODY", "HTML",
-                           "#document"];
-    for (let parent of parents) {
-      let expected = expectedParents.shift();
-      is(parent.nodeName, expected, "Got expected parent");
-    }
   }).then(runNextTest));
 });
 
