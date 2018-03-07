@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function() {
   if (!aboutCapabilities.isWindowPrivate()) {
     document.documentElement.classList.remove("private");
     document.documentElement.classList.add("normal");
-    document.title = aboutCapabilities.getStringFromBundle(STRING_BUNDLE, "title.normal");
+    document.title = document.querySelector("title").getAttribute("notprivatetitle");
     document.getElementById("favicon").setAttribute("href", FAVICON_QUESTION);
     document.getElementById("startPrivateBrowsing").addEventListener("click", function() {
       aboutCapabilities.sendAsyncMessage("OpenPrivateWindow", null);
@@ -41,7 +41,6 @@ document.addEventListener("DOMContentLoaded", function() {
     return;
   }
 
-  document.title = aboutCapabilities.getStringFromBundle(STRING_BUNDLE, "title.head");
   document.getElementById("startTour").addEventListener("click", function() {
     aboutCapabilities.sendAsyncMessage("DontShowIntroPanelAgain", null);
   });
