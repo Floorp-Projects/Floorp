@@ -107,6 +107,13 @@
       "type": "boolean"
     },
 
+    "DisableBuiltinPDFViewer": {
+      "description": "Disables PDF.js, which displays PDFs within Firefox.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableDeveloperTools": {
       "description": "Prevents access to developer tools.",
       "first_available": "60.0",

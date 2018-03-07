@@ -135,6 +135,14 @@ var Policies = {
     }
   },
 
+  "DisableBuiltinPDFViewer": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("PDF.js");
+      }
+    }
+  },
+
   "DisableDeveloperTools": {
     onBeforeAddons(manager, param) {
       if (param) {
