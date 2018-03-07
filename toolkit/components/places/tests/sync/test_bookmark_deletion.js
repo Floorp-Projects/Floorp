@@ -587,13 +587,6 @@ add_task(async function test_nonexistent_on_one_side() {
   let buf = await openMirror("nonexistent_on_one_side");
 
   info("Set up empty mirror");
-  // Previous tests change the menu's date added time; reset it to a predictable
-  // value.
-  let menuDateAdded = new Date();
-  await PlacesUtils.bookmarks.update({
-    guid: PlacesUtils.bookmarks.menuGuid,
-    dateAdded: menuDateAdded,
-  });
   await PlacesTestUtils.markBookmarksAsSynced();
 
   // A doesn't exist in the mirror.
@@ -622,6 +615,9 @@ add_task(async function test_nonexistent_on_one_side() {
   deepEqual(await buf.fetchUnmergedGuids(), ["bookmarkBBBB"],
     "Should leave B unmerged");
 
+  let menuInfo = await PlacesUtils.bookmarks.fetch(
+    PlacesUtils.bookmarks.menuGuid);
+
   // We should still upload a record for the menu, since we changed its
   // children when we added then removed A.
   deepEqual(changesToUpload, {
@@ -635,7 +631,7 @@ add_task(async function test_nonexistent_on_one_side() {
         parentid: "places",
         hasDupe: true,
         parentName: "",
-        dateAdded: menuDateAdded.getTime(),
+        dateAdded: menuInfo.dateAdded.getTime(),
         title: BookmarksMenuTitle,
         children: [],
       },

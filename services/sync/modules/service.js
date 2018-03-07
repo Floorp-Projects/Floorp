@@ -520,7 +520,7 @@ Sync11Service.prototype = {
       throw ex;
     }
 
-    // Always check for errors; this is also where we look for X-Weave-Alert.
+    // Always check for errors.
     this.errorHandler.checkServerError(info);
     if (!info.success) {
       this._log.error("Aborting sync: failed to get collections.");

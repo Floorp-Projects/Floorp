@@ -102,6 +102,38 @@ def enum(*names):
     return Foo()
 
 
+# List with constant time index() and contains() methods.
+class IndexedList(object):
+    def __init__(self, iterable):
+        self._list = []
+        self._index_map = {}
+        for i in iterable:
+            self.append(i)
+
+    def sort(self):
+        self._list.sort()
+        self._index_map = {val: i for i, val in enumerate(self._list)}
+
+    def append(self, val):
+        self._index_map[val] = len(self._list)
+        self._list.append(val)
+
+    def index(self, what):
+        return self._index_map[what]
+
+    def __contains__(self, what):
+        return what in self._index_map
+
+    def __iter__(self):
+        return iter(self._list)
+
+    def __getitem__(self, index):
+        return self._list[index]
+
+    def __len__(self):
+        return len(self._list)
+
+
 # Descriptor types as described in the spec
 class Type(object):
     """
@@ -1150,7 +1182,7 @@ class Typelib(object):
 
         """
         self.version = version
-        self.interfaces = list(interfaces)
+        self.interfaces = IndexedList(interfaces)
         self.annotations = list(annotations)
         self.filename = None
 
