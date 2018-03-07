@@ -127,6 +127,10 @@ class FirefoxConnector {
     }
   }
 
+  enableActions(enable) {
+    this.dataProvider.enableActions(enable);
+  }
+
   willNavigate() {
     if (!Services.prefs.getBoolPref("devtools.netmonitor.persistlog")) {
       this.actions.batchReset();
