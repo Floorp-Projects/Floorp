@@ -4,10 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from editBookmark.js */
-// Via downloadsViewOverlay.xul -> allDownloadsViewOverlay.xul
+// Via allDownloadsViewOverlay.xul
 /* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
 /* import-globals-from ../PlacesUIUtils.jsm */
 /* import-globals-from ../../../../toolkit/components/places/PlacesUtils.jsm */
+/* import-globals-from ../../downloads/content/allDownloadsViewOverlay.js */
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -134,6 +135,17 @@ var PlacesOrganizer = {
   },
 
   init: function PO_init() {
+    // Register the downloads view.
+    const DOWNLOADS_QUERY = "place:transition=" +
+      Ci.nsINavHistoryService.TRANSITION_DOWNLOAD +
+      "&sort=" +
+      Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+
+    ContentArea.setContentViewForQueryString(DOWNLOADS_QUERY,
+      () => new DownloadsPlacesView(document.getElementById("downloadsRichListBox"), false),
+      { showDetailsPane: false,
+        toolbarSet: "back-button, forward-button, organizeButton, clearDownloadsButton, libraryToolbarSpacer, searchFilter" });
+
     ContentArea.init();
 
     this._places = document.getElementById("placesList");
