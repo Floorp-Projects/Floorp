@@ -13,6 +13,16 @@
 
 namespace IPC {
 
+template<>
+struct ParamTraits<nsIPrincipal>
+{
+  static void Write(Message* aMsg, nsIPrincipal* aParam);
+  static bool Read(const Message* aMsg, PickleIterator* aIter, RefPtr<nsIPrincipal>* aResult);
+};
+
+/**
+ * Legacy IPC::Principal type. Use nsIPrincipal directly in new IPDL code.
+ */
 class Principal
 {
   friend struct ParamTraits<Principal>;
@@ -35,15 +45,21 @@ public:
   }
 
 private:
-  nsCOMPtr<nsIPrincipal> mPrincipal;
+  RefPtr<nsIPrincipal> mPrincipal;
 };
 
 template <>
 struct ParamTraits<Principal>
 {
   typedef Principal paramType;
-  static void Write(Message* aMsg, const paramType& aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult);
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mPrincipal);
+  }
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mPrincipal);
+  }
 };
 
 } // namespace IPC
