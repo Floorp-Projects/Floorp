@@ -81,14 +81,14 @@ def generate_release_task(uiTestTaskId):
 			"public": {
 				"type": "directory",
 				"path": "/opt/focus-android/builds",
-				"expires": taskcluster.stringDate(taskcluster.fromNow('1 week'))
+				"expires": taskcluster.stringDate(taskcluster.fromNow('1 month'))
 			}
 		})
 
 
 def generate_task(name, description, command, dependencies = [], artifacts = {}, scopes = [], routes = []):
 	created = datetime.datetime.now()
-	expires = taskcluster.fromNow('1 week')
+	expires = taskcluster.fromNow('1 month')
 	deadline = taskcluster.fromNow('1 day')
 
 	return {
