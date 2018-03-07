@@ -9,6 +9,7 @@ const {
   CANVAS_SIZE,
   DEFAULT_COLOR,
   clearRect,
+  drawLine,
   drawRect,
   getCurrentMatrix,
   updateCanvasElement,
@@ -450,6 +451,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     let flexLines = this.currentNode.getAsFlexContainer().getLines();
     let computedStyle = getComputedStyle(this.currentNode);
     let direction = computedStyle.getPropertyValue("flex-direction");
+    let options = { matrix: this.currentMatrix };
 
     for (let flexLine of flexLines) {
       let { crossStart, crossSize } = flexLine;
@@ -457,19 +459,35 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       if (direction.startsWith("column")) {
         clearRect(this.ctx, crossStart, 0, crossStart + crossSize, bounds.height,
           this.currentMatrix);
-        drawRect(this.ctx, crossStart, 0, crossStart, bounds.height, this.currentMatrix);
-        this.ctx.stroke();
-        drawRect(this.ctx, crossStart + crossSize, 0, crossStart + crossSize,
-          bounds.height, this.currentMatrix);
-        this.ctx.stroke();
+
+        // Avoid drawing the start flex line when they overlap with the flex container.
+        if (crossStart != 0) {;
+          drawLine(this.ctx, crossStart, 0, crossStart, bounds.height, options);
+          this.ctx.stroke();
+        }
+
+        // Avoid drawing the end flex line when they overlap with the flex container.
+        if (bounds.width - crossStart - crossSize >= lineWidth) {
+          drawLine(this.ctx, crossStart + crossSize, 0, crossStart + crossSize,
+            bounds.height, options);
+          this.ctx.stroke();
+        }
       } else {
         clearRect(this.ctx, 0, crossStart, bounds.width, crossStart + crossSize,
           this.currentMatrix);
-        drawRect(this.ctx, 0, crossStart, bounds.width, crossStart, this.currentMatrix);
-        this.ctx.stroke();
-        drawRect(this.ctx, 0, crossStart + crossSize, bounds.width,
-          crossStart + crossSize, this.currentMatrix);
-        this.ctx.stroke();
+
+        // Avoid drawing the start flex line when they overlap with the flex container.
+        if (crossStart != 0) {
+          drawLine(this.ctx, 0, crossStart, bounds.width, crossStart, options);
+          this.ctx.stroke();
+        }
+
+        // Avoid drawing the end flex line when they overlap with the flex container.
+        if (bounds.height - crossStart - crossSize >= lineWidth) {
+          drawLine(this.ctx, 0, crossStart + crossSize, bounds.width,
+            crossStart + crossSize, options);
+          this.ctx.stroke();
+        }
       }
     }
 
