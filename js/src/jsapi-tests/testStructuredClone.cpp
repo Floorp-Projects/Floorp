@@ -82,6 +82,62 @@ BEGIN_TEST(testStructuredClone_string)
 }
 END_TEST(testStructuredClone_string)
 
+BEGIN_TEST(testStructuredClone_externalArrayBuffer)
+{
+    RefCountedData data("One two three four");
+    JS::RootedObject g1(cx, createGlobal());
+    JS::RootedObject g2(cx, createGlobal());
+    CHECK(g1);
+    CHECK(g2);
+
+    JS::RootedValue v1(cx);
+
+    {
+        JSAutoCompartment ac(cx, g1);
+
+        JS::RootedObject obj(cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
+            &RefCountedData::incCallback, &RefCountedData::decCallback, &data));
+        data.decref();
+        CHECK_EQUAL(data.refcount(), size_t(1));
+
+        v1 = JS::ObjectOrNullValue(obj);
+        CHECK(v1.isObject());
+    }
+
+    {
+        JSAutoCompartment ac(cx, g2);
+        JS::RootedValue v2(cx);
+
+        CHECK(JS_StructuredClone(cx, v1, &v2, nullptr, nullptr));
+        CHECK(v2.isObject());
+
+        JS::RootedObject obj(cx, &v2.toObject());
+        CHECK(&v1.toObject() != obj);
+
+        uint32_t len;
+        bool isShared;
+        uint8_t* clonedData;
+        js::GetArrayBufferLengthAndData(obj, &len, &isShared, &clonedData);
+
+        // The contents of the two array buffers should be equal, but not the
+        // same pointer, and an extra reference should not be taken.
+        CHECK_EQUAL(len, data.len());
+        CHECK(clonedData != data.contents());
+        CHECK(strcmp(reinterpret_cast<char*>(clonedData), data.asString()) == 0);
+        CHECK_EQUAL(data.refcount(), size_t(1));
+    }
+
+    // GC the array buffer before data goes out of scope
+    v1.setNull();
+    JS_GC(cx);
+    JS_GC(cx); // Trigger another to wait for background finalization to end
+
+    CHECK_EQUAL(data.refcount(), size_t(0));
+
+    return true;
+}
+END_TEST(testStructuredClone_externalArrayBuffer)
+
 struct StructuredCloneTestPrincipals final : public JSPrincipals {
     uint32_t rank;
 
