@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-extern crate angle;
+extern crate mozangle;
 extern crate webrender;
 
-use angle::hl::{BuiltInResources, Output, ShaderSpec, ShaderValidator};
+use mozangle::shaders::{BuiltInResources, Output, ShaderSpec, ShaderValidator};
 
 // from glslang
 const FRAGMENT_SHADER: u32 = 0x8B30;
@@ -113,7 +113,7 @@ const VERSION_STRING: &str = "#version 300 es\n";
 
 #[test]
 fn validate_shaders() {
-    angle::hl::initialize().unwrap();
+    mozangle::shaders::initialize().unwrap();
 
     let resources = BuiltInResources::default();
     let vs_validator =
