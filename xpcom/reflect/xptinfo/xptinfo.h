@@ -188,17 +188,17 @@ public:
     MOZ_IMPLICIT nsXPTMethodInfo(const XPTMethodDescriptor& desc)
         {*(XPTMethodDescriptor*)this = desc;}
 
-    bool IsGetter() const {return !!(flags & kGetterMask);}
-    bool IsSetter() const {return !!(flags & kSetterMask);}
-    bool IsNotXPCOM() const {return !!(flags & kNotXPCOMMask);}
-    bool IsHidden() const {return !!(flags & kHiddenMask);}
-    bool WantsOptArgc() const {return !!(flags & kOptArgcMask);}
-    bool WantsContext() const {return !!(flags & kContextMask);}
-    const char* GetName() const {return name;}
-    uint8_t GetParamCount() const {return num_args;}
+    bool IsGetter() const { return !!(mFlags & kGetterMask); }
+    bool IsSetter() const { return !!(mFlags & kSetterMask); }
+    bool IsNotXPCOM() const { return !!(mFlags & kNotXPCOMMask); }
+    bool IsHidden() const { return !!(mFlags & kHiddenMask); }
+    bool WantsOptArgc() const { return !!(mFlags & kOptArgcMask); }
+    bool WantsContext() const { return !!(mFlags & kContextMask); }
+    const char* GetName() const { return mName; }
+    uint8_t GetParamCount() const { return mNumArgs; }
     const nsXPTParamInfo GetParam(uint8_t idx) const {
         MOZ_ASSERT(idx < GetParamCount(), "bad arg");
-        return params[idx];
+        return mParams[idx];
     }
 
 private:
