@@ -123,6 +123,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     highlighterEnv.off("will-navigate", this.onWillNavigate);
 
     let { pageListenerTarget } = highlighterEnv;
+
     if (pageListenerTarget) {
       pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
     }
@@ -373,6 +374,11 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
    */
   renderFlexItemBasis(flexItem, left, top, right, bottom, boundsWidth) {
     let computedStyle = getComputedStyle(flexItem);
+
+    if (!computedStyle) {
+      return;
+    }
+
     let basis = computedStyle.getPropertyValue("flex-basis");
 
     if (basis.endsWith("px")) {
@@ -405,29 +411,34 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.strokeStyle = DEFAULT_COLOR;
 
     let { bounds } = this.currentQuads.content[0];
-    let flexItems = this.currentNode.children;
+    let flexLines = this.currentNode.getAsFlexContainer().getLines();
 
-    // TODO: Utilize the platform API that will be implemented in Bug 1414290 to
-    // retrieve the flex item properties.
-    for (let flexItem of flexItems) {
-      let quads = getAdjustedQuads(this.win, flexItem, "border");
-      if (!quads.length) {
-        continue;
+    for (let flexLine of flexLines) {
+      let flexItems = flexLine.getItems();
+
+      for (let flexItem of flexItems) {
+        let { node } = flexItem;
+        let quads = getAdjustedQuads(this.win, node, "border");
+
+        if (!quads.length) {
+          continue;
+        }
+
+        // Adjust the flex item bounds relative to the current quads.
+        let { bounds: flexItemBounds } = quads[0];
+        let left = Math.round(flexItemBounds.left - bounds.left);
+        let top = Math.round(flexItemBounds.top - bounds.top);
+        let right = Math.round(flexItemBounds.right - bounds.left);
+        let bottom = Math.round(flexItemBounds.bottom - bounds.top);
+
+        clearRect(this.ctx, left, top, right, bottom, this.currentMatrix);
+        drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
+        this.ctx.stroke();
+
+        this.renderFlexItemBasis(node, left, top, right, bottom, bounds.width);
       }
-
-      // Adjust the flex item bounds relative to the current quads.
-      let { bounds: flexItemBounds } = quads[0];
-      let left = Math.round(flexItemBounds.left - bounds.left);
-      let top = Math.round(flexItemBounds.top - bounds.top);
-      let right = Math.round(flexItemBounds.right - bounds.left);
-      let bottom = Math.round(flexItemBounds.bottom - bounds.top);
-
-      clearRect(this.ctx, left, top, right, bottom, this.currentMatrix);
-      drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
-      this.ctx.stroke();
-
-      this.renderFlexItemBasis(flexItem, left, top, right, bottom, bounds.width);
     }
+
     this.ctx.restore();
   }
 
@@ -521,6 +532,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     for (let flexItem of flexItems) {
       let quads = getAdjustedQuads(this.win, flexItem, "border");
+
       if (!quads.length) {
         continue;
       }
