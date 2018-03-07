@@ -204,11 +204,20 @@ window._gBrowser = {
     }
 
     let messageManager = window.getGroupMessageManager("browsers");
-    if (gMultiProcessBrowser) {
+
+    let remote = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIWebNavigation)
+                       .QueryInterface(Ci.nsILoadContext)
+                       .useRemoteTabs;
+    if (remote) {
       messageManager.addMessageListener("DOMTitleChanged", this);
       messageManager.addMessageListener("DOMWindowClose", this);
       window.messageManager.addMessageListener("contextmenu", this);
       messageManager.addMessageListener("Browser:Init", this);
+
+      // If this window has remote tabs, switch to our tabpanels fork
+      // which does asynchronous tab switching.
+      this.mPanelContainer.classList.add("tabbrowser-tabpanels");
     } else {
       this._outerWindowIDBrowserMap.set(this.mCurrentBrowser.outerWindowID,
         this.mCurrentBrowser);
@@ -886,17 +895,11 @@ window._gBrowser = {
   },
 
   updateCurrentBrowser(aForceUpdate) {
-    let newBrowser = this.getBrowserAtIndex(this.tabContainer.selectedIndex);
+    var newBrowser = this.getBrowserAtIndex(this.tabContainer.selectedIndex);
     if (this.mCurrentBrowser == newBrowser && !aForceUpdate)
       return;
 
-    let newTab = this.getTabForBrowser(newBrowser);
-
     if (!aForceUpdate) {
-      if (gMultiProcessBrowser) {
-        this._getSwitcher().requestTab(newTab);
-      }
-
       document.commandDispatcher.lock();
 
       TelemetryStopwatch.start("FX_TAB_SWITCH_UPDATE_MS");
@@ -925,7 +928,7 @@ window._gBrowser = {
       }
     }
 
-    let oldTab = this.mCurrentTab;
+    var oldTab = this.mCurrentTab;
 
     // Preview mode should not reset the owner
     if (!this._previewMode && !oldTab.selected)
@@ -938,7 +941,7 @@ window._gBrowser = {
     }
     this._lastRelatedTabMap = new WeakMap();
 
-    let oldBrowser = this.mCurrentBrowser;
+    var oldBrowser = this.mCurrentBrowser;
 
     if (!gMultiProcessBrowser) {
       oldBrowser.removeAttribute("primary");
@@ -955,8 +958,8 @@ window._gBrowser = {
       updateBlockedPopups = true;
 
     this.mCurrentBrowser = newBrowser;
-    this.mCurrentTab = newTab;
-    this.showTab(newTab);
+    this.mCurrentTab = this.tabContainer.selectedItem;
+    this.showTab(this.mCurrentTab);
 
     gURLBar.setAttribute("switchingtabs", "true");
     window.addEventListener("MozAfterPaint", function() {
@@ -966,13 +969,13 @@ window._gBrowser = {
     this._appendStatusPanel();
 
     if (updateBlockedPopups)
-      newBrowser.updateBlockedPopups();
+      this.mCurrentBrowser.updateBlockedPopups();
 
     // Update the URL bar.
-    let loc = newBrowser.currentURI;
+    var loc = this.mCurrentBrowser.currentURI;
 
-    let webProgress = newBrowser.webProgress;
-    let securityUI = newBrowser.securityUI;
+    var webProgress = this.mCurrentBrowser.webProgress;
+    var securityUI = this.mCurrentBrowser.securityUI;
 
     this._callProgressListeners(null, "onLocationChange",
                                 [webProgress, null, loc, 0],
@@ -986,7 +989,7 @@ window._gBrowser = {
                                   true, false);
     }
 
-    let listener = this._tabListeners.get(newTab);
+    var listener = this._tabListeners.get(this.mCurrentTab);
     if (listener && listener.mStateFlags) {
       this._callProgressListeners(null, "onUpdateCurrentBrowser",
                                   [listener.mStateFlags, listener.mStatus,
@@ -995,8 +998,8 @@ window._gBrowser = {
     }
 
     if (!this._previewMode) {
-      newTab.updateLastAccessed();
-      newTab.removeAttribute("unread");
+      this.mCurrentTab.updateLastAccessed();
+      this.mCurrentTab.removeAttribute("unread");
       oldTab.updateLastAccessed();
 
       let oldFindBar = oldTab._findBar;
@@ -1007,22 +1010,22 @@ window._gBrowser = {
 
       this.updateTitlebar();
 
-      newTab.removeAttribute("titlechanged");
-      newTab.removeAttribute("attention");
+      this.mCurrentTab.removeAttribute("titlechanged");
+      this.mCurrentTab.removeAttribute("attention");
 
       // The tab has been selected, it's not unselected anymore.
       // (1) Call the current tab's finishUnselectedTabHoverTimer()
       //     to save a telemetry record.
       // (2) Call the current browser's unselectedTabHover() with false
       //     to dispatch an event.
-      newTab.finishUnselectedTabHoverTimer();
-      newBrowser.unselectedTabHover(false);
+      this.mCurrentTab.finishUnselectedTabHoverTimer();
+      this.mCurrentBrowser.unselectedTabHover(false);
     }
 
     // If the new tab is busy, and our current state is not busy, then
     // we need to fire a start to all progress listeners.
     const nsIWebProgressListener = Ci.nsIWebProgressListener;
-    if (newTab.hasAttribute("busy") && !this.mIsBusy) {
+    if (this.mCurrentTab.hasAttribute("busy") && !this.mIsBusy) {
       this.mIsBusy = true;
       this._callProgressListeners(null, "onStateChange",
                                   [webProgress, null,
@@ -1033,7 +1036,7 @@ window._gBrowser = {
 
     // If the new tab is not busy, and our current state is busy, then
     // we need to fire a stop to all progress listeners.
-    if (!newTab.hasAttribute("busy") && this.mIsBusy) {
+    if (!this.mCurrentTab.hasAttribute("busy") && this.mIsBusy) {
       this.mIsBusy = false;
       this._callProgressListeners(null, "onStateChange",
                                   [webProgress, null,
@@ -1054,10 +1057,10 @@ window._gBrowser = {
           previousTab: oldTab
         }
       });
-      newTab.dispatchEvent(event);
+      this.mCurrentTab.dispatchEvent(event);
 
       this._tabAttrModified(oldTab, ["selected"]);
-      this._tabAttrModified(newTab, ["selected"]);
+      this._tabAttrModified(this.mCurrentTab, ["selected"]);
 
       if (oldBrowser != newBrowser &&
           oldBrowser.getInPermitUnload) {
@@ -1086,8 +1089,8 @@ window._gBrowser = {
       }
 
       if (!gMultiProcessBrowser) {
-        this._adjustFocusBeforeTabSwitch(oldTab, newTab);
-        this._adjustFocusAfterTabSwitch(newTab);
+        this._adjustFocusBeforeTabSwitch(oldTab, this.mCurrentTab);
+        this._adjustFocusAfterTabSwitch(this.mCurrentTab);
       }
     }
 
@@ -1100,7 +1103,7 @@ window._gBrowser = {
     // session to allow the user to easily drag the selected tab.
     // This is currently only supported on Windows.
     oldTab.removeAttribute("touchdownstartsdrag");
-    newTab.setAttribute("touchdownstartsdrag", "true");
+    this.mCurrentTab.setAttribute("touchdownstartsdrag", "true");
 
     if (!gMultiProcessBrowser) {
       document.commandDispatcher.unlock();
