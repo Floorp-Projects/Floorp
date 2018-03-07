@@ -14,6 +14,7 @@ import logging
 from mozbuild.util import memoize
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+from taskgraph.task import Task
 
 _TC_ARTIFACT_LOCATION = \
         'https://queue.taskcluster.net/v1/task/{task_id}/artifacts/public/build/{postfix}'
@@ -88,6 +89,19 @@ def get_artifact(task_id, path, use_proxy=False):
 def list_artifacts(task_id, use_proxy=False):
     response = _do_request(get_artifact_url(task_id, '', use_proxy).rstrip('/'))
     return response.json()['artifacts']
+
+
+def get_artifact_prefix(task):
+    prefix = None
+    if isinstance(task, dict):
+        prefix = task.get('attributes', {}).get("artifact_prefix")
+    elif isinstance(task, Task):
+        prefix = task.attributes.get("artifact_prefix")
+    return prefix or "public/build"
+
+
+def get_artifact_path(task, path):
+    return "{}/{}".format(get_artifact_prefix(task), path)
 
 
 def get_index_url(index_path, use_proxy=False, multiple=False):
