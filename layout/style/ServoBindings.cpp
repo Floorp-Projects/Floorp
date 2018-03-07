@@ -38,7 +38,6 @@
 #include "nsIPresShellInlines.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
-#include "nsIXULRuntime.h"
 #include "nsFontMetrics.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
@@ -2640,13 +2639,6 @@ Gecko_RegisterNamespace(nsAtom* aNamespace)
     return -1;
   }
   return id;
-}
-
-bool
-Gecko_ShouldCreateStyleThreadPool()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return !mozilla::BrowserTabsRemoteAutostart() || XRE_IsContentProcess();
 }
 
 NS_IMPL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
