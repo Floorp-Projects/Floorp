@@ -102,8 +102,8 @@ private:
   //      // WRONG! 1970-01-01-00:00:00 == time_t(0), but not Time(0)!
   //      return Time(t);
   //    }
-  explicit Time(uint64_t elapsedSecondsAD)
-    : elapsedSecondsAD(elapsedSecondsAD)
+  explicit Time(uint64_t aElapsedSecondsAD)
+    : elapsedSecondsAD(aElapsedSecondsAD)
   {
   }
   friend Time TimeFromElapsedSecondsAD(uint64_t);
@@ -112,9 +112,9 @@ private:
   uint64_t elapsedSecondsAD;
 };
 
-inline Time TimeFromElapsedSecondsAD(uint64_t elapsedSecondsAD)
+inline Time TimeFromElapsedSecondsAD(uint64_t aElapsedSecondsAD)
 {
-  return Time(elapsedSecondsAD);
+  return Time(aElapsedSecondsAD);
 }
 
 Time Now();
@@ -132,8 +132,8 @@ public:
   {
   }
 
-  explicit Duration(uint64_t durationInSeconds)
-    : durationInSeconds(durationInSeconds)
+  explicit Duration(uint64_t aDurationInSeconds)
+    : durationInSeconds(aDurationInSeconds)
   {
   }
 

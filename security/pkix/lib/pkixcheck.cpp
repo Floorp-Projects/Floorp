@@ -339,15 +339,16 @@ CheckSubjectPublicKeyInfoContents(Reader& input, TrustDomain& trustDomain,
                      [&trustDomain, endEntityOrCA](Reader& r) {
       Input modulus;
       Input::size_type modulusSignificantBytes;
-      Result rv = der::PositiveInteger(r, modulus, &modulusSignificantBytes);
-      if (rv != Success) {
-        return rv;
+      Result nestedRv =
+        der::PositiveInteger(r, modulus, &modulusSignificantBytes);
+      if (nestedRv != Success) {
+        return nestedRv;
       }
       // XXX: Should we do additional checks of the modulus?
-      rv = trustDomain.CheckRSAPublicKeyModulusSizeInBits(
-             endEntityOrCA, modulusSignificantBytes * 8u);
-      if (rv != Success) {
-        return rv;
+      nestedRv = trustDomain.CheckRSAPublicKeyModulusSizeInBits(
+        endEntityOrCA, modulusSignificantBytes * 8u);
+      if (nestedRv != Success) {
+        return nestedRv;
       }
 
       // XXX: We don't allow the TrustDomain to validate the exponent.
@@ -652,9 +653,9 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
     Reader input(*encodedBasicConstraints);
     Result rv = der::Nested(input, der::SEQUENCE,
                             [&isCA, &pathLenConstraint](Reader& r) {
-      Result rv = der::OptionalBoolean(r, isCA);
-      if (rv != Success) {
-        return rv;
+      Result nestedRv = der::OptionalBoolean(r, isCA);
+      if (nestedRv != Success) {
+        return nestedRv;
       }
       // TODO(bug 985025): If isCA is false, pathLenConstraint
       // MUST NOT be included (as per RFC 5280 section

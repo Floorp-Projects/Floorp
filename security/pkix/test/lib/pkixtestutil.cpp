@@ -154,8 +154,8 @@ OCSPResponseExtension::OCSPResponseExtension()
 {
 }
 
-OCSPResponseContext::OCSPResponseContext(const CertID& certID, time_t time)
-  : certID(certID)
+OCSPResponseContext::OCSPResponseContext(const CertID& aCertID, time_t time)
+  : certID(aCertID)
   , responseStatus(successful)
   , skipResponseBytes(false)
   , producedAt(time)
@@ -1142,11 +1142,11 @@ CertStatus(OCSPResponseContext& context)
 static const ByteString NO_UNUSED_BITS(1, 0x00);
 
 // The SubjectPublicKeyInfo syntax is specified in RFC 5280 Section 4.1.
-TestKeyPair::TestKeyPair(const TestPublicKeyAlgorithm& publicKeyAlg,
+TestKeyPair::TestKeyPair(const TestPublicKeyAlgorithm& aPublicKeyAlg,
                          const ByteString& spk)
-  : publicKeyAlg(publicKeyAlg)
+  : publicKeyAlg(aPublicKeyAlg)
   , subjectPublicKeyInfo(TLV(der::SEQUENCE,
-                             publicKeyAlg.algorithmIdentifier +
+                             aPublicKeyAlg.algorithmIdentifier +
                              TLV(der::BIT_STRING, NO_UNUSED_BITS + spk)))
   , subjectPublicKey(spk)
 {

@@ -47,14 +47,14 @@ CreateCert(const char* issuerCN,
 class AlgorithmTestsTrustDomain final : public DefaultCryptoTrustDomain
 {
 public:
-  AlgorithmTestsTrustDomain(const ByteString& rootDER,
-                            const ByteString& rootSubjectDER,
-               /*optional*/ const ByteString& intDER,
-               /*optional*/ const ByteString& intSubjectDER)
-    : rootDER(rootDER)
-    , rootSubjectDER(rootSubjectDER)
-    , intDER(intDER)
-    , intSubjectDER(intSubjectDER)
+  AlgorithmTestsTrustDomain(const ByteString& aRootDER,
+                            const ByteString& aRootSubjectDER,
+               /*optional*/ const ByteString& aIntDER,
+               /*optional*/ const ByteString& aIntSubjectDER)
+    : rootDER(aRootDER)
+    , rootSubjectDER(aRootSubjectDER)
+    , intDER(aIntDER)
+    , intSubjectDER(aIntSubjectDER)
   {
   }
 
@@ -118,14 +118,14 @@ static const TestSignatureAlgorithm NO_INTERMEDIATE
 
 struct ChainValidity final
 {
-  ChainValidity(const TestSignatureAlgorithm& endEntitySignatureAlgorithm,
-                const TestSignatureAlgorithm& optionalIntSignatureAlgorithm,
-                const TestSignatureAlgorithm& rootSignatureAlgorithm,
-                bool isValid)
-    : endEntitySignatureAlgorithm(endEntitySignatureAlgorithm)
-    , optionalIntermediateSignatureAlgorithm(optionalIntSignatureAlgorithm)
-    , rootSignatureAlgorithm(rootSignatureAlgorithm)
-    , isValid(isValid)
+  ChainValidity(const TestSignatureAlgorithm& aEndEntitySignatureAlgorithm,
+                const TestSignatureAlgorithm& aOptionalIntSignatureAlgorithm,
+                const TestSignatureAlgorithm& aRootSignatureAlgorithm,
+                bool aIsValid)
+    : endEntitySignatureAlgorithm(aEndEntitySignatureAlgorithm)
+    , optionalIntermediateSignatureAlgorithm(aOptionalIntSignatureAlgorithm)
+    , rootSignatureAlgorithm(aRootSignatureAlgorithm)
+    , isValid(aIsValid)
   { }
 
   // In general, a certificate is generated for each of these.  However, if

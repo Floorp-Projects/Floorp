@@ -213,7 +213,6 @@ SignatureAlgorithmIdentifierValue(Reader& input,
 Result
 DigestAlgorithmIdentifier(Reader& input, /*out*/ DigestAlgorithm& algorithm)
 {
-  Reader r;
   return der::Nested(input, SEQUENCE, [&algorithm](Reader& r) -> Result {
     Reader algorithmID;
     Result rv = AlgorithmIdentifierValue(r, algorithmID);
