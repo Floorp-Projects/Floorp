@@ -28,13 +28,13 @@ public:
         {*(uint8_t*)this = prefix;}
 
     nsXPTType& operator=(uint8_t val)
-        {flags = val; return *this;}
+        {mFlags = val; return *this;}
 
     nsXPTType& operator=(const nsXPTType& other)
-        {flags = other.flags; return *this;}
+        {mFlags = other.mFlags; return *this;}
 
     operator uint8_t() const
-        {return flags;}
+        {return mFlags;}
 
     // 'Arithmetic' here roughly means that the value is self-contained and
     // doesn't depend on anything else in memory (ie: not a pointer, not an
@@ -44,7 +44,7 @@ public:
     // a rather crappy name. We'd change it if it wasn't used all over the
     // place in xptcall. :-(
     bool IsArithmetic() const
-        {return flags <= T_WCHAR;}
+        {return mFlags <= T_WCHAR;}
 
     // We used to abuse 'pointer' flag bit in typelib format quite extensively.
     // We've gotten rid of most of the cases, but there's still a fair amount

@@ -395,7 +395,7 @@ bool
 DoTypeDescriptorPrefix(XPTArena *arena, NotNull<XPTCursor*> cursor,
                        XPTTypeDescriptorPrefix *tdp)
 {
-    return XPT_Do8(cursor, &tdp->flags);
+    return XPT_Do8(cursor, &tdp->mFlags);
 }
 
 bool
