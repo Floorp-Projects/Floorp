@@ -34,6 +34,8 @@ def add_task_info(config, jobs):
         job['treeherder']['platform'] = plat
         job['treeherder']['tier'] = dep_th['tier']
         # Add an environment variable pointing at the artifact from the build.
+        # XXX This will break with any non-public artifact_prefix, but I believe
+        # these tasks are going away with buildbot.
         artifact_url = get_artifact_url('<build>',
                                         'public/build/target.generated-files.tar.gz')
         job['worker'].setdefault('env', {})['ARTIFACT_URL'] = {
