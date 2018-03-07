@@ -6,7 +6,7 @@
 "use strict";
 
 // shared-head.js handles imports, constants, and utility functions
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js", this);
+Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
 
 // Disable logging for faster test runs. Set this pref to true if you want to
 // debug a test in your try runs. Both the debugger server and frontend will
@@ -208,10 +208,7 @@ function attachThreadActorForUrl(aClient, aUrl) {
   return deferred.promise;
 }
 
-// Override once from shared-head, as some tests depend on trying native DOM listeners
-// before EventEmitter.  Since this directory is deprecated, there's little value in
-// resolving the descrepency here.
-this.once = function (aTarget, aEventName, aUseCapture = false) {
+function once(aTarget, aEventName, aUseCapture = false) {
   info("Waiting for event: '" + aEventName + "' on " + aTarget + ".");
 
   let deferred = promise.defer();
@@ -231,7 +228,7 @@ this.once = function (aTarget, aEventName, aUseCapture = false) {
   }
 
   return deferred.promise;
-};
+}
 
 function waitForTick() {
   let deferred = promise.defer();

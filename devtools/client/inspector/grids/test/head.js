@@ -2,7 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* import-globals-from ../../../shared/test/shared-head.js */
+/* import-globals-from ../../../framework/test/shared-head.js */
 /* import-globals-from ../../test/head.js */
 "use strict";
 
@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript(
 
 // Load the shared Redux helpers into this compartment.
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
+  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-redux-head.js",
   this);
 
 Services.prefs.setIntPref("devtools.toolbox.footer.height", 350);

@@ -4,16 +4,16 @@
 "use strict";
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* import-globals-from ../../../shared/test/shared-head.js */
-/* import-globals-from ../../../shared/test/shared-redux-head.js */
+/* import-globals-from ../../../framework/test/shared-head.js */
+/* import-globals-from ../../../framework/test/shared-redux-head.js */
 /* import-globals-from ../../../commandline/test/helpers.js */
 /* import-globals-from ../../../inspector/test/shared-head.js */
 
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
+  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-redux-head.js",
   this);
 
 // Import the GCLI test helper

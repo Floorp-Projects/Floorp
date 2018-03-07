@@ -11,7 +11,7 @@
 function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(RAF_BEGIN_URL);
   let { window, EVENTS, gFront, SnapshotsListView } = panel.panelWin;
-  loadFrameScriptUtils();
+  loadFrameScripts();
 
   yield reload(target);
 
