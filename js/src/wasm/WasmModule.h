@@ -149,11 +149,14 @@ class Module : public JS::WasmModule
     bool instantiateTable(JSContext* cx,
                           MutableHandleWasmTableObject table,
                           SharedTableVector* tables) const;
+    bool instantiateGlobalExports(JSContext* cx,
+                                  const ValVector& globalImportValues,
+                                  WasmGlobalObjectVector& globalObjs) const;
     bool initSegments(JSContext* cx,
                       HandleWasmInstanceObject instance,
                       Handle<FunctionVector> funcImports,
                       HandleWasmMemoryObject memory,
-                      const ValVector& globalImports) const;
+                      const ValVector& globalImportValues) const;
 
     class Tier2GeneratorTaskImpl;
     void notifyCompilationListeners();
@@ -201,7 +204,8 @@ class Module : public JS::WasmModule
                      Handle<FunctionVector> funcImports,
                      HandleWasmTableObject tableImport,
                      HandleWasmMemoryObject memoryImport,
-                     const ValVector& globalImports,
+                     const ValVector& globalImportValues,
+                     WasmGlobalObjectVector& globalObjs,
                      HandleObject instanceProto,
                      MutableHandleWasmInstanceObject instanceObj) const;
 
