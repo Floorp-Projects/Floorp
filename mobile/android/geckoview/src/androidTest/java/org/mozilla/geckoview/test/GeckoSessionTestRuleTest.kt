@@ -48,6 +48,11 @@ class GeckoSessionTestRuleTest {
                    sessionRule.session.isOpen, equalTo(true))
     }
 
+    @GeckoSessionTestRule.ClosedSessionAtStart
+    @Test fun getSession_closedSession() {
+        assertThat("Session is closed", sessionRule.session.isOpen, equalTo(false))
+    }
+
     @Setting.List(Setting(key = Setting.Key.USE_PRIVATE_MODE, value = "true"),
                   Setting(key = Setting.Key.DISPLAY_MODE, value = "DISPLAY_MODE_MINIMAL_UI"))
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")

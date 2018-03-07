@@ -90,6 +90,15 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     /**
+     * Specify that the main session should not be opened at the start of the test.
+     */
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ClosedSessionAtStart {
+        boolean value() default true;
+    }
+
+    /**
      * Specify a list of GeckoSession settings to be applied to the GeckoSession object
      * under test. Can be used on classes or methods. Note that the settings values must
      * be string literals regardless of the type of the settings.
@@ -487,6 +496,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected SurfaceTexture mDisplayTexture;
     protected Surface mDisplaySurface;
     protected GeckoDisplay mDisplay;
+    protected boolean mClosedSession;
 
     public GeckoSessionTestRule() {
         mDefaultSettings = new GeckoSessionSettings();
@@ -585,6 +595,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             } else if (WithDisplay.class.equals(annotation.annotationType())) {
                 final WithDisplay displaySize = (WithDisplay)annotation;
                 mDisplaySize = new Point(displaySize.width(), displaySize.height());
+            } else if (ClosedSessionAtStart.class.equals(annotation.annotationType())) {
+                mClosedSession = ((ClosedSessionAtStart) annotation).value();
             }
         }
     }
@@ -602,6 +614,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         final GeckoSessionSettings settings = new GeckoSessionSettings(mDefaultSettings);
         mTimeoutMillis = !env.isDebugging() ? DEFAULT_TIMEOUT_MILLIS
                                             : DEFAULT_DEBUG_TIMEOUT_MILLIS;
+        mClosedSession = false;
 
         applyAnnotations(Arrays.asList(description.getTestClass().getAnnotations()), settings);
         applyAnnotations(description.getAnnotations(), settings);
@@ -658,6 +671,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             if (cls != null) {
                 getCallbackSetter(cls).invoke(mSession, mCallbackProxy);
             }
+        }
+
+        if (mClosedSession) {
+            return;
         }
 
         mSession.openWindow(mInstrumentation.getTargetContext());
