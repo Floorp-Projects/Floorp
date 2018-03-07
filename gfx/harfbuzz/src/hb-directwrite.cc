@@ -370,7 +370,7 @@ public:
   {
     if (textPosition == 0 || textPosition > mTextLength) {
       // Either there is no text before here (== 0), or this
-      // is an invalid position. The query is considered valid thouh.
+      // is an invalid position. The query is considered valid though.
       *textString = nullptr;
       *textLength = 0;
     }
@@ -878,8 +878,6 @@ retry_getglyphs:
     pos->x_offset =
       x_mult * (isRightToLeft ? -info->var1.i32 : info->var1.i32);
     pos->y_offset = y_mult * info->var2.i32;
-
-    info->mask = HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
   }
 
   if (isRightToLeft)

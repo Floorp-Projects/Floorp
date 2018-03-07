@@ -1212,7 +1212,7 @@ struct Rule
 		  lookupCount.sanitize (c) &&
 		  c->check_range (inputZ,
 				  inputZ[0].static_size * inputCount +
-				  lookupRecordX[0].static_size * lookupCount));
+				  LookupRecord::static_size * lookupCount));
   }
 
   protected:
@@ -1222,10 +1222,10 @@ struct Rule
   HBUINT16	lookupCount;		/* Number of LookupRecords */
   HBUINT16	inputZ[VAR];		/* Array of match inputs--start with
 					 * second glyph */
-  LookupRecord	lookupRecordX[VAR];	/* Array of LookupRecords--in
+/*LookupRecord	lookupRecordX[VAR];*/	/* Array of LookupRecords--in
 					 * design order */
   public:
-  DEFINE_SIZE_ARRAY2 (4, inputZ, lookupRecordX);
+  DEFINE_SIZE_ARRAY (4, inputZ);
 };
 
 struct RuleSet
@@ -1556,10 +1556,10 @@ struct ContextFormat3
   OffsetTo<Coverage>
 		coverageZ[VAR];		/* Array of offsets to Coverage
 					 * table in glyph sequence order */
-  LookupRecord	lookupRecordX[VAR];	/* Array of LookupRecords--in
+/*LookupRecord	lookupRecordX[VAR];*/	/* Array of LookupRecords--in
 					 * design order */
   public:
-  DEFINE_SIZE_ARRAY2 (6, coverageZ, lookupRecordX);
+  DEFINE_SIZE_ARRAY (6, coverageZ);
 };
 
 struct Context

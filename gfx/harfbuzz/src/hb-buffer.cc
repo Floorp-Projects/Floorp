@@ -1933,7 +1933,7 @@ hb_buffer_diff (hb_buffer_t *buffer,
       result |= HB_BUFFER_DIFF_FLAG_CODEPOINT_MISMATCH;
     if (buf_info->cluster != ref_info->cluster)
       result |= HB_BUFFER_DIFF_FLAG_CLUSTER_MISMATCH;
-    if ((buf_info->mask & HB_GLYPH_FLAG_DEFINED) != (ref_info->mask & HB_GLYPH_FLAG_DEFINED))
+    if ((buf_info->mask & ~ref_info->mask & HB_GLYPH_FLAG_DEFINED))
       result |= HB_BUFFER_DIFF_FLAG_GLYPH_FLAGS_MISMATCH;
     if (contains && ref_info->codepoint == dottedcircle_glyph)
       result |= HB_BUFFER_DIFF_FLAG_DOTTED_CIRCLE_PRESENT;

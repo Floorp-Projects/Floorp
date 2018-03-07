@@ -120,7 +120,7 @@ struct BinSearchArrayOf
       else
 	return p;
     }
-    return NULL;
+    return nullptr;
   }
 
   private:
@@ -563,9 +563,9 @@ struct StateTable
     unsigned int entry = 0;
     while (state < num_states)
     {
-      if (unlikely (!c->check_array (states + state * nClasses,
-				     states[0].static_size,
-				     nClasses * (num_states - state))))
+      if (unlikely (!c->check_array (states,
+				     states[0].static_size * nClasses,
+				     num_states)))
 	return_trace (false);
       { /* Sweep new states. */
 	const HBUINT16 *stop = &states[num_states * nClasses];
@@ -574,9 +574,9 @@ struct StateTable
 	state = num_states;
       }
 
-      if (unlikely (!c->check_array (entries + entry,
+      if (unlikely (!c->check_array (entries,
 				     entries[0].static_size,
-				     num_entries - entry)))
+				     num_entries)))
 	return_trace (false);
       { /* Sweep new entries. */
 	const Entry<Extra> *stop = &entries[num_entries];
@@ -614,8 +614,7 @@ struct StateTableDriver
 			   hb_face_t *face_) :
 	      machine (machine_),
 	      buffer (buffer_),
-	      num_glyphs (face_->get_num_glyphs ()),
-	      last_zero (0) {}
+	      num_glyphs (face_->get_num_glyphs ()) {}
 
   template <typename context_t>
   inline void drive (context_t *c)
@@ -629,9 +628,6 @@ struct StateTableDriver
     bool last_was_dont_advance = false;
     for (buffer->idx = 0;;)
     {
-      if (!state)
-	last_zero = buffer->idx;
-
       unsigned int klass = buffer->idx < buffer->len ?
 			   machine.get_class (info[buffer->idx].codepoint, num_glyphs) :
 			   0 /* End of text */;
@@ -639,10 +635,29 @@ struct StateTableDriver
       if (unlikely (!entry))
 	break;
 
+      /* Unsafe-to-break before this if not in state 0, as things might
+       * go differently if we start from state 0 here. */
+      if (state && buffer->idx)
+      {
+	/* If there's no action and we're just epsilon-transitioning to state 0,
+	 * safe to break. */
+	if (c->is_actionable (this, entry) ||
+	    !(entry->newState == 0 && entry->flags == context_t::DontAdvance))
+	  buffer->unsafe_to_break (buffer->idx - 1, buffer->idx + 1);
+      }
+
+      /* Unsafe-to-break if end-of-text would kick in here. */
+      if (buffer->idx + 2 <= buffer->len)
+      {
+	const Entry<EntryData> *end_entry = machine.get_entryZ (state, 0);
+	if (c->is_actionable (this, end_entry))
+	  buffer->unsafe_to_break (buffer->idx, buffer->idx + 2);
+      }
+
       if (unlikely (!c->transition (this, entry)))
         break;
 
-      last_was_dont_advance = (entry->flags & context_t::DontAdvance) && buffer->max_ops--;
+      last_was_dont_advance = (entry->flags & context_t::DontAdvance) && buffer->max_ops-- > 0;
 
       state = entry->newState;
 
@@ -665,7 +680,6 @@ struct StateTableDriver
   const StateTable<EntryData> &machine;
   hb_buffer_t *buffer;
   unsigned int num_glyphs;
-  unsigned int last_zero;
 };
 
 
@@ -684,16 +698,22 @@ struct hb_aat_apply_context_t :
   hb_buffer_t *buffer;
   hb_sanitize_context_t sanitizer;
 
+  /* Unused. For debug tracing only. */
+  unsigned int lookup_index;
+  unsigned int debug_depth;
+
   inline hb_aat_apply_context_t (hb_font_t *font_,
 				 hb_buffer_t *buffer_,
 				 hb_blob_t *table) :
 		font (font_), face (font->face), buffer (buffer_),
-		sanitizer ()
+		sanitizer (), lookup_index (0), debug_depth (0)
   {
     sanitizer.init (table);
     sanitizer.num_glyphs = face->get_num_glyphs ();
     sanitizer.start_processing ();
   }
+
+  inline void set_lookup_index (unsigned int i) { lookup_index = i; }
 
   inline ~hb_aat_apply_context_t (void)
   {

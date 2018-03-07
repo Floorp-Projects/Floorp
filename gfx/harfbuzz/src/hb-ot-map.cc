@@ -139,7 +139,7 @@ hb_ot_map_builder_t::compile (hb_ot_map_t  &m,
 {
   static_assert ((!(HB_GLYPH_FLAG_DEFINED & (HB_GLYPH_FLAG_DEFINED + 1))), "");
   unsigned int global_bit_mask = HB_GLYPH_FLAG_DEFINED + 1;
-  unsigned int global_bit_shift = _hb_popcount32 (HB_GLYPH_FLAG_DEFINED);
+  unsigned int global_bit_shift = _hb_popcount (HB_GLYPH_FLAG_DEFINED);
 
   m.global_mask = global_bit_mask;
 
