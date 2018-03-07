@@ -321,6 +321,20 @@ ul.children + .tag-line::before {
   border: 1px solid #CCC;
 }
 
+.reveal-link {
+  margin-inline-start: 10px;
+  cursor: pointer;
+  display: none;
+}
+
+.reveal-link:hover {
+  text-decoration: underline
+}
+
+.tag-line:hover .reveal-link {
+  display: inline;
+}
+
 /* Draw a circle next to nodes that have a pseudo class lock.
    Center vertically with the 1.4em line height on .tag-line */
 .child.pseudoclass-locked::before {

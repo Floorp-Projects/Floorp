@@ -4,11 +4,15 @@
 
 "use strict";
 
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const INSPECTOR_L10N =
+      new LocalizationHelper("devtools/client/locales/inspector.properties");
+
 function SlottedNodeEditor(container, node) {
   this.container = container;
   this.markup = this.container.markup;
   this.buildMarkup();
-  this.tag.textContent = "<" + node.nodeName.toLowerCase() + ">";
+  this.tag.textContent = "→ <" + node.nodeName.toLowerCase() + ">";
 
   // Make the "tag" part of this editor focusable.
   this.tag.setAttribute("tabindex", "-1");
@@ -24,6 +28,11 @@ SlottedNodeEditor.prototype = {
     this.tag = doc.createElement("span");
     this.tag.classList.add("tag");
     this.elt.appendChild(this.tag);
+
+    this.revealLink = doc.createElement("span");
+    this.revealLink.classList.add("reveal-link");
+    this.revealLink.textContent = INSPECTOR_L10N.getStr("markupView.revealLink.label");
+    this.elt.appendChild(this.revealLink);
   },
 
   destroy: function() {
@@ -35,6 +44,7 @@ SlottedNodeEditor.prototype = {
     this.elt.remove();
     this.elt = null;
     this.tag = null;
+    this.revealLink = null;
   },
 
   /**
