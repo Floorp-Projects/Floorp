@@ -156,9 +156,6 @@ window._gBrowser = {
     this.mCurrentBrowser = this.initialBrowser;
     this.mCurrentBrowser.permanentKey = {};
 
-    CustomizableUI.addListener(this);
-    this._updateNewTabVisibility();
-
     Services.obs.addObserver(this, "contextual-identity-updated");
 
     this.mCurrentTab = this.tabContainer.firstChild;
@@ -3911,42 +3908,6 @@ window._gBrowser = {
     }
   },
 
-  _updateNewTabVisibility() {
-    // Helper functions to help deal with customize mode wrapping some items
-    let wrap = n => n.parentNode.localName == "toolbarpaletteitem" ? n.parentNode : n;
-    let unwrap = n => n && n.localName == "toolbarpaletteitem" ? n.firstElementChild : n;
-
-    let sib = this.tabContainer;
-    do {
-      sib = unwrap(wrap(sib).nextElementSibling);
-    } while (sib && sib.hidden);
-
-    const kAttr = "hasadjacentnewtabbutton";
-    if (sib && sib.id == "new-tab-button") {
-      this.tabContainer.setAttribute(kAttr, "true");
-    } else {
-      this.tabContainer.removeAttribute(kAttr);
-    }
-  },
-
-  onWidgetAfterDOMChange(aNode, aNextNode, aContainer) {
-    if (aContainer.ownerDocument == document &&
-        aContainer.id == "TabsToolbar") {
-      this._updateNewTabVisibility();
-    }
-  },
-
-  onAreaNodeRegistered(aArea, aContainer) {
-    if (aContainer.ownerDocument == document &&
-        aArea == "TabsToolbar") {
-      this._updateNewTabVisibility();
-    }
-  },
-
-  onAreaReset(aArea, aContainer) {
-    this.onAreaNodeRegistered(aArea, aContainer);
-  },
-
   _generateUniquePanelID() {
     if (!this._uniquePanelIDCounter) {
       this._uniquePanelIDCounter = 0;
@@ -3964,8 +3925,6 @@ window._gBrowser = {
 
   destroy() {
     Services.obs.removeObserver(this, "contextual-identity-updated");
-
-    CustomizableUI.removeListener(this);
 
     for (let tab of this.tabs) {
       let browser = tab.linkedBrowser;
