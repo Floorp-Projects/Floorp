@@ -552,7 +552,14 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         return mErrorCollector;
     }
 
-    private <T> void assertThat(final String reason, final T value, final Matcher<T> matcher) {
+    /**
+     * Assert a condition with junit.Assert or an error collector.
+     *
+     * @param reason Reason string
+     * @param value Value to check
+     * @param matcher Matcher for checking the value
+     */
+    public <T> void assertThat(final String reason, final T value, final Matcher<T> matcher) {
         if (mErrorCollector != null) {
             mErrorCollector.checkThat(reason, value, matcher);
         } else {
@@ -564,7 +571,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         final int count = call.getCount();
         if (count != 0) {
             assertThat(call.method.getName() + " call count should be within limit",
-                       call.getCurrentCount(), lessThan(Math.max(0, count)));
+                       call.getCurrentCount() + 1, lessThanOrEqualTo(Math.max(0, count)));
         }
     }
 

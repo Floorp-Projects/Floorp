@@ -15,15 +15,9 @@ import android.support.test.filters.LargeTest
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 
-import org.hamcrest.Matcher
 import org.hamcrest.Matchers.*
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ErrorCollector
 import org.junit.runner.RunWith
-
-fun GeckoSession.loadTestPath(path: String) =
-        this.loadUri(GeckoSessionTestRule.APK_URI_PREFIX + path.removePrefix("/"))
 
 /**
  * Test for the GeckoSessionTestRule class, to ensure it properly sets up a session for
@@ -32,15 +26,7 @@ fun GeckoSession.loadTestPath(path: String) =
  */
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-class GeckoSessionTestRuleTest {
-    companion object {
-        const val HELLO_HTML_PATH = "assets/www/hello.html"
-    }
-
-    @get:Rule val sessionRule = GeckoSessionTestRule()
-
-    @get:Rule val errors = ErrorCollector()
-    fun <T> assertThat(reason: String, v: T, m: Matcher<T>) = errors.checkThat(reason, v, m)
+class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @Test fun getSession() {
         assertThat("Can get session", sessionRule.session, notNullValue())
