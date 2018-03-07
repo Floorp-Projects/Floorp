@@ -11,6 +11,9 @@ CHECK(DanglingOnTemporaryChecker, "dangling-on-temporary")
 CHECK(ExplicitImplicitChecker, "implicit-constructor")
 CHECK(ExplicitOperatorBoolChecker, "explicit-operator-bool")
 CHECK(KungFuDeathGripChecker, "kungfu-death-grip")
+#ifdef _WIN32
+CHECK(LoadLibraryUsageChecker, "load-library-usage")
+#endif
 CHECK(MustOverrideChecker, "must-override")
 CHECK(MustReturnFromCallerChecker, "must-return-from-caller")
 CHECK(MustUseChecker, "must-use")
