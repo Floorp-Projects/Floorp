@@ -26,7 +26,6 @@ var gUpdateHistory = {
 
       for (var i = 0; i < uc; ++i) {
         var update = um.getUpdateAt(i);
-
         if (!update || !update.name)
           continue;
 
@@ -35,8 +34,7 @@ var gUpdateHistory = {
         if (!update.statusText)
           continue;
 
-        var element = document.createElementNS(NS_XUL, "richlistitem");
-        element.className = "update";
+        var element = document.createElementNS(NS_XUL, "update");
         this._view.appendChild(element);
         element.name = bundle.getFormattedString("updateFullName",
           [update.name, update.buildID]);
