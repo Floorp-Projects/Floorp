@@ -120,7 +120,6 @@ XPTInterfaceInfoManager::RegisterXPTHeader(const XPTHeader* aHeader)
 {
     if (aHeader->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
         NS_ASSERTION(!aHeader->num_interfaces,"bad libxpt");
-        LOG_AUTOREG(("      file is version %d.%d  Type file of version %d.0 or higher can not be read.\n", (int)header->major_version, (int)header->minor_version, (int)XPT_MAJOR_INCOMPATIBLE_VERSION));
     }
 
     xptiTypelibGuts* typelib = xptiTypelibGuts::Create(aHeader);
@@ -152,7 +151,6 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry
     xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(iface->iid);
     if (entry) {
         // XXX validate this info to find possible inconsistencies
-        LOG_AUTOREG(("      ignoring repeated interface: %s\n", iface->name));
         return;
     }
 
@@ -175,8 +173,6 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry
     mWorkingSet.mNameTable.Put(entry->GetTheName(), entry);
 
     typelib->SetEntryAt(idx, entry);
-
-    LOG_AUTOREG(("      added interface: %s\n", iface->name));
 }
 
 // this is a private helper
