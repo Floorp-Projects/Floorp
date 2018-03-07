@@ -140,12 +140,23 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
-XPCOMUtils.defineLazyGetter(this, "gBrowser", function() {
-  // The TabBrowser class only exists in proper browser windows, whereas
-  // browser.js may be loaded in other windows where a non-tabbrowser
-  // browser might try to access the gBrowser property.
-  // eslint-disable-next-line no-undef
-  return (typeof TabBrowser == "function") ? new TabBrowser() : null;
+Object.defineProperty(this, "gBrowser", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    delete window.gBrowser;
+
+    // The tabbed browser only exists in proper browser windows, but on Mac we
+    // load browser.js in other windows and might try to access gBrowser.
+    if (!window._gBrowser) {
+      return window.gBrowser = null;
+    }
+
+    window.gBrowser = window._gBrowser;
+    delete window._gBrowser;
+    gBrowser.init();
+    return gBrowser;
+  },
 });
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
