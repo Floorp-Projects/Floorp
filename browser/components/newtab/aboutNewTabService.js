@@ -15,7 +15,6 @@ ChromeUtils.defineModuleGetter(this, "AboutNewTab",
 
 // Dummy references to the files that this service no longer allows loading.
 // Bug 1409054 to remove "chrome://browser/content/abouthome/aboutHome.xhtml"
-// Bug 1433133 to remove "chrome://browser/content/newtab/newTab.xhtml"
 
 const TOPIC_APP_QUIT = "quit-application-granted";
 const TOPIC_LOCALES_CHANGE = "intl:requested-locales-changed";
