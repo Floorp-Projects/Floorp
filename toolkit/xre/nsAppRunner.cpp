@@ -101,8 +101,10 @@
 #include <math.h>
 #include "cairo/cairo-features.h"
 #include "mozilla/WindowsDllBlocklist.h"
+#include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/MainThreadRuntime.h"
 #include "mozilla/widget/AudioSession.h"
+#include "mozilla/WindowsVersion.h"
 
 #ifndef PROCESS_DEP_ENABLE
 #define PROCESS_DEP_ENABLE 0x1
@@ -4320,6 +4322,16 @@ XREMain::XRE_mainRun()
   auto dllServicesDisable = MakeScopeExit([&dllServices]() {
     dllServices->Disable();
   });
+
+#if defined(NIGHTLY_BUILD)
+  if (!IsWin8OrLater()) {
+    // On Windows 7, ensure that the COM MTA remains alive for the life of the
+    // process. We have seen multiple crashes on that OS when the MTA is
+    // repeatedly set up and torn down, so maintaining at least one consistent
+    // reference should prevent those.
+    mscom::EnsureMTA();
+  }
+#endif // defined(NIGHTLY_BUILD)
 #endif // defined(XP_WIN)
 
 #ifdef NS_FUNCTION_TIMER
