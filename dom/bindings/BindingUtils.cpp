@@ -1216,13 +1216,14 @@ bool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JS::Rooted<JS::Value> thisv(cx, JS_THIS(cx, vp));
-  if (thisv.isNull())
+  if (!args.thisv().isObject()) {
+    JS_ReportErrorASCII(cx, "QueryInterface called on incompatible non-object");
     return false;
+  }
 
   // Get the object. It might be a security wrapper, in which case we do a checked
   // unwrap.
-  JS::Rooted<JSObject*> origObj(cx, &thisv.toObject());
+  JS::Rooted<JSObject*> origObj(cx, &args.thisv().toObject());
   JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(origObj,
                                                   /* stopAtWindowProxy = */ false));
   if (!obj) {
@@ -1269,7 +1270,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
     return Throw(cx, rv);
   }
 
-  *vp = thisv;
+  args.rval().set(args.thisv());
   return true;
 }
 
