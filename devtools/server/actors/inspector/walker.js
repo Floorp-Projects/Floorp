@@ -713,15 +713,33 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     if (isShadowHost) {
+      let {before, after} = this._getBeforeAfterElements(node.rawNode);
       nodes = [
         // #shadow-root
         this._ref(node.rawNode.shadowRoot),
+        // ::before
+        ...(before ? [before] : []),
         // shadow host direct children
         ...nodes,
+        // ::after
+        ...(after ? [after] : []),
       ];
     }
 
     return { hasFirst, hasLast, nodes };
+  },
+
+  _getBeforeAfterElements: function(node) {
+    let firstChildWalker = this.getDocumentWalker(node);
+    let before = this._ref(firstChildWalker.firstChild());
+
+    let lastChildWalker = this.getDocumentWalker(node);
+    let after = this._ref(lastChildWalker.lastChild());
+
+    return {
+      before: before.isBeforePseudoElement ? before : undefined,
+      after: after.isAfterPseudoElement ? after : undefined,
+    };
   },
 
   /**
