@@ -1341,37 +1341,42 @@ impl MarionetteConnection {
         MarionetteConnection {
             port: port,
             stream: None,
-            session: MarionetteSession::new(session_id)
+            session: MarionetteSession::new(session_id),
         }
     }
 
     pub fn connect(&mut self, browser: &mut Option<FirefoxProcess>) -> WebDriverResult<()> {
-        let timeout = 60 * 1000;  // ms
-        let poll_interval = 100;  // ms
+        let timeout = 60 * 1000; // ms
+        let poll_interval = 100; // ms
         let poll_attempts = timeout / poll_interval;
         let mut poll_attempt = 0;
 
         loop {
-            // If the process is gone, immediately abort the connection attempts
+            // immediately abort connection attempts if process disappears
             if let &mut Some(ref mut runner) = browser {
-                let status = runner.status();
-                if status.is_err() || status.as_ref().map(|x| *x).unwrap_or(None) != None {
+                let exit_status = match runner.try_wait() {
+                    Ok(Some(status)) => Some(
+                        status
+                            .code()
+                            .map(|c| c.to_string())
+                            .unwrap_or("signal".into()),
+                    ),
+                    Ok(None) => None,
+                    Err(_) => Some("{unknown}".into()),
+                };
+                if let Some(s) = exit_status {
                     return Err(WebDriverError::new(
                         ErrorStatus::UnknownError,
-                        format!("Process unexpectedly closed with status: {}", status
-                            .ok()
-                            .and_then(|x| x)
-                            .and_then(|x| x.code())
-                            .map(|x| x.to_string())
-                            .unwrap_or("{unknown}".into()))));
+                        format!("Process unexpectedly closed with status {}", s),
+                    ));
                 }
             }
 
             match TcpStream::connect(&(DEFAULT_HOST, self.port)) {
                 Ok(stream) => {
                     self.stream = Some(stream);
-                    break
-                },
+                    break;
+                }
                 Err(e) => {
                     trace!("  connection attempt {}/{}", poll_attempt, poll_attempts);
                     if poll_attempt <= poll_attempts {
@@ -1379,16 +1384,16 @@ impl MarionetteConnection {
                         sleep(Duration::from_millis(poll_interval));
                     } else {
                         return Err(WebDriverError::new(
-                            ErrorStatus::UnknownError, e.description().to_owned()));
+                            ErrorStatus::UnknownError,
+                            e.description().to_owned(),
+                        ));
                     }
                 }
             }
-        };
+        }
 
         debug!("Connected to Marionette on {}:{}", DEFAULT_HOST, self.port);
-
-        try!(self.handshake());
-        Ok(())
+        self.handshake()
     }
 
     fn handshake(&mut self) -> WebDriverResult<()> {
