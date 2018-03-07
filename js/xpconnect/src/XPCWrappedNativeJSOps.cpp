@@ -69,9 +69,13 @@ static bool
 XPC_WN_Shared_ToString(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!obj)
+
+    RootedValue thisv(cx, args.computeThis(cx));
+    if (!thisv.isObject()) {
+        JS_ReportErrorASCII(cx, "Called on incompatible |this|");
         return false;
+    }
+    RootedObject obj(cx, &thisv.toObject());
 
     XPCCallContext ccx(cx, obj);
     if (!ccx.IsValid())
@@ -176,9 +180,11 @@ XPC_WN_DoubleWrappedGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!obj)
+    if (!args.thisv().isObject()) {
+        JS_ReportErrorASCII(cx, "xpconnect double wrapped getter called on incompatible non-object");
         return false;
+    }
+    RootedObject obj(cx, &args.thisv().toObject());
 
     XPCCallContext ccx(cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
@@ -894,9 +900,12 @@ XPC_WN_CallMethod(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(JS_TypeOfValue(cx, args.calleev()) == JSTYPE_FUNCTION, "bad function");
     RootedObject funobj(cx, &args.callee());
 
-    RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!obj)
+    RootedValue thisv(cx, args.computeThis(cx));
+    if (!thisv.isObject()) {
+        JS_ReportErrorASCII(cx, "Called on incompatible |this|");
         return false;
+    }
+    RootedObject obj(cx, &thisv.toObject());
 
     obj = FixUpThisIfBroken(obj, funobj);
     XPCCallContext ccx(cx, obj, funobj, JSID_VOIDHANDLE, args.length(),
@@ -920,9 +929,11 @@ XPC_WN_GetterSetter(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(JS_TypeOfValue(cx, args.calleev()) == JSTYPE_FUNCTION, "bad function");
     RootedObject funobj(cx, &args.callee());
 
-    RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!obj)
+    if (!args.thisv().isObject()) {
+        JS_ReportErrorASCII(cx, "xpconnect getter/setter called on incompatible non-object");
         return false;
+    }
+    RootedObject obj(cx, &args.thisv().toObject());
 
     obj = FixUpThisIfBroken(obj, funobj);
     XPCCallContext ccx(cx, obj, funobj, JSID_VOIDHANDLE, args.length(),
