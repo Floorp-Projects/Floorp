@@ -745,7 +745,7 @@ TelemetryEvent::RecordChildEvents(ProcessID aProcessType,
   MOZ_ASSERT(XRE_IsParentProcess());
   StaticMutexAutoLock locker(gTelemetryEventsMutex);
   for (uint32_t i = 0; i < aEvents.Length(); ++i) {
-    const mozilla::Telemetry::ChildEventData e = aEvents[i];
+    const mozilla::Telemetry::ChildEventData& e = aEvents[i];
 
     // Timestamps from child processes are absolute. We fix them up here to be
     // relative to the main process start time.
