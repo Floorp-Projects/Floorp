@@ -313,7 +313,7 @@ MarkupView.prototype = {
 
   _onMouseClick: function(event) {
     // From the target passed here, let's find the parent MarkupContainer
-    // and ask it if the tooltip should be shown
+    // and forward the event if needed.
     let parentNode = event.target;
     let container;
     while (parentNode !== this.doc.body) {
@@ -324,11 +324,9 @@ MarkupView.prototype = {
       parentNode = parentNode.parentNode;
     }
 
-    if (container instanceof MarkupElementContainer) {
-      // With the newly found container, delegate the tooltip content creation
-      // and decision to show or not the tooltip
-      container._buildEventTooltipContent(event.target,
-        this.eventDetailsTooltip);
+    if (typeof container.onContainerClick === "function") {
+      // Forward the event to the container if it implements onContainerClick.
+      container.onContainerClick(event);
     }
   },
 
@@ -541,8 +539,6 @@ MarkupView.prototype = {
     }
 
     if (container instanceof MarkupElementContainer) {
-      // With the newly found container, delegate the tooltip content creation
-      // and decision to show or not the tooltip
       return container.isImagePreviewTarget(target, this.imagePreviewTooltip);
     }
 
