@@ -12,8 +12,6 @@
 %define glassShadowColor hsla(240,5%,5%,0.3)
 
 :root {
-  --titlebar-text-color: currentColor;
-
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
   --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
@@ -114,11 +112,6 @@
   color: var(--toolbar-color, inherit);
 }
 
-#toolbar-menubar,
-#TabsToolbar {
-  color: var(--titlebar-text-color);
-}
-
 /*
  * Windows 7 draws the chrome background color as the tab background
  * instead of in the tabs toolbar.
@@ -170,12 +163,12 @@
   /* Please keep the menu text colors in this media block in sync with
    * compacttheme.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
    */
-  :root[tabsintitlebar]:not([inFullscreen]):not(:-moz-lwtheme) {
-    --titlebar-text-color: CaptionText;
+  :root[tabsintitlebar]:not([inFullscreen]) .titlebar-color:not(:-moz-lwtheme) {
+    color: CaptionText;
   }
 
-  :root[tabsintitlebar]:not([inFullscreen]):not(:-moz-lwtheme):-moz-window-inactive {
-    --titlebar-text-color: InactiveCaptionText;
+  :root[tabsintitlebar]:not([inFullscreen]) .titlebar-color:not(:-moz-lwtheme):-moz-window-inactive {
+    color: InactiveCaptionText;
   }
 }
 
