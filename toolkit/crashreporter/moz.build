@@ -35,13 +35,6 @@ if CONFIG['MOZ_CRASHREPORTER']:
         if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
             DIRS += ['breakpad-windows-standalone']
 
-        UNIFIED_SOURCES += [
-            'CertAnnotator.cpp',
-        ]
-        EXPORTS.mozilla += [
-            'CertAnnotator.h',
-        ]
-
     elif CONFIG['OS_ARCH'] == 'Darwin':
         DIRS += [
             'breakpad-client',

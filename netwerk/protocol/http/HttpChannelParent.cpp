@@ -1424,6 +1424,8 @@ HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
 NS_IMETHODIMP
 HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
+  nsresult rv;
+
   LOG(("HttpChannelParent::OnStartRequest [this=%p, aRequest=%p]\n",
        this, aRequest));
   MOZ_ASSERT(NS_IsMainThread());
@@ -1534,6 +1536,12 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
   int64_t altDataLen = chan->GetAltDataLength();
 
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  Unused << chan->GetLoadInfo(getter_AddRefs(loadInfo));
+
+  ParentLoadInfoForwarderArgs loadInfoForwarderArg;
+  mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo, &loadInfoForwarderArg);
+
   // Maybe pass back the ServiceWorkerDescriptor controller for this channel.
   // For subresource loads the controller is already known when the channel
   // is first open and comes down to us via the LoadInfo.  For non-subresource
@@ -1542,25 +1550,22 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   // back to the child process so the resulting window/worker can set its
   // navigator.serviceWorker.controller correctly immediately.
   OptionalIPCServiceWorkerDescriptor ipcController = void_t();
-  if (ServiceWorkerParentInterceptEnabled()) {
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    Unused << chan->GetLoadInfo(getter_AddRefs(loadInfo));
-    if (loadInfo) {
-      const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
-      if (controller.isSome()) {
-        ipcController = controller.ref().ToIPC();
-      }
+  if (ServiceWorkerParentInterceptEnabled() && loadInfo) {
+    const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
+    if (controller.isSome()) {
+      ipcController = controller.ref().ToIPC();
     }
   }
 
   // !!! We need to lock headers and please don't forget to unlock them !!!
   requestHead->Enter();
-  nsresult rv = NS_OK;
+  rv = NS_OK;
   if (mIPCClosed ||
       !SendOnStartRequest(channelStatus,
                           responseHead ? *responseHead : nsHttpResponseHead(),
                           !!responseHead,
                           requestHead->Headers(),
+                          loadInfoForwarderArg,
                           isFromCache,
                           mCacheEntry ? true : false,
                           cacheEntryId,
@@ -1907,13 +1912,18 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
     rv = httpChannel->GetChannelId(&channelId);
     NS_ENSURE_SUCCESS(rv, NS_BINDING_ABORTED);
   }
+
   nsCOMPtr<nsILoadInfo> loadInfo;
-  mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  Unused << mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+
+  ParentLoadInfoForwarderArgs loadInfoForwarderArg;
+  mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo, &loadInfoForwarderArg);
+
   nsHttpResponseHead *responseHead = mChannel->GetResponseHead();
   bool result = false;
   if (!mIPCClosed) {
     result = SendRedirect1Begin(registrarId, uriParams, redirectFlags,
-                                loadInfo->GetAllowInsecureRedirectToDataURI(),
+                                loadInfoForwarderArg,
                                 responseHead ? *responseHead
                                              : nsHttpResponseHead(),
                                 secInfoSerialization,

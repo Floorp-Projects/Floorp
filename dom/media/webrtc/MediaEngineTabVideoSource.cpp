@@ -402,6 +402,11 @@ nsresult
 MediaEngineTabVideoSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
 {
   AssertIsOnOwningThread();
+
+  if (mState == kStopped || mState == kAllocated) {
+    return NS_OK;
+  }
+
   MOZ_ASSERT(mState == kStarted);
 
   // If mBlackedoutWindow is true, we may be running

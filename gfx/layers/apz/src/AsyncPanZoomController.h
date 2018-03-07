@@ -9,8 +9,6 @@
 
 #include "CrossProcessMutex.h"
 #include "mozilla/layers/GeckoContentController.h"
-#include "mozilla/layers/APZCTreeManager.h"
-#include "mozilla/layers/AsyncPanZoomAnimation.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Monitor.h"
@@ -43,6 +41,7 @@ class SharedMemoryBasic;
 namespace layers {
 
 class AsyncDragMetrics;
+class APZCTreeManager;
 struct ScrollableLayerGuid;
 class CompositorController;
 class MetricsSharingController;
@@ -52,9 +51,11 @@ class AsyncPanZoomAnimation;
 class AndroidFlingAnimation;
 class GenericFlingAnimation;
 class InputBlockState;
+struct FlingHandoffState;
 class TouchBlockState;
 class PanGestureBlockState;
 class OverscrollHandoffChain;
+struct OverscrollHandoffState;
 class StateChangeNotificationBlocker;
 class CheckerboardEvent;
 class OverscrollEffectBase;

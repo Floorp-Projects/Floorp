@@ -171,6 +171,9 @@ public:
    *
    * If this was the last AllocationHandle that had been started,
    * the underlying device will be stopped.
+   *
+   * Double-stopping a given allocation handle is allowed and will return NS_OK.
+   * This is necessary sometimes during shutdown.
    */
   virtual nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) = 0;
 

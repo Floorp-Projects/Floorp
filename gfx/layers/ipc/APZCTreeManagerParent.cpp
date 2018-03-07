@@ -6,7 +6,7 @@
 
 #include "mozilla/layers/APZCTreeManagerParent.h"
 
-#include "mozilla/layers/APZCTreeManager.h"
+#include "apz/src/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
 
 namespace mozilla {

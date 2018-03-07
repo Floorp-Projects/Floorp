@@ -6,6 +6,6 @@ module.exports = {
     "new-parens": "error",
     "no-inner-declarations": "error",
     "no-shadow": "error",
-    "no-unused-vars": ["error", {"vars": "all", "varsIgnorePattern": "^EXPORTED_SYMBOLS$", "args": "none"}],
+    "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
   },
 }

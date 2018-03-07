@@ -7,13 +7,14 @@
 #include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
 
 #include <cmath>
+
+#include "APZCTreeManager.h"
 #include "FrameMetrics.h"
 #include "gfxPrefs.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
-#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"

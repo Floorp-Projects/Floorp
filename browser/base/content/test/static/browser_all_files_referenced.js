@@ -73,9 +73,6 @@ var whitelist = [
   {file: "chrome://devtools/content/inspector/markup/markup.xhtml",
    isFromDevTools: true},
 
-  // Kept for add-on compatibility, should be removed in bug 851471.
-  {file: "chrome://mozapps/skin/downloads/downloadIcon.png"},
-
   // SpiderMonkey parser API, currently unused in browser/ and toolkit/
   {file: "resource://gre/modules/reflect.jsm"},
 

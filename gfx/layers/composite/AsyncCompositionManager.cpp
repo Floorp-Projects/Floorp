@@ -39,6 +39,7 @@
 #include "gfxPrefs.h"
 #if defined(MOZ_WIDGET_ANDROID)
 # include <android/log.h>
+# include "apz/src/APZCTreeManager.h"
 # include "mozilla/layers/UiCompositorControllerParent.h"
 # include "mozilla/widget/AndroidCompositorWidget.h"
 #endif

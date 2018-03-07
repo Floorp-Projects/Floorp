@@ -94,6 +94,7 @@
 #elif defined(XP_LINUX)
 #include "mozilla/Sandbox.h"
 #include "mozilla/SandboxInfo.h"
+#include "CubebUtils.h"
 #elif defined(XP_MACOSX)
 #include "mozilla/Sandbox.h"
 #endif
@@ -1671,6 +1672,11 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
   // On Linux, we have to support systems that can't use any sandboxing.
   if (!SandboxInfo::Get().CanSandboxContent()) {
     sandboxEnabled = false;
+  } else {
+    // Pre-start audio before sandboxing; see bug 1443612.
+    if (!Preferences::GetBool("media.cubeb.sandbox")) {
+      Unused << CubebUtils::GetCubebContext();
+    }
   }
 
   if (sandboxEnabled) {

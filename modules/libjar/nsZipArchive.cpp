@@ -18,6 +18,7 @@
 #include "nsISupportsUtils.h"
 #include "prio.h"
 #include "plstr.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "stdlib.h"
@@ -964,6 +965,7 @@ nsZipFind::~nsZipFind()
  *
  * returns a hash key for the entry name
  */
+MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
 static uint32_t HashName(const char* aName, uint16_t len)
 {
   MOZ_ASSERT(aName != 0);

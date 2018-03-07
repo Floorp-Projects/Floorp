@@ -18,18 +18,18 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "MasterPassword",
                                "resource://formautofill/MasterPassword.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
-  let profileStorage;
+XPCOMUtils.defineLazyGetter(this, "formAutofillStorage", () => {
+  let formAutofillStorage;
   try {
-    profileStorage = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {})
-                                .profileStorage;
-    profileStorage.initialize();
+    formAutofillStorage = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {})
+                                .formAutofillStorage;
+    formAutofillStorage.initialize();
   } catch (ex) {
-    profileStorage = null;
+    formAutofillStorage = null;
     Cu.reportError(ex);
   }
 
-  return profileStorage;
+  return formAutofillStorage;
 });
 
 var paymentDialogWrapper = {
@@ -44,13 +44,13 @@ var paymentDialogWrapper = {
   ]),
 
   /**
-   * Note: This method is async because profileStorage plans to become async.
+   * Note: This method is async because formAutofillStorage plans to become async.
    *
    * @param {string} guid
    * @returns {nsIPaymentAddress}
    */
   async _convertProfileAddressToPaymentAddress(guid) {
-    let addressData = profileStorage.addresses.get(guid);
+    let addressData = formAutofillStorage.addresses.get(guid);
     if (!addressData) {
       throw new Error(`Shipping address not found: ${guid}`);
     }
@@ -77,7 +77,7 @@ var paymentDialogWrapper = {
    *                                      master password dialog was cancelled);
    */
   async _convertProfileBasicCardToPaymentMethodData(guid, cardSecurityCode) {
-    let cardData = profileStorage.creditCards.get(guid);
+    let cardData = formAutofillStorage.creditCards.get(guid);
     if (!cardData) {
       throw new Error(`Basic card not found in storage: ${guid}`);
     }
@@ -222,7 +222,7 @@ var paymentDialogWrapper = {
 
   fetchSavedAddresses() {
     let savedAddresses = {};
-    for (let address of profileStorage.addresses.getAll()) {
+    for (let address of formAutofillStorage.addresses.getAll()) {
       savedAddresses[address.guid] = address;
     }
     return savedAddresses;
@@ -230,7 +230,7 @@ var paymentDialogWrapper = {
 
   fetchSavedPaymentCards() {
     let savedBasicCards = {};
-    for (let card of profileStorage.creditCards.getAll()) {
+    for (let card of formAutofillStorage.creditCards.getAll()) {
       savedBasicCards[card.guid] = card;
       // Filter out the encrypted card number since the dialog content is
       // considered untrusted and runs in a content process.

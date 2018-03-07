@@ -12,6 +12,7 @@
 #include "nsCSSProps.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 
 #include "nsCSSKeywords.h"
 #include "nsLayoutUtils.h"
@@ -140,9 +141,13 @@ SortPropertyAndCount(const void* s1, const void* s2, void *closure)
 {
   const PropertyAndCount *pc1 = static_cast<const PropertyAndCount*>(s1);
   const PropertyAndCount *pc2 = static_cast<const PropertyAndCount*>(s2);
+
   // Primary sort by count (lowest to highest)
-  if (pc1->count != pc2->count)
-    return pc1->count - pc2->count;
+  if (pc1->count != pc2->count) {
+    return AssertedCast<int32_t>(pc1->count) -
+           AssertedCast<int32_t>(pc2->count);
+  }
+
   // Secondary sort by property index (highest to lowest)
   return pc2->property - pc1->property;
 }
@@ -161,7 +166,7 @@ static nsCSSPropertyID gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 #undef CSS_PROP_ALIAS
 };
 
-nsStaticCaseInsensitiveNameTable*
+static nsStaticCaseInsensitiveNameTable*
 CreateStaticTable(const char* const aRawTable[], int32_t aLength)
 {
   auto table = new nsStaticCaseInsensitiveNameTable(aRawTable, aLength);

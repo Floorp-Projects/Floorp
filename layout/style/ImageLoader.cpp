@@ -317,7 +317,8 @@ IsRenderNoImages(uint32_t aDisplayItemKey)
   return flags & TYPE_RENDERS_NO_IMAGES;
 }
 
-void InvalidateImages(nsIFrame* aFrame)
+static void
+InvalidateImages(nsIFrame* aFrame)
 {
   bool invalidateFrame = false;
   const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();

@@ -85,7 +85,7 @@ CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData)
 bool
 CopyableCanvasRenderer::IsDataValid(const CanvasInitializeData& aData)
 {
-  return mGLContext == aData.mGLContext;
+  return mGLContext == aData.mGLContext && mBufferProvider == aData.mBufferProvider;
 }
 
 void

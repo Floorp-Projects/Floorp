@@ -1072,7 +1072,7 @@ BuildStrutInfoFromCollapsedItems(const FlexLine* aFirstLine,
   }
 }
 
-uint8_t
+static uint8_t
 SimplifyAlignOrJustifyContentForOneItem(uint16_t aAlignmentVal,
                                         bool aIsAlign)
 {
@@ -2320,7 +2320,7 @@ nsFlexContainerFrame::GetLogicalBaseline(mozilla::WritingMode aWM) const
 //    normal flow, except that 'z-index' values other than 'auto' create
 //    a stacking context even if 'position' is 'static'.
 // http://www.w3.org/TR/2012/CR-css3-flexbox-20120918/#painting
-uint32_t
+static uint32_t
 GetDisplayFlagsForFlexItem(nsIFrame* aFrame)
 {
   MOZ_ASSERT(aFrame->IsFlexItem(), "Should only be called on flex items");

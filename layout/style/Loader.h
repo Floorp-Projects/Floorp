@@ -614,8 +614,12 @@ private:
   // The guts of SheetComplete.  This may be called recursively on parent datas
   // or datas that had glommed on to a single load.  The array is there so load
   // datas whose observers need to be notified can be added to it.
-  void DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
-                       LoadDataArray& aDatasToNotify);
+  void DoSheetComplete(SheetLoadData* aLoadData, LoadDataArray& aDatasToNotify);
+
+  // Mark the given SheetLoadData, as well as any of its siblings, parents, etc
+  // transitively, as failed.  The idea is to mark as failed any load that was
+  // directly or indirectly @importing the sheet this SheetLoadData represents.
+  void MarkLoadTreeFailed(SheetLoadData* aLoadData);
 
   StyleBackendType GetStyleBackendType() const;
 

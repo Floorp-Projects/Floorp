@@ -29,7 +29,6 @@ def make_task_worker(config, jobs):
             job, 'scopes', item_name=job['name'], project=config.params['project']
         )
 
-        job['scopes'].append('project:releng:bouncer:action:aliases')
         job['worker']['entries'] = craft_bouncer_entries(config, job)
 
         del job['bouncer-products']

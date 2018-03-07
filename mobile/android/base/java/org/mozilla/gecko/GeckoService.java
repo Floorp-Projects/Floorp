@@ -10,6 +10,7 @@ import android.app.Service;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Handler;
 import android.os.Looper;
@@ -115,6 +116,11 @@ public class GeckoService extends Service {
 
     private static Intent getIntentForAction(final Context context, final String action) {
         final Intent intent = new Intent(action, /* uri */ null, context, GeckoService.class);
+        final Bundle extras = GeckoThread.getActiveExtras();
+        if (extras != null && extras.size() > 0) {
+            intent.replaceExtras(extras);
+        }
+
         final GeckoProfile profile = GeckoThread.getActiveProfile();
         if (profile != null) {
             setIntentProfile(intent, profile.getName(), profile.getDir().getAbsolutePath());
@@ -162,7 +168,7 @@ public class GeckoService extends Service {
 
         if (!GeckoThread.initMainProcessWithProfile(
                 profileName, profileDir != null ? new File(profileDir) : null,
-                GeckoApplication.addDefaultGeckoArgs(null))) {
+                GeckoApplication.getDefaultGeckoArgs(), intent.getExtras())) {
             Log.w(LOGTAG, "Ignoring due to profile mismatch: " +
                           profileName + " [" + profileDir + ']');
 

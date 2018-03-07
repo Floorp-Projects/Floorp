@@ -241,7 +241,7 @@ StyleEditorUI.prototype = {
         yield this._addStyleSheet(sheet);
       } catch (e) {
         console.error(e);
-        this.emit("error", { key: LOAD_ERROR });
+        this.emit("error", { key: LOAD_ERROR, level: "warning" });
       }
     }
 
@@ -407,7 +407,7 @@ StyleEditorUI.prototype = {
         contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
       }, (stream, status) => {
         if (!Components.isSuccessCode(status)) {
-          this.emit("error", { key: LOAD_ERROR });
+          this.emit("error", { key: LOAD_ERROR, level: "warning" });
           return;
         }
         let source =

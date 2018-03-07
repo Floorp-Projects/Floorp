@@ -369,12 +369,18 @@ class JSONPoliciesProvider {
   }
 
   _getConfigurationFile() {
-    let configFile = Services.dirsvc.get("XREAppDist", Ci.nsIFile);
-    configFile.append(POLICIES_FILENAME);
+    let configFile = null;
+    try {
+      configFile = Services.dirsvc.get("XREAppDist", Ci.nsIFile);
+      configFile.append(POLICIES_FILENAME);
+    } catch (ex) {
+      // Getting the correct directory will fail in xpcshell tests. This should
+      // be handled the same way as if the configFile simply does not exist.
+    }
 
     let alternatePath = Services.prefs.getStringPref(PREF_ALTERNATE_PATH, "");
 
-    if (alternatePath && !configFile.exists()) {
+    if (alternatePath && (!configFile || !configFile.exists())) {
       // We only want to use the alternate file path if the file on the install
       // folder doesn't exist. Otherwise it'd be possible for a user to override
       // the admin-provided policies by changing the user-controlled prefs.

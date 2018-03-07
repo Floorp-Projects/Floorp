@@ -939,19 +939,7 @@ impl RenderBackend {
             &mut profile_counters.resources,
         );
 
-        // If we get a generate_frame message after getting a root pipeline set,
-        // but that pipeline id hasn't been propagated to the current scene, then
-        // we should force that to happen. Otherwise we will skip a render that
-        // the caller is expecting to happen, and in Gecko's case, that will
-        // leave it wedged permanently.
-        let force_build = if transaction_msg.generate_frame {
-            let doc = self.documents.get_mut(&document_id).unwrap();
-            doc.pending.scene.root_pipeline_id.is_some() && !doc.current.scene.root_pipeline_id.is_some()
-        } else {
-            false
-        };
-
-        if op.build || force_build {
+        if op.build {
             let doc = self.documents.get_mut(&document_id).unwrap();
             let _timer = profile_counters.total_time.timer();
             profile_scope!("build scene");

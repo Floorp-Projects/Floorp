@@ -237,6 +237,10 @@ MediaEngineDefaultVideoSource::Stop(const RefPtr<const AllocationHandle>& aHandl
 {
   AssertIsOnOwningThread();
 
+  if (mState == kStopped || mState == kAllocated) {
+    return NS_OK;
+  }
+
   MOZ_ASSERT(mState == kStarted);
   MOZ_ASSERT(mTimer);
   MOZ_ASSERT(mStream);
@@ -350,7 +354,7 @@ MediaEngineDefaultVideoSource::Pull(const RefPtr<const AllocationHandle>& aHandl
   StreamTime delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
   if (delta > 0) {
     // nullptr images are allowed
-    IntSize size(image ? mOpts.mWidth : 0, image ? mOpts.mHeight : 0);
+    IntSize size(mOpts.mWidth, mOpts.mHeight);
     segment.AppendFrame(image.forget(), delta, size, aPrincipalHandle);
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
@@ -495,8 +499,11 @@ MediaEngineDefaultAudioSource::Stop(const RefPtr<const AllocationHandle>& aHandl
 {
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(mState == kStarted);
+  if (mState == kStopped || mState == kAllocated) {
+    return NS_OK;
+  }
 
+  MOZ_ASSERT(mState == kStarted);
 
   MutexAutoLock lock(mMutex);
   mState = kStopped;

@@ -108,3 +108,15 @@ and it is structured like this:
 All the fields of the error object are required, so the stacktrace and
 message fields may be empty strings.  The error field is guaranteed
 to be one of the JSON error codes as laid out by the [WebDriver standard].
+
+
+Clients
+-------
+
+Clients may be implemented in any language that is capable of writing
+and receiving data over TCP socket.  A [reference client] is provided.
+Clients may be implemented both synchronously and asynchronously,
+although the latter is impossible in protocol levels 2 and earlier
+due to the lack of message sequencing.
+
+[reference client]: https://searchfox.org/mozilla-central/source/testing/marionette/client/

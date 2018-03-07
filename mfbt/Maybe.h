@@ -12,8 +12,10 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryChecking.h"
 #include "mozilla/Move.h"
 #include "mozilla/OperatorNewExtensions.h"
+#include "mozilla/Poison.h"
 #include "mozilla/TypeTraits.h"
 
 #include <new>  // for placement new
@@ -23,6 +25,27 @@
 namespace mozilla {
 
 struct Nothing { };
+
+namespace detail {
+
+template<typename T>
+struct MaybePoisoner
+{
+  static const size_t N = sizeof(T);
+
+  static void poison(void* aPtr)
+  {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    // Avoid MOZ_ASSERT in mozWritePoison.
+    if (N >= sizeof(uintptr_t)) {
+      mozWritePoison(aPtr, N);
+    }
+#endif
+    MOZ_MAKE_MEM_UNDEFINED(aPtr, N);
+  }
+};
+
+} // namespace detail
 
 /*
  * Maybe is a container class which contains either zero or one elements. It
@@ -93,19 +116,32 @@ class MOZ_NON_PARAM MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
   void* data() { return mStorage; }
   const void* data() const { return mStorage; }
 
+  void poisonData()
+  {
+    detail::MaybePoisoner<T>::poison(data());
+  }
+
 public:
   using ValueType = T;
 
-  Maybe() : mIsSome(false) { }
+  Maybe() : mIsSome(false)
+  {
+    poisonData();
+  }
   ~Maybe() { reset(); }
 
-  MOZ_IMPLICIT Maybe(Nothing) : mIsSome(false) { }
+  MOZ_IMPLICIT Maybe(Nothing) : mIsSome(false)
+  {
+    poisonData();
+  }
 
   Maybe(const Maybe& aOther)
     : mIsSome(false)
   {
     if (aOther.mIsSome) {
       emplace(*aOther);
+    } else {
+      poisonData();
     }
   }
 
@@ -121,6 +157,8 @@ public:
   {
     if (aOther.isSome()) {
       emplace(*aOther);
+    } else {
+      poisonData();
     }
   }
 
@@ -130,6 +168,8 @@ public:
     if (aOther.mIsSome) {
       emplace(Move(*aOther));
       aOther.reset();
+    } else {
+      poisonData();
     }
   }
 
@@ -146,6 +186,8 @@ public:
     if (aOther.isSome()) {
       emplace(Move(*aOther));
       aOther.reset();
+    } else {
+      poisonData();
     }
   }
 
@@ -445,6 +487,7 @@ public:
     if (isSome()) {
       ref().T::~T();
       mIsSome = false;
+      poisonData();
     }
   }
 

@@ -3747,7 +3747,7 @@ PresShell::ScheduleViewManagerFlush(PaintType aType)
   SetNeedLayoutFlush();
 }
 
-bool
+static bool
 FlushLayoutRecursive(nsIDocument* aDocument,
                      void* aData = nullptr)
 {
@@ -6740,7 +6740,8 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
   }
 }
 
-nsIFrame* GetNearestFrameContainingPresShell(nsIPresShell* aPresShell)
+static nsIFrame*
+GetNearestFrameContainingPresShell(nsIPresShell* aPresShell)
 {
   nsView* view = aPresShell->GetViewManager()->GetRootView();
   while (view && !view->GetFrame()) {

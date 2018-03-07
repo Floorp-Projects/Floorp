@@ -506,7 +506,9 @@ ReadString(JSStructuredCloneReader* aReader, nsString& aString)
     return false;
   }
   MOZ_ASSERT(zero == 0);
-  aString.SetLength(nameLength);
+  if (NS_WARN_IF(!aString.SetLength(nameLength, fallible))) {
+    return false;
+  }
   size_t charSize = sizeof(nsString::char_type);
   read = JS_ReadBytes(aReader, (void*) aString.BeginWriting(),
                       nameLength * charSize);

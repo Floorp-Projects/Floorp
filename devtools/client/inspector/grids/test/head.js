@@ -21,6 +21,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.toolbox.footer.height");
 });
 
+const asyncStorage = require("devtools/shared/async-storage");
 const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
 /**
@@ -39,4 +40,8 @@ var simulateColorPickerChange = Task.async(function* (colorPicker, newRgba) {
   info("Applying the change");
   spectrum.updateUI();
   spectrum.onChange();
+});
+
+registerCleanupFunction(async function () {
+  await asyncStorage.removeItem("gridInspectorHostColors");
 });

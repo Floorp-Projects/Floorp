@@ -655,7 +655,7 @@ struct EffectOffsets {
   gfxPoint offsetToUserSpaceInDevPx;
 };
 
-EffectOffsets
+static EffectOffsets
 ComputeEffectOffset(nsIFrame* aFrame, const PaintFramesParams& aParams)
 {
   EffectOffsets result;

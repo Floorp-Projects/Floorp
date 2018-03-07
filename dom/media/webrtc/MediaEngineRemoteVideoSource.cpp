@@ -324,6 +324,10 @@ MediaEngineRemoteVideoSource::Stop(const RefPtr<const AllocationHandle>& aHandle
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
 
+  if (mState == kStopped || mState == kAllocated) {
+    return NS_OK;
+  }
+
   MOZ_ASSERT(mState == kStarted);
 
   if (camera::GetChildAndCall(&camera::CamerasChild::StopCapture,

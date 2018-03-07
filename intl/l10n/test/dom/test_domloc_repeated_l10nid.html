@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's matching l10nIds functionality</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { DOMLocalization } =
+    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
+  const { MessageContext } =
+    ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+
+  async function* mockGenerateMessages(locales, resourceIds) {
+    const mc = new MessageContext(locales);
+    mc.addMessages(`
+key1 = Translation For Key 1
+
+key2 = Visit <a>this link<a/>.
+    `);
+    yield mc;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(async () => {
+    const domLoc = new DOMLocalization(
+      window,
+      [],
+      mockGenerateMessages
+    );
+
+    await domLoc.translateFragment(document.body);
+
+    ok(document.querySelector("#elem1").textContent.includes("Key 1"));
+    ok(document.querySelector("#elem2").textContent.includes("Key 1"));
+
+    const elem3 = document.querySelector("#elem3");
+    const elem4 = document.querySelector("#elem4");
+
+    ok(elem3.textContent.includes("Visit"));
+    is(elem3.querySelector("a").getAttribute("href"), "http://www.mozilla.org");
+
+    ok(elem4.textContent.includes("Visit"));
+    is(elem4.querySelector("a").getAttribute("href"), "http://www.firefox.com");
+
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+  <h1 id="elem1" data-l10n-id="key1"></h1>
+  <h2 id="elem2" data-l10n-id="key1"></h2>
+
+  <p id="elem3" data-l10n-id="key2">
+    <a href="http://www.mozilla.org"></a>
+  </p>
+
+  <p id="elem4" data-l10n-id="key2">
+    <a href="http://www.firefox.com"></a>
+  </p>
+</body>
+</html>

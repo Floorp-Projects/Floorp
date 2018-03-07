@@ -45,7 +45,7 @@ module.exports = {
 
     // No declaring variables that are never used
     "no-unused-vars": ["error", {
-      "args": "none", "vars": "all", "varsIgnorePattern": "^EXPORTED_SYMBOLS$"
+      "args": "none", "vars": "all"
     }],
 
     // No using variables before defined

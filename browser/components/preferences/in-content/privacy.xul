@@ -186,6 +186,7 @@
           <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
           <hbox>
             <menulist id="keepCookiesUntil"
+                      onsyncfrompreference="return gPrivacyPane.readKeepCookiesUntil();"
                       preference="network.cookie.lifetimePolicy">
               <menupopup>
                 <menuitem label="&expire.label;" value="0"/>

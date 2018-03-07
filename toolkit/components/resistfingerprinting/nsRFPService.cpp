@@ -411,8 +411,12 @@ nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
   }
 
   // Offset the appropriate index into the hash output, and then turn it into a random midpoint
-  // between 0 and aResolutionUSec
-  int byteOffset = ((aClampedTimeUSec - extraClampedTime) / aResolutionUSec) * 4;
+  // between 0 and aResolutionUSec. Sometimes out input time is negative, we ride the negative
+  // out to the end until we start doing pointer math. (We also triple check we're in bounds.)
+  int byteOffset = abs(((aClampedTimeUSec - extraClampedTime) / aResolutionUSec) * 4);
+  if (MOZ_UNLIKELY(byteOffset > (HASH_DIGEST_SIZE_BYTES - 4))) {
+    byteOffset = 0;
+  }
   uint32_t deterministiclyRandomValue = *BitwiseCast<uint32_t*>(PromiseFlatCString(hashResult).get() + byteOffset);
   deterministiclyRandomValue %= aResolutionUSec;
   *aMidpointOut = deterministiclyRandomValue;
@@ -954,8 +958,10 @@ nsRFPService::GetSpoofedModifierStates(const nsIDocument* aDoc,
     return false;
   }
 
-  // We will spoof the modifer state for Alt, Shift, AltGraph and Control.
-  if (aModifier & (MODIFIER_ALT | MODIFIER_SHIFT | MODIFIER_ALTGRAPH | MODIFIER_CONTROL)) {
+  // We will spoof the modifer state for Alt, Shift, and AltGraph.
+  // We don't spoof the Control key, because it is often used
+  // for command key combinations in web apps.
+  if (aModifier & (MODIFIER_ALT | MODIFIER_SHIFT | MODIFIER_ALTGRAPH)) {
     SpoofingKeyboardCode keyCodeInfo;
 
     if (GetSpoofedKeyCodeInfo(aDoc, aKeyboardEvent, keyCodeInfo)) {
