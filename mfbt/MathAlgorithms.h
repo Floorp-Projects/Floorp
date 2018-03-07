@@ -480,16 +480,19 @@ RoundUpPow2(size_t aValue)
  * Rotates the bits of the given value left by the amount of the shift width.
  */
 template<typename T>
+MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
 inline T
 RotateLeft(const T aValue, uint_fast8_t aShift)
 {
+  static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
+
   MOZ_ASSERT(aShift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
   MOZ_ASSERT(aShift > 0,
              "Rotation by value length is undefined behavior, but compilers "
              "do not currently fold a test into the rotate instruction. "
              "Please remove this restriction when compilers optimize the "
              "zero case (http://blog.regehr.org/archives/1063).");
-  static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
+
   return (aValue << aShift) | (aValue >> (sizeof(T) * CHAR_BIT - aShift));
 }
 
@@ -497,16 +500,19 @@ RotateLeft(const T aValue, uint_fast8_t aShift)
  * Rotates the bits of the given value right by the amount of the shift width.
  */
 template<typename T>
+MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
 inline T
 RotateRight(const T aValue, uint_fast8_t aShift)
 {
+  static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
+
   MOZ_ASSERT(aShift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
   MOZ_ASSERT(aShift > 0,
              "Rotation by value length is undefined behavior, but compilers "
              "do not currently fold a test into the rotate instruction. "
              "Please remove this restriction when compilers optimize the "
              "zero case (http://blog.regehr.org/archives/1063).");
-  static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
+
   return (aValue >> aShift) | (aValue << (sizeof(T) * CHAR_BIT - aShift));
 }
 
