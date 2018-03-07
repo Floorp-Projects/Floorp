@@ -100,24 +100,6 @@ class MachCommands(MachCommandBase):
                          **kwargs):
         self._activate_virtualenv()
 
-        def find_tests_by_path():
-            import glob
-            files = []
-            for t in tests:
-                if t.endswith('.py') and os.path.isfile(t):
-                    files.append(t)
-                elif os.path.isdir(t):
-                    for root, _, _ in os.walk(t):
-                        files += glob.glob(mozpath.join(root, 'test*.py'))
-                        files += glob.glob(mozpath.join(root, 'unit*.py'))
-                else:
-                    self.log(logging.WARN, 'python-test',
-                             {'test': t},
-                             'TEST-UNEXPECTED-FAIL | Invalid test: {test}')
-                    if stop:
-                        break
-            return files
-
         # Python's unittest, and in particular discover, has problems with
         # clashing namespaces when importing multiple test modules. What follows
         # is a simple way to keep environments separate, at the price of
