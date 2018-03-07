@@ -257,8 +257,8 @@ struct XPTConstDescriptor {
  * single argument to a method or a method's result.
  */
 struct XPTParamDescriptor {
-  uint8_t flags;
-  XPTTypeDescriptor type;
+  uint8_t mFlags;
+  XPTTypeDescriptor mType;
 };
 
 /*
