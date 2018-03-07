@@ -1193,6 +1193,12 @@ CompositorBridgeParent::GetAPZCTreeManager()
 {
   return mApzcTreeManager;
 }
+
+AndroidDynamicToolbarAnimator*
+CompositorBridgeParent::GetAndroidDynamicToolbarAnimator()
+{
+  return mApzcTreeManager ? mApzcTreeManager->GetAndroidDynamicToolbarAnimator() : nullptr;
+}
 #endif
 
 RefPtr<APZSampler>
