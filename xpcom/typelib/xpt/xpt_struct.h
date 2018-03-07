@@ -91,41 +91,41 @@ struct XPTInterfaceDescriptor {
   static const uint8_t kBuiltinClassMask =              0x20;
   static const uint8_t kMainProcessScriptableOnlyMask = 0x10;
 
-  bool IsScriptable() const { return !!(flags & kScriptableMask); }
-  bool IsFunction() const { return !!(flags & kFunctionMask); }
-  bool IsBuiltinClass() const { return !!(flags & kBuiltinClassMask); }
-  bool IsMainProcessScriptableOnly() const { return !!(flags & kMainProcessScriptableOnlyMask); }
+  bool IsScriptable() const { return !!(mFlags & kScriptableMask); }
+  bool IsFunction() const { return !!(mFlags & kFunctionMask); }
+  bool IsBuiltinClass() const { return !!(mFlags & kBuiltinClassMask); }
+  bool IsMainProcessScriptableOnly() const { return !!(mFlags & kMainProcessScriptableOnlyMask); }
 
   /*
    * This field ordering minimizes the size of this struct.
    * The fields are serialized on disk in a different order.
    * See DoInterfaceDescriptor().
    */
-  const XPTMethodDescriptor* method_descriptors;
-  const XPTConstDescriptor* const_descriptors;
-  const XPTTypeDescriptor* additional_types;
-  uint16_t parent_interface;
-  uint16_t num_methods;
-  uint16_t num_constants;
-  uint8_t flags;
+  const XPTMethodDescriptor* mMethodDescriptors;
+  const XPTConstDescriptor* mConstDescriptors;
+  const XPTTypeDescriptor* mAdditionalTypes;
+  uint16_t mParentInterface;
+  uint16_t mNumMethods;
+  uint16_t mNumConstants;
+  uint8_t mFlags;
 
   /*
-   * additional_types are used for arrays where we may need multiple
+   * mAdditionalTypes are used for arrays where we may need multiple
    * XPTTypeDescriptors for a single XPTMethodDescriptor. Since we still
    * want to have a simple array of XPTMethodDescriptor (each with a single
    * embedded XPTTypeDescriptor), a XPTTypeDescriptor can have a reference
    * to an 'additional_type'. That reference is an index in this
-   * "additional_types" array. So a given XPTMethodDescriptor might have
+   * "mAdditionalTypes" array. So a given XPTMethodDescriptor might have
    * a whole chain of these XPTTypeDescriptors to represent, say, a multi
    * dimensional array.
    *
    * Note that in the typelib file these additional types are stored 'inline'
    * in the MethodDescriptor. But, in the typelib MethodDescriptors can be
    * of varying sizes, where in XPT's in memory mapping of the data we want
-   * them to be of fixed size. This additional_types scheme is here to allow
+   * them to be of fixed size. This mAdditionalTypes scheme is here to allow
    * for that.
    */
-  uint8_t num_additional_types;
+  uint8_t mNumAdditionalTypes;
 };
 
 /*
