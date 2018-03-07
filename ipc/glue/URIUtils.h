@@ -8,6 +8,7 @@
 #define mozilla_ipc_URIUtils_h
 
 #include "mozilla/ipc/URIParams.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 
@@ -27,6 +28,28 @@ DeserializeURI(const URIParams& aParams);
 
 already_AddRefed<nsIURI>
 DeserializeURI(const OptionalURIParams& aParams);
+
+template<>
+struct IPDLParamTraits<nsIURI>
+{
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, nsIURI* aParam)
+  {
+    OptionalURIParams params;
+    SerializeURI(aParam, params);
+    WriteIPDLParam(aMsg, aActor, params);
+  }
+
+  static bool Read(IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, RefPtr<nsIURI>* aResult)
+  {
+    OptionalURIParams params;
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &params)) {
+      return false;
+    }
+    *aResult = DeserializeURI(params);
+    return true;
+  }
+};
 
 } // namespace ipc
 } // namespace mozilla
