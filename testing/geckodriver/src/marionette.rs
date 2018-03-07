@@ -17,8 +17,8 @@ use std::path::PathBuf;
 use std::io::Result as IoResult;
 use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
-use std::thread::sleep;
-use std::time::Duration;
+use std::thread;
+use std::time;
 use uuid::Uuid;
 use webdriver::capabilities::CapabilitiesMatching;
 use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
@@ -55,10 +55,6 @@ use logging;
 use prefs;
 
 const DEFAULT_HOST: &'static str = "localhost";
-
-// Firefox' integrated background monitor which observes long running threads during
-// shutdown kills those after 65s. Wait some additional seconds for a safe shutdown
-const TIMEOUT_BROWSER_SHUTDOWN: u64 = 70 * 1000;
 
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
     return vec![(Method::Get, "/session/{sessionId}/moz/context", GeckoExtensionRoute::GetContext),
@@ -571,7 +567,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
                                 // Shutdown the browser if no session can
                                 // be established due to errors.
                                 if let NewSession(_) = msg.command {
-                                    err.delete_session=true;
+                                    err.delete_session = true;
                                 }
                                 err})
                     },
@@ -587,32 +583,12 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
     }
 
     fn delete_session(&mut self, session: &Option<Session>) {
-        // If there is still an active session send a delete session command
-        // and wait for the browser to quit
         if let Some(ref s) = *session {
             let delete_session = WebDriverMessage {
                 session_id: Some(s.id.clone()),
-                command: WebDriverCommand::DeleteSession
+                command: WebDriverCommand::DeleteSession,
             };
             let _ = self.handle_command(session, delete_session);
-
-            if let Some(ref mut runner) = self.browser {
-                let timeout = TIMEOUT_BROWSER_SHUTDOWN;
-                let poll_interval = 100;
-                let poll_attempts = timeout / poll_interval;
-                let mut poll_attempt = 0;
-
-                while runner.running() {
-                    if poll_attempt <= poll_attempts {
-                        debug!("Waiting for the browser process to shutdown");
-                        poll_attempt += 1;
-                        sleep(Duration::from_millis(poll_interval));
-                    } else {
-                        warn!("Browser process did not shutdown");
-                        break;
-                    }
-                }
-            }
         }
 
         if let Ok(ref mut connection) = self.connection.lock() {
@@ -621,13 +597,11 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
             }
         }
 
-        // If the browser is still open then kill the process
         if let Some(ref mut runner) = self.browser {
-            if runner.running() {
-                info!("Forcing a shutdown of the browser process");
-                if runner.kill().is_err() {
-                    error!("Failed to kill browser process");
-                };
+            // TODO(https://bugzil.la/1443922):
+            // Use toolkit.asyncshutdown.crash_timout pref
+            if runner.wait(time::Duration::from_secs(70)).is_err() {
+                error!("Failed to stop browser process");
             }
         }
 
@@ -1381,7 +1355,7 @@ impl MarionetteConnection {
                     trace!("  connection attempt {}/{}", poll_attempt, poll_attempts);
                     if poll_attempt <= poll_attempts {
                         poll_attempt += 1;
-                        sleep(Duration::from_millis(poll_interval));
+                        thread::sleep(time::Duration::from_millis(poll_interval));
                     } else {
                         return Err(WebDriverError::new(
                             ErrorStatus::UnknownError,

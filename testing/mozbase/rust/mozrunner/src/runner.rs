@@ -9,8 +9,10 @@ use std::fmt;
 use std::io;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, Stdio};
 use std::process;
+use std::process::{Child, Command, Stdio};
+use std::thread;
+use std::time;
 
 pub trait Runner {
     type Process;
@@ -58,6 +60,17 @@ pub trait RunnerProcess {
     /// available at this time then `Ok(None)` is returned.  If an error occurs, then that error is
     /// returned.
     fn try_wait(&mut self) -> io::Result<Option<process::ExitStatus>>;
+
+    /// Waits for the process to exit completely, killing it if it does not stop within `timeout`,
+    /// and returns the status that it exited with.
+    ///
+    /// Firefox' integrated background monitor observes long running threads during shutdown and
+    /// kills these after 63 seconds.  If the process fails to exit within the duration of
+    /// `timeout`, it is forcefully killed.
+    ///
+    /// This function will continue to have the same return value after it has been called at least
+    /// once.
+    fn wait(&mut self, timeout: time::Duration) -> io::Result<process::ExitStatus>;
 
     /// Determine if the process is still running.
     fn running(&mut self) -> bool;
@@ -121,6 +134,17 @@ pub struct FirefoxProcess {
 impl RunnerProcess for FirefoxProcess {
     fn try_wait(&mut self) -> io::Result<Option<process::ExitStatus>> {
         self.process.try_wait()
+    }
+
+    fn wait(&mut self, timeout: time::Duration) -> io::Result<process::ExitStatus> {
+        let now = time::Instant::now();
+        while self.running() {
+            if now.elapsed() >= timeout {
+                break;
+            }
+            thread::sleep(time::Duration::from_millis(100));
+        }
+        self.kill()
     }
 
     fn running(&mut self) -> bool {
