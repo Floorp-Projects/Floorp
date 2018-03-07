@@ -57,7 +57,7 @@ public:
   {
     // See the comment on |mString|'s declaration.
     MOZ_ASSERT(IsDynamicAtom() || IsHTML5Atom());
-    return nsStringBuffer::FromData(mString);
+    return nsStringBuffer::FromData(const_cast<char16_t*>(mString));
   }
 
   // A hashcode that is better distributed than the actual atom pointer, for
@@ -99,7 +99,7 @@ protected:
   // non-static atoms it points to the chars in an nsStringBuffer. This means
   // that nsStringBuffer::FromData(mString) calls are only valid for non-static
   // atoms.
-  char16_t* const mString;
+  const char16_t* const mString;
 };
 
 // A trivial subclass of nsAtom that can be used for known static atoms. The
