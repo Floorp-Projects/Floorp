@@ -409,43 +409,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return this._ref(elt);
   },
 
-  /**
-   * Return all parents of the given node, ordered from immediate parent
-   * to root.
-   * @param NodeActor node
-   *    The node whose parents are requested.
-   * @param object options
-   *    Named options, including:
-   *    `sameDocument`: If true, parents will be restricted to the same
-   *      document as the node.
-   *    `sameTypeRootTreeItem`: If true, this will not traverse across
-   *     different types of docshells.
-   */
-  parents: function(node, options = {}) {
-    if (isNodeDead(node)) {
-      return [];
-    }
-
-    let walker = this.getDocumentWalker(node.rawNode);
-    let parents = [];
-    let cur;
-    while ((cur = walker.parentNode())) {
-      if (options.sameDocument &&
-          nodeDocument(cur) != nodeDocument(node.rawNode)) {
-        break;
-      }
-
-      if (options.sameTypeRootTreeItem &&
-          nodeDocshell(cur).sameTypeRootTreeItem !=
-          nodeDocshell(node.rawNode).sameTypeRootTreeItem) {
-        break;
-      }
-
-      parents.push(this._ref(cur));
-    }
-    return parents;
-  },
-
   parentNode: function(node) {
     let walker = this.getDocumentWalker(node.rawNode);
     let parent = walker.parentNode();
@@ -672,55 +635,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       hasLast: nodes[nodes.length - 1].rawNode == lastChild,
       nodes: nodes
     };
-  },
-
-  /**
-   * Return siblings of the given node.  By default this method will return
-   * all siblings of the node, but there are options that can restrict this
-   * to a more manageable subset.
-   *
-   * If `start` or `center` are not specified, this method will center on the
-   * node whose siblings are requested.
-   *
-   * @param NodeActor node
-   *    The node whose children you're curious about.
-   * @param object options
-   *    Named options:
-   *    `maxNodes`: The set of nodes returned by the method will be no longer
-   *       than maxNodes.
-   *    `start`: If a node is specified, the list of nodes will start
-   *       with the given child.  Mutally exclusive with `center`.
-   *    `center`: If a node is specified, the given node will be as centered
-   *       as possible in the list, given how close to the ends of the child
-   *       list it is.  Mutually exclusive with `start`.
-   *    `whatToShow`: A bitmask of node types that should be included.  See
-   *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
-   *
-   * @returns an object with three items:
-   *    hasFirst: true if the first child of the node is included in the list.
-   *    hasLast: true if the last child of the node is included in the list.
-   *    nodes: Child nodes returned by the request.
-   */
-  siblings: function(node, options = {}) {
-    if (isNodeDead(node)) {
-      return { hasFirst: true, hasLast: true, nodes: [] };
-    }
-
-    let parentNode = this.getDocumentWalker(node.rawNode, options.whatToShow)
-                         .parentNode();
-    if (!parentNode) {
-      return {
-        hasFirst: true,
-        hasLast: true,
-        nodes: [node]
-      };
-    }
-
-    if (!(options.start || options.center)) {
-      options.center = node;
-    }
-
-    return this.children(this._ref(parentNode), options);
   },
 
   /**
@@ -1995,15 +1909,5 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return this._ref(offsetParent);
   },
 });
-
-function nodeDocshell(node) {
-  let doc = node ? nodeDocument(node) : null;
-  let win = doc ? doc.defaultView : null;
-  if (win) {
-    return win.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDocShell);
-  }
-  return null;
-}
 
 exports.WalkerActor = WalkerActor;
