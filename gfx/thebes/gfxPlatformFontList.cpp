@@ -5,6 +5,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/MozLocale.h"
 #include "mozilla/intl/OSPreferences.h"
 
 #include "gfxPlatformFontList.h"
@@ -33,6 +34,7 @@
 
 using namespace mozilla;
 using mozilla::intl::LocaleService;
+using mozilla::intl::Locale;
 using mozilla::intl::OSPreferences;
 
 #define LOG_FONTLIST(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
@@ -1243,19 +1245,18 @@ gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aL
         LocaleService::GetInstance()->GetAppLocaleAsLangTag(localeStr);
 
         {
-          const nsACString& lang = Substring(localeStr, 0, 2);
-          if (lang.EqualsLiteral("ja")) {
+          Locale locale(localeStr);
+          if (locale.GetLanguage().Equals("ja")) {
               AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Japanese);
-          } else if (lang.EqualsLiteral("zh")) {
-              const nsACString& region = Substring(localeStr, 3, 2);
-              if (region.EqualsLiteral("CN")) {
+          } else if (locale.GetLanguage().Equals("zh")) {
+              if (locale.GetRegion().Equals("CN")) {
                   AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseCN);
-              } else if (region.EqualsLiteral("TW")) {
+              } else if (locale.GetRegion().Equals("TW")) {
                   AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseTW);
-              } else if (region.EqualsLiteral("HK")) {
+              } else if (locale.GetRegion().Equals("HK")) {
                   AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseHK);
               }
-          } else if (lang.EqualsLiteral("ko")) {
+          } else if (locale.GetLanguage().Equals("ko")) {
               AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Korean);
           }
         }
@@ -1270,28 +1271,28 @@ gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aL
 
         AutoTArray<nsCString,16> sysLocales;
         AutoTArray<nsCString,16> negLocales;
-        if (OSPreferences::GetInstance()->GetSystemLocales(sysLocales) &&
+        if (OSPreferences::GetInstance()->GetSystemLocales(sysLocales)) {
             LocaleService::GetInstance()->NegotiateLanguages(
                 sysLocales, prefLocales, NS_LITERAL_CSTRING(""),
-                LocaleService::LangNegStrategy::Filtering, negLocales)) {
+                LocaleService::LangNegStrategy::Filtering, negLocales);
             for (const auto& localeStr : negLocales) {
-                const nsACString& lang = Substring(localeStr, 0, 2);
-                if (lang.EqualsLiteral("ja")) {
+                Locale locale(localeStr);
+
+                if (locale.GetLanguage().Equals("ja")) {
                     AppendPrefLang(tempPrefLangs, tempLen,
                                    eFontPrefLang_Japanese);
-                } else if (lang.EqualsLiteral("zh")) {
-                    const nsACString& region = Substring(localeStr, 3, 2);
-                    if (region.EqualsLiteral("CN")) {
+                } else if (locale.GetLanguage().Equals("zh")) {
+                    if (locale.GetRegion().Equals("CN")) {
                         AppendPrefLang(tempPrefLangs, tempLen,
                                        eFontPrefLang_ChineseCN);
-                    } else if (region.EqualsLiteral("TW")) {
+                    } else if (locale.GetRegion().Equals("TW")) {
                         AppendPrefLang(tempPrefLangs, tempLen,
                                        eFontPrefLang_ChineseTW);
-                    } else if (region.EqualsLiteral("HK")) {
+                    } else if (locale.GetRegion().Equals("HK")) {
                         AppendPrefLang(tempPrefLangs, tempLen,
                                        eFontPrefLang_ChineseHK);
                     }
-                } else if (lang.EqualsLiteral("ko")) {
+                } else if (locale.GetLanguage().Equals("ko")) {
                     AppendPrefLang(tempPrefLangs, tempLen,
                                    eFontPrefLang_Korean);
                 }
