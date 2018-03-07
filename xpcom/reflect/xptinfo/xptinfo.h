@@ -147,7 +147,7 @@ public:
     // after the call.
     bool IsDipper() const {return !!(flags & kDipperMask);}
     bool IsOptional() const {return !!(flags & kOptionalMask);}
-    const nsXPTType GetType() const {return type.prefix;}
+    const nsXPTType GetType() const {return type.mPrefix;}
 
     bool IsStringClass() const {
       switch (GetType().TagPart()) {

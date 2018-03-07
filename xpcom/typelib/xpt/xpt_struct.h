@@ -191,41 +191,41 @@ enum XPTTypeDescriptorTags {
 
 struct XPTTypeDescriptor {
   uint8_t Tag() const {
-    return prefix.TagPart();
+    return mPrefix.TagPart();
   }
 
-  XPTTypeDescriptorPrefix prefix;
+  XPTTypeDescriptorPrefix mPrefix;
 
   // The memory layout here doesn't exactly match (for the appropriate types)
   // the on-disk format. This is to save memory.
   union {
     // Used for TD_INTERFACE_IS_TYPE.
     struct {
-      uint8_t argnum;
-    } interface_is;
+      uint8_t mArgNum;
+    } mInterfaceIs;
 
     // Used for TD_PSTRING_SIZE_IS, TD_PWSTRING_SIZE_IS.
     struct {
-      uint8_t argnum;
-      //uint8_t argnum2;          // Present on disk, omitted here.
-    } pstring_is;
+      uint8_t mArgNum;
+      //uint8_t mArgNum2;         // Present on disk, omitted here.
+    } mPStringIs;
 
     // Used for TD_ARRAY.
     struct {
-      uint8_t argnum;
-      //uint8_t argnum2;          // Present on disk, omitted here.
-      uint8_t additional_type;    // uint16_t on disk, uint8_t here;
+      uint8_t mArgNum;
+      //uint8_t mArgNum2;         // Present on disk, omitted here.
+      uint8_t mAdditionalType;    // uint16_t on disk, uint8_t here;
                                   // in practice it never exceeds 20.
-    } array;
+    } mArray;
 
     // Used for TD_INTERFACE_TYPE.
     struct {
       // We store the 16-bit iface value as two 8-bit values in order to
       // avoid 16-bit alignment requirements for XPTTypeDescriptor, which
       // reduces its size and also the size of XPTParamDescriptor.
-      uint8_t iface_hi8;
-      uint8_t iface_lo8;
-    } iface;
+      uint8_t mIfaceHi8;
+      uint8_t mIfaceLo8;
+    } mIface;
   } u;
 };
 
@@ -247,9 +247,9 @@ union XPTConstValue {
 }; /* varies according to type */
 
 struct XPTConstDescriptor {
-  const char* name;
-  XPTTypeDescriptor type;
-  union XPTConstValue value;
+  const char* mName;
+  XPTTypeDescriptor mType;
+  union XPTConstValue mValue;
 };
 
 /*
