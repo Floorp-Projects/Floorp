@@ -43,10 +43,11 @@ EXPORTS += [
     'nsCaret.h',
     'nsChangeHint.h',
     'nsCompatibility.h',
+    'nsCounterManager.h',
     'nsCSSFrameConstructor.h',
     'nsFrameManager.h',
-    'nsFrameManagerBase.h',
     'nsFrameTraversal.h',
+    'nsGenConList.h',
     'nsIFrameTraversal.h',
     'nsILayoutDebugger.h',
     'nsIPercentBSizeObserver.h',
@@ -58,6 +59,7 @@ EXPORTS += [
     'nsPresArenaObjectList.h',
     'nsPresContext.h',
     'nsPresState.h',
+    'nsQuoteList.h',
     'nsRefreshDriver.h',
     'nsStyleChangeList.h',
     'nsStyleSheetService.h',
@@ -83,6 +85,7 @@ EXPORTS.mozilla += [
     'ServoRestyleManager.h',
     'ShapeUtils.h',
     'StaticPresData.h',
+    'UndisplayedNode.h',
 ]
 
 if CONFIG['MOZ_OLD_STYLE']:

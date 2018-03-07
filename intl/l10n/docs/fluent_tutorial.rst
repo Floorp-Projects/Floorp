@@ -185,7 +185,7 @@ In return, localizers enter the social contract by promising to provide an accur
 and clean translation of the messages that match the request.
 
 In previous localization systems, developers were responsible for differentiating
-string variant based on a platform via pre-processing instructions, or
+string variants based on a platform via pre-processing instructions, or
 selecting which strings should be formatted using `PluralForms.jsm`.
 
 In Fluent, the developer is not to be bothered with inner logic and complexity that the
@@ -239,7 +239,7 @@ The other change is that the developer can localize a whole fragment of DOM:
 
 Fluent will overlay the translation onto the source fragment preserving attributes like
 :code:`class` and :code:`href` from the source and adding translations for the elements
-inside. The end result will look like this:
+inside. The resulting localized content will look like this:
 
 .. code-block:: html
 
@@ -274,11 +274,11 @@ a JSON object storing variables exposed by the developer to the localizer.
 This is the main channel for the developer to provide additional variables
 to be used in the localization.
 
-It is very rare that the arguments are needed for localizations which previously
-used DTD, because such variables will usually have to be computed from the runtime code,
-but it is worth understanding that when the :code:`l10n-args` are set in
-the runtime code, they are in fact encoded via JSON and stored together with
-:code:`l10n-id` as an attribute on the element.
+Arguments are rarely needed for situations where it’s currently possible to use
+DTD, since such variables would need to be computed from the code at runtime.
+It's worth noting that, when the :code:`l10n-args` are set in
+the runtime code, they are in fact encoded as JSON and stored together with
+:code:`l10n-id` as an attribute of the element.
 
 __ https://www.w3.org/TR/2011/WD-html5-20110525/text-level-semantics.html
 
@@ -469,7 +469,7 @@ tune the options as well:
 
 .. code-block:: properties
 
-  welcome-message = Początek Twojej sesji: { DATETIME($startDate, month="short") }
+  welcome-message = Początek Twojej sesji: { DATETIME($startDate, month: "short") }
 
 This will adjust the length of the month token in the message to short and get formatted
 in Polish as `28 lut 2018`.
@@ -539,18 +539,18 @@ contexts manually using `Localization` class:
 
 .. code-block:: javascript
 
-	const { Localization } =
-		ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
-
-
-	const myL10n = new Localization([
-		"branding/brand.ftl",
-		"browser/preferences/preferences.ftl"
-	]);
-
-
-	let [isDefaultMsg, isNotDefaultMsg] =
-		myL10n.formatValues(["is-default", "is-not-default"]);
+  const { Localization } =
+    ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
+  
+  
+  const myL10n = new Localization([
+    "branding/brand.ftl",
+    "browser/preferences/preferences.ftl"
+  ]);
+  
+  
+  let [isDefaultMsg, isNotDefaultMsg] =
+    myL10n.formatValues(["is-default", "is-not-default"]);
 
 
 .. admonition:: Example
@@ -558,11 +558,11 @@ contexts manually using `Localization` class:
   An example of a use case is the Preferences UI in Firefox which uses the
   main context to localize the UI but also to build a search index.
 
-  It is common to build such search index both in a current langauge and additionally
-  in English since a lot of documentation and online help exists in that language.
+  It is common to build such search index both in a current language and additionally
+  in English, since a lot of documentation and online help exist only in English.
 
-  A developer may create manually a new context with the same resources as the main one
-  uses, but hardcode it to `en-US` and then build the search index using both contexts.
+  A developer may create manually a new context with the same resources as the main one,
+  but hardcode it to `en-US` and then build the search index using both contexts.
 
 Designing Localizable APIs
 ==========================
@@ -592,10 +592,10 @@ the code sets the right :code:`l10n-id`/:code:`l10n-args` attributes like this:
   const l10nAttrs = document.l10n.getAttributes(element);
   
   deepEquals(l10nAttrs, {
-		id: "my-expected-id",
-		args: {
-			unreadCount: 5
-		}
+    id: "my-expected-id",
+    args: {
+      unreadCount: 5
+    }
   });
 
 If the code really has to test for particular values in the localized UI, it is

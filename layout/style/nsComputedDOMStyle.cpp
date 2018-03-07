@@ -925,8 +925,8 @@ nsComputedDOMStyle::SetFrameStyleContext(nsStyleContext* aContext,
   mStyleContextGeneration = aGeneration;
 }
 
-FlushTarget
-nsComputedDOMStyle::GetFlushTarget(nsIDocument* aDocument) const
+bool
+nsComputedDOMStyle::NeedsToFlush(nsIDocument* aDocument) const
 {
   // If mContent is not in the same document, we could do some checks to know if
   // there are some pending restyles can be ignored across documents (since we
@@ -937,21 +937,22 @@ nsComputedDOMStyle::GetFlushTarget(nsIDocument* aDocument) const
   // FIXME(emilio): This is likely to want GetComposedDoc() instead of
   // OwnerDoc().
   if (aDocument != mContent->OwnerDoc()) {
-    return FlushTarget::Normal;
+    return true;
   }
   if (DocumentNeedsRestyle(aDocument, mContent->AsElement(), mPseudo)) {
-    return FlushTarget::Normal;
+    return true;
   }
   // If parent document is there, also needs to check if there is some change
   // that needs to flush this document (e.g. size change for iframe).
   while (nsIDocument* parentDocument = aDocument->GetParentDocument()) {
     Element* element = parentDocument->FindContentForSubDocument(aDocument);
     if (DocumentNeedsRestyle(parentDocument, element, nullptr)) {
-      return FlushTarget::Normal;
+      return true;
     }
     aDocument = parentDocument;
   }
-  return FlushTarget::ParentOnly;
+
+  return false;
 }
 
 void
@@ -969,14 +970,16 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
   //  * https://github.com/w3c/csswg-drafts/issues/1548
 
   // If the property we are computing relies on layout, then we must flush.
-  FlushTarget target = aNeedsLayoutFlush ? FlushTarget::Normal : GetFlushTarget(document);
+  const bool needsToFlush = aNeedsLayoutFlush || NeedsToFlush(document);
+  if (needsToFlush) {
+    // Flush _before_ getting the presshell, since that could create a new
+    // presshell.  Also note that we want to flush the style on the document
+    // we're computing style in, not on the document mContent is in -- the two
+    // may be different.
+    document->FlushPendingNotifications(
+      aNeedsLayoutFlush ? FlushType::Layout : FlushType::Style);
+  }
 
-  // Flush _before_ getting the presshell, since that could create a new
-  // presshell.  Also note that we want to flush the style on the document
-  // we're computing style in, not on the document mContent is in -- the two
-  // may be different.
-  document->FlushPendingNotifications(
-    aNeedsLayoutFlush ? FlushType::Layout : FlushType::Style, target);
 #ifdef DEBUG
   mFlushedPendingReflows = aNeedsLayoutFlush;
 #endif
@@ -1101,7 +1104,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     // No need to re-get the generation, even though GetStyleContext
     // will flush, since we flushed style at the top of this function.
     // We don't need to check this if we only flushed the parent.
-    NS_ASSERTION(target == FlushTarget::ParentOnly ||
+    NS_ASSERTION(!needsToFlush ||
                  currentGeneration ==
                      mPresShell->GetPresContext()->GetUndisplayedRestyleGeneration(),
                    "why should we have flushed style again?");

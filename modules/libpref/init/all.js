@@ -5491,6 +5491,8 @@ pref("network.trr.bootstrapAddress", "");
 pref("network.trr.blacklist-duration", 259200);
 // Single TRR request timeout, in milliseconds
 pref("network.trr.request-timeout", 3000);
+// Allow AAAA entries to be used "early", before the A results are in
+pref("network.trr.early-AAAA", false);
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");

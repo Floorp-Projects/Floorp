@@ -659,9 +659,6 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut, nsCSSPropertyID);
 // Returns -1 on error (OOM)
 int32_t Gecko_RegisterNamespace(nsAtom* ns);
 
-// Returns true if this process should create a rayon thread pool for styling.
-bool Gecko_ShouldCreateStyleThreadPool();
-
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \
   void Gecko_Construct_Default_nsStyle##name(                                  \

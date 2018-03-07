@@ -3009,7 +3009,7 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
     // If it's a fixed background attachment, then the image is placed
     // relative to the viewport, which is the area of the root frame
     // in a screen context or the page content frame in a print context.
-    attachedToFrame = aPresContext->PresShell()->FrameManager()->GetRootFrame();
+    attachedToFrame = aPresContext->PresShell()->GetRootFrame();
     NS_ASSERTION(attachedToFrame, "no root frame");
     nsIFrame* pageContentFrame = nullptr;
     if (aPresContext->IsPaginated()) {
