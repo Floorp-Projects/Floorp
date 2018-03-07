@@ -602,7 +602,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
                 let poll_attempts = timeout / poll_interval;
                 let mut poll_attempt = 0;
 
-                while runner.is_running() {
+                while runner.running() {
                     if poll_attempt <= poll_attempts {
                         debug!("Waiting for the browser process to shutdown");
                         poll_attempt += 1;
@@ -623,7 +623,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
 
         // If the browser is still open then kill the process
         if let Some(ref mut runner) = self.browser {
-            if runner.is_running() {
+            if runner.running() {
                 info!("Forcing a shutdown of the browser process");
                 if runner.stop().is_err() {
                     error!("Failed to kill browser process");
