@@ -186,34 +186,10 @@ const HarExporter = {
    * since it can involve additional RDP communication (e.g. resolving
    * long strings).
    */
-  buildHarData: async function (options) {
-    let { connector } = options;
-    let {
-      getTabTarget,
-    } = connector;
-    let {
-      form: { title, url }
-    } = getTabTarget();
-
-    // Disconnect from redux actions/store.
-    connector.enableActions(false);
-
-    options = {
-      ...options,
-      title: title || url,
-      getString: connector.getLongString,
-      getTimingMarker: connector.getTimingMarker,
-      requestData: connector.requestData,
-    };
-
+  buildHarData: function (options) {
     // Build HAR object from collected data.
     let builder = new HarBuilder(options);
-    let result = await builder.build();
-
-    // Connect to redux actions again.
-    connector.enableActions(true);
-
-    return result;
+    return builder.build();
   },
 
   /**
