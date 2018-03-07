@@ -4101,6 +4101,8 @@ SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable)
       return DeviceOperationPromise::CreateAndResolve(NS_ERROR_ABORT, __func__);
     })->Then(GetMainThreadSerialEventTarget(), __func__,
     [self, this, &state, aTrackID, aEnable](nsresult aResult) mutable {
+      MOZ_ASSERT_IF(aResult != NS_ERROR_ABORT,
+                    state.mDeviceEnabled == aEnable);
       MOZ_ASSERT(state.mOperationInProgress);
       state.mOperationInProgress = false;
 
@@ -4120,9 +4122,6 @@ SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable)
         // This path handles errors from starting or stopping the device.
         // NS_ERROR_ABORT are for cases where *we* aborted. They need graceful
         // handling.
-        MOZ_ASSERT(state.mDeviceEnabled != aEnable,
-                   "If operating the device failed, the device's `enabled` "
-                   "state must remain at its old value");
         if (aEnable) {
           // Starting the device failed. Stopping the track here will make the
           // MediaStreamTrack end after a pass through the MediaStreamGraph.
@@ -4142,7 +4141,6 @@ SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable)
       // NS_ERROR_ABORT (*we* canceled the operation).
       // At this point we have to follow up on the intended state, i.e., update
       // the device state if the track state changed in the meantime.
-      MOZ_ASSERT_IF(NS_SUCCEEDED(aResult), state.mDeviceEnabled == aEnable);
 
       if (state.mTrackEnabled == state.mDeviceEnabled) {
         // Intended state is same as device's current state.
