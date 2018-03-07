@@ -690,13 +690,13 @@ MarkupView.prototype = {
      "markupView.edit.key",
      "markupView.scrollInto.key"].forEach(name => {
        let key = INSPECTOR_L10N.getStr(name);
-       shortcuts.on(key, (_, event) => this._onShortcut(name, event));
+       shortcuts.on(key, event => this._onShortcut(name, event));
      });
 
     // Process generic keys:
     ["Delete", "Backspace", "Home", "Left", "Right", "Up", "Down", "PageUp",
      "PageDown", "Esc", "Enter", "Space"].forEach(key => {
-       shortcuts.on(key, this._onShortcut);
+       shortcuts.on(key, event => this._onShortcut(key, event));
      });
   },
 

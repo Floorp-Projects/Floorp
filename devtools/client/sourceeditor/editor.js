@@ -1365,7 +1365,7 @@ Editor.prototype = {
     // Process generic keys:
     keys.forEach(name => {
       let key = L10N.getStr(name);
-      shortcuts.on(key, (_, event) => this._onShortcut(name, event));
+      shortcuts.on(key, event => this._onShortcut(name, event));
     });
   },
     /**
