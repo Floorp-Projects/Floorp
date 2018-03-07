@@ -4,7 +4,6 @@
 package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -12,31 +11,13 @@ import android.support.test.filters.MediumTest
 import android.support.test.filters.LargeTest
 import android.support.test.runner.AndroidJUnit4
 
-import org.hamcrest.Matcher
 import org.hamcrest.Matchers.*
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ErrorCollector
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-class ProgressDelegateTest {
-    companion object {
-        const val INVALID_URI = "http://www.test.invalid/"
-        const val HELLO_HTML_PATH = "/assets/www/hello.html";
-        const val HELLO2_HTML_PATH = "/assets/www/hello2.html";
-    }
-
-    @get:Rule val sessionRule = GeckoSessionTestRule()
-
-    @get:Rule val errors = ErrorCollector()
-    fun <T> assertThat(reason: String, v: T, m: Matcher<T>) = errors.checkThat(reason, v, m)
-
-    @Before fun setUp() {
-        sessionRule.errorCollector = errors
-    }
+class ProgressDelegateTest : BaseSessionTest() {
 
     @Test fun load() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
