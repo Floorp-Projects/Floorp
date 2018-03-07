@@ -5,6 +5,7 @@ package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
@@ -208,7 +209,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @GeckoSessionTestRule.WithDisplay(width = 128, height = 128)
+    @WithDisplay(width = 128, height = 128)
     @Test fun onNewSession_calledForNewWindow() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.waitForPageStop()
@@ -220,11 +221,11 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.synthesizeTap(5, 5)
+        sessionRule.session.synthesizeTap(5, 5)
         sessionRule.waitUntilCalled(GeckoSession.NavigationDelegate::class, "onNewSession")
     }
 
-    @GeckoSessionTestRule.WithDisplay(width = 128, height = 128)
+    @WithDisplay(width = 128, height = 128)
     @Test(expected = IllegalArgumentException::class)
     fun onNewSession_doesNotAllowOpened() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
@@ -233,13 +234,13 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
-                var session = GeckoSession(session.settings)
-                session.openWindow(null)
-                response.respond(session)
+                var newSession = GeckoSession(session.settings)
+                newSession.openWindow()
+                response.respond(newSession)
             }
         })
 
-        sessionRule.synthesizeTap(5, 5)
+        sessionRule.session.synthesizeTap(5, 5)
         sessionRule.waitUntilCalled(GeckoSession.NavigationDelegate::class, "onNewSession")
     }
 }
