@@ -140,27 +140,18 @@ wasm::ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* 
     }
 }
 
-void
-wasm::ToJSValue(const Val& val, MutableHandleValue value)
+Value
+wasm::ToJSValue(const Val& val)
 {
     switch (val.type()) {
-      case ValType::I32: {
-        value.set(Int32Value(val.i32()));
-        return;
-      }
-      case ValType::F32: {
-        float f = val.f32();
-        value.set(DoubleValue(JS::CanonicalizeNaN(double(f))));
-        return;
-      }
-      case ValType::F64: {
-        double d = val.f64();
-        value.set(DoubleValue(JS::CanonicalizeNaN(d)));
-        return;
-      }
-      default: {
+      case ValType::I32:
+        return Int32Value(val.i32());
+      case ValType::F32:
+        return DoubleValue(JS::CanonicalizeNaN(double(val.f32())));
+      case ValType::F64:
+        return DoubleValue(JS::CanonicalizeNaN(val.f64()));
+      default:
         MOZ_CRASH("unexpected type when translating to a JS value");
-      }
     }
 }
 
@@ -199,7 +190,8 @@ GetImports(JSContext* cx,
            MutableHandle<FunctionVector> funcImports,
            MutableHandleWasmTableObject tableImport,
            MutableHandleWasmMemoryObject memoryImport,
-           ValVector* globalImports)
+           WasmGlobalObjectVector& globalObjs,
+           ValVector* globalImportValues)
 {
     const ImportVector& imports = module.imports();
     if (!imports.empty() && !importObj)
@@ -250,26 +242,35 @@ GetImports(JSContext* cx,
 
           case DefinitionKind::Global:
             Val val;
-            const GlobalDesc& global = globals[globalIndex++];
-            MOZ_ASSERT(global.importIndex() == globalIndex - 1);
-            MOZ_ASSERT(!global.isMutable());
+            const uint32_t index = globalIndex++;
+            const GlobalDesc& global = globals[index];
+            MOZ_ASSERT(global.importIndex() == index);
 
 #if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
-            if (v.isObject() && v.toObject().is<WasmGlobalObject>())
-                v.set(v.toObject().as<WasmGlobalObject>().value());
+            if (v.isObject() && v.toObject().is<WasmGlobalObject>()) {
+                RootedWasmGlobalObject obj(cx, &v.toObject().as<WasmGlobalObject>());
+                if (globalObjs.length() <= index && !globalObjs.resize(index+1)) {
+                    ReportOutOfMemory(cx);
+                    return false;
+                }
+                globalObjs[index] = obj;
+                val = obj->val();
+            } else
 #endif
+            {
+                if (global.type() == ValType::I64) {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
+                    return false;
+                }
 
-            if (global.type() == ValType::I64) {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
-                return false;
+                if (!v.isNumber())
+                    return ThrowBadImportType(cx, import.field.get(), "Number");
+
+                if (!ToWebAssemblyValue(cx, global.type(), v, &val))
+                    return false;
             }
-            if (!v.isNumber())
-                return ThrowBadImportType(cx, import.field.get(), "Number");
 
-            if (!ToWebAssemblyValue(cx, global.type(), v, &val))
-                return false;
-
-            if (!globalImports->append(val))
+            if (!globalImportValues->append(val))
                 return false;
         }
     }
@@ -338,11 +339,13 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
     RootedWasmTableObject table(cx);
     RootedWasmMemoryObject memory(cx);
+    Rooted<WasmGlobalObjectVector> globalObjs(cx);
+
     ValVector globals;
-    if (!GetImports(cx, *module, importObj, &funcs, &table, &memory, &globals))
+    if (!GetImports(cx, *module, importObj, &funcs, &table, &memory, globalObjs.get(), &globals))
         return false;
 
-    return module->instantiate(cx, funcs, table, memory, globals, nullptr, instanceObj);
+    return module->instantiate(cx, funcs, table, memory, globals, globalObjs.get(), nullptr, instanceObj);
 }
 
 // ============================================================================
@@ -979,6 +982,7 @@ WasmInstanceObject::finalize(FreeOp* fop, JSObject* obj)
 {
     fop->delete_(&obj->as<WasmInstanceObject>().exports());
     fop->delete_(&obj->as<WasmInstanceObject>().scopes());
+    fop->delete_(&obj->as<WasmInstanceObject>().indirectGlobals());
     if (!obj->as<WasmInstanceObject>().isNewborn())
         fop->delete_(&obj->as<WasmInstanceObject>().instance());
 }
@@ -988,6 +992,7 @@ WasmInstanceObject::trace(JSTracer* trc, JSObject* obj)
 {
     WasmInstanceObject& instanceObj = obj->as<WasmInstanceObject>();
     instanceObj.exports().trace(trc);
+    instanceObj.indirectGlobals().trace(trc);
     if (!instanceObj.isNewborn())
         instanceObj.instance().tracePrivate(trc);
 }
@@ -1000,7 +1005,9 @@ WasmInstanceObject::create(JSContext* cx,
                            HandleWasmMemoryObject memory,
                            SharedTableVector&& tables,
                            Handle<FunctionVector> funcImports,
-                           const ValVector& globalImports,
+                           const GlobalDescVector& globals,
+                           const ValVector& globalImportValues,
+                           const WasmGlobalObjectVector& globalObjs,
                            HandleObject proto)
 {
     UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>();
@@ -1020,8 +1027,32 @@ WasmInstanceObject::create(JSContext* cx,
     if (!obj)
         return nullptr;
 
+    uint32_t indirectGlobals = 0;
+
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
+    for (uint32_t i = 0; i < globalObjs.length(); i++) {
+        if (globalObjs[i] && globals[i].isIndirect())
+            indirectGlobals++;
+    }
+#endif
+
+    Rooted<UniquePtr<WasmGlobalObjectVector>> indirectGlobalObjs(cx, js::MakeUnique<WasmGlobalObjectVector>());
+    if (!indirectGlobalObjs || !indirectGlobalObjs->resize(indirectGlobals))
+        return nullptr;
+
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
+    {
+        uint32_t next = 0;
+        for (uint32_t i = 0; i < globalObjs.length(); i++) {
+            if (globalObjs[i] && globals[i].isIndirect())
+                (*indirectGlobalObjs)[next++] = globalObjs[i];
+        }
+    }
+#endif
+
     obj->setReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
     obj->setReservedSlot(SCOPES_SLOT, PrivateValue(scopes.release()));
+    obj->setReservedSlot(GLOBALS_SLOT, PrivateValue(indirectGlobalObjs.release()));
     obj->setReservedSlot(INSTANCE_SCOPE_SLOT, UndefinedValue());
     MOZ_ASSERT(obj->isNewborn());
 
@@ -1036,7 +1067,8 @@ WasmInstanceObject::create(JSContext* cx,
                                         memory,
                                         Move(tables),
                                         funcImports,
-                                        globalImports);
+                                        globalImportValues,
+                                        globalObjs);
     if (!instance)
         return nullptr;
 
@@ -1076,11 +1108,13 @@ Instantiate(JSContext* cx, const Module& module, HandleObject importObj,
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
     RootedWasmTableObject table(cx);
     RootedWasmMemoryObject memory(cx);
+    Rooted<WasmGlobalObjectVector> globalObjs(cx);
+
     ValVector globals;
-    if (!GetImports(cx, module, importObj, &funcs, &table, &memory, &globals))
+    if (!GetImports(cx, module, importObj, &funcs, &table, &memory, globalObjs.get(), &globals))
         return false;
 
-    return module.instantiate(cx, funcs, table, memory, globals, instanceProto, instanceObj);
+    return module.instantiate(cx, funcs, table, memory, globals, globalObjs.get(), instanceProto, instanceObj);
 }
 
 /* static */ bool
@@ -1135,6 +1169,12 @@ WasmInstanceObject::ScopeMap&
 WasmInstanceObject::scopes() const
 {
     return *(ScopeMap*)getReservedSlot(SCOPES_SLOT).toPrivate();
+}
+
+WasmGlobalObjectVector&
+WasmInstanceObject::indirectGlobals() const
+{
+    return *(WasmGlobalObjectVector*)getReservedSlot(GLOBALS_SLOT).toPrivate();
 }
 
 static bool
@@ -1992,8 +2032,6 @@ WasmTableObject::table() const
 // ============================================================================
 // WebAssembly.global class and methods
 
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
-
 const ClassOps WasmGlobalObject::classOps_ =
 {
     nullptr, /* addProperty */
@@ -2002,7 +2040,7 @@ const ClassOps WasmGlobalObject::classOps_ =
     nullptr, /* newEnumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* finalize */
+    WasmGlobalObject::finalize,
     nullptr, /* call */
     nullptr, /* hasInstance */
     nullptr, /* construct */
@@ -2012,23 +2050,43 @@ const ClassOps WasmGlobalObject::classOps_ =
 const Class WasmGlobalObject::class_ =
 {
     "WebAssembly.Global",
-    JSCLASS_HAS_RESERVED_SLOTS(WasmGlobalObject::RESERVED_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(WasmGlobalObject::RESERVED_SLOTS) |
+    JSCLASS_BACKGROUND_FINALIZE,
     &WasmGlobalObject::classOps_
 };
 
-/* static */ WasmGlobalObject*
-WasmGlobalObject::create(JSContext* cx, wasm::ValType type, bool isMutable, HandleValue val)
+/* static */ void
+WasmGlobalObject::finalize(FreeOp*, JSObject* obj)
 {
+    WasmGlobalObject* global = reinterpret_cast<WasmGlobalObject*>(obj);
+    js_delete(global->cell());
+}
+
+/* static */ WasmGlobalObject*
+WasmGlobalObject::create(JSContext* cx, const Val& val, bool isMutable)
+{
+    UniquePtr<Cell> cell = js::MakeUnique<Cell>();
+    if (!cell)
+        return nullptr;
+
+    switch (val.type()) {
+      case ValType::I32: cell->i32 = val.i32(); break;
+      case ValType::I64: cell->i64 = val.i64(); break;
+      case ValType::F32: cell->f32 = val.f32(); break;
+      case ValType::F64: cell->f64 = val.f64(); break;
+      default:           MOZ_CRASH();
+    }
+
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmGlobal).toObject());
 
     AutoSetNewObjectMetadata metadata(cx);
-    Rooted<WasmGlobalObject*> obj(cx, NewObjectWithGivenProto<WasmGlobalObject>(cx, proto));
+    RootedWasmGlobalObject obj(cx, NewObjectWithGivenProto<WasmGlobalObject>(cx, proto));
     if (!obj)
         return nullptr;
 
-    obj->initReservedSlot(TYPE_SLOT, Int32Value(int32_t(type)));
+    obj->initReservedSlot(TYPE_SLOT, Int32Value(int32_t(val.type())));
     obj->initReservedSlot(MUTABLE_SLOT, JS::BooleanValue(isMutable));
-    obj->initReservedSlot(VALUE_SLOT, val);
+    obj->initReservedSlot(CELL_SLOT, PrivateValue(cell.release()));
 
     return obj;
 }
@@ -2089,11 +2147,7 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!ToWebAssemblyValue(cx, globalType, valueVal, &globalVal))
         return false;
 
-    RootedValue globalValue(cx);
-    ToJSValue(globalVal, &globalValue);
-
-    Rooted<WasmGlobalObject*> global(cx, WasmGlobalObject::create(cx, globalType, isMutable,
-                                                                  globalValue));
+    WasmGlobalObject* global = WasmGlobalObject::create(cx, globalVal, isMutable);
     if (!global)
         return false;
 
@@ -2117,7 +2171,7 @@ WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args)
         args.rval().set(args.thisv().toObject().as<WasmGlobalObject>().value());
         return true;
       case ValType::I64:
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
         return false;
       default:
         MOZ_CRASH();
@@ -2134,15 +2188,31 @@ WasmGlobalObject::valueGetter(JSContext* cx, unsigned argc, Value* vp)
 /* static */ bool
 WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args)
 {
-    if (!args.thisv().toObject().as<WasmGlobalObject>().isMutable()) {
+    RootedWasmGlobalObject global(cx, &args.thisv().toObject().as<WasmGlobalObject>());
+    if (!global->isMutable()) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_GLOBAL_IMMUTABLE);
         return false;
     }
 
-    // TODO - implement this, we probably need a different representation for
-    // mutable globals.
-    JS_ReportErrorASCII(cx, "Value setter not yet implemented");
-    return false;
+    if (global->type() == ValType::I64) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
+        return false;
+    }
+
+    Val val;
+    if (!ToWebAssemblyValue(cx, global->type(), args.get(0), &val))
+        return false;
+
+    Cell* cell = global->cell();
+    switch (global->type()) {
+      case ValType::I32: cell->i32 = val.i32(); break;
+      case ValType::F32: cell->f32 = val.f32(); break;
+      case ValType::F64: cell->f64 = val.f64(); break;
+      default:           MOZ_CRASH();
+    }
+
+    args.rval().setUndefined();
+    return true;
 }
 
 /* static */ bool
@@ -2180,13 +2250,33 @@ WasmGlobalObject::isMutable() const
     return getReservedSlot(MUTABLE_SLOT).toBoolean();
 }
 
+Val
+WasmGlobalObject::val() const
+{
+    Cell* cell = this->cell();
+    Val val;
+    switch (type()) {
+      case ValType::I32: val = Val(uint32_t(cell->i32)); break;
+      case ValType::I64: val = Val(uint64_t(cell->i64)); break;
+      case ValType::F32: val = Val(cell->f32); break;
+      case ValType::F64: val = Val(cell->f64); break;
+      default:           MOZ_CRASH();
+    }
+    return val;
+}
+
 Value
 WasmGlobalObject::value() const
 {
-    return getReservedSlot(VALUE_SLOT);
+    // ToJSValue crashes on I64; this is desirable.
+    return ToJSValue(val());
 }
 
-#endif // ENABLE_WASM_GLOBAL && EARLY_BETA_OR_EARLIER
+WasmGlobalObject::Cell*
+WasmGlobalObject::cell() const
+{
+    return reinterpret_cast<Cell*>(getReservedSlot(CELL_SLOT).toPrivate());
+}
 
 // ============================================================================
 // WebAssembly class and static methods
