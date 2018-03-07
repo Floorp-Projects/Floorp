@@ -32,9 +32,6 @@ public:
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                          bool aPreallocateChildren) const override;
-
-  // SVGTests
-  bool IsInChromeDoc() const override;
 };
 
 } // namespace dom
