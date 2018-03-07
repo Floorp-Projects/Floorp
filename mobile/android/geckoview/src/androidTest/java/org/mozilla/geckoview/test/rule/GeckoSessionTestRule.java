@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import kotlin.jvm.JvmClassMappingKt;
@@ -68,6 +69,20 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     private static final long DEFAULT_TIMEOUT_MILLIS = 10000;
     private static final long DEFAULT_DEBUG_TIMEOUT_MILLIS = 86400000;
     public static final String APK_URI_PREFIX = "resource://android/";
+
+    private static final Method sOnLocationChange;
+    private static final Method sOnPageStop;
+
+    static {
+        try {
+            sOnLocationChange = GeckoSession.NavigationDelegate.class.getMethod(
+                    "onLocationChange", GeckoSession.class, String.class);
+            sOnPageStop = GeckoSession.ProgressDelegate.class.getMethod(
+                    "onPageStop", GeckoSession.class, boolean.class);
+        } catch (final NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Specify the timeout for any of the wait methods, in milliseconds. Can be used
@@ -352,6 +367,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
     }
 
+    protected interface CallRecordHandler {
+        boolean handleCall(Method method, Object[] args);
+    }
+
     public class Environment {
         /* package */ Environment() {
         }
@@ -376,7 +395,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
 
         public boolean isE10s() {
-            return mSession.getSettings().getBoolean(
+            return mMainSession.getSettings().getBoolean(
                     GeckoSessionSettings.USE_MULTIPROCESS);
         }
 
@@ -481,18 +500,20 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected final Instrumentation mInstrumentation =
             InstrumentationRegistry.getInstrumentation();
     protected final GeckoSessionSettings mDefaultSettings;
+    protected final Set<GeckoSession> mSubSessions = new HashSet<>();
 
     protected ErrorCollector mErrorCollector;
-    protected GeckoSession mSession;
-    protected Point mDisplaySize;
+    protected GeckoSession mMainSession;
     protected Object mCallbackProxy;
     protected List<CallRecord> mCallRecords;
+    protected CallRecordHandler mCallRecordHandler;
     protected CallbackDelegates mWaitScopeDelegates;
     protected CallbackDelegates mTestScopeDelegates;
     protected int mLastWaitStart;
     protected int mLastWaitEnd;
     protected MethodCall mCurrentMethodCall;
     protected long mTimeoutMillis;
+    protected Point mDisplaySize;
     protected SurfaceTexture mDisplayTexture;
     protected Surface mDisplaySurface;
     protected GeckoDisplay mDisplay;
@@ -568,7 +589,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      * @return GeckoSession object.
      */
     public @NonNull GeckoSession getSession() {
-        return mSession;
+        return mMainSession;
     }
 
     protected static Method getCallbackSetter(final @NonNull Class<?> cls)
@@ -601,16 +622,18 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
     }
 
-    private static RuntimeException unwrapRuntimeException(Throwable e) {
+    private static RuntimeException unwrapRuntimeException(final Throwable e) {
         final Throwable cause = e.getCause();
         if (cause != null && cause instanceof RuntimeException) {
-            return (RuntimeException)cause;
+            return (RuntimeException) cause;
+        } else if (e instanceof RuntimeException) {
+            return (RuntimeException) e;
         }
 
-        return new RuntimeException(cause);
+        return new RuntimeException(cause != null ? cause : e);
     }
 
-    protected void prepareSession(final Description description) throws Throwable {
+    protected void prepareStatement(final Description description) throws Throwable {
         final GeckoSessionSettings settings = new GeckoSessionSettings(mDefaultSettings);
         mTimeoutMillis = !env.isDebugging() ? DEFAULT_TIMEOUT_MILLIS
                                             : DEFAULT_DEBUG_TIMEOUT_MILLIS;
@@ -632,14 +655,27 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             @Override
             public Object invoke(final Object proxy, final Method method,
                                  final Object[] args) {
-                assertThat("Callbacks must be on UI thread",
-                           Looper.myLooper(), equalTo(Looper.getMainLooper()));
+                boolean ignore = false;
+                MethodCall call = null;
 
-                records.add(new CallRecord(method, args));
+                if (Object.class.equals(method.getDeclaringClass())) {
+                    ignore = true;
+                } else if (mCallRecordHandler != null) {
+                    ignore = mCallRecordHandler.handleCall(method, args);
+                }
 
-                MethodCall call = waitDelegates.prepareMethodCall(method);
-                if (call == null) {
-                    call = testDelegates.prepareMethodCall(method);
+                if (!ignore) {
+                    assertThat("Callbacks must be on UI thread",
+                               Looper.myLooper(), equalTo(Looper.getMainLooper()));
+                    assertThat("Callback first argument must be session object",
+                               args[0], instanceOf(GeckoSession.class));
+
+                    records.add(new CallRecord(method, args));
+
+                    call = waitDelegates.prepareMethodCall(method);
+                    if (call == null) {
+                        call = testDelegates.prepareMethodCall(method);
+                    }
                 }
 
                 try {
@@ -658,30 +694,81 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mCallbackProxy = Proxy.newProxyInstance(GeckoSession.class.getClassLoader(),
                                                 classes, recorder);
 
-        mSession = new GeckoSession(settings);
+        mMainSession = new GeckoSession(settings);
+        prepareSession(mMainSession);
 
         if (mDisplaySize != null) {
             mDisplayTexture = new SurfaceTexture(0);
             mDisplaySurface = new Surface(mDisplayTexture);
-            mDisplay = mSession.acquireDisplay();
+            mDisplay = mMainSession.acquireDisplay();
             mDisplay.surfaceChanged(mDisplaySurface, mDisplaySize.x, mDisplaySize.y);
         }
 
+        if (!mClosedSession) {
+            openSession(mMainSession);
+        }
+    }
+
+    protected void prepareSession(final GeckoSession session) throws Throwable {
         for (final Class<?> cls : CALLBACK_CLASSES) {
             if (cls != null) {
-                getCallbackSetter(cls).invoke(mSession, mCallbackProxy);
+                getCallbackSetter(cls).invoke(session, mCallbackProxy);
             }
         }
+    }
 
-        if (mClosedSession) {
+    /**
+     * Call openWindow() on a session, and ensure it's ready for use by the test. In particular,
+     * remove any extra calls recorded as part of opening the session.
+     *
+     * @param session Session to open.
+     */
+    public void openSession(final GeckoSession session) {
+        final boolean e10s = session.getSettings().getBoolean(
+                GeckoSessionSettings.USE_MULTIPROCESS);
+
+        if (e10s) {
+            // Give any pending calls a chance to catch up.
+            loopUntilIdle(/* timeout */ 0);
+        }
+
+        session.openWindow(mInstrumentation.getTargetContext());
+
+        if (!e10s) {
             return;
         }
 
-        mSession.openWindow(mInstrumentation.getTargetContext());
+        // Under e10s, we receive an initial about:blank load; don't expose that to the test.
+        // The about:blank load is bounded by onLocationChange and onPageStop calls,
+        // so find the first about:blank onLocationChange, then the next onPageStop,
+        // and ignore everything in-between from that session.
 
-        if (settings.getBoolean(GeckoSessionSettings.USE_MULTIPROCESS)) {
-            // Under e10s, we receive an initial about:blank load; don't expose that to the test.
-            waitForPageStop();
+        try {
+            mCallRecordHandler = new CallRecordHandler() {
+                private boolean mFoundStart = false;
+
+                @Override
+                public boolean handleCall(final Method method, final Object[] args) {
+                    if (!mFoundStart && sOnLocationChange.equals(method) &&
+                            session.equals(args[0]) && "about:blank".equals(args[1])) {
+                        mFoundStart = true;
+                        return true;
+                    } else if (mFoundStart && session.equals(args[0])) {
+                        if (sOnPageStop.equals(method)) {
+                            mCallRecordHandler = null;
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+            };
+
+            do {
+                loopUntilIdle(mTimeoutMillis);
+            } while (mCallRecordHandler != null);
+
+        } finally {
+            mCallRecordHandler = null;
         }
     }
 
@@ -693,22 +780,29 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mTestScopeDelegates.clear();
     }
 
-    protected void cleanupSession() throws Throwable {
-        if (mSession.isOpen()) {
-            mSession.closeWindow();
+    protected void cleanupSession(final GeckoSession session) {
+        if (session.isOpen()) {
+            session.closeWindow();
         }
+    }
+
+    protected void cleanupStatement() throws Throwable {
+        for (final GeckoSession session : mSubSessions) {
+            cleanupSession(session);
+        }
+        cleanupSession(mMainSession);
 
         if (mDisplay != null) {
             mDisplay.surfaceDestroyed();
-            mSession.releaseDisplay(mDisplay);
-            mDisplaySurface.release();
-            mDisplayTexture.release();
+            mMainSession.releaseDisplay(mDisplay);
             mDisplay = null;
-            mDisplayTexture = null;
+            mDisplaySurface.release();
             mDisplaySurface = null;
+            mDisplayTexture.release();
+            mDisplayTexture = null;
         }
 
-        mSession = null;
+        mMainSession = null;
         mCallbackProxy = null;
         mCallRecords = null;
         mWaitScopeDelegates = null;
@@ -724,11 +818,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             @Override
             public void evaluate() throws Throwable {
                 try {
-                    prepareSession(description);
+                    prepareStatement(description);
                     base.evaluate();
                     performTestEndCheck();
                 } finally {
-                    cleanupSession();
+                    cleanupStatement();
                 }
             }
         }, description);
@@ -826,16 +920,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      * @param count Number of page loads to wait for.
      */
     public void waitForPageStops(final int count) {
-        final Method onPageStop;
-        try {
-            onPageStop = GeckoSession.ProgressDelegate.class.getMethod(
-                    "onPageStop", GeckoSession.class, boolean.class);
-        } catch (final NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-
         final List<MethodCall> methodCalls = new ArrayList<>(1);
-        methodCalls.add(new MethodCall(onPageStop,
+        methodCalls.add(new MethodCall(sOnPageStop,
                 new CallRequirement(/* allowed */ true, count, null)));
 
         waitUntilCalled(GeckoSession.ProgressDelegate.class, methodCalls);
@@ -1083,15 +1169,85 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mWaitScopeDelegates.delegate(callback);
     }
 
-    public void synthesizeTap(int x, int y) {
+    /**
+     * Synthesize a tap event at the specified location using the main session.
+     * The session must have been created with a display.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     */
+    public void synthesizeTap(final int x, final int y) {
         final long downTime = SystemClock.uptimeMillis();
-        final MotionEvent down = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
-            MotionEvent.ACTION_DOWN, x, y, 0);
-
+        final MotionEvent down = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, x, y, 0);
         mSession.getPanZoomController().onTouchEvent(down);
 
-        final MotionEvent up = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
-                MotionEvent.ACTION_UP, x, y, 0);
+        final MotionEvent up = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y, 0);
         mSession.getPanZoomController().onTouchEvent(up);
+    }
+
+    /**
+     * Initialize and keep track of the specified session within the test rule. The
+     * session is automatically cleaned up at the end of the test.
+     *
+     * @param session Session to keep track of.
+     * @return Same session
+     */
+    public GeckoSession wrapSession(final GeckoSession session) {
+        try {
+            mSubSessions.add(session);
+            prepareSession(session);
+        } catch (final Throwable e) {
+            throw unwrapRuntimeException(e);
+        }
+        return session;
+    }
+
+    private GeckoSession createSession(final GeckoSessionSettings settings,
+                                       final boolean open) {
+        final GeckoSession session = wrapSession(new GeckoSession(settings));
+        if (open) {
+            openSession(session);
+        }
+        return session;
+    }
+
+    /**
+     * Create a new, opened session using the main session settings.
+     *
+     * @return New session.
+     */
+    public GeckoSession createOpenSession() {
+        return createSession(mMainSession.getSettings(), /* open */ true);
+    }
+
+    /**
+     * Create a new, opened session using the specified settings.
+     *
+     * @param settings Settings for the new session.
+     * @return New session.
+     */
+    public GeckoSession createOpenSession(final GeckoSessionSettings settings) {
+        return createSession(settings, /* open */ true);
+    }
+
+    /**
+     * Create a new, closed session using the specified settings.
+     *
+     * @return New session.
+     */
+    public GeckoSession createClosedSession() {
+        return createSession(mMainSession.getSettings(), /* open */ false);
+    }
+
+    /**
+     * Create a new, closed session using the specified settings.
+     *
+     * @param settings Settings for the new session.
+     * @return New session.
+     */
+    public GeckoSession createClosedSession(final GeckoSessionSettings settings) {
+        return createSession(settings, /* open */ false);
     }
 }

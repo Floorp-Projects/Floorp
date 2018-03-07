@@ -688,4 +688,73 @@ class GeckoSessionTestRuleTest {
         assertThat("Test delegate should be used", testCounter, equalTo(6))
         assertThat("Wait delegate should be cleared", waitCounter, equalTo(2))
     }
+
+    @Test fun wrapSession() {
+        val session = sessionRule.wrapSession(GeckoSession(sessionRule.session.settings))
+        sessionRule.openSession(session)
+        session.reload()
+        session.waitForPageStop()
+    }
+
+    @Test fun createOpenSession() {
+        val newSession = sessionRule.createOpenSession()
+        assertThat("Can create session", newSession, notNullValue())
+        assertThat("New session is open", newSession.isOpen, equalTo(true))
+        assertThat("New session has same settings",
+                   newSession.settings, equalTo(sessionRule.session.settings))
+    }
+
+    @Test fun createOpenSession_withSettings() {
+        val settings = GeckoSessionSettings(sessionRule.session.settings)
+        settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true)
+
+        val newSession = sessionRule.createOpenSession(settings)
+        assertThat("New session has same settings", newSession.settings, equalTo(settings))
+    }
+
+    @Test fun createOpenSession_canInterleaveOtherCalls() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+
+        val newSession = sessionRule.createOpenSession()
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStops(2)
+
+        newSession.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(false)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
+
+        sessionRule.session.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 2)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
+    }
+
+    @Test fun createClosedSession() {
+        val newSession = sessionRule.createClosedSession()
+        assertThat("Can create session", newSession, notNullValue())
+        assertThat("New session is open", newSession.isOpen, equalTo(false))
+        assertThat("New session has same settings",
+                   newSession.settings, equalTo(sessionRule.session.settings))
+    }
+
+    @Test fun createClosedSession_withSettings() {
+        val settings = GeckoSessionSettings(sessionRule.session.settings)
+        settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true)
+
+        val newSession = sessionRule.createClosedSession(settings)
+        assertThat("New session has same settings", newSession.settings, equalTo(settings))
+    }
+
+    @Test(expected = AssertionError::class)
+    @TimeoutMillis(1000)
+    @LargeTest
+    @GeckoSessionTestRule.ClosedSessionAtStart
+    fun noPendingCallbacks_withSpecificSession() {
+        sessionRule.createOpenSession()
+        // Make sure we don't have unexpected pending callbacks after opening a session.
+        sessionRule.waitUntilCalled(object : Callbacks.All {})
+    }
 }
