@@ -101,7 +101,7 @@ HarBuilder.prototype = {
     let entry = {};
     entry.pageref = page.id;
     entry.startedDateTime = dateToJSON(new Date(file.startedMillis));
-    entry.time = file.totalTime;
+    entry.time = file.endedMillis - file.startedMillis;
 
     let eventTimings = file.eventTimings;
     if (!eventTimings && this._options.requestData) {
