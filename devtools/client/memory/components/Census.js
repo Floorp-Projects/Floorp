@@ -49,6 +49,7 @@ class Census extends Component {
 
     return Tree({
       autoExpandDepth: 0,
+      preventNavigationOnArrowRight: false,
       focused: census.focused,
       getParent: node => {
         const parent = parentMap[node.id];
