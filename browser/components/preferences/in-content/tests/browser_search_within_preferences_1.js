@@ -110,7 +110,6 @@ add_task(async function() {
     let child = mainPrefTag.children[i];
     if (child.id == "paneGeneral"
       || child.id == "startupGroup"
-      || child.id == "homepageGroup"
       || child.id == "languagesGroup"
       || child.id == "fontsGroup"
       || child.id == "downloadsGroup"
