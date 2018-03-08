@@ -4,6 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+
+TEST_HARNESS_FILES.xpcshell.toolkit.components.downloads.test.data += [
+    'test/data/empty.txt',
+    'test/data/source.txt',
+]
+
+XPIDL_SOURCES += [
+    'mozIDownloadPlatform.idl',
+]
+
+XPIDL_MODULE = 'downloads'
+
+CXXFLAGS += CONFIG['TK_CFLAGS']
+
 SOURCES += [
     'DownloadPlatform.cpp',
 ]
@@ -30,4 +46,5 @@ if CONFIG['MOZ_PLACES']:
 
 FINAL_LIBRARY = 'xul'
 
-CXXFLAGS += CONFIG['TK_CFLAGS']
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Download Manager')
