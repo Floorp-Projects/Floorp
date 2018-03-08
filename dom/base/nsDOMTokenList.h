@@ -75,7 +75,7 @@ public:
   void Remove(const nsAString& aToken, mozilla::ErrorResult& aError);
   void Remove(const nsTArray<nsString>& aTokens,
               mozilla::ErrorResult& aError);
-  bool Replace(const nsAString& aToken,
+  void Replace(const nsAString& aToken,
                const nsAString& aNewToken,
                mozilla::ErrorResult& aError);
   bool Toggle(const nsAString& aToken,
@@ -99,7 +99,7 @@ protected:
                    const nsTArray<nsString>& aTokens);
   void RemoveInternal(const nsAttrValue* aAttr,
                       const nsTArray<nsString>& aTokens);
-  bool ReplaceInternal(const nsAttrValue* aAttr,
+  void ReplaceInternal(const nsAttrValue* aAttr,
                        const nsAString& aToken,
                        const nsAString& aNewToken);
   inline const nsAttrValue* GetParsedAttr();
