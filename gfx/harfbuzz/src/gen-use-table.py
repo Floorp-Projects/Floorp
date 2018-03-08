@@ -449,7 +449,7 @@ page_bits = 12
 print "}; /* Table items: %d; occupancy: %d%% */" % (offset, occupancy)
 print
 print "USE_TABLE_ELEMENT_TYPE"
-print "hb_use_get_categories (hb_codepoint_t u)"
+print "hb_use_get_category (hb_codepoint_t u)"
 print "{"
 print "  switch (u >> %d)" % page_bits
 print "  {"

@@ -239,11 +239,14 @@ public:
 
   bool IsInitialized() const { return !!mDocument; }
   already_AddRefed<nsIDOMDocument> GetDOMDocument();
-  already_AddRefed<nsIDocument> GetDocument();
-  already_AddRefed<nsIPresShell> GetPresShell();
-  nsPresContext* GetPresContext()
+  nsIDocument* GetDocument() const { return mDocument; }
+  nsIPresShell* GetPresShell() const
   {
-    RefPtr<nsIPresShell> presShell = GetPresShell();
+    return mDocument ? mDocument->GetShell() : nullptr;
+  }
+  nsPresContext* GetPresContext() const
+  {
+    nsIPresShell* presShell = GetPresShell();
     return presShell ? presShell->GetPresContext() : nullptr;
   }
   already_AddRefed<nsIWidget> GetWidget();

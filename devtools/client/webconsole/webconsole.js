@@ -636,7 +636,7 @@ WebConsoleFrame.prototype = {
     });
 
     shortcuts.on(l10n.getStr("webconsole.find.key"),
-                 (name, event) => {
+                 event => {
                    this.filterBox.focus();
                    event.preventDefault();
                  });

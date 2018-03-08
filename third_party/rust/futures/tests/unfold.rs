@@ -2,7 +2,7 @@ extern crate futures;
 
 mod support;
 
-use futures::*;
+use futures::stream;
 
 use support::*;
 

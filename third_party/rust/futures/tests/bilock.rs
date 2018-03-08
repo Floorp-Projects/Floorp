@@ -2,10 +2,10 @@ extern crate futures;
 
 use std::thread;
 
-use futures::{Async, Poll};
+use futures::prelude::*;
 use futures::executor;
-use futures::stream::{self, Stream};
-use futures::future::{self, Future};
+use futures::stream;
+use futures::future;
 use futures::sync::BiLock;
 
 mod support;
@@ -15,31 +15,37 @@ use support::*;
 fn smoke() {
     let future = future::lazy(|| {
         let (a, b) = BiLock::new(1);
-        let mut lock = match a.poll_lock() {
-            Async::Ready(l) => l,
-            Async::NotReady => panic!("poll not ready"),
-        };
-        assert_eq!(*lock, 1);
-        *lock = 2;
 
-        assert!(b.poll_lock().is_not_ready());
-        assert!(a.poll_lock().is_not_ready());
-        drop(lock);
+        {
+            let mut lock = match a.poll_lock() {
+                Async::Ready(l) => l,
+                Async::NotReady => panic!("poll not ready"),
+            };
+            assert_eq!(*lock, 1);
+            *lock = 2;
+
+            assert!(b.poll_lock().is_not_ready());
+            assert!(a.poll_lock().is_not_ready());
+        }
 
         assert!(b.poll_lock().is_ready());
         assert!(a.poll_lock().is_ready());
 
-        let lock = match b.poll_lock() {
-            Async::Ready(l) => l,
-            Async::NotReady => panic!("poll not ready"),
-        };
-        assert_eq!(*lock, 2);
+        {
+            let lock = match b.poll_lock() {
+                Async::Ready(l) => l,
+                Async::NotReady => panic!("poll not ready"),
+            };
+            assert_eq!(*lock, 2);
+        }
+
+        assert_eq!(a.reunite(b).expect("bilock/smoke: reunite error"), 2);
 
         Ok::<(), ()>(())
     });
 
     assert!(executor::spawn(future)
-                .poll_future(unpark_noop())
+                .poll_future_notify(&notify_noop(), 0)
                 .expect("failure in poll")
                 .is_ready());
 }
@@ -53,7 +59,7 @@ fn concurrent() {
         a: Some(a),
         remaining: N,
     };
-    let b = stream::iter((0..N).map(Ok::<_, ()>)).fold(b, |b, _n| {
+    let b = stream::iter_ok::<_, ()>((0..N)).fold(b, |b, _n| {
         b.lock().map(|mut b| {
             *b += 1;
             b.unlock()
@@ -72,6 +78,8 @@ fn concurrent() {
         Async::Ready(l) => assert_eq!(*l, 2 * N),
         Async::NotReady => panic!("poll not ready"),
     }
+
+    assert_eq!(a.reunite(b).expect("bilock/concurrent: reunite error"), 2 * N);
 
     struct Increment {
         remaining: usize,

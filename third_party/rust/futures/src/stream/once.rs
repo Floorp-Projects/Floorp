@@ -1,7 +1,4 @@
-use core;
-
-use Poll;
-use stream;
+use {Poll, Async};
 use stream::Stream;
 
 /// A stream which emits single element and then EOF.
@@ -9,7 +6,7 @@ use stream::Stream;
 /// This stream will never block and is always ready.
 #[derive(Debug)]
 #[must_use = "streams do nothing unless polled"]
-pub struct Once<T, E>(stream::Iter<core::iter::Once<Result<T, E>>>);
+pub struct Once<T, E>(Option<Result<T, E>>);
 
 /// Creates a stream of single element
 ///
@@ -21,7 +18,7 @@ pub struct Once<T, E>(stream::Iter<core::iter::Once<Result<T, E>>>);
 /// assert_eq!(Ok(Async::Ready(None)), stream.poll());
 /// ```
 pub fn once<T, E>(item: Result<T, E>) -> Once<T, E> {
-    Once(stream::iter(core::iter::once(item)))
+    Once(Some(item))
 }
 
 impl<T, E> Stream for Once<T, E> {
@@ -29,6 +26,10 @@ impl<T, E> Stream for Once<T, E> {
     type Error = E;
 
     fn poll(&mut self) -> Poll<Option<T>, E> {
-        self.0.poll()
+        match self.0.take() {
+            Some(Ok(e)) => Ok(Async::Ready(Some(e))),
+            Some(Err(e)) => Err(e),
+            None => Ok(Async::Ready(None)),
+        }
     }
 }

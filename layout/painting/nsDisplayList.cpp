@@ -3095,7 +3095,6 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   , mForceNotVisible(aBuilder->IsBuildingInvisibleItems())
   , mDisableSubpixelAA(false)
   , mReusedItem(false)
-  , mMergedItem(false)
   , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
 #ifdef MOZ_DUMP_PAINTING
   , mPainted(false)
@@ -7556,10 +7555,10 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
     stickyScrollContainer->ScrollFrame()->GetScrolledFrame()->GetContent());
 
   float factor = presContext->AppUnitsPerDevPixel();
-  nsCoordBox outer;
-  nsCoordBox inner;
+  nsRectAbsolute outer;
+  nsRectAbsolute inner;
   stickyScrollContainer->GetScrollRanges(mFrame, &outer, &inner);
-  LayerBox stickyOuter(NSAppUnitsToFloatPixels(outer.X(), factor) *
+  LayerRectAbsolute stickyOuter(NSAppUnitsToFloatPixels(outer.X(), factor) *
                           aContainerParameters.mXScale,
                         NSAppUnitsToFloatPixels(outer.Y(), factor) *
                           aContainerParameters.mYScale,
@@ -7567,7 +7566,7 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
                           aContainerParameters.mXScale,
                         NSAppUnitsToFloatPixels(outer.YMost(), factor) *
                           aContainerParameters.mYScale);
-  LayerBox stickyInner(NSAppUnitsToFloatPixels(inner.X(), factor) *
+  LayerRectAbsolute stickyInner(NSAppUnitsToFloatPixels(inner.X(), factor) *
                           aContainerParameters.mXScale,
                         NSAppUnitsToFloatPixels(inner.Y(), factor) *
                           aContainerParameters.mYScale,
@@ -7633,8 +7632,8 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
     wr::StickyOffsetBounds hBounds = { 0.0, 0.0 };
     nsPoint appliedOffset;
 
-    nsCoordBox outer;
-    nsCoordBox inner;
+    nsRectAbsolute outer;
+    nsRectAbsolute inner;
     stickyScrollContainer->GetScrollRanges(mFrame, &outer, &inner);
 
     nsIFrame* scrollFrame = do_QueryFrame(stickyScrollContainer->ScrollFrame());

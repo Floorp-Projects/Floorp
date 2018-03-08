@@ -110,7 +110,7 @@ struct CaretValueFormat1
 
   protected:
   HBUINT16	caretValueFormat;	/* Format identifier--format = 1 */
-  HBINT16		coordinate;		/* X or Y value, in design units */
+  FWORD		coordinate;		/* X or Y value, in design units */
   public:
   DEFINE_SIZE_STATIC (4);
 };
@@ -161,7 +161,7 @@ struct CaretValueFormat3
 
   protected:
   HBUINT16	caretValueFormat;	/* Format identifier--format = 3 */
-  HBINT16		coordinate;		/* X or Y value, in design units */
+  FWORD		coordinate;		/* X or Y value, in design units */
   OffsetTo<Device>
 		deviceTable;		/* Offset to Device table for X or Y
 					 * value--from beginning of CaretValue

@@ -128,6 +128,11 @@ interface nsIBlocklistService : nsISupports
    *          it is not available.
    */
   AString getPluginInfoURL(in nsIPluginTag plugin);
+
+  /**
+   * Whether or not we've finished loading the blocklist.
+   */
+  readonly attribute boolean isLoaded;
 };
 
 /**

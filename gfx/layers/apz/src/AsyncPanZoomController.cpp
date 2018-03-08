@@ -72,7 +72,7 @@
 #include "nsMathUtils.h"                // for NS_hypot
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsStyleConsts.h"
-#include "nsStyleStruct.h"              // for nsTimingFunction
+#include "nsTimingFunction.h"
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 #include "nsViewportInfo.h"             // for kViewportMinScale, kViewportMaxScale

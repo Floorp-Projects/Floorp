@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsCSSFrameConstructor.h"
 #include "nsTArray.h"
 #include "nsString.h"
 #ifdef MOZ_OLD_STYLE
@@ -25,7 +26,6 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsGkAtoms.h"
-#include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsXBLPrototypeBinding.h"
 #ifdef MOZ_OLD_STYLE
@@ -272,10 +272,10 @@ nsXBLResourceLoader::NotifyBoundElements()
           if (!childFrame) {
             // Check if it's in the display:none or display:contents maps.
             nsStyleContext* sc =
-              shell->FrameManager()->GetDisplayNoneStyleFor(content);
+              shell->FrameConstructor()->GetDisplayNoneStyleFor(content);
 
             if (!sc) {
-              sc = shell->FrameManager()->GetDisplayContentsStyleFor(content);
+              sc = shell->FrameConstructor()->GetDisplayContentsStyleFor(content);
             }
 
             if (!sc) {

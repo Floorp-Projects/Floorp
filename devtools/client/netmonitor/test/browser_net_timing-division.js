@@ -7,8 +7,8 @@
  * Tests if timing intervals are divided againts seconds when appropriate.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -17,10 +17,10 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 2);
   // Timeout needed for having enough divisions on the time scale.
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests(2, null, 3000);
   });
-  yield wait;
+  await wait;
 
   let milDivs = document.querySelectorAll(
     ".requests-list-timings-division[data-division-scale=millisecond]");

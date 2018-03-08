@@ -20,6 +20,8 @@ import org.junit.runners.model.Statement;
 import android.app.Instrumentation;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
+import android.os.Bundle;
+import android.os.Debug;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -29,6 +31,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.UiThreadTestRule;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.Surface;
 
@@ -50,6 +53,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import kotlin.jvm.JvmClassMappingKt;
@@ -64,7 +68,22 @@ import kotlin.reflect.KClass;
 public class GeckoSessionTestRule extends UiThreadTestRule {
 
     private static final long DEFAULT_TIMEOUT_MILLIS = 10000;
+    private static final long DEFAULT_DEBUG_TIMEOUT_MILLIS = 86400000;
     public static final String APK_URI_PREFIX = "resource://android/";
+
+    private static final Method sOnLocationChange;
+    private static final Method sOnPageStop;
+
+    static {
+        try {
+            sOnLocationChange = GeckoSession.NavigationDelegate.class.getMethod(
+                    "onLocationChange", GeckoSession.class, String.class);
+            sOnPageStop = GeckoSession.ProgressDelegate.class.getMethod(
+                    "onPageStop", GeckoSession.class, boolean.class);
+        } catch (final NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Specify the timeout for any of the wait methods, in milliseconds. Can be used
@@ -84,6 +103,15 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public @interface WithDisplay {
         int width();
         int height();
+    }
+
+    /**
+     * Specify that the main session should not be opened at the start of the test.
+     */
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ClosedSessionAtStart {
+        boolean value() default true;
     }
 
     /**
@@ -239,19 +267,20 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     public static class MethodCall {
+        public final GeckoSession session;
         public final Method method;
         public final CallRequirement requirement;
         public final Object target;
         private int currentCount;
 
-        public MethodCall(final Method method,
+        public MethodCall(final GeckoSession session, final Method method,
                           final CallRequirement requirement) {
-            this(method, requirement, /* target */ null);
+            this(session, method, requirement, /* target */ null);
         }
 
-        /* package */ MethodCall(final Method method, final AssertCalled annotation,
-                                 final Object target) {
-            this(method,
+        /* package */ MethodCall(final GeckoSession session, final Method method,
+                                 final AssertCalled annotation, final Object target) {
+            this(session, method,
                  (annotation != null) ? new CallRequirement(annotation.value(),
                                                             annotation.count(),
                                                             annotation.order())
@@ -259,8 +288,9 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                  /* target */ target);
         }
 
-        /* package */ MethodCall(final Method method, final CallRequirement requirement,
-                                 final Object target) {
+        /* package */ MethodCall(final GeckoSession session, final Method method,
+                                 final CallRequirement requirement, final Object target) {
+            this.session = session;
             this.method = method;
             this.requirement = requirement;
             this.target = target;
@@ -272,7 +302,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             if (this == other) {
                 return true;
             } else if (other instanceof MethodCall) {
-                return methodsEqual(method, ((MethodCall) other).method);
+                final MethodCall otherCall = (MethodCall) other;
+                return (session == null || otherCall.session == null ||
+                        session == otherCall.session) &&
+                        methodsEqual(method, ((MethodCall) other).method);
             } else if (other instanceof Method) {
                 return methodsEqual(method, (Method) other);
             }
@@ -328,11 +361,61 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
     }
 
+    protected static class CallRecord {
+        public final Method method;
+        public final MethodCall methodCall;
+        public final Object[] args;
+
+        public CallRecord(final GeckoSession session, final Method method, final Object[] args) {
+            this.method = method;
+            this.methodCall = new MethodCall(session, method, /* requirement */ null);
+            this.args = args;
+        }
+    }
+
+    protected interface CallRecordHandler {
+        boolean handleCall(Method method, Object[] args);
+    }
+
+    public class Environment {
+        /* package */ Environment() {
+        }
+
+        private String getEnvVar(final String name) {
+            final int nameLen = name.length();
+            final Bundle args = InstrumentationRegistry.getArguments();
+            String env = args.getString("env0", null);
+            for (int i = 1; env != null; i++) {
+                if (env.length() >= nameLen + 1 &&
+                        env.startsWith(name) &&
+                        env.charAt(nameLen) == '=') {
+                    return env.substring(nameLen + 1);
+                }
+                env = args.getString("env" + i, null);
+            }
+            return "";
+        }
+
+        public boolean isAutomation() {
+            return !getEnvVar("MOZ_IN_AUTOMATION").isEmpty();
+        }
+
+        public boolean isE10s() {
+            return mMainSession.getSettings().getBoolean(
+                    GeckoSessionSettings.USE_MULTIPROCESS);
+        }
+
+        public boolean isDebugging() {
+            return Debug.isDebuggerConnected();
+        }
+    }
+
     protected class CallbackDelegates {
-        private final Map<Method, MethodCall> mDelegates = new HashMap<>();
+        private final Map<Pair<GeckoSession, Method>, MethodCall> mDelegates = new HashMap<>();
         private int mOrder;
 
-        public void delegate(final Object callback) {
+        public void delegate(final @Nullable GeckoSession session,
+                             final @NonNull Object callback) {
             for (final Class<?> ifce : CALLBACK_CLASSES) {
                 if (!ifce.isInstance(callback)) {
                     continue;
@@ -346,8 +429,9 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                         throw new RuntimeException(e);
                     }
                     final MethodCall call = new MethodCall(
-                            callbackMethod, getAssertCalled(callbackMethod, callback), callback);
-                    mDelegates.put(method, call);
+                            session, callbackMethod,
+                            getAssertCalled(callbackMethod, callback), callback);
+                    mDelegates.put(new Pair<>(session, method), call);
                 }
             }
         }
@@ -364,8 +448,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             }
         }
 
-        public MethodCall prepareMethodCall(final Method method) {
-            final MethodCall call = mDelegates.get(method);
+        public MethodCall prepareMethodCall(final GeckoSession session, final Method method) {
+            MethodCall call = mDelegates.get(new Pair<>(session, method));
+            if (call == null && session != null) {
+                call = mDelegates.get(new Pair<>((GeckoSession) null, method));
+            }
             if (call == null) {
                 return null;
             }
@@ -375,18 +462,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             assertOrder(call, mOrder);
             mOrder = Math.max(call.getOrder(), mOrder);
             return call;
-        }
-    }
-
-    protected static class CallRecord {
-        public final Method method;
-        public final MethodCall methodCall;
-        public final Object[] args;
-
-        public CallRecord(final Method method, final Object[] args) {
-            this.method = method;
-            this.methodCall = new MethodCall(method, /* requirement */ null);
-            this.args = args;
         }
     }
 
@@ -431,24 +506,29 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     private static final List<Class<?>> CALLBACK_CLASSES = Arrays.asList(getCallbackClasses());
 
+    public final Environment env = new Environment();
+
     protected final Instrumentation mInstrumentation =
             InstrumentationRegistry.getInstrumentation();
     protected final GeckoSessionSettings mDefaultSettings;
+    protected final Set<GeckoSession> mSubSessions = new HashSet<>();
 
     protected ErrorCollector mErrorCollector;
-    protected GeckoSession mSession;
-    protected Point mDisplaySize;
+    protected GeckoSession mMainSession;
     protected Object mCallbackProxy;
     protected List<CallRecord> mCallRecords;
+    protected CallRecordHandler mCallRecordHandler;
     protected CallbackDelegates mWaitScopeDelegates;
     protected CallbackDelegates mTestScopeDelegates;
     protected int mLastWaitStart;
     protected int mLastWaitEnd;
     protected MethodCall mCurrentMethodCall;
-    protected long mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
+    protected long mTimeoutMillis;
+    protected Point mDisplaySize;
     protected SurfaceTexture mDisplayTexture;
     protected Surface mDisplaySurface;
     protected GeckoDisplay mDisplay;
+    protected boolean mClosedSession;
 
     public GeckoSessionTestRule() {
         mDefaultSettings = new GeckoSessionSettings();
@@ -472,7 +552,14 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         return mErrorCollector;
     }
 
-    private <T> void assertThat(final String reason, final T value, final Matcher<T> matcher) {
+    /**
+     * Assert a condition with junit.Assert or an error collector.
+     *
+     * @param reason Reason string
+     * @param value Value to check
+     * @param matcher Matcher for checking the value
+     */
+    public <T> void assertThat(final String reason, final T value, final Matcher<T> matcher) {
         if (mErrorCollector != null) {
             mErrorCollector.checkThat(reason, value, matcher);
         } else {
@@ -484,7 +571,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         final int count = call.getCount();
         if (count != 0) {
             assertThat(call.method.getName() + " call count should be within limit",
-                       call.getCurrentCount(), lessThan(Math.max(0, count)));
+                       call.getCurrentCount() + 1, lessThanOrEqualTo(Math.max(0, count)));
         }
     }
 
@@ -520,7 +607,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      * @return GeckoSession object.
      */
     public @NonNull GeckoSession getSession() {
-        return mSession;
+        return mMainSession;
     }
 
     protected static Method getCallbackSetter(final @NonNull Class<?> cls)
@@ -547,21 +634,28 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             } else if (WithDisplay.class.equals(annotation.annotationType())) {
                 final WithDisplay displaySize = (WithDisplay)annotation;
                 mDisplaySize = new Point(displaySize.width(), displaySize.height());
+            } else if (ClosedSessionAtStart.class.equals(annotation.annotationType())) {
+                mClosedSession = ((ClosedSessionAtStart) annotation).value();
             }
         }
     }
 
-    private static RuntimeException unwrapRuntimeException(Throwable e) {
+    private static RuntimeException unwrapRuntimeException(final Throwable e) {
         final Throwable cause = e.getCause();
         if (cause != null && cause instanceof RuntimeException) {
-            return (RuntimeException)cause;
+            return (RuntimeException) cause;
+        } else if (e instanceof RuntimeException) {
+            return (RuntimeException) e;
         }
 
-        return new RuntimeException(cause);
+        return new RuntimeException(cause != null ? cause : e);
     }
 
-    protected void prepareSession(final Description description) throws Throwable {
+    protected void prepareStatement(final Description description) throws Throwable {
         final GeckoSessionSettings settings = new GeckoSessionSettings(mDefaultSettings);
+        mTimeoutMillis = !env.isDebugging() ? DEFAULT_TIMEOUT_MILLIS
+                                            : DEFAULT_DEBUG_TIMEOUT_MILLIS;
+        mClosedSession = false;
 
         applyAnnotations(Arrays.asList(description.getTestClass().getAnnotations()), settings);
         applyAnnotations(description.getAnnotations(), settings);
@@ -579,14 +673,28 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             @Override
             public Object invoke(final Object proxy, final Method method,
                                  final Object[] args) {
-                assertThat("Callbacks must be on UI thread",
-                           Looper.myLooper(), equalTo(Looper.getMainLooper()));
+                boolean ignore = false;
+                MethodCall call = null;
 
-                records.add(new CallRecord(method, args));
+                if (Object.class.equals(method.getDeclaringClass())) {
+                    ignore = true;
+                } else if (mCallRecordHandler != null) {
+                    ignore = mCallRecordHandler.handleCall(method, args);
+                }
 
-                MethodCall call = waitDelegates.prepareMethodCall(method);
-                if (call == null) {
-                    call = testDelegates.prepareMethodCall(method);
+                if (!ignore) {
+                    assertThat("Callbacks must be on UI thread",
+                               Looper.myLooper(), equalTo(Looper.getMainLooper()));
+                    assertThat("Callback first argument must be session object",
+                               args[0], instanceOf(GeckoSession.class));
+
+                    final GeckoSession session = (GeckoSession) args[0];
+                    records.add(new CallRecord(session, method, args));
+
+                    call = waitDelegates.prepareMethodCall(session, method);
+                    if (call == null) {
+                        call = testDelegates.prepareMethodCall(session, method);
+                    }
                 }
 
                 try {
@@ -605,26 +713,81 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mCallbackProxy = Proxy.newProxyInstance(GeckoSession.class.getClassLoader(),
                                                 classes, recorder);
 
-        mSession = new GeckoSession(settings);
+        mMainSession = new GeckoSession(settings);
+        prepareSession(mMainSession);
 
         if (mDisplaySize != null) {
             mDisplayTexture = new SurfaceTexture(0);
             mDisplaySurface = new Surface(mDisplayTexture);
-            mDisplay = mSession.acquireDisplay();
+            mDisplay = mMainSession.acquireDisplay();
             mDisplay.surfaceChanged(mDisplaySurface, mDisplaySize.x, mDisplaySize.y);
         }
 
+        if (!mClosedSession) {
+            openSession(mMainSession);
+        }
+    }
+
+    protected void prepareSession(final GeckoSession session) throws Throwable {
         for (final Class<?> cls : CALLBACK_CLASSES) {
             if (cls != null) {
-                getCallbackSetter(cls).invoke(mSession, mCallbackProxy);
+                getCallbackSetter(cls).invoke(session, mCallbackProxy);
             }
         }
+    }
 
-        mSession.openWindow(mInstrumentation.getTargetContext());
+    /**
+     * Call openWindow() on a session, and ensure it's ready for use by the test. In particular,
+     * remove any extra calls recorded as part of opening the session.
+     *
+     * @param session Session to open.
+     */
+    public void openSession(final GeckoSession session) {
+        final boolean e10s = session.getSettings().getBoolean(
+                GeckoSessionSettings.USE_MULTIPROCESS);
 
-        if (settings.getBoolean(GeckoSessionSettings.USE_MULTIPROCESS)) {
-            // Under e10s, we receive an initial about:blank load; don't expose that to the test.
-            waitForPageStop();
+        if (e10s) {
+            // Give any pending calls a chance to catch up.
+            loopUntilIdle(/* timeout */ 0);
+        }
+
+        session.openWindow(mInstrumentation.getTargetContext());
+
+        if (!e10s) {
+            return;
+        }
+
+        // Under e10s, we receive an initial about:blank load; don't expose that to the test.
+        // The about:blank load is bounded by onLocationChange and onPageStop calls,
+        // so find the first about:blank onLocationChange, then the next onPageStop,
+        // and ignore everything in-between from that session.
+
+        try {
+            mCallRecordHandler = new CallRecordHandler() {
+                private boolean mFoundStart = false;
+
+                @Override
+                public boolean handleCall(final Method method, final Object[] args) {
+                    if (!mFoundStart && sOnLocationChange.equals(method) &&
+                            session.equals(args[0]) && "about:blank".equals(args[1])) {
+                        mFoundStart = true;
+                        return true;
+                    } else if (mFoundStart && session.equals(args[0])) {
+                        if (sOnPageStop.equals(method)) {
+                            mCallRecordHandler = null;
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+            };
+
+            do {
+                loopUntilIdle(mTimeoutMillis);
+            } while (mCallRecordHandler != null);
+
+        } finally {
+            mCallRecordHandler = null;
         }
     }
 
@@ -636,29 +799,36 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mTestScopeDelegates.clear();
     }
 
-    protected void cleanupSession() throws Throwable {
-        if (mSession.isOpen()) {
-            mSession.closeWindow();
+    protected void cleanupSession(final GeckoSession session) {
+        if (session.isOpen()) {
+            session.closeWindow();
         }
+    }
+
+    protected void cleanupStatement() throws Throwable {
+        for (final GeckoSession session : mSubSessions) {
+            cleanupSession(session);
+        }
+        cleanupSession(mMainSession);
 
         if (mDisplay != null) {
             mDisplay.surfaceDestroyed();
-            mSession.releaseDisplay(mDisplay);
-            mDisplaySurface.release();
-            mDisplayTexture.release();
+            mMainSession.releaseDisplay(mDisplay);
             mDisplay = null;
-            mDisplayTexture = null;
+            mDisplaySurface.release();
             mDisplaySurface = null;
+            mDisplayTexture.release();
+            mDisplayTexture = null;
         }
 
-        mSession = null;
+        mMainSession = null;
         mCallbackProxy = null;
         mCallRecords = null;
         mWaitScopeDelegates = null;
         mTestScopeDelegates = null;
         mLastWaitStart = 0;
         mLastWaitEnd = 0;
-        mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
+        mTimeoutMillis = 0;
     }
 
     @Override
@@ -667,11 +837,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             @Override
             public void evaluate() throws Throwable {
                 try {
-                    prepareSession(description);
+                    prepareStatement(description);
                     base.evaluate();
                     performTestEndCheck();
                 } finally {
-                    cleanupSession();
+                    cleanupStatement();
                 }
             }
         }, description);
@@ -755,59 +925,99 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     /**
-     * Wait until a page load has finished. The session must have started a page load since
-     * the last wait, or this method will wait indefinitely.
+     * Wait until a page load has finished on any session. A session must have started a
+     * page load since the last wait, or this method will wait indefinitely.
      */
     public void waitForPageStop() {
-        waitForPageStops(/* count */ 1);
+        waitForPageStop(/* session */ null);
     }
 
     /**
      * Wait until a page load has finished. The session must have started a page load since
      * the last wait, or this method will wait indefinitely.
      *
+     * @param session Session to wait on, or null to wait on any session.
+     */
+    public void waitForPageStop(final GeckoSession session) {
+        waitForPageStops(session, /* count */ 1);
+    }
+
+    /**
+     * Wait until a page load has finished on any session. A session must have started a
+     * page load since the last wait, or this method will wait indefinitely.
+     *
      * @param count Number of page loads to wait for.
      */
     public void waitForPageStops(final int count) {
-        final Method onPageStop;
-        try {
-            onPageStop = GeckoSession.ProgressDelegate.class.getMethod(
-                    "onPageStop", GeckoSession.class, boolean.class);
-        } catch (final NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+        waitForPageStops(/* session */ null, count);
+    }
 
+    /**
+     * Wait until a page load has finished. The session must have started a page load since
+     * the last wait, or this method will wait indefinitely.
+     *
+     * @param session Session to wait on, or null to wait on any session.
+     * @param count Number of page loads to wait for.
+     */
+    public void waitForPageStops(final GeckoSession session, final int count) {
         final List<MethodCall> methodCalls = new ArrayList<>(1);
-        methodCalls.add(new MethodCall(onPageStop,
+        methodCalls.add(new MethodCall(session, sOnPageStop,
                 new CallRequirement(/* allowed */ true, count, null)));
 
-        waitUntilCalled(GeckoSession.ProgressDelegate.class, methodCalls);
+        waitUntilCalled(session, GeckoSession.ProgressDelegate.class, methodCalls);
     }
 
     /**
      * Wait until the specified methods have been called on the specified callback
-     * interface. If no methods are specified, wait until any method has been called.
+     * interface for any session. If no methods are specified, wait until any method has
+     * been called.
      *
      * @param callback Target callback interface; must be an interface under GeckoSession.
      * @param methods List of methods to wait on; use empty or null or wait on any method.
      */
     public void waitUntilCalled(final @NonNull KClass<?> callback,
                                 final @Nullable String... methods) {
-        waitUntilCalled(JvmClassMappingKt.getJavaClass(callback), methods);
+        waitUntilCalled(/* session */ null, callback, methods);
     }
 
     /**
      * Wait until the specified methods have been called on the specified callback
      * interface. If no methods are specified, wait until any method has been called.
      *
+     * @param session Session to wait on, or null to wait on any session.
+     * @param callback Target callback interface; must be an interface under GeckoSession.
+     * @param methods List of methods to wait on; use empty or null or wait on any method.
+     */
+    public void waitUntilCalled(final @Nullable GeckoSession session,
+                                final @NonNull KClass<?> callback,
+                                final @Nullable String... methods) {
+        waitUntilCalled(session, JvmClassMappingKt.getJavaClass(callback), methods);
+    }
+
+    /**
+     * Wait until the specified methods have been called on the specified callback
+     * interface for any session. If no methods are specified, wait until any method has
+     * been called.
+     *
      * @param callback Target callback interface; must be an interface under GeckoSession.
      * @param methods List of methods to wait on; use empty or null or wait on any method.
      */
     public void waitUntilCalled(final @NonNull Class<?> callback,
                                 final @Nullable String... methods) {
-        assertThat("Class should be a GeckoSession interface",
-                   callback, isIn(CALLBACK_CLASSES));
+        waitUntilCalled(/* session */ null, callback, methods);
+    }
 
+    /**
+     * Wait until the specified methods have been called on the specified callback
+     * interface. If no methods are specified, wait until any method has been called.
+     *
+     * @param session Session to wait on, or null to wait on any session.
+     * @param callback Target callback interface; must be an interface under GeckoSession.
+     * @param methods List of methods to wait on; use empty or null or wait on any method.
+     */
+    public void waitUntilCalled(final @Nullable GeckoSession session,
+                                final @NonNull Class<?> callback,
+                                final @Nullable String... methods) {
         final int length = (methods != null) ? methods.length : 0;
         final Pattern[] patterns = new Pattern[length];
         for (int i = 0; i < length; i++) {
@@ -815,16 +1025,41 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
 
         final List<MethodCall> waitMethods = new ArrayList<>();
+        boolean isSessionCallback = false;
 
-        for (final Method method : callback.getDeclaredMethods()) {
-            for (final Pattern pattern : patterns) {
-                if (pattern.matcher(method.getName()).matches()) {
-                    waitMethods.add(new MethodCall(method, /* requirement */ null));
+        for (final Class<?> ifce : CALLBACK_CLASSES) {
+            if (!ifce.isAssignableFrom(callback)) {
+                continue;
+            }
+            for (final Method method : ifce.getMethods()) {
+                for (final Pattern pattern : patterns) {
+                    if (!pattern.matcher(method.getName()).matches()) {
+                        continue;
+                    }
+                    waitMethods.add(new MethodCall(session, method,
+                                                   /* requirement */ null));
+                    break;
                 }
             }
+            isSessionCallback = true;
         }
 
-        waitUntilCalled(callback, waitMethods);
+        assertThat("Class should be a GeckoSession interface",
+                   isSessionCallback, equalTo(true));
+
+        waitUntilCalled(session, callback, waitMethods);
+    }
+
+    /**
+     * Wait until the specified methods have been called on the specified object for any
+     * session, as specified by any {@link AssertCalled @AssertCalled} annotations. If no
+     * {@link AssertCalled @AssertCalled} annotations are found, wait until any method has
+     * been called. Only methods belonging to a GeckoSession callback are supported.
+     *
+     * @param callback Target callback object; must implement an interface under GeckoSession.
+     */
+    public void waitUntilCalled(final @NonNull Object callback) {
+        waitUntilCalled(/* session */ null, callback);
     }
 
     /**
@@ -833,11 +1068,13 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      * {@link AssertCalled @AssertCalled} annotations are found, wait until any method
      * has been called. Only methods belonging to a GeckoSession callback are supported.
      *
+     * @param session Session to wait on, or null to wait on any session.
      * @param callback Target callback object; must implement an interface under GeckoSession.
      */
-    public void waitUntilCalled(final @NonNull Object callback) {
+    public void waitUntilCalled(final @Nullable GeckoSession session,
+                                final @NonNull Object callback) {
         if (callback instanceof Class<?>) {
-            waitUntilCalled((Class<?>) callback, (String[]) null);
+            waitUntilCalled(session, (Class<?>) callback, (String[]) null);
             return;
         }
 
@@ -856,17 +1093,24 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 }
                 final AssertCalled ac = getAssertCalled(callbackMethod, callback);
                 if (ac != null && ac.value()) {
-                    methodCalls.add(new MethodCall(callbackMethod, ac, /* target */ null));
+                    methodCalls.add(new MethodCall(session, callbackMethod,
+                                                   ac, /* target */ null));
                 }
             }
         }
 
-        waitUntilCalled(callback.getClass(), methodCalls);
-        forCallbacksDuringWait(callback);
+        waitUntilCalled(session, callback.getClass(), methodCalls);
+        forCallbacksDuringWait(session, callback);
     }
 
-    protected void waitUntilCalled(final @NonNull Class<?> delegate,
+    protected void waitUntilCalled(final @Nullable GeckoSession session,
+                                   final @NonNull Class<?> delegate,
                                    final @NonNull List<MethodCall> methodCalls) {
+        if (session != null && !session.equals(mMainSession)) {
+            assertThat("Session should be wrapped through wrapSession",
+                       session, isIn(mSubSessions));
+        }
+
         // Make sure all handlers are set though #delegateUntilTestEnd or #delegateDuringNextWait,
         // instead of through GeckoSession directly, so that we can still record calls even with
         // custom handlers set.
@@ -874,7 +1118,9 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             try {
                 assertThat("Callbacks should be set through" +
                            " GeckoSessionTestRule delegate methods",
-                           getCallbackGetter(ifce).invoke(mSession), sameInstance(mCallbackProxy));
+                           getCallbackGetter(ifce).invoke(session == null ? mMainSession
+                                                                          : session),
+                           sameInstance(mCallbackProxy));
             } catch (final NoSuchMethodException | IllegalAccessException |
                            InvocationTargetException e) {
                 throw unwrapRuntimeException(e);
@@ -910,16 +1156,32 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     /**
+     * Playback callbacks that were made on all sessions during the previous wait. For any
+     * methods annotated with {@link AssertCalled @AssertCalled}, assert that the
+     * callbacks satisfy the specified requirements. If no {@link AssertCalled
+     * @AssertCalled} annotations are found, assert any method has been called. Only
+     * methods belonging to a GeckoSession callback are supported.
+     *
+     * @param callback Target callback object; must implement one or more interfaces
+     *                 under GeckoSession.
+     */
+    public void forCallbacksDuringWait(final @NonNull Object callback) {
+        forCallbacksDuringWait(/* session */ null, callback);
+    }
+
+    /**
      * Playback callbacks that were made during the previous wait. For any methods
      * annotated with {@link AssertCalled @AssertCalled}, assert that the callbacks
      * satisfy the specified requirements. If no {@link AssertCalled @AssertCalled}
      * annotations are found, assert any method has been called. Only methods belonging
      * to a GeckoSession callback are supported.
      *
+     * @param session  Target session object, or null to playback all sessions.
      * @param callback Target callback object; must implement one or more interfaces
      *                 under GeckoSession.
      */
-    public void forCallbacksDuringWait(final @NonNull Object callback) {
+    public void forCallbacksDuringWait(final @Nullable GeckoSession session,
+                                       final @NonNull Object callback) {
         final Method[] declaredMethods = callback.getClass().getDeclaredMethods();
         final List<MethodCall> methodCalls = new ArrayList<>(declaredMethods.length);
         for (final Class<?> ifce : CALLBACK_CLASSES) {
@@ -935,7 +1197,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     throw new RuntimeException(e);
                 }
                 methodCalls.add(new MethodCall(
-                        callbackMethod, getAssertCalled(callbackMethod, callback),
+                        session, callbackMethod, getAssertCalled(callbackMethod, callback),
                         /* target */ null));
             }
         }
@@ -945,7 +1207,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
         for (int index = mLastWaitStart; index < mLastWaitEnd; index++) {
             final CallRecord record = mCallRecords.get(index);
-            if (!record.method.getDeclaringClass().isInstance(callback)) {
+            if (!record.method.getDeclaringClass().isInstance(callback) ||
+                    (session != null && record.args[0] != session)) {
                 continue;
             }
 
@@ -994,15 +1257,41 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     /**
+     * Delegate implemented interfaces to the specified callback object for all sessions,
+     * for the rest of the test.  Only GeckoSession callback interfaces are supported.
+     * Delegates for {@link #delegateUntilTestEnd} can be temporarily overridden by
+     * delegates for {@link #delegateDuringNextWait}.
+     *
+     * @param callback Callback object, or null to clear all previously-set delegates.
+     */
+    public void delegateUntilTestEnd(final @NonNull Object callback) {
+        delegateUntilTestEnd(/* session */ null, callback);
+    }
+
+    /**
      * Delegate implemented interfaces to the specified callback object, for the rest of the test.
      * Only GeckoSession callback interfaces are supported. Delegates for {@link
      * #delegateUntilTestEnd} can be temporarily overridden by delegates for {@link
      * #delegateDuringNextWait}.
      *
+     * @param session Session to target, or null to target all sessions.
      * @param callback Callback object, or null to clear all previously-set delegates.
      */
-    public void delegateUntilTestEnd(final Object callback) {
-        mTestScopeDelegates.delegate(callback);
+    public void delegateUntilTestEnd(final @Nullable GeckoSession session,
+                                     final @NonNull Object callback) {
+        mTestScopeDelegates.delegate(session, callback);
+    }
+
+    /**
+     * Delegate implemented interfaces to the specified callback object for all sessions,
+     * during the next wait.  Only GeckoSession callback interfaces are supported.
+     * Delegates for {@link #delegateDuringNextWait} can temporarily take precedence over
+     * delegates for {@link #delegateUntilTestEnd}.
+     *
+     * @param callback Callback object, or null to clear all previously-set delegates.
+     */
+    public void delegateDuringNextWait(final @NonNull Object callback) {
+        delegateDuringNextWait(/* session */ null, callback);
     }
 
     /**
@@ -1011,21 +1300,95 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      * #delegateDuringNextWait} can temporarily take precedence over delegates for
      * {@link #delegateUntilTestEnd}.
      *
+     * @param session Session to target, or null to target all sessions.
      * @param callback Callback object, or null to clear all previously-set delegates.
      */
-    public void delegateDuringNextWait(final Object callback) {
-        mWaitScopeDelegates.delegate(callback);
+    public void delegateDuringNextWait(final @Nullable GeckoSession session,
+                                       final @NonNull Object callback) {
+        mWaitScopeDelegates.delegate(session, callback);
     }
 
-    public void synthesizeTap(int x, int y) {
+    /**
+     * Synthesize a tap event at the specified location using the main session.
+     * The session must have been created with a display.
+     *
+     * @param session Target session
+     * @param x X coordinate
+     * @param y Y coordinate
+     */
+    public void synthesizeTap(final @NonNull GeckoSession session,
+                              final int x, final int y) {
         final long downTime = SystemClock.uptimeMillis();
-        final MotionEvent down = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
-            MotionEvent.ACTION_DOWN, x, y, 0);
+        final MotionEvent down = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, x, y, 0);
+        session.getPanZoomController().onTouchEvent(down);
 
-        mSession.getPanZoomController().onTouchEvent(down);
+        final MotionEvent up = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y, 0);
+        session.getPanZoomController().onTouchEvent(up);
+    }
 
-        final MotionEvent up = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
-                MotionEvent.ACTION_UP, x, y, 0);
-        mSession.getPanZoomController().onTouchEvent(up);
+    /**
+     * Initialize and keep track of the specified session within the test rule. The
+     * session is automatically cleaned up at the end of the test.
+     *
+     * @param session Session to keep track of.
+     * @return Same session
+     */
+    public GeckoSession wrapSession(final GeckoSession session) {
+        try {
+            mSubSessions.add(session);
+            prepareSession(session);
+        } catch (final Throwable e) {
+            throw unwrapRuntimeException(e);
+        }
+        return session;
+    }
+
+    private GeckoSession createSession(final GeckoSessionSettings settings,
+                                       final boolean open) {
+        final GeckoSession session = wrapSession(new GeckoSession(settings));
+        if (open) {
+            openSession(session);
+        }
+        return session;
+    }
+
+    /**
+     * Create a new, opened session using the main session settings.
+     *
+     * @return New session.
+     */
+    public GeckoSession createOpenSession() {
+        return createSession(mMainSession.getSettings(), /* open */ true);
+    }
+
+    /**
+     * Create a new, opened session using the specified settings.
+     *
+     * @param settings Settings for the new session.
+     * @return New session.
+     */
+    public GeckoSession createOpenSession(final GeckoSessionSettings settings) {
+        return createSession(settings, /* open */ true);
+    }
+
+    /**
+     * Create a new, closed session using the specified settings.
+     *
+     * @return New session.
+     */
+    public GeckoSession createClosedSession() {
+        return createSession(mMainSession.getSettings(), /* open */ false);
+    }
+
+    /**
+     * Create a new, closed session using the specified settings.
+     *
+     * @param settings Settings for the new session.
+     * @return New session.
+     */
+    public GeckoSession createClosedSession(final GeckoSessionSettings settings) {
+        return createSession(settings, /* open */ false);
     }
 }

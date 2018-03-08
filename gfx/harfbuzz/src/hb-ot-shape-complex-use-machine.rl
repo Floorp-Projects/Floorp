@@ -100,7 +100,7 @@ final_consonants = FAbv* FBlw* FPst* FM?;
 virama_terminated_cluster =
 	(R|CS)? (B | GB) VS?
 	consonant_modifiers
-	H
+	ZWJ?.H.ZWJ?
 ;
 standard_cluster =
 	(R|CS)? (B | GB) VS?

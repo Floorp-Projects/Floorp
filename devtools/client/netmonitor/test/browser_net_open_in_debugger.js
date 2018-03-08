@@ -7,8 +7,8 @@
  * Test the 'Open in debugger' feature
  */
 
-add_task(function* () {
-  let { tab, monitor, toolbox} = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+add_task(async function () {
+  let { tab, monitor, toolbox} = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -18,23 +18,23 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests();
   });
-  yield wait;
+  await wait;
 
   wait = waitForDOM(contextMenuDoc, "#request-list-context-open-in-debugger");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[2]);
-  yield wait;
+  await wait;
 
   let onDebuggerReady = toolbox.once("jsdebugger-ready");
   contextMenuDoc.querySelector("#request-list-context-open-in-debugger").click();
-  yield onDebuggerReady;
+  await onDebuggerReady;
 
   ok(true, "Debugger has been open");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

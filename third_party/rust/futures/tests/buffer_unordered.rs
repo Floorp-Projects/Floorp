@@ -3,7 +3,7 @@ extern crate futures;
 use std::sync::mpsc as std_mpsc;
 use std::thread;
 
-use futures::{Future, Stream, Sink};
+use futures::prelude::*;
 use futures::sync::oneshot;
 use futures::sync::mpsc;
 

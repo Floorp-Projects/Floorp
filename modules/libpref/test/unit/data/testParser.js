@@ -1,5 +1,6 @@
-// Note: this file tests only valid syntax. See
-// modules/libpref/test/gtest/Parser.cpp for tests if invalid syntax.
+// Note: this file tests only valid syntax (of user pref files, not default
+// pref files). See modules/libpref/test/gtest/Parser.cpp for tests if invalid
+// syntax.
 
 #
 # comment
@@ -50,6 +51,10 @@ pref
 pref("pref", true);
 sticky_pref("sticky_pref", true);
 user_pref("user_pref", true);
+pref("sticky_pref2", true, sticky);
+pref("locked_pref", true, locked);
+pref("locked_sticky_pref", true, locked, sticky,sticky,
+     locked, locked, locked);
 
 pref("bool.true", true);
 pref("bool.false", false);

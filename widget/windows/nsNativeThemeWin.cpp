@@ -16,6 +16,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsIFrame.h"
 #include "nsNameSpaceManager.h"
 #include "nsLookAndFeel.h"

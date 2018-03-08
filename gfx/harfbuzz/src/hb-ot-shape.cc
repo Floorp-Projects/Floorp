@@ -41,7 +41,7 @@
 #include "hb-set-private.hh"
 
 #include "hb-ot-layout-gsubgpos-private.hh"
-#include "hb-aat-layout-private.hh"
+//#include "hb-aat-layout-private.hh"
 
 static hb_tag_t common_features[] = {
   HB_TAG('c','c','m','p'),
@@ -787,6 +787,8 @@ hb_ot_position (hb_ot_shape_context_t *c)
     _hb_ot_shape_fallback_kern (c->plan, c->font, c->buffer);
 
   _hb_buffer_deallocate_gsubgpos_vars (c->buffer);
+
+  //hb_aat_layout_position (c->font, c->buffer);
 }
 
 static inline void
@@ -957,7 +959,7 @@ hb_ot_shape_glyphs_closure (hb_font_t          *font,
   hb_set_t *copy = hb_set_create ();
   do {
     copy->set (glyphs);
-    for (hb_codepoint_t lookup_index = -1; hb_set_next (lookups, &lookup_index);)
+    for (hb_codepoint_t lookup_index = HB_SET_VALUE_INVALID; hb_set_next (lookups, &lookup_index);)
       hb_ot_layout_lookup_substitute_closure (font->face, lookup_index, glyphs);
   } while (!copy->is_equal (glyphs));
   hb_set_destroy (copy);

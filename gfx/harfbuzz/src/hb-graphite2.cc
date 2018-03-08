@@ -80,7 +80,7 @@ static const void *hb_graphite2_get_table (const void *data, unsigned int tag, s
     p->tag = tag;
 
     /* TODO Not thread-safe, but fairly harmless.
-     * We can do the double-chcked pointer cmpexch thing here. */
+     * We can do the double-checked pointer cmpexch thing here. */
     p->next = face_data->tlist;
     face_data->tlist = p;
   }
@@ -360,7 +360,6 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan,
       hb_glyph_info_t *info = &buffer->info[clusters[i].base_glyph + j];
       info->codepoint = gids[clusters[i].base_glyph + j];
       info->cluster = clusters[i].cluster;
-      info->mask = HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
       info->var1.i32 = clusters[i].advance;     // all glyphs in the cluster get the same advance
     }
   }

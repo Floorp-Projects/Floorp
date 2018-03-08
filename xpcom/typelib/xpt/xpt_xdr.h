@@ -24,7 +24,7 @@ bool
 XPT_SkipStringInline(NotNull<XPTCursor*> cursor);
 
 bool
-XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, char **strp,
+XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, const char **strp,
               bool ignore = false);
 
 bool

@@ -1,7 +1,7 @@
 //! Asynchronous sinks
 //!
 //! This module contains the `Sink` trait, along with a number of adapter types
-//! for it. An overview is available in the documentaiton for the trait itself.
+//! for it. An overview is available in the documentation for the trait itself.
 //!
 //! You can find more information/tutorials about streams [online at
 //! https://tokio.rs][online]
@@ -12,6 +12,7 @@ use {IntoFuture, Poll, StartSend};
 use stream::Stream;
 
 mod with;
+mod with_flat_map;
 // mod with_map;
 // mod with_filter;
 // mod with_filter_map;
@@ -20,6 +21,7 @@ mod from_err;
 mod send;
 mod send_all;
 mod map_err;
+mod fanout;
 
 if_std! {
     mod buffer;
@@ -49,7 +51,7 @@ if_std! {
         }
     }
 
-    /// A type alias for `Box<Stream + Send>`
+    /// A type alias for `Box<Sink + Send>`
     pub type BoxSink<T, E> = ::std::boxed::Box<Sink<SinkItem = T, SinkError = E> +
                                                ::core::marker::Send>;
 
@@ -73,11 +75,13 @@ if_std! {
 }
 
 pub use self::with::With;
+pub use self::with_flat_map::WithFlatMap;
 pub use self::flush::Flush;
 pub use self::send::Send;
 pub use self::send_all::SendAll;
 pub use self::map_err::SinkMapErr;
 pub use self::from_err::SinkFromErr;
+pub use self::fanout::Fanout;
 
 /// A `Sink` is a value into which other values can be sent, asynchronously.
 ///
@@ -237,7 +241,7 @@ pub trait Sink {
     ///
     /// If the value returned is `NotReady` then the sink is not yet closed and
     /// work needs to be done to close it. The work has been scheduled and the
-    /// current task will recieve a notification when it's next ready to call
+    /// current task will receive a notification when it's next ready to call
     /// this method again.
     ///
     /// Finally, this function may also return an error.
@@ -315,6 +319,44 @@ pub trait Sink {
         with::new(self, f)
     }
 
+    /// Composes a function *in front of* the sink.
+    ///
+    /// This adapter produces a new sink that passes each value through the
+    /// given function `f` before sending it to `self`.
+    ///
+    /// To process each value, `f` produces a *stream*, of which each value
+    /// is passed to the underlying sink. A new value will not be accepted until
+    /// the stream has been drained
+    ///
+    /// Note that this function consumes the given sink, returning a wrapped
+    /// version, much like `Iterator::flat_map`.
+    ///
+    /// # Examples
+    /// ---
+    /// Using this function with an iterator through use of the `stream::iter_ok()`
+    /// function
+    ///
+    /// ```
+    /// use futures::prelude::*;
+    /// use futures::stream;
+    /// use futures::sync::mpsc;
+    ///
+    /// let (tx, rx) = mpsc::channel::<i32>(5);
+    ///
+    /// let tx = tx.with_flat_map(|x| {
+    ///     stream::iter_ok(vec![42; x].into_iter().map(|y| y))
+    /// });
+    /// tx.send(5).wait().unwrap();
+    /// assert_eq!(rx.collect().wait(), Ok(vec![42, 42, 42, 42, 42]))
+    /// ```
+    fn with_flat_map<U, F, St>(self, f: F) -> WithFlatMap<Self, U, F, St>
+        where F: FnMut(U) -> St,
+              St: Stream<Item = Self::SinkItem, Error=Self::SinkError>,
+              Self: Sized
+        {
+            with_flat_map::new(self, f)
+        }
+
     /*
     fn with_map<U, F>(self, f: F) -> WithMap<Self, U, F>
         where F: FnMut(U) -> Self::SinkItem,
@@ -367,6 +409,18 @@ pub trait Sink {
         buffer::new(self, amt)
     }
 
+    /// Fanout items to multiple sinks.
+    ///
+    /// This adapter clones each incoming item and forwards it to both this as well as
+    /// the other sink at the same time.
+    fn fanout<S>(self, other: S) -> Fanout<Self, S>
+        where Self: Sized,
+              Self::SinkItem: Clone,
+              S: Sink<SinkItem=Self::SinkItem, SinkError=Self::SinkError>
+    {
+        fanout::new(self, other)
+    }
+
     /// A future that completes when the sink has finished processing all
     /// pending requests.
     ///
@@ -398,11 +452,13 @@ pub trait Sink {
     ///
     /// This future will drive the stream to keep producing items until it is
     /// exhausted, sending each item to the sink. It will complete once both the
-    /// stream is exhausted, and the sink has fully processed and flushed all of
-    /// the items sent to it.
+    /// stream is exhausted, the sink has received all items, the sink has been
+    /// flushed, and the sink has been closed.
     ///
     /// Doing `sink.send_all(stream)` is roughly equivalent to
-    /// `stream.forward(sink)`.
+    /// `stream.forward(sink)`. The returned future will exhaust all items from
+    /// `stream` and send them to `self`, closing `self` when all items have been
+    /// received.
     ///
     /// On completion, the pair `(sink, source)` is returned.
     fn send_all<S>(self, stream: S) -> SendAll<Self, S>

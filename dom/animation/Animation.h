@@ -406,7 +406,6 @@ protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void CancelNoUpdate();
   void PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior);
-  void PauseNoUpdate(ErrorResult& aRv);
   void ResumeAt(const TimeDuration& aReadyTime);
   void PauseAt(const TimeDuration& aReadyTime);
   void FinishPendingAt(const TimeDuration& aReadyTime)

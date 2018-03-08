@@ -8,8 +8,8 @@
  * the performance analysis view.
  */
 
-add_task(function* () {
-  let { monitor } = yield initNetMonitor(FILTERING_URL);
+add_task(async function () {
+  let { monitor } = await initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
   let panel = monitor.panelWin;
@@ -34,7 +34,7 @@ add_task(function* () {
   ok(document.querySelector(".statistics-panel"),
     "The main panel is switched to the statistics panel.");
 
-  yield waitUntil(
+  await waitUntil(
     () => document.querySelectorAll(".pie-chart-container:not([placeholder=true])")
                   .length == 2);
   ok(true, "Two real pie charts appear to be rendered correctly.");
@@ -48,5 +48,5 @@ add_task(function* () {
   testFilterButtons(monitor, "html");
   info("The correct filtering predicate is used when exiting perf. analysis mode.");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

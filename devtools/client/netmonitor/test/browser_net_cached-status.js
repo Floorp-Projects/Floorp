@@ -7,11 +7,11 @@
  * Tests if cached requests have the correct status code
  */
 
-add_task(function* () {
+add_task(async function () {
   // Disable rcwn to make cache behavior deterministic.
-  yield pushPref("network.http.rcwn.enabled", false);
+  await pushPref("network.http.rcwn.enabled", false);
 
-  let { tab, monitor } = yield initNetMonitor(STATUS_CODES_URL, true);
+  let { tab, monitor } = await initNetMonitor(STATUS_CODES_URL, true);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -89,10 +89,10 @@ add_task(function* () {
   ];
 
   info("Performing requests #1...");
-  yield performRequestsAndWait();
+  await performRequestsAndWait();
 
   info("Performing requests #2...");
-  yield performRequestsAndWait();
+  await performRequestsAndWait();
 
   let index = 0;
   for (let request of REQUEST_DATA) {
@@ -100,10 +100,10 @@ add_task(function* () {
     requestItem.scrollIntoView();
     let requestsListStatus = requestItem.querySelector(".requests-list-status");
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-    yield waitUntil(() => requestsListStatus.title);
+    await waitUntil(() => requestsListStatus.title);
 
     info("Verifying request #" + index);
-    yield verifyRequestItemTarget(
+    await verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),
       getSortedRequests(store.getState()).get(index),
@@ -115,13 +115,13 @@ add_task(function* () {
     index++;
   }
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
-  function* performRequestsAndWait() {
+  async function performRequestsAndWait() {
     let wait = waitForNetworkEvents(monitor, 3);
-    yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
       content.wrappedJSObject.performCachedRequests();
     });
-    yield wait;
+    await wait;
   }
 });

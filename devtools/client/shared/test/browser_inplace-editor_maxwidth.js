@@ -97,8 +97,7 @@ let testMaxWidth = Task.async(function* (editor) {
 function getLines(textarea) {
   let win = textarea.ownerDocument.defaultView;
   let style = win.getComputedStyle(textarea);
-  let lineHeight = style.getPropertyCSSValue("line-height").cssText;
-  return Math.floor(textarea.clientHeight / parseFloat(lineHeight));
+  return Math.floor(textarea.clientHeight / parseFloat(style.lineHeight));
 }
 
 /**

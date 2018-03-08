@@ -3,20 +3,19 @@ extern crate futures;
 
 use core::marker;
 
-use futures::{Stream, Future, Poll};
+use futures::prelude::*;
 use futures::future::{ok, err};
 use futures::stream;
 
 #[test]
 fn successful_future() {
-    let stream_items = vec![Ok(17), Err(true), Ok(19)];
-    let future_of_a_stream = ok::<_, bool>(stream::iter(stream_items));
+    let stream_items = vec![17, 19];
+    let future_of_a_stream = ok::<_, bool>(stream::iter_ok(stream_items));
 
     let stream = future_of_a_stream.flatten_stream();
 
     let mut iter = stream.wait();
     assert_eq!(Ok(17), iter.next().unwrap());
-    assert_eq!(Err(true), iter.next().unwrap());
     assert_eq!(Ok(19), iter.next().unwrap());
     assert_eq!(None, iter.next());
 }

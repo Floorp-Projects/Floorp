@@ -15,8 +15,8 @@ const TEST_CASES = [
   },
 ];
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
@@ -27,23 +27,23 @@ add_task(function* () {
 
     info("Performing request to " + test.uri);
     let wait = waitForNetworkEvents(monitor, 1);
-    yield ContentTask.spawn(tab.linkedBrowser, test.uri, function* (url) {
+    await ContentTask.spawn(tab.linkedBrowser, test.uri, async function (url) {
       content.wrappedJSObject.performRequests(1, url);
     });
-    yield wait;
+    await wait;
 
     info("Selecting the request.");
     wait = waitForDOM(document, ".tabs");
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll(".request-list-item")[0]);
-    yield wait;
+    await wait;
 
     if (!document.querySelector("#security-tab[aria-selected=true]")) {
       info("Selecting security tab.");
       wait = waitForDOM(document, "#security-panel .properties-view");
       EventUtils.sendMouseEvent({ type: "click" },
         document.querySelector("#security-tab"));
-      yield wait;
+      await wait;
     }
 
     is(document.querySelector("#security-warning-cipher"),

@@ -16,6 +16,7 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/GeckoStyleContext.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/UndisplayedNode.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/css/StyleRule.h" // For nsCSSSelector
 #include "mozilla/dom/MutationEventBinding.h"
@@ -3664,7 +3665,7 @@ AutoDisplayContentsAncestorPusher::AutoDisplayContentsAncestorPusher(
   , mPresContext(aPresContext)
 {
   if (aParent) {
-    nsFrameManager* fm = mPresContext->FrameManager();
+    nsFrameManager* fm = mPresContext->FrameConstructor();
     // Push display:contents mAncestors onto mTreeMatchContext.
     for (nsIContent* p = aParent; p && fm->GetDisplayContentsStyleFor(p);
          p = p->GetParent()) {

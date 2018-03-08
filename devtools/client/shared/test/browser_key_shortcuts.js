@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+  http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
@@ -34,12 +34,11 @@ add_task(function* () {
 function once(shortcuts, key, listener) {
   let called = false;
   return new Promise(done => {
-    let onShortcut = (key2, event) => {
+    let onShortcut = event => {
       shortcuts.off(key, onShortcut);
       ok(!called, "once listener called only once (i.e. off() works)");
-      is(key, key2, "listener first argument match the key we listen");
       called = true;
-      listener(key2, event);
+      listener(event);
       done();
     };
     shortcuts.on(key, onShortcut);
@@ -49,7 +48,7 @@ function once(shortcuts, key, listener) {
 function* testSimple(shortcuts) {
   info("Test simple key shortcuts");
 
-  let onKey = once(shortcuts, "0", (key, event) => {
+  let onKey = once(shortcuts, "0", event => {
     is(event.key, "0");
 
     // Display another key press to ensure that once() correctly stop listening
@@ -63,7 +62,7 @@ function* testSimple(shortcuts) {
 function* testNonLetterCharacter(shortcuts) {
   info("Test non-naive character key shortcuts");
 
-  let onKey = once(shortcuts, "[", (key, event) => {
+  let onKey = once(shortcuts, "[", event => {
     is(event.key, "[");
   });
 
@@ -74,7 +73,7 @@ function* testNonLetterCharacter(shortcuts) {
 function* testFunctionKey(shortcuts) {
   info("Test function key shortcuts");
 
-  let onKey = once(shortcuts, "F12", (key, event) => {
+  let onKey = once(shortcuts, "F12", event => {
     is(event.key, "F12");
   });
 
@@ -88,7 +87,7 @@ function* testFunctionKey(shortcuts) {
 function* testPlusCharacter(shortcuts) {
   info("Test 'Plus' key shortcuts");
 
-  let onKey = once(shortcuts, "Plus", (key, event) => {
+  let onKey = once(shortcuts, "Plus", event => {
     is(event.key, "+");
   });
 
@@ -101,11 +100,11 @@ function* testMixup(shortcuts) {
   info("Test possible listener mixup");
 
   let hitFirst = false, hitSecond = false;
-  let onFirstKey = once(shortcuts, "0", (key, event) => {
+  let onFirstKey = once(shortcuts, "0", event => {
     is(event.key, "0");
     hitFirst = true;
   });
-  let onSecondKey = once(shortcuts, "Alt+A", (key, event) => {
+  let onSecondKey = once(shortcuts, "Alt+A", event => {
     is(event.key, "a");
     ok(event.altKey);
     hitSecond = true;
@@ -134,7 +133,7 @@ function* testMixup(shortcuts) {
 // but we accept them even if we omit doing that.
 function* testLooseDigits(shortcuts) {
   info("Test Loose digits");
-  let onKey = once(shortcuts, "0", (key, event) => {
+  let onKey = once(shortcuts, "0", event => {
     is(event.key, "à");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -149,7 +148,7 @@ function* testLooseDigits(shortcuts) {
     window);
   yield onKey;
 
-  onKey = once(shortcuts, "0", (key, event) => {
+  onKey = once(shortcuts, "0", event => {
     is(event.key, "0");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -169,7 +168,7 @@ function* testExactModifiers(shortcuts) {
   info("Test exact modifiers match");
 
   let hit = false;
-  let onKey = once(shortcuts, "Alt+A", (key, event) => {
+  let onKey = once(shortcuts, "Alt+A", event => {
     is(event.key, "a");
     ok(event.altKey);
     ok(!event.ctrlKey);
@@ -215,7 +214,7 @@ function* testExactModifiers(shortcuts) {
 // Same thing for `@` on US keybords.
 function* testLooseShiftModifier(shortcuts) {
   info("Test Loose shift modifier");
-  let onKey = once(shortcuts, "%", (key, event) => {
+  let onKey = once(shortcuts, "%", event => {
     is(event.key, "%");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -228,7 +227,7 @@ function* testLooseShiftModifier(shortcuts) {
     window);
   yield onKey;
 
-  onKey = once(shortcuts, "@", (key, event) => {
+  onKey = once(shortcuts, "@", event => {
     is(event.key, "@");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -246,7 +245,7 @@ function* testLooseShiftModifier(shortcuts) {
 function* testStrictLetterShiftModifier(shortcuts) {
   info("Test strict shift modifier on letters");
   let hitFirst = false;
-  let onKey = once(shortcuts, "a", (key, event) => {
+  let onKey = once(shortcuts, "a", event => {
     is(event.key, "a");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -254,7 +253,7 @@ function* testStrictLetterShiftModifier(shortcuts) {
     ok(!event.shiftKey);
     hitFirst = true;
   });
-  let onShiftKey = once(shortcuts, "Shift+a", (key, event) => {
+  let onShiftKey = once(shortcuts, "Shift+a", event => {
     is(event.key, "a");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -277,7 +276,7 @@ function* testStrictLetterShiftModifier(shortcuts) {
 
 function* testAltModifier(shortcuts) {
   info("Test Alt modifier");
-  let onKey = once(shortcuts, "Alt+F1", (key, event) => {
+  let onKey = once(shortcuts, "Alt+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(event.altKey);
     ok(!event.ctrlKey);
@@ -293,7 +292,7 @@ function* testAltModifier(shortcuts) {
 
 function* testCommandOrControlModifier(shortcuts) {
   info("Test CommandOrControl modifier");
-  let onKey = once(shortcuts, "CommandOrControl+F1", (key, event) => {
+  let onKey = once(shortcuts, "CommandOrControl+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(!event.altKey);
     if (isOSX) {
@@ -305,7 +304,7 @@ function* testCommandOrControlModifier(shortcuts) {
     }
     ok(!event.shiftKey);
   });
-  let onKeyAlias = once(shortcuts, "CmdOrCtrl+F1", (key, event) => {
+  let onKeyAlias = once(shortcuts, "CmdOrCtrl+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(!event.altKey);
     if (isOSX) {
@@ -334,14 +333,14 @@ function* testCommandOrControlModifier(shortcuts) {
 
 function* testCtrlModifier(shortcuts) {
   info("Test Ctrl modifier");
-  let onKey = once(shortcuts, "Ctrl+F1", (key, event) => {
+  let onKey = once(shortcuts, "Ctrl+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(!event.altKey);
     ok(event.ctrlKey);
     ok(!event.metaKey);
     ok(!event.shiftKey);
   });
-  let onKeyAlias = once(shortcuts, "Control+F1", (key, event) => {
+  let onKeyAlias = once(shortcuts, "Control+F1", event => {
     is(event.keyCode, window.KeyboardEvent.DOM_VK_F1);
     ok(!event.altKey);
     ok(event.ctrlKey);
@@ -362,14 +361,14 @@ function* testCmdShiftShortcut(shortcuts) {
     return;
   }
 
-  let onCmdKey = once(shortcuts, "CmdOrCtrl+[", (key, event) => {
+  let onCmdKey = once(shortcuts, "CmdOrCtrl+[", event => {
     is(event.key, "[");
     ok(!event.altKey);
     ok(!event.ctrlKey);
     ok(event.metaKey);
     ok(!event.shiftKey);
   });
-  let onCmdShiftKey = once(shortcuts, "CmdOrCtrl+Shift+[", (key, event) => {
+  let onCmdShiftKey = once(shortcuts, "CmdOrCtrl+Shift+[", event => {
     is(event.key, "[");
     ok(!event.altKey);
     ok(!event.ctrlKey);
@@ -402,7 +401,7 @@ function* testTarget() {
     window,
     target
   });
-  let onKey = once(shortcuts, "0", (key, event) => {
+  let onKey = once(shortcuts, "0", event => {
     is(event.key, "0");
     is(event.target, target);
   });

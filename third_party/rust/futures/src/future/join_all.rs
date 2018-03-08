@@ -1,4 +1,4 @@
-//! Definition of the JoinAll combinator, waiting for all of a list of futures
+//! Definition of the `JoinAll` combinator, waiting for all of a list of futures
 //! to finish.
 
 use std::prelude::v1::*;
@@ -43,10 +43,11 @@ impl<I> fmt::Debug for JoinAll<I>
 /// given.
 ///
 /// The returned future will drive execution for all of its underlying futures,
-/// collecting the results into a destination `Vec<T>`. If any future returns
-/// an error then all other futures will be canceled and an error will be
-/// returned immediately. If all futures complete successfully, however, then
-/// the returned future will succeed with a `Vec` of all the successful results.
+/// collecting the results into a destination `Vec<T>` in the same order as they
+/// were provided. If any future returns an error then all other futures will be
+/// canceled and an error will be returned immediately. If all futures complete
+/// successfully, however, then the returned future will succeed with a `Vec` of
+/// all the successful results.
 ///
 /// # Examples
 ///
@@ -63,9 +64,9 @@ impl<I> fmt::Debug for JoinAll<I>
 /// });
 ///
 /// let f = join_all(vec![
-///     ok::<u32, u32>(1).boxed(),
-///     err::<u32, u32>(2).boxed(),
-///     ok::<u32, u32>(3).boxed(),
+///     Box::new(ok::<u32, u32>(1)),
+///     Box::new(err::<u32, u32>(2)),
+///     Box::new(ok::<u32, u32>(3)),
 /// ]);
 /// let f = f.then(|x| {
 ///     assert_eq!(x, Err(2));
@@ -94,8 +95,8 @@ impl<I> Future for JoinAll<I>
         let mut all_done = true;
 
         for idx in 0 .. self.elems.len() {
-            let done_val = match &mut self.elems[idx] {
-                &mut ElemState::Pending(ref mut t) => {
+            let done_val = match self.elems[idx] {
+                ElemState::Pending(ref mut t) => {
                     match t.poll() {
                         Ok(Async::Ready(v)) => Ok(v),
                         Ok(Async::NotReady) => {
@@ -105,7 +106,7 @@ impl<I> Future for JoinAll<I>
                         Err(e) => Err(e),
                     }
                 }
-                &mut ElemState::Done(ref mut _v) => continue,
+                ElemState::Done(ref mut _v) => continue,
             };
 
             match done_val {

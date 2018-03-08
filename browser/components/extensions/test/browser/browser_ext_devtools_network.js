@@ -180,6 +180,8 @@ add_task(async function test_devtools_network_get_har() {
     extension.awaitMessage("tabUpdated"),
     extension.awaitMessage("onNavigatedFired"),
     extension.awaitMessage("onRequestFinished"),
+    extension.awaitMessage("onRequestFinished-callbackExecuted"),
+    extension.awaitMessage("onRequestFinished-promiseResolved"),
     waitForRequestAdded(toolbox),
   ]);
 

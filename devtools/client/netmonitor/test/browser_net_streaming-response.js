@@ -8,8 +8,8 @@
  * displayed as XML or plain text
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
 
   info("Starting test... ");
   let { document, store, windowRequire } = monitor.panelWin;
@@ -29,18 +29,18 @@ add_task(function* () {
   let wait = waitForNetworkEvents(monitor, REQUESTS.length);
   for (let [fmt] of REQUESTS) {
     let url = CONTENT_TYPE_SJS + "?fmt=" + fmt;
-    yield ContentTask.spawn(tab.linkedBrowser, { url }, function* (args) {
+    await ContentTask.spawn(tab.linkedBrowser, { url }, async function (args) {
       content.wrappedJSObject.performRequests(1, args.url);
     });
   }
-  yield wait;
+  await wait;
 
   let requestItems = document.querySelectorAll(".request-list-item");
   for (let requestItem of requestItems) {
     requestItem.scrollIntoView();
     let requestsListStatus = requestItem.querySelector(".requests-list-status");
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-    yield waitUntil(() => requestsListStatus.title);
+    await waitUntil(() => requestsListStatus.title);
   }
 
   REQUESTS.forEach(([ fmt ], i) => {
@@ -61,15 +61,15 @@ add_task(function* () {
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
-  yield wait;
+  await wait;
 
   store.dispatch(Actions.selectRequest(null));
 
-  yield selectIndexAndWaitForSourceEditor(monitor, 0);
+  await selectIndexAndWaitForSourceEditor(monitor, 0);
   // the hls-m3u8 part
   testEditorContent(REQUESTS[0]);
 
-  yield selectIndexAndWaitForSourceEditor(monitor, 1);
+  await selectIndexAndWaitForSourceEditor(monitor, 1);
   // the mpeg-dash part
   testEditorContent(REQUESTS[1]);
 

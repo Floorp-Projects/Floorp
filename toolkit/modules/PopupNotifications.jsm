@@ -329,13 +329,10 @@ PopupNotifications.prototype = {
    *        at a time. If a notification already exists with the given ID, it
    *        will be replaced.
    * @param message
-   *        A JavaScript object or a string containing the text to be displayed in the
-   *        notification header. It must have the following properties:
-   *          - start(string): First part of the notification header text. Optionally,
-   *            it is also the entire header text when the notification header does not
-   *            contain a host name. eg. file URIs.
-   *          - host(string): Hostname of the site displaying the notifiation.
-   *          - end(string): An optional end label to the notification header text.
+   *        A string containing the text to be displayed as the notification header.
+   *        The string may optionally contain "<>" as a  placeholder which is later
+   *        replaced by a host name or an addon name that is formatted to look bold,
+   *        in which case the options.name property needs to be specified.
    * @param anchorID
    *        The ID of the element that should be used as this notification
    *        popup's anchor. May be null, in which case the notification will be
@@ -454,6 +451,10 @@ PopupNotifications.prototype = {
    *                     from. If present, this will be displayed above the message.
    *                     If the nsIURI represents a file, the path will be displayed,
    *                     otherwise the hostPort will be displayed.
+   *        name:
+   *                     An optional string formatted to look bold and used in the
+   *                     notifiation description header text. Usually a host name or
+   *                     addon name.
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(browser, id, message, anchorID,
@@ -751,6 +752,33 @@ PopupNotifications.prototype = {
     }
   },
 
+  /**
+   * Formats the notification description message before we display it
+   * and splits it into three parts if the message contains "<>" as
+   * placeholder.
+   *
+   * param notification
+   *       The Notification object which contains the message to format.
+   *
+   * @returns a Javascript object that has the following properties:
+   * start: A start label string containing the first part of the message.
+   *        It may contain the whole string if the description message
+   *        does not have "<>" as a placeholder. For example, local
+   *        file URIs with description messages that don't display hostnames.
+   * name:  A string that is formatted to look bold. It replaces the
+   *        placeholder with the options.name property from the notification
+   *        object which is usually an addon name or a host name.
+   * end:   The last part of the description message.
+   */
+  _formatDescriptionMessage(n) {
+    let text = {};
+    let array = n.message.split("<>");
+    text.start = array[0] || "";
+    text.name = n.options.name || "";
+    text.end = array[1] || "";
+    return text;
+  },
+
   _refreshPanel: function PopupNotifications_refreshPanel(notificationsToShow) {
     this._clearPanel();
 
@@ -772,15 +800,10 @@ PopupNotifications.prototype = {
         popupnotification = doc.createElementNS(XUL_NS, "popupnotification");
 
       // Create the notification description element.
-
-      // Adding an if condition to check if n.message(i.e. the notification-description-text) is a string or an object.
-      if (typeof n.message == "string") {
-        popupnotification.setAttribute("label", n.message);
-      } else {
-        popupnotification.setAttribute("label", n.message.start || "");
-        popupnotification.setAttribute("hostname", n.message.host || "");
-        popupnotification.setAttribute("endlabel", n.message.end || "");
-      }
+      let desc = this._formatDescriptionMessage(n);
+      popupnotification.setAttribute("label", desc.start);
+      popupnotification.setAttribute("name", desc.name);
+      popupnotification.setAttribute("endlabel", desc.end);
 
       popupnotification.setAttribute("id", popupnotificationID);
       popupnotification.setAttribute("popupid", n.id);

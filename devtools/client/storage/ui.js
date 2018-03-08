@@ -135,7 +135,7 @@ function StorageUI(front, target, panelWin, toolbox) {
     window: this._panelDoc.defaultView,
   });
   let key = L10N.getStr("storage.filter.key");
-  shortcuts.on(key, (name, event) => {
+  shortcuts.on(key, event => {
     event.preventDefault();
     this.searchBox.focus();
   });
@@ -327,7 +327,7 @@ StorageUI.prototype = {
     }
   },
 
-  editItem: function (eventType, data) {
+  editItem: function (data) {
     let front = this.getCurrentFront();
 
     front.editItem(data);
@@ -879,7 +879,7 @@ StorageUI.prototype = {
    *        An array of ids which represent the location of the selected item in
    *        the storage tree
    */
-  onHostSelect: function (event, item) {
+  onHostSelect: function (item) {
     this.table.clear();
     this.hideSidebar();
     this.searchBox.value = "";
@@ -1179,8 +1179,8 @@ StorageUI.prototype = {
   /**
    * Handles refreshing the selected storage
    */
-  onRefreshTable: function (event) {
-    this.onHostSelect(event, this.tree.selectedItem);
+  onRefreshTable: function () {
+    this.onHostSelect(this.tree.selectedItem);
   },
 
   /**

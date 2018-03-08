@@ -501,12 +501,6 @@ nsHttpHandler::Init()
     mSessionStartTime = NowInSeconds();
     mHandlerActive = true;
 
-    rv = mAuthCache.Init();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mPrivateAuthCache.Init();
-    if (NS_FAILED(rv)) return rv;
-
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 

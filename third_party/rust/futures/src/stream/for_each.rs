@@ -36,7 +36,7 @@ impl<S, F, U> Future for ForEach<S, F, U>
     fn poll(&mut self) -> Poll<(), S::Error> {
         loop {
             if let Some(mut fut) = self.fut.take() {
-                if try!(fut.poll()).is_not_ready() {
+                if fut.poll()?.is_not_ready() {
                     self.fut = Some(fut);
                     return Ok(Async::NotReady);
                 }

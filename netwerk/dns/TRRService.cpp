@@ -188,6 +188,12 @@ TRRService::ReadPrefs(const char *name)
       mTRRTimeout = ms;
     }
   }
+  if (!name || !strcmp(name, TRR_PREF("early-AAAA"))) {
+    bool tmp;
+    if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("early-AAAA"), &tmp))) {
+      mEarlyAAAA = tmp;
+    }
+  }
 
   return NS_OK;
 }

@@ -108,6 +108,17 @@ bool
 IsValidIdentifierString(const nsACString& aStr, const size_t aMaxLength,
                         const bool aAllowInfixPeriod, const bool aAllowInfixUnderscore);
 
+/**
+ * Convert the given UTF8 string to a JavaScript string.  The returned
+ * string's contents will be the UTF16 conversion of the given string.
+ *
+ * @param cx The JS context.
+ * @param aStr The UTF8 string.
+ * @returns a JavaScript string.
+ */
+JSString*
+ToJSString(JSContext* cx, const nsACString& aStr);
+
 } // namespace Common
 } // namespace Telemetry
 } // namespace mozilla

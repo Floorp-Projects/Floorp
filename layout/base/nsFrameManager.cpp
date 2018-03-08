@@ -6,6 +6,8 @@
 
 /* storage of the frame tree and information about it */
 
+#include "nsFrameManager.h"
+
 #include "nscore.h"
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"
@@ -16,6 +18,7 @@
 #include "nsILayoutHistoryState.h"
 #include "nsPresState.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/UndisplayedNode.h"
 #include "nsIDocument.h"
 
 #include "nsContentUtils.h"
@@ -24,7 +27,6 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "ChildIterator.h"
 
-#include "nsFrameManager.h"
 #include "GeckoProfiler.h"
 #include "nsIStatefulFrame.h"
 #include "nsContainerFrame.h"
@@ -37,19 +39,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-//----------------------------------------------------------------------
-
-nsFrameManagerBase::nsFrameManagerBase()
-  : mPresShell(nullptr)
-  , mRootFrame(nullptr)
-  , mDisplayNoneMap(nullptr)
-  , mDisplayContentsMap(nullptr)
-  , mIsDestroyingFrames(false)
-{
-}
-
-//----------------------------------------------------------------------
-
 /**
  * The undisplayed map is a class that maps a parent content node to the
  * undisplayed content children, and their style contexts.
@@ -57,7 +46,7 @@ nsFrameManagerBase::nsFrameManagerBase()
  * The linked list of nodes holds strong references to the style contexts and
  * the content.
  */
-class nsFrameManagerBase::UndisplayedMap :
+class nsFrameManager::UndisplayedMap :
   private nsClassHashtable<nsPtrHashKey<nsIContent>,
                            LinkedList<UndisplayedNode>>
 {
@@ -715,19 +704,19 @@ nsFrameManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
 
 //----------------------------------------------------------------------
 
-nsFrameManagerBase::UndisplayedMap::UndisplayedMap()
+nsFrameManager::UndisplayedMap::UndisplayedMap()
 {
-  MOZ_COUNT_CTOR(nsFrameManagerBase::UndisplayedMap);
+  MOZ_COUNT_CTOR(nsFrameManager::UndisplayedMap);
 }
 
-nsFrameManagerBase::UndisplayedMap::~UndisplayedMap(void)
+nsFrameManager::UndisplayedMap::~UndisplayedMap(void)
 {
-  MOZ_COUNT_DTOR(nsFrameManagerBase::UndisplayedMap);
+  MOZ_COUNT_DTOR(nsFrameManager::UndisplayedMap);
   Clear();
 }
 
 void
-nsFrameManagerBase::UndisplayedMap::Clear()
+nsFrameManager::UndisplayedMap::Clear()
 {
   for (auto iter = Iter(); !iter.Done(); iter.Next()) {
     auto* list = iter.UserData();
@@ -740,7 +729,7 @@ nsFrameManagerBase::UndisplayedMap::Clear()
 
 
 nsIContent*
-nsFrameManagerBase::UndisplayedMap::GetApplicableParent(nsIContent* aParent)
+nsFrameManager::UndisplayedMap::GetApplicableParent(nsIContent* aParent)
 {
   // In the case of XBL default content, <xbl:children> elements do not get a
   // frame causing a mismatch between the content tree and the frame tree.
@@ -756,7 +745,7 @@ nsFrameManagerBase::UndisplayedMap::GetApplicableParent(nsIContent* aParent)
 }
 
 LinkedList<UndisplayedNode>*
-nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent* aParent)
+nsFrameManager::UndisplayedMap::GetListFor(nsIContent* aParent)
 {
   MOZ_ASSERT(aParent == GetApplicableParent(aParent),
              "The parent that we use as the hash key must have been normalized");
@@ -770,7 +759,7 @@ nsFrameManagerBase::UndisplayedMap::GetListFor(nsIContent* aParent)
 }
 
 LinkedList<UndisplayedNode>*
-nsFrameManagerBase::UndisplayedMap::GetOrCreateListFor(nsIContent* aParent)
+nsFrameManager::UndisplayedMap::GetOrCreateListFor(nsIContent* aParent)
 {
   MOZ_ASSERT(aParent == GetApplicableParent(aParent),
              "The parent that we use as the hash key must have been normalized");
@@ -780,7 +769,7 @@ nsFrameManagerBase::UndisplayedMap::GetOrCreateListFor(nsIContent* aParent)
 
 
 UndisplayedNode*
-nsFrameManagerBase::UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
+nsFrameManager::UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
 {
   auto* list = GetListFor(aParentContent);
   return list ? list->getFirst() : nullptr;
@@ -788,8 +777,8 @@ nsFrameManagerBase::UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
 
 
 void
-nsFrameManagerBase::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
-                                                  nsIContent* aParentContent)
+nsFrameManager::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
+                                              nsIContent* aParentContent)
 {
   LinkedList<UndisplayedNode>* list = GetOrCreateListFor(aParentContent);
 
@@ -806,17 +795,17 @@ nsFrameManagerBase::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
 }
 
 void
-nsFrameManagerBase::UndisplayedMap::AddNodeFor(nsIContent* aParentContent,
-                                               nsIContent* aChild,
-                                               nsStyleContext* aStyle)
+nsFrameManager::UndisplayedMap::AddNodeFor(nsIContent* aParentContent,
+                                           nsIContent* aChild,
+                                           nsStyleContext* aStyle)
 {
   UndisplayedNode*  node = new UndisplayedNode(aChild, aStyle);
   AppendNodeFor(node, aParentContent);
 }
 
 void
-nsFrameManagerBase::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
-                                                  UndisplayedNode* aNode)
+nsFrameManager::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
+                                              UndisplayedNode* aNode)
 {
 #ifdef DEBUG
   auto list = GetListFor(aParentContent);
@@ -830,7 +819,7 @@ nsFrameManagerBase::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
 
 
 nsAutoPtr<LinkedList<UndisplayedNode>>
-nsFrameManagerBase::UndisplayedMap::UnlinkNodesFor(nsIContent* aParentContent)
+nsFrameManager::UndisplayedMap::UnlinkNodesFor(nsIContent* aParentContent)
 {
   nsAutoPtr<LinkedList<UndisplayedNode>> list;
   Remove(GetApplicableParent(aParentContent), &list);
@@ -838,7 +827,7 @@ nsFrameManagerBase::UndisplayedMap::UnlinkNodesFor(nsIContent* aParentContent)
 }
 
 void
-nsFrameManagerBase::UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
+nsFrameManager::UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
 {
   nsAutoPtr<LinkedList<UndisplayedNode>> list = UnlinkNodesFor(aParentContent);
   if (list) {
@@ -849,7 +838,7 @@ nsFrameManagerBase::UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
 }
 
 void
-nsFrameManagerBase::UndisplayedMap::
+nsFrameManager::UndisplayedMap::
 AddSizeOfIncludingThis(nsWindowSizes& aSizes, bool aIsServo) const
 {
   MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;

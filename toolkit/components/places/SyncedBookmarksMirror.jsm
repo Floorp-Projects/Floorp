@@ -344,7 +344,8 @@ class SyncedBookmarksMirror {
                                 { count: String(missingChildren.length) });
     }
 
-    let { missingLocal, missingRemote } = await this.fetchInconsistencies();
+    let { missingLocal, missingRemote, wrongSyncStatus } =
+      await this.fetchInconsistencies();
     if (missingLocal.length) {
       MirrorLog.warn("Remote tree has merged items that don't exist locally",
                      missingLocal);
@@ -352,10 +353,16 @@ class SyncedBookmarksMirror {
                                 { count: String(missingLocal.length) });
     }
     if (missingRemote.length) {
-      MirrorLog.error("Local tree has synced items that don't exist remotely",
-                      missingRemote);
+      MirrorLog.warn("Local tree has synced items that don't exist remotely",
+                     missingRemote);
       this.recordTelemetryEvent("mirror", "inconsistencies", "remote",
                                 { count: String(missingRemote.length) });
+    }
+    if (wrongSyncStatus.length) {
+      MirrorLog.warn("Local tree has wrong sync statuses for items that " +
+                     "exist remotely", wrongSyncStatus);
+      this.recordTelemetryEvent("mirror", "inconsistencies", "syncStatus",
+                                { count: String(wrongSyncStatus.length) });
     }
 
     // It's safe to build the remote tree outside the transaction because
@@ -768,8 +775,8 @@ class SyncedBookmarksMirror {
   /**
    * Checks the sync statuses of all items for consistency. All merged items in
    * the remote tree should exist as either items or tombstones in the local
-   * tree, and all NORMAL items in the local tree should exist in the remote
-   * tree.
+   * tree, and all NORMAL items and tombstones in the local tree should exist
+   * in the remote tree, if the mirror has any merged items.
    *
    * @return {Object.<String, String[]>}
    *         An object containing GUIDs for each problem type:
@@ -782,10 +789,11 @@ class SyncedBookmarksMirror {
     let infos = {
       missingLocal: [],
       missingRemote: [],
+      wrongSyncStatus: [],
     };
 
     let problemRows = await this.db.execute(`
-      SELECT v.guid, 1 AS missingLocal, 0 AS missingRemote
+      SELECT v.guid, 1 AS missingLocal, 0 AS missingRemote, 0 AS wrongSyncStatus
       FROM items v
       LEFT JOIN moz_bookmarks b ON b.guid = v.guid
       LEFT JOIN moz_bookmarks_deleted d ON d.guid = v.guid
@@ -794,17 +802,33 @@ class SyncedBookmarksMirror {
             b.guid IS NULL AND
             d.guid IS NULL
       UNION ALL
-      SELECT b.guid, 0 AS missingLocal, 1 AS missingRemote
+      SELECT b.guid, 0 AS missingLocal, 1 AS missingRemote, 0 AS wrongSyncStatus
       FROM moz_bookmarks b
       LEFT JOIN items v ON v.guid = b.guid
-      WHERE b.syncStatus = :syncStatus AND
+      WHERE EXISTS(SELECT 1 FROM items
+                   WHERE NOT needsMerge AND
+                         guid <> :rootGuid) AND
+            b.syncStatus = :syncStatus AND
             v.guid IS NULL
       UNION ALL
-      SELECT d.guid, 0 AS missingLocal, 1 AS missingRemote
+      SELECT d.guid, 0 AS missingLocal, 1 AS missingRemote, 0 AS wrongSyncStatus
       FROM moz_bookmarks_deleted d
       LEFT JOIN items v ON v.guid = d.guid
-      WHERE v.guid IS NULL`,
-      { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
+      WHERE EXISTS(SELECT 1 FROM items
+                   WHERE NOT needsMerge AND
+                         guid <> :rootGuid) AND
+            v.guid IS NULL
+      UNION ALL
+      SELECT b.guid, 0 AS missingLocal, 0 AS missingRemote, 1 AS wrongSyncStatus
+      FROM moz_bookmarks b
+      JOIN items v ON v.guid = b.guid
+      WHERE EXISTS(SELECT 1 FROM items
+                   WHERE NOT needsMerge AND
+                         guid <> :rootGuid) AND
+            b.guid <> :rootGuid AND
+            b.syncStatus <> :syncStatus`,
+      { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+        rootGuid: PlacesUtils.bookmarks.rootGuid });
 
     for await (let row of yieldingIterator(problemRows)) {
       let guid = row.getResultByName("guid");
@@ -815,6 +839,10 @@ class SyncedBookmarksMirror {
       let missingRemote = row.getResultByName("missingRemote");
       if (missingRemote) {
         infos.missingRemote.push(guid);
+      }
+      let wrongSyncStatus = row.getResultByName("wrongSyncStatus");
+      if (wrongSyncStatus) {
+        infos.wrongSyncStatus.push(guid);
       }
     }
 
@@ -1245,6 +1273,12 @@ class SyncedBookmarksMirror {
    * Creates local tag folders mentioned in remotely changed tag queries, then
    * rewrites the query URLs in the mirror to point to the new local folders.
    *
+   * For example, an incoming tag query of, say, "place:type=6&folder=3" means
+   * it is a query for whatever tag is defined by the local record with id=3
+   * (and the incoming record has the actual tag in the folderName field).
+   * We need to ensure that the URL is adjusted so the folder ID refers to
+   * whatever local folder ID represents that tag.
+   *
    * This can be removed once bug 1293445 lands.
    */
   async rewriteRemoteTagQueries() {
@@ -1601,7 +1635,7 @@ class SyncedBookmarksMirror {
           tagFolderName = (SELECT b.title FROM moz_bookmarks b
                            WHERE b.id = :tagFolderId AND
                                  b.type = :folderType)
-        WHERE id = :id`);
+        WHERE id = :id`, tagFolderNameParams);
     }
 
     // Record the child GUIDs of locally changed folders, which we use to
@@ -1648,7 +1682,7 @@ class SyncedBookmarksMirror {
 
     let itemRows = await this.db.execute(`
       SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
-             smartBookmarkName, IFNULL(tagFolderName, "") AS tagFolderName,
+             smartBookmarkName, tagFolderName,
              loadInSidebar, keyword, tags, url, IFNULL(title, "") AS title,
              description, feedURL, siteURL, position, parentGuid,
              IFNULL(parentTitle, "") AS parentTitle, dateAdded
@@ -1699,7 +1733,8 @@ class SyncedBookmarksMirror {
               bmkUri: row.getResultByName("url"),
               title: row.getResultByName("title"),
               queryId: row.getResultByName("smartBookmarkName"),
-              folderName: row.getResultByName("tagFolderName"),
+              // folderName should never be an empty string or null
+              folderName: row.getResultByName("tagFolderName") || undefined,
             };
             let description = row.getResultByName("description");
             if (description) {
@@ -1963,33 +1998,38 @@ async function createMirrorRoots(db) {
     // `NOT NULL` constraints on `structure`.
     parentGuid: PlacesUtils.bookmarks.rootGuid,
     position: -1,
+    needsMerge: false,
   }, {
     guid: PlacesUtils.bookmarks.menuGuid,
     parentGuid: PlacesUtils.bookmarks.rootGuid,
     position: 0,
+    needsMerge: true,
   }, {
     guid: PlacesUtils.bookmarks.toolbarGuid,
     parentGuid: PlacesUtils.bookmarks.rootGuid,
     position: 1,
+    needsMerge: true,
   }, {
     guid: PlacesUtils.bookmarks.unfiledGuid,
     parentGuid: PlacesUtils.bookmarks.rootGuid,
     position: 2,
+    needsMerge: true,
   }, {
     guid: PlacesUtils.bookmarks.mobileGuid,
     parentGuid: PlacesUtils.bookmarks.rootGuid,
     position: 3,
+    needsMerge: true,
   }];
-  for (let info of syncableRoots) {
+  for (let { guid, parentGuid, position, needsMerge } of syncableRoots) {
     await db.executeCached(`
-      INSERT INTO items(guid, kind)
-      VALUES(:guid, :kind)`,
-      { guid: info.guid, kind: SyncedBookmarksMirror.KIND.FOLDER });
+      INSERT INTO items(guid, kind, needsMerge)
+      VALUES(:guid, :kind, :needsMerge)`,
+      { guid, kind: SyncedBookmarksMirror.KIND.FOLDER, needsMerge });
 
     await db.executeCached(`
       INSERT INTO structure(guid, parentGuid, position)
       VALUES(:guid, :parentGuid, :position)`,
-      info);
+      { guid, parentGuid, position });
   }
 }
 
@@ -3876,7 +3916,7 @@ class BookmarkMerger {
           value: "structure",
           extra: { type: "delete", kind: "item", prefer: "remote" },
         });
-        return false;
+        return BookmarkMerger.STRUCTURE.UNCHANGED;
       }
       // For folders, we always take the local deletion and relocate remotely
       // changed grandchildren to the merged node. We could use the mirror to
@@ -3950,7 +3990,7 @@ class BookmarkMerger {
           value: "structure",
           extra: { type: "delete", kind: "item", prefer: "local" },
         });
-        return false;
+        return BookmarkMerger.STRUCTURE.UNCHANGED;
       }
       MirrorLog.trace("Local folder ${localNode} deleted remotely and " +
                       "changed locally; taking remote deletion", { localNode });

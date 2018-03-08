@@ -7,58 +7,58 @@
  * Bug 863102 - Automatically scroll down upon new network requests.
  * edited to account for changes made to fix Bug 1360457
  */
-add_task(function* () {
+add_task(async function () {
   requestLongerTimeout(4);
 
-  let { tab, monitor } = yield initNetMonitor(INFINITE_GET_URL, true);
+  let { tab, monitor } = await initNetMonitor(INFINITE_GET_URL, true);
   let { document, windowRequire, store } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
   // Wait until the first request makes the empty notice disappear
-  yield waitForRequestListToAppear();
+  await waitForRequestListToAppear();
 
   let requestsContainer = document.querySelector(".requests-list-contents");
   ok(requestsContainer, "Container element exists as expected.");
 
   // (1) Check that the scroll position is maintained at the bottom
   // when the requests overflow the vertical size of the container.
-  yield waitForRequestsToOverflowContainer();
-  yield waitForScroll();
+  await waitForRequestsToOverflowContainer();
+  await waitForScroll();
   ok(true, "Scrolled to bottom on overflow.");
 
   // (2) Now scroll to the top and check that additional requests
   // do not change the scroll position.
   requestsContainer.scrollTop = 0;
-  yield waitSomeTime();
+  await waitSomeTime();
   ok(!scrolledToBottom(requestsContainer), "Not scrolled to bottom.");
   // save for comparison later
   let scrollTop = requestsContainer.scrollTop;
-  yield waitForNetworkEvents(monitor, 8);
-  yield waitSomeTime();
+  await waitForNetworkEvents(monitor, 8);
+  await waitSomeTime();
   is(requestsContainer.scrollTop, scrollTop, "Did not scroll.");
 
   // (3) Now set the scroll position back at the bottom and check that
   // additional requests *do* cause the container to scroll down.
   requestsContainer.scrollTop = requestsContainer.scrollHeight;
   ok(scrolledToBottom(requestsContainer), "Set scroll position to bottom.");
-  yield waitForNetworkEvents(monitor, 8);
-  yield waitForScroll();
+  await waitForNetworkEvents(monitor, 8);
+  await waitForScroll();
   ok(true, "Still scrolled to bottom.");
 
   // (4) Now select the first item in the list
   // and check that additional requests do not change the scroll position
   // from just below the headers.
   store.dispatch(Actions.selectRequestByIndex(0));
-  yield waitForNetworkEvents(monitor, 8);
-  yield waitSomeTime();
+  await waitForNetworkEvents(monitor, 8);
+  await waitSomeTime();
   let requestsContainerHeaders = requestsContainer.firstChild;
   let headersHeight = requestsContainerHeaders.offsetHeight;
   is(requestsContainer.scrollTop, headersHeight, "Did not scroll.");
 
   // Stop doing requests.
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, function () {
     content.wrappedJSObject.stopRequests();
   });
 
@@ -70,11 +70,11 @@ add_task(function* () {
     return waitUntil(() => !!document.querySelector(".requests-list-contents"));
   }
 
-  function* waitForRequestsToOverflowContainer() {
+  async function waitForRequestsToOverflowContainer() {
     info("Waiting for enough requests to overflow the container");
     while (true) {
       info("Waiting for one network request");
-      yield waitForNetworkEvents(monitor, 1);
+      await waitForNetworkEvents(monitor, 1);
       if (requestsContainer.scrollHeight > requestsContainer.clientHeight) {
         info("The list is long enough, returning");
         return;

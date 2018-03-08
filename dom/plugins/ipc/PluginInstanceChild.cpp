@@ -76,7 +76,6 @@ static HWND sWinlessPopupSurrogateHWND = nullptr;
 static User32TrackPopupMenu sUser32TrackPopupMenuStub = nullptr;
 
 typedef HIMC (WINAPI *Imm32ImmGetContext)(HWND hWND);
-typedef BOOL (WINAPI *Imm32ImmReleaseContext)(HWND hWND, HIMC hIMC);
 typedef LONG (WINAPI *Imm32ImmGetCompositionString)(HIMC hIMC,
                                                     DWORD dwIndex,
                                                     LPVOID lpBuf,
@@ -87,7 +86,6 @@ typedef BOOL (WINAPI *Imm32ImmNotifyIME)(HIMC hIMC, DWORD dwAction,
                                         DWORD dwIndex, DWORD dwValue);
 static WindowsDllInterceptor sImm32Intercept;
 static Imm32ImmGetContext sImm32ImmGetContextStub = nullptr;
-static Imm32ImmReleaseContext sImm32ImmReleaseContextStub = nullptr;
 static Imm32ImmGetCompositionString sImm32ImmGetCompositionStringStub = nullptr;
 static Imm32ImmSetCandidateWindow sImm32ImmSetCandidateWindowStub = nullptr;
 static Imm32ImmNotifyIME sImm32ImmNotifyIME = nullptr;
@@ -2036,17 +2034,6 @@ PluginInstanceChild::ImmGetContextProc(HWND aWND)
 }
 
 // static
-BOOL
-PluginInstanceChild::ImmReleaseContextProc(HWND aWND, HIMC aIMC)
-{
-    if (aIMC == sHookIMC) {
-        return TRUE;
-    }
-
-    return sImm32ImmReleaseContextStub(aWND, aIMC);
-}
-
-// static
 LONG
 PluginInstanceChild::ImmGetCompositionStringProc(HIMC aIMC, DWORD aIndex,
                                                  LPVOID aBuf, DWORD aLen)
@@ -2130,16 +2117,15 @@ PluginInstanceChild::InitImm32Hook()
     }
 
     // When using windowless plugin, IMM API won't work due ot OOP.
+    //
+    // ImmReleaseContext on Windows 7+ just returns TRUE only, so we don't
+    // need to hook this.
 
     sImm32Intercept.Init("imm32.dll");
     sImm32Intercept.AddHook(
         "ImmGetContext",
         reinterpret_cast<intptr_t>(ImmGetContextProc),
         (void**)&sImm32ImmGetContextStub);
-    sImm32Intercept.AddHook(
-        "ImmReleaseContext",
-        reinterpret_cast<intptr_t>(ImmReleaseContextProc),
-        (void**)&sImm32ImmReleaseContextStub);
     sImm32Intercept.AddHook(
         "ImmGetCompositionStringW",
         reinterpret_cast<intptr_t>(ImmGetCompositionStringProc),

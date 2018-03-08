@@ -111,7 +111,7 @@ XPT_SkipStringInline(NotNull<XPTCursor*> cursor)
 }
 
 bool
-XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, char **identp,
+XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, const char **identp,
               bool ignore)
 {
     uint32_t offset = 0;

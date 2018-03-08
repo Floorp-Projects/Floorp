@@ -8,7 +8,7 @@
  * state.
  */
 
-add_task(function* () {
+add_task(async function () {
   const EXPECTED_SECURITY_STATES = {
     "test1.example.com": "security-state-insecure",
     "example.com": "security-state-secure",
@@ -16,13 +16,13 @@ add_task(function* () {
     "localhost": "security-state-local",
   };
 
-  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
+  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  yield performRequests();
+  await performRequests();
 
   for (let subitemNode of Array.from(document.querySelectorAll(
     "requests-list-column.requests-list-security-and-domain"))) {
@@ -49,38 +49,38 @@ add_task(function* () {
    *  - http://localhost (local)
    * and waits until NetworkMonitor has handled all packets sent by the server.
    */
-  function* performRequests() {
+  async function performRequests() {
     function executeRequests(count, url) {
-      return ContentTask.spawn(tab.linkedBrowser, {count, url}, function* (args) {
+      return ContentTask.spawn(tab.linkedBrowser, {count, url}, async function (args) {
         content.wrappedJSObject.performRequests(args.count, args.url);
       });
     }
 
     let done = waitForNetworkEvents(monitor, 1);
     info("Requesting a resource that has a certificate problem.");
-    yield executeRequests(1, "https://nocert.example.com");
+    await executeRequests(1, "https://nocert.example.com");
 
     // Wait for the request to complete before firing another request. Otherwise
     // the request with security issues interfere with waitForNetworkEvents.
     info("Waiting for request to complete.");
-    yield done;
+    await done;
 
     // Next perform a request over HTTP. If done the other way around the latter
     // occasionally hangs waiting for event timings that don't seem to appear...
     done = waitForNetworkEvents(monitor, 1);
     info("Requesting a resource over HTTP.");
-    yield executeRequests(1, "http://test1.example.com" + CORS_SJS_PATH);
-    yield done;
+    await executeRequests(1, "http://test1.example.com" + CORS_SJS_PATH);
+    await done;
 
     done = waitForNetworkEvents(monitor, 1);
     info("Requesting a resource over HTTPS.");
-    yield executeRequests(1, "https://example.com" + CORS_SJS_PATH);
-    yield done;
+    await executeRequests(1, "https://example.com" + CORS_SJS_PATH);
+    await done;
 
     done = waitForNetworkEvents(monitor, 1);
     info("Requesting a resource over HTTP to localhost.");
-    yield executeRequests(1, "http://localhost" + CORS_SJS_PATH);
-    yield done;
+    await executeRequests(1, "http://localhost" + CORS_SJS_PATH);
+    await done;
 
     const expectedCount = Object.keys(EXPECTED_SECURITY_STATES).length;
     is(store.getState().requests.requests.size,

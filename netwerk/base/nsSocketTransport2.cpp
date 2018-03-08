@@ -1106,6 +1106,8 @@ nsSocketTransport::ResolveHost()
     uint32_t dnsFlags = 0;
     if (mConnectionFlags & nsSocketTransport::BYPASS_CACHE)
         dnsFlags = nsIDNSService::RESOLVE_BYPASS_CACHE;
+    if (mConnectionFlags & nsSocketTransport::REFRESH_CACHE)
+        dnsFlags = nsIDNSService::RESOLVE_REFRESH_CACHE;
     if (mConnectionFlags & nsSocketTransport::DISABLE_IPV6)
         dnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV6;
     if (mConnectionFlags & nsSocketTransport::DISABLE_IPV4)
@@ -1809,10 +1811,11 @@ nsSocketTransport::RecoverFromError()
                 mDNSRecord->IsTRR(&trrEnabled);
                 if (trrEnabled) {
                     // Drop state to closed.  This will trigger a new round of
-                    // DNS resolving.
+                    // DNS resolving. Bypass the cache this time since the
+                    // cached data came from TRR and failed already!
                     SOCKET_LOG(("  failed to connect with TRR enabled, try w/o\n"));
                     mState = STATE_CLOSED;
-                    mConnectionFlags |= DISABLE_TRR;
+                    mConnectionFlags |= DISABLE_TRR | BYPASS_CACHE | REFRESH_CACHE;
                     tryAgain = true;
                 }
             }

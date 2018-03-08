@@ -47,4 +47,13 @@ impl<S: Sink> Wait<S> {
     pub fn flush(&mut self) -> Result<(), S::SinkError> {
         self.sink.wait_flush()
     }
+
+    /// Close this sink, blocking the current thread until it's entirely closed.
+    ///
+    /// This function will call the underlying sink's `close` method
+    /// until it returns that it's closed. If the method returns
+    /// `NotReady` the current thread will be blocked until it's otherwise closed.
+    pub fn close(&mut self) -> Result<(), S::SinkError> {
+        self.sink.wait_close()
+    }
 }

@@ -70,7 +70,7 @@ k = (Ra As H);			# Kinzi
 c = C|Ra;			# is_consonant
 
 medial_group = MY? MR? MW? MH? As?;
-main_vowel_group = VPre* VAbv* VBlw* A* (DB As?)?;
+main_vowel_group = (VPre.VS?)* VAbv* VBlw* A* (DB As?)?;
 post_vowel_group = VPst MH? As* VAbv* A* (DB As?)?;
 pwo_tone_group = PT A* DB? As?;
 

@@ -7,8 +7,8 @@
  * Tests if the clear button empties the request menu.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -24,7 +24,7 @@ add_task(function* () {
   // Load one request and assert it shows up in the list
   let onMonitorUpdated = waitForAllRequestsFinished(monitor);
   tab.linkedBrowser.reload();
-  yield onMonitorUpdated;
+  await onMonitorUpdated;
 
   assertSingleRequestState();
 
@@ -35,7 +35,7 @@ add_task(function* () {
   // Load a second request and make sure they still show up
   onMonitorUpdated = waitForAllRequestsFinished(monitor);
   tab.linkedBrowser.reload();
-  yield onMonitorUpdated;
+  await onMonitorUpdated;
 
   assertSingleRequestState();
 

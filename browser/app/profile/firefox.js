@@ -76,7 +76,9 @@ pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,remoteBreakpad");
 pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
 pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
+pref("extensions.webextensions.remote", true);
+#elif defined(XP_MACOSX) && !defined(RELEASE_OR_BETA)
 pref("extensions.webextensions.remote", true);
 #endif
 
@@ -399,8 +401,7 @@ pref("browser.search.geoSpecificDefaults.url", "https://search.services.mozilla.
 // US specific default (used as a fallback if the geoSpecificDefaults request fails).
 pref("browser.search.defaultenginename.US",      "data:text/plain,browser.search.defaultenginename.US=Google");
 pref("browser.search.order.US.1",                "data:text/plain,browser.search.order.US.1=Google");
-pref("browser.search.order.US.2",                "data:text/plain,browser.search.order.US.2=Yahoo");
-pref("browser.search.order.US.3",                "data:text/plain,browser.search.order.US.3=Bing");
+pref("browser.search.order.US.2",                "data:text/plain,browser.search.order.US.2=Bing");
 
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);
@@ -1167,7 +1168,6 @@ pref("services.sync.prefs.sync.browser.download.useDownloadDir", true);
 pref("services.sync.prefs.sync.browser.formfill.enable", true);
 pref("services.sync.prefs.sync.browser.link.open_newwindow", true);
 pref("services.sync.prefs.sync.browser.newtabpage.enabled", true);
-pref("services.sync.prefs.sync.browser.newtabpage.enhanced", true);
 pref("services.sync.prefs.sync.browser.newtabpage.pinned", true);
 pref("services.sync.prefs.sync.browser.offline-apps.notify", true);
 pref("services.sync.prefs.sync.browser.safebrowsing.phishing.enabled", true);
@@ -1242,9 +1242,10 @@ pref("services.sync.syncedTabs.showRemoteIcons", true);
 
 // Developer edition preferences
 #ifdef MOZ_DEV_EDITION
-sticky_pref("lightweightThemes.selectedThemeID", "firefox-compact-dark@mozilla.org");
+pref("lightweightThemes.selectedThemeID", "firefox-compact-dark@mozilla.org",
+     sticky);
 #else
-sticky_pref("lightweightThemes.selectedThemeID", "");
+pref("lightweightThemes.selectedThemeID", "", sticky);
 #endif
 
 // Whether the character encoding menu is under the main Firefox button. This
@@ -1257,28 +1258,8 @@ pref("prompts.tab_modal.enabled", true);
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// Remembers if the about:newtab intro has been shown
-// NOTE: This preference is unused but was not removed in case
-//       this information will be valuable in the future.
-pref("browser.newtabpage.introShown", false);
-
-// Toggles the content of 'about:newtab'. Shows the grid when enabled.
+// Indicates if about:newtab shows content (enabled) or just blank
 pref("browser.newtabpage.enabled", true);
-
-// Toggles the directory tiles content of 'about:newtab'.
-sticky_pref("browser.newtabpage.enhanced", true);
-
-// enables Activity Stream inspired layout
-pref("browser.newtabpage.compact", false);
-
-// enables showing basic placeholders for missing thumbnails
-pref("browser.newtabpage.thumbnailPlaceholder", false);
-
-// number of rows of newtab grid
-pref("browser.newtabpage.rows", 3);
-
-// number of columns of newtab grid
-pref("browser.newtabpage.columns", 5);
 
 // Activity Stream prefs that control to which page to redirect
 pref("browser.newtabpage.activity-stream.prerender", true);

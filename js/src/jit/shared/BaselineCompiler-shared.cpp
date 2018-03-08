@@ -20,7 +20,6 @@ BaselineCompilerShared::BaselineCompilerShared(JSContext* cx, TempAllocator& all
     script(script),
     pc(script->code()),
     ionCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script)),
-    ionOSRCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script)),
     compileDebugInstrumentation_(script->isDebuggee()),
     alloc_(alloc),
     analysis_(alloc, script),

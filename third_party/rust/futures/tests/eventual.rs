@@ -6,7 +6,7 @@ use support::*;
 use std::sync::mpsc;
 use std::thread;
 
-use futures::Future;
+use futures::prelude::*;
 use futures::future::{ok, err};
 use futures::sync::oneshot;
 

@@ -185,7 +185,7 @@ class StatisticsPanel extends Component {
       sorted: true,
     });
 
-    chart.on("click", (_, { label }) => {
+    chart.on("click", ({ label }) => {
       // Reset FilterButtons and enable one filter exclusively
       this.props.closeStatistics();
       this.props.enableRequestFilterTypeOnly(label);
