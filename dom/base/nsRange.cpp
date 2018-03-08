@@ -2908,15 +2908,30 @@ nsRange::CreateContextualFragment(const nsAString& aFragment, ErrorResult& aRv)
 }
 
 static void ExtractRectFromOffset(nsIFrame* aFrame,
-                                  const int32_t aOffset, nsRect* aR, bool aKeepLeft,
-                                  bool aClampToEdge)
+                                  const int32_t aOffset, nsRect* aR,
+                                  bool aFlushToOriginEdge, bool aClampToEdge)
 {
   nsPoint point;
   aFrame->GetPointFromOffset(aOffset, &point);
 
+  // Determine if point was generated from a vertical text run, which will change
+  // our math on the output rect.
+  bool isVertical = false;
+  if (aFrame->IsTextFrame()) {
+    nsTextFrame* textFrame = static_cast<nsTextFrame*>(aFrame);
+    isVertical = textFrame->GetTextRun(nsTextFrame::eInflated)->IsVertical();
+  }
+
   if (!aClampToEdge && !aR->Contains(point)) {
-    aR->SetWidth(0);
-    aR->x = point.x;
+    // If point is outside aR, and we aren't clamping, output an empty rect
+    // with origin at the point.
+    if (isVertical) {
+      aR->SetHeight(0);
+      aR->y = point.y;
+    } else {
+      aR->SetWidth(0);
+      aR->x = point.x;
+    }
     return;
   }
 
@@ -2924,11 +2939,24 @@ static void ExtractRectFromOffset(nsIFrame* aFrame,
     point = aR->ClampPoint(point);
   }
 
-  if (aKeepLeft) {
-    aR->SetWidth(point.x - aR->x);
+  // point is within aR, and now we'll modify aR to output a rect that has point
+  // on one edge. But which edge?
+  if (aFlushToOriginEdge) {
+    // The output rect should be flush to the edge of aR that contains the origin.
+    if (isVertical) {
+      aR->SetHeight(point.y - aR->y);
+    } else {
+      aR->SetWidth(point.x - aR->x);
+    }
   } else {
-    aR->SetWidth(aR->XMost() - point.x);
-    aR->x = point.x;
+    // The output rect should be flush to the edge of aR opposite the origin.
+    if (isVertical) {
+      aR->SetHeight(aR->YMost() - point.y);
+      aR->y = point.y;
+    } else {
+      aR->SetWidth(aR->XMost() - point.x);
+      aR->x = point.x;
+    }
   }
 }
 
