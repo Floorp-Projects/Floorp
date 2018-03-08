@@ -32,12 +32,15 @@ static NS_DEFINE_CID(kSubstitutingURLCID, NS_SUBSTITUTINGURL_CID);
 // SubstitutingURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
 //---------------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(SubstitutingURL::Mutator,
-                  nsIURISetters,
-                  nsIURIMutator,
-                  nsIStandardURLMutator,
-                  nsIURLMutator,
-                  nsIFileURLMutator)
+// The list of interfaces should be in sync with nsStandardURL
+// Queries this list of interfaces. If none match, it queries mURI.
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(SubstitutingURL::Mutator,
+                                nsIURISetters,
+                                nsIURIMutator,
+                                nsIStandardURLMutator,
+                                nsIURLMutator,
+                                nsIFileURLMutator,
+                                nsISerializable)
 
 nsresult
 SubstitutingURL::EnsureFile()

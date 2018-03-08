@@ -1283,9 +1283,16 @@ NS_INTERFACE_MAP_END_INHERITING(mozilla::net::nsSimpleURI)
 // nsISerializable methods:
 
 NS_IMETHODIMP
-nsJSURI::Read(nsIObjectInputStream* aStream)
+nsJSURI::Read(nsIObjectInputStream *aStream)
 {
-    nsresult rv = mozilla::net::nsSimpleURI::Read(aStream);
+    NS_NOTREACHED("Use nsIURIMutator.read() instead");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsJSURI::ReadPrivate(nsIObjectInputStream *aStream)
+{
+    nsresult rv = mozilla::net::nsSimpleURI::ReadPrivate(aStream);
     if (NS_FAILED(rv)) return rv;
 
     bool haveBase;
@@ -1380,7 +1387,11 @@ nsJSURI::StartClone(mozilla::net::nsSimpleURI::RefHandlingEnum refHandlingMode,
     return url;
 }
 
-NS_IMPL_ISUPPORTS(nsJSURI::Mutator, nsIURISetters, nsIURIMutator)
+// Queries this list of interfaces. If none match, it queries mURI.
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsJSURI::Mutator,
+                                nsIURISetters,
+                                nsIURIMutator,
+                                nsISerializable)
 
 NS_IMETHODIMP
 nsJSURI::Mutate(nsIURIMutator** aMutator)
