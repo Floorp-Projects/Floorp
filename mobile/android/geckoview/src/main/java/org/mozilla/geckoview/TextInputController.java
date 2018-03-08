@@ -100,8 +100,8 @@ public final class TextInputController {
     private final GeckoEditableChild mEditableChild = new GeckoEditableChild(mEditable);
     private Delegate mInputConnection;
 
-    public TextInputController(final @NonNull GeckoSession session,
-                               final @NonNull NativeQueue queue) {
+    /* package */ TextInputController(final @NonNull GeckoSession session,
+                                      final @NonNull NativeQueue queue) {
         mSession = session;
         mQueue = queue;
         mEditable.setDefaultEditableChild(mEditableChild);
