@@ -405,7 +405,7 @@ class LSimdSwizzleF : public LSimdSwizzleBase
 class LSimdGeneralShuffleBase : public LVariadicInstruction<1, 1>
 {
   public:
-    LSimdGeneralShuffleBase(const LDefinition& temp, uint32_t numOperands)
+    LSimdGeneralShuffleBase(uint32_t numOperands, const LDefinition& temp)
       : LVariadicInstruction<1, 1>(numOperands)
     {
         setTemp(0, temp);
@@ -431,8 +431,8 @@ class LSimdGeneralShuffleI : public LSimdGeneralShuffleBase
   public:
     LIR_HEADER(SimdGeneralShuffleI);
 
-    LSimdGeneralShuffleI(const LDefinition& temp, uint32_t numOperands)
-      : LSimdGeneralShuffleBase(temp, numOperands)
+    LSimdGeneralShuffleI(uint32_t numOperands, const LDefinition& temp)
+      : LSimdGeneralShuffleBase(numOperands, temp)
     {}
 };
 
@@ -441,8 +441,8 @@ class LSimdGeneralShuffleF : public LSimdGeneralShuffleBase
   public:
     LIR_HEADER(SimdGeneralShuffleF);
 
-    LSimdGeneralShuffleF(const LDefinition& temp, uint32_t numOperands)
-      : LSimdGeneralShuffleBase(temp, numOperands)
+    LSimdGeneralShuffleF(uint32_t numOperands, const LDefinition& temp)
+      : LSimdGeneralShuffleBase(numOperands, temp)
     {}
 };
 
@@ -5846,8 +5846,8 @@ class LLoadElementFromStateV : public LVariadicInstruction<BOX_PIECES, 3>
   public:
     LIR_HEADER(LoadElementFromStateV)
 
-    LLoadElementFromStateV(const LDefinition& temp0, const LDefinition& temp1,
-                           const LDefinition& tempD, uint32_t numOperands)
+    LLoadElementFromStateV(uint32_t numOperands, const LDefinition& temp0,
+                           const LDefinition& temp1, const LDefinition& tempD)
       : LVariadicInstruction<BOX_PIECES, 3>(numOperands)
     {
         setTemp(0, temp0);
