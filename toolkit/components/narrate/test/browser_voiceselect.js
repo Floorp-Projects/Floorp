@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* eslint-disable mozilla/no-cpows-in-tests */
-
 registerCleanupFunction(teardown);
 
 add_task(async function testVoiceselectDropdownAutoclose() {

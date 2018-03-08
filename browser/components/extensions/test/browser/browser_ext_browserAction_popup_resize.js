@@ -41,12 +41,10 @@ add_task(async function testBrowserActionPopupResize() {
        "Panel body should be wide enough to fit its contents");
   }
 
-  /* eslint-disable mozilla/no-cpows-in-tests */
   function setSize(size) {
     content.document.body.style.height = `${size}px`;
     content.document.body.style.width = `${size}px`;
   }
-  /* eslint-enable mozilla/no-cpows-in-tests */
 
   let sizes = [
     200,
@@ -114,8 +112,6 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   });
 
   await extension.startup();
-
-  /* eslint-disable mozilla/no-cpows-in-tests */
 
   if (arrowSide == "top") {
     // Test the standalone panel for a toolbar button.
