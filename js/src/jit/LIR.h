@@ -669,6 +669,9 @@ class LNode
     // LPhi::numOperands() may not fit in this bitfield, so we only use this
     // field for LInstruction.
     uint32_t nonPhiNumOperands_ : 6;
+    // For LInstruction, the first operand is stored at offset
+    // sizeof(LInstruction) + nonPhiOperandsOffset_ * sizeof(uintptr_t).
+    uint32_t nonPhiOperandsOffset_ : 5;
     uint32_t numDefs_ : 4;
     uint32_t numTemps_ : 4;
     uint32_t numSuccessors_ : 2;
@@ -680,6 +683,7 @@ class LNode
         id_(0),
         isCall_(false),
         nonPhiNumOperands_(nonPhiNumOperands),
+        nonPhiOperandsOffset_(0),
         numDefs_(numDefs),
         numTemps_(numTemps),
         numSuccessors_(0)
@@ -826,12 +830,26 @@ class LInstruction
     void setDef(size_t index, const LDefinition& def) {
         *getDef(index) = def;
     }
+
+    LAllocation* getOperand(size_t index) const {
+        MOZ_ASSERT(index < numOperands());
+        MOZ_ASSERT(nonPhiOperandsOffset_ > 0);
+        uintptr_t p = reinterpret_cast<uintptr_t>(this + 1) + nonPhiOperandsOffset_ * sizeof(uintptr_t);
+        return reinterpret_cast<LAllocation*>(p) + index;
+    }
     void setOperand(size_t index, const LAllocation& a) {
         *getOperand(index) = a;
     }
 
-    // Returns information about operands.
-    virtual LAllocation* getOperand(size_t index) = 0;
+    void initOperandsOffset(size_t offset) {
+        MOZ_ASSERT(nonPhiOperandsOffset_ == 0);
+        MOZ_ASSERT(offset >= sizeof(LInstruction));
+        MOZ_ASSERT(((offset - sizeof(LInstruction)) % sizeof(uintptr_t)) == 0);
+        offset = (offset - sizeof(LInstruction)) / sizeof(uintptr_t);
+        nonPhiOperandsOffset_ = offset;
+        MOZ_ASSERT(nonPhiOperandsOffset_ == offset,
+                   "offset must fit in bitfield");
+    }
 
     // Returns information about temporary registers needed. Each temporary
     // register is an LDefinition with a fixed or virtual register and
@@ -1162,10 +1180,17 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
   protected:
     LInstructionHelper()
       : details::LInstructionFixedDefsTempsHelper<Defs, Temps>(Operands)
-    {}
+    {
+        static_assert(Operands == 0 || sizeof(operands_) == Operands * sizeof(LAllocation),
+                      "mozilla::Array should not contain other fields");
+        if (Operands > 0) {
+            using T = LInstructionHelper<Defs, Operands, Temps>;
+            this->initOperandsOffset(offsetof(T, operands_));
+        }
+    }
 
   public:
-    LAllocation* getOperand(size_t index) final {
+    LAllocation* getOperand(size_t index) {
         return &operands_[index];
     }
     void setOperand(size_t index, const LAllocation& a) {
@@ -1200,29 +1225,18 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
 template<size_t Defs, size_t Temps>
 class LVariadicInstruction : public details::LInstructionFixedDefsTempsHelper<Defs, Temps>
 {
-    FixedList<LAllocation> operands_;
-
   protected:
     explicit LVariadicInstruction(size_t numOperands)
       : details::LInstructionFixedDefsTempsHelper<Defs, Temps>(numOperands)
     {}
 
   public:
-    MOZ_MUST_USE bool init(TempAllocator& alloc) {
-        return operands_.init(alloc, this->nonPhiNumOperands_);
-    }
-    LAllocation* getOperand(size_t index) final {
-        return &operands_[index];
-    }
-    void setOperand(size_t index, const LAllocation& a) {
-        operands_[index] = a;
-    }
     void setBoxOperand(size_t index, const LBoxAllocation& a) {
 #ifdef JS_NUNBOX32
-        operands_[index + TYPE_INDEX] = a.type();
-        operands_[index + PAYLOAD_INDEX] = a.payload();
+        this->setOperand(index + TYPE_INDEX, a.type());
+        this->setOperand(index + PAYLOAD_INDEX, a.payload());
 #else
-        operands_[index] = a.value();
+        this->setOperand(index, a.value());
 #endif
     }
 };
