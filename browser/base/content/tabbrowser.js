@@ -250,12 +250,6 @@ window._gBrowser = {
 
     this.tabMinWidth = this.tabMinWidthPref;
 
-    XPCOMUtils.defineLazyGetter(this, "_emptyTabTitle", () => {
-      let str = PrivateBrowsingUtils.isWindowPrivate(window) ?
-        "emptyPrivateTabTitle" : "emptyTabTitle";
-      return gTabBrowserBundle.GetStringFromName("tabs." + str);
-    });
-
     this._setupEventListeners();
   },
 
@@ -1335,7 +1329,7 @@ window._gBrowser = {
         } catch (ex) { /* Do nothing. */ }
       } else {
         // Still no title? Fall back to our untitled string.
-        title = this._emptyTabTitle;
+        title = gTabBrowserBundle.GetStringFromName("tabs.emptyTabTitle");
       }
     }
 
@@ -2267,7 +2261,7 @@ window._gBrowser = {
 
     if (!aNoInitialLabel) {
       if (isBlankPageURL(aURI)) {
-        t.setAttribute("label", this._emptyTabTitle);
+        t.setAttribute("label", gTabBrowserBundle.GetStringFromName("tabs.emptyTabTitle"));
       } else {
         // Set URL as label so that the tab isn't empty initially.
         this.setInitialTabTitle(t, aURI, { beforeTabOpen: true });
