@@ -51,9 +51,9 @@ public:
 
   bool IsCurrent() const;
   bool IsInEffect() const;
-  bool IsActiveDurationZero() const
+  bool HasFiniteActiveDuration() const
   {
-    return !SpecifiedTiming().ActiveDuration();
+    return SpecifiedTiming().ActiveDuration() != TimeDuration::Forever();
   }
 
   already_AddRefed<AnimationEffectTimingReadOnly> Timing();
