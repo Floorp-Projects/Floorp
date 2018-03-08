@@ -107,6 +107,15 @@ var Policies = {
   "Cookies": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("cookie", param.Allow, param.Block);
+
+      if (param.Block) {
+        const hosts = param.Block.map(uri => uri.host).sort().join("\n");
+        runOncePerModification("clearCookiesForBlockedHosts", hosts, () => {
+          for (let blocked of param.Block) {
+            Services.cookies.removeCookiesWithOriginAttributes("{}", blocked.host);
+          }
+        });
+      }
     }
   },
 
