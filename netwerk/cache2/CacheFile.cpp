@@ -1290,7 +1290,7 @@ nsresult CacheFile::GetOnStartTime(uint64_t *_retval)
     return NS_ERROR_NOT_AVAILABLE;
   }
   nsresult rv;
-  *_retval = nsCString(onStartTimeStr).ToInteger64(&rv);
+  *_retval = nsDependentCString(onStartTimeStr).ToInteger64(&rv);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   return NS_OK;
 }
@@ -1305,7 +1305,7 @@ nsresult CacheFile::GetOnStopTime(uint64_t *_retval)
     return NS_ERROR_NOT_AVAILABLE;
   }
   nsresult rv;
-  *_retval = nsCString(onStopTimeStr).ToInteger64(&rv);
+  *_retval = nsDependentCString(onStopTimeStr).ToInteger64(&rv);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   return NS_OK;
 }
@@ -2548,7 +2548,7 @@ CacheFile::InitIndexEntry()
   static auto toUint16 = [](const char* s) -> uint16_t {
     if (s) {
       nsresult rv;
-      uint64_t n64 = nsCString(s).ToInteger64(&rv);
+      uint64_t n64 = nsDependentCString(s).ToInteger64(&rv);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       return n64 <= kIndexTimeOutOfBound ? n64 : kIndexTimeOutOfBound ;
     }
