@@ -231,6 +231,9 @@ class LIRGeneratorShared : public MDefinitionVisitor
     // Redefine a sin/cos call to sincos.
     inline void redefine(MDefinition* def, MDefinition* as, MMathFunction::Function func);
 
+    template <typename LClass, typename... Args>
+    inline LClass* allocateVariadic(uint32_t numOperands, Args&&... args);
+
     TempAllocator& alloc() const {
         return graph.alloc();
     }

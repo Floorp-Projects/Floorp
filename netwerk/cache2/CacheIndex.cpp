@@ -2734,7 +2734,7 @@ CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
       return kIndexTimeNotAvailable;
     }
     nsresult rv;
-    uint64_t n64 = nsCString(aUint16String).ToInteger64(&rv);
+    uint64_t n64 = nsDependentCString(aUint16String).ToInteger64(&rv);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return n64 <= kIndexTimeOutOfBound ? n64 : kIndexTimeOutOfBound;
   };
