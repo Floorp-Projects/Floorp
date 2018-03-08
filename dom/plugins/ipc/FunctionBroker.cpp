@@ -11,6 +11,7 @@
 #if defined(XP_WIN)
 #include <commdlg.h>
 #include <schannel.h>
+#include <sddl.h>
 #endif // defined(XP_WIN)
 
 using namespace mozilla;
@@ -1130,6 +1131,128 @@ bool FCHReq::ShouldBroker(Endpoint endpoint, const PCredHandle& h)
          ((h->dwLower == h->dwUpper) && IsOdd(static_cast<uint64_t>(h->dwLower)));
 }
 
+/* CreateMutexW */
+
+// Get the user's SID as a string.  Returns an empty string on failure.
+static std::wstring GetUserSid()
+{
+  std::wstring ret;
+  // Get user SID from process token information
+  HANDLE token;
+  BOOL success = ::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token);
+  if (!success) {
+    return ret;
+  }
+  DWORD bufLen;
+  success = ::GetTokenInformation(token, TokenUser, nullptr, 0, &bufLen);
+  if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+    return ret;
+  }
+  void* buf = malloc(bufLen);
+  success = ::GetTokenInformation(token, TokenUser, buf, bufLen, &bufLen);
+  MOZ_ASSERT(success);
+  if (success) {
+    TOKEN_USER* tokenUser = static_cast<TOKEN_USER*>(buf);
+    PSID sid = tokenUser->User.Sid;
+    LPWSTR sidStr;
+    success = ::ConvertSidToStringSid(sid, &sidStr);
+    if (success) {
+      ret = sidStr;
+      ::LocalFree(sidStr);
+    }
+  }
+  free(buf);
+  ::CloseHandle(token);
+  return ret;
+}
+
+// Get the name Windows uses for the camera mutex.  Returns an empty string
+// on failure.
+// The camera mutex is identified in Windows code using a hard-coded GUID string,
+// "eed3bd3a-a1ad-4e99-987b-d7cb3fcfa7f0", and the user's SID.  The GUID
+// value was determined by investigating Windows code.  It is referenced in
+// CCreateSwEnum::CCreateSwEnum(void) in devenum.dll.
+static std::wstring GetCameraMutexName()
+{
+  std::wstring userSid = GetUserSid();
+  if (userSid.empty()) {
+    return userSid;
+  }
+  return std::wstring(L"eed3bd3a-a1ad-4e99-987b-d7cb3fcfa7f0 - ") + userSid;
+}
+
+typedef FunctionBroker<ID_CreateMutexW, decltype(CreateMutexW)> CreateMutexWFB;
+
+template<>
+ShouldHookFunc* const
+CreateMutexWFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_CREATEMUTEXW>;
+
+typedef CreateMutexWFB::Request CMWReqHandler;
+typedef CMWReqHandler::Info CMWReqInfo;
+typedef CreateMutexWFB::Response CMWRspHandler;
+
+template<>
+bool CMWReqHandler::ShouldBroker(Endpoint endpoint,
+                                 const LPSECURITY_ATTRIBUTES& aAttribs,
+                                 const BOOL& aOwner,
+                                 const LPCWSTR& aName)
+{
+  // Statically hold the camera mutex name so that we dont recompute it for
+  // every CreateMutexW call in the client process.
+  static std::wstring camMutexName = GetCameraMutexName();
+
+  // Only broker if we are requesting the camera mutex.  Note that we only
+  // need to check that the client is actually requesting the camera.  The
+  // command is always valid on the server as long as we can construct the
+  // mutex name.
+  if (endpoint == SERVER) {
+    return !camMutexName.empty();
+  }
+
+  return (!aOwner) && aName && (!camMutexName.empty()) && (camMutexName == aName);
+}
+
+// We dont need to marshal any parameters.  We construct all of them server-side.
+template<> template<>
+struct CMWReqInfo::ShouldMarshal<0> { static const bool value = false; };
+template<> template<>
+struct CMWReqInfo::ShouldMarshal<1> { static const bool value = false; };
+template<> template<>
+struct CMWReqInfo::ShouldMarshal<2> { static const bool value = false; };
+
+template<> template<>
+HANDLE CreateMutexWFB::RunFunction(CreateMutexWFB::FunctionType* aOrigFunction,
+                                   base::ProcessId aClientId,
+                                   LPSECURITY_ATTRIBUTES& aAttribs,
+                                   BOOL& aOwner,
+                                   LPCWSTR& aName) const
+{
+  // Use CreateMutexW to get the camera mutex and DuplicateHandle to open it
+  // for use in the child process.
+  // Recall that aAttribs, aOwner and aName are all unmarshaled so they are
+  // unassigned garbage.
+  SECURITY_ATTRIBUTES mutexAttrib =
+    { sizeof(SECURITY_ATTRIBUTES), nullptr /* ignored */, TRUE };
+  std::wstring camMutexName = GetCameraMutexName();
+  if (camMutexName.empty()) {
+    return 0;
+  }
+  HANDLE serverMutex = ::CreateMutexW(&mutexAttrib, FALSE, camMutexName.c_str());
+  if (serverMutex == 0) {
+    return 0;
+  }
+  ScopedProcessHandle clientProcHandle;
+  if (!base::OpenProcessHandle(aClientId, &clientProcHandle.rwget())) {
+    return 0;
+  }
+  HANDLE ret;
+  if (!::DuplicateHandle(::GetCurrentProcess(), serverMutex, clientProcHandle,
+                         &ret, SYNCHRONIZE, FALSE, DUPLICATE_CLOSE_SOURCE)) {
+    return 0;
+  }
+  return ret;
+}
+
 #endif // defined(XP_WIN)
 
 /*****************************************************************************/
@@ -1205,6 +1328,8 @@ AddBrokeredFunctionHooks(FunctionHookArray& aHooks)
     FUN_HOOK(new FreeCredentialsHandleFB("sspicli.dll",
                                          "FreeCredentialsHandle",
                                          &FreeCredentialsHandle));
+  aHooks[ID_CreateMutexW] =
+    FUN_HOOK(new CreateMutexWFB("kernel32.dll", "CreateMutexW", &CreateMutexW));
 #endif // defined(XP_WIN)
 }
 
