@@ -814,7 +814,7 @@ Toolbox.prototype = {
   },
 
   _buildOptions: function () {
-    let selectOptions = (name, event) => {
+    let selectOptions = event => {
       // Flip back to the last used panel if we are already
       // on the options panel.
       if (this.currentToolId === "options" &&
@@ -854,7 +854,7 @@ Toolbox.prototype = {
    *        if this tool is active.
    */
   useKeyWithSplitConsole: function (key, handler, whichTool) {
-    this.shortcuts.on(key, (name, event) => {
+    this.shortcuts.on(key, event => {
       if (this.currentToolId === whichTool && this.isSplitConsoleFocused()) {
         handler();
         event.preventDefault();
@@ -870,7 +870,7 @@ Toolbox.prototype = {
       ["forceReload2", true]
     ].forEach(([id, force]) => {
       let key = L10N.getStr("toolbox." + id + ".key");
-      this.shortcuts.on(key, (name, event) => {
+      this.shortcuts.on(key, event => {
         this.reloadTarget(force);
 
         // Prevent Firefox shortcuts from reloading the page
@@ -881,22 +881,22 @@ Toolbox.prototype = {
 
   _addHostListeners: function () {
     this.shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
-                 (name, event) => {
+                 event => {
                    this.selectNextTool();
                    event.preventDefault();
                  });
     this.shortcuts.on(L10N.getStr("toolbox.previousTool.key"),
-                 (name, event) => {
+                 event => {
                    this.selectPreviousTool();
                    event.preventDefault();
                  });
     this.shortcuts.on(L10N.getStr("toolbox.minimize.key"),
-                 (name, event) => {
+                 event => {
                    this._toggleMinimizeMode();
                    event.preventDefault();
                  });
     this.shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
-                 (name, event) => {
+                 event => {
                    this.switchToPreviousHost();
                    event.preventDefault();
                  });
@@ -2263,7 +2263,7 @@ Toolbox.prototype = {
   /**
    * Show 'frames' menu on key down
    */
-  showFramesMenuOnKeyDown: function (name, event) {
+  showFramesMenuOnKeyDown: function (event) {
     if (event.target.id == "command-button-frames") {
       this.showFramesMenu(event);
     }

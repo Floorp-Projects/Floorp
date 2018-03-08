@@ -401,7 +401,7 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         match (self, other) {
             (&FastTransform::Offset(ref offset), &FastTransform::Offset(ref other_offset)) => {
                 let offset = TypedVector2D::from_untyped(&offset.to_untyped());
-                FastTransform::Offset((offset + *other_offset))
+                FastTransform::Offset(offset + *other_offset)
             }
             _ => {
                 let new_transform = self.to_transform().pre_mul(&other.to_transform());

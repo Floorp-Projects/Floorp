@@ -17,17 +17,30 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="handler-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+  <binding id="handler" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <implementation>
       <property name="type" readonly="true">
         <getter>
           return this.getAttribute("type");
         </getter>
       </property>
-    </implementation>
-  </binding>
+      <!-- Overriding listitem -->
+      <property name="selected" onget="return this.getAttribute('selected') == 'true';">
+        <setter><![CDATA[
+          if (val) {
+            this.setAttribute("selected", "true");
+            gMainPane.rebuildActionsMenu();
+          } else {
+            this.removeAttribute("selected");
+          }
 
-  <binding id="handler" extends="chrome://browser/content/preferences/handlers.xml#handler-base">
+          document.getAnonymousElementByAttribute(this, "anonid", "selected").setAttribute("hidden", !val);
+          document.getAnonymousElementByAttribute(this, "anonid", "not-selected").setAttribute("hidden", !!val);
+
+          return val;
+        ]]></setter>
+      </property>
+    </implementation>
     <content>
       <xul:hbox flex="1" equalsize="always">
         <xul:hbox flex="1" align="center" xbl:inherits="tooltiptext=typeDescription">
@@ -35,23 +48,11 @@
                      xbl:inherits="src=typeIcon" height="16" width="16"/>
           <xul:label flex="1" crop="end" xbl:inherits="value=typeDescription"/>
         </xul:hbox>
-        <xul:hbox flex="1" align="center" xbl:inherits="tooltiptext=actionDescription">
+        <xul:hbox anonid="not-selected" flex="1" align="center" xbl:inherits="tooltiptext=actionDescription">
           <xul:image xbl:inherits="src=actionIcon" height="16" width="16" class="actionIcon"/>
           <xul:label flex="1" crop="end" xbl:inherits="value=actionDescription"/>
         </xul:hbox>
-      </xul:hbox>
-    </content>
-  </binding>
-
-  <binding id="handler-selected" extends="chrome://browser/content/preferences/handlers.xml#handler-base">
-    <content>
-      <xul:hbox flex="1" equalsize="always">
-        <xul:hbox flex="1" align="center" xbl:inherits="tooltiptext=typeDescription">
-          <xul:image src="moz-icon://goat?size=16" class="typeIcon"
-                     xbl:inherits="src=typeIcon" height="16" width="16"/>
-          <xul:label flex="1" crop="end" xbl:inherits="value=typeDescription"/>
-        </xul:hbox>
-        <xul:hbox flex="1">
+        <xul:hbox hidden="true" anonid="selected" flex="1">
           <xul:menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1"
                         xbl:inherits="tooltiptext=actionDescription"
                         oncommand="gMainPane.onSelectAction(event.originalTarget)">
@@ -60,13 +61,6 @@
         </xul:hbox>
       </xul:hbox>
     </content>
-
-    <implementation>
-      <constructor>
-        gMainPane.rebuildActionsMenu();
-      </constructor>
-    </implementation>
-
   </binding>
 
   <binding id="container">

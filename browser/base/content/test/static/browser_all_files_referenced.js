@@ -50,9 +50,6 @@ var whitelist = [
   // security/manager/pki/resources/content/device_manager.js
   {file: "chrome://pippki/content/load_device.xul"},
 
-  // Used by setting this url as a pref in about:config
-  {file: "chrome://browser/content/newtab/alternativeDefaultSites.json"},
-
   // Add-on compat
   {file: "chrome://global/content/XPCNativeWrapper.js"},
   {file: "chrome://global/locale/brand.dtd"},

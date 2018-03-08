@@ -40,7 +40,7 @@ base64 = { optional = true, version = "0.3.0" }
 ron = { optional = true, version = "0.1.7" }
 
 [dev-dependencies]
-angle = {git = "https://github.com/servo/angle", branch = "servo"}
+mozangle = "0.1"
 env_logger = "0.5"
 rand = "0.3"                # for the benchmarks
 glutin = "0.12"             # for the example apps

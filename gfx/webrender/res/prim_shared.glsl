@@ -71,7 +71,7 @@ vec4[2] fetch_from_resource_cache_2(int address) {
 
 #ifdef WR_VERTEX_SHADER
 
-#define VECS_PER_CLIP_SCROLL_NODE   5
+#define VECS_PER_CLIP_SCROLL_NODE   9
 #define VECS_PER_LOCAL_CLIP_RECT    1
 #define VECS_PER_RENDER_TASK        3
 #define VECS_PER_PRIM_HEADER        2
@@ -85,6 +85,16 @@ uniform HIGHP_SAMPLER_FLOAT sampler2D sRenderTasks;
 // Instanced attributes
 in ivec4 aData0;
 in ivec4 aData1;
+
+// Work around Angle bug that forgets to update sampler metadata,
+// by making the use of those samplers uniform across programs.
+// https://github.com/servo/webrender/wiki/Driver-issues#texturesize-in-vertex-shaders
+void markCacheTexturesUsed() {
+    vec2 size = vec2(textureSize(sCacheA8, 0)) + vec2(textureSize(sCacheRGBA8, 0));
+    if (size.x > 1000000.0) {
+        gl_Position = vec4(0.0);
+    }
+}
 
 // get_fetch_uv is a macro to work around a macOS Intel driver parsing bug.
 // TODO: convert back to a function once the driver issues are resolved, if ever.
@@ -154,6 +164,7 @@ vec4 fetch_from_resource_cache_1(int address) {
 
 struct ClipScrollNode {
     mat4 transform;
+    mat4 inv_transform;
     bool is_axis_aligned;
 };
 
@@ -166,13 +177,19 @@ ClipScrollNode fetch_clip_scroll_node(int index) {
     // of OSX.
     ivec2 uv = get_fetch_uv(index, VECS_PER_CLIP_SCROLL_NODE);
     ivec2 uv0 = ivec2(uv.x + 0, uv.y);
+    ivec2 uv1 = ivec2(uv.x + 8, uv.y);
 
     node.transform[0] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(0, 0));
     node.transform[1] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(1, 0));
     node.transform[2] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(2, 0));
     node.transform[3] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(3, 0));
 
-    vec4 misc = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(4, 0));
+    node.inv_transform[0] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(4, 0));
+    node.inv_transform[1] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(5, 0));
+    node.inv_transform[2] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(6, 0));
+    node.inv_transform[3] = TEXEL_FETCH(sClipScrollNodes, uv0, 0, ivec2(7, 0));
+
+    vec4 misc = TEXEL_FETCH(sClipScrollNodes, uv1, 0, ivec2(0, 0));
     node.is_axis_aligned = misc.x == 0.0;
 
     return node;
@@ -358,6 +375,8 @@ PrimitiveInstance fetch_prim_instance() {
     pi.user_data1 = aData1.z;
     pi.user_data2 = aData1.w;
 
+    markCacheTexturesUsed();
+
     return pi;
 }
 
@@ -384,6 +403,8 @@ CompositeInstance fetch_composite_instance() {
     ci.user_data1 = aData1.y;
     ci.user_data2 = aData1.z;
     ci.user_data3 = aData1.w;
+
+    markCacheTexturesUsed();
 
     return ci;
 }
@@ -476,9 +497,8 @@ vec4 get_node_pos(vec2 pos, ClipScrollNode node) {
     vec3 a = ah.xyz / ah.w;
 
     // get the normal to the scroll node plane
-    mat4 inv_transform = inverse(node.transform);
-    vec3 n = transpose(mat3(inv_transform)) * vec3(0.0, 0.0, 1.0);
-    return untransform(pos, n, a, inv_transform);
+    vec3 n = transpose(mat3(node.inv_transform)) * vec3(0.0, 0.0, 1.0);
+    return untransform(pos, n, a, node.inv_transform);
 }
 
 // Compute a snapping offset in world space (adjusted to pixel ratio),

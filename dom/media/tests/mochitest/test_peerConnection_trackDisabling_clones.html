@@ -24,9 +24,7 @@ runNetworkTest(async () => {
   var originalStream;
   var localVideoOriginal;
 
-  // Always use fake tracks since we depend on audio to have a large 1000Hz
-  // component.
-  test.setMediaConstraints([{audio: true, video: true, fake: true}], []);
+  test.setMediaConstraints([{audio: true, video: true}], []);
   test.chain.replace("PC_LOCAL_GUM", [
     function PC_LOCAL_GUM_CLONE() {
       return getUserMedia(test.pcLocal.constraints[0]).then(stream => {
@@ -112,11 +110,11 @@ runNetworkTest(async () => {
       var remoteAnalyserClone =
         new AudioStreamAnalyser(ac, test.pcRemote._pc.getRemoteStreams()[0]);
 
-      var freq1k = localAnalyserOriginal.binIndexForFrequency(1000);
+      var freq = localAnalyserOriginal.binIndexForFrequency(TEST_AUDIO_FREQ);
       var checkAudioEnabled = analyser =>
-        analyser.waitForAnalysisSuccess(array => array[freq1k] > 200);
+        analyser.waitForAnalysisSuccess(array => array[freq] > 200);
       var checkAudioDisabled = analyser =>
-        analyser.waitForAnalysisSuccess(array => array[freq1k] < 50);
+        analyser.waitForAnalysisSuccess(array => array[freq] < 50);
 
       info("Checking local original enabled");
       await checkAudioEnabled(localAnalyserOriginal);
