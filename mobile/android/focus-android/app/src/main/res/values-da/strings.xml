@@ -8,6 +8,8 @@
   <string name="feedback_erase">Din browser-historik er blevet slettet.</string>
   <string name="search_hint">Søg efter %1$s</string>
   <string name="menu_share">Del…</string>
+  <string name="menu_open_with_default_browser2">Åbn i %1$s</string>
+  <string name="menu_open_with_a_browser2">Åbn i…</string>
   <string name="menu_add_to_home_screen">Føj til startskærmen</string>
   <string name="menu_whats_new">Nyheder</string>
   <string name="menu_settings">Indstillinger</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Du bliver ikke givet nogen ret eller licens til varemærker tilhørende Mozilla Foundation eller tredjepart, herunder navn og logo for Mozilla, Firefox og %1$s. Få flere oplysninger "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">her</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Yderligere gratis og åben kildekode til %1$s er tilgængelig under diverse "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenser</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s benytter sig også af blokeringslister fra Disconnect, Inc. som adskilte og uafhængige værker under "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>". Listerne er tilgængelige "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">her</a>.]]></string>
+  <string name="gv_prompt_username_hint">Brugernavn</string>
+  <string name="gv_prompt_password_hint">Adgangskode</string>
+  <string name="gv_prompt_clear">Ryd</string>
 </resources>

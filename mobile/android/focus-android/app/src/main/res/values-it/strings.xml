@@ -8,6 +8,8 @@
   <string name="feedback_erase">La cronologia di navigazione è stata eliminata.</string>
   <string name="search_hint">Cerca %1$s</string>
   <string name="menu_share">Condividi…</string>
+  <string name="menu_open_with_default_browser2">Apri in %1$s</string>
+  <string name="menu_open_with_a_browser2">Apri in…</string>
   <string name="menu_add_to_home_screen">Agg. a schermata principale</string>
   <string name="menu_whats_new">Novità</string>
   <string name="menu_settings">Impostazioni</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Mozilla non attribuisce all’utente alcun diritto o licenza relativamente all’utilizzo dei marchi registrati da Mozilla Foundation o da altri soggetti, inclusi i nomi Mozilla, Firefox, %1$s e i logo associati. Ulteriori informazioni sono disponibili in "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">questa pagina</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Codice sorgente aggiuntivo per %1$s è disponibile nei termini di altre "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenze</a>" libere e Open Source."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s utilizza un servizio di "<em xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">blocklist</em>" fornito da Disconnect, Inc. in qualità di opera aggiuntiva e separata, distribuita nei termini della "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" e disponibile "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">qui</a>.]]></string>
+  <string name="gv_prompt_username_hint">Nome utente</string>
+  <string name="gv_prompt_password_hint">Password</string>
+  <string name="gv_prompt_clear">Cancella</string>
 </resources>

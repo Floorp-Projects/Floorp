@@ -8,6 +8,8 @@
   <string name="feedback_erase">Сіздің шолу тарихыңыз өшірілді.</string>
   <string name="search_hint">%1$s іздеу</string>
   <string name="menu_share">Бөлісу…</string>
+  <string name="menu_open_with_default_browser2">%1$s көмегімен ашу</string>
+  <string name="menu_open_with_a_browser2">Көмегімен ашу…</string>
   <string name="menu_add_to_home_screen">Үй экранына қосу</string>
   <string name="menu_whats_new">Не жаңалық</string>
   <string name="menu_settings">Баптаулар</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Сізге Mozilla Foundation-ның немесе басқа да жақтардың ешбір тіркелген сауда белгілеріне, соның ішінде Mozilla, Firefox немесе %1$s аттары немесе логотиптеріне ешбір құқықтар немесе лицензиялар берілмейді. Қосымша ақпаратты "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">here</a>" жерінен табуға болады."]]></string>
   <string name="your_rights_content4"><![CDATA["%1$s үшін қосымша бастапқы кодтары әр түрлі басқа тегін және бастапқы кодтары ашық "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1079;&#1080;&#1103;&#1083;&#1072;&#1088;</a>" аясында қолжетерлік."]]></string>
   <string name="your_rights_content5"><![CDATA["Сонымен қатар, %1$s Disconnect, Inc. ұсынған блоктізімдерін қолданады, олар "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" аясында, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1086;&#1089;&#1099;&#1085;&#1076;&#1072;</a>" бөлек және тәуелсіз жұмыстар ретінде қолжетерлік."]]></string>
+  <string name="gv_prompt_username_hint">Пайдаланушы аты</string>
+  <string name="gv_prompt_password_hint">Пароль</string>
+  <string name="gv_prompt_clear">Тазарту</string>
 </resources>

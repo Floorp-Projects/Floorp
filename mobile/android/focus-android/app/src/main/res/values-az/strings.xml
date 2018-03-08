@@ -8,6 +8,8 @@
   <string name="feedback_erase">Səyahət tarixçəniz silindi.</string>
   <string name="search_hint">%1$s üçün axtar</string>
   <string name="menu_share">Paylaş…</string>
+  <string name="menu_open_with_default_browser2">%1$s ilə aç</string>
+  <string name="menu_open_with_a_browser2">Bununla aç…</string>
   <string name="menu_add_to_home_screen">Ana ekrana əlavə et</string>
   <string name="menu_whats_new">Yeniliklər</string>
   <string name="menu_settings">Tənzimləmələr</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Sizə Mozilla Fondunun və digər tərəflərin ticari markası olan Mozilla, Firefox və ya %1$s adları və loqoları üçün heç bir hüquq və ya lisenziya verilmir. Ətraflı məlumatı "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">buradan</a>" tapa bilərsiz."]]></string>
   <string name="your_rights_content4"><![CDATA["%1$s üçün əlavə qaynaq kodu digər bir neçə azad və açıq qaynaq "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisenziyalar&#305;</a>" ilə mövcuddur."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s həmçinin Disconnect Inc. tərəfindən təchiz edilən qara siyahını işlədir, hansı ki, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" ilə müstəqil tərtib edilir və "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">burada</a>" mövcuddur."]]></string>
+  <string name="gv_prompt_username_hint">İstifadəçi adı</string>
+  <string name="gv_prompt_password_hint">Parol</string>
+  <string name="gv_prompt_clear">Təmizlə</string>
 </resources>

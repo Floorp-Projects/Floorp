@@ -8,6 +8,8 @@
   <string name="feedback_erase">Zure nabigatze-historia ezabatu egin da.</string>
   <string name="search_hint">Bilatu %1$s</string>
   <string name="menu_share">Partekatu…</string>
+  <string name="menu_open_with_default_browser2">Ireki %1$s nabigatzailean</string>
+  <string name="menu_open_with_a_browser2">Ireki honekin…</string>
   <string name="menu_add_to_home_screen">Gehitu hasierako pantailan</string>
   <string name="menu_whats_new">Nobedadeak</string>
   <string name="menu_settings">Ezarpenak</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Ez zaizu inolako eskubiderik edo lizentziarik aitortzen Mozilla Fundazioaren edo bestelakoen marka erregistratuetan, Mozilla, Firefox eta %1$s izen edo logoetan barne. Argibide gehiago "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hemen</a>" aurki daitezke."]]></string>
   <string name="your_rights_content4"><![CDATA["%1$s aplikazioaren iturburu-kode gehigarria erabilgarri dago kode irekikoak eta libreak diren bestelako "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lizentzietan</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s aplikazioak Diskonnect, Inc.-ek emandako blokeo-zerrendak ere erabiltzen ditu, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" lizentziapeko aparteko lan independente gisa eta eskuragarri dago "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hemen</a>.]]></string>
+  <string name="gv_prompt_username_hint">Erabiltzaile-izena</string>
+  <string name="gv_prompt_password_hint">Pasahitza</string>
+  <string name="gv_prompt_clear">Garbitu</string>
 </resources>
