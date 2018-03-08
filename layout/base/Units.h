@@ -7,10 +7,10 @@
 #ifndef MOZ_UNITS_H_
 #define MOZ_UNITS_H_
 
-#include "mozilla/gfx/Box.h"
 #include "mozilla/gfx/Coord.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/RectAbsolute.h"
 #include "mozilla/gfx/ScaleFactor.h"
 #include "mozilla/gfx/ScaleFactors2D.h"
 #include "nsMargin.h"
@@ -75,8 +75,8 @@ typedef gfx::PointTyped<LayerPixel> LayerPoint;
 typedef gfx::IntPointTyped<LayerPixel> LayerIntPoint;
 typedef gfx::SizeTyped<LayerPixel> LayerSize;
 typedef gfx::IntSizeTyped<LayerPixel> LayerIntSize;
-typedef gfx::BoxTyped<LayerPixel> LayerBox;
 typedef gfx::RectTyped<LayerPixel> LayerRect;
+typedef gfx::RectAbsoluteTyped<LayerPixel> LayerRectAbsolute;
 typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
 typedef gfx::MarginTyped<LayerPixel> LayerMargin;
 typedef gfx::IntMarginTyped<LayerPixel> LayerIntMargin;

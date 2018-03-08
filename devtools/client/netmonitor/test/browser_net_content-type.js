@@ -7,8 +7,8 @@
  * Tests if different response content types are handled correctly.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -22,16 +22,16 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, function () {
     content.wrappedJSObject.performRequests();
   });
-  yield wait;
+  await wait;
 
   for (let requestItem of document.querySelectorAll(".request-list-item")) {
     let requestsListStatus = requestItem.querySelector(".requests-list-status");
     requestItem.scrollIntoView();
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-    yield waitUntil(() => requestsListStatus.title);
+    await waitUntil(() => requestsListStatus.title);
   }
 
   verifyRequestItemTarget(
@@ -142,30 +142,30 @@ add_task(function* () {
     }
   );
 
-  yield selectIndexAndWaitForSourceEditor(monitor, 0);
-  yield testResponseTab("xml");
+  await selectIndexAndWaitForSourceEditor(monitor, 0);
+  await testResponseTab("xml");
 
-  yield selectIndexAndWaitForSourceEditor(monitor, 1);
-  yield testResponseTab("css");
+  await selectIndexAndWaitForSourceEditor(monitor, 1);
+  await testResponseTab("css");
 
-  yield selectIndexAndWaitForSourceEditor(monitor, 2);
-  yield testResponseTab("js");
+  await selectIndexAndWaitForSourceEditor(monitor, 2);
+  await testResponseTab("js");
 
-  yield selectIndexAndWaitForJSONView(3);
-  yield testResponseTab("json");
+  await selectIndexAndWaitForJSONView(3);
+  await testResponseTab("json");
 
-  yield selectIndexAndWaitForSourceEditor(monitor, 4);
-  yield testResponseTab("html");
+  await selectIndexAndWaitForSourceEditor(monitor, 4);
+  await testResponseTab("html");
 
-  yield selectIndexAndWaitForImageView(5);
-  yield testResponseTab("png");
+  await selectIndexAndWaitForImageView(5);
+  await testResponseTab("png");
 
-  yield selectIndexAndWaitForSourceEditor(monitor, 6);
-  yield testResponseTab("gzip");
+  await selectIndexAndWaitForSourceEditor(monitor, 6);
+  await testResponseTab("gzip");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
-  function* testResponseTab(type) {
+  function testResponseTab(type) {
     let tabpanel = document.querySelector("#response-panel");
 
     function checkVisibility(box) {
@@ -270,26 +270,26 @@ add_task(function* () {
     }
   }
 
-  function* selectIndexAndWaitForJSONView(index) {
+  async function selectIndexAndWaitForJSONView(index) {
     let onResponseContent = monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
     let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".treeTable");
     store.dispatch(Actions.selectRequestByIndex(index));
-    yield waitDOM;
-    yield onResponseContent;
+    await waitDOM;
+    await onResponseContent;
 
     // Waiting for RECEIVED_RESPONSE_CONTENT isn't enough.
     // DOM may not be fully updated yet and checkVisibility(json) may still fail.
-    yield waitForTick();
+    await waitForTick();
   }
 
-  function* selectIndexAndWaitForImageView(index) {
+  async function selectIndexAndWaitForImageView(index) {
     let onResponseContent = monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
     let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".response-image");
     store.dispatch(Actions.selectRequestByIndex(index));
-    let [imageNode] = yield waitDOM;
-    yield once(imageNode, "load");
-    yield onResponseContent;
+    let [imageNode] = await waitDOM;
+    await once(imageNode, "load");
+    await onResponseContent;
   }
 });

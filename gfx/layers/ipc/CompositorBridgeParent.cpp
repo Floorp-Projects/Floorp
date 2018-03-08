@@ -1743,10 +1743,15 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }
 
-  // We don't support moving a child from a APZ-enabled compositor to a
-  // APZ-disabled compostior. The mOptions assertion above should already
-  // ensure this, since APZ-ness is one of the things in mOptions.
-  MOZ_ASSERT((oldApzSampler != nullptr) == (mApzSampler != nullptr));
+  if (oldApzSampler) {
+    // We don't support moving a child from an APZ-enabled compositor to a
+    // APZ-disabled compositor. The mOptions assertion above should already
+    // ensure this, since APZ-ness is one of the things in mOptions. Note
+    // however it is possible for mApzSampler to be non-null here with
+    // oldApzSampler null, because the child may not have been previously
+    // composited.
+    MOZ_ASSERT(mApzSampler);
+  }
   if (mApzSampler) {
     if (parent) {
       MOZ_ASSERT(mApzcTreeManager);

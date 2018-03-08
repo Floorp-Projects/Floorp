@@ -7,8 +7,8 @@
  * Tests if toggling the details pane works as expected.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -35,7 +35,7 @@ add_task(function* () {
 
   let networkEvent = monitor.panelWin.once(EVENTS.NETWORK_EVENT);
   tab.linkedBrowser.reload();
-  yield networkEvent;
+  await networkEvent;
 
   is(toggleButton.hasAttribute("disabled"), false,
     "The pane toggle button should be enabled after the first request.");
@@ -73,7 +73,7 @@ add_task(function* () {
   is(getSelectedRequest(store.getState()), null,
     "There should now be no selected item in the requests menu.");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   function getSelectedIndex(state) {
     if (!state.requests.selectedId) {

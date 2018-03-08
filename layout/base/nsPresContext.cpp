@@ -6,6 +6,8 @@
 
 /* a presentation of a document, part 1 */
 
+#include "nsPresContext.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
@@ -16,7 +18,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsDocShell.h"

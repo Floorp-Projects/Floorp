@@ -8,8 +8,8 @@
  * displayed correctly.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(PARAMS_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(PARAMS_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -19,41 +19,41 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 7);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests();
   });
-  yield wait;
+  await wait;
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#params-tab"));
-  yield wait;
+  await wait;
   testParamsTab1("a", "", '{ "foo": "bar" }', "");
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]);
-  yield wait;
+  await wait;
   testParamsTab1("a", "b", '{ "foo": "bar" }', "");
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]);
-  yield wait;
+  await wait;
   testParamsTab1("a", "b", "?foo", "bar");
 
   wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[3]);
-  yield wait;
+  await wait;
   testParamsTab2("a", "", '{ "foo": "bar" }', "js");
 
   wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[4]);
-  yield wait;
+  await wait;
   testParamsTab2("a", "b", '{ "foo": "bar" }', "js");
 
   // Wait for all tree sections and editor updated by react
@@ -61,14 +61,14 @@ add_task(function* () {
   let waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[5]);
-  yield Promise.all([waitSections, waitSourceEditor]);
+  await Promise.all([waitSections, waitSourceEditor]);
   testParamsTab2("a", "b", "?foo=bar", "text");
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[6]);
   testParamsTab3();
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   function testParamsTab1(queryStringParamName, queryStringParamValue,
                           formDataParamName, formDataParamValue) {

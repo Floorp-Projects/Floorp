@@ -161,9 +161,3 @@ function getBlackBoxCheckbox(aPanel, aIndex) {
   return aPanel.panelWin.document.querySelectorAll(
     ".side-menu-widget-item-checkbox")[aIndex];
 }
-
-function once(aTarget, aEvent) {
-  let deferred = defer();
-  aTarget.once(aEvent, deferred.resolve);
-  return deferred.promise;
-}

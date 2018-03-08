@@ -7,10 +7,10 @@
  * Test if request and response body logging stays on after opening the console.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = yield initNetMonitor(JSON_LONG_URL);
+  let { tab, monitor } = await initNetMonitor(JSON_LONG_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -24,46 +24,46 @@ add_task(function* () {
 
   // Perform first batch of requests.
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests();
   });
-  yield wait;
+  await wait;
 
-  yield verifyRequest(0);
+  await verifyRequest(0);
 
   // Switch to the webconsole.
   let onWebConsole = monitor.toolbox.once("webconsole-selected");
   monitor.toolbox.selectTool("webconsole");
-  yield onWebConsole;
+  await onWebConsole;
 
   // Switch back to the netmonitor.
   let onNetMonitor = monitor.toolbox.once("netmonitor-selected");
   monitor.toolbox.selectTool("netmonitor");
-  yield onNetMonitor;
+  await onNetMonitor;
 
   // Reload debugee.
   wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
-  yield wait;
+  await wait;
 
   // Perform another batch of requests.
   wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests();
   });
-  yield wait;
+  await wait;
 
-  yield verifyRequest(1);
+  await verifyRequest(1);
 
   return teardown(monitor);
 
-  function* verifyRequest(index) {
+  async function verifyRequest(index) {
     let requestItems = document.querySelectorAll(".request-list-item");
     for (let requestItem of requestItems) {
       requestItem.scrollIntoView();
       let requestsListStatus = requestItem.querySelector(".requests-list-status");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-      yield waitUntil(() => requestsListStatus.title);
+      await waitUntil(() => requestsListStatus.title);
     }
     verifyRequestItemTarget(
       document,

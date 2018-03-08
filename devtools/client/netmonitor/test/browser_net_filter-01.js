@@ -128,8 +128,8 @@ const EXPECTED_REQUESTS = [
   }
 ];
 
-add_task(function* () {
-  let { monitor } = yield initNetMonitor(FILTERING_URL);
+add_task(async function () {
+  let { monitor } = await initNetMonitor(FILTERING_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
@@ -147,9 +147,9 @@ add_task(function* () {
   info("Starting test... ");
 
   let wait = waitForNetworkEvents(monitor, 9);
-  loadCommonFrameScript();
-  yield performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
-  yield wait;
+  loadFrameScriptUtils();
+  await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
+  await wait;
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
@@ -163,12 +163,12 @@ add_task(function* () {
 
   // First test with single filters...
   testFilterButtons(monitor, "all");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-html-button"));
   testFilterButtons(monitor, "html");
-  yield testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  await testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Reset filters
   EventUtils.sendMouseEvent({ type: "click" },
@@ -176,79 +176,79 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-css-button"));
   testFilterButtons(monitor, "css");
-  yield testContents([0, 1, 0, 0, 0, 0, 0, 0, 0]);
+  await testContents([0, 1, 0, 0, 0, 0, 0, 0, 0]);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-js-button"));
   testFilterButtons(monitor, "js");
-  yield testContents([0, 0, 1, 0, 0, 0, 0, 0, 0]);
+  await testContents([0, 0, 1, 0, 0, 0, 0, 0, 0]);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-xhr-button"));
   testFilterButtons(monitor, "xhr");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 0]);
+  await testContents([1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   EventUtils.sendMouseEvent({ type: "click" },
      document.querySelector(".requests-list-filter-fonts-button"));
   testFilterButtons(monitor, "fonts");
-  yield testContents([0, 0, 0, 1, 0, 0, 0, 0, 0]);
+  await testContents([0, 0, 0, 1, 0, 0, 0, 0, 0]);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-images-button"));
   testFilterButtons(monitor, "images");
-  yield testContents([0, 0, 0, 0, 1, 0, 0, 0, 0]);
+  await testContents([0, 0, 0, 0, 1, 0, 0, 0, 0]);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-media-button"));
   testFilterButtons(monitor, "media");
-  yield testContents([0, 0, 0, 0, 0, 1, 1, 0, 0]);
+  await testContents([0, 0, 0, 0, 0, 1, 1, 0, 0]);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-ws-button"));
   testFilterButtons(monitor, "ws");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 1]);
+  await testContents([0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
 
   testFilterButtons(monitor, "all");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   // Text in filter box that matches nothing should hide all.
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   setFreetextFilter("foobar");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Text in filter box that matches should filter out everything else.
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   setFreetextFilter("sample");
-  yield testContents([1, 1, 1, 0, 0, 0, 0, 0, 0]);
+  await testContents([1, 1, 1, 0, 0, 0, 0, 0, 0]);
 
   // Text in filter box that matches should filter out everything else.
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   setFreetextFilter("SAMPLE");
-  yield testContents([1, 1, 1, 0, 0, 0, 0, 0, 0]);
+  await testContents([1, 1, 1, 0, 0, 0, 0, 0, 0]);
 
   // Test negative filtering (only show unmatched items)
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   setFreetextFilter("-sample");
-  yield testContents([0, 0, 0, 1, 1, 1, 1, 1, 1]);
+  await testContents([0, 0, 0, 1, 1, 1, 1, 1, 1]);
 
   // ...then combine multiple filters together.
 
@@ -259,27 +259,27 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-css-button"));
   testFilterButtonsCustom(monitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]);
-  yield testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
+  await testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
 
   // Html and css filter enabled and text filter should show just the html and css match.
   // Should not show both the items matching the button plus the items matching the text.
   setFreetextFilter("sample");
-  yield testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
+  await testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
   setFreetextFilter("");
   testFilterButtonsCustom(monitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]);
-  yield testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
+  await testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
 
   // Disable some filters. Only one left active.
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-css-button"));
   testFilterButtons(monitor, "html");
-  yield testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  await testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Disable last active filter. Should toggle to all.
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-html-button"));
   testFilterButtons(monitor, "all");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   // Enable few filters and click on all. Only "all" should be checked.
   EventUtils.sendMouseEvent({ type: "click" },
@@ -292,9 +292,9 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   testFilterButtons(monitor, "all");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   function getSelectedIndex(state) {
     if (!state.requests.selectedId) {
@@ -303,13 +303,13 @@ add_task(function* () {
     return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
   }
 
-  function* testContents(visibility) {
+  async function testContents(visibility) {
     let requestItems = document.querySelectorAll(".request-list-item");
     for (let requestItem of requestItems) {
       requestItem.scrollIntoView();
       let requestsListStatus = requestItem.querySelector(".requests-list-status");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-      yield waitUntil(() => requestsListStatus.title);
+      await waitUntil(() => requestsListStatus.title);
     }
 
     let items = getSortedRequests(store.getState());
@@ -317,7 +317,7 @@ add_task(function* () {
 
     // Filter results will be updated asynchronously, so we should wait until
     // displayed requests reach final state.
-    yield waitUntil(() => {
+    await waitUntil(() => {
       visibleItems = getDisplayedRequests(store.getState());
       return visibleItems.size === visibility.filter(e => e).length;
     });

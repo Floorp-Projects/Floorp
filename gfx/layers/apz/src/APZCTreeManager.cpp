@@ -254,14 +254,15 @@ APZCTreeManager::NotifyLayerTreeAdopted(uint64_t aLayersId,
 {
   APZThreadUtils::AssertOnSamplerThread();
 
-  MOZ_ASSERT(aOldApzcTreeManager);
-  aOldApzcTreeManager->mFocusState.RemoveFocusTarget(aLayersId);
-  // While we could move the focus target information from the old APZC tree
-  // manager into this one, it's safer to not do that, as we'll probably have
-  // that information repopulated soon anyway (on the next layers update).
+  if (aOldApzcTreeManager) {
+    aOldApzcTreeManager->mFocusState.RemoveFocusTarget(aLayersId);
+    // While we could move the focus target information from the old APZC tree
+    // manager into this one, it's safer to not do that, as we'll probably have
+    // that information repopulated soon anyway (on the next layers update).
+  }
 
   UniquePtr<APZTestData> adoptedData;
-  { // scope lock for removal on oldApzcTreeManager
+  if (aOldApzcTreeManager) {
     MutexAutoLock lock(aOldApzcTreeManager->mTestDataLock);
     auto it = aOldApzcTreeManager->mTestData.find(aLayersId);
     if (it != aOldApzcTreeManager->mTestData.end()) {

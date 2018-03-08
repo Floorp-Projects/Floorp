@@ -7,8 +7,8 @@
  * Test that CORS preflight requests are displayed by network monitor
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CORS_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CORS_URL);
 
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -23,12 +23,12 @@ add_task(function* () {
 
   info("Performing a CORS request");
   let requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
-  yield ContentTask.spawn(tab.linkedBrowser, requestUrl, function* (url) {
+  await ContentTask.spawn(tab.linkedBrowser, requestUrl, async function (url) {
     content.wrappedJSObject.performRequests(url, "triggering/preflight", "post-data");
   });
 
   info("Waiting until the requests appear in netmonitor");
-  yield wait;
+  await wait;
 
   info("Checking the preflight and flight methods");
   ["OPTIONS", "POST"].forEach((method, index) => {
@@ -41,5 +41,5 @@ add_task(function* () {
     );
   });
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

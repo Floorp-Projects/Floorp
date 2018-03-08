@@ -8,8 +8,8 @@
  * when loaded directly from an HTML page.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CYRILLIC_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CYRILLIC_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -20,13 +20,13 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
-  yield wait;
+  await wait;
 
   let requestItem = document.querySelectorAll(".request-list-item")[0];
   let requestsListStatus = requestItem.querySelector(".requests-list-status");
   requestItem.scrollIntoView();
   EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-  yield waitUntil(() => requestsListStatus.title);
+  await waitUntil(() => requestsListStatus.title);
 
   verifyRequestItemTarget(
     document,
@@ -42,11 +42,11 @@ add_task(function* () {
   wait = waitForDOM(document, "#headers-panel");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
-  yield wait;
+  await wait;
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
-  yield wait;
+  await wait;
 
   // CodeMirror will only load lines currently in view to the DOM. getValue()
   // retrieves all lines pending render after a user begins scrolling.
