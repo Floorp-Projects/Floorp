@@ -7,8 +7,8 @@
 #include "DDMediaLogs.h"
 
 #include "DDLogUtils.h"
+#include "nsIThreadManager.h"
 #include "mozilla/JSONWriter.h"
-#include "mozilla/SharedThreadPool.h"
 
 namespace mozilla {
 
@@ -19,7 +19,7 @@ DDMediaLogs::New()
   nsresult rv = NS_NewNamedThread("DDMediaLogs",
                                   getter_AddRefs(mThread),
                                   nullptr,
-                                  SharedThreadPool::kStackSize);
+                                  nsIThreadManager::kThreadPoolStackSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return { rv, nullptr };
   }

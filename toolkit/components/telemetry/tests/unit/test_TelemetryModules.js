@@ -64,6 +64,14 @@ if (AppConstants.platform === "win") {
       debugName: null,
       version: null,
     },
+    {
+      // We choose this DLL because it's guaranteed to exist in our process and
+      // be signed on all Windows versions that we support.
+      name: "ntdll.dll",
+      // debugName changes depending on OS version and is irrelevant to this test
+      // version changes depending on OS version and is irrelevant to this test
+      certSubject: "Microsoft Windows",
+    },
   ];
 } else if (AppConstants.platform === "android") {
   // Listing shared libraries doesn't work in Android xpcshell tests.
@@ -113,7 +121,7 @@ add_task(async function setup() {
   // Force the timer to fire (using a small interval).
   Cc["@mozilla.org/updates/timer-manager;1"].getService(Ci.nsIObserver).observe(null, "utm-test-init", "");
   Preferences.set("toolkit.telemetry.modulesPing.interval", 0);
-  Preferences.set("app.update.url", "http:/localhost");
+  Preferences.set("app.update.url", "http://localhost");
 
   // Start the local ping server and setup Telemetry to use it during the tests.
   PingServer.start();
@@ -154,23 +162,47 @@ add_task({
   Assert.ok(!!found.clientId, "'modules' ping has a client ID.");
   Assert.ok(!!found.payload.modules, "Telemetry ping payload contains the 'modules' array.");
 
+  let nameComparator;
+  if (AppConstants.platform === "win") {
+    // Do case-insensitive checking of file/module names on Windows
+    nameComparator = function(a, b) {
+      if (typeof a === "string" && typeof b === "string") {
+        return a.toLowerCase() === b.toLowerCase();
+      }
+
+      return a === b;
+    };
+  } else {
+    nameComparator = function(a, b) {
+      return a === b;
+    };
+  }
+
   for (let lib of expectedLibs) {
-    let test_lib = found.payload.modules.find(module => module.name === lib.name);
+    let test_lib = found.payload.modules.find(module => nameComparator(module.name, lib.name));
 
     Assert.ok(!!test_lib, "There is a '" + lib.name + "' module.");
 
-    if (lib.version !== null) {
-      Assert.ok(test_lib.version.startsWith(lib.version), "The version of the " + lib.name + " module (" + test_lib.version + ") is correct (it starts with '" + lib.version + "').");
-    } else {
-      Assert.strictEqual(test_lib.version, null, "The version of the " + lib.name + " module is null.");
+    if ("version" in lib) {
+      if (lib.version !== null) {
+        Assert.ok(test_lib.version.startsWith(lib.version), "The version of the " + lib.name + " module (" + test_lib.version + ") is correct (it starts with '" + lib.version + "').");
+      } else {
+        Assert.strictEqual(test_lib.version, null, "The version of the " + lib.name + " module is null.");
+      }
     }
 
-    Assert.strictEqual(test_lib.debugName, lib.debugName, "The " + lib.name + " module has the correct debug name.");
+    if ("debugName" in lib) {
+      Assert.ok(nameComparator(test_lib.debugName, lib.debugName), "The " + lib.name + " module has the correct debug name.");
+    }
 
     if (lib.debugName === null) {
       Assert.strictEqual(test_lib.debugID, null, "The " + lib.name + " module doesn't have a debug ID.");
     } else {
       Assert.greater(test_lib.debugID.length, 0, "The " + lib.name + " module has a debug ID.");
+    }
+
+    if ("certSubject" in lib) {
+      Assert.strictEqual(test_lib.certSubject, lib.certSubject, "The " + lib.name + " module has the expected cert subject.");
     }
   }
 

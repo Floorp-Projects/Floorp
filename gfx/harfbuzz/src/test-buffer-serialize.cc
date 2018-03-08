@@ -101,7 +101,7 @@ main (int argc, char **argv)
 
   bool ret = true;
   char line[BUFSIZ], out[BUFSIZ];
-  while (fgets (line, sizeof(line), stdin) != 0)
+  while (fgets (line, sizeof(line), stdin) != nullptr)
   {
     hb_buffer_clear_contents (buf);
 

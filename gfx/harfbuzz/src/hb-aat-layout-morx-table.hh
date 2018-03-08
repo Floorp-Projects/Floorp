@@ -40,6 +40,8 @@ using namespace OT;
 
 struct RearrangementSubtable
 {
+  typedef void EntryData;
+
   struct driver_context_t
   {
     static const bool in_place = true;
@@ -58,20 +60,21 @@ struct RearrangementSubtable
 
     inline driver_context_t (const RearrangementSubtable *table) :
 	ret (false),
-	start (0), end (0),
-	last_zero_before_start (0) {}
+	start (0), end (0) {}
 
-    inline bool transition (StateTableDriver<void> *driver,
-			    const Entry<void> *entry)
+    inline bool is_actionable (StateTableDriver<EntryData> *driver,
+			       const Entry<EntryData> *entry)
+    {
+      return (entry->flags & Verb) && start < end;
+    }
+    inline bool transition (StateTableDriver<EntryData> *driver,
+			    const Entry<EntryData> *entry)
     {
       hb_buffer_t *buffer = driver->buffer;
       unsigned int flags = entry->flags;
 
       if (flags & MarkFirst)
-      {
 	start = buffer->idx;
-	last_zero_before_start = driver->last_zero;
-      }
 
       if (flags & MarkLast)
 	end = MIN (buffer->idx + 1, buffer->len);
@@ -110,7 +113,7 @@ struct RearrangementSubtable
 
 	if (end - start >= l + r)
 	{
-	  buffer->unsafe_to_break (last_zero_before_start, MIN (buffer->idx + 1, buffer->len));
+	  buffer->merge_clusters (start, MIN (buffer->idx + 1, buffer->len));
 	  buffer->merge_clusters (start, end);
 
 	  hb_glyph_info_t *info = buffer->info;
@@ -147,7 +150,6 @@ struct RearrangementSubtable
     private:
     unsigned int start;
     unsigned int end;
-    unsigned int last_zero_before_start;
   };
 
   inline bool apply (hb_aat_apply_context_t *c) const
@@ -169,7 +171,7 @@ struct RearrangementSubtable
   }
 
   protected:
-  StateTable<void>	machine;
+  StateTable<EntryData>	machine;
   public:
   DEFINE_SIZE_STATIC (16);
 };
@@ -198,20 +200,29 @@ struct ContextualSubtable
 
     inline driver_context_t (const ContextualSubtable *table) :
 	ret (false),
+	mark_set (false),
 	mark (0),
-	last_zero_before_mark (0),
 	subs (table+table->substitutionTables) {}
 
+    inline bool is_actionable (StateTableDriver<EntryData> *driver,
+			       const Entry<EntryData> *entry)
+    {
+      hb_buffer_t *buffer = driver->buffer;
+
+      if (buffer->idx == buffer->len && !mark_set)
+        return false;
+
+      return entry->data.markIndex != 0xFFFF || entry->data.currentIndex != 0xFFFF;
+    }
     inline bool transition (StateTableDriver<EntryData> *driver,
 			    const Entry<EntryData> *entry)
     {
       hb_buffer_t *buffer = driver->buffer;
 
-      if (entry->flags & SetMark)
-      {
-	mark = buffer->idx;
-	last_zero_before_mark = driver->last_zero;
-      }
+      /* Looks like CoreText applies neither mark nor current substitution for
+       * end-of-text if mark was not explicitly set. */
+      if (buffer->idx == buffer->len && !mark_set)
+        return true;
 
       if (entry->data.markIndex != 0xFFFF)
       {
@@ -220,22 +231,28 @@ struct ContextualSubtable
 	const GlyphID *replacement = lookup.get_value (info[mark].codepoint, driver->num_glyphs);
 	if (replacement)
 	{
-	  buffer->unsafe_to_break (last_zero_before_mark, MIN (buffer->idx + 1, buffer->len));
+	  buffer->unsafe_to_break (mark, MIN (buffer->idx + 1, buffer->len));
 	  info[mark].codepoint = *replacement;
 	  ret = true;
 	}
       }
       if (entry->data.currentIndex != 0xFFFF)
       {
+        unsigned int idx = MIN (buffer->idx, buffer->len - 1);
 	const Lookup<GlyphID> &lookup = subs[entry->data.currentIndex];
 	hb_glyph_info_t *info = buffer->info;
-	const GlyphID *replacement = lookup.get_value (info[buffer->idx].codepoint, driver->num_glyphs);
+	const GlyphID *replacement = lookup.get_value (info[idx].codepoint, driver->num_glyphs);
 	if (replacement)
 	{
-	  buffer->unsafe_to_break (driver->last_zero, MIN (buffer->idx + 1, buffer->len));
-	  info[buffer->idx].codepoint = *replacement;
+	  info[idx].codepoint = *replacement;
 	  ret = true;
 	}
+      }
+
+      if (entry->flags & SetMark)
+      {
+	mark_set = true;
+	mark = buffer->idx;
       }
 
       return true;
@@ -244,8 +261,8 @@ struct ContextualSubtable
     public:
     bool ret;
     private:
+    bool mark_set;
     unsigned int mark;
-    unsigned int last_zero_before_mark;
     const UnsizedOffsetListOf<Lookup<GlyphID>, HBUINT32> &subs;
   };
 
@@ -265,8 +282,8 @@ struct ContextualSubtable
   {
     TRACE_SANITIZE (this);
 
-    unsigned int num_entries;
-    if (unlikely (!machine.sanitize (c, &num_entries))) return false;
+    unsigned int num_entries = 0;
+    if (unlikely (!machine.sanitize (c, &num_entries))) return_trace (false);
 
     unsigned int num_lookups = 0;
 
@@ -275,8 +292,10 @@ struct ContextualSubtable
     {
       const EntryData &data = entries[i].data;
 
-      num_lookups = MAX<unsigned int> (num_lookups, 1 + data.markIndex);
-      num_lookups = MAX<unsigned int> (num_lookups, 1 + data.currentIndex);
+      if (data.markIndex != 0xFFFF)
+	num_lookups = MAX<unsigned int> (num_lookups, 1 + data.markIndex);
+      if (data.currentIndex != 0xFFFF)
+	num_lookups = MAX<unsigned int> (num_lookups, 1 + data.currentIndex);
     }
 
     return_trace (substitutionTables.sanitize (c, this, num_lookups));
@@ -333,6 +352,11 @@ struct LigatureSubtable
 	ligature (table+table->ligature),
 	match_length (0) {}
 
+    inline bool is_actionable (StateTableDriver<EntryData> *driver,
+			       const Entry<EntryData> *entry)
+    {
+      return !!(entry->flags & PerformAction);
+    }
     inline bool transition (StateTableDriver<EntryData> *driver,
 			    const Entry<EntryData> *entry)
     {
@@ -432,9 +456,8 @@ struct LigatureSubtable
   {
     TRACE_SANITIZE (this);
     /* The rest of array sanitizations are done at run-time. */
-    return c->check_struct (this) && machine.sanitize (c) &&
-	   ligAction && component && ligature;
-    return_trace (true);
+    return_trace (c->check_struct (this) && machine.sanitize (c) &&
+		  ligAction && component && ligature);
   }
 
   protected:
@@ -593,8 +616,18 @@ struct Chain
     unsigned int count = subtableCount;
     for (unsigned int i = 0; i < count; i++)
     {
+      if (!c->buffer->message (c->font, "start chain subtable %d", c->lookup_index))
+      {
+	c->set_lookup_index (c->lookup_index + 1);
+	continue;
+      }
+
       subtable->apply (c);
       subtable = &StructAfter<ChainSubtable> (*subtable);
+
+      (void) c->buffer->message (c->font, "end chain subtable %d", c->lookup_index);
+
+      c->set_lookup_index (c->lookup_index + 1);
     }
   }
 
@@ -648,6 +681,7 @@ struct morx
 
   inline void apply (hb_aat_apply_context_t *c) const
   {
+    c->set_lookup_index (0);
     const Chain *chain = chains;
     unsigned int count = chainCount;
     for (unsigned int i = 0; i < count; i++)
