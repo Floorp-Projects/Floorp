@@ -2,7 +2,7 @@
 #include "gtest/MozGTestBench.h" // For MOZ_GTEST_BENCH
 
 #include "nsCOMPtr.h"
-#include "../../base/MozURL.h"
+#include "mozilla/net/MozURL.h"
 
 using namespace mozilla::net;
 
@@ -40,7 +40,7 @@ TEST(TestMozURL, Getters)
 
   url = nullptr;
   ASSERT_EQ(MozURL::Init(getter_AddRefs(url), NS_LITERAL_CSTRING("")),
-            NS_ERROR_FAILURE);
+            NS_ERROR_MALFORMED_URI);
   ASSERT_EQ(url, nullptr);
 }
 
