@@ -107,7 +107,14 @@ nsJARURI::CreateEntryURL(const nsACString& entryFilename,
 // nsISerializable methods:
 
 NS_IMETHODIMP
-nsJARURI::Read(nsIObjectInputStream* aInputStream)
+nsJARURI::Read(nsIObjectInputStream *aStream)
+{
+    NS_NOTREACHED("Use nsIURIMutator.read() instead");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsJARURI::ReadPrivate(nsIObjectInputStream *aInputStream)
 {
     nsresult rv;
 
@@ -256,7 +263,12 @@ nsJARURI::SetSpecInternal(const nsACString& aSpec)
     return SetSpecWithBase(aSpec, nullptr);
 }
 
-NS_IMPL_ISUPPORTS(nsJARURI::Mutator, nsIURISetters, nsIURIMutator, nsIURLMutator)
+// Queries this list of interfaces. If none match, it queries mURI.
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsJARURI::Mutator,
+                                nsIURISetters,
+                                nsIURIMutator,
+                                nsIURLMutator,
+                                nsISerializable)
 
 NS_IMETHODIMP
 nsJARURI::Mutator::SetFileName(const nsACString& aFileName, nsIURIMutator** aMutator)

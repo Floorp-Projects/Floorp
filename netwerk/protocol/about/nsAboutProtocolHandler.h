@@ -87,11 +87,13 @@ public:
 
 protected:
     nsCOMPtr<nsIURI> mBaseURI;
+    nsresult ReadPrivate(nsIObjectInputStream *stream);
 
 public:
     class Mutator final
         : public nsIURIMutator
         , public BaseURIMutator<nsNestedAboutURI>
+        , public nsISerializable
     {
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
@@ -104,6 +106,12 @@ public:
         Deserialize(const mozilla::ipc::URIParams& aParams) override
         {
             return InitFromIPCParams(aParams);
+        }
+
+        NS_IMETHOD
+        Write(nsIObjectOutputStream *aOutputStream) override
+        {
+            return NS_ERROR_NOT_IMPLEMENTED;
         }
 
         MOZ_MUST_USE NS_IMETHOD
