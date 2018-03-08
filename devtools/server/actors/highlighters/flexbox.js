@@ -461,13 +461,13 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     let { bounds } = this.currentQuads.content[0];
     let flexLines = this.currentNode.getAsFlexContainer().getLines();
     let computedStyle = getComputedStyle(this.currentNode);
-    let direction = computedStyle.getPropertyValue("flex-direction");
+    let isColumn = computedStyle.getPropertyValue("flex-direction").startsWith("column");
     let options = { matrix: this.currentMatrix };
 
     for (let flexLine of flexLines) {
       let { crossStart, crossSize } = flexLine;
 
-      if (direction.startsWith("column")) {
+      if (isColumn) {
         clearRect(this.ctx, crossStart, 0, crossStart + crossSize, bounds.height,
           this.currentMatrix);
 
@@ -511,10 +511,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     let { bounds } = this.currentQuads.content[0];
-    let flexItems = this.currentNode.children;
     let flexLines = this.currentNode.getAsFlexContainer().getLines();
     let computedStyle = getComputedStyle(this.currentNode);
-    let direction = computedStyle.getPropertyValue("flex-direction");
+    let isColumn = computedStyle.getPropertyValue("flex-direction").startsWith("column");
 
     // Render the justify-content area by first highlighting all the content, and
     // clearing the occupied and margin areas of the flex item.
@@ -523,59 +522,48 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     for (let flexLine of flexLines) {
       let { crossStart, crossSize } = flexLine;
 
-      if (direction.startsWith("column")) {
+      if (isColumn) {
         this.drawJustifyContent(crossStart, 0, crossStart + crossSize, bounds.height);
       } else {
         this.drawJustifyContent(0, crossStart, bounds.width, crossStart + crossSize);
       }
     }
 
-    for (let flexItem of flexItems) {
-      let quads = getAdjustedQuads(this.win, flexItem, "border");
+    // Then, cut all the items out of this content area.
+    for (let flexLine of flexLines) {
+      let flexItems = flexLine.getItems();
 
-      if (!quads.length) {
-        continue;
-      }
+      for (let flexItem of flexItems) {
+        let { node } = flexItem;
 
-      // Adjust the flex item bounds relative to the current quads.
-      let { bounds: flexItemBounds } = quads[0];
-      let left = Math.round(flexItemBounds.left - bounds.left);
-      let top = Math.round(flexItemBounds.top - bounds.top);
-      let right = Math.round(flexItemBounds.right - bounds.left);
-      let bottom = Math.round(flexItemBounds.bottom - bounds.top);
-      let flexItemComputedStyle = getComputedStyle(flexItem);
+        let quads = getAdjustedQuads(this.win, node, "margin");
 
-      // Clear the occupied and margin areas of the flex item.
-      for (let flexLine of flexLines) {
+        if (!quads.length) {
+          continue;
+        }
+
+        // Adjust the flex item bounds relative to the current quads.
+        let { bounds: flexItemBounds } = quads[0];
+        let left = Math.round(flexItemBounds.left - bounds.left);
+        let top = Math.round(flexItemBounds.top - bounds.top);
+        let right = Math.round(flexItemBounds.right - bounds.left);
+        let bottom = Math.round(flexItemBounds.bottom - bounds.top);
+
+        // Clear the occupied and margin areas of the flex item.
         let { crossStart, crossSize } = flexLine;
         crossSize = Math.round(crossSize);
         crossStart = Math.round(crossStart);
 
-        if (direction.startsWith("column") &&
-            crossStart <= left &&
-            left <= right &&
-            right <= crossSize + crossStart) {
-          // Remove the margin area for justify-content
-          let marginTop = Math.round(parseFloat(
-            flexItemComputedStyle.getPropertyValue("margin-top")));
-          let marginBottom = Math.round(parseFloat(
-            flexItemComputedStyle.getPropertyValue("margin-bottom")));
-          clearRect(this.ctx, crossStart, top - marginTop, crossSize + crossStart,
-            bottom + marginBottom, this.currentMatrix);
-          break;
-        } else if (crossStart <= top &&
-                   top <= bottom &&
-                   bottom <= crossSize + crossStart) {
-          let marginLeft = Math.round(parseFloat(
-            flexItemComputedStyle.getPropertyValue("margin-left")));
-          let marginRight = Math.round(parseFloat(
-            flexItemComputedStyle.getPropertyValue("margin-right")));
-          clearRect(this.ctx, left - marginLeft, crossStart, right + marginRight,
-            crossSize + crossStart, this.currentMatrix);
-          break;
+        if (isColumn) {
+          clearRect(this.ctx, crossStart, top, crossSize + crossStart, bottom,
+            this.currentMatrix);
+        } else {
+          clearRect(this.ctx, left, crossStart, right, crossSize + crossStart,
+            this.currentMatrix);
         }
       }
     }
+
     this.ctx.restore();
   }
 

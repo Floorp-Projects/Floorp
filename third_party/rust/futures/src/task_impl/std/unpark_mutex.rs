@@ -16,7 +16,7 @@ pub struct UnparkMutex<D> {
 }
 
 // `UnparkMutex<D>` functions in many ways like a `Mutex<D>`, except that on
-// acquisition failure, the current lockholder performs the desired work --
+// acquisition failure, the current lock holder performs the desired work --
 // re-polling.
 //
 // As such, these impls mirror those for `Mutex<D>`. In particular, a reference
