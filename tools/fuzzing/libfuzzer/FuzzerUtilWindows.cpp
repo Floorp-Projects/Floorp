@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <windows.h>
-#include <Psapi.h>
+#include <psapi.h>
 
 namespace fuzzer {
 

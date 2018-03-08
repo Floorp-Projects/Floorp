@@ -14,7 +14,7 @@
 
 #include <windows.h>
 #include <winnt.h>
-#include <ImageHlp.h>
+#include <imagehlp.h>
 
 namespace CrashReporter {
 
