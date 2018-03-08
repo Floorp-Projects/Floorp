@@ -24,6 +24,9 @@ from . import errors
 
 class GeckoInstance(object):
     required_prefs = {
+        # Make sure Shield doesn't hit the network.
+        "app.normandy.api_url": "",
+
         # Increase the APZ content response timeout in tests to 1 minute.
         # This is to accommodate the fact that test environments tends to be slower
         # than production environments (with the b2g emulator being the slowest of them
@@ -55,7 +58,8 @@ class GeckoInstance(object):
         # Disable intalling any distribution add-ons
         "extensions.installDistroAddons": False,
         # Make sure Shield doesn't hit the network.
-        "app.normandy.api_url": "",
+        # Removed in Firefox 60.
+        "extensions.shield-recipe-client.api_url": "",
         "extensions.showMismatchUI": False,
         # Turn off extension updates so they don't bother tests
         "extensions.update.enabled": False,
