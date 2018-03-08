@@ -2,27 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-win32-clang-cl:
-    description: "Clang-cl toolchain build"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TW32(clang-cl)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
-    worker:
-        max-run-time: 36000
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
-    run:
-        using: toolchain-script
-        script: build-clang32-windows.sh
-        resources:
-            - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-win32.json'
-            - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
-        toolchain-artifact: public/build/clang.tar.bz2
-
 win64-clang-cl:
     description: "Clang-cl toolchain build"
     treeherder:
@@ -41,6 +20,48 @@ win64-clang-cl:
         resources:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-win64.json'
+            - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
+        toolchain-artifact: public/build/clang.tar.bz2
+
+win32-clang-cl-st-an:
+    description: "Clang-cl static analysis toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW32(clang-cl-st-an)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
+    run:
+        using: toolchain-script
+        script: build-clang32-st-an-windows.sh
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-win32-st-an.json'
+            - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
+        toolchain-artifact: public/build/clang.tar.bz2
+
+win64-clang-cl-st-an:
+    description: "Clang-cl static analysis toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(clang-cl-st-an)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
+    run:
+        using: toolchain-script
+        script: build-clang64-st-an-windows.sh
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-win64-st-an.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang.tar.bz2
 
