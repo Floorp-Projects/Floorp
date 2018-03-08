@@ -145,7 +145,7 @@
                       data-l10n-id="category-home"
                       data-l10n-attrs="tooltiptext"
                       align="center"
-                      hidden="true">
+                      hidden="false">
           <image class="category-icon"/>
           <label class="category-name" flex="1" data-l10n-id="pane-home-title"></label>
         </richlistitem>
