@@ -675,7 +675,6 @@ class LNode
     uint32_t nonPhiOperandsOffset_ : 5;
     uint32_t numDefs_ : 4;
     uint32_t numTemps_ : 4;
-    uint32_t numSuccessors_ : 2;
 
   public:
     enum Opcode {
@@ -694,8 +693,7 @@ class LNode
         nonPhiNumOperands_(nonPhiNumOperands),
         nonPhiOperandsOffset_(0),
         numDefs_(numDefs),
-        numTemps_(numTemps),
-        numSuccessors_(0)
+        numTemps_(numTemps)
     {
         MOZ_ASSERT(op_ < LOp_Invalid);
         MOZ_ASSERT(op_ == op, "opcode must fit in bitfield");
@@ -862,16 +860,6 @@ class LInstruction
         return numTemps_;
     }
     inline LDefinition* getTemp(size_t index);
-
-    // Returns the number of successors of this instruction, if it is a control
-    // transfer instruction, or zero otherwise.
-    size_t numSuccessors() const {
-        return numSuccessors_;
-    }
-    void setNumSuccessors(size_t succ) {
-        numSuccessors_ = succ;
-        MOZ_ASSERT(numSuccessors_ == succ, "Number of successors must fit in bitfield");
-    }
 
     LSnapshot* snapshot() const {
         return snapshot_;
