@@ -222,6 +222,7 @@
 @RESPATH@/components/dom_workers.xpt
 @RESPATH@/components/dom_xul.xpt
 @RESPATH@/components/dom_presentation.xpt
+@RESPATH@/components/downloads.xpt
 @RESPATH@/components/editor.xpt
 @RESPATH@/components/enterprisepolicies.xpt
 @RESPATH@/components/extensions.xpt
@@ -236,7 +237,6 @@
 @RESPATH@/components/intl.xpt
 @RESPATH@/components/jar.xpt
 @RESPATH@/components/jsdebugger.xpt
-@RESPATH@/components/jsdownloads.xpt
 @RESPATH@/browser/components/jsinspector.xpt
 @RESPATH@/components/layout_base.xpt
 #ifdef MOZ_DEBUG

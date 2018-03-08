@@ -1607,15 +1607,18 @@ IdlInterface.prototype.test_self = function()
                           0,
                           this.name + '.prototype[Symbol.unscopables] should have the right number of symbol-named properties');
 
-            // It would be nice to check that we do not have _extra_
-            // unscopables, but someone might be calling us with only a subset
-            // of the IDL the browser know about, and our subset may exclude
-            // unscopable things that really do exist.
+            // Check that we do not have _extra_ unscopables.  Checking that we
+            // have all the ones we should will happen in the per-member tests.
+            var observed = Object.getOwnPropertyNames(desc.value);
+            for (var prop of observed) {
+                assert_not_equals(unscopables.indexOf(prop),
+                                  -1,
+                                  this.name + '.prototype[Symbol.unscopables] has unexpected property "' + prop + '"');
+            }
         } else {
-            // It would be nice to assert that there is no @@unscopables on this
-            // prototype, but someone might be calling us with only a subset of
-            // the IDL the browser know about, and our subset may exclude
-            // unscopable things that really do exist.
+            assert_equals(Object.getOwnPropertyDescriptor(self[this.name].prototype, Symbol.unscopables),
+                          undefined,
+                          this.name + '.prototype should not have @@unscopables');
         }
     }.bind(this), this.name + ' interface: existence and properties of interface prototype object\'s @@unscopables property');
 
@@ -1959,8 +1962,6 @@ IdlInterface.prototype.do_member_unscopable_asserts = function(member)
     }
 
     var unscopables = self[this.name].prototype[Symbol.unscopables];
-    assert_equals(typeof unscopables, "object",
-                  this.name + '.prototype[Symbol.unscopables] must exist');
     var prop = member.name;
     var propDesc = Object.getOwnPropertyDescriptor(unscopables, prop);
     assert_equals(typeof propDesc, "object",
