@@ -671,6 +671,7 @@ nsXULElement::UpdateEditableState(bool aNotify)
     UpdateState(aNotify);
 }
 
+#ifdef DEBUG
 /**
  * Returns true if the user-agent style sheet rules for this XUL element are
  * in minimal-xul.css instead of xul.css.
@@ -683,31 +684,11 @@ static inline bool XULElementsRulesInMinimalXULSheet(nsAtom* aTag)
          aTag == nsGkAtoms::scrollcorner ||
          aTag == nsGkAtoms::slider ||
          aTag == nsGkAtoms::thumb ||
-         aTag == nsGkAtoms::scale ||
          // other
          aTag == nsGkAtoms::datetimebox ||
          aTag == nsGkAtoms::resizer ||
          aTag == nsGkAtoms::label ||
          aTag == nsGkAtoms::videocontrols;
-}
-
-#ifdef DEBUG
-/**
- * Returns true if aElement is a XUL element created by the video controls
- * binding. HTML <video> and <audio> bindings pull in this binding. This
- * binding creates lots of different types of XUL elements.
- */
-static inline bool
-IsInVideoControls(nsXULElement* aElement)
-{
-  nsIContent* ancestor = aElement->GetParent();
-  while (ancestor) {
-    if (ancestor->NodeInfo()->Equals(nsGkAtoms::videocontrols, kNameSpaceID_XUL)) {
-      return true;
-    }
-    ancestor = ancestor->GetParent();
-  }
-  return false;
 }
 #endif
 
@@ -763,6 +744,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIDocument* doc = GetComposedDoc();
+#ifdef DEBUG
   if (doc &&
       !doc->LoadsFullXULStyleSheetUpFront() &&
       !doc->IsUnstyledDocument()) {
@@ -770,30 +752,15 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
     // To save CPU cycles and memory, non-XUL documents only load the user
     // agent style sheet rules for a minimal set of XUL elements such as
     // 'scrollbar' that may be created implicitly for their content (those
-    // rules being in minimal-xul.css).  This is where we make sure that all
-    // the other XUL UA style sheet rules (xul.css) have been loaded if the
-    // minimal set is not sufficient.
+    // rules being in minimal-xul.css).
     //
-    // We do this during binding, not element construction, because elements
-    // can be moved from the document that creates them to another document.
-
+    // This assertion makes sure no other XUL element than the ones in the
+    // minimal XUL sheet is used in the bindings.
     if (!XULElementsRulesInMinimalXULSheet(NodeInfo()->NameAtom())) {
-      auto cache = nsLayoutStylesheetCache::For(doc->GetStyleBackendType());
-      doc->EnsureOnDemandBuiltInUASheet(cache->XULSheet());
-      // To keep memory usage down it is important that we try and avoid
-      // pulling xul.css into non-XUL documents. That should be very rare, and
-      // for HTML we currently should only pull it in if the document contains
-      // an <audio> or <video> element. This assertion is here to make sure
-      // that we don't fail to notice if a change to bindings causes us to
-      // start pulling in xul.css much more frequently. If this assertion
-      // fails then we need to figure out why, and how we can continue to avoid
-      // pulling in xul.css.
-      // Note that add-ons may introduce bindings that cause this assertion to
-      // fire.
-      NS_ASSERTION(IsInVideoControls(this),
-                   "Unexpected XUL element in non-XUL doc");
+      NS_ERROR("Unexpected XUL element in non-XUL doc");
     }
   }
+#endif
 
   if (doc && NeedTooltipSupport(*this)) {
       AddTooltipSupport();
