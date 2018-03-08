@@ -470,6 +470,26 @@ LIRGeneratorShared::ensureDefined(MDefinition* mir)
     }
 }
 
+template <typename LClass, typename... Args>
+LClass*
+LIRGeneratorShared::allocateVariadic(uint32_t numOperands, Args&&... args)
+{
+    size_t numBytes = sizeof(LClass) + numOperands * sizeof(LAllocation);
+    void* buf = alloc().allocate(numBytes);
+    if (!buf)
+        return nullptr;
+
+    LClass* ins = static_cast<LClass*>(buf);
+    new(ins) LClass(numOperands, mozilla::Forward<Args>(args)...);
+
+    ins->initOperandsOffset(sizeof(LClass));
+
+    for (uint32_t i = 0; i < numOperands; i++)
+        ins->setOperand(i, LAllocation());
+
+    return ins;
+}
+
 LUse
 LIRGeneratorShared::useRegister(MDefinition* mir)
 {

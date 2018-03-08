@@ -9,9 +9,10 @@
 #include "nsError.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
+#include "nsHashKeys.h"
 #include "nsStringFwd.h"
-#include "plhash.h"
 #include "nsIObserver.h"
 
 namespace mozilla {
@@ -166,6 +167,7 @@ private:
     nsTArray<nsAutoPtr<nsHttpAuthEntry> > mList;
 
     friend class nsHttpAuthCache;
+    friend class nsAutoPtr<nsHttpAuthNode>; // needs to call the destructor
 };
 
 //-----------------------------------------------------------------------------
@@ -178,8 +180,6 @@ class nsHttpAuthCache
 public:
     nsHttpAuthCache();
    ~nsHttpAuthCache();
-
-    MOZ_MUST_USE nsresult Init();
 
     // |scheme|, |host|, and |port| are required
     // |path| can be null
@@ -233,14 +233,6 @@ private:
                                    nsACString const &originSuffix,
                                    nsCString  &key);
 
-    // hash table allocation functions
-    static void*        AllocTable(void *, size_t size);
-    static void         FreeTable(void *, void *item);
-    static PLHashEntry* AllocEntry(void *, const void *key);
-    static void         FreeEntry(void *, PLHashEntry *he, unsigned flag);
-
-    static PLHashAllocOps gHashAllocOps;
-
     class OriginClearObserver : public nsIObserver {
       virtual ~OriginClearObserver() {}
     public:
@@ -253,7 +245,8 @@ private:
     void ClearOriginData(OriginAttributesPattern const &pattern);
 
 private:
-    PLHashTable *mDB; // "host:port" --> nsHttpAuthNode
+    using AuthNodeTable = nsClassHashtable<nsCStringHashKey, nsHttpAuthNode>;
+    AuthNodeTable mDB; // "host:port" --> nsHttpAuthNode
     RefPtr<OriginClearObserver> mObserver;
 };
 
