@@ -72,18 +72,6 @@ AnalysisModeString(AnalysisMode mode)
     }
 }
 
-static inline bool
-CanIonCompile(JSScript* script, AnalysisMode mode)
-{
-    switch (mode) {
-      case Analysis_None: return script->canIonCompile();
-      case Analysis_DefiniteProperties: return true;
-      case Analysis_ArgumentsUsage: return true;
-      default:;
-    }
-    MOZ_CRASH("Invalid AnalysisMode");
-}
-
 } // namespace jit
 } // namespace js
 

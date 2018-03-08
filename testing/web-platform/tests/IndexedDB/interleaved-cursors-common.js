@@ -1,12 +1,5 @@
-<!doctype html>
-<meta charset="utf-8">
-<meta name="timeout" content="long">
-<title>IndexedDB: Interleaved iteration of multiple cursors</title>
-<link rel="author" href="pwnall@chromium.org" title="Victor Costan">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="support-promises.js"></script>
-<script>
+// Infrastructure shared by interleaved-cursors-{small,large}.html
+
 // Number of objects that each iterator goes over.
 const itemCount = 10;
 
@@ -169,7 +162,7 @@ function interleaveCursors(testCase, store, cursorCount) {
   });
 }
 
-for (let cursorCount of [1, 10, 100, 500]) {
+function cursorTest(cursorCount) {
   promise_test(testCase => {
     return createDatabase(testCase, (database, transaction) => {
       const store = database.createObjectStore('cache',
@@ -193,4 +186,3 @@ for (let cursorCount of [1, 10, 100, 500]) {
     });
   }, `${cursorCount} cursors`);
 }
-</script>
