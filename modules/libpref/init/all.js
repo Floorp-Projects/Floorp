@@ -1365,8 +1365,8 @@ pref("dom.forms.autocomplete.formautofill", false);
 // Enable search in <select> dropdowns (more than 40 options)
 pref("dom.forms.selectSearch", false);
 // Allow for webpages to provide custom styling for <select>
-// popups. Disabled on Linux due to bug 1338283.
-#ifdef XP_LINUX
+// popups. Disabled on GTK due to bug 1338283.
+#ifdef MOZ_WIDGET_GTK
 pref("dom.forms.select.customstyling", false);
 #else
 pref("dom.forms.select.customstyling", true);
