@@ -15,7 +15,9 @@ class LDivI : public LBinaryMath<1>
   public:
     LIR_HEADER(DivI)
 
-    LDivI(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+    LDivI(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp)
+      : LBinaryMath(classOpcode)
+    {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
@@ -53,7 +55,9 @@ class LDivPowTwoI : public LBinaryMath<0>
     LIR_HEADER(DivPowTwoI)
 
     LDivPowTwoI(const LAllocation& lhs, const LAllocation& lhsCopy, int32_t shift, bool negativeDivisor)
-      : shift_(shift), negativeDivisor_(negativeDivisor)
+      : LBinaryMath(classOpcode),
+        shift_(shift),
+        negativeDivisor_(negativeDivisor)
     {
         setOperand(0, lhs);
         setOperand(1, lhsCopy);
@@ -84,7 +88,8 @@ class LDivOrModConstantI : public LInstructionHelper<1, 1, 1>
     LIR_HEADER(DivOrModConstantI)
 
     LDivOrModConstantI(const LAllocation& lhs, int32_t denominator, const LDefinition& temp)
-    : denominator_(denominator)
+      : LInstructionHelper(classOpcode),
+        denominator_(denominator)
     {
         setOperand(0, lhs);
         setTemp(0, temp);
@@ -112,7 +117,9 @@ class LModI : public LBinaryMath<1>
   public:
     LIR_HEADER(ModI)
 
-    LModI(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+    LModI(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp)
+      : LBinaryMath(classOpcode)
+    {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
@@ -137,7 +144,9 @@ class LUDivOrMod : public LBinaryMath<1>
   public:
     LIR_HEADER(UDivOrMod);
 
-    LUDivOrMod(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+    LUDivOrMod(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp)
+      : LBinaryMath(classOpcode)
+    {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
@@ -183,7 +192,8 @@ class LUDivOrModConstant : public LInstructionHelper<1, 1, 1>
     LIR_HEADER(UDivOrModConstant)
 
     LUDivOrModConstant(const LAllocation &lhs, uint32_t denominator, const LDefinition& temp)
-      : denominator_(denominator)
+      : LInstructionHelper(classOpcode),
+        denominator_(denominator)
     {
         setOperand(0, lhs);
         setTemp(0, temp);
@@ -224,7 +234,8 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
     LIR_HEADER(ModPowTwoI)
 
     LModPowTwoI(const LAllocation& lhs, int32_t shift)
-      : shift_(shift)
+      : LInstructionHelper(classOpcode),
+        shift_(shift)
     {
         setOperand(0, lhs);
     }
@@ -248,6 +259,7 @@ class LTableSwitch : public LInstructionHelper<0, 1, 2>
 
     LTableSwitch(const LAllocation& in, const LDefinition& inputCopy,
                  const LDefinition& jumpTablePointer, MTableSwitch* ins)
+      : LInstructionHelper(classOpcode)
     {
         setOperand(0, in);
         setTemp(0, inputCopy);
@@ -279,6 +291,7 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 3>
     LTableSwitchV(const LBoxAllocation& input, const LDefinition& inputCopy,
                   const LDefinition& floatCopy, const LDefinition& jumpTablePointer,
                   MTableSwitch* ins)
+      : LInstructionHelper(classOpcode)
     {
         setBoxOperand(InputValue, input);
         setTemp(0, inputCopy);
@@ -309,7 +322,9 @@ class LMulI : public LBinaryMath<0, 1>
   public:
     LIR_HEADER(MulI)
 
-    LMulI(const LAllocation& lhs, const LAllocation& rhs, const LAllocation& lhsCopy) {
+    LMulI(const LAllocation& lhs, const LAllocation& rhs, const LAllocation& lhsCopy)
+      : LBinaryMath(classOpcode)
+    {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setOperand(2, lhsCopy);
@@ -336,6 +351,7 @@ class LSimdValueInt32x4 : public LInstructionHelper<1, 4, 0>
     LIR_HEADER(SimdValueInt32x4)
     LSimdValueInt32x4(const LAllocation& x, const LAllocation& y,
                       const LAllocation& z, const LAllocation& w)
+      : LInstructionHelper(classOpcode)
     {
         setOperand(0, x);
         setOperand(1, y);
@@ -356,6 +372,7 @@ class LSimdValueFloat32x4 : public LInstructionHelper<1, 4, 1>
     LSimdValueFloat32x4(const LAllocation& x, const LAllocation& y,
                         const LAllocation& z, const LAllocation& w,
                         const LDefinition& copyY)
+      : LInstructionHelper(classOpcode)
     {
         setOperand(0, x);
         setOperand(1, y);
@@ -375,7 +392,9 @@ class LInt64ToFloatingPoint : public LInstructionHelper<1, INT64_PIECES, 1>
   public:
     LIR_HEADER(Int64ToFloatingPoint);
 
-    explicit LInt64ToFloatingPoint(const LInt64Allocation& in, const LDefinition& temp) {
+    LInt64ToFloatingPoint(const LInt64Allocation& in, const LDefinition& temp)
+      : LInstructionHelper(classOpcode)
+    {
         setInt64Operand(0, in);
         setTemp(0, temp);
     }

@@ -665,6 +665,7 @@ class LNode
 
   protected:
     // Bitfields below are all uint32_t to make sure MSVC packs them correctly.
+    uint32_t op_ : 10;
     uint32_t isCall_ : 1;
     // LPhi::numOperands() may not fit in this bitfield, so we only use this
     // field for LInstruction.
@@ -677,10 +678,18 @@ class LNode
     uint32_t numSuccessors_ : 2;
 
   public:
-    LNode(uint32_t nonPhiNumOperands, uint32_t numDefs, uint32_t numTemps)
+    enum Opcode {
+#define LIROP(name) LOp_##name,
+        LIR_OPCODE_LIST(LIROP)
+#undef LIROP
+        LOp_Invalid
+    };
+
+    LNode(Opcode op, uint32_t nonPhiNumOperands, uint32_t numDefs, uint32_t numTemps)
       : mir_(nullptr),
         block_(nullptr),
         id_(0),
+        op_(op),
         isCall_(false),
         nonPhiNumOperands_(nonPhiNumOperands),
         nonPhiOperandsOffset_(0),
@@ -688,25 +697,20 @@ class LNode
         numTemps_(numTemps),
         numSuccessors_(0)
     {
+        MOZ_ASSERT(op_ < LOp_Invalid);
+        MOZ_ASSERT(op_ == op, "opcode must fit in bitfield");
         MOZ_ASSERT(nonPhiNumOperands_ == nonPhiNumOperands,
                    "nonPhiNumOperands must fit in bitfield");
         MOZ_ASSERT(numDefs_ == numDefs, "numDefs must fit in bitfield");
         MOZ_ASSERT(numTemps_ == numTemps, "numTemps must fit in bitfield");
     }
 
-    enum Opcode {
-#   define LIROP(name) LOp_##name,
-        LIR_OPCODE_LIST(LIROP)
-#   undef LIROP
-        LOp_Invalid
-    };
-
     const char* opName() {
         switch (op()) {
-#   define LIR_NAME_INS(name)                   \
+#define LIR_NAME_INS(name)                   \
             case LOp_##name: return #name;
             LIR_OPCODE_LIST(LIR_NAME_INS)
-#   undef LIR_NAME_INS
+#undef LIR_NAME_INS
           default:
             return "Invalid";
         }
@@ -722,7 +726,9 @@ class LNode
   public:
     const char* getExtraName() const;
 
-    virtual Opcode op() const = 0;
+    Opcode op() const {
+        return Opcode(op_);
+    }
 
     bool isInstruction() const {
         return op() != LOp_Phi;
@@ -778,19 +784,17 @@ class LNode
 
   public:
     // Opcode testing and casts.
-#   define LIROP(name)                                                      \
+#define LIROP(name)                                                         \
     bool is##name() const {                                                 \
         return op() == LOp_##name;                                          \
     }                                                                       \
     inline L##name* to##name();                                             \
     inline const L##name* to##name() const;
     LIR_OPCODE_LIST(LIROP)
-#   undef LIROP
+#undef LIROP
 
 #define LIR_HEADER(opcode)                                                  \
-    Opcode op() const override {                                            \
-        return LInstruction::LOp_##opcode;                                  \
-    }
+    static constexpr LNode::Opcode classOpcode = LNode::LOp_##opcode;
 };
 
 class LInstruction
@@ -811,8 +815,8 @@ class LInstruction
     LMoveGroup* movesAfter_;
 
   protected:
-    LInstruction(uint32_t numOperands, uint32_t numDefs, uint32_t numTemps)
-      : LNode(numOperands, numDefs, numTemps),
+    LInstruction(Opcode opcode, uint32_t numOperands, uint32_t numDefs, uint32_t numTemps)
+      : LNode(opcode, numOperands, numDefs, numTemps),
         snapshot_(nullptr),
         safepoint_(nullptr),
         inputMoves_(nullptr),
@@ -966,7 +970,8 @@ class LPhi final : public LNode
     LIR_HEADER(Phi)
 
     LPhi(MPhi* ins, LAllocation* inputs)
-      : LNode(/* nonPhiNumOperands = */ 0,
+      : LNode(classOpcode,
+              /* nonPhiNumOperands = */ 0,
               /* numDefs = */ 1,
               /* numTemps = */ 0),
         inputs_(inputs)
@@ -1103,8 +1108,8 @@ namespace details {
         mozilla::Array<LDefinition, Defs + Temps> defsAndTemps_;
 
       protected:
-        explicit LInstructionFixedDefsTempsHelper(uint32_t numOperands)
-          : LInstruction(numOperands, Defs, Temps)
+        LInstructionFixedDefsTempsHelper(Opcode opcode, uint32_t numOperands)
+          : LInstruction(opcode, numOperands, Defs, Temps)
         {}
 
       public:
@@ -1178,8 +1183,8 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
     mozilla::Array<LAllocation, Operands> operands_;
 
   protected:
-    LInstructionHelper()
-      : details::LInstructionFixedDefsTempsHelper<Defs, Temps>(Operands)
+    explicit LInstructionHelper(LNode::Opcode opcode)
+      : details::LInstructionFixedDefsTempsHelper<Defs, Temps>(opcode, Operands)
     {
         static_assert(Operands == 0 || sizeof(operands_) == Operands * sizeof(LAllocation),
                       "mozilla::Array should not contain other fields");
@@ -1226,8 +1231,8 @@ template<size_t Defs, size_t Temps>
 class LVariadicInstruction : public details::LInstructionFixedDefsTempsHelper<Defs, Temps>
 {
   protected:
-    explicit LVariadicInstruction(size_t numOperands)
-      : details::LInstructionFixedDefsTempsHelper<Defs, Temps>(numOperands)
+    LVariadicInstruction(LNode::Opcode opcode, size_t numOperands)
+      : details::LInstructionFixedDefsTempsHelper<Defs, Temps>(opcode, numOperands)
     {}
 
   public:
@@ -1244,8 +1249,10 @@ class LVariadicInstruction : public details::LInstructionFixedDefsTempsHelper<De
 template <size_t Defs, size_t Operands, size_t Temps>
 class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
 {
-  public:
-    LCallInstructionHelper() {
+  protected:
+    explicit LCallInstructionHelper(LNode::Opcode opcode)
+      : LInstructionHelper<Defs, Operands, Temps>(opcode)
+    {
         this->setIsCall();
     }
 };
@@ -1253,6 +1260,11 @@ class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
 template <size_t Defs, size_t Temps>
 class LBinaryCallInstructionHelper : public LCallInstructionHelper<Defs, 2, Temps>
 {
+  protected:
+    explicit LBinaryCallInstructionHelper(LNode::Opcode opcode)
+      : LCallInstructionHelper<Defs, 2, Temps>(opcode)
+    {}
+
   public:
     const LAllocation* lhs() {
         return this->getOperand(0);
