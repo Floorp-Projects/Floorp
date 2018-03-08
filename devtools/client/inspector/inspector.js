@@ -391,7 +391,7 @@ Inspector.prototype = {
       window: this.panelDoc.defaultView,
     });
     let key = INSPECTOR_L10N.getStr("inspector.searchHTML.key");
-    shortcuts.on(key, (name, event) => {
+    shortcuts.on(key, event => {
       // Prevent overriding same shortcut from the computed/rule views
       if (event.target.closest("#sidebar-panel-ruleview") ||
           event.target.closest("#sidebar-panel-computedview")) {

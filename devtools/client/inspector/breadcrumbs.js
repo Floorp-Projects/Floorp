@@ -578,7 +578,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {DOMEvent} event
    *        Original event that triggered the shortcut.
    */
-  handleShortcut: function (name, event) {
+  handleShortcut: function (event) {
     if (!this.selection.isElementNode()) {
       return;
     }
@@ -588,9 +588,13 @@ HTMLBreadcrumbs.prototype = {
 
     this.keyPromise = (this.keyPromise || promise.resolve(null)).then(() => {
       let currentnode;
-      if (name === "Left" && this.currentIndex != 0) {
+
+      const isLeft = event.code === "ArrowLeft";
+      const isRight = event.code === "ArrowRight";
+
+      if (isLeft && this.currentIndex != 0) {
         currentnode = this.nodeHierarchy[this.currentIndex - 1];
-      } else if (name === "Right" && this.currentIndex < this.nodeHierarchy.length - 1) {
+      } else if (isRight && this.currentIndex < this.nodeHierarchy.length - 1) {
         currentnode = this.nodeHierarchy[this.currentIndex + 1];
       } else {
         return null;

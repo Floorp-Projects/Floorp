@@ -1493,7 +1493,7 @@ const WidgetMethods = exports.WidgetMethods = {
    * @param string name
    * @param KeyboardEvent event
    */
-  _onWidgetKeyDown: function (name, event) {
+  _onWidgetKeyDown: function (event) {
     // Prevent scrolling when pressing navigation keys.
     ViewHelpers.preventScrolling(event);
 
@@ -1528,7 +1528,7 @@ const WidgetMethods = exports.WidgetMethods = {
    * @param string name
    * @param MouseEvent event
    */
-  _onWidgetMousePress: function (name, event) {
+  _onWidgetMousePress: function (event) {
     if (event.button != 0 && !this.allowFocusOnRightClick) {
       // Only allow left-click to trigger this event.
       return;

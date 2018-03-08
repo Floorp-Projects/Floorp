@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "setNamedTimeout",
   "devtools/client/shared/widgets/view-helpers", true);
 loader.lazyRequireGetter(this, "clearNamedTimeout",
@@ -106,7 +106,7 @@ function TableWidget(node, options = {}) {
     this.setPlaceholderText(this.emptyText);
   }
 
-  this.bindSelectedRow = (event, id) => {
+  this.bindSelectedRow = id => {
     this.selectedRow = id;
   };
   this.on(EVENTS.ROW_SELECTED, this.bindSelectedRow);
@@ -250,7 +250,7 @@ TableWidget.prototype = {
   /**
    * Emit all cell edit events.
    */
-  onChange: function (type, data) {
+  onChange: function (data) {
     let changedField = data.change.field;
     let colName = changedField.parentNode.id;
     let column = this.columns.get(colName);
@@ -313,7 +313,7 @@ TableWidget.prototype = {
       // We need to apply a change, which can mean that the position of cells
       // within the table can change. Because of this we need to wait for
       // EVENTS.ROW_EDIT and then move the textbox.
-      this.once(EVENTS.ROW_EDIT, (e, uniqueId) => {
+      this.once(EVENTS.ROW_EDIT, uniqueId => {
         let cell;
         let cells;
         let columnObj;
@@ -452,7 +452,7 @@ TableWidget.prototype = {
    * @param  {Object} row
    *         The values from the removed row.
    */
-  onRowRemoved: function (event, row) {
+  onRowRemoved: function (row) {
     if (!this._editableFieldsEngine || !this._editableFieldsEngine.isEditing) {
       return;
     }
@@ -1182,7 +1182,7 @@ Column.prototype = {
    * @param {string} column
    *        The id of the column being sorted by.
    */
-  onColumnSorted: function (event, column) {
+  onColumnSorted: function (column) {
     if (column != this.id) {
       this.sorted = 0;
       return;
@@ -1194,7 +1194,7 @@ Column.prototype = {
     this.updateZebra();
   },
 
-  onTableFiltered: function (event, itemsToHide) {
+  onTableFiltered: function (itemsToHide) {
     this._updateItems();
     if (!this.cells) {
       return;
@@ -1218,7 +1218,7 @@ Column.prototype = {
    * @param {string} id
    *        The unique id of the object associated with the row.
    */
-  onRowUpdated: function (event, id) {
+  onRowUpdated: function (id) {
     this._updateItems();
 
     if (this.highlightUpdated && this.items[id] != null) {
@@ -1377,7 +1377,7 @@ Column.prototype = {
    * @param {string} checked
    *        true if the column is visible
    */
-  toggleColumn: function (event, id, checked) {
+  toggleColumn: function (id, checked) {
     if (arguments.length == 0) {
       // Act like a toggling method when called with no params
       id = this.id;

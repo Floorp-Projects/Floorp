@@ -31,17 +31,17 @@ exports.register = function (window) {
     .QueryInterface(Ci.nsIDocShell);
   let contViewer = docShell.contentViewer;
   let zoomValue = parseFloat(Services.prefs.getCharPref(ZOOM_PREF));
-  let zoomIn = function (name, event) {
+  let zoomIn = function (event) {
     setZoom(zoomValue + 0.1);
     event.preventDefault();
   };
 
-  let zoomOut = function (name, event) {
+  let zoomOut = function (event) {
     setZoom(zoomValue - 0.1);
     event.preventDefault();
   };
 
-  let zoomReset = function (name, event) {
+  let zoomReset = function (event) {
     setZoom(1);
     event.preventDefault();
   };

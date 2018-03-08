@@ -2230,13 +2230,7 @@ nsCocoaWindow::SetWindowShadowStyle(int32_t aStyle)
 
   // Shadowless windows are only supported on popups.
   if (mWindowType == eWindowType_popup) {
-    MOZ_ASSERT(mPopupContentView);
-
-    // Drop shadows are not sized correctly for composited popups when they are
-    // animated, so disable them entirely if the popup is composited.
-    bool disableShadow = (aStyle == NS_STYLE_WINDOW_SHADOW_NONE ||
-                          mPopupContentView->ShouldUseOffMainThreadCompositing());
-    [mWindow setHasShadow:!disableShadow];
+    [mWindow setHasShadow:aStyle != NS_STYLE_WINDOW_SHADOW_NONE];
   }
 
   [mWindow setUseMenuStyle:(aStyle == NS_STYLE_WINDOW_SHADOW_MENU)];
@@ -3198,7 +3192,9 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (void)importState:(NSDictionary*)aState
 {
-  [self setTitle:[aState objectForKey:kStateTitleKey]];
+  if (NSString* title = [aState objectForKey:kStateTitleKey]) {
+    [self setTitle:title];
+  }
   [self setDrawsContentsIntoWindowFrame:[[aState objectForKey:kStateDrawsContentsIntoWindowFrameKey] boolValue]];
   [self setTitlebarColor:[aState objectForKey:kStateActiveTitlebarColorKey] forActiveWindow:YES];
   [self setTitlebarColor:[aState objectForKey:kStateInactiveTitlebarColorKey] forActiveWindow:NO];
@@ -3209,7 +3205,9 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (NSMutableDictionary*)exportState
 {
   NSMutableDictionary* state = [NSMutableDictionary dictionaryWithCapacity:10];
-  [state setObject:[self title] forKey:kStateTitleKey];
+  if (NSString* title = [self title]) {
+    [state setObject:title forKey:kStateTitleKey];
+  }
   [state setObject:[NSNumber numberWithBool:[self drawsContentsIntoWindowFrame]]
             forKey:kStateDrawsContentsIntoWindowFrameKey];
   NSColor* activeTitlebarColor = [self titlebarColorForActiveWindow:YES];

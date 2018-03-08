@@ -16,14 +16,14 @@ is unknown to Webpack.
 
 ```
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/old-event-emitter");
+  "devtools/shared/event-emitter");
 ```
 
-In order to properly bundle `devtools/shared/old-event-emitter` module
+In order to properly bundle `devtools/shared/event-emitter` module
 the code needs to be translated into:
 
 ```
-let EventEmitter = require("devtools/shared/old-event-emitter");
+let EventEmitter = require("devtools/shared/event-emitter");
 ```
 
 See more in `rewrite-lazy-require`

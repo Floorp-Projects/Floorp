@@ -97,10 +97,8 @@ add_task(async function() {
 
 
 function sendWebSearchKeyCommand() {
-  if (Services.appinfo.OS === "Darwin")
-    EventUtils.synthesizeKey("k", {accelKey: true});
-  else
-    EventUtils.synthesizeKey("k", {ctrlKey: true});
+  document.documentElement.focus();
+  EventUtils.synthesizeKey("k", { accelKey: true });
 }
 
 function logActiveElement() {

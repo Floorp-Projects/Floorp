@@ -146,6 +146,7 @@ impl Scene {
             self.root_pipeline_id = None;
         }
         self.pipelines.remove(&pipeline_id);
+        self.pipeline_epochs.remove(&pipeline_id);
     }
 
     pub fn update_epoch(&mut self, pipeline_id: PipelineId, epoch: Epoch) {

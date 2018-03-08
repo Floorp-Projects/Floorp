@@ -234,7 +234,7 @@ NewWebConsoleFrame.prototype = {
     });
 
     shortcuts.on(l10n.getStr("webconsole.find.key"),
-                 (name, event) => {
+                 event => {
                    this.filterBox.focus();
                    event.preventDefault();
                  });
@@ -254,7 +254,7 @@ NewWebConsoleFrame.prototype = {
 
       ZoomKeys.register(this.window);
     } else if (Services.prefs.getBoolPref(PREF_SIDEBAR_ENABLED)) {
-      shortcuts.on("Esc", (name, event) => {
+      shortcuts.on("Esc", event => {
         if (!this.jsterm.autocompletePopup || !this.jsterm.autocompletePopup.isOpen) {
           this.newConsoleOutput.dispatchSidebarClose();
         }
