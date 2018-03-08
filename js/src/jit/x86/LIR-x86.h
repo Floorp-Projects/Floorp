@@ -18,7 +18,8 @@ class LBoxFloatingPoint : public LInstructionHelper<2, 1, 1>
     LIR_HEADER(BoxFloatingPoint);
 
     LBoxFloatingPoint(const LAllocation& in, const LDefinition& temp, MIRType type)
-      : type_(type)
+      : LInstructionHelper(classOpcode),
+        type_(type)
     {
         MOZ_ASSERT(IsFloatingPointType(type));
         setOperand(0, in);
@@ -37,6 +38,10 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(Unbox);
+
+    LUnbox()
+      : LInstructionHelper(classOpcode)
+    {}
 
     MUnbox* mir() const {
         return mir_->toUnbox();
@@ -62,7 +67,8 @@ class LUnboxFloatingPoint : public LInstructionHelper<1, 2, 0>
     static const size_t Input = 0;
 
     LUnboxFloatingPoint(const LBoxAllocation& input, MIRType type)
-      : type_(type)
+      : LInstructionHelper(classOpcode),
+        type_(type)
     {
         setBoxOperand(Input, input);
     }
@@ -85,7 +91,9 @@ class LWasmUint32ToDouble : public LInstructionHelper<1, 1, 1>
   public:
     LIR_HEADER(WasmUint32ToDouble)
 
-    LWasmUint32ToDouble(const LAllocation& input, const LDefinition& temp) {
+    LWasmUint32ToDouble(const LAllocation& input, const LDefinition& temp)
+      : LInstructionHelper(classOpcode)
+    {
         setOperand(0, input);
         setTemp(0, temp);
     }
@@ -100,7 +108,9 @@ class LWasmUint32ToFloat32: public LInstructionHelper<1, 1, 1>
   public:
     LIR_HEADER(WasmUint32ToFloat32)
 
-    LWasmUint32ToFloat32(const LAllocation& input, const LDefinition& temp) {
+    LWasmUint32ToFloat32(const LAllocation& input, const LDefinition& temp)
+      : LInstructionHelper(classOpcode)
+    {
         setOperand(0, input);
         setTemp(0, temp);
     }
@@ -118,6 +128,7 @@ class LDivOrModI64 : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES*2,
     static const size_t Rhs = INT64_PIECES;
 
     LDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs, const LDefinition& temp)
+      : LCallInstructionHelper(classOpcode)
     {
         setInt64Operand(Lhs, lhs);
         setInt64Operand(Rhs, rhs);
@@ -158,6 +169,7 @@ class LUDivOrModI64 : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES*2
     static const size_t Rhs = INT64_PIECES;
 
     LUDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs, const LDefinition& temp)
+      : LCallInstructionHelper(classOpcode)
     {
         setInt64Operand(Lhs, lhs);
         setInt64Operand(Rhs, rhs);
@@ -195,6 +207,7 @@ class LWasmTruncateToInt64 : public LInstructionHelper<INT64_PIECES, 1, 1>
     LIR_HEADER(WasmTruncateToInt64);
 
     LWasmTruncateToInt64(const LAllocation& in, const LDefinition& temp)
+      : LInstructionHelper(classOpcode)
     {
         setOperand(0, in);
         setTemp(0, temp);
@@ -216,6 +229,7 @@ class LWasmAtomicLoadI64 : public LInstructionHelper<INT64_PIECES, 2, 2>
 
     LWasmAtomicLoadI64(const LAllocation& memoryBase, const LAllocation& ptr, const LDefinition& t1,
                        const LDefinition& t2)
+      : LInstructionHelper(classOpcode)
     {
         setOperand(0, memoryBase);
         setOperand(1, ptr);
@@ -248,6 +262,7 @@ class LWasmAtomicStoreI64 : public LInstructionHelper<0, 2 + INT64_PIECES, 2>
     LWasmAtomicStoreI64(const LAllocation& memoryBase, const LAllocation& ptr,
                         const LInt64Allocation& value, const LDefinition& t1,
                         const LDefinition& t2)
+      : LInstructionHelper(classOpcode)
     {
         setOperand(0, memoryBase);
         setOperand(1, ptr);
@@ -283,6 +298,7 @@ class LWasmCompareExchangeI64 : public LInstructionHelper<INT64_PIECES, 2 + 2*IN
 
     LWasmCompareExchangeI64(const LAllocation& memoryBase, const LAllocation& ptr,
                             const LInt64Allocation& expected, const LInt64Allocation& replacement)
+      : LInstructionHelper(classOpcode)
     {
         setOperand(0, memoryBase);
         setOperand(1, ptr);
@@ -316,7 +332,8 @@ class LWasmAtomicExchangeI64 : public LInstructionHelper<INT64_PIECES, 2 + INT64
 
     LWasmAtomicExchangeI64(const LAllocation& memoryBase, const LAllocation& ptr,
                            const LInt64Allocation& value, const wasm::MemoryAccessDesc& access)
-      : access_(access)
+      : LInstructionHelper(classOpcode),
+        access_(access)
     {
         setOperand(0, memoryBase);
         setOperand(1, ptr);
@@ -348,7 +365,8 @@ class LWasmAtomicBinopI64 : public LInstructionHelper<INT64_PIECES, 2 + INT64_PI
     LWasmAtomicBinopI64(const LAllocation& memoryBase, const LAllocation& ptr,
                         const LInt64Allocation& value, const wasm::MemoryAccessDesc& access,
                         AtomicOp op)
-      : access_(access),
+      : LInstructionHelper(classOpcode),
+        access_(access),
         op_(op)
     {
         setOperand(0, memoryBase);
