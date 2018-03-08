@@ -8,6 +8,7 @@
 #define ProfilerMarkerPayload_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -150,11 +151,15 @@ public:
   {}
 
   UserTimingMarkerPayload(const nsAString& aName,
+                          const mozilla::Maybe<nsString>& aStartMark,
+                          const mozilla::Maybe<nsString>& aEndMark,
                           const mozilla::TimeStamp& aStartTime,
                           const mozilla::TimeStamp& aEndTime)
     : ProfilerMarkerPayload(aStartTime, aEndTime)
     , mEntryType("measure")
     , mName(aName)
+    , mStartMark(aStartMark)
+    , mEndMark(aEndMark)
   {}
 
   DECL_STREAM_PAYLOAD
@@ -163,6 +168,8 @@ private:
   // Either "mark" or "measure".
   const char* mEntryType;
   nsString mName;
+  mozilla::Maybe<nsString> mStartMark;
+  mozilla::Maybe<nsString> mEndMark;
 };
 
 // Contains the translation applied to a 2d layer so we can track the layer
