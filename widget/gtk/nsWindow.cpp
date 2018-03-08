@@ -7039,3 +7039,65 @@ nsWindow::GetWaylandSurface()
   return nullptr;
 }
 #endif
+
+#ifdef MOZ_X11
+/* XApp progress support currently works by setting a property
+ * on a window with this Atom name.  A supporting window manager
+ * will notice this and pass it along to whatever handling has
+ * been implemented on that end (e.g. passing it on to a taskbar
+ * widget.)  There is no issue if WM support is lacking, this is
+ * simply ignored in that case.
+ *
+ * See https://github.com/linuxmint/xapps/blob/master/libxapp/xapp-gtk-window.c
+ * for further details.
+ */
+
+#define PROGRESS_HINT  "_NET_WM_XAPP_PROGRESS"
+
+static void
+set_window_hint_cardinal (Window       xid,
+                          const gchar *atom_name,
+                          gulong       cardinal)
+{
+  GdkDisplay *display;
+
+  display = gdk_display_get_default ();
+
+  if (cardinal > 0)
+  {
+    XChangeProperty (GDK_DISPLAY_XDISPLAY (display),
+                     xid,
+                     gdk_x11_get_xatom_by_name_for_display (display, atom_name),
+                     XA_CARDINAL, 32,
+                     PropModeReplace,
+                     (guchar *) &cardinal, 1);
+  }
+  else
+  {
+    XDeleteProperty (GDK_DISPLAY_XDISPLAY (display),
+                     xid,
+                     gdk_x11_get_xatom_by_name_for_display (display, atom_name));
+  }
+}
+#endif // MOZ_X11
+
+void
+nsWindow::SetProgress(unsigned long progressPercent)
+{
+#ifdef MOZ_X11
+
+  if (!mIsX11Display) {
+    return;
+  }
+
+  if (!mShell) {
+    return;
+  }
+
+  progressPercent = CLAMP(progressPercent, 0, 100);
+
+  set_window_hint_cardinal(GDK_WINDOW_XID(gtk_widget_get_window(mShell)),
+                           PROGRESS_HINT,
+                           progressPercent);
+#endif // MOZ_X11
+}
