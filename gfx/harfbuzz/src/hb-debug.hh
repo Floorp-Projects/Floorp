@@ -396,6 +396,18 @@ struct hb_no_trace_t {
 #define TRACE_SERIALIZE(this) hb_no_trace_t<bool> trace
 #endif
 
+#ifndef HB_DEBUG_SUBSET
+#define HB_DEBUG_SUBSET (HB_DEBUG+0)
+#endif
+#if HB_DEBUG_SUBSET
+#define TRACE_SUBSET(this) \
+  hb_auto_trace_t<HB_DEBUG_SUBSET, bool> trace \
+  (&c->debug_depth, c->get_name (), this, HB_FUNC, \
+   " ");
+#else
+#define TRACE_SUBSET(this) hb_no_trace_t<bool> trace
+#endif
+
 #ifndef HB_DEBUG_WOULD_APPLY
 #define HB_DEBUG_WOULD_APPLY (HB_DEBUG+0)
 #endif
@@ -415,6 +427,7 @@ struct hb_no_trace_t {
 	HB_DEBUG_COLLECT_GLYPHS + \
 	HB_DEBUG_SANITIZE + \
 	HB_DEBUG_SERIALIZE + \
+  HB_DEBUG_SUBSET + \
 	HB_DEBUG_WOULD_APPLY + \
 	0)
 #endif

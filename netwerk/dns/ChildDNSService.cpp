@@ -185,10 +185,10 @@ ChildDNSService::AsyncResolveExtendedNative(const nsACString        &hostname,
   }
 
   RefPtr<DNSRequestChild> childReq =
-    new DNSRequestChild(nsCString(hostname),
+    new DNSRequestChild(hostname,
                         aOriginAttributes,
                         flags,
-                        nsCString(aNetworkInterface),
+                        aNetworkInterface,
                         listener, target);
 
   {

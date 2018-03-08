@@ -24,118 +24,8 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-complex-indic-private.hh"
+#include "hb-ot-shape-complex-khmer-private.hh"
 #include "hb-ot-layout-private.hh"
-
-/* buffer var allocations */
-#define khmer_category() complex_var_u8_0() /* khmer_category_t */
-#define khmer_position() complex_var_u8_1() /* khmer_position_t */
-
-
-/*
- * Khmer shaper.
- */
-
-typedef indic_category_t khmer_category_t;
-typedef indic_position_t khmer_position_t;
-
-
-static inline khmer_position_t
-matra_position (khmer_position_t side)
-{
-  switch ((int) side)
-  {
-    case POS_PRE_C:
-      return POS_PRE_M;
-
-    case POS_POST_C:
-    case POS_ABOVE_C:
-    case POS_BELOW_C:
-      return POS_AFTER_POST;
-
-    default:
-      return side;
-  };
-}
-
-static inline bool
-is_one_of (const hb_glyph_info_t &info, unsigned int flags)
-{
-  /* If it ligated, all bets are off. */
-  if (_hb_glyph_info_ligated (&info)) return false;
-  return !!(FLAG_UNSAFE (info.khmer_category()) & flags);
-}
-
-static inline bool
-is_joiner (const hb_glyph_info_t &info)
-{
-  return is_one_of (info, JOINER_FLAGS);
-}
-
-static inline bool
-is_consonant (const hb_glyph_info_t &info)
-{
-  return is_one_of (info, CONSONANT_FLAGS | FLAG (OT_V));
-}
-
-static inline bool
-is_coeng (const hb_glyph_info_t &info)
-{
-  return is_one_of (info, FLAG (OT_Coeng));
-}
-
-static inline void
-set_khmer_properties (hb_glyph_info_t &info)
-{
-  hb_codepoint_t u = info.codepoint;
-  unsigned int type = hb_indic_get_categories (u);
-  khmer_category_t cat = (khmer_category_t) (type & 0x7Fu);
-  khmer_position_t pos = (khmer_position_t) (type >> 8);
-
-
-  /*
-   * Re-assign category
-   */
-
-  if (unlikely (u == 0x17C6u)) cat = OT_N; /* Khmer Bindu doesn't like to be repositioned. */
-  else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x17CDu, 0x17D1u) ||
-		     u == 0x17CBu || u == 0x17D3u || u == 0x17DDu)) /* Khmer Various signs */
-  {
-    /* These can occur mid-syllable (eg. before matras), even though Unicode marks them as Syllable_Modifier.
-     * https://github.com/roozbehp/unicode-data/issues/5 */
-    cat = OT_M;
-    pos = POS_ABOVE_C;
-  }
-  else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x2010u, 0x2011u))) cat = OT_PLACEHOLDER;
-  else if (unlikely (u == 0x25CCu)) cat = OT_DOTTEDCIRCLE;
-
-
-  /*
-   * Re-assign position.
-   */
-
-  if ((FLAG_UNSAFE (cat) & CONSONANT_FLAGS))
-  {
-    pos = POS_BASE_C;
-    if (u == 0x179Au)
-      cat = OT_Ra;
-  }
-  else if (cat == OT_M)
-  {
-    pos = matra_position (pos);
-  }
-  else if ((FLAG_UNSAFE (cat) & (FLAG (OT_SM) | FLAG (OT_A) | FLAG (OT_Symbol))))
-  {
-    pos = POS_SMVD;
-  }
-
-  info.khmer_category() = cat;
-  info.khmer_position() = pos;
-}
-
-/*
- * Things above this line should ideally be moved to the Indic table itself.
- */
 
 
 /*
@@ -404,7 +294,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 
   /* Mark all subsequent consonants as below. */
   for (unsigned int i = base + 1; i < end; i++)
-    if (is_consonant (info[i]))
+    if (is_consonant_or_vowel (info[i]))
       info[i].khmer_position() = POS_BELOW_C;
 
   /* Mark final consonants.  A final consonant is one appearing after a matra,
@@ -412,7 +302,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
   for (unsigned int i = base + 1; i < end; i++)
     if (info[i].khmer_category() == OT_M) {
       for (unsigned int j = i + 1; j < end; j++)
-        if (is_consonant (info[j])) {
+        if (is_consonant_or_vowel (info[j])) {
 	  info[j].khmer_position() = POS_FINAL_C;
 	  break;
 	}
@@ -455,7 +345,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
   {
     unsigned int last = base;
     for (unsigned int i = base + 1; i < end; i++)
-      if (is_consonant (info[i]))
+      if (is_consonant_or_vowel (info[i]))
       {
 	for (unsigned int j = last + 1; j < i; j++)
 	  if (info[j].khmer_position() < POS_SMVD)

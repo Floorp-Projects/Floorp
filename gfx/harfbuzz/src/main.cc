@@ -37,7 +37,9 @@
 
 using namespace OT;
 
+#ifndef HB_NO_VISIBILITY
 const void * const OT::_hb_NullPool[HB_NULL_POOL_SIZE / sizeof (void *)] = {};
+#endif
 
 int
 main (int argc, char **argv)
