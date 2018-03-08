@@ -620,12 +620,6 @@ public:
   }
 
   bool NeedStyleFlush() const { return mNeedStyleFlush; }
-  /**
-   * Returns true if we might need to flush layout, even if we haven't scheduled
-   * one yet (as opposed to HasPendingReflow, which returns true if a flush is
-   * scheduled or will soon be scheduled).
-   */
-  bool NeedLayoutFlush() const { return mNeedLayoutFlush; }
 
   /**
    * Callbacks will be called even if reflow itself fails for
@@ -1644,10 +1638,6 @@ public:
     mIsNeverPainting = aNeverPainting;
   }
 
-  /**
-   * True if a reflow event has been scheduled, or is going to be scheduled
-   * to run in the future.
-   */
   bool HasPendingReflow() const
     { return mObservingLayoutFlushes || mReflowContinueTimer; }
 
