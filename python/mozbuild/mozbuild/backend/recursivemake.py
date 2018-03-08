@@ -539,12 +539,17 @@ class RecursiveMakeBackend(CommonBackend):
             if obj.inputs:
                 if obj.localized:
                     # Localized generated files can have locale-specific inputs, which are
-                    # indicated by paths starting with `en-US/` or containing `/locales/en-US/`.
+                    # indicated by paths starting with `en-US/` or containing `locales/en-US/`.
                     def srcpath(p):
-                        if '/locales/en-US' in p:
-                            e, f = p.split('/locales/en-US/', 1)
+                        if 'locales/en-US' in p:
+                            # We need an "absolute source path" relative to
+                            # topsrcdir, like "/source/path".
+                            if not p.startswith('/'):
+                                p = '/' + mozpath.relpath(p.full_path, obj.topsrcdir)
+                            e, f = p.split('locales/en-US/', 1)
                             assert(f)
-                            return '$(call MERGE_RELATIVE_FILE,%s,/locales/%s)' % (f, e)
+                            return '$(call MERGE_RELATIVE_FILE,{},{}locales)'.format(
+                                f, e if not e.startswith('/') else e[len('/'):])
                         elif p.startswith('en-US/'):
                             e, f = p.split('en-US/', 1)
                             assert(not e)
