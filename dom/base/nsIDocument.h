@@ -1222,13 +1222,8 @@ public:
     return !mBFCacheDisallowed;
   }
 
-  void SetBFCacheEntry(nsIBFCacheEntry* aEntry)
-  {
-    NS_ASSERTION(IsBFCachingAllowed() || !aEntry,
-                 "You should have checked!");
-
-    mBFCacheEntry = aEntry;
-  }
+  // Accepts null to clear the BFCache entry too.
+  void SetBFCacheEntry(nsIBFCacheEntry* aEntry);
 
   nsIBFCacheEntry* GetBFCacheEntry() const
   {

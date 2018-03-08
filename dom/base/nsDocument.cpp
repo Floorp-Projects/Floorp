@@ -4073,6 +4073,21 @@ nsIDocument::DeleteShell()
   }
 }
 
+void
+nsIDocument::SetBFCacheEntry(nsIBFCacheEntry* aEntry)
+{
+  MOZ_ASSERT(IsBFCachingAllowed() || !aEntry, "You should have checked!");
+
+  if (mPresShell) {
+    if (aEntry) {
+      mPresShell->StopObservingRefreshDriver();
+    } else if (mBFCacheEntry) {
+      mPresShell->StartObservingRefreshDriver();
+    }
+  }
+  mBFCacheEntry = aEntry;
+}
+
 static void
 SubDocClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
