@@ -51,10 +51,6 @@ public:
 
   bool IsCurrent() const;
   bool IsInEffect() const;
-  bool IsActiveDurationZero() const
-  {
-    return !SpecifiedTiming().ActiveDuration();
-  }
 
   already_AddRefed<AnimationEffectTimingReadOnly> Timing();
   const TimingParams& SpecifiedTiming() const
