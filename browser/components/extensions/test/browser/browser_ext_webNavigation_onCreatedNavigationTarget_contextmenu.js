@@ -117,7 +117,7 @@ add_task(async function test_on_created_navigation_target_from_context_menu_subf
         pageElementSelector: function() {
           // This code runs as a framescript in the child process and it returns the
           // target link in the subframe.
-          return this.content.frames[0] // eslint-disable-line mozilla/no-cpows-in-tests
+          return this.content.frames[0]
             .document.querySelector("#test-create-new-tab-from-context-menu-subframe");
         },
         contextMenuItemLabel: "Open Link in New Tab",
@@ -139,7 +139,7 @@ add_task(async function test_on_created_navigation_target_from_context_menu_subf
         pageElementSelector: function() {
           // This code runs as a framescript in the child process and it returns the
           // target link in the subframe.
-          return this.content.frames[0] // eslint-disable-line mozilla/no-cpows-in-tests
+          return this.content.frames[0]
             .document.querySelector("#test-create-new-window-from-context-menu-subframe");
         },
         contextMenuItemLabel: "Open Link in New Window",

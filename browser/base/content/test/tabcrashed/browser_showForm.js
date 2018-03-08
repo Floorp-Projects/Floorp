@@ -26,7 +26,6 @@ add_task(async function test_show_form() {
     // Now crash the browser.
     await BrowserTestUtils.crashBrowser(browser);
 
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let doc = browser.contentDocument;
 
     // Ensure the checkbox is checked. We can safely reach into

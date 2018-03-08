@@ -55,7 +55,6 @@ function waitForMessageChange(element, cb, opts = { attributes: true, attributeF
   return waitForMutation(element, opts, cb);
 }
 
-// eslint-disable-next-line mozilla/no-cpows-in-tests
 function getElement(id, doc = gBrowser.contentDocument) {
   return doc.getElementById(id);
 }
@@ -84,7 +83,6 @@ function waitForMessageContent(messageId, content, doc) {
 
 add_task(async function testExtensionControlledHomepage() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, "about:preferences#general",
      "#general should be in the URI for about:preferences");
@@ -144,7 +142,6 @@ add_task(async function testExtensionControlledHomepage() {
 
 add_task(async function testPrefLockedHomepage() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, "about:preferences#general",
      "#general should be in the URI for about:preferences");
@@ -276,7 +273,6 @@ add_task(async function testPrefLockedHomepage() {
 
 add_task(async function testExtensionControlledNewTab() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, "about:preferences#general",
      "#general should be in the URI for about:preferences");
@@ -326,7 +322,6 @@ add_task(async function testExtensionControlledNewTab() {
 
 add_task(async function testExtensionControlledDefaultSearch() {
   await openPreferencesViaOpenPreferencesAPI("paneSearch", {leaveOpen: true});
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
   let extensionId = "@set_default_search";
   let manifest = {
@@ -422,7 +417,6 @@ add_task(async function testExtensionControlledDefaultSearch() {
 add_task(async function testExtensionControlledHomepageUninstalledAddon() {
   async function checkHomepageEnabled() {
     await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let doc = gBrowser.contentDocument;
     is(gBrowser.currentURI.spec, "about:preferences#general",
       "#general should be in the URI for about:preferences");
@@ -566,7 +560,6 @@ add_task(async function testExtensionControlledTrackingProtection() {
   let uiType = "new";
 
   await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
 
   is(gBrowser.currentURI.spec, "about:preferences#privacy",
@@ -745,7 +738,6 @@ add_task(async function testExtensionControlledProxyConfig() {
   }
 
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let mainDoc = gBrowser.contentDocument;
 
   is(gBrowser.currentURI.spec, "about:preferences#general",

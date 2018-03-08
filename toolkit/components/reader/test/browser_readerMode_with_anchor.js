@@ -29,7 +29,6 @@ add_task(async function() {
     let readerButton = document.getElementById("reader-mode-button");
     readerButton.click();
     await pageShownPromise;
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
     is(gBrowser.contentDocumentAsCPOW.documentElement.scrollTop, 0, "scrollTop should be 0");
     await BrowserTestUtils.synthesizeMouseAtCenter("#foo-anchor", {}, browser);
     await ContentTask.spawn(browser, null, async function() {

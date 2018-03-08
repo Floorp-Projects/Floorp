@@ -192,7 +192,6 @@ var tests = [
         if (gMultiProcessBrowser) {
           is(Services.focus.focusedElement, browser);
         } else {
-          // eslint-disable-next-line mozilla/no-cpows-in-tests
           is(Services.focus.focusedElement, browser.contentDocument.getElementById("test-input"));
         }
 

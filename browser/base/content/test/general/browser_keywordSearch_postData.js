@@ -67,7 +67,6 @@ function doTest() {
   info("Running test: " + gCurrTest.name);
 
   waitForLoad(function() {
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let loadedText = gBrowser.contentDocumentAsCPOW.body.textContent;
     ok(loadedText, "search page loaded");
     let needle = "searchterms=" + gCurrTest.expectText;

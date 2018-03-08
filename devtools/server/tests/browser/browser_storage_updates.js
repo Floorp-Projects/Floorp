@@ -298,7 +298,6 @@ async function finishTests(client) {
 
 add_task(async function() {
   let browser = await addTab(MAIN_DOMAIN + "storage-updates.html");
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = browser.contentDocumentAsCPOW;
 
   initDebuggerServer();

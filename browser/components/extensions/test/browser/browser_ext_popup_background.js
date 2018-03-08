@@ -59,11 +59,9 @@ add_task(async function testPopupBackground() {
       });
     }
 
-    /* eslint-disable mozilla/no-cpows-in-tests */
     let setBackground = color => {
       content.document.body.style.backgroundColor = color;
     };
-    /* eslint-enable mozilla/no-cpows-in-tests */
 
     await new Promise(resolve => setTimeout(resolve, 100));
 

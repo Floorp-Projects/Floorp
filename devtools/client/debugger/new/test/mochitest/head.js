@@ -782,7 +782,7 @@ function invokeInTab(fnc, ...args) {
     fnc,
     args
   }) {
-    content.wrappedJSObject[fnc](...args); // eslint-disable-line mozilla/no-cpows-in-tests, max-len
+    content.wrappedJSObject[fnc](...args);
   });
 }
 

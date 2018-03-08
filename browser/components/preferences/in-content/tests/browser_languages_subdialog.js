@@ -1,8 +1,6 @@
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   const contentDocument = gBrowser.contentDocument;
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   const dialogOverlay = content.gSubDialog._preloadDialog._overlay;
 
   async function languagesSubdialogOpened() {
