@@ -97,6 +97,37 @@ public:
 
     TextEventDispatcher* GetTextEventDispatcher();
 
+    // TODO: Typically, new IM comes every several years.  And now, our code
+    //       becomes really IM behavior dependent.  So, perhaps, we need prefs
+    //       to control related flags for IM developers.
+    enum class IMContextID : uint8_t
+    {
+        eFcitx,
+        eIBus,
+        eIIIMF,
+        eScim,
+        eUim,
+        eUnknown,
+    };
+
+    static const char* GetIMContextIDName(IMContextID aIMContextID)
+    {
+        switch (aIMContextID) {
+            case IMContextID::eFcitx:
+                return "eFcitx";
+            case IMContextID::eIBus:
+                return "eIBus";
+            case IMContextID::eIIIMF:
+                return "eIIIMF";
+            case IMContextID::eScim:
+                return "eScim";
+            case IMContextID::eUim:
+                return "eUim";
+            default:
+                return "eUnknown";
+        }
+    }
+
 protected:
     ~IMContextWrapper();
 
@@ -175,7 +206,8 @@ protected:
     Range mCompositionTargetRange;
 
     // mCompositionState indicates current status of composition.
-    enum eCompositionState {
+    enum eCompositionState : uint8_t
+    {
         eCompositionState_NotComposing,
         eCompositionState_CompositionStartDispatched,
         eCompositionState_CompositionChangeEventDispatched
@@ -226,6 +258,10 @@ protected:
                 return "InvaildState";
         }
     }
+
+    // mIMContextID indicates the ID of mContext.  This is actually indicates
+    // IM which user selected.
+    IMContextID mIMContextID;
 
     struct Selection final
     {
@@ -321,6 +357,10 @@ protected:
     // pressing "Shift" key causes exactly same behavior but dead key sequence
     // isn't finished yet.
     bool mMaybeInDeadKeySequence;
+    // mIsIMInAsyncKeyHandlingMode is set to true if we know that IM handles
+    // key events asynchronously.  I.e., filtered key event may come again
+    // later.
+    bool mIsIMInAsyncKeyHandlingMode;
 
     // sLastFocusedContext is a pointer to the last focused instance of this
     // class.  When a instance is destroyed and sLastFocusedContext refers it,
