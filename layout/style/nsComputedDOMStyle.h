@@ -130,6 +130,11 @@ public:
     mExposeVisitedStyle = aExpose;
   }
 
+
+  void GetCSSImageURLs(const nsAString& aPropertyName,
+                       nsTArray<nsString>& aImageURLs,
+                       mozilla::ErrorResult& aRv) final;
+
   // nsDOMCSSDeclaration abstract methods which should never be called
   // on a nsComputedDOMStyle object, but must be defined to avoid
   // compile errors.
