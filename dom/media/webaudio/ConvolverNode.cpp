@@ -246,7 +246,7 @@ ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv)
       // Supported number of channels
       break;
     default:
-      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
   }
