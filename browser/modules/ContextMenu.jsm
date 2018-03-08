@@ -376,18 +376,17 @@ class ContextMenu {
 
   // Returns a "url"-type computed style attribute value, with the url() stripped.
   _getComputedURL(aElem, aProp) {
-    let url = aElem.ownerGlobal.getComputedStyle(aElem).getPropertyCSSValue(aProp);
+    let urls = aElem.ownerGlobal.getComputedStyle(aElem).getCSSImageURLs(aProp);
 
-    if (url instanceof this.content.CSSValueList) {
-      if (url.length != 1) {
-        throw "found multiple URLs";
-      }
-
-      url = url[0];
+    if (!urls.length) {
+      return null;
     }
 
-    return url.primitiveType == this.content.CSSPrimitiveValue.CSS_URI ?
-           url.getStringValue() : null;
+    if (urls.length != 1) {
+      throw "found multiple URLs";
+    }
+
+    return urls[0];
   }
 
   _makeURLAbsolute(aBase, aUrl) {
