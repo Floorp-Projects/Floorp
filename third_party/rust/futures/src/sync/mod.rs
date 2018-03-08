@@ -8,7 +8,7 @@
 //! More information and examples of how to use these synchronization primitives
 //! can be found [online at tokio.rs].
 //!
-//! [online at tokio.rs]: https://tokio.rs/docs/going-deeper/synchronization/
+//! [online at tokio.rs]: https://tokio.rs/docs/going-deeper-futures/synchronization/
 
 pub mod oneshot;
 pub mod mpsc;

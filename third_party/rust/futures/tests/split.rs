@@ -1,7 +1,7 @@
 extern crate futures;
 
-use futures::{Future, StartSend, Sink, Stream, Poll};
-use futures::stream::iter;
+use futures::prelude::*;
+use futures::stream::iter_ok;
 
 struct Join<T, U>(T, U);
 
@@ -37,7 +37,9 @@ impl<T, U: Sink> Sink for Join<T, U> {
 fn test_split() {
     let mut dest = Vec::new();
     {
-        let j = Join(iter(vec![Ok(10), Ok(20), Ok(30)]), &mut dest);
+        let j = Join(iter_ok(vec![10, 20, 30]), &mut dest);
+        let (sink, stream) = j.split();
+        let j = sink.reunite(stream).expect("test_split: reunite error");
         let (sink, stream) = j.split();
         sink.send_all(stream).wait().unwrap();
     }

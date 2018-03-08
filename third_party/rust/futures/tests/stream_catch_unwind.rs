@@ -1,12 +1,11 @@
 extern crate futures;
 
 use futures::stream;
-use futures::stream::Stream;
+use futures::prelude::*;
 
 #[test]
 fn panic_in_the_middle_of_the_stream() {
-    let stream = stream::iter::<_, Option<i32>, bool>(vec![
-        Some(10), None, Some(11)].into_iter().map(Ok));
+    let stream = stream::iter_ok::<_, bool>(vec![Some(10), None, Some(11)]);
 
     // panic on second element
     let stream_panicking = stream.map(|o| o.unwrap());
@@ -19,8 +18,7 @@ fn panic_in_the_middle_of_the_stream() {
 
 #[test]
 fn no_panic() {
-    let stream = stream::iter::<_, _, bool>(vec![
-        10, 11, 12].into_iter().map(Ok));
+    let stream = stream::iter_ok::<_, bool>(vec![10, 11, 12]);
 
     let mut iter = stream.catch_unwind().wait();
 
