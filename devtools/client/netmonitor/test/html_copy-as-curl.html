@@ -12,20 +12,21 @@
   </head>
 
   <body>
-    <p>Performing a GET request</p>
+    <p>Performing a GET or POST request</p>
 
     <script type="text/javascript">
       /* exported performRequest */
       "use strict";
 
-      function performRequest(url) {
+      function performRequest(url, payload) {
         let xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
+        let method = payload ? "POST" : "GET";
+        xhr.open(method, url, true);
         xhr.setRequestHeader("Accept-Language", window.navigator.language);
         xhr.setRequestHeader("X-Custom-Header-1", "Custom value");
         xhr.setRequestHeader("X-Custom-Header-2", "8.8.8.8");
         xhr.setRequestHeader("X-Custom-Header-3", "Mon, 3 Mar 2014 11:11:11 GMT");
-        xhr.send(null);
+        xhr.send(payload);
       }
     </script>
   </body>
