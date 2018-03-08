@@ -1,7 +1,7 @@
 use mozprofile::preferences::Pref;
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 78] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 79] = [
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
@@ -110,6 +110,7 @@ lazy_static! {
 
         // Do not show datareporting policy notifications which can
         // interfere with tests
+        ("datareporting.healthreport.about.reportUrl", Pref::new("http://%(server)s/dummy/abouthealthreport/")),  // removed in Firefox 59
         ("datareporting.healthreport.documentServerURI", Pref::new("http://%(server)s/dummy/healthreport/")),
         ("datareporting.healthreport.logging.consoleEnabled", Pref::new(false)),
         ("datareporting.healthreport.service.enabled", Pref::new(false)),
