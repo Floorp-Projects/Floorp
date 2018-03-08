@@ -84,6 +84,61 @@ function promiseNewEngine(basename, options = {}) {
   });
 }
 
+let promiseStateChangeFrameScript = "data:," + encodeURIComponent(`(${
+  function processScript() {
+    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+    /* globals docShell, sendAsyncMessage */
+
+    let listener = {
+      QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference",
+                                             "nsIWebProgressListener"]),
+
+      onStateChange: function onStateChange(webProgress, req, flags, status) {
+        // Only care about top-level document starts
+        if (!webProgress.isTopLevel ||
+            !(flags & Ci.nsIWebProgressListener.STATE_START)) {
+          return;
+        }
+
+        req.QueryInterface(Ci.nsIChannel);
+        let spec = req.originalURI.spec;
+        if (spec == "about:blank")
+          return;
+
+        docShell.removeProgressListener(listener);
+
+        req.cancel(Cr.NS_ERROR_FAILURE);
+
+        sendAsyncMessage("PromiseStateChange::StateChanged", spec);
+      },
+    };
+
+    docShell.QueryInterface(Ci.nsIWebProgress);
+    docShell.addProgressListener(listener,
+                                 Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+  }
+})()`);
+
+function promiseStateChangeURI() {
+  const MSG = "PromiseStateChange::StateChanged";
+
+  return new Promise(resolve => {
+    let mm = window.getGroupMessageManager("browsers");
+    mm.loadFrameScript(promiseStateChangeFrameScript, true);
+
+    let listener = msg => {
+      mm.removeMessageListener(MSG, listener);
+      mm.removeDelayedFrameScript(promiseStateChangeFrameScript);
+
+      resolve(msg.data);
+    };
+
+    mm.addMessageListener(MSG, listener);
+  });
+}
+
+
 /**
  * Waits for a load (or custom) event to finish in a given tab. If provided
  * load an uri into the tab.
