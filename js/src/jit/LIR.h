@@ -1113,6 +1113,8 @@ namespace details {
         {}
 
       public:
+        // Override the methods in LInstruction with more optimized versions
+        // for when we know the exact instruction type.
         LDefinition* getDef(size_t index) {
             MOZ_ASSERT(index < Defs);
             return &defsAndTemps_[index];
@@ -1195,6 +1197,8 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
     }
 
   public:
+    // Override the methods in LInstruction with more optimized versions
+    // for when we know the exact instruction type.
     LAllocation* getOperand(size_t index) {
         return &operands_[index];
     }

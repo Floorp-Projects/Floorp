@@ -9,6 +9,7 @@
 #include "mozilla/ScopeExit.h"
 
 #include <ctype.h>
+#include <type_traits>
 
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
@@ -699,3 +700,8 @@ LMoveGroup::printOperands(GenericPrinter& out)
             out.printf(",");
     }
 }
+
+#define LIROP(x) static_assert(!std::is_polymorphic<L##x>::value, \
+                               "LIR instructions should not have virtual methods");
+    LIR_OPCODE_LIST(LIROP)
+#undef LIROP
