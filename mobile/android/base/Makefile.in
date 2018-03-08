@@ -9,9 +9,6 @@
 GARBAGE += \
   classes.dex  \
   gecko.ap_  \
-  res/values/strings.xml \
-  res/raw/browsersearch.json \
-  res/raw/suggestedsites.json \
   GeneratedJNINatives.h \
   GeneratedJNIWrappers.cpp \
   GeneratedJNIWrappers.h \
@@ -36,6 +33,16 @@ generated_files := \
   generated/preprocessed/org/mozilla/gecko/MmaConstants.java \
   $(NULL)
 
+include $(topsrcdir)/config/AB_rCD.mk
+
+chrome-%:: AB_CD=$*
+chrome-%::
+	$(MAKE) \
+	  res/values$(AB_rCD)/strings.xml \
+	  res/raw$(AB_rCD)/suggestedsites.json \
+	  res/raw$(AB_rCD)/browsersearch.json \
+	  AB_CD=$*
+
 gradle_dir := $(topobjdir)/gradle/build/mobile/android
 
 define gradle_command
@@ -55,58 +62,23 @@ FennecJNIWrappers.cpp FennecJNIWrappers.h FennecJNINatives.h: .gradle.deps
 
 include $(topsrcdir)/config/rules.mk
 
-# [Comment 1/3] We don't have correct dependencies for strings.xml at
-# this point, so we always recursively invoke the submake to check the
-# dependencies.  Sigh.  And, with multilocale builds, there will be
-# multiple strings.xml files, and we need to rebuild gecko.ap_ if any
-# of them change.  But!  mobile/android/base/locales does not have
-# enough information to actually build res/values/strings.xml during a
-# language repack.  So rather than adding rules into the main
-# makefile, and trying to work around the lack of information, we
-# force a rebuild of gecko.ap_ during packaging.  See below.
-
-# Since the sub-Make is forced, it doesn't matter that we touch the
-# target file before the command.  If in the future we stop forcing
-# the sub-Make, touching the target file first is better, because the
-# sub-Make outputs will be fresher than the target, and not require
-# rebuilding.  This is all safe because Make removes the target file
-# if any recipe command fails. It is crucial that the sub-Make touch
-# the target files (those depending on .locales.deps) only when there
-# contents have changed; otherwise, this will force rebuild them as
-# part of every build.
-.locales.deps: FORCE
-	$(TOUCH) $@
-	$(MAKE) -C locales
-
-
-# This .deps pattern saves an invocation of the sub-Make: the single
-# invocation generates strings.xml, browsersearch.json, and
-# suggestedsites.json. The trailing semi-colon defines an empty
-# recipe: defining no recipe at all causes Make to treat the target
-# differently, in a way that defeats our dependencies.
-res/values/strings.xml: .locales.deps ;
-res/raw/browsersearch.json: .locales.deps ;
-res/raw/suggestedsites.json: .locales.deps ;
-
 gecko.ap_: .gradle.deps ;
 R.txt: .gradle.deps ;
 
-# [Comment 2/3] This tom-foolery provides a target that forces a
-# rebuild of gecko.ap_.  This is used during packaging to ensure that
-# resources are fresh.  The alternative would be complicated; see
-# [Comment 1/3].
+# This tom-foolery provides a target that forces a rebuild of
+# gecko.ap_.  This is used during packaging to ensure that resources
+# are fresh.  The alternative would be complicated.
 
 gecko-nodeps.ap_: .gradle.nodeps
 	cp $(GRADLE_ANDROID_APP_APK) $@
 
 gecko-nodeps/R.txt: .gradle.nodeps ;
 
-# [Comment 3/3] The first of these rules is used during regular
-# builds.  The second writes an ap_ file that is only used during
-# packaging.  It doesn't write the normal ap_, or R.java, since we
-# don't want the packaging step to write anything that would make a
-# further no-op build do work.  See also
-# toolkit/mozapps/installer/packager.mk.
+# The first of these rules is used during regular builds.  The second
+# writes an ap_ file that is only used during packaging.  It doesn't
+# write the normal ap_, or R.java, since we don't want the packaging
+# step to write anything that would make a further no-op build do
+# work.  See also toolkit/mozapps/installer/packager.mk.
 
 # It's not quite "no dependencies": nodeps means that it doesn't
 # depend on the generated resources that incorporate l10n, principally
