@@ -379,4 +379,16 @@ var PlacesTestUtils = Object.freeze({
     results.push("\n");
     dump(results.join("\n"));
   },
+
+  /**
+   * Removes all stored metadata.
+   */
+  clearMetadata() {
+    return PlacesUtils.withConnectionWrapper("PlacesTestUtils: clearMetadata",
+      async db => {
+        await db.execute(`DELETE FROM moz_meta`);
+        PlacesUtils.metadata.cache.clear();
+      }
+    );
+  },
 });

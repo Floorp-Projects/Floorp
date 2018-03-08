@@ -1995,6 +1995,111 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised",
 );
 
 /**
+ * The metadata API allows consumers to store simple key-value metadata in
+ * Places. Keys are strings, values can be any type that SQLite supports:
+ * numbers (integers and doubles), Booleans, strings, and blobs. Values are
+ * cached in memory for faster lookups.
+ *
+ * Since some consumers set metadata as part of an existing operation or active
+ * transaction, the API also exposes a `*withConnection` variant for each
+ * method that takes an open database connection.
+ */
+PlacesUtils.metadata = {
+  cache: new Map(),
+
+  /**
+   * Returns the value associated with a metadata key.
+   *
+   * @param  {String} key
+   *         The metadata key to look up.
+   * @return {*}
+   *         The value associated with the key, or `null` if not set.
+   */
+  get(key) {
+    return PlacesUtils.withConnectionWrapper("PlacesUtils.metadata.get",
+      db => this.getWithConnection(db, key));
+  },
+
+  /**
+   * Sets the value for a metadata key.
+   *
+   * @param {String} key
+   *        The metadata key to update.
+   * @param {*}
+   *        The value to associate with the key.
+   */
+  set(key, value) {
+    return PlacesUtils.withConnectionWrapper("PlacesUtils.metadata.set",
+      db => this.setWithConnection(db, key, value));
+  },
+
+  /**
+   * Removes the values for the given metadata keys.
+   *
+   * @param {String...}
+   *        One or more metadata keys to remove.
+   */
+  delete(...keys) {
+    return PlacesUtils.withConnectionWrapper("PlacesUtils.metadata.delete",
+      db => this.deleteWithConnection(db, ...keys));
+  },
+
+  async getWithConnection(db, key) {
+    key = this.canonicalizeKey(key);
+    if (this.cache.has(key)) {
+      return this.cache.get(key);
+    }
+    let rows = await db.executeCached(`
+      SELECT value FROM moz_meta WHERE key = :key`,
+      { key });
+    let value = null;
+    if (rows.length) {
+      let row = rows[0];
+      let rawValue = row.getResultByName("value");
+      // Convert blobs back to `Uint8Array`s.
+      value = row.getTypeOfIndex(0) == row.VALUE_TYPE_BLOB ?
+              new Uint8Array(rawValue) : rawValue;
+    }
+    this.cache.set(key, value);
+    return value;
+  },
+
+  async setWithConnection(db, key, value) {
+    if (value === null) {
+      await this.deleteWithConnection(db, key);
+      return;
+    }
+    key = this.canonicalizeKey(key);
+    await db.executeCached(`
+      REPLACE INTO moz_meta (key, value)
+      VALUES (:key, :value)`,
+      { key, value });
+    this.cache.set(key, value);
+  },
+
+  async deleteWithConnection(db, ...keys) {
+    keys = keys.map(this.canonicalizeKey);
+    if (!keys.length) {
+      return;
+    }
+    await db.execute(`
+      DELETE FROM moz_meta
+      WHERE key IN (${new Array(keys.length).fill("?").join(",")})`,
+      keys);
+    for (let key of keys) {
+      this.cache.delete(key);
+    }
+  },
+
+  canonicalizeKey(key) {
+    if (typeof key != "string" || !/^[a-zA-Z0-9\/]+$/.test(key)) {
+      throw new TypeError("Invalid metadata key: " + key);
+    }
+    return key.toLowerCase();
+  },
+};
+
+/**
  * Keywords management API.
  * Sooner or later these keywords will merge with search aliases, this is an
  * interim API that should then be replaced by a unified one.
