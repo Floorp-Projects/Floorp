@@ -7,8 +7,6 @@
 
 window._gBrowser = {
   init() {
-    this.requiresAddonInterpositions = true;
-
     ChromeUtils.defineModuleGetter(this, "AsyncTabSwitcher",
       "resource:///modules/AsyncTabSwitcher.jsm");
 

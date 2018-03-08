@@ -1553,10 +1553,6 @@ pref("browser.tabs.crashReporting.requestEmail", false);
 pref("browser.tabs.crashReporting.emailMe", false);
 pref("browser.tabs.crashReporting.email", "");
 
-// Enable e10s add-on interposition by default.
-pref("extensions.interposition.enabled", true);
-pref("extensions.interposition.prefetching", true);
-
 // But don't allow non-MPC extensions by default on Nightly
 #if defined(NIGHTLY_BUILD)
 pref("extensions.allow-non-mpc-extensions", false);

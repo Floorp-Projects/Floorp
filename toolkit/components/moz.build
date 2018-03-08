@@ -16,7 +16,6 @@ DIRS += [
     'aboutcheckerboard',
     'aboutmemory',
     'aboutperformance',
-    'addoncompat',
     'alerts',
     'apppicker',
     'asyncshutdown',
