@@ -35,6 +35,7 @@ class Individuals extends Component {
     return Tree({
       key: "individuals-tree",
       autoExpandDepth: 0,
+      preventNavigationOnArrowRight: false,
       focused: individuals.focused,
       getParent: node => null,
       getChildren: node => [],
