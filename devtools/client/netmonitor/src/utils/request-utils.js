@@ -441,7 +441,7 @@ async function updateFormDataSections(props) {
   }
 
   if (requestPostDataAvailable && !requestPostData) {
-    requestPostData = await connector.requestData(id, "requestPostData");
+    ({ requestPostData } = await connector.requestData(id, "requestPostData"));
   }
 
   if (!formDataSections && requestHeaders && requestPostData &&
