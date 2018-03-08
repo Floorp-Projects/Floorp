@@ -198,10 +198,10 @@ private:
 // DNSRequestChild
 //-----------------------------------------------------------------------------
 
-DNSRequestChild::DNSRequestChild(const nsCString& aHost,
+DNSRequestChild::DNSRequestChild(const nsACString& aHost,
                                  const OriginAttributes& aOriginAttributes,
                                  const uint32_t& aFlags,
-                                 const nsCString& aNetworkInterface,
+                                 const nsACString& aNetworkInterface,
                                  nsIDNSListener *aListener,
                                  nsIEventTarget *target)
   : mListener(aListener)

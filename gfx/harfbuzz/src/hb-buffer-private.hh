@@ -93,7 +93,7 @@ struct hb_buffer_t {
   hb_buffer_flags_t flags; /* BOT / EOT / etc. */
   hb_buffer_cluster_level_t cluster_level;
   hb_codepoint_t replacement; /* U+FFFD or something else. */
-  hb_buffer_scratch_flags_t scratch_flags; /* Have space-flallback, etc. */
+  hb_buffer_scratch_flags_t scratch_flags; /* Have space-fallback, etc. */
   unsigned int max_len; /* Maximum allowed len. */
   int max_ops; /* Maximum allowed operations. */
 
@@ -344,8 +344,7 @@ struct hb_buffer_t {
   inline void
   unsafe_to_break_all (void)
   {
-    for (unsigned int i = 0; i < len; i++)
-      info[i].mask |= HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
+    unsafe_to_break_impl (0, len);
   }
   inline void
   safe_to_break_all (void)
