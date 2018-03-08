@@ -39,17 +39,21 @@ function* ifWebGLSupported() {
     "The tooltip's content container was created correctly.");
 
   let messages = content.childNodes;
-  is(messages.length, 2,
-    "There are two messages displayed in the tooltip.");
+  is(messages.length, 3,
+    "There are three messages displayed in the tooltip.");
   ok(messages[0].className.includes("devtools-tooltip-simple-text"),
     "The first message was created correctly.");
   ok(messages[1].className.includes("devtools-tooltip-simple-text"),
     "The second message was created correctly.");
+  ok(messages[2].className.includes("devtools-tooltip-simple-text"),
+    "The third message was created correctly.");
 
   ok(messages[0].textContent.includes("'constructor' : too many arguments"),
     "The first message contains the correct text.");
-  ok(messages[1].textContent.includes("'assign' : cannot convert"),
+  ok(messages[1].textContent.includes("'=' : dimension mismatch"),
     "The second message contains the correct text.");
+  ok(messages[2].textContent.includes("'assign' : cannot convert"),
+    "The third message contains the correct text.");
 
   yield teardown(panel);
   finish();

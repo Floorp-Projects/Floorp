@@ -1258,8 +1258,7 @@ pref("prompts.tab_modal.enabled", true);
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// Is supposed to toggle something to do with about:newtab . Doesn't seem to do
-// anything in activity stream. bug 1443646 covers dealing with this.
+// Indicates if about:newtab shows content (enabled) or just blank
 pref("browser.newtabpage.enabled", true);
 
 // Activity Stream prefs that control to which page to redirect

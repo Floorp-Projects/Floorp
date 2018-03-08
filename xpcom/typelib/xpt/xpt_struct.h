@@ -48,7 +48,7 @@ struct XPTHeader {
   //uint8_t minor_version;
   uint16_t num_interfaces;
   //uint32_t file_length;
-  XPTInterfaceDirectoryEntry* interface_directory;
+  const XPTInterfaceDirectoryEntry* interface_directory;
   //uint32_t data_pool;
 };
 
@@ -72,13 +72,13 @@ struct XPTHeader {
  */
 struct XPTInterfaceDirectoryEntry {
   nsID iid;
-  char* name;
+  const char* name;
 
   // This field exists in the on-disk format. But it isn't used so we don't
   // allocate space for it in memory.
-  //char* name_space;
+  //const char* name_space;
 
-  XPTInterfaceDescriptor* interface_descriptor;
+  const XPTInterfaceDescriptor* interface_descriptor;
 };
 
 /*
@@ -101,9 +101,9 @@ struct XPTInterfaceDescriptor {
    * The fields are serialized on disk in a different order.
    * See DoInterfaceDescriptor().
    */
-  XPTMethodDescriptor* method_descriptors;
-  XPTConstDescriptor* const_descriptors;
-  XPTTypeDescriptor* additional_types;
+  const XPTMethodDescriptor* method_descriptors;
+  const XPTConstDescriptor* const_descriptors;
+  const XPTTypeDescriptor* additional_types;
   uint16_t parent_interface;
   uint16_t num_methods;
   uint16_t num_constants;
@@ -247,7 +247,7 @@ union XPTConstValue {
 }; /* varies according to type */
 
 struct XPTConstDescriptor {
-  char* name;
+  const char* name;
   XPTTypeDescriptor type;
   union XPTConstValue value;
 };
@@ -266,8 +266,8 @@ struct XPTParamDescriptor {
  * interface method.
  */
 struct XPTMethodDescriptor {
-  char* name;
-  XPTParamDescriptor* params;
+  const char* name;
+  const XPTParamDescriptor* params;
   //XPTParamDescriptor result; // Present on disk, omitted here.
   uint8_t flags;
   uint8_t num_args;

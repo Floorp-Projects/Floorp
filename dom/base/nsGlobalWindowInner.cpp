@@ -7428,7 +7428,7 @@ nsGlobalWindowInner::PromiseDocumentFlushed(PromiseDocumentFlushedCallback& aCal
   UniquePtr<PromiseDocumentFlushedResolver> flushResolver(
     new PromiseDocumentFlushedResolver(resultPromise, aCallback));
 
-  if (!shell->NeedFlush(FlushType::Style)) {
+  if (!shell->NeedStyleFlush() && !shell->NeedLayoutFlush()) {
     flushResolver->Call();
     return resultPromise.forget();
   }
@@ -7523,10 +7523,11 @@ nsGlobalWindowInner::DidRefresh()
   nsIPresShell* shell = mDoc->GetShell();
   MOZ_ASSERT(shell);
 
-  if (shell->NeedStyleFlush() || shell->HasPendingReflow()) {
+  if (shell->NeedStyleFlush() || shell->NeedLayoutFlush()) {
     // By the time our observer fired, something has already invalidated
-    // style and maybe layout. We'll wait until the next refresh driver
-    // tick instead.
+    // style or layout - or perhaps we're still in the middle of a flush that
+    // was interrupted. In either case, we'll wait until the next refresh driver
+    // tick instead and try again.
     rejectionGuard.release();
     return;
   }

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_BOX_H_
-#define MOZILLA_GFX_BOX_H_
+#ifndef MOZILLA_GFX_RECT_ABSOLUTE_H_
+#define MOZILLA_GFX_RECT_ABSOLUTE_H_
 
 #include <algorithm>
 #include <cstdint>
@@ -21,7 +21,7 @@ template <typename> struct IsPixel;
 namespace gfx {
 
 /**
- * A Box is similar to a Rect (see BaseRect.h), but represented as
+ * A RectAbsolute is similar to a Rect (see BaseRect.h), but represented as
  * (x1, y1, x2, y2) instead of (x, y, width, height).
  *
  * Unless otherwise indicated, methods on this class correspond
@@ -33,13 +33,13 @@ namespace gfx {
  * Sub parameter, and only use that subclass.
  */
 template <class T, class Sub, class Rect>
-struct BaseBox {
+struct BaseRectAbsolute {
 protected:
   T x1, y1, x2, y2;
 
 public:
-  BaseBox() : x1(0), y1(0), x2(0), y2(0) {}
-  BaseBox(T aX1, T aY1, T aX2, T aY2) :
+  BaseRectAbsolute() : x1(0), y1(0), x2(0), y2(0) {}
+  BaseRectAbsolute(T aX1, T aY1, T aX2, T aY2) :
     x1(aX1), y1(aY1), x2(aX2), y2(aY2) {}
 
   MOZ_ALWAYS_INLINE T X() const { return x1; }
@@ -75,51 +75,51 @@ public:
     return Sub(aRect.x, aRect.y, aRect.XMost(), aRect.YMost());
   }
 
-  MOZ_MUST_USE Sub Intersect(const Sub& aBox) const
+  MOZ_MUST_USE Sub Intersect(const Sub& aOther) const
   {
     Sub result;
-    result.x1 = std::max<T>(x1, aBox.x1);
-    result.y1 = std::max<T>(y1, aBox.y1);
-    result.x2 = std::min<T>(x2, aBox.x2);
-    result.y2 = std::min<T>(y2, aBox.y2);
+    result.x1 = std::max<T>(x1, aOther.x1);
+    result.y1 = std::max<T>(y1, aOther.y1);
+    result.x2 = std::min<T>(x2, aOther.x2);
+    result.y2 = std::min<T>(y2, aOther.y2);
     return result;
   }
 
-  bool IsEqualEdges(const Sub& aBox) const
+  bool IsEqualEdges(const Sub& aOther) const
   {
-    return x1 == aBox.x1 && y1 == aBox.y1 &&
-           x2 == aBox.x2 && y2 == aBox.y2;
+    return x1 == aOther.x1 && y1 == aOther.y1 &&
+           x2 == aOther.x2 && y2 == aOther.y2;
   }
 };
 
 template <class Units>
-struct IntBoxTyped :
-    public BaseBox<int32_t, IntBoxTyped<Units>, IntRectTyped<Units>>,
+struct IntRectAbsoluteTyped :
+    public BaseRectAbsolute<int32_t, IntRectAbsoluteTyped<Units>, IntRectTyped<Units>>,
     public Units {
   static_assert(IsPixel<Units>::value,
                 "'units' must be a coordinate system tag");
-  typedef BaseBox<int32_t, IntBoxTyped<Units>, IntRectTyped<Units>> Super;
+  typedef BaseRectAbsolute<int32_t, IntRectAbsoluteTyped<Units>, IntRectTyped<Units>> Super;
   typedef IntParam<int32_t> ToInt;
 
-  IntBoxTyped() : Super() {}
-  IntBoxTyped(ToInt aX1, ToInt aY1, ToInt aX2, ToInt aY2) :
+  IntRectAbsoluteTyped() : Super() {}
+  IntRectAbsoluteTyped(ToInt aX1, ToInt aY1, ToInt aX2, ToInt aY2) :
       Super(aX1.value, aY1.value, aX2.value, aY2.value) {}
 };
 
 template <class Units>
-struct BoxTyped :
-    public BaseBox<Float, BoxTyped<Units>, RectTyped<Units>>,
+struct RectAbsoluteTyped :
+    public BaseRectAbsolute<Float, RectAbsoluteTyped<Units>, RectTyped<Units>>,
     public Units {
   static_assert(IsPixel<Units>::value,
                 "'units' must be a coordinate system tag");
-  typedef BaseBox<Float, BoxTyped<Units>, RectTyped<Units>> Super;
+  typedef BaseRectAbsolute<Float, RectAbsoluteTyped<Units>, RectTyped<Units>> Super;
 
-  BoxTyped() : Super() {}
-  BoxTyped(Float aX1, Float aY1, Float aX2, Float aY2) :
+  RectAbsoluteTyped() : Super() {}
+  RectAbsoluteTyped(Float aX1, Float aY1, Float aX2, Float aY2) :
       Super(aX1, aY1, aX2, aY2) {}
 };
 
 }
 }
 
-#endif /* MOZILLA_GFX_BOX_H_ */
+#endif /* MOZILLA_GFX_RECT_ABSOLUTE_H_ */

@@ -1,25 +1,22 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ../../shared/test/shared-head.js */
+
 "use strict";
 
-var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-var { Task } = require("devtools/shared/task");
+// Load the shared-head file first.
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  this);
 
-var Services = require("Services");
-var promise = require("promise");
-const defer = require("devtools/shared/defer");
-var { gDevTools } = require("devtools/client/framework/devtools");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { DebuggerServer } = require("devtools/server/main");
 var { WebGLFront } = require("devtools/shared/fronts/webgl");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var flags = require("devtools/shared/flags");
-var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
-var mm = null;
 
-const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/shadereditor/test/";
 const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
 const SHADER_ORDER_URL = EXAMPLE_URL + "doc_shader-order.html";
@@ -31,16 +28,9 @@ var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 // To enable logging for try runs, just set the pref to true.
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
-// All tests are asynchronous.
-waitForExplicitFinish();
-
 var gToolEnabled = Services.prefs.getBoolPref("devtools.shadereditor.enabled");
 
-flags.testing = true;
-
 registerCleanupFunction(() => {
-  info("finish() was called, cleaning up...");
-  flags.testing = false;
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.shadereditor.enabled", gToolEnabled);
 
@@ -59,45 +49,8 @@ registerCleanupFunction(() => {
  */
 function loadFrameScripts() {
   if (Cu.isCrossProcessWrapper(content)) {
-    mm = gBrowser.selectedBrowser.messageManager;
-    mm.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
+    loadFrameScriptUtils();
   }
-}
-
-function addTab(aUrl, aWindow) {
-  info("Adding tab: " + aUrl);
-
-  let deferred = defer();
-  let targetWindow = aWindow || window;
-  let targetBrowser = targetWindow.gBrowser;
-
-  targetWindow.focus();
-  let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
-  let linkedBrowser = tab.linkedBrowser;
-
-  BrowserTestUtils.browserLoaded(linkedBrowser).then(function () {
-    info("Tab added and finished loading: " + aUrl);
-    deferred.resolve(tab);
-  });
-
-  return deferred.promise;
-}
-
-function removeTab(aTab, aWindow) {
-  info("Removing tab.");
-
-  let deferred = defer();
-  let targetWindow = aWindow || window;
-  let targetBrowser = targetWindow.gBrowser;
-  let tabContainer = targetBrowser.tabContainer;
-
-  tabContainer.addEventListener("TabClose", function (aEvent) {
-    info("Tab removed and finished closing.");
-    deferred.resolve();
-  }, {once: true});
-
-  targetBrowser.removeTab(aTab);
-  return deferred.promise;
 }
 
 function handleError(aError) {
@@ -122,28 +75,6 @@ function test() {
 
 function createCanvas() {
   return document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-}
-
-function once(aTarget, aEventName, aUseCapture = false) {
-  info("Waiting for event: '" + aEventName + "' on " + aTarget + ".");
-
-  let deferred = defer();
-
-  for (let [add, remove] of [
-    ["on", "off"], // Use event emitter before DOM events for consistency
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"]
-  ]) {
-    if ((add in aTarget) && (remove in aTarget)) {
-      aTarget[add](aEventName, function onEvent(...aArgs) {
-        aTarget[remove](aEventName, onEvent, aUseCapture);
-        deferred.resolve(...aArgs);
-      }, aUseCapture);
-      break;
-    }
-  }
-
-  return deferred.promise;
 }
 
 // Hack around `once`, as that only resolves to a single (first) argument
@@ -200,12 +131,9 @@ function ensurePixelIs(aFront, aPosition, aColor, aWaitFlag = false, aSelector =
 
 function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate") {
   if (Cu.isCrossProcessWrapper(content)) {
-    if (!mm) {
-      throw new Error("`loadFrameScripts()` must be called before attempting to navigate in e10s.");
-    }
+    let mm = gBrowser.selectedBrowser.messageManager;
     mm.sendAsyncMessage("devtools:test:history", { direction: aDirection });
-  }
-  else {
+  } else {
     executeSoon(() => content.history[aDirection]());
   }
   return once(aTarget, aWaitForTargetEvent);

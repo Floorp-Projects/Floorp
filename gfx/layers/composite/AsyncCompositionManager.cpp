@@ -532,8 +532,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
     // the layer should not move relative to the scroll container. To
     // accomplish this, we limit each dimension of the |translation| to that
     // part of it which overlaps those intervals.
-    const LayerBox& stickyOuter = layer->GetStickyScrollRangeOuter();
-    const LayerBox& stickyInner = layer->GetStickyScrollRangeInner();
+    const LayerRectAbsolute& stickyOuter = layer->GetStickyScrollRangeOuter();
+    const LayerRectAbsolute& stickyInner = layer->GetStickyScrollRangeInner();
 
     LayerPoint originalTranslation = translation;
     translation.y = IntervalOverlap(translation.y, stickyOuter.Y(), stickyOuter.YMost()) -
