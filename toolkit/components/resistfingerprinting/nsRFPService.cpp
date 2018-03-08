@@ -559,8 +559,10 @@ nsRFPService::GetSpoofedModifierStates(const nsIDocument* aDoc,
     return false;
   }
 
-  // We will spoof the modifer state for Alt, Shift, AltGraph and Control.
-  if (aModifier & (MODIFIER_ALT | MODIFIER_SHIFT | MODIFIER_ALTGRAPH | MODIFIER_CONTROL)) {
+  // We will spoof the modifer state for Alt, Shift, and AltGraph.
+  // We don't spoof the Control key, because it is often used
+  // for command key combinations in web apps.
+  if (aModifier & (MODIFIER_ALT | MODIFIER_SHIFT | MODIFIER_ALTGRAPH)) {
     SpoofingKeyboardCode keyCodeInfo;
 
     if (GetSpoofedKeyCodeInfo(aDoc, aKeyboardEvent, keyCodeInfo)) {
