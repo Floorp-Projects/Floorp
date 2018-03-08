@@ -71,6 +71,7 @@ SessionStore.prototype = {
   _pendingWrite: 0,
   _pendingWritePrivateOnly: 0,
   _scrollSavePending: null,
+  _formdataSavePending: null,
   _writeInProgress: false,
 
   // We only want to start doing backups if we've successfully
@@ -520,8 +521,20 @@ SessionStore.prototype = {
       case "input":
       case "DOMAutoComplete": {
         let browser = aEvent.currentTarget;
-        log("TabInput for tab " + window.BrowserApp.getTabForBrowser(browser).id);
-        this.onTabInput(window, browser);
+        // Duplicated logging check to avoid calling getTabForBrowser on each input event.
+        if (loggingEnabled) {
+          log("TabInput for tab " + window.BrowserApp.getTabForBrowser(browser).id);
+        }
+        // Schedule saving instead of doing it immediately - immediate save will block activity, and in
+        // cases like checking or unchecking 100 checkboxes, this can cause long delays. (bug 1443765)
+        // XXX This may be better handled with idle detection similar to desktop (bug 1444222)
+        if (!this._formdataSavePending) {
+          this._formdataSavePending =
+            window.setTimeout(() => {
+              this._formdataSavePending = null;
+              this.onTabInput(window, browser);
+            }, 2000);
+        }
         break;
       }
       case "resize":
@@ -843,6 +856,13 @@ SessionStore.prototype = {
   },
 
   onTabInput: function ss_onTabInput(aWindow, aBrowser) {
+    // If we've been called directly, cancel any pending timeouts.
+    if (this._formdataSavePending) {
+      aWindow.clearTimeout(this._formdataSavePending);
+      this._formdataSavePending = null;
+      log("onTabInput() clearing pending timeout");
+    }
+
     // If this browser belongs to a zombie tab or the initial restore hasn't yet finished,
     // skip any session save activity.
     if (aBrowser.__SS_restore || !this._startupRestoreFinished || aBrowser.__SS_restoreReloadPending) {
