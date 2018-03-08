@@ -1993,10 +1993,9 @@ Gecko_DestroyShapeSource(mozilla::StyleShapeSource* aShape)
 }
 
 void
-Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* aShape, ServoBundledURI aURI)
+Gecko_StyleShapeSource_SetURLValue(StyleShapeSource* aShape, URLValue* aURL)
 {
-  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
-  aShape->SetURL(url.get());
+  aShape->SetURL(aURL);
 }
 
 void
@@ -2027,10 +2026,9 @@ Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest)
 }
 
 void
-Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* aEffects, ServoBundledURI aURI)
+Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* aEffects, URLValue* aURL)
 {
-  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
-  aEffects->SetURL(url.get());
+  aEffects->SetURL(aURL);
 }
 
 void
@@ -2040,10 +2038,9 @@ Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* aDest, const nsStyleSVGPaint* aS
 }
 
 void
-Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* aPaint, ServoBundledURI aURI)
+Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* aPaint, URLValue* aURL)
 {
-  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
-  aPaint->SetPaintServer(url.get());
+  aPaint->SetPaintServer(aURL);
 }
 
 void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* aPaint)
@@ -2084,6 +2081,15 @@ Gecko_NewURLValue(ServoBundledURI aURI)
 {
   RefPtr<css::URLValue> url = aURI.IntoCssUrl();
   return url.forget().take();
+}
+
+MOZ_DEFINE_MALLOC_SIZE_OF(GeckoURLValueMallocSizeOf)
+
+size_t
+Gecko_URLValue_SizeOfIncludingThis(URLValue* aURL)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return aURL->SizeOfIncludingThis(GeckoURLValueMallocSizeOf);
 }
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(css::URLValue, CSSURLValue);
@@ -2237,12 +2243,10 @@ Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut aCSSValue, int32_t aLength)
 }
 
 void
-Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut aCSSValue,
-                      ServoBundledURI aURI)
+Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut aCSSValue, URLValue* aURL)
 {
   MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
-  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
-  aCSSValue->SetURLValue(url.get());
+  aCSSValue->SetURLValue(aURL);
 }
 
 void
