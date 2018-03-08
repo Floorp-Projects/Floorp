@@ -680,7 +680,7 @@ nsAtomTable::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
 
   for (uint32_t i = 0; i < aCount; ++i) {
     const char16_t* string = aSetup[i].mString;
-    nsStaticAtom** atomp = aSetup[i].mAtom;
+    nsStaticAtom** atomp = aSetup[i].mAtomp;
 
     MOZ_ASSERT(nsCRT::IsAscii(string));
 

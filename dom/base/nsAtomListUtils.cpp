@@ -19,7 +19,7 @@ nsAtomListUtils::IsMember(nsAtom *aAtom,
 {
     for (const nsStaticAtomSetup *setup = aSetup, *setup_end = aSetup + aCount;
          setup != setup_end; ++setup) {
-        if (aAtom == *(setup->mAtom))
+        if (aAtom == *(setup->mAtomp))
             return true;
     }
     return false;
