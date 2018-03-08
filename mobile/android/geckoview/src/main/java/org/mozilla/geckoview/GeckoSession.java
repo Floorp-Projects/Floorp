@@ -127,17 +127,6 @@ public class GeckoSession extends LayerSession
                 "GeckoView:OnNewSession"
             }
         ) {
-            // This needs to match nsIBrowserDOMWindow.idl
-            private int convertGeckoTarget(int geckoTarget) {
-                switch (geckoTarget) {
-                    case 0: // OPEN_DEFAULTWINDOW
-                    case 1: // OPEN_CURRENTWINDOW
-                        return NavigationDelegate.TARGET_WINDOW_CURRENT;
-                    default: // OPEN_NEWWINDOW, OPEN_NEWTAB, OPEN_SWITCHTAB
-                        return NavigationDelegate.TARGET_WINDOW_NEW;
-                }
-            }
-
             @Override
             public void handleMessage(final NavigationDelegate delegate,
                                       final String event,
@@ -152,9 +141,11 @@ public class GeckoSession extends LayerSession
                                             message.getBoolean("canGoForward"));
                 } else if ("GeckoView:OnLoadUri".equals(event)) {
                     final String uri = message.getString("uri");
-                    final int where = convertGeckoTarget(message.getInt("where"));
+                    final NavigationDelegate.TargetWindow where =
+                        NavigationDelegate.TargetWindow.forGeckoValue(
+                            message.getInt("where"));
                     final boolean result =
-                        delegate.onLoadRequest(GeckoSession.this, uri, where);
+                        delegate.onLoadUri(GeckoSession.this, uri, where);
                     callback.sendSuccess(result);
                 } else if ("GeckoView:OnNewSession".equals(event)) {
                     final String uri = message.getString("uri");
@@ -171,7 +162,7 @@ public class GeckoSession extends LayerSession
                                     throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
                                 }
 
-                                session.open(null);
+                                session.openWindow(null);
                                 callback.sendSuccess(session.getId());
                             }
                         });
@@ -601,21 +592,8 @@ public class GeckoSession extends LayerSession
     /* package */ boolean isReady() {
         return mNativeQueue.isReady();
     }
-    
-    /**
-     * Opens the session.
-     *
-     * The session is in a 'closed' state when first created. Opening it creates
-     * the underlying Gecko objects necessary to load a page, etc. Most GeckoSession
-     * methods only take affect on an open session, and are queued until the session
-     * is opened here. Opening a session is an asynchronous operation. You can check
-     * the current state via isOpen().
-     *
-     * Call this when you are ready to use a GeckoSession instance.
-     *
-     * @param appContext An application context
-     */
-    public void open(final @Nullable Context appContext) {
+
+    public void openWindow(final @Nullable Context appContext) {
         ThreadUtils.assertOnUiThread();
 
         if (isOpen()) {
@@ -656,14 +634,7 @@ public class GeckoSession extends LayerSession
         onWindowChanged();
     }
 
-    /**
-     * Closes the session.
-     *
-     * This frees the underlying Gecko objects and unloads the current page. The session may be
-     * reopened later, but page state is not restored. Call this when you are finished using
-     * a GeckoSession instance.
-     */
-    public void close() {
+    public void closeWindow() {
         ThreadUtils.assertOnUiThread();
 
         if (!isOpen()) {
@@ -1428,21 +1399,49 @@ public class GeckoSession extends LayerSession
         */
         void onCanGoForward(GeckoSession session, boolean canGoForward);
 
-        public static final int TARGET_WINDOW_NONE = 0;
-        public static final int TARGET_WINDOW_CURRENT = 1;
-        public static final int TARGET_WINDOW_NEW = 2;
+        enum TargetWindow {
+            DEFAULT(0),
+            CURRENT(1),
+            NEW(2);
+
+            private static final TargetWindow[] sValues = TargetWindow.values();
+            private int mValue;
+
+            private TargetWindow(int value) {
+                mValue = value;
+            }
+
+            public static TargetWindow forValue(int value) {
+                return sValues[value];
+            }
+
+            public static TargetWindow forGeckoValue(int value) {
+                // DEFAULT(0),
+                // CURRENT(1),
+                // NEW(2),
+                // NEWTAB(3),
+                // SWITCHTAB(4);
+                final TargetWindow[] sMap = {
+                    DEFAULT,
+                    CURRENT,
+                    NEW,
+                    NEW,
+                    NEW
+                };
+                return sMap[value];
+            }
+        }
 
         /**
-         * A request to open an URI.
-         * @param session The GeckoSession that initiated the callback.
-         * @param uri The URI to be loaded.
-         * @param target The target where the window has requested to open. One of
-         *               TARGET_WINDOW_*.
-         *
-         * @return Whether or not the load was handled. Returning false will allow Gecko
-         *         to continue the load as normal.
-         */
-        boolean onLoadRequest(GeckoSession session, String uri, int target);
+        * A request to open an URI.
+        * @param session The GeckoSession that initiated the callback.
+        * @param uri The URI to be loaded.
+        * @param where The target window.
+        *
+        * @return Whether or not the load was handled. Returning false will allow Gecko
+        *         to continue the load as normal.
+        */
+        boolean onLoadUri(GeckoSession session, String uri, TargetWindow where);
 
         /**
         * A request has been made to open a new session. The URI is provided only for
