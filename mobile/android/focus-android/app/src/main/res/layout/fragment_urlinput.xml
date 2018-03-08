@@ -40,7 +40,7 @@
 
     </org.mozilla.focus.widget.ResizableKeyboardLinearLayout>
 
-    <FrameLayout
+    <FrameLayout android:id="@+id/urlInputLayout"
         android:layout_width="match_parent"
         android:layout_height="81dp"
         android:orientation="horizontal"

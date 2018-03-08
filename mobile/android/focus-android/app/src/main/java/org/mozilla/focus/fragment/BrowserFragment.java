@@ -66,6 +66,7 @@ import org.mozilla.focus.utils.ColorUtils;
 import org.mozilla.focus.utils.DownloadUtils;
 import org.mozilla.focus.utils.DrawableUtils;
 import org.mozilla.focus.utils.Features;
+import org.mozilla.focus.utils.StatusBarUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
@@ -205,6 +206,12 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         urlBar = view.findViewById(R.id.urlbar);
         statusBar = view.findViewById(R.id.status_bar_background);
+        StatusBarUtils.getStatusBarHeight(statusBar, new StatusBarUtils.StatusBarHeightListener() {
+            @Override
+            public void onStatusBarHeightFetched(int statusBarHeight) {
+                statusBar.getLayoutParams().height = statusBarHeight;
+            }
+        });
 
         urlView = (TextView) view.findViewById(R.id.display_url);
 

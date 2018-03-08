@@ -41,4 +41,6 @@
     <dimen name="preference_row_height">48dp</dimen>
 
     <dimen name="textinputlayout_spacing">8dp</dimen>
+
+    <dimen name="urlinput_height">57dp</dimen>
 </resources>
