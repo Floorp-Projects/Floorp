@@ -36,7 +36,7 @@ impl<A, B, C> Chain<A, B, C>
             Chain::First(_, c) => c,
             _ => panic!(),
         };
-        match try!(f(a_result, data)) {
+        match f(a_result, data)? {
             Ok(e) => Ok(Async::Ready(e)),
             Err(mut b) => {
                 let ret = b.poll();

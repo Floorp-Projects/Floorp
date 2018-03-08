@@ -2,15 +2,16 @@ extern crate futures;
 
 use std::sync::mpsc::channel;
 
-use futures::future::{ok, Future};
+use futures::future::ok;
+use futures::prelude::*;
 
 #[test]
 fn lots() {
     fn doit(n: usize) -> Box<Future<Item=(), Error=()> + Send> {
         if n == 0 {
-            ok(()).boxed()
+            Box::new(ok(()))
         } else {
-            ok(n - 1).and_then(doit).boxed()
+            Box::new(ok(n - 1).and_then(doit))
         }
     }
 

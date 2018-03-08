@@ -5,6 +5,12 @@
 //!
 //! More information about executors can be [found online at tokio.rs][online].
 //!
-//! [online]: https://tokio.rs/docs/going-deeper/tasks/
+//! [online]: https://tokio.rs/docs/going-deeper-futures/tasks/
 
-pub use task_impl::{Spawn, spawn, Unpark, Executor, Run};
+#[allow(deprecated)]
+#[cfg(feature = "use_std")]
+pub use task_impl::{Unpark, Executor, Run};
+
+pub use task_impl::{Spawn, spawn, Notify, with_notify};
+
+pub use task_impl::{UnsafeNotify, NotifyHandle};
