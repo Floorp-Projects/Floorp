@@ -93,7 +93,7 @@ impl<R, Q> ClientProxy<R, Q> {
         // By ignoring it, we are just dropping the `tx`, which will mean the
         // rx will return Canceled when polled. In turn, that is translated
         // into a BrokenPipe, which conveys the proper error.
-        let _ = self.tx.send((request, tx));
+        let _ = self.tx.unbounded_send((request, tx));
 
         Response { inner: rx }
     }

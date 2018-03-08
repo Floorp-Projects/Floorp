@@ -48,8 +48,10 @@ parts:
       - libgl1-mesa-glx
       - libmirclient9
       - desktop-file-utils
-      - xdg-utils
       - ffmpeg
+      - xdg-utils
+      - libc-bin
+      - locales-all
     after: [desktop-gtk3]
 
   xdg-open:

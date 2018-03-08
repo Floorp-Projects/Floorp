@@ -67,6 +67,7 @@ EXPORTS += [
     'nsStyleStructInlines.h',
     'nsStyleTransformMatrix.h',
     'nsStyleUtil.h',
+    'nsTimingFunction.h',
 ]
 
 if CONFIG['MOZ_OLD_STYLE']:

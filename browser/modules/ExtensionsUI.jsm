@@ -322,15 +322,6 @@ var ExtensionsUI = {
   },
 
   showPermissionsPrompt(browser, strings, icon, histkey) {
-    let message = {};
-    // Create the notification header element.
-    let header = strings.header;
-    header = header.split("<>");
-    message.start = header[0];
-    // Use the host element to display addon name in addon permission prompts.
-    message.host = strings.addonName;
-    message.end = header[1];
-
     function eventCallback(topic) {
       let doc = this.browser.ownerDocument;
       if (topic == "showing") {
@@ -363,6 +354,7 @@ var ExtensionsUI = {
       popupIconURL: icon || DEFAULT_EXTENSION_ICON,
       persistent: true,
       eventCallback,
+      name: strings.addonName,
     };
 
     let win = browser.ownerGlobal;
@@ -390,22 +382,13 @@ var ExtensionsUI = {
         },
       ];
 
-      win.PopupNotifications.show(browser, "addon-webext-permissions", message,
-                                  "addons-notification-icon",
-                                  action, secondaryActions, popupOptions);
+      win.PopupNotifications.show(browser, "addon-webext-permissions", strings.header,
+                                  "addons-notification-icon", action,
+                                  secondaryActions, popupOptions);
     });
   },
 
   showDefaultSearchPrompt(browser, strings, icon) {
-    let message = {};
-    // Create the notification header element.
-    let header = strings.text;
-    header = header.split("<>");
-    message.start = header[0];
-    // Use the host element to display addon name in addon notification prompts.
-    message.host = strings.addonName;
-    message.end = header[1];
-
     return new Promise(resolve => {
       let popupOptions = {
         hideClose: true,
@@ -416,7 +399,8 @@ var ExtensionsUI = {
           if (topic == "removed") {
             resolve(false);
           }
-        }
+        },
+        name: strings.addonName,
       };
 
       let action = {
@@ -438,9 +422,9 @@ var ExtensionsUI = {
       ];
 
       let win = browser.ownerGlobal;
-      win.PopupNotifications.show(browser, "addon-webext-defaultsearch", message,
-                                  "addons-notification-icon",
-                                  action, secondaryActions, popupOptions);
+      win.PopupNotifications.show(browser, "addon-webext-defaultsearch", strings.text,
+                                  "addons-notification-icon", action,
+                                  secondaryActions, popupOptions);
     });
   },
 
@@ -452,16 +436,8 @@ var ExtensionsUI = {
     let appName = brandBundle.getString("brandShortName");
     let bundle = win.gNavigatorBundle;
 
-    // Create the notification header element.
-    let message = {};
-    let header = bundle.getFormattedString("addonPostInstall.message1",
-                                          ["<>", appName]);
-    header = header.split("<>");
-    message.start = header[0];
-    // Use the host element to display addon name in addon permission prompts.
-    message.host = addon.name;
-    message.end = header[1];
-
+    let message = bundle.getFormattedString("addonPostInstall.message1",
+                                            ["<>", appName]);
     return new Promise(resolve => {
       let action = {
         label: bundle.getString("addonPostInstall.okay.label"),
@@ -480,7 +456,8 @@ var ExtensionsUI = {
           if (topic == "dismissed") {
             resolve();
           }
-        }
+        },
+        name: addon.name,
       };
 
       popups.show(target, "addon-installed", message, "addons-notification-icon",

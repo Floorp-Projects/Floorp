@@ -34,17 +34,15 @@ impl<S1, S2> Stream for Zip<S1, S2>
 
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
         if self.queued1.is_none() {
-            match try!(self.stream1.poll()) {
-                Async::NotReady => {}
+            match self.stream1.poll()? {
                 Async::Ready(Some(item1)) => self.queued1 = Some(item1),
-                Async::Ready(None) => {}
+                Async::Ready(None) | Async::NotReady => {}
             }
         }
         if self.queued2.is_none() {
-            match try!(self.stream2.poll()) {
-                Async::NotReady => {}
+            match self.stream2.poll()? {
                 Async::Ready(Some(item2)) => self.queued2 = Some(item2),
-                Async::Ready(None) => {}
+                Async::Ready(None) | Async::NotReady => {}
             }
         }
 

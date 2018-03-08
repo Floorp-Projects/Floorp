@@ -792,10 +792,6 @@ class RTCPeerConnection {
       options = optionsOrOnSucc;
     }
 
-    // Spec language implies that this needs to happen as if it were called
-    // before createOffer, so we do this as early as possible.
-    this._ensureTransceiversForOfferToReceive(options);
-
     // This entry-point handles both new and legacy call sig. Decipher which one
     if (onSuccess) {
       return this._legacy(onSuccess, onErr, () => this._createOffer(options));
@@ -846,6 +842,7 @@ class RTCPeerConnection {
 
   async _createOffer(options) {
     this._checkClosed();
+    this._ensureTransceiversForOfferToReceive(options);
     this._syncTransceivers();
     let origin = Cu.getWebIDLCallerPrincipal().origin;
     return this._chain(async () => {

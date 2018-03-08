@@ -6723,13 +6723,7 @@ var CanvasPermissionPromptHelper = {
       return;
     }
 
-    let message = {};
-    let header = gNavigatorBundle.getFormattedString("canvas.siteprompt", ["<>"], 1);
-
-    header = header.split("<>");
-    message.start = header[0];
-    message.host = uri.asciiHost;
-    message.end = header[1];
+    let message = gNavigatorBundle.getFormattedString("canvas.siteprompt", ["<>"], 1);
 
     function setCanvasPermission(aURI, aPerm, aPersistent) {
       Services.perms.add(aURI, "canvas", aPerm,
@@ -6765,7 +6759,8 @@ var CanvasPermissionPromptHelper = {
     }
 
     let options = {
-      checkbox
+      checkbox,
+      name: uri.asciiHost,
     };
     PopupNotifications.show(browser, aTopic, message, this._notificationIcon,
                             mainAction, secondaryActions, options);
