@@ -12,16 +12,16 @@ const { LongStringActor } = require("devtools/server/actors/string");
  * Creates an actor for a network event.
  *
  * @constructor
- * @param object webConsoleActor
- *        The parent WebConsoleActor instance for this object.
+ * @param object netMonitorActor
+ *        The parent NetworkMonitorActor instance for this object.
  */
 const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
-  initialize(webConsoleActor) {
+  initialize(netMonitorActor) {
     // Necessary to get the events to work
-    protocol.Actor.prototype.initialize.call(this, webConsoleActor.conn);
+    protocol.Actor.prototype.initialize.call(this, netMonitorActor.conn);
 
-    this.webConsoleActor = webConsoleActor;
-    this.conn = this.webConsoleActor.conn;
+    this.netMonitorActor = netMonitorActor;
+    this.conn = this.netMonitorActor.conn;
 
     this._request = {
       method: null,
@@ -72,21 +72,15 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * Releases this actor from the pool.
    */
   destroy(conn) {
-    if (!this.webConsoleActor) {
+    if (!this.netMonitorActor) {
       return;
     }
     if (this._request.url) {
-      this.webConsoleActor._networkEventActorsByURL.delete(this._request.url);
+      this.netMonitorActor._networkEventActorsByURL.delete(this._request.url);
     }
     if (this.channel) {
-      this.webConsoleActor._netEvents.delete(this.channel);
+      this.netMonitorActor._netEvents.delete(this.channel);
     }
-
-    // Nullify webConsoleActor before calling releaseActor as it will recall this method
-    // To be removed once WebConsoleActor switches to protocol.js
-    const actor = this.webConsoleActor;
-    this.webConsoleActor = null;
-    actor.releaseActor(this);
 
     protocol.Actor.prototype.destroy.call(this, conn);
   },
