@@ -57,15 +57,21 @@ const DEBUGGER_POLLING_INTERVAL = 50;
 const debuggerHelper = {
   waitForState(dbg, predicate, msg) {
     return new Promise(resolve => {
-      dump(`Waiting for state change: ${msg}\n`);
+      if (msg) {
+        dump(`Waiting for state change: ${msg}\n`);
+      }
       if (predicate(dbg.store.getState())) {
-        dump(`Finished waiting for state change: ${msg}\n`);
+        if (msg) {
+          dump(`Finished waiting for state change: ${msg}\n`);
+        }
         return resolve();
       }
 
       const unsubscribe = dbg.store.subscribe(() => {
         if (predicate(dbg.store.getState())) {
-          dump(`Finished waiting for state change: ${msg}\n`);
+          if (msg) {
+            dump(`Finished waiting for state change: ${msg}\n`);
+          }
           unsubscribe();
           resolve();
         }
@@ -94,12 +100,16 @@ const debuggerHelper = {
   },
 
   async waitUntil(predicate, msg) {
-    dump(`Waiting until: ${msg}\n`);
+    if (msg) {
+      dump(`Waiting until: ${msg}\n`);
+    }
     return new Promise(resolve => {
       const timer = setInterval(() => {
         if (predicate()) {
           clearInterval(timer);
-          dump(`Finished Waiting until: ${msg}\n`);
+          if (msg) {
+            dump(`Finished Waiting until: ${msg}\n`);
+          }
           resolve();
         }
       }, DEBUGGER_POLLING_INTERVAL);
@@ -184,6 +194,92 @@ const debuggerHelper = {
       },
       "selected source"
     );
+  },
+
+  async addBreakpoint(dbg, line, url) {
+    dump(`add breakpoint\n`);
+    const source = this.findSource(dbg, url);
+    const location = {
+      sourceId: source.get("id"),
+      line,
+      column: 0
+    };
+    const onDispatched = debuggerHelper.waitForDispatch(dbg, "ADD_BREAKPOINT");
+    dbg.actions.addBreakpoint(location);
+    return onDispatched;
+  },
+
+  async removeBreakpoints(dbg, line, url) {
+    dump(`remove all breakpoints\n`);
+    const breakpoints = dbg.selectors.getBreakpoints(dbg.getState());
+
+    const onBreakpointsCleared =  this.waitForState(
+      dbg,
+      state => !dbg.selectors.getBreakpoints(state).length
+    );
+    await dbg.actions.removeBreakpoints(breakpoints);
+    return onBreakpointsCleared;
+  },
+
+  async pauseDebugger(dbg, tab, testFunction, { line, file }) {
+    await this.addBreakpoint(dbg, line, file);
+    const onPaused = this.waitForPaused(dbg);
+    await this.evalInContent(dbg, tab, testFunction);
+    return onPaused;
+  },
+
+  async waitForPaused(dbg) {
+    const onLoadedScope = this.waitForLoadedScopes(dbg);
+    const onStateChange =  this.waitForState(
+      dbg,
+      state => {
+        return dbg.selectors.getSelectedScope(state) && dbg.selectors.isPaused(state);
+      },
+    );
+    return Promise.all([onLoadedScope, onStateChange]);
+  },
+
+  async resume(dbg) {
+    const onResumed = this.waitForResumed(dbg);
+    dbg.actions.resume();
+    return onResumed;
+  },
+
+  async waitForResumed(dbg) {
+    return this.waitForState(
+      dbg,
+      state => !dbg.selectors.isPaused(state)
+    );
+  },
+
+  evalInContent(dbg, tab, testFunction) {
+    dump(`Run function in content process: ${testFunction}\n`);
+    // Load a frame script using a data URI so we can run a script
+    // inside of the content process and trigger debugger functionality
+    // as needed
+    const messageManager = tab.linkedBrowser.messageManager;
+    return messageManager.loadFrameScript("data:,(" + encodeURIComponent(
+      `function () {
+          content.window.eval("${testFunction}");
+      }`
+    ) + ")()", true);
+  },
+
+  async waitForElement(dbg, name) {
+    await this.waitUntil(() => dbg.win.document.querySelector(name));
+    return dbg.win.document.querySelector(name);
+  },
+
+  async waitForLoadedScopes(dbg) {
+    const element = ".scopes-list .tree-node[aria-level=\"1\"]";
+    return this.waitForElement(dbg, element);
+  },
+
+  async step(dbg, stepType) {
+    const resumed = this.waitForResumed(dbg);
+    dbg.actions[stepType]();
+    await resumed;
+    return this.waitForPaused(dbg);
   }
 };
 
@@ -814,7 +910,7 @@ async _consoleOpenWithCachedMessagesTest() {
     await selectNodeFront(initialNodeFront);
   },
 
-  async openDebuggerAndLog(label, expectedSources, selectedFile, expectedText) {
+  async openDebuggerAndLog(label, { expectedSources, selectedFile, expectedText }) {
    const onLoad = async (toolbox, panel) => {
     const dbg = await debuggerHelper.createContext(panel);
     await debuggerHelper.waitForSources(dbg, expectedSources);
@@ -826,7 +922,61 @@ async _consoleOpenWithCachedMessagesTest() {
    return toolbox;
   },
 
-  async reloadDebuggerAndLog(label, toolbox, expectedSources, selectedFile, expectedText) {
+  async pauseDebuggerAndLog(tab, toolbox, { testFunction }) {
+    const panel = await toolbox.getPanelWhenReady("jsdebugger");
+    const dbg = await debuggerHelper.createContext(panel);
+    const pauseLocation = { line: 22, file: "App.js" };
+
+    dump("Pausing debugger\n");
+    let test = this.runTest("custom.jsdebugger.pause.DAMP");
+    await debuggerHelper.pauseDebugger(dbg, tab, testFunction, pauseLocation);
+    test.done();
+
+    await debuggerHelper.removeBreakpoints(dbg);
+    await debuggerHelper.resume(dbg);
+    await garbageCollect();
+  },
+
+  async stepDebuggerAndLog(tab, toolbox, { testFunction }) {
+    const panel = await toolbox.getPanelWhenReady("jsdebugger");
+    const dbg = await debuggerHelper.createContext(panel);
+    const stepCount = 2;
+
+    /*
+     * Each Step test has a max step count of at least 200;
+     * see https://github.com/codehag/debugger-talos-example/blob/master/src/ and the specific test
+     * file for more information
+     */
+
+    const stepTests = [
+      {
+        location: { line: 10194, file: "step-in-test.js" },
+        key: "stepIn"
+      },
+      {
+        location: { line: 16, file: "step-over-test.js" },
+        key: "stepOver"
+      },
+      {
+        location: { line: 998, file: "step-out-test.js" },
+        key: "stepOut"
+      }
+    ];
+
+    for (const stepTest of stepTests) {
+      await debuggerHelper.pauseDebugger(dbg, tab, testFunction, stepTest.location);
+      const test = this.runTest(`custom.jsdebugger.${stepTest.key}.DAMP`);
+      for (let i = 0; i < stepCount; i++) {
+        await debuggerHelper.step(dbg, stepTest.key);
+      }
+      test.done();
+      await debuggerHelper.removeBreakpoints(dbg);
+      await debuggerHelper.resume(dbg);
+      await garbageCollect();
+    }
+  },
+
+  async reloadDebuggerAndLog(label, toolbox, { expectedSources, selectedFile, expectedText }) {
     const onReload = async () => {
       const panel = await toolbox.getPanelWhenReady("jsdebugger");
       const dbg = await debuggerHelper.createContext(panel);
@@ -840,13 +990,22 @@ async _consoleOpenWithCachedMessagesTest() {
 
   async customDebugger() {
     const label = "custom";
-    const expectedSources = 7;
     let url = CUSTOM_URL.replace(/\$TOOL/, "debugger");
-    await this.testSetup(url);
-    const selectedFile = "App.js";
-    const expectedText = "import React, { Component } from 'react';";
-    const toolbox = await this.openDebuggerAndLog(label, expectedSources, selectedFile, expectedText);
-    await this.reloadDebuggerAndLog(label, toolbox, expectedSources, selectedFile, expectedText);
+
+    const tab = await this.testSetup(url);
+    const debuggerTestData = {
+      expectedSources: 7,
+      testFunction: "window.hitBreakpoint()",
+      selectedFile: "App.js",
+      expectedText: "import React, { Component } from 'react';"
+    };
+    const toolbox = await this.openDebuggerAndLog(label, debuggerTestData);
+    await this.reloadDebuggerAndLog(label, toolbox, debuggerTestData);
+
+    // these tests are only run on custom.jsdebugger
+    await this.pauseDebuggerAndLog(tab, toolbox, debuggerTestData);
+    await this.stepDebuggerAndLog(tab, toolbox, debuggerTestData);
+
     await this.closeToolboxAndLog("custom.jsdebugger", toolbox);
     await this.testTeardown();
   },
@@ -883,9 +1042,7 @@ async _consoleOpenWithCachedMessagesTest() {
   _getToolLoadingTests(url, label, {
     expectedMessages,
     expectedRequests,
-    expectedSources,
-    selectedFile,
-    expectedText,
+    debuggerTestData
   }) {
     let tests = {
       async inspector() {
@@ -906,8 +1063,8 @@ async _consoleOpenWithCachedMessagesTest() {
 
       async debugger() {
         await this.testSetup(url);
-        let toolbox = await this.openDebuggerAndLog(label, expectedSources, selectedFile, expectedText);
-        await this.reloadDebuggerAndLog(label, toolbox, expectedSources, selectedFile, expectedText);
+        let toolbox = await this.openDebuggerAndLog(label, debuggerTestData);
+        await this.reloadDebuggerAndLog(label, toolbox, debuggerTestData);
         await this.closeToolboxAndLog(label + ".jsdebugger", toolbox);
         await this.testTeardown();
       },
@@ -1137,18 +1294,22 @@ async _consoleOpenWithCachedMessagesTest() {
     Object.assign(tests, this._getToolLoadingTests(SIMPLE_URL, "simple", {
       expectedMessages: 1,
       expectedRequests: 1,
-      expectedSources: 1,
-      selectedFile: "simple.html",
-      expectedText: "This is a simple page"
+      debuggerTestData: {
+        expectedSources: 1,
+        selectedFile: "simple.html",
+        expectedText: "This is a simple page"
+      }
     }));
 
     // Run all tests against "complicated" document
     Object.assign(tests, this._getToolLoadingTests(COMPLICATED_URL, "complicated", {
       expectedMessages: 7,
       expectedRequests: 280,
-      expectedSources: 14,
-      selectedFile: "ga.js",
-      expectedText: "Math;function ga(a,b){return a.name=b}"
+      debuggerTestData: {
+        expectedSources: 14,
+        selectedFile: "ga.js",
+        expectedText: "Math;function ga(a,b){return a.name=b}"
+      }
     }));
 
     // Run all tests against a document specific to each tool
@@ -1189,7 +1350,6 @@ async _consoleOpenWithCachedMessagesTest() {
         if (!config.subtests[i] || !tests[config.subtests[i]]) {
           continue;
         }
-
         sequenceArray.push(tests[config.subtests[i]]);
       }
     }

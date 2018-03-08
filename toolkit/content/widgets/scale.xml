@@ -9,19 +9,6 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="scalethumb" extends="xul:button">
-    <resources>
-      <stylesheet src="chrome://global/skin/scale.css"/>
-    </resources>
-  </binding>
-
-  <binding id="scaleslider" display="xul:slider"
-           extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <resources>
-      <stylesheet src="chrome://global/skin/scale.css"/>
-    </resources>
-  </binding>
-
   <binding id="scale"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>

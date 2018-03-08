@@ -42,9 +42,7 @@
 using namespace mozilla;
 using namespace std;
 
-#ifdef DEBUG
 static mozilla::LazyLogModule gResistFingerprintingLog("nsResistFingerprinting");
-#endif
 
 #define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
 #define RFP_TIMER_PREF "privacy.reduceTimerPrecision"
@@ -163,20 +161,15 @@ public:
         // Double check after we have a lock
         if (MOZ_UNLIKELY(cacheEntry.key != aKey)) {
           // Got evicted in a race
-#if defined(DEBUG)
           long long tmp_key = cacheEntry.key;
           MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
             ("LRU Cache HIT-MISS with %lli != %lli", aKey, tmp_key));
-#endif
           return EmptyCString();
         }
 
         cacheEntry.accessTime = PR_Now();
-
-#if defined(DEBUG)
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
           ("LRU Cache HIT with %lli", aKey));
-#endif
         return cacheEntry.data;
       }
     }
@@ -192,10 +185,8 @@ public:
     for (auto & cacheEntry : this->cache) {
       if (MOZ_UNLIKELY(cacheEntry.key == aKey)) {
         // Another thread inserted before us, don't insert twice
-#if defined(DEBUG)
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
           ("LRU Cache DOUBLE STORE with %lli", aKey));
-#endif
         return;
       }
       if (cacheEntry.accessTime < lowestKey->accessTime) {
@@ -206,9 +197,7 @@ public:
     lowestKey->key = aKey;
     lowestKey->data = aValue;
     lowestKey->accessTime = PR_Now();
-#if defined(DEBUG)
     MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose, ("LRU Cache STORE with %lli", aKey));
-#endif
   }
 
 
@@ -499,14 +488,12 @@ nsRFPService::ReduceTimePrecisionImpl(
   // Cast it back to a double and reduce it to the correct units.
   double ret = double(clampedAndJittered) / (1000000.0 / aTimeScale);
 
-#if defined(DEBUG)
   bool tmp_jitter = sJitter;
   MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
     ("Given: (%.*f, Scaled: %.*f, Converted: %lli), Rounding with (%lli, Originally %.*f), "
      "Intermediate: (%lli), Clamped: (%lli) Jitter: (%i Midpoint: %lli) Final: (%lli Converted: %.*f)",
      DBL_DIG-1, aTime, DBL_DIG-1, timeScaled, timeAsInt, resolutionAsInt, DBL_DIG-1, aResolutionUSec,
      (long long)floor(double(timeAsInt) / resolutionAsInt), clamped, tmp_jitter, midpoint, clampedAndJittered, DBL_DIG-1, ret));
-#endif
 
   return ret;
 }

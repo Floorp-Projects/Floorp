@@ -174,7 +174,7 @@ int32_t VideoCaptureDS::StopCapture()
 {
     CriticalSectionScoped cs(&_apiCs);
 
-    HRESULT hr = _mediaControl->Pause();
+    HRESULT hr = _mediaControl->Stop();
     if (FAILED(hr))
     {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, 0,

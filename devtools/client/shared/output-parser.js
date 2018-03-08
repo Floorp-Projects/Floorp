@@ -8,7 +8,7 @@ const Services = require("Services");
 const {angleUtils} = require("devtools/client/shared/css-angle");
 const {colorUtils} = require("devtools/shared/css/color");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {appendText} = require("devtools/client/inspector/shared/utils");
 
 loader.lazyRequireGetter(this, "ANGLE_TAKING_FUNCTIONS",

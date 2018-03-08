@@ -134,7 +134,7 @@ var WaterfallView = extend(DetailsSubview, {
   /**
    * Called whenever an observed pref is changed.
    */
-  _onObservedPrefChange: function (_, prefName) {
+  _onObservedPrefChange: function (prefName) {
     this._hiddenMarkers = PerformanceController.getPref("hidden-markers");
 
     // Clear the cache as we'll need to recompute the collapsed
