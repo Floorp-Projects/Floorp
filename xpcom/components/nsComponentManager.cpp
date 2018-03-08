@@ -535,16 +535,13 @@ CutExtension(nsCString& aPath)
 static void
 DoRegisterManifest(NSLocationType aType,
                    FileLocation& aFile,
-                   bool aChromeOnly,
-                   bool aXPTOnly)
+                   bool aChromeOnly)
 {
-  MOZ_ASSERT(!aXPTOnly || !nsComponentManagerImpl::gComponentManager);
-
   auto result = URLPreloader::Read(aFile);
   if (result.isOk()) {
     nsCString buf(result.unwrap());
 
-    ParseManifest(aType, aFile, buf.BeginWriting(), aChromeOnly, aXPTOnly);
+    ParseManifest(aType, aFile, buf.BeginWriting(), aChromeOnly);
   } else if (NS_BOOTSTRAPPED_LOCATION != aType) {
     nsCString uri;
     aFile.GetURIString(uri);
@@ -557,7 +554,7 @@ nsComponentManagerImpl::RegisterManifest(NSLocationType aType,
                                          FileLocation& aFile,
                                          bool aChromeOnly)
 {
-  DoRegisterManifest(aType, aFile, aChromeOnly, false);
+  DoRegisterManifest(aType, aFile, aChromeOnly);
 }
 
 void
