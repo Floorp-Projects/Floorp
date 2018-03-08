@@ -480,6 +480,19 @@ LDefinition::dump() const
     fprintf(stderr, "%s\n", toString().get());
 }
 
+template <typename T>
+static void
+PrintOperands(GenericPrinter& out, T* node)
+{
+    size_t numOperands = node->numOperands();
+
+    for (size_t i = 0; i < numOperands; i++) {
+        out.printf(" (%s)", node->getOperand(i)->toString().get());
+        if (i != numOperands - 1)
+            out.printf(",");
+    }
+}
+
 void
 LNode::printOperands(GenericPrinter& out)
 {
@@ -488,13 +501,10 @@ LNode::printOperands(GenericPrinter& out)
         return;
     }
 
-    size_t numOperands = isPhi() ? toPhi()->numOperands() : toInstruction()->numOperands();
-
-    for (size_t i = 0; i < numOperands; i++) {
-        out.printf(" (%s)", getOperand(i)->toString().get());
-        if (i != numOperands - 1)
-            out.printf(",");
-    }
+    if (isPhi())
+        PrintOperands(out, toPhi());
+    else
+        PrintOperands(out, toInstruction());
 }
 
 void
