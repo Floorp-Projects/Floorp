@@ -140,10 +140,10 @@ function CssRuleView(inspector, document, store, pageStyle) {
 
   this.shortcuts = new KeyShortcuts({ window: this.styleWindow });
   this._onShortcut = this._onShortcut.bind(this);
-  this.shortcuts.on("Escape", this._onShortcut);
-  this.shortcuts.on("Return", this._onShortcut);
-  this.shortcuts.on("Space", this._onShortcut);
-  this.shortcuts.on("CmdOrCtrl+F", this._onShortcut);
+  this.shortcuts.on("Escape", event => this._onShortcut("Escape", event));
+  this.shortcuts.on("Return", event => this._onShortcut("Return", event));
+  this.shortcuts.on("Space", event => this._onShortcut("Space", event));
+  this.shortcuts.on("CmdOrCtrl+F", event => this._onShortcut("CmdOrCtrl+F", event));
   this.element.addEventListener("copy", this._onCopy);
   this.element.addEventListener("contextmenu", this._onContextMenu);
   this.addRuleButton.addEventListener("click", this._onAddRule);
@@ -156,10 +156,13 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.focusCheckbox.addEventListener("click", this._onTogglePseudoClass);
 
   this._handlePrefChange = this._handlePrefChange.bind(this);
+  this._handleUAStylePrefChange = this._handleUAStylePrefChange.bind(this);
+  this._handleDefaultColorUnitPrefChange =
+    this._handleDefaultColorUnitPrefChange.bind(this);
 
   this._prefObserver = new PrefObserver("devtools.");
-  this._prefObserver.on(PREF_UA_STYLES, this._handlePrefChange);
-  this._prefObserver.on(PREF_DEFAULT_COLOR_UNIT, this._handlePrefChange);
+  this._prefObserver.on(PREF_UA_STYLES, this._handleUAStylePrefChange);
+  this._prefObserver.on(PREF_DEFAULT_COLOR_UNIT, this._handleDefaultColorUnitPrefChange);
 
   this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
 
@@ -571,11 +574,16 @@ CssRuleView.prototype = {
         .length > 0;
   },
 
-  _handlePrefChange: function (pref) {
-    if (pref === PREF_UA_STYLES) {
-      this.showUserAgentStyles = Services.prefs.getBoolPref(pref);
-    }
+  _handleUAStylePrefChange: function () {
+    this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
+    this._handlePrefChange(PREF_UA_STYLES);
+  },
 
+  _handleDefaultColorUnitPrefChange: function () {
+    this._handlePrefChange(PREF_DEFAULT_COLOR_UNIT);
+  },
+
+  _handlePrefChange: function (pref) {
     // Reselect the currently selected element
     let refreshOnPrefs = [PREF_UA_STYLES, PREF_DEFAULT_COLOR_UNIT];
     if (refreshOnPrefs.indexOf(pref) > -1) {
@@ -693,9 +701,12 @@ CssRuleView.prototype = {
     this.clear();
 
     this._dummyElement = null;
-
-    this._prefObserver.off(PREF_UA_STYLES, this._handlePrefChange);
-    this._prefObserver.off(PREF_DEFAULT_COLOR_UNIT, this._handlePrefChange);
+    // off handlers must have the same reference as their on handlers
+    this._prefObserver.off(PREF_UA_STYLES, this._handleUAStylePrefChange);
+    this._prefObserver.off(
+      PREF_DEFAULT_COLOR_UNIT,
+      this._handleDefaultColorUnitPrefChange
+    );
     this._prefObserver.destroy();
 
     this._outputParser = null;

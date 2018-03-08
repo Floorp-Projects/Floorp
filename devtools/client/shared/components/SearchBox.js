@@ -50,7 +50,7 @@ class SearchBox extends Component {
     this.shortcuts = new KeyShortcuts({
       window
     });
-    this.shortcuts.on(this.props.keyShortcut, (name, event) => {
+    this.shortcuts.on(this.props.keyShortcut, event => {
       event.preventDefault();
       this.refs.input.focus();
     });

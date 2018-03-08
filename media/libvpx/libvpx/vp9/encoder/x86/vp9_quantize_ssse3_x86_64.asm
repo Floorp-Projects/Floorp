@@ -171,7 +171,7 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   pshuflw                         m7, m8, 0x1
   pmaxsw                          m8, m7
   pextrw                          r6, m8, 0
-  mov                           [r2], r6
+  mov                           [r2], r6w
   RET
 
   ; skip-block, i.e. just write all zeroes

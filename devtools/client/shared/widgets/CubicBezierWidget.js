@@ -25,7 +25,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {
   PREDEFINED,
   PRESETS,
@@ -390,7 +390,7 @@ CubicBezierWidget.prototype = {
     this._updateFromPoints();
   },
 
-  _onNewCoordinates: function (event, coordinates) {
+  _onNewCoordinates: function (coordinates) {
     this.coordinates = coordinates;
   },
 

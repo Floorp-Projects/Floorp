@@ -13,6 +13,11 @@ JSDoc style comments are used within the JS files of the component. This documen
 Debugging/Development
 =====================
 
+Must Have Electrolysis
+-------
+
+Web Payments `does not work without e10s <https://bugzilla.mozilla.org/show_bug.cgi?id=1365964>`_!
+
 Logging
 -------
 

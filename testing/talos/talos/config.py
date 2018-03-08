@@ -112,7 +112,6 @@ DEFAULTS = dict(
         'browser.newtabpage.activity-stream.tippyTop.service.endpoint': '',
         'browser.newtabpage.activity-stream.feeds.section.topstories': False,
         'browser.newtabpage.activity-stream.feeds.snippets': False,
-        'browser.newtabpage.introShown': True,
         'browser.safebrowsing.downloads.remote.url':
             'http://127.0.0.1/safebrowsing-dummy/downloads',
         'browser.safebrowsing.provider.google.gethashURL':

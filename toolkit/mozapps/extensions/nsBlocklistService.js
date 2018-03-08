@@ -315,7 +315,7 @@ Blocklist.prototype = {
 
   /* See nsIBlocklistService */
   getAddonBlocklistState(addon, appVersion, toolkitVersion) {
-    if (!this._isBlocklistLoaded())
+    if (!this.isLoaded)
       this._loadBlocklist();
     return this._getAddonBlocklistState(addon, this._addonEntries,
                                         appVersion, toolkitVersion);
@@ -371,7 +371,7 @@ Blocklist.prototype = {
   },
 
   getAddonBlocklistEntry(addon, appVersion, toolkitVersion) {
-    if (!this._isBlocklistLoaded())
+    if (!this.isLoaded)
       this._loadBlocklist();
     return this._getAddonBlocklistEntry(addon, this._addonEntries,
                                         appVersion, toolkitVersion);
@@ -455,7 +455,7 @@ Blocklist.prototype = {
 
   /* See nsIBlocklistService */
   getAddonBlocklistURL(addon, appVersion, toolkitVersion) {
-    if (!this._isBlocklistLoaded())
+    if (!this.isLoaded)
       this._loadBlocklist();
 
     let entry = this._getAddonBlocklistEntry(addon, this._addonEntries);
@@ -584,7 +584,7 @@ Blocklist.prototype = {
 
     // When the blocklist loads we need to compare it to the current copy so
     // make sure we have loaded it.
-    if (!this._isBlocklistLoaded())
+    if (!this.isLoaded)
       this._loadBlocklist();
 
     // If blocklist update via Kinto is enabled, poll for changes and sync.
@@ -802,7 +802,7 @@ Blocklist.prototype = {
       this._loadBlocklistFromString(text);
   },
 
-  _isBlocklistLoaded() {
+  get isLoaded() {
     return this._addonEntries != null && this._gfxEntries != null && this._pluginEntries != null;
   },
 
@@ -905,6 +905,12 @@ Blocklist.prototype = {
     } catch (e) {
       LOG("Blocklist::_loadBlocklistFromXML: Error constructing blocklist " + e);
     }
+    // Dispatch to mainthread because consumers may try to construct nsIPluginHost
+    // again based on this notification, while we were called from nsIPluginHost
+    // anyway, leading to re-entrancy.
+    Services.tm.dispatchToMainThread(function() {
+      Services.obs.notifyObservers(null, "blocklist-loaded");
+    });
   },
 
   _processItemNodes(itemNodes, itemName, handler) {
@@ -1089,7 +1095,7 @@ Blocklist.prototype = {
     if (AppConstants.platform == "android") {
       return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
     }
-    if (!this._isBlocklistLoaded())
+    if (!this.isLoaded)
       this._loadBlocklist();
     return this._getPluginBlocklistState(plugin, this._pluginEntries,
                                          appVersion, toolkitVersion);
@@ -1198,7 +1204,7 @@ Blocklist.prototype = {
 
   /* See nsIBlocklistService */
   getPluginBlocklistURL(plugin) {
-    if (!this._isBlocklistLoaded())
+    if (!this.isLoaded)
       this._loadBlocklist();
 
     let r = this._getPluginBlocklistEntry(plugin, this._pluginEntries);
@@ -1215,7 +1221,7 @@ Blocklist.prototype = {
 
   /* See nsIBlocklistService */
   getPluginInfoURL(plugin) {
-    if (!this._isBlocklistLoaded())
+    if (!this.isLoaded)
       this._loadBlocklist();
 
     let r = this._getPluginBlocklistEntry(plugin, this._pluginEntries);

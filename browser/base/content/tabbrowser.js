@@ -156,9 +156,6 @@ window._gBrowser = {
     this.mCurrentBrowser = this.initialBrowser;
     this.mCurrentBrowser.permanentKey = {};
 
-    CustomizableUI.addListener(this);
-    this._updateNewTabVisibility();
-
     Services.obs.addObserver(this, "contextual-identity-updated");
 
     this.mCurrentTab = this.tabContainer.firstChild;
@@ -1812,6 +1809,8 @@ window._gBrowser = {
 
     browser.loadURI(BROWSER_NEW_TAB_URL);
     browser.docShellIsActive = false;
+    browser.renderLayers = true;
+    browser._urlbarFocused = true;
 
     // Make sure the preloaded browser is loaded with desired zoom level
     let tabURI = Services.io.newURI(BROWSER_NEW_TAB_URL);
@@ -2075,9 +2074,19 @@ window._gBrowser = {
 
     browser.droppedLinkHandler = handleDroppedLink;
 
-    // We start our browsers out as inactive, and then maintain
-    // activeness in the tab switcher.
-    browser.docShellIsActive = false;
+    // Most of the time, we start our browser's docShells out as inactive,
+    // and then maintain activeness in the tab switcher. Preloaded about:newtab's
+    // are already created with their docShell's as inactive, but then explicitly
+    // render their layers to ensure that we can switch to them quickly. We avoid
+    // setting docShellIsActive to false again in this case, since that'd cause
+    // the layers for the preloaded tab to be dropped, and we'd see a flash
+    // of empty content instead.
+    //
+    // So for all browsers except for the preloaded case, we set the browser
+    // docShell to inactive.
+    if (!usingPreloadedContent) {
+      browser.docShellIsActive = false;
+    }
 
     // When addTab() is called with an URL that is not "about:blank" we
     // set the "nodefaultsrc" attribute that prevents a frameLoader
@@ -3899,42 +3908,6 @@ window._gBrowser = {
     }
   },
 
-  _updateNewTabVisibility() {
-    // Helper functions to help deal with customize mode wrapping some items
-    let wrap = n => n.parentNode.localName == "toolbarpaletteitem" ? n.parentNode : n;
-    let unwrap = n => n && n.localName == "toolbarpaletteitem" ? n.firstElementChild : n;
-
-    let sib = this.tabContainer;
-    do {
-      sib = unwrap(wrap(sib).nextElementSibling);
-    } while (sib && sib.hidden);
-
-    const kAttr = "hasadjacentnewtabbutton";
-    if (sib && sib.id == "new-tab-button") {
-      this.tabContainer.setAttribute(kAttr, "true");
-    } else {
-      this.tabContainer.removeAttribute(kAttr);
-    }
-  },
-
-  onWidgetAfterDOMChange(aNode, aNextNode, aContainer) {
-    if (aContainer.ownerDocument == document &&
-        aContainer.id == "TabsToolbar") {
-      this._updateNewTabVisibility();
-    }
-  },
-
-  onAreaNodeRegistered(aArea, aContainer) {
-    if (aContainer.ownerDocument == document &&
-        aArea == "TabsToolbar") {
-      this._updateNewTabVisibility();
-    }
-  },
-
-  onAreaReset(aArea, aContainer) {
-    this.onAreaNodeRegistered(aArea, aContainer);
-  },
-
   _generateUniquePanelID() {
     if (!this._uniquePanelIDCounter) {
       this._uniquePanelIDCounter = 0;
@@ -3952,8 +3925,6 @@ window._gBrowser = {
 
   destroy() {
     Services.obs.removeObserver(this, "contextual-identity-updated");
-
-    CustomizableUI.removeListener(this);
 
     for (let tab of this.tabs) {
       let browser = tab.linkedBrowser;

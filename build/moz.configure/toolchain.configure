@@ -1266,7 +1266,10 @@ def pgo_flags(compiler):
             use_cflags=['-GL', '-wd4624', '-wd4952'],
             # XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
             # Probably also a compiler bug, but what can you do?
-            use_ldflags=['-LTCG:PGUPDATE', cgthreads],
+            # /d2:-cgsummary prints a summary of what is happening during
+            # code generation. How long individual functions are optimized,
+            # which functions are optimized, etc.
+            use_ldflags=['-LTCG:PGUPDATE', cgthreads, '-d2:-cgsummary'],
         )
 
 

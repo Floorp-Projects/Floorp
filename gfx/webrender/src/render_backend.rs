@@ -172,13 +172,49 @@ impl Document {
 
     // TODO: We will probably get rid of this soon and always forward to the scene building thread.
     fn build_scene(&mut self, resource_cache: &mut ResourceCache) {
-        let frame_builder = self.create_frame_builder(resource_cache);
+
+        if self.view.window_size.width == 0 || self.view.window_size.height == 0 {
+            error!("ERROR: Invalid window dimensions! Please call api.set_window_size()");
+        }
+
+        let old_builder = self.frame_builder.take().unwrap_or_else(FrameBuilder::empty);
+        let root_pipeline_id = match self.pending.scene.root_pipeline_id {
+            Some(root_pipeline_id) => root_pipeline_id,
+            None => return,
+        };
+
+        if !self.pending.scene.pipelines.contains_key(&root_pipeline_id) {
+            return;
+        }
+
+        // The DisplayListFlattener will re-create the up-to-date current scene's pipeline epoch
+        // map and clip scroll tree from the information in the pending scene.
+        self.current.scene.pipeline_epochs.clear();
+        let old_scrolling_states = self.clip_scroll_tree.drain();
+
+        let frame_builder = DisplayListFlattener::create_frame_builder(
+            old_builder,
+            &self.pending.scene,
+            &mut self.clip_scroll_tree,
+            resource_cache.get_font_instances(),
+            resource_cache.get_tiled_image_map(),
+            &self.view,
+            &self.output_pipelines,
+            &self.frame_builder_config,
+            &mut self.current.scene,
+        );
+
+        self.clip_scroll_tree.finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
+
         if !self.current.removed_pipelines.is_empty() {
             warn!("Built the scene several times without rendering it.");
         }
+
         self.current.removed_pipelines.extend(self.pending.removed_pipelines.drain(..));
         self.frame_builder = Some(frame_builder);
-        self.current.scene = self.pending.scene.clone();
+
+        // Advance to the next frame.
+        self.frame_id.0 += 1;
     }
 
     fn forward_transaction_to_scene_builder(
@@ -311,48 +347,6 @@ impl Document {
 
         // Advance to the next frame.
         self.frame_id.0 += 1;
-    }
-
-    // When changing this, please make the same modification to build_scene,
-    // which will soon replace this method completely.
-    pub fn create_frame_builder(&mut self, resource_cache: &mut ResourceCache) -> FrameBuilder {
-        if self.view.window_size.width == 0 || self.view.window_size.height == 0 {
-            error!("ERROR: Invalid window dimensions! Please call api.set_window_size()");
-        }
-
-        let old_builder = self.frame_builder.take().unwrap_or_else(FrameBuilder::empty);
-        let root_pipeline_id = match self.pending.scene.root_pipeline_id {
-            Some(root_pipeline_id) => root_pipeline_id,
-            None => return old_builder,
-        };
-
-        if !self.pending.scene.pipelines.contains_key(&root_pipeline_id) {
-            return old_builder;
-        }
-
-        // The DisplayListFlattener will re-create the up-to-date current scene's pipeline epoch
-        // map and clip scroll tree from the information in the pending scene.
-        self.current.scene.pipeline_epochs.clear();
-        let old_scrolling_states = self.clip_scroll_tree.drain();
-
-        let frame_builder = DisplayListFlattener::create_frame_builder(
-            old_builder,
-            &self.pending.scene,
-            &mut self.clip_scroll_tree,
-            resource_cache.get_font_instances(),
-            resource_cache.get_tiled_image_map(),
-            &self.view,
-            &self.output_pipelines,
-            &self.frame_builder_config,
-            &mut self.current.scene.pipeline_epochs,
-        );
-
-        self.clip_scroll_tree.finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
-
-        // Advance to the next frame.
-        self.frame_id.0 += 1;
-
-        frame_builder
     }
 }
 
@@ -1149,10 +1143,15 @@ impl RenderBackend {
         bits: CaptureBits,
         profile_counters: &mut BackendProfileCounters,
     ) -> DebugOutput {
+        use std::fs;
         use capture::CaptureConfig;
 
         debug!("capture: saving {:?}", root);
-        let (resources, deferred) = self.resource_cache.save_capture(&root);
+        if !root.is_dir() {
+            if let Err(e) = fs::create_dir_all(&root) {
+                panic!("Unable to create capture dir: {:?}", e);
+            }
+        }
         let config = CaptureConfig::new(root, bits);
 
         for (&id, doc) in &mut self.documents {
@@ -1174,6 +1173,9 @@ impl RenderBackend {
                 config.serialize(&rendered_document.frame, file_name);
             }
         }
+
+        debug!("\tresource cache");
+        let (resources, deferred) = self.resource_cache.save_capture(&config.root);
 
         info!("\tbackend");
         let backend = PlainRenderBackend {
