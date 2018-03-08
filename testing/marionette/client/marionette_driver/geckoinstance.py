@@ -499,9 +499,6 @@ class DesktopInstance(GeckoInstance):
 
         # Turn off about:newtab and make use of about:blank instead for new opened tabs
         "browser.newtabpage.enabled": False,
-        # Assume the about:newtab page"s intro panels have been shown to not depend on
-        # which test runs first and happens to open about:newtab
-        "browser.newtabpage.introShown": True,
 
         # Background thumbnails in particular cause grief, and disabling thumbnails
         # in general can"t hurt - we re-enable them when tests need them

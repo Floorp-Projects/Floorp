@@ -10,7 +10,7 @@
 "use strict";
 
 const {Task} = require("devtools/shared/task");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {colorUtils} = require("devtools/shared/css/color");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
@@ -25,7 +25,7 @@ const SAMPLE_TEXT = "Abc";
  *
  * const {ColorWidget} = require("devtools/client/shared/widgets/ColorWidget");
  * let s = new ColorWidget(containerElement, [255, 126, 255, 1]);
- * s.on("changed", (event, rgba, color) => {
+ * s.on("changed", (rgba, color) => {
  *   console.log("rgba(" + rgba[0] + ", " + rgba[1] + ", " + rgba[2] + ", " +
  *     rgba[3] + ")");
  * });

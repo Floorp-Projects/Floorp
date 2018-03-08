@@ -9,7 +9,7 @@
   * for Rule View's filter swatches
   */
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const { LocalizationHelper } = require("devtools/shared/l10n");

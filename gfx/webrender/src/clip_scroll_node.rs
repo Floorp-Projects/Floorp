@@ -286,6 +286,14 @@ impl ClipScrollNode {
             return;
         }
 
+        let inv_transform = match self.world_content_transform.inverse() {
+            Some(inverted) => inverted.to_transform(),
+            None => {
+                node_data.push(ClipScrollNodeData::invalid());
+                return;
+            }
+        };
+
         let transform_kind = if self.world_content_transform.preserves_2d_axis_alignment() {
             TransformedRectKind::AxisAligned
         } else {
@@ -293,6 +301,7 @@ impl ClipScrollNode {
         };
         let data = ClipScrollNodeData {
             transform: self.world_content_transform.into(),
+            inv_transform,
             transform_kind: transform_kind as u32 as f32,
             padding: [0.0; 3],
         };
