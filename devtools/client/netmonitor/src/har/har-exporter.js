@@ -195,6 +195,9 @@ const HarExporter = {
       form: { title, url }
     } = getTabTarget();
 
+    // Disconnect from redux actions/store.
+    connector.enableActions(false);
+
     options = {
       ...options,
       title: title || url,
@@ -206,6 +209,9 @@ const HarExporter = {
     // Build HAR object from collected data.
     let builder = new HarBuilder(options);
     let result = await builder.build();
+
+    // Connect to redux actions again.
+    connector.enableActions(true);
 
     return result;
   },
