@@ -65,6 +65,7 @@
 .requests-list-contents {
   display: table-row-group;
   position: absolute;
+  width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   --timings-scale: 1;

@@ -7,7 +7,6 @@
 const {
   ACTIVITY_TYPE,
   OPEN_NETWORK_DETAILS,
-  RESIZE_NETWORK_DETAILS,
   ENABLE_PERSISTENT_LOGS,
   DISABLE_BROWSER_CACHE,
   OPEN_STATISTICS,
@@ -26,20 +25,6 @@ function openNetworkDetails(open) {
   return {
     type: OPEN_NETWORK_DETAILS,
     open,
-  };
-}
-
-/**
- * Change network details panel size.
- *
- * @param {integer} width
- * @param {integer} height
- */
-function resizeNetworkDetails(width, height) {
-  return {
-    type: RESIZE_NETWORK_DETAILS,
-    width,
-    height,
   };
 }
 
@@ -161,7 +146,6 @@ function toggleStatistics(connector) {
 
 module.exports = {
   openNetworkDetails,
-  resizeNetworkDetails,
   enablePersistentLogs,
   disableBrowserCache,
   openStatistics,

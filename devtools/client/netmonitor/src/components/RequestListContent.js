@@ -50,9 +50,6 @@ class RequestListContent extends Component {
     return {
       connector: PropTypes.object.isRequired,
       columns: PropTypes.object.isRequired,
-      networkDetailsOpen: PropTypes.bool.isRequired,
-      networkDetailsWidth: PropTypes.number.isRequired,
-      networkDetailsHeight: PropTypes.number.isRequired,
       cloneSelectedRequest: PropTypes.func.isRequired,
       displayedRequests: PropTypes.array.isRequired,
       firstRequestStartedMillis: PropTypes.number.isRequired,
@@ -117,12 +114,6 @@ class RequestListContent extends Component {
       // Using maximum scroll height rather than node.scrollHeight to avoid sync reflow.
       node.scrollTop = MAX_SCROLL_HEIGHT;
     }
-    if (prevProps.networkDetailsOpen !== this.props.networkDetailsOpen ||
-      prevProps.networkDetailsWidth !== this.props.networkDetailsWidth ||
-      prevProps.networkDetailsHeight !== this.props.networkDetailsHeight
-    ) {
-      this.onResize();
-    }
   }
 
   componentWillUnmount() {
@@ -135,7 +126,6 @@ class RequestListContent extends Component {
 
   onResize() {
     let parent = this.refs.contentEl.parentNode;
-    this.refs.contentEl.style.width = parent.offsetWidth + "px";
     this.refs.contentEl.style.height = parent.offsetHeight + "px";
   }
 
@@ -310,9 +300,6 @@ class RequestListContent extends Component {
 module.exports = connect(
   (state) => ({
     columns: state.ui.columns,
-    networkDetailsOpen: state.ui.networkDetailsOpen,
-    networkDetailsWidth: state.ui.networkDetailsWidth,
-    networkDetailsHeight: state.ui.networkDetailsHeight,
     displayedRequests: getDisplayedRequests(state),
     firstRequestStartedMillis: state.requests.firstStartedMillis,
     selectedRequest: getSelectedRequest(state),

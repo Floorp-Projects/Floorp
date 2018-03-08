@@ -8,7 +8,6 @@ const Services = require("Services");
 const {
   CLEAR_REQUESTS,
   OPEN_NETWORK_DETAILS,
-  RESIZE_NETWORK_DETAILS,
   ENABLE_PERSISTENT_LOGS,
   DISABLE_BROWSER_CACHE,
   OPEN_STATISTICS,
@@ -56,8 +55,6 @@ function UI(initialState = {}) {
     columns: Columns(),
     detailsPanelSelectedTab: PANELS.HEADERS,
     networkDetailsOpen: false,
-    networkDetailsWidth: null,
-    networkDetailsHeight: null,
     persistentLogsEnabled: Services.prefs.getBoolPref("devtools.netmonitor.persistlog"),
     browserCacheDisabled: Services.prefs.getBoolPref("devtools.cache.disabled"),
     statisticsOpen: false,
@@ -84,14 +81,6 @@ function openNetworkDetails(state, action) {
   return {
     ...state,
     networkDetailsOpen: action.open
-  };
-}
-
-function resizeNetworkDetails(state, action) {
-  return {
-    ...state,
-    networkDetailsWidth: action.width,
-    networkDetailsHeight: action.height,
   };
 }
 
@@ -145,8 +134,6 @@ function ui(state = UI(), action) {
       return openNetworkDetails(state, { open: false });
     case OPEN_NETWORK_DETAILS:
       return openNetworkDetails(state, action);
-    case RESIZE_NETWORK_DETAILS:
-      return resizeNetworkDetails(state, action);
     case ENABLE_PERSISTENT_LOGS:
       return enablePersistentLogs(state, action);
     case DISABLE_BROWSER_CACHE:
