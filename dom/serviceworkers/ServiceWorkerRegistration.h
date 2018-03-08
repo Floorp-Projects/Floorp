@@ -131,7 +131,12 @@ private:
   ~ServiceWorkerRegistration();
 
   ServiceWorkerRegistrationDescriptor mDescriptor;
+
+  // This forms a ref-cycle with the inner implementation object.  Its broken
+  // when either the global is torn down or the registration is removed from
+  // the ServiceWorkerManager.
   RefPtr<Inner> mInner;
+
   RefPtr<ServiceWorker> mInstallingWorker;
   RefPtr<ServiceWorker> mWaitingWorker;
   RefPtr<ServiceWorker> mActiveWorker;
