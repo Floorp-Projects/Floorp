@@ -645,7 +645,7 @@ public:
     // In the child process, assert that we're not trying to parse stylesheets
     // before we've gotten all our prefs.
     MOZ_ASSERT_IF(!XRE_IsParentProcess(),
-                  mozilla::Preferences::AreAllPrefsSetInContentProcess());
+                  mozilla::Preferences::ArePrefsInitedInContentProcess());
     return gPropertyEnabled[aProperty];
   }
 
