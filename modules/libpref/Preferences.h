@@ -328,15 +328,10 @@ public:
                                    const char* aPref,
                                    float aDefault = 0.0f);
 
-  // When a content process is created these methods are used to pass prefs in
-  // bulk from the parent process. "Early" preferences are ones that are needed
-  // very early on in the content process's lifetime; they are passed via a
-  // special shared memory segment. "Late" preferences are the remainder, which
-  // are passed via a standard IPC message.
-  static void SerializeEarlyPreferences(nsCString& aStr);
-  static void DeserializeEarlyPreferences(char* aStr, size_t aStrLen);
-  static void GetPreferences(InfallibleTArray<dom::Pref>* aSettings);
-  static void SetLatePreferences(const nsTArray<dom::Pref>* aSettings);
+  // When a content process is created these methods are used to pass changed
+  // prefs in bulk from the parent process, via shared memory.
+  static void SerializePreferences(nsCString& aStr);
+  static void DeserializePreferences(char* aStr, size_t aPrefsLen);
 
   // When a single pref is changed in the parent process, these methods are
   // used to pass the update to content processes.
@@ -344,7 +339,7 @@ public:
   static void SetPreference(const dom::Pref& aPref);
 
 #ifdef DEBUG
-  static bool AreAllPrefsSetInContentProcess();
+  static bool ArePrefsInitedInContentProcess();
 #endif
 
   static void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
