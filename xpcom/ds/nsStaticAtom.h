@@ -20,32 +20,87 @@
 //   MY_ATOM(two, "two")
 //   MY_ATOM(three, "three")
 //
-// The code defining the static atoms might look like this:
+// The code defining the static atoms should look something like this:
 //
-//   class MyAtoms {
-//   public:
-//     #define MY_ATOM(_name, _value) NS_STATIC_ATOM_DECL(_name)
+//   ====> MyAtoms.h <====
+//
+//   namespace detail {
+//
+//   struct MyAtoms
+//   {
+//     #define MY_ATOM(name_, value_) NS_STATIC_ATOM_DECL_STRING(name_, value_)
+//     #include "MyAtomList.h"
+//     #undef MY_ATOM
+//
+//     #define MY_ATOM(name_, value_) NS_STATIC_ATOM_DECL_ATOM(name_)
 //     #include "MyAtomList.h"
 //     #undef MY_ATOM
 //   };
 //
-//   #define MY_ATOM(name_, value_) NS_STATIC_ATOM_DEFN(MyAtoms, name_)
-//   #include "MyAtomList.h"
-//   #undef MY_ATOM
+//   extern const MyAtoms gMyAtoms;
 //
-//   #define MY_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_, value_)
+//   } // namespace detail
+//
+//   class nsMyAtoms
+//   {
+//   public:
+//     #define MY_ATOM(name_, value_) NS_STATIC_ATOM_DECL_PTR(name_)
+//     #include "MyAtomList.h"
+//     #undef MY_ATOM
+//   };
+//
+//   ====> MyAtoms.cpp <====
+//
+//   MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+//   static constexpr MyAtoms gMyAtoms = {
+//     #define MY_ATOM(name_, value_) NS_STATIC_ATOM_INIT_STRING(value_)
+//     #include "MyAtomList.h"
+//     #undef MY_ATOM
+//
+//     #define MY_ATOM(name_, value_) NS_STATIC_ATOM_INIT_ATOM(MyAtoms, name_, value_)
+//     #include "MyAtomList.h"
+//     #undef MY_ATOM
+//   };
+//   MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+//
+//   #define MY_ATOM(name_, value_) NS_STATIC_ATOM_DEFN_PTR(nsMyAtoms, name_)
 //   #include "MyAtomList.h"
 //   #undef MY_ATOM
 //
 //   static const nsStaticAtomSetup sMyAtomSetup[] = {
-//     #define MY_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(MyAtoms, name_)
+//     #define MY_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(mozilla::detail::gMyAtoms, nsMyAtoms, name_)
 //     #include "MyAtomList.h"
 //     #undef MY_ATOM
 //   };
 //
 // The macros expand to the following:
 //
-//   class MyAtoms
+//   ====> MyAtoms.h <====
+//
+//   // A `detail` namespace is used because the things within it aren't
+//   // directly referenced by external users of these static atoms.
+//   namespace detail {
+//
+//   // This `detail` class contains the atom strings and the atom objects.
+//   // Because they are together in a class, the mStringOffset field of the
+//   // atoms will be small and can be initialized at compile time.
+//   struct MyAtoms
+//   {
+//     const char16_t one_string[4];
+//     const char16_t two_string[4];
+//     const char16_t three_string[6];
+//
+//     const nsStaticAtom one_atom;
+//     const nsStaticAtom two_atom;
+//     const nsStaticAtom three_atom;
+//   };
+//
+//   extern const MyAtoms gMyAtoms;
+//
+//   } // namespace detail
+//
+//   // This class holds the pointers to the individual atoms.
+//   class nsMyAtoms
 //   {
 //   public:
 //     static nsStaticAtom* one;
@@ -53,66 +108,100 @@
 //     static nsStaticAtom* three;
 //   };
 //
+//   ====> MyAtoms.cpp <====
+//
+//   // Need to suppress some MSVC warning weirdness with WrappingMultiply().
+//   MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+//   // Because this is `constexpr` it ends up in read-only memory where it can
+//   // be shared between processes.
+//   extern constexpr MyAtoms gMyAtoms = {
+//     u"one",
+//     u"two",
+//     u"three",
+//
+//     nsStaticAtom(u"one", 3, offsetof(MyAtoms, one_atom) -
+//                             offsetof(MyAtoms, one_string)),
+//     nsStaticAtom(u"two", 3, offsetof(MyAtoms, two_atom) -
+//                             offsetof(MyAtoms, two_string)),
+//     nsStaticAtom(u"three", 3, offsetof(MyAtoms, three_atom) -
+//                               offsetof(MyAtoms, three_string)),
+//   };
+//   MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+//
 //   nsStaticAtom* MyAtoms::one;
 //   nsStaticAtom* MyAtoms::two;
 //   nsStaticAtom* MyAtoms::three;
 //
-//   static const char16_t one_buffer[4] = u"one";     // plus a static_assert
-//   static const char16_t two_buffer[4] = u"two";     // plus a static_assert
-//   static const char16_t three_buffer[6] = u"three"; // plus a static_assert
-//
 //   static const nsStaticAtomSetup sMyAtomSetup[] = {
-//     { one_buffer, &MyAtoms::one },
-//     { two_buffer, &MyAtoms::two },
-//     { three_buffer, &MyAtoms::three },
+//     { &detail::gMyAtoms.one_atom, &nsMyAtoms::one },
+//     { &detail::gMyAtoms.two_atom, &nsMyAtoms::two },
+//     { &detail::gMyAtoms.three_atom, &nsMyAtoms::three },
 //   };
 //
 // When RegisterStaticAtoms(sMyAtomSetup) is called it iterates over
 // sMyAtomSetup[]. E.g. for the first atom it does roughly the following:
-// - MyAtoms::one = new nsStaticAtom(one_buffer)
-// - inserts MyAtoms::one into the atom table
+// - MyAtoms::one = one_atom
+// - inserts one_atom into the atom table
 
-// The declaration of the pointer to the static atom, which must be within a
-// class.
-#define NS_STATIC_ATOM_DECL(name_) \
+// The declaration of the atom's string, which must be within the same `detail`
+// class as NS_STATIC_ATOM_DECL_ATOM.
+#define NS_STATIC_ATOM_DECL_STRING(name_, value_) \
+  const char16_t name_##_string[sizeof(value_)];
+
+// The declaration of the static atom itself, which must be within the same
+// `detail` class as NS_STATIC_ATOM_DECL_STRING.
+#define NS_STATIC_ATOM_DECL_ATOM(name_) \
+  const nsStaticAtom name_##_atom;
+
+// The declaration of the pointer to the static atom, which must be within
+// a class.
+#define NS_STATIC_ATOM_DECL_PTR(name_) \
   static nsStaticAtom* name_;
 
 // Like NS_STATIC_ATOM_DECL, but for sub-classes of nsStaticAtom.
-#define NS_STATIC_ATOM_SUBCLASS_DECL(type_, name_) \
+#define NS_STATIC_ATOM_SUBCLASS_DECL_PTR(type_, name_) \
   static type_* name_;
 
-// The definition of the pointer to the static atom. Initially null, it is
-// set by RegisterStaticAtoms() to point to a heap-allocated nsStaticAtom.
-#define NS_STATIC_ATOM_DEFN(class_, name_) \
-  nsStaticAtom* class_::name_;
+// The initialization of the atom's string, which must be within a `constexpr`
+// instance of the `detail` class.
+#define NS_STATIC_ATOM_INIT_STRING(value_) \
+  u"" value_,
 
-// Like NS_STATIC_ATOM_DEFN, but for sub-classes of nsStaticAtom.
-#define NS_STATIC_ATOM_SUBCLASS_DEFN(type_, class_, name_) \
-  type_* class_::name_;
-
-// The buffer of 16-bit chars that constitute the static atom.
+// The initialization of the static atom itself, which must be within a
+// `constexpr` instance of the `detail` class.
 //
 // Note that |value_| is an 8-bit string, and so |sizeof(value_)| is equal
 // to the number of chars (including the terminating '\0'). The |u""| prefix
-// converts |value_| to a 16-bit string, which is what is assigned.
-#define NS_STATIC_ATOM_BUFFER(name_, value_) \
-  static const char16_t name_##_buffer[sizeof(value_)] = u"" value_; \
-  static_assert(sizeof(value_[0]) == 1, "non-8-bit static atom literal");
+// converts |value_| to a 16-bit string.
+#define NS_STATIC_ATOM_INIT_ATOM(class_, name_, value_) \
+  nsStaticAtom(u"" value_, \
+               sizeof(value_) - 1, \
+               offsetof(class_, name_##_atom) - \
+               offsetof(class_, name_##_string)),
 
-// The StaticAtomSetup. Used only during start-up.
-#define NS_STATIC_ATOM_SETUP(class_, name_) \
-  { name_##_buffer, &class_::name_ },
+// The definition of the pointer to the static atom. Initially null, it is
+// set by RegisterStaticAtoms() to point to a heap-allocated nsStaticAtom.
+#define NS_STATIC_ATOM_DEFN_PTR(class_, name_) \
+  nsStaticAtom* class_::name_;
+
+// Like NS_STATIC_ATOM_DEFN, but for sub-classes of nsStaticAtom.
+#define NS_STATIC_ATOM_SUBCLASS_DEFN_PTR(type_, class_, name_) \
+  type_* class_::name_;
+
+// The StaticAtomSetup. Used during start-up, and in some cases afterwards.
+#define NS_STATIC_ATOM_SETUP(detailObj_, class_, name_) \
+  { &detailObj_.name_##_atom, &class_::name_ },
 
 // Like NS_STATIC_ATOM_SUBCLASS, but for sub-classes of nsStaticAtom.
-#define NS_STATIC_ATOM_SUBCLASS_SETUP(class_, name_) \
-  { name_##_buffer, reinterpret_cast<nsStaticAtom**>(&class_::name_) },
+#define NS_STATIC_ATOM_SUBCLASS_SETUP(detailObj_, class_, name_) \
+  { &detailObj_.name_##_atom, \
+    reinterpret_cast<nsStaticAtom**>(&class_::name_) },
 
 // Holds data used to initialize large number of atoms during startup. Use
-// NS_STATIC_ATOM_SETUP to initialize these structs. They should never be
-// accessed directly other than from nsAtomTable.cpp.
+// NS_STATIC_ATOM_SETUP to initialize these structs.
 struct nsStaticAtomSetup
 {
-  const char16_t* const mString;
+  const nsStaticAtom* const mAtom;
   nsStaticAtom** const mAtomp;
 };
 

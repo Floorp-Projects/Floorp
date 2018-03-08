@@ -7,14 +7,34 @@
 #ifndef nsGkAtoms_h___
 #define nsGkAtoms_h___
 
+#include "nsAtom.h"
 #include "nsStaticAtom.h"
+
+namespace mozilla {
+namespace detail {
+
+struct GkAtoms
+{
+  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_DECL_STRING(name_, value_)
+  #include "nsGkAtomList.h"
+  #undef GK_ATOM
+
+  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_DECL_ATOM(name_)
+  #include "nsGkAtomList.h"
+  #undef GK_ATOM
+};
+
+extern const GkAtoms gGkAtoms;
+
+} // namespace detail
+} // namespace mozilla
 
 class nsGkAtoms
 {
 public:
   static void RegisterStaticAtoms();
 
-  #define GK_ATOM(_name, _value) NS_STATIC_ATOM_DECL(_name)
+  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_DECL_PTR(name_)
   #include "nsGkAtomList.h"
   #undef GK_ATOM
 };

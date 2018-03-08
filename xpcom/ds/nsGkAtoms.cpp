@@ -5,18 +5,33 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGkAtoms.h"
-#include "nsStaticAtom.h"
 
-#define GK_ATOM(name_, value_) NS_STATIC_ATOM_DEFN(nsGkAtoms, name_)
-#include "nsGkAtomList.h"
-#undef GK_ATOM
+namespace mozilla {
+namespace detail {
 
-#define GK_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_, value_)
+MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+extern constexpr GkAtoms gGkAtoms = {
+  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_INIT_STRING(value_)
+  #include "nsGkAtomList.h"
+  #undef GK_ATOM
+
+  #define GK_ATOM(name_, value_) \
+    NS_STATIC_ATOM_INIT_ATOM(GkAtoms, name_, value_)
+  #include "nsGkAtomList.h"
+  #undef GK_ATOM
+};
+MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+
+} // namespace detail
+} // namespace mozilla
+
+#define GK_ATOM(name_, value_) NS_STATIC_ATOM_DEFN_PTR(nsGkAtoms, name_)
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 
 static const nsStaticAtomSetup sGkAtomSetup[] = {
-  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(nsGkAtoms, name_)
+  #define GK_ATOM(name_, value_) \
+    NS_STATIC_ATOM_SETUP(mozilla::detail::gGkAtoms, nsGkAtoms, name_)
   #include "nsGkAtomList.h"
   #undef GK_ATOM
 };
