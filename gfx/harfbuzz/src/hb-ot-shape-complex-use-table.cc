@@ -690,7 +690,7 @@ static const USE_TABLE_ELEMENT_TYPE use_table[] = {
 }; /* Table items: 5424; occupancy: 73% */
 
 USE_TABLE_ELEMENT_TYPE
-hb_use_get_categories (hb_codepoint_t u)
+hb_use_get_category (hb_codepoint_t u)
 {
   switch (u >> 12)
   {

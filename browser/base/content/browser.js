@@ -3258,6 +3258,8 @@ function getDefaultHomePage() {
   // Get the start page from the *default* pref branch, not the user's
   var prefs = Services.prefs.getDefaultBranch(null);
   var url = BROWSER_NEW_TAB_URL;
+  if (PrivateBrowsingUtils.isWindowPrivate(window))
+    return url;
   try {
     url = prefs.getComplexValue("browser.startup.homepage",
                                 Ci.nsIPrefLocalizedString).data;

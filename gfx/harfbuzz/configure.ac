@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [1.7.5],
+        [1.7.6],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -11,6 +11,7 @@ AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([1.13.0 gnits tar-ustar dist-bzip2 no-dist-gzip -Wall no-define color-tests -Wno-portability])
 AM_SILENT_RULES([yes])
+AX_CODE_COVERAGE
 
 # Initialize libtool
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
@@ -20,6 +21,7 @@ LT_INIT([disable-static])
 # Check for programs
 AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
+AC_PROG_CC_C99
 AM_PROG_CC_C_O
 AC_PROG_CXX
 dnl AX_CXX_COMPILE_STDCXX(11, noext, optional)
@@ -57,6 +59,13 @@ m4_define([hb_libtool_current],
 HB_LIBTOOL_VERSION_INFO=hb_libtool_current:hb_libtool_revision:hb_libtool_age
 AC_SUBST(HB_LIBTOOL_VERSION_INFO)
 
+AC_ARG_WITH([libstdc++],
+	[AS_HELP_STRING([--with-libstdc++=@<:@yes/no@:>@],
+			[Allow linking with libstdc++ @<:@default=no@:>@])],
+	[with_libstdcxx=$withval],
+	[with_libstdcxx=no])
+AM_CONDITIONAL(WITH_LIBSTDCXX, [test "x$with_libstdcxx" = "xyes"])
+
 # Documentation
 have_gtk_doc=false
 m4_ifdef([GTK_DOC_CHECK], [
@@ -68,8 +77,8 @@ GTK_DOC_CHECK([1.15],[--flavour no-tmpl])
 	AM_CONDITIONAL([ENABLE_GTK_DOC], false)
 ])
 
-# Functions and headers
-AC_CHECK_FUNCS(atexit mprotect sysconf getpagesize mmap isatty newlocale strtod_l)
+# Functions, and headers
+AC_CHECK_FUNCS(atexit mprotect sysconf getpagesize mmap isatty newlocale strtod_l setlinebuf)
 AC_CHECK_HEADERS(unistd.h sys/mman.h xlocale.h)
 
 # Compiler flags
@@ -79,12 +88,6 @@ if test "x$GCC" = "xyes"; then
 
 	# Make symbols link locally
 	LDFLAGS="$LDFLAGS -Bsymbolic-functions"
-
-	# Make sure we don't link to libstdc++
-	CXXFLAGS="$CXXFLAGS -fno-rtti -fno-exceptions"
-
-	# No threadsafe statics and C++ as we do it ourselves
-	CXXFLAGS="$CXXFLAGS -fno-threadsafe-statics"
 
 	# Assorted warnings
 	CXXFLAGS="$CXXFLAGS -Wcast-align"
@@ -182,6 +185,7 @@ if $have_gobject; then
 	AC_SUBST(GLIB_MKENUMS)
 fi
 AM_CONDITIONAL(HAVE_GOBJECT, $have_gobject)
+AC_SUBST(have_gobject)
 
 dnl ===========================================================================
 
@@ -355,9 +359,7 @@ if $have_freetype; then
 	AC_DEFINE(HAVE_FREETYPE, 1, [Have FreeType 2 library])
 	save_libs=$LIBS
 	LIBS="$LIBS $FREETYPE_LIBS"
-	AC_CHECK_FUNCS(FT_Get_Var_Blend_Coordinates)
-	AC_CHECK_FUNCS(FT_Set_Var_Blend_Coordinates)
-	AC_CHECK_FUNCS(FT_Done_MM_Var)
+	AC_CHECK_FUNCS(FT_Get_Var_Blend_Coordinates FT_Set_Var_Blend_Coordinates FT_Done_MM_Var)
 	LIBS=$save_libs
 fi
 AM_CONDITIONAL(HAVE_FREETYPE, $have_freetype)
@@ -491,6 +493,7 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/hb-version.h
+src/harfbuzz-config.cmake
 src/hb-ucdn/Makefile
 util/Makefile
 test/Makefile
@@ -500,6 +503,8 @@ test/shaping/Makefile
 test/shaping/data/Makefile
 test/shaping/data/in-house/Makefile
 test/shaping/data/text-rendering-tests/Makefile
+test/subset/Makefile
+test/subset/data/Makefile
 docs/Makefile
 docs/version.xml
 ])
@@ -515,14 +520,14 @@ Unicode callbacks (you want at least one):
 	Glib:			${have_glib}
 	ICU:			${have_icu}
 
-Font callbacks (the more the better):
+Font callbacks (the more the merrier):
 	FreeType:		${have_freetype}
 
 Tools used for command-line utilities:
 	Cairo:			${have_cairo}
 	Fontconfig:		${have_fontconfig}
 
-Additional shapers (the more the better):
+Additional shapers (the more the merrier):
 	Graphite2:		${have_graphite2}
 
 Platform shapers (not normally needed):
@@ -531,7 +536,7 @@ Platform shapers (not normally needed):
 	DirectWrite:		${have_directwrite}
 
 Other features:
-	Documentation:		${have_gtk_doc}
+	Documentation:		${enable_gtk_doc}
 	GObject bindings:	${have_gobject}
 	Introspection:		${have_introspection}
 ])

@@ -82,6 +82,9 @@
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/HangMonitor.h"
+#if defined(XP_WIN)
+#include "mozilla/WinDllServices.h"
+#endif
 #include "nsNativeCharsetUtils.h"
 #include "nsProxyRelease.h"
 #include "HangReports.h"
@@ -894,6 +897,30 @@ public:
         mPromise->MaybeReject(NS_ERROR_FAILURE);
         return NS_OK;
       }
+
+#if defined(XP_WIN)
+      // Cert Subject.
+      // NB: Currently we cannot lower this down to the profiler layer due to
+      // differing startup dependencies between the profiler and DllServices.
+      RefPtr<DllServices> dllSvc(DllServices::Get());
+      auto orgName = dllSvc->GetBinaryOrgName(info.GetModulePath().get());
+      if (orgName) {
+        JS::RootedString jsOrg(cx, JS_NewUCStringCopyZ(cx, (char16_t*) orgName.get()));
+        if (!jsOrg) {
+          mPromise->MaybeReject(NS_ERROR_FAILURE);
+          return NS_OK;
+        }
+
+        JS::RootedValue certSubject(cx);
+        certSubject.setString(jsOrg);
+
+        if (!JS_DefineProperty(cx, moduleObj, "certSubject", certSubject,
+                               JSPROP_ENUMERATE)) {
+          mPromise->MaybeReject(NS_ERROR_FAILURE);
+          return NS_OK;
+        }
+      }
+#endif // defined(XP_WIN)
 
       if (!JS_DefineElement(cx, moduleArray, i, moduleObj, JSPROP_ENUMERATE)) {
         mPromise->MaybeReject(NS_ERROR_FAILURE);
