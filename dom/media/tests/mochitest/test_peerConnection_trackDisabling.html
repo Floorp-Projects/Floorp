@@ -21,9 +21,7 @@ runNetworkTest(async () => {
     ["media.getusermedia.microphone.stop_on_disable.enabled", true],
     ["media.getusermedia.microphone.stop_on_disable.delay_ms", 0]);
 
-  // Always use fake tracks since we depend on video to be somewhat green and
-  // audio to have a large 1000Hz component (or 440Hz if using fake devices).
-  test.setMediaConstraints([{audio: true, video: true, fake: true}], []);
+  test.setMediaConstraints([{audio: true, video: true}], []);
   test.chain.append([
     function CHECK_ASSUMPTIONS() {
       is(test.pcLocal.localMediaElements.length, 2,
@@ -78,11 +76,11 @@ runNetworkTest(async () => {
 
       var checkAudio = (analyser, fun) => analyser.waitForAnalysisSuccess(fun);
 
-      var freq1k = localAnalyser.binIndexForFrequency(1000);
+      var freq = localAnalyser.binIndexForFrequency(TEST_AUDIO_FREQ);
       var checkAudioEnabled = analyser =>
-        checkAudio(analyser, array => array[freq1k] > 200);
+        checkAudio(analyser, array => array[freq] > 200);
       var checkAudioDisabled = analyser =>
-        checkAudio(analyser, array => array[freq1k] < 50);
+        checkAudio(analyser, array => array[freq] < 50);
 
       info("Checking local audio enabled");
       await checkAudioEnabled(localAnalyser);

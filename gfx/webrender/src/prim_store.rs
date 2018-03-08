@@ -168,7 +168,7 @@ pub struct ScreenRect {
 #[derive(Debug)]
 pub struct PrimitiveMetadata {
     pub opacity: PrimitiveOpacity,
-    pub clip_sources: ClipSourcesHandle,
+    pub clip_sources: Option<ClipSourcesHandle>,
     pub prim_kind: PrimitiveKind,
     pub cpu_prim_index: SpecificPrimitiveIndex,
     pub gpu_location: GpuCacheHandle,
@@ -964,7 +964,7 @@ impl PrimitiveStore {
         local_rect: &LayerRect,
         local_clip_rect: &LayerRect,
         is_backface_visible: bool,
-        clip_sources: ClipSourcesHandle,
+        clip_sources: Option<ClipSourcesHandle>,
         tag: Option<ItemTag>,
         container: PrimitiveContainer,
     ) -> PrimitiveIndex {
@@ -1570,8 +1570,8 @@ impl PrimitiveStore {
         let transform = &prim_run_context.scroll_node.world_content_transform;
         let extra_clip =  {
             let metadata = &self.cpu_metadata[prim_index.0];
-            let prim_clips = frame_state.clip_store.get_mut(&metadata.clip_sources);
-            if prim_clips.has_clips() {
+            metadata.clip_sources.as_ref().map(|ref clip_sources| {
+                let prim_clips = frame_state.clip_store.get_mut(clip_sources);
                 prim_clips.update(
                     frame_state.gpu_cache,
                     frame_state.resource_cache,
@@ -1583,10 +1583,10 @@ impl PrimitiveStore {
                     combined_outer_rect = combined_outer_rect.and_then(|r| r.intersection(&outer));
                 }
 
-                Some(Arc::new(ClipChainNode {
+                Arc::new(ClipChainNode {
                     work_item: ClipWorkItem {
                         scroll_node_data_index: prim_run_context.scroll_node.node_data_index,
-                        clip_sources: metadata.clip_sources.weak(),
+                        clip_sources: clip_sources.weak(),
                         coordinate_system_id: prim_coordinate_system_id,
                     },
                     // The local_clip_rect a property of ClipChain nodes that are ClipScrollNodes.
@@ -1597,10 +1597,8 @@ impl PrimitiveStore {
                     screen_inner_rect,
                     screen_outer_rect: screen_outer_rect.unwrap_or(prim_screen_rect),
                     prev: None,
-                }))
-            } else {
-                None
-            }
+                })
+            })
         };
 
         // If everything is clipped out, then we don't need to render this primitive.

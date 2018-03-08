@@ -83,8 +83,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
     // Overflow a nsTransferable region by using the clipboard helper
     gClipboardHelper.copyString(Ipsum);
 
-    // Undefined private browsing mode should not cache to disk
-    is(getClipboardCacheFDCount(), initialFdCount, "should avoid caching to disk when PBM is undefined");
+    // gClipboardHelper.copyString also puts the data on the selection
+    // clipboard if the platform supports it.
+    var expectedFdDelta = Services.clipboard.supportsSelectionClipboard() ? 2 : 1;
+    // Undefined private browsing mode should cache to disk
+    is(getClipboardCacheFDCount(), initialFdCount + expectedFdDelta, "should cache to disk when PBM is undefined");
 
     // Sanitize environment again.
     gClipboardHelper.copyString(SHORT_STRING_NO_CACHE);

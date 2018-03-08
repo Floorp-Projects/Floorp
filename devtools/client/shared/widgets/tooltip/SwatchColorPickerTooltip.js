@@ -138,7 +138,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     this.emit("ready");
   }
 
-  _onSpectrumColorChange(event, rgba, cssColor) {
+  _onSpectrumColorChange(rgba, cssColor) {
     this._selectColor(cssColor);
   }
 

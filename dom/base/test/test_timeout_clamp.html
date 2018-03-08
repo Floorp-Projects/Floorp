@@ -74,9 +74,10 @@ async function runTests() {
   // Verify a setTimeout() chain clamps correctly
   let start = performance.now();
   await delayByTimeoutChain(expectedClampIteration);
-  let delta = performance.now() - start;
+  let stop = performance.now();
+  let delta = stop - start;
 
-  ok(delta >= clampDelayMS, "setTimeout() chain clamped");
+  ok(delta >= clampDelayMS, "setTimeout() chain clamped: " + stop + " - " + start + " = " + delta);
   ok(delta < (2*clampDelayMS), "setTimeout() chain did not clamp twice");
 
   await clearNestingLevel();
@@ -84,9 +85,10 @@ async function runTests() {
   // Verify setInterval() clamps correctly
   start = performance.now();
   await delayByInterval(expectedClampIteration);
-  delta = performance.now() - start;
+  stop = performance.now();
+  delta = stop - start;
 
-  ok(delta >= clampDelayMS, "setInterval() clamped");
+  ok(delta >= clampDelayMS, "setInterval() clamped: " + stop + " - " + start + " = " + delta);
   ok(delta < (2*clampDelayMS), "setInterval() did not clamp twice");
 
   await clearNestingLevel();
@@ -97,9 +99,10 @@ async function runTests() {
 
   start = performance.now();
   await delayByTimeoutChain(2 * expectedClampIteration);
-  delta = performance.now() - start;
+  stop = performance.now();
+  delta = stop - start;
 
-  ok(delta >= expectedDelay, "setTimeout() chain continued to clamp");
+  ok(delta >= expectedDelay, "setTimeout() chain continued to clamp: " + stop + " - " + start + " = " + delta);
 
   await clearNestingLevel();
 
@@ -107,15 +110,22 @@ async function runTests() {
   // iteration.
   start = performance.now();
   await delayByTimeoutChain(2 * expectedClampIteration);
-  delta = performance.now() - start;
+  stop = performance.now();
+  delta = stop - start;
 
-  ok(delta >= expectedDelay, "setInterval() continued to clamp");
+  ok(delta >= expectedDelay, "setInterval() continued to clamp: " + stop + " - " + start + " = " + delta);
 
   SimpleTest.finish();
 }
 
-SpecialPowers.pushPrefEnv({ 'set': [["dom.min_timeout_value", clampDelayMS]]},
-                          runTests);
+// It appears that it's possible to get unlucky with time jittering and fail this test.
+// If start is jittered upwards, everything executes very quickly, and delta has
+// a very high midpoint, we may have taken between 10 and 10.002 seconds to execute; but
+// it will appear to be 9.998. Turn off jitter (and add logging) to test this.
+SpecialPowers.pushPrefEnv({ 'set': [
+  ["dom.min_timeout_value", clampDelayMS],
+  ["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false],
+  ]}, runTests);
 </script>
 
 </body>
