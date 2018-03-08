@@ -170,6 +170,13 @@ IsValidIdentifierString(const nsACString& aStr, const size_t aMaxLength,
   return true;
 }
 
+JSString*
+ToJSString(JSContext* cx, const nsACString& aStr)
+{
+  const NS_ConvertUTF8toUTF16 wide(aStr);
+  return JS_NewUCStringCopyN(cx, wide.Data(), wide.Length());
+}
+
 } // namespace Common
 } // namespace Telemetry
 } // namespace mozilla
