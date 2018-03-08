@@ -16,20 +16,37 @@
 
 using namespace mozilla;
 
-#define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
-  NS_STATIC_ATOM_BUFFER(name_, value_)
-#include "nsCSSPseudoElementList.h"
-#undef CSS_PSEUDO_ELEMENT
+namespace mozilla {
+namespace detail {
+
+MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+extern constexpr CSSPseudoElementAtoms gCSSPseudoElementAtoms = {
+  #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+    NS_STATIC_ATOM_INIT_STRING(value_)
+  #include "nsCSSPseudoElementList.h"
+  #undef CSS_PSEUDO_ELEMENT
+
+  #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+    NS_STATIC_ATOM_INIT_ATOM(CSSPseudoElementAtoms, name_, value_)
+  #include "nsCSSPseudoElementList.h"
+  #undef CSS_PSEUDO_ELEMENT
+};
+MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+
+} // namespace detail
+} // namespace mozilla
 
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
-  NS_STATIC_ATOM_SUBCLASS_DEFN(nsICSSPseudoElement, nsCSSPseudoElements, name_)
+  NS_STATIC_ATOM_SUBCLASS_DEFN_PTR( \
+    nsICSSPseudoElement, nsCSSPseudoElements, name_)
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
 // Array of nsStaticAtomSetup for each of the pseudo-elements.
 static const nsStaticAtomSetup sCSSPseudoElementAtomSetup[] = {
   #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
-    NS_STATIC_ATOM_SUBCLASS_SETUP(nsCSSPseudoElements, name_)
+    NS_STATIC_ATOM_SUBCLASS_SETUP( \
+      detail::gCSSPseudoElementAtoms, nsCSSPseudoElements, name_)
   #include "nsCSSPseudoElementList.h"
   #undef CSS_PSEUDO_ELEMENT
 };
