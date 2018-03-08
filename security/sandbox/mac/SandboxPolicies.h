@@ -482,17 +482,32 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (allow sysctl-read)
       (allow sysctl-read
         (sysctl-name
+          "hw.activecpu"
           "hw.availcpu"
-          "hw.physicalcpu_max"
-          "hw.ncpu"
-          "hw.model"
           "hw.busfrequency_max"
           "hw.cpu64bit_capable"
+          "hw.cputype"
+          "hw.physicalcpu_max"
+          "hw.logicalcpu_max"
+          "hw.machine"
+          "hw.model"
+          "hw.ncpu"
+          "hw.optional.avx1_0"
+          "hw.optional.avx2_0"
+          "hw.optional.sse2"
+          "hw.optional.sse3"
+          "hw.optional.sse4_1"
+          "hw.optional.sse4_2"
           "hw.optional.x86_64"
-          "kern.memorystatus_level"
-          "kern.osrelease"
           "kern.hostname"
           "kern.maxfilesperproc"
+          "kern.memorystatus_level"
+          "kern.osrelease"
+          "kern.ostype"
+          "kern.osvariant_status"
+          "kern.osversion"
+          "kern.safeboot"
+          "kern.version"
           "vm.footprint_suspend")))
 
   ; Utilities for allowing access to home subdirectories
