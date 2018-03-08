@@ -1,1 +1,2 @@
 HTTP == accept-image-catchall.html accept-image-catchall-ref.html
+pref(image.downscale-during-decode.enabled,true) == 1443232-1.html about:blank
