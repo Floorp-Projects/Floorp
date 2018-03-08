@@ -82,6 +82,15 @@ Converter.prototype = {
     request.QueryInterface(Ci.nsIChannel);
     request.contentType = "text/html";
 
+    // Enforce strict CSP:
+    try {
+      request.QueryInterface(Ci.nsIHttpChannel);
+      request.setResponseHeader("Content-Security-Policy",
+        "default-src 'none' ; script-src resource:; ", false);
+    } catch (ex) {
+      // If this is not an HTTP channel we can't and won't do anything.
+    }
+
     // Don't honor the charset parameter and use UTF-8 (see bug 741776).
     request.contentCharset = "UTF-8";
     this.decoder = new TextDecoder("UTF-8");
@@ -93,10 +102,6 @@ Converter.prototype = {
     // force setting it to a null principal to avoid it being same-
     // origin with (other) content.
     request.loadInfo.resetPrincipalToInheritToNullPrincipal();
-
-    // Because the JSON might be served with a CSP, we instrument
-    // the loadinfo so the Document can discard such a CSP.
-    request.loadInfo.allowDocumentToBeAgnosticToCSP = true;
 
     // Start the request.
     this.listener.onStartRequest(request, context);
