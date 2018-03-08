@@ -5,6 +5,7 @@
 
 #include "nsHTMLTags.h"
 #include "nsCRT.h"
+#include "nsDataHashtable.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStaticAtom.h"
@@ -24,31 +25,8 @@ const char16_t* const nsHTMLTags::sTagUnicodeTable[] = {
 #undef HTML_OTHER
 
 int32_t nsHTMLTags::gTableRefCount;
-PLHashTable* nsHTMLTags::gTagTable;
-PLHashTable* nsHTMLTags::gTagAtomTable;
-
-// char16_t* -> id hash
-static PLHashNumber
-HTMLTagsHashCodeUCPtr(const void *key)
-{
-  return HashString(static_cast<const char16_t*>(key));
-}
-
-static int
-HTMLTagsKeyCompareUCPtr(const void *key1, const void *key2)
-{
-  const char16_t *str1 = (const char16_t *)key1;
-  const char16_t *str2 = (const char16_t *)key2;
-
-  return nsCRT::strcmp(str1, str2) == 0;
-}
-
-// nsAtom* -> id hash
-static PLHashNumber
-HTMLTagsHashCodeAtom(const void *key)
-{
-  return NS_PTR_TO_INT32(key) >> 2;
-}
+nsHTMLTags::TagStringHash* nsHTMLTags::gTagTable;
+nsHTMLTags::TagAtomHash* nsHTMLTags::gTagAtomTable;
 
 #define NS_HTMLTAG_NAME_MAX_LENGTH 10
 
@@ -114,15 +92,8 @@ nsHTMLTags::AddRefTable(void)
   if (gTableRefCount++ == 0) {
     NS_ASSERTION(!gTagTable && !gTagAtomTable, "pre existing hash!");
 
-    gTagTable = PL_NewHashTable(64, HTMLTagsHashCodeUCPtr,
-                                HTMLTagsKeyCompareUCPtr, PL_CompareValues,
-                                nullptr, nullptr);
-    NS_ENSURE_TRUE(gTagTable, NS_ERROR_OUT_OF_MEMORY);
-
-    gTagAtomTable = PL_NewHashTable(64, HTMLTagsHashCodeAtom,
-                                    PL_CompareValues, PL_CompareValues,
-                                    nullptr, nullptr);
-    NS_ENSURE_TRUE(gTagAtomTable, NS_ERROR_OUT_OF_MEMORY);
+    gTagTable = new TagStringHash(64);
+    gTagAtomTable = new TagAtomHash(64);
 
     // Fill in gTagTable with the above static char16_t strings as
     // keys and the value of the corresponding enum as the value in
@@ -130,11 +101,14 @@ nsHTMLTags::AddRefTable(void)
 
     int32_t i;
     for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      PL_HashTableAdd(gTagTable, sTagUnicodeTable[i],
-                      NS_INT32_TO_PTR(i + 1));
-
-      PL_HashTableAdd(gTagAtomTable, sTagAtomTable[i],
-                      NS_INT32_TO_PTR(i + 1));
+      const char16_t* tagName = sTagUnicodeTable[i];
+      const nsHTMLTag tagValue = static_cast<nsHTMLTag>(i + 1);
+      // We use AssignLiteral here to avoid a string copy. This is okay
+      // because this is truly static data.
+      nsString tmp;
+      tmp.AssignLiteral(tagName, nsString::char_traits::length(tagName));
+      gTagTable->Put(tmp, tagValue);
+      gTagAtomTable->Put(sTagAtomTable[i], tagValue);
     }
   }
 
@@ -146,14 +120,10 @@ void
 nsHTMLTags::ReleaseTable(void)
 {
   if (0 == --gTableRefCount) {
-    if (gTagTable) {
-      // Nothing to delete/free in this table, just destroy the table.
-
-      PL_HashTableDestroy(gTagTable);
-      PL_HashTableDestroy(gTagAtomTable);
-      gTagTable = nullptr;
-      gTagAtomTable = nullptr;
-    }
+    delete gTagTable;
+    delete gTagAtomTable;
+    gTagTable = nullptr;
+    gTagAtomTable = nullptr;
   }
 }
 
@@ -167,33 +137,28 @@ nsHTMLTags::StringTagToId(const nsAString& aTagName)
     return eHTMLTag_userdefined;
   }
 
-  char16_t buf[NS_HTMLTAG_NAME_MAX_LENGTH + 1];
+  // Setup a stack allocated string buffer with the appropriate length.
+  nsAutoString lowerCase;
+  lowerCase.SetLength(length);
 
-  nsAString::const_iterator iter;
-  uint32_t i = 0;
-  char16_t c;
-
-  aTagName.BeginReading(iter);
+  // Operate on the raw buffers to avoid bounds checks.
+  auto src = aTagName.BeginReading();
+  auto dst = lowerCase.BeginWriting();
 
   // Fast lowercasing-while-copying of ASCII characters into a
-  // char16_t buffer
+  // nsString buffer.
 
-  while (i < length) {
-    c = *iter;
+  for (uint32_t i = 0; i < length; i++) {
+    char16_t c = src[i];
 
     if (c <= 'Z' && c >= 'A') {
       c |= 0x20; // Lowercase the ASCII character.
     }
 
-    buf[i] = c; // Copy ASCII character.
-
-    ++i;
-    ++iter;
+    dst[i] = c; // Copy ASCII character.
   }
 
-  buf[i] = 0;
-
-  return CaseSensitiveStringTagToId(buf);
+  return CaseSensitiveStringTagToId(lowerCase);
 }
 
 #ifdef DEBUG
@@ -208,14 +173,15 @@ nsHTMLTags::TestTagTable()
      // Make sure we can find everything we are supposed to
      for (int i = 0; i < NS_HTML_TAG_MAX; ++i) {
        tag = sTagUnicodeTable[i];
-       id = StringTagToId(nsDependentString(tag));
+       const nsAString& tagString = nsDependentString(tag);
+       id = StringTagToId(tagString);
        NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");
 
-       nsAutoString uname(tag);
+       nsAutoString uname(tagString);
        ToUpperCase(uname);
        NS_ASSERTION(id == StringTagToId(uname), "wrong id");
 
-       NS_ASSERTION(id == CaseSensitiveStringTagToId(tag), "wrong id");
+       NS_ASSERTION(id == CaseSensitiveStringTagToId(tagString), "wrong id");
 
        atom = NS_Atomize(tag);
        NS_ASSERTION(id == CaseSensitiveAtomTagToId(atom), "wrong id");

@@ -935,14 +935,14 @@ LIRGeneratorX86Shared::visitSimdGeneralShuffle(MSimdGeneralShuffle* ins)
 #else
         LDefinition t = temp();
 #endif
-        lir = new (alloc()) LSimdGeneralShuffleI(t, numOperands);
+        lir = allocateVariadic<LSimdGeneralShuffleI>(numOperands, t);
     } else if (ins->type() == MIRType::Float32x4) {
-        lir = new (alloc()) LSimdGeneralShuffleF(temp(), numOperands);
+        lir = allocateVariadic<LSimdGeneralShuffleF>(numOperands, temp());
     } else {
         MOZ_CRASH("Unknown SIMD kind when doing a shuffle");
     }
 
-    if (!lir->init(alloc()))
+    if (!lir)
         return;
 
     for (unsigned i = 0; i < ins->numVectors(); i++) {

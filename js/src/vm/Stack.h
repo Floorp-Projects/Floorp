@@ -241,8 +241,6 @@ class AbstractFramePtr
     inline bool isModuleFrame() const;
     inline bool isEvalFrame() const;
     inline bool isDebuggerEvalFrame() const;
-    inline bool hasCachedSavedFrame() const;
-    inline void setHasCachedSavedFrame();
 
     inline bool hasScript() const;
     inline JSScript* script() const;
@@ -1170,17 +1168,57 @@ struct DefaultHasher<AbstractFramePtr> {
 class LiveSavedFrameCache
 {
   public:
-    using FramePtr = mozilla::Variant<AbstractFramePtr, jit::CommonFrameLayout*>;
+    // The address of a live frame for which we can cache SavedFrames: it has a
+    // 'hasCachedSavedFrame' bit we can examine and set, and can be converted to
+    // a Key to index the cache.
+    class FramePtr {
+        // We use jit::CommonFrameLayout for both Baseline frames and Ion
+        // physical frames.
+        using Ptr = mozilla::Variant<InterpreterFrame*,
+                                     jit::CommonFrameLayout*,
+                                     jit::RematerializedFrame*,
+                                     wasm::DebugFrame*>;
+
+        Ptr ptr;
+
+        template<typename Frame>
+        explicit FramePtr(Frame ptr) : ptr(ptr) { }
+
+        struct HasCachedMatcher;
+        struct SetHasCachedMatcher;
+
+      public:
+        static inline mozilla::Maybe<FramePtr> create(const FrameIter& iter);
+
+        inline bool hasCachedSavedFrame() const;
+        inline void setHasCachedSavedFrame();
+
+        bool operator==(const FramePtr& rhs) const { return rhs.ptr == this->ptr; }
+        bool operator!=(const FramePtr& rhs) const { return !(rhs == *this); }
+    };
 
   private:
+    // A key in the cache: the address of a frame, live or dead, for which we
+    // can cache SavedFrames. Since the pointer may not be live, the only
+    // operation this type permits is comparison.
+    class Key {
+        FramePtr framePtr;
+
+      public:
+        MOZ_IMPLICIT Key(const FramePtr& framePtr) : framePtr(framePtr) { }
+
+        bool operator==(const Key& rhs) const { return rhs.framePtr == this->framePtr; }
+        bool operator!=(const Key& rhs) const { return !(rhs == *this); }
+    };
+
     struct Entry
     {
-        const FramePtr       framePtr;
+        const Key            key;
         const jsbytecode*    pc;
         HeapPtr<SavedFrame*> savedFrame;
 
-        Entry(const FramePtr& framePtr, const jsbytecode* pc, SavedFrame* savedFrame)
-          : framePtr(framePtr)
+        Entry(const Key& key, const jsbytecode* pc, SavedFrame* savedFrame)
+          : key(key)
           , pc(pc)
           , savedFrame(savedFrame)
         { }
@@ -1219,10 +1257,10 @@ class LiveSavedFrameCache
         return true;
     }
 
-    static mozilla::Maybe<FramePtr> getFramePtr(const FrameIter& iter);
     void trace(JSTracer* trc);
 
-    void find(JSContext* cx, FrameIter& frameIter, MutableHandleSavedFrame frame) const;
+    void find(JSContext* cx, FramePtr& frameptr, const jsbytecode* pc,
+              MutableHandleSavedFrame frame) const;
     bool insert(JSContext* cx, FramePtr& framePtr, const jsbytecode* pc,
                 HandleSavedFrame savedFrame);
 };
@@ -1939,15 +1977,11 @@ class FrameIter
 
     inline bool isIon() const;
     inline bool isBaseline() const;
-    inline bool isPhysicalIonFrame() const;
+    inline bool isPhysicalJitFrame() const;
 
     bool isEvalFrame() const;
     bool isFunctionFrame() const;
     bool hasArgs() const { return isFunctionFrame(); }
-
-    // These two methods may not be called with asm frames.
-    inline bool hasCachedSavedFrame() const;
-    inline void setHasCachedSavedFrame();
 
     ScriptSource* scriptSource() const;
     const char* filename() const;
@@ -2039,8 +2073,8 @@ class FrameIter
     // This can only be called when isInterp():
     inline InterpreterFrame* interpFrame() const;
 
-    // This can only be called when isPhysicalIonFrame():
-    inline jit::CommonFrameLayout* physicalIonFrame() const;
+    // This can only be called when isPhysicalJitFrame():
+    inline jit::CommonFrameLayout* physicalJitFrame() const;
 
     // This is used to provide a raw interface for debugging.
     void* rawFramePtr() const;
@@ -2273,17 +2307,28 @@ FrameIter::interpFrame() const
 }
 
 inline bool
-FrameIter::isPhysicalIonFrame() const
+FrameIter::isPhysicalJitFrame() const
 {
-    return isJSJit() &&
-           jsJitFrame().isIonScripted() &&
-           ionInlineFrames_.frameNo() == 0;
+    if (!isJSJit())
+        return false;
+
+    auto& jitFrame = jsJitFrame();
+
+    if (jitFrame.isBaselineJS())
+        return true;
+
+    if (jitFrame.isIonScripted()) {
+        // Only the bottom of a group of inlined Ion frames is a physical frame.
+        return ionInlineFrames_.frameNo() == 0;
+    }
+
+    return false;
 }
 
 inline jit::CommonFrameLayout*
-FrameIter::physicalIonFrame() const
+FrameIter::physicalJitFrame() const
 {
-    MOZ_ASSERT(isPhysicalIonFrame());
+    MOZ_ASSERT(isPhysicalJitFrame());
     return jsJitFrame().current();
 }
 

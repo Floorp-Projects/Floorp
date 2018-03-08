@@ -2104,7 +2104,6 @@ public:
     , mForceNotVisible(false)
     , mDisableSubpixelAA(false)
     , mReusedItem(false)
-    , mMergedItem(false)
     , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
@@ -2178,7 +2177,6 @@ public:
     , mForceNotVisible(aOther.mForceNotVisible)
     , mDisableSubpixelAA(aOther.mDisableSubpixelAA)
     , mReusedItem(false)
-    , mMergedItem(false)
     , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
@@ -2826,16 +2824,6 @@ public:
     mReusedItem = aReused;
   }
 
-  bool IsMerged() const
-  {
-    return mMergedItem;
-  }
-
-  void SetMerged()
-  {
-    mMergedItem = true;
-  }
-
   virtual bool CanBeReused() const { return true; }
 
   virtual nsIFrame* GetDependentFrame()
@@ -2880,7 +2868,6 @@ protected:
   bool      mForceNotVisible;
   bool      mDisableSubpixelAA;
   bool      mReusedItem;
-  bool      mMergedItem;
   bool      mBackfaceHidden;
 #ifdef MOZ_DUMP_PAINTING
   // True if this frame has been painted.

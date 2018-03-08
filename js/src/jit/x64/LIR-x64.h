@@ -15,7 +15,9 @@ namespace jit {
 class LUnboxBase : public LInstructionHelper<1, 1, 0>
 {
   public:
-    explicit LUnboxBase(const LAllocation& input) {
+    LUnboxBase(LNode::Opcode op, const LAllocation& input)
+      : LInstructionHelper<1, 1, 0>(op)
+    {
         setOperand(0, input);
     }
 
@@ -31,7 +33,7 @@ class LUnbox : public LUnboxBase {
     LIR_HEADER(Unbox)
 
     explicit LUnbox(const LAllocation& input)
-      : LUnboxBase(input)
+      : LUnboxBase(classOpcode, input)
     { }
 
     const char* extraName() const {
@@ -46,7 +48,7 @@ class LUnboxFloatingPoint : public LUnboxBase {
     LIR_HEADER(UnboxFloatingPoint)
 
     LUnboxFloatingPoint(const LAllocation& input, MIRType type)
-      : LUnboxBase(input),
+      : LUnboxBase(classOpcode, input),
         type_(type)
     { }
 
@@ -64,7 +66,9 @@ class LWasmUint32ToDouble : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(WasmUint32ToDouble)
 
-    explicit LWasmUint32ToDouble(const LAllocation& input) {
+    explicit LWasmUint32ToDouble(const LAllocation& input)
+      : LInstructionHelper(classOpcode)
+    {
         setOperand(0, input);
     }
 };
@@ -75,7 +79,9 @@ class LWasmUint32ToFloat32 : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(WasmUint32ToFloat32)
 
-    explicit LWasmUint32ToFloat32(const LAllocation& input) {
+    explicit LWasmUint32ToFloat32(const LAllocation& input)
+      : LInstructionHelper(classOpcode)
+    {
         setOperand(0, input);
     }
 };
@@ -85,7 +91,9 @@ class LDivOrModI64 : public LBinaryMath<1>
   public:
     LIR_HEADER(DivOrModI64)
 
-    LDivOrModI64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+    LDivOrModI64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp)
+      : LBinaryMath(classOpcode)
+    {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
@@ -125,7 +133,9 @@ class LUDivOrModI64 : public LBinaryMath<1>
   public:
     LIR_HEADER(UDivOrModI64);
 
-    LUDivOrModI64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+    LUDivOrModI64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp)
+      : LBinaryMath(classOpcode)
+    {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
@@ -163,7 +173,9 @@ class LWasmTruncateToInt64 : public LInstructionHelper<1, 1, 1>
   public:
     LIR_HEADER(WasmTruncateToInt64);
 
-    LWasmTruncateToInt64(const LAllocation& in, const LDefinition& temp) {
+    LWasmTruncateToInt64(const LAllocation& in, const LDefinition& temp)
+      : LInstructionHelper(classOpcode)
+    {
         setOperand(0, in);
         setTemp(0, temp);
     }

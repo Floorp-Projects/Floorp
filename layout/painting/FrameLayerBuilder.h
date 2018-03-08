@@ -510,10 +510,10 @@ public:
    * aItem must have an underlying frame.
    * @param aTopLeft offset from active scrolled root to reference frame
    */
-  void AddPaintedDisplayItem(PaintedLayerData* aLayer,
+  void AddPaintedDisplayItem(PaintedLayerData* aLayerData,
                              AssignedDisplayItem& aAssignedDisplayItem,
                              ContainerState& aContainerState,
-                             const nsPoint& aTopLeft);
+                             Layer* aLayer);
 
   /**
    * Calls GetOldLayerForFrame on the underlying frame of the display item,
@@ -589,14 +589,6 @@ public:
    * aFrame and that container layer.
    */
   static gfxSize GetPaintedLayerScaleForFrame(nsIFrame* aFrame);
-
-  /**
-   * Stores a Layer as the dedicated layer in the DisplayItemData for a given frame/key pair.
-   *
-   * Used when we optimize a PaintedLayer into an ImageLayer and want to retroactively update the
-   * DisplayItemData so we can retrieve the layer from within layout.
-   */
-  void StoreOptimizedLayerForFrame(nsDisplayItem* aItem, Layer* aLayer);
 
   static void RemoveFrameFromLayerManager(const nsIFrame* aFrame,
                                           SmallPointerArray<DisplayItemData>& aArray);
