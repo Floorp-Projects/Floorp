@@ -5,20 +5,29 @@
 
 package org.mozilla.gecko.webapps;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsIntent;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
@@ -205,7 +214,7 @@ public class WebAppActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
-        mGeckoSession.close();
+        mGeckoSession.closeWindow();
         mTextSelection.destroy();
         mFormAssistPopup.destroy();
         mDoorHangerPopup.destroy();
@@ -370,8 +379,8 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onLoadRequest(final GeckoSession session, final String urlStr,
-                                 final int target) {
+    public boolean onLoadUri(final GeckoSession session, final String urlStr,
+                             final TargetWindow where) {
         final Uri uri = Uri.parse(urlStr);
         if (uri == null) {
             // We can't really handle this, so deny it?
@@ -379,7 +388,7 @@ public class WebAppActivity extends AppCompatActivity
             return true;
         }
 
-        if (mManifest.isInScope(uri) && target != TARGET_WINDOW_NEW) {
+        if (mManifest.isInScope(uri) && where != TargetWindow.NEW) {
             // This is in scope and wants to load in the same frame, so
             // let Gecko handle it.
             return false;
@@ -421,7 +430,7 @@ public class WebAppActivity extends AppCompatActivity
     @Override
     public void onNewSession(final GeckoSession session, final String uri,
                              final GeckoSession.Response<GeckoSession> response) {
-        // We should never get here because we abort loads that need a new session in onLoadRequest()
+        // We should never get here because we abort loads that need a new session in onLoadUri()
         throw new IllegalStateException("Unexpected new session");
     }
 

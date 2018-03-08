@@ -19,8 +19,10 @@ import android.view.WindowManager;
 import java.util.Locale;
 
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
 import org.mozilla.geckoview.GeckoSession.Response;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.geckoview.GeckoView;
@@ -184,7 +186,7 @@ public class GeckoViewActivity extends Activity {
         @Override
         public void onCloseRequest(final GeckoSession session) {
             if (session != mGeckoSession) {
-                session.close();
+                session.closeWindow();
             }
         }
 
@@ -346,9 +348,9 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public boolean onLoadRequest(final GeckoSession session, final String uri,
-                                     final int target) {
-            Log.d(LOGTAG, "onLoadRequest=" + uri + " where=" + target);
+        public boolean onLoadUri(final GeckoSession session, final String uri,
+                                 final TargetWindow where) {
+            Log.d(LOGTAG, "onLoadUri=" + uri + " where=" + where);
             return false;
         }
 

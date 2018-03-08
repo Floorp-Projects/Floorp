@@ -263,7 +263,7 @@ public class GeckoView extends FrameLayout {
         }
 
         if (!mSession.isOpen()) {
-            mSession.open(getContext().getApplicationContext());
+            mSession.openWindow(getContext().getApplicationContext());
         }
 
         mSession.getTextInputController().setView(this);
@@ -283,7 +283,7 @@ public class GeckoView extends FrameLayout {
         }
 
         if (mSession != null && mSession.isOpen()) {
-            mSession.close();
+            mSession.closeWindow();
         }
     }
 
