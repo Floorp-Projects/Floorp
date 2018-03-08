@@ -14,7 +14,7 @@ fn main() {
 }
 
 fn child_main() {
-    env_logger::init();
+    env_logger::init().unwrap();
     info!("XYZ Message");
 }
 
