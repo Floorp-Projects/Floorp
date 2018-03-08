@@ -19,8 +19,7 @@ const { createValueGrip, stringIsLong } = require("devtools/server/actors/object
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const ErrorDocs = require("devtools/server/actors/errordocs");
 
-loader.lazyRequireGetter(this, "NetworkMonitor", "devtools/shared/webconsole/network-monitor", true);
-loader.lazyRequireGetter(this, "NetworkMonitorChild", "devtools/shared/webconsole/network-monitor", true);
+loader.lazyRequireGetter(this, "NetworkMonitorActor", "devtools/server/actors/network-monitor", true);
 loader.lazyRequireGetter(this, "NetworkEventActor", "devtools/server/actors/network-event", true);
 loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/shared/webconsole/network-monitor", true);
@@ -289,16 +288,6 @@ WebConsoleActor.prototype =
   consoleAPIListener: null,
 
   /**
-   * The NetworkMonitor instance.
-   */
-  networkMonitor: null,
-
-  /**
-   * The NetworkMonitor instance living in the same (child) process.
-   */
-  networkMonitorChild: null,
-
-  /**
    * The ConsoleProgressListener instance.
    */
   consoleProgressListener: null,
@@ -354,17 +343,20 @@ WebConsoleActor.prototype =
       this.consoleServiceListener.destroy();
       this.consoleServiceListener = null;
     }
+    if (this.networkMonitorActor) {
+      this.networkMonitorActor.destroy();
+      this.networkMonitorActor = null;
+    }
+    if (this.networkMonitorActorId) {
+      this.networkMonitorActorId = null;
+    }
+    if (this.networkMonitorChildActor) {
+      this.networkMonitorChildActor.destroy();
+      this.networkMonitorChildActor = null;
+    }
     if (this.consoleAPIListener) {
       this.consoleAPIListener.destroy();
       this.consoleAPIListener = null;
-    }
-    if (this.networkMonitor) {
-      this.networkMonitor.destroy();
-      this.networkMonitor = null;
-    }
-    if (this.networkMonitorChild) {
-      this.networkMonitorChild.destroy();
-      this.networkMonitorChild = null;
     }
     if (this.stackTraceCollector) {
       this.stackTraceCollector.destroy();
@@ -575,7 +567,7 @@ WebConsoleActor.prototype =
    * @return object
    *         The response object which holds the startedListeners array.
    */
-  startListeners: function(request) {
+  startListeners: async function(request) {
     const startedListeners = [];
     const window = !this.parentActor.isRootActor ? this.window : null;
     let messageManager = null;
@@ -623,7 +615,7 @@ WebConsoleActor.prototype =
           if (isWorker) {
             break;
           }
-          if (!this.networkMonitor) {
+          if (!this.networkMonitorActorId && !this.networkMonitorActor) {
             // Create a StackTraceCollector that's going to be shared both by
             // the NetworkMonitorChild (getting messages about requests from
             // parent) and by the NetworkMonitor that directly watches service
@@ -634,16 +626,23 @@ WebConsoleActor.prototype =
             if (messageManager && processBoundary) {
               // Start a network monitor in the parent process to listen to
               // most requests than happen in parent
-              this.networkMonitor =
-                new NetworkMonitorChild(this.parentActor.outerWindowID,
-                                        messageManager, this.conn, this);
-              this.networkMonitor.init();
+              this.networkMonitorActorId = await this.conn.spawnActorInParentProcess(
+                this.actorID, {
+                  module: "devtools/server/actors/network-monitor",
+                  constructor: "NetworkMonitorActor",
+                  args: [
+                    { outerWindowID: this.parentActor.outerWindowID },
+                    this.actorID
+                  ],
+                });
+
               // Spawn also one in the child to listen to service workers
-              this.networkMonitorChild = new NetworkMonitor({ window }, this);
-              this.networkMonitorChild.init();
+              this.networkMonitorChildActor = new NetworkMonitorActor(this.conn,
+                { window },
+                this.actorID);
             } else {
-              this.networkMonitor = new NetworkMonitor({ window }, this);
-              this.networkMonitor.init();
+              this.networkMonitorActor = new NetworkMonitorActor(this.conn, { window },
+                this.actorID);
             }
           }
           startedListeners.push(listener);
@@ -743,13 +742,16 @@ WebConsoleActor.prototype =
           stoppedListeners.push(listener);
           break;
         case "NetworkActivity":
-          if (this.networkMonitor) {
-            this.networkMonitor.destroy();
-            this.networkMonitor = null;
+          if (this.networkMonitorActor) {
+            this.networkMonitorActor.destroy();
+            this.networkMonitorActor = null;
           }
-          if (this.networkMonitorChild) {
-            this.networkMonitorChild.destroy();
-            this.networkMonitorChild = null;
+          if (this.networkMonitorActorId) {
+            this.networkMonitorActorId = null;
+          }
+          if (this.networkMonitorChildActor) {
+            this.networkMonitorChildActor.destroy();
+            this.networkMonitorChildActor = null;
           }
           if (this.stackTraceCollector) {
             this.stackTraceCollector.destroy();
