@@ -16,6 +16,17 @@ LOCALIZED_GENERATED_FILES += [ 'bar{AB_rCD}.xyz' ]
 bar = LOCALIZED_GENERATED_FILES['bar{AB_rCD}.xyz']
 bar.script = 'generate-foo.py'
 bar.inputs = [
-    'inner/locales/en-US/localized-input',
+    # Absolute source path.
+    '/inner/locales/en-US/localized-input',
+    'non-localized-input',
+]
+
+LOCALIZED_GENERATED_FILES += [ 'zot{AB_rCD}.xyz' ]
+
+bar = LOCALIZED_GENERATED_FILES['zot{AB_rCD}.xyz']
+bar.script = 'generate-foo.py'
+bar.inputs = [
+    # Relative source path.
+    'locales/en-US/localized-input',
     'non-localized-input',
 ]
