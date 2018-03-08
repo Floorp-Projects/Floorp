@@ -1,7 +1,10 @@
 use mozprofile::preferences::Pref;
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 79] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 80] = [
+        // Make sure Shield doesn't hit the network.
+        ("app.normandy.api_url", Pref::new("")),
+
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
@@ -145,7 +148,8 @@ lazy_static! {
         ("extensions.installDistroAddons", Pref::new(false)),
 
         // Make sure Shield doesn't hit the network.
-        ("app.normandy.api_url", Pref::new("")),
+        // Removed in Firefox 60.
+        ("extensions.shield-recipe-client.api_url", Pref::new("")),
 
         ("extensions.showMismatchUI", Pref::new(false)),
 
