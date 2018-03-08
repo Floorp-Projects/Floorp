@@ -6,11 +6,8 @@ registerCleanupFunction(function() {
 
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   await gBrowser.contentWindow.gMainPane._selectDefaultLanguageGroupPromise;
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let contentWindow = gBrowser.contentWindow;
   var langGroup = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString).data;
   is(contentWindow.Preferences.get("font.language.group").value, langGroup,

@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-cpows-in-tests */
 
 add_task(async function test_reports_section() {
   let prefs = await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});

@@ -136,7 +136,6 @@ add_task(async function() {
   is(gBrowser.currentURI.spec, "about:addons", "Foreground tab is at about:addons");
 
   const VIEW = "addons://list/extension";
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let win = gBrowser.selectedBrowser.contentWindow;
   ok(!win.gViewController.isLoading, "about:addons view is fully loaded");
   is(win.gViewController.currentViewId, VIEW, "about:addons is at extensions list");
@@ -172,7 +171,6 @@ add_task(async function() {
   // Again we should be at the extentions list in about:addons
   is(gBrowser.currentURI.spec, "about:addons", "Foreground tab is at about:addons");
 
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   win = gBrowser.selectedBrowser.contentWindow;
   ok(!win.gViewController.isLoading, "about:addons view is fully loaded");
   is(win.gViewController.currentViewId, VIEW, "about:addons is at extensions list");

@@ -1,8 +1,5 @@
 "use strict";
 
-// Disable CPOW checks because they have false-positives from use of ContentTask in a helper.
-/* eslint-disable mozilla/no-cpows-in-tests */
-
 add_task(async function test_serializeRequest_displayItems() {
   const testTask = ({methodData, details}) => {
     let contentWin = Cu.waiveXrays(content);
