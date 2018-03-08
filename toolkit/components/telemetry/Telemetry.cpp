@@ -8,7 +8,7 @@
 
 #include <prio.h>
 #include <prproces.h>
-#ifdef XP_LINUX
+#if defined(XP_UNIX) && !defined(XP_DARWIN)
 #include <time.h>
 #else
 #include <chrono>
@@ -1674,7 +1674,7 @@ TelemetryImpl::MsSinceProcessStart(double* aResult)
 NS_IMETHODIMP
 TelemetryImpl::MsSystemNow(double* aResult)
 {
-#ifdef XP_LINUX
+#if defined(XP_UNIX) && !defined(XP_DARWIN)
   timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
   *aResult = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
@@ -1682,7 +1682,7 @@ TelemetryImpl::MsSystemNow(double* aResult)
   using namespace std::chrono;
   milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
   *aResult = static_cast<double>(ms.count());
-#endif // XP_LINUX
+#endif // XP_UNIX && !XP_DARWIN
 
   return NS_OK;
 }
