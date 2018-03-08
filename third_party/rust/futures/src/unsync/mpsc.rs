@@ -13,7 +13,11 @@ use std::mem;
 use std::rc::{Rc, Weak};
 
 use task::{self, Task};
-use {Async, AsyncSink, Poll, StartSend, Sink, Stream};
+use future::Executor;
+use sink::SendAll;
+use resultstream::{self, Results};
+use unsync::oneshot;
+use {Async, AsyncSink, Future, Poll, StartSend, Sink, Stream};
 
 /// Creates a bounded in-memory channel with buffered storage.
 ///
@@ -31,7 +35,6 @@ fn channel_<T>(buffer: Option<usize>) -> (Sender<T>, Receiver<T>) {
         capacity: buffer,
         blocked_senders: VecDeque::new(),
         blocked_recv: None,
-        sender_count: 1,
     }));
     let sender = Sender { shared: Rc::downgrade(&shared) };
     let receiver = Receiver { state: State::Open(shared) };
@@ -44,8 +47,6 @@ struct Shared<T> {
     capacity: Option<usize>,
     blocked_senders: VecDeque<Task>,
     blocked_recv: Option<Task>,
-    // TODO: Redundant to Rc::weak_count; use that if/when stabilized
-    sender_count: usize,
 }
 
 /// The transmission end of a channel.
@@ -60,20 +61,19 @@ impl<T> Sender<T> {
     fn do_send(&self, msg: T) -> StartSend<T, SendError<T>> {
         let shared = match self.shared.upgrade() {
             Some(shared) => shared,
-            None => return Err(SendError(msg)),
+            None => return Err(SendError(msg)), // receiver was dropped
         };
         let mut shared = shared.borrow_mut();
 
         match shared.capacity {
             Some(capacity) if shared.buffer.len() == capacity => {
-                shared.blocked_senders.push_back(task::park());
+                shared.blocked_senders.push_back(task::current());
                 Ok(AsyncSink::NotReady(msg))
             }
             _ => {
                 shared.buffer.push_back(msg);
                 if let Some(task) = shared.blocked_recv.take() {
-                    drop(shared);
-                    task.unpark();
+                    task.notify();
                 }
                 Ok(AsyncSink::Ready)
             }
@@ -83,11 +83,7 @@ impl<T> Sender<T> {
 
 impl<T> Clone for Sender<T> {
     fn clone(&self) -> Self {
-        let result = Sender { shared: self.shared.clone() };
-        if let Some(shared) = self.shared.upgrade() {
-            shared.borrow_mut().sender_count += 1;
-        }
-        result
+        Sender { shared: self.shared.clone() }
     }
 }
 
@@ -114,13 +110,10 @@ impl<T> Drop for Sender<T> {
             Some(shared) => shared,
             None => return,
         };
-        let mut shared = shared.borrow_mut();
-        shared.sender_count -= 1;
-        if shared.sender_count == 0 {
-            if let Some(task) = shared.blocked_recv.take() {
+        if Rc::weak_count(&shared) == 0 {
+            if let Some(task) = shared.borrow_mut().blocked_recv.take() {
                 // Wake up receiver as its stream has ended
-                drop(shared);
-                task.unpark();
+                task.notify();
             }
         }
     }
@@ -159,7 +152,7 @@ impl<T> Receiver<T> {
         };
         self.state = State::Closed(items);
         for task in blockers {
-            task.unpark();
+            task.notify();
         }
     }
 }
@@ -186,11 +179,11 @@ impl<T> Stream for Receiver<T> {
         if let Some(msg) = shared.buffer.pop_front() {
             if let Some(task) = shared.blocked_senders.pop_front() {
                 drop(shared);
-                task.unpark();
+                task.notify();
             }
             Ok(Async::Ready(Some(msg)))
         } else {
-            shared.blocked_recv = Some(task::park());
+            shared.blocked_recv = Some(task::current());
             Ok(Async::NotReady)
         }
     }
@@ -252,7 +245,18 @@ impl<T> UnboundedSender<T> {
     /// This is an unbounded sender, so this function differs from `Sink::send`
     /// by ensuring the return type reflects that the channel is always ready to
     /// receive messages.
+    #[deprecated(note = "renamed to `unbounded_send`")]
+    #[doc(hidden)]
     pub fn send(&self, msg: T) -> Result<(), SendError<T>> {
+        self.unbounded_send(msg)
+    }
+
+    /// Sends the provided message along this channel.
+    ///
+    /// This is an unbounded sender, so this function differs from `Sink::send`
+    /// by ensuring the return type reflects that the channel is always ready to
+    /// receive messages.
+    pub fn unbounded_send(&self, msg: T) -> Result<(), SendError<T>> {
         let shared = match self.0.shared.upgrade() {
             Some(shared) => shared,
             None => return Err(SendError(msg)),
@@ -261,7 +265,7 @@ impl<T> UnboundedSender<T> {
         shared.buffer.push_back(msg);
         if let Some(task) = shared.blocked_recv.take() {
             drop(shared);
-            task.unpark();
+            task.notify();
         }
         Ok(())
     }
@@ -328,5 +332,139 @@ impl<T> SendError<T> {
     /// Returns the message that was attempted to be sent but failed.
     pub fn into_inner(self) -> T {
         self.0
+    }
+}
+
+/// Handle returned from the `spawn` function.
+///
+/// This handle is a stream that proxies a stream on a separate `Executor`.
+/// Created through the `mpsc::spawn` function, this handle will produce
+/// the same values as the proxied stream, as they are produced in the executor,
+/// and uses a limited buffer to exert back-pressure on the remote stream.
+///
+/// If this handle is dropped, then the stream will no longer be polled and is
+/// scheduled to be dropped.
+pub struct SpawnHandle<Item, Error> {
+    inner: Receiver<Result<Item, Error>>,
+    _cancel_tx: oneshot::Sender<()>,
+}
+
+/// Type of future which `Executor` instances must be able to execute for `spawn`.
+pub struct Execute<S: Stream> {
+    inner: SendAll<Sender<Result<S::Item, S::Error>>, Results<S, SendError<Result<S::Item, S::Error>>>>,
+    cancel_rx: oneshot::Receiver<()>,
+}
+
+/// Spawns a `stream` onto the instance of `Executor` provided, `executor`,
+/// returning a handle representing the remote stream.
+///
+/// The `stream` will be canceled if the `SpawnHandle` is dropped.
+///
+/// The `SpawnHandle` returned is a stream that is a proxy for `stream` itself.
+/// When `stream` has additional items available, then the `SpawnHandle`
+/// will have those same items available.
+///
+/// At most `buffer + 1` elements will be buffered at a time. If the buffer
+/// is full, then `stream` will stop progressing until more space is available.
+/// This allows the `SpawnHandle` to exert backpressure on the `stream`.
+///
+/// # Panics
+///
+/// This function will panic if `executor` is unable spawn a `Future` containing
+/// the entirety of the `stream`.
+pub fn spawn<S, E>(stream: S, executor: &E, buffer: usize) -> SpawnHandle<S::Item, S::Error>
+    where S: Stream,
+          E: Executor<Execute<S>>
+{
+    let (cancel_tx, cancel_rx) = oneshot::channel();
+    let (tx, rx) = channel(buffer);
+    executor.execute(Execute {
+        inner: tx.send_all(resultstream::new(stream)),
+        cancel_rx: cancel_rx,
+    }).expect("failed to spawn stream");
+    SpawnHandle {
+        inner: rx,
+        _cancel_tx: cancel_tx,
+    }
+}
+
+/// Spawns a `stream` onto the instance of `Executor` provided, `executor`,
+/// returning a handle representing the remote stream, with unbounded buffering.
+///
+/// The `stream` will be canceled if the `SpawnHandle` is dropped.
+///
+/// The `SpawnHandle` returned is a stream that is a proxy for `stream` itself.
+/// When `stream` has additional items available, then the `SpawnHandle`
+/// will have those same items available.
+///
+/// An unbounded buffer is used, which means that values will be buffered as
+/// fast as `stream` can produce them, without any backpressure. Therefore, if
+/// `stream` is an infinite stream, it can use an unbounded amount of memory, and
+/// potentially hog CPU resources. In particular, if `stream` is infinite
+/// and doesn't ever yield (by returning `Async::NotReady` from `poll`), it
+/// will result in an infinite loop.
+///
+/// # Panics
+///
+/// This function will panic if `executor` is unable spawn a `Future` containing
+/// the entirety of the `stream`.
+pub fn spawn_unbounded<S,E>(stream: S, executor: &E) -> SpawnHandle<S::Item, S::Error>
+    where S: Stream,
+          E: Executor<Execute<S>>
+{
+    let (cancel_tx, cancel_rx) = oneshot::channel();
+    let (tx, rx) = channel_(None);
+    executor.execute(Execute {
+        inner: tx.send_all(resultstream::new(stream)),
+        cancel_rx: cancel_rx,
+    }).expect("failed to spawn stream");
+    SpawnHandle {
+        inner: rx,
+        _cancel_tx: cancel_tx,
+    }
+}
+
+impl<I, E> Stream for SpawnHandle<I, E> {
+    type Item = I;
+    type Error = E;
+
+    fn poll(&mut self) -> Poll<Option<I>, E> {
+        match self.inner.poll() {
+            Ok(Async::Ready(Some(Ok(t)))) => Ok(Async::Ready(Some(t.into()))),
+            Ok(Async::Ready(Some(Err(e)))) => Err(e),
+            Ok(Async::Ready(None)) => Ok(Async::Ready(None)),
+            Ok(Async::NotReady) => Ok(Async::NotReady),
+            Err(_) => unreachable!("mpsc::Receiver should never return Err"),
+        }
+    }
+}
+
+impl<I, E> fmt::Debug for SpawnHandle<I, E> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("SpawnHandle")
+            .finish()
+    }
+}
+
+impl<S: Stream> Future for Execute<S> {
+    type Item = ();
+    type Error = ();
+
+    fn poll(&mut self) -> Poll<(), ()> {
+        match self.cancel_rx.poll() {
+            Ok(Async::NotReady) => (),
+            _ => return Ok(Async::Ready(())),
+        }
+        match self.inner.poll() {
+            Ok(Async::NotReady) => Ok(Async::NotReady),
+            _ => Ok(Async::Ready(()))
+        }
+    }
+}
+
+impl<S: Stream> fmt::Debug for Execute<S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Execute")
+         .finish()
     }
 }

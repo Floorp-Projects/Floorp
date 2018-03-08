@@ -7,7 +7,7 @@ use {Future, Poll, Async};
 /// A future representing a value that is immediately ready.
 ///
 /// Created by the `result` function.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[must_use = "futures do nothing unless polled"]
 // TODO: rename this to `Result` on the next major version
 pub struct FutureResult<T, E> {
@@ -16,7 +16,7 @@ pub struct FutureResult<T, E> {
 
 /// Creates a new "leaf future" which will resolve with the given result.
 ///
-/// The returned future represents a computation which is finshed immediately.
+/// The returned future represents a computation which is finished immediately.
 /// This can be useful with the `finished` and `failed` base future types to
 /// convert an immediate value to a future to interoperate elsewhere.
 ///
@@ -71,5 +71,11 @@ impl<T, E> Future for FutureResult<T, E> {
 
     fn poll(&mut self) -> Poll<T, E> {
         self.inner.take().expect("cannot poll Result twice").map(Async::Ready)
+    }
+}
+
+impl<T, E> From<Result<T, E>> for FutureResult<T, E> {
+    fn from(r: Result<T, E>) -> Self {
+        result(r)
     }
 }
