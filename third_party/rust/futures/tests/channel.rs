@@ -2,7 +2,7 @@ extern crate futures;
 
 use std::sync::atomic::*;
 
-use futures::{Future, Stream, Sink};
+use futures::prelude::*;
 use futures::future::result;
 use futures::sync::mpsc;
 
@@ -27,11 +27,11 @@ fn sequence() {
     fn send(n: u32, sender: mpsc::Sender<u32>)
             -> Box<Future<Item=(), Error=()> + Send> {
         if n == 0 {
-            return result(Ok(())).boxed()
+            return Box::new(result(Ok(())))
         }
-        sender.send(n).map_err(|_| ()).and_then(move |sender| {
+        Box::new(sender.send(n).map_err(|_| ()).and_then(move |sender| {
             send(n - 1, sender)
-        }).boxed()
+        }))
     }
 }
 

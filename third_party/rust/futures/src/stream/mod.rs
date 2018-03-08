@@ -18,9 +18,15 @@
 use {IntoFuture, Poll};
 
 mod iter;
+#[allow(deprecated)]
 pub use self::iter::{iter, Iter};
 #[cfg(feature = "with-deprecated")]
+#[allow(deprecated)]
 pub use self::Iter as IterStream;
+mod iter_ok;
+pub use self::iter_ok::{iter_ok, IterOk};
+mod iter_result;
+pub use self::iter_result::{iter_result, IterResult};
 
 mod repeat;
 pub use self::repeat::{repeat, Repeat};
@@ -37,12 +43,15 @@ mod for_each;
 mod from_err;
 mod fuse;
 mod future;
+mod inspect;
+mod inspect_err;
 mod map;
 mod map_err;
 mod merge;
 mod once;
 mod or_else;
 mod peek;
+mod poll_fn;
 mod select;
 mod skip;
 mod skip_while;
@@ -54,7 +63,9 @@ mod zip;
 mod forward;
 pub use self::and_then::AndThen;
 pub use self::chain::Chain;
+#[allow(deprecated)]
 pub use self::concat::Concat;
+pub use self::concat::Concat2;
 pub use self::empty::{Empty, empty};
 pub use self::filter::Filter;
 pub use self::filter_map::FilterMap;
@@ -64,12 +75,16 @@ pub use self::for_each::ForEach;
 pub use self::from_err::FromErr;
 pub use self::fuse::Fuse;
 pub use self::future::StreamFuture;
+pub use self::inspect::Inspect;
+pub use self::inspect_err::InspectErr;
 pub use self::map::Map;
 pub use self::map_err::MapErr;
+#[allow(deprecated)]
 pub use self::merge::{Merge, MergedItem};
 pub use self::once::{Once, once};
 pub use self::or_else::OrElse;
 pub use self::peek::Peekable;
+pub use self::poll_fn::{poll_fn, PollFn};
 pub use self::select::Select;
 pub use self::skip::Skip;
 pub use self::skip_while::SkipWhile;
@@ -92,7 +107,8 @@ if_std! {
     mod wait;
     mod channel;
     mod split;
-    mod futures_unordered;
+    pub mod futures_unordered;
+    mod futures_ordered;
     pub use self::buffered::Buffered;
     pub use self::buffer_unordered::BufferUnordered;
     pub use self::catch_unwind::CatchUnwind;
@@ -100,7 +116,8 @@ if_std! {
     pub use self::collect::Collect;
     pub use self::wait::Wait;
     pub use self::split::{SplitStream, SplitSink};
-    pub use self::futures_unordered::{futures_unordered, FuturesUnordered};
+    pub use self::futures_unordered::FuturesUnordered;
+    pub use self::futures_ordered::{futures_ordered, FuturesOrdered};
 
     #[doc(hidden)]
     #[cfg(feature = "with-deprecated")]
@@ -108,6 +125,10 @@ if_std! {
     pub use self::channel::{channel, Sender, Receiver, FutureSender, SendError};
 
     /// A type alias for `Box<Stream + Send>`
+    #[doc(hidden)]
+    #[deprecated(note = "removed without replacement, recommended to use a \
+                         local extension trait or function if needed, more \
+                         details in https://github.com/alexcrichton/futures-rs/issues/228")]
     pub type BoxStream<T, E> = ::std::boxed::Box<Stream<Item = T, Error = E> + Send>;
 
     impl<S: ?Sized + Stream> Stream for ::std::boxed::Box<S> {
@@ -247,6 +268,11 @@ pub trait Stream {
     /// let a: BoxStream<i32, ()> = rx.boxed();
     /// ```
     #[cfg(feature = "use_std")]
+    #[doc(hidden)]
+    #[deprecated(note = "removed without replacement, recommended to use a \
+                         local extension trait or function if needed, more \
+                         details in https://github.com/alexcrichton/futures-rs/issues/228")]
+    #[allow(deprecated)]
     fn boxed(self) -> BoxStream<Self::Item, Self::Error>
         where Self: Sized + Send + 'static,
     {
@@ -281,7 +307,7 @@ pub trait Stream {
     /// # Examples
     ///
     /// ```
-    /// use futures::Stream;
+    /// use futures::prelude::*;
     /// use futures::sync::mpsc;
     ///
     /// let (_tx, rx) = mpsc::channel::<i32>(1);
@@ -307,7 +333,7 @@ pub trait Stream {
     /// # Examples
     ///
     /// ```
-    /// use futures::Stream;
+    /// use futures::prelude::*;
     /// use futures::sync::mpsc;
     ///
     /// let (_tx, rx) = mpsc::channel::<i32>(1);
@@ -337,11 +363,11 @@ pub trait Stream {
     /// # Examples
     ///
     /// ```
-    /// use futures::Stream;
+    /// use futures::prelude::*;
     /// use futures::sync::mpsc;
     ///
     /// let (_tx, rx) = mpsc::channel::<i32>(1);
-    /// let evens = rx.filter(|x| x % 0 == 2);
+    /// let evens = rx.filter(|x| x % 2 == 0);
     /// ```
     fn filter<F>(self, f: F) -> Filter<Self, F>
         where F: FnMut(&Self::Item) -> bool,
@@ -367,7 +393,7 @@ pub trait Stream {
     /// # Examples
     ///
     /// ```
-    /// use futures::Stream;
+    /// use futures::prelude::*;
     /// use futures::sync::mpsc;
     ///
     /// let (_tx, rx) = mpsc::channel::<i32>(1);
@@ -406,7 +432,7 @@ pub trait Stream {
     /// # Examples
     ///
     /// ```
-    /// use futures::Stream;
+    /// use futures::prelude::*;
     /// use futures::sync::mpsc;
     ///
     /// let (_tx, rx) = mpsc::channel::<i32>(1);
@@ -446,10 +472,13 @@ pub trait Stream {
     /// Note that this function consumes the receiving stream and returns a
     /// wrapped version of it.
     ///
+    /// To process the entire stream and return a single future representing
+    /// success or error, use `for_each` instead.
+    ///
     /// # Examples
     ///
     /// ```
-    /// use futures::stream::*;
+    /// use futures::prelude::*;
     /// use futures::sync::mpsc;
     ///
     /// let (_tx, rx) = mpsc::channel::<i32>(1);
@@ -515,7 +544,7 @@ pub trait Stream {
     /// ```
     /// use std::thread;
     ///
-    /// use futures::{Stream, Future, Sink};
+    /// use futures::prelude::*;
     /// use futures::sync::mpsc;
     ///
     /// let (mut tx, rx) = mpsc::channel(1);
@@ -540,16 +569,52 @@ pub trait Stream {
     /// destination, returning a future representing the end result.
     ///
     /// This combinator will extend the first item with the contents
-    /// of all the successful results of the stream. If an error
-    /// occurs, all the results will be dropped and the error will be
-    /// returned.
+    /// of all the successful results of the stream. If the stream is
+    /// empty, the default value will be returned. If an error occurs,
+    /// all the results will be dropped and the error will be returned.
+    ///
+    /// The name `concat2` is an intermediate measure until the release of
+    /// futures 0.2, at which point it will be renamed back to `concat`.
     ///
     /// # Examples
     ///
     /// ```
     /// use std::thread;
     ///
-    /// use futures::{Future, Sink, Stream};
+    /// use futures::prelude::*;
+    /// use futures::sync::mpsc;
+    ///
+    /// let (mut tx, rx) = mpsc::channel(1);
+    ///
+    /// thread::spawn(move || {
+    ///     for i in (0..3).rev() {
+    ///         let n = i * 3;
+    ///         tx = tx.send(vec![n + 1, n + 2, n + 3]).wait().unwrap();
+    ///     }
+    /// });
+    /// let result = rx.concat2();
+    /// assert_eq!(result.wait(), Ok(vec![7, 8, 9, 4, 5, 6, 1, 2, 3]));
+    /// ```
+    fn concat2(self) -> Concat2<Self>
+        where Self: Sized,
+              Self::Item: Extend<<<Self as Stream>::Item as IntoIterator>::Item> + IntoIterator + Default,
+    {
+        concat::new2(self)
+    }
+
+    /// Concatenate all results of a stream into a single extendable
+    /// destination, returning a future representing the end result.
+    ///
+    /// This combinator will extend the first item with the contents
+    /// of all the successful results of the stream. If an error occurs,
+    /// all the results will be dropped and the error will be returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::thread;
+    ///
+    /// use futures::prelude::*;
     /// use futures::sync::mpsc;
     ///
     /// let (mut tx, rx) = mpsc::channel(1);
@@ -563,6 +628,13 @@ pub trait Stream {
     /// let result = rx.concat();
     /// assert_eq!(result.wait(), Ok(vec![7, 8, 9, 4, 5, 6, 1, 2, 3]));
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// It's important to note that this function will panic if the stream
+    /// is empty, which is the reason for its deprecation.
+    #[deprecated(since="0.1.14", note="please use `Stream::concat2` instead")]
+    #[allow(deprecated)]
     fn concat(self) -> Concat<Self>
         where Self: Sized,
               Self::Item: Extend<<<Self as Stream>::Item as IntoIterator>::Item> + IntoIterator,
@@ -585,11 +657,12 @@ pub trait Stream {
     /// # Examples
     ///
     /// ```
-    /// use futures::stream::{self, Stream};
-    /// use futures::future::{ok, Future};
+    /// use futures::prelude::*;
+    /// use futures::stream;
+    /// use futures::future;
     ///
-    /// let number_stream = stream::iter::<_, _, ()>((0..6).map(Ok));
-    /// let sum = number_stream.fold(0, |a, b| ok(a + b));
+    /// let number_stream = stream::iter_ok::<_, ()>(0..6);
+    /// let sum = number_stream.fold(0, |acc, x| future::ok(acc + x));
     /// assert_eq!(sum.wait(), Ok(15));
     /// ```
     fn fold<F, T, Fut>(self, init: T, f: F) -> Fold<Self, F, Fut, T>
@@ -611,7 +684,7 @@ pub trait Stream {
     /// ```
     /// use std::thread;
     ///
-    /// use futures::{Future, Stream, Poll, Sink};
+    /// use futures::prelude::*;
     /// use futures::sync::mpsc;
     ///
     /// let (tx1, rx1) = mpsc::channel::<i32>(1);
@@ -682,6 +755,9 @@ pub trait Stream {
     /// errors are otherwise threaded through. Any error on the stream or in the
     /// closure will cause iteration to be halted immediately and the future
     /// will resolve to that error.
+    ///
+    /// To process each item in the stream and produce another stream instead
+    /// of a single future, use `and_then` instead.
     fn for_each<F, U>(self, f: F) -> ForEach<Self, F, U>
         where F: FnMut(Self::Item) -> U,
               U: IntoFuture<Item=(), Error = Self::Error>,
@@ -759,6 +835,31 @@ pub trait Stream {
         fuse::new(self)
     }
 
+    /// Borrows a stream, rather than consuming it.
+    ///
+    /// This is useful to allow applying stream adaptors while still retaining
+    /// ownership of the original stream.
+    ///
+    /// ```
+    /// use futures::prelude::*;
+    /// use futures::stream;
+    /// use futures::future;
+    ///
+    /// let mut stream = stream::iter_ok::<_, ()>(1..5);
+    ///
+    /// let sum = stream.by_ref().take(2).fold(0, |a, b| future::ok(a + b)).wait();
+    /// assert_eq!(sum, Ok(3));
+    ///
+    /// // You can use the stream again
+    /// let sum = stream.take(2).fold(0, |a, b| future::ok(a + b)).wait();
+    /// assert_eq!(sum, Ok(7));
+    /// ```
+    fn by_ref(&mut self) -> &mut Self
+        where Self: Sized
+    {
+        self
+    }
+
     /// Catches unwinding panics while polling the stream.
     ///
     /// Caught panic (if any) will be the last element of the resulting stream.
@@ -780,11 +881,10 @@ pub trait Stream {
     /// # Examples
     ///
     /// ```rust
+    /// use futures::prelude::*;
     /// use futures::stream;
-    /// use futures::stream::Stream;
     ///
-    /// let stream = stream::iter::<_, Option<i32>, bool>(vec![
-    ///     Some(10), None, Some(11)].into_iter().map(Ok));
+    /// let stream = stream::iter_ok::<_, bool>(vec![Some(10), None, Some(11)]);
     /// // panic on second element
     /// let stream_panicking = stream.map(|o| o.unwrap());
     /// let mut iter = stream_panicking.catch_unwind().wait();
@@ -847,6 +947,8 @@ pub trait Stream {
     /// The merged stream produces items from one or both of the underlying
     /// streams as they become available. Errors, however, are not merged: you
     /// get at most one error at a time.
+    #[deprecated(note = "functionality provided by `select` now")]
+    #[allow(deprecated)]
     fn merge<S>(self, other: S) -> Merge<Self, S>
         where S: Stream<Error = Self::Error>,
               Self: Sized,
@@ -872,11 +974,11 @@ pub trait Stream {
     /// first stream reaches the end, emits the elements from the second stream.
     ///
     /// ```rust
+    /// use futures::prelude::*;
     /// use futures::stream;
-    /// use futures::stream::Stream;
     ///
-    /// let stream1 = stream::iter(vec![Ok(10), Err(false)]);
-    /// let stream2 = stream::iter(vec![Err(true), Ok(20)]);
+    /// let stream1 = stream::iter_result(vec![Ok(10), Err(false)]);
+    /// let stream2 = stream::iter_result(vec![Err(true), Ok(20)]);
     /// let mut chain = stream1.chain(stream2).wait();
     ///
     /// assert_eq!(Some(Ok(10)), chain.next());
@@ -951,11 +1053,13 @@ pub trait Stream {
     ///
     /// This future will drive the stream to keep producing items until it is
     /// exhausted, sending each item to the sink. It will complete once both the
-    /// stream is exhausted, and the sink has fully processed and flushed all of
-    /// the items sent to it.
+    /// stream is exhausted, and the sink has fully processed received item,
+    /// flushed successfully, and closed successfully.
     ///
     /// Doing `stream.forward(sink)` is roughly equivalent to
-    /// `sink.send_all(stream)`.
+    /// `sink.send_all(stream)`. The returned future will exhaust all items from
+    /// `self`, sending them all to `sink`. Furthermore the `sink` will be
+    /// closed and flushed.
     ///
     /// On completion, the pair `(stream, sink)` is returned.
     fn forward<S>(self, sink: S) -> Forward<Self, S>
@@ -981,6 +1085,30 @@ pub trait Stream {
     {
         split::split(self)
     }
+
+    /// Do something with each item of this stream, afterwards passing it on.
+    ///
+    /// This is similar to the `Iterator::inspect` method in the standard
+    /// library where it allows easily inspecting each value as it passes
+    /// through the stream, for example to debug what's going on.
+    fn inspect<F>(self, f: F) -> Inspect<Self, F>
+        where F: FnMut(&Self::Item),
+              Self: Sized,
+    {
+        inspect::new(self, f)
+    }
+
+    /// Do something with the error of this stream, afterwards passing it on.
+    ///
+    /// This is similar to the `Stream::inspect` method where it allows
+    /// easily inspecting the error as it passes through the stream, for
+    /// example to debug what's going on.
+    fn inspect_err<F>(self, f: F) -> InspectErr<Self, F>
+        where F: FnMut(&Self::Error),
+              Self: Sized,
+    {
+        inspect_err::new(self, f)
+    }
 }
 
 impl<'a, S: ?Sized + Stream> Stream for &'a mut S {
@@ -990,4 +1118,28 @@ impl<'a, S: ?Sized + Stream> Stream for &'a mut S {
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
         (**self).poll()
     }
+}
+
+/// Converts a list of futures into a `Stream` of results from the futures.
+///
+/// This function will take an list of futures (e.g. a vector, an iterator,
+/// etc), and return a stream. The stream will yield items as they become
+/// available on the futures internally, in the order that they become
+/// available. This function is similar to `buffer_unordered` in that it may
+/// return items in a different order than in the list specified.
+///
+/// Note that the returned set can also be used to dynamically push more
+/// futures into the set as they become available.
+#[cfg(feature = "use_std")]
+pub fn futures_unordered<I>(futures: I) -> FuturesUnordered<<I::Item as IntoFuture>::Future>
+    where I: IntoIterator,
+        I::Item: IntoFuture
+{
+    let mut set = FuturesUnordered::new();
+
+    for future in futures {
+        set.push(future.into_future());
+    }
+
+    return set
 }

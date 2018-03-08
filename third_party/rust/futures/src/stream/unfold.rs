@@ -6,7 +6,7 @@ use stream::Stream;
 /// Creates a `Stream` from a seed and a closure returning a `Future`.
 ///
 /// This function is the dual for the `Stream::fold()` adapter: while
-/// `Stream:fold()` reduces a `Stream` to one single value, `unfold()` creates a
+/// `Stream::fold()` reduces a `Stream` to one single value, `unfold()` creates a
 /// `Stream` from a seed value.
 ///
 /// `unfold()` will call the provided closure with the provided seed, then wait
@@ -85,7 +85,7 @@ impl <T, F, Fut, It> Stream for Unfold<T, F, Fut>
                     }
                 }
                 State::Processing(mut fut) => {
-                    match try!(fut.poll()) {
+                    match fut.poll()? {
                         Async:: Ready((item, next_state)) => {
                             self.state = State::Ready(next_state);
                             return Ok(Async::Ready(Some(item)));

@@ -240,7 +240,7 @@ APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
   AsyncPanZoomController::InitializeGlobalState();
   mApzcTreeLog.ConditionOnPrefFunction(gfxPrefs::APZPrintTree);
 #if defined(MOZ_WIDGET_ANDROID)
-  mToolbarAnimator = new AndroidDynamicToolbarAnimator();
+  mToolbarAnimator = new AndroidDynamicToolbarAnimator(this);
 #endif // (MOZ_WIDGET_ANDROID)
 }
 
@@ -2025,6 +2025,10 @@ APZCTreeManager::ClearTree()
 {
   APZThreadUtils::AssertOnSamplerThread();
 
+#if defined(MOZ_WIDGET_ANDROID)
+  mToolbarAnimator->ClearTreeManager();
+#endif
+
   // Ensure that no references to APZCs are alive in any lingering input
   // blocks. This breaks cycles from InputBlockState::mTargetApzc back to
   // the InputQueue.
@@ -2986,13 +2990,6 @@ APZCTreeManager::GetAPZTestData(uint64_t aLayersId,
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
-void
-APZCTreeManager::InitializeDynamicToolbarAnimator(const int64_t& aRootLayerTreeId)
-{
-  MOZ_ASSERT(mToolbarAnimator);
-  mToolbarAnimator->Initialize(aRootLayerTreeId);
-}
-
 AndroidDynamicToolbarAnimator*
 APZCTreeManager::GetAndroidDynamicToolbarAnimator()
 {

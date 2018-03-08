@@ -39,7 +39,7 @@
 // Since most of this work is lock-free, once the work starts, it is impossible
 // to safely revert.
 //
-// If the sender is unable to process a send operation, then the the curren
+// If the sender is unable to process a send operation, then the current
 // task is parked and the handle is sent on the parked task queue.
 //
 // Note that the implementation guarantees that the channel capacity will never
@@ -77,8 +77,12 @@ use std::thread;
 use std::usize;
 
 use sync::mpsc::queue::{Queue, PopResult};
+use sync::oneshot;
 use task::{self, Task};
-use {Async, AsyncSink, Poll, StartSend, Sink, Stream};
+use future::Executor;
+use sink::SendAll;
+use resultstream::{self, Results};
+use {Async, AsyncSink, Future, Poll, StartSend, Sink, Stream};
 
 mod queue;
 
@@ -93,7 +97,7 @@ pub struct Sender<T> {
     // Handle to the task that is blocked on this sender. This handle is sent
     // to the receiver half in order to be notified when the sender becomes
     // unblocked.
-    sender_task: SenderTask,
+    sender_task: Arc<Mutex<SenderTask>>,
 
     // True if the sender might be blocked. This is an optimization to avoid
     // having to lock the mutex most of the time.
@@ -106,14 +110,8 @@ pub struct Sender<T> {
 #[derive(Debug)]
 pub struct UnboundedSender<T>(Sender<T>);
 
-fn _assert_kinds() {
-    fn _assert_send<T: Send>() {}
-    fn _assert_sync<T: Sync>() {}
-    fn _assert_clone<T: Clone>() {}
-    _assert_send::<UnboundedSender<u32>>();
-    _assert_sync::<UnboundedSender<u32>>();
-    _assert_clone::<UnboundedSender<u32>>();
-}
+trait AssertKinds: Send + Sync + Clone {}
+impl AssertKinds for UnboundedSender<u32> {}
 
 
 /// The receiving end of a channel which implements the `Stream` trait.
@@ -138,6 +136,18 @@ pub struct UnboundedReceiver<T>(Receiver<T>);
 /// dropped
 #[derive(Clone, PartialEq, Eq)]
 pub struct SendError<T>(T);
+
+/// Error type returned from `try_send`
+#[derive(Clone, PartialEq, Eq)]
+pub struct TrySendError<T> {
+    kind: TrySendErrorKind<T>,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+enum TrySendErrorKind<T> {
+    Full(T),
+    Disconnected(T),
+}
 
 impl<T> fmt::Debug for SendError<T> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
@@ -167,6 +177,65 @@ impl<T> SendError<T> {
     }
 }
 
+impl<T> fmt::Debug for TrySendError<T> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_tuple("TrySendError")
+            .field(&"...")
+            .finish()
+    }
+}
+
+impl<T> fmt::Display for TrySendError<T> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        if self.is_full() {
+            write!(fmt, "send failed because channel is full")
+        } else {
+            write!(fmt, "send failed because receiver is gone")
+        }
+    }
+}
+
+impl<T: Any> Error for TrySendError<T> {
+    fn description(&self) -> &str {
+        if self.is_full() {
+            "send failed because channel is full"
+        } else {
+            "send failed because receiver is gone"
+        }
+    }
+}
+
+impl<T> TrySendError<T> {
+    /// Returns true if this error is a result of the channel being full
+    pub fn is_full(&self) -> bool {
+        use self::TrySendErrorKind::*;
+
+        match self.kind {
+            Full(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if this error is a result of the receiver being dropped
+    pub fn is_disconnected(&self) -> bool {
+        use self::TrySendErrorKind::*;
+
+        match self.kind {
+            Disconnected(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns the message that was attempted to be sent but failed.
+    pub fn into_inner(self) -> T {
+        use self::TrySendErrorKind::*;
+
+        match self.kind {
+            Full(v) | Disconnected(v) => v,
+        }
+    }
+}
+
 #[derive(Debug)]
 struct Inner<T> {
     // Max buffer size of the channel. If `None` then the channel is unbounded.
@@ -180,7 +249,7 @@ struct Inner<T> {
     message_queue: Queue<Option<T>>,
 
     // Atomic, FIFO queue used to send parked task handles to the receiver.
-    parked_queue: Queue<SenderTask>,
+    parked_queue: Queue<Arc<Mutex<SenderTask>>>,
 
     // Number of senders in existence
     num_senders: AtomicUsize,
@@ -213,13 +282,13 @@ enum TryPark {
 }
 
 // The `is_open` flag is stored in the left-most bit of `Inner::state`
-const OPEN_MASK: usize = 1 << 31;
+const OPEN_MASK: usize = usize::MAX - (usize::MAX >> 1);
 
 // When a new channel is created, it is created in the open state with no
 // pending messages.
 const INIT_STATE: usize = OPEN_MASK;
 
-// The maximum number of messages that a channel can track is `usize::MAX > 1`
+// The maximum number of messages that a channel can track is `usize::MAX >> 1`
 const MAX_CAPACITY: usize = !(OPEN_MASK);
 
 // The maximum requested buffer size must be less than the maximum capacity of
@@ -227,7 +296,28 @@ const MAX_CAPACITY: usize = !(OPEN_MASK);
 const MAX_BUFFER: usize = MAX_CAPACITY >> 1;
 
 // Sent to the consumer to wake up blocked producers
-type SenderTask = Arc<Mutex<Option<Task>>>;
+#[derive(Debug)]
+struct SenderTask {
+    task: Option<Task>,
+    is_parked: bool,
+}
+
+impl SenderTask {
+    fn new() -> Self {
+        SenderTask {
+            task: None,
+            is_parked: false,
+        }
+    }
+
+    fn notify(&mut self) {
+        self.is_parked = false;
+
+        if let Some(task) = self.task.take() {
+            task.notify();
+        }
+    }
+}
 
 /// Creates an in-memory channel implementation of the `Stream` trait with
 /// bounded capacity.
@@ -281,7 +371,7 @@ fn channel2<T>(buffer: Option<usize>) -> (Sender<T>, Receiver<T>) {
 
     let tx = Sender {
         inner: inner.clone(),
-        sender_task: Arc::new(Mutex::new(None)),
+        sender_task: Arc::new(Mutex::new(SenderTask::new())),
         maybe_parked: false,
     };
 
@@ -299,8 +389,35 @@ fn channel2<T>(buffer: Option<usize>) -> (Sender<T>, Receiver<T>) {
  */
 
 impl<T> Sender<T> {
+    /// Attempts to send a message on this `Sender<T>` without blocking.
+    ///
+    /// This function, unlike `start_send`, is safe to call whether it's being
+    /// called on a task or not. Note that this function, however, will *not*
+    /// attempt to block the current task if the message cannot be sent.
+    ///
+    /// It is not recommended to call this function from inside of a future,
+    /// only from an external thread where you've otherwise arranged to be
+    /// notified when the channel is no longer full.
+    pub fn try_send(&mut self, msg: T) -> Result<(), TrySendError<T>> {
+        // If the sender is currently blocked, reject the message
+        if !self.poll_unparked(false).is_ready() {
+            return Err(TrySendError {
+                kind: TrySendErrorKind::Full(msg),
+            });
+        }
+
+        // The channel has capacity to accept the message, so send it
+        self.do_send(Some(msg), false)
+            .map_err(|SendError(v)| {
+                TrySendError {
+                    kind: TrySendErrorKind::Disconnected(v),
+                }
+            })
+    }
+
     // Do the send without failing
-    fn do_send(&mut self, msg: Option<T>, can_park: bool) -> Result<(), SendError<T>> {
+    // None means close
+    fn do_send(&mut self, msg: Option<T>, do_park: bool) -> Result<(), SendError<T>> {
         // First, increment the number of messages contained by the channel.
         // This operation will also atomically determine if the sender task
         // should be parked.
@@ -331,11 +448,11 @@ impl<T> Sender<T> {
         // be parked. This will send the task handle on the parked task queue.
         //
         // However, when `do_send` is called while dropping the `Sender`,
-        // `task::park()` can't be called safely. In this case, in order to
+        // `task::current()` can't be called safely. In this case, in order to
         // maintain internal consistency, a blank message is pushed onto the
         // parked task queue.
         if park_self {
-            self.park(can_park);
+            self.park(do_park);
         }
 
         self.queue_push_and_signal(msg);
@@ -428,27 +545,31 @@ impl<T> Sender<T> {
             }
 
             // Setting this flag enables the receiving end to detect that
-            // an unpark event happened in order to avoid unecessarily
+            // an unpark event happened in order to avoid unnecessarily
             // parking.
             recv_task.unparked = true;
             recv_task.task.take()
         };
 
         if let Some(task) = task {
-            task.unpark();
+            task.notify();
         }
     }
 
     fn park(&mut self, can_park: bool) {
-        // TODO: clean up internal state if the task::park will fail
+        // TODO: clean up internal state if the task::current will fail
 
         let task = if can_park {
-            Some(task::park())
+            Some(task::current())
         } else {
             None
         };
 
-        *self.sender_task.lock().unwrap() = task;
+        {
+            let mut sender = self.sender_task.lock().unwrap();
+            sender.task = task;
+            sender.is_parked = true;
+        }
 
         // Send handle over queue
         let t = self.sender_task.clone();
@@ -460,14 +581,33 @@ impl<T> Sender<T> {
         self.maybe_parked = state.is_open;
     }
 
-    fn poll_unparked(&mut self) -> Async<()> {
+    /// Polls the channel to determine if there is guaranteed to be capacity to send at least one
+    /// item without waiting.
+    ///
+    /// Returns `Ok(Async::Ready(_))` if there is sufficient capacity, or returns
+    /// `Ok(Async::NotReady)` if the channel is not guaranteed to have capacity. Returns
+    /// `Err(SendError(_))` if the receiver has been dropped.
+    ///
+    /// # Panics
+    ///
+    /// This method will panic if called from outside the context of a task or future.
+    pub fn poll_ready(&mut self) -> Poll<(), SendError<()>> {
+        let state = decode_state(self.inner.state.load(SeqCst));
+        if !state.is_open {
+            return Err(SendError(()));
+        }
+
+        Ok(self.poll_unparked(true))
+    }
+
+    fn poll_unparked(&mut self, do_park: bool) -> Async<()> {
         // First check the `maybe_parked` variable. This avoids acquiring the
         // lock in most cases
         if self.maybe_parked {
             // Get a lock on the task handle
             let mut task = self.sender_task.lock().unwrap();
 
-            if task.is_none() {
+            if !task.is_parked {
                 self.maybe_parked = false;
                 return Async::Ready(())
             }
@@ -478,7 +618,11 @@ impl<T> Sender<T> {
             //
             // Update the task in case the `Sender` has been moved to another
             // task
-            *task = Some(task::park());
+            task.task = if do_park {
+                Some(task::current())
+            } else {
+                None
+            };
 
             Async::NotReady
         } else {
@@ -494,12 +638,12 @@ impl<T> Sink for Sender<T> {
     fn start_send(&mut self, msg: T) -> StartSend<T, SendError<T>> {
         // If the sender is currently blocked, reject the message before doing
         // any work.
-        if !self.poll_unparked().is_ready() {
+        if !self.poll_unparked(true).is_ready() {
             return Ok(AsyncSink::NotReady(msg));
         }
 
         // The channel has capacity to accept the message, so send it.
-        try!(self.do_send(Some(msg), true));
+        self.do_send(Some(msg), true)?;
 
         Ok(AsyncSink::Ready)
     }
@@ -519,7 +663,18 @@ impl<T> UnboundedSender<T> {
     /// This is an unbounded sender, so this function differs from `Sink::send`
     /// by ensuring the return type reflects that the channel is always ready to
     /// receive messages.
+    #[deprecated(note = "renamed to `unbounded_send`")]
+    #[doc(hidden)]
     pub fn send(&self, msg: T) -> Result<(), SendError<T>> {
+        self.unbounded_send(msg)
+    }
+
+    /// Sends the provided message along this channel.
+    ///
+    /// This is an unbounded sender, so this function differs from `Sink::send`
+    /// by ensuring the return type reflects that the channel is always ready to
+    /// receive messages.
+    pub fn unbounded_send(&self, msg: T) -> Result<(), SendError<T>> {
         self.0.do_send_nb(msg)
     }
 }
@@ -546,7 +701,7 @@ impl<'a, T> Sink for &'a UnboundedSender<T> {
     type SinkError = SendError<T>;
 
     fn start_send(&mut self, msg: T) -> StartSend<T, SendError<T>> {
-        try!(self.0.do_send_nb(msg));
+        self.0.do_send_nb(msg)?;
         Ok(AsyncSink::Ready)
     }
 
@@ -589,7 +744,7 @@ impl<T> Clone for Sender<T> {
             if actual == curr {
                 return Sender {
                     inner: self.inner.clone(),
-                    sender_task: Arc::new(Mutex::new(None)),
+                    sender_task: Arc::new(Mutex::new(SenderTask::new())),
                     maybe_parked: false,
                 };
             }
@@ -645,10 +800,7 @@ impl<T> Receiver<T> {
         loop {
             match unsafe { self.inner.parked_queue.pop() } {
                 PopResult::Data(task) => {
-                    let task = task.lock().unwrap().take();
-                    if let Some(task) = task {
-                        task.unpark();
-                    }
+                    task.lock().unwrap().notify();
                 }
                 PopResult::Empty => break,
                 PopResult::Inconsistent => thread::yield_now(),
@@ -675,7 +827,7 @@ impl<T> Receiver<T> {
                     //
                     // 1) Spin
                     // 2) thread::yield_now()
-                    // 3) task::park().unwrap() & return NotReady
+                    // 3) task::current().unwrap() & return NotReady
                     //
                     // For now, thread::yield_now() is used, but it would
                     // probably be better to spin a few times then yield.
@@ -690,14 +842,7 @@ impl<T> Receiver<T> {
         loop {
             match unsafe { self.inner.parked_queue.pop() } {
                 PopResult::Data(task) => {
-                    // Do this step first so that the lock is dropped when
-                    // `unpark` is called
-                    let task = task.lock().unwrap().take();
-
-                    if let Some(task) = task {
-                        task.unpark();
-                    }
-
+                    task.lock().unwrap().notify();
                     return;
                 }
                 PopResult::Empty => {
@@ -731,7 +876,7 @@ impl<T> Receiver<T> {
             return TryPark::NotEmpty;
         }
 
-        recv_task.task = Some(task::park());
+        recv_task.task = Some(task::current());
         TryPark::Parked
     }
 
@@ -825,6 +970,138 @@ impl<T> Stream for UnboundedReceiver<T> {
 
     fn poll(&mut self) -> Poll<Option<T>, ()> {
         self.0.poll()
+    }
+}
+
+/// Handle returned from the `spawn` function.
+///
+/// This handle is a stream that proxies a stream on a separate `Executor`.
+/// Created through the `mpsc::spawn` function, this handle will produce
+/// the same values as the proxied stream, as they are produced in the executor,
+/// and uses a limited buffer to exert back-pressure on the remote stream.
+///
+/// If this handle is dropped, then the stream will no longer be polled and is
+/// scheduled to be dropped.
+pub struct SpawnHandle<Item, Error> {
+    rx: Receiver<Result<Item, Error>>,
+    _cancel_tx: oneshot::Sender<()>,
+}
+
+/// Type of future which `Executor` instances must be able to execute for `spawn`.
+pub struct Execute<S: Stream> {
+    inner: SendAll<Sender<Result<S::Item, S::Error>>, Results<S, SendError<Result<S::Item, S::Error>>>>,
+    cancel_rx: oneshot::Receiver<()>,
+}
+
+/// Spawns a `stream` onto the instance of `Executor` provided, `executor`,
+/// returning a handle representing the remote stream.
+///
+/// The `stream` will be canceled if the `SpawnHandle` is dropped.
+///
+/// The `SpawnHandle` returned is a stream that is a proxy for `stream` itself.
+/// When `stream` has additional items available, then the `SpawnHandle`
+/// will have those same items available.
+///
+/// At most `buffer + 1` elements will be buffered at a time. If the buffer
+/// is full, then `stream` will stop progressing until more space is available.
+/// This allows the `SpawnHandle` to exert backpressure on the `stream`.
+///
+/// # Panics
+///
+/// This function will panic if `executor` is unable spawn a `Future` containing
+/// the entirety of the `stream`.
+pub fn spawn<S, E>(stream: S, executor: &E, buffer: usize) -> SpawnHandle<S::Item, S::Error>
+    where S: Stream,
+          E: Executor<Execute<S>>
+{
+    let (cancel_tx, cancel_rx) = oneshot::channel();
+    let (tx, rx) = channel(buffer);
+    executor.execute(Execute {
+        inner: tx.send_all(resultstream::new(stream)),
+        cancel_rx: cancel_rx,
+    }).expect("failed to spawn stream");
+    SpawnHandle {
+        rx: rx,
+        _cancel_tx: cancel_tx,
+    }
+}
+
+/// Spawns a `stream` onto the instance of `Executor` provided, `executor`,
+/// returning a handle representing the remote stream, with unbounded buffering.
+///
+/// The `stream` will be canceled if the `SpawnHandle` is dropped.
+///
+/// The `SpawnHandle` returned is a stream that is a proxy for `stream` itself.
+/// When `stream` has additional items available, then the `SpawnHandle`
+/// will have those same items available.
+///
+/// An unbounded buffer is used, which means that values will be buffered as
+/// fast as `stream` can produce them, without any backpressure. Therefore, if
+/// `stream` is an infinite stream, it can use an unbounded amount of memory, and
+/// potentially hog CPU resources.
+///
+/// # Panics
+///
+/// This function will panic if `executor` is unable spawn a `Future` containing
+/// the entirety of the `stream`.
+pub fn spawn_unbounded<S, E>(stream: S, executor: &E) -> SpawnHandle<S::Item, S::Error>
+    where S: Stream,
+          E: Executor<Execute<S>>
+{
+    let (cancel_tx, cancel_rx) = oneshot::channel();
+    let (tx, rx) = channel2(None);
+    executor.execute(Execute {
+        inner: tx.send_all(resultstream::new(stream)),
+        cancel_rx: cancel_rx,
+    }).expect("failed to spawn stream");
+    SpawnHandle {
+        rx: rx,
+        _cancel_tx: cancel_tx,
+    }
+}
+
+impl<I, E> Stream for SpawnHandle<I, E> {
+    type Item = I;
+    type Error = E;
+
+    fn poll(&mut self) -> Poll<Option<I>, E> {
+        match self.rx.poll() {
+            Ok(Async::Ready(Some(Ok(t)))) => Ok(Async::Ready(Some(t.into()))),
+            Ok(Async::Ready(Some(Err(e)))) => Err(e),
+            Ok(Async::Ready(None)) => Ok(Async::Ready(None)),
+            Ok(Async::NotReady) => Ok(Async::NotReady),
+            Err(_) => unreachable!("mpsc::Receiver should never return Err"),
+        }
+    }
+}
+
+impl<I, E> fmt::Debug for SpawnHandle<I, E> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("SpawnHandle")
+         .finish()
+    }
+}
+
+impl<S: Stream> Future for Execute<S> {
+    type Item = ();
+    type Error = ();
+
+    fn poll(&mut self) -> Poll<(), ()> {
+        match self.cancel_rx.poll() {
+            Ok(Async::NotReady) => (),
+            _ => return Ok(Async::Ready(())),
+        }
+        match self.inner.poll() {
+            Ok(Async::NotReady) => Ok(Async::NotReady),
+            _ => Ok(Async::Ready(()))
+        }
+    }
+}
+
+impl<S: Stream> fmt::Debug for Execute<S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Execute")
+         .finish()
     }
 }
 

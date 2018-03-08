@@ -5,11 +5,11 @@ use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 use std::thread;
 use std::time::Duration;
 
-use futures::future::{Future, BoxFuture};
+use futures::future::Future;
 use futures_cpupool::{CpuPool, Builder};
 
-fn done<T: Send + 'static>(t: T) -> BoxFuture<T, ()> {
-    futures::future::ok(t).boxed()
+fn done<T: Send + 'static>(t: T) -> Box<Future<Item = T, Error = ()> + Send> {
+    Box::new(futures::future::ok(t))
 }
 
 #[test]

@@ -7,12 +7,13 @@
 use std::prelude::v1::*;
 use std::sync::Arc;
 use std::cell::UnsafeCell;
+use task_impl;
 
 // One critical piece of this module's contents are the `TaskRc<A>` handles.
 // The purpose of this is to conceptually be able to store data in a task,
 // allowing it to be accessed within multiple futures at once. For example if
 // you have some concurrent futures working, they may all want mutable access to
-// some data. We already know that when the futures are being poll'ed that we're
+// some data. We already know that when the futures are being poll'd that we're
 // entirely synchronized (aka `&mut Task`), so you shouldn't require an
 // `Arc<Mutex<T>>` to share as the synchronization isn't necessary!
 //
@@ -63,7 +64,7 @@ use std::cell::UnsafeCell;
 /// change over time, if the task migrates, so `A` must be `Send`.
 #[derive(Debug)]
 pub struct TaskRc<A> {
-    task_id: usize,
+    task: task_impl::Task,
     ptr: Arc<UnsafeCell<A>>,
 }
 
@@ -89,12 +90,10 @@ impl<A> TaskRc<A> {
     ///
     /// This function will panic if a task is not currently running.
     pub fn new(a: A) -> TaskRc<A> {
-        super::with(|task| {
-            TaskRc {
-                task_id: task.id,
-                ptr: Arc::new(UnsafeCell::new(a)),
-            }
-        })
+        TaskRc {
+            task: task_impl::park(),
+            ptr: Arc::new(UnsafeCell::new(a)),
+        }
     }
 
     /// Operate with a reference to the underlying data.
@@ -112,19 +111,18 @@ impl<A> TaskRc<A> {
     pub fn with<F, R>(&self, f: F) -> R
         where F: FnOnce(&A) -> R
     {
-        // for safety here, see docs at the top of this module
-        super::with(|task| {
-            assert!(self.task_id == task.id,
-                    "TaskRc being accessed on task it does not belong to");
-            f(unsafe { &*self.ptr.get() })
-        })
+        if !self.task.is_current() {
+            panic!("TaskRc being accessed on task it does not belong to");
+        }
+
+        f(unsafe { &*self.ptr.get() })
     }
 }
 
 impl<A> Clone for TaskRc<A> {
     fn clone(&self) -> TaskRc<A> {
         TaskRc {
-            task_id: self.task_id,
+            task: self.task.clone(),
             ptr: self.ptr.clone(),
         }
     }
