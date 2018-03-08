@@ -189,6 +189,7 @@ class JITOptimizations extends Component {
 
     return Tree({
       autoExpandDepth,
+      preventNavigationOnArrowRight: false,
       getParent: node => {
         let site = getSite(node.id);
         let parent;
