@@ -442,9 +442,6 @@ DocAccessible::Shutdown()
 
   RemoveEventListeners();
 
-  nsCOMPtr<nsIDocument> kungFuDeathGripDoc = mDocumentNode;
-  mDocumentNode = nullptr;
-
   if (mParent) {
     DocAccessible* parentDocument = mParent->Document();
     if (parentDocument)
@@ -492,7 +489,8 @@ DocAccessible::Shutdown()
 
   HyperTextAccessibleWrap::Shutdown();
 
-  GetAccService()->NotifyOfDocumentShutdown(this, kungFuDeathGripDoc);
+  GetAccService()->NotifyOfDocumentShutdown(this, mDocumentNode);
+  mDocumentNode = nullptr;
 }
 
 nsIFrame*
