@@ -1188,12 +1188,12 @@ class TreeMetadataEmitter(LoggingMixin):
                         if isinstance(f, SourcePath):
                             if f.startswith('en-US/'):
                                 pass
-                            elif '/locales/en-US/' in f:
+                            elif 'locales/en-US/' in f:
                                 pass
                             else:
                                 raise SandboxValidationError(
                                         '%s paths must start with `en-US/` or '
-                                        'contain `/locales/en-US/`: %s'
+                                        'contain `locales/en-US/`: %s'
                                         % (var, f,), context)
 
                     if not isinstance(f, ObjDirPath):

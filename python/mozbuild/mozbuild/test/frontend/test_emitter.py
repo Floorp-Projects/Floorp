@@ -1371,10 +1371,10 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_localized_files_no_en_us(self):
         """Test that LOCALIZED_FILES errors if a path does not start with
-        `en-US/` or contain `/locales/en-US/`."""
+        `en-US/` or contain `locales/en-US/`."""
         reader = self.reader('localized-files-no-en-us')
         with self.assertRaisesRegexp(SandboxValidationError,
-             'LOCALIZED_FILES paths must start with `en-US/` or contain `/locales/en-US/`: foo.js'):
+             'LOCALIZED_FILES paths must start with `en-US/` or contain `locales/en-US/`: foo.js'):
             objs = self.read_topsrcdir(reader)
 
     def test_localized_pp_files(self):
