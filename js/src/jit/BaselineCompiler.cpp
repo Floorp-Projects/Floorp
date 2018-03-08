@@ -727,7 +727,7 @@ BaselineCompiler::emitWarmUpCounterIncrement(bool allowOsr)
     // Emit no warm-up counter increments or bailouts if Ion is not
     // enabled, or if the script will never be Ion-compileable
 
-    if (!ionCompileable_ && !ionOSRCompileable_)
+    if (!ionCompileable_)
         return true;
 
     frame.assertSyncedStack();

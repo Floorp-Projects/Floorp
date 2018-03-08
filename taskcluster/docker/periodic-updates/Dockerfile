@@ -12,10 +12,10 @@ RUN apt-get update -q && \
     arcanist=0~git20170812-1 \
     bzip2=1.0.6-8.1 \
     ca-certificates=20170717 \
-    curl=7.58.0-2ubuntu1 \
+    curl=7.58.0-2ubuntu2 \
     jq=1.5+dfsg-2 \
     libdbus-glib-1-2=0.110-2 \
-    libgtk-3-0=3.22.28-1ubuntu1  \
+    libgtk-3-0=3.22.28-1ubuntu3 \
     libxml2-utils=2.9.4+dfsg1-6.1ubuntu1 \
     libxt6=1:1.1.5-1 \
     mercurial=4.3.1-2 \
