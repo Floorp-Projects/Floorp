@@ -37,7 +37,7 @@ static bool GetShouldUseFlatpakPortal() {
   return shouldUsePortal;
 }
 
-static bool ShouldUseFlatpakPortal() {
+static bool ShouldUseFlatpakPortalImpl() {
   static bool sShouldUseFlatpakPortal = GetShouldUseFlatpakPortal();
   return sShouldUseFlatpakPortal;
 }
@@ -456,7 +456,7 @@ nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
   // Application in flatpak sandbox does not have access to the list
   // of installed applications on the system. We use generic
   // nsFlatpakHandlerApp which forwards launch call to the system.
-  if (ShouldUseFlatpakPortal()) {
+  if (ShouldUseFlatpakPortalImpl()) {
     nsFlatpakHandlerApp *mozApp = new nsFlatpakHandlerApp();
     NS_ADDREF(*aApp = mozApp);
     return NS_OK;
@@ -515,7 +515,7 @@ nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
 
   // Flatpak does not reveal installed application to the sandbox,
   // we need to create generic system handler.
-  if (ShouldUseFlatpakPortal()) {
+  if (ShouldUseFlatpakPortalImpl()) {
     nsFlatpakHandlerApp *mozApp = new nsFlatpakHandlerApp();
     NS_ADDREF(*aApp = mozApp);
     return NS_OK;
@@ -742,5 +742,12 @@ nsGIOService::CreateAppFromCommand(nsACString const& cmd,
   nsGIOMimeApp *mozApp = new nsGIOMimeApp(app_info);
   NS_ENSURE_TRUE(mozApp, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*appInfo = mozApp);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGIOService::ShouldUseFlatpakPortal(bool* aRes)
+{
+  *aRes = ShouldUseFlatpakPortalImpl();
   return NS_OK;
 }
