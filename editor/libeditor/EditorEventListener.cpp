@@ -299,15 +299,15 @@ EditorEventListener::UninstallFromEditor()
                                   TrustedEventsAtSystemGroupBubble());
 }
 
-already_AddRefed<nsIPresShell>
-EditorEventListener::GetPresShell()
+nsIPresShell*
+EditorEventListener::GetPresShell() const
 {
   MOZ_ASSERT(!DetachedFromEditor());
   return mEditorBase->GetPresShell();
 }
 
 nsPresContext*
-EditorEventListener::GetPresContext()
+EditorEventListener::GetPresContext() const
 {
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   return presShell ? presShell->GetPresContext() : nullptr;

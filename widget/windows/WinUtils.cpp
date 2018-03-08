@@ -1703,12 +1703,12 @@ WinUtils::GetShellItemPath(IShellItem* aItem,
 }
 
 /* static */
-nsIntRegion
+LayoutDeviceIntRegion
 WinUtils::ConvertHRGNToRegion(HRGN aRgn)
 {
   NS_ASSERTION(aRgn, "Don't pass NULL region here");
 
-  nsIntRegion rgn;
+  LayoutDeviceIntRegion rgn;
 
   DWORD size = ::GetRegionData(aRgn, 0, nullptr);
   AutoTArray<uint8_t,100> buffer;
@@ -1732,12 +1732,12 @@ WinUtils::ConvertHRGNToRegion(HRGN aRgn)
   return rgn;
 }
 
-nsIntRect
+LayoutDeviceIntRect
 WinUtils::ToIntRect(const RECT& aRect)
 {
-  return nsIntRect(aRect.left, aRect.top,
-                   aRect.right - aRect.left,
-                   aRect.bottom - aRect.top);
+  return LayoutDeviceIntRect(aRect.left, aRect.top,
+                             aRect.right - aRect.left,
+                             aRect.bottom - aRect.top);
 }
 
 /* static */

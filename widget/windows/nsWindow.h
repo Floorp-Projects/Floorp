@@ -428,7 +428,7 @@ protected:
    * Event handlers
    */
   virtual void            OnDestroy() override;
-  virtual bool            OnResize(nsIntRect &aWindowRect);
+  bool                    OnResize(const LayoutDeviceIntSize& aSize);
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);
   bool                    OnHotKey(WPARAM wParam, LPARAM lParam);
@@ -496,7 +496,7 @@ protected:
   static bool             IsTopLevelMouseExit(HWND aWnd);
   virtual nsresult        SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
                                               bool aIntersectWithExisting) override;
-  nsIntRegion             GetRegionToPaint(bool aForceFullRepaint,
+  LayoutDeviceIntRegion   GetRegionToPaint(bool aForceFullRepaint,
                                            PAINTSTRUCT ps, HDC aDC);
   void                    ClearCachedResources();
   nsIWidgetListener*      GetPaintListener();

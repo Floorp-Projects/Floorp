@@ -1473,6 +1473,13 @@ KeyframeEffectReadOnly::CanThrottle() const
       // If there are transform change hints, unthrottle the animation
       // periodically since it might affect the overflow region.
       if (HasTransformThatMightAffectOverflow()) {
+        // Don't throttle finite transform animations since the animation might
+        // suddenly come into view and if it was throttled it will be
+        // out-of-sync.
+        if (HasFiniteActiveDuration()) {
+          return false;
+        }
+
         return isVisibilityHidden
           ? CanThrottleTransformChangesInScrollable(*frame)
           : CanThrottleTransformChanges(*frame);

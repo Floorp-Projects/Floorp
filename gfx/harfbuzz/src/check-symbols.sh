@@ -7,6 +7,7 @@ test -z "$srcdir" && srcdir=.
 test -z "$libs" && libs=.libs
 stat=0
 
+IGNORED_SYMBOLS='_fini\|_init\|_fdata\|_ftext\|_fbss\|__bss_start\|__bss_start__\|__bss_end__\|_edata\|_end\|_bss_end__\|__end__\|__gcov_flush\|llvm_.*'
 
 if which nm 2>/dev/null >/dev/null; then
 	:
@@ -15,29 +16,46 @@ else
 	exit 77
 fi
 
-echo "Checking that we are not exposing internal symbols"
 tested=false
-for suffix in so dylib; do
-	so=$libs/libharfbuzz.$suffix
-	if ! test -f "$so"; then continue; fi
+for soname in harfbuzz harfbuzz-subset harfbuzz-icu harfbuzz-gobject; do
+	for suffix in so dylib; do
+		so=$libs/lib$soname.$suffix
+		if ! test -f "$so"; then continue; fi
 
-	EXPORTED_SYMBOLS="`nm "$so" | grep ' [BCDGINRSTVW] .' | grep -v ' _fini\>\| _init\>\| _fdata\>\| _ftext\>\| _fbss\>\| __bss_start\>\| __bss_start__\>\| __bss_end__\>\| _edata\>\| _end\>\| _bss_end__\>\| __end__\>\| __gcov_flush\>\| ___gcov_flush\>\| llvm_\| _llvm_' | cut -d' ' -f3`"
+		# On macOS, C symbols are prefixed with _
+		symprefix=
+		if test $suffix = dylib; then symprefix=_; fi
 
-	prefix=`basename "$so" | sed 's/libharfbuzz/hb/; s/-/_/g; s/[.].*//'`
+		EXPORTED_SYMBOLS="`nm "$so" | grep ' [BCDGINRSTVW] .' | grep -v " $symprefix\\($IGNORED_SYMBOLS\\>\\)" | cut -d' ' -f3 | c++filt`"
 
-	# On mac, C symbols are prefixed with _
-	if test $suffix = dylib; then prefix="_$prefix"; fi
+		prefix=$symprefix`basename "$so" | sed 's/libharfbuzz/hb/; s/-/_/g; s/[.].*//'`
 
-	echo "Processing $so"
-	if echo "$EXPORTED_SYMBOLS" | grep -v "^${prefix}_"; then
-		echo "Ouch, internal symbols exposed"
-		stat=1
-	fi
+		echo
+		echo "Checking that $so does not expose internal symbols"
+		if echo "$EXPORTED_SYMBOLS" | grep -v "^${prefix}\(_\|$\)"; then
+			echo "Ouch, internal symbols exposed"
+			stat=1
+		fi
 
-	tested=true
+		def=$soname.def
+		if ! test -f "$def"; then
+			echo "'$def' not found; skipping"
+		else
+			echo
+			echo "Checking that $so has the same symbol list as $def"
+			{
+				echo EXPORTS
+				echo "$EXPORTED_SYMBOLS" | sed -e "s/^${symprefix}hb/hb/g"
+				# cheat: copy the last line from the def file!
+				tail -n1 "$def"
+			} | c++filt | diff "$def" - >&2 || stat=1
+		fi
+
+		tested=true
+	done
 done
 if ! $tested; then
-	echo "check-symbols.sh: no shared library found; skipping test"
+	echo "check-symbols.sh: no shared libraries found; skipping test"
 	exit 77
 fi
 

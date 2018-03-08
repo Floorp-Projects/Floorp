@@ -1174,7 +1174,8 @@ BacktrackingAllocator::mergeAndQueueRegisters()
             continue;
 
         if (reg.def()->policy() == LDefinition::MUST_REUSE_INPUT) {
-            LUse* use = reg.ins()->getOperand(reg.def()->getReusedInput())->toUse();
+            LUse* use =
+                reg.ins()->toInstruction()->getOperand(reg.def()->getReusedInput())->toUse();
             if (!tryMergeReusedRegister(reg, vreg(use)))
                 return false;
         }

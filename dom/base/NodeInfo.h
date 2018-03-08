@@ -25,8 +25,9 @@
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "nsAtom.h"
-#include "plhash.h"
+#include "nsHashKeys.h"
 
 class nsIDocument;
 class nsNodeInfoManager;
@@ -248,22 +249,54 @@ protected:
     NodeInfoInner()
       : mName(nullptr), mPrefix(nullptr), mNamespaceID(kNameSpaceID_Unknown),
         mNodeType(0), mNameString(nullptr), mExtraName(nullptr),
-        mHash(0), mHashInitialized(false)
+        mHash()
     {
     }
     NodeInfoInner(nsAtom *aName, nsAtom *aPrefix, int32_t aNamespaceID,
                     uint16_t aNodeType, nsAtom* aExtraName)
       : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
         mNodeType(aNodeType), mNameString(nullptr), mExtraName(aExtraName),
-        mHash(aName->hash()), mHashInitialized(true)
+        mHash()
     {
     }
     NodeInfoInner(const nsAString& aTmpName, nsAtom *aPrefix,
                     int32_t aNamespaceID, uint16_t aNodeType)
       : mName(nullptr), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
         mNodeType(aNodeType), mNameString(&aTmpName), mExtraName(nullptr),
-        mHash(0), mHashInitialized(false)
+        mHash()
     {
+    }
+
+    bool operator==(const NodeInfoInner& aOther) const
+    {
+      if (mPrefix != aOther.mPrefix ||
+          mNamespaceID != aOther.mNamespaceID ||
+          mNodeType != aOther.mNodeType ||
+          mExtraName != aOther.mExtraName) {
+        return false;
+      }
+
+      if (mName) {
+        if (aOther.mName) {
+          return mName == aOther.mName;
+        }
+        return mName->Equals(*(aOther.mNameString));
+      }
+
+      if (aOther.mName) {
+        return aOther.mName->Equals(*(mNameString));
+      }
+
+      return mNameString->Equals(*(aOther.mNameString));
+    }
+
+    uint32_t Hash() const
+    {
+      if (!mHash) {
+        mHash.emplace(
+            mName ? mName->hash() : mozilla::HashString(*mNameString));
+      }
+      return mHash.value();
     }
 
     nsAtom* const MOZ_OWNING_REF mName;
@@ -272,8 +305,7 @@ protected:
     uint16_t            mNodeType; // As defined by nsIDOMNode.nodeType
     const nsAString* const mNameString;
     nsAtom* MOZ_OWNING_REF mExtraName; // Only used by PIs and DocTypes
-    PLHashNumber      mHash;
-    bool              mHashInitialized;
+    mutable mozilla::Maybe<const uint32_t> mHash;
   };
 
   // nsNodeInfoManager needs to pass mInner to the hash table.

@@ -454,6 +454,14 @@ IDBFactory::Open(JSContext* aCx,
   if (!IsChrome() &&
       aOptions.mStorage.WasPassed()) {
 
+    if (mWindow && mWindow->GetExtantDoc()) {
+      mWindow->GetExtantDoc()->WarnOnceAbout(nsIDocument::eIDBOpenDBOptions_StorageType);
+    } else if (!NS_IsMainThread()) {
+      // The method below reports on the main thread too, so we need to make sure we're on a worker.
+      // Workers don't have a WarnOnceAbout mechanism, so this will be reported every time.
+      WorkerPrivate::ReportErrorToConsole("IDBOpenDBOptions_StorageType");
+    }
+
     bool ignore = false;
     // Ignore internal usage on about: pages.
     if (NS_IsMainThread()) {

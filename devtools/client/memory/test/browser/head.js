@@ -5,12 +5,12 @@
 
 // Load the shared test helpers into this compartment.
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
   this);
 
 // Load the shared Redux helpers into this compartment.
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-redux-head.js",
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
   this);
 
 var { censusDisplays, snapshotState: states } = require("devtools/client/memory/constants");

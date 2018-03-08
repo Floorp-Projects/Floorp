@@ -72,11 +72,6 @@ class BaselineFrame
         // debug mode OSR sanity checking when it handles corner cases which
         // only arise during exception handling.
         HANDLING_EXCEPTION = 1 << 12,
-
-        // If set, this frame has been on the stack when
-        // |js::SavedStacks::saveCurrentStack| was called, and so there is a
-        // |js::SavedFrame| object cached for this frame.
-        HAS_CACHED_SAVED_FRAME = 1 << 13
     };
 
   protected: // Silence Clang warning about unused private fields.
@@ -310,13 +305,6 @@ class BaselineFrame
     }
     void unsetIsHandlingException() {
         flags_ &= ~HANDLING_EXCEPTION;
-    }
-
-    bool hasCachedSavedFrame() const {
-        return flags_ & HAS_CACHED_SAVED_FRAME;
-    }
-    void setHasCachedSavedFrame() {
-        flags_ |= HAS_CACHED_SAVED_FRAME;
     }
 
     bool overRecursed() const {

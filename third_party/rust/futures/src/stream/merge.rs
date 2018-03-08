@@ -1,3 +1,6 @@
+#![deprecated(note = "functionality provided by `select` now")]
+#![allow(deprecated)]
+
 use {Poll, Async};
 use stream::{Stream, Fuse};
 
@@ -47,7 +50,7 @@ impl<S1, S2> Stream for Merge<S1, S2>
             return Err(e)
         }
 
-        match try!(self.stream1.poll()) {
+        match self.stream1.poll()? {
             Async::NotReady => {
                 match try_ready!(self.stream2.poll()) {
                     Some(item2) => Ok(Async::Ready(Some(MergedItem::Second(item2)))),

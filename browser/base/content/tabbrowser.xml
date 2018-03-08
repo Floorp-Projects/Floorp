@@ -126,12 +126,17 @@
           this.observe(null, "nsPref:changed", "privacy.userContext.enabled");
 
           this._setPositionalAttributes();
+
+          CustomizableUI.addListener(this);
+          this._updateNewTabVisibility();
         ]]>
       </constructor>
 
       <destructor>
         <![CDATA[
           Services.prefs.removeObserver("privacy.userContext", this);
+
+          CustomizableUI.removeListener(this);
         ]]>
       </destructor>
 
@@ -907,6 +912,57 @@
           return document.getElementById(aTab.linkedPanel);
         ]]>
         </body>
+      </method>
+
+      <method name="_updateNewTabVisibility">
+        <body><![CDATA[
+          // Helper functions to help deal with customize mode wrapping some items
+          let wrap = n => n.parentNode.localName == "toolbarpaletteitem" ? n.parentNode : n;
+          let unwrap = n => n && n.localName == "toolbarpaletteitem" ? n.firstElementChild : n;
+
+          let sib = this;
+          do {
+            sib = unwrap(wrap(sib).nextElementSibling);
+          } while (sib && sib.hidden);
+
+          const kAttr = "hasadjacentnewtabbutton";
+          if (sib && sib.id == "new-tab-button") {
+            this.setAttribute(kAttr, "true");
+          } else {
+            this.removeAttribute(kAttr);
+          }
+        ]]></body>
+      </method>
+
+      <method name="onWidgetAfterDOMChange">
+        <parameter name="aNode"/>
+        <parameter name="aNextNode"/>
+        <parameter name="aContainer"/>
+        <body><![CDATA[
+          if (aContainer.ownerDocument == document &&
+              aContainer.id == "TabsToolbar") {
+            this._updateNewTabVisibility();
+          }
+        ]]></body>
+      </method>
+
+      <method name="onAreaNodeRegistered">
+        <parameter name="aArea"/>
+        <parameter name="aContainer"/>
+        <body><![CDATA[
+          if (aContainer.ownerDocument == document &&
+              aArea == "TabsToolbar") {
+            this._updateNewTabVisibility();
+          }
+        ]]></body>
+      </method>
+
+      <method name="onAreaReset">
+        <parameter name="aArea"/>
+        <parameter name="aContainer"/>
+        <body><![CDATA[
+          this.onAreaNodeRegistered(aArea, aContainer);
+        ]]></body>
       </method>
     </implementation>
 

@@ -28,7 +28,7 @@ nsIRootBox::GetRootBox(nsIPresShell* aShell)
   if (!aShell) {
     return nullptr;
   }
-  nsIFrame* rootFrame = aShell->FrameManager()->GetRootFrame();
+  nsIFrame* rootFrame = aShell->GetRootFrame();
   if (!rootFrame) {
     return nullptr;
   }

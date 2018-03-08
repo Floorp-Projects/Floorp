@@ -773,7 +773,7 @@ JSTerm.prototype = {
     });
 
     // Relay events from the VariablesView.
-    view.on("fetched", (event, type, variableObject) => {
+    view.on("fetched", (type, variableObject) => {
       this.emit("variablesview-fetched", variableObject);
     });
 

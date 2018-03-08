@@ -114,7 +114,7 @@ struct SingleSubstFormat1
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
-  HBINT16		deltaGlyphID;		/* Add to original GlyphID to get
+  HBINT16	deltaGlyphID;		/* Add to original GlyphID to get
 					 * substitute GlyphID */
   public:
   DEFINE_SIZE_STATIC (6);
@@ -386,7 +386,7 @@ struct MultipleSubstFormat1
       if (unlikely (!sequence[i].serialize (c, this).serialize (c,
 								substitute_glyphs_list,
 								substitute_len_list[i]))) return_trace (false);
-    substitute_len_list.advance (num_glyphs);
+    substitute_len_list += num_glyphs;
     if (unlikely (!coverage.serialize (c, this).serialize (c, glyphs, num_glyphs))) return_trace (false);
     return_trace (true);
   }
@@ -536,7 +536,7 @@ struct AlternateSubstFormat1
       if (unlikely (!alternateSet[i].serialize (c, this).serialize (c,
 								    alternate_glyphs_list,
 								    alternate_len_list[i]))) return_trace (false);
-    alternate_len_list.advance (num_glyphs);
+    alternate_len_list += num_glyphs;
     if (unlikely (!coverage.serialize (c, this).serialize (c, glyphs, num_glyphs))) return_trace (false);
     return_trace (true);
   }
@@ -757,8 +757,8 @@ struct LigatureSet
 								ligatures[i],
 								component_list,
 								component_count_list[i]))) return_trace (false);
-    ligatures.advance (num_ligatures);
-    component_count_list.advance (num_ligatures);
+    ligatures += num_ligatures;
+    component_count_list += num_ligatures;
     return_trace (true);
   }
 
@@ -850,7 +850,7 @@ struct LigatureSubstFormat1
 								   component_count_list,
 								   ligature_per_first_glyph_count_list[i],
 								   component_list))) return_trace (false);
-    ligature_per_first_glyph_count_list.advance (num_first_glyphs);
+    ligature_per_first_glyph_count_list += num_first_glyphs;
     if (unlikely (!coverage.serialize (c, this).serialize (c, first_glyphs, num_first_glyphs))) return_trace (false);
     return_trace (true);
   }

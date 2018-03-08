@@ -2,9 +2,9 @@ extern crate futures;
 
 use std::sync::mpsc::channel;
 
-use futures::Poll;
-use futures::future::*;
+use futures::prelude::*;
 use futures::sync::oneshot;
+use futures::future::{err, ok};
 
 mod support;
 use support::*;

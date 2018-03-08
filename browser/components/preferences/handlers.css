@@ -6,10 +6,6 @@
   -moz-binding: url("chrome://browser/content/preferences/handlers.xml#handler");
 }
 
-#handlersView > richlistitem[selected="true"] {
-  -moz-binding: url("chrome://browser/content/preferences/handlers.xml#handler-selected");
-}
-
 #containersView > richlistitem {
   -moz-binding: url("chrome://browser/content/preferences/handlers.xml#container");
 }

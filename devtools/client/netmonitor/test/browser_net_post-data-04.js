@@ -8,10 +8,10 @@
  * for JSON payloads.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = yield initNetMonitor(POST_JSON_URL);
+  let { tab, monitor } = await initNetMonitor(POST_JSON_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -20,10 +20,10 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests();
   });
-  yield wait;
+  await wait;
 
   // Wait for all tree view updated by react
   wait = waitForDOM(document, "#params-panel .tree-section");
@@ -31,7 +31,7 @@ add_task(function* () {
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#params-tab"));
-  yield wait;
+  await wait;
 
   let tabpanel = document.querySelector("#params-panel");
 

@@ -140,12 +140,23 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
-XPCOMUtils.defineLazyGetter(this, "gBrowser", function() {
-  // The TabBrowser class only exists in proper browser windows, whereas
-  // browser.js may be loaded in other windows where a non-tabbrowser
-  // browser might try to access the gBrowser property.
-  // eslint-disable-next-line no-undef
-  return (typeof TabBrowser == "function") ? new TabBrowser() : null;
+Object.defineProperty(this, "gBrowser", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    delete window.gBrowser;
+
+    // The tabbed browser only exists in proper browser windows, but on Mac we
+    // load browser.js in other windows and might try to access gBrowser.
+    if (!window._gBrowser) {
+      return window.gBrowser = null;
+    }
+
+    window.gBrowser = window._gBrowser;
+    delete window._gBrowser;
+    gBrowser.init();
+    return gBrowser;
+  },
 });
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
@@ -3247,6 +3258,8 @@ function getDefaultHomePage() {
   // Get the start page from the *default* pref branch, not the user's
   var prefs = Services.prefs.getDefaultBranch(null);
   var url = BROWSER_NEW_TAB_URL;
+  if (PrivateBrowsingUtils.isWindowPrivate(window))
+    return url;
   try {
     url = prefs.getComplexValue("browser.startup.homepage",
                                 Ci.nsIPrefLocalizedString).data;
@@ -6710,13 +6723,7 @@ var CanvasPermissionPromptHelper = {
       return;
     }
 
-    let message = {};
-    let header = gNavigatorBundle.getFormattedString("canvas.siteprompt", ["<>"], 1);
-
-    header = header.split("<>");
-    message.start = header[0];
-    message.host = uri.asciiHost;
-    message.end = header[1];
+    let message = gNavigatorBundle.getFormattedString("canvas.siteprompt", ["<>"], 1);
 
     function setCanvasPermission(aURI, aPerm, aPersistent) {
       Services.perms.add(aURI, "canvas", aPerm,
@@ -6752,7 +6759,8 @@ var CanvasPermissionPromptHelper = {
     }
 
     let options = {
-      checkbox
+      checkbox,
+      name: uri.asciiHost,
     };
     PopupNotifications.show(browser, aTopic, message, this._notificationIcon,
                             mainAction, secondaryActions, options);
@@ -8266,7 +8274,7 @@ var gIdentityHandler = {
     let messageBase = gNavigatorBundle.getString("popupShowBlockedPopupsIndicatorText");
     let message = PluralForm.get(popupCount, messageBase)
                                  .replace("#1", popupCount);
-    text.setAttribute("value", message);
+    text.textContent = message;
 
     text.addEventListener("click", () => {
       gPopupBlockerObserver.showAllBlockedPopups(gBrowser.selectedBrowser);

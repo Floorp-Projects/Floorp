@@ -14,6 +14,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsIThreadManager.h"
 #ifdef XP_WIN
 #include "ThreadPoolCOMListener.h"
 #endif
@@ -220,7 +221,7 @@ CreateThreadPool(const nsCString& aName)
   rv = pool->SetName(aName);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  rv = pool->SetThreadStackSize(SharedThreadPool::kStackSize);
+  rv = pool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
 #ifdef XP_WIN

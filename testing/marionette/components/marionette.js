@@ -93,10 +93,6 @@ const RECOMMENDED_PREFS = new Map([
   // as it is picked up at runtime.
   ["browser.newtabpage.enabled", false],
 
-  // Assume the about:newtab page's intro panels have been shown to not
-  // depend on which test runs first and happens to open about:newtab
-  ["browser.newtabpage.introShown", true],
-
   // Never start the browser in offline mode
   //
   // This should also be set in the profile prior to starting Firefox,

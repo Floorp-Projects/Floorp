@@ -7,7 +7,7 @@ use std::thread;
 use futures::{Future, IntoFuture, Async, Poll};
 use futures::future::FutureResult;
 use futures::stream::Stream;
-use futures::executor::{self, Unpark};
+use futures::executor::{self, NotifyHandle, Notify};
 use futures::task;
 
 pub mod local_executor;
@@ -27,11 +27,11 @@ pub fn assert_done<T, F>(f: F, result: Result<T::Item, T::Error>)
 }
 
 pub fn assert_empty<T: Future, F: FnMut() -> T>(mut f: F) {
-    assert!(executor::spawn(f()).poll_future(unpark_panic()).ok().unwrap().is_not_ready());
+    assert!(executor::spawn(f()).poll_future_notify(&notify_panic(), 0).ok().unwrap().is_not_ready());
 }
 
 pub fn sassert_done<S: Stream>(s: &mut S) {
-    match executor::spawn(s).poll_stream(unpark_panic()) {
+    match executor::spawn(s).poll_stream_notify(&notify_panic(), 0) {
         Ok(Async::Ready(None)) => {}
         Ok(Async::Ready(Some(_))) => panic!("stream had more elements"),
         Ok(Async::NotReady) => panic!("stream wasn't ready"),
@@ -40,7 +40,7 @@ pub fn sassert_done<S: Stream>(s: &mut S) {
 }
 
 pub fn sassert_empty<S: Stream>(s: &mut S) {
-    match executor::spawn(s).poll_stream(unpark_noop()) {
+    match executor::spawn(s).poll_stream_notify(&notify_noop(), 0) {
         Ok(Async::Ready(None)) => panic!("stream is at its end"),
         Ok(Async::Ready(Some(_))) => panic!("stream had more elements"),
         Ok(Async::NotReady) => {}
@@ -51,7 +51,7 @@ pub fn sassert_empty<S: Stream>(s: &mut S) {
 pub fn sassert_next<S: Stream>(s: &mut S, item: S::Item)
     where S::Item: Eq + fmt::Debug
 {
-    match executor::spawn(s).poll_stream(unpark_panic()) {
+    match executor::spawn(s).poll_stream_notify(&notify_panic(), 0) {
         Ok(Async::Ready(None)) => panic!("stream is at its end"),
         Ok(Async::Ready(Some(e))) => assert_eq!(e, item),
         Ok(Async::NotReady) => panic!("stream wasn't ready"),
@@ -62,7 +62,7 @@ pub fn sassert_next<S: Stream>(s: &mut S, item: S::Item)
 pub fn sassert_err<S: Stream>(s: &mut S, err: S::Error)
     where S::Error: Eq + fmt::Debug
 {
-    match executor::spawn(s).poll_stream(unpark_panic()) {
+    match executor::spawn(s).poll_stream_notify(&notify_panic(), 0) {
         Ok(Async::Ready(None)) => panic!("stream is at its end"),
         Ok(Async::Ready(Some(_))) => panic!("stream had more elements"),
         Ok(Async::NotReady) => panic!("stream wasn't ready"),
@@ -70,26 +70,28 @@ pub fn sassert_err<S: Stream>(s: &mut S, err: S::Error)
     }
 }
 
-pub fn unpark_panic() -> Arc<Unpark> {
+pub fn notify_panic() -> NotifyHandle {
     struct Foo;
 
-    impl Unpark for Foo {
-        fn unpark(&self) {
-            panic!("should not be unparked");
+    impl Notify for Foo {
+        fn notify(&self, _id: usize) {
+            panic!("should not be notified");
         }
     }
 
-    Arc::new(Foo)
+    NotifyHandle::from(Arc::new(Foo))
 }
 
-pub fn unpark_noop() -> Arc<Unpark> {
-    struct Foo;
+pub fn notify_noop() -> NotifyHandle {
+    struct Noop;
 
-    impl Unpark for Foo {
-        fn unpark(&self) {}
+    impl Notify for Noop {
+        fn notify(&self, _id: usize) {}
     }
 
-    Arc::new(Foo)
+    const NOOP : &'static Noop = &Noop;
+
+    NotifyHandle::from(NOOP)
 }
 
 pub trait ForgetExt {
@@ -117,13 +119,13 @@ impl<F: Future> Future for DelayFuture<F> {
             self.0.poll()
         } else {
             self.1 = true;
-            task::park().unpark();
+            task::current().notify();
             Ok(Async::NotReady)
         }
     }
 }
 
-/// Introduces one Ok(Async::NotReady) before polling the given future
+/// Introduces one `Ok(Async::NotReady)` before polling the given future
 pub fn delay_future<F>(f: F) -> DelayFuture<F::Future>
     where F: IntoFuture,
 {

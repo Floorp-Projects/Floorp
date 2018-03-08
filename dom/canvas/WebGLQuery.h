@@ -13,13 +13,16 @@
 #include "nsThreadUtils.h"
 
 namespace mozilla {
+namespace webgl {
+class AvailabilityRunnable;
+} // namespace webgl
 
 class WebGLQuery final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLQuery>
     , public LinkedListElement<WebGLQuery>
 {
-    friend class AvailableRunnable;
+    friend class webgl::AvailabilityRunnable;
     friend class WebGLRefCountedObject<WebGLQuery>;
 
 public:
@@ -28,7 +31,7 @@ private:
     GLenum mTarget;
     WebGLRefPtr<WebGLQuery>* mActiveSlot;
 
-    bool mCanBeAvailable; // Track whether the event loop has spun
+    bool mCanBeAvailable = false; // Track whether the event loop has spun
 
     ////
 public:

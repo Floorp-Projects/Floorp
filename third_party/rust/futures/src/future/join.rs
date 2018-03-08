@@ -150,7 +150,7 @@ enum MaybeDone<A: Future> {
 impl<A: Future> MaybeDone<A> {
     fn poll(&mut self) -> Result<bool, A::Error> {
         let res = match *self {
-            MaybeDone::NotYet(ref mut a) => try!(a.poll()),
+            MaybeDone::NotYet(ref mut a) => a.poll()?,
             MaybeDone::Done(_) => return Ok(true),
             MaybeDone::Gone => panic!("cannot poll Join twice"),
         };

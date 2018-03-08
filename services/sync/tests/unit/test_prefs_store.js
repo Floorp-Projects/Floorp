@@ -25,7 +25,7 @@ function makePersona(id) {
 add_task(async function run_test() {
   _("Test fixtures.");
   // read our custom prefs file before doing anything.
-  Services.prefs.readUserPrefsFromFile(do_get_file("prefs_test_prefs_store.js"));
+  Services.prefs.readDefaultPrefsFromFile(do_get_file("prefs_test_prefs_store.js"));
 
   let engine = Service.engineManager.get("prefs");
   let store = engine._store;

@@ -13,9 +13,6 @@ with Files("defaultthemes/**"):
 with Files("docs/**"):
     BUG_COMPONENT = ("Core", "Security")
 
-with Files("newtab/**"):
-    BUG_COMPONENT = ("Firefox", "New Tab Page")
-
 with Files("pageinfo/**"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
@@ -36,9 +33,6 @@ with Files("test/contextMenu/**"):
 
 with Files("test/forms/**"):
     BUG_COMPONENT = ("Core", "Layout: Form Controls")
-
-with Files("test/newtab/**"):
-    BUG_COMPONENT = ("Firefox", "New Tab Page")
 
 with Files("test/pageinfo/**"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")

@@ -19,6 +19,7 @@ add_task(async function testFullscreen() {
   is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popuphidden");
+  document.documentElement.focus();
   EventUtils.synthesizeKey("KEY_F11");
   await popuphiddenPromise;
   await new Promise(executeSoon);

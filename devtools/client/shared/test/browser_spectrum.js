@@ -73,7 +73,7 @@ function testChangingColorShouldEmitEvents(container) {
     let s = new Spectrum(container, [255, 255, 255, 1]);
     s.show();
 
-    s.once("changed", (event, rgba, color) => {
+    s.once("changed", (rgba, color) => {
       ok(true, "Changed event was emitted on color change");
       is(rgba[0], 128, "New color is correct");
       is(rgba[1], 64, "New color is correct");

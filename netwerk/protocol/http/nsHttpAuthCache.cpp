@@ -54,7 +54,7 @@ StrEquivalent(const char16_t *a, const char16_t *b)
 //-----------------------------------------------------------------------------
 
 nsHttpAuthCache::nsHttpAuthCache()
-    : mDB(nullptr)
+    : mDB(128)
     , mObserver(new OriginClearObserver(this))
 {
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
@@ -65,31 +65,13 @@ nsHttpAuthCache::nsHttpAuthCache()
 
 nsHttpAuthCache::~nsHttpAuthCache()
 {
-    if (mDB) {
-        DebugOnly<nsresult> rv = ClearAll();
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
+    DebugOnly<nsresult> rv = ClearAll();
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
     if (obsSvc) {
         obsSvc->RemoveObserver(mObserver, "clear-origin-attributes-data");
         mObserver->mOwner = nullptr;
     }
-}
-
-nsresult
-nsHttpAuthCache::Init()
-{
-    NS_ENSURE_TRUE(!mDB, NS_ERROR_ALREADY_INITIALIZED);
-
-    LOG(("nsHttpAuthCache::Init\n"));
-
-    mDB = PL_NewHashTable(128, (PLHashFunction) PL_HashString,
-                               (PLHashComparator) PL_CompareStrings,
-                               (PLHashComparator) 0, &gHashAllocOps, this);
-    if (!mDB)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    return NS_OK;
 }
 
 nsresult
@@ -150,24 +132,17 @@ nsHttpAuthCache::SetAuthEntry(const char *scheme,
     LOG(("nsHttpAuthCache::SetAuthEntry [key=%s://%s:%d realm=%s path=%s metadata=%p]\n",
         scheme, host, port, realm, path, metadata));
 
-    if (!mDB) {
-        rv = Init();
-        if (NS_FAILED(rv)) return rv;
-    }
-
     nsAutoCString key;
     nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, originSuffix, key);
 
     if (!node) {
         // create a new entry node and set the given entry
         node = new nsHttpAuthNode();
-        if (!node)
-            return NS_ERROR_OUT_OF_MEMORY;
         rv = node->SetAuthEntry(path, realm, creds, challenge, ident, metadata);
         if (NS_FAILED(rv))
             delete node;
         else
-            PL_HashTableAdd(mDB, strdup(key.get()), node);
+            mDB.Put(key, node);
         return rv;
     }
 
@@ -181,23 +156,16 @@ nsHttpAuthCache::ClearAuthEntry(const char *scheme,
                                 const char *realm,
                                 nsACString const &originSuffix)
 {
-    if (!mDB)
-        return;
-
     nsAutoCString key;
     GetAuthKey(scheme, host, port, originSuffix, key);
-    PL_HashTableRemove(mDB, key.get());
+    mDB.Remove(key);
 }
 
 nsresult
 nsHttpAuthCache::ClearAll()
 {
     LOG(("nsHttpAuthCache::ClearAll\n"));
-
-    if (mDB) {
-        PL_HashTableDestroy(mDB);
-        mDB = 0;
-    }
+    mDB.Clear();
     return NS_OK;
 }
 
@@ -212,56 +180,9 @@ nsHttpAuthCache::LookupAuthNode(const char *scheme,
                                 nsACString const &originSuffix,
                                 nsCString  &key)
 {
-    if (!mDB)
-        return nullptr;
-
     GetAuthKey(scheme, host, port, originSuffix, key);
-
-    return (nsHttpAuthNode *) PL_HashTableLookup(mDB, key.get());
+    return mDB.Get(key);
 }
-
-void *
-nsHttpAuthCache::AllocTable(void *self, size_t size)
-{
-    return malloc(size);
-}
-
-void
-nsHttpAuthCache::FreeTable(void *self, void *item)
-{
-    free(item);
-}
-
-PLHashEntry *
-nsHttpAuthCache::AllocEntry(void *self, const void *key)
-{
-    return (PLHashEntry *) malloc(sizeof(PLHashEntry));
-}
-
-void
-nsHttpAuthCache::FreeEntry(void *self, PLHashEntry *he, unsigned flag)
-{
-    if (flag == HT_FREE_VALUE) {
-        // this would only happen if PL_HashTableAdd were to replace an
-        // existing entry in the hash table, but we _always_ do a lookup
-        // before adding a new entry to avoid this case.
-        NS_NOTREACHED("should never happen");
-    }
-    else if (flag == HT_FREE_ENTRY) {
-        // three wonderful flavors of freeing memory ;-)
-        delete (nsHttpAuthNode *) he->value;
-        free((char *) he->key);
-        free(he);
-    }
-}
-
-PLHashAllocOps nsHttpAuthCache::gHashAllocOps =
-{
-    nsHttpAuthCache::AllocTable,
-    nsHttpAuthCache::FreeTable,
-    nsHttpAuthCache::AllocEntry,
-    nsHttpAuthCache::FreeEntry
-};
 
 NS_IMPL_ISUPPORTS(nsHttpAuthCache::OriginClearObserver, nsIObserver)
 
@@ -282,37 +203,27 @@ nsHttpAuthCache::OriginClearObserver::Observe(nsISupports *subject,
     return NS_OK;
 }
 
-static int
-RemoveEntriesForPattern(PLHashEntry *entry, int32_t number, void *arg)
-{
-    nsDependentCString key(static_cast<const char*>(entry->key));
-
-    // Extract the origin attributes suffix from the key.
-    int32_t colon = key.Find(NS_LITERAL_CSTRING(":"));
-    MOZ_ASSERT(colon != kNotFound);
-    nsDependentCSubstring oaSuffix;
-    oaSuffix.Rebind(key.BeginReading(), colon);
-
-    // Build the OriginAttributes object of it...
-    OriginAttributes oa;
-    DebugOnly<bool> rv = oa.PopulateFromSuffix(oaSuffix);
-    MOZ_ASSERT(rv);
-
-    // ...and match it against the given pattern.
-    OriginAttributesPattern const *pattern = static_cast<OriginAttributesPattern const*>(arg);
-    if (pattern->Matches(oa)) {
-        return HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE;
-    }
-    return HT_ENUMERATE_NEXT;
-}
-
 void
 nsHttpAuthCache::ClearOriginData(OriginAttributesPattern const &pattern)
 {
-    if (!mDB) {
-        return;
+    for (auto iter = mDB.Iter(); !iter.Done(); iter.Next()) {
+        const nsACString& key = iter.Key();
+
+        // Extract the origin attributes suffix from the key.
+        int32_t colon = key.FindChar(':');
+        MOZ_ASSERT(colon != kNotFound);
+        nsDependentCSubstring oaSuffix = StringHead(key, colon);
+
+        // Build the OriginAttributes object of it...
+        OriginAttributes oa;
+        DebugOnly<bool> rv = oa.PopulateFromSuffix(oaSuffix);
+        MOZ_ASSERT(rv);
+
+        // ...and match it against the given pattern.
+        if (pattern.Matches(oa)) {
+            iter.Remove();
+        }
     }
-    PL_HashTableEnumerateEntries(mDB, RemoveEntriesForPattern, (void*)&pattern);
 }
 
 //-----------------------------------------------------------------------------

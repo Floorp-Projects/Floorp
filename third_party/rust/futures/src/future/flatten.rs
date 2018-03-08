@@ -42,7 +42,7 @@ impl<A> Future for Flatten<A>
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         self.state.poll(|a, ()| {
-            let future = try!(a).into_future();
+            let future = a?.into_future();
             Ok(Err(future))
         })
     }

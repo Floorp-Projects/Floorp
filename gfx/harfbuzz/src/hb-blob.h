@@ -83,6 +83,9 @@ hb_blob_create_sub_blob (hb_blob_t    *parent,
 			 unsigned int  length);
 
 HB_EXTERN hb_blob_t *
+hb_blob_copy_writable_or_fail (hb_blob_t *blob);
+
+HB_EXTERN hb_blob_t *
 hb_blob_get_empty (void);
 
 HB_EXTERN hb_blob_t *

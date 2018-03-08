@@ -477,9 +477,10 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
       orientation.Normalize();
     }
 
-    // If both the listener are in the same spot, and no cone gain is specified,
-    // this node is noop.
-    if (mListenerPosition ==  position &&
+    // For a stereo source, when both the listener and the panner are in
+    // the same spot, and no cone gain is specified, this node is noop.
+    if (inputChannels == 2 &&
+        mListenerPosition ==  position &&
         mConeInnerAngle == 360 &&
         mConeOuterAngle == 360) {
       *aOutput = aInput;

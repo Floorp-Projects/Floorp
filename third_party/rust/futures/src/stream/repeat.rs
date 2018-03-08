@@ -7,6 +7,8 @@ use {Async, Poll};
 
 
 /// Stream that produces the same element repeatedly.
+///
+/// This structure is created by the `stream::repeat` function.
 #[derive(Debug)]
 #[must_use = "streams do nothing unless polled"]
 pub struct Repeat<T, E>
@@ -18,7 +20,9 @@ pub struct Repeat<T, E>
 
 /// Create a stream which produces the same item repeatedly.
 ///
-/// Stream never produces an error or EOF.
+/// Stream never produces an error or EOF. Note that you likely want to avoid
+/// usage of `collect` or such on the returned stream as it will exhaust
+/// available memory as it tries to just fill up all RAM.
 ///
 /// ```rust
 /// use futures::*;

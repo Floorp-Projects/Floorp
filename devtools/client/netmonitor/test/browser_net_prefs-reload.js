@@ -7,8 +7,8 @@
  * Tests if the prefs that should survive across tool reloads work.
  */
 
-add_task(function* () {
-  let { monitor } = yield initNetMonitor(SIMPLE_URL);
+add_task(async function () {
+  let { monitor } = await initNetMonitor(SIMPLE_URL);
   let Actions = monitor.panelWin
     .windowRequire("devtools/client/netmonitor/src/actions/index");
   info("Starting test... ");
@@ -61,12 +61,12 @@ add_task(function* () {
     /* add more prefs here... */
   };
 
-  yield testBottom();
-  yield testSide();
-  yield testWindow();
+  await testBottom();
+  await testSide();
+  await testWindow();
 
   info("Moving toolbox back to the bottom...");
-  yield monitor.toolbox.switchHost("bottom");
+  await monitor.toolbox.switchHost("bottom");
   return teardown(monitor);
 
   function storeFirstPrefValues() {
@@ -175,22 +175,22 @@ add_task(function* () {
     }
   }
 
-  function* restartNetMonitorAndSetupEnv() {
-    let newMonitor = yield restartNetMonitor(monitor);
+  async function restartNetMonitorAndSetupEnv() {
+    let newMonitor = await restartNetMonitor(monitor);
     monitor = newMonitor.monitor;
 
     let networkEvent = waitForNetworkEvents(monitor, 1);
     newMonitor.tab.linkedBrowser.reload();
-    yield networkEvent;
+    await networkEvent;
 
     let wait = waitForDOM(getDoc(), ".network-details-panel");
     EventUtils.sendMouseEvent({ type: "click" },
       getDoc().querySelector(".network-details-panel-toggle"));
-    yield wait;
+    await wait;
   }
 
-  function* testBottom() {
-    yield restartNetMonitorAndSetupEnv();
+  async function testBottom() {
+    await restartNetMonitorAndSetupEnv();
 
     info("Testing prefs reload for a bottom host.");
     storeFirstPrefValues();
@@ -199,24 +199,24 @@ add_task(function* () {
     validateFirstPrefValues(true);
     modifyFrontend(true);
 
-    yield restartNetMonitorAndSetupEnv();
+    await restartNetMonitorAndSetupEnv();
 
     // Revalidate and reset frontend while toolbox is on the bottom.
     validateNewPrefValues(true);
     resetFrontend(true);
 
-    yield restartNetMonitorAndSetupEnv();
+    await restartNetMonitorAndSetupEnv();
 
     // Revalidate.
     validateFirstPrefValues(true);
   }
 
-  function* testSide() {
-    yield restartNetMonitorAndSetupEnv();
+  async function testSide() {
+    await restartNetMonitorAndSetupEnv();
 
     info("Moving toolbox to the side...");
 
-    yield monitor.toolbox.switchHost("side");
+    await monitor.toolbox.switchHost("side");
     info("Testing prefs reload for a side host.");
     storeFirstPrefValues();
 
@@ -224,24 +224,24 @@ add_task(function* () {
     validateFirstPrefValues(false);
     modifyFrontend(false);
 
-    yield restartNetMonitorAndSetupEnv();
+    await restartNetMonitorAndSetupEnv();
 
     // Revalidate and reset frontend while toolbox is on the side.
     validateNewPrefValues(false);
     resetFrontend(false);
 
-    yield restartNetMonitorAndSetupEnv();
+    await restartNetMonitorAndSetupEnv();
 
     // Revalidate.
     validateFirstPrefValues(false);
   }
 
-  function* testWindow() {
-    yield restartNetMonitorAndSetupEnv();
+  async function testWindow() {
+    await restartNetMonitorAndSetupEnv();
 
     info("Moving toolbox into a window...");
 
-    yield monitor.toolbox.switchHost("window");
+    await monitor.toolbox.switchHost("window");
     info("Testing prefs reload for a window host.");
     storeFirstPrefValues();
 
@@ -249,13 +249,13 @@ add_task(function* () {
     validateFirstPrefValues(true);
     modifyFrontend(true);
 
-    yield restartNetMonitorAndSetupEnv();
+    await restartNetMonitorAndSetupEnv();
 
     // Revalidate and reset frontend while toolbox is in a window.
     validateNewPrefValues(true);
     resetFrontend(true);
 
-    yield restartNetMonitorAndSetupEnv();
+    await restartNetMonitorAndSetupEnv();
 
     // Revalidate.
     validateFirstPrefValues(true);

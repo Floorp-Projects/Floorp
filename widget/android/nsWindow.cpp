@@ -1136,94 +1136,6 @@ public:
 template<> const char
 nsWindow::NativePtr<nsWindow::LayerViewSupport>::sName[] = "LayerViewSupport";
 
-#ifdef MOZ_NATIVE_DEVICES
-/* PresentationMediaPlayerManager native calls access inner nsWindow functionality so PMPMSupport is a child class of nsWindow */
-class nsWindow::PMPMSupport final
-    : public PresentationMediaPlayerManager::Natives<PMPMSupport>
-{
-    PMPMSupport() = delete;
-
-    static LayerViewSupport* GetLayerViewSupport(jni::Object::Param aSession)
-    {
-        const auto& session = LayerSession::Ref::From(aSession);
-
-        LayerSession::Compositor::LocalRef compositor = session->GetCompositor();
-        if (!compositor) {
-            return nullptr;
-        }
-
-        LayerViewSupport* const lvs = LayerViewSupport::FromNative(compositor);
-        if (!lvs) {
-            // There is a pending exception whenever FromNative returns nullptr.
-            compositor.Env()->ExceptionClear();
-        }
-        return lvs;
-    }
-
-public:
-    static ANativeWindow* sWindow;
-    static EGLSurface sSurface;
-
-    static void InvalidateAndScheduleComposite(jni::Object::Param aSession)
-    {
-        LayerViewSupport* const lvs = GetLayerViewSupport(aSession);
-        if (lvs) {
-            lvs->SyncInvalidateAndScheduleComposite();
-        }
-    }
-
-    static void AddPresentationSurface(const jni::Class::LocalRef& aCls,
-                                       jni::Object::Param aSession,
-                                       jni::Object::Param aSurface)
-    {
-        RemovePresentationSurface();
-
-        LayerViewSupport* const lvs = GetLayerViewSupport(aSession);
-        if (!lvs) {
-            return;
-        }
-
-        ANativeWindow* const window = ANativeWindow_fromSurface(
-                aCls.Env(), aSurface.Get());
-        if (!window) {
-            return;
-        }
-
-        sWindow = window;
-
-        const bool wasAlreadyPaused = lvs->CompositorPaused();
-        if (!wasAlreadyPaused) {
-            lvs->SyncPauseCompositor();
-        }
-
-        if (sSurface) {
-            // Destroy the EGL surface! The compositor is paused so it should
-            // be okay to destroy the surface here.
-            mozilla::gl::GLContextProvider::DestroyEGLSurface(sSurface);
-            sSurface = nullptr;
-        }
-
-        if (!wasAlreadyPaused) {
-            lvs->SyncResumeCompositor();
-        }
-
-        lvs->SyncInvalidateAndScheduleComposite();
-    }
-
-    static void RemovePresentationSurface()
-    {
-        if (sWindow) {
-            ANativeWindow_release(sWindow);
-            sWindow = nullptr;
-        }
-    }
-};
-
-ANativeWindow* nsWindow::PMPMSupport::sWindow;
-EGLSurface nsWindow::PMPMSupport::sSurface;
-#endif
-
-
 nsWindow::GeckoViewSupport::~GeckoViewSupport()
 {
     // Disassociate our GeckoEditable instance with our native object.
@@ -1390,11 +1302,6 @@ nsWindow::InitNatives()
     nsWindow::GeckoViewSupport::Base::Init();
     nsWindow::LayerViewSupport::Init();
     nsWindow::NPZCSupport::Init();
-#ifdef MOZ_NATIVE_DEVICES
-    if (jni::IsFennec()) {
-        nsWindow::PMPMSupport::Init();
-    }
-#endif
 
     GeckoEditableSupport::Init();
 }
@@ -2075,14 +1982,6 @@ nsWindow::GetNativeData(uint32_t aDataType)
                 return lvs->GetSurface().Get();
             }
             return nullptr;
-
-#ifdef MOZ_NATIVE_DEVICES
-        case NS_PRESENTATION_WINDOW:
-            return PMPMSupport::sWindow;
-
-        case NS_PRESENTATION_SURFACE:
-            return PMPMSupport::sSurface;
-#endif
     }
 
     return nullptr;
@@ -2092,11 +1991,6 @@ void
 nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
 {
     switch (aDataType) {
-#ifdef MOZ_NATIVE_DEVICES
-        case NS_PRESENTATION_SURFACE:
-            PMPMSupport::sSurface = reinterpret_cast<EGLSurface>(aVal);
-            break;
-#endif
     }
 }
 

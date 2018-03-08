@@ -86,7 +86,7 @@ function click(node) {
 function* testMouseInteraction(tree) {
   info("Testing mouse interaction with the tree");
   let event;
-  let pass = (e, d, a) => event.resolve([e, d, a]);
+  let pass = (d, a) => event.resolve([d, a]);
 
   ok(!tree.selectedItem, "Nothing should be selected beforehand");
 
@@ -97,7 +97,7 @@ function* testMouseInteraction(tree) {
   ok(!node.classList.contains("theme-selected"),
      "Node should not have selected class before clicking");
   click(node);
-  let [, data, attachment] = yield event.promise;
+  let [data, attachment] = yield event.promise;
   ok(node.classList.contains("theme-selected"),
      "Node has selected class after click");
   is(data[0], "level1.2", "Correct tree path is emitted");
@@ -113,7 +113,7 @@ function* testMouseInteraction(tree) {
   ok(!node2.hasAttribute("expanded"), "New node is not expanded before clicking");
   tree.once("select", pass);
   click(node2);
-  [, data, attachment] = yield event.promise;
+  [data, attachment] = yield event.promise;
   ok(node2.classList.contains("theme-selected"),
      "New node has selected class after clicking");
   is(data[0], "level1", "Correct tree path is emitted for new node");

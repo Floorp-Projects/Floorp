@@ -174,20 +174,6 @@ const char MemoryMonitor::name[] =
 constexpr char MemoryMonitor::DispatchMemoryPressure_t::name[];
 constexpr char MemoryMonitor::DispatchMemoryPressure_t::signature[];
 
-#ifdef MOZ_NATIVE_DEVICES
-const char PresentationMediaPlayerManager::name[] =
-        "org/mozilla/gecko/PresentationMediaPlayerManager";
-
-constexpr char PresentationMediaPlayerManager::AddPresentationSurface_t::name[];
-constexpr char PresentationMediaPlayerManager::AddPresentationSurface_t::signature[];
-
-constexpr char PresentationMediaPlayerManager::InvalidateAndScheduleComposite_t::name[];
-constexpr char PresentationMediaPlayerManager::InvalidateAndScheduleComposite_t::signature[];
-
-constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::name[];
-constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::signature[];
-
-#endif // MOZ_NATIVE_DEVICES
 const char Telemetry::name[] =
         "org/mozilla/gecko/Telemetry";
 

@@ -14,8 +14,8 @@
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
-#include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsIFrameInlines.h"
@@ -190,7 +190,7 @@ nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostD
     if ((GetStateBits() & PLACEHOLDER_FOR_POPUP) ||
         !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof)) {
       ChildListID listId = ChildListIDForOutOfFlow(GetStateBits(), oof);
-      nsFrameManager* fm = PresContext()->GetPresShell()->FrameManager();
+      nsFrameManager* fm = PresContext()->FrameConstructor();
       fm->RemoveFrame(listId, oof);
     }
     // else oof will be destroyed by its parent
@@ -218,7 +218,7 @@ nsPlaceholderFrame::GetParentStyleContextForOutOfFlow(nsIFrame** aProviderFrame)
   nsIContent* parentContent = mContent ? mContent->GetFlattenedTreeParent() : nullptr;
   if (parentContent) {
     nsStyleContext* sc =
-      PresContext()->FrameManager()->GetDisplayContentsStyleFor(parentContent);
+      PresContext()->FrameConstructor()->GetDisplayContentsStyleFor(parentContent);
     if (sc) {
       *aProviderFrame = nullptr;
       return sc;

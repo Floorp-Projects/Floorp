@@ -27,6 +27,31 @@ pub fn new<S, P, R>(s: S, p: P) -> SkipWhile<S, P, R>
     }
 }
 
+impl<S, P, R> SkipWhile<S, P, R> where S: Stream, R: IntoFuture {
+    /// Acquires a reference to the underlying stream that this combinator is
+    /// pulling from.
+    pub fn get_ref(&self) -> &S {
+        &self.stream
+    }
+
+    /// Acquires a mutable reference to the underlying stream that this
+    /// combinator is pulling from.
+    ///
+    /// Note that care must be taken to avoid tampering with the state of the
+    /// stream which may otherwise confuse this combinator.
+    pub fn get_mut(&mut self) -> &mut S {
+        &mut self.stream
+    }
+
+    /// Consumes this combinator, returning the underlying stream.
+    ///
+    /// Note that this may discard intermediate state of this combinator, so
+    /// care should be taken to avoid losing resources when this is called.
+    pub fn into_inner(self) -> S {
+        self.stream
+    }
+}
+
 // Forwarding impl of Sink from the underlying stream
 impl<S, P, R> ::sink::Sink for SkipWhile<S, P, R>
     where S: ::sink::Sink + Stream, R: IntoFuture

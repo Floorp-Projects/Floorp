@@ -188,14 +188,14 @@ BookmarkQuery.prototype = {
 
   toSyncBookmark() {
     let info = Bookmark.prototype.toSyncBookmark.call(this);
-    info.folder = this.folderName;
+    info.folder = this.folderName || undefined; // empty string -> undefined
     info.query = this.queryId;
     return info;
   },
 
   fromSyncBookmark(item) {
     Bookmark.prototype.fromSyncBookmark.call(this, item);
-    this.folderName = item.folder;
+    this.folderName = item.folder || undefined; // empty string -> undefined
     this.queryId = item.query;
   },
 };

@@ -77,9 +77,9 @@ const EXPECTED_REQUESTS = [
   },
 ];
 
-add_task(function* () {
+add_task(async function () {
   // Async stacks aren't on by default in all builds
-  yield SpecialPowers.pushPrefEnv({ set: [["javascript.options.asyncstack", true]] });
+  await SpecialPowers.pushPrefEnv({ set: [["javascript.options.asyncstack", true]] });
 
   // the initNetMonitor function clears the network request list after the
   // page is loaded. That's why we first load a bogus page from SIMPLE_URL,
@@ -87,7 +87,7 @@ add_task(function* () {
   // all the requests the page is making, not only the XHRs.
   // We can't use about:blank here, because initNetMonitor checks that the
   // page has actually made at least one request.
-  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
+  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
 
   let { document, store, windowRequire, connector } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -100,10 +100,10 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, EXPECTED_REQUESTS.length);
   tab.linkedBrowser.loadURI(CAUSE_URL);
-  yield wait;
+  await wait;
 
   let requests = getSortedRequests(store.getState());
-  yield Promise.all(requests.map(requestItem =>
+  await Promise.all(requests.map(requestItem =>
     connector.requestData(requestItem.id, "stackTrace")));
 
   is(store.getState().requests.requests.size, EXPECTED_REQUESTS.length,
@@ -159,5 +159,5 @@ add_task(function* () {
     is(cause, expectedCause, `The request #${i} has the expected cause after sorting`);
   });
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

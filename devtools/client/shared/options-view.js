@@ -1,6 +1,6 @@
 "use strict";
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 const OPTIONS_SHOWN_EVENT = "options-shown";
@@ -95,7 +95,7 @@ OptionsView.prototype = {
    * button or by changing it in about:config). Updates the checked status
    * of the corresponding button.
    */
-  _onPrefChange: function (_, prefName) {
+  _onPrefChange: function (prefName) {
     let $el = this.$(`menuitem[data-pref="${prefName}"]`, this.menupopup);
     let value = this.prefObserver.get(prefName);
 

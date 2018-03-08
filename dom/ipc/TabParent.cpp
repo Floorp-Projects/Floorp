@@ -2105,7 +2105,7 @@ TabParent::GetChildProcessOffset()
   }
 
   nsPresContext* presContext = targetFrame->PresContext();
-  nsIFrame* rootFrame = presContext->PresShell()->FrameManager()->GetRootFrame();
+  nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
   nsView* rootView = rootFrame ? rootFrame->GetView() : nullptr;
   if (!rootView) {
     return offset;

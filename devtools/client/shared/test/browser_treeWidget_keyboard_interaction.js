@@ -86,7 +86,7 @@ function click(node) {
 async function testKeyboardInteraction(tree, win) {
   info("Testing keyboard interaction with the tree");
   let event;
-  let pass = (e, d, a) => event.resolve([e, d, a]);
+  let pass = (d, a) => event.resolve([d, a]);
 
   info("clicking on first top level item");
   let node = tree.root.children.firstChild.firstChild;
@@ -106,9 +106,9 @@ async function testKeyboardInteraction(tree, win) {
   event = defer();
   tree.once("select", pass);
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-  let [name, data, attachment] = await event.promise;
-  is(name, "select", "Select event was fired after pressing down");
-  is(data[0], "level1", "Correct item was selected after pressing down");
+
+  let [data, attachment] = await event.promise;
+  is(data, "level1", "Correct item was selected after pressing down");
   ok(!attachment, "null attachment was emitted");
   ok(node.classList.contains("theme-selected"), "Node has selected class");
   ok(node.hasAttribute("expanded"), "Node is expanded now");
@@ -117,7 +117,7 @@ async function testKeyboardInteraction(tree, win) {
   event = defer();
   tree.once("select", pass);
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-  [name, data, attachment] = await event.promise;
+  [data, attachment] = await event.promise;
   is(data.length, 2, "Correct level item was selected after second down keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2", "Correct second level");
@@ -126,7 +126,7 @@ async function testKeyboardInteraction(tree, win) {
   event = defer();
   tree.once("select", pass);
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-  [name, data, attachment] = await event.promise;
+  [data, attachment] = await event.promise;
   is(data.length, 3, "Correct level item was selected after third down keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2", "Correct second level");
@@ -136,7 +136,7 @@ async function testKeyboardInteraction(tree, win) {
   event = defer();
   tree.once("select", pass);
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-  [name, data, attachment] = await event.promise;
+  [data, attachment] = await event.promise;
   is(data.length, 2, "Correct level item was selected after fourth down keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2-1", "Correct second level");
@@ -165,7 +165,7 @@ async function testKeyboardInteraction(tree, win) {
   node = tree.root.children.firstChild.nextSibling.firstChild;
   ok(node.hasAttribute("expanded"), "Parent is expanded");
   EventUtils.synthesizeKey("KEY_ArrowLeft", {}, win);
-  [name, data] = await event.promise;
+  [data] = await event.promise;
   is(data.length, 3, "Correct level item was selected after second left keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2", "Correct second level");
@@ -178,7 +178,7 @@ async function testKeyboardInteraction(tree, win) {
   event = defer();
   tree.once("select", pass);
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-  [name, data, attachment] = await event.promise;
+  [data, attachment] = await event.promise;
   is(data.length, 2, "Correct level item was selected after fifth down keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2-1", "Correct second level");

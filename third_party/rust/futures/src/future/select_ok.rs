@@ -7,7 +7,7 @@ use std::prelude::v1::*;
 use {Future, IntoFuture, Poll, Async};
 
 /// Future for the `select_ok` combinator, waiting for one of any of a list of
-/// futures to succesfully complete. unlike `select_all`, this future ignores all
+/// futures to successfully complete. Unlike `select_all`, this future ignores all
 /// but the last error, if there are any.
 ///
 /// This is created by the `select_ok` function.

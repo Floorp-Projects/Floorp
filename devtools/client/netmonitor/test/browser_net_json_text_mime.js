@@ -7,10 +7,10 @@
  * Tests if JSON responses with unusal/custom MIME types are handled correctly.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = yield initNetMonitor(JSON_TEXT_MIME_URL);
+  let { tab, monitor } = await initNetMonitor(JSON_TEXT_MIME_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -23,15 +23,15 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests();
   });
-  yield wait;
+  await wait;
 
   let requestItem = document.querySelector(".request-list-item");
   let requestsListStatus = requestItem.querySelector(".requests-list-status");
   EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-  yield waitUntil(() => requestsListStatus.title);
+  await waitUntil(() => requestsListStatus.title);
 
   verifyRequestItemTarget(
     document,
@@ -53,11 +53,11 @@ add_task(function* () {
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
-  yield wait;
+  await wait;
 
   testResponseTab();
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   function testResponseTab() {
     let tabpanel = document.querySelector("#response-panel");

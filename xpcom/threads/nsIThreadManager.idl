@@ -33,6 +33,30 @@ interface nsIThreadManager : nsISupports
    */
   const unsigned long DEFAULT_STACK_SIZE = 0;
 
+%{C++
+  /* DEFAULT_STACK_SIZE can be a little overzealous for many platforms.  On
+   * Linux and OS X, for instance, the default thread stack size is whatever
+   * getrlimit(RLIMIT_STACK) returns, which is often set at 8MB.  The
+   * default on Windows is 1MB, which is a little more reasonable.  But
+   * for thread pools, each individual thread often doesn't need that much
+   * stack space.
+   *
+   * We therefore have a separate setting for a reasonable stack size for
+   * a thread pool worker thread.
+   */
+#if defined(MOZ_ASAN) || defined(MOZ_TSAN)
+  // Use the system default in ASAN builds, because the default is assumed
+  // to be larger than the size we want to use and is hopefully sufficient
+  // for ASAN.
+  static const uint32_t kThreadPoolStackSize = DEFAULT_STACK_SIZE;
+#elif defined(XP_WIN) || defined(XP_MACOSX) || defined(LINUX)
+  static const uint32_t kThreadPoolStackSize = (256 * 1024);
+#else
+  // All other platforms use their system default.
+  static const uint32_t kThreadPoolStackSize = DEFAULT_STACK_SIZE;
+#endif
+%}
+
   /**
    * Create a new thread (a global, user PRThread).
    *

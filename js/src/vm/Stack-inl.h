@@ -609,31 +609,6 @@ AbstractFramePtr::isDebuggerEvalFrame() const
 }
 
 inline bool
-AbstractFramePtr::hasCachedSavedFrame() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->hasCachedSavedFrame();
-    if (isBaselineFrame())
-        return asBaselineFrame()->hasCachedSavedFrame();
-    if (isWasmDebugFrame())
-        return asWasmDebugFrame()->hasCachedSavedFrame();
-    return asRematerializedFrame()->hasCachedSavedFrame();
-}
-
-inline void
-AbstractFramePtr::setHasCachedSavedFrame()
-{
-    if (isInterpreterFrame())
-        asInterpreterFrame()->setHasCachedSavedFrame();
-    else if (isBaselineFrame())
-        asBaselineFrame()->setHasCachedSavedFrame();
-    else if (isWasmDebugFrame())
-        asWasmDebugFrame()->setHasCachedSavedFrame();
-    else
-        asRematerializedFrame()->setHasCachedSavedFrame();
-}
-
-inline bool
 AbstractFramePtr::isDebuggee() const
 {
     if (isInterpreterFrame())
@@ -998,34 +973,48 @@ InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue n
     return true;
 }
 
-inline bool
-FrameIter::hasCachedSavedFrame() const
+/* static */ inline Maybe<LiveSavedFrameCache::FramePtr>
+LiveSavedFrameCache::FramePtr::create(const FrameIter& iter)
 {
-    if (isWasm())
-        return false;
+    if (iter.done())
+        return mozilla::Nothing();
 
-    if (hasUsableAbstractFramePtr())
-        return abstractFramePtr().hasCachedSavedFrame();
+    if (iter.isPhysicalJitFrame())
+        return mozilla::Some(FramePtr(iter.physicalJitFrame()));
 
-    MOZ_ASSERT(jsJitFrame().isIonScripted());
-    // SavedFrame caching is done at the physical frame granularity (rather than
-    // for each inlined frame) for ion. Therefore, it is impossible to have a
-    // cached SavedFrame if this frame is not a physical frame.
-    return isPhysicalIonFrame() && jsJitFrame().current()->hasCachedSavedFrame();
+    if (!iter.hasUsableAbstractFramePtr())
+        return mozilla::Nothing();
+
+    auto afp = iter.abstractFramePtr();
+
+    if (afp.isInterpreterFrame())
+        return mozilla::Some(FramePtr(afp.asInterpreterFrame()));
+    if (afp.isWasmDebugFrame())
+        return mozilla::Some(FramePtr(afp.asWasmDebugFrame()));
+    if (afp.isRematerializedFrame())
+        return mozilla::Some(FramePtr(afp.asRematerializedFrame()));
+
+    MOZ_CRASH("unexpected frame type");
 }
 
+struct LiveSavedFrameCache::FramePtr::HasCachedMatcher {
+    template<typename Frame>
+    bool match(Frame* f) const { return f->hasCachedSavedFrame(); }
+};
+
+inline bool
+LiveSavedFrameCache::FramePtr::hasCachedSavedFrame() const {
+    return ptr.match(HasCachedMatcher());
+}
+
+struct LiveSavedFrameCache::FramePtr::SetHasCachedMatcher {
+    template<typename Frame>
+    void match(Frame* f) const { f->setHasCachedSavedFrame(); }
+};
+
 inline void
-FrameIter::setHasCachedSavedFrame()
-{
-    MOZ_ASSERT(!isWasm());
-
-    if (hasUsableAbstractFramePtr()) {
-        abstractFramePtr().setHasCachedSavedFrame();
-        return;
-    }
-
-    MOZ_ASSERT(isPhysicalIonFrame());
-    jsJitFrame().current()->setHasCachedSavedFrame();
+LiveSavedFrameCache::FramePtr::setHasCachedSavedFrame() {
+    ptr.match(SetHasCachedMatcher());
 }
 
 } /* namespace js */

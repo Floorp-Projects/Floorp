@@ -7,7 +7,7 @@
  * Test if the summary text displayed in the network requests menu footer is correct.
  */
 
-add_task(function* () {
+add_task(async function () {
   const {
     getFormattedSize,
     getFormattedTime
@@ -15,7 +15,7 @@ add_task(function* () {
 
   requestLongerTimeout(2);
 
-  let { tab, monitor } = yield initNetMonitor(FILTERING_URL);
+  let { tab, monitor } = await initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -31,10 +31,10 @@ add_task(function* () {
   for (let i = 0; i < 2; i++) {
     info(`Performing requests in batch #${i}`);
     let wait = waitForNetworkEvents(monitor, 8);
-    yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
       content.wrappedJSObject.performRequests('{ "getMedia": true, "getFlash": true }');
     });
-    yield wait;
+    await wait;
 
     testStatus();
 
@@ -46,7 +46,7 @@ add_task(function* () {
     }
   }
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   function testStatus() {
     let state = store.getState();

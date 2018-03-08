@@ -372,8 +372,9 @@ class CodeGeneratorShared : public LElementVisitor
     // actually branch directly to.
     MBasicBlock* skipTrivialBlocks(MBasicBlock* block) {
         while (block->lir()->isTrivial()) {
-            MOZ_ASSERT(block->lir()->rbegin()->numSuccessors() == 1);
-            block = block->lir()->rbegin()->toGoto()->getSuccessor(0);
+            LGoto* ins = block->lir()->rbegin()->toGoto();
+            MOZ_ASSERT(ins->numSuccessors() == 1);
+            block = ins->getSuccessor(0);
         }
         return block;
     }

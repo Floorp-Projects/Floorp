@@ -37,9 +37,7 @@ function testSetTheme() {
   let otherTheme = originalTheme == "dark" ? "light" : "dark";
 
   let prefObserver = new PrefObserver("devtools.");
-  prefObserver.once("devtools.theme", pref => {
-    is(pref, "devtools.theme",
-      "A preference event triggered by setTheme has correct pref.");
+  prefObserver.once("devtools.theme", () => {
     let newValue = Services.prefs.getCharPref("devtools.theme");
     is(newValue, otherTheme,
       "A preference event triggered by setTheme comes after the value is set.");

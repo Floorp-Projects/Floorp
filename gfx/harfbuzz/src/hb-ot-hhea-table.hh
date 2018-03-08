@@ -41,7 +41,7 @@ namespace OT {
 #define HB_OT_TAG_hhea HB_TAG('h','h','e','a')
 #define HB_OT_TAG_vhea HB_TAG('v','h','e','a')
 
-
+template <typename T>
 struct _hea
 {
   inline bool sanitize (hb_sanitize_context_t *c) const
@@ -84,10 +84,10 @@ struct _hea
   DEFINE_SIZE_STATIC (36);
 };
 
-struct hhea : _hea {
+struct hhea : _hea<hhea> {
   static const hb_tag_t tableTag	= HB_OT_TAG_hhea;
 };
-struct vhea : _hea {
+struct vhea : _hea<vhea> {
   static const hb_tag_t tableTag	= HB_OT_TAG_vhea;
 };
 

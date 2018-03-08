@@ -7,8 +7,8 @@
  * Tests if Copy as cURL works.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CURL_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CURL_URL);
   info("Starting test... ");
 
   // Different quote chars are used for Windows and POSIX
@@ -44,17 +44,17 @@ add_task(function* () {
   let { document } = monitor.panelWin;
 
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
+  await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function (url) {
     content.wrappedJSObject.performRequest(url);
   });
-  yield wait;
+  await wait;
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[0]);
 
-  yield waitForClipboardPromise(function setup() {
+  await waitForClipboardPromise(function setup() {
     monitor.panelWin.parent.document
       .querySelector("#request-list-context-copy-as-curl").click();
   }, function validate(result) {
@@ -85,5 +85,5 @@ add_task(function* () {
 
   info("Clipboard contains a cURL command for the currently selected item's url.");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

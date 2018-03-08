@@ -30,7 +30,6 @@ browser.jar:
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png                 (feeds/feedIcon16.png)
-* skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png

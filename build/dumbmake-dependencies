@@ -60,7 +60,7 @@ browser/app
   browser/themes
   toolkit
   toolkit/components
-  toolkit/components/jsdownloads
+  toolkit/components/downloads
   toolkit/content
   toolkit/crashreporter
   toolkit/forgetaboutsite

@@ -66,8 +66,7 @@ APZSampler::NotifyLayerTreeAdopted(uint64_t aLayersId,
                                    const RefPtr<APZSampler>& aOldSampler)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  MOZ_ASSERT(aOldSampler);
-  mApz->NotifyLayerTreeAdopted(aLayersId, aOldSampler->mApz);
+  mApz->NotifyLayerTreeAdopted(aLayersId, aOldSampler ? aOldSampler->mApz : nullptr);
 }
 
 void

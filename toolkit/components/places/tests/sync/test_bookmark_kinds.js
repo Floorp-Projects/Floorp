@@ -257,6 +257,61 @@ add_task(async function test_livemarks() {
   await PlacesSyncUtils.bookmarks.reset();
 });
 
+add_task(async function test_queries() {
+  try {
+    let buf = await openMirror("queries");
+
+    info("Set up places");
+
+    // create a tag and grab the local folder ID.
+    let tag = await PlacesUtils.bookmarks.insert({
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      parentGuid: PlacesUtils.bookmarks.tagsGuid,
+      title: "a-tag",
+    });
+    let tagid = await PlacesUtils.promiseItemId(tag.guid);
+
+    await PlacesTestUtils.markBookmarksAsSynced();
+
+    await PlacesUtils.bookmarks.insertTree({
+      guid: PlacesUtils.bookmarks.menuGuid,
+      children: [
+        {
+          // this entry has a folder= query param for a folder that exists.
+          guid: "queryAAAAAAA",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          title: "TAG_QUERY query",
+          url: `place:type=6&sort=14&maxResults=10&folder=${tagid}`,
+        },
+        {
+          // this entry has a folder= query param for a folder that doesn't exist.
+          guid: "queryBBBBBBB",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          title: "TAG_QUERY query but invalid folder id",
+          url: `place:type=6&sort=14&maxResults=10&folder=12345`,
+        },
+        {
+          // this entry has no folder= query param.
+          guid: "queryCCCCCCC",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          title: "TAG_QUERY without a folder at all",
+          url: "place:type=6&sort=14&maxResults=10",
+        },
+
+        ],
+    });
+
+    info("Create records to upload");
+    let changes = await buf.apply();
+    Assert.strictEqual(changes.queryAAAAAAA.cleartext.folderName, tag.title);
+    Assert.strictEqual(changes.queryBBBBBBB.cleartext.folderName, undefined);
+    Assert.strictEqual(changes.queryCCCCCCC.cleartext.folderName, undefined);
+  } finally {
+    await PlacesUtils.bookmarks.eraseEverything();
+    await PlacesSyncUtils.bookmarks.reset();
+  }
+});
+
 // Bug 632287.
 add_task(async function test_mismatched_types() {
   let buf = await openMirror("mismatched_types");

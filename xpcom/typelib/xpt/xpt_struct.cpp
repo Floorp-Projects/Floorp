@@ -66,7 +66,7 @@ SkipAnnotation(NotNull<XPTCursor*> cursor, bool *isLast);
 
 static bool
 DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
-                      XPTInterfaceDescriptor **idp);
+                      const XPTInterfaceDescriptor **idp);
 
 static bool
 DoTypeDescriptorPrefix(XPTArena *arena, NotNull<XPTCursor*> cursor,
@@ -146,11 +146,13 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
 
     XPT_SetDataOffset(cursor->state, data_pool);
 
+    XPTInterfaceDirectoryEntry* interface_directory = nullptr;
+
     if (header->num_interfaces) {
         size_t n = header->num_interfaces * sizeof(XPTInterfaceDirectoryEntry);
-        header->interface_directory =
+        interface_directory =
             static_cast<XPTInterfaceDirectoryEntry*>(XPT_CALLOC8(arena, n));
-        if (!header->interface_directory)
+        if (!interface_directory)
             return false;
     }
 
@@ -170,9 +172,11 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
 
     for (i = 0; i < header->num_interfaces; i++) {
         if (!DoInterfaceDirectoryEntry(arena, cursor,
-                                       &header->interface_directory[i]))
+                                       &interface_directory[i]))
             return false;
     }
+
+    header->interface_directory = interface_directory;
 
     return true;
 }
@@ -182,7 +186,7 @@ bool
 DoInterfaceDirectoryEntry(XPTArena *arena, NotNull<XPTCursor*> cursor,
                           XPTInterfaceDirectoryEntry *ide)
 {
-    char* dummy_name_space;
+    const char* dummy_name_space;
 
     /* write the IID in our cursor space */
     if (!XPT_DoIID(cursor, &(ide->iid)) ||
@@ -204,9 +208,11 @@ DoInterfaceDirectoryEntry(XPTArena *arena, NotNull<XPTCursor*> cursor,
 }
 
 static bool
-InterfaceDescriptorAddType(XPTArena *arena, XPTInterfaceDescriptor *id)
+InterfaceDescriptorAddType(XPTArena *arena,
+                           XPTInterfaceDescriptor *id,
+                           XPTTypeDescriptor *td)
 {
-    XPTTypeDescriptor *old = id->additional_types;
+    const XPTTypeDescriptor *old = id->additional_types;
     XPTTypeDescriptor *new_;
     size_t old_size = id->num_additional_types * sizeof(XPTTypeDescriptor);
     size_t new_size = old_size + sizeof(XPTTypeDescriptor);
@@ -218,6 +224,8 @@ InterfaceDescriptorAddType(XPTArena *arena, XPTInterfaceDescriptor *id)
     if (old) {
         memcpy(new_, old, old_size);
     }
+
+    new_[id->num_additional_types] = *td;
     id->additional_types = new_;
 
     if (id->num_additional_types == UINT8_MAX)
@@ -229,7 +237,7 @@ InterfaceDescriptorAddType(XPTArena *arena, XPTInterfaceDescriptor *id)
 
 bool
 DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
-                      XPTInterfaceDescriptor **idp)
+                      const XPTInterfaceDescriptor **idp)
 {
     XPTInterfaceDescriptor *id;
     XPTCursor curs;
@@ -255,36 +263,44 @@ DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
         return false;
     }
 
+    XPTMethodDescriptor* method_descriptors = nullptr;
+
     if (id->num_methods) {
         size_t n = id->num_methods * sizeof(XPTMethodDescriptor);
-        id->method_descriptors =
+        method_descriptors =
             static_cast<XPTMethodDescriptor*>(XPT_CALLOC8(arena, n));
-        if (!id->method_descriptors)
+        if (!method_descriptors)
             return false;
     }
 
     for (i = 0; i < id->num_methods; i++) {
-        if (!DoMethodDescriptor(arena, cursor, &id->method_descriptors[i], id))
+        if (!DoMethodDescriptor(arena, cursor, &method_descriptors[i], id))
             return false;
     }
+
+    id->method_descriptors = method_descriptors;
 
     if (!XPT_Do16(cursor, &id->num_constants)) {
         return false;
     }
 
+    XPTConstDescriptor* const_descriptors = nullptr;
+
     if (id->num_constants) {
         size_t n = id->num_constants * sizeof(XPTConstDescriptor);
-        id->const_descriptors =
+        const_descriptors =
             static_cast<XPTConstDescriptor*>(XPT_CALLOC8(arena, n));
-        if (!id->const_descriptors)
+        if (!const_descriptors)
             return false;
     }
 
     for (i = 0; i < id->num_constants; i++) {
-        if (!DoConstDescriptor(arena, cursor, &id->const_descriptors[i], id)) {
+        if (!DoConstDescriptor(arena, cursor, &const_descriptors[i], id)) {
             return false;
         }
     }
+
+    id->const_descriptors = const_descriptors;
 
     if (!XPT_Do8(cursor, &id->flags)) {
         return false;
@@ -337,17 +353,21 @@ DoMethodDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
         !XPT_Do8(cursor, &md->num_args))
         return false;
 
+    XPTParamDescriptor* params = nullptr;
+
     if (md->num_args) {
         size_t n = md->num_args * sizeof(XPTParamDescriptor);
-        md->params = static_cast<XPTParamDescriptor*>(XPT_CALLOC8(arena, n));
-        if (!md->params)
+        params = static_cast<XPTParamDescriptor*>(XPT_CALLOC8(arena, n));
+        if (!params)
             return false;
     }
 
     for(i = 0; i < md->num_args; i++) {
-        if (!DoParamDescriptor(arena, cursor, &md->params[i], id))
+        if (!DoParamDescriptor(arena, cursor, &params[i], id))
             return false;
     }
+
+    md->params = params;
 
     // |result| appears in the on-disk format but it isn't used,
     // because a method is either notxpcom, in which case it can't be
@@ -405,14 +425,13 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
             !XPT_Do8(cursor, &argnum2))
             return false;
 
-        if (!InterfaceDescriptorAddType(arena, id))
+        XPTTypeDescriptor elementTypeDescriptor;
+        if (!DoTypeDescriptor(arena, cursor, &elementTypeDescriptor, id))
+            return false;
+        if (!InterfaceDescriptorAddType(arena, id, &elementTypeDescriptor))
             return false;
         td->u.array.additional_type = id->num_additional_types - 1;
 
-        if (!DoTypeDescriptor(arena, cursor,
-                              &id->additional_types[td->u.array.additional_type],
-                              id))
-            return false;
         break;
       }
       case TD_PSTRING_SIZE_IS:
