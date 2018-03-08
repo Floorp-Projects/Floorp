@@ -4,10 +4,14 @@
 "use strict";
 
 /**
- * Tests if timing intervals are divided againts seconds when appropriate.
+ * Tests if timing intervals are divided against seconds when appropriate.
  */
-
 add_task(async function () {
+  // Show only few columns, so there is enough space
+  // for the waterfall.
+  await pushPref("devtools.netmonitor.visibleColumns",
+    '["status", "contentSize", "waterfall"]');
+
   let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
