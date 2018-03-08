@@ -585,7 +585,7 @@ SerializeEventsArray(const EventRecordArray& events,
              items.append(JS::StringValue(ToJSString(cx, method))) &&
              items.append(JS::StringValue(ToJSString(cx, object)));
     };
-      
+
     const EventKey& eventKey = record.GetEventKey();
     if (!eventKey.dynamic) {
       const EventInfo& info = gEventInfo[eventKey.id];

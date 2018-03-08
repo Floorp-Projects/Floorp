@@ -103,6 +103,7 @@ class MozFramebuffer;
 } // namespace gl
 
 namespace webgl {
+class AvailabilityRunnable;
 struct LinkedProgramInfo;
 class ShaderValidator;
 class TexUnpackBlob;
@@ -270,6 +271,23 @@ struct TexImageSourceAdapter final : public TexImageSource
     }
 };
 
+// --
+
+namespace webgl {
+class AvailabilityRunnable final : public Runnable
+{
+public:
+    const RefPtr<WebGLContext> mWebGL; // Prevent CC
+    std::vector<RefPtr<WebGLQuery>> mQueries;
+    std::vector<RefPtr<WebGLSync>> mSyncs;
+
+    explicit AvailabilityRunnable(WebGLContext* webgl);
+    ~AvailabilityRunnable();
+
+    NS_IMETHOD Run() override;
+};
+} // namespace webgl
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class WebGLContext
@@ -297,6 +315,7 @@ class WebGLContext
     friend class WebGLExtensionLoseContext;
     friend class WebGLExtensionVertexArray;
     friend class WebGLMemoryTracker;
+    friend class webgl::AvailabilityRunnable;
     friend struct webgl::LinkedProgramInfo;
     friend struct webgl::UniformBlockInfo;
 
@@ -2049,6 +2068,12 @@ public:
     const decltype(mBound2DTextures)* TexListForElemType(GLenum elemType) const;
 
     void UpdateMaxDrawBuffers();
+
+    // --
+private:
+    webgl::AvailabilityRunnable* mAvailabilityRunnable = nullptr;
+public:
+    webgl::AvailabilityRunnable* EnsureAvailabilityRunnable();
 
     // Friend list
     friend class ScopedCopyTexImageSource;

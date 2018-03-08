@@ -309,7 +309,8 @@ bool DecodePoolImpl::CreateThread()
   nsCOMPtr<nsIRunnable> worker = new DecodePoolWorker(this, shutdownIdle);
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_NewNamedThread(mThreadNaming.GetNextThreadName("ImgDecoder"),
-                                  getter_AddRefs(thread), worker);
+                                  getter_AddRefs(thread), worker,
+                                  nsIThreadManager::kThreadPoolStackSize);
   if (NS_FAILED(rv) || !thread) {
     MOZ_ASSERT_UNREACHABLE("Should successfully create image decoding threads");
     return false;
