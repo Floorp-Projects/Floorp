@@ -12,10 +12,11 @@
 #define nsNodeInfoManager_h___
 
 #include "mozilla/Attributes.h"           // for final
+#include "mozilla/dom/NodeInfo.h"
 #include "nsCOMPtr.h"                     // for member
 #include "nsCycleCollectionParticipant.h" // for NS_DECL_CYCLE_*
+#include "nsDataHashtable.h"
 #include "nsStringFwd.h"
-#include "plhash.h"                       // for typedef PLHashNumber
 
 class nsBindingManager;
 class nsAtom;
@@ -26,12 +27,6 @@ class nsWindowSizes;
 struct PLHashEntry;
 struct PLHashTable;
 template<class T> struct already_AddRefed;
-
-namespace mozilla {
-namespace dom {
-class NodeInfo;
-} // namespace dom
-} // namespace mozilla
 
 #define RECENTLY_USED_NODEINFOS_SIZE 31
 
@@ -155,15 +150,20 @@ protected:
   void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
 
 private:
-  static int NodeInfoInnerKeyCompare(const void *key1, const void *key2);
-  static PLHashNumber GetNodeInfoInnerHashValue(const void *key);
-  static int DropNodeInfoDocument(PLHashEntry *he, int hashIndex,
-                                     void *arg);
-
   bool InternalSVGEnabled();
   bool InternalMathMLEnabled();
 
-  PLHashTable *mNodeInfoHash;
+  class NodeInfoInnerKey :
+    public nsPtrHashKey<mozilla::dom::NodeInfo::NodeInfoInner>
+  {
+  public:
+    explicit NodeInfoInnerKey(KeyTypePointer aKey) : nsPtrHashKey(aKey) {}
+    ~NodeInfoInnerKey() = default;
+    bool KeyEquals(KeyTypePointer aKey) const { return *mKey == *aKey; }
+    static PLDHashNumber HashKey(KeyTypePointer aKey) { return aKey->Hash(); }
+  };
+
+  nsDataHashtable<NodeInfoInnerKey, mozilla::dom::NodeInfo*> mNodeInfoHash;
   nsIDocument * MOZ_NON_OWNING_REF mDocument; // WEAK
   uint32_t mNonDocumentNodeInfos;
   nsCOMPtr<nsIPrincipal> mPrincipal; // Never null after Init() succeeds.
