@@ -1,39 +1,39 @@
-function testActual(SimpleURIClassByID)
+function testActual(CSPContextClassByID)
 {
-  var simpleURI =
-    Cc["@mozilla.org/network/simple-uri;1"].createInstance();
+  var cspContext =
+    Cc["@mozilla.org/cspcontext;1"].createInstance();
 
-  Assert.equal(simpleURI instanceof SimpleURIClassByID, true);
+  Assert.equal(cspContext instanceof CSPContextClassByID, true);
 }
 
-function testInherited(SimpleURIClassByID)
+function testInherited(CSPContextClassByID)
 {
-  var simpleURI =
-    Cc["@mozilla.org/network/simple-uri;1"].createInstance();
+  var cspContext =
+    Cc["@mozilla.org/cspcontext;1"].createInstance();
 
-  var inherited = Object.create(simpleURI);
+  var inherited = Object.create(cspContext);
 
-  Assert.equal(inherited instanceof SimpleURIClassByID, true);
+  Assert.equal(inherited instanceof CSPContextClassByID, true);
 }
 
-function testInheritedCrossGlobal(SimpleURIClassByID)
+function testInheritedCrossGlobal(CSPContextClassByID)
 {
-  var simpleURI =
-    Cc["@mozilla.org/network/simple-uri;1"].createInstance();
+  var cspContext =
+    Cc["@mozilla.org/cspcontext;1"].createInstance();
 
   var sb = new Cu.Sandbox(this, { wantComponents: true });
-  var inheritedCross = sb.Object.create(simpleURI);
+  var inheritedCross = sb.Object.create(cspContext);
 
-  Assert.equal(inheritedCross instanceof SimpleURIClassByID, true);
+  Assert.equal(inheritedCross instanceof CSPContextClassByID, true);
 }
 
-function testCrossGlobalArbitraryGetPrototype(SimpleURIClassByID)
+function testCrossGlobalArbitraryGetPrototype(CSPContextClassByID)
 {
-  var simpleURI =
-    Cc["@mozilla.org/network/simple-uri;1"].createInstance();
+  var cspContext =
+    Cc["@mozilla.org/cspcontext;1"].createInstance();
 
   var sb = new Cu.Sandbox(this, { wantComponents: true });
-  var firstLevel = Object.create(simpleURI);
+  var firstLevel = Object.create(cspContext);
 
   var obj = { shouldThrow: false };
   var secondLevel =
@@ -53,7 +53,7 @@ function testCrossGlobalArbitraryGetPrototype(SimpleURIClassByID)
   var err;
   try
   {
-    void (thirdLevel instanceof SimpleURIClassByID);
+    void (thirdLevel instanceof CSPContextClassByID);
   }
   catch (e)
   {
@@ -66,14 +66,14 @@ function testCrossGlobalArbitraryGetPrototype(SimpleURIClassByID)
 
   obj.shouldThrow = false;
 
-  Assert.equal(thirdLevel instanceof SimpleURIClassByID, true);
+  Assert.equal(thirdLevel instanceof CSPContextClassByID, true);
 }
 
 function run_test() {
-  var SimpleURIClassByID = Components.classesByID["{e0da1d70-2f7b-11d3-8cd0-0060b0fc14a3}"];
+  var CSPContextClassByID = Components.classesByID["{09d9ed1a-e5d4-4004-bfe0-27ceb923d9ac}"];
 
-  testActual(SimpleURIClassByID);
-  testInherited(SimpleURIClassByID);
-  testInheritedCrossGlobal(SimpleURIClassByID);
-  testCrossGlobalArbitraryGetPrototype(SimpleURIClassByID);
+  testActual(CSPContextClassByID);
+  testInherited(CSPContextClassByID);
+  testInheritedCrossGlobal(CSPContextClassByID);
+  testCrossGlobalArbitraryGetPrototype(CSPContextClassByID);
 }
