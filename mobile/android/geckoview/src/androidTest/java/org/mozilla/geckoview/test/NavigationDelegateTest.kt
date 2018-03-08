@@ -4,38 +4,19 @@
 package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
-import org.hamcrest.Matcher
 import org.hamcrest.Matchers.*
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ErrorCollector
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-class NavigationDelegateTest {
-    companion object {
-        const val HELLO_HTML_PATH = "/assets/www/hello.html";
-        const val HELLO2_HTML_PATH = "/assets/www/hello2.html";
-        const val NEW_SESSION_HTML_PATH = "/assets/www/newSession.html";
-        const val NEW_SESSION_CHILD_HTML_PATH = "/assets/www/newSession_child.html";
-    }
-
-    @get:Rule val sessionRule = GeckoSessionTestRule()
-
-    @get:Rule val errors = ErrorCollector()
-    fun <T> assertThat(reason: String, v: T, m: Matcher<T>) = errors.checkThat(reason, v, m)
-
-    @Before fun setUp() {
-        sessionRule.errorCollector = errors
-    }
+class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun load() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
@@ -228,9 +209,8 @@ class NavigationDelegateTest {
         })
     }
 
-    @Test
-    @GeckoSessionTestRule.WithDisplay(width = 128, height = 128)
-    fun onNewSession_calledForNewWindow() {
+    @WithDisplay(width = 128, height = 128)
+    @Test fun onNewSession_calledForNewWindow() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.waitForPageStop()
 
@@ -241,12 +221,12 @@ class NavigationDelegateTest {
             }
         })
 
-        sessionRule.synthesizeTap(5, 5)
+        sessionRule.session.synthesizeTap(5, 5)
         sessionRule.waitUntilCalled(GeckoSession.NavigationDelegate::class, "onNewSession")
     }
 
+    @WithDisplay(width = 128, height = 128)
     @Test(expected = IllegalArgumentException::class)
-    @GeckoSessionTestRule.WithDisplay(width = 128, height = 128)
     fun onNewSession_doesNotAllowOpened() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.waitForPageStop()
@@ -254,13 +234,13 @@ class NavigationDelegateTest {
         sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
-                var session = GeckoSession(session.settings)
-                session.openWindow(null)
-                response.respond(session)
+                var newSession = GeckoSession(session.settings)
+                newSession.openWindow()
+                response.respond(newSession)
             }
         })
 
-        sessionRule.synthesizeTap(5, 5)
+        sessionRule.session.synthesizeTap(5, 5)
         sessionRule.waitUntilCalled(GeckoSession.NavigationDelegate::class, "onNewSession")
     }
 }

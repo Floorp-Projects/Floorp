@@ -12,7 +12,7 @@
 const { Cc, Ci } = require("chrome");
 const { Task } = require("devtools/shared/task");
 
-const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
+const FRAME_SCRIPT_UTILS_URL = "chrome://mochitests/content/browser/devtools/client/shared/test/frame-script-utils.js";
 
 let gMM = null;
 

@@ -20,8 +20,8 @@ const REQUESTS_WITH_MEDIA = BASIC_REQUESTS.concat([
   { url: "sjs_content-type-test-server.sjs?fmt=video" },
 ]);
 
-add_task(function* () {
-  let { monitor } = yield initNetMonitor(FILTERING_URL);
+add_task(async function () {
+  let { monitor } = await initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on Ubuntu builds running on ec2.
@@ -43,11 +43,11 @@ add_task(function* () {
   let newres = "res=<p>" + new Array(10).join(Math.random(10)) + "</p>";
   requests[0].url = requests[0].url.replace("res=undefined", newres);
 
-  loadCommonFrameScript();
+  loadFrameScriptUtils();
 
   let wait = waitForNetworkEvents(monitor, 7);
-  yield performRequestsInContent(requests);
-  yield wait;
+  await performRequestsInContent(requests);
+  await wait;
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
@@ -77,7 +77,7 @@ add_task(function* () {
   info("Performing more requests.");
   wait = waitForNetworkEvents(monitor, 7);
   performRequestsInContent(REQUESTS_WITH_MEDIA);
-  yield wait;
+  await wait;
 
   info("Testing html filtering again.");
   resetSorting();
@@ -86,7 +86,7 @@ add_task(function* () {
 
   info("Performing more requests.");
   performRequestsInContent(REQUESTS_WITH_MEDIA);
-  yield waitForNetworkEvents(monitor, 7);
+  await waitForNetworkEvents(monitor, 7);
 
   info("Testing html filtering again.");
   resetSorting();
@@ -94,7 +94,7 @@ add_task(function* () {
   testContents([12, 13, 20, 14, 16, 18, 15, 17, 19, 0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11],
     3, 20);
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   function resetSorting() {
     EventUtils.sendMouseEvent({ type: "click" },

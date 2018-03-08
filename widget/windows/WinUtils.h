@@ -420,20 +420,20 @@ public:
                                nsString& aResultString);
 
   /**
-   * ConvertHRGNToRegion converts a Windows HRGN to an nsIntRegion.
+   * ConvertHRGNToRegion converts a Windows HRGN to an LayoutDeviceIntRegion.
    *
    * aRgn the HRGN to convert.
-   * returns the nsIntRegion.
+   * returns the LayoutDeviceIntRegion.
    */
-  static nsIntRegion ConvertHRGNToRegion(HRGN aRgn);
+  static LayoutDeviceIntRegion ConvertHRGNToRegion(HRGN aRgn);
 
   /**
-   * ToIntRect converts a Windows RECT to a nsIntRect.
+   * ToIntRect converts a Windows RECT to a LayoutDeviceIntRect.
    *
    * aRect the RECT to convert.
-   * returns the nsIntRect.
+   * returns the LayoutDeviceIntRect.
    */
-  static nsIntRect ToIntRect(const RECT& aRect);
+  static LayoutDeviceIntRect ToIntRect(const RECT& aRect);
 
   /**
    * Helper used in invalidating flash plugin windows owned

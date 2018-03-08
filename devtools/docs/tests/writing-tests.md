@@ -107,7 +107,7 @@ For example, the head.js files in the `markupview` and `styleinspector` test fol
 
 ## Shared head.js file
 
-A [shared-head.js](https://dxr.mozilla.org/mozilla-central/source/devtools/client/framework/test/shared-head.js) file has been introduced to avoid duplicating code in various `head.js` files.
+A [shared-head.js](https://dxr.mozilla.org/mozilla-central/source/devtools/client/shared/test/shared-head.js) file has been introduced to avoid duplicating code in various `head.js` files.
 
 It's important to know whether or not the `shared.js` in your test directory already imports `shared-head.js` (look for a <code>Services.scriptloader.loadSubScript</code> call), as common helpers in `shared-head.js` might be useful for your test.
 
@@ -241,7 +241,7 @@ When tests fail, it's far better to have them fail and end immediately with an e
 
 In some cases, you may want to extract some common code from your test to use it another another test. 
 
-* If this is very common code that all tests could use, then add it to `devtools/client/framework/test/shared-head.js`.
+* If this is very common code that all tests could use, then add it to `devtools/client/shared/test/shared-head.js`.
 * If this is common code specific to a given tool, then add it to the corresponding `head.js` file.
 * If it isn't common enough to live in `head.js`, then it may be a good idea to create a helper file to avoid duplication anyway. Here's how to create a helper file:
  * Create a new file in your test director. The naming convention should be `helper_<description_of_the_helper>.js`
