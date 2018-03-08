@@ -795,6 +795,9 @@ main {
             fill: #FFF; }
           .context-menu > ul > li > a:-moz-any(:focus, :hover):-moz-any(:focus, :hover) {
             color: #FFF; }
+        .context-menu > ul > li > a.disabled {
+          opacity: 0.4;
+          pointer-events: none; }
 
 .prefs-pane {
   color: #4A4A4F;
@@ -1133,8 +1136,25 @@ main {
     height: 370px; }
     .wide-layout-enabled .card-outer .card-preview-image-outer {
       height: 155px; }
+    .wide-layout-enabled .card-outer .card-details {
+      padding: 13px 16px 12px; }
     .wide-layout-enabled .card-outer .card-text {
-      max-height: 135px; } }
+      max-height: 140px; }
+    .wide-layout-enabled .card-outer .card-host-name {
+      font-size: 12px;
+      padding-bottom: 5px; }
+    .wide-layout-enabled .card-outer .card-title {
+      font-size: 17px;
+      line-height: 23px;
+      margin-bottom: 0; }
+    .wide-layout-enabled .card-outer .card-text:not(.no-description) .card-title {
+      max-height: 69px; }
+    .wide-layout-enabled .card-outer .card-description {
+      font-size: 15px;
+      line-height: 23px; }
+    .wide-layout-enabled .card-outer .card-context {
+      bottom: 4px;
+      font-size: 14px; } }
 
 .manual-migration-container {
   color: #4A4A4F;
@@ -1180,7 +1200,10 @@ main {
     padding: 0 12px; }
 
 .collapsible-section {
-  padding: 10px 25px; }
+  padding: 10px 25px;
+  transition-delay: 100ms;
+  transition-duration: 100ms;
+  transition-property: background-color; }
   .collapsible-section .section-title {
     margin: 0; }
     .collapsible-section .section-title .click-target {
@@ -1206,7 +1229,8 @@ main {
       transition-property: opacity;
       width: 27px; }
       .collapsible-section .section-top-bar .context-menu-button:-moz-any(:active, :focus, :hover) {
-        fill: #0C0C0D; }
+        fill: #0C0C0D;
+        opacity: 1; }
     .collapsible-section .section-top-bar .context-menu {
       top: 16px; }
     @media (max-width: 1458px) {
