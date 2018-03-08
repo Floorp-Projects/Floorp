@@ -81,6 +81,10 @@ interface nsIGIOService : nsISupports
 
   /* Open path in file manager using org.freedesktop.FileManager1 interface */
   [noscript] void    orgFreedesktopFileManager1ShowItems(in ACString path);
+
+  /* Check if we're in flatpak runtime or using GTK portals has been enforced */
+  [noscript] bool    shouldUseFlatpakPortal();
+
 };
 
 %{C++
