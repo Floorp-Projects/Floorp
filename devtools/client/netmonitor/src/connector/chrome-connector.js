@@ -43,6 +43,10 @@ class ChromeConnector {
     this.setup();
   }
 
+  enableActions(enable) {
+    // TODO : implement.
+  }
+
   /**
    * currently all events are about "navigation" is not support on CDP
    */

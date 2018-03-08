@@ -1188,10 +1188,10 @@ CompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
-RefPtr<APZCTreeManager>
-CompositorBridgeParent::GetAPZCTreeManager()
+AndroidDynamicToolbarAnimator*
+CompositorBridgeParent::GetAndroidDynamicToolbarAnimator()
 {
-  return mApzcTreeManager;
+  return mApzcTreeManager ? mApzcTreeManager->GetAndroidDynamicToolbarAnimator() : nullptr;
 }
 #endif
 

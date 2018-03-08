@@ -1526,12 +1526,11 @@ InplaceEditor.prototype = {
 function copyTextStyles(from, to) {
   let win = from.ownerDocument.defaultView;
   let style = win.getComputedStyle(from);
-  let getCssText = name => style.getPropertyCSSValue(name).cssText;
 
-  to.style.fontFamily = getCssText("font-family");
-  to.style.fontSize = getCssText("font-size");
-  to.style.fontWeight = getCssText("font-weight");
-  to.style.fontStyle = getCssText("font-style");
+  to.style.fontFamily = style.fontFamily;
+  to.style.fontSize = style.fontSize;
+  to.style.fontWeight = style.fontWeight;
+  to.style.fontStyle = style.fontStyle;
 }
 
 /**
@@ -1540,14 +1539,13 @@ function copyTextStyles(from, to) {
 function copyAllStyles(from, to) {
   let win = from.ownerDocument.defaultView;
   let style = win.getComputedStyle(from);
-  let getCssText = name => style.getPropertyCSSValue(name).cssText;
 
   copyTextStyles(from, to);
-  to.style.lineHeight = getCssText("line-height");
+  to.style.lineHeight = style.lineHeight;
 
   // If box-sizing is set to border-box, box model styles also need to be
   // copied.
-  let boxSizing = getCssText("box-sizing");
+  let boxSizing = style.boxSizing;
   if (boxSizing === "border-box") {
     to.style.boxSizing = boxSizing;
     copyBoxModelStyles(from, to);
@@ -1564,27 +1562,29 @@ function copyAllStyles(from, to) {
  *        the element on which copied styles are applied
  */
 function copyBoxModelStyles(from, to) {
+  let properties = [
+    // Copy all paddings.
+    "paddingTop",
+    "paddingRight",
+    "paddingBottom",
+    "paddingLeft",
+    // Copy border styles.
+    "borderTopStyle",
+    "borderRightStyle",
+    "borderBottomStyle",
+    "borderLeftStyle",
+    // Copy border widths.
+    "borderTopWidth",
+    "borderRightWidth",
+    "borderBottomWidth",
+    "borderLeftWidth"
+  ];
+
   let win = from.ownerDocument.defaultView;
   let style = win.getComputedStyle(from);
-  let getCssText = name => style.getPropertyCSSValue(name).cssText;
-
-  // Copy all paddings.
-  to.style.paddingTop = getCssText("padding-top");
-  to.style.paddingRight = getCssText("padding-right");
-  to.style.paddingBottom = getCssText("padding-bottom");
-  to.style.paddingLeft = getCssText("padding-left");
-
-  // Copy border styles.
-  to.style.borderTopStyle = getCssText("border-top-style");
-  to.style.borderRightStyle = getCssText("border-right-style");
-  to.style.borderBottomStyle = getCssText("border-bottom-style");
-  to.style.borderLeftStyle = getCssText("border-left-style");
-
-  // Copy border widths.
-  to.style.borderTopWidth = getCssText("border-top-width");
-  to.style.borderRightWidth = getCssText("border-right-width");
-  to.style.borderBottomWidth = getCssText("border-bottom-width");
-  to.style.borderLeftWidth = getCssText("border-left-width");
+  for (let property of properties) {
+    to.style[property] = style[property];
+  }
 }
 
 /**

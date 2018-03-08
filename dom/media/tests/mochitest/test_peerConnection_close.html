@@ -78,6 +78,10 @@
                                         r => is(r.name, "InvalidStateError", msg));
       Promise.all([
         [pc.createOffer(), "createOffer"],
+        [pc.createOffer({offerToReceiveAudio: true}), "createOffer({offerToReceiveAudio: true})"],
+        [pc.createOffer({offerToReceiveAudio: false}), "createOffer({offerToReceiveAudio: false})"],
+        [pc.createOffer({offerToReceiveVideo: true}), "createOffer({offerToReceiveVideo: true})"],
+        [pc.createOffer({offerToReceiveVideo: false}), "createOffer({offerToReceiveVideo: false})"],
         [pc.createAnswer(), "createAnswer"],
         [pc.setLocalDescription(offer), "setLocalDescription"],
         [pc.setRemoteDescription(answer), "setRemoteDescription"],

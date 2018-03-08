@@ -57,7 +57,6 @@
 #if defined(MOZ_WIDGET_ANDROID)
 #include <android/log.h>
 #include <android/native_window.h>
-#include "apz/src/APZCTreeManager.h"
 #include "mozilla/widget/AndroidCompositorWidget.h"
 #include "opengl/CompositorOGL.h"
 #include "GLConsts.h"
@@ -1172,7 +1171,7 @@ LayerManagerComposite::GetContentShiftForToolbar()
   }
 
   if (CompositorBridgeParent* bridge = mCompositor->GetCompositorBridgeParent()) {
-    AndroidDynamicToolbarAnimator* animator = bridge->GetAPZCTreeManager()->GetAndroidDynamicToolbarAnimator();
+    AndroidDynamicToolbarAnimator* animator = bridge->GetAndroidDynamicToolbarAnimator();
     MOZ_RELEASE_ASSERT(animator);
     result.value = (float)animator->GetCurrentContentOffset().value;
   }
@@ -1188,7 +1187,7 @@ LayerManagerComposite::RenderToolbar()
   }
 
   if (CompositorBridgeParent* bridge = mCompositor->GetCompositorBridgeParent()) {
-    AndroidDynamicToolbarAnimator* animator = bridge->GetAPZCTreeManager()->GetAndroidDynamicToolbarAnimator();
+    AndroidDynamicToolbarAnimator* animator = bridge->GetAndroidDynamicToolbarAnimator();
     MOZ_RELEASE_ASSERT(animator);
 
     animator->UpdateToolbarSnapshotTexture(mCompositor->AsCompositorOGL());
