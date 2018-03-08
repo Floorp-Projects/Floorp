@@ -4,6 +4,9 @@ We verify and test Marionette in a couple of different ways.
 While for the server component XPCShell tests are used, the
 client and harness packages both use Python.
 
+For debugging test failures which are happing in CI, a one-click loaner from
+[Taskcluster](Taskcluster.html) can be used.
+
 ## Setting up the tests
 
 Marionette-based tests can be run in-tree with a locally built
