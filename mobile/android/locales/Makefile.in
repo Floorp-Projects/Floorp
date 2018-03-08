@@ -36,6 +36,7 @@ clobber-stage:
 	$(RM) -rf $(STAGEDIST)
 	$(RM) $(DEPTH)/mobile/android/base/res/values-*/strings.xml
 	$(RM) $(DEPTH)/mobile/android/base/res/raw-*/suggestedsites.json
+	$(RM) $(DEPTH)/mobile/android/base/res/raw-*/browsersearch.json
 
 # merge if we're not en-US, using conditional function as we need
 # the current value of AB_CD
@@ -46,7 +47,7 @@ libs-%:
 	$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 	$(MAKE) multilocale.txt-$* AB_CD=$* XPI_NAME=locale-$*
 ifeq ($(OS_TARGET),Android)
-	$(MAKE) -C $(DEPTH)/mobile/android/base/locales AB_CD=$* XPI_NAME=locale-$*
+	$(MAKE) -C $(DEPTH)/mobile/android/base AB_CD=$* XPI_NAME=locale-$*
 endif
 
 # Tailored target to just add the chrome processing for multi-locale builds
@@ -59,7 +60,7 @@ chrome-%:
 	$(MAKE) -C $(DEPTH)/mobile/locales chrome-$*
 	$(MAKE) chrome AB_CD=$*
 ifeq ($(OS_TARGET),Android)
-	$(MAKE) -C $(DEPTH)/mobile/android/base/locales chrome-$*
+	$(MAKE) -C $(DEPTH)/mobile/android/base chrome-$*
 endif
 
 langpack: langpack-$(AB_CD)
