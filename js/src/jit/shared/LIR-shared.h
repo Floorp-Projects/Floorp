@@ -1044,11 +1044,12 @@ class LControlInstructionHelper : public LInstructionHelper<0, Operands, Temps> 
   protected:
     explicit LControlInstructionHelper(LNode::Opcode opcode)
       : LInstructionHelper<0, Operands, Temps>(opcode)
-    {
-        this->setNumSuccessors(Succs);
-    }
+    {}
 
   public:
+    size_t numSuccessors() const {
+        return Succs;
+    }
     MBasicBlock* getSuccessor(size_t i) const {
         return successors_[i];
     }
