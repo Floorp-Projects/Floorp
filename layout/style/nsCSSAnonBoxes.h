@@ -16,6 +16,25 @@
 // require an atom from this atom list.
 class nsICSSAnonBoxPseudo : public nsAtom {};
 
+namespace mozilla {
+namespace detail {
+
+struct CSSAnonBoxAtoms
+{
+  #define CSS_ANON_BOX(name_, value_) NS_STATIC_ATOM_DECL_STRING(name_, value_)
+  #include "nsCSSAnonBoxList.h"
+  #undef CSS_ANON_BOX
+
+  #define CSS_ANON_BOX(name_, value_) NS_STATIC_ATOM_DECL_ATOM(name_)
+  #include "nsCSSAnonBoxList.h"
+  #undef CSS_ANON_BOX
+};
+
+extern const CSSAnonBoxAtoms gCSSAnonBoxAtoms;
+
+} // namespace detail
+} // namespace mozilla
+
 class nsCSSAnonBoxes {
 public:
 
@@ -32,7 +51,7 @@ public:
   }
 
 #define CSS_ANON_BOX(name_, value_) \
-  NS_STATIC_ATOM_SUBCLASS_DECL(nsICSSAnonBoxPseudo, name_)
+  NS_STATIC_ATOM_SUBCLASS_DECL_PTR(nsICSSAnonBoxPseudo, name_)
 #include "nsCSSAnonBoxList.h"
 #undef CSS_ANON_BOX
 

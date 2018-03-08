@@ -305,6 +305,7 @@ whitelist-types = [
     "nsCursorImage",
     "nsFont",
     "nsAtom",
+    "nsDynamicAtom",
     "nsMainThreadPtrHandle",
     "nsMainThreadPtrHolder",
     "nsMargin",
