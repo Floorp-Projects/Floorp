@@ -200,8 +200,7 @@ position_mark (const hb_ot_shape_plan_t *plan,
 	       unsigned int combining_class)
 {
   hb_glyph_extents_t mark_extents;
-  if (!font->get_glyph_extents (buffer->info[i].codepoint,
-				&mark_extents))
+  if (!font->get_glyph_extents (buffer->info[i].codepoint, &mark_extents))
     return;
 
   hb_position_t y_gap = font->y_scale / 16;
@@ -322,7 +321,9 @@ position_around_base (const hb_ot_shape_plan_t *plan,
   base_extents.y_bearing += buffer->pos[base].y_offset;
 
   unsigned int lig_id = _hb_glyph_info_get_lig_id (&buffer->info[base]);
-  unsigned int num_lig_components = _hb_glyph_info_get_lig_num_comps (&buffer->info[base]);
+  /* Use integer for num_lig_components such that it doesn't convert to unsigned
+   * when we divide or multiply by it. */
+  int num_lig_components = _hb_glyph_info_get_lig_num_comps (&buffer->info[base]);
 
   hb_position_t x_offset = 0, y_offset = 0;
   if (HB_DIRECTION_IS_FORWARD (buffer->props.direction)) {
@@ -331,7 +332,7 @@ position_around_base (const hb_ot_shape_plan_t *plan,
   }
 
   hb_glyph_extents_t component_extents = base_extents;
-  unsigned int last_lig_component = (unsigned int) -1;
+  int last_lig_component = -1;
   unsigned int last_combining_class = 255;
   hb_glyph_extents_t cluster_extents = base_extents; /* Initialization is just to shut gcc up. */
   hb_glyph_info_t *info = buffer->info;
@@ -340,7 +341,7 @@ position_around_base (const hb_ot_shape_plan_t *plan,
     {
       if (num_lig_components > 1) {
 	unsigned int this_lig_id = _hb_glyph_info_get_lig_id (&info[i]);
-	unsigned int this_lig_component = _hb_glyph_info_get_lig_comp (&info[i]) - 1;
+	int this_lig_component = _hb_glyph_info_get_lig_comp (&info[i]) - 1;
 	/* Conditions for attaching to the last component. */
 	if (!lig_id || lig_id != this_lig_id || this_lig_component >= num_lig_components)
 	  this_lig_component = num_lig_components - 1;
@@ -526,7 +527,7 @@ _hb_ot_shape_fallback_spaces (const hb_ot_shape_plan_t *plan,
 	  break;
 
 	case t::SPACE_4_EM_18:
-	  pos[i].x_advance = font->x_scale * 4 / 18;
+	  pos[i].x_advance = (int64_t) font->x_scale * 4 / 18;
 	  break;
 
 	case t::SPACE_FIGURE:

@@ -24,7 +24,7 @@ add_task(async function testBasicPrompt() {
 });
 
 function getWriteTestFile() {
-  let file = getAppBaseDir();
+  let file = getUpdatesRootDir();
   file.append(FILE_UPDATE_TEST);
   file.QueryInterface(Ci.nsILocalFileWin);
   if (file.exists()) {
