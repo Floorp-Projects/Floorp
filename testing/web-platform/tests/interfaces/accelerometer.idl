@@ -1,17 +1,11 @@
-enum LocalCoordinateSystem { "device", "screen" };
-
-dictionary SpatialSensorOptions : SensorOptions {
-  LocalCoordinateSystem referenceFrame = "device";
-};
-
-[Constructor(optional SpatialSensorOptions options), SecureContext, Exposed=Window]
+[Constructor(optional SensorOptions options), SecureContext, Exposed=Window]
 interface Accelerometer : Sensor {
   readonly attribute double? x;
   readonly attribute double? y;
   readonly attribute double? z;
 };
 
-[Constructor(optional SpatialSensorOptions options), SecureContext, Exposed=Window]
+[Constructor(optional SensorOptions options), SecureContext, Exposed=Window]
 interface LinearAccelerationSensor : Accelerometer {
 };
 
