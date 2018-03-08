@@ -52,8 +52,8 @@ div {
 <script>
 'use strict';
 
-function observeStyling(frameCount, onFrame) {
-  var docShell =
+function getDocShellForObservingRestyles() {
+  const docShell =
     SpecialPowers.wrap(window)
                  .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
                  .getInterface(SpecialPowers.Ci.nsIWebNavigation)
@@ -61,6 +61,18 @@ function observeStyling(frameCount, onFrame) {
 
   docShell.recordProfileTimelineMarkers = true;
   docShell.popProfileTimelineMarkers();
+
+  return docShell;
+}
+
+// Returns the animation restyle markers observed during |frameCount| refresh
+// driver ticks.  This function is typically used to count the number of
+// restyles that take place as part of the style update that happens on each
+// refresh driver tick, as opposed to synchronous restyles triggered by script.
+//
+// For the latter observeAnimSyncStyling (below) should be used.
+function observeStyling(frameCount, onFrame) {
+  let docShell = getDocShellForObservingRestyles();
 
   return new Promise(resolve => {
     return waitForAnimationFrames(frameCount, onFrame).then(() => {
@@ -71,6 +83,24 @@ function observeStyling(frameCount, onFrame) {
       });
       resolve(stylingMarkers);
     });
+  });
+}
+
+// Returns observed animation restyle markers when |funcToMakeRestyleHappen|
+// is called.
+// NOTE: This function is synchronous version of the above observeStyling().
+// Unlike the above observeStyling, this function takes a callback function,
+// |funcToMakeRestyleHappen|, which may be expected to trigger a synchronous
+// restyles, and returns any restyle markers produced by calling that function.
+function observeAnimSyncStyling(funcToMakeRestyleHappen) {
+  let docShell = getDocShellForObservingRestyles();
+
+  funcToMakeRestyleHappen();
+
+  let markers = docShell.popProfileTimelineMarkers();
+  docShell.recordProfileTimelineMarkers = false;
+  return markers.filter((marker, index) => {
+    return marker.name == 'Styles' && marker.isAnimationOnly;
   });
 }
 
