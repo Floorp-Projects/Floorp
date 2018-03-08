@@ -844,17 +844,6 @@ public class GeckoSession extends LayerSession
         return mSettings;
     }
 
-    public void importScript(final String url) {
-        if (url.startsWith("resource://android/assets/")) {
-            final GeckoBundle data = new GeckoBundle(1);
-            data.putString("scriptURL", url);
-            getEventDispatcher().dispatch("GeckoView:ImportScript", data);
-            return;
-        }
-
-        throw new IllegalArgumentException("Must import script from 'resources://android/assets/' location.");
-    }
-
     /**
     * Exits fullscreen mode
     */
