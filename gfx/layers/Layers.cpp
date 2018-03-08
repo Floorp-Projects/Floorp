@@ -43,7 +43,6 @@
 #include "nsCSSValue.h"                 // for nsCSSValue::Array, etc
 #include "nsDisplayList.h"              // for nsDisplayItem
 #include "nsPrintfCString.h"            // for nsPrintfCString
-#include "nsStyleStruct.h"              // for nsTimingFunction, etc
 #include "protobuf/LayerScopePacket.pb.h"
 #include "mozilla/Compression.h"
 #include "TreeTraversal.h"              // for ForEachNode

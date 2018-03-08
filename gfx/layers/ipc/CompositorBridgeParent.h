@@ -464,7 +464,7 @@ public:
   bool DeallocPAPZParent(PAPZParent* aActor) override;
 
 #if defined(MOZ_WIDGET_ANDROID)
-  RefPtr<APZCTreeManager> GetAPZCTreeManager();
+  AndroidDynamicToolbarAnimator* GetAndroidDynamicToolbarAnimator();
 #endif
   RefPtr<APZSampler> GetAPZSampler();
 
@@ -490,10 +490,6 @@ public:
 #if defined(MOZ_WIDGET_ANDROID)
   gfx::IntSize GetEGLSurfaceSize() {
     return mEGLSurfaceSize;
-  }
-
-  uint64_t GetRootLayerTreeId() {
-    return mRootLayerTreeID;
   }
 #endif // defined(MOZ_WIDGET_ANDROID)
 

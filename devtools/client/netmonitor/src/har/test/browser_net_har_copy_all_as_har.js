@@ -47,6 +47,7 @@ add_task(async function () {
   ok("onLoad" in page.pageTimings, "There must be onLoad time");
 
   let entry = har.log.entries[0];
+  ok(entry.time > 0, "Check the total time");
   is(entry.request.method, "GET", "Check the method");
   is(entry.request.url, SIMPLE_URL, "Check the URL");
   is(entry.request.headers.length, 9, "Check number of request headers");

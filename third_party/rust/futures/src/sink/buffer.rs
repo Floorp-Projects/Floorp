@@ -36,13 +36,21 @@ impl<S: Sink> Buffer<S> {
         &mut self.sink
     }
 
+    /// Consumes this combinator, returning the underlying sink.
+    ///
+    /// Note that this may discard intermediate state of this combinator, so
+    /// care should be taken to avoid losing resources when this is called.
+    pub fn into_inner(self) -> S {
+        self.sink
+    }
+
     fn try_empty_buffer(&mut self) -> Poll<(), S::SinkError> {
         while let Some(item) = self.buf.pop_front() {
-            if let AsyncSink::NotReady(item) = try!(self.sink.start_send(item)) {
+            if let AsyncSink::NotReady(item) = self.sink.start_send(item)? {
                 self.buf.push_front(item);
 
                 // ensure that we attempt to complete any pushes we've started
-                try!(self.sink.poll_complete());
+                self.sink.poll_complete()?;
 
                 return Ok(Async::NotReady);
             }
@@ -67,8 +75,12 @@ impl<S: Sink> Sink for Buffer<S> {
     type SinkError = S::SinkError;
 
     fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
-        try!(self.try_empty_buffer());
-        if self.buf.len() > self.cap {
+        if self.cap == 0 {
+            return self.sink.start_send(item);
+        }
+
+        self.try_empty_buffer()?;
+        if self.buf.len() == self.cap {
             return Ok(AsyncSink::NotReady(item));
         }
         self.buf.push_back(item);
@@ -76,12 +88,20 @@ impl<S: Sink> Sink for Buffer<S> {
     }
 
     fn poll_complete(&mut self) -> Poll<(), Self::SinkError> {
+        if self.cap == 0 {
+            return self.sink.poll_complete();
+        }
+
         try_ready!(self.try_empty_buffer());
         debug_assert!(self.buf.is_empty());
         self.sink.poll_complete()
     }
 
     fn close(&mut self) -> Poll<(), Self::SinkError> {
+        if self.cap == 0 {
+            return self.sink.close();
+        }
+
         if self.buf.len() > 0 {
             try_ready!(self.try_empty_buffer());
         }

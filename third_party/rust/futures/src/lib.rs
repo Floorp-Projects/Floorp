@@ -37,7 +37,8 @@
 //!
 //! use std::io;
 //! use std::time::Duration;
-//! use futures::future::{Future, Map};
+//! use futures::prelude::*;
+//! use futures::future::Map;
 //!
 //! // A future is actually a trait implementation, so we can generically take a
 //! // future of any integer and return back a future that will resolve to that
@@ -196,16 +197,21 @@ pub use future::{
     SelectNext, Then
 };
 
+#[cfg(feature = "use_std")]
+mod lock;
+mod task_impl;
+
+mod resultstream;
+
+pub mod task;
+pub mod executor;
+#[cfg(feature = "use_std")]
+pub mod sync;
+#[cfg(feature = "use_std")]
+pub mod unsync;
+
+
 if_std! {
-    mod lock;
-    mod task_impl;
-    mod stack;
-
-    pub mod task;
-    pub mod executor;
-    pub mod sync;
-    pub mod unsync;
-
     #[doc(hidden)]
     #[deprecated(since = "0.1.4", note = "use sync::oneshot::channel instead")]
     #[cfg(feature = "with-deprecated")]
@@ -229,10 +235,31 @@ if_std! {
     #[doc(hidden)]
     #[deprecated(since = "0.1.4", note = "import through the future module instead")]
     #[cfg(feature = "with-deprecated")]
+    #[allow(deprecated)]
     pub use future::{BoxFuture, collect, select_all, select_ok};
 
     #[doc(hidden)]
     #[deprecated(since = "0.1.4", note = "import through the future module instead")]
     #[cfg(feature = "with-deprecated")]
     pub use future::{SelectAll, SelectAllNext, Collect, SelectOk};
+}
+
+/// A "prelude" for crates using the `futures` crate.
+///
+/// This prelude is similar to the standard library's prelude in that you'll
+/// almost always want to import its entire contents, but unlike the standard
+/// library's prelude you'll have to do so manually. An example of using this is:
+///
+/// ```
+/// use futures::prelude::*;
+/// ```
+///
+/// We may add items to this over time as they become ubiquitous as well, but
+/// otherwise this should help cut down on futures-related imports when you're
+/// working with the `futures` crate!
+pub mod prelude {
+    #[doc(no_inline)]
+    pub use {Future, Stream, Sink, Async, AsyncSink, Poll, StartSend};
+    #[doc(no_inline)]
+    pub use IntoFuture;
 }

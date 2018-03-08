@@ -1,13 +1,14 @@
 extern crate futures;
 
-use futures::future::*;
+use futures::prelude::*;
+use futures::future::{ok, select_all, err};
 
 #[test]
 fn smoke() {
     let v = vec![
-        ok(1).boxed(),
-        err(2).boxed(),
-        ok(3).boxed(),
+        ok(1),
+        err(2),
+        ok(3),
     ];
 
     let (i, idx, v) = select_all(v).wait().ok().unwrap();
@@ -22,5 +23,5 @@ fn smoke() {
     assert_eq!(i, 3);
     assert_eq!(idx, 0);
 
-    assert!(v.len() == 0);
+    assert!(v.is_empty());
 }

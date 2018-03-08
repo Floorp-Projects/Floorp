@@ -143,12 +143,12 @@ function checkResult() {
     // is set.
     autocomplete.highlightNonMatches = "true";
 
-    isnot(style.getPropertyCSSValue("color").cssText, "rgb(255, 0, 0)",
+    isnot(style.color, "rgb(255, 0, 0)",
           "not nomatch and highlightNonMatches - should not be red");
 
     autocomplete.highlightNonMatches = "false";
 
-    isnot(style.getPropertyCSSValue("color").cssText, "rgb(255, 0, 0)",
+    isnot(style.color, "rgb(255, 0, 0)",
           "not nomatch and not highlightNonMatches - should not be red");
 
     is (autocomplete.popup.getAttribute("autocompleteinput"), "autocomplete",
@@ -165,12 +165,12 @@ function checkResult() {
     // is set.
     autocomplete.highlightNonMatches = "true";
 
-    is(style.getPropertyCSSValue("color").cssText, "rgb(255, 0, 0)",
+    is(style.color, "rgb(255, 0, 0)",
        "nomatch and highlightNonMatches - should be red");
 
     autocomplete.highlightNonMatches = "false";
 
-    isnot(style.getPropertyCSSValue("color").cssText, "rgb(255, 0, 0)",
+    isnot(style.color, "rgb(255, 0, 0)",
           "nomatch and not highlightNonMatches - should not be red");
 
     ok(!autocomplete.popup.hasAttribute("autocompleteinput"),

@@ -7,7 +7,7 @@ use std::rc::Rc;
 use std::thread;
 
 use futures::sync::oneshot;
-use futures::Future;
+use futures::prelude::*;
 use futures::future;
 
 fn send_shared_oneshot_and_wait_on_multiple_threads(threads_number: u32) {
@@ -16,11 +16,11 @@ fn send_shared_oneshot_and_wait_on_multiple_threads(threads_number: u32) {
     let threads = (0..threads_number).map(|_| {
         let cloned_future = f.clone();
         thread::spawn(move || {
-            assert!(*cloned_future.wait().unwrap() == 6);
+            assert_eq!(*cloned_future.wait().unwrap(), 6);
         })
     }).collect::<Vec<_>>();
     tx.send(6).unwrap();
-    assert!(*f.wait().unwrap() == 6);
+    assert_eq!(*f.wait().unwrap(), 6);
     for f in threads {
         f.join().unwrap();
     }
@@ -57,7 +57,7 @@ fn drop_on_one_task_ok() {
     let (tx3, rx3) = oneshot::channel::<u32>();
 
     let t2 = thread::spawn(|| {
-        drop(f2.map(|x| tx3.send(*x).unwrap()).map_err(|_| ()).wait());
+        let _ = f2.map(|x| tx3.send(*x).unwrap()).map_err(|_| ()).wait();
     });
 
     tx2.send(11).unwrap(); // cancel `f1`
@@ -84,7 +84,7 @@ fn drop_in_poll() {
 
 #[test]
 fn peek() {
-    let mut core = ::support::local_executor::Core::new();
+    let core = ::support::local_executor::Core::new();
 
     let (tx0, rx0) = oneshot::channel::<u32>();
     let f1 = rx0.shared();
@@ -113,7 +113,7 @@ fn peek() {
 
 #[test]
 fn polled_then_ignored() {
-    let mut core = ::support::local_executor::Core::new();
+    let core = ::support::local_executor::Core::new();
 
     let (tx0, rx0) = oneshot::channel::<u32>();
     let f1 = rx0.shared();
@@ -146,7 +146,7 @@ fn recursive_poll() {
     use futures::sync::mpsc;
     use futures::Stream;
 
-    let mut core = ::support::local_executor::Core::new();
+    let core = ::support::local_executor::Core::new();
     let (tx0, rx0) = mpsc::unbounded::<Box<Future<Item=(),Error=()>>>();
     let run_stream = rx0.for_each(|f| f);
 
@@ -155,7 +155,7 @@ fn recursive_poll() {
     let f1 = run_stream.shared();
     let f2 = f1.clone();
     let f3 = f1.clone();
-    tx0.send(Box::new(
+    tx0.unbounded_send(Box::new(
         f1.map(|_|()).map_err(|_|())
             .select(rx1.map_err(|_|()))
             .map(|_| ()).map_err(|_|()))).unwrap();
@@ -176,7 +176,7 @@ fn recursive_poll_with_unpark() {
     use futures::sync::mpsc;
     use futures::{Stream, task};
 
-    let mut core = ::support::local_executor::Core::new();
+    let core = ::support::local_executor::Core::new();
     let (tx0, rx0) = mpsc::unbounded::<Box<Future<Item=(),Error=()>>>();
     let run_stream = rx0.for_each(|f| f);
 
@@ -185,8 +185,8 @@ fn recursive_poll_with_unpark() {
     let f1 = run_stream.shared();
     let f2 = f1.clone();
     let f3 = f1.clone();
-    tx0.send(Box::new(future::lazy(move || {
-        task::park().unpark();
+    tx0.unbounded_send(Box::new(future::lazy(move || {
+        task::current().notify();
         f1.map(|_|()).map_err(|_|())
             .select(rx1.map_err(|_|()))
             .map(|_| ()).map_err(|_|())

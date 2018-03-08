@@ -28,11 +28,11 @@ window._gBrowser = {
 
     this.initialBrowser = document.getElementById("tabbrowser-initialBrowser");
 
+    this.tabbox = document.getElementById("tabbrowser-tabbox");
+
     this.tabContainer = document.getElementById("tabbrowser-tabs");
 
     this.tabs = this.tabContainer.childNodes;
-
-    this.tabbox = document.getElementById("tabbrowser-tabbox");
 
     this.closingTabsEnum = { ALL: 0, OTHER: 1, TO_END: 2 };
 
