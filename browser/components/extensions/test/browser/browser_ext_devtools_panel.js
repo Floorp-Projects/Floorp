@@ -286,7 +286,7 @@ add_task(async function test_devtools_page_panels_create() {
   ok(toolbox.hasAdditionalTool(panelId),
      "The tool has not been removed on visibilityswitch set to false");
 
-  is(toolbox.visibleAdditionalTools.filter(tool => tool.id == panelId).length, 0,
+  is(toolbox.visibleAdditionalTools.filter(toolId => toolId == panelId).length, 0,
      "The tool is not visible on visibilityswitch set to false");
 
   // Turn on the addon devtools panel using the visibilityswitch.
