@@ -84,6 +84,11 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     if CONFIG['MOZ_X11']:
         DIRS += ['gtkxtbin']
 
+    XPIDL_SOURCES += [
+        'nsIGtkTaskbarProgress.idl',
+        'nsITaskbarProgress.idl',
+    ]
+
 XPIDL_SOURCES += [
     'nsIAppShell.idl',
     'nsIBaseWindow.idl',
