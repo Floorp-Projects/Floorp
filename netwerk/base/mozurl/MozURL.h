@@ -54,12 +54,18 @@ public:
   nsDependentCSubstring Password() const {
     return mozurl_password(this);
   }
+  // Will return the hostname of URL. If the hostname is an IPv6 address,
+  // it will be enclosed in square brackets, such as `[::1]`
   nsDependentCSubstring Host() const {
     return mozurl_host(this);
   }
+  // Will return the port number, if specified, or -1
   int32_t Port() const {
     return mozurl_port(this);
   }
+  // If the URL's port number is equal to the default port, will only return the
+  // hostname, otherwise it will return a string of the form `{host}:{port}`
+  // See: https://url.spec.whatwg.org/#default-port
   nsDependentCSubstring HostPort() const {
     return mozurl_host_port(this);
   }
@@ -91,58 +97,6 @@ public:
   }
   nsresult GetRelative(const MozURL* aOther, nsACString* aRelative) const {
     return mozurl_relative(this, aOther, aRelative);
-  }
-
-  // Legacy XPCOM-style getters
-  nsresult GetScheme(nsACString& aScheme) const {
-    aScheme.Assign(Scheme());
-    return NS_OK;
-  }
-  nsresult GetSpec(nsACString& aSpec) const {
-    aSpec.Assign(Spec());
-    return NS_OK;
-  }
-  nsresult GetUsername(nsACString& aUser) const {
-    aUser.Assign(Username());
-    return NS_OK;
-  }
-  nsresult GetPassword(nsACString& aPassword) const {
-    aPassword.Assign(Password());
-    return NS_OK;
-  }
-  // Will return the hostname of URL. If the hostname is an IPv6 address,
-  // it will be enclosed in square brackets, such as `[::1]`
-  nsresult GetHostname(nsACString& aHost) const {
-    aHost.Assign(Host());
-    return NS_OK;
-  }
-  // If the URL's port number is equal to the default port, will only return the
-  // hostname, otherwise it will return a string of the form `{host}:{port}`
-  // See: https://url.spec.whatwg.org/#default-port
-  nsresult GetHostPort(nsACString& aHostPort) const {
-    aHostPort.Assign(HostPort());
-    return NS_OK;
-  }
-  // Will return the port number, if specified, or -1
-  nsresult GetPort(int32_t* aPort) const {
-    *aPort = Port();
-    return NS_OK;
-  }
-  nsresult GetFilePath(nsACString& aPath) const {
-    aPath.Assign(FilePath());
-    return NS_OK;
-  }
-  nsresult GetQuery(nsACString& aQuery) const {
-    aQuery.Assign(Query());
-    return NS_OK;
-  }
-  nsresult GetRef(nsACString& aRef) const {
-    aRef.Assign(Ref());
-    return NS_OK;
-  }
-  nsresult GetOrigin(nsACString& aOrigin) const {
-    Origin(aOrigin);
-    return NS_OK;
   }
 
   class MOZ_STACK_CLASS Mutator
