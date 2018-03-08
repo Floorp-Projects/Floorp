@@ -1611,12 +1611,16 @@ CompositorBridgeParent::DeallocPLayerTransactionParent(PLayerTransactionParent* 
 
 CompositorBridgeParent* CompositorBridgeParent::GetCompositorBridgeParent(uint64_t id)
 {
+  MOZ_RELEASE_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
   CompositorMap::iterator it = sCompositorMap->find(id);
   return it != sCompositorMap->end() ? it->second : nullptr;
 }
 
 void CompositorBridgeParent::AddCompositor(CompositorBridgeParent* compositor, uint64_t* outID)
 {
+  MOZ_RELEASE_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
   static uint64_t sNextID = 1;
 
   ++sNextID;
@@ -1626,6 +1630,8 @@ void CompositorBridgeParent::AddCompositor(CompositorBridgeParent* compositor, u
 
 CompositorBridgeParent* CompositorBridgeParent::RemoveCompositor(uint64_t id)
 {
+  MOZ_RELEASE_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
   CompositorMap::iterator it = sCompositorMap->find(id);
   if (it == sCompositorMap->end()) {
     return nullptr;
