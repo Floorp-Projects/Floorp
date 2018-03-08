@@ -3,6 +3,7 @@
 //! This module contains the `Future` trait and a number of adaptors for this
 //! trait. See the crate docs, and the docs for `Future`, for full detail.
 
+use core::fmt;
 use core::result;
 
 // Primitive futures
@@ -55,6 +56,7 @@ mod select;
 mod select2;
 mod then;
 mod either;
+mod inspect;
 
 // impl details
 mod chain;
@@ -73,6 +75,7 @@ pub use self::select::{Select, SelectNext};
 pub use self::select2::Select2;
 pub use self::then::Then;
 pub use self::either::Either;
+pub use self::inspect::Inspect;
 
 if_std! {
     mod catch_unwind;
@@ -96,6 +99,10 @@ if_std! {
     pub use self::join_all::JoinAll as Collect;
 
     /// A type alias for `Box<Future + Send>`
+    #[doc(hidden)]
+    #[deprecated(note = "removed without replacement, recommended to use a \
+                         local extension trait or function if needed, more \
+                         details in https://github.com/alexcrichton/futures-rs/issues/228")]
     pub type BoxFuture<T, E> = ::std::boxed::Box<Future<Item = T, Error = E> + Send>;
 
     impl<F: ?Sized + Future> Future for ::std::boxed::Box<F> {
@@ -148,7 +155,7 @@ use {Poll, stream};
 /// More information about the details of `poll` and the nitty-gritty of tasks
 /// can be [found online at tokio.rs][poll-dox].
 ///
-/// [poll-dox]: https://tokio.rs/docs/going-deeper/futures-model/
+/// [poll-dox]: https://tokio.rs/docs/going-deeper-futures/futures-model/
 ///
 /// # Combinators
 ///
@@ -166,7 +173,7 @@ use {Poll, stream};
 ///
 /// More information about combinators can be found [on tokio.rs].
 ///
-/// [on tokio.rs]: https://tokio.rs/docs/going-deeper/futures-mechanics/
+/// [on tokio.rs]: https://tokio.rs/docs/going-deeper-futures/futures-mechanics/
 pub trait Future {
     /// The type of value that this future will resolved with if it is
     /// successful.
@@ -180,7 +187,7 @@ pub trait Future {
     /// interest if it is not.
     ///
     /// This function will check the internal state of the future and assess
-    /// whether the value is ready to be produced. Implementors of this function
+    /// whether the value is ready to be produced. Implementers of this function
     /// should ensure that a call to this **never blocks** as event loops may
     /// not work properly otherwise.
     ///
@@ -194,7 +201,7 @@ pub trait Future {
     /// More information about the details of `poll` and the nitty-gritty of
     /// tasks can be [found online at tokio.rs][poll-dox].
     ///
-    /// [poll-dox]: https://tokio.rs/docs/going-deeper/futures-model/
+    /// [poll-dox]: https://tokio.rs/docs/going-deeper-futures/futures-model/
     ///
     /// # Runtime characteristics
     ///
@@ -233,6 +240,14 @@ pub trait Future {
     /// `task::park`). In other words, the current task will receive a
     /// notification (through the `unpark` method) once the value is ready to be
     /// produced or the future can make progress.
+    ///
+    /// Note that if `NotReady` is returned it only means that *this* task will
+    /// receive a notification. Historical calls to `poll` with different tasks
+    /// will not receive notifications. In other words, implementers of the
+    /// `Future` trait need not store a queue of tasks to notify, but only the
+    /// last task that called this method. Alternatively callers of this method
+    /// can only rely on the most recent task which call `poll` being notified
+    /// when a future is ready.
     ///
     /// # Panics
     ///
@@ -299,11 +314,17 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future::{BoxFuture, result};
     ///
     /// let a: BoxFuture<i32, i32> = result(Ok(1)).boxed();
     /// ```
     #[cfg(feature = "use_std")]
+    #[doc(hidden)]
+    #[deprecated(note = "removed without replacement, recommended to use a \
+                         local extension trait or function if needed, more \
+                         details in https://github.com/alexcrichton/futures-rs/issues/228")]
+    #[allow(deprecated)]
     fn boxed(self) -> BoxFuture<Self::Item, Self::Error>
         where Self: Sized + Send + 'static
     {
@@ -328,10 +349,23 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
     ///
-    /// let future_of_1 = ok::<u32, u32>(1);
-    /// let future_of_4 = future_of_1.map(|x| x + 3);
+    /// let future = future::ok::<u32, u32>(1);
+    /// let new_future = future.map(|x| x + 3);
+    /// assert_eq!(new_future.wait(), Ok(4));
+    /// ```
+    ///
+    /// Calling `map` on an errored `Future` has no effect:
+    ///
+    /// ```
+    /// use futures::prelude::*;
+    /// use futures::future;
+    ///
+    /// let future = future::err::<u32, u32>(1);
+    /// let new_future = future.map(|x| x + 3);
+    /// assert_eq!(new_future.wait(), Err(1));
     /// ```
     fn map<F, U>(self, f: F) -> Map<Self, F>
         where F: FnOnce(Self::Item) -> U,
@@ -359,8 +393,19 @@ pub trait Future {
     /// ```
     /// use futures::future::*;
     ///
-    /// let future_of_err_1 = err::<u32, u32>(1);
-    /// let future_of_err_4 = future_of_err_1.map_err(|x| x + 3);
+    /// let future = err::<u32, u32>(1);
+    /// let new_future = future.map_err(|x| x + 3);
+    /// assert_eq!(new_future.wait(), Err(4));
+    /// ```
+    ///
+    /// Calling `map_err` on a successful `Future` has no effect:
+    ///
+    /// ```
+    /// use futures::future::*;
+    ///
+    /// let future = ok::<u32, u32>(1);
+    /// let new_future = future.map_err(|x| x + 3);
+    /// assert_eq!(new_future.wait(), Ok(1));
     /// ```
     fn map_err<F, E>(self, f: F) -> MapErr<Self, F>
         where F: FnOnce(Self::Error) -> E,
@@ -386,10 +431,11 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
     ///
-    /// let future_of_err_1 = err::<u32, u32>(1);
-    /// let future_of_err_4 = future_of_err_1.from_err::<u32>();
+    /// let future_with_err_u8 = future::err::<(), u8>(1);
+    /// let future_with_err_u32 = future_with_err_u8.from_err::<u32>();
     /// ```
     fn from_err<E:From<Self::Error>>(self) -> FromErr<Self, E>
         where Self: Sized,
@@ -419,18 +465,19 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
     ///
-    /// let future_of_1 = ok::<u32, u32>(1);
+    /// let future_of_1 = future::ok::<u32, u32>(1);
     /// let future_of_4 = future_of_1.then(|x| {
     ///     x.map(|y| y + 3)
     /// });
     ///
-    /// let future_of_err_1 = err::<u32, u32>(1);
+    /// let future_of_err_1 = future::err::<u32, u32>(1);
     /// let future_of_4 = future_of_err_1.then(|x| {
     ///     match x {
     ///         Ok(_) => panic!("expected an error"),
-    ///         Err(y) => ok::<u32, u32>(y + 3),
+    ///         Err(y) => future::ok::<u32, u32>(y + 3),
     ///     }
     /// });
     /// ```
@@ -462,14 +509,15 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future::{self, FutureResult};
     ///
-    /// let future_of_1 = ok::<u32, u32>(1);
+    /// let future_of_1 = future::ok::<u32, u32>(1);
     /// let future_of_4 = future_of_1.and_then(|x| {
     ///     Ok(x + 3)
     /// });
     ///
-    /// let future_of_err_1 = err::<u32, u32>(1);
+    /// let future_of_err_1 = future::err::<u32, u32>(1);
     /// future_of_err_1.and_then(|_| -> FutureResult<u32, u32> {
     ///     panic!("should not be called in case of an error");
     /// });
@@ -502,14 +550,15 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future::{self, FutureResult};
     ///
-    /// let future_of_err_1 = err::<u32, u32>(1);
+    /// let future_of_err_1 = future::err::<u32, u32>(1);
     /// let future_of_4 = future_of_err_1.or_else(|x| -> Result<u32, u32> {
     ///     Ok(x + 3)
     /// });
     ///
-    /// let future_of_1 = ok::<u32, u32>(1);
+    /// let future_of_1 = future::ok::<u32, u32>(1);
     /// future_of_1.or_else(|_| -> FutureResult<u32, u32> {
     ///     panic!("should not be called in case of success");
     /// });
@@ -534,20 +583,42 @@ pub trait Future {
     ///
     /// # Examples
     ///
+    /// ```no_run
+    /// use futures::prelude::*;
+    /// use futures::future;
+    /// use std::thread;
+    /// use std::time;
+    ///
+    /// let future1 = future::lazy(|| {
+    ///     thread::sleep(time::Duration::from_secs(5));
+    ///     future::ok::<char, ()>('a')
+    /// });
+    ///
+    /// let future2 = future::lazy(|| {
+    ///     thread::sleep(time::Duration::from_secs(3));
+    ///     future::ok::<char, ()>('b')
+    /// });
+    ///
+    /// let (value, last_future) = future1.select(future2).wait().ok().unwrap();
+    /// assert_eq!(value, 'a');
+    /// assert_eq!(last_future.wait().unwrap(), 'b');
     /// ```
-    /// use futures::future::*;
     ///
-    /// // A poor-man's join implemented on top of select
+    /// A poor-man's `join` implemented on top of `select`:
     ///
-    /// fn join<A>(a: A, b: A) -> BoxFuture<(u32, u32), u32>
-    ///     where A: Future<Item = u32, Error = u32> + Send + 'static,
+    /// ```
+    /// use futures::prelude::*;
+    /// use futures::future;
+    ///
+    /// fn join<A>(a: A, b: A) -> Box<Future<Item=(u32, u32), Error=u32>>
+    ///     where A: Future<Item = u32, Error = u32> + 'static,
     /// {
-    ///     a.select(b).then(|res| {
+    ///     Box::new(a.select(b).then(|res| -> Box<Future<Item=_, Error=_>> {
     ///         match res {
-    ///             Ok((a, b)) => b.map(move |b| (a, b)).boxed(),
-    ///             Err((a, _)) => err(a).boxed(),
+    ///             Ok((a, b)) => Box::new(b.map(move |b| (a, b))),
+    ///             Err((a, _)) => Box::new(future::err(a)),
     ///         }
-    ///     }).boxed()
+    ///     }))
     /// }
     /// ```
     fn select<B>(self, other: B) -> Select<Self, B::Future>
@@ -576,23 +647,24 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future::{self, Either};
     ///
     /// // A poor-man's join implemented on top of select2
     ///
-    /// fn join<A, B, E>(a: A, b: B) -> BoxFuture<(A::Item, B::Item), E>
-    ///     where A: Future<Error = E> + Send + 'static,
-    ///           B: Future<Error = E> + Send + 'static,
-    ///           A::Item: Send, B::Item: Send, E: Send + 'static,
+    /// fn join<A, B, E>(a: A, b: B) -> Box<Future<Item=(A::Item, B::Item), Error=E>>
+    ///     where A: Future<Error = E> + 'static,
+    ///           B: Future<Error = E> + 'static,
+    ///           E: 'static,
     /// {
-    ///     a.select2(b).then(|res| {
+    ///     Box::new(a.select2(b).then(|res| -> Box<Future<Item=_, Error=_>> {
     ///         match res {
-    ///             Ok(Either::A((x, b))) => b.map(move |y| (x, y)).boxed(),
-    ///             Ok(Either::B((y, a))) => a.map(move |x| (x, y)).boxed(),
-    ///             Err(Either::A((e, _))) => err(e).boxed(),
-    ///             Err(Either::B((e, _))) => err(e).boxed(),
+    ///             Ok(Either::A((x, b))) => Box::new(b.map(move |y| (x, y))),
+    ///             Ok(Either::B((y, a))) => Box::new(a.map(move |x| (x, y))),
+    ///             Err(Either::A((e, _))) => Box::new(future::err(e)),
+    ///             Err(Either::B((e, _))) => Box::new(future::err(e)),
     ///         }
-    ///     }).boxed()
+    ///     }))
     /// }
     /// ```
     fn select2<B>(self, other: B) -> Select2<Self, B::Future>
@@ -617,16 +689,28 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
     ///
-    /// let a = ok::<u32, u32>(1);
-    /// let b = ok::<u32, u32>(2);
+    /// let a = future::ok::<u32, u32>(1);
+    /// let b = future::ok::<u32, u32>(2);
     /// let pair = a.join(b);
     ///
-    /// pair.map(|(a, b)| {
-    ///     assert_eq!(a, 1);
-    ///     assert_eq!(b, 2);
-    /// });
+    /// assert_eq!(pair.wait(), Ok((1, 2)));
+    /// ```
+    ///
+    /// If one or both of the joined `Future`s is errored, the resulting
+    /// `Future` will be errored:
+    ///
+    /// ```
+    /// use futures::prelude::*;
+    /// use futures::future;
+    ///
+    /// let a = future::ok::<u32, u32>(1);
+    /// let b = future::err::<u32, u32>(2);
+    /// let pair = a.join(b);
+    ///
+    /// assert_eq!(pair.wait(), Err(2));
     /// ```
     fn join<B>(self, other: B) -> Join<Self, B::Future>
         where B: IntoFuture<Error=Self::Error>,
@@ -677,15 +761,15 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::{Stream, Async};
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
     ///
-    /// let future = ok::<_, bool>(17);
+    /// let future = future::ok::<_, bool>(17);
     /// let mut stream = future.into_stream();
     /// assert_eq!(Ok(Async::Ready(Some(17))), stream.poll());
     /// assert_eq!(Ok(Async::Ready(None)), stream.poll());
     ///
-    /// let future = err::<bool, _>(19);
+    /// let future = future::err::<bool, _>(19);
     /// let mut stream = future.into_stream();
     /// assert_eq!(Err(19), stream.poll());
     /// assert_eq!(Ok(Async::Ready(None)), stream.poll());
@@ -700,7 +784,7 @@ pub trait Future {
     /// future is itself another future.
     ///
     /// This can be useful when combining futures together to flatten the
-    /// computation out the the final result. This method can only be called
+    /// computation out the final result. This method can only be called
     /// when the successful result of this future itself implements the
     /// `IntoFuture` trait and the error can be created from this future's error
     /// type.
@@ -713,10 +797,24 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
     ///
-    /// let future_of_a_future = ok::<_, u32>(ok::<u32, u32>(1));
-    /// let future_of_1 = future_of_a_future.flatten();
+    /// let nested_future = future::ok::<_, u32>(future::ok::<u32, u32>(1));
+    /// let future = nested_future.flatten();
+    /// assert_eq!(future.wait(), Ok(1));
+    /// ```
+    ///
+    /// Calling `flatten` on an errored `Future`, or if the inner `Future` is
+    /// errored, will result in an errored `Future`:
+    ///
+    /// ```
+    /// use futures::prelude::*;
+    /// use futures::future;
+    ///
+    /// let nested_future = future::ok::<_, u32>(future::err::<u32, u32>(1));
+    /// let future = nested_future.flatten();
+    /// assert_eq!(future.wait(), Err(1));
     /// ```
     fn flatten(self) -> Flatten<Self>
         where Self::Item: IntoFuture,
@@ -743,17 +841,18 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::stream::{self, Stream};
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
+    /// use futures::stream;
     ///
-    /// let stream_items = vec![Ok(17), Err(true), Ok(19)];
-    /// let future_of_a_stream = ok::<_, bool>(stream::iter(stream_items));
+    /// let stream_items = vec![17, 18, 19];
+    /// let future_of_a_stream = future::ok::<_, bool>(stream::iter_ok(stream_items));
     ///
     /// let stream = future_of_a_stream.flatten_stream();
     ///
     /// let mut iter = stream.wait();
     /// assert_eq!(Ok(17), iter.next().unwrap());
-    /// assert_eq!(Err(true), iter.next().unwrap());
+    /// assert_eq!(Ok(18), iter.next().unwrap());
     /// assert_eq!(Ok(19), iter.next().unwrap());
     /// assert_eq!(None, iter.next());
     /// ```
@@ -783,17 +882,17 @@ pub trait Future {
     /// # Examples
     ///
     /// ```rust
-    /// use futures::Async;
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
     ///
-    /// let mut future = ok::<i32, u32>(2);
+    /// let mut future = future::ok::<i32, u32>(2);
     /// assert_eq!(future.poll(), Ok(Async::Ready(2)));
     ///
     /// // Normally, a call such as this would panic:
     /// //future.poll();
     ///
     /// // This, however, is guaranteed to not panic
-    /// let mut future = ok::<i32, u32>(2).fuse();
+    /// let mut future = future::ok::<i32, u32>(2).fuse();
     /// assert_eq!(future.poll(), Ok(Async::Ready(2)));
     /// assert_eq!(future.poll(), Ok(Async::NotReady));
     /// ```
@@ -802,6 +901,29 @@ pub trait Future {
     {
         let f = fuse::new(self);
         assert_future::<Self::Item, Self::Error, _>(f)
+    }
+
+    /// Do something with the item of a future, passing it on.
+    ///
+    /// When using futures, you'll often chain several of them together.
+    /// While working on such code, you might want to check out what's happening at
+    /// various parts in the pipeline. To do that, insert a call to inspect().
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use futures::prelude::*;
+    /// use futures::future;
+    ///
+    /// let future = future::ok::<u32, u32>(1);
+    /// let new_future = future.inspect(|&x| println!("about to resolve: {}", x));
+    /// assert_eq!(new_future.wait(), Ok(1));
+    /// ```
+    fn inspect<F>(self, f: F) -> Inspect<Self, F>
+        where F: FnOnce(&Self::Item) -> (),
+              Self: Sized,
+    {
+        assert_future::<Self::Item, Self::Error, _>(inspect::new(self, f))
     }
 
     /// Catches unwinding panics while polling the future.
@@ -823,14 +945,15 @@ pub trait Future {
     /// # Examples
     ///
     /// ```rust
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future::{self, FutureResult};
     ///
-    /// let mut future = ok::<i32, u32>(2);
+    /// let mut future = future::ok::<i32, u32>(2);
     /// assert!(future.catch_unwind().wait().is_ok());
     ///
-    /// let mut future = lazy(|| -> FutureResult<i32, u32> {
+    /// let mut future = future::lazy(|| -> FutureResult<i32, u32> {
     ///     panic!();
-    ///     ok::<i32, u32>(2)
+    ///     future::ok::<i32, u32>(2)
     /// });
     /// assert!(future.catch_unwind().wait().is_err());
     /// ```
@@ -844,7 +967,7 @@ pub trait Future {
     /// Create a cloneable handle to this future where all handles will resolve
     /// to the same result.
     ///
-    /// The shared() method provides a mean to convert any future into a
+    /// The shared() method provides a method to convert any future into a
     /// cloneable future. It enables a future to be polled by multiple threads.
     ///
     /// The returned `Shared` future resolves successfully with
@@ -859,9 +982,10 @@ pub trait Future {
     /// # Examples
     ///
     /// ```
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
     ///
-    /// let future = ok::<_, bool>(6);
+    /// let future = future::ok::<_, bool>(6);
     /// let shared1 = future.shared();
     /// let shared2 = shared1.clone();
     /// assert_eq!(6, *shared1.wait().unwrap());
@@ -870,9 +994,10 @@ pub trait Future {
     ///
     /// ```
     /// use std::thread;
-    /// use futures::future::*;
+    /// use futures::prelude::*;
+    /// use futures::future;
     ///
-    /// let future = ok::<_, bool>(6);
+    /// let future = future::ok::<_, bool>(6);
     /// let shared1 = future.shared();
     /// let shared2 = shared1.clone();
     /// let join_handle = thread::spawn(move || {
@@ -956,4 +1081,90 @@ pub trait FutureFrom<T>: Sized {
 
     /// Consume the given value, beginning the conversion.
     fn future_from(T) -> Self::Future;
+}
+
+/// A trait for types which can spawn fresh futures.
+///
+/// This trait is typically implemented for "executors", or those types which
+/// can execute futures to completion. Futures passed to `Spawn::spawn`
+/// typically get turned into a *task* and are then driven to completion.
+///
+/// On spawn, the executor takes ownership of the future and becomes responsible
+/// to call `Future::poll()` whenever a readiness notification is raised.
+pub trait Executor<F: Future<Item = (), Error = ()>> {
+    /// Spawns a future to run on this `Executor`, typically in the
+    /// "background".
+    ///
+    /// This function will return immediately, and schedule the future `future`
+    /// to run on `self`. The details of scheduling and execution are left to
+    /// the implementations of `Executor`, but this is typically a primary point
+    /// for injecting concurrency in a futures-based system. Futures spawned
+    /// through this `execute` function tend to run concurrently while they're
+    /// waiting on events.
+    ///
+    /// # Errors
+    ///
+    /// Implementers of this trait are allowed to reject accepting this future
+    /// as well. This can happen for various reason such as:
+    ///
+    /// * The executor is shut down
+    /// * The executor has run out of capacity to execute futures
+    ///
+    /// The decision is left to the caller how to work with this form of error.
+    /// The error returned transfers ownership of the future back to the caller.
+    fn execute(&self, future: F) -> Result<(), ExecuteError<F>>;
+}
+
+/// Errors returned from the `Spawn::spawn` function.
+pub struct ExecuteError<F> {
+    future: F,
+    kind: ExecuteErrorKind,
+}
+
+/// Kinds of errors that can be returned from the `Execute::spawn` function.
+///
+/// Executors which may not always be able to accept a future may return one of
+/// these errors, indicating why it was unable to spawn a future.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum ExecuteErrorKind {
+    /// This executor has shut down and will no longer accept new futures to
+    /// spawn.
+    Shutdown,
+
+    /// This executor has no more capacity to run more futures. Other futures
+    /// need to finish before this executor can accept another.
+    NoCapacity,
+
+    #[doc(hidden)]
+    __Nonexhaustive,
+}
+
+impl<F> ExecuteError<F> {
+    /// Create a new `ExecuteError`
+    pub fn new(kind: ExecuteErrorKind, future: F) -> ExecuteError<F> {
+        ExecuteError {
+            future: future,
+            kind: kind,
+        }
+    }
+
+    /// Returns the associated reason for the error
+    pub fn kind(&self) -> ExecuteErrorKind {
+        self.kind
+    }
+
+    /// Consumes self and returns the original future that was spawned.
+    pub fn into_future(self) -> F {
+        self.future
+    }
+}
+
+impl<F> fmt::Debug for ExecuteError<F> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.kind {
+            ExecuteErrorKind::Shutdown => "executor has shut down".fmt(f),
+            ExecuteErrorKind::NoCapacity => "executor has no more capacity".fmt(f),
+            ExecuteErrorKind::__Nonexhaustive => panic!(),
+        }
+    }
 }

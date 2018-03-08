@@ -2,6 +2,7 @@ use command::Parameters;
 use common::{Nullable, WebElement};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 use rustc_serialize::json::{ToJson, Json};
+use unicode_segmentation::UnicodeSegmentation;
 use std::collections::BTreeMap;
 use std::default::Default;
 
@@ -368,26 +369,26 @@ impl ToJson for KeyAction {
     }
 }
 
-fn validate_key_value(value_str: &str) -> WebDriverResult<char> {
-    let mut chars = value_str.chars();
-    let value = if let Some(c) = chars.next() {
-        c
+fn validate_key_value(value_str: &str) -> WebDriverResult<String> {
+    let mut graphemes = value_str.graphemes(true);
+    let value = if let Some(g) = graphemes.next() {
+        g
     } else {
         return Err(WebDriverError::new(
             ErrorStatus::InvalidArgument,
             "Parameter 'value' was an empty string"))
     };
-    if chars.next().is_some() {
+    if graphemes.next().is_some() {
         return Err(WebDriverError::new(
             ErrorStatus::InvalidArgument,
-            "Parameter 'value' contained multiple characters"))
+            "Parameter 'value' contained multiple graphemes"))
     };
-    Ok(value)
+    Ok(value.to_string())
 }
 
 #[derive(Debug, PartialEq)]
 pub struct KeyUpAction {
-    pub value: char
+    pub value: String
 }
 
 impl Parameters for KeyUpAction {
@@ -419,7 +420,7 @@ impl ToJson for KeyUpAction {
 
 #[derive(Debug, PartialEq)]
 pub struct KeyDownAction {
-    pub value: char
+    pub value: String
 }
 
 impl Parameters for KeyDownAction {

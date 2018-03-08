@@ -144,7 +144,7 @@ var ToolbarView = {
    * Fired when a preference changes in the underlying OptionsView.
    * Propogated by the PerformanceController.
    */
-  _onPrefChanged: function (_, prefName) {
+  _onPrefChanged: function (prefName) {
     let value = PerformanceController.getOption(prefName);
 
     if (prefName === "experimental") {

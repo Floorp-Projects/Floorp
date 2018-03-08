@@ -239,4 +239,9 @@ interface nsIDNSService : nsISupports
      */
     const unsigned long RESOLVE_DISABLE_TRR = (1 << 9);
 
+    /**
+     * if set (together with RESOLVE_BYPASS_CACHE), invalidate the DNS
+     * existing cache entry first (if existing) then make a new resolve.
+     */
+    const unsigned long RESOLVE_REFRESH_CACHE = (1 << 10);
 };

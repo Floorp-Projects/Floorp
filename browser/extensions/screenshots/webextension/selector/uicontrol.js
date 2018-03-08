@@ -99,14 +99,14 @@ this.uicontrol = (function() {
     const previewDataUrl = (captureType === "fullPageTruncated") ? null : dataUrl;
     // Downloaded shots don't have dimension limits
     removeDimensionLimitsOnFullPageShot();
-    shooter.downloadShot(selectedPos, previewDataUrl);
+    shooter.downloadShot(selectedPos, previewDataUrl, captureType);
   }
 
   function copyShot() {
     const previewDataUrl = (captureType === "fullPageTruncated") ? null : dataUrl;
     // Copied shots don't have dimension limits
     removeDimensionLimitsOnFullPageShot();
-    shooter.copyShot(selectedPos, previewDataUrl);
+    shooter.copyShot(selectedPos, previewDataUrl, captureType);
   }
 
   /** *********************************************

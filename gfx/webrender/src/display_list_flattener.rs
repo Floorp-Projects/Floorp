@@ -216,14 +216,13 @@ impl<'a> DisplayListFlattener<'a> {
         view: &DocumentView,
         output_pipelines: &FastHashSet<PipelineId>,
         frame_builder_config: &FrameBuilderConfig,
-        pipeline_epochs: &mut FastHashMap<PipelineId, Epoch>,
+        new_scene: &mut Scene,
     ) -> FrameBuilder {
         // We checked that the root pipeline is available on the render backend.
         let root_pipeline_id = scene.root_pipeline_id.unwrap();
         let root_pipeline = scene.pipelines.get(&root_pipeline_id).unwrap();
 
         let root_epoch = scene.pipeline_epochs[&root_pipeline_id];
-        pipeline_epochs.insert(root_pipeline_id, root_epoch);
 
         let background_color = root_pipeline
             .background_color
@@ -261,7 +260,11 @@ impl<'a> DisplayListFlattener<'a> {
         flattener.flatten_root(root_pipeline, &root_pipeline.viewport_size);
 
         debug_assert!(flattener.picture_stack.is_empty());
-        pipeline_epochs.extend(flattener.pipeline_epochs.drain(..));
+
+        new_scene.root_pipeline_id = Some(root_pipeline_id);
+        new_scene.pipeline_epochs.insert(root_pipeline_id, root_epoch);
+        new_scene.pipeline_epochs.extend(flattener.pipeline_epochs.drain(..));
+        new_scene.pipelines = scene.pipelines.clone();
 
         FrameBuilder::with_display_list_flattener(
             view.inner_rect,
@@ -1164,7 +1167,12 @@ impl<'a> DisplayListFlattener<'a> {
 
         let stacking_context = self.sc_stack.last().expect("bug: no stacking context!");
 
-        let clip_sources = self.clip_store.insert(ClipSources::new(clip_sources));
+        let clip_sources = if clip_sources.is_empty() {
+            None
+        } else {
+            Some(self.clip_store.insert(ClipSources::new(clip_sources)))
+        };
+
         let prim_index = self.prim_store.add_primitive(
             &info.rect,
             &info.local_clip.clip_rect(),
@@ -1271,9 +1279,6 @@ impl<'a> DisplayListFlattener<'a> {
                 None,
             );
 
-            // No clip sources needed for the main framebuffer.
-            let clip_sources = self.clip_store.insert(ClipSources::new(Vec::new()));
-
             // Add root picture primitive. The provided layer rect
             // is zero, because we don't yet know the size of the
             // picture. Instead, this is calculated recursively
@@ -1282,7 +1287,7 @@ impl<'a> DisplayListFlattener<'a> {
                 &LayerRect::zero(),
                 &max_clip,
                 true,
-                clip_sources,
+                None,
                 None,
                 PrimitiveContainer::Picture(pic),
             );
@@ -1351,13 +1356,11 @@ impl<'a> DisplayListFlattener<'a> {
                 None,
             );
 
-            let clip_sources = self.clip_store.insert(ClipSources::new(Vec::new()));
-
             let prim_index = self.prim_store.add_primitive(
                 &LayerRect::zero(),
                 &max_clip,
                 is_backface_visible,
-                clip_sources,
+                None,
                 None,
                 PrimitiveContainer::Picture(container),
             );
@@ -1402,13 +1405,12 @@ impl<'a> DisplayListFlattener<'a> {
                 current_reference_frame_index,
                 None,
             );
-            let src_clip_sources = self.clip_store.insert(ClipSources::new(Vec::new()));
 
             let src_prim_index = self.prim_store.add_primitive(
                 &LayerRect::zero(),
                 &max_clip,
                 is_backface_visible,
-                src_clip_sources,
+                None,
                 None,
                 PrimitiveContainer::Picture(src_prim),
             );
@@ -1433,13 +1435,12 @@ impl<'a> DisplayListFlattener<'a> {
                 current_reference_frame_index,
                 None,
             );
-            let src_clip_sources = self.clip_store.insert(ClipSources::new(Vec::new()));
 
             let src_prim_index = self.prim_store.add_primitive(
                 &LayerRect::zero(),
                 &max_clip,
                 is_backface_visible,
-                src_clip_sources,
+                None,
                 None,
                 PrimitiveContainer::Picture(src_prim),
             );
@@ -1487,12 +1488,11 @@ impl<'a> DisplayListFlattener<'a> {
             frame_output_pipeline_id,
         );
 
-        let sc_clip_sources = self.clip_store.insert(ClipSources::new(Vec::new()));
         let sc_prim_index = self.prim_store.add_primitive(
             &LayerRect::zero(),
             &max_clip,
             is_backface_visible,
-            sc_clip_sources,
+            None,
             None,
             PrimitiveContainer::Picture(sc_prim),
         );
@@ -1646,8 +1646,6 @@ impl<'a> DisplayListFlattener<'a> {
     ) -> ClipScrollNodeIndex {
         let clip_rect = clip_region.main;
         let clip_sources = ClipSources::from(clip_region);
-
-        debug_assert!(clip_sources.has_clips());
         let handle = self.clip_store.insert(clip_sources);
 
         let node_index = self.id_to_index_mapper.get_node_index(new_node_id);
@@ -2621,10 +2619,9 @@ impl<'a> DisplayListFlattener<'a> {
 }
 
 pub fn build_scene(config: &FrameBuilderConfig, request: SceneRequest) -> BuiltScene {
-    // TODO: mutably pass the scene and update its own pipeline epoch map instead of
-    // creating a new one here.
-    let mut pipeline_epoch_map = FastHashMap::default();
+
     let mut clip_scroll_tree = ClipScrollTree::new();
+    let mut new_scene = Scene::new();
 
     let frame_builder = DisplayListFlattener::create_frame_builder(
         FrameBuilder::empty(), // WIP, we're not really recycling anything here, clean this up.
@@ -2635,14 +2632,11 @@ pub fn build_scene(config: &FrameBuilderConfig, request: SceneRequest) -> BuiltS
         &request.view,
         &request.output_pipelines,
         config,
-        &mut pipeline_epoch_map
+        &mut new_scene
     );
 
-    let mut scene = request.scene;
-    scene.pipeline_epochs = pipeline_epoch_map;
-
     BuiltScene {
-        scene,
+        scene: new_scene,
         frame_builder,
         clip_scroll_tree,
         removed_pipelines: request.removed_pipelines,

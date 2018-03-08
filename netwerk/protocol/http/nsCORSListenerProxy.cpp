@@ -187,15 +187,18 @@ static bool EnsurePreflightCache()
 void
 nsPreflightCache::CacheEntry::PurgeExpired(TimeStamp now)
 {
-  uint32_t i;
-  for (i = 0; i < mMethods.Length(); ++i) {
+  for (uint32_t i = 0, len = mMethods.Length(); i < len; ++i) {
     if (now >= mMethods[i].expirationTime) {
-      mMethods.RemoveElementAt(i--);
+      mMethods.UnorderedRemoveElementAt(i);
+      --i; // Examine the element again, if necessary.
+      --len;
     }
   }
-  for (i = 0; i < mHeaders.Length(); ++i) {
+  for (uint32_t i = 0, len = mHeaders.Length(); i < len; ++i) {
     if (now >= mHeaders[i].expirationTime) {
-      mHeaders.RemoveElementAt(i--);
+      mHeaders.UnorderedRemoveElementAt(i);
+      --i; // Examine the element again, if necessary.
+      --len;
     }
   }
 }
@@ -207,25 +210,26 @@ nsPreflightCache::CacheEntry::CheckRequest(const nsCString& aMethod,
   PurgeExpired(TimeStamp::NowLoRes());
 
   if (!aMethod.EqualsLiteral("GET") && !aMethod.EqualsLiteral("POST")) {
-    uint32_t i;
-    for (i = 0; i < mMethods.Length(); ++i) {
-      if (aMethod.Equals(mMethods[i].token))
-        break;
-    }
-    if (i == mMethods.Length()) {
+    struct CheckToken {
+      bool Equals(const TokenTime& e, const nsCString& method) const {
+        return e.token.Equals(method);
+      }
+    };
+
+    if (!mMethods.Contains(aMethod, CheckToken())) {
       return false;
     }
   }
 
-  for (uint32_t i = 0; i < aHeaders.Length(); ++i) {
-    uint32_t j;
-    for (j = 0; j < mHeaders.Length(); ++j) {
-      if (aHeaders[i].Equals(mHeaders[j].token,
-                             nsCaseInsensitiveCStringComparator())) {
-        break;
-      }
+  const struct CheckHeaderToken {
+    bool Equals(const TokenTime& e, const nsCString& header) const {
+      return e.token.Equals(header, comparator);
     }
-    if (j == mHeaders.Length()) {
+
+    const nsCaseInsensitiveCStringComparator comparator;
+  } checker;
+  for (uint32_t i = 0; i < aHeaders.Length(); ++i) {
+    if (!mHeaders.Contains(aHeaders[i], checker)) {
       return false;
     }
   }
@@ -1372,8 +1376,8 @@ nsCORSPreflightListener::CheckPreflightRequestApproved(nsIRequest* aRequest)
     headers.AppendElement(header);
   }
   for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
-    if (!headers.Contains(mPreflightHeaders[i],
-                          nsCaseInsensitiveCStringArrayComparator())) {
+    const auto& comparator = nsCaseInsensitiveCStringArrayComparator();
+    if (!headers.Contains(mPreflightHeaders[i], comparator)) {
       LogBlockedRequest(aRequest, "CORSMissingAllowHeaderFromPreflight",
                         NS_ConvertUTF8toUTF16(mPreflightHeaders[i]).get(), parentHttpChannel);
       return NS_ERROR_DOM_BAD_URI;
@@ -1518,7 +1522,9 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   // the warning reporter.
   RefPtr<nsHttpChannel> reqCh = do_QueryObject(aRequestChannel);
   RefPtr<nsHttpChannel> preCh = do_QueryObject(preHttp);
-  preCh->SetWarningReporter(reqCh->GetWarningReporter());
+  if (preCh && reqCh) { // there are other implementers of nsIHttpChannel
+    preCh->SetWarningReporter(reqCh->GetWarningReporter());
+  }
 
   nsTArray<nsCString> preflightHeaders;
   if (!aUnsafeHeaders.IsEmpty()) {

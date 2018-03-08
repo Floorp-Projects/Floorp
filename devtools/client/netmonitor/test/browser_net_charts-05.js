@@ -7,10 +7,10 @@
  * Makes sure Pie+Table Charts have the right internal structure.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { monitor, tab } = yield initNetMonitor(SIMPLE_URL);
+  let { monitor, tab } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document, windowRequire } = monitor.panelWin;
@@ -18,7 +18,7 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.loadURI(SIMPLE_URL);
-  yield wait;
+  await wait;
 
   let chart = Chart.PieTable(document, {
     title: "Table title",
@@ -66,5 +66,5 @@ add_task(function* () {
   is(rows.length, 4, "There should be 3 table chart rows and 1 header created.");
   is(sums.length, 2, "There should be 2 total summaries and 1 header created.");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

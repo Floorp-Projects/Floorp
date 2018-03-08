@@ -596,8 +596,9 @@ public:
 
   nsresult SetDefaultValue(PrefType aType,
                            PrefValue aValue,
-                           bool aFromFile,
                            bool aIsSticky,
+                           bool aIsLocked,
+                           bool aFromFile,
                            bool* aValueChanged)
   {
     // Types must always match when setting the default value.
@@ -607,20 +608,25 @@ public:
 
     // Should we set the default value? Only if the pref is not locked, and
     // doing so would change the default value.
-    if (!IsLocked() && !ValueMatches(PrefValueKind::Default, aType, aValue)) {
-      mDefaultValue.Replace(Type(), aType, aValue);
-      mHasDefaultValue = true;
-      if (!aFromFile) {
-        mHasChangedSinceInit = true;
+    if (!IsLocked()) {
+      if (aIsLocked) {
+        SetIsLocked(true);
       }
-      if (aIsSticky) {
-        mIsSticky = true;
+      if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
+        mDefaultValue.Replace(Type(), aType, aValue);
+        mHasDefaultValue = true;
+        if (!aFromFile) {
+          mHasChangedSinceInit = true;
+        }
+        if (aIsSticky) {
+          mIsSticky = true;
+        }
+        if (!mHasUserValue) {
+          *aValueChanged = true;
+        }
+        // What if we change the default to be the same as the user value?
+        // Should we clear the user value? Currently we don't.
       }
-      if (!mHasUserValue) {
-        *aValueChanged = true;
-      }
-      // What if we change the default to be the same as the user value?
-      // Should we clear the user value? Currently we don't.
     }
     return NS_OK;
   }
@@ -820,8 +826,6 @@ static PLDHashTable* gHashTable;
 static CallbackNode* gFirstCallback = nullptr;
 static CallbackNode* gLastPriorityNode = nullptr;
 
-static bool gIsAnyPrefLocked = false;
-
 // These are only used during the call to NotifyCallbacks().
 static bool gCallbacksInProgress = false;
 static bool gShouldCleanupDeadNodes = false;
@@ -946,6 +950,7 @@ pref_SetPref(const char* aPrefName,
              PrefValueKind aKind,
              PrefValue aValue,
              bool aIsSticky,
+             bool aIsLocked,
              bool aFromFile)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -968,9 +973,10 @@ pref_SetPref(const char* aPrefName,
   bool valueChanged = false;
   nsresult rv;
   if (aKind == PrefValueKind::Default) {
-    rv =
-      pref->SetDefaultValue(aType, aValue, aFromFile, aIsSticky, &valueChanged);
+    rv = pref->SetDefaultValue(
+      aType, aValue, aIsSticky, aIsLocked, aFromFile, &valueChanged);
   } else {
+    MOZ_ASSERT(!aIsLocked); // `locked` is disallowed in user pref files
     rv = pref->SetUserValue(aType, aValue, aFromFile, &valueChanged);
   }
   if (NS_FAILED(rv)) {
@@ -1078,7 +1084,8 @@ typedef void (*PrefsParserPrefFn)(const char* aPrefName,
                                   PrefType aType,
                                   PrefValueKind aKind,
                                   PrefValue aValue,
-                                  bool aIsSticky);
+                                  bool aIsSticky,
+                                  bool aIsLocked);
 
 // Keep this in sync with ErrorFn in prefs_parser/src/lib.rs.
 //
@@ -1089,6 +1096,7 @@ typedef void (*PrefsParserErrorFn)(const char* aMsg);
 // Keep this in sync with prefs_parser_parse() in prefs_parser/src/lib.rs.
 bool
 prefs_parser_parse(const char* aPath,
+                   PrefValueKind aKind,
                    const char* aBuf,
                    size_t aLen,
                    PrefsParserPrefFn aPrefFn,
@@ -1102,13 +1110,14 @@ public:
   ~Parser() = default;
 
   bool Parse(const nsCString& aName,
+             PrefValueKind aKind,
              const char* aPath,
              const TimeStamp& aStartTime,
              const nsCString& aBuf)
   {
     sNumPrefs = 0;
     bool ok = prefs_parser_parse(
-      aPath, aBuf.get(), aBuf.Length(), HandlePref, HandleError);
+      aPath, aKind, aBuf.get(), aBuf.Length(), HandlePref, HandleError);
     if (!ok) {
       return false;
     }
@@ -1130,11 +1139,17 @@ private:
                          PrefType aType,
                          PrefValueKind aKind,
                          PrefValue aValue,
-                         bool aIsSticky)
+                         bool aIsSticky,
+                         bool aIsLocked)
   {
     sNumPrefs++;
-    pref_SetPref(
-      aPrefName, aType, aKind, aValue, aIsSticky, /* fromFile */ true);
+    pref_SetPref(aPrefName,
+                 aType,
+                 aKind,
+                 aValue,
+                 aIsSticky,
+                 aIsLocked,
+                 /* fromFile */ true);
   }
 
   static void HandleError(const char* aMsg)
@@ -1166,7 +1181,8 @@ TestParseErrorHandlePref(const char* aPrefName,
                          PrefType aType,
                          PrefValueKind aKind,
                          PrefValue aValue,
-                         bool aIsSticky)
+                         bool aIsSticky,
+                         bool aIsLocked)
 {
 }
 
@@ -1181,9 +1197,10 @@ TestParseErrorHandleError(const char* aMsg)
 
 // Keep this in sync with the declaration in test/gtest/Parser.cpp.
 void
-TestParseError(const char* aText, nsCString& aErrorMsg)
+TestParseError(PrefValueKind aKind, const char* aText, nsCString& aErrorMsg)
 {
   prefs_parser_parse("test",
+                     aKind,
                      aText,
                      strlen(aText),
                      TestParseErrorHandlePref,
@@ -2451,7 +2468,7 @@ Preferences::HandleDirty()
 }
 
 static nsresult
-openPrefFile(nsIFile* aFile);
+openPrefFile(nsIFile* aFile, PrefValueKind aKind);
 
 static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
 static const char kChannelPref[] = "app.update.channel";
@@ -3159,6 +3176,19 @@ Preferences::Observe(nsISupports* aSubject,
 }
 
 NS_IMETHODIMP
+Preferences::ReadDefaultPrefsFromFile(nsIFile* aFile)
+{
+  ENSURE_PARENT_PROCESS("Preferences::ReadDefaultPrefsFromFile", "all prefs");
+
+  if (!aFile) {
+    NS_ERROR("ReadDefaultPrefsFromFile requires a parameter");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return openPrefFile(aFile, PrefValueKind::Default);
+}
+
+NS_IMETHODIMP
 Preferences::ReadUserPrefsFromFile(nsIFile* aFile)
 {
   ENSURE_PARENT_PROCESS("Preferences::ReadUserPrefsFromFile", "all prefs");
@@ -3168,7 +3198,7 @@ Preferences::ReadUserPrefsFromFile(nsIFile* aFile)
     return NS_ERROR_INVALID_ARG;
   }
 
-  return openPrefFile(aFile);
+  return openPrefFile(aFile, PrefValueKind::User);
 }
 
 NS_IMETHODIMP
@@ -3415,7 +3445,7 @@ Preferences::ReadSavedPrefs()
     return nullptr;
   }
 
-  rv = openPrefFile(file);
+  rv = openPrefFile(file, PrefValueKind::User);
   if (rv == NS_ERROR_FILE_NOT_FOUND) {
     // This is a normal case for new users.
     Telemetry::ScalarSet(
@@ -3444,7 +3474,7 @@ Preferences::ReadUserOverridePrefs()
   }
 
   aFile->AppendNative(NS_LITERAL_CSTRING("user.js"));
-  rv = openPrefFile(aFile);
+  rv = openPrefFile(aFile, PrefValueKind::User);
   if (rv != NS_ERROR_FILE_NOT_FOUND) {
     // If the file exists and was at least partially read, record that in
     // telemetry as it may be a sign of pref injection.
@@ -3586,7 +3616,7 @@ Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
 }
 
 static nsresult
-openPrefFile(nsIFile* aFile)
+openPrefFile(nsIFile* aFile, PrefValueKind aKind)
 {
   TimeStamp startTime = TimeStamp::Now();
 
@@ -3602,7 +3632,7 @@ openPrefFile(nsIFile* aFile)
 
   Parser parser;
   if (!parser.Parse(
-        filename, NS_ConvertUTF16toUTF8(path).get(), startTime, data)) {
+        filename, aKind, NS_ConvertUTF16toUTF8(path).get(), startTime, data)) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
@@ -3703,7 +3733,7 @@ pref_LoadPrefsInDir(nsIFile* aDir,
   uint32_t arrayCount = prefFiles.Count();
   uint32_t i;
   for (i = 0; i < arrayCount; ++i) {
-    rv2 = openPrefFile(prefFiles[i]);
+    rv2 = openPrefFile(prefFiles[i], PrefValueKind::Default);
     if (NS_FAILED(rv2)) {
       NS_ERROR("Default pref file not parsed successfully.");
       rv = rv2;
@@ -3715,7 +3745,7 @@ pref_LoadPrefsInDir(nsIFile* aDir,
     // This may be a sparse array; test before parsing.
     nsIFile* file = specialFiles[i];
     if (file) {
-      rv2 = openPrefFile(file);
+      rv2 = openPrefFile(file, PrefValueKind::Default);
       if (NS_FAILED(rv2)) {
         NS_ERROR("Special default pref file not parsed successfully.");
         rv = rv2;
@@ -3736,7 +3766,11 @@ pref_ReadPrefFromJar(nsZipArchive* aJarReader, const char* aName)
               URLPreloader::ReadZip(aJarReader, nsDependentCString(aName)));
 
   Parser parser;
-  if (!parser.Parse(nsDependentCString(aName), aName, startTime, manifest)) {
+  if (!parser.Parse(nsDependentCString(aName),
+                    PrefValueKind::Default,
+                    aName,
+                    startTime,
+                    manifest)) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
@@ -3816,7 +3850,7 @@ Preferences::InitInitialObjects()
     rv = greprefsFile->AppendNative(NS_LITERAL_CSTRING("greprefs.js"));
     NS_ENSURE_SUCCESS(rv, Err("greprefsFile->AppendNative() failed"));
 
-    rv = openPrefFile(greprefsFile);
+    rv = openPrefFile(greprefsFile, PrefValueKind::Default);
     if (NS_FAILED(rv)) {
       NS_WARNING("Error parsing GRE default preferences. Is this an old-style "
                  "embedding app?");
@@ -3945,15 +3979,14 @@ Preferences::InitInitialObjects()
   bool releaseCandidateOnBeta = false;
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "release")) {
     nsAutoCString updateChannelPrefValue;
-    Preferences::GetCString(kChannelPref, updateChannelPrefValue,
-                            PrefValueKind::Default);
+    Preferences::GetCString(
+      kChannelPref, updateChannelPrefValue, PrefValueKind::Default);
     releaseCandidateOnBeta = updateChannelPrefValue.EqualsLiteral("beta");
   }
 
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "nightly") ||
       !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "aurora") ||
-      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") ||
-      developerBuild ||
+      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") || developerBuild ||
       releaseCandidateOnBeta) {
     Preferences::SetBoolInAnyProcess(
       kTelemetryPref, true, PrefValueKind::Default);
@@ -4103,6 +4136,7 @@ Preferences::SetCStringInAnyProcess(const char* aPrefName,
                       aKind,
                       prefValue,
                       /* isSticky */ false,
+                      /* isLocked */ false,
                       /* fromFile */ false);
 }
 
@@ -4129,6 +4163,7 @@ Preferences::SetBoolInAnyProcess(const char* aPrefName,
                       aKind,
                       prefValue,
                       /* isSticky */ false,
+                      /* isLocked */ false,
                       /* fromFile */ false);
 }
 
@@ -4153,6 +4188,7 @@ Preferences::SetIntInAnyProcess(const char* aPrefName,
                       aKind,
                       prefValue,
                       /* isSticky */ false,
+                      /* isLocked */ false,
                       /* fromFile */ false);
 }
 
@@ -4185,7 +4221,6 @@ Preferences::LockInAnyProcess(const char* aPrefName)
 
   if (!pref->IsLocked()) {
     pref->SetIsLocked(true);
-    gIsAnyPrefLocked = true;
     NotifyCallbacks(aPrefName);
   }
 
@@ -4223,14 +4258,8 @@ Preferences::IsLocked(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
-  if (gIsAnyPrefLocked) {
-    Pref* pref = pref_HashTableLookup(aPrefName);
-    if (pref && pref->IsLocked()) {
-      return true;
-    }
-  }
-
-  return false;
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  return pref && pref->IsLocked();
 }
 
 /* static */ nsresult

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
-<ShortName>browser_newtab_search searchEngine1x2xLogo.xml</ShortName>
-<Url type="text/html" method="GET" template="http://browser-newtab-search.com/1x2xlogo" rel="searchform"/>
-<!-- #00FF00 -->
-<Image width="65" height="26">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAAAaCAIAAABn3KYmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gkTADIGr0+8uwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAL0lEQVRYw+3PAREAAAQEsKd/Z3I4W4NVJtd14uDg4ODg4ODg4ODg4ODg4ODg8Pqw7M0BM+n9I0oAAAAASUVORK5CYII=</Image>
-<!-- #00FFFF -->
-<Image width="130" height="52">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAAA0CAIAAADJ8nfCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gkTADMoaoKANQAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAYklEQVR42u3RQQ0AAAjEMMC/58MECZ9OwtqVlL4bCzAIAwZhwCAMGIQBgzBgEAYMwoBBGDAIAwZhwCAMGIQBgzBgEAYMwoBBGIQBgzBgEAYMwoBBGDAIAwZhwCAMGIQBg+5ar7sCZiri9VUAAAAASUVORK5CYII=</Image>
-</SearchPlugin>

@@ -9,6 +9,7 @@
 #include "mozilla/ScopeExit.h"
 
 #include <ctype.h>
+#include <type_traits>
 
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
@@ -480,6 +481,19 @@ LDefinition::dump() const
     fprintf(stderr, "%s\n", toString().get());
 }
 
+template <typename T>
+static void
+PrintOperands(GenericPrinter& out, T* node)
+{
+    size_t numOperands = node->numOperands();
+
+    for (size_t i = 0; i < numOperands; i++) {
+        out.printf(" (%s)", node->getOperand(i)->toString().get());
+        if (i != numOperands - 1)
+            out.printf(",");
+    }
+}
+
 void
 LNode::printOperands(GenericPrinter& out)
 {
@@ -488,13 +502,10 @@ LNode::printOperands(GenericPrinter& out)
         return;
     }
 
-    size_t numOperands = isPhi() ? toPhi()->numOperands() : toInstruction()->numOperands();
-
-    for (size_t i = 0; i < numOperands; i++) {
-        out.printf(" (%s)", getOperand(i)->toString().get());
-        if (i != numOperands - 1)
-            out.printf(",");
-    }
+    if (isPhi())
+        PrintOperands(out, toPhi());
+    else
+        PrintOperands(out, toInstruction());
 }
 
 void
@@ -516,6 +527,30 @@ LInstruction::assignSnapshot(LSnapshot* snapshot)
 }
 
 #ifdef JS_JITSPEW
+static size_t
+NumSuccessorsHelper(const LNode* ins)
+{
+    return 0;
+}
+
+template <size_t Succs, size_t Operands, size_t Temps>
+static size_t
+NumSuccessorsHelper(const LControlInstructionHelper<Succs, Operands, Temps>* ins)
+{
+    return Succs;
+}
+
+static size_t
+NumSuccessors(const LInstruction* ins)
+{
+    switch (ins->op()) {
+      default: MOZ_CRASH("Unexpected LIR op");
+# define LIROP(x) case LNode::LOp_##x: return NumSuccessorsHelper(ins->to##x());
+    LIR_OPCODE_LIST(LIROP)
+# undef LIROP
+    }
+}
+
 static MBasicBlock*
 GetSuccessorHelper(const LNode* ins, size_t i)
 {
@@ -532,7 +567,7 @@ GetSuccessorHelper(const LControlInstructionHelper<Succs, Operands, Temps>* ins,
 static MBasicBlock*
 GetSuccessor(const LInstruction* ins, size_t i)
 {
-    MOZ_ASSERT(i < ins->numSuccessors());
+    MOZ_ASSERT(i < NumSuccessors(ins));
 
     switch (ins->op()) {
       default: MOZ_CRASH("Unexpected LIR op");
@@ -573,21 +608,19 @@ LNode::dump(GenericPrinter& out)
             out.printf(")");
         }
 
-        size_t numSuccessors = ins->numSuccessors();
+#ifdef JS_JITSPEW
+        size_t numSuccessors = NumSuccessors(ins);
         if (numSuccessors > 0) {
             out.printf(" s=(");
             for (size_t i = 0; i < numSuccessors; i++) {
-#ifdef JS_JITSPEW
                 MBasicBlock* succ = GetSuccessor(ins, i);
                 out.printf("block%u", succ->id());
-#else
-                out.put("block<unknown>");
-#endif
                 if (i != numSuccessors - 1)
                     out.printf(", ");
             }
             out.printf(")");
         }
+#endif
     }
 }
 
@@ -689,3 +722,8 @@ LMoveGroup::printOperands(GenericPrinter& out)
             out.printf(",");
     }
 }
+
+#define LIROP(x) static_assert(!std::is_polymorphic<L##x>::value, \
+                               "LIR instructions should not have virtual methods");
+    LIR_OPCODE_LIST(LIROP)
+#undef LIROP

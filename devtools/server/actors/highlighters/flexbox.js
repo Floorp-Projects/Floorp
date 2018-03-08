@@ -9,6 +9,7 @@ const {
   CANVAS_SIZE,
   DEFAULT_COLOR,
   clearRect,
+  drawLine,
   drawRect,
   getCurrentMatrix,
   updateCanvasElement,
@@ -122,6 +123,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     highlighterEnv.off("will-navigate", this.onWillNavigate);
 
     let { pageListenerTarget } = highlighterEnv;
+
     if (pageListenerTarget) {
       pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
     }
@@ -372,6 +374,11 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
    */
   renderFlexItemBasis(flexItem, left, top, right, bottom, boundsWidth) {
     let computedStyle = getComputedStyle(flexItem);
+
+    if (!computedStyle) {
+      return;
+    }
+
     let basis = computedStyle.getPropertyValue("flex-basis");
 
     if (basis.endsWith("px")) {
@@ -404,29 +411,34 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.strokeStyle = DEFAULT_COLOR;
 
     let { bounds } = this.currentQuads.content[0];
-    let flexItems = this.currentNode.children;
+    let flexLines = this.currentNode.getAsFlexContainer().getLines();
 
-    // TODO: Utilize the platform API that will be implemented in Bug 1414290 to
-    // retrieve the flex item properties.
-    for (let flexItem of flexItems) {
-      let quads = getAdjustedQuads(this.win, flexItem, "border");
-      if (!quads.length) {
-        continue;
+    for (let flexLine of flexLines) {
+      let flexItems = flexLine.getItems();
+
+      for (let flexItem of flexItems) {
+        let { node } = flexItem;
+        let quads = getAdjustedQuads(this.win, node, "border");
+
+        if (!quads.length) {
+          continue;
+        }
+
+        // Adjust the flex item bounds relative to the current quads.
+        let { bounds: flexItemBounds } = quads[0];
+        let left = Math.round(flexItemBounds.left - bounds.left);
+        let top = Math.round(flexItemBounds.top - bounds.top);
+        let right = Math.round(flexItemBounds.right - bounds.left);
+        let bottom = Math.round(flexItemBounds.bottom - bounds.top);
+
+        clearRect(this.ctx, left, top, right, bottom, this.currentMatrix);
+        drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
+        this.ctx.stroke();
+
+        this.renderFlexItemBasis(node, left, top, right, bottom, bounds.width);
       }
-
-      // Adjust the flex item bounds relative to the current quads.
-      let { bounds: flexItemBounds } = quads[0];
-      let left = Math.round(flexItemBounds.left - bounds.left);
-      let top = Math.round(flexItemBounds.top - bounds.top);
-      let right = Math.round(flexItemBounds.right - bounds.left);
-      let bottom = Math.round(flexItemBounds.bottom - bounds.top);
-
-      clearRect(this.ctx, left, top, right, bottom, this.currentMatrix);
-      drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
-      this.ctx.stroke();
-
-      this.renderFlexItemBasis(flexItem, left, top, right, bottom, bounds.width);
     }
+
     this.ctx.restore();
   }
 
@@ -449,27 +461,44 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     let { bounds } = this.currentQuads.content[0];
     let flexLines = this.currentNode.getAsFlexContainer().getLines();
     let computedStyle = getComputedStyle(this.currentNode);
-    let direction = computedStyle.getPropertyValue("flex-direction");
+    let isColumn = computedStyle.getPropertyValue("flex-direction").startsWith("column");
+    let options = { matrix: this.currentMatrix };
 
     for (let flexLine of flexLines) {
       let { crossStart, crossSize } = flexLine;
 
-      if (direction.startsWith("column")) {
+      if (isColumn) {
         clearRect(this.ctx, crossStart, 0, crossStart + crossSize, bounds.height,
           this.currentMatrix);
-        drawRect(this.ctx, crossStart, 0, crossStart, bounds.height, this.currentMatrix);
-        this.ctx.stroke();
-        drawRect(this.ctx, crossStart + crossSize, 0, crossStart + crossSize,
-          bounds.height, this.currentMatrix);
-        this.ctx.stroke();
+
+        // Avoid drawing the start flex line when they overlap with the flex container.
+        if (crossStart != 0) {
+          drawLine(this.ctx, crossStart, 0, crossStart, bounds.height, options);
+          this.ctx.stroke();
+        }
+
+        // Avoid drawing the end flex line when they overlap with the flex container.
+        if (bounds.width - crossStart - crossSize >= lineWidth) {
+          drawLine(this.ctx, crossStart + crossSize, 0, crossStart + crossSize,
+            bounds.height, options);
+          this.ctx.stroke();
+        }
       } else {
         clearRect(this.ctx, 0, crossStart, bounds.width, crossStart + crossSize,
           this.currentMatrix);
-        drawRect(this.ctx, 0, crossStart, bounds.width, crossStart, this.currentMatrix);
-        this.ctx.stroke();
-        drawRect(this.ctx, 0, crossStart + crossSize, bounds.width,
-          crossStart + crossSize, this.currentMatrix);
-        this.ctx.stroke();
+
+        // Avoid drawing the start flex line when they overlap with the flex container.
+        if (crossStart != 0) {
+          drawLine(this.ctx, 0, crossStart, bounds.width, crossStart, options);
+          this.ctx.stroke();
+        }
+
+        // Avoid drawing the end flex line when they overlap with the flex container.
+        if (bounds.height - crossStart - crossSize >= lineWidth) {
+          drawLine(this.ctx, 0, crossStart + crossSize, bounds.width,
+            crossStart + crossSize, options);
+          this.ctx.stroke();
+        }
       }
     }
 
@@ -482,10 +511,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     let { bounds } = this.currentQuads.content[0];
-    let flexItems = this.currentNode.children;
     let flexLines = this.currentNode.getAsFlexContainer().getLines();
     let computedStyle = getComputedStyle(this.currentNode);
-    let direction = computedStyle.getPropertyValue("flex-direction");
+    let isColumn = computedStyle.getPropertyValue("flex-direction").startsWith("column");
 
     // Render the justify-content area by first highlighting all the content, and
     // clearing the occupied and margin areas of the flex item.
@@ -494,58 +522,48 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     for (let flexLine of flexLines) {
       let { crossStart, crossSize } = flexLine;
 
-      if (direction.startsWith("column")) {
+      if (isColumn) {
         this.drawJustifyContent(crossStart, 0, crossStart + crossSize, bounds.height);
       } else {
         this.drawJustifyContent(0, crossStart, bounds.width, crossStart + crossSize);
       }
     }
 
-    for (let flexItem of flexItems) {
-      let quads = getAdjustedQuads(this.win, flexItem, "border");
-      if (!quads.length) {
-        continue;
-      }
+    // Then, cut all the items out of this content area.
+    for (let flexLine of flexLines) {
+      let flexItems = flexLine.getItems();
 
-      // Adjust the flex item bounds relative to the current quads.
-      let { bounds: flexItemBounds } = quads[0];
-      let left = Math.round(flexItemBounds.left - bounds.left);
-      let top = Math.round(flexItemBounds.top - bounds.top);
-      let right = Math.round(flexItemBounds.right - bounds.left);
-      let bottom = Math.round(flexItemBounds.bottom - bounds.top);
-      let flexItemComputedStyle = getComputedStyle(flexItem);
+      for (let flexItem of flexItems) {
+        let { node } = flexItem;
 
-      // Clear the occupied and margin areas of the flex item.
-      for (let flexLine of flexLines) {
+        let quads = getAdjustedQuads(this.win, node, "margin");
+
+        if (!quads.length) {
+          continue;
+        }
+
+        // Adjust the flex item bounds relative to the current quads.
+        let { bounds: flexItemBounds } = quads[0];
+        let left = Math.round(flexItemBounds.left - bounds.left);
+        let top = Math.round(flexItemBounds.top - bounds.top);
+        let right = Math.round(flexItemBounds.right - bounds.left);
+        let bottom = Math.round(flexItemBounds.bottom - bounds.top);
+
+        // Clear the occupied and margin areas of the flex item.
         let { crossStart, crossSize } = flexLine;
         crossSize = Math.round(crossSize);
         crossStart = Math.round(crossStart);
 
-        if (direction.startsWith("column") &&
-            crossStart <= left &&
-            left <= right &&
-            right <= crossSize + crossStart) {
-          // Remove the margin area for justify-content
-          let marginTop = Math.round(parseFloat(
-            flexItemComputedStyle.getPropertyValue("margin-top")));
-          let marginBottom = Math.round(parseFloat(
-            flexItemComputedStyle.getPropertyValue("margin-bottom")));
-          clearRect(this.ctx, crossStart, top - marginTop, crossSize + crossStart,
-            bottom + marginBottom, this.currentMatrix);
-          break;
-        } else if (crossStart <= top &&
-                   top <= bottom &&
-                   bottom <= crossSize + crossStart) {
-          let marginLeft = Math.round(parseFloat(
-            flexItemComputedStyle.getPropertyValue("margin-left")));
-          let marginRight = Math.round(parseFloat(
-            flexItemComputedStyle.getPropertyValue("margin-right")));
-          clearRect(this.ctx, left - marginLeft, crossStart, right + marginRight,
-            crossSize + crossStart, this.currentMatrix);
-          break;
+        if (isColumn) {
+          clearRect(this.ctx, crossStart, top, crossSize + crossStart, bottom,
+            this.currentMatrix);
+        } else {
+          clearRect(this.ctx, left, crossStart, right, crossSize + crossStart,
+            this.currentMatrix);
         }
       }
     }
+
     this.ctx.restore();
   }
 

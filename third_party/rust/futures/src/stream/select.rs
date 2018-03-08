@@ -42,24 +42,23 @@ impl<S1, S2> Stream for Select<S1, S2>
         };
         self.flag = !self.flag;
 
-        let a_done = match try!(a.poll()) {
+        let a_done = match a.poll()? {
             Async::Ready(Some(item)) => return Ok(Some(item).into()),
             Async::Ready(None) => true,
             Async::NotReady => false,
         };
 
-        match try!(b.poll()) {
+        match b.poll()? {
             Async::Ready(Some(item)) => {
                 // If the other stream isn't finished yet, give them a chance to
                 // go first next time as we pulled something off `b`.
                 if !a_done {
                     self.flag = !self.flag;
                 }
-                return Ok(Some(item).into())
+                Ok(Some(item).into())
             }
             Async::Ready(None) if a_done => Ok(None.into()),
-            Async::Ready(None) => Ok(Async::NotReady),
-            Async::NotReady => Ok(Async::NotReady),
+            Async::Ready(None) | Async::NotReady => Ok(Async::NotReady),
         }
     }
 }

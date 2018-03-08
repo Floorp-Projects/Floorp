@@ -9,8 +9,8 @@
 
 const { Curl, CurlUtils } = require("devtools/client/shared/curl");
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CURL_UTILS_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CURL_UTILS_URL);
   info("Starting test... ");
 
   let { store, windowRequire, connector } = monitor.panelWin;
@@ -26,10 +26,10 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 5);
-  yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
+  await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function (url) {
     content.wrappedJSObject.performRequests(url);
   });
-  yield wait;
+  await wait;
 
   let requests = {
     get: getSortedRequests(store.getState()).get(0),
@@ -39,26 +39,26 @@ add_task(function* () {
     multipartForm: getSortedRequests(store.getState()).get(4),
   };
 
-  let data = yield createCurlData(requests.get, getLongString, requestData);
+  let data = await createCurlData(requests.get, getLongString, requestData);
   testFindHeader(data);
 
-  data = yield createCurlData(requests.post, getLongString, requestData);
+  data = await createCurlData(requests.post, getLongString, requestData);
   testIsUrlEncodedRequest(data);
   testWritePostDataTextParams(data);
   testWriteEmptyPostDataTextParams(data);
   testDataArgumentOnGeneratedCommand(data);
 
-  data = yield createCurlData(requests.patch, getLongString, requestData);
+  data = await createCurlData(requests.patch, getLongString, requestData);
   testWritePostDataTextParams(data);
   testDataArgumentOnGeneratedCommand(data);
 
-  data = yield createCurlData(requests.multipart, getLongString, requestData);
+  data = await createCurlData(requests.multipart, getLongString, requestData);
   testIsMultipartRequest(data);
   testGetMultipartBoundary(data);
   testMultiPartHeaders(data);
   testRemoveBinaryDataFromMultipartText(data);
 
-  data = yield createCurlData(requests.multipartForm, getLongString, requestData);
+  data = await createCurlData(requests.multipartForm, getLongString, requestData);
   testMultiPartHeaders(data);
 
   testGetHeadersFromMultipartText({
@@ -71,7 +71,7 @@ add_task(function* () {
     testEscapeStringWin();
   }
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });
 
 function testIsUrlEncodedRequest(data) {
@@ -239,7 +239,7 @@ function testEscapeStringWin() {
     "Newlines should be escaped.");
 }
 
-function* createCurlData(selected, getLongString, requestData) {
+async function createCurlData(selected, getLongString, requestData) {
   let { id, url, method, httpVersion } = selected;
 
   // Create a sanitized object for the Curl command generator.
@@ -251,18 +251,18 @@ function* createCurlData(selected, getLongString, requestData) {
     postDataText: null
   };
 
-  let requestHeaders = yield requestData(id, "requestHeaders");
+  let requestHeaders = await requestData(id, "requestHeaders");
   // Fetch header values.
   for (let { name, value } of requestHeaders.headers) {
-    let text = yield getLongString(value);
+    let text = await getLongString(value);
     data.headers.push({ name: name, value: text });
   }
 
-  let { requestPostData } = yield requestData(id, "requestPostData");
+  let { requestPostData } = await requestData(id, "requestPostData");
   // Fetch the request payload.
   if (requestPostData) {
     let postData = requestPostData.postData.text;
-    data.postDataText = yield getLongString(postData);
+    data.postDataText = await getLongString(postData);
   }
 
   return data;

@@ -660,7 +660,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
           if (!rootDocPresContext)
             return;
           nsIFrame* rootDocumentRootFrame = rootDocPresContext->
-              PresShell()->FrameManager()->GetRootFrame();
+              PresShell()->GetRootFrame();
           if ((event->mClass == eMouseEventClass ||
                event->mClass == eMouseScrollEventClass ||
                event->mClass == eWheelEventClass) &&
@@ -672,7 +672,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
             mouseEvent->GetClientY(&clientPt.y);
 
             // XXX this doesn't handle IFRAMEs in transforms
-            nsPoint thisDocToRootDocOffset = presShell->FrameManager()->
+            nsPoint thisDocToRootDocOffset = presShell->
               GetRootFrame()->GetOffsetToCrossDoc(rootDocumentRootFrame);
             // convert to device pixels
             mCachedMousePoint.x = presContext->AppUnitsToDevPixels(

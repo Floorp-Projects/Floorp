@@ -756,7 +756,7 @@ function uniqueFile(aLocalFile) {
 }
 
 /**
- * Download a URL using the new jsdownloads API.
+ * Download a URL using the Downloads API.
  *
  * @param aURL
  *        the url to download

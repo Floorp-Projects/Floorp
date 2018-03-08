@@ -1188,10 +1188,10 @@ CompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
-RefPtr<APZCTreeManager>
-CompositorBridgeParent::GetAPZCTreeManager()
+AndroidDynamicToolbarAnimator*
+CompositorBridgeParent::GetAndroidDynamicToolbarAnimator()
 {
-  return mApzcTreeManager;
+  return mApzcTreeManager ? mApzcTreeManager->GetAndroidDynamicToolbarAnimator() : nullptr;
 }
 #endif
 
@@ -1611,12 +1611,16 @@ CompositorBridgeParent::DeallocPLayerTransactionParent(PLayerTransactionParent* 
 
 CompositorBridgeParent* CompositorBridgeParent::GetCompositorBridgeParent(uint64_t id)
 {
+  MOZ_RELEASE_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
   CompositorMap::iterator it = sCompositorMap->find(id);
   return it != sCompositorMap->end() ? it->second : nullptr;
 }
 
 void CompositorBridgeParent::AddCompositor(CompositorBridgeParent* compositor, uint64_t* outID)
 {
+  MOZ_RELEASE_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
   static uint64_t sNextID = 1;
 
   ++sNextID;
@@ -1626,6 +1630,8 @@ void CompositorBridgeParent::AddCompositor(CompositorBridgeParent* compositor, u
 
 CompositorBridgeParent* CompositorBridgeParent::RemoveCompositor(uint64_t id)
 {
+  MOZ_RELEASE_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
   CompositorMap::iterator it = sCompositorMap->find(id);
   if (it == sCompositorMap->end()) {
     return nullptr;
@@ -1743,10 +1749,15 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }
 
-  // We don't support moving a child from a APZ-enabled compositor to a
-  // APZ-disabled compostior. The mOptions assertion above should already
-  // ensure this, since APZ-ness is one of the things in mOptions.
-  MOZ_ASSERT((oldApzSampler != nullptr) == (mApzSampler != nullptr));
+  if (oldApzSampler) {
+    // We don't support moving a child from an APZ-enabled compositor to a
+    // APZ-disabled compositor. The mOptions assertion above should already
+    // ensure this, since APZ-ness is one of the things in mOptions. Note
+    // however it is possible for mApzSampler to be non-null here with
+    // oldApzSampler null, because the child may not have been previously
+    // composited.
+    MOZ_ASSERT(mApzSampler);
+  }
   if (mApzSampler) {
     if (parent) {
       MOZ_ASSERT(mApzcTreeManager);

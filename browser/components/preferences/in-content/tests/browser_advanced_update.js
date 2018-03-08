@@ -130,7 +130,7 @@ add_task(async function() {
 
   let dialogFrame = dialogOverlay.querySelector(".dialogFrame");
   let frameDoc = dialogFrame.contentDocument;
-  let updates = frameDoc.querySelectorAll("update");
+  let updates = frameDoc.querySelectorAll("richlistitem.update");
 
   // Test the update history numbers are correct
   is(updates.length, mockUpdateManager.updateCount, "The update count is incorrect.");

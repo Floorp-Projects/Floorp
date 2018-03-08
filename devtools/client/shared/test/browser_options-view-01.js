@@ -41,7 +41,7 @@ function* testOptionsView(win) {
 
   let $ = win.document.querySelector.bind(win.document);
 
-  options.on("pref-changed", (_, pref) => events.push(pref));
+  options.on("pref-changed", pref => events.push(pref));
 
   let ppEl = $("menuitem[data-pref='auto-pretty-print']");
   let bbEl = $("menuitem[data-pref='auto-black-box']");

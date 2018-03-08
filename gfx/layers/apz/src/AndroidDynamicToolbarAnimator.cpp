@@ -39,8 +39,9 @@ static const float   SHRINK_FACTOR      = 0.95f; // Amount to shrink the either 
 namespace mozilla {
 namespace layers {
 
-AndroidDynamicToolbarAnimator::AndroidDynamicToolbarAnimator()
+AndroidDynamicToolbarAnimator::AndroidDynamicToolbarAnimator(APZCTreeManager* aApz)
   : mRootLayerTreeId(0)
+  , mApz(aApz)
   // Read/Write Compositor Thread, Read only Controller thread
   , mToolbarState(eToolbarVisible)
   , mPinnedFlags(0)
@@ -93,6 +94,13 @@ AndroidDynamicToolbarAnimator::Initialize(uint64_t aRootLayerTreeId)
     uiController->ToolbarAnimatorMessageFromCompositor(message->mMessage);
   }
   mCompositorQueuedMessages.clear();
+}
+
+void
+AndroidDynamicToolbarAnimator::ClearTreeManager()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  mApz = nullptr;
 }
 
 static bool
@@ -343,6 +351,7 @@ AndroidDynamicToolbarAnimator::UpdateAnimation(const TimeStamp& aCurrentFrame)
   if (!parent) {
     return false;
   }
+  MOZ_ASSERT(mApz); // because parent is non-null
 
   AsyncCompositionManager* manager = parent->GetCompositionManager(nullptr);
   if (!manager) {
@@ -357,7 +366,7 @@ AndroidDynamicToolbarAnimator::UpdateAnimation(const TimeStamp& aCurrentFrame)
       return true;
     }
   } else if (!mCompositorAnimationStarted) {
-    parent->GetAPZCTreeManager()->AdjustScrollForSurfaceShift(ScreenPoint(0.0f, (float)(-mCompositorToolbarHeight)));
+    mApz->AdjustScrollForSurfaceShift(ScreenPoint(0.0f, (float)(-mCompositorToolbarHeight)));
     manager->SetFixedLayerMargins(mCompositorToolbarHeight, 0);
     mCompositorAnimationStarted = true;
     mCompositorReceivedFirstPaint = false;
@@ -412,7 +421,7 @@ AndroidDynamicToolbarAnimator::UpdateAnimation(const TimeStamp& aCurrentFrame)
   } else {
     if (mCompositorAnimationDirection == MOVE_TOOLBAR_DOWN) {
       if (!mCompositorReceivedFirstPaint) {
-        parent->GetAPZCTreeManager()->AdjustScrollForSurfaceShift(ScreenPoint(0.0f, (float)mCompositorMaxToolbarHeight));
+        mApz->AdjustScrollForSurfaceShift(ScreenPoint(0.0f, (float)mCompositorMaxToolbarHeight));
       }
       manager->SetFixedLayerMargins(0, GetFixedLayerMarginsBottom());
     } else {
@@ -633,9 +642,8 @@ AndroidDynamicToolbarAnimator::ProcessTouchDelta(StaticToolbarState aCurrentTool
     uint32_t timeDelta = aTimeStamp - mControllerLastEventTimeStamp;
     if (mControllerLastEventTimeStamp && timeDelta && aDelta) {
       float speed = -(float)aDelta / (float)timeDelta;
-      CompositorBridgeParent* parent = CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(mRootLayerTreeId);
-      if (parent) {
-        parent->GetAPZCTreeManager()->ProcessTouchVelocity(aTimeStamp, speed);
+      if (mApz) {
+        mApz->ProcessTouchVelocity(aTimeStamp, speed);
       }
     }
   }
@@ -890,9 +898,8 @@ AndroidDynamicToolbarAnimator::StartCompositorAnimation(int32_t aDirection, Anim
     NotifyControllerAnimationStarted();
     // Only reset the time stamp and start compositor animation if not already animating.
     if (initialToolbarState != eToolbarAnimating) {
-      CompositorBridgeParent* parent = CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(mRootLayerTreeId);
-      if (parent) {
-        mCompositorAnimationStartTimeStamp = parent->GetAPZCTreeManager()->GetFrameTime();
+      if (mApz) {
+        mCompositorAnimationStartTimeStamp = mApz->GetFrameTime();
       }
       // Kick the compositor to start the animation if we aren't already animating.
       RequestComposite();
@@ -933,8 +940,9 @@ AndroidDynamicToolbarAnimator::StopCompositorAnimation()
       if (parent) {
         AsyncCompositionManager* manager = parent->GetCompositionManager(nullptr);
         if (manager) {
-            parent->GetAPZCTreeManager()->AdjustScrollForSurfaceShift(ScreenPoint(0.0f, (float)(mCompositorToolbarHeight)));
-            RequestComposite();
+          MOZ_ASSERT(mApz);
+          mApz->AdjustScrollForSurfaceShift(ScreenPoint(0.0f, (float)(mCompositorToolbarHeight)));
+          RequestComposite();
         }
       }
     }

@@ -245,6 +245,15 @@ interface nsISocketTransport : nsITransport
     const unsigned long DISABLE_TRR = (1 << 8);
 
     /**
+     * Values for the connectionFlags
+     *
+     * When using BYPASS_CACHE, setting this bit will invalidate the existing
+     * cached entry immediately while the new resolve is being done to avoid
+     * other users from using stale content in the mean time.
+     */
+    const unsigned long REFRESH_CACHE = (1 << 9);
+
+    /**
      * An opaque flags for non-standard behavior of the TLS system.
      * It is unlikely this will need to be set outside of telemetry studies
      * relating to the TLS implementation.

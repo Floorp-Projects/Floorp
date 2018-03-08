@@ -1,5 +1,8 @@
+use std::any::Any;
 use std::boxed::Box;
 use std::cell::UnsafeCell;
+use std::error::Error;
+use std::fmt;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
@@ -35,7 +38,7 @@ pub struct BiLock<T> {
 #[derive(Debug)]
 struct Inner<T> {
     state: AtomicUsize,
-    inner: UnsafeCell<T>,
+    inner: Option<UnsafeCell<T>>,
 }
 
 unsafe impl<T: Send> Send for Inner<T> {}
@@ -50,7 +53,7 @@ impl<T> BiLock<T> {
     pub fn new(t: T) -> (BiLock<T>, BiLock<T>) {
         let inner = Arc::new(Inner {
             state: AtomicUsize::new(0),
-            inner: UnsafeCell::new(t),
+            inner: Some(UnsafeCell::new(t)),
         });
 
         (BiLock { inner: inner.clone() }, BiLock { inner: inner })
@@ -90,7 +93,7 @@ impl<T> BiLock<T> {
                 }
             }
 
-            let me = Box::new(task::park());
+            let me = Box::new(task::current());
             let me = Box::into_raw(me) as usize;
 
             match self.inner.state.compare_exchange(1, me, SeqCst, SeqCst) {
@@ -127,7 +130,22 @@ impl<T> BiLock<T> {
     /// Note that the returned future will never resolve to an error.
     pub fn lock(self) -> BiLockAcquire<T> {
         BiLockAcquire {
-            inner: self,
+            inner: Some(self),
+        }
+    }
+
+    /// Attempts to put the two "halves" of a `BiLock<T>` back together and
+    /// recover the original value. Succeeds only if the two `BiLock<T>`s
+    /// originated from the same call to `BiLock::new`.
+    pub fn reunite(self, other: Self) -> Result<T, ReuniteError<T>> {
+        if &*self.inner as *const _ == &*other.inner as *const _ {
+            drop(other);
+            let inner = Arc::try_unwrap(self.inner)
+                .ok()
+                .expect("futures: try_unwrap failed in BiLock<T>::reunite");
+            Ok(unsafe { inner.into_inner() })
+        } else {
+            Err(ReuniteError(self, other))
         }
     }
 
@@ -143,15 +161,45 @@ impl<T> BiLock<T> {
             // Another task has parked themselves on this lock, let's wake them
             // up as its now their turn.
             n => unsafe {
-                Box::from_raw(n as *mut Task).unpark();
+                Box::from_raw(n as *mut Task).notify();
             }
         }
+    }
+}
+
+impl<T> Inner<T> {
+    unsafe fn into_inner(mut self) -> T {
+        mem::replace(&mut self.inner, None).unwrap().into_inner()
     }
 }
 
 impl<T> Drop for Inner<T> {
     fn drop(&mut self) {
         assert_eq!(self.state.load(SeqCst), 0);
+    }
+}
+
+/// Error indicating two `BiLock<T>`s were not two halves of a whole, and
+/// thus could not be `reunite`d.
+pub struct ReuniteError<T>(pub BiLock<T>, pub BiLock<T>);
+
+impl<T> fmt::Debug for ReuniteError<T> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_tuple("ReuniteError")
+            .field(&"...")
+            .finish()
+    }
+}
+
+impl<T> fmt::Display for ReuniteError<T> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "tried to reunite two BiLocks that don't form a pair")
+    }
+}
+
+impl<T: Any> Error for ReuniteError<T> {
+    fn description(&self) -> &str {
+        "tried to reunite two BiLocks that don't form a pair"
     }
 }
 
@@ -168,13 +216,13 @@ pub struct BiLockGuard<'a, T: 'a> {
 impl<'a, T> Deref for BiLockGuard<'a, T> {
     type Target = T;
     fn deref(&self) -> &T {
-        unsafe { &*self.inner.inner.inner.get() }
+        unsafe { &*self.inner.inner.inner.as_ref().unwrap().get() }
     }
 }
 
 impl<'a, T> DerefMut for BiLockGuard<'a, T> {
     fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.inner.inner.inner.get() }
+        unsafe { &mut *self.inner.inner.inner.as_ref().unwrap().get() }
     }
 }
 
@@ -188,7 +236,7 @@ impl<'a, T> Drop for BiLockGuard<'a, T> {
 /// acquired.
 #[derive(Debug)]
 pub struct BiLockAcquire<T> {
-    inner: BiLock<T>,
+    inner: Option<BiLock<T>>,
 }
 
 impl<T> Future for BiLockAcquire<T> {
@@ -196,15 +244,13 @@ impl<T> Future for BiLockAcquire<T> {
     type Error = ();
 
     fn poll(&mut self) -> Poll<BiLockAcquired<T>, ()> {
-        match self.inner.poll_lock() {
+        match self.inner.as_ref().expect("cannot poll after Ready").poll_lock() {
             Async::Ready(r) => {
                 mem::forget(r);
-                Ok(BiLockAcquired {
-                    inner: BiLock { inner: self.inner.inner.clone() },
-                }.into())
             }
-            Async::NotReady => Ok(Async::NotReady),
+            Async::NotReady => return Ok(Async::NotReady),
         }
+        Ok(Async::Ready(BiLockAcquired { inner: self.inner.take() }))
     }
 }
 
@@ -216,33 +262,37 @@ impl<T> Future for BiLockAcquire<T> {
 /// `unlock` method.
 #[derive(Debug)]
 pub struct BiLockAcquired<T> {
-    inner: BiLock<T>,
+    inner: Option<BiLock<T>>,
 }
 
 impl<T> BiLockAcquired<T> {
     /// Recovers the original `BiLock<T>`, unlocking this lock.
-    pub fn unlock(self) -> BiLock<T> {
-        // note that unlocked is implemented in `Drop`, so we don't do anything
-        // here other than creating a new handle to return.
-        BiLock { inner: self.inner.inner.clone() }
+    pub fn unlock(mut self) -> BiLock<T> {
+        let bi_lock = self.inner.take().unwrap();
+
+        bi_lock.unlock();
+
+        bi_lock
     }
 }
 
 impl<T> Deref for BiLockAcquired<T> {
     type Target = T;
     fn deref(&self) -> &T {
-        unsafe { &*self.inner.inner.inner.get() }
+        unsafe { &*self.inner.as_ref().unwrap().inner.inner.as_ref().unwrap().get() }
     }
 }
 
 impl<T> DerefMut for BiLockAcquired<T> {
     fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.inner.inner.inner.get() }
+        unsafe { &mut *self.inner.as_mut().unwrap().inner.inner.as_ref().unwrap().get() }
     }
 }
 
 impl<T> Drop for BiLockAcquired<T> {
     fn drop(&mut self) {
-        self.inner.unlock();
+        if let Some(ref bi_lock) = self.inner {
+            bi_lock.unlock();
+        }
     }
 }

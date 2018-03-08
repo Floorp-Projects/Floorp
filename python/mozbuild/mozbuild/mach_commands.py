@@ -341,6 +341,26 @@ class Clobber(MachCommandBase):
     @CommandArgument('--full', action='store_true',
         help='Perform a full clobber')
     def clobber(self, what, full=False):
+        """Clean up the source and object directories.
+
+        Performing builds and running various commands generate various files.
+
+        Sometimes it is necessary to clean up these files in order to make
+        things work again. This command can be used to perform that cleanup.
+
+        By default, this command removes most files in the current object
+        directory (where build output is stored). Some files (like Visual
+        Studio project files) are not removed by default. If you would like
+        to remove the object directory in its entirety, run with `--full`.
+
+        The `python` target will clean up various generated Python files from
+        the source directory and will remove untracked files from well-known
+        directories containing Python packages. Run this to remove .pyc files,
+        compiled C extensions, etc. Note: all files not tracked or ignored by
+        version control in well-known Python package directories will be
+        deleted. Run the `status` command of your VCS to see if any untracked
+        files you haven't committed yet will be deleted.
+        """
         invalid = set(what) - set(self.CLOBBER_CHOICES)
         if invalid:
             print('Unknown clobber target(s): {}'.format(', '.join(invalid)))
@@ -362,11 +382,16 @@ class Clobber(MachCommandBase):
 
         if 'python' in what:
             if conditions.is_hg(self):
-                cmd = ['hg', 'purge', '--all', '-I', 'glob:**.py[co]']
+                cmd = ['hg', 'purge', '--all', '-I', 'glob:**.py[cdo]',
+                       '-I', 'path:python/', '-I', 'path:third_party/python/']
             elif conditions.is_git(self):
-                cmd = ['git', 'clean', '-f', '-x', '*.py[co]']
+                cmd = ['git', 'clean', '-f', '-x', '*.py[cdo]', 'python/',
+                       'third_party/python/']
             else:
-                cmd = ['find', '.', '-type', 'f', '-name', '*.py[co]', '-delete']
+                # We don't know what is tracked/untracked if we don't have VCS.
+                # So we can't clean python/ and third_party/python/.
+                cmd = ['find', '.', '-type', 'f', '-name', '*.py[cdo]',
+                       '-delete']
             ret = subprocess.call(cmd, cwd=self.topsrcdir)
         return ret
 

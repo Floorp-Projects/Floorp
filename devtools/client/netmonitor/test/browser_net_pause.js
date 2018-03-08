@@ -6,8 +6,8 @@
 /**
  * Tests if the pause/resume button works.
  */
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(PAUSE_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(PAUSE_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire, connector } = monitor.panelWin;
@@ -20,7 +20,7 @@ add_task(function* () {
   assertRequestCount(store, 0);
 
   // Load one request and assert it shows up in the list.
-  yield performRequestAndWait(tab, monitor);
+  await performRequestAndWait(tab, monitor);
   assertRequestCount(store, 1);
 
   let noRequest = true;
@@ -34,21 +34,21 @@ add_task(function* () {
 
   // Click pause, load second request and make sure they don't show up.
   EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
-  yield performPausedRequest(connector, tab, monitor);
+  await performPausedRequest(connector, tab, monitor);
   ok(noRequest, "There should be no activity when paused.");
   assertRequestCount(store, 1);
 
   // Click pause again to resume monitoring. Load a third request
   // and make sure they will show up.
   EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
-  yield performRequestAndWait(tab, monitor);
+  await performRequestAndWait(tab, monitor);
   assertRequestCount(store, 2);
 
   // Click pause, reload the page and check that there are
   // some requests. Page reload should auto-resume.
   EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
   tab.linkedBrowser.reload();
-  yield waitForNetworkEvents(monitor, 1);
+  await waitForNetworkEvents(monitor, 1);
   assertRequestCount(store, 1);
 
   return teardown(monitor);
@@ -65,23 +65,23 @@ function assertRequestCount(store, count) {
 /**
  * Execute simple GET request and wait till it's done.
  */
-function* performRequestAndWait(tab, monitor) {
+async function performRequestAndWait(tab, monitor) {
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
-    yield content.wrappedJSObject.performRequests(url);
+  await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function (url) {
+    await content.wrappedJSObject.performRequests(url);
   });
-  yield wait;
+  await wait;
 }
 
 /**
  * Execute simple GET request
  */
-function* performPausedRequest(connector, tab, monitor) {
+async function performPausedRequest(connector, tab, monitor) {
   let wait = waitForWebConsoleNetworkEvent(connector);
-  yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
-    yield content.wrappedJSObject.performRequests(url);
+  await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function (url) {
+    await content.wrappedJSObject.performRequests(url);
   });
-  yield wait;
+  await wait;
 }
 
 /**

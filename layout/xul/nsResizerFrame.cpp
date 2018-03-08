@@ -219,7 +219,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       }
       else if (menuPopupFrame) {
         nsRect frameRect = menuPopupFrame->GetScreenRectInAppUnits();
-        nsIFrame* rootFrame = aPresContext->PresShell()->FrameManager()->GetRootFrame();
+        nsIFrame* rootFrame = aPresContext->PresShell()->GetRootFrame();
         nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
         nsPopupLevel popupLevel = menuPopupFrame->PopupLevel();

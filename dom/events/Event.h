@@ -171,6 +171,7 @@ public:
   // void GetType(nsString& aRetval) {}
 
   EventTarget* GetTarget() const;
+  static bool IsSrcElementEnabled(JSContext* /* unused */, JSObject* /* unused */);
   EventTarget* GetCurrentTarget() const;
 
   void ComposedPath(nsTArray<RefPtr<EventTarget>>& aPath);

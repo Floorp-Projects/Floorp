@@ -3323,18 +3323,19 @@ LIRGenerator::visitLoadElementFromState(MLoadElementFromState* ins)
                "LIRGenerator::visitLoadElementFromState: Unsupported state object");
     MArgumentState* array = ins->array()->toArgumentState();
 
-    size_t numOperands = 1 + BOX_PIECES * array->numElements();
-    LLoadElementFromStateV* lir = new(alloc()) LLoadElementFromStateV(temp(), temp1, tempDouble(),
-                                                                      numOperands);
-
     //   1                                 -- for the index as a register
     //   BOX_PIECES * array->numElements() -- for using as operand all the
     //                                        elements of the inlined array.
-    if (!lir->init(alloc())) {
+    size_t numOperands = 1 + BOX_PIECES * array->numElements();
+
+    auto* lir = allocateVariadic<LLoadElementFromStateV>(numOperands, temp(), temp1, tempDouble());
+    if (!lir) {
         abort(AbortReason::Alloc, "OOM: LIRGenerator::visitLoadElementFromState");
         return;
     }
+
     lir->setOperand(0, useRegister(ins->index())); // index
+
     for (size_t i = 0, e = array->numElements(); i < e; i++) {
         MDefinition* elem = array->getElement(i);
         if (elem->isConstant() && elem->isEmittedAtUses()) {
@@ -4692,8 +4693,8 @@ template <typename LClass>
 LInstruction*
 LIRGenerator::lowerWasmCall(MWasmCall* ins, bool needsBoundsCheck)
 {
-    auto* lir = new(alloc()) LClass(ins->numOperands(), needsBoundsCheck);
-    if (!lir->init(alloc())) {
+    auto* lir = allocateVariadic<LClass>(ins->numOperands(), needsBoundsCheck);
+    if (!lir) {
         abort(AbortReason::Alloc, "Couldn't allocate for MWasmCall");
         return nullptr;
     }

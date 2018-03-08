@@ -12,7 +12,7 @@ const NAMED_SLICE_MIN_ANGLE = TAU / 8;
 const NAMED_SLICE_TEXT_DISTANCE_RATIO = 1.9;
 const HOVERED_SLICE_TRANSLATE_DISTANCE_RATIO = 20;
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(NET_STRINGS_URI);
 
@@ -119,37 +119,37 @@ function createPieTableChart(document,
 
   let proxy = new PieTableChart(container, pie, table);
 
-  pie.on("click", (event, item) => {
-    proxy.emit(event, item);
+  pie.on("click", (item) => {
+    proxy.emit("click", item);
   });
 
-  table.on("click", (event, item) => {
-    proxy.emit(event, item);
+  table.on("click", (item) => {
+    proxy.emit("click", item);
   });
 
-  pie.on("mouseover", (event, item) => {
-    proxy.emit(event, item);
+  pie.on("mouseover", (item) => {
+    proxy.emit("mouseover", item);
     if (table.rows.has(item)) {
       table.rows.get(item).setAttribute("focused", "");
     }
   });
 
-  pie.on("mouseout", (event, item) => {
-    proxy.emit(event, item);
+  pie.on("mouseout", (item) => {
+    proxy.emit("mouseout", item);
     if (table.rows.has(item)) {
       table.rows.get(item).removeAttribute("focused");
     }
   });
 
-  table.on("mouseover", (event, item) => {
-    proxy.emit(event, item);
+  table.on("mouseover", (item) => {
+    proxy.emit("mouseover", item);
     if (pie.slices.has(item)) {
       pie.slices.get(item).setAttribute("focused", "");
     }
   });
 
-  table.on("mouseout", (event, item) => {
-    proxy.emit(event, item);
+  table.on("mouseout", (item) => {
+    proxy.emit("mouseout", item);
     if (pie.slices.has(item)) {
       pie.slices.get(item).removeAttribute("focused");
     }

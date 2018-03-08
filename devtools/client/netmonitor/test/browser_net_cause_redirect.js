@@ -8,7 +8,7 @@
  * redirected without hitting the network (HSTS is one of such cases)
  */
 
-add_task(function* () {
+add_task(async function () {
   const EXPECTED_REQUESTS = [
     // Request to HTTP URL, redirects to HTTPS, has callstack
     { status: 302, hasStack: true },
@@ -18,7 +18,7 @@ add_task(function* () {
     { status: 200, hasStack: true },
   ];
 
-  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
+  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   let { store, windowRequire, connector } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
@@ -28,8 +28,8 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, EXPECTED_REQUESTS.length);
-  yield performRequests(2, HSTS_SJS);
-  yield wait;
+  await performRequests(2, HSTS_SJS);
+  await wait;
 
   // Fetch stack-trace data from the backend and wait till
   // all packets are received.
@@ -37,7 +37,7 @@ add_task(function* () {
     .filter((req) => !req.stacktrace)
     .map((req) => connector.requestData(req.id, "stackTrace"));
 
-  yield Promise.all(requests);
+  await Promise.all(requests);
 
   EXPECTED_REQUESTS.forEach(({status, hasStack}, i) => {
     let item = getSortedRequests(store.getState()).get(i);
@@ -57,13 +57,13 @@ add_task(function* () {
 
   // Send a request to reset the HSTS policy to state before the test
   wait = waitForNetworkEvents(monitor, 1);
-  yield performRequests(1, HSTS_SJS + "?reset");
-  yield wait;
+  await performRequests(1, HSTS_SJS + "?reset");
+  await wait;
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   function performRequests(count, url) {
-    return ContentTask.spawn(tab.linkedBrowser, { count, url }, function* (args) {
+    return ContentTask.spawn(tab.linkedBrowser, { count, url }, async function (args) {
       content.wrappedJSObject.performRequests(args.count, args.url);
     });
   }

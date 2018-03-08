@@ -74,7 +74,10 @@ reference_table  (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data)
   const char *data = reinterpret_cast<const char*> (CFDataGetBytePtr (cf_data));
   const size_t length = CFDataGetLength (cf_data);
   if (!data || !length)
+  {
+    CFRelease (cf_data);
     return nullptr;
+  }
 
   return hb_blob_create (data, length, HB_MEMORY_MODE_READONLY,
 			 reinterpret_cast<void *> (const_cast<__CFData *> (cf_data)),
@@ -311,7 +314,7 @@ _hb_coretext_shaper_font_data_destroy (hb_coretext_shaper_font_data_t *data)
 hb_font_t *
 hb_coretext_font_create (CTFontRef ct_font)
 {
-  CGFontRef cg_font = CTFontCopyGraphicsFont (ct_font, 0);
+  CGFontRef cg_font = CTFontCopyGraphicsFont (ct_font, nullptr);
   hb_face_t *face = hb_coretext_face_create (cg_font);
   CFRelease (cg_font);
   hb_font_t *font = hb_font_create (face);
@@ -877,7 +880,10 @@ resize_and_retry:
 							    kCFStringEncodingUTF8,
 							    kCFAllocatorNull);
 	if (unlikely (!lang))
+        {
+	  CFRelease (attr_string);
 	  FAIL ("CFStringCreateWithCStringNoCopy failed");
+        }
 	CFAttributedStringSetAttribute (attr_string, CFRangeMake (0, chars_len),
 					kCTLanguageAttributeName, lang);
 	CFRelease (lang);
@@ -946,7 +952,10 @@ resize_and_retry:
 						    &kCFTypeDictionaryValueCallBacks);
       CFRelease (level_number);
       if (unlikely (!options))
+      {
+        CFRelease (attr_string);
         FAIL ("CFDictionaryCreate failed");
+      }
 
       CTTypesetterRef typesetter = CTTypesetterCreateWithAttributedStringAndOptions (attr_string, options);
       CFRelease (options);
@@ -1036,7 +1045,7 @@ resize_and_retry:
 	  }
 	if (!matched)
 	{
-	  CGFontRef run_cg_font = CTFontCopyGraphicsFont (run_ct_font, 0);
+	  CGFontRef run_cg_font = CTFontCopyGraphicsFont (run_ct_font, nullptr);
 	  if (run_cg_font)
 	  {
 	    matched = CFEqual (run_cg_font, cg_font);
@@ -1209,7 +1218,7 @@ resize_and_retry:
     }
 
     /* Mac OS 10.6 doesn't have kCTTypesetterOptionForcedEmbeddingLevel,
-     * or if it does, it doesn't resepct it.  So we get runs with wrong
+     * or if it does, it doesn't respect it.  So we get runs with wrong
      * directions.  As such, disable the assert...  It wouldn't crash, but
      * cursoring will be off...
      *
@@ -1235,8 +1244,6 @@ resize_and_retry:
 	pos->x_offset = info->var1.i32;
 	pos->y_offset = info->var2.i32;
 
-	info->mask = HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
-
 	info++, pos++;
       }
     else
@@ -1245,8 +1252,6 @@ resize_and_retry:
 	pos->y_advance = info->mask;
 	pos->x_offset = info->var1.i32;
 	pos->y_offset = info->var2.i32;
-
-	info->mask = HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
 
 	info++, pos++;
       }

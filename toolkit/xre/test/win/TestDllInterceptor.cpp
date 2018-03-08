@@ -675,7 +675,6 @@ int main()
       TestDetour("user32.dll", "CreateWindowExW") &&
       TestHook(TestInSendMessageEx, "user32.dll", "InSendMessageEx") &&
       TestHook(TestImmGetContext, "imm32.dll", "ImmGetContext") &&
-      // TestHook("imm32.dll", "ImmReleaseContext") &&    // see Bug 1316415
       TestHook(TestImmGetCompositionStringW, "imm32.dll", "ImmGetCompositionStringW") &&
       TestHook(TestImmSetCandidateWindow, "imm32.dll", "ImmSetCandidateWindow") &&
       TestHook(TestImmNotifyIME, "imm32.dll", "ImmNotifyIME") &&

@@ -1060,9 +1060,6 @@ impl ResourceCache {
 
         info!("saving resource cache");
         let res = &self.resources;
-        if !root.is_dir() {
-            fs::create_dir_all(root).unwrap()
-        }
         let path_fonts = root.join("fonts");
         if !path_fonts.is_dir() {
             fs::create_dir(&path_fonts).unwrap();

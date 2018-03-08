@@ -41,6 +41,7 @@ DIRS += [
     'browser-element',
     'cache',
     'canvas',
+    'chrome-webidl',
     'clients',
     'commandhandler',
     'credentialmanagement',

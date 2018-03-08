@@ -299,7 +299,7 @@ struct FeatureParamsSize
      * better.
      *
      * Assume that the offset to the size feature is according to specification,
-     * and make the following value checks. If it fails, assume the the size
+     * and make the following value checks. If it fails, assume the size
      * feature is calculated as versions of MakeOTF before the AFDKO 2.0 built it.
      * If this fails, reject the 'size' feature. The older makeOTF's calculated the
      * offset from the beginning of the FeatureList table, rather than from the
@@ -700,7 +700,7 @@ struct CoverageFormat1
     if (unlikely (!c->extend (glyphArray))) return_trace (false);
     for (unsigned int i = 0; i < num_glyphs; i++)
       glyphArray[i] = glyphs[i];
-    glyphs.advance (num_glyphs);
+    glyphs += num_glyphs;
     return_trace (true);
   }
 
@@ -789,7 +789,7 @@ struct CoverageFormat2
       } else {
         rangeRecord[range].end = glyphs[i];
       }
-    glyphs.advance (num_glyphs);
+    glyphs += num_glyphs;
     return_trace (true);
   }
 
@@ -1057,7 +1057,7 @@ struct ClassDefFormat1
     if (klass == 0)
     {
       /* Match if there's any glyph that is not listed! */
-      hb_codepoint_t g = -1;
+      hb_codepoint_t g = HB_SET_VALUE_INVALID;
       if (!hb_set_next (glyphs, &g))
         return false;
       if (g < startGlyph)
@@ -1128,7 +1128,7 @@ struct ClassDefFormat2
     if (klass == 0)
     {
       /* Match if there's any glyph that is not listed! */
-      hb_codepoint_t g = (hb_codepoint_t) -1;
+      hb_codepoint_t g = HB_SET_VALUE_INVALID;
       for (unsigned int i = 0; i < count; i++)
       {
 	if (!hb_set_next (glyphs, &g))
@@ -1137,7 +1137,7 @@ struct ClassDefFormat2
 	  return true;
 	g = rangeRecord[i].end;
       }
-      if (g != (hb_codepoint_t) -1 && hb_set_next (glyphs, &g))
+      if (g != HB_SET_VALUE_INVALID && hb_set_next (glyphs, &g))
         return true;
       /* Fall through. */
     }

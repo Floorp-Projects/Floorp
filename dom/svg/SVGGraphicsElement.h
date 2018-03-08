@@ -26,7 +26,6 @@ public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
-  bool IsInChromeDoc() const override;
   nsSVGElement* AsSVGElement() final { return this; }
 };
 

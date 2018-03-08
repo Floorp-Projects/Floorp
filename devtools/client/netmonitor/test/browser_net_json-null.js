@@ -7,8 +7,8 @@
  * Tests if JSON responses containing null values are properly displayed.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(JSON_BASIC_URL + "?name=null");
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(JSON_BASIC_URL + "?name=null");
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -18,12 +18,12 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests();
   });
-  yield wait;
+  await wait;
 
-  yield openResponsePanel();
+  await openResponsePanel();
   checkResponsePanelDisplaysJSON();
 
   let tabpanel = document.querySelector("#response-panel");
@@ -42,7 +42,7 @@ add_task(function* () {
   is(labels[0].textContent, "greeting", "The first json property name was incorrect.");
   is(values[0].textContent, "null", "The first json property value was incorrect.");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   /**
    * Helper to assert that the response panel found in the provided document is currently

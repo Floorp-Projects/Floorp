@@ -280,7 +280,7 @@ nsPluginFrame::PrepForDrawing(nsIWidget *aWidget)
 
   if (mWidget) {
     // Disallow windowed plugins in popups
-    nsIFrame* rootFrame = rpc->PresShell()->FrameManager()->GetRootFrame();
+    nsIFrame* rootFrame = rpc->PresShell()->GetRootFrame();
     nsIWidget* parentWidget = rootFrame->GetNearestWidget();
     if (!parentWidget || nsLayoutUtils::GetDisplayRootFrame(this) != rootFrame) {
       return NS_ERROR_FAILURE;
@@ -632,7 +632,7 @@ nsPluginFrame::CallSetWindow(bool aCheckIsHidden)
   if (!rootPC)
     return NS_ERROR_FAILURE;
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-  nsIFrame* rootFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
+  nsIFrame* rootFrame = rootPC->PresShell()->GetRootFrame();
   nsRect bounds = GetContentRectRelativeToSelf() + GetOffsetToCrossDoc(rootFrame);
   nsIntRect intBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
 

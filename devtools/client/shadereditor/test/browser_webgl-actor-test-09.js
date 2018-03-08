@@ -29,10 +29,12 @@ function* ifWebGLSupported() {
 
     isnot(infoLog, "",
       "The one of the compile or link info logs should not be empty.");
-    is(infoLog.split("ERROR").length - 1, 2,
-      "The info log contains two errors.");
+    is(infoLog.split("ERROR").length - 1, 3,
+      "The info log status contains three errors.");
     ok(infoLog.includes("ERROR: 0:8: 'constructor'"),
       "A constructor error is contained in the info log.");
+    ok(infoLog.includes("ERROR: 0:8: '='"),
+      "A dimension error is contained in the info log.");
     ok(infoLog.includes("ERROR: 0:8: 'assign'"),
       "An assignment error is contained in the info log.");
   }

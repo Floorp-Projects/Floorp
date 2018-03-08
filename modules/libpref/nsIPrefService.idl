@@ -45,7 +45,7 @@ interface nsIPrefService : nsISupports
    *
    * @throws Error File failed to write.
    *
-   * @see readUserPrefs
+   * @see readUserPrefsFromFile
    * @see nsIFile
    */
   void savePrefFile(in nsIFile aFile);
@@ -102,13 +102,19 @@ interface nsIPrefService : nsISupports
   readonly attribute boolean dirty;
 
   /**
-   * Read in the preferences specified in a user preference file. This method
-   * does not clear user preferences that were already set.
+   * Read in the preferences specified in a default preference file. This
+   * method does not clear preferences that were already set, but it may
+   * overwrite existing preferences.
    *
    * @param aFile The file to be read.
    *
    * @throws Error File failed to read or contained invalid data.
    * @note This method is intended for internal unit testing only!
+   */
+  void readDefaultPrefsFromFile(in nsIFile aFile);
+
+  /**
+   * Like readDefaultPrefsFromFile, but for a user prefs file.
    */
   void readUserPrefsFromFile(in nsIFile aFile);
 };

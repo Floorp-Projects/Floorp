@@ -805,7 +805,7 @@
     "toolkit/components/addoncompat/tests/browser/browser_addonShims.js": 3823,
     "toolkit/components/extensions/test/browser/browser_ext_management_themes.js": 2922,
     "toolkit/components/extensions/test/browser/browser_ext_themes_persistence.js": 1948,
-    "toolkit/components/jsdownloads/test/browser/browser_DownloadPDFSaver.js": 4102,
+    "toolkit/components/downloads/test/browser/browser_DownloadPDFSaver.js": 4102,
     "toolkit/components/narrate/test/browser_narrate.js": 2700,
     "toolkit/components/narrate/test/browser_voiceselect.js": 2254,
     "toolkit/components/narrate/test/browser_word_highlight.js": 2215,

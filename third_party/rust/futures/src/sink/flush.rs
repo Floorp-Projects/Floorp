@@ -23,6 +23,11 @@ impl<S: Sink> Flush<S> {
     pub fn get_mut(&mut self) -> &mut S {
         self.sink.as_mut().expect("Attempted `Flush::get_mut` after the flush completed")
     }
+
+    /// Consume the `Flush` and return the inner sink.
+    pub fn into_inner(self) -> S {
+        self.sink.expect("Attempted `Flush::into_inner` after the flush completed")
+    }
 }
 
 impl<S: Sink> Future for Flush<S> {
@@ -31,7 +36,7 @@ impl<S: Sink> Future for Flush<S> {
 
     fn poll(&mut self) -> Poll<S, S::SinkError> {
         let mut sink = self.sink.take().expect("Attempted to poll Flush after it completed");
-        if try!(sink.poll_complete()).is_ready() {
+        if sink.poll_complete()?.is_ready() {
             Ok(Async::Ready(sink))
         } else {
             self.sink = Some(sink);

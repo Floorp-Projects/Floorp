@@ -215,7 +215,7 @@ VariableBubbleView.prototype = {
         getterOrSetterEvalMacro: this._getGetterOrSetterEvalMacro(evalPrefix),
         overrideValueEvalMacro: this._getOverrideValueEvalMacro(evalPrefix)
       }, {
-        fetched: (aEvent, aType) => {
+        fetched: aType => {
           if (aType == "properties") {
             window.emit(EVENTS.FETCHED_BUBBLE_PROPERTIES);
           }

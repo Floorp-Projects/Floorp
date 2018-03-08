@@ -6,8 +6,9 @@
 
 /* rendering object for CSS display:inline objects */
 
-#include "gfxContext.h"
 #include "nsInlineFrame.h"
+
+#include "gfxContext.h"
 #include "nsLineLayout.h"
 #include "nsBlockFrame.h"
 #include "nsPlaceholderFrame.h"

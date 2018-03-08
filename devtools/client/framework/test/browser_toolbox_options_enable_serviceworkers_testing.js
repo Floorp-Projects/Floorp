@@ -6,8 +6,6 @@
 // Test that enabling Service Workers testing option enables the
 // mServiceWorkersTestingEnabled attribute added to nsPIDOMWindow.
 
-const COMMON_FRAME_SCRIPT_URL =
-  "chrome://devtools/content/shared/frame-script-utils.js";
 const ROOT_TEST_DIR =
   getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL =
@@ -35,7 +33,7 @@ function init() {
     let target = TargetFactory.forTab(tab);
     let linkedBrowser = tab.linkedBrowser;
 
-    linkedBrowser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
+    loadFrameScriptUtils(linkedBrowser);
     linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
 
     gDevTools.showToolbox(target).then(testSelectTool);

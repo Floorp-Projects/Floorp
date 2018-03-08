@@ -7,10 +7,10 @@
  * Tests if timeline correctly displays interval divisions.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
+  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { $, $all, NetMonitorView, NetMonitorController } = monitor.panelWin;
@@ -34,7 +34,7 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
-  yield wait;
+  await wait;
 
   // Make sure the DOMContentLoaded and load markers don't interfere with
   // this test by removing them and redrawing the waterfall (bug 1224088).

@@ -8,7 +8,7 @@
 #define mozilla_ComputedTimingFunction_h
 
 #include "nsSMILKeySpline.h"  // nsSMILKeySpline
-#include "nsStyleStruct.h"    // nsTimingFunction
+#include "nsTimingFunction.h"
 
 namespace mozilla {
 

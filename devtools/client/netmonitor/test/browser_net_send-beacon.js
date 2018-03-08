@@ -7,8 +7,8 @@
  * Tests if beacons are handled correctly.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(SEND_BEACON_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(SEND_BEACON_URL);
   let { store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { getSortedRequests } =
@@ -19,10 +19,10 @@ add_task(function* () {
   is(store.getState().requests.requests.size, 0, "The requests menu should be empty.");
 
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequest();
   });
-  yield wait;
+  await wait;
 
   is(store.getState().requests.requests.size, 1, "The beacon should be recorded.");
   let request = getSortedRequests(store.getState()).get(0);

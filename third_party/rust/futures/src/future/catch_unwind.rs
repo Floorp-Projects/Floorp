@@ -29,7 +29,7 @@ impl<F> Future for CatchUnwind<F>
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let mut future = self.future.take().expect("cannot poll twice");
-        let (res, future) = try!(catch_unwind(|| (future.poll(), future)));
+        let (res, future) = catch_unwind(|| (future.poll(), future))?;
         match res {
             Ok(Async::NotReady) => {
                 self.future = Some(future);

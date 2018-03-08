@@ -5,13 +5,13 @@
 
 "use strict";
 
-add_task(function* () {
-  yield throttleUploadTest(true);
-  yield throttleUploadTest(false);
+add_task(async function () {
+  await throttleUploadTest(true);
+  await throttleUploadTest(false);
 });
 
-function* throttleUploadTest(actuallyThrottle) {
-  let { tab, monitor } = yield initNetMonitor(
+async function throttleUploadTest(actuallyThrottle) {
+  let { tab, monitor } = await initNetMonitor(
     HAR_EXAMPLE_URL + "html_har_post-data-test-page.html");
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
@@ -40,7 +40,7 @@ function* throttleUploadTest(actuallyThrottle) {
   };
 
   info("sending throttle request");
-  yield new Promise((resolve) => {
+  await new Promise((resolve) => {
     connector.setPreferences(request, (response) => {
       resolve(response);
     });
@@ -49,15 +49,15 @@ function* throttleUploadTest(actuallyThrottle) {
   // Execute one POST request on the page and wait till its done.
   let onEventTimings = monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS);
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, { size }, function* (args) {
+  await ContentTask.spawn(tab.linkedBrowser, { size }, async function (args) {
     content.wrappedJSObject.executeTest2(args.size);
   });
-  yield wait;
-  yield onEventTimings;
+  await wait;
+  await onEventTimings;
 
   // Copy HAR into the clipboard (asynchronous).
   let contextMenu = new RequestListContextMenu({ connector });
-  let jsonString = yield contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
+  let jsonString = await contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
   let har = JSON.parse(jsonString);
 
   // Check out the HAR log.
@@ -77,5 +77,5 @@ function* throttleUploadTest(actuallyThrottle) {
   }
 
   // Clean up
-  yield teardown(monitor);
+  await teardown(monitor);
 }

@@ -244,9 +244,9 @@ function test() {
 
     if (!check()) {
       info("wait for: " + options.name);
-      toolbar.on("errors-counter-updated", function onUpdate(event) {
+      toolbar.on("errors-counter-updated", function onUpdate() {
         if (check()) {
-          toolbar.off(event, onUpdate);
+          toolbar.off("errors-counter-updated", onUpdate);
         }
       });
     }

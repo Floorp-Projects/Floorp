@@ -10,9 +10,10 @@
  */
 
 #include "nsStyleChangeList.h"
+
+#include "nsCSSFrameConstructor.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsFrameManager.h"
 
 void
 nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHint)
@@ -29,7 +30,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
   MOZ_ASSERT(!aContent || aContent->IsElement() ||
              // display:contents elements posts the changes for their children:
              (aFrame && aContent->GetParent() &&
-             aFrame->PresContext()->FrameManager()->
+             aFrame->PresContext()->FrameConstructor()->
                GetDisplayContentsStyleFor(aContent->GetParent())) ||
              (aContent->IsNodeOfType(nsINode::eTEXT) &&
               aContent->IsStyledByServo() &&

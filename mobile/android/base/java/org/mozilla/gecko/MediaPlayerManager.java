@@ -43,12 +43,7 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
         if (instance != null) {
             return instance;
         }
-        if (Versions.feature17Plus) {
-            instance = (MediaPlayerManager) new PresentationMediaPlayerManager();
-        } else {
-            instance = new MediaPlayerManager();
-        }
-        return instance;
+        return new MediaPlayerManager();
     }
 
     private static final String LOGTAG = "GeckoMediaPlayerManager";

@@ -38,12 +38,6 @@ public:
     return Equals(aString.BeginReading(), aString.Length());
   }
 
-  void SetKind(AtomKind aKind)
-  {
-    mKind = static_cast<uint32_t>(aKind);
-    MOZ_ASSERT(Kind() == aKind);
-  }
-
   AtomKind Kind() const { return static_cast<AtomKind>(mKind); }
 
   bool IsDynamicAtom() const { return Kind() == AtomKind::DynamicAtom; }
@@ -57,12 +51,13 @@ public:
   void ToString(nsAString& aString) const;
   void ToUTF8String(nsACString& aString) const;
 
-  // This is only valid for dynamic atoms.
+  // This is not valid for static atoms. The caller must *not* mutate the
+  // string buffer, otherwise all hell will break loose.
   nsStringBuffer* GetStringBuffer() const
   {
     // See the comment on |mString|'s declaration.
-    MOZ_ASSERT(IsDynamicAtom());
-    return nsStringBuffer::FromData(mString);
+    MOZ_ASSERT(IsDynamicAtom() || IsHTML5Atom());
+    return nsStringBuffer::FromData(const_cast<char16_t*>(mString));
   }
 
   // A hashcode that is better distributed than the actual atom pointer, for
@@ -88,23 +83,23 @@ private:
   friend class nsAtomSubTable;
   friend class nsHtml5AtomEntry;
 
-  // Dynamic atom construction is done by |friend|s.
+protected:
+  // Used by nsDynamicAtom and directly (by nsHtml5AtomEntry) for HTML5 atoms.
   nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash);
 
-protected:
+  // Used by nsStaticAtom.
   nsAtom(const char16_t* aString, uint32_t aLength, uint32_t aHash);
 
   ~nsAtom();
 
-  mozilla::ThreadSafeAutoRefCnt mRefCnt;
-  uint32_t mLength: 30;
-  uint32_t mKind: 2; // nsAtom::AtomKind
-  uint32_t mHash;
+  const uint32_t mLength:30;
+  const uint32_t mKind:2; // nsAtom::AtomKind
+  const uint32_t mHash;
   // WARNING! For static atoms, this is a pointer to a static char buffer. For
   // non-static atoms it points to the chars in an nsStringBuffer. This means
   // that nsStringBuffer::FromData(mString) calls are only valid for non-static
   // atoms.
-  char16_t* mString;
+  const char16_t* const mString;
 };
 
 // A trivial subclass of nsAtom that can be used for known static atoms. The
@@ -118,7 +113,7 @@ class nsStaticAtom : public nsAtom
 {
 public:
   // These are deleted so it's impossible to RefPtr<nsStaticAtom>. Raw
-  // nsStaticAtom atoms should be used instead.
+  // nsStaticAtom pointers should be used instead.
   MozExternalRefCountType AddRef() = delete;
   MozExternalRefCountType Release() = delete;
 

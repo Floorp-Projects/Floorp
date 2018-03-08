@@ -7,11 +7,11 @@
 #include "FileBlockCache.h"
 #include "MediaCache.h"
 #include "MediaPrefs.h"
-#include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
 #include "prio.h"
 #include <algorithm>
 #include "nsAnonymousTemporaryFile.h"
+#include "nsIThreadManager.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/SystemGroup.h"
 #include "nsXULAppAPI.h"
@@ -82,7 +82,7 @@ FileBlockCache::Init()
   nsresult rv = NS_NewNamedThread("FileBlockCache",
                                   getter_AddRefs(mThread),
                                   nullptr,
-                                  SharedThreadPool::kStackSize);
+                                  nsIThreadManager::kThreadPoolStackSize);
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -23,7 +23,6 @@ class BaselineCompilerShared
     jsbytecode* pc;
     MacroAssembler masm;
     bool ionCompileable_;
-    bool ionOSRCompileable_;
     bool compileDebugInstrumentation_;
 
     TempAllocator& alloc_;

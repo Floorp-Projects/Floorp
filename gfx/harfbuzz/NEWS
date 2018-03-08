@@ -1,3 +1,18 @@
+Overview of changes leading to 1.7.6
+Wednesday, March 7, 2018
+====================================
+
+- Fix to hb_set_t binary operations. Ouch.
+- New experimental harfbuzz-subset library. All of hb-subset.h
+  is experimental right now and API WILL change.
+
+- New API:
+hb_blob_copy_writable_or_fail()
+HB_OT_TAG_BASE
+hb_set_previous()
+hb_set_previous_range()
+
+
 Overview of changes leading to 1.7.5
 Tuesday, January 30, 2018
 ====================================

@@ -31,11 +31,12 @@
 #include "hb-font-private.hh"
 
 #include "hb-ot-cmap-table.hh"
-#include "hb-ot-cbdt-table.hh"
 #include "hb-ot-glyf-table.hh"
 #include "hb-ot-hmtx-table.hh"
 #include "hb-ot-kern-table.hh"
 #include "hb-ot-post-table.hh"
+
+#include "hb-ot-color-cbdt-table.hh"
 
 
 struct hb_ot_font_t

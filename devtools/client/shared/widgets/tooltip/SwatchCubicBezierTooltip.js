@@ -78,7 +78,7 @@ class SwatchCubicBezierTooltip extends SwatchBasedEditorTooltip {
     }
   }
 
-  _onUpdate(event, bezier) {
+  _onUpdate(bezier) {
     if (!this.activeSwatch) {
       return;
     }

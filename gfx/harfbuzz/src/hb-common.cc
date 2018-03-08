@@ -879,7 +879,7 @@ parse_feature_value_postfix (const char **pp, const char *end, hb_feature_t *fea
                    parse_bool (pp, end, &feature->value);
   /* CSS doesn't use equal-sign between tag and value.
    * If there was an equal-sign, then there *must* be a value.
-   * A value without an eqaul-sign is ok, but not required. */
+   * A value without an equal-sign is ok, but not required. */
   return !had_equal || had_value;
 }
 

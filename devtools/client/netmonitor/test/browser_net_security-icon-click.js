@@ -7,20 +7,20 @@
  * Test that clicking on the security indicator opens the security details tab.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
   info("Requesting a resource over HTTPS.");
-  yield performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_2");
-  yield performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_1");
+  await performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_2");
+  await performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_1");
 
   is(store.getState().requests.requests.size, 2, "Two events event logged.");
 
-  yield clickAndTestSecurityIcon();
+  await clickAndTestSecurityIcon();
 
   info("Selecting headers panel again.");
   EventUtils.sendMouseEvent({ type: "click" },
@@ -32,23 +32,23 @@ add_task(function* () {
 
   info("Testing that security icon can be clicked after the items were sorted.");
 
-  yield clickAndTestSecurityIcon();
+  await clickAndTestSecurityIcon();
 
   return teardown(monitor);
 
-  function* performRequestAndWait(url) {
+  async function performRequestAndWait(url) {
     let wait = waitForNetworkEvents(monitor, 1);
-    yield ContentTask.spawn(tab.linkedBrowser, { url }, function* (args) {
+    await ContentTask.spawn(tab.linkedBrowser, { url }, async function (args) {
       content.wrappedJSObject.performRequests(1, args.url);
     });
     return wait;
   }
 
-  function* clickAndTestSecurityIcon() {
+  async function clickAndTestSecurityIcon() {
     let icon = document.querySelector(".requests-security-state-icon");
     info("Clicking security icon of the first request and waiting for panel update.");
     EventUtils.synthesizeMouseAtCenter(icon, {}, monitor.panelWin);
-    yield waitUntil(() => document.querySelector("#security-panel .security-info-value"));
+    await waitUntil(() => document.querySelector("#security-panel .security-info-value"));
 
     ok(document.querySelector("#security-tab[aria-selected=true]"),
        "Security tab is selected.");

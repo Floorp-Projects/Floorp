@@ -30,7 +30,7 @@ pub enum Async<T> {
 }
 
 impl<T> Async<T> {
-    /// Change the success type of this `Async` value with the closure provided
+    /// Change the success value of this `Async` with the closure provided
     pub fn map<F, U>(self, f: F) -> Async<U>
         where F: FnOnce(T) -> U
     {
@@ -75,6 +75,16 @@ pub enum AsyncSink<T> {
 }
 
 impl<T> AsyncSink<T> {
+    /// Change the NotReady value of this `AsyncSink` with the closure provided
+    pub fn map<F, U>(self, f: F) -> AsyncSink<U>
+        where F: FnOnce(T) -> U,
+    {
+        match self {
+            AsyncSink::Ready => AsyncSink::Ready,
+            AsyncSink::NotReady(t) => AsyncSink::NotReady(f(t)),
+        }
+    }
+
     /// Returns whether this is `AsyncSink::Ready`
     pub fn is_ready(&self) -> bool {
         match *self {

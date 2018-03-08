@@ -1,26 +1,25 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ../../shared/test/shared-head.js */
+
 "use strict";
 
-var { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+// Load the shared-head file first.
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  this);
 
-var Services = require("Services");
-var promise = require("promise");
-const defer = require("devtools/shared/defer");
-var { gDevTools } = require("devtools/client/framework/devtools");
+var { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { DebuggerServer } = require("devtools/server/main");
 var { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
 var { CanvasFront } = require("devtools/shared/fronts/canvas");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var flags = require("devtools/shared/flags");
-var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
-var mm = null;
 
-const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/canvasdebugger/test/";
 const SET_TIMEOUT_URL = EXAMPLE_URL + "doc_settimeout.html";
 const NO_CANVAS_URL = EXAMPLE_URL + "doc_no-canvas.html";
@@ -40,16 +39,9 @@ const RAF_BEGIN_URL = EXAMPLE_URL + "doc_raf-begin.html";
 var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
-// All tests are asynchronous.
-waitForExplicitFinish();
-
 var gToolEnabled = Services.prefs.getBoolPref("devtools.canvasdebugger.enabled");
 
-flags.testing = true;
-
 registerCleanupFunction(() => {
-  info("finish() was called, cleaning up...");
-  flags.testing = false;
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", gToolEnabled);
 
@@ -58,52 +50,6 @@ registerCleanupFunction(() => {
   info("Forcing GC after canvas debugger test.");
   Cu.forceGC();
 });
-
-/**
- * Call manually in tests that use frame script utils after initializing
- * the shader editor. Call after init but before navigating to different pages.
- */
-function loadFrameScripts() {
-  mm = gBrowser.selectedBrowser.messageManager;
-  mm.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
-}
-
-function addTab(aUrl, aWindow) {
-  info("Adding tab: " + aUrl);
-
-  let deferred = defer();
-  let targetWindow = aWindow || window;
-  let targetBrowser = targetWindow.gBrowser;
-
-  targetWindow.focus();
-  let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
-  let linkedBrowser = tab.linkedBrowser;
-
-  BrowserTestUtils.browserLoaded(linkedBrowser)
-    .then(function () {
-      info("Tab added and finished loading: " + aUrl);
-      deferred.resolve(tab);
-    });
-
-  return deferred.promise;
-}
-
-function removeTab(aTab, aWindow) {
-  info("Removing tab.");
-
-  let deferred = defer();
-  let targetWindow = aWindow || window;
-  let targetBrowser = targetWindow.gBrowser;
-  let tabContainer = targetBrowser.tabContainer;
-
-  tabContainer.addEventListener("TabClose", function (aEvent) {
-    info("Tab removed and finished closing.");
-    deferred.resolve();
-  }, {once: true});
-
-  targetBrowser.removeTab(aTab);
-  return deferred.promise;
-}
 
 function handleError(aError) {
   ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
@@ -142,35 +88,6 @@ function isTestingSupported() {
   info("This test requires WebGL support.");
   info("Apparently, WebGL is" + (supported ? "" : " not") + " supported.");
   return supported;
-}
-
-function once(aTarget, aEventName, aUseCapture = false) {
-  info("Waiting for event: '" + aEventName + "' on " + aTarget + ".");
-
-  let deferred = defer();
-
-  for (let [add, remove] of [
-    ["on", "off"], // Use event emitter before DOM events for consistency
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"]
-  ]) {
-    if ((add in aTarget) && (remove in aTarget)) {
-      aTarget[add](aEventName, function onEvent(...aArgs) {
-        info("Got event: '" + aEventName + "' on " + aTarget + ".");
-        aTarget[remove](aEventName, onEvent, aUseCapture);
-        deferred.resolve(...aArgs);
-      }, aUseCapture);
-      break;
-    }
-  }
-
-  return deferred.promise;
-}
-
-function waitForTick() {
-  let deferred = defer();
-  executeSoon(deferred.resolve);
-  return deferred.promise;
 }
 
 function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate") {
@@ -248,53 +165,7 @@ function teardown({target}) {
   });
 }
 
-/**
- * Takes a string `script` and evaluates it directly in the content
- * in potentially a different process.
- */
-function evalInDebuggee(script) {
-  let deferred = defer();
-
-  if (!mm) {
-    throw new Error("`loadFrameScripts()` must be called when using MessageManager.");
-  }
-
-  let id = generateUUID().toString();
-  mm.sendAsyncMessage("devtools:test:eval", { script: script, id: id });
-  mm.addMessageListener("devtools:test:eval:response", handler);
-
-  function handler({ data }) {
-    if (id !== data.id) {
-      return;
-    }
-
-    mm.removeMessageListener("devtools:test:eval:response", handler);
-    deferred.resolve(data.value);
-  }
-
-  return deferred.promise;
-}
-
 function getSourceActor(aSources, aURL) {
   let item = aSources.getItemForAttachment(a => a.source.url === aURL);
   return item ? item.value : null;
-}
-
-/**
- * Waits until a predicate returns true.
- *
- * @param function predicate
- *        Invoked once in a while until it returns true.
- * @param number interval [optional]
- *        How often the predicate is invoked, in milliseconds.
- */
-function* waitUntil(predicate, interval = 10) {
-  if (yield predicate()) {
-    return Promise.resolve(true);
-  }
-  let deferred = defer();
-  setTimeout(function () {
-    waitUntil(predicate).then(() => deferred.resolve(true));
-  }, interval);
-  return deferred.promise;
 }
