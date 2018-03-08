@@ -72,35 +72,6 @@ function RemoteWebProgressManager(aBrowser) {
   this.swapBrowser(aBrowser);
 }
 
-RemoteWebProgressManager.argumentsForAddonListener = function(kind, args) {
-  function checkType(arg, typ) {
-    if (!arg) {
-      return false;
-    }
-    return (arg instanceof typ) ||
-      (arg instanceof Ci.nsISupports && arg.wrappedJSObject instanceof typ);
-  }
-
-  // Arguments for a tabs listener are shifted over one since the
-  // <browser> element is passed as the first argument.
-  let webProgressIndex = 0;
-  let requestIndex = 1;
-  if (kind == "tabs") {
-    webProgressIndex = 1;
-    requestIndex = 2;
-  }
-
-  if (checkType(args[webProgressIndex], RemoteWebProgress)) {
-    args[webProgressIndex] = args[webProgressIndex].wrappedJSObject._webProgressCPOW;
-  }
-
-  if (checkType(args[requestIndex], RemoteWebProgressRequest)) {
-    args[requestIndex] = args[requestIndex].wrappedJSObject._requestCPOW;
-  }
-
-  return args;
-};
-
 RemoteWebProgressManager.prototype = {
   swapBrowser(aBrowser) {
     if (this._messageManager) {

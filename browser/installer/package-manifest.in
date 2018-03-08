@@ -424,9 +424,6 @@
 #endif
 @RESPATH@/components/nsUpdateTimerManager.manifest
 @RESPATH@/components/nsUpdateTimerManager.js
-@RESPATH@/components/addoncompat.manifest
-@RESPATH@/components/multiprocessShims.js
-@RESPATH@/components/defaultShims.js
 @RESPATH@/components/utils.manifest
 @RESPATH@/components/simpleServices.js
 @RESPATH@/components/pluginGlue.manifest
