@@ -4845,9 +4845,11 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
 
   // If we exit gracefully, remove the startup crash canary file.
   auto cleanup = MakeScopeExit([&] () -> nsresult {
-    nsCOMPtr<nsIFile> crashFile;
-    MOZ_TRY_VAR(crashFile, GetIncompleteStartupFile(mProfLD));
-    crashFile->Remove(false);
+    if (mProfLD) {
+      nsCOMPtr<nsIFile> crashFile;
+      MOZ_TRY_VAR(crashFile, GetIncompleteStartupFile(mProfLD));
+      crashFile->Remove(false);
+    }
     return NS_OK;
   });
 
