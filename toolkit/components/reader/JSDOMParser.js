@@ -560,8 +560,7 @@
     },
   };
 
-  var Document = function (url) {
-    this.documentURI = url;
+  var Document = function () {
     this.styleSheets = [];
     this.childNodes = [];
     this.children = [];
@@ -600,20 +599,6 @@
       var node = new Text();
       node.textContent = text;
       return node;
-    },
-
-    get baseURI() {
-      if (!this.hasOwnProperty("_baseURI")) {
-        this._baseURI = this.documentURI;
-        var baseElements = this.getElementsByTagName("base");
-        var href = baseElements[0] && baseElements[0].getAttribute("href");
-        if (href) {
-          try {
-            this._baseURI = (new URL(href, this._baseURI)).href;
-          } catch (ex) {/* Just fall back to documentURI */}
-        }
-      }
-      return this._baseURI;
     },
   };
 
@@ -1133,9 +1118,9 @@
     /**
      * Parses an HTML string and returns a JS implementation of the Document.
      */
-    parse: function (html, url) {
+    parse: function (html) {
       this.html = html;
-      var doc = this.doc = new Document(url);
+      var doc = this.doc = new Document();
       this.readChildren(doc);
 
       // If this is an HTML document, remove root-level children except for the
