@@ -10749,6 +10749,9 @@
   "CERT_VALIDATION_SUCCESS_BY_CA": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
+    "alert_emails": ["jjones@mozilla.com", "seceng-telemetry@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1364159, 1369747, 1441550],
     "kind": "enumerated",
     "n_values": 256,
     "description": "Successful SSL server cert validations by CA (see RootHashes.inc for names of CAs)"
