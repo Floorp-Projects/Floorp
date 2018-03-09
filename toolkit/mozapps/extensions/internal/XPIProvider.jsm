@@ -80,6 +80,7 @@ const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 // xpinstall.signatures.required only supported in dev builds
 const PREF_XPI_SIGNATURES_REQUIRED    = "xpinstall.signatures.required";
 const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
+const PREF_LANGPACK_SIGNATURES        = "extensions.langpacks.signatures.required";
 const PREF_XPI_PERMISSIONS_BRANCH     = "xpinstall.";
 const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin";
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
@@ -218,6 +219,7 @@ const SIGNED_TYPES = new Set([
   "extension",
   "experiment",
   "webextension",
+  "webextension-langpack",
   "webextension-theme",
 ]);
 
@@ -239,6 +241,10 @@ const ALL_EXTERNAL_TYPES = new Set([
 function mustSign(aType) {
   if (!SIGNED_TYPES.has(aType))
     return false;
+
+  if (aType == "webextension-langpack") {
+    return AddonSettings.LANGPACKS_REQUIRE_SIGNING;
+  }
 
   return AddonSettings.REQUIRE_SIGNING;
 }
@@ -2169,6 +2175,7 @@ var XPIProvider = {
       Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this);
       if (!AppConstants.MOZ_REQUIRE_SIGNING || Cu.isInAutomation)
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this);
+      Services.prefs.addObserver(PREF_LANGPACK_SIGNATURES, this);
       Services.prefs.addObserver(PREF_ALLOW_LEGACY, this);
       Services.prefs.addObserver(PREF_ALLOW_NON_MPC, this);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
@@ -4029,6 +4036,7 @@ var XPIProvider = {
         this.updateAddonAppDisabledStates();
         break;
       case PREF_XPI_SIGNATURES_REQUIRED:
+      case PREF_LANGPACK_SIGNATURES:
       case PREF_ALLOW_LEGACY:
       case PREF_ALLOW_NON_MPC:
         this.updateAddonAppDisabledStates();
@@ -6983,6 +6991,7 @@ var XPIInternal = {
   KEY_APP_SYSTEM_ADDONS,
   KEY_APP_SYSTEM_DEFAULTS,
   KEY_APP_TEMPORARY,
+  SIGNED_TYPES,
   TEMPORARY_ADDON_SUFFIX,
   TOOLKIT_ID,
   XPIStates,
@@ -6990,6 +6999,7 @@ var XPIInternal = {
   isTheme,
   isUsableAddon,
   isWebExtension,
+  mustSign,
   recordAddonTelemetry,
 
   get XPIDatabase() { return gGlobalScope.XPIDatabase; },
