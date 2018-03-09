@@ -8,13 +8,16 @@ package org.mozilla.focus.web;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.View;
 
 import org.mozilla.focus.session.Session;
+import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.Settings;
+import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
@@ -276,6 +279,12 @@ public class WebViewProvider {
                     // Check if we should handle an internal link
                     if (LocalizedContentGecko.INSTANCE.handleInternalContent(uri, session, getContext())) {
                         return true;
+                    }
+
+                    // Check if we should handle an external link
+                    final Uri urlToURI = Uri.parse(uri);
+                    if (!UrlUtils.isSupportedProtocol(urlToURI.getScheme()) && callback != null) {
+                        return IntentUtils.handleExternalUri(getContext(), GeckoWebView.this, uri);
                     }
 
                     // Otherwise allow the load to continue normally
