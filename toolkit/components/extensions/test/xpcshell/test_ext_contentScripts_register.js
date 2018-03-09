@@ -31,15 +31,24 @@ add_task(async function test_contentscripts_register_css() {
       }
     `;
 
+    const matches = ["http://localhost/*/file_sample_registered_styles.html"];
+
+    browser.test.assertThrows(() => {
+      browser.contentScripts.register({
+        matches,
+        unknownParam: "unexpected property",
+      });
+    }, /Unexpected property "unknownParam"/, "contentScripts.register throws on unexpected properties");
+
     let fileScript = await browser.contentScripts.register({
       css: [{file: "registered_ext_style.css"}],
-      matches: ["http://localhost/*/file_sample_registered_styles.html"],
+      matches,
       runAt: "document_start",
     });
 
     let textScript = await browser.contentScripts.register({
       css: [{code: cssCode}],
-      matches: ["http://localhost/*/file_sample_registered_styles.html"],
+      matches,
       runAt: "document_start",
     });
 
