@@ -30,6 +30,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
+#include "jit/AsyncInterrupt.h"
 #include "jit/JitCompartment.h"
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
@@ -44,7 +45,6 @@
 #include "vm/JSScript.h"
 #include "vm/TraceLogging.h"
 #include "vm/TraceLoggingGraph.h"
-#include "wasm/WasmSignalHandlers.h"
 
 #include "gc/GC-inl.h"
 #include "vm/JSContext-inl.h"
@@ -598,7 +598,7 @@ JSContext::requestInterrupt(InterruptMode mode)
         if (fx.isWaiting())
             fx.wake(FutexThread::WakeForJSInterrupt);
         fx.unlock();
-        InterruptRunningJitCode(this);
+        jit::InterruptRunningCode(this);
     }
 }
 

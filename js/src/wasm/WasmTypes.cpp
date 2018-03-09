@@ -784,7 +784,6 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
       case UnalignedExit:
       case TrapExit:
       case Throw:
-      case Interrupt:
         break;
       default:
         MOZ_CRASH("should use more specific constructor");

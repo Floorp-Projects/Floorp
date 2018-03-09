@@ -69,28 +69,6 @@ CallingActivation()
     return act->asJit();
 }
 
-static void*
-WasmHandleExecutionInterrupt()
-{
-    JitActivation* activation = CallingActivation();
-    MOZ_ASSERT(activation->isWasmInterrupted());
-
-    if (!CheckForInterrupt(activation->cx())) {
-        // If CheckForInterrupt failed, it is time to interrupt execution.
-        // Returning nullptr to the caller will jump to the throw stub which
-        // will call HandleThrow. The JitActivation must stay in the
-        // interrupted state until then so that stack unwinding works in
-        // HandleThrow.
-        return nullptr;
-    }
-
-    // If CheckForInterrupt succeeded, then execution can proceed and the
-    // interrupt is over.
-    void* resumePC = activation->wasmInterruptResumePC();
-    activation->finishWasmInterrupt();
-    return resumePC;
-}
-
 static bool
 WasmHandleDebugTrap()
 {
@@ -219,7 +197,6 @@ wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter)
         frame->leave(cx);
     }
 
-    MOZ_ASSERT(!cx->activation()->asJit()->isWasmInterrupted(), "unwinding clears the interrupt");
     MOZ_ASSERT(!cx->activation()->asJit()->isWasmTrapping(), "unwinding clears the trapping state");
 
     return iter.unwoundAddressOfReturnAddress();
@@ -287,7 +264,7 @@ WasmOldReportTrap(int32_t trapIndex)
 static void
 WasmReportTrap()
 {
-    Trap trap = TlsContext.get()->runtime()->wasmTrapData().trap;
+    Trap trap = TlsContext.get()->runtime()->wasmTrapData->trap;
     WasmOldReportTrap(int32_t(trap));
 }
 
@@ -511,9 +488,6 @@ void*
 wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
 {
     switch (imm) {
-      case SymbolicAddress::HandleExecutionInterrupt:
-        *abiType = Args_General0;
-        return FuncCast(WasmHandleExecutionInterrupt, *abiType);
       case SymbolicAddress::HandleDebugTrap:
         *abiType = Args_General0;
         return FuncCast(WasmHandleDebugTrap, *abiType);
@@ -692,7 +666,6 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
     // Some functions don't want to a thunk, because they already have one or
     // they don't have frame info.
     switch (sym) {
-      case SymbolicAddress::HandleExecutionInterrupt: // GenerateInterruptExit
       case SymbolicAddress::HandleDebugTrap:          // GenerateDebugTrapStub
       case SymbolicAddress::HandleThrow:              // GenerateThrowStub
       case SymbolicAddress::ReportTrap:               // GenerateTrapExit
@@ -874,8 +847,8 @@ PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives)
 // things:
 //  - bridging the few differences between the internal wasm ABI and the external
 //    native ABI (viz. float returns on x86 and soft-fp ARM)
-//  - executing an exit prologue/epilogue which in turn allows any asynchronous
-//    interrupt to see the full stack up to the wasm operation that called out
+//  - executing an exit prologue/epilogue which in turn allows any profiling
+//    iterator to see the full stack up to the wasm operation that called out
 //
 // Thunks are created for two kinds of C++ callees, enumerated above:
 //  - SymbolicAddress: for statically compiled calls in the wasm module

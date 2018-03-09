@@ -392,7 +392,7 @@ JitZoneGroup::patchIonBackedges(JSContext* cx, BackedgeTarget target)
         MOZ_ASSERT(cx->runtime()->jitRuntime()->preventBackedgePatching());
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
     } else {
-        // We must be called from InterruptRunningJitCode, or a signal handler
+        // We must be called from jit::InterruptRunningCode, or a signal handler
         // triggered there. rt->handlingJitInterrupt() ensures we can't reenter
         // this code.
         MOZ_ASSERT(!cx->runtime()->jitRuntime()->preventBackedgePatching());
