@@ -220,7 +220,7 @@ AudioConfig::ChannelLayout::SMPTEDefault(ChannelMap aMap)
   AutoTArray<Channel, MAX_AUDIO_CHANNELS> layout;
   uint32_t channels = 0;
 
-  uint32_t i = 1;
+  uint32_t i = 0;
   while (aMap) {
     if (aMap & 1) {
       layout.AppendElement(static_cast<Channel>(i));
@@ -230,6 +230,7 @@ AudioConfig::ChannelLayout::SMPTEDefault(ChannelMap aMap)
       }
     }
     aMap >>= 1;
+    i++;
   }
   return ChannelLayout(channels, layout.Elements());
 }
