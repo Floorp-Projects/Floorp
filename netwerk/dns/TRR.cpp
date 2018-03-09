@@ -46,7 +46,6 @@ NS_IMETHODIMP
 TRR::Notify(nsITimer *aTimer)
 {
   if (aTimer == mTimeout) {
-    LOG(("TRR request for %s timed out\n", mHost.get()));
     mTimeout = nullptr;
     Cancel();
   } else {
