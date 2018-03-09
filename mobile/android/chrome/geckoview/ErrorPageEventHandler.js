@@ -48,7 +48,7 @@ var ErrorPageEventHandler = {
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
             errorDoc.location = "about:home";
           }
-        } 
+        }
         break;
       }
     }
