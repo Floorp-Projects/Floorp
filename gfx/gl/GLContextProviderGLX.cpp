@@ -119,6 +119,7 @@ GLXLibrary::EnsureInitialized()
 
         /* functions introduced in GLX 1.3 */
         SYMBOL(ChooseFBConfig),
+        SYMBOL(ChooseVisual),
         SYMBOL(GetFBConfigAttrib),
         SYMBOL(GetFBConfigs),
         SYMBOL(CreatePixmap),
