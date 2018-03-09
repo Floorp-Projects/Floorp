@@ -229,7 +229,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   // If we have an invalid argument in the call, we emit the diagnostic to
   // signal it.
   if (InvalidArg) {
-    diag(CallRange.getBegin(), ErrorInvalidArg, DiagnosticIDs::Error)
+    diag(InvalidArg->getExprLoc(), ErrorInvalidArg, DiagnosticIDs::Error)
         << CallRange;
   }
 
