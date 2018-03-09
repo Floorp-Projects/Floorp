@@ -1,9 +1,29 @@
 language: rust
-rust:
-  - nightly
-  - beta
-  - stable
-  - 1.17.0
-script: make test
+
+jobs:
+  include:
+  - rust: 1.17.0
+    install:
+    # --precise requires Cargo.lock to already exist
+    - cargo update
+    # getopts is only used in tests. Its versions 0.2.16+ don’t build on 1.17.0
+    - cargo update -p getopts --precise 0.2.15
+    # data-url uses pub(crate) which is unstable in 1.17
+    script: cargo test --all-features -p url -p idna -p percent-encoding -p url_serde
+
+  - rust: stable
+    script: cargo test --all-features --all
+
+  - rust: beta
+    script: cargo test --all-features --all
+
+  - rust: nightly
+    script: cargo test --all-features --all
+
+  - rust: nightly
+    env: TARGET=WASM32  # For job list UI
+    install: rustup target add wasm32-unknown-unknown
+    script: cargo build --all --target=wasm32-unknown-unknown
+
 notifications:
   webhooks: http://build.servo.org:54856/travis

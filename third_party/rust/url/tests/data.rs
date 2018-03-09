@@ -29,6 +29,7 @@ fn check_invariants(url: &Url) {
 fn run_parsing(input: &str, base: &str, expected: Result<ExpectedAttributes, ()>) {
     let base = match Url::parse(&base) {
         Ok(base) => base,
+        Err(_) if expected.is_err() => return,
         Err(message) => panic!("Error parsing base {:?}: {}", base, message)
     };
     let (url, expected) = match (base.join(&input), expected) {

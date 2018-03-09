@@ -13,7 +13,7 @@ use std::io;
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4, SocketAddrV6, ToSocketAddrs};
 use std::vec;
 use parser::{ParseResult, ParseError};
-use percent_encoding::percent_decode;
+use percent_encoding::{percent_decode, utf8_percent_encode, SIMPLE_ENCODE_SET};
 use idna;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -73,7 +73,9 @@ impl<S> From<Host<S>> for HostInternal {
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Host<S=String> {
     /// A DNS domain name, as '.' dot-separated labels.
-    /// Non-ASCII labels are encoded in punycode per IDNA.
+    /// Non-ASCII labels are encoded in punycode per IDNA if this is the host of
+    /// a special URL, or percent encoded for non-special URLs. Hosts for
+    /// non-special URLs are also called opaque hosts.
     Domain(S),
 
     /// An IPv4 address.
@@ -157,6 +159,23 @@ impl Host<String> {
         } else {
             Ok(Host::Domain(domain.into()))
         }
+    }
+
+    // <https://url.spec.whatwg.org/#concept-opaque-host-parser>
+    pub fn parse_opaque(input: &str) -> Result<Self, ParseError> {
+        if input.starts_with('[') {
+            if !input.ends_with(']') {
+                return Err(ParseError::InvalidIpv6Address)
+            }
+            return parse_ipv6addr(&input[1..input.len() - 1]).map(Host::Ipv6)
+        }
+        if input.find(|c| matches!(c,
+            '\0' | '\t' | '\n' | '\r' | ' ' | '#' | '/' | ':' | '?' | '@' | '[' | '\\' | ']'
+        )).is_some() {
+            return Err(ParseError::InvalidDomainCharacter)
+        }
+        let s = utf8_percent_encode(input, SIMPLE_ENCODE_SET).to_string();
+        Ok(Host::Domain(s))
     }
 }
 
@@ -310,7 +329,7 @@ fn longest_zero_sequence(pieces: &[u16; 8]) -> (isize, isize) {
 }
 
 /// <https://url.spec.whatwg.org/#ipv4-number-parser>
-fn parse_ipv4number(mut input: &str) -> Result<u32, ()> {
+fn parse_ipv4number(mut input: &str) -> Result<Option<u32>, ()> {
     let mut r = 10;
     if input.starts_with("0x") || input.starts_with("0X") {
         input = &input[2..];
@@ -319,14 +338,30 @@ fn parse_ipv4number(mut input: &str) -> Result<u32, ()> {
         input = &input[1..];
         r = 8;
     }
+
+    // At the moment we can't know the reason why from_str_radix fails
+    // https://github.com/rust-lang/rust/issues/22639
+    // So instead we check if the input looks like a real number and only return
+    // an error when it's an overflow.
+    let valid_number = match r {
+        8 => input.chars().all(|c| c >= '0' && c <='7'),
+        10 => input.chars().all(|c| c >= '0' && c <='9'),
+        16 => input.chars().all(|c| (c >= '0' && c <='9') || (c >='a' && c <= 'f') || (c >= 'A' && c <= 'F')),
+        _ => false
+    };
+
+    if !valid_number {
+        return Ok(None);
+    }
+
     if input.is_empty() {
-        return Ok(0);
+        return Ok(Some(0));
     }
     if input.starts_with('+') {
-        return Err(())
+        return Ok(None);
     }
     match u32::from_str_radix(input, r) {
-        Ok(number) => Ok(number),
+        Ok(number) => Ok(Some(number)),
         Err(_) => Err(()),
     }
 }
@@ -344,15 +379,19 @@ fn parse_ipv4addr(input: &str) -> ParseResult<Option<Ipv4Addr>> {
         return Ok(None);
     }
     let mut numbers: Vec<u32> = Vec::new();
+    let mut overflow = false;
     for part in parts {
         if part == "" {
             return Ok(None);
         }
-        if let Ok(n) = parse_ipv4number(part) {
-            numbers.push(n);
-        } else {
-            return Ok(None);
-        }
+        match parse_ipv4number(part) {
+            Ok(Some(n)) => numbers.push(n),
+            Ok(None) => return Ok(None),
+            Err(()) => overflow = true
+        };
+    }
+    if overflow {
+        return Err(ParseError::InvalidIpv4Address);
     }
     let mut ipv4 = numbers.pop().expect("a non-empty list of numbers");
     // Equivalent to: ipv4 >= 256 ** (4 − numbers.len())
