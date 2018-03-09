@@ -19,14 +19,12 @@ namespace net {
 
 class TRRService
   : public nsIObserver
-  , public nsITimerCallback
   , public nsSupportsWeakReference
   , public AHostResolver
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSITIMERCALLBACK
 
   TRRService();
   nsresult Init();
@@ -81,9 +79,7 @@ private:
     CONFIRM_FAILED = 3
   };
   Atomic<ConfirmationState, Relaxed>  mConfirmationState;
-  RefPtr<TRR> mConfirmer;
-  nsCOMPtr<nsITimer> mRetryConfirmTimer;
-  uint32_t mRetryConfirmInterval; // milliseconds until retry
+  RefPtr<TRR>           mConfirmer;
 };
 
 extern TRRService *gTRRService;

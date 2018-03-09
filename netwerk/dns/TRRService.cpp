@@ -44,7 +44,6 @@ TRRService::TRRService()
   , mUseGET(false)
   , mClearTRRBLStorage(false)
   , mConfirmationState(CONFIRM_INIT)
-  , mRetryConfirmInterval(1000)
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 }
@@ -84,17 +83,11 @@ bool
 TRRService::Enabled()
 {
   if (mConfirmationState == CONFIRM_INIT && !mWaitForCaptive) {
-    LOG(("TRRService::Enabled => CONFIRM_TRYING\n"));
     mConfirmationState = CONFIRM_TRYING;
   }
 
   if (mConfirmationState == CONFIRM_TRYING) {
-    LOG(("TRRService::Enabled MaybeConfirm()\n"));
     MaybeConfirm();
-  }
-
-  if (mConfirmationState != CONFIRM_OK) {
-    LOG(("TRRService::Enabled mConfirmationState=%d\n", (int)mConfirmationState));
   }
 
   return (mConfirmationState == CONFIRM_OK);
@@ -297,8 +290,6 @@ TRRService::MaybeConfirm()
 {
   if ((mMode == MODE_NATIVEONLY) || mConfirmer ||
       mConfirmationState != CONFIRM_TRYING) {
-    LOG(("TRRService:MaybeConfirm mode=%d, mConfirmer=%p mConfirmationState=%d\n",
-         (int)mMode, mConfirmer, (int)mConfirmationState));
     return;
   }
   nsAutoCString host;
@@ -487,24 +478,6 @@ TRRService::TRRBlacklist(const nsACString &aHost, bool privateBrowsing, bool aPa
   }
 }
 
-NS_IMETHODIMP
-TRRService::Notify(nsITimer *aTimer)
-{
-  if (aTimer == mRetryConfirmTimer) {
-    mRetryConfirmTimer = nullptr;
-    if (mConfirmationState == CONFIRM_FAILED) {
-      LOG(("TRRService retry NS of %s\n", mConfirmationNS.get()));
-      mConfirmationState = CONFIRM_TRYING;
-      MaybeConfirm();
-    }
-  } else {
-    MOZ_CRASH("Unknown timer");
-  }
-
-  return NS_OK;
-}
-
-
 AHostResolver::LookupStatus
 TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRSet, bool pb)
 {
@@ -523,18 +496,6 @@ TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRS
     LOG(("TRRService finishing confirmation test %s %d %X\n",
          mPrivateURI.get(), (int)mConfirmationState, (unsigned int)status));
     mConfirmer = nullptr;
-    if ((mConfirmationState == CONFIRM_FAILED) && (mMode == MODE_TRRONLY)) {
-      // in TRR-only mode; retry failed confirmations
-      NS_NewTimerWithCallback(getter_AddRefs(mRetryConfirmTimer),
-                              this, mRetryConfirmInterval,
-                              nsITimer::TYPE_ONE_SHOT);
-      if (mRetryConfirmInterval < 64000) {
-        // double the interval up to this point
-        mRetryConfirmInterval *= 2;
-      }
-    } else {
-      mRetryConfirmInterval = 1000;
-    }
     return LOOKUP_OK;
   }
 
