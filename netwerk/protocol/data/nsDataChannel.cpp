@@ -8,10 +8,12 @@
 #include "nsDataChannel.h"
 
 #include "mozilla/Base64.h"
+#include "nsIOService.h"
 #include "nsDataHandler.h"
+#include "nsIPipe.h"
 #include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsEscape.h"
-#include "nsStringStream.h"
 
 using namespace mozilla;
 
@@ -84,6 +86,16 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
     }
 
     nsCOMPtr<nsIInputStream> bufInStream;
+    nsCOMPtr<nsIOutputStream> bufOutStream;
+
+    // create an unbounded pipe.
+    rv = NS_NewPipe(getter_AddRefs(bufInStream),
+                    getter_AddRefs(bufOutStream),
+                    nsIOService::gDefaultSegmentSize,
+                    UINT32_MAX,
+                    async, true);
+    if (NS_FAILED(rv))
+        return rv;
 
     uint32_t contentLen;
     if (lBase64) {
@@ -91,11 +103,9 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
         rv = Base64Decode(data, decodedData);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        contentLen = decodedData.Length();
-        rv = NS_NewCStringInputStream(getter_AddRefs(bufInStream), decodedData);
+        rv = bufOutStream->Write(decodedData.get(), decodedData.Length(), &contentLen);
     } else {
-        contentLen = data.Length();
-        rv = NS_NewCStringInputStream(getter_AddRefs(bufInStream), data);
+        rv = bufOutStream->Write(data.Data(), data.Length(), &contentLen);
     }
 
     if (NS_FAILED(rv))
