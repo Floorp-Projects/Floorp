@@ -2,6 +2,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// There are shutdown issues for which multiple rejections are left uncaught.
+// See bug 1018184 for resolving these issues.
+const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
+PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
+
 // On debug test slave, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
