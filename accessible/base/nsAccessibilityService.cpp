@@ -1687,13 +1687,15 @@ nsAccessibilityService::HasAccessible(nsIDOMNode* aDOMNode)
 // nsAccessibilityService private (DON'T put methods here)
 
 void
-nsAccessibilityService::SetConsumers(uint32_t aConsumers) {
+nsAccessibilityService::SetConsumers(uint32_t aConsumers, bool aNotify) {
   if (gConsumers & aConsumers) {
     return;
   }
 
   gConsumers |= aConsumers;
-  NotifyOfConsumersChange();
+  if (aNotify) {
+    NotifyOfConsumersChange();
+  }
 }
 
 void
@@ -1767,10 +1769,16 @@ MaybeShutdownAccService(uint32_t aFormerConsumer)
     return;
   }
 
+  // Still used by XPCOM
   if (nsCoreUtils::AccEventObserversExist() ||
       xpcAccessibilityService::IsInUse() ||
       accService->HasXPCDocuments()) {
-    // Still used by XPCOM
+    // In case the XPCOM flag was unset (possibly because of the shutdown
+    // timer in the xpcAccessibilityService) ensure it is still present. Note:
+    // this should be fixed when all the consumer logic is taken out as a
+    // separate class.
+    accService->SetConsumers(nsAccessibilityService::eXPCOM, false);
+
     if (aFormerConsumer != nsAccessibilityService::eXPCOM) {
       // Only unset non-XPCOM consumers.
       accService->UnsetConsumers(aFormerConsumer);

@@ -249,6 +249,12 @@ DefaultJitOptions::DefaultJitOptions()
     // included in the bounds check.
     SET_DEFAULT(wasmFoldOffsets, true);
 
+    // Controls whether two-tiered compilation should be requested when
+    // compiling a new wasm module, independently of other heuristics, and
+    // should be delayed to test both baseline and ion paths in compiled code,
+    // as well as the transition from one tier to the other.
+    SET_DEFAULT(wasmDelayTier2, false);
+
     // Until which wasm bytecode size should we accumulate functions, in order
     // to compile efficiently on helper threads. Baseline code compiles much
     // faster than Ion code so use scaled thresholds (see also bug 1320374).
