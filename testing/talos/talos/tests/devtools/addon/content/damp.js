@@ -43,6 +43,51 @@ function getActiveTab(window) {
   return window.gBrowser.selectedTab;
 }
 
+let gmm = window.getGroupMessageManager("browsers");
+
+const frameScript = "data:," + encodeURIComponent(`(${
+  function() {
+    addEventListener("load", function(event) {
+      let subframe = event.target != content.document;
+      sendAsyncMessage("browser-test-utils:loadEvent",
+        {subframe, url: event.target.documentURI});
+    }, true);
+  }
+})()`);
+
+gmm.loadFrameScript(frameScript, true);
+
+// This is duplicated from BrowserTestUtils.jsm
+function awaitBrowserLoaded(browser, includeSubFrames = false, wantLoad = null) {
+  // If browser belongs to tabbrowser-tab, ensure it has been
+  // inserted into the document.
+  let tabbrowser = browser.ownerGlobal.gBrowser;
+  if (tabbrowser && tabbrowser.getTabForBrowser) {
+    tabbrowser._insertBrowser(tabbrowser.getTabForBrowser(browser));
+  }
+
+  function isWanted(url) {
+    if (!wantLoad) {
+      return true;
+    } else if (typeof(wantLoad) == "function") {
+      return wantLoad(url);
+    }
+    // It's a string.
+    return wantLoad == url;
+  }
+
+  return new Promise(resolve => {
+    let mm = browser.ownerGlobal.messageManager;
+    mm.addMessageListener("browser-test-utils:loadEvent", function onLoad(msg) {
+      if (msg.target == browser && (!msg.data.subframe || includeSubFrames) &&
+          isWanted(msg.data.url)) {
+        mm.removeMessageListener("browser-test-utils:loadEvent", onLoad);
+        resolve(msg.data.url);
+      }
+    });
+  });
+}
+
 /* ************* Debugger Helper ***************/
 /*
  * These methods are used for working with debugger state changes in order
@@ -368,13 +413,9 @@ Damp.prototype = {
   },
 
   addTab(url) {
-    return new Promise((resolve, reject) => {
-      let tab = this._win.gBrowser.selectedTab = this._win.gBrowser.addTab(url);
-      let browser = tab.linkedBrowser;
-      browser.addEventListener("load", function onload() {
-        resolve(tab);
-      }, {capture: true, once: true});
-    });
+    let tab = this._win.gBrowser.selectedTab = this._win.gBrowser.addTab(url);
+    let browser = tab.linkedBrowser;
+    return awaitBrowserLoaded(browser);
   },
 
   closeCurrentTab() {
@@ -388,7 +429,7 @@ Damp.prototype = {
       if (typeof(onReload) == "function") {
         onReload().then(resolve);
       } else {
-        browser.addEventListener("load", resolve, {capture: true, once: true});
+        resolve(awaitBrowserLoaded(browser));
       }
       browser.reload();
     });
