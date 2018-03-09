@@ -1995,7 +1995,8 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         preserveJitCode_(false),
         cloneSingletons_(false),
         sharedMemoryAndAtomics_(false),
-        secureContext_(false)
+        secureContext_(false),
+        clampAndJitterTime_(true)
     {}
 
     // A null add-on ID means that the compartment is not associated with an
@@ -2071,6 +2072,12 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         return *this;
     }
 
+    bool clampAndJitterTime() const { return clampAndJitterTime_; }
+    CompartmentCreationOptions& setClampAndJitterTime(bool flag) {
+        clampAndJitterTime_ = flag;
+        return *this;
+    }
+
   private:
     JSAddonId* addonId_;
     JSTraceOp traceGlobal_;
@@ -2082,6 +2089,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     bool cloneSingletons_;
     bool sharedMemoryAndAtomics_;
     bool secureContext_;
+    bool clampAndJitterTime_;
 };
 
 /**
