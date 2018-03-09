@@ -47,6 +47,33 @@ var paymentDialogWrapper = {
    * Note: This method is async because formAutofillStorage plans to become async.
    *
    * @param {string} guid
+   * @returns {object} containing only the requested payer values.
+   */
+  async _convertProfileAddressToPayerData(guid) {
+    let addressData = formAutofillStorage.addresses.get(guid);
+    if (!addressData) {
+      throw new Error(`Payer address not found: ${guid}`);
+    }
+
+    let {
+      requestPayerName,
+      requestPayerEmail,
+      requestPayerPhone,
+    } = this.request.paymentOptions;
+
+    let payerData = {
+      payerName: requestPayerName ? addressData.name : "",
+      payerEmail: requestPayerEmail ? addressData.email : "",
+      payerPhone: requestPayerPhone ? addressData.tel : "",
+    };
+
+    return payerData;
+  },
+
+  /**
+   * Note: This method is async because formAutofillStorage plans to become async.
+   *
+   * @param {string} guid
    * @returns {nsIPaymentAddress}
    */
   async _convertProfileAddressToPaymentAddress(guid) {
@@ -375,6 +402,7 @@ var paymentDialogWrapper = {
   },
 
   async onPay({
+    selectedPayerAddressGUID: payerGUID,
     selectedPaymentCardGUID: paymentCardGUID,
     selectedPaymentCardSecurityCode: cardSecurityCode,
   }) {
@@ -388,9 +416,18 @@ var paymentDialogWrapper = {
       return;
     }
 
+    let {
+      payerName,
+      payerEmail,
+      payerPhone,
+    } = await this._convertProfileAddressToPayerData(payerGUID);
+
     this.pay({
       methodName: "basic-card",
       methodData,
+      payerName,
+      payerEmail,
+      payerPhone,
     });
   },
 

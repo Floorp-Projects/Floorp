@@ -48,7 +48,6 @@ const BUILT_IN_SECTIONS = {
       icon: "check"
     },
     shouldSendImpressionStats: true,
-    order: 0,
     dedupeFrom: ["highlights"]
   }),
   "feeds.section.highlights": options => ({
@@ -67,8 +66,7 @@ const BUILT_IN_SECTIONS = {
       message: {id: "highlights_empty_state"},
       icon: "highlights"
     },
-    shouldSendImpressionStats: false,
-    order: 1
+    shouldSendImpressionStats: false
   })
 };
 
@@ -116,7 +114,7 @@ const SectionsManager = {
       options = JSON.parse(optionsPrefValue);
     } catch (e) {
       options = {};
-      Cu.reportError("Problem parsing options pref", e);
+      Cu.reportError(`Problem parsing options pref for ${feedPrefName}`);
     }
     const section = BUILT_IN_SECTIONS[feedPrefName](options);
     section.pref.feed = feedPrefName;
@@ -282,6 +280,13 @@ class SectionsFeed {
   onAddSection(event, id, options) {
     if (options) {
       this.store.dispatch(ac.BroadcastToContent({type: at.SECTION_REGISTER, data: Object.assign({id}, options)}));
+
+      // Make sure the section is in sectionOrder pref. Otherwise, prepend it.
+      const orderedSections = this.orderedSectionIds;
+      if (!orderedSections.includes(id)) {
+        orderedSections.unshift(id);
+        this.store.dispatch(ac.SetPref("sectionOrder", orderedSections.join(",")));
+      }
     }
   }
 
@@ -301,6 +306,49 @@ class SectionsFeed {
       const action = {type: at.SECTION_UPDATE_CARD, data: {id, url, options}};
       this.store.dispatch(shouldBroadcast ? ac.BroadcastToContent(action) : ac.AlsoToPreloaded(action));
     }
+  }
+
+  get orderedSectionIds() {
+    return this.store.getState().Prefs.values.sectionOrder.split(",");
+  }
+
+  get enabledSectionIds() {
+    let sections = this.store.getState().Sections.filter(section => section.enabled).map(s => s.id);
+    // Top Sites is a special case. Append if show pref is on.
+    if (this.store.getState().Prefs.values.showTopSites) {
+      sections.push("topsites");
+    }
+    return sections;
+  }
+
+  moveSection(id, direction) {
+    const orderedSections = this.orderedSectionIds;
+    const enabledSections = this.enabledSectionIds;
+    let index = orderedSections.indexOf(id);
+    orderedSections.splice(index, 1);
+    if (direction > 0) {
+      // "Move Down"
+      while (index < orderedSections.length) {
+        // If the section at the index is enabled/visible, insert moved section after.
+        // Otherwise, move on to the next spot and check it.
+        if (enabledSections.includes(orderedSections[index++])) {
+          break;
+        }
+      }
+    } else {
+      // "Move Up"
+      while (index > 0) {
+        // If the section at the previous index is enabled/visible, insert moved section there.
+        // Otherwise, move on to the previous spot and check it.
+        index--;
+        if (enabledSections.includes(orderedSections[index])) {
+          break;
+        }
+      }
+    }
+
+    orderedSections.splice(index, 0, id);
+    this.store.dispatch(ac.SetPref("sectionOrder", orderedSections.join(",")));
   }
 
   onAction(action) {
@@ -335,6 +383,9 @@ class SectionsFeed {
         break;
       case at.SECTION_ENABLE:
         SectionsManager.enableSection(action.data);
+        break;
+      case at.SECTION_MOVE:
+        this.moveSection(action.data.id, action.data.direction);
         break;
       case at.UNINIT:
         this.uninit();

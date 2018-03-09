@@ -5,7 +5,6 @@
 
 "use strict";
 
-const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const {LocalizationHelper, ELLIPSIS} = require("devtools/shared/l10n");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
@@ -64,21 +63,6 @@ const COOKIE_KEY_MAP = {
 // trimmed with ellipsis if it's longer.
 const ITEM_NAME_MAX_LENGTH = 32;
 
-function addEllipsis(name) {
-  if (name.length > ITEM_NAME_MAX_LENGTH) {
-    if (/^https?:/.test(name)) {
-      // For URLs, add ellipsis in the middle
-      const halfLen = ITEM_NAME_MAX_LENGTH / 2;
-      return name.slice(0, halfLen) + ELLIPSIS + name.slice(-halfLen);
-    }
-
-    // For other strings, add ellipsis at the end
-    return name.substr(0, ITEM_NAME_MAX_LENGTH) + ELLIPSIS;
-  }
-
-  return name;
-}
-
 /**
  * StorageUI is controls and builds the UI of the Storage Inspector.
  *
@@ -89,148 +73,144 @@ function addEllipsis(name) {
  * @param {Window} panelWin
  *        Window of the toolbox panel to populate UI in.
  */
-function StorageUI(front, target, panelWin, toolbox) {
-  EventEmitter.decorate(this);
+class StorageUI {
+  constructor(front, target, panelWin, toolbox) {
+    EventEmitter.decorate(this);
 
-  this._target = target;
-  this._window = panelWin;
-  this._panelDoc = panelWin.document;
-  this._toolbox = toolbox;
-  this.front = front;
+    this._target = target;
+    this._window = panelWin;
+    this._panelDoc = panelWin.document;
+    this._toolbox = toolbox;
+    this.front = front;
+    this.storageTypes = null;
+    this.sidebarToggledOpen = null;
+    this.shouldLoadMoreItems = true;
 
-  let treeNode = this._panelDoc.getElementById("storage-tree");
-  this.tree = new TreeWidget(treeNode, {
-    defaultType: "dir",
-    contextMenuId: "storage-tree-popup"
-  });
-  this.onHostSelect = this.onHostSelect.bind(this);
-  this.tree.on("select", this.onHostSelect);
+    let treeNode = this._panelDoc.getElementById("storage-tree");
+    this.tree = new TreeWidget(treeNode, {
+      defaultType: "dir",
+      contextMenuId: "storage-tree-popup"
+    });
+    this.onHostSelect = this.onHostSelect.bind(this);
+    this.tree.on("select", this.onHostSelect);
 
-  let tableNode = this._panelDoc.getElementById("storage-table");
-  this.table = new TableWidget(tableNode, {
-    emptyText: L10N.getStr("table.emptyText"),
-    highlightUpdated: true,
-    cellContextMenuId: "storage-table-popup"
-  });
+    let tableNode = this._panelDoc.getElementById("storage-table");
+    this.table = new TableWidget(tableNode, {
+      emptyText: L10N.getStr("table.emptyText"),
+      highlightUpdated: true,
+      cellContextMenuId: "storage-table-popup"
+    });
 
-  this.updateObjectSidebar = this.updateObjectSidebar.bind(this);
-  this.table.on(TableWidget.EVENTS.ROW_SELECTED, this.updateObjectSidebar);
+    this.updateObjectSidebar = this.updateObjectSidebar.bind(this);
+    this.table.on(TableWidget.EVENTS.ROW_SELECTED, this.updateObjectSidebar);
 
-  this.handleScrollEnd = this.handleScrollEnd.bind(this);
-  this.table.on(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
+    this.handleScrollEnd = this.handleScrollEnd.bind(this);
+    this.table.on(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
 
-  this.editItem = this.editItem.bind(this);
-  this.table.on(TableWidget.EVENTS.CELL_EDIT, this.editItem);
+    this.editItem = this.editItem.bind(this);
+    this.table.on(TableWidget.EVENTS.CELL_EDIT, this.editItem);
 
-  this.sidebar = this._panelDoc.getElementById("storage-sidebar");
-  this.sidebar.setAttribute("width", "300");
-  this.view = new VariablesView(this.sidebar.firstChild,
-                                GENERIC_VARIABLES_VIEW_SETTINGS);
+    this.sidebar = this._panelDoc.getElementById("storage-sidebar");
+    this.sidebar.setAttribute("width", "300");
+    this.view = new VariablesView(this.sidebar.firstChild,
+                                  GENERIC_VARIABLES_VIEW_SETTINGS);
 
-  this.filterItems = this.filterItems.bind(this);
-  this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
-  this.setupToolbar();
+    this.filterItems = this.filterItems.bind(this);
+    this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
+    this.setupToolbar();
 
-  let shortcuts = new KeyShortcuts({
-    window: this._panelDoc.defaultView,
-  });
-  let key = L10N.getStr("storage.filter.key");
-  shortcuts.on(key, event => {
-    event.preventDefault();
-    this.searchBox.focus();
-  });
+    let shortcuts = new KeyShortcuts({
+      window: this._panelDoc.defaultView,
+    });
+    let key = L10N.getStr("storage.filter.key");
+    shortcuts.on(key, event => {
+      event.preventDefault();
+      this.searchBox.focus();
+    });
 
-  this.front.listStores().then(storageTypes => {
-    this.populateStorageTree(storageTypes);
-  }).catch(e => {
-    if (!this._toolbox || this._toolbox._destroyer) {
-      // The toolbox is in the process of being destroyed... in this case throwing here
-      // is expected and normal so let's ignore the error.
-      return;
-    }
+    this.front.listStores().then(storageTypes => {
+      this.populateStorageTree(storageTypes);
+    }).catch(e => {
+      if (!this._toolbox || this._toolbox._destroyer) {
+        // The toolbox is in the process of being destroyed... in this case throwing here
+        // is expected and normal so let's ignore the error.
+        return;
+      }
 
-    // The toolbox is open so the error is unexpected and real so let's log it.
-    console.error(e);
-  });
+      // The toolbox is open so the error is unexpected and real so let's log it.
+      console.error(e);
+    });
 
-  this.onUpdate = this.onUpdate.bind(this);
-  this.front.on("stores-update", this.onUpdate);
-  this.onCleared = this.onCleared.bind(this);
-  this.front.on("stores-cleared", this.onCleared);
+    this.onUpdate = this.onUpdate.bind(this);
+    this.front.on("stores-update", this.onUpdate);
+    this.onCleared = this.onCleared.bind(this);
+    this.front.on("stores-cleared", this.onCleared);
 
-  this.handleKeypress = this.handleKeypress.bind(this);
-  this._panelDoc.addEventListener("keypress", this.handleKeypress);
+    this.handleKeypress = this.handleKeypress.bind(this);
+    this._panelDoc.addEventListener("keypress", this.handleKeypress);
 
-  this.onTreePopupShowing = this.onTreePopupShowing.bind(this);
-  this._treePopup = this._panelDoc.getElementById("storage-tree-popup");
-  this._treePopup.addEventListener("popupshowing", this.onTreePopupShowing);
+    this.onTreePopupShowing = this.onTreePopupShowing.bind(this);
+    this._treePopup = this._panelDoc.getElementById("storage-tree-popup");
+    this._treePopup.addEventListener("popupshowing", this.onTreePopupShowing);
 
-  this.onTablePopupShowing = this.onTablePopupShowing.bind(this);
-  this._tablePopup = this._panelDoc.getElementById("storage-table-popup");
-  this._tablePopup.addEventListener("popupshowing", this.onTablePopupShowing);
+    this.onTablePopupShowing = this.onTablePopupShowing.bind(this);
+    this._tablePopup = this._panelDoc.getElementById("storage-table-popup");
+    this._tablePopup.addEventListener("popupshowing", this.onTablePopupShowing);
 
-  this.onRefreshTable = this.onRefreshTable.bind(this);
-  this.onAddItem = this.onAddItem.bind(this);
-  this.onRemoveItem = this.onRemoveItem.bind(this);
-  this.onRemoveAllFrom = this.onRemoveAllFrom.bind(this);
-  this.onRemoveAll = this.onRemoveAll.bind(this);
-  this.onRemoveAllSessionCookies = this.onRemoveAllSessionCookies.bind(this);
-  this.onRemoveTreeItem = this.onRemoveTreeItem.bind(this);
+    this.onRefreshTable = this.onRefreshTable.bind(this);
+    this.onAddItem = this.onAddItem.bind(this);
+    this.onRemoveItem = this.onRemoveItem.bind(this);
+    this.onRemoveAllFrom = this.onRemoveAllFrom.bind(this);
+    this.onRemoveAll = this.onRemoveAll.bind(this);
+    this.onRemoveAllSessionCookies = this.onRemoveAllSessionCookies.bind(this);
+    this.onRemoveTreeItem = this.onRemoveTreeItem.bind(this);
 
-  this._refreshButton = this._panelDoc.getElementById("refresh-button");
-  this._refreshButton.addEventListener("command", this.onRefreshTable);
+    this._refreshButton = this._panelDoc.getElementById("refresh-button");
+    this._refreshButton.addEventListener("command", this.onRefreshTable);
 
-  this._addButton = this._panelDoc.getElementById("add-button");
-  this._addButton.addEventListener("command", this.onAddItem);
+    this._addButton = this._panelDoc.getElementById("add-button");
+    this._addButton.addEventListener("command", this.onAddItem);
 
-  this._tablePopupAddItem = this._panelDoc.getElementById(
-    "storage-table-popup-add");
-  this._tablePopupAddItem.addEventListener("command", this.onAddItem);
+    this._tablePopupAddItem = this._panelDoc.getElementById(
+      "storage-table-popup-add");
+    this._tablePopupAddItem.addEventListener("command", this.onAddItem);
 
-  this._tablePopupDelete = this._panelDoc.getElementById(
-    "storage-table-popup-delete");
-  this._tablePopupDelete.addEventListener("command", this.onRemoveItem);
+    this._tablePopupDelete = this._panelDoc.getElementById(
+      "storage-table-popup-delete");
+    this._tablePopupDelete.addEventListener("command", this.onRemoveItem);
 
-  this._tablePopupDeleteAllFrom = this._panelDoc.getElementById(
-    "storage-table-popup-delete-all-from");
-  this._tablePopupDeleteAllFrom.addEventListener("command",
-    this.onRemoveAllFrom);
+    this._tablePopupDeleteAllFrom = this._panelDoc.getElementById(
+      "storage-table-popup-delete-all-from");
+    this._tablePopupDeleteAllFrom.addEventListener("command",
+      this.onRemoveAllFrom);
 
-  this._tablePopupDeleteAll = this._panelDoc.getElementById(
-    "storage-table-popup-delete-all");
-  this._tablePopupDeleteAll.addEventListener("command", this.onRemoveAll);
+    this._tablePopupDeleteAll = this._panelDoc.getElementById(
+      "storage-table-popup-delete-all");
+    this._tablePopupDeleteAll.addEventListener("command", this.onRemoveAll);
 
-  this._tablePopupDeleteAllSessionCookies = this._panelDoc.getElementById(
-    "storage-table-popup-delete-all-session-cookies");
-  this._tablePopupDeleteAllSessionCookies.addEventListener("command",
-    this.onRemoveAllSessionCookies);
+    this._tablePopupDeleteAllSessionCookies = this._panelDoc.getElementById(
+      "storage-table-popup-delete-all-session-cookies");
+    this._tablePopupDeleteAllSessionCookies.addEventListener("command",
+      this.onRemoveAllSessionCookies);
 
-  this._treePopupDeleteAll = this._panelDoc.getElementById(
-    "storage-tree-popup-delete-all");
-  this._treePopupDeleteAll.addEventListener("command", this.onRemoveAll);
+    this._treePopupDeleteAll = this._panelDoc.getElementById(
+      "storage-tree-popup-delete-all");
+    this._treePopupDeleteAll.addEventListener("command", this.onRemoveAll);
 
-  this._treePopupDeleteAllSessionCookies = this._panelDoc.getElementById(
-    "storage-tree-popup-delete-all-session-cookies");
-  this._treePopupDeleteAllSessionCookies.addEventListener("command",
-    this.onRemoveAllSessionCookies);
+    this._treePopupDeleteAllSessionCookies = this._panelDoc.getElementById(
+      "storage-tree-popup-delete-all-session-cookies");
+    this._treePopupDeleteAllSessionCookies.addEventListener("command",
+      this.onRemoveAllSessionCookies);
 
-  this._treePopupDelete = this._panelDoc.getElementById("storage-tree-popup-delete");
-  this._treePopupDelete.addEventListener("command", this.onRemoveTreeItem);
-}
-
-exports.StorageUI = StorageUI;
-
-StorageUI.prototype = {
-
-  storageTypes: null,
-  sidebarToggledOpen: null,
-  shouldLoadMoreItems: true,
+    this._treePopupDelete = this._panelDoc.getElementById("storage-tree-popup-delete");
+    this._treePopupDelete.addEventListener("command", this.onRemoveTreeItem);
+  }
 
   set animationsEnabled(value) {
     this._panelDoc.documentElement.classList.toggle("no-animate", !value);
-  },
+  }
 
-  destroy: function () {
+  destroy() {
     this.table.off(TableWidget.EVENTS.ROW_SELECTED, this.updateObjectSidebar);
     this.table.off(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
     this.table.off(TableWidget.EVENTS.CELL_EDIT, this.editItem);
@@ -260,9 +240,9 @@ StorageUI.prototype = {
     this._tablePopupDeleteAll.removeEventListener("command", this.onRemoveAll);
     this._tablePopupDeleteAllSessionCookies.removeEventListener("command",
       this.onRemoveAllSessionCookies);
-  },
+  }
 
-  setupToolbar: function () {
+  setupToolbar() {
     this.searchBox = this._panelDoc.getElementById("storage-searchbox");
     this.searchBox.addEventListener("command", this.filterItems);
 
@@ -271,9 +251,9 @@ StorageUI.prototype = {
     this.updateSidebarToggleButton();
 
     this.sidebarToggleBtn.addEventListener("click", this.onPaneToggleButtonClicked);
-  },
+  }
 
-  onPaneToggleButtonClicked: function () {
+  onPaneToggleButtonClicked() {
     if (this.sidebar.hidden && this.table.selectedRow) {
       this.sidebar.hidden = false;
       this.sidebarToggledOpen = true;
@@ -282,9 +262,9 @@ StorageUI.prototype = {
       this.sidebarToggledOpen = false;
       this.hideSidebar();
     }
-  },
+  }
 
-  updateSidebarToggleButton: function () {
+  updateSidebarToggleButton() {
     let title;
     this.sidebarToggleBtn.hidden = !this.table.hasSelectedRow;
 
@@ -297,21 +277,21 @@ StorageUI.prototype = {
     }
 
     this.sidebarToggleBtn.setAttribute("tooltiptext", title);
-  },
+  }
 
   /**
    * Hide the object viewer sidebar
    */
-  hideSidebar: function () {
+  hideSidebar() {
     this.sidebar.hidden = true;
     this.updateSidebarToggleButton();
-  },
+  }
 
-  getCurrentFront: function () {
+  getCurrentFront() {
     let type = this.table.datatype;
 
     return this.storageTypes[type];
-  },
+  }
 
   /**
    *  Make column fields editable
@@ -319,26 +299,26 @@ StorageUI.prototype = {
    *  @param {Array} editableFields
    *         An array of keys of columns to be made editable
    */
-  makeFieldsEditable: function* (editableFields) {
+  makeFieldsEditable(editableFields) {
     if (editableFields && editableFields.length > 0) {
       this.table.makeFieldsEditable(editableFields);
     } else if (this.table._editableFieldsEngine) {
       this.table._editableFieldsEngine.destroy();
     }
-  },
+  }
 
-  editItem: function (data) {
+  editItem(data) {
     let front = this.getCurrentFront();
 
     front.editItem(data);
-  },
+  }
 
   /**
    * Removes the given item from the storage table. Reselects the next item in
    * the table and repopulates the sidebar with that item's data if the item
    * being removed was selected.
    */
-  removeItemFromTable: function (name) {
+  async removeItemFromTable(name) {
     if (this.table.isSelected(name) && this.table.items.size > 1) {
       if (this.table.selectedIndex == 0) {
         this.table.selectNextRow();
@@ -348,8 +328,8 @@ StorageUI.prototype = {
     }
 
     this.table.remove(name);
-    this.updateObjectSidebar();
-  },
+    await this.updateObjectSidebar();
+  }
 
   /**
    * Event handler for "stores-cleared" event coming from the storage actor.
@@ -357,7 +337,7 @@ StorageUI.prototype = {
    * @param {object} response
    *        An object containing which storage types were cleared
    */
-  onCleared: function (response) {
+  onCleared(response) {
     function* enumPaths() {
       for (let type in response) {
         if (Array.isArray(response[type])) {
@@ -396,7 +376,7 @@ StorageUI.prototype = {
         break;
       }
     }
-  },
+  }
 
   /**
    * Event handler for "stores-update" event coming from the storage actor.
@@ -421,30 +401,36 @@ StorageUI.prototype = {
    *        of the changed store objects. This array is empty for deleted object
    *        if the host was completely removed.
    */
-  onUpdate: function ({ changed, added, deleted }) {
-    if (deleted) {
-      this.handleDeletedItems(deleted);
-    }
-
+  async onUpdate({ changed, added, deleted }) {
     if (added) {
-      this.handleAddedItems(added);
+      await this.handleAddedItems(added);
     }
 
     if (changed) {
-      this.handleChangedItems(changed);
+      await this.handleChangedItems(changed);
+    }
+
+    // We are dealing with batches of changes here. Deleted **MUST** come last in case it
+    // is in the same batch as added and changed events e.g.
+    //   - An item is changed then deleted in the same batch: deleted then changed will
+    //     display an item that has been deleted.
+    //   - An item is added then deleted in the same batch: deleted then added will
+    //     display an item that has been deleted.
+    if (deleted) {
+      await this.handleDeletedItems(deleted);
     }
 
     if (added || deleted || changed) {
       this.emit("store-objects-updated");
     }
-  },
+  }
 
   /**
    * Handle added items received by onUpdate
    *
    * @param {object} See onUpdate docs
    */
-  handleAddedItems: function (added) {
+  async handleAddedItems(added) {
     for (let type in added) {
       for (let host in added[type]) {
         this.tree.add([type, {id: host, type: "url"}]);
@@ -457,8 +443,8 @@ StorageUI.prototype = {
             this.tree.add([type, host, ...name]);
             if (!this.tree.selectedItem) {
               this.tree.selectedItem = [type, host, name[0], name[1]];
-              this.fetchStorageObjects(type, host, [JSON.stringify(name)],
-                                       REASON.NEW_ROW);
+              await this.fetchStorageObjects(type, host, [JSON.stringify(name)],
+                                              REASON.NEW_ROW);
             }
           } catch (ex) {
             // Do nothing
@@ -466,19 +452,19 @@ StorageUI.prototype = {
         }
 
         if (this.tree.isSelected([type, host])) {
-          this.fetchStorageObjects(type, host, added[type][host],
-                                   REASON.NEW_ROW);
+          await this.fetchStorageObjects(type, host, added[type][host],
+                                          REASON.NEW_ROW);
         }
       }
     }
-  },
+  }
 
   /**
    * Handle deleted items received by onUpdate
    *
    * @param {object} See onUpdate docs
    */
-  handleDeletedItems: function (deleted) {
+  async handleDeletedItems(deleted) {
     for (let type in deleted) {
       for (let host in deleted[type]) {
         if (!deleted[type][host].length) {
@@ -511,26 +497,26 @@ StorageUI.prototype = {
               if (names.length > 0) {
                 let tableItemName = names.pop();
                 if (this.tree.isSelected([type, host, ...names])) {
-                  this.removeItemFromTable(tableItemName);
+                  await this.removeItemFromTable(tableItemName);
                 }
               }
             } catch (ex) {
               if (this.tree.isSelected([type, host])) {
-                this.removeItemFromTable(name);
+                await this.removeItemFromTable(name);
               }
             }
           }
         }
       }
     }
-  },
+  }
 
   /**
    * Handle changed items received by onUpdate
    *
    * @param {object} See onUpdate docs
    */
-  handleChangedItems: function (changed) {
+  async handleChangedItems(changed) {
     let [type, host, db, objectStore] = this.tree.selectedItem;
     if (!changed[type] || !changed[type][host] ||
         changed[type][host].length == 0) {
@@ -544,11 +530,11 @@ StorageUI.prototype = {
           toUpdate.push(name);
         }
       }
-      this.fetchStorageObjects(type, host, toUpdate, REASON.UPDATE);
+      await this.fetchStorageObjects(type, host, toUpdate, REASON.UPDATE);
     } catch (ex) {
-      this.fetchStorageObjects(type, host, changed[type][host], REASON.UPDATE);
+      await this.fetchStorageObjects(type, host, changed[type][host], REASON.UPDATE);
     }
-  },
+  }
 
   /**
    * Fetches the storage objects from the storage actor and populates the
@@ -563,7 +549,7 @@ StorageUI.prototype = {
    * @param {Constant} reason
    *        See REASON constant at top of file.
    */
-  fetchStorageObjects: Task.async(function* (type, host, names, reason) {
+  async fetchStorageObjects(type, host, names, reason) {
     let fetchOpts = reason === REASON.NEXT_50_ITEMS ? {offset: this.itemOffset}
                                                     : {};
     let storageType = this.storageTypes[type];
@@ -593,32 +579,32 @@ StorageUI.prototype = {
           }
         }
 
-        this.actorSupportsAddItem = yield this._target.actorHasMethod(type, "addItem");
+        this.actorSupportsAddItem = await this._target.actorHasMethod(type, "addItem");
         this.actorSupportsRemoveItem =
-          yield this._target.actorHasMethod(type, "removeItem");
+          await this._target.actorHasMethod(type, "removeItem");
         this.actorSupportsRemoveAll =
-          yield this._target.actorHasMethod(type, "removeAll");
+          await this._target.actorHasMethod(type, "removeAll");
         this.actorSupportsRemoveAllSessionCookies =
-          yield this._target.actorHasMethod(type, "removeAllSessionCookies");
+          await this._target.actorHasMethod(type, "removeAllSessionCookies");
 
-        yield this.resetColumns(type, host, subType);
+        await this.resetColumns(type, host, subType);
       }
 
-      let {data} = yield storageType.getStoreObjects(host, names, fetchOpts);
+      let {data} = await storageType.getStoreObjects(host, names, fetchOpts);
       if (data.length) {
-        this.populateTable(data, reason);
+        await this.populateTable(data, reason);
       }
-      yield this.updateToolbar();
+      this.updateToolbar();
       this.emit("store-objects-updated");
     } catch (ex) {
       console.error(ex);
     }
-  }),
+  }
 
   /**
    * Updates the toolbar hiding and showing buttons as appropriate.
    */
-  updateToolbar: Task.async(function* () {
+  updateToolbar() {
     let item = this.tree.selectedItem;
     let howManyNodesIn = item ? item.length : 0;
 
@@ -634,7 +620,7 @@ StorageUI.prototype = {
       this._addButton.hidden = true;
       this._addButton.removeAttribute("tooltiptext");
     }
-  }),
+  }
 
   /**
    * Populates the storage tree which displays the list of storages present for
@@ -644,7 +630,7 @@ StorageUI.prototype = {
    *        List of storages and their corresponding hosts returned by the
    *        StorageFront.listStores call.
    */
-  populateStorageTree: function (storageTypes) {
+  populateStorageTree(storageTypes) {
     this.storageTypes = {};
     for (let type in storageTypes) {
       // Ignore `from` field, which is just a protocol.js implementation
@@ -681,19 +667,19 @@ StorageUI.prototype = {
         }
       }
     }
-  },
+  }
 
   /**
    * Populates the selected entry from the table in the sidebar for a more
    * detailed view.
    */
-  updateObjectSidebar: Task.async(function* () {
+  async updateObjectSidebar() {
     let item = this.table.selectedRow;
     let value;
 
     // Get the string value (async action) and the update the UI synchronously.
     if (item && item.name && item.valueActor) {
-      value = yield item.valueActor.string();
+      value = await item.valueActor.string();
     }
 
     // Bail if the selectedRow is no longer selected, the item doesn't exist or the state
@@ -762,7 +748,7 @@ StorageUI.prototype = {
     }
 
     this.emit("sidebar-updated");
-  }),
+  }
 
   /**
    * Tries to parse a string value into either a json or a key-value separated
@@ -774,7 +760,7 @@ StorageUI.prototype = {
    * @param {string} value
    *        The string to be parsed into an object
    */
-  parseItemValue: function (name, originalValue) {
+  parseItemValue(name, originalValue) {
     // Find if value is URLEncoded ie
     let decodedValue = "";
     try {
@@ -811,13 +797,13 @@ StorageUI.prototype = {
     let view = this.view;
     jsonObject[name] = json;
     let valueScope = view.getScopeAtIndex(1) ||
-                     view.addScope(L10N.getStr("storage.parsedValue.label"));
+                      view.addScope(L10N.getStr("storage.parsedValue.label"));
     valueScope.expanded = true;
     let jsonVar = valueScope.addItem("", Object.create(null), {relaxed: true});
     jsonVar.expanded = true;
     jsonVar.twisty = true;
     jsonVar.populate(jsonObject, {expanded: true});
-  },
+  }
 
   /**
    * Tries to parse a string into an object on the basis of key-value pairs,
@@ -827,7 +813,7 @@ StorageUI.prototype = {
    * @param {string} value
    *        The string to be parsed into an object or array
    */
-  _extractKeyValPairs: function (value) {
+  _extractKeyValPairs(value) {
     let makeObject = (keySep, pairSep) => {
       let object = {};
       for (let pair of value.split(pairSep)) {
@@ -867,7 +853,7 @@ StorageUI.prototype = {
       }
     }
     return null;
-  },
+  }
 
   /**
    * Select handler for the storage tree. Fetches details of the selected item
@@ -879,7 +865,7 @@ StorageUI.prototype = {
    *        An array of ids which represent the location of the selected item in
    *        the storage tree
    */
-  onHostSelect: function (item) {
+  async onHostSelect(item) {
     this.table.clear();
     this.hideSidebar();
     this.searchBox.value = "";
@@ -897,9 +883,9 @@ StorageUI.prototype = {
     if (item.length > 2) {
       names = [JSON.stringify(item.slice(2))];
     }
-    this.fetchStorageObjects(type, host, names, REASON.POPULATE);
+    await this.fetchStorageObjects(type, host, names, REASON.POPULATE);
     this.itemOffset = 0;
-  },
+  }
 
   /**
    * Resets the column headers in the storage table with the pased object `data`
@@ -913,7 +899,7 @@ StorageUI.prototype = {
    * @param {string} [subType]
    *        The sub type under the given type.
    */
-  resetColumns: function* (type, host, subtype) {
+  async resetColumns(type, host, subtype) {
     this.table.host = host;
     this.table.datatype = type;
 
@@ -922,7 +908,7 @@ StorageUI.prototype = {
     let editableFields = [];
     let hiddenFields = [];
     let privateFields = [];
-    let fields = yield this.getCurrentFront().getFields(subtype);
+    let fields = await this.getCurrentFront().getFields(subtype);
 
     fields.forEach(f => {
       if (!uniqueKey) {
@@ -962,8 +948,8 @@ StorageUI.prototype = {
     this.table.setColumns(columns, null, hiddenFields, privateFields);
     this.hideSidebar();
 
-    yield this.makeFieldsEditable(editableFields);
-  },
+    this.makeFieldsEditable(editableFields);
+  }
 
   /**
    * Populates or updates the rows in the storage table.
@@ -973,7 +959,7 @@ StorageUI.prototype = {
    * @param {Constant} reason
    *        See REASON constant at top of file.
    */
-  populateTable: function (data, reason) {
+  async populateTable(data, reason) {
     for (let item of data) {
       if (item.value) {
         item.valueActor = item.value;
@@ -1004,14 +990,14 @@ StorageUI.prototype = {
         case REASON.UPDATE:
           this.table.update(item);
           if (item == this.table.selectedRow && !this.sidebar.hidden) {
-            this.updateObjectSidebar();
+            await this.updateObjectSidebar();
           }
           break;
       }
 
       this.shouldLoadMoreItems = true;
     }
-  },
+  }
 
   /**
    * Handles keypress event on the body table to close the sidebar when open
@@ -1019,7 +1005,7 @@ StorageUI.prototype = {
    * @param {DOMEvent} event
    *        The event passed by the keypress event.
    */
-  handleKeypress: function (event) {
+  handleKeypress(event) {
     if (event.keyCode == KeyCodes.DOM_VK_ESCAPE && !this.sidebar.hidden) {
       // Stop Propagation to prevent opening up of split console
       this.hideSidebar();
@@ -1027,7 +1013,7 @@ StorageUI.prototype = {
       event.stopPropagation();
       event.preventDefault();
     }
-  },
+  }
 
   /**
    * Handles filtering the table
@@ -1036,12 +1022,12 @@ StorageUI.prototype = {
     let value = this.searchBox.value;
     this.table.filterItems(value, ["valueActor"]);
     this._panelDoc.documentElement.classList.toggle("filtering", !!value);
-  },
+  }
 
   /**
    * Handles endless scrolling for the table
    */
-  handleScrollEnd: function () {
+  async handleScrollEnd() {
     if (!this.shouldLoadMoreItems) {
       return;
     }
@@ -1054,21 +1040,21 @@ StorageUI.prototype = {
     if (item.length > 2) {
       names = [JSON.stringify(item.slice(2))];
     }
-    this.fetchStorageObjects(type, host, names, REASON.NEXT_50_ITEMS);
-  },
+    await this.fetchStorageObjects(type, host, names, REASON.NEXT_50_ITEMS);
+  }
 
   /**
    * Fires before a cell context menu with the "Add" or "Delete" action is
    * shown. If the currently selected storage object doesn't support adding or
    * removing items, prevent showing the menu.
    */
-  onTablePopupShowing: function (event) {
+  onTablePopupShowing(event) {
     let selectedItem = this.tree.selectedItem;
     let type = selectedItem[0];
 
     // IndexedDB only supports removing items from object stores (level 4 of the tree)
     if ((!this.actorSupportsAddItem && !this.actorSupportsRemoveItem &&
-         type !== "cookies") ||
+          type !== "cookies") ||
         (type === "indexedDB" && selectedItem.length !== 4)) {
       event.preventDefault();
       return;
@@ -1115,9 +1101,9 @@ StorageUI.prototype = {
     } else {
       this._tablePopupDeleteAllFrom.hidden = true;
     }
-  },
+  }
 
-  onTreePopupShowing: function (event) {
+  onTreePopupShowing(event) {
     let showMenu = false;
     let selectedItem = this.tree.selectedItem;
 
@@ -1160,7 +1146,7 @@ StorageUI.prototype = {
       // - IndexedDB databases (level 3 of the tree)
       // - Cache objects (level 3 of the tree)
       let showDelete = (type == "indexedDB" || type == "Cache") &&
-                       selectedItem.length == 3;
+                        selectedItem.length == 3;
       this._treePopupDelete.hidden = !showDelete;
       if (showDelete) {
         let itemName = addEllipsis(selectedItem[selectedItem.length - 1]);
@@ -1174,19 +1160,19 @@ StorageUI.prototype = {
     if (!showMenu) {
       event.preventDefault();
     }
-  },
+  }
 
   /**
    * Handles refreshing the selected storage
    */
-  onRefreshTable: function () {
-    this.onHostSelect(this.tree.selectedItem);
-  },
+  async onRefreshTable() {
+    await this.onHostSelect(this.tree.selectedItem);
+  }
 
   /**
    * Handles adding an item from the storage
    */
-  onAddItem: function () {
+  onAddItem() {
     let front = this.getCurrentFront();
     let [, host] = this.tree.selectedItem;
 
@@ -1194,12 +1180,12 @@ StorageUI.prototype = {
     this.table.scrollIntoViewOnUpdate = true;
     this.table.editBookmark = createGUID();
     front.addItem(this.table.editBookmark, host);
-  },
+  }
 
   /**
    * Handles removing an item from the storage
    */
-  onRemoveItem: function () {
+  onRemoveItem() {
     let [, host, ...path] = this.tree.selectedItem;
     let front = this.getCurrentFront();
     let rowId = this.table.contextMenuRowId;
@@ -1209,12 +1195,12 @@ StorageUI.prototype = {
       name = JSON.stringify([...path, name]);
     }
     front.removeItem(host, name);
-  },
+  }
 
   /**
    * Handles removing all items from the storage
    */
-  onRemoveAll: function () {
+  onRemoveAll() {
     // Cannot use this.currentActor() if the handler is called from the
     // tree context menu: it returns correct value only after the table
     // data from server are successfully fetched (and that's async).
@@ -1222,12 +1208,12 @@ StorageUI.prototype = {
     let front = this.getCurrentFront();
     let name = path.length > 0 ? JSON.stringify(path) : undefined;
     front.removeAll(host, name);
-  },
+  }
 
   /**
    * Handles removing all session cookies from the storage
    */
-  onRemoveAllSessionCookies: function () {
+  onRemoveAllSessionCookies() {
     // Cannot use this.currentActor() if the handler is called from the
     // tree context menu: it returns the correct value only after the
     // table data from server is successfully fetched (and that's async).
@@ -1235,22 +1221,22 @@ StorageUI.prototype = {
     let front = this.getCurrentFront();
     let name = path.length > 0 ? JSON.stringify(path) : undefined;
     front.removeAllSessionCookies(host, name);
-  },
+  }
 
   /**
    * Handles removing all cookies with exactly the same domain as the
    * cookie in the selected row.
    */
-  onRemoveAllFrom: function () {
+  onRemoveAllFrom() {
     let [, host] = this.tree.selectedItem;
     let front = this.getCurrentFront();
     let rowId = this.table.contextMenuRowId;
     let data = this.table.items.get(rowId);
 
     front.removeAll(host, data.host);
-  },
+  }
 
-  onRemoveTreeItem: function () {
+  onRemoveTreeItem() {
     let [type, host, ...path] = this.tree.selectedItem;
 
     if (type == "indexedDB" && path.length == 1) {
@@ -1258,9 +1244,9 @@ StorageUI.prototype = {
     } else if (type == "Cache" && path.length == 1) {
       this.removeCache(host, path[0]);
     }
-  },
+  }
 
-  removeDatabase: function (host, dbName) {
+  removeDatabase(host, dbName) {
     let front = this.getCurrentFront();
 
     front.removeDatabase(host, dbName).then(result => {
@@ -1280,14 +1266,16 @@ StorageUI.prototype = {
         null,
         notificationBox.PRIORITY_CRITICAL_LOW);
     });
-  },
+  }
 
-  removeCache: function (host, cacheName) {
+  removeCache(host, cacheName) {
     let front = this.getCurrentFront();
 
     front.removeItem(host, JSON.stringify([ cacheName ]));
-  },
-};
+  }
+}
+
+exports.StorageUI = StorageUI;
 
 // Helper Functions
 
@@ -1296,4 +1284,19 @@ function createGUID() {
     let r = Math.random() * 16 | 0, v = c == "c" ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
+}
+
+function addEllipsis(name) {
+  if (name.length > ITEM_NAME_MAX_LENGTH) {
+    if (/^https?:/.test(name)) {
+      // For URLs, add ellipsis in the middle
+      const halfLen = ITEM_NAME_MAX_LENGTH / 2;
+      return name.slice(0, halfLen) + ELLIPSIS + name.slice(-halfLen);
+    }
+
+    // For other strings, add ellipsis at the end
+    return name.substr(0, ITEM_NAME_MAX_LENGTH) + ELLIPSIS;
+  }
+
+  return name;
 }

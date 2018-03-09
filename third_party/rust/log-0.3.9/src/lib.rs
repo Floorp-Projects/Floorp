@@ -10,7 +10,7 @@
 
 //! A lightweight logging facade.
 //!
-//! The `log` crate provides a single logging API that abstracts over the
+//! A logging facade provides a single logging API that abstracts over the
 //! actual logging implementation. Libraries can use the logging API provided
 //! by this crate, and the consumer of those libraries can choose the logging
 //! framework that is most suitable for its use case.
@@ -19,10 +19,11 @@
 //! implementation that ignores all log messages. The overhead in this case
 //! is very small - just an integer load, comparison and jump.
 //!
-//! A log request consists of a _target_, a _level_, and a _body_. A target is a
-//! string which defaults to the module path of the location of the log request,
-//! though that default may be overridden. Logger implementations typically use
-//! the target to filter requests based on some user configuration.
+//! A log request consists of a target, a level, and a body. A target is a
+//! string which defaults to the module path of the location of the log
+//! request, though that default may be overridden. Logger implementations
+//! typically use the target to filter requests based on some user
+//! configuration.
 //!
 //! # Use
 //!
@@ -78,25 +79,21 @@
 //! ```rust,ignore
 //! #[macro_use]
 //! extern crate log;
-//! extern crate env_logger;
+//! extern crate my_logger;
 //!
 //! fn main() {
-//!     // Select env_logger, one possible logger implementation
-//!     // (see https://doc.rust-lang.org/log/env_logger/index.html)
-//!     env_logger::init().unwrap();
-//!     
+//!     my_logger::init();
+//!
 //!     info!("starting up");
-//!     error!("error: {}", 404);
-//!     
+//!
 //!     // ...
 //! }
 //! ```
 //!
 //! # Logger implementations
 //!
-//! Loggers implement the [`Log`] trait. Here's a very basic example that simply
-//! logs all messages at the [`Error`][level_link], [`Warn`][level_link] or
-//! [`Info`][level_link] levels to stdout:
+//! Loggers implement the `Log` trait. Here's a very basic example that simply
+//! logs all messages at the `Error`, `Warn` or `Info` levels to stdout:
 //!
 //! ```rust
 //! extern crate log;
@@ -120,16 +117,15 @@
 //! # fn main() {}
 //! ```
 //!
-//! Loggers are installed by calling the [`set_logger`] function. It takes a
-//! closure which is provided a [`MaxLogLevelFilter`] token and returns a
-//! [`Log`] trait object. The [`MaxLogLevelFilter`] token controls the global
-//! maximum log level. The logging facade uses this as an optimization to
-//! improve performance of log messages at levels that are disabled. In the
-//! case of our example logger, we'll want to set the maximum log level to
-//! [`Info`][level_link], since we ignore any [`Debug`][level_link] or
-//! [`Trace`][level_link] level log messages. A logging framework should
-//! provide a function that wraps a call to [`set_logger`], handling
-//! initialization of the logger:
+//! Loggers are installed by calling the `set_logger` function. It takes a
+//! closure which is provided a `MaxLogLevel` token and returns a `Log` trait
+//! object. The `MaxLogLevel` token controls the global maximum log level. The
+//! logging facade uses this as an optimization to improve performance of log
+//! messages at levels that are disabled. In the case of our example logger,
+//! we'll want to set the maximum log level to `Info`, since we ignore any
+//! `Debug` or `Trace` level log messages. A logging framework should provide a
+//! function that wraps a call to `set_logger`, handling initialization of the
+//! logger:
 //!
 //! ```rust
 //! # extern crate log;
@@ -154,8 +150,8 @@
 //! To use the `log` crate without depending on `libstd`, you need to specify
 //! `default-features = false` when specifying the dependency in `Cargo.toml`.
 //! This makes no difference to libraries using `log` since the logging API
-//! remains the same. However executables will need to use the [`set_logger_raw`]
-//! function to initialize a logger and the [`shutdown_logger_raw`] function to
+//! remains the same. However executables will need to use the `set_logger_raw`
+//! function to initialize a logger and the `shutdown_logger_raw` function to
 //! shut down the global logger before exiting:
 //!
 //! ```rust
@@ -187,19 +183,11 @@
 //!     })
 //! }
 //! ```
-//!
-//! [`Log`]: trait.Log.html
-//! [level_link]: enum.LogLevel.html
-//! [`set_logger`]: fn.set_logger.html
-//! [`MaxLogLevelFilter`]: struct.MaxLogLevelFilter.html
-//! [`set_logger_raw`]: fn.set_logger_raw.html
-//! [`shutdown_logger_raw`]: fn.shutdown_logger_raw.html
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://doc.rust-lang.org/log/")]
 #![warn(missing_docs)]
-#![deny(missing_debug_implementations)]
 #![cfg_attr(feature = "nightly", feature(panic_handler))]
 
 #![cfg_attr(not(feature = "use_std"), no_std)]
@@ -211,6 +199,7 @@
 
 #[cfg(not(feature = "use_std"))]
 extern crate core as std;
+extern crate log;
 
 use std::cmp;
 #[cfg(feature = "use_std")]
@@ -247,23 +236,17 @@ static mut LOGGER: *const Log = &NopLogger;
 static STATE: AtomicUsize = ATOMIC_USIZE_INIT;
 static REFCOUNT: AtomicUsize = ATOMIC_USIZE_INIT;
 
-const UNINITIALIZED: usize = 0;
 const INITIALIZING: usize = 1;
 const INITIALIZED: usize = 2;
-
-static MAX_LOG_LEVEL_FILTER: AtomicUsize = ATOMIC_USIZE_INIT;
 
 static LOG_LEVEL_NAMES: [&'static str; 6] = ["OFF", "ERROR", "WARN", "INFO",
                                              "DEBUG", "TRACE"];
 
-/// An enum representing the available verbosity levels of the logging framework.
+/// An enum representing the available verbosity levels of the logging framework
 ///
-/// Typical usage includes: checking if a certain `LogLevel` is enabled with
-/// [`log_enabled!`](macro.log_enabled.html), specifying the `LogLevel` of
-/// [`log!`](macro.log.html), and comparing a `LogLevel` directly to a
-/// [`LogLevelFilter`](enum.LogLevelFilter.html).
+/// A `LogLevel` may be compared directly to a `LogLevelFilter`.
 #[repr(usize)]
-#[derive(Copy, Eq, Debug, Hash)]
+#[derive(Copy, Eq, Debug)]
 pub enum LogLevel {
     /// The "error" level.
     ///
@@ -385,6 +368,26 @@ impl LogLevel {
         }
     }
 
+    fn from_new(level: log::Level) -> LogLevel {
+        match level {
+            log::Level::Error => LogLevel::Error,
+            log::Level::Warn => LogLevel::Warn,
+            log::Level::Info => LogLevel::Info,
+            log::Level::Debug => LogLevel::Debug,
+            log::Level::Trace => LogLevel::Trace,
+        }
+    }
+
+    fn to_new(&self) -> log::Level {
+        match *self {
+            LogLevel::Error => log::Level::Error,
+            LogLevel::Warn => log::Level::Warn,
+            LogLevel::Info => log::Level::Info,
+            LogLevel::Debug => log::Level::Debug,
+            LogLevel::Trace => log::Level::Trace,
+        }
+    }
+
     /// Returns the most verbose logging level.
     #[inline]
     pub fn max() -> LogLevel {
@@ -401,13 +404,9 @@ impl LogLevel {
 /// An enum representing the available verbosity level filters of the logging
 /// framework.
 ///
-/// A `LogLevelFilter` may be compared directly to a [`LogLevel`](enum.LogLevel.html).
-/// Use this type to [`get()`](struct.MaxLogLevelFilter.html#method.get) and
-/// [`set()`](struct.MaxLogLevelFilter.html#method.set) the
-/// [`MaxLogLevelFilter`](struct.MaxLogLevelFilter.html), or to match with the getter
-/// [`max_log_level()`](fn.max_log_level.html).
+/// A `LogLevelFilter` may be compared directly to a `LogLevel`.
 #[repr(usize)]
-#[derive(Copy, Eq, Debug, Hash)]
+#[derive(Copy, Eq, Debug)]
 pub enum LogLevelFilter {
     /// A level lower than all log levels.
     Off,
@@ -494,6 +493,29 @@ impl LogLevelFilter {
             _ => None
         }
     }
+
+    fn from_new(filter: log::LevelFilter) -> LogLevelFilter {
+        match filter {
+            log::LevelFilter::Off => LogLevelFilter::Off,
+            log::LevelFilter::Error => LogLevelFilter::Error,
+            log::LevelFilter::Warn => LogLevelFilter::Warn,
+            log::LevelFilter::Info => LogLevelFilter::Info,
+            log::LevelFilter::Debug => LogLevelFilter::Debug,
+            log::LevelFilter::Trace => LogLevelFilter::Trace,
+        }
+    }
+
+    fn to_new(&self) -> log::LevelFilter {
+        match *self {
+            LogLevelFilter::Off => log::LevelFilter::Off,
+            LogLevelFilter::Error => log::LevelFilter::Error,
+            LogLevelFilter::Warn => log::LevelFilter::Warn,
+            LogLevelFilter::Info => log::LevelFilter::Info,
+            LogLevelFilter::Debug => log::LevelFilter::Debug,
+            LogLevelFilter::Trace => log::LevelFilter::Trace,
+        }
+    }
+
     /// Returns the most verbose logging level filter.
     #[inline]
     pub fn max() -> LogLevelFilter {
@@ -509,12 +531,7 @@ impl LogLevelFilter {
     }
 }
 
-/// The "payload" of a log message. This structure is primarily used as a
-/// parameter in the [`log`] method of the [`Log`] trait.
-///
-/// [`log`]: trait.Log.html#tymethod.log
-/// [`Log`]: trait.Log.html
-#[derive(Debug)]
+/// The "payload" of a log message.
 pub struct LogRecord<'a> {
     metadata: LogMetadata<'a>,
     location: &'a LogLocation,
@@ -549,7 +566,6 @@ impl<'a> LogRecord<'a> {
 }
 
 /// Metadata about a log message.
-#[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct LogMetadata<'a> {
     level: LogLevel,
     target: &'a str,
@@ -601,7 +617,7 @@ impl Log for NopLogger {
 /// The fields of this struct are public so that they may be initialized by the
 /// `log!` macro. They are subject to change at any time and should never be
 /// accessed directly.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug)]
 pub struct LogLocation {
     #[doc(hidden)]
     pub __module_path: &'static str,
@@ -636,7 +652,6 @@ impl LogLocation {
 /// higher than the maximum log level filter will be ignored. A logger should
 /// make sure to keep the maximum log level filter in sync with its current
 /// configuration.
-#[allow(missing_copy_implementations)]
 pub struct MaxLogLevelFilter(());
 
 impl fmt::Debug for MaxLogLevelFilter {
@@ -653,7 +668,7 @@ impl MaxLogLevelFilter {
 
     /// Sets the maximum log level.
     pub fn set(&self, level: LogLevelFilter) {
-        MAX_LOG_LEVEL_FILTER.store(level as usize, Ordering::SeqCst)
+        log::set_max_level(level.to_new())
     }
 }
 
@@ -664,7 +679,7 @@ impl MaxLogLevelFilter {
 /// log level is set by the `MaxLogLevel` token passed to loggers.
 #[inline(always)]
 pub fn max_log_level() -> LogLevelFilter {
-    unsafe { mem::transmute(MAX_LOG_LEVEL_FILTER.load(Ordering::Relaxed)) }
+    LogLevelFilter::from_new(log::max_level())
 }
 
 /// Sets the global logger.
@@ -712,14 +727,15 @@ pub fn set_logger<M>(make_logger: M) -> Result<(), SetLoggerError>
 /// addition, `shutdown_logger` *must not* be called after this function.
 pub unsafe fn set_logger_raw<M>(make_logger: M) -> Result<(), SetLoggerError>
         where M: FnOnce(MaxLogLevelFilter) -> *const Log {
-    if STATE.compare_and_swap(UNINITIALIZED, INITIALIZING,
-                              Ordering::SeqCst) != UNINITIALIZED {
-        return Err(SetLoggerError(()));
+    static ADAPTOR: LoggerAdaptor = LoggerAdaptor;
+    match log::set_logger(&ADAPTOR) {
+        Ok(()) => {
+            LOGGER = make_logger(MaxLogLevelFilter(()));
+            STATE.store(INITIALIZED, Ordering::SeqCst);
+            Ok(())
+        }
+        Err(_) => Err(SetLoggerError(())),
     }
-
-    LOGGER = make_logger(MaxLogLevelFilter(()));
-    STATE.store(INITIALIZED, Ordering::SeqCst);
-    Ok(())
 }
 
 /// Shuts down the global logger.
@@ -752,9 +768,6 @@ pub fn shutdown_logger() -> Result<Box<Log>, ShutdownLoggerError> {
 /// success. At that point it is guaranteed that no other threads are
 /// concurrently accessing the logger object.
 pub fn shutdown_logger_raw() -> Result<*const Log, ShutdownLoggerError> {
-    // Set the global log level to stop other thread from logging
-    MAX_LOG_LEVEL_FILTER.store(0, Ordering::SeqCst);
-
     // Set to INITIALIZING to prevent re-initialization after
     if STATE.compare_and_swap(INITIALIZED, INITIALIZING,
                               Ordering::SeqCst) != INITIALIZED {
@@ -873,15 +886,66 @@ fn logger() -> Option<LoggerGuard> {
     }
 }
 
+struct LoggerAdaptor;
+
+impl log::Log for LoggerAdaptor {
+    fn log(&self, record: &log::Record) {
+        if let Some(logger) = logger() {
+            let record = LogRecord {
+                metadata: LogMetadata {
+                    level: LogLevel::from_new(record.level()),
+                    target: record.target(),
+                },
+                // file and module path aren't static in 0.4 so we can't forward them.
+                location: &LogLocation {
+                    __file: "<unknown>",
+                    __line: record.line().unwrap_or(0),
+                    __module_path: "<unknown>",
+                },
+                args: *record.args(),
+            };
+            logger.log(&record);
+        }
+    }
+
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        match logger() {
+            Some(logger) => {
+                let metadata = LogMetadata {
+                    level: LogLevel::from_new(metadata.level()),
+                    target: metadata.target(),
+                };
+                logger.enabled(&metadata)
+            }
+            None => false
+        }
+    }
+
+    fn flush(&self) {}
+}
+
 // WARNING
 // This is not considered part of the crate's public API. It is subject to
 // change at any time.
 #[doc(hidden)]
 pub fn __enabled(level: LogLevel, target: &str) -> bool {
-    if let Some(logger) = logger() {
-        logger.enabled(&LogMetadata { level: level, target: target })
-    } else {
-        false
+    match logger() {
+        Some(logger) => {
+            let metadata = LogMetadata {
+                level: level,
+                target: target,
+            };
+            logger.enabled(&metadata)
+        }
+        None => {
+            log::Log::enabled(
+                log::logger(),
+                &log::Metadata::builder()
+                    .level(level.to_new())
+                    .target(target)
+                    .build()
+            )
+        }
     }
 }
 
@@ -891,16 +955,31 @@ pub fn __enabled(level: LogLevel, target: &str) -> bool {
 #[doc(hidden)]
 pub fn __log(level: LogLevel, target: &str, loc: &LogLocation,
              args: fmt::Arguments) {
-    if let Some(logger) = logger() {
-        let record = LogRecord {
-            metadata: LogMetadata {
-                level: level,
-                target: target,
-            },
-            location: loc,
-            args: args
-        };
-        logger.log(&record)
+    match logger() {
+        Some(logger) => {
+            let record = LogRecord {
+                metadata: LogMetadata {
+                    level: level,
+                    target: target,
+                },
+                location: loc,
+                args: args,
+            };
+            logger.log(&record);
+        }
+        None => {
+            log::Log::log(
+                log::logger(),
+                &log::Record::builder()
+                    .level(level.to_new())
+                    .target(target)
+                    .file(Some(loc.__file))
+                    .line(Some(loc.__line))
+                    .module_path(Some(loc.__module_path))
+                    .args(args)
+                    .build()
+            )
+        }
     }
 }
 
@@ -910,35 +989,7 @@ pub fn __log(level: LogLevel, target: &str, loc: &LogLocation,
 #[inline(always)]
 #[doc(hidden)]
 pub fn __static_max_level() -> LogLevelFilter {
-    if !cfg!(debug_assertions) {
-        // This is a release build. Check `release_max_level_*` first.
-        if cfg!(feature = "release_max_level_off") {
-            return LogLevelFilter::Off
-        } else if cfg!(feature = "release_max_level_error") {
-            return LogLevelFilter::Error
-        } else if cfg!(feature = "release_max_level_warn") {
-            return LogLevelFilter::Warn
-        } else if cfg!(feature = "release_max_level_info") {
-            return LogLevelFilter::Info
-        } else if cfg!(feature = "release_max_level_debug") {
-            return LogLevelFilter::Debug
-        } else if cfg!(feature = "release_max_level_trace") {
-            return LogLevelFilter::Trace
-        }
-    }
-    if cfg!(feature = "max_level_off") {
-        LogLevelFilter::Off
-    } else if cfg!(feature = "max_level_error") {
-        LogLevelFilter::Error
-    } else if cfg!(feature = "max_level_warn") {
-        LogLevelFilter::Warn
-    } else if cfg!(feature = "max_level_info") {
-        LogLevelFilter::Info
-    } else if cfg!(feature = "max_level_debug") {
-        LogLevelFilter::Debug
-    } else {
-        LogLevelFilter::Trace
-    }
+    LogLevelFilter::from_new(log::STATIC_MAX_LEVEL)
 }
 
 #[cfg(test)]

@@ -480,6 +480,16 @@ SandboxEarlyInit() {
     return;
   }
 
+  // Fix LD_PRELOAD for any child processes.  See bug 1434392 comment #10;
+  // this can probably go away when audio remoting is mandatory.
+  const char* oldPreload = PR_GetEnv("MOZ_ORIG_LD_PRELOAD");
+  char* preloadEntry;
+  // This string is "leaked" because the environment takes ownership.
+  if (asprintf(&preloadEntry, "LD_PRELOAD=%s",
+               oldPreload ? oldPreload : "") != -1) {
+    PR_SetEnv(preloadEntry);
+  }
+
   // If TSYNC is not supported, set up signal handler
   // used to enable seccomp on each thread.
   if (!SandboxInfo::Get().Test(SandboxInfo::kHasSeccompTSync)) {

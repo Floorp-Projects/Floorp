@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(this, "AboutNewTab",
 // Bug 1409054 to remove "chrome://browser/content/abouthome/aboutHome.xhtml"
 
 const TOPIC_APP_QUIT = "quit-application-granted";
-const TOPIC_LOCALES_CHANGE = "intl:requested-locales-changed";
+const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
 
 // Automated tests ensure packaged locales are in this list. Copied output of:
 // https://github.com/mozilla/activity-stream/blob/master/bin/render-activity-stream-html.js
