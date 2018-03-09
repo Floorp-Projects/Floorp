@@ -2666,8 +2666,12 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     if (mIsSecureContext) {
       mJSSettings.chrome.compartmentOptions
                  .creationOptions().setSecureContext(true);
+      mJSSettings.chrome.compartmentOptions
+                 .creationOptions().setClampAndJitterTime(false);
       mJSSettings.content.compartmentOptions
                  .creationOptions().setSecureContext(true);
+      mJSSettings.content.compartmentOptions
+                 .creationOptions().setClampAndJitterTime(false);
     }
 
     mIsInAutomation = xpc::IsInAutomation();
