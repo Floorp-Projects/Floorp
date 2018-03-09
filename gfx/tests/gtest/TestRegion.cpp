@@ -16,6 +16,8 @@
 using namespace std;
 using namespace mozilla::gfx;
 
+//#define REGION_RANDOM_STRESS_TESTS
+
 class TestLargestRegion {
 public:
   static void TestSingleRect(nsRect r) {
@@ -182,6 +184,270 @@ TEST(Gfx, RegionScaleToInside) {
 
 }
 
+TEST(Gfx, RegionOrWith) {
+  {
+    nsRegion r(nsRect(79, 31, 75, 12));
+    r.OrWith(nsRect(22, 43, 132, 5));
+    r.OrWith(nsRect(22, 48, 125, 3));
+    r.OrWith(nsRect(22, 51, 96, 20));
+    r.OrWith(nsRect(34, 71, 1, 14));
+    r.OrWith(nsRect(26, 85, 53, 1));
+    r.OrWith(nsRect(26, 86, 53, 4));
+    r.OrWith(nsRect(96, 86, 30, 4));
+    r.OrWith(nsRect(34, 90, 1, 2));
+    r.OrWith(nsRect(96, 90, 30, 2));
+    r.OrWith(nsRect(34, 92, 1, 3));
+    r.OrWith(nsRect(49, 92, 34, 3));
+    r.OrWith(nsRect(96, 92, 30, 3));
+    r.OrWith(nsRect(34, 95, 1, 17));
+    r.OrWith(nsRect(49, 95, 77, 17));
+    r.OrWith(nsRect(34, 112, 1, 12));
+    r.OrWith(nsRect(75, 112, 51, 12));
+    r.OrWith(nsRect(34, 124, 1, 10));
+    r.OrWith(nsRect(75, 124, 44, 10));
+    r.OrWith(nsRect(34, 134, 1, 19));
+    r.OrWith(nsRect(22, 17, 96, 27));
+  }
+  {
+    nsRegion r(nsRect(0, 8, 257, 32));
+    r.OrWith(nsRect(3702, 8, 138, 32));
+    r.OrWith(nsRect(0, 40, 225, 1));
+    r.OrWith(nsRect(3702, 40, 138, 1));
+    r.OrWith(nsRect(0, 41, 101, 40));
+    r.OrWith(nsRect(69, 41, 32, 40));
+  }
+  {
+    nsRegion r(nsRect(79, 56, 8, 32));
+    r.OrWith(nsRect(5, 94, 23, 81));
+    r.OrWith(nsRect(56, 29, 91, 81));
+  }
+  {
+    nsRegion r(nsRect(0, 82, 3840, 2046));
+    r.OrWith(nsRect(0, 0, 3840, 82));
+  }
+  {
+    nsRegion r(nsRect(2, 5, 600, 28));
+    r.OrWith(nsRect(2, 82, 600, 19));
+    r.OrWith(nsRect(2, 33, 600, 49));
+  }
+  {
+    nsRegion r(nsRect(3823, 0, 17, 17));
+    r.OrWith(nsRect(3823, 2029, 17, 17));
+    r.OrWith(nsRect(3823, 0, 17, 2046));
+  }
+  {
+    nsRegion r(nsRect(1036, 4, 32, 21));
+    r.OrWith(nsRect(1070, 4, 66, 21));
+    r.OrWith(nsRect(40, 5, 0, 33));
+  }
+  {
+    nsRegion r(nsRect(0, 0, 1024, 1152));
+    r.OrWith(nsRect(-335802, -1073741824, 1318851, 1860043520));
+  }
+  {
+    nsRegion r(nsRect(0, 0, 800, 1000));
+    r.OrWith(nsRect(0, 0, 536870912, 1073741824));
+  }
+  {
+    nsRegion r(nsRect(53, 2, 52, 3));
+    r.OrWith(nsRect(45, 5, 60, 16));
+    r.OrWith(nsRect(16, 21, 8, 1));
+    r.OrWith(nsRect(45, 21, 12, 1));
+    r.OrWith(nsRect(16, 22, 8, 5));
+    r.OrWith(nsRect(33, 22, 52, 5));
+    r.OrWith(nsRect(16, 27, 8, 7));
+    r.OrWith(nsRect(33, 27, 66, 7));
+    r.OrWith(nsRect(0, 34, 99, 1));
+    r.OrWith(nsRect(0, 35, 159, 27));
+    r.OrWith(nsRect(0, 62, 122, 3));
+    r.OrWith(nsRect(0, 65, 85, 11));
+    r.OrWith(nsRect(91, 65, 97, 11));
+    r.OrWith(nsRect(11, 76, 74, 2));
+    r.OrWith(nsRect(91, 76, 97, 2));
+    r.OrWith(nsRect(11, 78, 74, 12));
+    r.OrWith(nsRect(11, 90, 13, 3));
+    r.OrWith(nsRect(33, 90, 108, 3));
+    r.OrWith(nsRect(16, 93, 8, 22));
+    r.OrWith(nsRect(33, 93, 108, 22));
+    r.OrWith(nsRect(16, 115, 8, 1));
+    r.OrWith(nsRect(58, 115, 83, 1));
+    r.OrWith(nsRect(58, 116, 83, 25));
+    r.OrWith(nsRect(59, 37, 88, 92));
+  }
+#ifdef REGION_RANDOM_STRESS_TESTS
+  const uint32_t TestIterations = 100000;
+  const uint32_t RectsPerTest = 100;
+
+  nsRect rects[RectsPerTest];
+
+  for (uint32_t i = 0; i < TestIterations; i++) {
+    nsRegion r;
+    for (uint32_t n = 0; n < RectsPerTest; n++) {
+      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+    }
+    r.SetEmpty();
+    for (uint32_t n = 0; n < RectsPerTest; n++) {
+      r.OrWith(rects[n]);
+    }
+    for (uint32_t n = 0; n < RectsPerTest; n++) {
+      EXPECT_TRUE(r.Contains(rects[n]));
+    }
+  }
+#endif
+}
+
+TEST(Gfx, RegionSubWith) {
+  {
+    nsRegion r(nsRect(0, 0, 229380, 6780));
+    r.OrWith(nsRect(76800, 6780, 76800, 4440));
+    r.OrWith(nsRect(76800, 11220, 44082, 1800));
+    r.OrWith(nsRect(122682, 11220, 30918, 1800));
+    r.OrWith(nsRect(76800, 13020, 76800, 2340));
+    r.OrWith(nsRect(85020, 15360, 59340, 75520));
+    r.OrWith(nsRect(85020, 90880, 38622, 11332));
+    r.OrWith(nsRect(143789, 90880, 571, 11332));
+    r.OrWith(nsRect(85020, 102212, 59340, 960));
+    r.OrWith(nsRect(85020, 103172, 38622, 1560));
+    r.OrWith(nsRect(143789, 103172, 571, 1560));
+    r.OrWith(nsRect(85020, 104732, 59340, 12292));
+    r.OrWith(nsRect(85020, 117024, 38622, 1560));
+    r.OrWith(nsRect(143789, 117024, 571, 1560));
+    r.OrWith(nsRect(85020, 118584, 59340, 11976));
+    r.SubWith(nsRect(123642, 89320, 20147, 1560));
+  }
+  {
+    nsRegion r(nsRect(0, 0, 9480, 12900));
+    r.OrWith(nsRect(0, 12900, 8460, 1020));
+    r.SubWith(nsRect(8460, 0, 1020, 12900));
+  }
+
+#ifdef REGION_RANDOM_STRESS_TESTS
+  const uint32_t TestIterations = 100000;
+  const uint32_t RectsPerTest = 100;
+  const uint32_t SubRectsPerTest = 10;
+
+  nsRect rects[RectsPerTest];
+  nsRect subRects[SubRectsPerTest];
+
+  for (uint32_t i = 0; i < TestIterations; i++) {
+    nsRegion r;
+    for (uint32_t n = 0; n < RectsPerTest; n++) {
+      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+    }
+    r.SetEmpty();
+    for (uint32_t n = 0; n < RectsPerTest; n++) {
+      r.OrWith(rects[n]);
+    }
+    for (uint32_t n = 0; n < RectsPerTest; n++) {
+      EXPECT_TRUE(r.Contains(rects[n]));
+    }
+    for (uint32_t n = 0; n < SubRectsPerTest; n++) {
+      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+    }
+    for (uint32_t n = 0; n < SubRectsPerTest; n++) {
+      r.SubWith(subRects[n]);
+    }
+    for (uint32_t n = 0; n < SubRectsPerTest; n++) {
+      EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].y));
+      EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].YMost() - 1));
+      EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
+      EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].Y()));
+    }
+  }
+  for (uint32_t i = 0; i < TestIterations; i++) {
+    nsRegion r(nsRect(-1, -1, 202, 202));
+    for (uint32_t n = 0; n < SubRectsPerTest; n++) {
+      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      r.SubWith(subRects[n]);
+    }
+    for (uint32_t n = 0; n < SubRectsPerTest; n++) {
+      EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].y));
+      EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].YMost() - 1));
+      EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
+      EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].Y()));
+    }
+    EXPECT_TRUE(r.Contains(-1, -1));
+    EXPECT_TRUE(r.Contains(-1, 200));
+    EXPECT_TRUE(r.Contains(200, -1));
+    EXPECT_TRUE(r.Contains(200, 200));
+  }
+#endif
+}
+
+TEST(Gfx, RegionAndWith) {
+  {
+    nsRegion r(nsRect(20, 0, 20, 20));
+    r.OrWith(nsRect(0, 20, 40, 20));
+    r.AndWith(nsRect(0, 0, 5, 5));
+    EXPECT_FALSE(r.Contains(1, 1));
+  }
+  {
+    nsRegion r1(nsRect(512, 1792, 256, 256));
+    nsRegion r2(nsRect(17, 1860, 239, 35));
+    r2.OrWith(nsRect(17, 1895, 239, 7));
+    r2.OrWith(nsRect(768, 1895, 154, 7));
+    r2.OrWith(nsRect(17, 1902, 905, 483));
+    r1.AndWith(r2);
+  }
+#ifdef REGION_RANDOM_STRESS_TESTS
+  const uint32_t TestIterations = 100000;
+  const uint32_t RectsPerTest = 50;
+  const uint32_t pointsTested = 100;
+
+  {
+    nsRect rectsSet1[RectsPerTest];
+    nsRect rectsSet2[RectsPerTest];
+
+    for (uint32_t i = 0; i < TestIterations; i++) {
+      nsRegion r1;
+      nsRegion r2;
+      for (uint32_t n = 0; n < RectsPerTest; n++) {
+        rectsSet1[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+        rectsSet2[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+        r1.OrWith(rectsSet1[n]);
+        r2.OrWith(rectsSet1[n]);
+      }
+
+      nsRegion r3 = r1;
+      r3.AndWith(r2);
+
+      for (uint32_t n = 0; n < pointsTested; n++) {
+        nsPoint p(rand() % 200, rand() % 200);
+        if (r1.Contains(p.x, p.y) && r2.Contains(p.x, p.y)) {
+          EXPECT_TRUE(r3.Contains(p.x, p.y));
+        } else {
+          EXPECT_FALSE(r3.Contains(p.x, p.y));
+        }
+      }
+    }
+  }
+
+  {
+    nsRect rectsSet[RectsPerTest];
+    nsRect testRect;
+    for (uint32_t i = 0; i < TestIterations; i++) {
+      nsRegion r;
+      for (uint32_t n = 0; n < RectsPerTest; n++) {
+        rectsSet[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+        r.OrWith(rectsSet[n]);
+      }
+      testRect.SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+
+      nsRegion r2 = r;
+      r2.AndWith(testRect);
+
+      for (uint32_t n = 0; n < pointsTested; n++) {
+        nsPoint p(rand() % 200, rand() % 200);
+        if (r.Contains(p.x, p.y) && testRect.Contains(p.x, p.y)) {
+          EXPECT_TRUE(r2.Contains(p.x, p.y));
+        } else {
+          EXPECT_FALSE(r2.Contains(p.x, p.y));
+        }
+      }
+    }
+  }
+#endif
+}
 
 TEST(Gfx, RegionSimplify) {
   { // ensure simplify works on a single rect
@@ -223,6 +489,7 @@ TEST(Gfx, RegionSimplify) {
     EXPECT_TRUE(r.IsEqual(result)) <<
       "regions not merged";
   }
+
 
   { // the rectangles will be merged
     nsRegion r(nsRect(0,100,200,100));
