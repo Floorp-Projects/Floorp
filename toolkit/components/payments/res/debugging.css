@@ -5,7 +5,3 @@
 h1 {
   font-size: 1em;
 }
-
-fieldset > label {
-  white-space: nowrap;
-}
