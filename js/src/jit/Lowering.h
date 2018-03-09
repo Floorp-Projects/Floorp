@@ -211,6 +211,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitHomeObject(MHomeObject* ins) override;
     void visitHomeObjectSuperBase(MHomeObjectSuperBase* ins) override;
     void visitInterruptCheck(MInterruptCheck* ins) override;
+    void visitWasmInterruptCheck(MWasmInterruptCheck* ins) override;
     void visitWasmTrap(MWasmTrap* ins) override;
     void visitWasmReinterpret(MWasmReinterpret* ins) override;
     void visitStoreSlot(MStoreSlot* ins) override;
