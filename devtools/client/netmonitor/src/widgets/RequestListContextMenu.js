@@ -271,13 +271,16 @@ class RequestListContextMenu {
    */
   async copyPostData(id, formDataSections, requestPostData) {
     let params = [];
-    // Try to extract any form data parameters.
-    formDataSections.forEach(section => {
-      let paramsArray = parseQueryString(section);
-      if (paramsArray) {
-        params = [...params, ...paramsArray];
-      }
-    });
+    // Try to extract any form data parameters if formDataSections is already
+    // available, which is only true if ParamsPanel has ever been mounted before.
+    if (formDataSections) {
+      formDataSections.forEach(section => {
+        let paramsArray = parseQueryString(section);
+        if (paramsArray) {
+          params = [...params, ...paramsArray];
+        }
+      });
+    }
 
     let string = params
       .map(param => param.name + (param.value ? "=" + param.value : ""))
