@@ -2939,7 +2939,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   // In case this channel was instrument to discard the CSP, then
   // there is nothing for us to do here.
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (loadInfo->GetAllowDocumentToBeAgnosticToCSP()) {
+  if (loadInfo && loadInfo->GetAllowDocumentToBeAgnosticToCSP()) {
     return NS_OK;
   }
 
