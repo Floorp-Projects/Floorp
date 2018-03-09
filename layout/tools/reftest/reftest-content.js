@@ -582,7 +582,11 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
             return;
         }
 
-        FlushRendering();
+        // We don't need to flush styles any more when we are in the state
+        // after reftest-wait has removed.
+        if (state != STATE_WAITING_TO_FINISH) {
+          FlushRendering();
+        }
 
         switch (state) {
         case STATE_WAITING_TO_FIRE_INVALIDATE_EVENT: {
