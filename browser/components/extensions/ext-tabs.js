@@ -4,6 +4,7 @@
 
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-browser.js */
+/* import-globals-from ../../../toolkit/components/extensions/ext-tabs-base.js */
 
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -96,6 +97,208 @@ let tabListener = {
     return deferred.promise;
   },
 };
+
+const allAttrs = new Set(["audible", "favIconUrl", "mutedInfo", "sharingState", "title"]);
+const allProperties = new Set([
+  "audible",
+  "discarded",
+  "favIconUrl",
+  "hidden",
+  "isarticle",
+  "mutedInfo",
+  "pinned",
+  "sharingState",
+  "status",
+  "title",
+]);
+const restricted = new Set(["url", "favIconUrl", "title"]);
+
+class TabsUpdateFilterEventManager extends EventManager {
+  constructor(context, eventName) {
+    let {extension} = context;
+    let {tabManager} = extension;
+
+    let register = (fire, filterProps) => {
+      let filter = {...filterProps};
+      if (filter.urls) {
+        filter.urls = new MatchPatternSet(filter.urls);
+      }
+      let needsModified = true;
+      if (filter.properties) {
+        // Default is to listen for all events.
+        needsModified = filter.properties.some(p => allAttrs.has(p));
+        filter.properties = new Set(filter.properties);
+      } else {
+        filter.properties = allProperties;
+      }
+
+      function sanitize(extension, changeInfo) {
+        let result = {};
+        let nonempty = false;
+        let hasTabs = extension.hasPermission("tabs");
+        for (let prop in changeInfo) {
+          if (hasTabs || !restricted.has(prop)) {
+            nonempty = true;
+            result[prop] = changeInfo[prop];
+          }
+        }
+        return nonempty && result;
+      }
+
+      function getWindowID(windowId) {
+        if (windowId === WINDOW_ID_CURRENT) {
+          return windowTracker.getId(windowTracker.topWindow);
+        }
+        return windowId;
+      }
+
+      function matchFilters(tab, changed) {
+        if (!filterProps) {
+          return true;
+        }
+        if (filter.tabId != null && tab.id != filter.tabId) {
+          return false;
+        }
+        if (filter.windowId != null && tab.windowId != getWindowID(filter.windowId)) {
+          return false;
+        }
+        if (filter.urls) {
+          // We check permission first because tab.uri is null if !hasTabPermission.
+          return tab.hasTabPermission && filter.urls.matches(tab.uri);
+        }
+        return true;
+      }
+
+      let fireForTab = (tab, changed) => {
+        if (!matchFilters(tab, changed)) {
+          return;
+        }
+
+        let changeInfo = sanitize(extension, changed);
+        if (changeInfo) {
+          fire.async(tab.id, changeInfo, tab.convert());
+        }
+      };
+
+      let listener = event => {
+        let needed = [];
+        if (event.type == "TabAttrModified") {
+          let changed = event.detail.changed;
+          if (changed.includes("image") && filter.properties.has("favIconUrl")) {
+            needed.push("favIconUrl");
+          }
+          if (changed.includes("muted") && filter.properties.has("mutedInfo")) {
+            needed.push("mutedInfo");
+          }
+          if (changed.includes("soundplaying") && filter.properties.has("audible")) {
+            needed.push("audible");
+          }
+          if (changed.includes("label") && filter.properties.has("title")) {
+            needed.push("title");
+          }
+          if (changed.includes("sharing") && filter.properties.has("sharingState")) {
+            needed.push("sharingState");
+          }
+        } else if (event.type == "TabPinned") {
+          needed.push("pinned");
+        } else if (event.type == "TabUnpinned") {
+          needed.push("pinned");
+        } else if (event.type == "TabBrowserInserted" &&
+                   !event.detail.insertedOnTabCreation) {
+          needed.push("discarded");
+        } else if (event.type == "TabBrowserDiscarded") {
+          needed.push("discarded");
+        } else if (event.type == "TabShow") {
+          needed.push("hidden");
+        } else if (event.type == "TabHide") {
+          needed.push("hidden");
+        }
+
+        let tab = tabManager.getWrapper(event.originalTarget);
+
+        let changeInfo = {};
+        for (let prop of needed) {
+          changeInfo[prop] = tab[prop];
+        }
+
+        fireForTab(tab, changeInfo);
+      };
+
+      let statusListener = ({browser, status, url}) => {
+        let {gBrowser} = browser.ownerGlobal;
+        let tabElem = gBrowser.getTabForBrowser(browser);
+        if (tabElem) {
+          let changed = {status};
+          if (url) {
+            changed.url = url;
+          }
+
+          fireForTab(tabManager.wrapTab(tabElem), changed);
+        }
+      };
+
+      let isArticleChangeListener = (messageName, message) => {
+        let {gBrowser} = message.target.ownerGlobal;
+        let nativeTab = gBrowser.getTabForBrowser(message.target);
+
+        if (nativeTab) {
+          let tab = tabManager.getWrapper(nativeTab);
+          fireForTab(tab, {isArticle: message.data.isArticle});
+        }
+      };
+
+      let listeners = new Map();
+      if (filter.properties.has("status")) {
+        listeners.set("status", statusListener);
+      }
+      if (needsModified) {
+        listeners.set("TabAttrModified", listener);
+      }
+      if (filter.properties.has("pinned")) {
+        listeners.set("TabPinned", listener);
+        listeners.set("TabUnpinned", listener);
+      }
+      if (filter.properties.has("discarded")) {
+        listeners.set("TabBrowserInserted", listener);
+        listeners.set("TabBrowserDiscarded", listener);
+      }
+      if (filter.properties.has("hidden")) {
+        listeners.set("TabShow", listener);
+        listeners.set("TabHide", listener);
+      }
+
+      for (let [name, listener] of listeners) {
+        windowTracker.addListener(name, listener);
+      }
+
+      if (filter.properties.has("isarticle")) {
+        tabTracker.on("tab-isarticle", isArticleChangeListener);
+      }
+
+      return () => {
+        for (let [name, listener] of listeners) {
+          windowTracker.removeListener(name, listener);
+        }
+
+        if (filter.properties.has("isarticle")) {
+          tabTracker.off("tab-isarticle", isArticleChangeListener);
+        }
+      };
+    };
+
+    super(context, eventName, register);
+  }
+
+  addListener(callback, filter) {
+    let {extension} = this.context;
+    if (filter && filter.urls &&
+        (!extension.hasPermission("tabs") && !extension.hasPermission("activeTab"))) {
+      Cu.reportError("Url filtering in tabs.onUpdated requires \"tabs\" or \"activeTab\" permission.");
+      return false;
+    }
+    return super.addListener(callback, filter);
+  }
+}
 
 this.tabs = class extends ExtensionAPI {
   static onUpdate(id, manifest) {
@@ -254,117 +457,7 @@ this.tabs = class extends ExtensionAPI {
           };
         }).api(),
 
-        onUpdated: new EventManager(context, "tabs.onUpdated", fire => {
-          const restricted = ["url", "favIconUrl", "title"];
-
-          function sanitize(extension, changeInfo) {
-            let result = {};
-            let nonempty = false;
-            for (let prop in changeInfo) {
-              if (extension.hasPermission("tabs") || !restricted.includes(prop)) {
-                nonempty = true;
-                result[prop] = changeInfo[prop];
-              }
-            }
-            return [nonempty, result];
-          }
-
-          let fireForTab = (tab, changed) => {
-            let [needed, changeInfo] = sanitize(extension, changed);
-            if (needed) {
-              fire.async(tab.id, changeInfo, tab.convert());
-            }
-          };
-
-          let listener = event => {
-            let needed = [];
-            if (event.type == "TabAttrModified") {
-              let changed = event.detail.changed;
-              if (changed.includes("image")) {
-                needed.push("favIconUrl");
-              }
-              if (changed.includes("muted")) {
-                needed.push("mutedInfo");
-              }
-              if (changed.includes("soundplaying")) {
-                needed.push("audible");
-              }
-              if (changed.includes("label")) {
-                needed.push("title");
-              }
-              if (changed.includes("sharing")) {
-                needed.push("sharingState");
-              }
-            } else if (event.type == "TabPinned") {
-              needed.push("pinned");
-            } else if (event.type == "TabUnpinned") {
-              needed.push("pinned");
-            } else if (event.type == "TabBrowserInserted" &&
-                       !event.detail.insertedOnTabCreation) {
-              needed.push("discarded");
-            } else if (event.type == "TabBrowserDiscarded") {
-              needed.push("discarded");
-            } else if (event.type == "TabShow") {
-              needed.push("hidden");
-            } else if (event.type == "TabHide") {
-              needed.push("hidden");
-            }
-
-            let tab = tabManager.getWrapper(event.originalTarget);
-            let changeInfo = {};
-            for (let prop of needed) {
-              changeInfo[prop] = tab[prop];
-            }
-
-            fireForTab(tab, changeInfo);
-          };
-
-          let statusListener = ({browser, status, url}) => {
-            let {gBrowser} = browser.ownerGlobal;
-            let tabElem = gBrowser.getTabForBrowser(browser);
-            if (tabElem) {
-              let changed = {status};
-              if (url) {
-                changed.url = url;
-              }
-
-              fireForTab(tabManager.wrapTab(tabElem), changed);
-            }
-          };
-
-          let isArticleChangeListener = (messageName, message) => {
-            let {gBrowser} = message.target.ownerGlobal;
-            let nativeTab = gBrowser.getTabForBrowser(message.target);
-
-            if (nativeTab) {
-              let tab = tabManager.getWrapper(nativeTab);
-              fireForTab(tab, {isArticle: message.data.isArticle});
-            }
-          };
-
-          windowTracker.addListener("status", statusListener);
-          windowTracker.addListener("TabAttrModified", listener);
-          windowTracker.addListener("TabPinned", listener);
-          windowTracker.addListener("TabUnpinned", listener);
-          windowTracker.addListener("TabBrowserInserted", listener);
-          windowTracker.addListener("TabBrowserDiscarded", listener);
-          windowTracker.addListener("TabShow", listener);
-          windowTracker.addListener("TabHide", listener);
-
-          tabTracker.on("tab-isarticle", isArticleChangeListener);
-
-          return () => {
-            windowTracker.removeListener("status", statusListener);
-            windowTracker.removeListener("TabAttrModified", listener);
-            windowTracker.removeListener("TabPinned", listener);
-            windowTracker.removeListener("TabUnpinned", listener);
-            windowTracker.removeListener("TabBrowserInserted", listener);
-            windowTracker.removeListener("TabBrowserDiscarded", listener);
-            windowTracker.removeListener("TabShow", listener);
-            windowTracker.removeListener("TabHide", listener);
-            tabTracker.off("tab-isarticle", isArticleChangeListener);
-          };
-        }).api(),
+        onUpdated: new TabsUpdateFilterEventManager(context, "tabs.onUpdated").api(),
 
         create(createProperties) {
           return new Promise((resolve, reject) => {
