@@ -116,8 +116,8 @@ function triggerStart() {
 }
 
 function deselectAll() {
-  for (var test in defaultConfig.subtests) {
-    $("subtest-" + test).checked = false;
+  for (var test of defaultConfig.subtests) {
+    $("subtest-" + test.name).checked = false;
   }
 }
 
@@ -143,11 +143,11 @@ function updateOptionsFromUrl() {
   var tests = uriTests ? JSON.parse(uriTests) : [];
 
   if (tests.length) {
-    for (var d in defaultConfig.subtests) {
-      $("subtest-" + d).checked = false;
+    for (var test of defaultConfig.subtests) {
+      $("subtest-" + test.name).checked = false;
       for (var t in tests) {
-        if (tests[t] == d) {
-          $("subtest-" + d).checked = true;
+        if (tests[t] == test.name) {
+          $("subtest-" + test.name).checked = true;
         }
       }
     }
