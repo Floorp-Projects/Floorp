@@ -33,6 +33,10 @@ const SHADERS: &[Shader] = &[
         features: CLIP_FEATURES,
     },
     Shader {
+        name: "cs_clip_box_shadow",
+        features: CLIP_FEATURES,
+    },
+    Shader {
         name: "cs_clip_border",
         features: CLIP_FEATURES,
     },
@@ -81,10 +85,6 @@ const SHADERS: &[Shader] = &[
     },
     Shader {
         name: "brush_solid",
-        features: &[],
-    },
-    Shader {
-        name: "brush_picture",
         features: &[],
     },
     Shader {
