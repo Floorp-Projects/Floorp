@@ -49,12 +49,17 @@
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
+
+#ifdef MOZ_CRASHREPORTER
+#include "mozilla/ipc/CrashReporterClient.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::scache;
@@ -359,6 +364,45 @@ ResolveModuleObjectProperty(JSContext* aCx, HandleObject aModObj, const char* na
     return aModObj;
 }
 
+#ifdef MOZ_CRASHREPORTER
+static mozilla::Result<nsCString, nsresult> ReadScript(ComponentLoaderInfo& aInfo);
+
+static nsresult
+AnnotateScriptContents(const nsACString& aName, const nsACString& aURI)
+{
+    ComponentLoaderInfo info(aURI);
+
+    nsCString str;
+    MOZ_TRY_VAR(str, ReadScript(info));
+
+    // The crash reporter won't accept any strings with embedded nuls. We
+    // shouldn't have any here, but if we do because of data corruption, we
+    // still want the annotation. So replace any embedded nuls before
+    // annotating.
+    str.ReplaceSubstring(NS_LITERAL_CSTRING("\0"), NS_LITERAL_CSTRING("\\0"));
+
+    CrashReporter::AnnotateCrashReport(aName, str);
+
+    return NS_OK;
+}
+#endif // defined MOZ_CRASHREPORTER
+
+nsresult
+mozJSComponentLoader::AnnotateCrashReport()
+{
+#ifdef MOZ_CRASHREPORTER
+    Unused << AnnotateScriptContents(
+        NS_LITERAL_CSTRING("nsAsyncShutdownComponent"),
+        NS_LITERAL_CSTRING("resource://gre/components/nsAsyncShutdown.js"));
+
+    Unused << AnnotateScriptContents(
+        NS_LITERAL_CSTRING("AsyncShutdownModule"),
+        NS_LITERAL_CSTRING("resource://gre/modules/AsyncShutdown.jsm"));
+#endif // defined MOZ_CRASHREPORTER
+
+    return NS_OK;
+}
+
 const mozilla::Module*
 mozJSComponentLoader::LoadModule(FileLocation& aFile)
 {
@@ -401,6 +445,8 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
     if (NS_FAILED(rv)) {
         // Temporary debugging assertion for bug 1403348:
         if (isCriticalModule && !exn.isUndefined()) {
+            AnnotateCrashReport();
+
             JSAutoCompartment ac(cx, xpc::PrivilegedJunkScope());
             JS_WrapValue(cx, &exn);
 
@@ -705,6 +751,36 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     return thisObj;
 }
 
+static mozilla::Result<nsCString, nsresult>
+ReadScript(ComponentLoaderInfo& aInfo)
+{
+    MOZ_TRY(aInfo.EnsureScriptChannel());
+
+    nsCOMPtr<nsIInputStream> scriptStream;
+    MOZ_TRY(NS_MaybeOpenChannelUsingOpen2(aInfo.ScriptChannel(),
+                                          getter_AddRefs(scriptStream)));
+
+    uint64_t len64;
+    uint32_t bytesRead;
+
+    MOZ_TRY(scriptStream->Available(&len64));
+    NS_ENSURE_TRUE(len64 < UINT32_MAX, Err(NS_ERROR_FILE_TOO_BIG));
+    NS_ENSURE_TRUE(len64, Err(NS_ERROR_FAILURE));
+    uint32_t len = (uint32_t)len64;
+
+    /* malloc an internal buf the size of the file */
+    nsCString str;
+    if (!str.SetLength(len, fallible))
+        return Err(NS_ERROR_OUT_OF_MEMORY);
+
+    /* read the file in one swoop */
+    MOZ_TRY(scriptStream->Read(str.BeginWriting(), len, &bytesRead));
+    if (bytesRead != len)
+        return Err(NS_BASE_STREAM_OSERROR);
+
+    return Move(str);
+}
+
 nsresult
 mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
                                         nsIFile* aComponentFile,
@@ -795,39 +871,13 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
             else
                 Compile(cx, options, buf.get(), map.size(), &script);
         } else {
-            rv = aInfo.EnsureScriptChannel();
-            NS_ENSURE_SUCCESS(rv, rv);
-            nsCOMPtr<nsIInputStream> scriptStream;
-            rv = NS_MaybeOpenChannelUsingOpen2(aInfo.ScriptChannel(),
-                   getter_AddRefs(scriptStream));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            uint64_t len64;
-            uint32_t bytesRead;
-
-            rv = scriptStream->Available(&len64);
-            NS_ENSURE_SUCCESS(rv, rv);
-            NS_ENSURE_TRUE(len64 < UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
-            if (!len64)
-                return NS_ERROR_FAILURE;
-            uint32_t len = (uint32_t)len64;
-
-            /* malloc an internal buf the size of the file */
-            auto buf = MakeUniqueFallible<char[]>(len + 1);
-            if (!buf)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            /* read the file in one swoop */
-            rv = scriptStream->Read(buf.get(), len, &bytesRead);
-            if (bytesRead != len)
-                return NS_BASE_STREAM_OSERROR;
-
-            buf[len] = '\0';
+            nsCString str;
+            MOZ_TRY_VAR(str, ReadScript(aInfo));
 
             if (reuseGlobal)
-                CompileForNonSyntacticScope(cx, options, buf.get(), bytesRead, &script);
+                CompileForNonSyntacticScope(cx, options, str.get(), str.Length(), &script);
             else
-                Compile(cx, options, buf.get(), bytesRead, &script);
+                Compile(cx, options, str.get(), str.Length(), &script);
         }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.

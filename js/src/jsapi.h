@@ -5895,7 +5895,8 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(SPECTRE_STRING_MITIGATIONS, "spectre.string-mitigations")      \
     Register(SPECTRE_VALUE_MASKING, "spectre.value-masking")                \
     Register(ASMJS_ATOMICS_ENABLE, "asmjs.atomics.enable")                  \
-    Register(WASM_FOLD_OFFSETS, "wasm.fold-offsets")
+    Register(WASM_FOLD_OFFSETS, "wasm.fold-offsets")                        \
+    Register(WASM_DELAY_TIER2, "wasm.delay-tier2")
 
 typedef enum JSJitCompilerOption {
 #define JIT_COMPILER_DECLARE(key, str) \
