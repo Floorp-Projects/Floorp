@@ -58,6 +58,10 @@ requireHacker.global_hook("default", (path, module) => {
       return `() => {}`;
     case "devtools/client/netmonitor/src/components/TabboxPanel":
       return "{}";
+    case "devtools/client/webconsole/new-console-output/utils/context-menu":
+      return "{}";
+    case "devtools/shared/event-emitter":
+      return `module.exports = require("devtools-modules/src/utils/event-emitter")`;
   }
 
   // We need to rewrite all the modules assuming the root is mozilla-central and give them

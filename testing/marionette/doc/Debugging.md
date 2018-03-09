@@ -17,6 +17,14 @@ its log to stdout instead of file:
 
 	% ./mach marionette test --gecko-log -
 
+It is common to use this in conjunction with an option to increase
+the Marionette log level:
+
+  % ./mach test --gecko-log - -vv TEST
+
+A single `-v` enables debug logging, and a double `-vv` enables
+trace logging.
+
 This debugging technique can be particularly effective when combined
 with using [pdb] in the Python client or the JS remote debugger
 that is described below.

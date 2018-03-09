@@ -21,6 +21,7 @@ const {
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
   MESSAGE_TABLE_RECEIVE,
+  PRIVATE_MESSAGES_CLEAR,
 } = require("../constants");
 
 const defaultIdGenerator = new IdGenerator();
@@ -53,6 +54,12 @@ function messagesAdd(packets, idGenerator = null) {
 function messagesClear() {
   return {
     type: MESSAGES_CLEAR
+  };
+}
+
+function privateMessagesClear() {
+  return {
+    type: PRIVATE_MESSAGES_CLEAR
   };
 }
 
@@ -129,6 +136,7 @@ module.exports = {
   messageTableDataGet,
   networkMessageUpdate,
   networkUpdateRequest,
+  privateMessagesClear,
   // for test purpose only.
   messageTableDataReceive,
 };
