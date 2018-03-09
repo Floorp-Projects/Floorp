@@ -555,6 +555,7 @@ IMContextWrapper::OnDestroyWindow(nsWindow* aWindow)
     mOwnerWindow = nullptr;
     mLastFocusedWindow = nullptr;
     mInputContext.mIMEState.mEnabled = IMEState::DISABLED;
+    mPostingKeyEvents.Clear();
 
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
         ("0x%p   OnDestroyWindow(), succeeded, Completely destroyed",
@@ -726,9 +727,11 @@ IMContextWrapper::OnKeyEvent(nsWindow* aCaller,
                     MOZ_LOG(gGtkIMLog, LogLevel::Info,
                         ("0x%p   OnKeyEvent(), aEvent->state has "
                          "IBUS_IGNORED_MASK, so, it won't be handled "
-                         "asynchronously anymore",
+                         "asynchronously anymore. Removing posted events from "
+                         "the queue",
                          this));
                     maybeHandledAsynchronously = false;
+                    mPostingKeyEvents.RemoveEvent(aEvent);
                     break;
                 }
                 break;
@@ -751,9 +754,11 @@ IMContextWrapper::OnKeyEvent(nsWindow* aCaller,
                     MOZ_LOG(gGtkIMLog, LogLevel::Info,
                         ("0x%p   OnKeyEvent(), aEvent->state has "
                          "FcitxKeyState_IgnoredMask, so, it won't be handled "
-                         "asynchronously anymore",
+                         "asynchronously anymore. Removing posted events from "
+                         "the queue",
                          this));
                     maybeHandledAsynchronously = false;
+                    mPostingKeyEvents.RemoveEvent(aEvent);
                     break;
                 }
                 break;
@@ -794,12 +799,25 @@ IMContextWrapper::OnKeyEvent(nsWindow* aCaller,
         filterThisEvent = false;
     }
 
-    // If IME handled the key event but we've not dispatched eKeyDown nor
-    // eKeyUp event yet, we need to dispatch here unless the key event is
-    // now being handled by other IME process.
-    if (filterThisEvent && !maybeHandledAsynchronously) {
-        MaybeDispatchKeyEventAsProcessedByIME();
-        // Be aware, the widget might have been gone here.
+    if (filterThisEvent && !mKeyboardEventWasDispatched) {
+        // If IME handled the key event but we've not dispatched eKeyDown nor
+        // eKeyUp event yet, we need to dispatch here unless the key event is
+        // now being handled by other IME process.
+        if (!maybeHandledAsynchronously) {
+            MaybeDispatchKeyEventAsProcessedByIME();
+            // Be aware, the widget might have been gone here.
+        }
+        // If we need to wait reply from IM, IM may send some signals to us
+        // without sending the key event again.  In such case, we need to
+        // dispatch keyboard events with a copy of aEvent.  Therefore, we
+        // need to use information of this key event to dispatch an KeyDown
+        // or eKeyUp event later.
+        else {
+            MOZ_LOG(gGtkIMLog, LogLevel::Info,
+                ("0x%p   OnKeyEvent(), putting aEvent into the queue...",
+                 this));
+            mPostingKeyEvents.PutEvent(aEvent);
+        }
     }
 
     mProcessingKeyEvent = nullptr;
@@ -1138,6 +1156,10 @@ IMContextWrapper::Focus()
     }
 
     sLastFocusedContext = this;
+
+    // Forget all posted key events when focus is moved since they shouldn't
+    // be fired in different editor.
+    mPostingKeyEvents.Clear();
 
     gtk_im_context_focus_in(currentContext);
     mIsIMFocused = true;
@@ -1683,7 +1705,8 @@ IMContextWrapper::GetCompositionString(GtkIMContext* aContext,
 bool
 IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME()
 {
-    if (!mProcessingKeyEvent || mKeyboardEventWasDispatched ||
+    if ((!mProcessingKeyEvent && mPostingKeyEvents.IsEmpty()) ||
+        (mProcessingKeyEvent && mKeyboardEventWasDispatched) ||
         !mLastFocusedWindow) {
         return true;
     }
@@ -1698,7 +1721,28 @@ IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME()
     GtkIMContext* oldComposingContext = mComposingContext;
 
     RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
-    mKeyboardEventWasDispatched = true;
+    if (mProcessingKeyEvent) {
+        mKeyboardEventWasDispatched = true;
+    }
+
+    // If we're not handling a key event synchronously, the signal may be
+    // sent by IME without sending key event to us.  In such case, we should
+    // dispatch keyboard event for the last key event which was posted to
+    // other IME process.
+    GdkEventKey* sourceEvent =
+        mProcessingKeyEvent ? mProcessingKeyEvent :
+                              mPostingKeyEvents.GetFirstEvent();
+
+    MOZ_LOG(gGtkIMLog, LogLevel::Info,
+        ("0x%p MaybeDispatchKeyEventAsProcessedByIME(), dispatch %s %s "
+         "event: { type=%s, keyval=%s, unicode=0x%X, state=%s, "
+         "time=%u, hardware_keycode=%u, group=%u }",
+         this, ToChar(sourceEvent->type == GDK_KEY_PRESS ? eKeyDown : eKeyUp),
+         mProcessingKeyEvent ? "processing" : "posted",
+         GetEventType(sourceEvent), gdk_keyval_name(sourceEvent->keyval),
+         gdk_keyval_to_unicode(sourceEvent->keyval),
+         GetEventStateName(sourceEvent->state, mIMContextID).get(),
+         sourceEvent->time, sourceEvent->hardware_keycode, sourceEvent->group));
 
     // Let's dispatch eKeyDown event or eKeyUp event now.  Note that only when
     // we're not in a dead key composition, we should mark the eKeyDown and
@@ -1710,13 +1754,22 @@ IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME()
     //      cannot cancel the following composition event.
     //      Spec bug: https://github.com/w3c/uievents/issues/180
     bool isCancelled;
-    lastFocusedWindow->DispatchKeyDownOrKeyUpEvent(mProcessingKeyEvent,
+    lastFocusedWindow->DispatchKeyDownOrKeyUpEvent(sourceEvent,
                                                    !mMaybeInDeadKeySequence,
                                                    &isCancelled);
-    MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+    MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), keydown or keyup "
          "event is dispatched",
          this));
+
+    if (!mProcessingKeyEvent) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Info,
+            ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), removing first "
+             "event from the queue",
+             this));
+        mPostingKeyEvents.RemoveEvent(sourceEvent);
+    }
+
     if (lastFocusedWindow->IsDestroyed() ||
         lastFocusedWindow != mLastFocusedWindow) {
         MOZ_LOG(gGtkIMLog, LogLevel::Warning,
