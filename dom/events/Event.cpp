@@ -1095,10 +1095,14 @@ Event::DefaultPrevented(CallerType aCallerType) const
 }
 
 double
-Event::TimeStampImpl() const
+Event::TimeStamp()
 {
   if (!sReturnHighResTimeStamp) {
-    return static_cast<double>(mEvent->mTime);
+    // In the situation where you have set a very old, not-very-supported
+    // non-default preference, we will always reduce the precision,
+    // regardless of system principal or not.
+    double ret = static_cast<double>(mEvent->mTime);
+    return nsRFPService::ReduceTimePrecisionAsMSecs(ret);
   }
 
   if (mEvent->mTimeStamp.IsNull()) {
@@ -1120,19 +1124,22 @@ Event::TimeStampImpl() const
       return 0.0;
     }
 
-    return perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->mTimeStamp);
+    double ret = perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->mTimeStamp);
+    MOZ_ASSERT(mOwner->PrincipalOrNull());
+    if (nsContentUtils::IsSystemPrincipal(mOwner->PrincipalOrNull()))
+      return ret;
+
+    return nsRFPService::ReduceTimePrecisionAsMSecs(ret);
   }
 
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
-  return workerPrivate->TimeStampToDOMHighRes(mEvent->mTimeStamp);
-}
+  double ret = workerPrivate->TimeStampToDOMHighRes(mEvent->mTimeStamp);
+  if (workerPrivate->UsesSystemPrincipal())
+    return ret;
 
-double
-Event::TimeStamp() const
-{
-  return nsRFPService::ReduceTimePrecisionAsMSecs(TimeStampImpl());
+  return nsRFPService::ReduceTimePrecisionAsMSecs(ret);
 }
 
 NS_IMETHODIMP
