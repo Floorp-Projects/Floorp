@@ -2470,9 +2470,6 @@ Preferences::HandleDirty()
 static nsresult
 openPrefFile(nsIFile* aFile, PrefValueKind aKind);
 
-static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
-static const char kChannelPref[] = "app.update.channel";
-
 // clang-format off
 static const char kPrefFileHeader[] =
   "// Mozilla User Preferences"
@@ -2922,6 +2919,92 @@ public:
 
 // A list of prefs sent early from the parent, via shared memory.
 static InfallibleTArray<dom::Pref>* gEarlyDomPrefs;
+
+static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
+static const char kChannelPref[] = "app.update.channel";
+
+#ifdef MOZ_WIDGET_ANDROID
+
+static Maybe<bool>
+TelemetryPrefValue()
+{
+  // Leave it unchanged if it's already set.
+  // XXX: how could it already be set?
+  if (Preferences::GetType(kTelemetryPref) != nsIPrefBranch::PREF_INVALID) {
+    return Nothing();
+  }
+
+    // Determine the correct default for toolkit.telemetry.enabled. If this
+    // build has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel,
+    // telemetry is on by default, otherwise not. This is necessary so that
+    // beta users who are testing final release builds don't flipflop defaults.
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+  return Some(true);
+#else
+  nsAutoCString channelPrefValue;
+  Unused << Preferences::GetCString(
+    kChannelPref, channelPrefValue, PrefValueKind::Default);
+  return Some(prefValue.EqualsLiteral("beta"));
+#endif
+}
+
+/* static */ void
+Preferences::SetupTelemetryPref()
+{
+  Maybe<bool> telemetryPrefValue = TelemetryPrefValue();
+  if (telemetryPrefValue.isSome()) {
+    Preferences::SetBoolInAnyProcess(
+      kTelemetryPref, *telemetryPrefValue, PrefValueKind::Default);
+  }
+}
+
+#else // !MOZ_WIDGET_ANDROID
+
+static bool
+TelemetryPrefValue()
+{
+  // For platforms with Unified Telemetry (here meaning not-Android),
+  // toolkit.telemetry.enabled determines whether we send "extended" data.
+  // We only want extended data from pre-release channels due to size.
+
+  NS_NAMED_LITERAL_CSTRING(channel, NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+
+  // Easy cases: Nightly, Aurora, Beta.
+  if (channel.EqualsLiteral("nightly") || channel.EqualsLiteral("aurora") ||
+      channel.EqualsLiteral("beta")) {
+    return true;
+  }
+
+#ifndef MOZILLA_OFFICIAL
+  // Local developer builds: non-official builds on the "default" channel.
+  if (channel.EqualsLiteral("default")) {
+    return true;
+  }
+#endif
+
+  // Release Candidate builds: builds that think they are release builds, but
+  // are shipped to beta users.
+  if (channel.EqualsLiteral("release")) {
+    nsAutoCString channelPrefValue;
+    Unused << Preferences::GetCString(
+      kChannelPref, channelPrefValue, PrefValueKind::Default);
+    if (channelPrefValue.EqualsLiteral("beta")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* static */ void
+Preferences::SetupTelemetryPref()
+{
+  Preferences::SetBoolInAnyProcess(
+    kTelemetryPref, TelemetryPrefValue(), PrefValueKind::Default);
+  Preferences::LockInAnyProcess(kTelemetryPref);
+}
+
+#endif // MOZ_WIDGET_ANDROID
 
 /* static */ already_AddRefed<Preferences>
 Preferences::GetInstanceForService()
@@ -4063,58 +4146,7 @@ Preferences::InitInitialObjects()
     }
   }
 
-#ifdef MOZ_WIDGET_ANDROID
-  // Set up the correct default for toolkit.telemetry.enabled. If this build
-  // has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel, telemetry
-  // is on by default, otherwise not. This is necessary so that beta users who
-  // are testing final release builds don't flipflop defaults.
-  if (Preferences::GetType(kTelemetryPref) == nsIPrefBranch::PREF_INVALID) {
-    bool prerelease = false;
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-    prerelease = true;
-#else
-    nsAutoCString prefValue;
-    Preferences::GetCString(kChannelPref, prefValue, PrefValueKind::Default);
-    if (prefValue.EqualsLiteral("beta")) {
-      prerelease = true;
-    }
-#endif
-    Preferences::SetBoolInAnyProcess(
-      kTelemetryPref, prerelease, PrefValueKind::Default);
-  }
-#else
-  // For platforms with Unified Telemetry (here meaning not-Android),
-  // toolkit.telemetry.enabled determines whether we send "extended" data.
-  // We only want extended data from pre-release channels due to size. We
-  // also want it to be recorded for local developer builds (non-official builds
-  // on the "default" channel).
-  bool developerBuild = false;
-#ifndef MOZILLA_OFFICIAL
-  developerBuild = !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "default");
-#endif
-
-  // Release Candidate builds are builds that think they are release builds, but
-  // are shipped to beta users. We still need extended data from these users.
-  bool releaseCandidateOnBeta = false;
-  if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "release")) {
-    nsAutoCString updateChannelPrefValue;
-    Preferences::GetCString(
-      kChannelPref, updateChannelPrefValue, PrefValueKind::Default);
-    releaseCandidateOnBeta = updateChannelPrefValue.EqualsLiteral("beta");
-  }
-
-  if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "nightly") ||
-      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "aurora") ||
-      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") || developerBuild ||
-      releaseCandidateOnBeta) {
-    Preferences::SetBoolInAnyProcess(
-      kTelemetryPref, true, PrefValueKind::Default);
-  } else {
-    Preferences::SetBoolInAnyProcess(
-      kTelemetryPref, false, PrefValueKind::Default);
-  }
-  Preferences::LockInAnyProcess(kTelemetryPref);
-#endif // MOZ_WIDGET_ANDROID
+  SetupTelemetryPref();
 
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
                                 nullptr,
