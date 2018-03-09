@@ -81,12 +81,12 @@ JitAsyncInterruptHandler(int signum, siginfo_t*, void*)
 static bool sTriedInstallAsyncInterrupt = false;
 static bool sHaveAsyncInterrupt = false;
 
-bool
+void
 jit::EnsureAsyncInterrupt(JSContext* cx)
 {
     // We assume that there are no races creating the first JSRuntime of the process.
     if (sTriedInstallAsyncInterrupt)
-        return sHaveAsyncInterrupt;
+        return;
     sTriedInstallAsyncInterrupt = true;
 
 #if defined(ANDROID) && !defined(__aarch64__)
@@ -99,7 +99,7 @@ jit::EnsureAsyncInterrupt(JSContext* cx)
     PodArrayZero(version_string);
     if (__system_property_get("ro.build.version.sdk", version_string) > 0) {
         if (atol(version_string) < 19)
-            return false;
+            return;
     }
 #endif
 
@@ -125,7 +125,6 @@ jit::EnsureAsyncInterrupt(JSContext* cx)
 #endif // defined(XP_WIN)
 
     sHaveAsyncInterrupt = true;
-    return true;
 }
 
 bool
