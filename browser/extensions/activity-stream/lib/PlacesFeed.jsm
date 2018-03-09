@@ -114,6 +114,7 @@ class BookmarksObserver extends Observer {
     // default bookmarks, added when the profile is created.
     if (type !== PlacesUtils.bookmarks.TYPE_BOOKMARK ||
         source === PlacesUtils.bookmarks.SOURCES.IMPORT_REPLACE ||
+        source === PlacesUtils.bookmarks.SOURCES.SYNC ||
         (uri.scheme !== "http" && uri.scheme !== "https")) {
       return;
     }
@@ -139,8 +140,10 @@ class BookmarksObserver extends Observer {
    * @param  {str} uri
    * @param  {str} guid      The unique id of the bookmark
    */
-  onItemRemoved(id, folderId, index, type, uri, guid) {
-    if (type === PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+  onItemRemoved(id, folderId, index, type, uri, guid, parentGuid, source) { // eslint-disable-line max-params
+    if (type === PlacesUtils.bookmarks.TYPE_BOOKMARK &&
+        source !== PlacesUtils.bookmarks.SOURCES.IMPORT_REPLACE &&
+        source !== PlacesUtils.bookmarks.SOURCES.SYNC) {
       this.dispatch({
         type: at.PLACES_BOOKMARK_REMOVED,
         data: {url: uri.spec, bookmarkGuid: guid}
