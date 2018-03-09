@@ -82,10 +82,16 @@ public:
   {
     MOZ_ASSERT(aPerformance);
 
-    return (!aStamp.IsNull())
-        ? nsRFPService::ReduceTimePrecisionAsMSecs(
-            TimeStampToDOMHighRes(aPerformance, aStamp))
-        : FetchStartHighRes(aPerformance);
+    if(aStamp.IsNull()) {
+      return FetchStartHighRes(aPerformance);
+    }
+
+    DOMHighResTimeStamp rawTimestamp = TimeStampToDOMHighRes(aPerformance, aStamp);
+    if (aPerformance->IsSystemPrincipal()) {
+      return rawTimestamp;
+    }
+
+    return nsRFPService::ReduceTimePrecisionAsMSecs(rawTimestamp);
   }
 
   /**
@@ -268,6 +274,9 @@ public:
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetNavigationStart();
+    }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetNavigationStart());
   }
@@ -278,6 +287,9 @@ public:
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetUnloadEventStart();
+    }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetUnloadEventStart());
   }
@@ -287,6 +299,9 @@ public:
     if (!nsContentUtils::IsPerformanceTimingEnabled() ||
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
+    }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetUnloadEventEnd();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetUnloadEventEnd());
@@ -311,6 +326,9 @@ public:
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetDomLoading();
+    }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetDomLoading());
   }
@@ -320,6 +338,9 @@ public:
     if (!nsContentUtils::IsPerformanceTimingEnabled() ||
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
+    }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetDomInteractive();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetDomInteractive());
@@ -331,6 +352,9 @@ public:
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetDomContentLoadedEventStart();
+    }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetDomContentLoadedEventStart());
   }
@@ -340,6 +364,9 @@ public:
     if (!nsContentUtils::IsPerformanceTimingEnabled() ||
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
+    }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetDomContentLoadedEventEnd();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetDomContentLoadedEventEnd());
@@ -351,6 +378,9 @@ public:
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetDomComplete();
+    }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetDomComplete());
   }
@@ -360,6 +390,9 @@ public:
     if (!nsContentUtils::IsPerformanceTimingEnabled() ||
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
+    }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetLoadEventStart();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetLoadEventStart());
@@ -371,6 +404,9 @@ public:
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
     }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetLoadEventEnd();
+    }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetLoadEventEnd());
   }
@@ -380,6 +416,9 @@ public:
     if (!nsContentUtils::IsPerformanceTimingEnabled() ||
         nsContentUtils::ShouldResistFingerprinting()) {
       return 0;
+    }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetTimeToNonBlankPaint();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
       GetDOMTiming()->GetTimeToNonBlankPaint());
