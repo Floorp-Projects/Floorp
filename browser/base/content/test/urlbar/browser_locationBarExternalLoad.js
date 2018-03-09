@@ -41,14 +41,8 @@ function promiseLoaded(browser) {
 }
 
 async function testURL(url, loadFunc, endFunc) {
-  let tabSwitchedPromise = promiseNewTabSwitched();
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  let browser = gBrowser.selectedBrowser;
-
-  let pageshowPromise = promiseLoaded(browser);
-
-  await tabSwitchedPromise;
-  await pageshowPromise;
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let browser = tab.linkedBrowser;
 
   let pagePrincipal = gBrowser.contentPrincipal;
   loadFunc(url);
@@ -69,5 +63,5 @@ async function testURL(url, loadFunc, endFunc) {
   ok(!gBrowser.contentPrincipal.equals(pagePrincipal),
      "load of " + url + " by " + loadFunc.name + " should produce a page with a different principal");
 
-  gBrowser.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 }
