@@ -172,12 +172,15 @@ public:
   // The following Reduce methods can be called off main thread.
   static double ReduceTimePrecisionAsUSecs(
     double aTime,
+    int64_t aContextMixin,
     TimerPrecisionType aType = TimerPrecisionType::All);
   static double ReduceTimePrecisionAsMSecs(
     double aTime,
+    int64_t aContextMixin,
     TimerPrecisionType aType = TimerPrecisionType::All);
   static double ReduceTimePrecisionAsSecs(
     double aTime,
+    int64_t aContextMixin,
     TimerPrecisionType aType = TimerPrecisionType::All);
 
   // Used by the JS Engine, as it doesn't know about the TimerPrecisionType enum
@@ -189,9 +192,11 @@ public:
     double aTime,
     TimeScale aTimeScale,
     double aResolutionUSec,
+    int64_t aContextMixin,
     TimerPrecisionType aType);
   static nsresult RandomMidpoint(long long aClampedTimeUSec,
                                  long long aResolutionUSec,
+                                 int64_t aContextMixin,
                                  long long* aMidpointOut,
                                  uint8_t * aSecretSeed = nullptr);
 
