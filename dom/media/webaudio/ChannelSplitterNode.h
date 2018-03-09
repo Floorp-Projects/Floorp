@@ -31,6 +31,19 @@ public:
     return Create(aAudioContext, aOptions, aRv);
   }
 
+  void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override
+  {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+  void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv) override
+  {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+  void SetChannelInterpretationValue(ChannelInterpretation aMode, ErrorResult& aRv) override
+  {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint16_t NumberOfOutputs() const override { return mOutputCount; }

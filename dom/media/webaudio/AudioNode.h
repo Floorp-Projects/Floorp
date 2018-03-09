@@ -152,7 +152,7 @@ public:
   {
     return mChannelInterpretation;
   }
-  void SetChannelInterpretationValue(ChannelInterpretation aMode)
+  virtual void SetChannelInterpretationValue(ChannelInterpretation aMode, ErrorResult& aRv)
   {
     mChannelInterpretation = aMode;
     SendChannelMixingParametersToStream();
