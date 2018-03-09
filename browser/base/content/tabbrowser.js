@@ -251,10 +251,6 @@ window._gBrowser = {
     this._setupEventListeners();
   },
 
-  get tabContextMenu() {
-    return this.tabContainer.contextMenu;
-  },
-
   get visibleTabs() {
     if (!this._visibleTabs)
       this._visibleTabs = Array.filter(this.tabs,
