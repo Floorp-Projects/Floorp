@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "builtin/SymbolObject.h"
+#include "builtin/Symbol.h"
 
-#include "vm/StringBuffer.h"
-#include "vm/Symbol.h"
+#include "util/StringBuffer.h"
+#include "vm/SymbolType.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

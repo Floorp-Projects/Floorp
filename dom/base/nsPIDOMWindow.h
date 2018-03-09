@@ -55,8 +55,6 @@ class Navigator;
 class Performance;
 class ServiceWorker;
 class ServiceWorkerDescriptor;
-class ServiceWorkerRegistration;
-class ServiceWorkerRegistrationDescriptor;
 class Timeout;
 class TimeoutManager;
 class CustomElementRegistry;
@@ -189,10 +187,6 @@ public:
 
   bool GetAudioCaptured() const;
   nsresult SetAudioCapture(bool aCapture);
-
-  already_AddRefed<mozilla::dom::ServiceWorkerRegistration>
-    GetServiceWorkerRegistration(const mozilla::dom::ServiceWorkerRegistrationDescriptor& aDescriptor);
-  void InvalidateServiceWorkerRegistration(const nsAString& aScope);
 
   mozilla::dom::Performance* GetPerformance();
 
@@ -654,11 +648,6 @@ protected:
   mozilla::UniquePtr<mozilla::dom::TimeoutManager> mTimeoutManager;
 
   RefPtr<mozilla::dom::Navigator> mNavigator;
-
-  typedef nsRefPtrHashtable<nsStringHashKey,
-                            mozilla::dom::ServiceWorkerRegistration>
-          ServiceWorkerRegistrationTable;
-  ServiceWorkerRegistrationTable mServiceWorkerRegistrationTable;
 
   // These variables are only used on inner windows.
   uint32_t mMutationBits;

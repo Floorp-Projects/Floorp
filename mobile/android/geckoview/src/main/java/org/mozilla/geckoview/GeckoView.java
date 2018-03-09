@@ -192,18 +192,31 @@ public class GeckoView extends FrameLayout {
         }
     }
 
+    public GeckoSession releaseSession() {
+        if (mSession == null) {
+            return null;
+        }
+
+        GeckoSession session = mSession;
+        mSession.releaseDisplay(mDisplay.release());
+        mSession.getOverscrollEdgeEffect().setInvalidationCallback(null);
+        mSession.getCompositorController().setFirstPaintCallback(null);
+        mSession = null;
+        return session;
+    }
+
     public void setSession(final GeckoSession session) {
         if (mSession != null && mSession.isOpen()) {
             throw new IllegalStateException("Current session is open");
         }
 
-        if (mSession != null) {
-            mSession.releaseDisplay(mDisplay.release());
-        }
-        if (session != null) {
-            mDisplay.acquire(session.acquireDisplay());
+        releaseSession();
+        mSession = session;
+        if (mSession == null) {
+          return;
         }
 
+        mDisplay.acquire(session.acquireDisplay());
         final Context context = getContext();
         session.getOverscrollEdgeEffect().setTheme(context);
         session.getOverscrollEdgeEffect().setInvalidationCallback(new Runnable() {
@@ -232,8 +245,6 @@ public class GeckoView extends FrameLayout {
                 coverUntilFirstPaint(Color.TRANSPARENT);
             }
         });
-
-        mSession = session;
     }
 
     public GeckoSession getSession() {
@@ -263,7 +274,7 @@ public class GeckoView extends FrameLayout {
         }
 
         if (!mSession.isOpen()) {
-            mSession.openWindow(getContext().getApplicationContext());
+            mSession.open(getContext().getApplicationContext());
         }
 
         mSession.getTextInputController().setView(this);
@@ -275,7 +286,9 @@ public class GeckoView extends FrameLayout {
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
 
-        mSession.getTextInputController().setView(this);
+        if (mSession != null) {
+          mSession.getTextInputController().setView(null);
+        }
 
         if (mStateSaved) {
             // If we saved state earlier, we don't want to close the window.
@@ -283,7 +296,7 @@ public class GeckoView extends FrameLayout {
         }
 
         if (mSession != null && mSession.isOpen()) {
-            mSession.closeWindow();
+            mSession.close();
         }
     }
 
