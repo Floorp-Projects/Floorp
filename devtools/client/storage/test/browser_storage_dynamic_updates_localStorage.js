@@ -22,7 +22,7 @@ add_task(function* () {
 
   gWindow.localStorage.removeItem("ls4");
 
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [
@@ -33,8 +33,7 @@ add_task(function* () {
 
   gWindow.localStorage.setItem("ls4", "again");
 
-  yield gUI.once("store-objects-updated");
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [
@@ -45,8 +44,7 @@ add_task(function* () {
   // Updating a row
   gWindow.localStorage.setItem("ls2", "ls2-changed");
 
-  yield gUI.once("store-objects-updated");
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   checkCell("ls2", "value", "ls2-changed");
 
