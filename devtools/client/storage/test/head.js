@@ -512,11 +512,17 @@ function matchVariablesViewProperty(prop, rule) {
  *        The array id of the item in the tree
  */
 function* selectTreeItem(ids) {
-  /* If this item is already selected, return */
   if (gUI.tree.isSelected(ids)) {
+    info(`"${ids}" is already selected, returning.`);
+    return;
+  }
+  if (!gUI.tree.exists(ids)) {
+    info(`"${ids}" does not exist, returning.`);
     return;
   }
 
+  // The item exists but is not selected... select it.
+  info(`Selecting "${ids}".`);
   let updated = gUI.once("store-objects-updated");
   gUI.tree.selectedItem = ids;
   yield updated;
@@ -979,7 +985,7 @@ function* performAdd(store) {
   }
 
   let eventEdit = gUI.table.once("row-edit");
-  let eventWait = gUI.once("store-objects-updated");
+  let eventWait = gUI.once("store-objects-edit");
 
   menuAdd.click();
 
