@@ -7,6 +7,7 @@ ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ErrorPageEventHandler: "chrome://geckoview/content/ErrorPageEventHandler.js",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
 });
 
@@ -34,6 +35,11 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
   // nsILoadURIDelegate.
   loadURI(aUri, aWhere, aFlags, aTriggeringPrincipal) {
     debug("loadURI " + (aUri && aUri.spec) + " " + aWhere + " " + aFlags);
+
+    // TODO: Remove this when we have a sensible error API.
+    if (aUri && aUri.displaySpec.startsWith("about:certerror")) {
+      addEventListener("click", ErrorPageEventHandler, true);
+    }
 
     return LoadURIDelegate.load(this.eventDispatcher, aUri, aWhere, aFlags,
                                 aTriggeringPrincipal);

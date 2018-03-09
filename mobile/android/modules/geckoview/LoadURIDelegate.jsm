@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["LoadURIDelegate"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ErrorPageEventHandler: "chrome://geckoview/content/ErrorPageEventHandler.js",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -17,11 +16,6 @@ var LoadURIDelegate = {
   // Delegate URI loading to the app.
   // Return whether the loading has been handled.
   load: function(aEventDispatcher, aUri, aWhere, aFlags, aTriggeringPrincipal) {
-    // TODO: Remove this when we have a sensible error API.
-    if (aUri && aUri.displaySpec.startsWith("about:certerror")) {
-      addEventListener("click", ErrorPageEventHandler, true);
-    }
-
     const message = {
       type: "GeckoView:OnLoadRequest",
       uri: aUri ? aUri.displaySpec : "",
