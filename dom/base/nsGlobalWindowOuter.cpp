@@ -1644,6 +1644,7 @@ CreateNativeGlobalForInner(JSContext* aCx,
   // window's compartment with the add-on ID. See bug 1092156.
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     options.creationOptions().setAddonId(MapURIToAddonID(aURI));
+    options.creationOptions().setClampAndJitterTime(false);
   }
 
   options.creationOptions().setSecureContext(aIsSecureContext);
