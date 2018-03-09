@@ -8,6 +8,8 @@
   <string name="feedback_erase">Vaše historie prohlížení byla vymazána.</string>
   <string name="search_hint">Hledat %1$s</string>
   <string name="menu_share">Sdílet…</string>
+  <string name="menu_open_with_default_browser2">Otevřít v aplikaci %1$s</string>
+  <string name="menu_open_with_a_browser2">Otevřít v…</string>
   <string name="menu_add_to_home_screen">Přidat na domovskou obrazovku</string>
   <string name="menu_whats_new">Co je nového</string>
   <string name="menu_settings">Nastavení</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Nejsou vám však podstoupena žádná práva ani licence k ochranným známkám Mozilla Foundation či dalších stran, a to zejména k logům a jménům Mozilla, Firefox nebo %1$s. Podrobnější informace o ochranných známkách jsou dostupné "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">zde</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Další zdrojové kódy pro %1$s jsou dostupné pod dalšími různými "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencemi</a>" svobodného softwaru."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s také používá seznamy společnosti Disconnect, Inc. poskytnuté jako samostatná a nezávislá díla pod licencí "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" a dostupné "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">zde</a>.]]></string>
+  <string name="gv_prompt_username_hint">Uživatelské jméno</string>
+  <string name="gv_prompt_password_hint">Heslo</string>
+  <string name="gv_prompt_clear">Vymazat</string>
 </resources>

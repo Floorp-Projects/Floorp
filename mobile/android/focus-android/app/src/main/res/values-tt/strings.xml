@@ -174,6 +174,8 @@
   <string name="tabs_tray_action_erase">Гизү тарихын бетерү</string>
   <string name="download_firefox">Firefox\'ны йөкләп алу</string>
   <string name="your_rights_content1">%1$s — Mozilla һәм башка катнашучылар ясаган ирекле һәм ачык чыганаклы программа.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" һәм башка ачык чыганак лицензияләренең шартлары белән тәкъдим ителә."]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s өчен өстәмә чыганак кодлары берничә башка ирекле һәм ачык чыганак "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1079;&#1080;&#1103;&#1083;&#1241;&#1088;&#1077;</a>" белән тәкъдим ителә."]]></string>
   <string name="gv_prompt_username_hint">Кулланучы исеме</string>
   <string name="gv_prompt_password_hint">Серсүз</string>
   <string name="gv_prompt_clear">Чистарту</string>

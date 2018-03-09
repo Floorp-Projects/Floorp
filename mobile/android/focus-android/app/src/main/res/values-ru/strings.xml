@@ -8,6 +8,8 @@
   <string name="feedback_erase">Ваша история посещения сайтов была стёрта.</string>
   <string name="search_hint">Поиск %1$s</string>
   <string name="menu_share">Поделиться…</string>
+  <string name="menu_open_with_default_browser2">Открыть в %1$s</string>
+  <string name="menu_open_with_a_browser2">Открыть в…</string>
   <string name="menu_add_to_home_screen">Добавить на домашний экран</string>
   <string name="menu_whats_new">Что нового</string>
   <string name="menu_settings">Параметры</string>
@@ -181,4 +183,7 @@
   <string name="your_rights_content3"><![CDATA["Вы не получаете никаких прав или лицензий на товарные знаки Mozilla Foundation или любой из сторон, включая имена или логотипы Mozilla, Firefox или %1$s. Дополнительную информацию можно найти "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1079;&#1076;&#1077;&#1089;&#1100;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Дополнительный исходный код для %1$s доступен на условиях различных других "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1079;&#1080;&#1081;</a>" для бесплатного и открытого исходного кода."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s также использует списки блокировки, предоставленные Disconnect, Inc. как отдельные и независимые произведения на условиях "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" и доступные "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1079;&#1076;&#1077;&#1089;&#1100;</a>.]]></string>
+  <string name="gv_prompt_username_hint">Имя пользователя</string>
+  <string name="gv_prompt_password_hint">Пароль</string>
+  <string name="gv_prompt_clear">Очистить</string>
 </resources>
