@@ -3,7 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Check that exceptions from scripts loaded with the addon-sdk loader are
+// Check that exceptions from scripts loaded with the DevTools loader are
 // opened correctly in View Source from the Browser Console.
 // See bug 866950.
 
@@ -26,7 +26,7 @@ function test() {
     browserconsole = yield HUDService.toggleBrowserConsole();
     ok(browserconsole, "browser console opened");
 
-    // Cause an exception in a script loaded with the addon-sdk loader.
+    // Cause an exception in a script loaded with the DevTools loader.
     let toolbox = gDevTools.getToolbox(webconsole.target);
     let oldPanels = toolbox._toolPanels;
     // non-iterable

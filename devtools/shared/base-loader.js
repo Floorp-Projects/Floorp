@@ -571,7 +571,7 @@ function unload(loader, reason) {
   // some modules may do cleanup in subsequent turns of event loop. Destroying
   // cache may cause module identity problems in such cases.
   let subject = { wrappedJSObject: loader.destructor };
-  Services.obs.notifyObservers(subject, "sdk:loader:destroy", reason);
+  Services.obs.notifyObservers(subject, "devtools:loader:destroy", reason);
 }
 
 // Function makes new loader that can be used to load CommonJS modules.
