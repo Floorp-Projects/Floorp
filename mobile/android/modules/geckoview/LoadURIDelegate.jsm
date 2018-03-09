@@ -23,7 +23,7 @@ var LoadURIDelegate = {
     }
 
     const message = {
-      type: "GeckoView:OnLoadUri",
+      type: "GeckoView:OnLoadRequest",
       uri: aUri ? aUri.displaySpec : "",
       where: aWhere,
       flags: aFlags
