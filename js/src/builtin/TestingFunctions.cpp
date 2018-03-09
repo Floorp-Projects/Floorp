@@ -5113,6 +5113,8 @@ BaselineCompile(JSContext* cx, unsigned argc, Value* vp)
         return ReturnStringCopy(cx, args, "baseline disabled");
     if (!script->canBaselineCompile())
         return ReturnStringCopy(cx, args, "can't compile");
+    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+        return false;
 
     jit::MethodStatus status = jit::BaselineCompile(cx, script, forceDebug);
     switch (status) {
