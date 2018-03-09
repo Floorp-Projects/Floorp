@@ -1122,9 +1122,11 @@ class GeneratedFile(ContextDerived):
         'flags',
         'required_for_compile',
         'localized',
+        'force',
     )
 
-    def __init__(self, context, script, method, outputs, inputs, flags=(), localized=False):
+    def __init__(self, context, script, method, outputs, inputs,
+                 flags=(), localized=False, force=False):
         ContextDerived.__init__(self, context)
         self.script = script
         self.method = method
@@ -1132,6 +1134,7 @@ class GeneratedFile(ContextDerived):
         self.inputs = inputs
         self.flags = flags
         self.localized = localized
+        self.force = force
 
         suffixes = (
             '.c',
