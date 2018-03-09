@@ -333,6 +333,12 @@ panelview:not([mainview]) .toolbarbutton-text,
   margin-bottom: 0;
 }
 
+#extension-new-tab-notification-description > .extension-controlled-icon {
+  height: 16px;
+  width: 16px;
+  vertical-align: bottom;
+}
+
 #extension-new-tab-notification > .popup-notification-body-container > .popup-notification-body > .popup-notification-warning,
 #extension-new-tab-notification > .popup-notification-body-container > .popup-notification-icon {
   display: none;
