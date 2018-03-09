@@ -634,7 +634,7 @@ Utilities.extendObject(window.benchmarkController, {
         for (var suite in item['testsResults']) {
             for (var subtest in item['testsResults'][suite.toString()]) {
                 fullNames.push(suite.toString() + "-" + subtest.toString().replace(/ /g, '_'));
-                values.push(item['testsResults'][suite.toString()][subtest.toString()]['controller']['average']);
+                values.push(item['testsResults'][suite.toString()][subtest.toString()]['frameLength']['average']);
            }
         }
         if (typeof tpRecordTime !== "undefined") {
