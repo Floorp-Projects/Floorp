@@ -12,20 +12,12 @@ add_task(async function() {
 
   let url = "http://example.com/";
   let tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
+  await testLinkNavigation({ browser: tab.linkedBrowser, url });
 
-  // eslint-disable-next-line no-shadow
-  await ContentTask.spawn(tab.linkedBrowser, {url}, function({url}) {
-    let {document} = content;
+  info("Switch back to the JSONViewer");
+  await BrowserTestUtils.switchTab(gBrowser, tab);
 
-    let link = document.querySelector(".jsonPanelBox .treeTable .treeValueCell a");
-    is(link.href, url, "The URL was linkified.");
-    is(link.textContent, url, "The full URL is displayed.");
-
-    // Click the label
-    document.querySelector(".jsonPanelBox .treeTable .treeLabel").click();
-    is(link.href, url, "The link target didn't change.");
-    is(link.textContent, url, "The link text didn't change.");
-  });
+  await testLinkNavigation({ browser: tab.linkedBrowser, url, clickLabel: true });
 });
 
 add_task(async function() {
@@ -34,18 +26,53 @@ add_task(async function() {
   let url = "http://example.com/" + "a".repeat(100);
   let tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
 
-  // eslint-disable-next-line no-shadow
-  await ContentTask.spawn(tab.linkedBrowser, {url, ELLIPSIS}, function({url, ELLIPSIS}) {
-    let croppedUrl = url.slice(0, 24) + ELLIPSIS + url.slice(-24);
-    let {document} = content;
+  await testLinkNavigation({ browser: tab.linkedBrowser, url });
 
-    let link = document.querySelector(".jsonPanelBox .treeTable .treeValueCell a");
-    is(link.href, url, "The URL was linkified.");
-    is(link.textContent, url, "The full URL is displayed.");
+  info("Switch back to the JSONViewer");
+  await BrowserTestUtils.switchTab(gBrowser, tab);
 
-    // Click the label, this crops the value.
-    document.querySelector(".jsonPanelBox .treeTable .treeLabel").click();
-    is(link.href, url, "The link target didn't change.");
-    is(link.textContent, croppedUrl, "The link text was cropped.");
+  await testLinkNavigation({
+    browser: tab.linkedBrowser,
+    url,
+    urlText: url.slice(0, 24) + ELLIPSIS + url.slice(-24),
+    clickLabel: true,
   });
 });
+
+/**
+ * Assert that the expected link is displayed and that clicking on it navigates to the
+ * expected url.
+ *
+ * @param {Object} option object containing:
+ *        - browser (mandatory): the browser the tab will be opened in.
+ *        - url (mandatory): The url we should navigate to.
+ *        - urlText: The expected displayed text of the url.
+ *                   Falls back to `url` if not filled
+ *        - clickLabel: Should we click the label before doing assertions.
+ */
+async function testLinkNavigation({
+  browser,
+  url,
+  urlText,
+  clickLabel = false
+}) {
+  let onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url);
+
+  ContentTask.spawn(browser, [urlText || url, clickLabel], (args) => {
+    const [expectedURL, shouldClickLabel] = args;
+    let {document} = content;
+
+    if (shouldClickLabel === true) {
+      document.querySelector(".jsonPanelBox .treeTable .treeLabel").click();
+    }
+
+    let link = document.querySelector(".jsonPanelBox .treeTable .treeValueCell a");
+    is(link.textContent, expectedURL, "The expected URL is displayed.");
+    link.click();
+  });
+
+  let newTab = await onTabLoaded;
+  // We only need to check that newTab is truthy since
+  // BrowserTestUtils.waitForNewTab checks the URL.
+  ok(newTab, "The expected tab was opened.");
+}
