@@ -38,7 +38,6 @@ let requestStore = new PaymentsStore({
       shippingType: "shipping",
     },
   },
-  selectedPayerAddress: null,
   selectedPaymentCard: null,
   selectedPaymentCardSecurityCode: null,
   selectedShippingAddress: null,
