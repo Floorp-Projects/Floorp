@@ -134,8 +134,9 @@ public:
   nsTArray<ChunkListenerItem *> mItems;
 };
 
-class CacheFileChunk : public CacheFileIOListener
-                     , public CacheMemoryConsumer
+class CacheFileChunk final
+  : public CacheFileIOListener
+  , public CacheMemoryConsumer
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
