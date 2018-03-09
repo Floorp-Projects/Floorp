@@ -85,7 +85,6 @@ const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 const PREF_DISTRO_ADDONS_PERMS        = "extensions.distroAddons.promptForPermissions";
-const PREF_INTERPOSITION_ENABLED      = "extensions.interposition.enabled";
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 const PREF_ALLOW_LEGACY               = "extensions.legacy.enabled";
@@ -4232,11 +4231,6 @@ var XPIProvider = {
     let principal = Cc["@mozilla.org/systemprincipal;1"].
                     createInstance(Ci.nsIPrincipal);
     if (!aMultiprocessCompatible) {
-      if (Services.prefs.getBoolPref(PREF_INTERPOSITION_ENABLED, false)) {
-        let interposition = Cc["@mozilla.org/addons/multiprocess-shims;1"].
-          getService(Ci.nsIAddonInterposition);
-        Cu.setAddonInterposition(aId, interposition);
-      }
       Cu.allowCPOWsInAddon(aId, true);
     }
 
@@ -4300,9 +4294,6 @@ var XPIProvider = {
    *         The add-on's ID
    */
   unloadBootstrapScope(aId) {
-    // In case the add-on was not multiprocess-compatible, deregister
-    // any interpositions for it.
-    Cu.setAddonInterposition(aId, null);
     Cu.allowCPOWsInAddon(aId, false);
 
     this.activeAddons.delete(aId);

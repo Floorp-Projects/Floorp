@@ -43,7 +43,7 @@ def add_previous_versions(config, jobs):
     else:
         extra_params = []
         for partial in release_config["partial_versions"].split(","):
-            extra_params.append("--previous-version={}".format(partial.split("build")[0]))
+            extra_params.append("--previous-version={}".format(partial.split("build")[0].strip()))
 
         for job in jobs:
             job = copy.deepcopy(job)  # don't overwrite dict values here

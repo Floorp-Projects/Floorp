@@ -39,7 +39,9 @@ exclude = [
   "media/mp4parse-rust/mp4parse_fallible",
 ]
 
-# Explicitly specify what our profiles use.
+# Explicitly specify what our profiles use.  The opt-level setting here is
+# a total fiction; see the setup of MOZ_RUST_DEFAULT_FLAGS for what the
+# opt-level setting will be as a result of various other configure flags.
 [profile.dev]
 opt-level = 1
 rpath = false

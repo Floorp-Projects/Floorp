@@ -1265,7 +1265,6 @@ nsContentSink::StartLayout(bool aIgnorePendingSheets)
   // docshell in the iframe, and the content sink's call to OpenBody().
   // (Bug 153815)
   if (shell && !shell->DidInitialize()) {
-    nsCOMPtr<nsIPresShell> shellGrip = shell;
     nsresult rv = shell->Initialize();
     if (NS_FAILED(rv)) {
       return;
