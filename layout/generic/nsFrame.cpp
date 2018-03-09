@@ -3769,12 +3769,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
     child->MarkAbsoluteFramesForDisplayList(aBuilder);
 
-    const bool differentAGR =
-      buildingForChild.IsAnimatedGeometryRoot() || isPositioned;
-    nsDisplayList* toList = isPositioned ? &list : aLists.BorderBackground();
-
-    aBuilder->BuildCompositorHitTestInfoIfNeeded(child, toList, differentAGR);
-
     if (aBuilder->IsBuildingLayerEventRegions()) {
       // If this frame has a different animated geometry root than its parent,
       // make sure we accumulate event regions for its layer.
@@ -3799,6 +3793,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       }
     }
 
+    const bool differentAGR =
+      buildingForChild.IsAnimatedGeometryRoot() || isPositioned;
+
     if (!awayFromCommonPath && shortcutPossible &&
         !differentAGR && !buildingForChild.MaybeAnimatedGeometryRoot()) {
       // The shortcut is available for the child for next time.
@@ -3809,6 +3806,10 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // THIS IS THE COMMON CASE.
       // Not a pseudo or real stacking context. Do the simple thing and
       // return early.
+
+      aBuilder->BuildCompositorHitTestInfoIfNeeded(child,
+                                                   aLists.BorderBackground(),
+                                                   differentAGR);
 
       aBuilder->AdjustWindowDraggingRegion(child);
       child->BuildDisplayList(aBuilder, aLists);
@@ -3824,6 +3825,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // stacking context's positioned descendant list, because they might be
     // z-index:non-auto
     nsDisplayListCollection pseudoStack(aBuilder);
+
+    aBuilder->BuildCompositorHitTestInfoIfNeeded(child,
+                                                 pseudoStack.BorderBackground(),
+                                                 differentAGR);
+
     aBuilder->AdjustWindowDraggingRegion(child);
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
     child->BuildDisplayList(aBuilder, pseudoStack);
