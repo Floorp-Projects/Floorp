@@ -144,9 +144,8 @@ class ModuleSegment : public CodeSegment
 {
     Tier            tier_;
 
-    // These are pointers into code for stubs used for asynchronous
-    // signal-handler control-flow transfer.
-    uint8_t*        interruptCode_;
+    // These are pointers into code for stubs used for signal-handler
+    // control-flow transfer.
     uint8_t*        outOfBoundsCode_;
     uint8_t*        unalignedAccessCode_;
     uint8_t*        trapCode_;
@@ -173,7 +172,6 @@ class ModuleSegment : public CodeSegment
     ModuleSegment()
       : CodeSegment(),
         tier_(Tier(-1)),
-        interruptCode_(nullptr),
         outOfBoundsCode_(nullptr),
         unalignedAccessCode_(nullptr),
         trapCode_(nullptr)
@@ -195,7 +193,6 @@ class ModuleSegment : public CodeSegment
 
     Tier tier() const { return tier_; }
 
-    uint8_t* interruptCode() const { return interruptCode_; }
     uint8_t* outOfBoundsCode() const { return outOfBoundsCode_; }
     uint8_t* unalignedAccessCode() const { return unalignedAccessCode_; }
     uint8_t* trapCode() const { return trapCode_; }
