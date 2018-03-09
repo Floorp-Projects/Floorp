@@ -12,7 +12,7 @@
 #include "NamespaceImports.h"
 
 #include "vm/Scope.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 
 class JSLinearString;

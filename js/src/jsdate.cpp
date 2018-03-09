@@ -28,20 +28,20 @@
 
 #include "jsapi.h"
 #include "jsnum.h"
-#include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/String.h"
 #include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/Wrapper.h"
+#include "util/StringBuffer.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
-#include "vm/String.h"
-#include "vm/StringBuffer.h"
+#include "vm/StringType.h"
 #include "vm/Time.h"
 
 #include "vm/JSObject-inl.h"

@@ -31,7 +31,7 @@ job-defaults:
             - project:releng:bouncer:server:staging
    run-on-projects: []
    shipping-phase: promote
-   locales-file: browser/locales/l10n-changesets.json
+   locales-file: browser/locales/shipped-locales
 
 jobs:
    devedition:
