@@ -181,6 +181,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
       payRequest.addEventListener("shippingoptionchange", event => {
         event.updateWith(updateWithShippingOption());
       });
+
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
       payRequest.show().then(response => {
         is(response.requestId, "test payment", "response.requestId should be 'test payment'.");
         is(response.methodName, "testing-payment-method", "response.methodName should be 'testing-payment-method'.");
@@ -220,7 +222,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
       }).catch( e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 
@@ -230,6 +232,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     gScript.sendAsyncMessage("set-complete-status-fail");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
       payRequest.show().then(response => {
         response.complete("fail").then(() => {
           resolve();
@@ -240,7 +244,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
       }).catch( e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 
@@ -250,6 +254,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     gScript.sendAsyncMessage("set-complete-status-unknown");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
       payRequest.show().then(response => {
         response.complete("unknown").then(() => {
           resolve();
@@ -260,7 +266,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
       }).catch( e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 
@@ -270,6 +276,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     gScript.sendAsyncMessage("set-complete-status-unknown");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
       payRequest.show().then(response => {
         response.complete().then(() => {
           resolve();
@@ -280,11 +288,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
       }).catch( e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 
   function testCannotMakePaymentShow() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(nonSupportedMethods, defaultDetails);
       payRequest.canMakePayment().then(result => {
@@ -296,11 +306,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
           is(e.name, "NotSupportedError", "Should be rejected with 'NotSupportedError', but got " + e.name + ".");
           resolve();
         });
-      });
+      }).finally(handler.destruct);
     });
   }
 
   function testRejectShow() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
     gScript.sendAsyncMessage("set-reject-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
@@ -313,11 +325,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
       }).catch(e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 
   function testUpdateWithError() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
     gScript.sendAsyncMessage("set-update-with-error-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
@@ -336,7 +350,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
       }).catch(e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 
@@ -349,6 +363,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
         resolve();
       });
       gScript.sendAsyncMessage("test-init-data-and-response");
+    });
+  }
+
+  function testShowUnsafe() {
+    gScript.sendAsyncMessage("set-complete-ui-service");
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+      payRequest.show().then(() => {
+        ok(false, "Expected 'SecurityError', but got resolved")
+        resolve();
+      }).catch((err) => {
+        is(err.name, "SecurityError", `Should be rejected with 'SecurityError', but got ${err.name}`);
+        resolve();
+      });
     });
   }
 
@@ -372,6 +400,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     .then(testShowWithEmpty)
     .then(testUpdateWithError)
     .then(testNullDetailsResponse)
+    .then(testShowUnsafe)
     .then(teardown)
     .catch( e => {
       ok(false, "Unexpected error: " + e.name);

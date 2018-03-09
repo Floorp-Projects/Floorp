@@ -207,6 +207,37 @@ const ErrorUIService = {
 
 };
 
+const CompleteUIService = {
+  showPayment: function(requestId) {
+    const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
+                                createInstance(Ci.nsIGeneralResponseData);
+
+    try {
+      showResponseData.initData({});
+    } catch (e) {
+      emitTestFail("Fail to initialize response data with empty object.");
+    }
+
+    let showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
+                          createInstance(Ci.nsIPaymentShowActionResponse);
+    showResponse.init(requestId,
+                      Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+                      "",                  // payment method
+                      showResponseData,    // payment method data
+                      "",                  // payer name
+                      "",                  // payer email
+                      "");                 // payer phone
+    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  },
+  abortPayment: function(requestId) {
+  },
+  completePayment: function(requestId) {
+  },
+  updatePayment: function(requestId) {
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
+};
+
 function testInitDataAndResponse() {
   const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
                               createInstance(Ci.nsIGeneralResponseData);
@@ -275,6 +306,10 @@ addMessageListener("set-reject-ui-service", function() {
 
 addMessageListener("set-update-with-error-ui-service", function() {
   paymentSrv.setTestingUIService(ErrorUIService.QueryInterface(Ci.nsIPaymentUIService));
+});
+
+addMessageListener("set-complete-ui-service", function() {
+  paymentSrv.setTestingUIService(CompleteUIService.QueryInterface(Ci.nsIPaymentUIService));
 });
 
 addMessageListener("test-init-data-and-response", testInitDataAndResponse);
