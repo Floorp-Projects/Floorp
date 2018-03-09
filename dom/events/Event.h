@@ -64,7 +64,6 @@ private:
   void ConstructorInit(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        WidgetEvent* aEvent);
-  double TimeStampImpl() const;
 
 public:
   static Event* FromSupports(nsISupports* aSupports)
@@ -248,7 +247,7 @@ public:
     return mEvent->mFlags.mIsSynthesizedForTests;
   }
 
-  double TimeStamp() const;
+  double TimeStamp();
 
   EventTarget* GetOriginalTarget() const;
   EventTarget* GetExplicitOriginalTarget() const;
