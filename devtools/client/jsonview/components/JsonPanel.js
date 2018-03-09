@@ -88,7 +88,7 @@ define(function(require, exports, module) {
       return Rep(Object.assign({}, props, {
         cropLimit: 50,
         noGrip: true,
-        omitLinkHref: false,
+        openLink: url => window.open(url, "_blank"),
       }));
     }
 
