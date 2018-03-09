@@ -8,12 +8,16 @@ TEST_DIRS += ['tests']
 
 UNIFIED_SOURCES += [
     'nsRFPService.cpp',
+    'RelativeTimeline.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
 
 EXPORTS += [
-    'nsRFPService.h',
+    'nsRFPService.h'
+]
+EXPORTS.mozilla += [
+    'RelativeTimeline.h',
 ]
 
 EXTRA_JS_MODULES += [
