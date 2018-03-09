@@ -50,7 +50,7 @@ mochitest:
             default: true
     max-run-time:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 7200
+            android.*: 7200
             default: 5400
     allow-software-gl-layers: false
     tier:
@@ -170,7 +170,10 @@ mochitest-chrome:
             android-4.3-arm7-api-16/debug: 8
             android.*: 4
             default: 3
-    max-run-time: 3600
+    max-run-time:
+        by-test-platform:
+            android.*: 7200
+            default: 3600
     e10s: false
     mozharness:
         mochitest-flavor: chrome
