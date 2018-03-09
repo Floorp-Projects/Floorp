@@ -31,13 +31,21 @@ function promiseNewTabSwitched() {
   });
 }
 
+function promiseLoaded(browser) {
+  return ContentTask.spawn(browser, undefined, async () => {
+    if (!["interactive", "complete"].includes(content.document.readyState)) {
+      await new Promise(resolve => addEventListener(
+        "DOMContentLoaded", resolve, {once: true, capture: true}));
+    }
+  });
+}
+
 async function testURL(url, loadFunc, endFunc) {
   let tabSwitchedPromise = promiseNewTabSwitched();
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, undefined,
-                                                           {preferredRemoteType: "web"});
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.selectedBrowser;
 
-  let pageshowPromise = BrowserTestUtils.waitForContentEvent(browser, "pageshow");
+  let pageshowPromise = promiseLoaded(browser);
 
   await tabSwitchedPromise;
   await pageshowPromise;
