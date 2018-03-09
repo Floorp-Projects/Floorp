@@ -78,9 +78,6 @@ RUN usermod -a -G video worker
 
 RUN mkdir Documents; mkdir Pictures; mkdir Music; mkdir Videos; mkdir artifacts
 
-# install tc-npm-cache
-RUN  npm install -g taskcluster-npm-cache@1.1.14 \
- && rm -rf ~/.npm
 ENV PATH $PATH:/builds/worker/bin
 
 # TODO Re-enable worker when bug 1093833 lands

@@ -167,6 +167,7 @@ function transformConsoleAPICallPacket(packet) {
     timeStamp: message.timeStamp,
     userProvidedStyles: message.styles,
     prefix: message.prefix,
+    private: message.private,
   });
 }
 
@@ -177,7 +178,8 @@ function transformNavigationMessagePacket(packet) {
     type: MESSAGE_TYPE.LOG,
     level: MESSAGE_LEVEL.LOG,
     messageText: l10n.getFormatStr("webconsole.navigated", [message.url]),
-    timeStamp: message.timeStamp
+    timeStamp: message.timeStamp,
+    private: message.private,
   });
 }
 
@@ -193,6 +195,7 @@ function transformLogMessagePacket(packet) {
     level: MESSAGE_LEVEL.LOG,
     messageText: message,
     timeStamp,
+    private: message.private,
   });
 }
 
@@ -224,6 +227,7 @@ function transformPageErrorPacket(packet) {
     exceptionDocURL: pageError.exceptionDocURL,
     timeStamp: pageError.timeStamp,
     notes: pageError.notes,
+    private: pageError.private,
   });
 }
 
@@ -242,6 +246,7 @@ function transformNetworkEventPacket(packet) {
     method: networkEvent.request.method,
     updates: networkEvent.updates,
     cause: networkEvent.cause,
+    private: networkEvent.private,
   });
 }
 
@@ -287,6 +292,7 @@ function transformEvaluationResultPacket(packet) {
     frame,
     timeStamp,
     notes,
+    private: packet.private,
   });
 }
 
@@ -302,6 +308,7 @@ function getRepeatId(message) {
     source: message.source,
     type: message.type,
     userProvidedStyles: message.userProvidedStyles,
+    private: message.private,
   });
 }
 
@@ -381,9 +388,19 @@ function getInitialMessageCountForViewport(win) {
   return Math.ceil(win.innerHeight / minMessageHeight);
 }
 
+function isPacketPrivate(packet) {
+  return (
+    packet.private === true ||
+    (packet.message && packet.message.private === true) ||
+    (packet.pageError && packet.pageError.private === true) ||
+    (packet.networkEvent && packet.networkEvent.private === true)
+  );
+}
+
 module.exports = {
   getInitialMessageCountForViewport,
   isGroupType,
+  isPacketPrivate,
   l10n,
   prepareMessage,
   // Export for use in testing.
