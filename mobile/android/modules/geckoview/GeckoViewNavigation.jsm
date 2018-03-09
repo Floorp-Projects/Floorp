@@ -153,7 +153,8 @@ class GeckoViewNavigation extends GeckoViewModule {
     return browser;
   }
 
-  handleOpenUri(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
+  handleOpenUri(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal,
+                aNextTabParentId) {
     let browser = this.browser;
     if (LoadURIDelegate.load(this.eventDispatcher, aUri, aWhere, aFlags,
                              aTriggeringPrincipal)) {
@@ -177,14 +178,14 @@ class GeckoViewNavigation extends GeckoViewModule {
   // nsIBrowserDOMWindow.
   openURI(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
     const browser = this.handleOpenUri(aUri, aOpener, aWhere, aFlags,
-                                       aTriggeringPrincipal);
+                                       aTriggeringPrincipal, null);
     return browser && browser.contentWindow;
   }
 
   // nsIBrowserDOMWindow.
   openURIInFrame(aUri, aParams, aWhere, aFlags, aNextTabParentId, aName) {
-    const browser = this.handleOpenUri(aUri, aOpener, aWhere, aFlags,
-                                       aTriggeringPrincipal);
+    const browser = this.handleOpenUri(aUri, null, aWhere, aFlags, null,
+                                       aNextTabParentId);
     return browser;
   }
 
