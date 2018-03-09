@@ -31,6 +31,12 @@
 template <typename T>
 static MOZ_ALWAYS_INLINE T* MOZ_KnownLive(T* ptr) { return ptr; }
 
+/**
+ * Ditto, but for references.
+ */
+template <typename T>
+static MOZ_ALWAYS_INLINE T& MOZ_KnownLive(T& ref) { return ref; }
+
 extern "C" {
 #endif
 
