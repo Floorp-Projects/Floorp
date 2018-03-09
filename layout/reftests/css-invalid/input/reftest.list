@@ -21,13 +21,13 @@ fuzzy(11,4) == input-type-invalid.html input-ref.html
 fuzzy-if(webrender,0-15,0-14) == input-disabled-fieldset-1.html input-fieldset-ref.html
 fuzzy-if(webrender,0-15,0-14) == input-disabled-fieldset-2.html input-fieldset-ref.html
 == input-fieldset-legend.html input-fieldset-legend-ref.html
-fuzzy-if(webrender,0-14,0-8) == input-radio-required.html input-radio-ref.html
-fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-14,0-8) == input-radio-customerror.html input-radio-ref.html
-fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-14,0-8) == input-radio-dyn-valid-1.html input-radio-checked-ref.html
-fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-14,0-8) == input-radio-dyn-valid-2.html input-radio-ref.html
-fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-14,0-8) == input-radio-nogroup-required-valid.html input-radio-ref.html
-fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-14,0-8) == input-radio-nogroup-required-invalid.html input-radio-checked-ref.html
-fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-14,0-8) == input-radio-focus-click.html input-radio-ref.html
+fuzzy-if(webrender,0-92,0-2) == input-radio-required.html input-radio-ref.html
+fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-92,0-2) == input-radio-customerror.html input-radio-ref.html
+fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-92,0-2) == input-radio-dyn-valid-1.html input-radio-checked-ref.html
+fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-92,0-2) == input-radio-dyn-valid-2.html input-radio-ref.html
+fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-92,0-2) == input-radio-nogroup-required-valid.html input-radio-ref.html
+fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-92,0-2) == input-radio-nogroup-required-invalid.html input-radio-checked-ref.html
+fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-92,0-2) == input-radio-focus-click.html input-radio-ref.html
 == input-submit.html input-submit-ref.html
 == input-image.html input-image-ref.html
 # input type='hidden' shouldn't show
