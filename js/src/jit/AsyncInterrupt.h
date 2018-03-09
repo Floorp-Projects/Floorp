@@ -15,7 +15,7 @@ namespace jit {
 // Ensure the given JSRuntime is set up to use async interrupts. Failure to
 // enable signal handlers indicates some catastrophic failure and creation of
 // the runtime must fail.
-MOZ_MUST_USE bool
+void
 EnsureAsyncInterrupt(JSContext* cx);
 
 // Return whether the async interrupt can be used to interrupt Ion code.

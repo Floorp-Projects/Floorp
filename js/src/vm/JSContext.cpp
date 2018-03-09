@@ -128,8 +128,7 @@ JSContext::init(ContextKind kind)
             return false;
 #endif
 
-        if (!jit::EnsureAsyncInterrupt(this))
-            return false;
+        jit::EnsureAsyncInterrupt(this);
         if (!wasm::EnsureSignalHandlers(this))
             return false;
     }
