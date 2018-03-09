@@ -37,11 +37,13 @@ class ServiceWorkerRegistrationDescriptor final
   NewestInternal() const;
 
 public:
-  ServiceWorkerRegistrationDescriptor(nsIPrincipal* aPrincipal,
+  ServiceWorkerRegistrationDescriptor(uint64_t aId,
+                                      nsIPrincipal* aPrincipal,
                                       const nsACString& aScope,
                                       ServiceWorkerUpdateViaCache aUpdateViaCache);
 
-  ServiceWorkerRegistrationDescriptor(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+  ServiceWorkerRegistrationDescriptor(uint64_t aId,
+                                      const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                                       const nsACString& aScope,
                                       ServiceWorkerUpdateViaCache aUpdateViaCache);
 
@@ -61,6 +63,9 @@ public:
 
   bool
   operator==(const ServiceWorkerRegistrationDescriptor& aRight) const;
+
+  uint64_t
+  Id() const;
 
   ServiceWorkerUpdateViaCache
   UpdateViaCache() const;

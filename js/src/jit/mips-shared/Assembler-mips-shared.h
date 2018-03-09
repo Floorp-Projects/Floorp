@@ -767,9 +767,6 @@ class MIPSBufferWithExecutableCopy : public MIPSBuffer
 
 class AssemblerMIPSShared : public AssemblerShared
 {
-#ifdef JS_JITSPEW
-   Sprinter* printer;
-#endif
   public:
 
     enum Condition {
@@ -894,6 +891,10 @@ class AssemblerMIPSShared : public AssemblerShared
     CompactBufferWriter dataRelocations_;
 
     MIPSBufferWithExecutableCopy m_buffer;
+
+#ifdef JS_JITSPEW
+   Sprinter* printer;
+#endif
 
   public:
     AssemblerMIPSShared()

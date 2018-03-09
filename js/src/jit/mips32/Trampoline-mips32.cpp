@@ -719,6 +719,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
       case Type_Bool:
       case Type_Int32:
         MOZ_ASSERT(sizeof(uintptr_t) == sizeof(uint32_t));
+        MOZ_FALLTHROUGH;
       case Type_Pointer:
         outParamSize = sizeof(uintptr_t);
         masm.reserveStack(outParamSize);
@@ -831,6 +832,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
 
       case Type_Int32:
         MOZ_ASSERT(sizeof(uintptr_t) == sizeof(uint32_t));
+        MOZ_FALLTHROUGH;
       case Type_Pointer:
         masm.load32(Address(StackPointer, 0), ReturnReg);
         masm.freeStack(sizeof(uintptr_t));
