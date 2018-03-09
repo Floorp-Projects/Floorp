@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi-tests/tests.h"
+#include "util/StringBuffer.h"
 #include "vm/JSAtom.h"
-#include "vm/StringBuffer.h"
 
 BEGIN_TEST(testStringBuffer_finishString)
 {

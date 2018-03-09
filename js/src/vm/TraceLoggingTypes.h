@@ -7,7 +7,7 @@
 #ifndef TraceLoggingTypes_h
 #define TraceLoggingTypes_h
 
-#include "jsstr.h"
+#include "builtin/String.h"
 
 #include "js/AllocPolicy.h"
 

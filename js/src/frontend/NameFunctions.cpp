@@ -12,8 +12,8 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
+#include "util/StringBuffer.h"
 #include "vm/JSFunction.h"
-#include "vm/StringBuffer.h"
 
 using namespace js;
 using namespace js::frontend;
