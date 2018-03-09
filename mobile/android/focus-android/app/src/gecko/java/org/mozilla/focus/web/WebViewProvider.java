@@ -195,7 +195,11 @@ public class WebViewProvider {
                     if (elementSrc != null && uri != null) {
                         callback.onLongPress(new HitTarget(true, uri, true, elementSrc));
                     } else if (elementSrc != null) {
-                        callback.onLongPress(new HitTarget(false, null, true, elementSrc));
+                        if (elementSrc.endsWith("jpg") || elementSrc.endsWith("gif") ||
+                                elementSrc.endsWith("tif") || elementSrc.endsWith("bmp") ||
+                                elementSrc.endsWith("png")) {
+                            callback.onLongPress(new HitTarget(false, null, true, elementSrc));
+                        }
                     } else if (uri != null) {
                         callback.onLongPress(new HitTarget(true, uri, false, null));
                     }
