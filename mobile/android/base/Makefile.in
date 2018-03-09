@@ -164,6 +164,13 @@ endif
 
 .PHONY: gradle-targets gradle-omnijar
 
+# Neither multi-locale builds nor single-locale repacks should be
+# generating JNI wrappers.  In the future, generating JNI wrappers
+# will be integrated into the build system closer to their use,
+# avoiding these work-arounds.
+ifneq (multi,$(AB_CD))
+ifeq (,$(IS_LANGUAGE_REPACK))
+
 # GeneratedJNIWrappers.cpp target also generates
 #   GeneratedJNIWrappers.h and GeneratedJNINatives.h
 # FennecJNIWrappers.cpp target also generates
@@ -222,3 +229,6 @@ libs:: FennecJNIWrappers.cpp
 	  echo '* Repeat the build, and check in any changes.       *' && \
 	  echo '*****************************************************' && \
 	  exit 1)
+
+endif # ifneq (multi,$(AB_CD))
+endif # ifeq (,$(IS_LANGUAGE_REPACK))
