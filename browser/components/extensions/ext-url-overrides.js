@@ -89,6 +89,13 @@ async function handleNewTabOpened() {
   description.appendChild(
     BrowserUtils.getLocalizedFragment(doc, message, addonDetails));
 
+  // Add the Learn more link to the description.
+  let link = doc.createElement("label");
+  link.setAttribute("class", "learnMore text-link");
+  link.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "extension-home";
+  link.textContent = strBundle.GetStringFromName("newTabControlled.learnMore");
+  description.appendChild(link);
+
   // Setup the command handler.
   let handleCommand = async (event) => {
     if (event.originalTarget.getAttribute("anonid") == "button") {
