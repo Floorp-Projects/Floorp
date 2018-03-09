@@ -68,7 +68,7 @@ public:
       // Only the local names may be non-static, in which case all three
       // are the same.
       nsAtom* local = GetLocal(0);
-      if (!local->IsStaticAtom()) {
+      if (!local->IsStatic()) {
         nsAutoString str;
         local->ToString(str);
         local = aInterner->GetAtom(str);

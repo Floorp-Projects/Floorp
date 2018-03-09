@@ -69,6 +69,7 @@ LOCAL_INCLUDES += [
     '../system',
     '/dom/base',
     '/dom/bindings',
+    '/js/xpconnect/loader',
     '/xpcom/build',
     '/xpcom/threads',
 ]

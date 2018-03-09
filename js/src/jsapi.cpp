@@ -7293,6 +7293,9 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_WASM_FOLD_OFFSETS:
         jit::JitOptions.wasmFoldOffsets = !!value;
         break;
+      case JSJITCOMPILER_WASM_DELAY_TIER2:
+        jit::JitOptions.wasmDelayTier2 = !!value;
+        break;
       case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
         jit::JitOptions.ionInterruptWithoutSignals = !!value;
         break;

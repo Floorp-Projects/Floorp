@@ -35,7 +35,6 @@
 #include "nsWindowMemoryReporter.h"
 #include "nsDOMClassInfo.h"
 #include "ShimInterfaceInfo.h"
-#include "nsIAddonInterposition.h"
 #include "nsIException.h"
 #include "nsIScriptError.h"
 #include "nsISimpleEnumerator.h"
@@ -3103,33 +3102,6 @@ nsXPCComponents_Utils::GetCompartmentLocation(HandleValue val,
     MOZ_ASSERT(obj);
 
     result = xpc::CompartmentPrivate::Get(obj)->GetLocation();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::SetAddonInterposition(const nsACString& addonIdStr,
-                                             nsIAddonInterposition* interposition,
-                                             JSContext* cx)
-{
-    JSAddonId* addonId = xpc::NewAddonId(cx, addonIdStr);
-    if (!addonId)
-        return NS_ERROR_FAILURE;
-    if (!XPCWrappedNativeScope::SetAddonInterposition(cx, addonId, interposition))
-        return NS_ERROR_FAILURE;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::SetAddonCallInterposition(HandleValue target,
-                                                 JSContext* cx)
-{
-    NS_ENSURE_TRUE(target.isObject(), NS_ERROR_INVALID_ARG);
-    RootedObject targetObj(cx, &target.toObject());
-    targetObj = js::CheckedUnwrap(targetObj);
-    NS_ENSURE_TRUE(targetObj, NS_ERROR_INVALID_ARG);
-
-    xpc::CompartmentPrivate::Get(targetObj)->SetAddonCallInterposition();
     return NS_OK;
 }
 

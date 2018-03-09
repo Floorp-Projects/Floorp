@@ -217,7 +217,7 @@ public:
     MOZ_ASSERT(!mStringBuffer, "Setting stringbuffer twice?");
     MOZ_ASSERT(aAtom || aNullHandling != eNullNotExpected);
     if (aNullHandling == eNullNotExpected || aAtom) {
-      if (aAtom->IsStaticAtom()) {
+      if (aAtom->IsStatic()) {
         // Static atoms are backed by literals.
         SetLiteralInternal(aAtom->GetUTF16String(), aAtom->GetLength());
       } else {

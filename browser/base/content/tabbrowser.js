@@ -7,8 +7,6 @@
 
 window._gBrowser = {
   init() {
-    this.requiresAddonInterpositions = true;
-
     ChromeUtils.defineModuleGetter(this, "AsyncTabSwitcher",
       "resource:///modules/AsyncTabSwitcher.jsm");
 
@@ -251,10 +249,6 @@ window._gBrowser = {
     this.tabMinWidth = this.tabMinWidthPref;
 
     this._setupEventListeners();
-  },
-
-  get tabContextMenu() {
-    return this.tabContainer.contextMenu;
   },
 
   get visibleTabs() {

@@ -98,19 +98,19 @@ add_task(async function multiple_urls() {
     mochi.test/urls0
     mochi.test/urls1
     mochi.test/urls2
-    non-url0
+    non url0
     mochi.test/urls3
-    non-url1
-    non-url2
+    non url1
+    non url2
 `, 4);
 });
 
 // Open single search if there's no URL.
 add_task(async function multiple_text() {
   await dropText(`
-    non-url0
-    non-url1
-    non-url2
+    non url0
+    non url1
+    non url2
 `, 1);
 });
 
@@ -133,26 +133,34 @@ async function drop(dragData, expectedTabOpenCount = 0) {
   let awaitDrop = BrowserTestUtils.waitForEvent(newTabButton, "drop");
   let actualTabOpenCount = 0;
   let openedTabs = [];
-  let checkCount = function(event) {
+  let promiseTabsOpen = null;
+  let resolve = null;
+  let handler = function(event) {
     openedTabs.push(event.target);
     actualTabOpenCount++;
-    return actualTabOpenCount == expectedTabOpenCount;
+    if (actualTabOpenCount == expectedTabOpenCount && resolve) {
+      resolve();
+    }
   };
-  let awaitTabOpen = expectedTabOpenCount && BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen", false, checkCount);
+  gBrowser.tabContainer.addEventListener("TabOpen", handler);
+  if (expectedTabOpenCount) {
+    promiseTabsOpen = new Promise(r => { resolve = r; });
+  }
 
   EventUtils.synthesizeDrop(dragSrcElement, newTabButton, dragData, "link", window);
 
-  let tabsOpened = false;
-  if (awaitTabOpen) {
-    await awaitTabOpen;
+  if (promiseTabsOpen) {
+    await promiseTabsOpen;
     info("Got TabOpen event");
-    tabsOpened = true;
     for (let tab of openedTabs) {
       await BrowserTestUtils.removeTab(tab);
     }
   }
-  is(tabsOpened, !!expectedTabOpenCount, `Tabs for ${dragDataString} should only open if any of dropped items are valid`);
 
   await awaitDrop;
   ok(true, "Got drop event");
+
+  gBrowser.tabContainer.removeEventListener("TabOpen", handler);
+  is(actualTabOpenCount, expectedTabOpenCount,
+     "No other tabs are opened");
 }

@@ -776,6 +776,27 @@ WasmExtractCode(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+WasmHasTier2CompilationCompleted(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.get(0).isObject()) {
+        JS_ReportErrorASCII(cx, "argument is not an object");
+        return false;
+    }
+
+    JSObject* unwrapped = CheckedUnwrap(&args.get(0).toObject());
+    if (!unwrapped || !unwrapped->is<WasmModuleObject>()) {
+        JS_ReportErrorASCII(cx, "argument is not a WebAssembly.Module");
+        return false;
+    }
+
+    Rooted<WasmModuleObject*> module(cx, &unwrapped->as<WasmModuleObject>());
+    args.rval().set(BooleanValue(module->module().compilationComplete()));
+    return true;
+}
+
+static bool
 IsLazyFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -5454,6 +5475,11 @@ gc::ZealModeHelpText),
 "  'stable', 'best', 'baseline', or 'ion'; the default is 'stable'.  If the request\n"
 "  cannot be satisfied then null is returned.  If the request is 'ion' then block\n"
 "  until background compilation is complete."),
+
+    JS_FN_HELP("wasmHasTier2CompilationCompleted", WasmHasTier2CompilationCompleted, 1, 0,
+"wasmHasTier2CompilationCompleted(module)",
+"  Returns a boolean indicating whether a given module has finished compiled code for tier2. \n"
+"This will return true early if compilation isn't two-tiered. "),
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",

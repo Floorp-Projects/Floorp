@@ -1839,7 +1839,7 @@ nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
   }
 
   nsAtom* localName = aContent->NodeInfo()->NameAtom();
-  return localName->IsStaticAtom() ? localName : nullptr;
+  return localName->IsStatic() ? localName : nullptr;
 }
 
 bool

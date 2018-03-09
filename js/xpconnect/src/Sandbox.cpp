@@ -1144,9 +1144,11 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     if (options.addonId) {
         addonId = JS::NewAddonId(cx, options.addonId);
         NS_ENSURE_TRUE(addonId, NS_ERROR_FAILURE);
-    } else if (JSObject* obj = JS::CurrentGlobalOrNull(cx)) {
-        if (JSAddonId* id = JS::AddonIdOfObject(obj))
-            addonId = id;
+    } else if (principal == nsXPConnect::SystemPrincipal()) {
+        if (JSObject* obj = JS::CurrentGlobalOrNull(cx)) {
+            if (JSAddonId* id = JS::AddonIdOfObject(obj))
+                addonId = id;
+        }
     }
 
     creationOptions.setAddonId(addonId);
@@ -1168,7 +1170,6 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     CompartmentPrivate* priv = CompartmentPrivate::Get(sandbox);
     priv->allowWaivers = options.allowWaivers;
     priv->isWebExtensionContentScript = options.isWebExtensionContentScript;
-    priv->waiveInterposition = options.waiveInterposition;
     priv->isContentXBLCompartment = options.isContentXBLScope;
 
     // Set up the wantXrays flag, which indicates whether xrays are desired even
@@ -1731,7 +1732,6 @@ SandboxOptions::Parse()
               ParseBoolean("wantComponents", &wantComponents) &&
               ParseBoolean("wantExportHelpers", &wantExportHelpers) &&
               ParseBoolean("isWebExtensionContentScript", &isWebExtensionContentScript) &&
-              ParseBoolean("waiveInterposition", &waiveInterposition) &&
               ParseString("sandboxName", sandboxName) &&
               ParseObject("sameZoneAs", &sameZoneAs) &&
               ParseBoolean("freshZone", &freshZone) &&
