@@ -53,7 +53,15 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       ClipArea area) {
     vec2 actual_pos = area.screen_origin + aPosition.xy * area.common_data.task_rect.size;
 
-    vec4 node_pos = get_node_pos(actual_pos / uDevicePixelRatio, scroll_node);
+    vec4 node_pos;
+
+    // Select the local position, based on whether we are rasterizing this
+    // clip mask in local- or sccreen-space.
+    if (area.local_space) {
+        node_pos = vec4(actual_pos / uDevicePixelRatio, 0.0, 1.0);
+    } else {
+        node_pos = get_node_pos(actual_pos / uDevicePixelRatio, scroll_node);
+    }
 
     // compute the point position inside the scroll node, in CSS space
     vec2 vertex_pos = actual_pos +

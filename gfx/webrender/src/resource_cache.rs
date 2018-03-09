@@ -320,7 +320,7 @@ impl ResourceCache {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         f: F,
-    ) -> CacheItem where F: FnMut(&mut RenderTaskTree) -> (RenderTaskId, [f32; 3], bool) {
+    ) -> CacheItem where F: FnMut(&mut RenderTaskTree) -> (RenderTaskId, bool) {
         self.cached_render_tasks.request_render_task(
             key,
             &mut self.texture_cache,
