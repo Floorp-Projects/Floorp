@@ -398,6 +398,7 @@ public:
   };
 
 private:
+  static void SetupTelemetryPref();
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects();
 
   // Functions above that modify prefs will fail if they are not run in the
