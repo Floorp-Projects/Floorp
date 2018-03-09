@@ -655,6 +655,9 @@ class Instruction {
     // Test for a nop instruction, which falls under type 1.
     inline bool IsNopType1() const { return Bits(24, 0) == 0x0120F000; }
 
+    // Test for a nop instruction, which falls under type 1.
+    inline bool IsCsdbType1() const { return Bits(24, 0) == 0x0120F014; }
+
     // Test for a stop instruction.
     inline bool IsStop() const {
         return (TypeValue() == 7) && (Bit(24) == 1) && (SvcValue() >= kStopCode);
