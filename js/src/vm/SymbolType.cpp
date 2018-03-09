@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 
-#include "builtin/SymbolObject.h"
+#include "builtin/Symbol.h"
 #include "gc/Allocator.h"
 #include "gc/Rooting.h"
+#include "util/StringBuffer.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
-#include "vm/StringBuffer.h"
 
 #include "vm/JSCompartment-inl.h"
 

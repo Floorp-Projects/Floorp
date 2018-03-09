@@ -83,7 +83,9 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
 ServiceWorker::~ServiceWorker()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mInner->RemoveServiceWorker(this);
+  if (mInner) {
+    mInner->RemoveServiceWorker(this);
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorker, DOMEventTargetHelper)
@@ -128,7 +130,7 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                            const Sequence<JSObject*>& aTransferable,
                            ErrorResult& aRv)
 {
-  if (State() == ServiceWorkerState::Redundant) {
+  if (State() == ServiceWorkerState::Redundant || !mInner) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -146,6 +148,10 @@ ServiceWorker::Descriptor() const
 void
 ServiceWorker::DisconnectFromOwner()
 {
+  if (mInner) {
+    mInner->RemoveServiceWorker(this);
+    mInner = nullptr;
+  }
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 

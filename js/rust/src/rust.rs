@@ -16,8 +16,9 @@ use std::u32;
 use std::default::Default;
 use std::marker;
 use std::ops::{Deref, DerefMut};
-use std::sync::{Once, ONCE_INIT};
+use std::sync::{Once, ONCE_INIT, Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
+use std::sync::mpsc::{SyncSender, sync_channel};
 use std::thread;
 use jsapi::root::*;
 use jsval::{self, UndefinedValue};
@@ -65,6 +66,7 @@ thread_local!(static CONTEXT: Cell<*mut JSContext> = Cell::new(ptr::null_mut()))
 lazy_static! {
     static ref OUTSTANDING_RUNTIMES: AtomicUsize = AtomicUsize::new(0);
     static ref SHUT_DOWN: AtomicBool = AtomicBool::new(false);
+    static ref SHUT_DOWN_SIGNAL: Arc<Mutex<Option<SyncSender<()>>>> = Arc::new(Mutex::new(None));
 }
 
 /// A wrapper for the `JSContext` structure in SpiderMonkey.
@@ -101,7 +103,6 @@ impl Runtime {
 
             impl Parent {
                 fn set(&self, val: *mut JSContext) {
-                    assert!(self.get().is_null());
                     self.as_atomic().store(val, Ordering::SeqCst);
                     assert_eq!(self.get(), val);
                 }
@@ -125,6 +126,8 @@ impl Runtime {
             ONCE.call_once(|| {
                 // There is a 1:1 relationship between threads and JSContexts,
                 // so we must spawn a new thread for the parent context.
+                let (tx, rx) = sync_channel(0);
+                *SHUT_DOWN_SIGNAL.lock().unwrap() = Some(tx);
                 let _ = thread::spawn(move || {
                     let is_debug_mozjs = cfg!(feature = "debugmozjs");
                     let diagnostic = JS::detail::InitWithFailureDiagnostic(is_debug_mozjs);
@@ -139,9 +142,14 @@ impl Runtime {
                     JS::InitSelfHostedCode(context);
                     PARENT.set(context);
 
-                    loop {
-                        thread::sleep(::std::time::Duration::new(::std::u64::MAX, 0));
-                    }
+                    // The last JSRuntime child died, resume the execution by destroying the parent.
+                    rx.recv().unwrap();
+                    let cx = PARENT.get();
+                    JS_DestroyContext(cx);
+                    JS_ShutDown();
+                    PARENT.set(0 as *mut _);
+                    // Unblock the last child thread, waiting for the JS_ShutDown.
+                    rx.recv().unwrap();
                 });
 
                 while PARENT.get().is_null() {
@@ -253,7 +261,13 @@ impl Drop for Runtime {
 
             if OUTSTANDING_RUNTIMES.fetch_sub(1, Ordering::SeqCst) == 1 {
                 SHUT_DOWN.store(true, Ordering::SeqCst);
-                JS_ShutDown();
+                let signal = &SHUT_DOWN_SIGNAL.lock().unwrap();
+                let signal = signal.as_ref().unwrap();
+                // Send a signal to shutdown the Parent runtime.
+                signal.send(()).unwrap();
+                // Wait for it to be destroyed before resuming the execution
+                // of static variable destructors.
+                signal.send(()).unwrap();
             }
         }
     }

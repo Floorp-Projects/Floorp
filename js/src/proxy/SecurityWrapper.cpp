@@ -9,7 +9,7 @@
 #include "NamespaceImports.h"
 
 #include "js/Wrapper.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 using namespace js;
 

@@ -15,9 +15,9 @@
 #include <ctype.h>
 
 #include "jslibmath.h"
-#include "jsstr.h"
 
 #include "builtin/RegExp.h"
+#include "builtin/String.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineInspector.h"
 #include "jit/IonBuilder.h"
@@ -25,6 +25,7 @@
 #include "jit/MIRGraph.h"
 #include "jit/RangeAnalysis.h"
 #include "js/Conversions.h"
+#include "util/Text.h"
 
 #include "jsboolinlines.h"
 

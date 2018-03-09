@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_String_h
-#define vm_String_h
+#ifndef vm_StringType_h
+#define vm_StringType_h
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -13,8 +13,8 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsstr.h"
 
+#include "builtin/String.h"
 #include "gc/Barrier.h"
 #include "gc/Cell.h"
 #include "gc/Heap.h"
@@ -22,7 +22,7 @@
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
-
+#include "util/Text.h"
 #include "vm/Printer.h"
 
 class JSDependentString;
@@ -1491,6 +1491,137 @@ NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n, const JSStrin
 
 JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
 
+template <AllowGC allowGC>
+extern JSString*
+ConcatStrings(JSContext* cx,
+              typename MaybeRooted<JSString*, allowGC>::HandleType left,
+              typename MaybeRooted<JSString*, allowGC>::HandleType right);
+
+/*
+ * Test if strings are equal. The caller can call the function even if str1
+ * or str2 are not GC-allocated things.
+ */
+extern bool
+EqualStrings(JSContext* cx, JSString* str1, JSString* str2, bool* result);
+
+/* Use the infallible method instead! */
+extern bool
+EqualStrings(JSContext* cx, JSLinearString* str1, JSLinearString* str2, bool* result) = delete;
+
+/* EqualStrings is infallible on linear strings. */
+extern bool
+EqualStrings(JSLinearString* str1, JSLinearString* str2);
+
+/**
+ * Compare two strings that are known to be the same length.
+ * Exposed for the JITs; for ordinary uses, EqualStrings() is more sensible.
+ *
+ * Precondition: str1->length() == str2->length().
+ */
+extern bool
+EqualChars(JSLinearString* str1, JSLinearString* str2);
+
+/*
+ * Return less than, equal to, or greater than zero depending on whether
+ * `s1[0..len1]` is less than, equal to, or greater than `s2`.
+ */
+extern int32_t
+CompareChars(const char16_t* s1, size_t len1, JSLinearString* s2);
+
+/*
+ * Compare two strings, like CompareChars, but store the result in `*result`.
+ * This flattens the strings and therefore can fail.
+ */
+extern bool
+CompareStrings(JSContext* cx, JSString* str1, JSString* str2, int32_t* result);
+
+/*
+ * Same as CompareStrings but for atoms.  Don't use this to just test
+ * for equality; use this when you need an ordering on atoms.
+ */
+extern int32_t
+CompareAtoms(JSAtom* atom1, JSAtom* atom2);
+
+/*
+ * Return true if the string matches the given sequence of ASCII bytes.
+ */
+extern bool
+StringEqualsAscii(JSLinearString* str, const char* asciiBytes);
+
+extern int
+StringFindPattern(JSLinearString* text, JSLinearString* pat, size_t start);
+
+/**
+ * Return true if the string contains a pattern at |start|.
+ *
+ * Precondition: `text` is long enough that this might be true;
+ * that is, it has at least `start + pat->length()` characters.
+ */
+extern bool
+HasSubstringAt(JSLinearString* text, JSLinearString* pat, size_t start);
+
+/*
+ * Computes |str|'s substring for the range [beginInt, beginInt + lengthInt).
+ * Negative, overlarge, swapped, etc. |beginInt| and |lengthInt| are forbidden
+ * and constitute API misuse.
+ */
+JSString*
+SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt, int32_t lengthInt);
+
+
+/*** Conversions *********************************************************************************/
+
+/*
+ * Convert a value to a printable C string.
+ */
+extern const char*
+ValueToPrintable(JSContext* cx, const Value&, JSAutoByteString* bytes, bool asSource = false);
+
+/*
+ * Convert a non-string value to a string, returning null after reporting an
+ * error, otherwise returning a new string reference.
+ */
+template <AllowGC allowGC>
+extern JSString*
+ToStringSlow(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType arg);
+
+/*
+ * Convert the given value to a string.  This method includes an inline
+ * fast-path for the case where the value is already a string; if the value is
+ * known not to be a string, use ToStringSlow instead.
+ */
+template <AllowGC allowGC>
+static MOZ_ALWAYS_INLINE JSString*
+ToString(JSContext* cx, JS::HandleValue v)
+{
+    if (v.isString())
+        return v.toString();
+    return ToStringSlow<allowGC>(cx, v);
+}
+
+/*
+ * This function implements E-262-3 section 9.8, toString. Convert the given
+ * value to a string of characters appended to the given buffer. On error, the
+ * passed buffer may have partial results appended.
+ */
+inline bool
+ValueToStringBuffer(JSContext* cx, const Value& v, StringBuffer& sb);
+
+/*
+ * Convert a value to its source expression, returning null after reporting
+ * an error, otherwise returning a new string reference.
+ */
+extern JSString*
+ValueToSource(JSContext* cx, HandleValue v);
+
+/*
+ * Convert a JSString to its source expression; returns null after reporting an
+ * error, otherwise returns a new string reference. No Handle needed since the
+ * input is dead after the GC.
+ */
+extern JSString*
+StringToSource(JSContext* cx, JSString* str);
+
 } /* namespace js */
 
 // Addon IDs are interned atoms which are never destroyed. This detail is
@@ -1711,4 +1842,4 @@ TenuredCell::as<JSString>() {
 }
 }
 
-#endif /* vm_String_h */
+#endif /* vm_StringType_h */

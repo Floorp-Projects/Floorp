@@ -85,7 +85,7 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
     nsIPrincipal* aPrincipal,
     ServiceWorkerUpdateViaCache aUpdateViaCache)
   : mPrincipal(aPrincipal)
-  , mDescriptor(aPrincipal, aScope, aUpdateViaCache)
+  , mDescriptor(GetNextId(), aPrincipal, aScope, aUpdateViaCache)
   , mControlledClientsCounter(0)
   , mDelayMultiplier(0)
   , mUpdateState(NoUpdate)
@@ -728,6 +728,15 @@ ServiceWorkerRegistrationInfo::GetUpdateDelay()
   }
 
   return delay;
+}
+
+// static
+uint64_t
+ServiceWorkerRegistrationInfo::GetNextId()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static uint64_t sNextId = 0;
+  return ++sNextId;
 }
 
 } // namespace dom

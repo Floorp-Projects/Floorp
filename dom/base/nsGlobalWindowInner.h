@@ -356,6 +356,9 @@ public:
   virtual RefPtr<mozilla::dom::ServiceWorker>
   GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor) override;
 
+  RefPtr<mozilla::dom::ServiceWorkerRegistration>
+  GetOrCreateServiceWorkerRegistration(const mozilla::dom::ServiceWorkerRegistrationDescriptor& aDescriptor) override;
+
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
   virtual nsresult FireDelayedDOMEvents() override;
