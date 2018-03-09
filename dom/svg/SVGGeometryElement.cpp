@@ -167,20 +167,9 @@ SVGGeometryElement::GetPointAtLength(float distance, ErrorResult& rv)
     return nullptr;
   }
 
-  float totalLength = path->ComputeLength();
-  if (mPathLength.IsExplicitlySet()) {
-    float pathLength = mPathLength.GetAnimValue();
-    if (pathLength <= 0) {
-      rv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-    distance *= totalLength / pathLength;
-  }
-  distance = std::max(0.f,         distance);
-  distance = std::min(totalLength, distance);
-
   nsCOMPtr<nsISVGPoint> point =
-    new DOMSVGPoint(path->ComputePointAtLength(distance));
+    new DOMSVGPoint(path->ComputePointAtLength(
+      clamped(distance, 0.f, path->ComputeLength())));
   return point.forget();
 }
 
