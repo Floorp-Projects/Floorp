@@ -495,11 +495,22 @@ main {
     display: none; } }
 
 .edit-topsites-wrapper .modal {
-  offset-inline-start: -31px;
-  position: absolute;
-  top: -29px;
-  width: calc(100% + 62px);
-  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1); }
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
+  left: 0;
+  margin: 0 auto;
+  position: fixed;
+  right: 0;
+  top: 40px;
+  width: 274px; }
+  @media (min-width: 482px) {
+    .edit-topsites-wrapper .modal {
+      width: 402px; } }
+  @media (min-width: 610px) {
+    .edit-topsites-wrapper .modal {
+      width: 530px; } }
+  @media (min-width: 866px) {
+    .edit-topsites-wrapper .modal {
+      width: 786px; } }
 
 .topsite-form .form-input-container {
   max-width: 492px;
