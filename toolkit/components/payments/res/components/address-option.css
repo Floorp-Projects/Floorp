@@ -17,12 +17,6 @@ rich-select[open] > .rich-select-popup-box > address-option {
     "email          tel           ";
 }
 
-address-picker.payer-related > rich-select address-option {
-  grid-template-areas:
-    "name name"
-    "tel email";
-}
-
 address-option > .name {
   grid-area: name;
 }
@@ -46,23 +40,7 @@ address-option > .tel {
   white-space: nowrap;
 }
 
-address-picker.shipping-related address-option > .email,
-address-picker.shipping-related address-option.rich-select-selected-clone > .tel {
+.rich-select-selected-clone > .email,
+.rich-select-selected-clone > .tel {
   display: none;
-}
-
-/* for payer contact details:
- * display fields selectively based on the contents of the address-fields attribute
- */
-address-picker.payer-related address-option > .name,
-address-picker.payer-related address-option > .street-address,
-address-picker.payer-related address-option > .email,
-address-picker.payer-related address-option > .tel {
-  display: none;
-}
-
-address-picker[address-fields~='name'].payer-related address-option  > .name,
-address-picker[address-fields~='email'].payer-related address-option  > .email,
-address-picker[address-fields~='tel'].payer-related address-option  > .tel {
-  display: inline-block;
 }

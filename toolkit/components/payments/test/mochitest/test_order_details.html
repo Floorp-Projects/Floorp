@@ -49,6 +49,10 @@ function setup() {
   requestStore.setState(initialState);
 }
 
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 add_task(async function isFooterItem() {
   ok(OrderDetails.isFooterItem({
     label: "Levy",

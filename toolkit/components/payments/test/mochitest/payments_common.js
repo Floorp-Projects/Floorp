@@ -1,6 +1,6 @@
 "use strict";
 
-/* exported asyncElementRendered, promiseStateChange, deepClone */
+/* exported asyncElementRendered, promiseStateChange */
 
 /**
  * A helper to await on while waiting for an asynchronous rendering of a Custom
@@ -20,8 +20,4 @@ function promiseStateChange(store) {
       },
     });
   });
-}
-
-function deepClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
 }
