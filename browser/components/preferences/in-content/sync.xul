@@ -14,7 +14,8 @@
   <label class="header-name" flex="1">&paneSync1.title;</label>
 </hbox>
 
-<deck id="weavePrefsDeck" data-category="paneSync" hidden="true">
+<deck id="weavePrefsDeck" data-category="paneSync" hidden="true"
+      data-hidden-from-search="true">
   <groupbox id="noFxaAccount">
     <hbox>
       <vbox flex="1">

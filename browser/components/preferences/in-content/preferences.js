@@ -57,6 +57,7 @@ function init_all() {
   register_module("paneContainers", gContainersPane);
   if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
     document.getElementById("category-sync").hidden = false;
+    document.getElementById("weavePrefsDeck").removeAttribute("data-hidden-from-search");
     register_module("paneSync", gSyncPane);
   }
   register_module("paneSearchResults", gSearchResultsPane);
