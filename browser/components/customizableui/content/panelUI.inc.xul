@@ -707,18 +707,16 @@
        tabspecific="true">
   <popupnotification id="extension-new-tab-notification"
                      popupid="extension-new-tab"
-                     label="&newTabControlled.header.message;"
+                     label="&newTabControlled.header.message2;"
                      buttonlabel="&newTabControlled.keepButton.label;"
                      buttonaccesskey="&newTabControlled.keepButton.accesskey;"
-                     secondarybuttonlabel="&newTabControlled.restoreButton.label;"
-                     secondarybuttonaccesskey="&newTabControlled.restoreButton.accesskey;"
+                     secondarybuttonlabel="&newTabControlled.disableButton.label;"
+                     secondarybuttonaccesskey="&newTabControlled.disableButton.accesskey;"
                      closebuttonhidden="true"
                      dropmarkerhidden="true"
                      checkboxhidden="true">
     <popupnotificationcontent orient="vertical">
-      <description id="extension-new-tab-notification-description">
-        &newTabControlled.message;
-      </description>
+      <description id="extension-new-tab-notification-description"/>
     </popupnotificationcontent>
   </popupnotification>
 </panel>
