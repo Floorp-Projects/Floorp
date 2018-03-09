@@ -941,9 +941,11 @@ Link::AsValueToContentPolicy(const nsAttrValue& aValue)
   case DESTINATION_INVALID:
     return nsIContentPolicy::TYPE_INVALID;
   case DESTINATION_AUDIO:
+    return nsIContentPolicy::TYPE_INTERNAL_AUDIO;
   case DESTINATION_TRACK:
+    return nsIContentPolicy::TYPE_INTERNAL_TRACK;
   case DESTINATION_VIDEO:
-    return nsIContentPolicy::TYPE_MEDIA;
+    return nsIContentPolicy::TYPE_INTERNAL_VIDEO;
   case DESTINATION_FONT:
     return nsIContentPolicy::TYPE_FONT;
   case DESTINATION_IMAGE:
