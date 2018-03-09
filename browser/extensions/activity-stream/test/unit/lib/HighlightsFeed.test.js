@@ -40,7 +40,7 @@ describe("Highlights Feed", () => {
       disableSection: sinon.spy(),
       updateSection: sinon.spy(),
       updateSectionCard: sinon.spy(),
-      sections: new Map([["highlights", {order: 0}]])
+      sections: new Map([["highlights", {id: "highlights"}]])
     };
     fakeScreenshot = {
       getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_IMAGE)),
@@ -73,7 +73,7 @@ describe("Highlights Feed", () => {
           initialized: true,
           rows: Array(12).fill(null).map((v, i) => ({url: `http://www.topsite${i}.com`}))
         },
-        Sections: [{initialized: false}]
+        Sections: [{id: "highlights", initialized: false}]
       },
       subscribe: sinon.stub().callsFake(cb => { cb(); return () => {}; })
     };
@@ -108,7 +108,7 @@ describe("Highlights Feed", () => {
   describe("#filterForThumbnailExpiration", () => {
     it("should pass rows.urls to the callback provided", () => {
       const rows = [{url: "foo.com"}, {"url": "bar.com"}];
-      feed.store.state.Sections = [{rows, initialized: true}];
+      feed.store.state.Sections = [{id: "highlights", rows, initialized: true}];
       const stub = sinon.stub();
 
       feed.filterForThumbnailExpiration(stub);
@@ -118,7 +118,7 @@ describe("Highlights Feed", () => {
     });
     it("should include preview_image_url (if present) in the callback results", () => {
       const rows = [{url: "foo.com"}, {"url": "bar.com", "preview_image_url": "bar.jpg"}];
-      feed.store.state.Sections = [{rows, initialized: true}];
+      feed.store.state.Sections = [{id: "highlights", rows, initialized: true}];
       const stub = sinon.stub();
 
       feed.filterForThumbnailExpiration(stub);
