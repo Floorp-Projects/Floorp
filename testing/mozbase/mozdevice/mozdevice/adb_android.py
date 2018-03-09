@@ -163,6 +163,42 @@ class ADBAndroid(ADBDevice):
                     break
         return percentage
 
+    def get_top_activity(self, timeout=None):
+        """Returns the name of the top activity (focused app) reported by dumpsys
+
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :type timeout: integer or None
+        :returns: package name of top activity or None (cannot be determined)
+        :raises: * ADBTimeoutError
+                 * ADBError
+        """
+        package = None
+        data = None
+        cmd = "dumpsys window windows"
+        try:
+            data = self.shell_output(cmd, timeout=timeout)
+        except Exception:
+            # dumpsys intermittently fails on some platforms (4.3 arm emulator)
+            return package
+        m = re.search('mFocusedApp(.+)/', data)
+        if not m:
+            # alternative format seen on newer versions of Android
+            m = re.search('FocusedApplication(.+)/', data)
+        if m:
+            line = m.group(0)
+            # Extract package name: string of non-whitespace ending in forward slash
+            m = re.search('(\S+)/$', line)
+            if m:
+                package = m.group(1)
+        if self._verbose:
+            self._logger.debug('get_top_activity: %s' % str(package))
+        return package
+
     # System control methods
 
     def is_device_ready(self, timeout=None):
