@@ -2771,25 +2771,25 @@ class BookmarkMergeState {
   valueToString() {
     switch (this.value()) {
       case BookmarkMergeState.TYPE.LOCAL:
-        return "V: L";
+        return "Value: Local";
       case BookmarkMergeState.TYPE.REMOTE:
-        return "V: R";
+        return "Value: Remote";
     }
-    return "V: ?";
+    return "Value: ?";
   }
 
   structureToString() {
     switch (this.structure()) {
       case BookmarkMergeState.TYPE.LOCAL:
-        return "S: L";
+        return "Structure: Local";
       case BookmarkMergeState.TYPE.REMOTE:
-        return "S: R";
+        return "Structure: Remote";
       case BookmarkMergeState.TYPE.NEW:
         // We intentionally don't log the new structure node here, since
         // the merger already does that.
-        return "S: +";
+        return "Structure: New";
     }
-    return "S: ?";
+    return "Structure: ?";
   }
 
   toJSON() {
@@ -2939,15 +2939,16 @@ class BookmarkNode {
    * because the merger logs every local and remote node when trace logging is
    * enabled.
    *
-   * @return {String}
-   *         A string in the form of "bookmarkAAAA (B; 1.234s; !)", where
-   *         "B" is the kind, "1.234s" is the age, and "!" indicates that the
-   *         node needs to be merged.
+   * @return {String} A string in the form of
+   *         "bookmarkAAAA (Bookmark; Age = 1.234s; Unmerged)", where "Bookmark"
+   *         is the kind, "Age = 1.234s" indicates the age, and "Unmerged"
+   *         (which may not be present) indicates that the node needs to be
+   *         merged.
    */
   toString() {
-    let info = `${this.kindToString()}; ${this.age.toFixed(3)}s`;
+    let info = `${this.kindToString()}; ${this.age.toFixed(3)}s `;
     if (this.needsMerge) {
-      info += "; !";
+      info += "; Unmerged";
     }
     return `${this.guid} (${info})`;
   }
@@ -2955,17 +2956,17 @@ class BookmarkNode {
   kindToString() {
     switch (this.kind) {
       case SyncedBookmarksMirror.KIND.BOOKMARK:
-        return "B";
+        return "Bookmark";
       case SyncedBookmarksMirror.KIND.QUERY:
-        return "Q";
+        return "Query";
       case SyncedBookmarksMirror.KIND.FOLDER:
-        return "F";
+        return "Folder";
       case SyncedBookmarksMirror.KIND.LIVEMARK:
-        return "L";
+        return "Livemark";
       case SyncedBookmarksMirror.KIND.SEPARATOR:
-        return "S";
+        return "Separator";
     }
-    return "?";
+    return "Unknown";
   }
 
   // Used by `Log.jsm`.
@@ -3063,9 +3064,8 @@ class BookmarkTree {
    * @return {String}
    */
   toASCIITreeString() {
-    return this.root.toASCIITreeString() + "\n" + Array.from(this.deletedGuids,
-      guid => `~${guid}`
-    ).join(", ");
+    return `${this.root.toASCIITreeString()}\nDeleted: [${
+            Array.from(this.deletedGuids).join(", ")}]`;
   }
 }
 
