@@ -655,7 +655,7 @@ DevTools.prototype = {
   },
 
   /**
-   * Either the SDK Loader has been destroyed by the add-on contribution
+   * Either the DevTools Loader has been destroyed by the add-on contribution
    * workflow, or firefox is shutting down.
 
    * @param {boolean} shuttingDown
