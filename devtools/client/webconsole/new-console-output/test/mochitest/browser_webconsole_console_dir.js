@@ -39,7 +39,7 @@ add_task(async function() {
   is(arrayOiNodes.length, 6, "There is the expected number of nodes in the tree");
   let propertiesNodes = [...arrayOi.querySelectorAll(".object-label")]
     .map(el => el.textContent);
-  const arrayPropertiesNames = ["0", "1", "2", "length", "__proto__"];
+  const arrayPropertiesNames = ["0", "1", "2", "length", "<prototype>"];
   is(JSON.stringify(propertiesNodes), JSON.stringify(arrayPropertiesNames));
 
   info("console.dir on a long object");
@@ -67,7 +67,7 @@ add_task(async function() {
   // There are 102 nodes: the root, 100 "item-N" properties, and the proto.
   is(objectOiNodes.length, 102, "There is the expected number of nodes in the tree");
   const objectPropertiesNames = Object.getOwnPropertyNames(obj).map(name => `"${name}"`);
-  objectPropertiesNames.push("__proto__");
+  objectPropertiesNames.push("<prototype>");
   propertiesNodes = [...objectOi.querySelectorAll(".object-label")]
     .map(el => el.textContent);
   is(JSON.stringify(propertiesNodes), JSON.stringify(objectPropertiesNames));

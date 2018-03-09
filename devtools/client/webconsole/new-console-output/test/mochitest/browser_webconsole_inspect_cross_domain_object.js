@@ -36,7 +36,7 @@ add_task(async function() {
   // ▼ {…}
   // |  bug: 869003
   // |  hello: "world!"
-  // |  ▶︎ __proto__: Object { … }
+  // |  ▶︎ <prototype>: Object { … }
 
   let oi1Nodes = oi1.querySelectorAll(".node");
   is(oi1Nodes.length, 4, "There is the expected number of nodes in the tree");
@@ -55,7 +55,7 @@ add_task(async function() {
   // |  length: 1
   // |  name: "func"
   // |  ▶︎ prototype: Object { … }
-  // |  ▶︎ __proto__: function ()
+  // |  ▶︎ <prototype>: function ()
 
   let oi2Nodes = oi2.querySelectorAll(".node");
   is(oi2Nodes.length, 9, "There is the expected number of nodes in the tree");

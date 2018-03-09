@@ -55,14 +55,14 @@ add_task(async function() {
   // The object inspector now looks like:
   // {...}
   // |  testProp2: "testValue2"
-  // |  __proto__: Object { ... }
+  // |  <prototype>: Object { ... }
 
   let oiNodes = oi.querySelectorAll(".node");
   is(oiNodes.length, 3, "There is the expected number of nodes in the tree");
 
   ok(oiNodes[0].textContent.includes(`{\u2026}`));
   ok(oiNodes[1].textContent.includes(`testProp2: "testValue2"`));
-  ok(oiNodes[2].textContent.includes(`__proto__: Object { \u2026 }`));
+  ok(oiNodes[2].textContent.includes(`<prototype>: Object { \u2026 }`));
 });
 
 async function waitForFrameAdded() {
