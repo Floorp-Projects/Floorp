@@ -85,11 +85,13 @@ function promiseNewEngine(basename, options = {}) {
 }
 
 let promiseStateChangeFrameScript = "data:," + encodeURIComponent(`(${
-  function processScript() {
+  () => {
     ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
     /* globals docShell, sendAsyncMessage */
 
+    const global = this;
+    const LISTENER = Symbol("listener");
     let listener = {
       QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference",
                                              "nsIWebProgressListener"]),
@@ -106,6 +108,7 @@ let promiseStateChangeFrameScript = "data:," + encodeURIComponent(`(${
         if (spec == "about:blank")
           return;
 
+        delete global[LISTENER];
         docShell.removeProgressListener(listener);
 
         req.cancel(Cr.NS_ERROR_FAILURE);
@@ -113,6 +116,9 @@ let promiseStateChangeFrameScript = "data:," + encodeURIComponent(`(${
         sendAsyncMessage("PromiseStateChange::StateChanged", spec);
       },
     };
+
+    // Make sure the weak reference stays alive.
+    global[LISTENER] = listener;
 
     docShell.QueryInterface(Ci.nsIWebProgress);
     docShell.addProgressListener(listener,
