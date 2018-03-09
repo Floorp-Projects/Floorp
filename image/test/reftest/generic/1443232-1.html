@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+<img id='m1'><br/>
+<script>
+  var im1=document.getElementById('m1');
+  var step_state=0;
+  function handle_step(){
+    step_state+=1;
+    if(step_state == 1){
+      im1.src='data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=';
+    }
+    else if(step_state==2){
+      im1.src='1443232-1.gif';
+    }
+    else if(step_state==3){
+      if(im1.height==2)
+        im1.height=1;
+      im1.height=2;
+      im1.getBoundingClientRect();
+      setTimeout(function(){document.documentElement.classList.remove("reftest-wait");}, 1000);
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    im1.addEventListener('load', handle_step, false);
+    im1.src='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+  });
+</script>
+</body>
+</html>

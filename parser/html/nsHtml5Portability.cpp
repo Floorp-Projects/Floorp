@@ -87,7 +87,7 @@ nsHtml5Portability::newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner)
 {
   NS_PRECONDITION(local, "Atom was null.");
   NS_PRECONDITION(interner, "Atom table was null");
-  if (!local->IsStaticAtom()) {
+  if (!local->IsStatic()) {
     nsAutoString str;
     local->ToString(str);
     local = interner->GetAtom(str);

@@ -71,7 +71,8 @@ async function addJsonViewTab(url, {
 
   // Catch RequireJS errors (usually timeouts)
   let error = tabLoaded.then(() => new Promise((resolve, reject) => {
-    let {requirejs} = content.wrappedJSObject;
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
+    let {requirejs} = gBrowser.contentWindowAsCPOW.wrappedJSObject;
     if (requirejs) {
       requirejs.onError = err => {
         info(err);

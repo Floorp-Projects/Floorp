@@ -8,7 +8,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/RemoteAddonsChild.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PageThumbUtils",
@@ -115,11 +114,7 @@ var WebProgressListener = {
   },
 
   _send(name, data, objects) {
-    if (RemoteAddonsChild.useSyncWebProgress) {
-      sendRpcMessage(name, data, objects);
-    } else {
-      sendAsyncMessage(name, data, objects);
-    }
+    sendAsyncMessage(name, data, objects);
   },
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -604,15 +599,6 @@ addMessageListener("Browser:CreateAboutBlank", function(aMessage) {
   principal = BrowserUtils.principalWithMatchingOA(principal, content.document.nodePrincipal);
   docShell.createAboutBlankContentViewer(principal);
 });
-
-// The AddonsChild needs to be rooted so that it stays alive as long as
-// the tab.
-var AddonsChild = RemoteAddonsChild.init(this);
-if (AddonsChild) {
-  addEventListener("unload", () => {
-    RemoteAddonsChild.uninit(AddonsChild);
-  });
-}
 
 addMessageListener("InPermitUnload", msg => {
   let inPermitUnload = docShell.contentViewer && docShell.contentViewer.inPermitUnload;
