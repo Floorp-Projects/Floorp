@@ -148,30 +148,37 @@ class LRUCache final
 {
 public:
   LRUCache()
-    : mLock("mozilla.resistFingerprinting.LRUCache") {
+    : mLock("mozilla.resistFingerprinting.LRUCache")
+  {
     this->cache.SetLength(LRU_CACHE_SIZE);
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LRUCache)
 
-  nsCString Get(long long aKey) {
+  nsCString
+  Get(long long aKeyPart1, long long aKeyPart2)
+  {
     for (auto & cacheEntry : this->cache) {
       // Read optimistically befor locking
-      if (cacheEntry.key == aKey) {
+      if (cacheEntry.keyPart1 == aKeyPart1 &&
+          cacheEntry.keyPart2 == aKeyPart2) {
         MutexAutoLock lock(mLock);
 
         // Double check after we have a lock
-        if (MOZ_UNLIKELY(cacheEntry.key != aKey)) {
+        if (MOZ_UNLIKELY(cacheEntry.keyPart1 != aKeyPart1 ||
+                         cacheEntry.keyPart2 != aKeyPart2)) {
           // Got evicted in a race
-          long long tmp_key = cacheEntry.key;
+          long long tmp_keyPart1 = cacheEntry.keyPart1;
+          long long tmp_keyPart2 = cacheEntry.keyPart2;
           MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-            ("LRU Cache HIT-MISS with %lli != %lli", aKey, tmp_key));
+            ("LRU Cache HIT-MISS with %lli != %lli and %lli != %lli",
+              aKeyPart1, tmp_keyPart1, aKeyPart2, tmp_keyPart2));
           return EmptyCString();
         }
 
         cacheEntry.accessTime = PR_Now();
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-          ("LRU Cache HIT with %lli", aKey));
+          ("LRU Cache HIT with %lli %lli", aKeyPart1, aKeyPart2));
         return cacheEntry.data;
       }
     }
@@ -179,16 +186,19 @@ public:
     return EmptyCString();
   }
 
-  void Store(long long aKey, const nsCString& aValue) {
+  void
+  Store(long long aKeyPart1, long long aKeyPart2, const nsCString& aValue)
+  {
     MOZ_DIAGNOSTIC_ASSERT(aValue.Length() == HASH_DIGEST_SIZE_BYTES);
     MutexAutoLock lock(mLock);
 
     CacheEntry* lowestKey = &this->cache[0];
     for (auto & cacheEntry : this->cache) {
-      if (MOZ_UNLIKELY(cacheEntry.key == aKey)) {
+      if (MOZ_UNLIKELY(cacheEntry.keyPart1 == aKeyPart1 &&
+                       cacheEntry.keyPart2 == aKeyPart2)) {
         // Another thread inserted before us, don't insert twice
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-          ("LRU Cache DOUBLE STORE with %lli", aKey));
+          ("LRU Cache DOUBLE STORE with %lli %lli", aKeyPart1, aKeyPart2));
         return;
       }
       if (cacheEntry.accessTime < lowestKey->accessTime) {
@@ -196,28 +206,36 @@ public:
       }
     }
 
-    lowestKey->key = aKey;
+    lowestKey->keyPart1 = aKeyPart1;
+    lowestKey->keyPart2 = aKeyPart2;
     lowestKey->data = aValue;
     lowestKey->accessTime = PR_Now();
-    MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose, ("LRU Cache STORE with %lli", aKey));
+    MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
+      ("LRU Cache STORE with %lli %lli", aKeyPart1, aKeyPart2));
   }
 
 
 private:
   ~LRUCache() = default;
 
-  struct CacheEntry {
-    Atomic<long long, Relaxed> key;
+  struct CacheEntry
+  {
+    Atomic<long long, Relaxed> keyPart1;
+    Atomic<long long, Relaxed> keyPart2;
     PRTime accessTime = 0;
     nsCString data;
 
-    CacheEntry() {
-      this->key = 0xFFFFFFFFFFFFFFFF;
+    CacheEntry()
+    {
+      this->keyPart1 = 0xFFFFFFFFFFFFFFFF;
+      this->keyPart2 = 0xFFFFFFFFFFFFFFFF;
       this->accessTime = 0;
       this->data = nullptr;
     }
-    CacheEntry(const CacheEntry &obj) {
-      this->key.exchange(obj.key);
+    CacheEntry(const CacheEntry &obj)
+    {
+      this->keyPart1.exchange(obj.keyPart1);
+      this->keyPart2.exchange(obj.keyPart2);
       this->accessTime = obj.accessTime;
       this->data = obj.data;
     }
@@ -343,7 +361,7 @@ nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
   long long reducedResolution = aResolutionUSec * kClampTimesPerDigest;
   long long extraClampedTime = (aClampedTimeUSec / reducedResolution) * reducedResolution;
 
-  nsCString hashResult = cache->Get(extraClampedTime);
+  nsCString hashResult = cache->Get(extraClampedTime, aContextMixin);
 
   if(hashResult.Length() != HASH_DIGEST_SIZE_BYTES) { // Cache Miss =(
     // If someone has pased in the testing-only parameter, replace our seed with it
@@ -402,6 +420,9 @@ nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
      rv = hasher->Update(sSecretMidpointSeed, kSeedSize);
      NS_ENSURE_SUCCESS(rv, rv);
 
+     rv = hasher->Update((const uint8_t *)&aContextMixin, sizeof(aContextMixin));
+     NS_ENSURE_SUCCESS(rv, rv);
+
      rv = hasher->Update((const uint8_t *)&extraClampedTime, sizeof(extraClampedTime));
      NS_ENSURE_SUCCESS(rv, rv);
 
@@ -410,7 +431,7 @@ nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
      NS_ENSURE_SUCCESS(rv, rv);
 
      // Finally, store it in the cache
-     cache->Store(extraClampedTime, derivedSecret);
+     cache->Store(extraClampedTime, aContextMixin, derivedSecret);
      hashResult = derivedSecret;
   }
 
