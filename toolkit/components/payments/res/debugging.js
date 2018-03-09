@@ -162,6 +162,53 @@ let ADDRESSES_1 = {
   },
 };
 
+let DUPED_ADDRESSES = {
+  "a9e830667189": {
+    "street-address": "Unit 1\n1505 Northeast Kentucky Industrial Parkway \n",
+    "address-level2": "Greenup",
+    "address-level1": "KY",
+    "postal-code": "41144",
+    "country": "US",
+    "email": "bob@example.com",
+    "guid": "a9e830667189",
+    "tel": "+19871234567",
+    "name": "Bob Smith",
+  },
+  "72a15aed206d": {
+    "street-address": "1 New St",
+    "address-level2": "York",
+    "address-level1": "SC",
+    "postal-code": "29745",
+    "country": "US",
+    "guid": "72a15aed206d",
+    "tel": "+19871234567",
+    "name": "Mary Sue",
+    "address-line1": "1 New St",
+  },
+  "2b4dce0fbc1f": {
+    "street-address": "123 Park St",
+    "address-level2": "Springfield",
+    "address-level1": "OR",
+    "postal-code": "97403",
+    "country": "US",
+    "email": "rita@foo.com",
+    "guid": "2b4dce0fbc1f",
+    "name": "Rita Foo",
+    "address-line1": "123 Park St",
+  },
+  "46b2635a5b26": {
+    "street-address": "432 Another St",
+    "address-level2": "Springfield",
+    "address-level1": "OR",
+    "postal-code": "97402",
+    "country": "US",
+    "email": "rita@foo.com",
+    "guid": "46b2635a5b26",
+    "name": "Rita Foo",
+    "address-line1": "432 Another St",
+  },
+};
+
 let BASIC_CARDS_1 = {
   "53f9d009aed2": {
     "cc-number": "************5461",
@@ -239,6 +286,10 @@ let buttonActions = {
 
   setAddresses1() {
     paymentDialog.setStateFromParent({savedAddresses: ADDRESSES_1});
+  },
+
+  setDupesAddresses() {
+    paymentDialog.setStateFromParent({savedAddresses: DUPED_ADDRESSES});
   },
 
   setBasicCards1() {
