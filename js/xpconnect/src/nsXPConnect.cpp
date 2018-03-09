@@ -508,6 +508,7 @@ InitGlobalObjectOptions(JS::CompartmentOptions& aOptions,
     if (isSystem) {
         // Make sure [SecureContext] APIs are visible:
         aOptions.creationOptions().setSecureContext(true);
+        aOptions.creationOptions().setClampAndJitterTime(false);
     }
 
     if (shouldDiscardSystemSource) {
