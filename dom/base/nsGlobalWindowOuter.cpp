@@ -1862,6 +1862,7 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
         if (currentInner->mPerformance) {
           newInnerWindow->mPerformance =
             Performance::CreateForMainThread(newInnerWindow->AsInner(),
+                                             aDocument->NodePrincipal(),
                                              currentInner->mPerformance->GetDOMTiming(),
                                              currentInner->mPerformance->GetChannel());
         }
