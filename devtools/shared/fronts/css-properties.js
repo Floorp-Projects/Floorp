@@ -11,7 +11,6 @@ loader.lazyRequireGetter(this, "cssColors",
 
 const { FrontClassWithSpec, Front } = require("devtools/shared/protocol");
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
-const { Task } = require("devtools/shared/task");
 
 /**
  * Build up a regular expression that matches a CSS variable token. This is an
@@ -228,7 +227,7 @@ CssProperties.prototype = {
  * @param {Toolbox} The current toolbox.
  * @returns {Promise} Resolves to {cssProperties, cssPropertiesFront}.
  */
-const initCssProperties = Task.async(function* (toolbox) {
+const initCssProperties = async function (toolbox) {
   const client = toolbox.target.client;
   if (cachedCssProperties.has(client)) {
     return cachedCssProperties.get(client);
@@ -239,7 +238,7 @@ const initCssProperties = Task.async(function* (toolbox) {
   // Get the list dynamically if the cssProperties actor exists.
   if (toolbox.target.hasActor("cssProperties")) {
     front = CssPropertiesFront(client, toolbox.target.form);
-    db = yield front.getCSSDatabase();
+    db = await front.getCSSDatabase();
   } else {
     // The target does not support this actor, so require a static list of supported
     // properties.
@@ -249,7 +248,7 @@ const initCssProperties = Task.async(function* (toolbox) {
   const cssProperties = new CssProperties(normalizeCssData(db));
   cachedCssProperties.set(client, {cssProperties, front});
   return {cssProperties, front};
-});
+};
 
 /**
  * Synchronously get a cached and initialized CssProperties.
