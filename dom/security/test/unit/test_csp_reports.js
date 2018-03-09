@@ -106,7 +106,7 @@ function run_test() {
                    createInstance(Ci.nsISupportsString);
   content.data = "";
   // test that inline script violations cause a report.
-  makeTest(0, {"blocked-uri": "self"}, false,
+  makeTest(0, {"blocked-uri": ""}, false,
       function(csp) {
         let inlineOK = true;
         inlineOK = csp.getAllowsInline(Ci.nsIContentPolicy.TYPE_SCRIPT,
@@ -120,7 +120,7 @@ function run_test() {
       });
 
   // test that eval violations cause a report.
-  makeTest(1, {"blocked-uri": "self",
+  makeTest(1, {"blocked-uri": "",
                // JSON script-sample is UTF8 encoded
                "script-sample" : "\xc2\xa3\xc2\xa5\xc2\xb5\xe5\x8c\x97\xf0\xa0\x9d\xb9"}, false,
       function(csp) {
@@ -153,7 +153,7 @@ function run_test() {
       });
 
   // test that inline script violations cause a report in report-only policy
-  makeTest(3, {"blocked-uri": "self"}, true,
+  makeTest(3, {"blocked-uri": ""}, true,
       function(csp) {
         let inlineOK = true;
         let content = Cc["@mozilla.org/supports-string;1"].
@@ -170,7 +170,7 @@ function run_test() {
       });
 
   // test that eval violations cause a report in report-only policy
-  makeTest(4, {"blocked-uri": "self"}, true,
+  makeTest(4, {"blocked-uri": ""}, true,
       function(csp) {
         let evalOK = true, oReportViolation = {'value': false};
         evalOK = csp.getAllowsEval(oReportViolation);
