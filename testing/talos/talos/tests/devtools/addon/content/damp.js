@@ -81,7 +81,6 @@ function Damp() {
 }
 
 Damp.prototype = {
-
   async garbageCollect() {
     dump("Garbage collect\n");
 
@@ -184,7 +183,7 @@ Damp.prototype = {
     return tab;
   },
 
-  async testTeardown() {
+  async testTeardown(url) {
     this.closeCurrentTab();
 
     // Force freeing memory now so that it doesn't happen during the next test
@@ -300,75 +299,29 @@ Damp.prototype = {
 
     TalosParentProfiler.resume("DAMP - start");
 
-    let tests = {};
+    // Filter tests via `./mach --subtests filter` command line argument
+    let filter = Services.prefs.getCharPref("talos.subtests", "");
+
+    let tests = config.subtests.filter(test => !test.disabled)
+                               .filter(test => test.name.includes(filter));
+
+    if (tests.length === 0) {
+      dump("ERROR: Unable to find any test matching '" + filter + "'\n");
+    }
 
     // Run cold test only once
     let topWindow = getMostRecentBrowserWindow();
-    if (!topWindow.coldRunDAMP) {
-      topWindow.coldRunDAMP = true;
-      tests["cold.inspector"] = "inspector/cold-open.js";
-    }
-
-    tests["panelsInBackground.reload"] = "toolbox/panels-in-background.js";
-
-    // Run all tests against "simple" document
-    tests["simple.inspector"] = "inspector/simple.js";
-    tests["simple.webconsole"] = "webconsole/simple.js";
-    tests["simple.debugger"] = "debugger/simple.js";
-    tests["simple.styleeditor"] = "styleeditor/simple.js";
-    tests["simple.performance"] = "performance/simple.js";
-    tests["simple.netmonitor"] = "netmonitor/simple.js";
-    tests["simple.saveAndReadHeapSnapshot"] = "memory/simple.js";
-
-    // Run all tests against "complicated" document
-    tests["complicated.inspector"] = "inspector/complicated.js";
-    tests["complicated.webconsole"] = "webconsole/complicated.js";
-    tests["complicated.debugger"] = "debugger/complicated.js";
-    tests["complicated.styleeditor"] = "styleeditor/complicated.js";
-    tests["complicated.performance"] = "performance/complicated.js";
-    tests["complicated.netmonitor"] = "netmonitor/complicated.js";
-    tests["complicated.saveAndReadHeapSnapshot"] = "memory/complicated.js";
-
-    // Run all tests against a document specific to each tool
-    tests["custom.inspector"] = "inspector/custom.js";
-    tests["custom.debugger"] = "debugger/custom.js";
-    tests["custom.webconsole"] = "webconsole/custom.js";
-
-    // Run individual tests covering a very precise tool feature.
-    tests["console.bulklog"] = "webconsole/bulklog.js";
-    tests["console.streamlog"] = "webconsole/streamlog.js";
-    tests["console.objectexpand"] = "webconsole/objectexpand.js";
-    tests["console.openwithcache"] = "webconsole/openwithcache.js";
-    tests["inspector.mutations"] = "inspector/mutations.js";
-    tests["inspector.layout"] = "inspector/layout.js";
-    // ⚠  Adding new individual tests slows down DAMP execution ⚠
-    // ⚠  Consider contributing to custom.${tool} rather than adding isolated tests ⚠
-    // ⚠  See http://docs.firefox-dev.tools/tests/writing-perf-tests.html ⚠
-
-    // Filter tests via `./mach --subtests filter` command line argument
-    let filter = Services.prefs.getCharPref("talos.subtests", "");
-    if (filter) {
-      for (let name in tests) {
-        if (!name.includes(filter)) {
-          delete tests[name];
-        }
-      }
-      if (Object.keys(tests).length == 0) {
-        dump("ERROR: Unable to find any test matching '" + filter + "'\n");
-        this._doneInternal();
-        return;
-      }
+    if (topWindow.coldRunDAMPDone) {
+      tests = tests.filter(test => !test.cold);
+    } else {
+      topWindow.coldRunDAMPDone = true;
     }
 
     // Construct the sequence array while filtering tests
     let sequenceArray = [];
-    for (var i in config.subtests) {
-      for (var r = 0; r < config.repeat; r++) {
-        if (!config.subtests[i] || !tests[config.subtests[i]]) {
-          continue;
-        }
-
-        sequenceArray.push(tests[config.subtests[i]]);
+    for (let test of tests) {
+      for (let r = 0; r < config.repeat; r++) {
+        sequenceArray.push(test.path);
       }
     }
 
