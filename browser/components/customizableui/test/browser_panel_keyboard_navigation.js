@@ -8,9 +8,7 @@ const {PanelView} = ChromeUtils.import("resource:///modules/PanelMultiView.jsm",
 const kHelpButtonId = "appMenu-help-button";
 
 add_task(async function testUpDownKeys() {
-  let promise = promisePanelShown(window);
-  PanelUI.show();
-  await promise;
+  await gCUITestUtils.openMainMenu();
 
   let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
 
@@ -35,15 +33,11 @@ add_task(async function testUpDownKeys() {
       "The first button should be focused after navigating upward");
   }
 
-  promise = promisePanelHidden(window);
-  PanelUI.hide();
-  await promise;
+  await gCUITestUtils.hideMainMenu();
 });
 
 add_task(async function testEnterKeyBehaviors() {
-  let promise = promisePanelShown(window);
-  PanelUI.show();
-  await promise;
+  await gCUITestUtils.openMainMenu();
 
   let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
 
@@ -53,7 +47,7 @@ add_task(async function testEnterKeyBehaviors() {
   Assert.equal(focusedElement, buttons[buttons.length - 1],
     "The last button should be focused after navigating upward");
 
-  promise = BrowserTestUtils.waitForEvent(PanelUI.helpView, "ViewShown");
+  let promise = BrowserTestUtils.waitForEvent(PanelUI.helpView, "ViewShown");
   // Make sure the Help button is in focus.
   while (!focusedElement || !focusedElement.id || focusedElement.id != kHelpButtonId) {
     EventUtils.synthesizeKey("KEY_ArrowUp");
@@ -96,18 +90,15 @@ add_task(async function testEnterKeyBehaviors() {
   }
   Assert.equal(focusedElement.id, kFindButtonId, "Find button should be selected");
 
-  promise = promisePanelHidden(window);
-  EventUtils.synthesizeKey("KEY_Enter");
-  await promise;
+  await gCUITestUtils.hidePanelMultiView(PanelUI.panel,
+    () => EventUtils.synthesizeKey("KEY_Enter"));
 
   Assert.ok(!gFindBar.hidden, "Findbar should have opened");
   gFindBar.close();
 });
 
 add_task(async function testLeftRightKeys() {
-  let promise = promisePanelShown(window);
-  PanelUI.show();
-  await promise;
+  await gCUITestUtils.openMainMenu();
 
   // Navigate to the 'Help' button, which points to a subview.
   let focusedElement = document.commandDispatcher.focusedElement;
@@ -119,7 +110,7 @@ add_task(async function testLeftRightKeys() {
 
   // Hitting ArrowRight on a button that points to a subview should navigate us
   // there.
-  promise = BrowserTestUtils.waitForEvent(PanelUI.helpView, "ViewShown");
+  let promise = BrowserTestUtils.waitForEvent(PanelUI.helpView, "ViewShown");
   EventUtils.synthesizeKey("KEY_ArrowRight");
   await promise;
 
@@ -132,15 +123,11 @@ add_task(async function testLeftRightKeys() {
   Assert.equal(focusedElement.id, kHelpButtonId,
                "Help button should be focused again now that we're back in the main view");
 
-  promise = promisePanelHidden(window);
-  PanelUI.hide();
-  await promise;
+  await gCUITestUtils.hideMainMenu();
 });
 
 add_task(async function testTabKey() {
-  let promise = promisePanelShown(window);
-  PanelUI.show();
-  await promise;
+  await gCUITestUtils.openMainMenu();
 
   let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
 
@@ -169,15 +156,11 @@ add_task(async function testTabKey() {
   Assert.equal(document.commandDispatcher.focusedElement, buttons[buttons.length - 1],
     "Pressing shift + tab should cycle around and select the last button again");
 
-  promise = promisePanelHidden(window);
-  PanelUI.hide();
-  await promise;
+  await gCUITestUtils.hideMainMenu();
 });
 
 add_task(async function testInterleavedTabAndArrowKeys() {
-  let promise = promisePanelShown(window);
-  PanelUI.show();
-  await promise;
+  await gCUITestUtils.openMainMenu();
 
   let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
   let tab = false;
@@ -196,15 +179,11 @@ add_task(async function testInterleavedTabAndArrowKeys() {
   Assert.equal(document.commandDispatcher.focusedElement, buttons[buttons.length - 1],
     "The last button should be focused after a mix of Tab and ArrowDown");
 
-  promise = promisePanelHidden(window);
-  PanelUI.hide();
-  await promise;
+  await gCUITestUtils.hideMainMenu();
 });
 
 add_task(async function testSpaceDownAfterTabNavigation() {
-  let promise = promisePanelShown(window);
-  PanelUI.show();
-  await promise;
+  await gCUITestUtils.openMainMenu();
 
   let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
   let button;
@@ -223,11 +202,9 @@ add_task(async function testSpaceDownAfterTabNavigation() {
 
   // Pressing down space on a button that points to a subview should navigate us
   // there, before keyup.
-  promise = BrowserTestUtils.waitForEvent(PanelUI.helpView, "ViewShown");
+  let promise = BrowserTestUtils.waitForEvent(PanelUI.helpView, "ViewShown");
   EventUtils.synthesizeKey(" ", {type: "keydown"});
   await promise;
 
-  promise = promisePanelHidden(window);
-  PanelUI.hide();
-  await promise;
+  await gCUITestUtils.hideMainMenu();
 });
