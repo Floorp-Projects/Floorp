@@ -1892,21 +1892,35 @@ Search.prototype = {
     let [urlMapKey, action] = makeKeyForURL(match);
     if ((match.placeId && this._usedPlaceIds.has(match.placeId)) ||
         this._usedURLs.map(e => e.key).includes(urlMapKey)) {
-      // it's a duplicate.
+      let isDupe = true;
       if (action && ["switchtab", "remotetab"].includes(action.type)) {
-        // Look for the duplicate among current matches.
+        // The new entry is a switch/remote tab entry, look for the duplicate
+        // among current matches.
         for (let i = 0; i < this._usedURLs.length; ++i) {
-          let {key: matchKey, action: matchAction} = this._usedURLs[i];
+          let {key: matchKey, action: matchAction, type: matchType} = this._usedURLs[i];
           if (matchKey == urlMapKey) {
+            isDupe = true;
+            // Don't replace the match if the existing one is heuristic and the
+            // new one is a switchtab, instead also add the switchtab match.
+            if (matchType == MATCHTYPE.HEURISTIC && action.type == "switchtab") {
+              isDupe = false;
+              // Since we allow to insert a dupe in this case, we must continue
+              // checking the next matches to be sure we won't insert more than
+              // one dupe. For this same reason we must reset isDupe = true for
+              // each found dupe.
+              continue;
+            }
             if (!matchAction || action.type == "switchtab") {
-              this._usedURLs[i] = {key: urlMapKey, action};
+              this._usedURLs[i] = {key: urlMapKey, action, type: match.type};
               return { index:  i, replace: true };
             }
             break; // Found the duplicate, no reason to continue.
           }
         }
       }
-      return { index: -1, replace: false };
+      if (isDupe) {
+        return { index: -1, replace: false };
+      }
     }
 
     // Add this to our internal tracker to ensure duplicates do not end up in
@@ -1973,7 +1987,7 @@ Search.prototype = {
       bucket.insertIndex++;
       break;
     }
-    this._usedURLs[index] = {key: urlMapKey, action};
+    this._usedURLs[index] = {key: urlMapKey, action, type: match.type};
     return { index, replace };
   },
 
