@@ -256,10 +256,11 @@ class ADBAndroid(ADBDevice):
 
     # Application management methods
 
-    def install_app(self, apk_path, timeout=None):
+    def install_app(self, apk_path, replace=False, timeout=None):
         """Installs an app on the device.
 
         :param str apk_path: The apk file name to be installed.
+        :param bool replace: If True, replace existing application.
         :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
@@ -273,6 +274,8 @@ class ADBAndroid(ADBDevice):
         cmd = ["install"]
         if self.version >= version_codes.M:
             cmd.append("-g")
+        if replace:
+            cmd.append("-r")
         cmd.append(apk_path)
         data = self.command_output(cmd, timeout=timeout)
         if data.find('Success') == -1:
