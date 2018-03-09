@@ -7149,7 +7149,7 @@ public:
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "close";
+        static constexpr char name[] = "nativeClose";
         static constexpr char signature[] =
                 "()V";
         static const bool isStatic = false;

@@ -46,7 +46,17 @@ public class GeckoSession extends LayerSession
     private static final String LOGTAG = "GeckoSession";
     private static final boolean DEBUG = false;
 
-    /* package */ enum State implements NativeQueue.State {
+    // Type of changes given to onWindowChanged.
+    // Window has been cleared due to the session being closed.
+    private static final int WINDOW_CLOSE = 0;
+    // Window has been set due to the session being opened.
+    private static final int WINDOW_OPEN = 1; // Window has been opened.
+    // Window has been cleared due to the session being transferred to another session.
+    private static final int WINDOW_TRANSFER_OUT = 2; // Window has been transfer.
+    // Window has been set due to another session being transferred to this one.
+    private static final int WINDOW_TRANSFER_IN = 3;
+
+    private enum State implements NativeQueue.State {
         INITIAL(0),
         READY(1);
 
@@ -309,6 +319,13 @@ public class GeckoSession extends LayerSession
             }
         };
 
+    /* package */ int handlersCount;
+
+    private final GeckoSessionHandler<?>[] mSessionHandlers = new GeckoSessionHandler<?>[] {
+        mContentHandler, mNavigationHandler, mProgressHandler, mScrollHandler,
+        mTrackingProtectionHandler, mPermissionHandler
+    };
+
     private static class PermissionCallback implements
         PermissionDelegate.Callback, PermissionDelegate.MediaCallback {
 
@@ -402,16 +419,7 @@ public class GeckoSession extends LayerSession
                                        int screenId, boolean privateMode, String id);
 
         @Override // JNIObject
-        protected void disposeNative() {
-            // Detach ourselves from the binder as well, to prevent this window from being
-            // read from any parcels.
-            asBinder().attachInterface(null, Window.class.getName());
-
-            // Reset our queue, so we don't end up with queued calls on a disposed object.
-            synchronized (this) {
-                mNativeQueue.reset(State.INITIAL);
-            }
-
+        public void disposeNative() {
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
                 nativeDisposeNative();
             } else {
@@ -423,8 +431,31 @@ public class GeckoSession extends LayerSession
         @WrapForJNI(dispatchTo = "proxy", stubName = "DisposeNative")
         private native void nativeDisposeNative();
 
-        @WrapForJNI(dispatchTo = "proxy")
-        public native void close();
+        public void close() {
+            // Reset our queue, so we don't end up with queued calls on a disposed object.
+            synchronized (this) {
+                if (mNativeQueue == null) {
+                    // Already closed elsewhere.
+                    return;
+                }
+                mNativeQueue.reset(State.INITIAL);
+                mNativeQueue = null;
+            }
+
+            // Detach ourselves from the binder as well, to prevent this window from being
+            // read from any parcels.
+            asBinder().attachInterface(null, Window.class.getName());
+
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                nativeClose();
+            } else {
+                GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                        this, "nativeClose");
+            }
+        }
+
+        @WrapForJNI(dispatchTo = "proxy", stubName = "Close")
+        private native void nativeClose();
 
         @WrapForJNI(dispatchTo = "proxy")
         public native void transfer(Compositor compositor, EventDispatcher dispatcher,
@@ -433,7 +464,7 @@ public class GeckoSession extends LayerSession
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void onTransfer(final EventDispatcher dispatcher) {
             final NativeQueue nativeQueue = dispatcher.getNativeQueue();
-            if (mNativeQueue != nativeQueue) {
+            if (mNativeQueue != null && mNativeQueue != nativeQueue) {
                 // Set new queue to the same state as the old queue,
                 // then return the old queue to its initial state if applicable,
                 // because the old queue is no longer the active queue.
@@ -449,7 +480,8 @@ public class GeckoSession extends LayerSession
 
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void onReady() {
-            if (mNativeQueue.checkAndSetState(State.INITIAL, State.READY)) {
+            if (mNativeQueue != null &&
+                    mNativeQueue.checkAndSetState(State.INITIAL, State.READY)) {
                 Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
                       " - chrome startup finished");
             }
@@ -486,12 +518,20 @@ public class GeckoSession extends LayerSession
     public GeckoSession(final GeckoSessionSettings settings) {
         mSettings = new GeckoSessionSettings(settings, this);
         mListener.registerListeners();
+
+        if (BuildConfig.DEBUG && handlersCount != mSessionHandlers.length) {
+            throw new AssertionError("Add new handler to handlers list");
+        }
     }
 
     private void transferFrom(final Window window, final GeckoSessionSettings settings,
                               final String id) {
         if (isOpen()) {
             throw new IllegalStateException("Session is open");
+        }
+
+        if (window != null) {
+            onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ true);
         }
 
         mWindow = window;
@@ -508,15 +548,23 @@ public class GeckoSession extends LayerSession
                         EventDispatcher.class, mEventDispatcher,
                         GeckoBundle.class, mSettings.asBundle());
             }
-        }
 
-        onWindowChanged();
+            onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ false);
+        }
     }
 
     /* package */ void transferFrom(final GeckoSession session) {
+        final boolean changing = (session.mWindow != null);
+        if (changing) {
+            session.onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ true);
+        }
+
         transferFrom(session.mWindow, session.mSettings, session.mId);
         session.mWindow = null;
-        session.onWindowChanged();
+
+        if (changing) {
+            session.onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ false);
+        }
     }
 
     @Override // Parcelable
@@ -638,6 +686,8 @@ public class GeckoSession extends LayerSession
 
         mWindow = new Window(mNativeQueue);
 
+        onWindowChanged(WINDOW_OPEN, /* inProgress */ true);
+
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(mWindow, mCompositor, mEventDispatcher,
                         mSettings.asBundle(), chromeUri, screenId, isPrivate, mId);
@@ -653,7 +703,7 @@ public class GeckoSession extends LayerSession
                 screenId, isPrivate, mId);
         }
 
-        onWindowChanged();
+        onWindowChanged(WINDOW_OPEN, /* inProgress */ false);
     }
 
     /**
@@ -671,21 +721,27 @@ public class GeckoSession extends LayerSession
             return;
         }
 
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            mWindow.close();
-        } else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    mWindow, "close");
-        }
+        onWindowChanged(WINDOW_CLOSE, /* inProgress */ true);
 
+        mWindow.close();
         mWindow.disposeNative();
         mWindow = null;
-        onWindowChanged();
+
+        onWindowChanged(WINDOW_CLOSE, /* inProgress */ false);
     }
 
-    private void onWindowChanged() {
-        if (mWindow != null) {
+    private void onWindowChanged(int change, boolean inProgress) {
+        if ((change == WINDOW_OPEN || change == WINDOW_TRANSFER_IN) && !inProgress) {
             mTextInput.onWindowChanged(mWindow);
+        }
+
+        if (change == WINDOW_CLOSE) {
+            // Detach when window is closing, and reattach immediately after window is closed.
+            // We reattach immediate after closing because we want any actions performed while the
+            // session is closed to be properly queued, until the session is open again.
+            for (final GeckoSessionHandler<?> handler : mSessionHandlers) {
+                handler.setSessionIsReady(getEventDispatcher(), !inProgress);
+            }
         }
     }
 
