@@ -1173,8 +1173,7 @@ nsSVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
       if (clipPathFrame) {
         SVGClipPathElement *clipContent =
           static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
-        RefPtr<SVGAnimatedEnumeration> units = clipContent->ClipPathUnits();
-        if (units->AnimVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+        if (clipContent->IsUnitsObjectBoundingBox()) {
           matrix.PreTranslate(gfxPoint(x, y));
           matrix.PreScale(width, height);
         } else if (aFrame->IsSVGForeignObjectFrame()) {
