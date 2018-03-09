@@ -22,8 +22,7 @@ add_task(function* () {
 
   gWindow.sessionStorage.setItem("ss4", "new-item");
 
-  yield gUI.once("store-objects-updated");
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [
@@ -36,11 +35,11 @@ add_task(function* () {
 
   gWindow.sessionStorage.removeItem("ss3");
 
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   gWindow.sessionStorage.removeItem("ss1");
 
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [

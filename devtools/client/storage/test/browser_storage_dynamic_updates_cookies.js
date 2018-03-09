@@ -53,8 +53,7 @@ add_task(function* () {
   checkCell(c1id, "value", "1.2.3.4.5.6.7");
 
   gWindow.addCookie("c1", '{"foo": 4,"bar":6}', "/browser");
-  yield gUI.once("sidebar-updated");
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield findVariableViewProperties(finalValue[0], false);
   yield findVariableViewProperties(finalValue[1], true);
@@ -73,7 +72,7 @@ add_task(function* () {
   // Add a new entry
   gWindow.addCookie("c3", "booyeah");
 
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [
@@ -93,9 +92,7 @@ add_task(function* () {
   // Add another
   gWindow.addCookie("c4", "booyeah");
 
-  // Wait once for update and another time for value fetching
-  yield gUI.once("store-objects-updated");
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [
@@ -117,8 +114,7 @@ add_task(function* () {
   // Removing cookies
   gWindow.removeCookie("c1", "/browser");
 
-  yield gUI.once("sidebar-updated");
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [
@@ -141,7 +137,7 @@ add_task(function* () {
   // Keep deleting till no rows
   gWindow.removeCookie("c3");
 
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [
@@ -159,8 +155,7 @@ add_task(function* () {
 
   gWindow.removeCookie("c2", "/browser");
 
-  yield gUI.once("sidebar-updated");
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [
@@ -177,7 +172,7 @@ add_task(function* () {
 
   gWindow.removeCookie("c4");
 
-  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-edit");
 
   yield checkState([
     [["cookies", "http://test1.example.org"], [ ]],

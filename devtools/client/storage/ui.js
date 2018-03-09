@@ -141,8 +141,8 @@ class StorageUI {
       console.error(e);
     });
 
-    this.onUpdate = this.onUpdate.bind(this);
-    this.front.on("stores-update", this.onUpdate);
+    this.onEdit = this.onEdit.bind(this);
+    this.front.on("stores-update", this.onEdit);
     this.onCleared = this.onCleared.bind(this);
     this.front.on("stores-cleared", this.onCleared);
 
@@ -216,7 +216,7 @@ class StorageUI {
     this.table.off(TableWidget.EVENTS.CELL_EDIT, this.editItem);
     this.table.destroy();
 
-    this.front.off("stores-update", this.onUpdate);
+    this.front.off("stores-update", this.onEdit);
     this.front.off("stores-cleared", this.onCleared);
     this._panelDoc.removeEventListener("keypress", this.handleKeypress);
     this.searchBox.removeEventListener("input", this.filterItems);
@@ -401,7 +401,7 @@ class StorageUI {
    *        of the changed store objects. This array is empty for deleted object
    *        if the host was completely removed.
    */
-  async onUpdate({ changed, added, deleted }) {
+  async onEdit({ changed, added, deleted }) {
     if (added) {
       await this.handleAddedItems(added);
     }
@@ -421,14 +421,14 @@ class StorageUI {
     }
 
     if (added || deleted || changed) {
-      this.emit("store-objects-updated");
+      this.emit("store-objects-edit");
     }
   }
 
   /**
-   * Handle added items received by onUpdate
+   * Handle added items received by onEdit
    *
-   * @param {object} See onUpdate docs
+   * @param {object} See onEdit docs
    */
   async handleAddedItems(added) {
     for (let type in added) {
@@ -460,9 +460,9 @@ class StorageUI {
   }
 
   /**
-   * Handle deleted items received by onUpdate
+   * Handle deleted items received by onEdit
    *
-   * @param {object} See onUpdate docs
+   * @param {object} See onEdit docs
    */
   async handleDeletedItems(deleted) {
     for (let type in deleted) {
@@ -512,9 +512,9 @@ class StorageUI {
   }
 
   /**
-   * Handle changed items received by onUpdate
+   * Handle changed items received by onEdit
    *
-   * @param {object} See onUpdate docs
+   * @param {object} See onEdit docs
    */
   async handleChangedItems(changed) {
     let [type, host, db, objectStore] = this.tree.selectedItem;
