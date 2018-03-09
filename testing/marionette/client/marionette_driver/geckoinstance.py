@@ -497,9 +497,6 @@ class DesktopInstance(GeckoInstance):
         # Do not show the EULA notification which can interfer with tests
         "browser.EULA.override": True,
 
-        # Turn off about:newtab and make use of about:blank instead for new opened tabs
-        "browser.newtabpage.enabled": False,
-
         # Background thumbnails in particular cause grief, and disabling thumbnails
         # in general can"t hurt - we re-enable them when tests need them
         "browser.pagethumbnails.capturing_disabled": True,

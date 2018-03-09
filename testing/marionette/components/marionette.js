@@ -86,13 +86,6 @@ const RECOMMENDED_PREFS = new Map([
   // as it is picked up at runtime.
   ["browser.EULA.override", true],
 
-  // Turn off about:newtab and make use of about:blank instead for new
-  // opened tabs.
-  //
-  // This should also be set in the profile prior to starting Firefox,
-  // as it is picked up at runtime.
-  ["browser.newtabpage.enabled", false],
-
   // Never start the browser in offline mode
   //
   // This should also be set in the profile prior to starting Firefox,
