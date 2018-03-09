@@ -177,7 +177,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     lastAnimationTime(0),
     performanceMonitoring_(),
     stackFormat_(parentRuntime ? js::StackFormat::Default
-                               : js::StackFormat::SpiderMonkey)
+                               : js::StackFormat::SpiderMonkey),
+    wasmInstances(mutexid::WasmRuntimeInstances)
 {
     liveRuntimesCount++;
 
@@ -193,6 +194,8 @@ JSRuntime::~JSRuntime()
 
     DebugOnly<size_t> oldCount = liveRuntimesCount--;
     MOZ_ASSERT(oldCount > 0);
+
+    MOZ_ASSERT(wasmInstances.lock()->empty());
 }
 
 bool
@@ -509,6 +512,8 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         jitRuntime_->execAlloc().addSizeOfCode(&rtSizes->code);
         jitRuntime_->backedgeExecAlloc().addSizeOfCode(&rtSizes->code);
     }
+
+    rtSizes->wasmRuntime += wasmInstances.lock()->sizeOfExcludingThis(mallocSizeOf);
 }
 
 static bool
@@ -599,6 +604,7 @@ JSContext::requestInterrupt(InterruptMode mode)
             fx.wake(FutexThread::WakeForJSInterrupt);
         fx.unlock();
         jit::InterruptRunningCode(this);
+        wasm::InterruptRunningCode(this);
     }
 }
 
