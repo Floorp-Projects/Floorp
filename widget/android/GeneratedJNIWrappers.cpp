@@ -2523,27 +2523,19 @@ constexpr char GeckoSession::Window::Close_t::signature[];
 constexpr char GeckoSession::Window::DisposeNative_t::name[];
 constexpr char GeckoSession::Window::DisposeNative_t::signature[];
 
+constexpr char GeckoSession::Window::Transfer_t::name[];
+constexpr char GeckoSession::Window::Transfer_t::signature[];
+
 constexpr char GeckoSession::Window::OnReady_t::name[];
 constexpr char GeckoSession::Window::OnReady_t::signature[];
 
-auto GeckoSession::Window::OnReady() const -> void
+auto GeckoSession::Window::OnReady(mozilla::jni::Object::Param a0) const -> void
 {
-    return mozilla::jni::Method<OnReady_t>::Call(Window::mCtx, nullptr);
-}
-
-constexpr char GeckoSession::Window::OnTransfer_t::name[];
-constexpr char GeckoSession::Window::OnTransfer_t::signature[];
-
-auto GeckoSession::Window::OnTransfer(mozilla::jni::Object::Param a0) const -> void
-{
-    return mozilla::jni::Method<OnTransfer_t>::Call(Window::mCtx, nullptr, a0);
+    return mozilla::jni::Method<OnReady_t>::Call(Window::mCtx, nullptr, a0);
 }
 
 constexpr char GeckoSession::Window::Open_t::name[];
 constexpr char GeckoSession::Window::Open_t::signature[];
-
-constexpr char GeckoSession::Window::Transfer_t::name[];
-constexpr char GeckoSession::Window::Transfer_t::signature[];
 
 const char TextInputController::name[] =
         "org/mozilla/geckoview/TextInputController";

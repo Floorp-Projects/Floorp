@@ -7178,34 +7178,36 @@ public:
                 mozilla::jni::DispatchTarget::PROXY;
     };
 
-    struct OnReady_t {
+    struct Transfer_t {
         typedef Window Owner;
         typedef void ReturnType;
         typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "onReady";
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "nativeTransfer";
         static constexpr char signature[] =
-                "()V";
+                "(Lorg/mozilla/gecko/NativeQueue;Lorg/mozilla/gecko/gfx/LayerSession$Compositor;Lorg/mozilla/gecko/EventDispatcher;Lorg/mozilla/gecko/util/GeckoBundle;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
         static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
+                mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
+                mozilla::jni::DispatchTarget::PROXY;
     };
 
-    auto OnReady() const -> void;
-
-    struct OnTransfer_t {
+    struct OnReady_t {
         typedef Window Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "onTransfer";
+        static constexpr char name[] = "onReady";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/EventDispatcher;)V";
+                "(Lorg/mozilla/gecko/NativeQueue;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -7215,7 +7217,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    auto OnTransfer(mozilla::jni::Object::Param) const -> void;
+    auto OnReady(mozilla::jni::Object::Param) const -> void;
 
     struct Open_t {
         typedef Window Owner;
@@ -7226,34 +7228,15 @@ public:
                 mozilla::jni::Object::Param,
                 mozilla::jni::Object::Param,
                 mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param,
+                mozilla::jni::String::Param,
                 mozilla::jni::String::Param,
                 int32_t,
-                bool,
-                mozilla::jni::String::Param> Args;
+                bool> Args;
         static constexpr char name[] = "open";
         static constexpr char signature[] =
-                "(Lorg/mozilla/geckoview/GeckoSession$Window;Lorg/mozilla/gecko/gfx/LayerSession$Compositor;Lorg/mozilla/gecko/EventDispatcher;Lorg/mozilla/gecko/util/GeckoBundle;Ljava/lang/String;IZLjava/lang/String;)V";
+                "(Lorg/mozilla/geckoview/GeckoSession$Window;Lorg/mozilla/gecko/NativeQueue;Lorg/mozilla/gecko/gfx/LayerSession$Compositor;Lorg/mozilla/gecko/EventDispatcher;Lorg/mozilla/gecko/util/GeckoBundle;Ljava/lang/String;Ljava/lang/String;IZ)V";
         static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::PROXY;
-    };
-
-    struct Transfer_t {
-        typedef Window Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param,
-                mozilla::jni::Object::Param,
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "transfer";
-        static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/gfx/LayerSession$Compositor;Lorg/mozilla/gecko/EventDispatcher;Lorg/mozilla/gecko/util/GeckoBundle;)V";
-        static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
         static const mozilla::jni::CallingThread callingThread =
