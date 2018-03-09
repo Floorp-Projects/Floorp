@@ -28,32 +28,38 @@ class FormAutofillBase {
     }
   }
 
-  get storage() {
+  async getStorage() {
+    await formAutofillStorage.initialize();
     return formAutofillStorage[this._subStorageName];
   }
 
-  Create() {
-    this.storage.add(this.props);
+  async Create() {
+    const storage = await this.getStorage();
+    storage.add(this.props);
   }
 
-  Find() {
-    return this.storage._data.find(entry =>
+  async Find() {
+    const storage = await this.getStorage();
+    return storage._data.find(entry =>
       this._fields.every(field => entry[field] === this.props[field])
     );
   }
 
-  Update() {
-    const {guid} = this.Find();
-    this.storage.update(guid, this.updateProps, true);
+  async Update() {
+    const storage = await this.getStorage();
+    const {guid} = await this.Find();
+    storage.update(guid, this.updateProps, true);
   }
 
-  Remove() {
-    const {guid} = this.Find();
-    this.storage.remove(guid);
+  async Remove() {
+    const storage = await this.getStorage();
+    const {guid} = await this.Find();
+    storage.remove(guid);
   }
 }
 
-function DumpStorage(subStorageName) {
+async function DumpStorage(subStorageName) {
+  await formAutofillStorage.initialize();
   Logger.logInfo(`\ndumping ${subStorageName} list\n`, true);
   const entries = formAutofillStorage[subStorageName]._data;
   for (const entry of entries) {
@@ -82,8 +88,8 @@ class Address extends FormAutofillBase {
   }
 }
 
-function DumpAddresses() {
-  DumpStorage("addresses");
+async function DumpAddresses() {
+  await DumpStorage("addresses");
 }
 
 const CREDIT_CARD_FIELDS = [
@@ -98,14 +104,15 @@ class CreditCard extends FormAutofillBase {
     super(props, "creditCards", CREDIT_CARD_FIELDS);
   }
 
-  Find() {
-    return this.storage._data.find(entry => {
+  async Find() {
+    const storage = await this.getStorage();
+    return storage._data.find(entry => {
       entry["cc-number"] = MasterPassword.decryptSync(entry["cc-number-encrypted"]);
       return this._fields.every(field => entry[field] === this.props[field]);
     });
   }
 }
 
-function DumpCreditCards() {
-  DumpStorage("creditCards");
+async function DumpCreditCards() {
+  await DumpStorage("creditCards");
 }

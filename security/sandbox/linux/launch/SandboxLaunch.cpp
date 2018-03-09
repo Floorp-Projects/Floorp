@@ -241,13 +241,24 @@ SandboxLaunchPrepare(GeckoProcessType aType,
   PreloadSandboxLib(&aOptions->env_map);
   AttachSandboxReporter(&aOptions->fds_to_remap);
 
+  bool canChroot = false;
+  int flags = 0;
+
+  if (aType == GeckoProcessType_Content && level >= 1) {
+      static const bool needSysV = ContentNeedsSysVIPC();
+      if (needSysV) {
+        // Tell the child process so it can adjust its seccomp-bpf
+        // policy.
+        aOptions->env_map["MOZ_SANDBOX_ALLOW_SYSV"] = "1";
+      } else {
+        flags |= CLONE_NEWIPC;
+      }
+  }
+
   // Anything below this requires unprivileged user namespaces.
   if (!info.Test(SandboxInfo::kHasUserNamespaces)) {
     return;
   }
-
-  bool canChroot = false;
-  int flags = 0;
 
   switch (aType) {
 #ifdef MOZ_GMP_SANDBOX
@@ -260,17 +271,6 @@ SandboxLaunchPrepare(GeckoProcessType aType,
 #endif
 #ifdef MOZ_CONTENT_SANDBOX
   case GeckoProcessType_Content:
-    if (level >= 1) {
-      static const bool needSysV = ContentNeedsSysVIPC();
-      if (needSysV) {
-        // Tell the child process so it can adjust its seccomp-bpf
-        // policy.
-        aOptions->env_map["MOZ_SANDBOX_ALLOW_SYSV"] = "1";
-      } else {
-        flags |= CLONE_NEWIPC;
-      }
-    }
-
     if (level >= 4) {
       canChroot = true;
       // Unshare network namespace if allowed by graphics; see

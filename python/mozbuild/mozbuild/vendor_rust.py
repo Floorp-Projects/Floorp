@@ -264,8 +264,6 @@ license file's hash.
         vendor_dir = mozpath.join(self.topsrcdir, relative_vendor_dir)
         self.log(logging.INFO, 'rm_vendor_dir', {}, 'rm -rf %s' % vendor_dir)
         mozfile.remove(vendor_dir)
-        # Once we require a new enough cargo to switch to workspaces, we can
-        # just do this once on the workspace root crate.
 
         # We use check_call instead of mozprocess to ensure errors are displayed.
         # We do an |update -p| here to regenerate the Cargo.lock file with minimal changes. See bug 1324462
