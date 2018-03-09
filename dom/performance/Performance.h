@@ -41,6 +41,7 @@ public:
 
   static already_AddRefed<Performance>
   CreateForMainThread(nsPIDOMWindowInner* aWindow,
+                      nsIPrincipal* aPrincipal,
                       nsDOMNavigationTiming* aDOMTiming,
                       nsITimedChannel* aChannel);
 
@@ -100,6 +101,11 @@ public:
 
   virtual TimeStamp CreationTimeStamp() const = 0;
 
+  uint64_t IsSystemPrincipal()
+  {
+    return mSystemPrincipal;
+  }
+
   void MemoryPressure();
 
   size_t SizeOfUserEntries(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -143,8 +149,6 @@ protected:
   void RunNotificationObserversTask();
   void QueueEntry(PerformanceEntry* aEntry);
 
-  DOMHighResTimeStamp RoundTime(double aTime) const;
-
   nsTObserverArray<PerformanceObserver*> mObservers;
 
 protected:
@@ -159,6 +163,8 @@ protected:
   bool mPendingNotificationObserversTask;
 
   RefPtr<PerformanceService> mPerformanceService;
+
+  bool mSystemPrincipal;
 };
 
 } // namespace dom
