@@ -3805,5 +3805,41 @@ UnprivilegedJunkScopeOrWorkerGlobal()
 }
 } // namespace binding_detail
 
+JS::Handle<JSObject*>
+GetPerInterfaceObjectHandle(JSContext* aCx,
+                            size_t aSlotId,
+                            CreateInterfaceObjectsMethod aCreator,
+                            bool aDefineOnGlobal)
+{
+  /* Make sure our global is sane.  Hopefully we can remove this sometime */
+  JSObject* global = JS::CurrentGlobalOrNull(aCx);
+  if (!(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL)) {
+    return nullptr;
+  }
+
+  /* Check to see whether the interface objects are already installed */
+  ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(global);
+  if (!protoAndIfaceCache.HasEntryInSlot(aSlotId)) {
+    JS::Rooted<JSObject*> rootedGlobal(aCx, global);
+    aCreator(aCx, rootedGlobal, protoAndIfaceCache, aDefineOnGlobal);
+  }
+
+  /*
+   * The object might _still_ be null, but that's OK.
+   *
+   * Calling fromMarkedLocation() is safe because protoAndIfaceCache is
+   * traced by TraceProtoAndIfaceCache() and its contents are never
+   * changed after they have been set.
+   *
+   * Calling address() avoids the read barrier that does gray unmarking, but
+   * it's not possible for the object to be gray here.
+   */
+
+  const JS::Heap<JSObject*>& entrySlot =
+    protoAndIfaceCache.EntrySlotMustExist(aSlotId);
+  MOZ_ASSERT(JS::ObjectIsNotGray(entrySlot));
+  return JS::Handle<JSObject*>::fromMarkedLocation(entrySlot.address());
+}
+
 } // namespace dom
 } // namespace mozilla
