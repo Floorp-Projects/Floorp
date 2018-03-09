@@ -412,10 +412,11 @@ Damp.prototype = {
     };
   },
 
-  addTab(url) {
+  async addTab(url) {
     let tab = this._win.gBrowser.selectedTab = this._win.gBrowser.addTab(url);
     let browser = tab.linkedBrowser;
-    return awaitBrowserLoaded(browser);
+    await awaitBrowserLoaded(browser);
+    return tab;
   },
 
   closeCurrentTab() {
