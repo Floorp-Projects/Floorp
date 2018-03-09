@@ -221,6 +221,10 @@ mochitest-devtools-chrome:
     treeherder-symbol: M(dt)
     loopback-video: true
     max-run-time: 5400
+    run-on-projects:
+        by-test-platform:
+            linux64-jsdcov/opt: ['try']  # jsdcov only on try, Bug 1442823
+            default: built-projects
     chunks:
         by-test-platform:
             windows10-64-ccov/debug: 10
