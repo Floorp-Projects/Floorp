@@ -113,7 +113,7 @@ class nsStaticAtom;
 struct nsStaticAtomSetup
 {
   const char16_t* const mString;
-  nsStaticAtom** const mAtom;
+  nsStaticAtom** const mAtomp;
 };
 
 // Register an array of static atoms with the atom table.

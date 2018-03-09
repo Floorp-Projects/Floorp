@@ -10,7 +10,6 @@
 %}
 
 interface xpcIJSWeakReference;
-interface nsIAddonInterposition;
 interface nsIClassInfo;
 interface nsIComponentManager;
 interface nsICycleCollectorListener;
@@ -690,15 +689,6 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     ACString getCompartmentLocation(in jsval obj);
-
-    [implicit_jscontext]
-    void setAddonInterposition(in ACString addonId, in nsIAddonInterposition interposition);
-
-    /*
-     * Enables call interpositions from addon scopes to any functions in the scope of |target|.
-     */
-    [implicit_jscontext]
-    void setAddonCallInterposition(in jsval target);
 
     [implicit_jscontext]
     void allowCPOWsInAddon(in ACString addonId, in bool allow);

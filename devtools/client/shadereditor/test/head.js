@@ -48,7 +48,7 @@ registerCleanupFunction(() => {
  * frame script attached in the middle of the test.
  */
 function loadFrameScripts() {
-  if (Cu.isCrossProcessWrapper(content)) {
+  if (!content) {
     loadFrameScriptUtils();
   }
 }
@@ -130,7 +130,7 @@ function ensurePixelIs(aFront, aPosition, aColor, aWaitFlag = false, aSelector =
 }
 
 function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate") {
-  if (Cu.isCrossProcessWrapper(content)) {
+  if (!content) {
     let mm = gBrowser.selectedBrowser.messageManager;
     mm.sendAsyncMessage("devtools:test:history", { direction: aDirection });
   } else {

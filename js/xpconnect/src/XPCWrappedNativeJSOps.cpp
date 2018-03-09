@@ -10,8 +10,6 @@
 #include "xpc_make_class.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Preferences.h"
-#include "nsIAddonInterposition.h"
-#include "AddonWrapper.h"
 #include "js/Class.h"
 #include "js/Printf.h"
 
@@ -396,20 +394,6 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             *resolved = true;
         return member->GetConstantValue(ccx, iface, val.address()) &&
                JS_DefinePropertyById(ccx, obj, id, val, propFlags);
-    }
-
-    if (scope->HasInterposition()) {
-        Rooted<PropertyDescriptor> desc(ccx);
-        if (!xpc::InterposeProperty(ccx, obj, iface->GetIID(), id, &desc))
-            return false;
-
-        if (desc.object()) {
-            AutoResolveName arn(ccx, id);
-            if (resolved)
-                *resolved = true;
-            desc.attributesRef() |= JSPROP_RESOLVING;
-            return JS_DefinePropertyById(ccx, obj, id, desc);
-        }
     }
 
     if (id == xpccx->GetStringID(XPCJSContext::IDX_TO_STRING) ||

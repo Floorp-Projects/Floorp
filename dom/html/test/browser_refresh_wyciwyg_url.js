@@ -9,7 +9,7 @@ and instead is identical to the original URL.
 This testcase is aimed at preventing bug 619092
 */
 var testURL = "http://mochi.test:8888/browser/dom/html/test/file_refresh_wyciwyg_url.html";
-let aTab, aBrowser, test_btn;
+let aTab, aBrowser;
 
 function test(){
     waitForExplicitFinish();
@@ -17,15 +17,24 @@ function test(){
     aTab = BrowserTestUtils.addTab(gBrowser, testURL);
     aBrowser = gBrowser.getBrowserForTab(aTab);
     BrowserTestUtils.browserLoaded(aBrowser).then(() => {
-        is(aBrowser.contentDocument.URL, testURL, "Make sure we start at the correct URL");
+        is(aBrowser.currentURI.spec, testURL, "Make sure we start at the correct URL");
 
-        // test_btn calls document.write() then reloads the document
-        test_btn = aBrowser.contentDocument.getElementById("test_btn");
-        test_btn.click();
+        ContentTask.spawn(aBrowser, null, () => {
+          // test_btn calls document.write() then reloads the document
+          let test_btn = content.document.getElementById("test_btn");
+
+          addEventListener("load", () => {
+            test_btn.click();
+          }, {once: true, capture: true});
+
+          test_btn.click();
+        });
+
         return BrowserTestUtils.browserLoaded(aBrowser);
     }).then(() => {
-        test_btn.click();
-        is(aBrowser.contentDocument.URL, testURL, "Document URL should be identical after reload");
+        return ContentTask.spawn(aBrowser, null, () => content.document.URL);
+    }).then(url => {
+        is(url, testURL, "Document URL should be identical after reload");
         gBrowser.removeTab(aTab);
         finish();
     });

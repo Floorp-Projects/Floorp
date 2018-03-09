@@ -23,6 +23,7 @@
 #include "mozilla/SHA1.h"
 
 #include <algorithm>
+#include <thread>
 
 #include "util/Text.h"
 #include "wasm/WasmBaselineCompile.h"
@@ -1061,6 +1062,12 @@ ModuleGenerator::finishTier2(Module& module)
     auto tier2 = js::MakeUnique<CodeTier>(tier(), Move(metadataTier_), Move(moduleSegment));
     if (!tier2)
         return false;
+
+    if (MOZ_UNLIKELY(JitOptions.wasmDelayTier2)) {
+        // Introduce an artificial delay when testing wasmDelayTier2, since we
+        // want to exercise both tier1 and tier2 code in this case.
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
 
     return module.finishTier2(Move(linkDataTier_), Move(tier2), env_);
 }
