@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupWindow;
+import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.customtabs.CustomTabConfig;
@@ -35,9 +36,15 @@ public class BrowserMenu extends PopupWindow {
 
         adapter = new BrowserMenuAdapter(context, this, fragment, customTabConfig);
 
-        RecyclerView menuList = (RecyclerView) view.findViewById(R.id.list);
+        final RecyclerView menuList = view.findViewById(R.id.list);
         menuList.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         menuList.setAdapter(adapter);
+
+        if (customTabConfig != null) {
+            final TextView brandingView = view.findViewById(R.id.branding);
+            brandingView.setText(context.getString(R.string.menu_custom_tab_branding, context.getString(R.string.app_name)));
+            brandingView.setVisibility(View.VISIBLE);
+        }
 
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
