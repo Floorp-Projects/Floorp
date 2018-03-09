@@ -231,116 +231,121 @@ InternalRequest::OverrideContentPolicyType(nsContentPolicyType aContentPolicyTyp
   mContentPolicyTypeOverridden = true;
 }
 
-/* static */
-RequestContext
-InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aContentPolicyType)
+/* static */ RequestDestination
+InternalRequest::MapContentPolicyTypeToRequestDestination(nsContentPolicyType aContentPolicyType)
 {
-  RequestContext context = RequestContext::Internal;
+  RequestDestination destination = RequestDestination::_empty;
   switch (aContentPolicyType) {
   case nsIContentPolicy::TYPE_OTHER:
-    context = RequestContext::Internal;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
   case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
   case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
   case nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS:
-    context = RequestContext::Script;
+  case nsIContentPolicy::TYPE_SCRIPT:
+    destination = RequestDestination::Script;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_WORKER:
-    context = RequestContext::Worker;
+    destination = RequestDestination::Worker;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
-    context = RequestContext::Sharedworker;
+    destination = RequestDestination::Sharedworker;
     break;
+  case nsIContentPolicy::TYPE_IMAGESET:
   case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
   case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
   case nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
-    context = RequestContext::Image;
+  case nsIContentPolicy::TYPE_IMAGE:
+    destination = RequestDestination::Image;
     break;
+  case nsIContentPolicy::TYPE_STYLESHEET:
   case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
   case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
-    context = RequestContext::Style;
+    destination = RequestDestination::Style;
     break;
+  case nsIContentPolicy::TYPE_OBJECT:
   case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
-    context = RequestContext::Object;
+    destination = RequestDestination::Object;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_EMBED:
-    context = RequestContext::Embed;
+    destination = RequestDestination::Embed;
     break;
   case nsIContentPolicy::TYPE_DOCUMENT:
-    context = RequestContext::Internal;
-    break;
+  case nsIContentPolicy::TYPE_SUBDOCUMENT:
   case nsIContentPolicy::TYPE_INTERNAL_IFRAME:
-    context = RequestContext::Iframe;
+    destination = RequestDestination::Document;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_FRAME:
-    context = RequestContext::Frame;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_REFRESH:
-    context = RequestContext::Internal;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_XBL:
-    context = RequestContext::Internal;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_PING:
-    context = RequestContext::Ping;
+    destination = RequestDestination::_empty;
     break;
+  case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
   case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
-    context = RequestContext::Xmlhttprequest;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
-    context = RequestContext::Eventsource;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
-    context = RequestContext::Plugin;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_DTD:
-    context = RequestContext::Internal;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_FONT:
-    context = RequestContext::Font;
+    destination = RequestDestination::Font;
+    break;
+  case nsIContentPolicy::TYPE_MEDIA:
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_AUDIO:
-    context = RequestContext::Audio;
+    destination = RequestDestination::Audio;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
-    context = RequestContext::Video;
+    destination = RequestDestination::Video;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_TRACK:
-    context = RequestContext::Track;
+    destination = RequestDestination::Track;
     break;
   case nsIContentPolicy::TYPE_WEBSOCKET:
-    context = RequestContext::Internal;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_CSP_REPORT:
-    context = RequestContext::Cspreport;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_XSLT:
-    context = RequestContext::Xslt;
+    destination = RequestDestination::Xslt;
     break;
   case nsIContentPolicy::TYPE_BEACON:
-    context = RequestContext::Beacon;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_FETCH:
-    context = RequestContext::Fetch;
-    break;
-  case nsIContentPolicy::TYPE_IMAGESET:
-    context = RequestContext::Imageset;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_WEB_MANIFEST:
-    context = RequestContext::Manifest;
+    destination = RequestDestination::Manifest;
     break;
   case nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD:
-    context = RequestContext::Internal;
+    destination = RequestDestination::_empty;
     break;
   case nsIContentPolicy::TYPE_SPECULATIVE:
-    context = RequestContext::Internal;
+    destination = RequestDestination::_empty;
     break;
   default:
     MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
     break;
   }
-  return context;
+
+  return destination;
 }
 
 // static
@@ -376,7 +381,7 @@ InternalRequest::IsWorkerContentPolicy(nsContentPolicyType aContentPolicyType)
   // "worker".
   //
   // Note, service workers are not included here because currently there is
-  // no way to generate a Request with a "serviceworker" RequestContext.
+  // no way to generate a Request with a "serviceworker" RequestDestination.
   // ServiceWorker scripts cannot be intercepted.
   return aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
          aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
