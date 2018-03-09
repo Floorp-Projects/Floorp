@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/String-inl.h"
+#include "vm/StringType-inl.h"
 
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -16,14 +17,17 @@
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
 #include "js/UbiNode.h"
+#include "util/StringBuffer.h"
 #include "vm/GeckoProfiler.h"
 
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/JSContext-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 
+using mozilla::IsNegativeZero;
 using mozilla::IsSame;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
@@ -755,6 +759,165 @@ JSDependentString::dumpRepresentation(js::GenericPrinter& out, int indent) const
     base()->dumpRepresentation(out, indent);
 }
 #endif
+
+bool
+js::EqualChars(JSLinearString* str1, JSLinearString* str2)
+{
+    MOZ_ASSERT(str1->length() == str2->length());
+
+    size_t len = str1->length();
+
+    AutoCheckCannotGC nogc;
+    if (str1->hasTwoByteChars()) {
+        if (str2->hasTwoByteChars())
+            return PodEqual(str1->twoByteChars(nogc), str2->twoByteChars(nogc), len);
+
+        return EqualChars(str2->latin1Chars(nogc), str1->twoByteChars(nogc), len);
+    }
+
+    if (str2->hasLatin1Chars())
+        return PodEqual(str1->latin1Chars(nogc), str2->latin1Chars(nogc), len);
+
+    return EqualChars(str1->latin1Chars(nogc), str2->twoByteChars(nogc), len);
+}
+
+bool
+js::HasSubstringAt(JSLinearString* text, JSLinearString* pat, size_t start)
+{
+    MOZ_ASSERT(start + pat->length() <= text->length());
+
+    size_t patLen = pat->length();
+
+    AutoCheckCannotGC nogc;
+    if (text->hasLatin1Chars()) {
+        const Latin1Char* textChars = text->latin1Chars(nogc) + start;
+        if (pat->hasLatin1Chars())
+            return PodEqual(textChars, pat->latin1Chars(nogc), patLen);
+
+        return EqualChars(textChars, pat->twoByteChars(nogc), patLen);
+    }
+
+    const char16_t* textChars = text->twoByteChars(nogc) + start;
+    if (pat->hasTwoByteChars())
+        return PodEqual(textChars, pat->twoByteChars(nogc), patLen);
+
+    return EqualChars(pat->latin1Chars(nogc), textChars, patLen);
+}
+
+bool
+js::EqualStrings(JSContext* cx, JSString* str1, JSString* str2, bool* result)
+{
+    if (str1 == str2) {
+        *result = true;
+        return true;
+    }
+
+    size_t length1 = str1->length();
+    if (length1 != str2->length()) {
+        *result = false;
+        return true;
+    }
+
+    JSLinearString* linear1 = str1->ensureLinear(cx);
+    if (!linear1)
+        return false;
+    JSLinearString* linear2 = str2->ensureLinear(cx);
+    if (!linear2)
+        return false;
+
+    *result = EqualChars(linear1, linear2);
+    return true;
+}
+
+bool
+js::EqualStrings(JSLinearString* str1, JSLinearString* str2)
+{
+    if (str1 == str2)
+        return true;
+
+    size_t length1 = str1->length();
+    if (length1 != str2->length())
+        return false;
+
+    return EqualChars(str1, str2);
+}
+
+int32_t
+js::CompareChars(const char16_t* s1, size_t len1, JSLinearString* s2)
+{
+    AutoCheckCannotGC nogc;
+    return s2->hasLatin1Chars()
+           ? CompareChars(s1, len1, s2->latin1Chars(nogc), s2->length())
+           : CompareChars(s1, len1, s2->twoByteChars(nogc), s2->length());
+}
+
+static int32_t
+CompareStringsImpl(JSLinearString* str1, JSLinearString* str2)
+{
+    size_t len1 = str1->length();
+    size_t len2 = str2->length();
+
+    AutoCheckCannotGC nogc;
+    if (str1->hasLatin1Chars()) {
+        const Latin1Char* chars1 = str1->latin1Chars(nogc);
+        return str2->hasLatin1Chars()
+               ? CompareChars(chars1, len1, str2->latin1Chars(nogc), len2)
+               : CompareChars(chars1, len1, str2->twoByteChars(nogc), len2);
+    }
+
+    const char16_t* chars1 = str1->twoByteChars(nogc);
+    return str2->hasLatin1Chars()
+           ? CompareChars(chars1, len1, str2->latin1Chars(nogc), len2)
+           : CompareChars(chars1, len1, str2->twoByteChars(nogc), len2);
+}
+
+bool
+js::CompareStrings(JSContext* cx, JSString* str1, JSString* str2, int32_t* result)
+{
+    MOZ_ASSERT(str1);
+    MOZ_ASSERT(str2);
+
+    if (str1 == str2) {
+        *result = 0;
+        return true;
+    }
+
+    JSLinearString* linear1 = str1->ensureLinear(cx);
+    if (!linear1)
+        return false;
+
+    JSLinearString* linear2 = str2->ensureLinear(cx);
+    if (!linear2)
+        return false;
+
+    *result = CompareStringsImpl(linear1, linear2);
+    return true;
+}
+
+int32_t
+js::CompareAtoms(JSAtom* atom1, JSAtom* atom2)
+{
+    return CompareStringsImpl(atom1, atom2);
+}
+
+bool
+js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes)
+{
+    size_t length = strlen(asciiBytes);
+#ifdef DEBUG
+    for (size_t i = 0; i != length; ++i)
+        MOZ_ASSERT(unsigned(asciiBytes[i]) <= 127);
+#endif
+    if (length != str->length())
+        return false;
+
+    const Latin1Char* latin1 = reinterpret_cast<const Latin1Char*>(asciiBytes);
+
+    AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? PodEqual(latin1, str->latin1Chars(nogc), length)
+           : EqualChars(latin1, str->twoByteChars(nogc), length);
+}
 
 template <typename CharT>
 /* static */ bool
@@ -1731,4 +1894,147 @@ JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array)
 
     MOZ_ASSERT(index == 22);
     return true;
+}
+
+
+/*** Conversions *********************************************************************************/
+
+const char*
+js::ValueToPrintable(JSContext* cx, const Value& vArg, JSAutoByteString* bytes, bool asSource)
+{
+    RootedValue v(cx, vArg);
+    JSString* str;
+    if (asSource)
+        str = ValueToSource(cx, v);
+    else
+        str = ToString<CanGC>(cx, v);
+    if (!str)
+        return nullptr;
+    str = QuoteString(cx, str, 0);
+    if (!str)
+        return nullptr;
+    return bytes->encodeLatin1(cx, str);
+}
+
+template <AllowGC allowGC>
+JSString*
+js::ToStringSlow(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType arg)
+{
+    /* As with ToObjectSlow, callers must verify that |arg| isn't a string. */
+    MOZ_ASSERT(!arg.isString());
+
+    Value v = arg;
+    if (!v.isPrimitive()) {
+        MOZ_ASSERT(!cx->helperThread());
+        if (!allowGC)
+            return nullptr;
+        RootedValue v2(cx, v);
+        if (!ToPrimitive(cx, JSTYPE_STRING, &v2))
+            return nullptr;
+        v = v2;
+    }
+
+    JSString* str;
+    if (v.isString()) {
+        str = v.toString();
+    } else if (v.isInt32()) {
+        str = Int32ToString<allowGC>(cx, v.toInt32());
+    } else if (v.isDouble()) {
+        str = NumberToString<allowGC>(cx, v.toDouble());
+    } else if (v.isBoolean()) {
+        str = BooleanToString(cx, v.toBoolean());
+    } else if (v.isNull()) {
+        str = cx->names().null;
+    } else if (v.isSymbol()) {
+        MOZ_ASSERT(!cx->helperThread());
+        if (allowGC) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_SYMBOL_TO_STRING);
+        }
+        return nullptr;
+    } else {
+        MOZ_ASSERT(v.isUndefined());
+        str = cx->names().undefined;
+    }
+    return str;
+}
+
+template JSString*
+js::ToStringSlow<CanGC>(JSContext* cx, HandleValue arg);
+
+template JSString*
+js::ToStringSlow<NoGC>(JSContext* cx, const Value& arg);
+
+JS_PUBLIC_API(JSString*)
+js::ToStringSlow(JSContext* cx, HandleValue v)
+{
+    return ToStringSlow<CanGC>(cx, v);
+}
+
+static JSString*
+SymbolToSource(JSContext* cx, Symbol* symbol)
+{
+    RootedString desc(cx, symbol->description());
+    SymbolCode code = symbol->code();
+    if (code != SymbolCode::InSymbolRegistry && code != SymbolCode::UniqueSymbol) {
+        // Well-known symbol.
+        MOZ_ASSERT(uint32_t(code) < JS::WellKnownSymbolLimit);
+        return desc;
+    }
+
+    StringBuffer buf(cx);
+    if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(") : !buf.append("Symbol("))
+        return nullptr;
+    if (desc) {
+        desc = StringToSource(cx, desc);
+        if (!desc || !buf.append(desc))
+            return nullptr;
+    }
+    if (!buf.append(')'))
+        return nullptr;
+    return buf.finishString();
+}
+
+JSString*
+js::ValueToSource(JSContext* cx, HandleValue v)
+{
+    if (!CheckRecursionLimit(cx))
+        return nullptr;
+    assertSameCompartment(cx, v);
+
+    if (v.isUndefined())
+        return cx->names().void0;
+    if (v.isString())
+        return StringToSource(cx, v.toString());
+    if (v.isSymbol())
+        return SymbolToSource(cx, v.toSymbol());
+    if (v.isPrimitive()) {
+        /* Special case to preserve negative zero, _contra_ toString. */
+        if (v.isDouble() && IsNegativeZero(v.toDouble())) {
+            static const Latin1Char negativeZero[] = {'-', '0'};
+
+            return NewStringCopyN<CanGC>(cx, negativeZero, mozilla::ArrayLength(negativeZero));
+        }
+        return ToString<CanGC>(cx, v);
+    }
+
+    RootedValue fval(cx);
+    RootedObject obj(cx, &v.toObject());
+    if (!GetProperty(cx, obj, obj, cx->names().toSource, &fval))
+        return nullptr;
+    if (IsCallable(fval)) {
+        RootedValue v(cx);
+        if (!js::Call(cx, fval, obj, &v))
+            return nullptr;
+
+        return ToString<CanGC>(cx, v);
+    }
+
+    return ObjectToSource(cx, obj);
+}
+
+JSString*
+js::StringToSource(JSContext* cx, JSString* str)
+{
+    return QuoteString(cx, str, '"');
 }
