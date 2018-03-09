@@ -23,8 +23,16 @@
 #include "mozilla/ArrayView.h"          // for ArrayView
 #include "mozilla/Move.h"               // for mozilla::Move
 #include "mozilla/gfx/MatrixFwd.h"      // for mozilla::gfx::Matrix4x4
+#include "mozilla/gfx/Logging.h"
+#include "nsTArray.h"
 
 #include "pixman.h"
+
+// Uncomment this line to get additional integrity checking.
+//#define DEBUG_REGIONS
+#ifdef DEBUG_REGIONS
+#include <sstream>
+#endif
 
 /* For information on the internal representation look at pixman-region.c
  *
@@ -47,34 +55,481 @@ enum class VisitSide {
 	RIGHT
 };
 
+namespace regiondetails {
+struct Band;
+}
+
+template<>
+struct nsTArray_CopyChooser<regiondetails::Band>
+{
+  typedef nsTArray_CopyWithConstructors<regiondetails::Band> Type;
+};
+
+namespace regiondetails {
+
+template<typename T, typename E>
+class UncheckedArray : public T
+{
+public:
+  using T::Elements;
+  using T::Length;
+
+  E & operator[](size_t aIndex) { return Elements()[aIndex]; }
+  const E& operator[](size_t aIndex) const { return Elements()[aIndex]; }
+  E& LastElement() { return Elements()[Length() - 1]; }
+  const E& LastElement() const { return Elements()[Length() - 1]; }
+
+  using iterator = E* ;
+  using const_iterator = const E*;
+
+  iterator begin() { return iterator(Elements()); }
+  const_iterator begin() const { return const_iterator(Elements()); }
+  const_iterator cbegin() const { return begin(); }
+  iterator end() { return iterator(Elements() + Length()); }
+  const_iterator end() const { return const_iterator(Elements() + Length()); }
+  const_iterator cend() const { return end(); }
+};
+
+struct Strip
+{
+  // Default constructor should never be called, but is required for
+  // vector::resize to compile.
+  Strip() { MOZ_CRASH(); }
+  Strip(int32_t aLeft, int32_t aRight) : left(aLeft), right(aRight) {}
+
+  bool operator != (const Strip& aOther) const
+  {
+    return left != aOther.left || right != aOther.right;
+  }
+
+  uint32_t Size() const
+  {
+    return right - left;
+  }
+
+  int32_t left;
+  int32_t right;
+};
+
+struct Band
+{
+  using Strip = regiondetails::Strip;
+#ifndef DEBUG
+  using StripArray = regiondetails::UncheckedArray<AutoTArray<Strip, 2>, Strip>;
+#else
+  using StripArray = AutoTArray<Strip, 2>;
+#endif
+
+  MOZ_IMPLICIT Band(const nsRect& aRect)
+    : top(aRect.Y()), bottom(aRect.YMost())
+  {
+    mStrips.AppendElement(Strip{ aRect.X(), aRect.XMost() });
+  }
+
+  Band(const Band& aOther)
+    : top(aOther.top), bottom(aOther.bottom)
+    , mStrips(aOther.mStrips)
+  {}
+  Band(const Band&& aOther)
+    : top(aOther.top), bottom(aOther.bottom)
+    , mStrips(std::move(aOther.mStrips))
+  {}
+
+  void InsertStrip(const Strip& aStrip)
+  {
+    for (size_t i = 0; i < mStrips.Length(); i++) {
+      Strip& strip = mStrips[i];
+      if (strip.left > aStrip.right) {
+        // Current strip is beyond aStrip, insert aStrip before.
+        mStrips.InsertElementAt(i, aStrip);
+        return;
+      }
+
+      if (strip.right < aStrip.left) {
+        // Current strip is before aStrip, try the next.
+        continue;
+      }
+
+      // Current strip intersects with aStrip, extend to the lext.
+      strip.left = std::min(strip.left, aStrip.left);
+
+      if (strip.right >= aStrip.right) {
+        // Current strip extends beyond aStrip, done.
+        return;
+      }
+
+      size_t next = i;
+      next++;
+      // Consume any subsequent strips intersecting with aStrip.
+      while (next < mStrips.Length() && mStrips[next].left <= aStrip.right) {
+        strip.right = mStrips[next].right;
+
+        mStrips.RemoveElementAt(next);
+      }
+
+      // Extend the strip in case the aStrip goes on beyond it.
+      strip.right = std::max(strip.right, aStrip.right);
+      return;
+    }
+    mStrips.AppendElement(aStrip);
+  }
+
+  void SubStrip(const Strip& aStrip)
+  {
+    for (size_t i = 0; i < mStrips.Length(); i++) {
+      Strip& strip = mStrips[i];
+      if (strip.left > aStrip.right) {
+        // Strip is entirely to the right of aStrip. Done.
+        return;
+      }
+
+      if (strip.right < aStrip.left) {
+        // Strip is entirely to the left of aStrip. Move on.
+        continue;
+      }
+
+      if (strip.left < aStrip.left) {
+        if (strip.right <= aStrip.right) {
+          strip.right = aStrip.left;
+          // This strip lies to the left of the start of aStrip.
+          continue;
+        }
+
+        // aStrip is completely contained by this strip.
+        Strip newStrip(aStrip.right, strip.right);
+        strip.right = aStrip.left;
+        if (i < mStrips.Length()) {
+          i++;
+          mStrips.InsertElementAt(i, newStrip);
+        } else {
+          mStrips.AppendElement(newStrip);
+        }
+        return;
+      }
+
+      // This strip lies to the right of the start of aStrip.
+      if (strip.right <= aStrip.right) {
+        // aStrip completely contains this strip.
+        mStrips.RemoveElementAt(i);
+        // Make sure we evaluate the strip now at i. This loop will increment.
+        i--;
+        continue;
+      }
+      strip.left = aStrip.right;
+      return;
+    }
+  }
+
+  bool Intersects(const Strip& aStrip) const
+  {
+    for (const Strip& strip : mStrips) {
+      if (strip.left >= aStrip.right) {
+        return false;
+      }
+
+      if (strip.right <= aStrip.left) {
+        continue;
+      }
+
+      return true;
+    }
+    return false;
+  }
+
+  bool IntersectStripBounds(Strip& aStrip) const
+  {
+    bool intersected = false;
+
+    int32_t rightMost;
+    for (const Strip& strip : mStrips) {
+      if (strip.left > aStrip.right) {
+        break;
+      }
+
+      if (strip.right <= aStrip.left) {
+        continue;
+      }
+
+      if (!intersected) {
+        // First intersection, this is where the left side begins.
+        aStrip.left = std::max(aStrip.left, strip.left);
+      }
+
+      intersected = true;
+      // Expand to the right for each intersecting strip found.
+      rightMost = std::min(strip.right, aStrip.right);
+    }
+
+    if (intersected) {
+      aStrip.right = rightMost;
+    }
+    else {
+      aStrip.right = aStrip.left = 0;
+    }
+    return intersected;
+  }
+
+  bool ContainsStrip(const Strip& aStrip) const
+  {
+    for (const Strip& strip : mStrips) {
+      if (strip.left > aStrip.left) {
+        return false;
+      }
+
+      if (strip.right >= aStrip.right) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool EqualStrips(const Band& aBand) const
+  {
+    if (mStrips.Length() != aBand.mStrips.Length()) {
+      return false;
+    }
+
+    for (auto iter1 = mStrips.begin(), iter2 = aBand.mStrips.begin();
+      iter1 != mStrips.end(); iter1++, iter2++)
+    {
+      if (*iter1 != *iter2) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  void IntersectStrip(const Strip& aStrip)
+  {
+    size_t i = 0;
+
+    while (i < mStrips.Length()) {
+      Strip& strip = mStrips[i];
+      if (strip.right <= aStrip.left) {
+        mStrips.RemoveElementAt(i);
+        continue;
+      }
+
+      if (strip.left >= aStrip.right) {
+        mStrips.TruncateLength(i);
+        return;
+      }
+
+      strip.left = std::max(aStrip.left, strip.left);
+      strip.right = std::min(aStrip.right, strip.right);
+      i++;
+    }
+  }
+
+  void IntersectStrips(const Band& aOther)
+  {
+    auto iter = mStrips.begin();
+    auto iterOther = aOther.mStrips.begin();
+
+    StripArray newStrips;
+
+    // This function finds the intersection between two sets of strips.
+    while (true) {
+      while (true) {
+        while (iter != mStrips.end() && iter->right <= iterOther->left) {
+          // Increment our current strip until it ends beyond aOther's current strip.
+          iter++;
+        }
+
+        if (iter == mStrips.end()) {
+          // End of our strips. Done.
+          break;
+        }
+
+        while (iterOther != aOther.mStrips.end() && iterOther->right <= iter->left) {
+          // Increment aOther's current strip until it lies beyond our current strip.
+          iterOther++;
+        }
+
+        if (iterOther == aOther.mStrips.end()) {
+          // End of aOther's strips. Done.
+          break;
+        }
+
+        if (iterOther->left < iter->right) {
+          // Intersection!
+          break;
+        }
+      }
+
+      if (iter == mStrips.end() || iterOther == aOther.mStrips.end()) {
+        break;
+      }
+
+      newStrips.AppendElement(Strip(std::max(iter->left, iterOther->left), std::min(iterOther->right, iter->right)));
+
+      if (iterOther->right < iter->right) {
+        iterOther++;
+        if (iterOther == aOther.mStrips.end()) {
+          break;
+        }
+      } else {
+        iter++;
+      }
+    }
+
+    mStrips = newStrips;
+  }
+
+  bool Intersects(const Band& aOther) const
+  {
+    auto iter = mStrips.begin();
+    auto iterOther = aOther.mStrips.begin();
+
+    // This function finds the intersection between two sets of strips.
+    while (true) {
+      while (true) {
+        while (iter != mStrips.end() && iter->right <= iterOther->left) {
+          // Increment our current strip until it ends beyond aOther's current strip.
+          iter++;
+        }
+
+        if (iter == mStrips.end()) {
+          // End of our strips. Done.
+          break;
+        }
+
+        while (iterOther != aOther.mStrips.end() && iterOther->right <= iter->left) {
+          // Increment aOther's current strip until it lies beyond our current strip.
+          iterOther++;
+        }
+
+        if (iterOther == aOther.mStrips.end()) {
+          // End of aOther's strips. Done.
+          break;
+        }
+
+        if (iterOther->left < iter->right) {
+          // Intersection!
+          break;
+        }
+      }
+
+      if (iter == mStrips.end()|| iterOther == aOther.mStrips.end()) {
+        break;
+      }
+
+      return true;
+    }
+    return false;
+  }
+
+  void SubStrips(const Band& aOther)
+  {
+    size_t idx = 0;
+    auto iterOther = aOther.mStrips.begin();
+
+    // This function finds the intersection between two sets of strips.
+    while (true) {
+      while (true) {
+        while (idx < mStrips.Length() && mStrips[idx].right <= iterOther->left) {
+          // Increment our current strip until it ends beyond aOther's current strip.
+          idx++;
+        }
+
+        if (idx == mStrips.Length()) {
+          // End of our strips. Done.
+          break;
+        }
+
+        while (iterOther != aOther.mStrips.end() && iterOther->right <= mStrips[idx].left) {
+          // Increment aOther's current strip until it lies beyond our current strip.
+          iterOther++;
+        }
+
+        if (iterOther == aOther.mStrips.end()) {
+          // End of aOther's strips. Done.
+          break;
+        }
+
+        if (iterOther->left < mStrips[idx].right) {
+          // Intersection!
+          break;
+        }
+      }
+
+      if (idx == mStrips.Length() || iterOther == aOther.mStrips.end()) {
+        break;
+      }
+
+      if (mStrips[idx].left < iterOther->left) {
+        size_t oldIdx = idx;
+        // Our strip starts beyond other's
+        if (mStrips[idx].right > iterOther->right) {
+          // Our strip ends beyond other's as well.
+          Strip newStrip(mStrips[idx]);
+          newStrip.left = iterOther->right;
+          mStrips.InsertElementAt(idx + 1, newStrip);
+          idx++;
+        }
+        mStrips[oldIdx].right = iterOther->left;
+        // Either idx was just incremented, or the current index no longer intersects with iterOther.
+        continue;
+      } else if (mStrips[idx].right > iterOther->right) {
+        mStrips[idx].left = iterOther->right;
+        // Current strip no longer intersects, continue.
+        iterOther++;
+        if (iterOther == aOther.mStrips.end()) {
+          break;
+        }
+        continue;
+      }
+
+      // Our current strip is completely contained by the other strip.
+      mStrips.RemoveElementAt(idx);
+    }
+  }
+
+  int32_t top;
+  int32_t bottom;
+  StripArray mStrips;
+};
+}
+
 class nsRegion
 {
 public:
+  using Band = regiondetails::Band;
+  using Strip = regiondetails::Strip;
+#ifndef DEBUG
+  using BandArray = regiondetails::UncheckedArray<nsTArray<Band>, Band>;
+  using StripArray = regiondetails::UncheckedArray<AutoTArray<Strip, 2>, Strip>;
+#else
+  using BandArray = nsTArray<Band>;
+  using StripArray = AutoTArray<Strip, 2>;
+#endif
+
   typedef nsRect RectType;
   typedef nsPoint PointType;
   typedef nsMargin MarginType;
 
-  nsRegion () { pixman_region32_init(&mImpl); }
-  MOZ_IMPLICIT nsRegion (const nsRect& aRect) { pixman_region32_init_rect(&mImpl,
-                                                                          aRect.X(),
-                                                                          aRect.Y(),
-                                                                          aRect.Width(),
-                                                                          aRect.Height()); }
-  explicit nsRegion (mozilla::gfx::ArrayView<pixman_box32_t> aRects)
+  nsRegion() { }
+  MOZ_IMPLICIT nsRegion(const nsRect& aRect) {
+    mBounds = aRect;
+  }
+  explicit nsRegion(mozilla::gfx::ArrayView<pixman_box32_t> aRects)
   {
-    pixman_region32_init_rects(&mImpl, aRects.Data(), aRects.Length());
+    for (uint32_t i = 0; i < aRects.Length(); i++) {
+      AddRect(BoxToRect(aRects[i]));
+    }
   }
-  nsRegion (const nsRegion& aRegion) { pixman_region32_init(&mImpl); pixman_region32_copy(&mImpl,aRegion.Impl()); }
-  nsRegion (nsRegion&& aRegion) { mImpl = aRegion.mImpl; pixman_region32_init(&aRegion.mImpl); }
-  nsRegion& operator = (nsRegion&& aRegion) {
-      pixman_region32_fini(&mImpl);
-      mImpl = aRegion.mImpl;
-      pixman_region32_init(&aRegion.mImpl);
-      return *this;
+
+  nsRegion(const nsRegion& aRegion) { Copy(aRegion); }
+  nsRegion(nsRegion&& aRegion) { mBands.SwapElements(aRegion.mBands); mBounds = aRegion.mBounds; aRegion.SetEmpty(); }
+  nsRegion& operator =(nsRegion&& aRegion) {
+    mBands.SwapElements(aRegion.mBands);
+    mBounds = aRegion.mBounds;
+    aRegion.SetEmpty();
+    return *this;
   }
- ~nsRegion () { pixman_region32_fini(&mImpl); }
-  nsRegion& operator = (const nsRect& aRect) { Copy (aRect); return *this; }
-  nsRegion& operator = (const nsRegion& aRegion) { Copy (aRegion); return *this; }
+  nsRegion& operator =(const nsRect& aRect) { Copy(aRect); return *this; }
+  nsRegion& operator =(const nsRegion& aRegion) { Copy(aRegion); return *this; }
   bool operator==(const nsRegion& aRgn) const
   {
     return IsEqual(aRgn);
@@ -85,25 +540,328 @@ public:
   }
 
   friend std::ostream& operator<<(std::ostream& stream, const nsRegion& m);
+  void OutputToStream(std::string aObjName, std::ostream& stream) const;
 
-  void Swap(nsRegion* aOther)
+  static
+    nsresult InitStatic()
   {
-    pixman_region32_t tmp = mImpl;
-    mImpl = aOther->mImpl;
-    aOther->mImpl = tmp;
+    return NS_OK;
   }
 
-  void AndWith(const nsRegion& aOther)
+  static
+    void ShutdownStatic() {}
+
+private:
+#ifdef DEBUG_REGIONS
+  class OperationStringGenerator
   {
-    And(*this, aOther);
+  public:
+    virtual ~OperationStringGenerator() {}
+
+    virtual void OutputOp() = 0;
+  };
+#endif
+public:
+
+  void AssertStateInternal() const;
+  void AssertState() const {
+#ifdef DEBUG_REGIONS
+    AssertStateInternal();
+#endif
   }
-  void AndWith(const nsRect& aOther)
+
+private:
+  void And(BandArray& aOut, const BandArray& aIn1, const BandArray& aIn2)
   {
-    And(*this, aOther);
+    size_t idx = 0;
+    size_t idxOther = 0;
+
+    // This algorithm essentially forms a new list of bands, by iterating over
+    // both regions' lists of band simultaneously, and building a new band
+    // wherever the two regions intersect.
+    while (true) {
+      while (true) {
+        while (idx != aIn1.Length() && aIn1[idx].bottom <= aIn2[idxOther].top) {
+          // Increment our current band until it ends beyond aOther's current band.
+          idx++;
+        }
+
+        if (idx == aIn1.Length()) {
+          // This region is out of bands, the other region's future bands are ignored.
+          break;
+        }
+
+        while (idxOther != aIn2.Length() && aIn2[idxOther].bottom <= aIn1[idx].top) {
+          // Increment aOther's current band until it ends beyond our current band.
+          idxOther++;
+        }
+
+        if (idxOther == aIn2.Length()) {
+          // The other region's bands are all processed, all our future bands are ignored.
+          break;
+        }
+
+        if (aIn2[idxOther].top < aIn1[idx].bottom) {
+          // We know the other band's bottom lies beyond our band's top because
+          // otherwise we would've incremented above. Intersecting bands found.
+          break;
+        }
+      }
+
+      if (idx == aIn1.Length() || idxOther == aIn2.Length()) {
+        // The above loop executed a break because we're done.
+        break;
+      }
+
+      Band newBand(aIn1[idx]);
+      // The new band is the intersection of the two current bands from both regions.
+      newBand.top = std::max(aIn1[idx].top, aIn2[idxOther].top);
+      newBand.bottom = std::min(aIn1[idx].bottom, aIn2[idxOther].bottom);
+      newBand.IntersectStrips(aIn2[idxOther]);
+
+      if (newBand.mStrips.Length()) {
+        // The intersecting area of the bands had overlapping strips, if it is
+        // identical to the band above it merge, otherwise append.
+        if (aOut.Length() && aOut.LastElement().bottom == newBand.top &&
+          aOut.LastElement().EqualStrips(newBand)) {
+          aOut.LastElement().bottom = newBand.bottom;
+        } else {
+          aOut.AppendElement(std::move(newBand));
+        }
+      }
+
+      if (aIn2[idxOther].bottom < aIn1[idx].bottom) {
+        idxOther++;
+        if (idxOther == aIn2.Length()) {
+          // Since we will access idxOther the next iteration, check if we're not done.
+          break;
+        }
+      } else {
+        // No need to check here since we do at the beginning of the next iteration.
+        idx++;
+      }
+    }
   }
-  nsRegion& And(const nsRegion& aRgn1,   const nsRegion& aRgn2)
+
+public:
+  nsRegion& AndWith(const nsRegion& aRegion)
   {
-    pixman_region32_intersect(&mImpl, aRgn1.Impl(), aRgn2.Impl());
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorAndWith : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorAndWith(nsRegion& aRegion, const nsRegion& aOtherRegion)
+        : mRegion(&aRegion), mRegionCopy(aRegion), mOtherRegion(aOtherRegion)
+      {
+        aRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorAndWith()
+      {
+        mRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegionCopy.OutputToStream("r1", stream);
+        mOtherRegion.OutputToStream("r2", stream);
+        stream << "r1.AndWith(r2);\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion * mRegion;
+      nsRegion mRegionCopy;
+      nsRegion mOtherRegion;
+    };
+
+    OperationStringGeneratorAndWith opGenerator(*this, aRegion);
+#endif
+    if (mBounds.IsEmpty()) {
+      // Region is empty, stays empty.
+      return *this;
+    }
+
+    if (aRegion.IsEmpty()) {
+      SetEmpty();
+      return *this;
+    }
+
+    if (aRegion.mBands.IsEmpty()) {
+      // Other region is a rect.
+      return AndWith(aRegion.mBounds);
+    }
+
+    if (mBands.IsEmpty()) {
+      mBands.AppendElement(mBounds);
+    }
+
+    BandArray newBands;
+
+    And(newBands, mBands, aRegion.mBands);
+
+    mBands = std::move(newBands);
+    if (!mBands.Length()) {
+      mBounds = nsRect();
+    } else {
+      mBounds = CalculateBounds();
+    }
+
+    EnsureSimplified();
+    AssertState();
+    return *this;
+  }
+
+  nsRegion& AndWith(const nsRect& aRect)
+  {
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorAndWith : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorAndWith(nsRegion& aRegion, const nsRect& aRect)
+        : mRegion(&aRegion), mRegionCopy(aRegion), mRect(aRect)
+      {
+        aRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorAndWith()
+      {
+        mRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegionCopy.OutputToStream("r", stream);
+        stream << "r.AndWith(nsRect(" << mRect.X() << ", " << mRect.Y() << ", " << mRect.Width() << ", " << mRect.Height() << "));\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion * mRegion;
+      nsRegion mRegionCopy;
+      nsRect mRect;
+    };
+
+    OperationStringGeneratorAndWith opGenerator(*this, aRect);
+#endif
+    if (aRect.IsEmpty()) {
+      SetEmpty();
+      return *this;
+    }
+
+    if (mBands.IsEmpty()) {
+      mBounds = mBounds.Intersect(aRect);
+      return *this;
+    }
+
+    size_t idx = 0;
+
+    size_t removeStart = 0;
+
+    // This removes all bands that do not intersect with aRect, and intersects
+    // the remaining ones with aRect.
+
+    // Start by figuring out how much to remove from the start.
+    while (idx != mBands.Length() && mBands[idx].bottom <= aRect.Y()) {
+      idx++;
+    }
+
+    // We'll remove these later to avoid needless copying in the array.
+    removeStart = idx;
+
+    while (idx != mBands.Length()) {
+      if (mBands[idx].top >= aRect.YMost()) {
+        mBands.TruncateLength(idx);
+        break;
+      }
+
+      mBands[idx].top = std::max(mBands[idx].top, aRect.Y());
+      mBands[idx].bottom = std::min(mBands[idx].bottom, aRect.YMost());
+
+      mBands[idx].IntersectStrip(Strip(aRect.X(), aRect.XMost()));
+
+      if (!mBands[idx].mStrips.Length()) {
+        mBands.RemoveElementAt(idx);
+      } else {
+        if (idx > removeStart) {
+          CompressBefore(idx);
+        }
+        idx++;
+      }
+    }
+
+    if (removeStart) {
+      mBands.RemoveElementsAt(0, removeStart);
+    }
+
+    if (mBands.Length()) {
+      mBounds = CalculateBounds();
+    } else {
+      mBounds.SetEmpty();
+    }
+    EnsureSimplified();
+    AssertState();
+    return *this;
+  }
+  nsRegion& And(const nsRegion& aRgn1, const nsRegion& aRgn2)
+  {
+    if (&aRgn1 == this) {
+      return AndWith(aRgn2);
+    }
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorAnd : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorAnd(nsRegion& aRegion, const nsRegion& aRegion1, const nsRegion& aRegion2)
+        : mRegion(&aRegion), mRegion1(aRegion1), mRegion2(aRegion2)
+      {
+        aRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorAnd()
+      {
+        mRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegion1.OutputToStream("r1", stream);
+        mRegion2.OutputToStream("r2", stream);
+        stream << "nsRegion r3;\nr3.And(r1, r2);\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion * mRegion;
+      nsRegion mRegion1;
+      nsRegion mRegion2;
+    };
+
+    OperationStringGeneratorAnd opGenerator(*this, aRgn1, aRgn2);
+#endif
+    mBands.Clear();
+
+    if (aRgn1.IsEmpty() || aRgn2.IsEmpty()) {
+      mBounds.SetEmpty();
+      return *this;
+    }
+
+    if (aRgn1.mBands.IsEmpty() && aRgn2.mBands.IsEmpty()) {
+      mBounds = aRgn1.mBounds.Intersect(aRgn2.mBounds);
+      return *this;
+    } else if (aRgn1.mBands.IsEmpty()) {
+      return And(aRgn2, aRgn1.mBounds);
+    } else if (aRgn2.mBands.IsEmpty()) {
+      return And(aRgn1, aRgn2.mBounds);
+    }
+
+    And(mBands, aRgn1.mBands, aRgn2.mBands);
+
+    if (!mBands.Length()) {
+      mBounds = nsRect();
+    } else {
+      mBounds = CalculateBounds();
+    }
+
+    EnsureSimplified();
+    AssertState();
     return *this;
   }
   nsRegion& And(const nsRect& aRect, const nsRegion& aRegion)
@@ -112,33 +870,130 @@ public:
   }
   nsRegion& And(const nsRegion& aRegion, const nsRect& aRect)
   {
-    pixman_region32_intersect_rect(&mImpl, aRegion.Impl(), aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
+    if (&aRegion == this) {
+      return AndWith(aRect);
+    }
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorAnd : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorAnd(nsRegion& aThisRegion, const nsRegion& aRegion, const nsRect& aRect)
+        : mThisRegion(&aThisRegion), mRegion(aRegion), mRect(aRect)
+      {
+        aThisRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorAnd()
+      {
+        mThisRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegion.OutputToStream("r", stream);
+        stream << "nsRegion r2;\nr.And(r2, nsRect(" << mRect.X() << ", " << mRect.Y() << ", " << mRect.Width() << ", " << mRect.Height() << "));\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion* mThisRegion;
+      nsRegion mRegion;
+      nsRect mRect;
+    };
+
+    OperationStringGeneratorAnd opGenerator(*this, aRegion, aRect);
+#endif
+    mBands.Clear();
+
+    if (aRect.IsEmpty()) {
+      mBounds.SetEmpty();
+      return *this;
+    }
+
+    if (aRegion.mBands.IsEmpty()) {
+      mBounds = aRegion.mBounds.Intersect(aRect);
+      return *this;
+    }
+
+    size_t idx = 0;
+    const BandArray& bands = aRegion.mBands;
+
+    mBands.SetCapacity(bands.Length() + 3);
+    while (idx != bands.Length()) {
+      // Ignore anything before.
+      if (bands[idx].bottom <= aRect.Y()) {
+        idx++;
+        continue;
+      }
+      // We're done once we've reached the bottom.
+      if (bands[idx].top >= aRect.YMost()) {
+        break;
+      }
+
+      // Now deal with bands actually intersecting the rectangle.
+      Band newBand(bands[idx]);
+      newBand.top = std::max(bands[idx].top, aRect.Y());
+      newBand.bottom = std::min(bands[idx].bottom, aRect.YMost());
+
+      newBand.IntersectStrip(Strip(aRect.X(), aRect.XMost()));
+
+      if (newBand.mStrips.Length()) {
+        if (!mBands.IsEmpty() &&
+            newBand.top == mBands.LastElement().bottom &&
+            newBand.EqualStrips(mBands.LastElement())) {
+          mBands.LastElement().bottom = newBand.bottom;
+        } else {
+          mBands.AppendElement(std::move(newBand));
+        }
+      }
+      idx++;
+    }
+
+    if (mBands.Length()) {
+      mBounds = CalculateBounds();
+    } else {
+      mBounds.SetEmpty();
+    }
+
+    EnsureSimplified();
+    AssertState();
     return *this;
   }
   nsRegion& And(const nsRect& aRect1, const nsRect& aRect2)
   {
-    nsRect TmpRect;
+    nsRect tmpRect;
 
-    TmpRect.IntersectRect(aRect1, aRect2);
-    return Copy(TmpRect);
+    tmpRect.IntersectRect(aRect1, aRect2);
+    return Copy(tmpRect);
   }
 
   nsRegion& OrWith(const nsRegion& aOther)
   {
-    return Or(*this, aOther);
+    for (RectIterator idx(aOther); !idx.Done(); idx.Next()) {
+      AddRect(idx.Get());
+    }
+    return *this;
   }
   nsRegion& OrWith(const nsRect& aOther)
   {
-    return Or(*this, aOther);
+    AddRect(aOther);
+    return *this;
   }
   nsRegion& Or(const nsRegion& aRgn1, const nsRegion& aRgn2)
   {
-    pixman_region32_union(&mImpl, aRgn1.Impl(), aRgn2.Impl());
+    if (&aRgn1 != this) {
+      *this = aRgn1;
+    }
+    for (RectIterator idx(aRgn2); !idx.Done(); idx.Next()) {
+      AddRect(idx.Get());
+    }
     return *this;
   }
   nsRegion& Or(const nsRegion& aRegion, const nsRect& aRect)
   {
-    pixman_region32_union_rect(&mImpl, aRegion.Impl(), aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
+    if (&aRegion != this) {
+      *this = aRegion;
+    }
+    AddRect(aRect);
     return *this;
   }
   nsRegion& Or(const nsRect& aRect, const nsRegion& aRegion)
@@ -147,8 +1002,8 @@ public:
   }
   nsRegion& Or(const nsRect& aRect1, const nsRect& aRect2)
   {
-    Copy (aRect1);
-    return Or (*this, aRect2);
+    Copy(aRect1);
+    return Or(*this, aRect2);
   }
 
   nsRegion& XorWith(const nsRegion& aOther)
@@ -159,7 +1014,7 @@ public:
   {
     return Xor(*this, aOther);
   }
-  nsRegion& Xor(const nsRegion& aRgn1,   const nsRegion& aRgn2)
+  nsRegion& Xor(const nsRegion& aRgn1, const nsRegion& aRgn2)
   {
     // this could be implemented better if pixman had direct
     // support for xoring regions.
@@ -182,60 +1037,750 @@ public:
     return Xor(nsRegion(aRect1), nsRegion(aRect2));
   }
 
-  nsRegion ToAppUnits (nscoord aAppUnitsPerPixel) const;
+  nsRegion ToAppUnits(nscoord aAppUnitsPerPixel) const;
 
+  nsRegion& SubWith(const nsRegion& aOther)
+  {
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorSubWith : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorSubWith(nsRegion& aRegion, const nsRegion& aOtherRegion)
+        : mRegion(&aRegion), mRegionCopy(aRegion), mOtherRegion(aOtherRegion)
+      {
+        aRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorSubWith()
+      {
+        mRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegionCopy.OutputToStream("r1", stream);
+        mOtherRegion.OutputToStream("r2", stream);
+        stream << "r1.SubWith(r2);\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion * mRegion;
+      nsRegion mRegionCopy;
+      nsRegion mOtherRegion;
+    };
+
+    OperationStringGeneratorSubWith opGenerator(*this, aOther);
+#endif
+
+    if (mBounds.IsEmpty()) {
+      return *this;
+    }
+
+    if (aOther.mBands.IsEmpty()) {
+      return SubWith(aOther.mBounds);
+    }
+
+    if (mBands.IsEmpty()) {
+      mBands.AppendElement(Band(mBounds));
+    }
+
+    size_t idx = 0;
+    size_t idxOther = 0;
+    while (idx < mBands.Length()) {
+      while (true) {
+        while (idx != mBands.Length() && mBands[idx].bottom <= aOther.mBands[idxOther].top) {
+          // Increment our current band until it ends beyond aOther's current band.
+          idx++;
+        }
+
+        if (idx == mBands.Length()) {
+          // This region is out of bands, the other region's future bands are ignored.
+          break;
+        }
+
+        while (idxOther != aOther.mBands.Length() && aOther.mBands[idxOther].bottom <= mBands[idx].top) {
+          // Increment aOther's current band until it ends beyond our current band.
+          idxOther++;
+        }
+
+        if (idxOther == aOther.mBands.Length()) {
+          // The other region's bands are all processed, all our future bands are ignored.
+          break;
+        }
+
+        if (aOther.mBands[idxOther].top < mBands[idx].bottom) {
+          // We know the other band's bottom lies beyond our band's top because
+          // otherwise we would've incremented above. Intersecting bands found.
+          break;
+        }
+      }
+
+      if (idx == mBands.Length() || idxOther == aOther.mBands.Length()) {
+        // The above loop executed a break because we're done.
+        break;
+      }
+
+      const Band& bandOther = aOther.mBands[idxOther];
+
+      if (!mBands[idx].Intersects(bandOther)) {
+        if (mBands[idx].bottom < bandOther.bottom) {
+          idx++;
+        } else {
+          idxOther++;
+          if (idxOther == aOther.mBands.Length()) {
+            break;
+          }
+        }
+        continue;
+      }
+
+      // These bands actually intersect.
+      if (mBands[idx].top < bandOther.top) {
+        mBands.InsertElementAt(idx + 1, Band(mBands[idx]));
+        mBands[idx].bottom = bandOther.top;
+        idx++;
+        mBands[idx].top = bandOther.top;
+      }
+
+      // mBands[idx].top >= bandOther.top;
+      if (mBands[idx].bottom <= bandOther.bottom) {
+        mBands[idx].SubStrips(bandOther);
+        if (mBands[idx].mStrips.IsEmpty()) {
+          mBands.RemoveElementAt(idx);
+        } else {
+          CompressBefore(idx);
+          idx++;
+          // The band before us just changed, it may be identical now.
+          CompressBefore(idx);
+        }
+        continue;
+      }
+
+      // mBands[idx].bottom > bandOther.bottom
+      Band newBand = mBands[idx];
+      newBand.SubStrips(bandOther);
+
+      if (!newBand.mStrips.IsEmpty()) {
+        mBands.InsertElementAt(idx, newBand);
+        mBands[idx].bottom = bandOther.bottom;
+        CompressBefore(idx);
+        idx++;
+      }
+
+      mBands[idx].top = bandOther.bottom;
+
+      idxOther++;
+      if (idxOther == aOther.mBands.Length()) {
+        break;
+      }
+    }
+
+    if (mBands.IsEmpty()) {
+      mBounds.SetEmpty();
+    } else {
+      mBounds = CalculateBounds();
+    }
+
+    AssertState();
+    EnsureSimplified();
+    return *this;
+  }
   nsRegion& SubOut(const nsRegion& aOther)
   {
-    return Sub(*this, aOther);
+    return SubWith(aOther);
   }
   nsRegion& SubOut(const nsRect& aOther)
   {
-    return Sub(*this, aOther);
+    return SubWith(aOther);
   }
+
+private:
+  void AppendOrExtend(const Band& aNewBand)
+  {
+    if (aNewBand.mStrips.IsEmpty()) {
+      return;
+    }
+    if (mBands.IsEmpty()) {
+      mBands.AppendElement(aNewBand);
+      return;
+    }
+
+    if (mBands.LastElement().bottom == aNewBand.top && mBands.LastElement().EqualStrips(aNewBand)) {
+      mBands.LastElement().bottom = aNewBand.bottom;
+    } else {
+      mBands.AppendElement(aNewBand);
+    }
+  }
+  void AppendOrExtend(const Band&& aNewBand)
+  {
+    if (aNewBand.mStrips.IsEmpty()) {
+      return;
+    }
+    if (mBands.IsEmpty()) {
+      mBands.AppendElement(std::move(aNewBand));
+      return;
+    }
+
+    if (mBands.LastElement().bottom == aNewBand.top && mBands.LastElement().EqualStrips(aNewBand)) {
+      mBands.LastElement().bottom = aNewBand.bottom;
+    } else {
+      mBands.AppendElement(std::move(aNewBand));
+    }
+  }
+public:
   nsRegion& Sub(const nsRegion& aRgn1, const nsRegion& aRgn2)
   {
-    pixman_region32_subtract(&mImpl, aRgn1.Impl(), aRgn2.Impl());
+    if (&aRgn1 == this) {
+      return SubWith(aRgn2);
+    }
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorSub : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorSub(nsRegion& aRegion, const nsRegion& aRgn1, const nsRegion& aRgn2)
+        : mRegion(&aRegion), mRegion1(aRgn1), mRegion2(aRgn2)
+      {
+        aRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorSub()
+      {
+        mRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegion1.OutputToStream("r1", stream);
+        mRegion2.OutputToStream("r2", stream);
+        stream << "nsRegion r3;\nr3.Sub(r1, r2);\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion* mRegion;
+      nsRegion mRegion1;
+      nsRegion mRegion2;
+    };
+
+    OperationStringGeneratorSub opGenerator(*this, aRgn1, aRgn2);
+#endif
+
+    mBands.Clear();
+
+    if (aRgn1.mBounds.IsEmpty()) {
+      mBounds.SetEmpty();
+      return *this;
+    }
+
+    if (aRgn2.mBounds.IsEmpty()) {
+      Copy(aRgn1);
+      return *this;
+    }
+
+    if (aRgn1.mBands.IsEmpty() && aRgn2.mBands.IsEmpty()) {
+      return Sub(aRgn1.mBounds, aRgn2.mBounds);
+    } else if (aRgn1.mBands.IsEmpty()) {
+      return Sub(aRgn1.mBounds, aRgn2);
+    } else if (aRgn2.mBands.IsEmpty()) {
+      return Sub(aRgn1, aRgn2.mBounds);
+    }
+
+    const BandArray& bands1 = aRgn1.mBands;
+    const BandArray& bands2 = aRgn2.mBands;
+
+    size_t idx = 0;
+    size_t idxOther = 0;
+
+    // We iterate the source region's bands, subtracting the other regions bands from them as we
+    // move them into ours.
+    while (idx < bands1.Length()) {
+      while (idxOther < bands2.Length() && bands2[idxOther].bottom <= bands1[idx].top) {
+        // These other bands are irrelevant as they don't intersect with the
+        // band we're currently processing.
+        idxOther++;
+      }
+      if (idxOther == bands2.Length()) {
+        break;
+      }
+
+      const Band& other = bands2[idxOther];
+
+      // bands2[idxOther].bottom >= bands1[idx].top
+      Band origBand(bands1[idx]);
+      if (other.top >= origBand.bottom) {
+        // No intersecting bands, append and continue.
+        AppendOrExtend(origBand);
+        idx++;
+        continue;
+      }
+
+      // Push a band for an uncovered region above our band.
+      if (origBand.top < other.top) {
+        Band newBand(origBand);
+        newBand.bottom = other.top;
+        AppendOrExtend(std::move(newBand));
+      }
+
+      int32_t lastBottom = std::max(other.top, origBand.top);
+      while (idxOther < bands2.Length() && bands2[idxOther].top < origBand.bottom) {
+        const Band& other = bands2[idxOther];
+        Band newBand(origBand);
+        newBand.top = std::max(origBand.top, other.top);
+        newBand.bottom = std::min(origBand.bottom, other.bottom);
+
+        // If there was a gap, we need to add the original band there.
+        if (newBand.top > lastBottom) {
+          Band betweenBand(newBand);
+          betweenBand.top = lastBottom;
+          betweenBand.bottom = newBand.top;
+          AppendOrExtend(std::move(betweenBand));
+        }
+
+        lastBottom = newBand.bottom;
+        newBand.SubStrips(other);
+        AppendOrExtend(std::move(newBand));
+        idxOther++;
+      }
+      // Decrement other here so we are back at the last band in region 2
+      // that intersected.
+      idxOther--;
+
+      if (bands2[idxOther].bottom < origBand.bottom) {
+        // The last band in region2 that intersected ended before this one,
+        // we can copy the rest.
+        Band newBand(origBand);
+        newBand.top = bands2[idxOther].bottom;
+        AppendOrExtend(std::move(newBand));
+        idxOther++;
+      }
+      idx++;
+    }
+
+    // Copy any remaining bands, the first one may have to be extended to fit
+    // the last one added before. The rest can be unconditionally appended.
+    if (idx < bands1.Length()) {
+      AppendOrExtend(bands1[idx]);
+      idx++;
+    }
+
+    while (idx < bands1.Length()) {
+      mBands.AppendElement(bands1[idx]);
+      idx++;
+    }
+
+    if (mBands.IsEmpty()) {
+      mBounds.SetEmpty();
+    }
+    else {
+      mBounds = CalculateBounds();
+    }
+
+    AssertState();
+    EnsureSimplified();
+    return *this;
+  }
+
+private:
+  // Internal helper for executing subtraction.
+  void RunSubtraction(const nsRect& aRect)
+  {
+    Strip rectStrip(aRect.X(), aRect.XMost());
+
+    size_t idx = 0;
+
+    while (idx < mBands.Length()) {
+      if (mBands[idx].top >= aRect.YMost()) {
+        return;
+      }
+
+      if (mBands[idx].bottom <= aRect.Y()) {
+        // This band is entirely before aRect, move on.
+        idx++;
+        continue;
+      }
+
+      if (!mBands[idx].Intersects(Strip(aRect.X(), aRect.XMost()))) {
+        // This band does not intersect aRect horizontally. Move on.
+        idx++;
+        continue;
+      }
+
+      // This band intersects with aRect.
+
+      if (mBands[idx].top < aRect.Y()) {
+        // This band starts above the start of aRect, split the band into two
+        // along the intersection, and continue to the next iteration to process
+        // the one that now intersects exactly.
+        auto above = mBands.InsertElementAt(idx, Band(mBands[idx]));
+        above->bottom = aRect.Y();
+        idx++;
+        mBands[idx].top = aRect.Y();
+        // Continue to run the loop for the next band.
+        continue;
+      }
+
+      if (mBands[idx].bottom <= aRect.YMost()) {
+        // This band ends before the end of aRect.
+        mBands[idx].SubStrip(rectStrip);
+        if (mBands[idx].mStrips.Length()) {
+          CompressAdjacentBands(idx);
+        } else {
+          mBands.RemoveElementAt(idx);
+        }
+        continue;
+      }
+
+      // This band extends beyond aRect.
+      Band newBand = mBands[idx];
+      newBand.SubStrip(rectStrip);
+      newBand.bottom = aRect.YMost();
+      mBands[idx].top = aRect.YMost();
+
+      if (newBand.mStrips.Length()) {
+        if (idx && mBands[idx - 1].bottom == newBand.top && newBand.EqualStrips(mBands[idx - 1])) {
+          mBands[idx - 1].bottom = aRect.YMost();
+        } else {
+          mBands.InsertElementAt(idx, std::move(newBand));
+        }
+      }
+
+      return;
+    }
+  }
+
+public:
+  nsRegion& SubWith(const nsRect& aRect) {
+    if (!mBounds.Intersects(aRect)) {
+      return *this;
+    }
+
+    if (aRect.Contains(mBounds)) {
+      SetEmpty();
+      return *this;
+    }
+
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorSubWith : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorSubWith(nsRegion& aRegion, const nsRect& aRect)
+        : mRegion(&aRegion), mRegionCopy(aRegion), mRect(aRect)
+      {
+        aRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorSubWith()
+      {
+        mRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegionCopy.OutputToStream("r", stream);
+        stream << "r.SubWith(nsRect(" << mRect.X() << ", " << mRect.Y() << ", " << mRect.Width() << ", " << mRect.Height() << "));\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion * mRegion;
+      nsRegion mRegionCopy;
+      nsRect mRect;
+    };
+
+    OperationStringGeneratorSubWith opGenerator(*this, aRect);
+#endif
+
+    if (mBands.IsEmpty()) {
+      mBands.AppendElement(Band(mBounds));
+    }
+
+    RunSubtraction(aRect);
+
+    if (aRect.x <= mBounds.x || aRect.y <= mBounds.y ||
+        aRect.XMost() >= mBounds.XMost() || aRect.YMost() >= mBounds.YMost()) {
+      mBounds = CalculateBounds();
+    }
+    EnsureSimplified();
+    AssertState();
     return *this;
   }
   nsRegion& Sub(const nsRegion& aRegion, const nsRect& aRect)
   {
-    return Sub(aRegion, nsRegion(aRect));
+    if (aRect.Contains(aRegion.mBounds)) {
+      SetEmpty();
+      return *this;
+    }
+    if (&aRegion == this) {
+      return SubWith(aRect);
+    }
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorSub : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorSub(nsRegion& aRegion, const nsRegion& aRegionOther, const nsRect& aRect)
+        : mRegion(&aRegion), mRegionOther(aRegionOther), mRect(aRect)
+      {
+        aRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorSub()
+      {
+        mRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegionOther.OutputToStream("r1", stream);
+        stream << "nsRegion r2;\nr2.Sub(r1, nsRect(" << mRect.X() << ", " << mRect.Y() << ", " << mRect.Width() << ", " << mRect.Height() << "));\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion * mRegion;
+      nsRegion mRegionOther;
+      nsRect mRect;
+    };
+
+    OperationStringGeneratorSub opGenerator(*this, aRegion, aRect);
+#endif
+
+    mBands.Clear();
+
+    if (aRegion.mBounds.IsEmpty()) {
+      mBounds.SetEmpty();
+      return *this;
+    }
+
+    if (aRect.IsEmpty()) {
+      Copy(aRegion);
+      return *this;
+    }
+
+    if (aRegion.mBands.IsEmpty()) {
+      Copy(aRegion.mBounds);
+      return SubWith(aRect);
+    }
+
+    const BandArray& bands = aRegion.mBands;
+
+    size_t idx = 0;
+
+    Strip strip(aRect.X(), aRect.XMost());
+
+    mBands.SetCapacity(bands.Length() + 3);
+
+    // Process all bands that lie before aRect.
+    while (idx < bands.Length() && bands[idx].bottom <= aRect.Y()) {
+      mBands.AppendElement(bands[idx]);
+      idx++;
+    }
+
+    // This band's bottom lies beyond aRect.
+    if (idx < bands.Length() && bands[idx].top < aRect.Y()) {
+      Band newBand(bands[idx]);
+      if (bands[idx].Intersects(strip)) {
+        newBand.bottom = aRect.Y();
+      } else {
+        idx++;
+      }
+      mBands.AppendElement(std::move(newBand));
+    }
+
+    // This tracks whether the band when we -exit- the next loop intersected the rectangle.
+    bool didIntersect = false;
+
+    while (idx < bands.Length() && bands[idx].top < aRect.YMost()) {
+      // Process all bands intersecting with aRect.
+      if (!bands[idx].Intersects(strip)) {
+        AppendOrExtend(bands[idx]);
+        idx++;
+        didIntersect = false;
+        continue;
+      }
+
+      didIntersect = true;
+      Band newBand(bands[idx]);
+      newBand.top = std::max(newBand.top, aRect.Y());
+      newBand.bottom = std::min(newBand.bottom, aRect.YMost());
+      newBand.SubStrip(strip);
+      AppendOrExtend(std::move(newBand));
+      idx++;
+    }
+
+    if (didIntersect) {
+      if (aRect.YMost() < bands[idx - 1].bottom) {
+        // If this band does not intersect the loop above has already added the
+        // whole unmodified band.
+        Band newBand(bands[idx - 1]);
+        newBand.top = aRect.YMost();
+        AppendOrExtend(std::move(newBand));
+      }
+    }
+
+    // Now process all bands beyond aRect.
+    if (idx < bands.Length()) {
+      AppendOrExtend(bands[idx]);
+      idx++;
+    }
+
+    mBands.AppendElements(bands.Elements() + idx, bands.Length() - idx);
+
+    if (mBands.IsEmpty()) {
+      mBounds.SetEmpty();
+    } else {
+      mBounds = CalculateBounds();
+    }
+
+    AssertState();
+    EnsureSimplified();
+    return *this;
   }
   nsRegion& Sub(const nsRect& aRect, const nsRegion& aRegion)
   {
-    return Sub(nsRegion(aRect), aRegion);
+    Copy(aRect);
+    return SubWith(aRegion);
   }
   nsRegion& Sub(const nsRect& aRect1, const nsRect& aRect2)
   {
     Copy(aRect1);
-    return Sub(*this, aRect2);
+    return SubWith(aRect2);
   }
 
   /**
-   * Returns true iff the given point is inside the region. A region
+   * Returns true if the given point is inside the region. A region
    * created from a rect (x=0, y=0, w=100, h=100) will NOT contain
    * the point x=100, y=100.
    */
-  bool Contains (int aX, int aY) const
+  bool Contains(int aX, int aY) const
   {
-    return pixman_region32_contains_point(Impl(), aX, aY, nullptr);
-  }
-  bool Contains (const nsRect& aRect) const
-  {
-    pixman_box32_t box = RectToBox(aRect);
-    return pixman_region32_contains_rectangle(Impl(), &box) == PIXMAN_REGION_IN;
-  }
-  bool Contains (const nsRegion& aRgn) const;
-  bool Intersects (const nsRect& aRect) const;
+    if (mBands.IsEmpty()) {
+      return mBounds.Contains(aX, aY);
+    }
 
-  void MoveBy (int32_t aXOffset, int32_t aYOffset)
-  {
-    MoveBy (nsPoint (aXOffset, aYOffset));
+    auto iter = mBands.begin();
+
+    while (iter != mBands.end()) {
+      if (iter->bottom <= aY) {
+        iter++;
+        continue;
+      }
+
+      if (iter->top > aY) {
+        return false;
+      }
+
+      if (iter->ContainsStrip(Strip(aX, aX + 1))) {
+        return true;
+      }
+      return false;
+    }
+    return false;
   }
-  void MoveBy (nsPoint aPt) { pixman_region32_translate(&mImpl, aPt.x, aPt.y); }
-  void SetEmpty ()
+  bool Contains(const nsRect& aRect) const
   {
-    pixman_region32_clear(&mImpl);
+    if (aRect.IsEmpty()) {
+      return false;
+    }
+
+    if (mBands.IsEmpty()) {
+      return mBounds.Contains(aRect);
+    }
+
+    auto iter = mBands.begin();
+
+    while (iter != mBands.end()) {
+      if (iter->bottom <= aRect.Y()) {
+        iter++;
+        continue;
+      }
+
+      if (iter->top > aRect.Y()) {
+        return false;
+      }
+
+      // Now inside the rectangle.
+      if (!iter->ContainsStrip(Strip(aRect.X(), aRect.XMost()))) {
+        return false;
+      }
+
+      if (iter->bottom >= aRect.YMost()) {
+        return true;
+      }
+
+      int32_t lastY = iter->bottom;
+      iter++;
+      while (iter != mBands.end()) {
+        // Bands do not connect.
+        if (iter->top != lastY) {
+          return false;
+        }
+
+        if (!iter->ContainsStrip(Strip(aRect.X(), aRect.XMost()))) {
+          return false;
+        }
+
+        if (iter->bottom >= aRect.YMost()) {
+          return true;
+        }
+
+        lastY = iter->bottom;
+        iter++;
+      }
+    }
+    return false;
+  }
+
+  bool Contains(const nsRegion& aRgn) const;
+  bool Intersects(const nsRect& aRect) const;
+
+  void MoveBy(int32_t aXOffset, int32_t aYOffset)
+  {
+    MoveBy(nsPoint(aXOffset, aYOffset));
+  }
+  void MoveBy(nsPoint aPt)
+  {
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorMoveBy : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorMoveBy(nsRegion& aRegion, const nsPoint& aPoint)
+        : mRegion(&aRegion), mRegionCopy(aRegion), mPoint(aPoint)
+      {
+        aRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorMoveBy()
+      {
+        mRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegionCopy.OutputToStream("r", stream);
+        stream << "r.MoveBy(nsPoint(" << mPoint.x << ", " << mPoint.y << "));\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion * mRegion;
+      nsRegion mRegionCopy;
+      nsPoint mPoint;
+    };
+
+    OperationStringGeneratorMoveBy opGenerator(*this, aPt);
+#endif
+
+    mBounds.MoveBy(aPt);
+    for (Band& band : mBands) {
+      band.top += aPt.Y();
+      band.bottom += aPt.Y();
+      for (Strip& strip : band.mStrips) {
+        strip.left += aPt.X();
+        strip.right += aPt.X();
+      }
+    }
+    AssertState();
+  }
+  void SetEmpty()
+  {
+    mBands.Clear();
+    mBounds.SetEmpty();
   }
 
   nsRegion MovedBy(int32_t aXOffset, int32_t aYOffset) const
@@ -265,21 +1810,45 @@ public:
     return copy;
   }
 
-  bool IsEmpty () const { return !pixman_region32_not_empty(Impl()); }
-  bool IsComplex () const { return GetNumRects() > 1; }
-  bool IsEqual (const nsRegion& aRegion) const
+  bool IsEmpty() const { return mBounds.IsEmpty(); }
+  bool IsComplex() const { return GetNumRects() > 1; }
+  bool IsEqual(const nsRegion& aRegion) const
   {
-    return pixman_region32_equal(Impl(), aRegion.Impl());
+    if (mBands.IsEmpty() && aRegion.mBands.IsEmpty()) {
+      return mBounds.IsEqualInterior(aRegion.mBounds);
+    }
+
+    if (mBands.Length() != aRegion.mBands.Length()) {
+      return false;
+    }
+
+    for (auto iter1 = mBands.begin(), iter2 = aRegion.mBands.begin();
+      iter1 != mBands.end(); iter1++, iter2++)
+    {
+      if (!iter1->EqualStrips(*iter2)) {
+        return false;
+      }
+    }
+
+    return true;
   }
-  uint32_t GetNumRects () const
+
+  uint32_t GetNumRects() const
   {
-    // Work around pixman bug. Sometimes pixman creates regions with 1 rect
-    // that's empty.
-    uint32_t result = pixman_region32_n_rects(Impl());
-    return (result == 1 && GetBounds().IsEmpty()) ? 0 : result;
+    if (mBands.IsEmpty()) {
+      return mBounds.IsEmpty() ? 0 : 1;
+    }
+
+    uint32_t rects = 0;
+
+    for (const Band& band : mBands) {
+      rects += band.mStrips.Length();
+    }
+
+    return rects;
   }
-  const nsRect GetBounds () const { return BoxToRect(mImpl.extents); }
-  uint64_t Area () const;
+  const nsRect GetBounds() const { return mBounds; }
+  uint64_t Area() const;
 
   /**
    * Return this region scaled to a different appunits per pixel (APP) ratio.
@@ -289,17 +1858,17 @@ public:
    * @note this can turn an empty region into a non-empty region
    */
   MOZ_MUST_USE nsRegion
-    ScaleToOtherAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAPP) const;
+    ScaleToOtherAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const;
   MOZ_MUST_USE nsRegion
-    ScaleToOtherAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const;
+    ScaleToOtherAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const;
   nsRegion& ScaleRoundOut(float aXScale, float aYScale);
   nsRegion& ScaleInverseRoundOut(float aXScale, float aYScale);
-  nsRegion& Transform (const mozilla::gfx::Matrix4x4 &aTransform);
-  nsIntRegion ScaleToOutsidePixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
-  nsIntRegion ScaleToInsidePixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
-  nsIntRegion ScaleToNearestPixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
-  nsIntRegion ToOutsidePixels (nscoord aAppUnitsPerPixel) const;
-  nsIntRegion ToNearestPixels (nscoord aAppUnitsPerPixel) const;
+  nsRegion& Transform(const mozilla::gfx::Matrix4x4 &aTransform);
+  nsIntRegion ScaleToOutsidePixels(float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
+  nsIntRegion ScaleToInsidePixels(float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
+  nsIntRegion ScaleToNearestPixels(float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
+  nsIntRegion ToOutsidePixels(nscoord aAppUnitsPerPixel) const;
+  nsIntRegion ToNearestPixels(nscoord aAppUnitsPerPixel) const;
 
   /**
    * Gets the largest rectangle contained in the region.
@@ -307,7 +1876,7 @@ public:
    * maximizes the area intersecting with aContainingRect (and break ties by
    * then choosing the largest rectangle overall)
    */
-  nsRect GetLargestRectangle (const nsRect& aContainingRect = nsRect()) const;
+  nsRect GetLargestRectangle(const nsRect& aContainingRect = nsRect()) const;
 
   /**
    * Make sure the region has at most aMaxRects by adding area to it
@@ -315,7 +1884,7 @@ public:
    * original region. The simplified region's bounding box will be
    * the same as for the current region.
    */
-  void SimplifyOutward (uint32_t aMaxRects);
+  void SimplifyOutward(uint32_t aMaxRects);
   /**
    * Simplify the region by adding at most aThreshold area between spans of
    * rects.  The simplified region will be a superset of the original region.
@@ -328,7 +1897,7 @@ public:
    * it if necessary. The simplified region will be a subset of the
    * original region.
    */
-  void SimplifyInward (uint32_t aMaxRects);
+  void SimplifyInward(uint32_t aMaxRects);
 
   /**
    * VisitEdges is a weird kind of function that we use for padding
@@ -342,48 +1911,10 @@ public:
    * and specifies which kind of edge is being visited. x1, y1, x2, y2
    * are the coordinates of the line. (x1 == x2) || (y1 == y2)
    */
-  typedef void (*visitFn)(void *closure, VisitSide side, int x1, int y1, int x2, int y2);
+  typedef void(*visitFn)(void *closure, VisitSide side, int x1, int y1, int x2, int y2);
   void VisitEdges(visitFn, void *closure);
 
   nsCString ToString() const;
-
-  class RectIterator
-  {
-    int mCurrent;               // Index of the current entry
-    int mLimit;                 // Index one past the final entry.
-    mutable nsRect mTmp;        // The most recently gotten rectangle.
-    pixman_box32_t *mBoxes;
-
-  public:
-    explicit RectIterator(const nsRegion& aRegion)
-    {
-      mCurrent = 0;
-      mBoxes = pixman_region32_rectangles(aRegion.Impl(), &mLimit);
-      // Work around pixman bug. Sometimes pixman creates regions with 1 rect
-      // that's empty.
-      if (mLimit == 1 && nsRegion::BoxToRect(mBoxes[0]).IsEmpty()) {
-        mLimit = 0;
-      }
-    }
-
-    bool Done() const { return mCurrent == mLimit; }
-
-    const nsRect& Get() const
-    {
-      MOZ_ASSERT(!Done());
-      mTmp = nsRegion::BoxToRect(mBoxes[mCurrent]);
-      NS_ASSERTION(!mTmp.IsEmpty(), "Shouldn't return empty rect");
-      return mTmp;
-    }
-
-    void Next()
-    {
-      MOZ_ASSERT(!Done());
-      mCurrent++;
-    }
-  };
-
-  RectIterator RectIter() const { return RectIterator(*this); }
 
   static inline pixman_box32_t RectToBox(const nsRect &aRect)
   {
@@ -396,56 +1927,300 @@ public:
     pixman_box32_t box = { aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost() };
     return box;
   }
+private:
 
+  nsIntRegion ToPixels(nscoord aAppUnitsPerPixel, bool aOutsidePixels) const;
+
+  nsRegion& Copy(const nsRegion& aRegion)
+  {
+    mBounds = aRegion.mBounds;
+    mBands = aRegion.mBands;
+    return *this;
+  }
+
+  nsRegion& Copy(const nsRect& aRect)
+  {
+    mBands.Clear();
+    mBounds = aRect;
+    return *this;
+  }
+
+  void EnsureSimplified() {
+    if (mBands.Length() == 1 && mBands.begin()->mStrips.Length() == 1) {
+      mBands.Clear();
+    }
+  }
 
   static inline nsRect BoxToRect(const pixman_box32_t &aBox)
   {
     return nsRect(aBox.x1, aBox.y1,
-                  aBox.x2 - aBox.x1,
-                  aBox.y2 - aBox.y1);
+      aBox.x2 - aBox.x1,
+      aBox.y2 - aBox.y1);
   }
 
-private:
-  pixman_region32_t mImpl;
-
-#ifndef MOZ_TREE_PIXMAN
-  // For compatibility with pixman versions older than 0.25.2.
-  static inline void
-  pixman_region32_clear(pixman_region32_t *region)
+  void AddRect(const nsRect& aRect)
   {
-    pixman_region32_fini(region);
-    pixman_region32_init(region);
+#ifdef DEBUG_REGIONS
+    class OperationStringGeneratorAddRect : public OperationStringGenerator
+    {
+    public:
+      OperationStringGeneratorAddRect(nsRegion& aRegion, const nsRect& aRect)
+        : mRegion(&aRegion), mRegionCopy(aRegion), mRect(aRect)
+      {
+        aRegion.mCurrentOpGenerator = this;
+      }
+      virtual ~OperationStringGeneratorAddRect()
+      {
+        mRegion->mCurrentOpGenerator = nullptr;
+      }
+
+      virtual void OutputOp() override
+      {
+        std::stringstream stream;
+        mRegionCopy.OutputToStream("r", stream);
+        stream << "r.OrWith(nsRect(" << mRect.X() << ", " << mRect.Y() << ", " << mRect.Width() << ", " << mRect.Height() << "));\n";
+        gfxCriticalError() << stream.str();
+      }
+    private:
+      nsRegion* mRegion;
+      nsRegion mRegionCopy;
+      nsRect mRect;
+    };
+
+    OperationStringGeneratorAddRect opGenerator(*this, aRect);
+#endif
+    if (aRect.IsEmpty()) {
+      return;
+    }
+
+    if (aRect.Overflows()) {
+      // We don't accept rects which overflow.
+      gfxWarning() << "Passing overflowing rect to AddRect.";
+      return;
+    }
+
+    if (mBands.IsEmpty()) {
+      if (mBounds.IsEmpty()) {
+        mBounds = aRect;
+        return;
+      } else if (mBounds.Contains(aRect)) {
+        return;
+      }
+
+      mBands.AppendElement(Band(mBounds));
+    }
+
+    mBounds = aRect.UnsafeUnion(mBounds);
+
+    size_t idx = 0;
+
+    Strip strip(aRect.X(), aRect.XMost());
+    Band remaining(aRect);
+
+    while (idx != mBands.Length()) {
+      if (mBands[idx].bottom <= remaining.top) {
+        // This band lies wholly above aRect.
+        idx++;
+        continue;
+      }
+
+      if (remaining.top >= remaining.bottom) {
+        AssertState();
+        EnsureSimplified();
+        return;
+      }
+
+      if (mBands[idx].top >= remaining.bottom) {
+        // This band lies wholly below aRect.
+        break;
+      }
+
+      if (mBands[idx].EqualStrips(remaining)) {
+        mBands[idx].top = std::min(mBands[idx].top, remaining.top);
+        // Nothing to do for this band. Just expand.
+        remaining.top = mBands[idx].bottom;
+        CompressBefore(idx);
+        idx++;
+        continue;
+      }
+
+      if (mBands[idx].top > remaining.top) {
+        auto before = mBands.InsertElementAt(idx, remaining);
+        before->bottom = mBands[idx + 1].top;
+        remaining.top = before->bottom;
+        CompressBefore(idx);
+        idx++;
+        CompressBefore(idx);
+        continue;
+      }
+
+      if (mBands[idx].ContainsStrip(strip)) {
+        remaining.top = mBands[idx].bottom;
+        idx++;
+        continue;
+      }
+
+      // mBands[idx].top <= remaining.top.
+
+      if (mBands[idx].top < remaining.top) {
+        auto before = mBands.InsertElementAt(idx, Band(mBands[idx]));
+        before->bottom = remaining.top;
+        idx++;
+        mBands[idx].top = remaining.top;
+        continue;
+      }
+
+      // mBands[idx].top == remaining.top
+      if (mBands[idx].bottom > remaining.bottom) {
+        auto below = mBands.InsertElementAt(idx + 1, Band(mBands[idx]));
+        below->top = remaining.bottom;
+        mBands[idx].bottom = remaining.bottom;
+      }
+
+      mBands[idx].InsertStrip(strip);
+      CompressBefore(idx);
+      remaining.top = mBands[idx].bottom;
+      idx++;
+      CompressBefore(idx);
+    }
+
+    if (remaining.top < remaining.bottom) {
+      // We didn't find any bands that overlapped aRect.
+      if (idx) {
+        if (mBands[idx - 1].bottom == remaining.top && mBands[idx - 1].EqualStrips(remaining)) {
+          mBands[idx - 1].bottom = remaining.bottom;
+          CompressBefore(idx);
+          AssertState();
+          EnsureSimplified();
+          return;
+        }
+      }
+      mBands.InsertElementAt(idx, remaining);
+      idx++;
+      CompressBefore(idx);
+    } else {
+      CompressBefore(idx);
+    }
+
+    AssertState();
+    EnsureSimplified();
   }
+
+  // Most callers could probably do this on the fly, if this ever shows up
+  // in profiles we could optimize this.
+  nsRect CalculateBounds() const
+  {
+    if (mBands.IsEmpty()) {
+      return mBounds;
+    }
+
+    int32_t top = mBands.begin()->top;
+    int32_t bottom = mBands.LastElement().bottom;
+
+    int32_t leftMost = mBands.begin()->mStrips.begin()->left;
+    int32_t rightMost = mBands.begin()->mStrips.LastElement().right;
+    for (const Band& band : mBands) {
+      leftMost = std::min(leftMost, band.mStrips.begin()->left);
+      rightMost = std::max(rightMost, band.mStrips.LastElement().right);
+    }
+
+    return nsRect(leftMost, top, rightMost - leftMost, bottom - top);
+  }
+
+  static uint32_t ComputeMergedAreaIncrease(const Band& aTopBand,
+                                            const Band& aBottomBand);
+
+  // Returns true if idx is now referring to the 'next' band
+  bool CompressAdjacentBands(size_t& aIdx)
+  {
+    if ((aIdx + 1) < mBands.Length()) {
+      if (mBands[aIdx + 1].top == mBands[aIdx].bottom && mBands[aIdx + 1].EqualStrips(mBands[aIdx])) {
+        mBands[aIdx].bottom = mBands[aIdx + 1].bottom;
+        mBands.RemoveElementAt(aIdx + 1);
+      }
+    }
+    if (aIdx) {
+      if (mBands[aIdx - 1].bottom == mBands[aIdx].top && mBands[aIdx].EqualStrips(mBands[aIdx - 1])) {
+        mBands[aIdx - 1].bottom = mBands[aIdx].bottom;
+        mBands.RemoveElementAt(aIdx);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void CompressBefore(size_t& aIdx)
+  {
+    if (aIdx && aIdx < mBands.Length()) {
+      if (mBands[aIdx - 1].bottom == mBands[aIdx].top && mBands[aIdx - 1].EqualStrips(mBands[aIdx])) {
+        mBands[aIdx].top = mBands[aIdx - 1].top;
+        mBands.RemoveElementAt(aIdx - 1);
+        aIdx--;
+      }
+    }
+  }
+
+
+  BandArray mBands;
+  // Considering we only ever OR with nsRects, the bounds should fit in an nsRect as well.
+  nsRect mBounds;
+#ifdef DEBUG_REGIONS
+  friend class OperationStringGenerator;
+  OperationStringGenerator* mCurrentOpGenerator;
 #endif
 
-  nsIntRegion ToPixels(nscoord aAppUnitsPerPixel, bool aOutsidePixels) const;
-
-  nsRegion& Copy (const nsRegion& aRegion)
+public:
+  class RectIterator
   {
-    pixman_region32_copy(&mImpl, aRegion.Impl());
-    return *this;
-  }
+    const nsRegion& mRegion;
+    typename BandArray::const_iterator mCurrentBand;
+    typename StripArray::const_iterator mCurrentStrip;
 
-  nsRegion& Copy (const nsRect& aRect)
-  {
-    // pixman needs to distinguish between an empty region and a region
-    // with one rect so that it can return a different number of rectangles.
-    // Empty rect: data = empty_box
-    //     1 rect: data = null
-    //    >1 rect: data = rects
-    if (aRect.IsEmpty()) {
-      pixman_region32_clear(&mImpl);
-    } else {
-      pixman_box32_t box = RectToBox(aRect);
-      pixman_region32_reset(&mImpl, &box);
+  public:
+    explicit RectIterator(const nsRegion& aRegion)
+      : mRegion(aRegion)
+      , mCurrentBand(aRegion.mBands.begin())
+    {
+      mIsDone = mRegion.mBounds.IsEmpty();
+      if (mCurrentBand != aRegion.mBands.end()) {
+        mCurrentStrip = mCurrentBand->mStrips.begin();
+      }
     }
-    return *this;
-  }
 
-  pixman_region32_t* Impl() const
-  {
-    return const_cast<pixman_region32_t*>(&mImpl);
-  }
+    bool Done() const { return mIsDone; }
+
+    const nsRect Get() const
+    {
+      if (mRegion.mBands.IsEmpty()) {
+        return mRegion.mBounds;
+      }
+      return nsRect(mCurrentStrip->left, mCurrentBand->top,
+        mCurrentStrip->right - mCurrentStrip->left,
+        mCurrentBand->bottom - mCurrentBand->top);
+    }
+
+    void Next()
+    {
+      if (mRegion.mBands.IsEmpty()) {
+        mIsDone = true;
+        return;
+      }
+
+      mCurrentStrip++;
+      if (mCurrentStrip == mCurrentBand->mStrips.end()) {
+        mCurrentBand++;
+        if (mCurrentBand != mRegion.mBands.end()) {
+          mCurrentStrip = mCurrentBand->mStrips.begin();
+        } else {
+          mIsDone = true;
+        }
+      }
+    }
+
+    bool mIsDone;
+  };
+
+  RectIterator RectIter() const { return RectIterator(*this); }
 };
 
 namespace mozilla {
@@ -489,11 +2264,6 @@ public:
 
   friend std::ostream& operator<<(std::ostream& stream, const Derived& m) {
     return stream << m.mImpl;
-  }
-
-  void Swap(Derived* aOther)
-  {
-    mImpl.Swap(&aOther->mImpl);
   }
 
   void AndWith(const Derived& aOther)
@@ -639,7 +2409,7 @@ public:
   }
   void MoveBy (Point aPt)
   {
-    mImpl.MoveBy (aPt.x, aPt.y);
+    mImpl.MoveBy (aPt.X(), aPt.Y());
   }
   Derived MovedBy(int32_t aXOffset, int32_t aYOffset) const
   {
@@ -687,7 +2457,7 @@ public:
   nsRegion ToAppUnits (nscoord aAppUnitsPerPixel) const
   {
     nsRegion result;
-    for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
+    for (auto iter = RectIterator(*this); !iter.Done(); iter.Next()) {
       nsRect appRect = ::ToAppUnits(iter.Get(), aAppUnitsPerPixel);
       result.Or(result, appRect);
     }
