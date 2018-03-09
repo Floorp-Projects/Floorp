@@ -41,7 +41,7 @@ add_task(async function() {
   is(oiNodes.length, 5, "There is the expected number of nodes in the tree");
   let propertiesNodes = [...objectInspector.querySelectorAll(".object-label")]
     .map(el => el.textContent);
-  const arrayPropertiesNames = ["a", "b", "c", "__proto__"];
+  const arrayPropertiesNames = ["a", "b", "c", "<prototype>"];
   is(JSON.stringify(propertiesNodes), JSON.stringify(arrayPropertiesNames));
 });
 
