@@ -923,6 +923,7 @@ EventDispatcher::Attach(java::EventDispatcher::Param aDispatcher,
             mDOMWindow = aDOMWindow;
             return;
         }
+        mAttachCount--;
         mDispatcher->SetAttachedToGecko(java::EventDispatcher::REATTACHING);
     }
 
@@ -933,6 +934,7 @@ EventDispatcher::Attach(java::EventDispatcher::Param aDispatcher,
     mDOMWindow = aDOMWindow;
 
     dispatcher->SetAttachedToGecko(java::EventDispatcher::ATTACHED);
+    mAttachCount++;
 }
 
 void
@@ -944,9 +946,25 @@ EventDispatcher::Detach()
     // SetAttachedToGecko will call disposeNative for us. disposeNative will be
     // called later on the Gecko thread to make sure all pending
     // dispatchToGecko calls have completed.
+    mAttachCount--;
     mDispatcher->SetAttachedToGecko(java::EventDispatcher::DETACHED);
     mDispatcher = nullptr;
     mDOMWindow = nullptr;
+}
+
+void
+EventDispatcher::DisposeNative(const java::EventDispatcher::LocalRef& aInstance)
+{
+    JNIEnv* const env = jni::GetGeckoThreadEnv();
+    const auto natives = reinterpret_cast<RefPtr<EventDispatcher>*>(
+            jni::GetNativeHandle(env, aInstance.Get()));
+    MOZ_CATCH_JNI_EXCEPTION(env);
+
+    if (!(*natives)->mAttachCount) {
+        // Only actually dispose if we haven't attached again between calling
+        // Detach() and calling DisposeNative().
+        NativesBase::DisposeNative(aInstance);
+    }
 }
 
 bool
