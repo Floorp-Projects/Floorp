@@ -12,7 +12,7 @@
 
 [package]
 name = "url"
-version = "1.6.0"
+version = "1.7.0"
 authors = ["The rust-url developers"]
 description = "URL library for Rust, based on the WHATWG URL Standard"
 documentation = "https://docs.rs/url"
@@ -21,6 +21,8 @@ keywords = ["url", "parser"]
 categories = ["parser-implementations", "web-programming", "encoding"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/servo/rust-url"
+[package.metadata.docs.rs]
+features = ["query_encoding"]
 
 [lib]
 test = false
@@ -31,35 +33,35 @@ name = "unit"
 [[test]]
 name = "data"
 harness = false
-[dependencies.rustc-serialize]
-version = "0.3"
-optional = true
-
-[dependencies.matches]
-version = "0.1"
-
-[dependencies.serde]
-version = ">=0.6.1, <0.9"
-optional = true
-
-[dependencies.percent-encoding]
-version = "1.0.0"
-
 [dependencies.encoding]
 version = "0.2"
+optional = true
+
+[dependencies.heapsize]
+version = ">=0.4.1, <0.5"
 optional = true
 
 [dependencies.idna]
 version = "0.1.0"
 
-[dependencies.heapsize]
-version = ">=0.4.1, <0.5"
-optional = true
-[dev-dependencies.rustc-test]
-version = "0.2"
+[dependencies.matches]
+version = "0.1"
 
+[dependencies.percent-encoding]
+version = "1.0.0"
+
+[dependencies.rustc-serialize]
+version = "0.3"
+optional = true
+
+[dependencies.serde]
+version = ">=0.6.1, <0.9"
+optional = true
 [dev-dependencies.rustc-serialize]
 version = "0.3"
+
+[dev-dependencies.rustc-test]
+version = "0.2"
 
 [dev-dependencies.serde_json]
 version = ">=0.6.1, <0.9"
@@ -67,8 +69,8 @@ version = ">=0.6.1, <0.9"
 [features]
 heap_size = ["heapsize"]
 query_encoding = ["encoding"]
-[badges.travis-ci]
-repository = "servo/rust-url"
-
 [badges.appveyor]
 repository = "Manishearth/rust-url"
+
+[badges.travis-ci]
+repository = "servo/rust-url"
