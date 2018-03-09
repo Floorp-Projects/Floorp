@@ -299,7 +299,7 @@ namespace {
   protected:
     virtual ~AtomSetPref() = default;
 
-    AtomSetPref(const char* aPref) : mPref(aPref)
+    explicit AtomSetPref(const char* aPref) : mPref(aPref)
     {}
 
   private:
