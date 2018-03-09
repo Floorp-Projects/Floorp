@@ -110,20 +110,20 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
     }
 
     uint8_t minor_version;
-    if (!XPT_Do8(cursor, &header->major_version) ||
+    if (!XPT_Do8(cursor, &header->mMajorVersion) ||
         !XPT_Do8(cursor, &minor_version)) {
         return false;
     }
 
-    if (header->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
+    if (header->mMajorVersion >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
         /* This file is newer than we are and set to an incompatible version
          * number. We must set the header state thusly and return.
          */
-        header->num_interfaces = 0;
+        header->mNumInterfaces = 0;
         return true;
     }
 
-    if (!XPT_Do16(cursor, &header->num_interfaces) ||
+    if (!XPT_Do16(cursor, &header->mNumInterfaces) ||
         !XPT_Do32(cursor, &file_length) ||
         !XPT_Do32(cursor, &ide_offset)) {
         return false;
@@ -148,8 +148,8 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
 
     XPTInterfaceDirectoryEntry* interface_directory = nullptr;
 
-    if (header->num_interfaces) {
-        size_t n = header->num_interfaces * sizeof(XPTInterfaceDirectoryEntry);
+    if (header->mNumInterfaces) {
+        size_t n = header->mNumInterfaces * sizeof(XPTInterfaceDirectoryEntry);
         interface_directory =
             static_cast<XPTInterfaceDirectoryEntry*>(XPT_CALLOC8(arena, n));
         if (!interface_directory)
@@ -170,13 +170,13 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
     /* shouldn't be necessary now, but maybe later */
     XPT_SeekTo(cursor, ide_offset);
 
-    for (i = 0; i < header->num_interfaces; i++) {
+    for (i = 0; i < header->mNumInterfaces; i++) {
         if (!DoInterfaceDirectoryEntry(arena, cursor,
                                        &interface_directory[i]))
             return false;
     }
 
-    header->interface_directory = interface_directory;
+    header->mInterfaceDirectory = interface_directory;
 
     return true;
 }
@@ -189,18 +189,18 @@ DoInterfaceDirectoryEntry(XPTArena *arena, NotNull<XPTCursor*> cursor,
     const char* dummy_name_space;
 
     /* write the IID in our cursor space */
-    if (!XPT_DoIID(cursor, &(ide->iid)) ||
+    if (!XPT_DoIID(cursor, &(ide->mIID)) ||
 
         /* write the name string in the data pool, and the offset in our
            cursor space */
-        !XPT_DoCString(arena, cursor, &(ide->name)) ||
+        !XPT_DoCString(arena, cursor, &(ide->mName)) ||
 
         /* don't write the name_space string in the data pool, because we don't
          * need it. Do write the offset in our cursor space */
         !XPT_DoCString(arena, cursor, &dummy_name_space, /* ignore = */ true) ||
 
         /* do InterfaceDescriptors */
-        !DoInterfaceDescriptor(arena, cursor, &ide->interface_descriptor)) {
+        !DoInterfaceDescriptor(arena, cursor, &ide->mInterfaceDescriptor)) {
         return false;
     }
 
@@ -212,9 +212,9 @@ InterfaceDescriptorAddType(XPTArena *arena,
                            XPTInterfaceDescriptor *id,
                            XPTTypeDescriptor *td)
 {
-    const XPTTypeDescriptor *old = id->additional_types;
+    const XPTTypeDescriptor *old = id->mAdditionalTypes;
     XPTTypeDescriptor *new_;
-    size_t old_size = id->num_additional_types * sizeof(XPTTypeDescriptor);
+    size_t old_size = id->mNumAdditionalTypes * sizeof(XPTTypeDescriptor);
     size_t new_size = old_size + sizeof(XPTTypeDescriptor);
 
     /* XXX should grow in chunks to minimize alloc overhead */
@@ -225,13 +225,13 @@ InterfaceDescriptorAddType(XPTArena *arena,
         memcpy(new_, old, old_size);
     }
 
-    new_[id->num_additional_types] = *td;
-    id->additional_types = new_;
+    new_[id->mNumAdditionalTypes] = *td;
+    id->mAdditionalTypes = new_;
 
-    if (id->num_additional_types == UINT8_MAX)
+    if (id->mNumAdditionalTypes == UINT8_MAX)
         return false;
 
-    id->num_additional_types += 1;
+    id->mNumAdditionalTypes += 1;
     return true;
 }
 
@@ -258,51 +258,51 @@ DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
         *idp = NULL;
         return true;
     }
-    if(!XPT_Do16(cursor, &id->parent_interface) ||
-       !XPT_Do16(cursor, &id->num_methods)) {
+    if(!XPT_Do16(cursor, &id->mParentInterface) ||
+       !XPT_Do16(cursor, &id->mNumMethods)) {
         return false;
     }
 
     XPTMethodDescriptor* method_descriptors = nullptr;
 
-    if (id->num_methods) {
-        size_t n = id->num_methods * sizeof(XPTMethodDescriptor);
+    if (id->mNumMethods) {
+        size_t n = id->mNumMethods * sizeof(XPTMethodDescriptor);
         method_descriptors =
             static_cast<XPTMethodDescriptor*>(XPT_CALLOC8(arena, n));
         if (!method_descriptors)
             return false;
     }
 
-    for (i = 0; i < id->num_methods; i++) {
+    for (i = 0; i < id->mNumMethods; i++) {
         if (!DoMethodDescriptor(arena, cursor, &method_descriptors[i], id))
             return false;
     }
 
-    id->method_descriptors = method_descriptors;
+    id->mMethodDescriptors = method_descriptors;
 
-    if (!XPT_Do16(cursor, &id->num_constants)) {
+    if (!XPT_Do16(cursor, &id->mNumConstants)) {
         return false;
     }
 
     XPTConstDescriptor* const_descriptors = nullptr;
 
-    if (id->num_constants) {
-        size_t n = id->num_constants * sizeof(XPTConstDescriptor);
+    if (id->mNumConstants) {
+        size_t n = id->mNumConstants * sizeof(XPTConstDescriptor);
         const_descriptors =
             static_cast<XPTConstDescriptor*>(XPT_CALLOC8(arena, n));
         if (!const_descriptors)
             return false;
     }
 
-    for (i = 0; i < id->num_constants; i++) {
+    for (i = 0; i < id->mNumConstants; i++) {
         if (!DoConstDescriptor(arena, cursor, &const_descriptors[i], id)) {
             return false;
         }
     }
 
-    id->const_descriptors = const_descriptors;
+    id->mConstDescriptors = const_descriptors;
 
-    if (!XPT_Do8(cursor, &id->flags)) {
+    if (!XPT_Do8(cursor, &id->mFlags)) {
         return false;
     }
 
@@ -315,24 +315,24 @@ DoConstDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
 {
     bool ok = false;
 
-    if (!XPT_DoCString(arena, cursor, &cd->name) ||
-        !DoTypeDescriptor(arena, cursor, &cd->type, id)) {
+    if (!XPT_DoCString(arena, cursor, &cd->mName) ||
+        !DoTypeDescriptor(arena, cursor, &cd->mType, id)) {
 
         return false;
     }
 
-    switch (cd->type.Tag()) {
+    switch (cd->mType.Tag()) {
       case TD_INT16:
-        ok = XPT_Do16(cursor, (uint16_t*) &cd->value.i16);
+        ok = XPT_Do16(cursor, (uint16_t*) &cd->mValue.i16);
         break;
       case TD_INT32:
-        ok = XPT_Do32(cursor, (uint32_t*) &cd->value.i32);
+        ok = XPT_Do32(cursor, (uint32_t*) &cd->mValue.i32);
         break;
       case TD_UINT16:
-        ok = XPT_Do16(cursor, &cd->value.ui16);
+        ok = XPT_Do16(cursor, &cd->mValue.ui16);
         break;
       case TD_UINT32:
-        ok = XPT_Do32(cursor, &cd->value.ui32);
+        ok = XPT_Do32(cursor, &cd->mValue.ui32);
         break;
       default:
         MOZ_ASSERT(false, "illegal type");
@@ -348,26 +348,26 @@ DoMethodDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
 {
     int i;
 
-    if (!XPT_Do8(cursor, &md->flags) ||
-        !XPT_DoCString(arena, cursor, &md->name) ||
-        !XPT_Do8(cursor, &md->num_args))
+    if (!XPT_Do8(cursor, &md->mFlags) ||
+        !XPT_DoCString(arena, cursor, &md->mName) ||
+        !XPT_Do8(cursor, &md->mNumArgs))
         return false;
 
     XPTParamDescriptor* params = nullptr;
 
-    if (md->num_args) {
-        size_t n = md->num_args * sizeof(XPTParamDescriptor);
+    if (md->mNumArgs) {
+        size_t n = md->mNumArgs * sizeof(XPTParamDescriptor);
         params = static_cast<XPTParamDescriptor*>(XPT_CALLOC8(arena, n));
         if (!params)
             return false;
     }
 
-    for(i = 0; i < md->num_args; i++) {
+    for(i = 0; i < md->mNumArgs; i++) {
         if (!DoParamDescriptor(arena, cursor, &params[i], id))
             return false;
     }
 
-    md->params = params;
+    md->mParams = params;
 
     // |result| appears in the on-disk format but it isn't used,
     // because a method is either notxpcom, in which case it can't be
@@ -384,8 +384,8 @@ bool
 DoParamDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
                   XPTParamDescriptor *pd, XPTInterfaceDescriptor *id)
 {
-    if (!XPT_Do8(cursor, &pd->flags) ||
-        !DoTypeDescriptor(arena, cursor, &pd->type, id))
+    if (!XPT_Do8(cursor, &pd->mFlags) ||
+        !DoTypeDescriptor(arena, cursor, &pd->mType, id))
         return false;
 
     return true;
@@ -395,14 +395,14 @@ bool
 DoTypeDescriptorPrefix(XPTArena *arena, NotNull<XPTCursor*> cursor,
                        XPTTypeDescriptorPrefix *tdp)
 {
-    return XPT_Do8(cursor, &tdp->flags);
+    return XPT_Do8(cursor, &tdp->mFlags);
 }
 
 bool
 DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
                  XPTTypeDescriptor *td, XPTInterfaceDescriptor *id)
 {
-    if (!DoTypeDescriptorPrefix(arena, cursor, &td->prefix)) {
+    if (!DoTypeDescriptorPrefix(arena, cursor, &td->mPrefix)) {
         return false;
     }
 
@@ -411,17 +411,17 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
         uint16_t iface;
         if (!XPT_Do16(cursor, &iface))
             return false;
-        td->u.iface.iface_hi8 = (iface >> 8) & 0xff;
-        td->u.iface.iface_lo8 = iface & 0xff;
+        td->u.mIface.mIfaceHi8 = (iface >> 8) & 0xff;
+        td->u.mIface.mIfaceLo8 = iface & 0xff;
         break;
       case TD_INTERFACE_IS_TYPE:
-        if (!XPT_Do8(cursor, &td->u.interface_is.argnum))
+        if (!XPT_Do8(cursor, &td->u.mInterfaceIs.mArgNum))
             return false;
         break;
       case TD_ARRAY: {
         // argnum2 appears in the on-disk format but it isn't used.
         uint8_t argnum2 = 0;
-        if (!XPT_Do8(cursor, &td->u.array.argnum) ||
+        if (!XPT_Do8(cursor, &td->u.mArray.mArgNum) ||
             !XPT_Do8(cursor, &argnum2))
             return false;
 
@@ -430,7 +430,7 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
             return false;
         if (!InterfaceDescriptorAddType(arena, id, &elementTypeDescriptor))
             return false;
-        td->u.array.additional_type = id->num_additional_types - 1;
+        td->u.mArray.mAdditionalType = id->mNumAdditionalTypes - 1;
 
         break;
       }
@@ -438,7 +438,7 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
       case TD_PWSTRING_SIZE_IS: {
         // argnum2 appears in the on-disk format but it isn't used.
         uint8_t argnum2 = 0;
-        if (!XPT_Do8(cursor, &td->u.pstring_is.argnum) ||
+        if (!XPT_Do8(cursor, &td->u.mPStringIs.mArgNum) ||
             !XPT_Do8(cursor, &argnum2))
             return false;
         break;

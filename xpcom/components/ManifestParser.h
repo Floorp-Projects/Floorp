@@ -13,7 +13,7 @@
 #include "mozilla/FileLocation.h"
 
 void ParseManifest(NSLocationType aType, mozilla::FileLocation& aFile,
-                   char* aBuf, bool aChromeOnly, bool aXPTOnly = false);
+                   char* aBuf, bool aChromeOnly);
 
 void LogMessage(const char* aMsg, ...) MOZ_FORMAT_PRINTF(1, 2);
 

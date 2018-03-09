@@ -106,7 +106,7 @@ const actionTypes = {};
 /* harmony export (immutable) */ __webpack_exports__["b"] = actionTypes;
 
 
-for (const type of ["ARCHIVE_FROM_POCKET", "BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ARCHIVE_FROM_POCKET", "BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -649,28 +649,11 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         }
         return section;
       });
-
-      // Invariant: Sections array sorted in increasing order of property `order`.
-      // If section doesn't exist in prevState, create a new section object. If
-      // the section has an order, insert it at the correct place in the array.
-      // Otherwise, prepend it and set the order to be minimal.
+      // Otherwise, append it
       if (!hasMatch) {
         const initialized = !!(action.data.rows && action.data.rows.length > 0);
-        let order;
-        let index;
-        if (prevState.length > 0) {
-          order = action.data.order !== undefined ? action.data.order : prevState[0].order - 1;
-          index = newState.findIndex(section => section.order >= order);
-          if (index === -1) {
-            index = newState.length;
-          }
-        } else {
-          order = action.data.order !== undefined ? action.data.order : 0;
-          index = 0;
-        }
-
-        const section = Object.assign({ title: "", rows: [], order, enabled: false }, action.data, { initialized });
-        newState.splice(index, 0, section);
+        const section = Object.assign({ title: "", rows: [], enabled: false }, action.data, { initialized });
+        newState.push(section);
       }
       return newState;
     case Actions["b" /* actionTypes */].SECTION_UPDATE:
@@ -803,6 +786,10 @@ function Snippets(prevState = INITIAL_STATE.Snippets, action) {
   switch (action.type) {
     case Actions["b" /* actionTypes */].SNIPPETS_DATA:
       return Object.assign({}, prevState, { initialized: true }, action.data);
+    case Actions["b" /* actionTypes */].SNIPPET_BLOCKED:
+      return Object.assign({}, prevState, { blockList: prevState.blockList.concat(action.data) });
+    case Actions["b" /* actionTypes */].SNIPPETS_BLOCKLIST_CLEARED:
+      return Object.assign({}, prevState, { blockList: [] });
     case Actions["b" /* actionTypes */].SNIPPETS_RESET:
       return INITIAL_STATE.Snippets;
     default:
@@ -1006,13 +993,13 @@ const LinkMenuOptions = {
       action_position: index
     })
   }),
-  DeleteUrl: (site, index, eventSource) => ({
+  DeleteUrl: (site, index, eventSource, isEnabled, siteInfo) => ({
     id: "menu_action_delete",
     icon: "delete",
     action: {
       type: Actions["b" /* actionTypes */].DIALOG_OPEN,
       data: {
-        onConfirm: [Actions["a" /* actionCreators */].AlsoToMain({ type: Actions["b" /* actionTypes */].DELETE_HISTORY_URL, data: { url: site.url, pocket_id: site.pocket_id, forceBlock: site.bookmarkGuid } }), Actions["a" /* actionCreators */].UserEvent({ event: "DELETE", source: eventSource, action_position: index })],
+        onConfirm: [Actions["a" /* actionCreators */].AlsoToMain({ type: Actions["b" /* actionTypes */].DELETE_HISTORY_URL, data: { url: site.url, pocket_id: site.pocket_id, forceBlock: site.bookmarkGuid } }), Actions["a" /* actionCreators */].UserEvent(Object.assign({ event: "DELETE", source: eventSource, action_position: index }, siteInfo))],
         eventSource,
         body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
         confirm_button_string_id: "menu_action_delete",
@@ -1084,7 +1071,7 @@ const LinkMenuOptions = {
   CheckPinTopSite: (site, index) => site.isPinned ? LinkMenuOptions.UnpinTopSite(site) : LinkMenuOptions.PinTopSite(site, index),
   CheckSavedToPocket: (site, index) => site.pocket_id ? LinkMenuOptions.DeleteFromPocket(site) : LinkMenuOptions.SaveToPocket(site, index),
   CheckBookmarkOrArchive: site => site.pocket_id ? LinkMenuOptions.ArchiveFromPocket(site) : LinkMenuOptions.CheckBookmark(site),
-  CheckDeleteHistoryOrEmpty: (site, index, eventSource) => site.pocket_id ? LinkMenuOptions.EmptyItem() : LinkMenuOptions.DeleteUrl(site, index, eventSource),
+  CheckDeleteHistoryOrEmpty: (site, index, eventSource, isEnabled, siteInfo) => site.pocket_id ? LinkMenuOptions.EmptyItem() : LinkMenuOptions.DeleteUrl(site, index, eventSource, isEnabled, siteInfo),
   OpenInPrivateWindow: (site, index, eventSource, isEnabled) => isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem()
 };
 // EXTERNAL MODULE: external "React"
@@ -1104,23 +1091,24 @@ const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator"
 class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
   getOptions() {
     const { props } = this;
-    const { site, index, source, isPrivateBrowsingEnabled } = props;
+    const { site, index, source, isPrivateBrowsingEnabled, siteInfo } = props;
 
     // Handle special case of default site
     const propOptions = !site.isDefault ? props.options : DEFAULT_SITE_MENU_OPTIONS;
 
-    const options = propOptions.map(o => LinkMenuOptions[o](site, index, source, isPrivateBrowsingEnabled)).map(option => {
+    const options = propOptions.map(o => LinkMenuOptions[o](site, index, source, isPrivateBrowsingEnabled, siteInfo)).map(option => {
       const { action, impression, id, string_id, type, userEvent } = option;
       if (!type && id) {
         option.label = props.intl.formatMessage({ id: string_id || id });
         option.onClick = () => {
           props.dispatch(action);
           if (userEvent) {
-            props.dispatch(Actions["a" /* actionCreators */].UserEvent({
+            const userEventData = Object.assign({
               event: userEvent,
               source,
               action_position: index
-            }));
+            }, siteInfo);
+            props.dispatch(Actions["a" /* actionCreators */].UserEvent(userEventData));
           }
           if (impression && props.shouldSendImpressionStats) {
             props.dispatch(impression);
@@ -1165,6 +1153,7 @@ class ContextMenu extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.PureComp
   constructor(props) {
     super(props);
     this.hideContext = this.hideContext.bind(this);
+    this.onClick = this.onClick.bind(this);
   }
 
   hideContext() {
@@ -1181,10 +1170,17 @@ class ContextMenu extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.PureComp
     global.removeEventListener("click", this.hideContext);
   }
 
+  onClick(event) {
+    // Eat all clicks on the context menu so they don't bubble up to window.
+    // This prevents the context menu from closing when clicking disabled items
+    // or the separators.
+    event.stopPropagation();
+  }
+
   render() {
     return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
       "span",
-      { className: "context-menu" },
+      { className: "context-menu", onClick: this.onClick },
       __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
         "ul",
         { role: "menu", className: "context-menu-list" },
@@ -1233,7 +1229,7 @@ class ContextMenuItem extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.Pure
       { role: "menuitem", className: "context-menu-item" },
       __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
         "a",
-        { onClick: this.onClick, onKeyDown: this.onKeyDown, tabIndex: "0" },
+        { onClick: this.onClick, onKeyDown: this.onKeyDown, tabIndex: "0", className: option.disabled ? "disabled" : "" },
         option.icon && __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", { className: `icon icon-spacer icon-${option.icon}` }),
         option.label
       )
@@ -1414,7 +1410,7 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.
     const isCollapsible = this.props.prefName in this.props.Prefs.values;
     const isCollapsed = getCollapsed(this.props);
     const { enableAnimation, isAnimating, maxHeight, menuButtonHover, showContextMenu } = this.state;
-    const { id, eventSource, disclaimer, title, extraMenuOptions, prefName, showPrefName, privacyNoticeURL, dispatch } = this.props;
+    const { id, eventSource, disclaimer, title, extraMenuOptions, prefName, showPrefName, privacyNoticeURL, dispatch, isFirst, isLast } = this.props;
     const disclaimerPref = `section.${id}.showDisclaimer`;
     const needsDisclaimer = disclaimer && this.props.Prefs.values[disclaimerPref];
     const active = menuButtonHover || showContextMenu;
@@ -1453,6 +1449,7 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.
             )
           ),
           showContextMenu && __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__["a" /* SectionMenu */], {
+            id: id,
             extraOptions: extraMenuOptions,
             eventSource: eventSource,
             showPrefName: showPrefName,
@@ -1460,6 +1457,8 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.
             privacyNoticeURL: privacyNoticeURL,
             isCollapsed: isCollapsed,
             onUpdate: this.onMenuUpdate,
+            isFirst: isFirst,
+            isLast: isLast,
             dispatch: dispatch })
         )
       ),
@@ -1967,12 +1966,24 @@ class TopSite extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComponen
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
   }
 
+  /**
+   * Report to telemetry additional information about the item.
+   */
+  _getTelemetryInfo() {
+    const value = { icon_type: this.props.link.iconType };
+    // Filter out "not_pinned" type for being the default
+    if (this.props.link.isPinned) {
+      value.card_type = "pinned";
+    }
+    return { value };
+  }
+
   userEvent(event) {
-    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent({
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent(Object.assign({
       event,
       source: __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__["d" /* TOP_SITES_SOURCE */],
       action_position: this.props.index
-    }));
+    }, this._getTelemetryInfo())));
   }
 
   onLinkClick(ev) {
@@ -2015,6 +2026,7 @@ class TopSite extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComponen
           onUpdate: this.onMenuUpdate,
           options: __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__["c" /* TOP_SITES_CONTEXT_MENU_OPTIONS */],
           site: link,
+          siteInfo: this._getTelemetryInfo(),
           source: __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__["d" /* TOP_SITES_SOURCE */] })
       )
     );
@@ -2198,7 +2210,7 @@ class _TopSiteList extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureCom
     const maxNarrowVisibleIndex = props.TopSitesRows * 6;
 
     for (let i = 0, l = topSites.length; i < l; i++) {
-      const link = topSites[i];
+      const link = topSites[i] && Object.assign({}, topSites[i], { iconType: this.props.topSiteIconType(topSites[i]) });
       const slotProps = {
         key: link ? link.url : holeIndex++,
         index: i
@@ -2323,6 +2335,7 @@ class SnippetsMap extends Map {
 
   clear() {
     super.clear();
+    this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SNIPPETS_BLOCKLIST_CLEARED }));
     return this._dbTransaction(db => db.clear());
   }
 
@@ -2344,7 +2357,7 @@ class SnippetsMap extends Map {
     const { blockList } = this;
     if (!blockList.includes(id)) {
       blockList.push(id);
-      this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SNIPPETS_BLOCKLIST_UPDATED, data: blockList }));
+      this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SNIPPETS_BLOCKLIST_UPDATED, data: id }));
       await this.set("blockList", blockList);
     }
   }
@@ -2460,7 +2473,9 @@ class SnippetsMap extends Map {
         let cursor = event.target.result;
         // Populate the cache from the persistent storage.
         if (cursor) {
-          this.set(cursor.key, cursor.value);
+          if (cursor.value !== "blockList") {
+            this.set(cursor.key, cursor.value);
+          }
           cursor.continue();
         } else {
           // We are done.
@@ -2563,8 +2578,10 @@ class SnippetsProvider {
 
   _onAction(msg) {
     if (msg.data.type === __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SNIPPET_BLOCKED) {
-      this.snippetsMap.set("blockList", msg.data.data);
-      document.getElementById("snippets-container").style.display = "none";
+      if (!this.snippetsMap.blockList.includes(msg.data.data)) {
+        this.snippetsMap.set("blockList", this.snippetsMap.blockList.concat(msg.data.data));
+        document.getElementById("snippets-container").style.display = "none";
+      }
     }
   }
 
@@ -2601,7 +2618,11 @@ class SnippetsProvider {
 
     // Cache app data values so they can be accessible from gSnippetsMap
     for (const key of Object.keys(this.appData)) {
-      this.snippetsMap.set(`appData.${key}`, this.appData[key]);
+      if (key === "blockList") {
+        this.snippetsMap.set("blockList", this.appData[key]);
+      } else {
+        this.snippetsMap.set(`appData.${key}`, this.appData[key]);
+      }
     }
 
     // Refresh snippets, if enough time has passed.
@@ -3105,7 +3126,8 @@ var PrerenderData = new _PrerenderData({
     "section.topstories.collapsed": false,
     "feeds.section.topstories": true,
     "feeds.section.highlights": true,
-    "enableWideLayout": true
+    "enableWideLayout": true,
+    "sectionOrder": "topsites,topstories,highlights"
   },
   // Prefs listed as invalidating will prevent the prerendered version
   // of AS from being used if their value is something other than what is listed
@@ -3113,7 +3135,7 @@ var PrerenderData = new _PrerenderData({
   // too different for the prerendered version to be used. Unfortunately, this
   // will result in users who have modified some of their preferences not being
   // able to get the benefits of prerendering.
-  validation: ["showTopSites", "showSearch", "topSitesRows", "collapseTopSites", "section.highlights.collapsed", "section.topstories.collapsed", "enableWideLayout",
+  validation: ["showTopSites", "showSearch", "topSitesRows", "collapseTopSites", "section.highlights.collapsed", "section.topstories.collapsed", "enableWideLayout", "sectionOrder",
   // This means if either of these are set to their default values,
   // prerendering can be used.
   { oneOf: ["feeds.section.topstories", "feeds.section.highlights"] }],
@@ -3239,11 +3261,7 @@ const Search = Object(external__ReactRedux_["connect"])()(Object(external__React
 // EXTERNAL MODULE: ./system-addon/content-src/components/Sections/Sections.jsx
 var Sections = __webpack_require__(18);
 
-// EXTERNAL MODULE: ./system-addon/content-src/components/TopSites/TopSites.jsx
-var TopSites = __webpack_require__(22);
-
 // CONCATENATED MODULE: ./system-addon/content-src/components/Base/Base.jsx
-
 
 
 
@@ -3351,7 +3369,6 @@ class Base_BaseContent extends external__React__default.a.PureComponent {
             { className: "non-collapsible-section" },
             external__React__default.a.createElement(ManualMigration, null)
           ),
-          prefs.showTopSites && external__React__default.a.createElement(TopSites["a" /* TopSites */], null),
           external__React__default.a.createElement(Sections["a" /* Sections */], null)
         ),
         external__React__default.a.createElement(ConfirmDialog, null)
@@ -3403,7 +3420,9 @@ const Base = Object(external__ReactRedux_["connect"])(state => ({ App: state.App
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__ = __webpack_require__(22);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 
 
 
@@ -3460,7 +3479,7 @@ class Section extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponen
         props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
       }
 
-      // When the page becoems visible, send the impression stats ping if the section isn't collapsed.
+      // When the page becomes visible, send the impression stats ping if the section isn't collapsed.
       this._onVisibilityChange = () => {
         if (props.document.visibilityState === VISIBLE) {
           const { id, Prefs } = this.props;
@@ -3501,6 +3520,12 @@ class Section extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponen
     }
   }
 
+  componentWillUnmount() {
+    if (this._onVisibilityChange) {
+      this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+
   needsImpressionStats(cards) {
     if (!this.impressionCardGuids || this.impressionCardGuids.length !== cards.length) {
       return true;
@@ -3531,7 +3556,7 @@ class Section extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponen
       id, eventSource, title, icon, rows,
       emptyState, dispatch, maxRows,
       contextMenuOptions, initialized, disclaimer,
-      pref, privacyNoticeURL
+      pref, privacyNoticeURL, isFirst, isLast
     } = this.props;
     const maxCards = CARDS_PER_ROW * maxRows;
 
@@ -3562,6 +3587,8 @@ class Section extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponen
           showPrefName: pref && pref.feed || id,
           privacyNoticeURL: privacyNoticeURL,
           Prefs: this.props.Prefs,
+          isFirst: isFirst,
+          isLast: isLast,
           dispatch: this.props.dispatch },
         !shouldShowEmptyState && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
           "ul",
@@ -3599,17 +3626,41 @@ Section.defaultProps = {
   title: ""
 };
 
-const SectionIntl = Object(__WEBPACK_IMPORTED_MODULE_1_react_intl__["injectIntl"])(Section);
+const SectionIntl = Object(__WEBPACK_IMPORTED_MODULE_5_react_redux__["connect"])(state => ({ Prefs: state.Prefs }))(Object(__WEBPACK_IMPORTED_MODULE_1_react_intl__["injectIntl"])(Section));
 /* unused harmony export SectionIntl */
 
 
 class _Sections extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponent {
+  renderSections() {
+    const sections = [];
+    const enabledSections = this.props.Sections.filter(section => section.enabled);
+    const { sectionOrder, showTopSites } = this.props.Prefs.values;
+    // Enabled sections doesn't include Top Sites, so we add it if enabled.
+    const expectedCount = enabledSections.length + ~~showTopSites;
+
+    for (const sectionId of sectionOrder.split(",")) {
+      const commonProps = {
+        key: sectionId,
+        isFirst: sections.length === 0,
+        isLast: sections.length === expectedCount - 1
+      };
+      if (sectionId === "topsites" && showTopSites) {
+        sections.push(__WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__["a" /* TopSites */], commonProps));
+      } else {
+        const section = enabledSections.find(s => s.id === sectionId);
+        if (section) {
+          sections.push(__WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(SectionIntl, _extends({}, section, commonProps)));
+        }
+      }
+    }
+    return sections;
+  }
+
   render() {
-    const sections = this.props.Sections;
     return __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
       "div",
       { className: "sections-list" },
-      sections.filter(section => section.enabled).map(section => __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(SectionIntl, _extends({ key: section.id }, section, { Prefs: this.props.Prefs, dispatch: this.props.dispatch })))
+      this.renderSections()
     );
   }
 }
@@ -3735,6 +3786,18 @@ class Card_Card extends external__React__default.a.PureComponent {
     });
   }
 
+  /**
+   * Report to telemetry additional information about the item.
+   */
+  _getTelemetryInfo() {
+    // Filter out "history" type for being the default
+    if (this.props.link.type !== "history") {
+      return { value: { card_type: this.props.link.type } };
+    }
+
+    return null;
+  }
+
   onLinkClick(event) {
     event.preventDefault();
     const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
@@ -3750,11 +3813,11 @@ class Card_Card extends external__React__default.a.PureComponent {
         action_position: this.props.index
       }));
     } else {
-      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent(Object.assign({
         event: "CLICK",
         source: this.props.eventSource,
         action_position: this.props.index
-      }));
+      }, this._getTelemetryInfo())));
 
       if (this.props.shouldSendImpressionStats) {
         this.props.dispatch(Actions["a" /* actionCreators */].ImpressionStats({
@@ -3866,6 +3929,7 @@ class Card_Card extends external__React__default.a.PureComponent {
         onUpdate: this.onMenuUpdate,
         options: link.contextMenuOptions || contextMenuOptions,
         site: link,
+        siteInfo: this._getTelemetryInfo(),
         shouldSendImpressionStats: shouldSendImpressionStats })
     );
   }
@@ -3907,6 +3971,26 @@ var external__React__default = /*#__PURE__*/__webpack_require__.n(external__Reac
  */
 const SectionMenuOptions = {
   Separator: () => ({ type: "separator" }),
+  MoveUp: section => ({
+    id: "section_menu_action_move_up",
+    icon: "arrowhead-up",
+    action: Actions["a" /* actionCreators */].OnlyToMain({
+      type: Actions["b" /* actionTypes */].SECTION_MOVE,
+      data: { id: section.id, direction: -1 }
+    }),
+    userEvent: "SECTION_MENU_MOVE_UP",
+    disabled: !!section.isFirst
+  }),
+  MoveDown: section => ({
+    id: "section_menu_action_move_down",
+    icon: "arrowhead-down",
+    action: Actions["a" /* actionCreators */].OnlyToMain({
+      type: Actions["b" /* actionTypes */].SECTION_MOVE,
+      data: { id: section.id, direction: +1 }
+    }),
+    userEvent: "SECTION_MENU_MOVE_DOWN",
+    disabled: !!section.isLast
+  }),
   RemoveSection: section => ({
     id: "section_menu_action_remove_section",
     icon: "dismiss",
@@ -3955,7 +4039,7 @@ const SectionMenuOptions = {
 
 
 
-const DEFAULT_SECTION_MENU_OPTIONS = ["RemoveSection", "CheckCollapsed", "Separator", "ManageSection"];
+const DEFAULT_SECTION_MENU_OPTIONS = ["MoveUp", "MoveDown", "Separator", "RemoveSection", "CheckCollapsed", "Separator", "ManageSection"];
 
 class SectionMenu__SectionMenu extends external__React__default.a.PureComponent {
   getOptions() {
@@ -4094,6 +4178,22 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
 
 
 
+function topSiteIconType(link) {
+  if (link.tippyTopIcon || link.faviconRef === "tippytop") {
+    return "tippytop";
+  }
+  if (link.faviconSize >= __WEBPACK_IMPORTED_MODULE_1__TopSitesConstants__["b" /* MIN_RICH_FAVICON_SIZE */]) {
+    return "rich_icon";
+  }
+  if (link.screenshot && link.faviconSize >= __WEBPACK_IMPORTED_MODULE_1__TopSitesConstants__["a" /* MIN_CORNER_FAVICON_SIZE */]) {
+    return "screenshot_with_icon";
+  }
+  if (link.screenshot) {
+    return "screenshot";
+  }
+  return "no_image";
+}
+
 /**
  * Iterates through TopSites and counts types of images.
  * @param acc Accumulator for reducer.
@@ -4101,18 +4201,7 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
  */
 function countTopSitesIconsTypes(topSites) {
   const countTopSitesTypes = (acc, link) => {
-    if (link.tippyTopIcon || link.faviconRef === "tippytop") {
-      acc.tippytop++;
-    } else if (link.faviconSize >= __WEBPACK_IMPORTED_MODULE_1__TopSitesConstants__["b" /* MIN_RICH_FAVICON_SIZE */]) {
-      acc.rich_icon++;
-    } else if (link.screenshot && link.faviconSize >= __WEBPACK_IMPORTED_MODULE_1__TopSitesConstants__["a" /* MIN_CORNER_FAVICON_SIZE */]) {
-      acc.screenshot_with_icon++;
-    } else if (link.screenshot) {
-      acc.screenshot++;
-    } else {
-      acc.no_image++;
-    }
-
+    acc[topSiteIconType(link)]++;
     return acc;
   };
 
@@ -4186,14 +4275,17 @@ class _TopSites extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureCompon
         {
           className: "top-sites",
           icon: "topsites",
+          id: "topsites",
           title: props.intl.formatMessage({ id: "header_top_sites" }),
           extraMenuOptions: ["AddTopSite"],
           prefName: "collapseTopSites",
           showPrefName: "showTopSites",
           eventSource: __WEBPACK_IMPORTED_MODULE_1__TopSitesConstants__["d" /* TOP_SITES_SOURCE */],
           Prefs: props.Prefs,
+          isFirst: props.isFirst,
+          isLast: props.isLast,
           dispatch: props.dispatch },
-        __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_9__TopSite__["b" /* TopSiteList */], { TopSites: props.TopSites, TopSitesRows: props.TopSitesRows, dispatch: props.dispatch, intl: props.intl }),
+        __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_9__TopSite__["b" /* TopSiteList */], { TopSites: props.TopSites, TopSitesRows: props.TopSitesRows, dispatch: props.dispatch, intl: props.intl, topSiteIconType: topSiteIconType }),
         __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
           "div",
           { className: "edit-topsites-wrapper" },

@@ -590,6 +590,7 @@ EffectCompositor::HasPendingStyleUpdates() const
   return false;
 }
 
+#ifdef MOZ_OLD_STYLE
 bool
 EffectCompositor::HasThrottledStyleUpdates() const
 {
@@ -604,7 +605,6 @@ EffectCompositor::HasThrottledStyleUpdates() const
   return false;
 }
 
-#ifdef MOZ_OLD_STYLE
 void
 EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {

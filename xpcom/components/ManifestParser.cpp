@@ -67,64 +67,63 @@ struct ManifestDirective
   void (nsChromeRegistry::*regfunc)(
     nsChromeRegistry::ManifestProcessingContext& aCx,
     int aLineNo, char* const* aArgv, int aFlags);
-  void* xptonlyfunc;
 
   bool isContract;
 };
 static const ManifestDirective kParsingTable[] = {
   {
     "manifest",         1, false, false, true, true, false,
-    &nsComponentManagerImpl::ManifestManifest, nullptr, nullptr
+    &nsComponentManagerImpl::ManifestManifest, nullptr,
   },
   {
     "binary-component", 1, true, true, false, false, false,
-    &nsComponentManagerImpl::ManifestBinaryComponent, nullptr, nullptr
+    &nsComponentManagerImpl::ManifestBinaryComponent, nullptr,
   },
   {
     "interfaces",       1, false, true, false, false, false,
-    &nsComponentManagerImpl::ManifestXPT, nullptr, nullptr
+    &nsComponentManagerImpl::ManifestXPT, nullptr,
   },
   {
     "component",        2, false, true, false, false, false,
-    &nsComponentManagerImpl::ManifestComponent, nullptr, nullptr
+    &nsComponentManagerImpl::ManifestComponent, nullptr,
   },
   {
     "contract",         2, false, true, false, false, false,
-    &nsComponentManagerImpl::ManifestContract, nullptr, nullptr, true
+    &nsComponentManagerImpl::ManifestContract, nullptr,
   },
   {
     "category",         3, false, true, false, false, false,
-    &nsComponentManagerImpl::ManifestCategory, nullptr, nullptr
+    &nsComponentManagerImpl::ManifestCategory, nullptr,
   },
   {
     "content",          2, false, true, true, true,  true,
-    nullptr, &nsChromeRegistry::ManifestContent, nullptr
+    nullptr, &nsChromeRegistry::ManifestContent,
   },
   {
     "locale",           3, false, true, true, true, false,
-    nullptr, &nsChromeRegistry::ManifestLocale, nullptr
+    nullptr, &nsChromeRegistry::ManifestLocale,
   },
   {
     "skin",             3, false, false, true, true, false,
-    nullptr, &nsChromeRegistry::ManifestSkin, nullptr
+    nullptr, &nsChromeRegistry::ManifestSkin,
   },
   {
     "overlay",          2, false, true, true, false, false,
-    nullptr, &nsChromeRegistry::ManifestOverlay, nullptr
+    nullptr, &nsChromeRegistry::ManifestOverlay,
   },
   {
     "style",            2, false, false, true, false, false,
-    nullptr, &nsChromeRegistry::ManifestStyle, nullptr
+    nullptr, &nsChromeRegistry::ManifestStyle,
   },
   {
     // NB: note that while skin manifests can use this, they are only allowed
     // to use it for chrome://../skin/ URLs
     "override",         2, false, false, true, true, false,
-    nullptr, &nsChromeRegistry::ManifestOverride, nullptr
+    nullptr, &nsChromeRegistry::ManifestOverride,
   },
   {
     "resource",         2, false, true, true, true, true,
-    nullptr, &nsChromeRegistry::ManifestResource, nullptr
+    nullptr, &nsChromeRegistry::ManifestResource,
   }
 };
 
@@ -136,16 +135,10 @@ IsNewline(char aChar)
   return aChar == '\n' || aChar == '\r';
 }
 
-/**
- * If we are pre-loading XPTs, this method may do nothing because the
- * console service is not initialized.
- */
 void
 LogMessage(const char* aMsg, ...)
 {
-  if (!nsComponentManagerImpl::gComponentManager) {
-    return;
-  }
+  MOZ_ASSERT(nsComponentManagerImpl::gComponentManager);
 
   nsCOMPtr<nsIConsoleService> console =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
@@ -163,10 +156,6 @@ LogMessage(const char* aMsg, ...)
   console->LogMessage(error);
 }
 
-/**
- * If we are pre-loading XPTs, this method may do nothing because the
- * console service is not initialized.
- */
 void
 LogMessageWithContext(FileLocation& aFile,
                       uint32_t aLineNumber, const char* aMsg, ...)
@@ -179,9 +168,7 @@ LogMessageWithContext(FileLocation& aFile,
     return;
   }
 
-  if (!nsComponentManagerImpl::gComponentManager) {
-    return;
-  }
+  MOZ_ASSERT(nsComponentManagerImpl::gComponentManager);
 
   nsCString file;
   aFile.GetURIString(file);
@@ -444,18 +431,9 @@ struct CachedDirective
 } // namespace
 
 
-/**
- * For XPT-Only mode, the parser handles only directives of "manifest"
- * and "interfaces", and always call the function given by |xptonlyfunc|
- * variable of struct |ManifestDirective|.
- *
- * This function is safe to be called before the component manager is
- * ready if aXPTOnly is true for it don't invoke any component during
- * parsing.
- */
 void
 ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
-              bool aChromeOnly, bool aXPTOnly)
+              bool aChromeOnly)
 {
   nsComponentManagerImpl::ManifestProcessingContext mgrcx(aType, aFile,
                                                           aChromeOnly);
@@ -489,12 +467,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
   nsAutoString abi;
   nsAutoString process;
 
-  nsCOMPtr<nsIXULAppInfo> xapp;
-  if (!aXPTOnly) {
-    // Avoid to create any component for XPT only mode.
-    // No xapp means no ID, version, ..., modifiers checking.
-    xapp = do_GetService(XULAPPINFO_SERVICE_CONTRACTID);
-  }
+  nsCOMPtr<nsIXULAppInfo> xapp(do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
   if (xapp) {
     nsAutoCString s;
     rv = xapp->GetID(s);
@@ -610,8 +583,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
     for (const ManifestDirective* d = kParsingTable;
          d < ArrayEnd(kParsingTable);
          ++d) {
-      if (!strcmp(d->directive, token) &&
-          (!aXPTOnly || d->xptonlyfunc)) {
+      if (!strcmp(d->directive, token)) {
         directive = d;
         break;
       }

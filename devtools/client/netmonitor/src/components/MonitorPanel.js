@@ -40,6 +40,7 @@ class MonitorPanel extends Component {
       isEmpty: PropTypes.bool.isRequired,
       networkDetailsOpen: PropTypes.bool.isRequired,
       openNetworkDetails: PropTypes.func.isRequired,
+      onNetworkDetailsResized: PropTypes.func.isRequired,
       request: PropTypes.object,
       selectedRequestVisible: PropTypes.bool.isRequired,
       sourceMapService: PropTypes.object,
@@ -56,6 +57,7 @@ class MonitorPanel extends Component {
     };
 
     this.onLayoutChange = this.onLayoutChange.bind(this);
+    this.onNetworkDetailsResized = this.onNetworkDetailsResized.bind(this);
   }
 
   componentDidMount() {
@@ -94,6 +96,16 @@ class MonitorPanel extends Component {
     });
   }
 
+  onNetworkDetailsResized(width, height) {
+   // Cleaning width and height parameters, because SplitBox passes ALWAYS two values,
+   // while depending on orientation ONLY ONE dimension is managed by it at a time.
+    let { isVerticalSpliter }  = this.state;
+    return this.props.onNetworkDetailsResized(
+      isVerticalSpliter ? width : null,
+      isVerticalSpliter ? null : height
+    );
+  }
+
   render() {
     let {
       connector,
@@ -128,6 +140,7 @@ class MonitorPanel extends Component {
           endPanelCollapsed: !networkDetailsOpen,
           endPanelControl: true,
           vert: this.state.isVerticalSpliter,
+          onControlledPanelResized: this.onNetworkDetailsResized,
         }),
       )
     );
@@ -143,6 +156,9 @@ module.exports = connect(
   }),
   (dispatch) => ({
     openNetworkDetails: (open) => dispatch(Actions.openNetworkDetails(open)),
+    onNetworkDetailsResized: (width, height) => dispatch(
+      Actions.resizeNetworkDetails(width, height)
+    ),
     updateRequest: (id, data, batch) => dispatch(Actions.updateRequest(id, data, batch)),
   }),
 )(MonitorPanel);
