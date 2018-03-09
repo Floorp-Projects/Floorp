@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "nsMimeTypes.h"
 #include "nsString.h"
 #include "VideoUtils.h"
 
@@ -11,8 +12,8 @@ using namespace mozilla;
 
 TEST(MediaMIMETypes, IsMediaMIMEType)
 {
-  EXPECT_TRUE(IsMediaMIMEType("audio/mp4"));
-  EXPECT_TRUE(IsMediaMIMEType("video/mp4"));
+  EXPECT_TRUE(IsMediaMIMEType(AUDIO_MP4));
+  EXPECT_TRUE(IsMediaMIMEType(VIDEO_MP4));
   EXPECT_TRUE(IsMediaMIMEType("application/x-mp4"));
 
   EXPECT_TRUE(IsMediaMIMEType("audio/m"));

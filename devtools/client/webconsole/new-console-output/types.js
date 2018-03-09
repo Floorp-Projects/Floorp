@@ -21,6 +21,7 @@ exports.ConsoleCommand = function (props) {
     level: MESSAGE_LEVEL.LOG,
     groupId: null,
     indent: 0,
+    private: false,
   }, props);
 };
 
@@ -44,6 +45,7 @@ exports.ConsoleMessage = function (props) {
     notes: null,
     indent: 0,
     prefix: "",
+    private: false,
   }, props);
 };
 
@@ -66,5 +68,6 @@ exports.NetworkEventMessage = function (props) {
     securityState: null,
     securityInfo: null,
     requestHeadersFromUploadStream: null,
+    private: false,
   }, props);
 };
