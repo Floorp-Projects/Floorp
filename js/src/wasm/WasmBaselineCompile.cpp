@@ -3373,8 +3373,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
     void addInterruptCheck()
     {
-        // Always use signals for interrupts with Asm.JS/Wasm
-        MOZ_RELEASE_ASSERT(HaveSignalHandlers());
+        // TODO
     }
 
     void jumpTable(const LabelVector& labels, Label* theTable) {
@@ -9490,8 +9489,6 @@ BaseCompiler::init()
 
     if (!fr.setupLocals(locals_, sig().args(), debugEnabled_, &localInfo_))
         return false;
-
-    addInterruptCheck();
 
     return true;
 }
