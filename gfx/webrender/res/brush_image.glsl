@@ -13,12 +13,18 @@ varying vec2 vLocalPos;
 varying vec3 vUv;
 flat varying vec4 vUvBounds;
 flat varying vec4 vColor;
+
+#ifdef WR_FEATURE_ALPHA_PASS
 flat varying vec2 vSelect;
+#endif
+
 #ifdef WR_VERTEX_SHADER
 
-#define IMAGE_SOURCE_COLOR              0
-#define IMAGE_SOURCE_ALPHA              1
-#define IMAGE_SOURCE_MASK_FROM_COLOR    2
+#ifdef WR_FEATURE_ALPHA_PASS
+    #define IMAGE_SOURCE_COLOR              0
+    #define IMAGE_SOURCE_ALPHA              1
+    #define IMAGE_SOURCE_MASK_FROM_COLOR    2
+#endif
 
 void brush_vs(
     VertexInfo vi,
@@ -53,6 +59,7 @@ void brush_vs(
         max(uv0, uv1) - vec2(0.5)
     ) / texture_size.xyxy;
 
+#ifdef WR_FEATURE_ALPHA_PASS
     switch (user_data.y) {
         case IMAGE_SOURCE_COLOR:
             vSelect = vec2(0.0, 0.0);
@@ -65,7 +72,6 @@ void brush_vs(
             break;
     }
 
-#ifdef WR_FEATURE_ALPHA_PASS
     vLocalPos = vi.local_pos;
 #endif
 }
@@ -76,11 +82,12 @@ vec4 brush_fs() {
     vec2 uv = clamp(vUv.xy, vUvBounds.xy, vUvBounds.zw);
 
     vec4 texel = TEX_SAMPLE(sColor0, vec3(uv, vUv.z));
-    vec4 mask = mix(texel.rrrr, texel.aaaa, vSelect.x);
-    vec4 color = mix(texel, vColor * mask, vSelect.y);
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    color *= init_transform_fs(vLocalPos);
+    vec4 mask = mix(texel.rrrr, texel.aaaa, vSelect.x);
+    vec4 color = mix(texel, vColor * mask, vSelect.y) * init_transform_fs(vLocalPos);
+#else
+    vec4 color = texel;
 #endif
 
     return color;
