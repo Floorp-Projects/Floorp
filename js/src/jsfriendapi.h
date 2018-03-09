@@ -445,7 +445,7 @@ extern JS_FRIEND_API(bool)
 UseInternalJobQueues(JSContext* cx, bool cooperative = false);
 
 /**
- * Enqueue job on the run queue.
+ * Enqueue |job| on the internal job queue.
  *
  * This is useful in tests for creating situations where a call occurs with no
  * other JavaScript on the stack.
