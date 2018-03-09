@@ -44,6 +44,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345367
   }
 
   function testAfterShow() {
+     const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
      return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
       const acceptPromise = payRequest.show();
@@ -53,7 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345367
       }).catch( (err) => {
         ok(false, "Expected no error, but got '" + err.name + "'.");
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 
