@@ -1,0 +1,44 @@
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+var EXPORTED_SYMBOLS = ["LoadURIDelegate"];
+
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ErrorPageEventHandler: "chrome://geckoview/content/ErrorPageEventHandler.js"
+  Services: "resource://gre/modules/Services.jsm",
+});
+
+var LoadURIDelegate = {
+  // Delegate URI loading to the app.
+  // Return whether the loading has been handled.
+  load: function(aEventDispatcher, aUri, aWhere, aFlags, aTriggeringPrincipal) {
+    // TODO: Remove this when we have a sensible error API.
+    if (aUri && aUri.displaySpec.startsWith("about:certerror")) {
+      addEventListener("click", ErrorPageEventHandler, true);
+    }
+
+    const message = {
+      type: "GeckoView:OnLoadUri",
+      uri: aUri ? aUri.displaySpec : "",
+      where: aWhere,
+      flags: aFlags
+    };
+
+    let handled = undefined;
+    aEventDispatcher.sendRequestForResult(message).then(response => {
+      handled = response;
+    }, () => {
+      // There was an error or listener was not registered in GeckoSession,
+      // treat as unhandled.
+      handled = false;
+    });
+    Services.tm.spinEventLoopUntil(() => handled !== undefined);
+
+    return handled;
+  }
+};
