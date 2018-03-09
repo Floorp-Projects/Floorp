@@ -267,7 +267,7 @@ Simulator::handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes)
 
     const js::wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
-        act->startWasmTrap(wasm::Trap::OutOfBounds, 0, registerState());
+        act->startWasmTrap(js::wasm::Trap::OutOfBounds, 0, registerState());
         if (!instance->code().containsCodePC(pc))
             MOZ_CRASH("Cannot map PC to trap handler");
         set_pc((Instruction*)moduleSegment->outOfBoundsCode());

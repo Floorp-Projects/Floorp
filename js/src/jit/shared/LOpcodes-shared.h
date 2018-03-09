@@ -389,6 +389,7 @@
     _(InstanceOfV)                  \
     _(InstanceOfCache)              \
     _(InterruptCheck)               \
+    _(WasmInterruptCheck)           \
     _(Rotate)                       \
     _(RotateI64)                    \
     _(GetDOMProperty)               \
