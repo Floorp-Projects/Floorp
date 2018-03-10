@@ -46,6 +46,8 @@ toolkit.jar:
   skin/classic/global/media/audioMutedButton.svg           (../shared/media/audioMutedButton.svg)
   skin/classic/global/media/audioNoAudioButton.svg         (../shared/media/audioNoAudioButton.svg)
   skin/classic/global/media/audioUnmutedButton.svg         (../shared/media/audioUnmutedButton.svg)
+  skin/classic/global/media/castingButton-ready.svg        (../shared/media/castingButton-ready.svg)
+  skin/classic/global/media/castingButton-active.svg       (../shared/media/castingButton-active.svg)
   skin/classic/global/media/closedCaptionButton-cc-off.svg (../shared/media/closedCaptionButton-cc-off.svg)
   skin/classic/global/media/closedCaptionButton-cc-on.svg  (../shared/media/closedCaptionButton-cc-on.svg)
   skin/classic/global/media/fullscreenEnterButton.svg      (../shared/media/fullscreenEnterButton.svg)

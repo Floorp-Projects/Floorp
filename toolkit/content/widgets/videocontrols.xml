@@ -66,6 +66,8 @@
           <div anonid="volumeStack" class="volumeStack progressContainer" role="none">
             <input type="range" anonid="volumeControl" class="volumeControl" min="0" max="100" step="1" tabindex="-1"/>
           </div>
+          <button anonid="castingButton" class="castingButton"
+                  aria-label="&castingButton.castingLabel;"/>
           <button anonid="closedCaptionButton" class="closedCaptionButton"/>
           <button anonid="fullscreenButton"
                   class="fullscreenButton"
@@ -1359,6 +1361,10 @@
                textTrack.kind == "captions";
       },
 
+      get isCastingAvailable() {
+        return !this.isAudioOnly && this.video.mozAllowCasting;
+      },
+
       get isClosedCaptionAvailable() {
         return this.overlayableTextTracks.length;
       },
@@ -1372,6 +1378,32 @@
 
         // fallback to off button if there's no showing track.
         return showingTT ? showingTT.index : 0;
+      },
+
+      isCastingOn() {
+        return this.isCastingAvailable && this.video.mozIsCasting;
+      },
+
+      setCastingButtonState() {
+        if (this.isCastingOn()) {
+          this.castingButton.setAttribute("enabled", "true");
+        } else {
+          this.castingButton.removeAttribute("enabled");
+        }
+
+        this.adjustControlSize();
+      },
+
+      updateCasting(eventDetail) {
+        let castingData = JSON.parse(eventDetail);
+        if ("allow" in castingData) {
+          this.video.mozAllowCasting = !!castingData.allow;
+        }
+
+        if ("active" in castingData) {
+          this.video.mozIsCasting = !!castingData.active;
+        }
+        this.setCastingButtonState();
       },
 
       isClosedCaptionOn() {
@@ -1463,6 +1495,10 @@
         this.adjustControlSize();
       },
 
+      toggleCasting() {
+        this.videocontrols.dispatchEvent(new CustomEvent("VideoBindingCast"));
+      },
+
       toggleClosedCaption() {
         if (this.textTrackList.hasAttribute("hidden")) {
           this.textTrackList.removeAttribute("hidden");
@@ -1545,6 +1581,7 @@
         const minControlBarPaddingWidth = 18;
 
         this.fullscreenButton.isWanted = !this.controlBar.hasAttribute("fullscreen-unavailable");
+        this.castingButton.isWanted = this.isCastingAvailable;
         this.closedCaptionButton.isWanted = this.isClosedCaptionAvailable;
         this.volumeStack.isWanted = !this.muteButton.hasAttribute("noAudio");
 
@@ -1658,6 +1695,7 @@
         this.controlsSpacer     = document.getAnonymousElementByAttribute(binding, "anonid", "controlsSpacer");
         this.clickToPlay        = document.getAnonymousElementByAttribute(binding, "anonid", "clickToPlay");
         this.fullscreenButton   = document.getAnonymousElementByAttribute(binding, "anonid", "fullscreenButton");
+        this.castingButton = document.getAnonymousElementByAttribute(binding, "anonid", "castingButton");
         this.closedCaptionButton = document.getAnonymousElementByAttribute(binding, "anonid", "closedCaptionButton");
         this.textTrackList = document.getAnonymousElementByAttribute(binding, "anonid", "textTrackList");
 
@@ -1672,6 +1710,7 @@
           this.playButton,
           this.muteButton,
           this.fullscreenButton,
+          this.castingButton,
           this.closedCaptionButton,
           this.positionDurationBox,
           this.scrubberStack,
@@ -1705,7 +1744,7 @@
         // listener functions. Hence declare it as a global for ESLint.
         /* global Utils */
         function addListener(elem, eventName, func, {capture = false, mozSystemGroup = true} = {}) {
-          let boundFunc = func.bind(self);
+          let boundFunc = evt => evt.isTrusted && func.call(self, evt);
           self.controlListeners.push({
             item: elem,
             event: eventName,
@@ -1717,6 +1756,7 @@
         }
 
         addListener(this.muteButton, "click", this.toggleMute);
+        addListener(this.castingButton, "click", this.toggleCasting);
         addListener(this.closedCaptionButton, "click", this.toggleClosedCaption);
         addListener(this.fullscreenButton, "click", this.toggleFullscreen);
         addListener(this.playButton, "click", this.clickToPlayClickHandler);
@@ -1752,6 +1792,11 @@
         addListener(this.video.textTracks, "addtrack", this.onTextTrackAdd);
         addListener(this.video.textTracks, "removetrack", this.onTextTrackRemove);
         addListener(this.video.textTracks, "change", this.setClosedCaptionButtonState);
+
+        if (this.videocontrols.isTouchControls) {
+          addListener(this.video, "media-videoCasting",
+            (evt) => this.updateCasting(evt.detail));
+        }
 
         this.log("--- videocontrols initialized ---");
       }
