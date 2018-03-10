@@ -42,7 +42,7 @@ SegCacheEntry::SegCacheEntry(const uint16* cmapGlyphs, size_t length, Segment * 
     m_accessCount(0), m_lastAccess(cacheTime)
 {
     if (m_unicode)
-        for (uint16 i = 0; i < length; i++)
+        for (size_t i = 0; i < length; i++)
             m_unicode[i] = cmapGlyphs[i];
 
     const size_t    glyphCount = seg->slotCount(),
