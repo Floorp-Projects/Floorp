@@ -366,30 +366,6 @@ WebGLContext::ValidateAttribIndex(GLuint index, const char* info)
 }
 
 bool
-WebGLContext::ValidateStencilParamsForDrawCall()
-{
-    const char msg[] = "%s set different front and back stencil %s. Drawing in"
-                       " this configuration is not allowed.";
-
-    if (mStencilRefFront != mStencilRefBack) {
-        ErrorInvalidOperation(msg, "stencilFuncSeparate", "reference values");
-        return false;
-    }
-
-    if (mStencilValueMaskFront != mStencilValueMaskBack) {
-        ErrorInvalidOperation(msg, "stencilFuncSeparate", "value masks");
-        return false;
-    }
-
-    if (mStencilWriteMaskFront != mStencilWriteMaskBack) {
-        ErrorInvalidOperation(msg, "stencilMaskSeparate", "write masks");
-        return false;
-    }
-
-    return true;
-}
-
-bool
 WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 {
     MOZ_RELEASE_ASSERT(gl, "GFX: GL not initialized");

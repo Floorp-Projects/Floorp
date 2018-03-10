@@ -219,6 +219,49 @@ WebGLContext::BindFakeBlack(uint32_t texUnit, TexTarget target, FakeBlackType fa
 
 ////////////////////////////////////////
 
+bool
+WebGLContext::ValidateStencilParamsForDrawCall(const char* const funcName) const
+{
+    const auto stencilBits = [&]() -> uint8_t {
+        if (!mStencilTestEnabled)
+            return 0;
+
+        if (!mBoundDrawFramebuffer)
+            return mOptions.stencil ? 8 : 0;
+
+        if (mBoundDrawFramebuffer->StencilAttachment().IsDefined())
+            return 8;
+
+        if (mBoundDrawFramebuffer->DepthStencilAttachment().IsDefined())
+            return 8;
+
+        return 0;
+    }();
+    const uint32_t stencilMax = (1 << stencilBits) - 1;
+
+    const auto fnMask = [&](const uint32_t x) { return x & stencilMax; };
+    const auto fnClamp = [&](const int32_t x) {
+        return std::max(0, std::min(x, (int32_t)stencilMax));
+    };
+
+    bool ok = true;
+    ok &= (fnMask(mStencilWriteMaskFront) == fnMask(mStencilWriteMaskBack));
+    ok &= (fnMask(mStencilValueMaskFront) == fnMask(mStencilValueMaskBack));
+    ok &= (fnClamp(mStencilRefFront) == fnClamp(mStencilRefBack));
+
+    if (!ok) {
+        ErrorInvalidOperation("%s: Stencil front/back state must effectively match."
+                              " (before front/back comparison, WRITEMASK and VALUE_MASK"
+                              " are masked with (2^s)-1, and REF is clamped to"
+                              " [0, (2^s)-1], where `s` is the number of enabled stencil"
+                              " bits in the draw framebuffer)",
+                              funcName);
+    }
+    return ok;
+}
+
+////////////////////////////////////////
+
 template<typename T>
 static bool
 DoSetsIntersect(const std::set<T>& a, const std::set<T>& b)
@@ -253,7 +296,7 @@ public:
             return;
         }
 
-        if (!mWebGL->ValidateStencilParamsForDrawCall()) {
+        if (!mWebGL->ValidateStencilParamsForDrawCall(funcName)) {
             *out_error = true;
             return;
         }

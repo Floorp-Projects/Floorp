@@ -43,7 +43,7 @@
 var wtu = WebGLTestUtils;
 description("Tests the few differences between WebGL and GLES2");
 
-var gl = wtu.create3DContext();
+var gl = wtu.create3DContext(undefined, {stencil:true});
 var program = wtu.loadStandardProgram(gl);
 gl.useProgram(program);
 var vertexObject = gl.createBuffer();
@@ -78,6 +78,7 @@ wtu.shouldGenerateGLError(gl, gl.INVALID_OPERATION, "gl.depthRange(20, 10)");
 
 debug("");
 debug("Verify that front/back settings should be the same for stenclMask and stencilFunc");
+gl.enable(gl.STENCIL_TEST);
 wtu.shouldGenerateGLError(gl, gl.NO_ERROR, "gl.stencilMask(255)");
 wtu.shouldGenerateGLError(gl, gl.NO_ERROR, "gl.drawArrays(gl.TRIANGLES, 0, 0)");
 wtu.shouldGenerateGLError(gl, gl.NO_ERROR, "gl.stencilMaskSeparate(gl.FRONT, 1)");
