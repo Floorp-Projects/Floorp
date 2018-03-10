@@ -1,5 +1,7 @@
 package org.mozilla.gecko.media;
 
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
@@ -12,7 +14,9 @@ import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
-public class AudioFocusAgent {
+import java.lang.ref.WeakReference;
+
+public class AudioFocusAgent implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "AudioFocusAgent";
 
     // We're referencing the *application* context, so this is in fact okay.
@@ -20,6 +24,8 @@ public class AudioFocusAgent {
     private static Context mContext;
     private AudioManager mAudioManager;
     private OnAudioFocusChangeListener mAfChangeListener;
+
+    private WeakReference<Tab> mTabReference = new WeakReference<>(null);
 
     public enum State {
         OWN_FOCUS,
@@ -55,6 +61,7 @@ public class AudioFocusAgent {
 
         mContext = context.getApplicationContext();
         mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        Tabs.registerOnTabsChangedListener(this);
 
         mAfChangeListener = new OnAudioFocusChangeListener() {
             public void onAudioFocusChange(int focusChange) {
@@ -141,6 +148,57 @@ public class AudioFocusAgent {
         Log.d(LOGTAG, "Abandon AudioFocus");
         mAudioManager.abandonAudioFocus(mAfChangeListener);
         mAudioFocusState = State.LOST_FOCUS;
+    }
+
+    /* package */ Tab getActiveMediaTab() {
+        return mTabReference.get();
+    }
+
+    /* package */ void clearActiveMediaTab() {
+        mTabReference = new WeakReference<>(null);
+    }
+
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+        if (!isAttachedToContext()) {
+            return;
+        }
+
+        final Tab playingTab = mTabReference.get();
+        switch (msg) {
+            case MEDIA_PLAYING_CHANGE:
+                // The 'MEDIA_PLAYING_CHANGE' would only be received when the
+                // media starts or ends.
+                if (playingTab != tab && tab.isMediaPlaying()) {
+                    mTabReference = new WeakReference<>(tab);
+                    notifyMediaControlService(MediaControlService.ACTION_TAB_STATE_PLAYING);
+                } else if (playingTab == tab) {
+                    mTabReference = new WeakReference<>(tab.isMediaPlaying() ? tab : null);
+                    final String action = tab.isMediaPlaying()
+                            ? MediaControlService.ACTION_TAB_STATE_PLAYING
+                            : MediaControlService.ACTION_TAB_STATE_STOPPED;
+                    notifyMediaControlService(action);
+                }
+                break;
+            case MEDIA_PLAYING_RESUME:
+                // user resume the paused-by-control media from page so that we
+                // should make the control interface consistent.
+                if (playingTab == tab) {
+                    notifyMediaControlService(MediaControlService.ACTION_TAB_STATE_RESUMED);
+                }
+                break;
+            case CLOSED:
+                if (playingTab == null || playingTab == tab) {
+                    // Remove the controls when the playing tab disappeared or was closed.
+                    notifyMediaControlService(MediaControlService.ACTION_TAB_STATE_STOPPED);
+                }
+                break;
+            case FAVICON:
+                if (playingTab == tab) {
+                    notifyMediaControlService(MediaControlService.ACTION_TAB_STATE_FAVICON);
+                }
+                break;
+        }
     }
 
     private void notifyMediaControlService(String action) {
