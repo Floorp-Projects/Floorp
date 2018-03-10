@@ -138,6 +138,25 @@ class UrlInputFragment :
         activity?.let {
             urlAutoCompleteFilter.load(it.applicationContext)
         }
+
+        StatusBarUtils.getStatusBarHeight(keyboardLinearLayout, {
+            adjustViewToStatusBarHeight(it)
+        })
+    }
+
+    private fun adjustViewToStatusBarHeight(statusBarHeight: Int) {
+        val inputHeight = resources.getDimension(R.dimen.urlinput_height)
+        if (keyboardLinearLayout.layoutParams is ViewGroup.MarginLayoutParams) {
+            val marginParams = keyboardLinearLayout.layoutParams as ViewGroup.MarginLayoutParams
+            marginParams.topMargin = (inputHeight + statusBarHeight).toInt()
+        }
+
+        urlInputLayout.layoutParams.height = (inputHeight + statusBarHeight).toInt()
+
+        if (searchViewContainer.layoutParams is ViewGroup.MarginLayoutParams) {
+            val marginParams = searchViewContainer.layoutParams as ViewGroup.MarginLayoutParams
+            marginParams.topMargin = (inputHeight + statusBarHeight).toInt()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
@@ -172,27 +191,6 @@ class UrlInputFragment :
         }
 
         urlView.setOnCommitListener(this)
-
-        StatusBarUtils.getStatusBarHeight(keyboardLinearLayout, {
-            if (keyboardLinearLayout.layoutParams is ViewGroup.MarginLayoutParams) {
-                val inputHeight = resources.getDimension(R.dimen.urlinput_height)
-                val marginParams = keyboardLinearLayout.layoutParams as ViewGroup.MarginLayoutParams
-                marginParams.topMargin = (inputHeight + it).toInt()
-            }
-        })
-
-        StatusBarUtils.getStatusBarHeight(urlInputLayout, {
-            val inputHeight = resources.getDimension(R.dimen.urlinput_height)
-            urlInputLayout.layoutParams.height = (inputHeight + it).toInt()
-        })
-
-        StatusBarUtils.getStatusBarHeight(searchViewContainer, {
-            val inputHeight = resources.getDimension(R.dimen.urlinput_height)
-            if (searchViewContainer.layoutParams is ViewGroup.MarginLayoutParams) {
-                val marginParams = searchViewContainer.layoutParams as ViewGroup.MarginLayoutParams
-                marginParams.topMargin = (inputHeight + it).toInt()
-            }
-        })
 
         session?.let {
             urlView.setText(if (it.isSearch && Features.SEARCH_TERMS_OR_URL) it.searchTerms else it.url.value)

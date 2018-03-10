@@ -35,6 +35,8 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
 
     private ViewPager viewPager;
 
+    private View background;
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -55,13 +57,7 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
 
         view.findViewById(R.id.skip).setOnClickListener(this);
 
-        final View background = view.findViewById(R.id.background);
-        StatusBarUtils.getStatusBarHeight(background, new StatusBarUtils.StatusBarHeightListener() {
-            @Override
-            public void onStatusBarHeightFetched(int statusBarHeight) {
-                background.setPadding(0, statusBarHeight, 0, 0);
-            }
-        });
+        background = view.findViewById(R.id.background);
 
         final FirstrunPagerAdapter adapter = new FirstrunPagerAdapter(container.getContext(), this);
 
@@ -153,5 +149,16 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
         if (inputFragment != null) {
             inputFragment.showKeyboard();
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        StatusBarUtils.getStatusBarHeight(background, new StatusBarUtils.StatusBarHeightListener() {
+            @Override
+            public void onStatusBarHeightFetched(int statusBarHeight) {
+                background.setPadding(0, statusBarHeight, 0, 0);
+            }
+        });
     }
 }

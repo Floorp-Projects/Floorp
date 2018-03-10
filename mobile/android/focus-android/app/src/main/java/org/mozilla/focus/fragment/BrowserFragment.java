@@ -212,12 +212,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         urlBar = view.findViewById(R.id.urlbar);
         statusBar = view.findViewById(R.id.status_bar_background);
-        StatusBarUtils.getStatusBarHeight(statusBar, new StatusBarUtils.StatusBarHeightListener() {
-            @Override
-            public void onStatusBarHeightFetched(int statusBarHeight) {
-                statusBar.getLayoutParams().height = statusBarHeight;
-            }
-        });
 
         popupTint = view.findViewById(R.id.popup_tint);
 
@@ -721,6 +715,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             showDownloadPromptDialog(pendingDownload);
             pendingDownload = null;
         }
+
+        StatusBarUtils.getStatusBarHeight(statusBar, new StatusBarUtils.StatusBarHeightListener() {
+            @Override
+            public void onStatusBarHeightFetched(int statusBarHeight) {
+                statusBar.getLayoutParams().height = statusBarHeight;
+            }
+        });
     }
 
     /**

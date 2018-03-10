@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:layout_marginTop="81dp"
+        android:layout_marginTop="57dp"
         android:orientation="vertical"
         app:animate="true">
 
@@ -42,7 +42,7 @@
 
     <FrameLayout android:id="@+id/urlInputLayout"
         android:layout_width="match_parent"
-        android:layout_height="81dp"
+        android:layout_height="57dp"
         android:orientation="horizontal"
         android:elevation="4dp"
         android:clipChildren="false">
@@ -135,7 +135,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        android:layout_marginTop="81dp">
+        android:layout_marginTop="57dp">
 
         <TextView
             android:id="@+id/searchView"
