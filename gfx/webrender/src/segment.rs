@@ -144,14 +144,14 @@ impl Event {
 #[derive(Debug)]
 struct Item {
     rect: LayerRect,
-    mode: ClipMode,
+    mode: Option<ClipMode>,
     flags: ItemFlags,
 }
 
 impl Item {
     fn new(
         rect: LayerRect,
-        mode: ClipMode,
+        mode: Option<ClipMode>,
         has_mask: bool,
     ) -> Item {
         let flags = if has_mask {
@@ -192,15 +192,86 @@ impl SegmentBuilder {
             inner_rect,
         };
 
-        builder.push_rect(local_rect, None, ClipMode::Clip);
-        builder.push_rect(local_clip_rect, None, ClipMode::Clip);
+        builder.push_clip_rect(local_rect, None, ClipMode::Clip);
+        builder.push_clip_rect(local_clip_rect, None, ClipMode::Clip);
 
         builder
     }
 
+    // Push a region defined by an inner and outer rect where there
+    // is a mask required. This ensures that segments which intersect
+    // with these areas will get a clip mask task allocated. This
+    // is currently used to mark where a box-shadow region can affect
+    // the pixels of a clip-mask. It might be useful for other types
+    // such as dashed and dotted borders in the future.
+    pub fn push_mask_region(
+        &mut self,
+        outer_rect: LayerRect,
+        inner_rect: LayerRect,
+        inner_clip_mode: Option<ClipMode>,
+    ) {
+        debug_assert!(outer_rect.contains_rect(&inner_rect));
+
+        let p0 = outer_rect.origin;
+        let p1 = inner_rect.origin;
+        let p2 = inner_rect.bottom_right();
+        let p3 = outer_rect.bottom_right();
+
+        let segments = &[
+            LayerRect::new(
+                LayerPoint::new(p0.x, p0.y),
+                LayerSize::new(p1.x - p0.x, p1.y - p0.y),
+            ),
+            LayerRect::new(
+                LayerPoint::new(p2.x, p0.y),
+                LayerSize::new(p3.x - p2.x, p1.y - p0.y),
+            ),
+            LayerRect::new(
+                LayerPoint::new(p2.x, p2.y),
+                LayerSize::new(p3.x - p2.x, p3.y - p2.y),
+            ),
+            LayerRect::new(
+                LayerPoint::new(p0.x, p2.y),
+                LayerSize::new(p1.x - p0.x, p3.y - p2.y),
+            ),
+            LayerRect::new(
+                LayerPoint::new(p1.x, p0.y),
+                LayerSize::new(p2.x - p1.x, p1.y - p0.y),
+            ),
+            LayerRect::new(
+                LayerPoint::new(p2.x, p1.y),
+                LayerSize::new(p3.x - p2.x, p2.y - p1.y),
+            ),
+            LayerRect::new(
+                LayerPoint::new(p1.x, p2.y),
+                LayerSize::new(p2.x - p1.x, p3.y - p2.y),
+            ),
+            LayerRect::new(
+                LayerPoint::new(p0.x, p1.y),
+                LayerSize::new(p1.x - p0.x, p2.y - p1.y),
+            ),
+        ];
+
+        for segment in segments {
+            self.items.push(Item::new(
+                *segment,
+                None,
+                true
+            ));
+        }
+
+        if inner_clip_mode.is_some() {
+            self.items.push(Item::new(
+                inner_rect,
+                inner_clip_mode,
+                false,
+            ));
+        }
+    }
+
     // Push some kind of clipping region into the segment builder.
     // If radius is None, it's a simple rect.
-    pub fn push_rect(
+    pub fn push_clip_rect(
         &mut self,
         rect: LayerRect,
         radius: Option<BorderRadius>,
@@ -213,6 +284,7 @@ impl SegmentBuilder {
                 bounding_rect.intersection(&rect)
             });
         }
+        let mode = Some(mode);
 
         match radius {
             Some(radius) => {
@@ -480,7 +552,7 @@ fn emit_segment_if_needed(
         if item.flags.contains(ItemFlags::X_ACTIVE | ItemFlags::Y_ACTIVE) {
             has_clip_mask |= item.flags.contains(ItemFlags::HAS_MASK);
 
-            if item.mode == ClipMode::ClipOut && !item.flags.contains(ItemFlags::HAS_MASK) {
+            if item.mode == Some(ClipMode::ClipOut) && !item.flags.contains(ItemFlags::HAS_MASK) {
                 return None;
             }
         }
@@ -578,7 +650,7 @@ mod test {
         );
         let mut segments = Vec::new();
         for &(rect, radius, mode) in clips {
-            sb.push_rect(rect, radius, mode);
+            sb.push_clip_rect(rect, radius, mode);
         }
         sb.build(|segment| {
             segments.push(Segment {

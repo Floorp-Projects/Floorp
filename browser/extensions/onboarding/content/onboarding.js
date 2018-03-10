@@ -67,12 +67,12 @@ function createOnboardingTourContent(div, imageSrc) {
 /**
  * Helper function to create the tour button UI element.
  */
-function createOnboardingTourButton(div, buttonId, l10nId) {
+function createOnboardingTourButton(div, buttonId, l10nId, buttonElementTagName = "button") {
   let doc = div.ownerDocument;
   let aside = doc.createElement("aside");
   aside.className = "onboarding-tour-button-container";
 
-  let button = doc.createElement("button");
+  let button = doc.createElement(buttonElementTagName);
   button.id = buttonId;
   button.className = "onboarding-tour-action-button";
   button.setAttribute("data-l10n-id", l10nId);
@@ -403,9 +403,11 @@ var onboardingTourset = {
       createOnboardingTourContent(div, "resource://onboarding/img/figure_screenshots.svg");
 
       let aside = createOnboardingTourButton(div,
-        "onboarding-tour-screenshots-button", "onboarding.tour-screenshots.button");
+                                             "onboarding-tour-screenshots-button",
+                                             "onboarding.tour-screenshots.button",
+                                             "a");
 
-      let button = aside.querySelector("button");
+      let button = aside.querySelector("a");
       button.setAttribute("href", "https://screenshots.firefox.com/#tour");
       button.setAttribute("target", "_blank");
 

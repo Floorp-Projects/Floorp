@@ -370,7 +370,11 @@ impl ClipScrollNode {
         };
 
         let clip_sources = clip_store.get_mut(clip_sources_handle);
-        clip_sources.update(gpu_cache, resource_cache);
+        clip_sources.update(
+            gpu_cache,
+            resource_cache,
+            device_pixel_scale,
+        );
         let (screen_inner_rect, screen_outer_rect) =
             clip_sources.get_screen_bounds(&self.world_viewport_transform, device_pixel_scale);
 

@@ -6,6 +6,11 @@
 // Tests that the box model's accordion state is persistent through hide/show in the
 // computed view.
 
+// There are shutdown issues for which multiple rejections are left uncaught.
+// See bug 1018184 for resolving these issues.
+const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
+PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
+
 const TEST_URI = `
   <style>
     #div1 {

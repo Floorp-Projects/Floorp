@@ -414,6 +414,7 @@ nsBrowserContentHandler.prototype = {
         }
         handURIToExistingBrowser(resolvedURI, nsIBrowserDOMWindow.OPEN_NEWTAB, cmdLine, forcePrivate,
                                  Services.scriptSecurityManager.getSystemPrincipal());
+        cmdLine.preventDefault = true;
       }
     } catch (e) {
       if (e.result != Cr.NS_ERROR_INVALID_ARG) {
