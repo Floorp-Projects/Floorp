@@ -63,7 +63,7 @@ Release History
 
 * Upgrade setuptools to 19.6
 
-* Supress any errors from `unset` on different shells (:pull:`843`)
+* Suppress any errors from `unset` on different shells (:pull:`843`)
 
 * Normalize letter case for prefix path checking. Fixes :issue:`837`
 
@@ -355,7 +355,7 @@ Release History
 ------------------
 
 * Updated to pip 1.3.1 that fixed a major backward incompatible change of
-  parsing URLs to externally hosted packages that got accidentily included
+  parsing URLs to externally hosted packages that got accidentally included
   in pip 1.3.
 
 1.9 (2013-03-07)
