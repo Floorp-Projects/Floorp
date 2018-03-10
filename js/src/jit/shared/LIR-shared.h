@@ -9861,6 +9861,14 @@ class LWasmStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
     }
 };
 
+inline bool
+IsWasmCall(LNode::Opcode op)
+{
+    return (op == LNode::LOp_WasmCall ||
+            op == LNode::LOp_WasmCallVoid ||
+            op == LNode::LOp_WasmCallI64);
+}
+
 template <size_t Defs>
 class LWasmCallBase : public LVariadicInstruction<Defs, 0>
 {
@@ -9873,6 +9881,7 @@ class LWasmCallBase : public LVariadicInstruction<Defs, 0>
       : Base(opcode, numOperands),
         needsBoundsCheck_(needsBoundsCheck)
     {
+        MOZ_ASSERT(IsWasmCall(opcode));
         this->setIsCall();
     }
 
@@ -9930,14 +9939,9 @@ class LWasmCallI64 : public LWasmCallBase<INT64_PIECES>
 inline bool
 LNode::isCallPreserved(AnyRegister reg) const
 {
-    switch (op()) {
-      case LOp_WasmCall:
-      case LOp_WasmCallVoid:
-      case LOp_WasmCallI64:
+    if (IsWasmCall(op()))
         return LWasmCallBase<0>::isCallPreserved(reg);
-      default:
-        return false;
-    }
+    return false;
 }
 
 class LAssertRangeI : public LInstructionHelper<0, 1, 0>
