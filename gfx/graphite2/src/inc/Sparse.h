@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -73,7 +73,7 @@ public:
     size_t size()     const throw();
 
     size_t _sizeof() const throw();
-    
+
     CLASS_NEW_DELETE;
 
 private:
@@ -122,10 +122,7 @@ sparse::sparse(I attr, const I last)
                                                  + n_values);
 
     if (m_array.values == 0)
-    {
-        free(m_array.values); m_array.map=0;
         return;
-    }
 
     // coverity[forward_null : FALSE] Since m_array is union and m_array.values is not NULL
     chunk * ci = m_array.map;

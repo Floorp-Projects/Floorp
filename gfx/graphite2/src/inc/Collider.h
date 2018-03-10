@@ -210,6 +210,7 @@ private:
     float _sliceWidth;      // width of each slice
     float _mingap;
     float _xbound;        // max or min edge
+    bool  _hit;
 
 #if !defined GRAPHITE2_NTRACING    
     // Debugging
@@ -233,7 +234,8 @@ KernCollider::KernCollider(GR_MAYBE_UNUSED json *dbg)
   _maxy(1e38f),
   _sliceWidth(0.0f),
   _mingap(0.0f),
-  _xbound(0.0)
+  _xbound(0.0),
+  _hit(false)
 {
 #if !defined GRAPHITE2_NTRACING
     _seg = 0;
