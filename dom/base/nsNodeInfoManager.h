@@ -135,7 +135,7 @@ public:
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
 protected:
-  friend class nsDocument;
+  friend class nsIDocument;
   friend class nsXULPrototypeDocument;
   friend nsresult NS_NewDOMDocumentType(nsIDOMDocumentType** ,
                                         nsNodeInfoManager *,
