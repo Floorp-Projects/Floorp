@@ -111,6 +111,18 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        pauseTimers();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        resumeTimers();
+    }
+
+    @Override
     public void restoreWebViewState(Session session) {
         final Bundle stateData = session.getWebViewState();
 
