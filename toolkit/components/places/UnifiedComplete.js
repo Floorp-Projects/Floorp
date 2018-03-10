@@ -50,7 +50,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["maxHistoricalSearchSuggestions", 0],
   ["usepreloadedtopurls.enabled", true],
   ["usepreloadedtopurls.expire_days", 14],
-  ["matchBuckets", "suggestion:4,general:Infinity"],
+  ["matchBuckets", "general:5,suggestion:Infinity"],
   ["matchBucketsSearch", ""],
   ["insertMethod", INSERTMETHOD.MERGE_RELATED],
 ]);
@@ -339,6 +339,14 @@ function setTimeout(callback, ms) {
   return timer;
 }
 
+function convertBucketsCharPrefToArray(str) {
+  return str.split(",")
+            .map(v => {
+              let bucket = v.split(":");
+              return [ bucket[0].trim().toLowerCase(), Number(bucket[1]) ];
+            });
+}
+
 /**
  * Storage object for switch-to-tab entries.
  * This takes care of caching and registering open pages, that will be reused
@@ -480,9 +488,9 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
         // Convert from pref char format to an array and add the default buckets.
         let val = readPref(pref);
         try {
-          val = PlacesUtils.convertMatchBucketsStringToArray(val);
+          val = convertBucketsCharPrefToArray(val);
         } catch (ex) {
-          val = PlacesUtils.convertMatchBucketsStringToArray(PREF_URLBAR_DEFAULTS.get(pref));
+          val = convertBucketsCharPrefToArray(PREF_URLBAR_DEFAULTS.get(pref));
         }
         return [ ...DEFAULT_BUCKETS_BEFORE,
                 ...val,
@@ -494,7 +502,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
         if (val) {
           // Convert from pref char format to an array and add the default buckets.
           try {
-            val = PlacesUtils.convertMatchBucketsStringToArray(val);
+            val = convertBucketsCharPrefToArray(val);
             return [ ...DEFAULT_BUCKETS_BEFORE,
                     ...val,
                     ...DEFAULT_BUCKETS_AFTER ];
