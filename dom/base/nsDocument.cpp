@@ -357,7 +357,7 @@ public:
 
   // Would block if the result hasn't come out.
   mozilla::dom::FlashClassification ClassifyMaybeSync(nsIPrincipal* aPrincipal,
-                                           bool aIsThirdParty);
+                                                      bool aIsThirdParty);
 
 private:
  ~PrincipalFlashClassifier() = default;
@@ -1423,6 +1423,9 @@ nsIDocument::nsIDocument()
     mParentDocument(nullptr),
     mCachedRootElement(nullptr),
     mNodeInfoManager(nullptr),
+#ifdef DEBUG
+    mStyledLinksCleared(false),
+#endif
     mBidiEnabled(false),
     mMathMLEnabled(false),
     mIsInitialDocumentInWindow(false),
@@ -1486,6 +1489,7 @@ nsIDocument::nsIDocument()
     mNeedsReleaseAfterStackRefCntRelease(false),
     mStyleSetFilled(false),
     mSSApplicableStateNotificationPending(false),
+    mMayHaveTitleElement(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -1520,6 +1524,10 @@ nsIDocument::nsIDocument()
     mUserHasActivatedInteraction(false),
     mStackRefCnt(0),
     mUpdateNestLevel(0),
+    mViewportType(Unknown),
+    mSubDocuments(nullptr),
+    mHeaderData(nullptr),
+    mFlashClassification(FlashClassification::Unclassified),
     mServoRestyleRootDirtyBits(0),
     mThrowOnDynamicMarkupInsertionCounter(0),
     mIgnoreOpensDuringUnloadCounter(0)
@@ -1532,10 +1540,6 @@ nsIDocument::nsIDocument()
 
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
-  , mSubDocuments(nullptr)
-  , mFlashClassification(FlashClassification::Unclassified)
-  , mHeaderData(nullptr)
-  , mMayHaveTitleElement(false)
   , mHasWarnedAboutBoxObjects(false)
   , mDelayFrameLoaderInitialization(false)
   , mSynchronousDOMContentLoaded(false)
@@ -1548,13 +1552,9 @@ nsDocument::nsDocument(const char* aContentType)
   , mBoxObjectTable(nullptr)
   , mOnloadBlockCount(0)
   , mAsyncOnloadBlockCount(0)
-#ifdef DEBUG
-  , mStyledLinksCleared(false)
-#endif
   , mPreloadPictureDepth(0)
   , mScrolledToRefAlready(0)
   , mChangeScrollPosWhenScrollingToRef(0)
-  , mViewportType(Unknown)
   , mValidWidth(false)
   , mValidHeight(false)
   , mAutoSize(false)
@@ -2867,7 +2867,7 @@ nsDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
 }
 
 void
-nsDocument::ApplySettingsFromCSP(bool aSpeculative)
+nsIDocument::ApplySettingsFromCSP(bool aSpeculative)
 {
   nsresult rv = NS_OK;
   if (!aSpeculative) {
@@ -2882,7 +2882,7 @@ nsDocument::ApplySettingsFromCSP(bool aSpeculative)
       rv = csp->GetReferrerPolicy(&referrerPolicy, &hasReferrerPolicy);
       NS_ENSURE_SUCCESS_VOID(rv);
       if (hasReferrerPolicy) {
-        mReferrerPolicy = static_cast<ReferrerPolicy>(referrerPolicy);
+        mReferrerPolicy = static_cast<enum ReferrerPolicy>(referrerPolicy);
         mReferrerPolicySet = true;
       }
 
@@ -3082,7 +3082,7 @@ nsDocument::StopDocumentLoad()
 }
 
 void
-nsDocument::SetDocumentURI(nsIURI* aURI)
+nsIDocument::SetDocumentURI(nsIURI* aURI)
 {
   nsCOMPtr<nsIURI> oldBase = GetDocBaseURI();
   mDocumentURI = NS_TryToMakeImmutable(aURI);
@@ -3109,18 +3109,6 @@ nsDocument::SetDocumentURI(nsIURI* aURI)
   if (!equalBases) {
     RefreshLinkHrefs();
   }
-}
-
-void
-nsDocument::SetChromeXHRDocURI(nsIURI* aURI)
-{
-  mChromeXHRDocURI = aURI;
-}
-
-void
-nsDocument::SetChromeXHRDocBaseURI(nsIURI* aURI)
-{
-  mChromeXHRDocBaseURI = aURI;
 }
 
 static void
@@ -3237,7 +3225,7 @@ nsDocument::GetPrincipal()
 extern bool sDisablePrefetchHTTPSPref;
 
 void
-nsDocument::SetPrincipal(nsIPrincipal *aNewPrincipal)
+nsIDocument::SetPrincipal(nsIPrincipal *aNewPrincipal)
 {
   if (aNewPrincipal && mAllowDNSPrefetch && sDisablePrefetchHTTPSPref) {
     nsCOMPtr<nsIURI> uri;
@@ -3360,7 +3348,7 @@ nsDocument::SetContentType(const nsAString& aContentType)
 }
 
 bool
-nsDocument::GetAllowPlugins()
+nsIDocument::GetAllowPlugins()
 {
   // First, we ask our docshell if it allows plugins.
   nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
@@ -3692,7 +3680,7 @@ nsIDocument::GetBaseURI(bool aTryUseXHRDocBaseURI) const
 }
 
 void
-nsDocument::SetBaseURI(nsIURI* aURI)
+nsIDocument::SetBaseURI(nsIURI* aURI)
 {
   if (!aURI && !mDocumentBaseURI) {
     return;
@@ -3737,12 +3725,6 @@ nsIDocument::DefaultStyleAttrURLData()
 }
 
 void
-nsDocument::GetBaseTarget(nsAString &aBaseTarget)
-{
-  aBaseTarget = mBaseTarget;
-}
-
-void
 nsDocument::SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding)
 {
   if (mCharacterSet != aEncoding) {
@@ -3761,7 +3743,7 @@ nsIDocument::GetSandboxFlagsAsString(nsAString& aFlags)
 }
 
 void
-nsDocument::GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const
+nsIDocument::GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const
 {
   aData.Truncate();
   const nsDocHeaderData* data = mHeaderData;
@@ -3776,7 +3758,7 @@ nsDocument::GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const
 }
 
 void
-nsDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData)
+nsIDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData)
 {
   if (!aHeaderField) {
     NS_ERROR("null headerField");
@@ -3867,7 +3849,7 @@ nsDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData)
 
   // Referrer policy spec says to ignore any empty referrer policies.
   if (aHeaderField == nsGkAtoms::referrer && !aData.IsEmpty()) {
-     ReferrerPolicy policy = mozilla::net::ReferrerPolicyFromString(aData);
+     enum ReferrerPolicy policy = mozilla::net::ReferrerPolicyFromString(aData);
     // If policy is not the empty string, then set element's node document's
     // referrer policy to policy
     if (policy != mozilla::net::RP_Unset) {
@@ -3879,7 +3861,7 @@ nsDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData)
   }
 
   if (aHeaderField == nsGkAtoms::headerReferrerPolicy && !aData.IsEmpty()) {
-     ReferrerPolicy policy = nsContentUtils::GetReferrerPolicyFromHeader(aData);
+     enum ReferrerPolicy policy = nsContentUtils::GetReferrerPolicyFromHeader(aData);
     if (policy != mozilla::net::RP_Unset) {
       mReferrerPolicy = policy;
       mReferrerPolicySet = true;
@@ -4108,7 +4090,7 @@ nsDocument::SetAllowPaymentRequest(bool aAllowPaymentRequest)
 }
 
 nsresult
-nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
+nsIDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_UNEXPECTED);
 
@@ -4181,7 +4163,7 @@ nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
 }
 
 nsIDocument*
-nsDocument::GetSubDocumentFor(nsIContent *aContent) const
+nsIDocument::GetSubDocumentFor(nsIContent *aContent) const
 {
   if (mSubDocuments && aContent->IsElement()) {
     auto entry = static_cast<SubDocMapEntry*>
@@ -4196,7 +4178,7 @@ nsDocument::GetSubDocumentFor(nsIContent *aContent) const
 }
 
 Element*
-nsDocument::FindContentForSubDocument(nsIDocument *aDocument) const
+nsIDocument::FindContentForSubDocument(nsIDocument *aDocument) const
 {
   NS_ENSURE_TRUE(aDocument, nullptr);
 
@@ -5101,7 +5083,7 @@ nsDocument::ScriptLoader()
 }
 
 bool
-nsDocument::InternalAllowXULXBL()
+nsIDocument::InternalAllowXULXBL()
 {
   if (nsContentUtils::AllowXULXBLForPrincipal(NodePrincipal())) {
     mAllowXULXBL = eTriTrue;
@@ -5216,13 +5198,13 @@ nsDocument::BeginLoad()
 }
 
 void
-nsDocument::ReportEmptyGetElementByIdArg()
+nsIDocument::ReportEmptyGetElementByIdArg()
 {
   nsContentUtils::ReportEmptyGetElementByIdArg(this);
 }
 
 Element*
-nsDocument::AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
+nsIDocument::AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
                                 void* aData, bool aForImage)
 {
   nsDependentAtomString id(aID);
@@ -5238,7 +5220,7 @@ nsDocument::AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
 }
 
 void
-nsDocument::RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
+nsIDocument::RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
                                    void* aData, bool aForImage)
 {
   nsDependentAtomString id(aID);
@@ -5255,7 +5237,7 @@ nsDocument::RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
 }
 
 void
-nsDocument::MozSetImageElement(const nsAString& aImageElementId,
+nsIDocument::MozSetImageElement(const nsAString& aImageElementId,
                                Element* aElement)
 {
   if (aImageElementId.IsEmpty())
@@ -5265,7 +5247,7 @@ nsDocument::MozSetImageElement(const nsAString& aImageElementId,
   // out to id-observers
   nsAutoScriptBlocker scriptBlocker;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aImageElementId);
+  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aImageElementId);
   if (entry) {
     entry->SetImageElement(aElement);
     if (entry->IsEmpty()) {
@@ -5275,12 +5257,12 @@ nsDocument::MozSetImageElement(const nsAString& aImageElementId,
 }
 
 Element*
-nsDocument::LookupImageElement(const nsAString& aId)
+nsIDocument::LookupImageElement(const nsAString& aId)
 {
   if (aId.IsEmpty())
     return nullptr;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aId);
+  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
   return entry ? entry->GetImageIdElement() : nullptr;
 }
 
@@ -5304,7 +5286,7 @@ nsDocument::DispatchContentLoadedEvents()
   // Dispatch observer notification to notify observers document is interactive.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    nsIPrincipal *principal = GetPrincipal();
+    nsIPrincipal* principal = GetPrincipal();
     os->NotifyObservers(static_cast<nsIDocument*>(this),
                         nsContentUtils::IsSystemPrincipal(principal) ?
                           "chrome-document-interactive" :
@@ -6362,7 +6344,7 @@ nsIDocument::SetBody(nsGenericHTMLElement* newBody, ErrorResult& rv)
 }
 
 Element*
-nsDocument::GetTitleElement()
+nsIDocument::GetTitleElement()
 {
   // mMayHaveTitleElement will have been set to true if any HTML or SVG
   // <title> element has been bound to this document. So if it's false,
@@ -6399,7 +6381,7 @@ nsDocument::GetTitleElement()
 }
 
 void
-nsDocument::GetTitle(nsAString& aTitle)
+nsIDocument::GetTitle(nsAString& aTitle)
 {
   aTitle.Truncate();
 
@@ -6428,7 +6410,7 @@ nsDocument::GetTitle(nsAString& aTitle)
 }
 
 void
-nsDocument::SetTitle(const nsAString& aTitle, ErrorResult& aRv)
+nsIDocument::SetTitle(const nsAString& aTitle, ErrorResult& aRv)
 {
   Element* rootElement = GetRootElement();
   if (!rootElement) {
@@ -6486,7 +6468,7 @@ nsDocument::SetTitle(const nsAString& aTitle, ErrorResult& aRv)
 }
 
 void
-nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
+nsIDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
 {
   NS_ASSERTION(!mInUnlinkOrDeletion || !aBoundTitleElement,
                "Setting a title while unlinking or destroying the element?");
@@ -6501,10 +6483,10 @@ nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
     return;
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  RefPtr<nsRunnableMethod<nsDocument, void, false>> event =
-    NewNonOwningRunnableMethod("nsDocument::DoNotifyPossibleTitleChange",
+  RefPtr<nsRunnableMethod<nsIDocument, void, false>> event =
+    NewNonOwningRunnableMethod("nsIDocument::DoNotifyPossibleTitleChange",
                                this,
-                               &nsDocument::DoNotifyPossibleTitleChange);
+                               &nsIDocument::DoNotifyPossibleTitleChange);
   nsresult rv = Dispatch(TaskCategory::Other, do_AddRef(event));
   if (NS_SUCCEEDED(rv)) {
     mPendingTitleChangeEvent = Move(event);
@@ -6512,7 +6494,7 @@ nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
 }
 
 void
-nsDocument::DoNotifyPossibleTitleChange()
+nsIDocument::DoNotifyPossibleTitleChange()
 {
   mPendingTitleChangeEvent.Forget();
   mHaveFiredTitleChange = true;
@@ -8793,30 +8775,6 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
 }
 
 void
-nsDocument::AddStyleRelevantLink(Link* aLink)
-{
-  NS_ASSERTION(aLink, "Passing in a null link.  Expect crashes RSN!");
-#ifdef DEBUG
-  nsPtrHashKey<Link>* entry = mStyledLinks.GetEntry(aLink);
-  NS_ASSERTION(!entry, "Document already knows about this Link!");
-  mStyledLinksCleared = false;
-#endif
-  (void)mStyledLinks.PutEntry(aLink);
-}
-
-void
-nsDocument::ForgetLink(Link* aLink)
-{
-  NS_ASSERTION(aLink, "Passing in a null link.  Expect crashes RSN!");
-#ifdef DEBUG
-  nsPtrHashKey<Link>* entry = mStyledLinks.GetEntry(aLink);
-  NS_ASSERTION(entry || mStyledLinksCleared,
-               "Document knows nothing about this Link!");
-#endif
-  mStyledLinks.RemoveEntry(aLink);
-}
-
-void
 nsDocument::DestroyElementMaps()
 {
 #ifdef DEBUG
@@ -8828,7 +8786,7 @@ nsDocument::DestroyElementMaps()
 }
 
 void
-nsDocument::RefreshLinkHrefs()
+nsIDocument::RefreshLinkHrefs()
 {
   // Get a list of all links we know about.  We will reset them, which will
   // remove them from the document, so we need a copy of what is in the
@@ -12868,10 +12826,10 @@ nsIDocument::GetSameTypeParentDocument()
  * toolkit/components/url-classifier/flash-block-lists.rst
  */
 FlashClassification
-nsDocument::PrincipalFlashClassification()
+nsIDocument::PrincipalFlashClassification()
 {
   MOZ_ASSERT(mPrincipalFlashClassifier);
-  return mPrincipalFlashClassifier->ClassifyMaybeSync(GetPrincipal(),
+  return mPrincipalFlashClassifier->ClassifyMaybeSync(NodePrincipal(),
                                                       IsThirdParty());
 }
 
@@ -13272,7 +13230,7 @@ PrincipalFlashClassifier::AsyncClassifyInternal(nsIPrincipal* aPrincipal)
 }
 
 FlashClassification
-nsDocument::ComputeFlashClassification()
+nsIDocument::ComputeFlashClassification()
 {
   nsCOMPtr<nsIDocShellTreeItem> current = this->GetDocShell();
   if (!current) {
@@ -13321,7 +13279,7 @@ nsDocument::ComputeFlashClassification()
  * This function will NOT return FlashClassification::Unclassified
  */
 FlashClassification
-nsDocument::DocumentFlashClassification()
+nsIDocument::DocumentFlashClassification()
 {
   if (mFlashClassification == FlashClassification::Unclassified) {
     FlashClassification result = ComputeFlashClassification();
@@ -13349,7 +13307,7 @@ nsDocument::DocumentFlashClassification()
  * it will be assumed to be Third-Party for security reasons.
  */
 bool
-nsDocument::IsThirdParty()
+nsIDocument::IsThirdParty()
 {
   if (mIsThirdParty.isSome()) {
     return mIsThirdParty.value();
@@ -13384,7 +13342,7 @@ nsDocument::IsThirdParty()
     return mIsThirdParty.value();
   }
 
-  nsCOMPtr<nsIPrincipal> principal = GetPrincipal();
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(parentDocument,
                                                              &rv);
   if (NS_WARN_IF(NS_FAILED(rv) || !sop)) {

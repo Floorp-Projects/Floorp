@@ -129,24 +129,6 @@ public:
 } // namespace dom
 } // namespace mozilla
 
-class nsDocHeaderData
-{
-public:
-  nsDocHeaderData(nsAtom* aField, const nsAString& aData)
-    : mField(aField), mData(aData), mNext(nullptr)
-  {
-  }
-
-  ~nsDocHeaderData(void)
-  {
-    delete mNext;
-  }
-
-  RefPtr<nsAtom> mField;
-  nsString          mData;
-  nsDocHeaderData*  mNext;
-};
-
 class nsOnloadBlocker final : public nsIRequest
 {
 public:
@@ -315,9 +297,6 @@ protected:
   bool mHaveShutDown;
 };
 
-// For classifying a flash document based on its principal.
-class PrincipalFlashClassifier;
-
 // Base class for our document implementations.
 class nsDocument : public nsIDocument,
                    public nsIDOMDocument,
@@ -356,32 +335,10 @@ public:
 
   virtual void StopDocumentLoad() override;
 
-  virtual void NotifyPossibleTitleChange(bool aBoundTitleElement) override;
-
-  virtual void SetDocumentURI(nsIURI* aURI) override;
-
-  virtual void SetChromeXHRDocURI(nsIURI* aURI) override;
-
-  virtual void SetChromeXHRDocBaseURI(nsIURI* aURI) override;
-
-  virtual void ApplySettingsFromCSP(bool aSpeculative) override;
-
-  /**
-   * Set the principal responsible for this document.
-   */
-  virtual void SetPrincipal(nsIPrincipal *aPrincipal) override;
-
   /**
    * Set the Content-Type of this document.
    */
   virtual void SetContentType(const nsAString& aContentType) override;
-
-  virtual void SetBaseURI(nsIURI* aURI) override;
-
-  /**
-   * Get/Set the base target of a link in a document.
-   */
-  virtual void GetBaseTarget(nsAString &aBaseTarget) override;
 
   /**
    * Set the document's character encoding. This will
@@ -389,19 +346,6 @@ public:
    */
   virtual void
     SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) override;
-
-  virtual Element* AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
-                                       void* aData, bool aForImage) override;
-  virtual void RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
-                                      void* aData, bool aForImage) override;
-
-  /**
-   * Access HTTP header data (this may also get set from other sources, like
-   * HTML META tags).
-   */
-  virtual void GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const override;
-  virtual void SetHeaderData(nsAtom* aheaderField,
-                             const nsAString& aData) override;
 
   /**
    * Create a new presentation shell that will use aContext for
@@ -413,8 +357,6 @@ public:
                                              mozilla::StyleSetHandle aStyleSet)
     final;
   virtual void DeleteShell() override;
-
-  virtual bool GetAllowPlugins() override;
 
   static bool CallerIsTrustedAboutPage(JSContext* aCx, JSObject* aObject);
   static bool IsElementAnimateEnabled(JSContext* aCx, JSObject* aObject);
@@ -428,10 +370,6 @@ public:
     return mTimelines;
   }
 
-  virtual nsresult SetSubDocumentFor(Element* aContent,
-                                     nsIDocument* aSubDoc) override;
-  virtual nsIDocument* GetSubDocumentFor(nsIContent* aContent) const override;
-  virtual Element* FindContentForSubDocument(nsIDocument *aDocument) const override;
   virtual Element* GetRootElementInternal() const override;
 
   virtual nsIChannel* GetChannel() const override {
@@ -615,9 +553,6 @@ public:
   virtual void BlockOnload() override;
   virtual void UnblockOnload(bool aFireSync) override;
 
-  virtual void AddStyleRelevantLink(mozilla::dom::Link* aLink) override;
-  virtual void ForgetLink(mozilla::dom::Link* aLink) override;
-
   virtual void ClearBoxObjectFor(nsIContent* aContent) override;
 
   virtual already_AddRefed<mozilla::dom::BoxObject>
@@ -676,8 +611,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
                                                                    nsIDocument)
 
-  void DoNotifyPossibleTitleChange();
-
   nsExternalResourceMap& ExternalResourceMap()
   {
     return mExternalResourceMap;
@@ -733,10 +666,6 @@ public:
   virtual void ScrollToRef() override;
   virtual void ResetScrolledToRefAlready() override;
   virtual void SetChangeScrollPosWhenScrollingToRef(bool aValue) override;
-
-  virtual Element* LookupImageElement(const nsAString& aElementId) override;
-  virtual void MozSetImageElement(const nsAString& aImageElementId,
-                                  Element* aElement) override;
 
   // AddPlugin adds a plugin-related element to mPlugins when the element is
   // added to the tree.
@@ -878,22 +807,6 @@ public:
 protected:
   friend class nsNodeUtils;
 
-  /**
-   * Check that aId is not empty and log a message to the console
-   * service if it is.
-   * @returns true if aId looks correct, false otherwise.
-   */
-  inline bool CheckGetElementByIdArg(const nsAString& aId)
-  {
-    if (aId.IsEmpty()) {
-      ReportEmptyGetElementByIdArg();
-      return false;
-    }
-    return true;
-  }
-
-  void ReportEmptyGetElementByIdArg();
-
   void DispatchContentLoadedEvents();
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
@@ -907,26 +820,10 @@ protected:
   // That will stop us from doing a lot of work as each element is removed.
   void DestroyElementMaps();
 
-  // Refreshes the hrefs of all the links in the document.
-  void RefreshLinkHrefs();
-
   nsIContent* GetFirstBaseNodeWithHref();
   nsresult SetFirstBaseNodeWithHref(nsIContent *node);
 
-  /**
-   * Returns the title element of the document as defined by the HTML
-   * specification, or null if there isn't one.  For documents whose root
-   * element is an <svg:svg>, this is the first <svg:title> element that's a
-   * child of the root.  For other documents, it's the first HTML title element
-   * in the document.
-   */
-  Element* GetTitleElement();
-
 public:
-  // Get our title
-  virtual void GetTitle(nsAString& aTitle) override;
-  // Set our title
-  virtual void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv) override;
 
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
@@ -942,12 +839,8 @@ protected:
 
   virtual nsPIDOMWindowOuter* GetWindowInternal() const override;
   virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const override;
-  virtual bool InternalAllowXULXBL() override;
 
   void UpdateScreenOrientation();
-
-  virtual mozilla::dom::FlashClassification DocumentFlashClassification() override;
-  virtual bool IsThirdParty() override;
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_) do {                     \
     NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
@@ -972,16 +865,6 @@ protected:
   // events. It returns false if the fullscreen element ready check
   // fails and nothing gets changed.
   bool ApplyFullscreen(const FullscreenRequest& aRequest);
-
-  // Retrieves the classification of the Flash plugins in the document based on
-  // the classification lists.
-  mozilla::dom::FlashClassification PrincipalFlashClassification();
-
-  // Attempts to determine the Flash classification of this page based on the
-  // the classification lists and the classification of parent documents.
-  mozilla::dom::FlashClassification ComputeFlashClassification();
-
-  PLDHashTable *mSubDocuments;
 
   // Array of owning references to all children
   nsAttrAndChildArray mChildren;
@@ -1008,25 +891,14 @@ protected:
   // non-null when this document is in fullscreen mode.
   nsWeakPtr mFullscreenRoot;
 
-  RefPtr<PrincipalFlashClassifier> mPrincipalFlashClassifier;
-  mozilla::dom::FlashClassification mFlashClassification;
-  // Do not use this value directly. Call the |IsThirdParty()| method, which
-  // caches its result here.
-  mozilla::Maybe<bool> mIsThirdParty;
-
 public:
   RefPtr<mozilla::EventListenerManager> mListenerManager;
   RefPtr<mozilla::dom::ScriptLoader> mScriptLoader;
-  nsDocHeaderData* mHeaderData;
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
   // Recorded time of change to 'loading' state.
   mozilla::TimeStamp mLoadingTimeStamp;
-
-  // True if this document has ever had an HTML or SVG <title> element
-  // bound to it
-  bool mMayHaveTitleElement:1;
 
   bool mHasWarnedAboutBoxObjects:1;
 
@@ -1103,15 +975,6 @@ private:
   uint32_t mAsyncOnloadBlockCount;
   nsCOMPtr<nsIRequest> mOnloadBlocker;
 
-  // A hashtable of styled links keyed by address pointer.
-  nsTHashtable<nsPtrHashKey<mozilla::dom::Link> > mStyledLinks;
-#ifdef DEBUG
-  // Indicates whether mStyledLinks was cleared or not.  This is used to track
-  // state so we can provide useful assertions to consumers of ForgetLink and
-  // AddStyleRelevantLink.
-  bool mStyledLinksCleared;
-#endif
-
   // A set of responsive images keyed by address pointer.
   nsTHashtable< nsPtrHashKey<nsIContent> > mResponsiveContent;
 
@@ -1120,9 +983,6 @@ private:
   RefPtr<nsRunnableMethod<nsDocument> > mFrameLoaderRunner;
 
   nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
-
-  nsRevocableEventPtr<nsRunnableMethod<nsDocument, void, false> >
-    mPendingTitleChangeEvent;
 
   nsExternalResourceMap mExternalResourceMap;
 
@@ -1135,7 +995,7 @@ private:
   // A list of preconnects initiated by the preloader. This prevents
   // the same uri from being used more than once, and allows the dom
   // builder to not repeat the work of the preloader.
-  nsDataHashtable< nsURIHashKey, bool> mPreloadedPreconnects;
+  nsDataHashtable<nsURIHashKey, bool> mPreloadedPreconnects;
 
   // Current depth of picture elements from parser
   int32_t mPreloadPictureDepth;
@@ -1158,14 +1018,6 @@ private:
 
   RefPtr<mozilla::dom::DocumentTimeline> mDocumentTimeline;
   mozilla::LinkedList<mozilla::dom::DocumentTimeline> mTimelines;
-
-  enum ViewportType {
-    DisplayWidthHeight,
-    Specified,
-    Unknown
-  };
-
-  ViewportType mViewportType;
 
   // These member variables cache information about the viewport so we don't have to
   // recalculate it each time.
