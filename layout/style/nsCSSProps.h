@@ -14,7 +14,7 @@
 
 #include <limits>
 #include <type_traits>
-#include "nsString.h"
+#include "nsStringFwd.h"
 #include "nsCSSPropertyID.h"
 #include "nsStyleStructFwd.h"
 #include "nsCSSKeywords.h"

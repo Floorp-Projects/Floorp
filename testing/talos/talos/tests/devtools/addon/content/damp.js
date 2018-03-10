@@ -844,6 +844,15 @@ async _consoleOpenWithCachedMessagesTest() {
     test.done();
   },
 
+  async exportHar(label, toolbox) {
+    let test = this.runTest(label + ".exportHar");
+
+    // Export HAR from the Network panel.
+    await toolbox.getHARFromNetMonitor();
+
+    test.done();
+  },
+
   async _coldInspectorOpen() {
     await this.testSetup(SIMPLE_URL);
     await this.openToolboxAndLog("cold.inspector", "inspector");
@@ -1133,6 +1142,7 @@ async _consoleOpenWithCachedMessagesTest() {
         const requestsDone = this.waitForNetworkRequests(label + ".netmonitor", toolbox, expectedRequests);
         await this.reloadPageAndLog(label + ".netmonitor", toolbox);
         await requestsDone;
+        await this.exportHar(label + ".netmonitor", toolbox);
         await this.closeToolboxAndLog(label + ".netmonitor", toolbox);
         await this.testTeardown();
       },

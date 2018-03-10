@@ -272,24 +272,27 @@ public:
      */
 private:
     nsCOMPtr<nsPIDOMWindowOuter> mDOMWindow;
+    bool mIsReady{false};
 
 public:
     // Create and attach a window.
     static void Open(const jni::Class::LocalRef& aCls,
                      GeckoSession::Window::Param aWindow,
+                     jni::Object::Param aQueue,
                      jni::Object::Param aCompositor,
                      jni::Object::Param aDispatcher,
                      jni::Object::Param aSettings,
+                     jni::String::Param aId,
                      jni::String::Param aChromeURI,
                      int32_t aScreenId,
-                     bool aPrivateMode,
-                     jni::String::Param aId);
+                     bool aPrivateMode);
 
     // Close and destroy the nsWindow.
     void Close();
 
     // Transfer this nsWindow to new GeckoSession objects.
     void Transfer(const GeckoSession::Window::LocalRef& inst,
+                  jni::Object::Param aQueue,
                   jni::Object::Param aCompositor,
                   jni::Object::Param aDispatcher,
                   jni::Object::Param aSettings);
@@ -298,7 +301,7 @@ public:
                         jni::Object::Param aEditableParent,
                         jni::Object::Param aEditableChild);
 
-    void EnableEventDispatcher();
+    void OnReady(jni::Object::Param aQueue = nullptr);
 };
 
 /**
@@ -1156,13 +1159,14 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
 /* static */ void
 nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  GeckoSession::Window::Param aWindow,
+                                 jni::Object::Param aQueue,
                                  jni::Object::Param aCompositor,
                                  jni::Object::Param aDispatcher,
                                  jni::Object::Param aSettings,
+                                 jni::String::Param aId,
                                  jni::String::Param aChromeURI,
                                  int32_t aScreenId,
-                                 bool aPrivateMode,
-                                 jni::String::Param aId)
+                                 bool aPrivateMode)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1213,7 +1217,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
 
     // Attach other session support objects.
     window->mGeckoViewSupport->Transfer(
-            sessionWindow, aCompositor, aDispatcher, aSettings);
+            sessionWindow, aQueue, aCompositor, aDispatcher, aSettings);
 
     if (window->mWidgetListener) {
         nsCOMPtr<nsIXULWindow> xulWindow(
@@ -1244,6 +1248,7 @@ nsWindow::GeckoViewSupport::Close()
 
 void
 nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
+                                     jni::Object::Param aQueue,
                                      jni::Object::Param aCompositor,
                                      jni::Object::Param aDispatcher,
                                      jni::Object::Param aSettings)
@@ -1266,7 +1271,9 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
             java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
     window.mAndroidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
 
-    inst->OnTransfer(aDispatcher);
+    if (mIsReady) {
+        OnReady(aQueue);
+    }
 
     DispatchToUiThread(
             "GeckoViewSupport::Transfer",
@@ -1487,12 +1494,12 @@ nsWindow::GetRootLayerId() const
 }
 
 void
-nsWindow::EnableEventDispatcher()
+nsWindow::OnGeckoViewReady()
 {
     if (!mGeckoViewSupport) {
         return;
     }
-    mGeckoViewSupport->EnableEventDispatcher();
+    mGeckoViewSupport->OnReady();
 }
 
 void
@@ -2045,12 +2052,13 @@ nsWindow::GetEventTimeStamp(int64_t aEventTime)
 }
 
 void
-nsWindow::GeckoViewSupport::EnableEventDispatcher()
+nsWindow::GeckoViewSupport::OnReady(jni::Object::Param aQueue)
 {
     if (!mGeckoViewWindow) {
         return;
     }
-    mGeckoViewWindow->OnReady();
+    mGeckoViewWindow->OnReady(aQueue);
+    mIsReady = true;
 }
 
 void

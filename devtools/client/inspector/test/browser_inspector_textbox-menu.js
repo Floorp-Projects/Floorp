@@ -6,6 +6,11 @@
 // Test that when right-clicking on various text boxes throughout the inspector does use
 // the toolbox's context menu (copy/cut/paste/selectAll/Undo).
 
+// There are shutdown issues for which multiple rejections are left uncaught.
+// See bug 1018184 for resolving these issues.
+const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
+PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
+
 add_task(function* () {
   yield addTab(`data:text/html;charset=utf-8,
                 <style>h1 { color: red; }</style>
