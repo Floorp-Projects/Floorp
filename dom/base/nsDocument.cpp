@@ -4077,18 +4077,6 @@ SubDocInitEntry(PLDHashEntryHdr *entry, const void *key)
   e->mSubDocument = nullptr;
 }
 
-bool
-nsDocument::AllowPaymentRequest() const
-{
-  return mAllowPaymentRequest;
-}
-
-void
-nsDocument::SetAllowPaymentRequest(bool aAllowPaymentRequest)
-{
-  mAllowPaymentRequest = aAllowPaymentRequest;
-}
-
 nsresult
 nsIDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
 {

@@ -752,9 +752,6 @@ public:
   // DOM-exposed fullscreen API
   bool FullscreenEnabled(mozilla::dom::CallerType aCallerType) override;
 
-  virtual bool AllowPaymentRequest() const override;
-  virtual void SetAllowPaymentRequest(bool aIsAllowPaymentRequest) override;
-
   void RequestPointerLock(Element* aElement,
                           mozilla::dom::CallerType aCallerType) override;
   bool SetPointerLock(Element* aElement, int aCursorStyle);
