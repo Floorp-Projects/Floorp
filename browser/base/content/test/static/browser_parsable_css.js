@@ -116,6 +116,8 @@ let propNameWhitelist = [
   // dimensions, which is why they are not referenced by CSS.
   {propName: "--clickToPlay-width",
    isFromDevTools: false},
+  {propName: "--playButton-width",
+   isFromDevTools: false},
   {propName: "--muteButton-width",
    isFromDevTools: false},
   {propName: "--castingButton-width",

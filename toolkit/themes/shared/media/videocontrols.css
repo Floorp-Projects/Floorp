@@ -23,6 +23,21 @@ audio > xul|videocontrols {
 
 .controlsContainer {
   --clickToPlay-size: 48px;
+  --button-size: 30px;
+  --timer-size: 40px;
+  --timer-long-size: 60px;
+  --track-size: 5px;
+  --thumb-size: 13px;
+  --label-font-size: 13px;
+}
+.controlsContainer.touch {
+  --clickToPlay-size: 64px;
+  --button-size: 40px;
+  --timer-size: 52px;
+  --timer-long-size: 78px;
+  --track-size: 7px;
+  --thumb-size: 16px;
+  --label-font-size: 16px;
 }
 
 /* Some CSS custom properties defined here are referenced by videocontrols.xml in JavaScript */
@@ -30,18 +45,24 @@ audio > xul|videocontrols {
   /* Do not delete: these variables are accessed by JavaScript directly.
      see videocontrols.xml and search for |-width|. */
   --clickToPlay-width: var(--clickToPlay-size);
-  --playButton-width: 30px;
-  --playButton-height: var(--playButton-width);
+  --playButton-width: var(--button-size);
   --scrubberStack-width: 64px;
-  --muteButton-width: 30px;
+  --muteButton-width: var(--button-size);
   --volumeStack-width: 48px;
-  --castingButton-width: 30px;
-  --closedCaptionButton-width: 30px;
-  --fullscreenButton-width: 30px;
-  --positionDurationBox-width: 40px;
-  --durationSpan-width: 40px;
-  --positionDurationBox-width-long: 60px;
-  --durationSpan-width-long: 60px;
+  --castingButton-width: var(--button-size);
+  --closedCaptionButton-width: var(--button-size);
+  --fullscreenButton-width: var(--button-size);
+  --positionDurationBox-width: var(--timer-size);
+  --durationSpan-width: var(--timer-size);
+  --positionDurationBox-width-long: var(--timer-long-size);
+  --durationSpan-width-long: var(--timer-long-size);
+}
+
+.touch .controlBar {
+  /* Do not delete: these variables are accessed by JavaScript directly.
+     see videocontrols.xml and search for |-width|. */
+  --scrubberStack-width: 84px;
+  --volumeStack-width: 64px;
 }
 
 .controlsContainer [hidden="true"],
@@ -106,14 +127,14 @@ audio > xul|videocontrols {
   background-color: rgba(26,26,26,.8);
 }
 
-.playButton,
-.muteButton,
-.castingButton,
-.closedCaptionButton,
-.fullscreenButton {
+.touch .controlBar {
+  height: 52px;
+}
+
+.controlBar > .button {
   height: 100%;
-  min-width: var(--playButton-width);
-  min-height: var(--playButton-height);
+  min-width: var(--button-size);
+  min-height: var(--button-size);
   padding: 6px;
   border: 0;
   margin: 0;
@@ -126,19 +147,15 @@ audio > xul|videocontrols {
   fill: #ffffff;
 }
 
-.playButton:hover,
-.muteButton:hover,
-.castingButton:hover,
-.closedCaptionButton:hover,
-.fullscreenButton:hover {
+.touch .controlBar > .button {
+  background-size: 24px 24px;
+}
+
+.controlBar > .button:hover {
   fill: #48a0f7;
 }
 
-.playButton:hover:active,
-.muteButton:hover:active,
-.castingButton:hover:active,
-.closedCaptionButton:hover:active,
-.fullscreenButton:hover:active {
+.controlBar > .button:hover:active {
   fill: #2d89e6;
 }
 
@@ -193,8 +210,8 @@ audio > xul|videocontrols {
 
 .volumeControl::-moz-range-thumb,
 .scrubber::-moz-range-thumb {
-  height: 13px;
-  width: 13px;
+  height: var(--thumb-size);
+  width: var(--thumb-size);
   border: none;
   border-radius: 50%;
   background-color: #ffffff;
@@ -216,7 +233,7 @@ audio > xul|videocontrols {
 .progressStack {
   position: relative;
   width: 100%;
-  height: 5px;
+  height: var(--track-size);
 }
 
 .scrubberStack {
@@ -249,7 +266,7 @@ audio > xul|videocontrols {
   height: 100%;
   padding: 0;
   border: 0;
-  border-radius: 2.5px;
+  border-radius: calc(var(--track-size) / 2);
   margin: 0;
   background: none;
   background-color: transparent;
@@ -267,7 +284,7 @@ audio > xul|videocontrols {
   padding: 0;
   margin: 0;
   border: 0;
-  border-radius: 2.5px;
+  border-radius: calc(var(--track-size) / 2);
   background: none;
 }
 
@@ -288,8 +305,8 @@ audio > xul|videocontrols {
 
 .volumeControl::-moz-range-progress,
 .volumeControl::-moz-range-track {
-  height: 5px;
-  border-radius: 2.5px;
+  height: var(--track-size);
+  border-radius: calc(var(--track-size) / 2);
 }
 
 .volumeControl::-moz-range-progress {
@@ -303,7 +320,7 @@ audio > xul|videocontrols {
 
 .bufferBar::-moz-progress-bar {
   background-color: rgba(255,255,255,0.3);
-  border-radius: 2.5px;
+  border-radius: calc(var(--track-size) / 2);
 }
 
 .progressBar::-moz-progress-bar {
@@ -319,15 +336,19 @@ audio > xul|videocontrols {
   border-radius: 2.5px;
   padding: 5px 0;
   vertical-align: middle;
-  font-size: 12px;
   background-color: #000000;
   opacity: 0.7;
+}
+
+.touch .textTrackList {
+  bottom: 58px;
 }
 
 .textTrackList > .textTrackItem {
   display: block;
   width: 100%;
-  height: 30px;
+  height: var(--button-size);
+  font-size: var(--label-font-size);
   padding: 2px 10px;
   border: none;
   margin: 0;
@@ -358,7 +379,7 @@ audio > xul|videocontrols {
   padding-inline-end: 9px;
   white-space: nowrap;
   font: message-box;
-  font-size: 13px;
+  font-size: var(--label-font-size);
   font-size-adjust: 0.55;
   color: #ffffff;
 }

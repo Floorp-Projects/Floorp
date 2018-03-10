@@ -33,11 +33,13 @@
   const videoElems = [...document.getElementsByTagName("video")];
   const testCases = [];
 
-  const buttonWidth = 30;
-  const minSrubberWidth = 48;
-  const minControlBarHeight = 40;
-  const minControlBarWidth = 48;
-  const minClickToPlaySize = 48;
+  const isTouchControl = navigator.appVersion.includes("Android");
+
+  const buttonWidth = isTouchControl ? 40 : 30;
+  const minSrubberWidth = isTouchControl ? 64 : 48;
+  const minControlBarHeight = isTouchControl ? 52 : 40;
+  const minControlBarWidth = isTouchControl ? 58 : 48;
+  const minClickToPlaySize = isTouchControl ? 64 : 48;
 
   function getElementName(elem) {
     return elem.getAttribute("anonid") || elem.getAttribute("class");
