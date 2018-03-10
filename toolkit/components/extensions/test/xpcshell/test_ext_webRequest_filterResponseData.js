@@ -125,7 +125,4 @@ add_task(async function() {
   extension.sendMessage("done");
   await extension.awaitFinish("stream-filter");
   await extension.unload();
-
-  ChromeUtils.import("resource://gre/modules/Timer.jsm");
-  await new Promise(resolve => setTimeout(resolve, 100));
 });
