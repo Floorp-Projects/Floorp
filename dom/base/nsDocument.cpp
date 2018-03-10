@@ -4971,7 +4971,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   // doing the initial document load and don't want to fire the event for this
   // change.
   dom::VisibilityState oldState = mVisibilityState;
-  mVisibilityState = GetVisibilityState();
+  mVisibilityState = ComputeVisibilityState();
   // When the visibility is changed, notify it to observers.
   // Some observers need the notification, for example HTMLMediaElement uses
   // it to update internal media resource allocation.
@@ -11816,10 +11816,10 @@ nsIDocument::UnlockPointer(nsIDocument* aDoc)
 }
 
 void
-nsDocument::UpdateVisibilityState()
+nsIDocument::UpdateVisibilityState()
 {
   dom::VisibilityState oldState = mVisibilityState;
-  mVisibilityState = GetVisibilityState();
+  mVisibilityState = ComputeVisibilityState();
   if (oldState != mVisibilityState) {
     nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
                                          NS_LITERAL_STRING("visibilitychange"),
@@ -11834,7 +11834,7 @@ nsDocument::UpdateVisibilityState()
 }
 
 VisibilityState
-nsDocument::GetVisibilityState() const
+nsIDocument::ComputeVisibilityState() const
 {
   // We have to check a few pieces of information here:
   // 1)  Are we in bfcache (!IsVisible())?  If so, nothing else matters.
@@ -11851,18 +11851,18 @@ nsDocument::GetVisibilityState() const
   return dom::VisibilityState::Visible;
 }
 
-/* virtual */ void
-nsDocument::PostVisibilityUpdateEvent()
+void
+nsIDocument::PostVisibilityUpdateEvent()
 {
   nsCOMPtr<nsIRunnable> event =
-    NewRunnableMethod("nsDocument::UpdateVisibilityState",
+    NewRunnableMethod("nsIDocument::UpdateVisibilityState",
                       this,
-                      &nsDocument::UpdateVisibilityState);
+                      &nsIDocument::UpdateVisibilityState);
   Dispatch(TaskCategory::Other, event.forget());
 }
 
 void
-nsDocument::MaybeActiveMediaComponents()
+nsIDocument::MaybeActiveMediaComponents()
 {
   if (!mWindow) {
     return;
