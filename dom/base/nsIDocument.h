@@ -1899,7 +1899,7 @@ public:
     return IsXULDocument() || AllowXULXBL();
   }
 
-  virtual bool IsScriptEnabled() = 0;
+  bool IsScriptEnabled();
 
   bool IsTopLevelContentDocument() const { return mIsTopLevelContentDocument; }
   void SetIsTopLevelContentDocument(bool aIsTopLevelContentDocument)
