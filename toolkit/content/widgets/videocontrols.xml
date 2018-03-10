@@ -39,7 +39,7 @@
         </div>
         <div anonid="controlBar" class="controlBar" hidden="true">
           <button anonid="playButton"
-                  class="playButton"
+                  class="button playButton"
                   playlabel="&playButton.playLabel;"
                   pauselabel="&playButton.pauseLabel;"
                   tabindex="-1"/>
@@ -59,18 +59,18 @@
           </span>
           <div anonid="controlBarSpacer" class="controlBarSpacer" hidden="true" role="none"></div>
           <button anonid="muteButton"
-                  class="muteButton"
+                  class="button muteButton"
                   mutelabel="&muteButton.muteLabel;"
                   unmutelabel="&muteButton.unmuteLabel;"
                   tabindex="-1"/>
           <div anonid="volumeStack" class="volumeStack progressContainer" role="none">
             <input type="range" anonid="volumeControl" class="volumeControl" min="0" max="100" step="1" tabindex="-1"/>
           </div>
-          <button anonid="castingButton" class="castingButton"
+          <button anonid="castingButton" class="button castingButton"
                   aria-label="&castingButton.castingLabel;"/>
-          <button anonid="closedCaptionButton" class="closedCaptionButton"/>
+          <button anonid="closedCaptionButton" class="button closedCaptionButton"/>
           <button anonid="fullscreenButton"
-                  class="fullscreenButton"
+                  class="button fullscreenButton"
                   enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
                   exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
         </div>
@@ -1703,6 +1703,12 @@
           this.durationSpan = this.positionDurationBox.getElementsByTagName("span")[0];
         }
 
+        this.videocontrols.isTouchControls =
+          navigator.appVersion.includes("Android");
+        if (this.videocontrols.isTouchControls) {
+          this.controlsContainer.classList.add("touch");
+        }
+
         this.controlBarComputedStyles = getComputedStyle(this.controlBar);
 
         // Hide and show control in certain order.
@@ -1718,8 +1724,6 @@
           this.volumeStack
         ];
 
-        this.videocontrols.isTouchControls =
-          navigator.appVersion.includes("Android");
         this.isAudioOnly = (this.video instanceof HTMLAudioElement);
         this.setupInitialState();
         this.setupNewLoadState();
@@ -2025,7 +2029,7 @@
       handleEvent(aEvent) {
         // If the binding is detached (or has been replaced by a
         // newer instance of the binding), nuke our event-listeners.
-        if (this.binding.randomID != this.randomID) {
+        if (this.videocontrols.randomID != this.randomID) {
           this.terminateEventListeners();
           return;
         }
@@ -2041,7 +2045,7 @@
       },
 
       blockedVideoHandler() {
-        if (this.binding.randomID != this.randomID) {
+        if (this.videocontrols.randomID != this.randomID) {
           this.terminateEventListeners();
           return;
         } else if (this.hasError()) {
@@ -2052,7 +2056,7 @@
       },
 
       clickToPlayClickHandler(e) {
-        if (this.binding.randomID != this.randomID) {
+        if (this.videocontrols.randomID != this.randomID) {
           this.terminateEventListeners();
           return;
         } else if (e.button != 0) {
@@ -2064,12 +2068,19 @@
       },
 
       init(binding) {
-        this.binding = binding;
+        this.videocontrols = binding;
         this.randomID = Math.random();
-        this.binding.randomID = this.randomID;
+        this.videocontrols.randomID = this.randomID;
         this.video = binding.parentNode;
+        this.controlsContainer = document.getAnonymousElementByAttribute(binding, "anonid", "controlsContainer");
         this.clickToPlay       = document.getAnonymousElementByAttribute(binding, "anonid", "clickToPlay");
         this.noControlsOverlay = document.getAnonymousElementByAttribute(binding, "anonid", "controlsContainer");
+
+        this.videocontrols.isTouchControls =
+          navigator.appVersion.includes("Android");
+        if (this.videocontrols.isTouchControls) {
+          this.controlsContainer.classList.add("touch");
+        }
 
         let self = this;
         function addListener(elem, eventName, func) {
