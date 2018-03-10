@@ -1611,7 +1611,7 @@ public:
   /**
    * Returns all elements in the fullscreen stack in the insertion order.
    */
-  virtual nsTArray<Element*> GetFullscreenStack() const = 0;
+  nsTArray<Element*> GetFullscreenStack() const;
 
   /**
    * Asynchronously requests that the document make aElement the fullscreen
@@ -1624,8 +1624,29 @@ public:
    * the <iframe> or <browser> that contains this document is also mode
    * fullscreen. This happens recursively in all ancestor documents.
    */
-  virtual void AsyncRequestFullScreen(
-    mozilla::UniquePtr<FullscreenRequest>&& aRequest) = 0;
+  void AsyncRequestFullScreen(mozilla::UniquePtr<FullscreenRequest>&&);
+
+  // Do the "fullscreen element ready check" from the fullscreen spec.
+  // It returns true if the given element is allowed to go into fullscreen.
+  bool FullscreenElementReadyCheck(Element* aElement, bool aWasCallerChrome);
+
+  // This is called asynchronously by nsIDocument::AsyncRequestFullScreen()
+  // to move this document into full-screen mode if allowed.
+  void RequestFullScreen(mozilla::UniquePtr<FullscreenRequest>&& aRequest);
+
+  // Removes all elements from the full-screen stack, removing full-scren
+  // styles from the top element in the stack.
+  void CleanupFullscreenState();
+
+  // Pushes aElement onto the full-screen stack, and removes full-screen styles
+  // from the former full-screen stack top, and its ancestors, and applies the
+  // styles to aElement. aElement becomes the new "full-screen element".
+  bool FullScreenStackPush(Element* aElement);
+
+  // Remove the top element from the full-screen stack. Removes the full-screen
+  // styles from the former top element, and applies them to the new top
+  // element, if there is one.
+  void FullScreenStackPop();
 
   /**
    * Called when a frame in a child process has entered fullscreen or when a
@@ -1633,8 +1654,7 @@ public:
    * aFrameElement is the frame element which contains the child-process
    * fullscreen document.
    */
-  virtual nsresult
-    RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement) = 0;
+  nsresult RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement);
 
   /**
    * Called when a frame in a remote child document has rolled back fullscreen
@@ -1645,33 +1665,33 @@ public:
    * fullscreen document has a parent and that parent isn't fullscreen. We
    * preserve this property across process boundaries.
    */
-   virtual nsresult RemoteFrameFullscreenReverted() = 0;
+   nsresult RemoteFrameFullscreenReverted();
 
   /**
    * Restores the previous full-screen element to full-screen status. If there
    * is no former full-screen element, this exits full-screen, moving the
    * top-level browser window out of full-screen mode.
    */
-  virtual void RestorePreviousFullScreenState() = 0;
+  void RestorePreviousFullScreenState();
 
   /**
    * Returns true if this document is a fullscreen leaf document, i.e. it
    * is in fullscreen mode and has no fullscreen children.
    */
-  virtual bool IsFullscreenLeaf() = 0;
+  bool IsFullscreenLeaf();
 
   /**
    * Returns the document which is at the root of this document's branch
    * in the in-process document tree. Returns nullptr if the document isn't
    * fullscreen.
    */
-  virtual nsIDocument* GetFullscreenRoot() = 0;
+  nsIDocument* GetFullscreenRoot();
 
   /**
    * Sets the fullscreen root to aRoot. This stores a weak reference to aRoot
    * in this document.
    */
-  virtual void SetFullscreenRoot(nsIDocument* aRoot) = 0;
+  void SetFullscreenRoot(nsIDocument* aRoot);
 
   /**
    * Synchronously cleans up the fullscreen state on the given document.
@@ -3002,8 +3022,8 @@ public:
   void MozSetImageElement(const nsAString& aImageElementId, Element* aElement);
   nsIURI* GetDocumentURIObject() const;
   // Not const because all the full-screen goop is not const
-  virtual bool FullscreenEnabled(mozilla::dom::CallerType aCallerType) = 0;
-  virtual Element* FullScreenStackTop() = 0;
+  bool FullscreenEnabled(mozilla::dom::CallerType aCallerType);
+  Element* FullScreenStackTop();
   bool Fullscreen()
   {
     return !!GetFullscreenElement();
@@ -3343,6 +3363,11 @@ protected:
   // Since we wouldn't automatically play media from non-visited page, we need
   // to notify window when the page was first visited.
   void MaybeActiveMediaComponents();
+
+  // Apply the fullscreen state to the document, and trigger related
+  // events. It returns false if the fullscreen element ready check
+  // fails and nothing gets changed.
+  bool ApplyFullscreen(const FullscreenRequest& aRequest);
 
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
@@ -3781,6 +3806,8 @@ protected:
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
   unsigned int mIsScopedStyleEnabled : 2;
 
+  uint8_t mPendingFullscreenRequests;
+
   // Compatibility mode
   nsCompatibility mCompatMode;
 
@@ -4015,6 +4042,15 @@ protected:
   // Array of intersection observers
   nsTHashtable<nsPtrHashKey<mozilla::dom::DOMIntersectionObserver>>
     mIntersectionObservers;
+
+  // Stack of full-screen elements. When we request full-screen we push the
+  // full-screen element onto this stack, and when we cancel full-screen we
+  // pop one off this stack, restoring the previous full-screen state
+  nsTArray<nsWeakPtr> mFullScreenStack;
+
+  // The root of the doc tree in which this document is in. This is only
+  // non-null when this document is in fullscreen mode.
+  nsWeakPtr mFullscreenRoot;
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
