@@ -145,8 +145,6 @@ window._gBrowser = {
 
     this._switcher = null;
 
-    this._tabMinWidthLimit = 50;
-
     this._soundPlayingAttrRemovalTimer = 0;
 
     this._hoverTabTimer = null;
@@ -240,13 +238,6 @@ window._gBrowser = {
       "browser.tabs.remote.warmup.maxTabs", 3);
     XPCOMUtils.defineLazyPreferenceGetter(this, "tabWarmingUnloadDelay" /* ms */,
       "browser.tabs.remote.warmup.unloadDelayMs", 2000);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "tabMinWidthPref",
-      "browser.tabs.tabMinWidth", this._tabMinWidthLimit,
-      (pref, prevValue, newValue) => this.tabMinWidth = newValue,
-      newValue => Math.max(newValue, this._tabMinWidthLimit),
-    );
-
-    this.tabMinWidth = this.tabMinWidthPref;
 
     this._setupEventListeners();
   },
@@ -450,11 +441,6 @@ window._gBrowser = {
 
   get userTypedValue() {
     return this.mCurrentBrowser.userTypedValue;
-  },
-
-  set tabMinWidth(val) {
-    this.tabContainer.style.setProperty("--tab-min-width", val + "px");
-    return val;
   },
 
   isFindBarInitialized(aTab) {
