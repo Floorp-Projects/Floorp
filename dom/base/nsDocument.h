@@ -385,10 +385,6 @@ public:
 
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) override;
 
-  virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) override;
-
-  virtual nsIGlobalObject* GetScopeObject() const override;
-  void SetScopeObject(nsIGlobalObject* aGlobal) override;
   /**
    * Get the script loader for this document
    */
@@ -825,9 +821,6 @@ protected:
                               const nsAString& aType,
                               bool aPersisted);
 
-  virtual nsPIDOMWindowOuter* GetWindowInternal() const override;
-  virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const override;
-
   void UpdateScreenOrientation();
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_) do {                     \
@@ -864,11 +857,6 @@ protected:
   // Tracker for animations that are waiting to start.
   // nullptr until GetOrCreatePendingAnimationTracker is called.
   RefPtr<mozilla::PendingAnimationTracker> mPendingAnimationTracker;
-
-  // Weak reference to the scope object (aka the script global object)
-  // that, unlike mScriptGlobalObject, is never unset once set. This
-  // is a weak reference to avoid leaks due to circular references.
-  nsWeakPtr mScopeObject;
 
   // Stack of full-screen elements. When we request full-screen we push the
   // full-screen element onto this stack, and when we cancel full-screen we

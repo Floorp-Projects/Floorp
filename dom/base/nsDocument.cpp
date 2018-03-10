@@ -4697,14 +4697,14 @@ nsIDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aShee
 }
 
 nsIGlobalObject*
-nsDocument::GetScopeObject() const
+nsIDocument::GetScopeObject() const
 {
   nsCOMPtr<nsIGlobalObject> scope(do_QueryReferent(mScopeObject));
   return scope;
 }
 
 void
-nsDocument::SetScopeObject(nsIGlobalObject* aGlobal)
+nsIDocument::SetScopeObject(nsIGlobalObject* aGlobal)
 {
   mScopeObject = do_GetWeakReference(aGlobal);
   if (aGlobal) {
@@ -5009,7 +5009,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 }
 
 nsIScriptGlobalObject*
-nsDocument::GetScriptHandlingObjectInternal() const
+nsIDocument::GetScriptHandlingObjectInternal() const
 {
   MOZ_ASSERT(!mScriptGlobalObject,
              "Do not call this when mScriptGlobalObject is set!");
@@ -5030,7 +5030,7 @@ nsDocument::GetScriptHandlingObjectInternal() const
   return scriptHandlingObject;
 }
 void
-nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
+nsIDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
 {
   NS_ASSERTION(!mScriptGlobalObject ||
                mScriptGlobalObject == aScriptObject,
@@ -5042,7 +5042,7 @@ nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
 }
 
 nsPIDOMWindowOuter*
-nsDocument::GetWindowInternal() const
+nsIDocument::GetWindowInternal() const
 {
   MOZ_ASSERT(!mWindow, "This should not be called when mWindow is not null!");
   // Let's use mScriptGlobalObject. Even if the document is already removed from

@@ -1539,7 +1539,7 @@ public:
     return mScriptGlobalObject ? mScriptGlobalObject.get() :
                                  GetScriptHandlingObjectInternal();
   }
-  virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) = 0;
+  void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject);
 
   /**
    * Get the object that is used as the scope for all of the content
@@ -1548,8 +1548,8 @@ public:
    * document is truly gone. Use this object when you're trying to find a
    * content wrapper in XPConnect.
    */
-  virtual nsIGlobalObject* GetScopeObject() const = 0;
-  virtual void SetScopeObject(nsIGlobalObject* aGlobal) = 0;
+  nsIGlobalObject* GetScopeObject() const;
+  void SetScopeObject(nsIGlobalObject* aGlobal);
 
   /**
    * Return the window containing the document (the outer window).
@@ -3389,10 +3389,10 @@ protected:
   nsPropertyTable* GetExtraPropertyTable(uint16_t aCategory);
 
   // Never ever call this. Only call GetWindow!
-  virtual nsPIDOMWindowOuter* GetWindowInternal() const = 0;
+  nsPIDOMWindowOuter* GetWindowInternal() const;
 
   // Never ever call this. Only call GetScriptHandlingObject!
-  virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const = 0;
+  nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const;
 
   // Never ever call this. Only call AllowXULXBL!
   bool InternalAllowXULXBL();
@@ -3983,6 +3983,11 @@ protected:
   mozilla::TimeStamp mLoadingTimeStamp;
 
   nsWeakPtr mAutoFocusElement;
+
+  // Weak reference to the scope object (aka the script global object)
+  // that, unlike mScriptGlobalObject, is never unset once set. This
+  // is a weak reference to avoid leaks due to circular references.
+  nsWeakPtr mScopeObject;
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
