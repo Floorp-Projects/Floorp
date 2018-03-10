@@ -1160,6 +1160,7 @@ Simulator::Simulator(JSContext* cx)
     stackLimit_ = 0;
     pc_modified_ = false;
     icount_ = 0L;
+    wasm_interrupt_ = false;
     break_pc_ = nullptr;
     break_instr_ = 0;
     single_stepping_ = false;
@@ -1593,6 +1594,29 @@ Simulator::registerState()
     return state;
 }
 
+// The signal handler only redirects the PC to the interrupt stub when the PC is
+// in function code. However, this guard is racy for the ARM simulator since the
+// signal handler samples PC in the middle of simulating an instruction and thus
+// the current PC may have advanced once since the signal handler's guard. So we
+// re-check here.
+void
+Simulator::handleWasmInterrupt()
+{
+    if (!wasm::CodeExists)
+        return;
+
+    uint8_t* pc = (uint8_t*)get_pc();
+
+    const wasm::ModuleSegment* ms = nullptr;
+    if (!wasm::InInterruptibleCode(cx_, pc, &ms))
+        return;
+
+    if (!cx_->activation()->asJit()->startWasmInterrupt(registerState()))
+        return;
+
+    set_pc(int32_t(ms->interruptCode()));
+}
+
 static inline JitActivation*
 GetJitActivation(JSContext* cx)
 {
@@ -1635,7 +1659,7 @@ Simulator::handleWasmSegFault(int32_t addr, unsigned numBytes)
 
     const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
-        act->asJit()->startWasmTrap(wasm::Trap::OutOfBounds, 0, registerState());
+        MOZ_ALWAYS_TRUE(act->asJit()->startWasmInterrupt(registerState()));
         if (!instance->code().containsCodePC(pc))
             MOZ_CRASH("Cannot map PC to trap handler");
         set_pc(int32_t(moduleSegment->outOfBoundsCode()));
@@ -4901,6 +4925,19 @@ Simulator::disable_single_stepping()
     single_step_callback_arg_ = nullptr;
 }
 
+static void
+FakeInterruptHandler()
+{
+    JSContext* cx = TlsContext.get();
+    uint8_t* pc = cx->simulator()->get_pc_as<uint8_t*>();
+
+    const wasm::ModuleSegment* ms= nullptr;
+    if (!wasm::InInterruptibleCode(cx, pc, &ms))
+        return;
+
+    cx->simulator()->trigger_wasm_interrupt();
+}
+
 template<bool EnableStopSimAt>
 void
 Simulator::execute()
@@ -4920,9 +4957,16 @@ Simulator::execute()
         } else {
             if (single_stepping_)
                 single_step_callback_(single_step_callback_arg_, this, (void*)program_counter);
+            if (MOZ_UNLIKELY(JitOptions.simulatorAlwaysInterrupt))
+                FakeInterruptHandler();
             SimInstruction* instr = reinterpret_cast<SimInstruction*>(program_counter);
             instructionDecode(instr);
             icount_++;
+
+            if (MOZ_UNLIKELY(wasm_interrupt_)) {
+                handleWasmInterrupt();
+                wasm_interrupt_ = false;
+            }
         }
         program_counter = get_pc();
     }

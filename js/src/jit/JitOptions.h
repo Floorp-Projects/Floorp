@@ -76,6 +76,7 @@ struct DefaultJitOptions
     bool wasmFoldOffsets;
     bool wasmDelayTier2;
     bool ionInterruptWithoutSignals;
+    bool simulatorAlwaysInterrupt;
     uint32_t baselineWarmUpThreshold;
     uint32_t exceptionBailoutThreshold;
     uint32_t frequentBailoutThreshold;

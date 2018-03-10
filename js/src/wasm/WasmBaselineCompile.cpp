@@ -3371,10 +3371,10 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.loadConstantDouble(d, dest);
     }
 
-    void addInterruptCheck() {
-        ScratchI32 tmp(*this);
-        masm.loadWasmTlsRegFromFrame(tmp);
-        masm.wasmInterruptCheck(tmp, bytecodeOffset());
+    void addInterruptCheck()
+    {
+        // Always use signals for interrupts with Asm.JS/Wasm
+        MOZ_RELEASE_ASSERT(HaveSignalHandlers());
     }
 
     void jumpTable(const LabelVector& labels, Label* theTable) {
@@ -9490,6 +9490,8 @@ BaseCompiler::init()
 
     if (!fr.setupLocals(locals_, sig().args(), debugEnabled_, &localInfo_))
         return false;
+
+    addInterruptCheck();
 
     return true;
 }
