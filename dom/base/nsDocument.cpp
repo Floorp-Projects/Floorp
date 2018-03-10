@@ -3140,7 +3140,7 @@ nsIDocument::GetLastModified(nsAString& aLastModified) const
 }
 
 void
-nsDocument::AddToNameTable(Element *aElement, nsAtom* aName)
+nsIDocument::AddToNameTable(Element* aElement, nsAtom* aName)
 {
   MOZ_ASSERT(nsGenericHTMLElement::ShouldExposeNameAsHTMLDocumentProperty(aElement),
              "Only put elements that need to be exposed as document['name'] in "
@@ -3159,7 +3159,7 @@ nsDocument::AddToNameTable(Element *aElement, nsAtom* aName)
 }
 
 void
-nsDocument::RemoveFromNameTable(Element *aElement, nsAtom* aName)
+nsIDocument::RemoveFromNameTable(Element* aElement, nsAtom* aName)
 {
   // Speed up document teardown
   if (mIdentifierMap.Count() == 0)
@@ -3177,7 +3177,7 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsAtom* aName)
 }
 
 void
-nsDocument::AddToIdTable(Element *aElement, nsAtom* aId)
+nsIDocument::AddToIdTable(Element* aElement, nsAtom* aId)
 {
   nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aId);
 
@@ -3192,7 +3192,7 @@ nsDocument::AddToIdTable(Element *aElement, nsAtom* aId)
 }
 
 void
-nsDocument::RemoveFromIdTable(Element *aElement, nsAtom* aId)
+nsIDocument::RemoveFromIdTable(Element* aElement, nsAtom* aId)
 {
   NS_ASSERTION(aId, "huhwhatnow?");
 
