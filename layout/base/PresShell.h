@@ -718,7 +718,7 @@ private:
 
   nscolor GetDefaultBackgroundColorToDraw();
 
-  DOMHighResTimeStamp GetPerformanceNow();
+  DOMHighResTimeStamp GetPerformanceNowUnclamped();
 
   // The callback for the mPaintSuppressionTimer timer.
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell);
