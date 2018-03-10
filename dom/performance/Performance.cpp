@@ -91,10 +91,9 @@ Performance::~Performance()
 {}
 
 DOMHighResTimeStamp
-Performance::Now() const
+Performance::Now()
 {
-  TimeDuration duration = TimeStamp::Now() - CreationTimeStamp();
-  DOMHighResTimeStamp rawTime = duration.ToMilliseconds();
+  DOMHighResTimeStamp rawTime = NowUnclamped();
   if (mSystemPrincipal) {
     return rawTime;
   }
@@ -102,6 +101,13 @@ Performance::Now() const
   const double maxResolutionMs = 0.020;
   DOMHighResTimeStamp minimallyClamped = floor(rawTime / maxResolutionMs) * maxResolutionMs;
   return nsRFPService::ReduceTimePrecisionAsMSecs(minimallyClamped);
+}
+
+DOMHighResTimeStamp
+Performance::NowUnclamped() const
+{
+  TimeDuration duration = TimeStamp::Now() - CreationTimeStamp();
+  return duration.ToMilliseconds();
 }
 
 DOMHighResTimeStamp
