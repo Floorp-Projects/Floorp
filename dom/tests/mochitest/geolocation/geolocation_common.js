@@ -1,3 +1,5 @@
+"use strict";
+
 var harness = SimpleTest.harnessParameters.testRoot == "chrome" ? "chrome" : "tests";
 var BASE_URL = "http://mochi.test:8888/" + harness + "/dom/tests/mochitest/geolocation/network_geolocation.sjs";
 
@@ -64,29 +66,54 @@ function send404_geolocationProvider(callback)
     SpecialPowers.pushPrefEnv({"set": [["geo.wifi.uri", BASE_URL + "?action=send404"]]}, callback);});
 }
 
-function check_geolocation(location) {
-
+function check_geolocation(location)
+{
   ok(location, "Check to see if this location is non-null");
 
-  ok("timestamp" in location, "Check to see if there is a timestamp");
+  const timestamp = location.timestamp;
+  dump(`timestamp=$timestamp}\n`);
+  ok(IsNumber(timestamp), "check timestamp type");
+  ok(timestamp > 0, "check timestamp range");
 
   // eventually, coords may be optional (eg, when civic addresses are supported)
   ok("coords" in location, "Check to see if this location has a coords");
 
-  var coords = location.coords;
+  const {
+    latitude, longitude, accuracy, altitude, altitudeAccuracy, speed, heading
+  } = location.coords;
 
-  ok("latitude" in coords, "Check to see if there is a latitude");
-  ok("longitude" in coords, "Check to see if there is a longitude");
-  ok("accuracy" in coords, "Check to see if there is a accuracy");
-  
-  // optional ok("altitude" in coords, "Check to see if there is a altitude");
-  // optional ok("altitudeAccuracy" in coords, "Check to see if there is a alt accuracy");
-  // optional ok("heading" in coords, "Check to see if there is a heading");
-  // optional ok("speed" in coords, "Check to see if there is a speed");
+  dump(`latitude=${latitude}\n`);
+  dump(`longitude=${longitude}\n`);
+  dump(`accuracy=${accuracy}\n`);
+  dump(`altitude=${altitude}\n`);
+  dump(`altitudeAccuracy=${altitudeAccuracy}\n`);
+  dump(`speed=${speed}\n`);
+  dump(`heading=${heading}\n`);
 
-  ok (Math.abs(location.coords.latitude - 37.41857) < 0.001, "lat matches known value");
-  ok (Math.abs(location.coords.longitude + 122.08769) < 0.001, "lon matches known value");
-  // optional  ok(location.coords.altitude == 42, "alt matches known value");
-  // optional  ok(location.coords.altitudeAccuracy == 42, "alt acc matches known value");
+  ok(IsNumber(latitude), "check latitude type");
+  ok(IsNumber(longitude), "check longitude type");
+
+  ok(Math.abs(latitude - 37.41857) < 0.001, "latitude matches hard-coded value");
+  ok(Math.abs(longitude + 122.08769) < 0.001, "longitude matches hard-coded value");
+
+  ok(IsNonNegativeNumber(accuracy), "check accuracy type and range");
+  ok(IsNumber(altitude) || altitude === null, "check accuracy type");
+
+  ok((IsNonNegativeNumber(altitudeAccuracy) && IsNumber(altitude)) ||
+     (altitudeAccuracy === null), "check altitudeAccuracy type and range");
+
+  ok(IsNonNegativeNumber(speed) || speed === null, "check speed type and range");
+
+  ok((IsNonNegativeNumber(heading) && heading < 360 && speed > 0) ||
+     heading === null, "check heading type and range");
 }
 
+function IsNumber(x)
+{
+  return typeof(x) === "number" && !Number.isNaN(x);
+}
+
+function IsNonNegativeNumber(x)
+{
+  return IsNumber(x) && x >= 0;
+}
