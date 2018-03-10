@@ -7696,7 +7696,7 @@ nsDocument::GetXMLDeclaration(nsAString& aVersion, nsAString& aEncoding,
 }
 
 bool
-nsDocument::IsScriptEnabled()
+nsIDocument::IsScriptEnabled()
 {
   // If this document is sandboxed without 'allow-scripts'
   // script is not enabled
