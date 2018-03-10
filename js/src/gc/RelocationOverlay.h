@@ -34,7 +34,6 @@ class RelocationOverlay
     /* See comment in js/public/HeapAPI.h. */
     static const uint32_t Relocated = js::gc::Relocated;
 
-#if MOZ_LITTLE_ENDIAN
     /*
      * Keep the low 32 bits untouched. Use them to distinguish strings from
      * objects in the nursery.
@@ -43,10 +42,6 @@ class RelocationOverlay
 
     /* Set to Relocated when moved. */
     uint32_t magic_;
-#else
-    uint32_t magic_;
-    uint32_t preserve_;
-#endif
 
     /* The location |this| was moved to. */
     Cell* newLocation_;

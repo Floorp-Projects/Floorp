@@ -219,7 +219,11 @@ Machine::Code::Code(bool is_constraint, const byte * bytecode_begin, const byte 
     if (_out)
         *_out += total_sz;
     else
-        _code = static_cast<instr *>(realloc(_code, total_sz));
+    {
+      instr * const old_code = _code;
+      _code = static_cast<instr *>(realloc(_code, total_sz));
+      if (!_code) free(old_code);
+    }
    _data = reinterpret_cast<byte *>(_code + (_instr_count+1));
 
     if (!_code)
@@ -316,8 +320,9 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
             if (_stack_depth <= 0)
                 failure(underfull_stack);
             break;
-        case NEXT :
         case NEXT_N :           // runtime checked
+            break;
+        case NEXT :
         case COPY_NEXT :
             ++_out_index;
             if (_out_index < -1 || _out_index > _out_length || _slotref > _max.rule_length)
