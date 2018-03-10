@@ -3188,15 +3188,26 @@ public:
 
   mozilla::dom::DocGroup* GetDocGroup() const;
 
-  virtual void AddIntersectionObserver(
-    mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
-  virtual void RemoveIntersectionObserver(
-    mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
+  void AddIntersectionObserver(mozilla::dom::DOMIntersectionObserver* aObserver)
+  {
+    MOZ_ASSERT(!mIntersectionObservers.Contains(aObserver),
+               "Intersection observer already in the list");
+    mIntersectionObservers.PutEntry(aObserver);
+  }
 
-  virtual void UpdateIntersectionObservations() = 0;
-  virtual void ScheduleIntersectionObserverNotification() = 0;
-  virtual void NotifyIntersectionObservers() = 0;
-  virtual bool HasIntersectionObservers() const = 0;
+  void RemoveIntersectionObserver(mozilla::dom::DOMIntersectionObserver* aObserver)
+  {
+    mIntersectionObservers.RemoveEntry(aObserver);
+  }
+
+  bool HasIntersectionObservers() const
+  {
+    return !mIntersectionObservers.IsEmpty();
+  }
+
+  void UpdateIntersectionObservations();
+  void ScheduleIntersectionObserverNotification();
+  void NotifyIntersectionObservers();
 
   // Dispatch a runnable related to the document.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
@@ -3988,6 +3999,10 @@ protected:
   // that, unlike mScriptGlobalObject, is never unset once set. This
   // is a weak reference to avoid leaks due to circular references.
   nsWeakPtr mScopeObject;
+
+  // Array of intersection observers
+  nsTHashtable<nsPtrHashKey<mozilla::dom::DOMIntersectionObserver>>
+    mIntersectionObservers;
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];

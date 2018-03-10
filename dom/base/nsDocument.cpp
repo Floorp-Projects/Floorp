@@ -12358,21 +12358,7 @@ nsDocument::ReportUseCounters(UseCounterReportKind aKind)
 }
 
 void
-nsDocument::AddIntersectionObserver(DOMIntersectionObserver* aObserver)
-{
-  MOZ_ASSERT(!mIntersectionObservers.Contains(aObserver),
-             "Intersection observer already in the list");
-  mIntersectionObservers.PutEntry(aObserver);
-}
-
-void
-nsDocument::RemoveIntersectionObserver(DOMIntersectionObserver* aObserver)
-{
-  mIntersectionObservers.RemoveEntry(aObserver);
-}
-
-void
-nsDocument::UpdateIntersectionObservations()
+nsIDocument::UpdateIntersectionObservations()
 {
   if (mIntersectionObservers.IsEmpty()) {
     return;
@@ -12388,7 +12374,7 @@ nsDocument::UpdateIntersectionObservations()
   nsTArray<RefPtr<DOMIntersectionObserver>> observers(mIntersectionObservers.Count());
   for (auto iter = mIntersectionObservers.Iter(); !iter.Done(); iter.Next()) {
     DOMIntersectionObserver* observer = iter.Get()->GetKey();
-      observers.AppendElement(observer);
+    observers.AppendElement(observer);
   }
   for (const auto& observer : observers) {
     if (observer) {
@@ -12398,7 +12384,7 @@ nsDocument::UpdateIntersectionObservations()
 }
 
 void
-nsDocument::ScheduleIntersectionObserverNotification()
+nsIDocument::ScheduleIntersectionObserverNotification()
 {
   if (mIntersectionObservers.IsEmpty()) {
     return;
@@ -12412,7 +12398,7 @@ nsDocument::ScheduleIntersectionObserverNotification()
 }
 
 void
-nsDocument::NotifyIntersectionObservers()
+nsIDocument::NotifyIntersectionObservers()
 {
   nsTArray<RefPtr<DOMIntersectionObserver>> observers(mIntersectionObservers.Count());
   for (auto iter = mIntersectionObservers.Iter(); !iter.Done(); iter.Next()) {
