@@ -65,7 +65,6 @@
 #include "nsDataHashtable.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
-#include "jsfriendapi.h"
 #include "mozilla/LinkedList.h"
 #include "CustomElementRegistry.h"
 #include "mozilla/dom/Performance.h"
@@ -389,14 +388,6 @@ public:
    * Get the script loader for this document
    */
   virtual mozilla::dom::ScriptLoader* ScriptLoader() override;
-
-  /**
-   * Add/Remove an element to the document's id and name hashes
-   */
-  virtual void AddToIdTable(Element* aElement, nsAtom* aId) override;
-  virtual void RemoveFromIdTable(Element* aElement, nsAtom* aId) override;
-  virtual void AddToNameTable(Element* aElement, nsAtom* aName) override;
-  virtual void RemoveFromNameTable(Element* aElement, nsAtom* aName) override;
 
   virtual void EndUpdate(nsUpdateType aUpdateType) override;
   virtual void BeginLoad() override;
@@ -743,8 +734,6 @@ protected:
   nsresult SetFirstBaseNodeWithHref(nsIContent *node);
 
 public:
-
-  js::ExpandoAndGeneration mExpandoAndGeneration;
 
   bool ContainsEMEContent();
 
