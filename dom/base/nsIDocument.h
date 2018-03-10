@@ -2822,7 +2822,8 @@ public:
                      const char16_t **aParams = nullptr,
                      uint32_t aParamsLength = 0) const;
 
-  virtual void PostVisibilityUpdateEvent() = 0;
+  // Posts an event to call UpdateVisibilityState
+  void PostVisibilityUpdateEvent();
 
   bool IsSyntheticDocument() const { return mIsSyntheticDocument; }
 
@@ -3331,6 +3332,17 @@ protected:
   mozilla::dom::FlashClassification ComputeFlashClassification();
 
   void RecordNavigationTiming(ReadyState aReadyState);
+
+  // This method may fire a DOM event; if it does so it will happen
+  // synchronously.
+  void UpdateVisibilityState();
+
+  // Recomputes the visibility state but doesn't set the new value.
+  mozilla::dom::VisibilityState ComputeVisibilityState() const;
+
+  // Since we wouldn't automatically play media from non-visited page, we need
+  // to notify window when the page was first visited.
+  void MaybeActiveMediaComponents();
 
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {

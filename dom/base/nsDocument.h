@@ -747,16 +747,6 @@ public:
   void SetOrientationPendingPromise(mozilla::dom::Promise* aPromise) override;
   mozilla::dom::Promise* GetOrientationPendingPromise() const override;
 
-  // This method may fire a DOM event; if it does so it will happen
-  // synchronously.
-  void UpdateVisibilityState();
-  // Posts an event to call UpdateVisibilityState
-  virtual void PostVisibilityUpdateEvent() override;
-
-  // Since we wouldn't automatically play media from non-visited page, we need
-  // to notify window when the page was first visited.
-  void MaybeActiveMediaComponents();
-
   virtual void DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
@@ -901,8 +891,6 @@ public:
   nsCOMPtr<nsIContent> mFirstBaseNodeWithHref;
 private:
   friend class nsUnblockOnloadEvent;
-  // Recomputes the visibility state but doesn't set the new value.
-  mozilla::dom::VisibilityState GetVisibilityState() const;
 
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();
