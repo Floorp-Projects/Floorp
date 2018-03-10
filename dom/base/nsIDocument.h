@@ -2910,8 +2910,7 @@ public:
   static already_AddRefed<nsIDocument>
     Constructor(const GlobalObject& aGlobal,
                 mozilla::ErrorResult& rv);
-  virtual mozilla::dom::DOMImplementation*
-    GetImplementation(mozilla::ErrorResult& rv) = 0;
+  mozilla::dom::DOMImplementation* GetImplementation(mozilla::ErrorResult& rv);
   MOZ_MUST_USE nsresult GetURL(nsString& retval) const;
   MOZ_MUST_USE nsresult GetDocumentURI(nsString& retval) const;
   // Return the URI for the document.
@@ -4051,6 +4050,8 @@ protected:
   // The root of the doc tree in which this document is in. This is only
   // non-null when this document is in fullscreen mode.
   nsWeakPtr mFullscreenRoot;
+
+  RefPtr<mozilla::dom::DOMImplementation> mDOMImplementation;
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
