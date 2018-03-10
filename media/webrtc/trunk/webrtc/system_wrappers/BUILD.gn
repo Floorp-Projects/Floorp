@@ -105,7 +105,11 @@ rtc_static_library("system_wrappers") {
     libs += [ "rt" ]
   }
 
-  if (is_linux || is_android) {
+  if (is_bsd) {
+    defines += [ "WEBRTC_THREAD_RR" ]
+  }
+
+  if (is_linux || is_android || is_bsd) {
     sources += [ "source/atomic32_non_darwin_unix.cc" ]
   }
 
