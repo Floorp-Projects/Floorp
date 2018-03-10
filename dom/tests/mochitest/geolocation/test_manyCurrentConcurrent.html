@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=482260
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 
@@ -30,6 +31,7 @@ var failureCallbackCalled = 0;
 const totalResults = 100;
 
 function successCallback(position) {
+  check_geolocation(position);
   successCallbackCalled++;
   testPassed();
 }
