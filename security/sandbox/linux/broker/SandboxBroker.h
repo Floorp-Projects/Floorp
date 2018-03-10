@@ -53,6 +53,8 @@ class SandboxBroker final
     // Applies to everything below this path, including subdirs created
     // at runtime
     RECURSIVE     = 1 << 5,
+    // Allow Unix-domain socket connections to a path
+    MAY_CONNECT   = 1 << 6,
   };
   // Bitwise operations on enum values return ints, so just use int in
   // the hash table type (and below) to avoid cluttering code with casts.

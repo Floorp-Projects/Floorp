@@ -33,6 +33,7 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/syscall.h>
+#include <sys/un.h>
 #include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
@@ -622,6 +623,121 @@ private:
     return rv;
   }
 
+  // This just needs to return something to stand in for the
+  // unconnected socket until ConnectTrap, below, and keep track of
+  // the socket type somehow.  Half a socketpair *is* a socket, so it
+  // should result in minimal confusion in the caller.
+  static intptr_t FakeSocketTrapCommon(int domain, int type, int protocol) {
+    int fds[2];
+    // X11 client libs will still try to getaddrinfo() even for a
+    // local connection.  Also, WebRTC still has vestigial network
+    // code trying to do things in the content process.  Politely tell
+    // them no.
+    if (domain != AF_UNIX) {
+      return -EAFNOSUPPORT;
+    }
+    if (socketpair(domain, type, protocol, fds) != 0) {
+      return -errno;
+    }
+    close(fds[1]);
+    return fds[0];
+  }
+
+  static intptr_t FakeSocketTrap(ArgsRef aArgs, void* aux) {
+    return FakeSocketTrapCommon(static_cast<int>(aArgs.args[0]),
+                                static_cast<int>(aArgs.args[1]),
+                                static_cast<int>(aArgs.args[2]));
+  }
+
+  static intptr_t FakeSocketTrapLegacy(ArgsRef aArgs, void* aux) {
+    const auto innerArgs = reinterpret_cast<unsigned long*>(aArgs.args[1]);
+
+    return FakeSocketTrapCommon(static_cast<int>(innerArgs[0]),
+                                static_cast<int>(innerArgs[1]),
+                                static_cast<int>(innerArgs[2]));
+  }
+
+  static Maybe<int>
+  DoGetSockOpt(int fd, int optname) {
+    int optval;
+    socklen_t optlen = sizeof(optval);
+
+    if (getsockopt(fd, SOL_SOCKET, optname, &optval, &optlen) != 0) {
+      return Nothing();
+    }
+    MOZ_RELEASE_ASSERT(static_cast<size_t>(optlen) == sizeof(optval));
+    return Some(optval);
+  }
+
+  // Substitute the newly connected socket from the broker for the
+  // original socket.  This is meant to be used on a fd from
+  // FakeSocketTrap, above, but it should also work to simulate
+  // re-connect()ing a real connected socket.
+  //
+  // Warning: This isn't quite right if the socket is dup()ed, because
+  // other duplicates will still be the original socket, but hopefully
+  // nothing we're dealing with does that.
+  static intptr_t ConnectTrapCommon(SandboxBrokerClient* aBroker, int aFd,
+                                    const struct sockaddr_un* aAddr,
+                                    socklen_t aLen) {
+    if (aFd < 0) {
+      return -EBADF;
+    }
+    const auto maybeDomain = DoGetSockOpt(aFd, SO_DOMAIN);
+    if (!maybeDomain) {
+      return -errno;
+    }
+    if (*maybeDomain != AF_UNIX) {
+      return -EAFNOSUPPORT;
+    }
+    const auto maybeType = DoGetSockOpt(aFd, SO_TYPE);
+    if (!maybeType) {
+      return -errno;
+    }
+    const int oldFlags = fcntl(aFd, F_GETFL);
+    if (oldFlags == -1) {
+      return -errno;
+    }
+    const int newFd = aBroker->Connect(aAddr, aLen, *maybeType);
+    if (newFd < 0) {
+      return newFd;
+    }
+    // Copy over the nonblocking flag.  The connect() won't be
+    // nonblocking in that case, but that shouldn't matter for
+    // AF_UNIX.  The other fcntl-settable flags are either irrelevant
+    // for sockets (e.g., O_APPEND) or would be blocked by this
+    // seccomp-bpf policy, so they're ignored.
+    if (fcntl(newFd, F_SETFL, oldFlags & O_NONBLOCK) != 0) {
+      close(newFd);
+      return -errno;
+    }
+    if (dup2(newFd, aFd) < 0) {
+      close(newFd);
+      return -errno;
+    }
+    close(newFd);
+    return 0;
+  }
+
+  static intptr_t ConnectTrap(ArgsRef aArgs, void* aux) {
+    typedef const struct sockaddr_un* AddrPtr;
+
+    return ConnectTrapCommon(static_cast<SandboxBrokerClient*>(aux),
+                             static_cast<int>(aArgs.args[0]),
+                             reinterpret_cast<AddrPtr>(aArgs.args[1]),
+                             static_cast<socklen_t>(aArgs.args[2]));
+  }
+
+  static intptr_t ConnectTrapLegacy(ArgsRef aArgs, void* aux) {
+    const auto innerArgs = reinterpret_cast<unsigned long*>(aArgs.args[1]);
+    typedef const struct sockaddr_un* AddrPtr;
+
+    return ConnectTrapCommon(static_cast<SandboxBrokerClient*>(aux),
+                             static_cast<int>(innerArgs[0]),
+                             reinterpret_cast<AddrPtr>(innerArgs[1]),
+                             static_cast<socklen_t>(innerArgs[2]));
+  }
+
 public:
   ContentSandboxPolicy(SandboxBrokerClient* aBroker,
                        ContentProcessSandboxParams&& aParams)
@@ -654,7 +770,7 @@ public:
       }
       Arg<int> domain(0), type(1);
       return Some(If(domain == AF_UNIX,
-                     Switch(type & ~SOCK_CLOEXEC)
+                     Switch(type & ~(SOCK_CLOEXEC | SOCK_NONBLOCK))
                      .Case(SOCK_STREAM, Allow())
                      .Case(SOCK_SEQPACKET, Allow())
                      .Case(SOCK_DGRAM, Trap(SocketpairDatagramTrap, nullptr))
@@ -666,13 +782,14 @@ public:
     case SYS_SOCKET:
       return Some(Error(EACCES));
 #else // #ifdef DESKTOP
-    case SYS_SOCKET: // DANGEROUS
-      // Some things try to get a socket but can work without one,
-      // like sctp_userspace_get_mtu_from_ifn in WebRTC, so this is
-      // silently disallowed.
-      return Some(AllowBelowLevel(4, Error(EACCES)));
-    case SYS_CONNECT: // DANGEROUS
-      return Some(AllowBelowLevel(4));
+    case SYS_SOCKET: {
+      const auto trapFn = aHasArgs ? FakeSocketTrap : FakeSocketTrapLegacy;
+      return Some(AllowBelowLevel(4, Trap(trapFn, nullptr)));
+    }
+    case SYS_CONNECT: {
+      const auto trapFn = aHasArgs ? ConnectTrap : ConnectTrapLegacy;
+      return Some(AllowBelowLevel(4, Trap(trapFn, mBroker)));
+    }
     case SYS_RECV:
     case SYS_SEND:
     case SYS_GETSOCKOPT:
@@ -941,6 +1058,7 @@ public:
       return Allow();
 
     case __NR_dup:
+    case __NR_dup2: // See ConnectTrapCommon
       return Allow();
 
     CASES_FOR_getuid:
