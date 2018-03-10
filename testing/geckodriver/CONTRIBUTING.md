@@ -22,9 +22,9 @@ By participating in this project, you agree to abide by the Mozilla
 [Community Participation Guidelines].  Here are some guidelines
 for contributing high-quality and actionable bugs and code.
 
-[_geckodriver_]: ./README.md
-[_Marionette_]: ../marionette/README.md
-[_webdriver_]: ../webdriver/README.md
+[_geckodriver_]: https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/
+[_Marionette_]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/
+[_webdriver_]: https://crates.io/crates/webdriver
 [WebDriver protocol]: https://w3c.github.io/webdriver/webdriver-spec.html#protocol
 [XPCOM]: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Guide
 [Community Participation Guidelines]: https://www.mozilla.org/en-US/about/governance/policies/participation/
@@ -60,12 +60,11 @@ the affected system, reproduction steps, and logs.
 geckodriver development follows a rolling release model as we don’t
 release patches for older versions.  It is therefore useful to use
 the tip-of-tree geckodriver binary, or failing this, the latest
-release when verifying the problem.  Similarly, as noted in the
-[README], geckodriver is only compatible with the current release
-channel versions of Firefox, and it consequently does not help
-to report bugs that affect outdated and unsupported Firefoxen.
-Please always try to verify the issue in the latest Firefox Nightly
-before you file your bug.
+release when verifying the problem.  geckodriver is only compatible
+with the current release channel versions of Firefox, and it
+consequently does not help to report bugs that affect outdated and
+unsupported Firefoxen.  Please always try to verify the issue in
+the latest Firefox Nightly before you file your bug.
 
 Once we are satisfied the issue raised is of sufficiently actionable
 character, we will continue with triaging it and file a bug where it
@@ -73,9 +72,8 @@ is appropriate.  Bugs specific to geckodriver will be filed in the
 [`Testing :: geckodriver`] component in Bugzilla.
 
 [mailing list]: #communication
-[trace-level log]: doc/TraceLogs.md
+[trace-level log]: https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/TraceLogs.html
 [GitHub issue tracker]: https://github.com/mozilla/geckodriver/issues
-[README]: ./README.md
 [`Testing :: geckodriver`]: https://bugzilla.mozilla.org/buglist.cgi?component=geckodriver
 
 
@@ -133,12 +131,12 @@ To run the executable from the objdir:
 	geckodriver 0.19.0 (f3e939a81ee1169f9501ad96eb43bbf4bf4a1bde 2017-10-11)
 
 [Rust]: https://www.rust-lang.org/
-[webdriver crate]: ../webdriver/README.md
+[webdriver crate]: https://crates.io/crates/webdriver
 [commands]: https://docs.rs/webdriver/newest/webdriver/command/index.html
 [responses]: https://docs.rs/webdriver/newest/webdriver/response/index.html
 [errors]: https://docs.rs/webdriver/newest/webdriver/error/enum.ErrorStatus.html
 [Marionette protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol
-[Marionette]: ../marionette/README.md
+[Marionette]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/index.html
 [Firefox CI]: https://treeherder.mozilla.org/
 [mozconfig]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options
 
