@@ -118,6 +118,8 @@ let propNameWhitelist = [
    isFromDevTools: false},
   {propName: "--muteButton-width",
    isFromDevTools: false},
+  {propName: "--castingButton-width",
+   isFromDevTools: false},
   {propName: "--closedCaptionButton-width",
    isFromDevTools: false},
   {propName: "--fullscreenButton-width",
