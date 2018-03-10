@@ -122,7 +122,7 @@ sessions. Note that showing a dialog (including a Firefox dialog) will
 take Firefox out of focus & end the current session.
 
 An implementation that records a session when Firefox is completely hidden is
-preferrable (e.g. to avoid the dialog issue above), however, it's more complex
+preferable (e.g. to avoid the dialog issue above), however, it's more complex
 to implement and so we chose not to, at least for the initial implementation.
 
 profileDate

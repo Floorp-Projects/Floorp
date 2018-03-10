@@ -122,7 +122,7 @@ These values should be monotonic. If we can't get a monotonic timestamp, -1 will
 uid
 ~~~~~~~~~
 
-This property containing a hash of the FxA account identifier, which is a 32 character hexidecimal string. In the case that we are unable to authenticate with FxA and have never authenticated in the past, it will be a placeholder string consisting of 32 repeated ``0`` characters.
+This property containing a hash of the FxA account identifier, which is a 32 character hexadecimal string. In the case that we are unable to authenticate with FxA and have never authenticated in the past, it will be a placeholder string consisting of 32 repeated ``0`` characters.
 
 syncs.why
 ~~~~~~~~~
