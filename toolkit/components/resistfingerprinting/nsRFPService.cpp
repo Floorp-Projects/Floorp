@@ -527,13 +527,7 @@ nsRFPService::ReduceTimePrecisionImpl(
 
   long long midpoint = 0,
             clampedAndJittered = clamped;
-  // RandomMidpoint uses crypto functions from NSS. But we wind up in this code _very_ early
-  // on in and we don't want to initialize NSS earlier than it would be initialized naturally.
-  // Doing so caused nearly every xpcshell test to fail, as well as Marionette.
-  // This is safe, because we're not going to be doing any web context stuff before NSS is
-  // initialized, so anything that winds up here won't be exposed to content so we don't
-  // really need to worry about fuzzing its value.
-  if (sJitter && NSS_IsInitialized()) {
+  if (sJitter) {
     if(!NS_FAILED(RandomMidpoint(clamped, resolutionAsInt, aContextMixin, &midpoint)) &&
        timeAsInt >= clamped + midpoint) {
       clampedAndJittered += resolutionAsInt;
