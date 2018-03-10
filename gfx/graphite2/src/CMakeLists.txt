@@ -56,6 +56,10 @@ if (GRAPHITE2_TELEMETRY)
     add_definitions(-DGRAPHITE2_TELEMETRY)
 endif (GRAPHITE2_TELEMETRY)
 
+if (NOT BUILD_SHARED_LIBS)
+    add_definitions(-DGRAPHITE2_STATIC)
+endif (NOT BUILD_SHARED_LIBS)
+
 set(GRAPHITE_HEADERS 
     ../include/graphite2/Font.h
     ../include/graphite2/Segment.h
@@ -65,7 +69,7 @@ set(GRAPHITE_HEADERS
 
 file(GLOB PRIVATE_HEADERS inc/*.h) 
 
-add_library(graphite2 SHARED
+add_library(graphite2
     ${GRAPHITE2_VM_TYPE}_machine.cpp
     gr_char_info.cpp
     gr_features.cpp
@@ -107,9 +111,9 @@ set_target_properties(graphite2 PROPERTIES  PUBLIC_HEADER "${GRAPHITE_HEADERS}"
                                             LT_VERSION_AGE ${GRAPHITE_API_AGE})
 
 if  (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    set_target_properties(graphite2 PROPERTIES 
-        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wendif-labels -Wshadow -Wctor-dtor-privacy -Wnon-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden -fno-stack-protector"
-        LINK_FLAGS      "-nodefaultlibs ${GRAPHITE_LINK_FLAGS}" 
+    set_target_properties(graphite2 PROPERTIES
+        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wendif-labels -Wshadow -Wctor-dtor-privacy -Wnon-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden"
+        LINK_FLAGS      "-nodefaultlibs ${GRAPHITE_LINK_FLAGS}"
         LINKER_LANGUAGE C)
     if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86|i.86")
         add_definitions(-mfpmath=sse -msse2)
@@ -130,16 +134,18 @@ if  (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
             target_link_libraries(graphite2 c gcc)
         endif (GRAPHITE2_ASAN)
         include(Graphite)
-        nolib_test(stdc++ $<TARGET_SONAME_FILE:graphite2>)
+        if (BUILD_SHARED_LIBS)
+            nolib_test(stdc++ $<TARGET_SONAME_FILE:graphite2>)
+        endif (BUILD_SHARED_LIBS)
     endif (${CMAKE_CXX_COMPILER} MATCHES  ".*mingw.*")
     set(CMAKE_CXX_IMPLICIT_LINK_LIBRARIES "")
     CREATE_LIBTOOL_FILE(graphite2 "/lib${LIB_SUFFIX}")
 endif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
 if  (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-    set_target_properties(graphite2 PROPERTIES 
-        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wimplicit-fallthrough -Wendif-labels -Wshadow -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden -fno-stack-protector -mfpmath=sse -msse2"
-        LINK_FLAGS      "-nodefaultlibs" 
+    set_target_properties(graphite2 PROPERTIES
+        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wimplicit-fallthrough -Wendif-labels -Wshadow -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden -mfpmath=sse -msse2"
+        LINK_FLAGS      "-nodefaultlibs"
         LINKER_LANGUAGE C)
     target_link_libraries(graphite2 c)
     include(Graphite)

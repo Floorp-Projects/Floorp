@@ -103,7 +103,7 @@ gr_segment* gr_make_seg(const gr_font *font, const gr_face *face, gr_uint32 scri
     if (pFeats == 0)
         pFeats = tmp_feats = static_cast<const gr_feature_val*>(face->theSill().cloneFeatures(0));
     gr_segment * seg = makeAndInitialize(font, face, script, pFeats, enc, pStart, nChars, dir);
-    delete tmp_feats;
+    delete static_cast<const FeatureVal*>(tmp_feats);
 
     return seg;
 }
@@ -111,7 +111,7 @@ gr_segment* gr_make_seg(const gr_font *font, const gr_face *face, gr_uint32 scri
 
 void gr_seg_destroy(gr_segment* p)
 {
-    delete p;
+    delete static_cast<Segment*>(p);
 }
 
 
