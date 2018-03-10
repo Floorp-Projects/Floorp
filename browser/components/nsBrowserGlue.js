@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   ContentClick: "resource:///modules/ContentClick.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   DateTimePickerHelper: "resource://gre/modules/DateTimePickerHelper.jsm",
   DirectoryLinksProvider: "resource:///modules/DirectoryLinksProvider.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
@@ -441,8 +440,6 @@ BrowserGlue.prototype = {
           if (this._placesBrowserInitComplete) {
             Services.obs.notifyObservers(null, "places-browser-init-complete");
           }
-        } else if (data == "migrateMatchBucketsPrefForUIVersion60") {
-          this._migrateMatchBucketsPrefForUIVersion60(true);
         }
         break;
       case "initial-migration-will-import-default-bookmarks":
@@ -2251,9 +2248,8 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 60) {
-      // Set whether search suggestions or history results come first in the
-      // urlbar results.
-      this._migrateMatchBucketsPrefForUIVersion60();
+      // The changes made in this version were backed out on mozilla-release
+      // after subsequent versions were added.  See bug 1444548.
     }
 
     if (currentUIVersion < 61) {
@@ -2379,46 +2375,6 @@ BrowserGlue.prototype = {
     if (willPrompt) {
       DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
     }
-  },
-
-  _migrateMatchBucketsPrefForUIVersion60(forceCheck = false) {
-    function check() {
-      if (CustomizableUI.getPlacementOfWidget("search-container")) {
-        Services.prefs.setCharPref(prefName,
-                                   "general:5,suggestion:Infinity");
-      }
-    }
-    let prefName = "browser.urlbar.matchBuckets";
-    let pref = Services.prefs.getCharPref(prefName, "");
-    if (!pref) {
-      // Set the pref based on the search bar's current placement.  If it's
-      // placed (the urlbar and search bar are not unified), then set the pref
-      // (so that history results will come before search suggestions).  If it's
-      // not placed (the urlbar and search bar are unified), then leave the pref
-      // cleared so that UnifiedComplete.js uses the default value (so that
-      // search suggestions will come before history results).
-      if (forceCheck) {
-        // This is the case when this is called by the test.
-        check();
-      } else {
-        // This is the normal, non-test case.  At this point the first window
-        // has not been set up yet, so use a CUI listener to get the placement
-        // when the nav-bar is first registered.
-        let listener = {
-          onAreaNodeRegistered(area, container) {
-            if (CustomizableUI.AREA_NAVBAR == area) {
-              check();
-              CustomizableUI.removeListener(listener);
-            }
-          },
-        };
-        CustomizableUI.addListener(listener);
-      }
-    }
-    // Else, the pref has already been set.  Normally this pref does not exist.
-    // Either the user customized it, or they were enrolled in the Shield study
-    // in Firefox 57 that effectively already migrated the pref.  Either way,
-    // leave it at its current value.
   },
 
   // ------------------------------
