@@ -225,6 +225,7 @@ StreamFilterParent::Broken()
 
     RunOnActorThread(FUNC, [=] {
       if (self->IPCActive()) {
+        self->mDisconnected = true;
         self->mState = State::Disconnected;
       }
     });
@@ -266,6 +267,15 @@ StreamFilterParent::Destroy()
                       &StreamFilterParent::Close),
     NS_DISPATCH_NORMAL);
 }
+
+IPCResult
+StreamFilterParent::RecvDestroy()
+{
+  AssertIsActorThread();
+  Destroy();
+  return IPC_OK();
+}
+
 
 IPCResult
 StreamFilterParent::RecvSuspend()
@@ -311,7 +321,6 @@ StreamFilterParent::RecvResume()
   }
   return IPC_OK();
 }
-
 IPCResult
 StreamFilterParent::RecvDisconnect()
 {
@@ -346,6 +355,7 @@ StreamFilterParent::RecvFlushedData()
 
     RunOnActorThread(FUNC, [=] {
       self->mState = State::Disconnected;
+      self->mDisconnected = true;
     });
   });
   return IPC_OK();
@@ -406,7 +416,19 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 
   mContext = aContext;
 
-  if (mState != State::Disconnected) {
+  if (aRequest != mChannel) {
+    mDisconnected = true;
+
+    RefPtr<StreamFilterParent> self(this);
+    RunOnActorThread(FUNC, [=] {
+      if (self->IPCActive()) {
+        self->mState = State::Disconnected;
+        CheckResult(self->SendError(NS_LITERAL_CSTRING("Channel redirected")));
+      }
+    });
+  }
+
+  if (!mDisconnected) {
     RefPtr<StreamFilterParent> self(this);
     RunOnActorThread(FUNC, [=] {
       if (self->IPCActive()) {
@@ -439,7 +461,7 @@ StreamFilterParent::OnStopRequest(nsIRequest* aRequest,
   AssertIsMainThread();
 
   mReceivedStop = true;
-  if (mState == State::Disconnected) {
+  if (mDisconnected) {
     return EmitStopRequest(aStatusCode);
   }
 
@@ -485,7 +507,7 @@ StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
 {
   AssertIsIOThread();
 
-  if (mState == State::Disconnected) {
+  if (mDisconnected) {
     // If we're offloading data in a thread pool, it's possible that we'll
     // have buffered some additional data while waiting for the buffer to
     // flush. So, if there's any buffered data left, flush that before we

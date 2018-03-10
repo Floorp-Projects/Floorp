@@ -1265,19 +1265,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XSLTProcessor", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "XULButtonElement", insecureContext: true, xbl: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "XULCheckboxElement", insecureContext: true, xbl: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULCommandEvent", insecureContext: true, xbl: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "XULControlElement", insecureContext: true, xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULDocument", insecureContext: true, xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULElement", insecureContext: true, xbl: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "XULLabeledControlElement", insecureContext: true, xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
   ];
 // IMPORTANT: Do not change the list above without review from a DOM peer!

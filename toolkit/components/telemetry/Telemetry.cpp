@@ -8,7 +8,7 @@
 
 #include <prio.h>
 #include <prproces.h>
-#ifdef XP_LINUX
+#if defined(XP_UNIX) && !defined(XP_DARWIN)
 #include <time.h>
 #else
 #include <chrono>
@@ -60,6 +60,7 @@
 #include "nsHashKeys.h"
 #include "nsBaseHashtable.h"
 #include "nsClassHashtable.h"
+#include "nsDataHashtable.h"
 #include "nsXULAppAPI.h"
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
@@ -99,6 +100,7 @@ namespace {
 using namespace mozilla;
 using namespace mozilla::HangMonitor;
 using Telemetry::Common::AutoHashtable;
+using Telemetry::Common::ToJSString;
 using mozilla::dom::Promise;
 using mozilla::dom::AutoJSAPI;
 using mozilla::Telemetry::HangReports;
@@ -791,6 +793,9 @@ class GetLoadedModulesResultRunnable final : public Runnable
   nsMainThreadPtrHandle<Promise> mPromise;
   SharedLibraryInfo mRawModules;
   nsCOMPtr<nsIThread> mWorkerThread;
+#if defined(XP_WIN)
+  nsDataHashtable<nsStringHashKey, nsString> mCertSubjects;
+#endif // defined(XP_WIN)
 
 public:
   GetLoadedModulesResultRunnable(const nsMainThreadPtrHandle<Promise>& aPromise,
@@ -801,6 +806,9 @@ public:
     , mWorkerThread(do_GetCurrentThread())
   {
     MOZ_ASSERT(!NS_IsMainThread());
+#if defined(XP_WIN)
+    ObtainCertSubjects();
+#endif // defined(XP_WIN)
   }
 
   NS_IMETHOD
@@ -900,12 +908,9 @@ public:
 
 #if defined(XP_WIN)
       // Cert Subject.
-      // NB: Currently we cannot lower this down to the profiler layer due to
-      // differing startup dependencies between the profiler and DllServices.
-      RefPtr<DllServices> dllSvc(DllServices::Get());
-      auto orgName = dllSvc->GetBinaryOrgName(info.GetModulePath().get());
-      if (orgName) {
-        JS::RootedString jsOrg(cx, JS_NewUCStringCopyZ(cx, (char16_t*) orgName.get()));
+      nsString* subject = mCertSubjects.GetValue(info.GetModulePath());
+      if (subject) {
+        JS::RootedString jsOrg(cx, ToJSString(cx, *subject));
         if (!jsOrg) {
           mPromise->MaybeReject(NS_ERROR_FAILURE);
           return NS_OK;
@@ -931,6 +936,28 @@ public:
     mPromise->MaybeResolve(moduleArray);
     return NS_OK;
   }
+
+private:
+#if defined(XP_WIN)
+  void ObtainCertSubjects()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    // NB: Currently we cannot lower this down to the profiler layer due to
+    // differing startup dependencies between the profiler and DllServices.
+    RefPtr<DllServices> dllSvc(DllServices::Get());
+
+    for (unsigned int i = 0, n = mRawModules.GetSize(); i != n; i++) {
+      const SharedLibrary& info = mRawModules.GetEntry(i);
+
+      auto orgName = dllSvc->GetBinaryOrgName(info.GetModulePath().get());
+      if (orgName) {
+        mCertSubjects.Put(info.GetModulePath(),
+                          nsDependentString(orgName.get()));
+      }
+    }
+  }
+#endif // defined(XP_WIN)
 };
 
 class GetLoadedModulesRunnable final : public Runnable
@@ -1674,7 +1701,7 @@ TelemetryImpl::MsSinceProcessStart(double* aResult)
 NS_IMETHODIMP
 TelemetryImpl::MsSystemNow(double* aResult)
 {
-#ifdef XP_LINUX
+#if defined(XP_UNIX) && !defined(XP_DARWIN)
   timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
   *aResult = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
@@ -1682,7 +1709,7 @@ TelemetryImpl::MsSystemNow(double* aResult)
   using namespace std::chrono;
   milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
   *aResult = static_cast<double>(ms.count());
-#endif // XP_LINUX
+#endif // XP_UNIX && !XP_DARWIN
 
   return NS_OK;
 }

@@ -1569,6 +1569,7 @@ pref("javascript.options.spectre.index_masking", true);
 pref("javascript.options.spectre.object_mitigations.barriers", true);
 pref("javascript.options.spectre.string_mitigations", true);
 pref("javascript.options.spectre.value_masking", true);
+pref("javascript.options.spectre.jit_to_C++_calls", true);
 
 // Streams API
 pref("javascript.options.streams", false);
@@ -5109,6 +5110,7 @@ pref("extensions.webextensions.keepStorageOnUninstall", false);
 pref("extensions.webextensions.keepUuidOnUninstall", false);
 // Redirect basedomain used by identity api
 pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org");
+pref("extensions.webextensions.restrictedDomains", "accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,content.cdn.mozilla.net,discovery.addons.mozilla.org,input.mozilla.org,install.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com,testpilot.firefox.com");
 // Whether or not webextension themes are supported.
 pref("extensions.webextensions.themes.enabled", false);
 pref("extensions.webextensions.themes.icons.enabled", false);

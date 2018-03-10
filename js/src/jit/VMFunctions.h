@@ -149,6 +149,12 @@ struct VMFunction
         return returnType;
     }
 
+    // Whether this function returns anything more than a boolean flag for
+    // failures.
+    bool returnsData() const {
+        return returnType == Type_Pointer || outParam != Type_Void;
+    }
+
     ArgProperties argProperties(uint32_t explicitArg) const {
         return ArgProperties((argumentProperties >> (2 * explicitArg)) & 3);
     }

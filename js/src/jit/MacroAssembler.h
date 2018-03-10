@@ -1957,6 +1957,32 @@ class MacroAssembler : public MacroAssemblerSpecific
                           Register offsetTemp, Register maskTemp)
         DEFINED_ON(mips_shared);
 
+    // ========================================================================
+    // Spectre Mitigations.
+    //
+    // Spectre attacks are side-channel attacks based on cache pollution or
+    // slow-execution of some instructions. We have multiple spectre mitigations
+    // possible:
+    //
+    //   - Stop speculative executions, with memory barriers. Memory barriers
+    //     force all branches depending on loads to be resolved, and thus
+    //     resolve all miss-speculated paths.
+    //
+    //   - Use conditional move instructions. Some CPUs have a branch predictor,
+    //     and not a flag predictor. In such cases, using a conditional move
+    //     instruction to zero some pointer/index is enough to add a
+    //     data-dependency which prevents any futher executions until the load is
+    //     resolved.
+
+    void spectreMaskIndex(Register index, Register length, Register output);
+    void spectreMaskIndex(Register index, const Address& length, Register output);
+
+    // The length must be a power of two. Performs a bounds check and Spectre index
+    // masking.
+    void boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure);
+
+    void speculationBarrier() PER_SHARED_ARCH;
+
     //}}} check_macroassembler_decl_style
   public:
 
@@ -2140,13 +2166,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         else
             store32(Imm32(key.constant()), dest);
     }
-
-    void spectreMaskIndex(Register index, Register length, Register output);
-    void spectreMaskIndex(Register index, const Address& length, Register output);
-
-    // The length must be a power of two. Performs a bounds check and Spectre index
-    // masking.
-    void boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure);
 
     template <typename T>
     void guardedCallPreBarrier(const T& address, MIRType type) {

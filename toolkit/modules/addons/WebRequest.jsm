@@ -764,7 +764,7 @@ HttpObserverManager = {
           data.responseHeaders = responseHeaders.toArray();
         }
 
-        if (opts.requestBody) {
+        if (opts.requestBody && channel.canModify) {
           requestBody = requestBody || WebRequestUpload.createRequestBody(channel.channel);
           data.requestBody = requestBody;
         }

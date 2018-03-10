@@ -133,7 +133,7 @@ public class GeckoSession extends LayerSession
             "GeckoViewNavigation", this,
             new String[]{
                 "GeckoView:LocationChange",
-                "GeckoView:OnLoadUri",
+                "GeckoView:OnLoadRequest",
                 "GeckoView:OnNewSession"
             }
         ) {
@@ -160,7 +160,7 @@ public class GeckoSession extends LayerSession
                                          message.getBoolean("canGoBack"));
                     delegate.onCanGoForward(GeckoSession.this,
                                             message.getBoolean("canGoForward"));
-                } else if ("GeckoView:OnLoadUri".equals(event)) {
+                } else if ("GeckoView:OnLoadRequest".equals(event)) {
                     final String uri = message.getString("uri");
                     final int where = convertGeckoTarget(message.getInt("where"));
                     final boolean result =
