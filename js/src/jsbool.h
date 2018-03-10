@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_Boolean_h
-#define builtin_Boolean_h
+#ifndef jsbool_h
+#define jsbool_h
 
 /*
  * JS boolean interface.
@@ -23,4 +23,4 @@ BooleanToString(JSContext* cx, bool b);
 
 } // namespace js
 
-#endif /* builtin_Boolean_h */
+#endif /* jsbool_h */
