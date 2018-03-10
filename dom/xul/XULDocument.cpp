@@ -2630,6 +2630,27 @@ XULDocument::ResumeWalk()
     return rv;
 }
 
+already_AddRefed<nsIXULWindow>
+XULDocument::GetXULWindowIfToplevelChrome() const
+{
+    nsCOMPtr<nsIDocShellTreeItem> item = GetDocShell();
+    if (!item) {
+        return nullptr;
+    }
+    nsCOMPtr<nsIDocShellTreeOwner> owner;
+    item->GetTreeOwner(getter_AddRefs(owner));
+    nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(owner);
+    if (!xulWin) {
+        return nullptr;
+    }
+    nsCOMPtr<nsIDocShell> xulWinShell;
+    xulWin->GetDocShell(getter_AddRefs(xulWinShell));
+    if (!SameCOMIdentity(xulWinShell, item)) {
+        return nullptr;
+    }
+    return xulWin.forget();
+}
+
 nsresult
 XULDocument::DoneWalking()
 {
@@ -2671,17 +2692,9 @@ XULDocument::DoneWalking()
         // Before starting layout, check whether we're a toplevel chrome
         // window.  If we are, setup some state so that we don't have to restyle
         // the whole tree after StartLayout.
-        if (nsCOMPtr<nsIDocShellTreeItem> item = GetDocShell()) {
-            nsCOMPtr<nsIDocShellTreeOwner> owner;
-            item->GetTreeOwner(getter_AddRefs(owner));
-            if (nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(owner)) {
-                nsCOMPtr<nsIDocShell> xulWinShell;
-                xulWin->GetDocShell(getter_AddRefs(xulWinShell));
-                if (SameCOMIdentity(xulWinShell, item)) {
-                    // We're the chrome document!
-                    xulWin->BeforeStartLayout();
-                }
-            }
+        if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
+            // We're the chrome document!
+            win->BeforeStartLayout();
         }
 
         StartLayout();
