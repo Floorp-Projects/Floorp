@@ -22,6 +22,7 @@
 // replace those syscalls, but they could also be used directly.
 
 struct stat;
+struct sockaddr_un;
 
 namespace mozilla {
 
@@ -42,6 +43,7 @@ class SandboxBrokerClient final : private SandboxBrokerCommon {
   int Unlink(const char* aPath);
   int Rmdir(const char* aPath);
   int Readlink(const char* aPath, void* aBuf, size_t aBufSize);
+  int Connect(const struct sockaddr_un* aAddr, size_t aLen, int aType);
 
  private:
   int mFileDesc;
