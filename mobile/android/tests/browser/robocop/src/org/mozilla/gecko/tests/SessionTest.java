@@ -353,6 +353,7 @@ public abstract class SessionTest extends UITest {
             final JSONArray tabs = window.getJSONArray("tabs");
             final int optSelected = window.optInt("selected", -1);
 
+            asserter.is(tabs.length(), sessionTabs.length, "number of saved tabs matches");
             asserter.is(optSelected, session.getIndex() + 1, "selected tab matches");
 
             for (int i = 0; i < tabs.length(); i++) {
