@@ -107,7 +107,7 @@ Enrollment
       experimentType
          The type of preference experiment. Currently this can take
          values "exp" and "exp-highpop", the latter being for
-         experiments targetting large numbers of users.
+         experiments targeting large numbers of users.
 
 Unenrollment
    method

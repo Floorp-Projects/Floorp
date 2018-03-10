@@ -51,7 +51,7 @@ can point to the directory via
 Instructions for multi-locale builds
 ------------------------------------
 
-If you want to create a single build with mutliple locales, you will do
+If you want to create a single build with multiple locales, you will do
 
 #. Create a build and package
 

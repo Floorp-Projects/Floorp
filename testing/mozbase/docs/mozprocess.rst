@@ -18,7 +18,7 @@ Running a process
 mozprocess consists of two classes: ProcessHandler inherits from ProcessHandlerMixin.
 
 Let's see how to run a process.
-First, the class should be instanciated with at least one argument which is a command (or a list formed by the command followed by its arguments).
+First, the class should be instantiated with at least one argument which is a command (or a list formed by the command followed by its arguments).
 Then the process can be launched using the *run()* method.
 Finally the *wait()* method will wait until end of execution.
 
@@ -207,7 +207,7 @@ Except on Windows, you can specify the signal with which to kill method the proc
 End of execution
 ````````````````
 
-You can provide a function or a list of functions to call at the end of the process using the initilization parameter *onFinish*.
+You can provide a function or a list of functions to call at the end of the process using the initialization parameter *onFinish*.
 
 .. code-block:: python
 
@@ -297,7 +297,7 @@ By default the *ignore_children* option is False. In that case, killing the main
     print("kill")
     p.kill()
 
-If *ignore_children* is set to *True*, killing will apply only to the main process that will wait children end of execution before stoping (join).
+If *ignore_children* is set to *True*, killing will apply only to the main process that will wait children end of execution before stopping (join).
 
 .. code-block:: python
 
