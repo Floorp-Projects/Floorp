@@ -20,12 +20,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.CheckResult;
+import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
-import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.PrefsHelper;
@@ -51,7 +50,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
     // This is maximum volume level difference when audio ducking. The number is arbitrary.
     private static final int AUDIO_DUCK_MAX_STEPS = 3;
-    private enum AudioDucking { START, STOP };
+    private enum AudioDucking { START, STOP }
     private boolean mSupportsDucking = false;
     private int mAudioDuckCurrentSteps = 0;
 
@@ -225,7 +224,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             case ACTION_RESUME_BY_AUDIO_FOCUS :
                 mController.getTransportControls().sendCustomAction(ACTION_RESUME_BY_AUDIO_FOCUS, null);
                 break;
-            case ACTION_START_AUDIO_DUCK:
+            case ACTION_START_AUDIO_DUCK :
                 handleAudioDucking(AudioDucking.START);
                 break;
             case ACTION_STOP_AUDIO_DUCK :
@@ -306,7 +305,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
         mSession.setCallback(new MediaSession.Callback() {
             @Override
-            public void onCustomAction(String action, Bundle extras) {
+            public void onCustomAction(@NonNull String action, Bundle extras) {
                 if (action.equals(ACTION_PAUSE_BY_AUDIO_FOCUS)) {
                     Log.d(LOGTAG, "Controller, pause by audio focus changed");
                     setState(State.PAUSED);
