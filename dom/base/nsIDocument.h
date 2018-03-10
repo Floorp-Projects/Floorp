@@ -3274,8 +3274,15 @@ public:
     --mIgnoreOpensDuringUnloadCounter;
   }
 
-  virtual bool AllowPaymentRequest() const = 0;
-  virtual void SetAllowPaymentRequest(bool aAllowPaymentRequest) = 0;
+  bool AllowPaymentRequest() const
+  {
+    return mAllowPaymentRequest;
+  }
+
+  void SetAllowPaymentRequest(bool aAllowPaymentRequest)
+  {
+    mAllowPaymentRequest = aAllowPaymentRequest;
+  }
 
   bool IsShadowDOMEnabled() const
   {
