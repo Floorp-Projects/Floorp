@@ -384,7 +384,7 @@ WifiGeoPositionProvider.prototype = {
       xhr.open("POST", url, true);
       xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
     } catch (e) {
-      this.listener.notifyError(POSITION_UNAVAILABLE);
+      notifyPositionUnavailable(this.listener);
       return;
     }
     xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
@@ -393,16 +393,16 @@ WifiGeoPositionProvider.prototype = {
     xhr.timeout = Services.prefs.getIntPref("geo.wifi.xhr.timeout");
     xhr.ontimeout = () => {
       LOG("Location request XHR timed out.")
-      this.listener.notifyError(POSITION_UNAVAILABLE);
+      notifyPositionUnavailable(this.listener);
     };
     xhr.onerror = () => {
-      this.listener.notifyError(POSITION_UNAVAILABLE);
+      notifyPositionUnavailable(this.listener);
     };
     xhr.onload = () => {
       LOG("server returned status: " + xhr.status + " --> " +  JSON.stringify(xhr.response));
       if ((xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) ||
           !xhr.response || !xhr.response.location) {
-        this.listener.notifyError(POSITION_UNAVAILABLE);
+        notifyPositionUnavailable(this.listener);
         return;
       }
 
@@ -410,13 +410,21 @@ WifiGeoPositionProvider.prototype = {
                                                   xhr.response.location.lng,
                                                   xhr.response.accuracy);
 
-      this.listener.update(newLocation);
+      if (this.listener) {
+        this.listener.update(newLocation);
+      }
       gCachedRequest = new CachedRequest(newLocation, data.cellTowers, data.wifiAccessPoints);
     };
 
     var requestData = JSON.stringify(data);
     LOG("sending " + requestData);
     xhr.send(requestData);
+
+    function notifyPositionUnavailable(listener) {
+      if (listener) {
+        listener.notifyError(POSITION_UNAVAILABLE);
+      }
+    }
   }
 };
 
