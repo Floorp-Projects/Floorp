@@ -193,17 +193,18 @@ class AddonTarget extends Component {
     uninstallAddon(target.addonID);
   }
 
-  reload() {
+  async reload() {
     let { client, target } = this.props;
-    // This function sometimes returns a partial promise that only
-    // implements then().
-    client.request({
-      to: target.addonActor,
-      type: "reload"
-    }).then(() => {}, error => {
-      throw new Error(
-        "Error reloading addon " + target.addonID + ": " + error);
-    });
+    let { AboutDebugging } = window;
+    try {
+      await client.request({
+        to: target.addonActor,
+        type: "reload"
+      });
+      AboutDebugging.emit("addon-reload");
+    } catch (e) {
+      throw new Error("Error reloading addon " + target.addonID + ": " + e.message);
+    }
   }
 
   render() {

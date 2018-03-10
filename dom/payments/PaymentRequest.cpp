@@ -31,6 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PaymentRequest,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbortPromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResponse)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mShippingAddress)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFullShippingAddress)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PaymentRequest,
@@ -40,6 +41,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PaymentRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAbortPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResponse)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mShippingAddress)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFullShippingAddress)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PaymentRequest)
@@ -743,6 +745,10 @@ PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
     return;
   }
 
+  // https://github.com/w3c/payment-request/issues/692
+  mShippingAddress.swap(mFullShippingAddress);
+  mFullShippingAddress = nullptr;
+
   RefPtr<PaymentResponse> paymentResponse =
     new PaymentResponse(GetOwner(), mInternalId, mId, aMethodName,
                         mShippingOption, mShippingAddress, aDetails,
@@ -940,11 +946,15 @@ PaymentRequest::UpdateShippingAddress(const nsAString& aCountry,
                                       const nsAString& aRecipient,
                                       const nsAString& aPhone)
 {
-  mShippingAddress = new PaymentAddress(GetOwner(), aCountry, aAddressLine,
+  nsTArray<nsString> emptyArray;
+  mShippingAddress = new PaymentAddress(GetOwner(), aCountry, emptyArray,
                                         aRegion, aCity, aDependentLocality,
                                         aPostalCode, aSortingCode, aLanguageCode,
-                                        aOrganization, aRecipient, aPhone);
-
+                                        EmptyString(), EmptyString(), EmptyString());
+  mFullShippingAddress = new PaymentAddress(GetOwner(), aCountry, aAddressLine,
+                                            aRegion, aCity, aDependentLocality,
+                                            aPostalCode, aSortingCode, aLanguageCode,
+                                            aOrganization, aRecipient, aPhone);
   // Fire shippingaddresschange event
   return DispatchUpdateEvent(NS_LITERAL_STRING("shippingaddresschange"));
 }

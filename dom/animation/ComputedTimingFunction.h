@@ -7,8 +7,13 @@
 #ifndef mozilla_ComputedTimingFunction_h
 #define mozilla_ComputedTimingFunction_h
 
+#include "nsDebug.h"
 #include "nsSMILKeySpline.h"  // nsSMILKeySpline
+#include "nsStringFwd.h"
 #include "nsTimingFunction.h"
+
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 

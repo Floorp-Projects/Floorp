@@ -74,8 +74,9 @@ private:
   RefPtr<CamerasParent> mParent;
 };
 
-class CamerasParent :  public PCamerasParent,
-                       public nsIObserver
+class CamerasParent final
+  : public PCamerasParent
+  , public nsIObserver
 {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
