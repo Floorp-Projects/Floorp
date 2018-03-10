@@ -746,6 +746,8 @@ class Simulator : public DecoderVisitor {
     pc_modified_ = true;
   }
 
+  void trigger_wasm_interrupt();
+  void handle_wasm_interrupt();
   bool handle_wasm_ill_fault();
   bool handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes);
 
@@ -2581,6 +2583,7 @@ class Simulator : public DecoderVisitor {
   // automatically incremented.
   bool pc_modified_;
   const Instruction* pc_;
+  bool wasm_interrupt_;
 
   static const char* xreg_names[];
   static const char* wreg_names[];
