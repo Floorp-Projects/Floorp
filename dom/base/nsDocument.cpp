@@ -1490,6 +1490,10 @@ nsIDocument::nsIDocument()
     mStyleSetFilled(false),
     mSSApplicableStateNotificationPending(false),
     mMayHaveTitleElement(false),
+    mDOMLoadingSet(false),
+    mDOMInteractiveSet(false),
+    mDOMCompleteSet(false),
+    mAutoFocusFired(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -1568,10 +1572,6 @@ nsDocument::nsDocument(const char* aContentType)
 #ifdef DEBUG
   , mWillReparent(false)
 #endif
-  , mDOMLoadingSet(false)
-  , mDOMInteractiveSet(false)
-  , mDOMCompleteSet(false)
-  , mAutoFocusFired(false)
 {
   SetContentTypeInternal(nsDependentCString(aContentType));
 
@@ -8891,7 +8891,7 @@ nsDocument::CloneDocHelper(nsDocument* clone, bool aPreallocateChildren) const
 }
 
 void
-nsDocument::SetReadyStateInternal(ReadyState rs)
+nsIDocument::SetReadyStateInternal(ReadyState rs)
 {
   mReadyState = rs;
   if (rs == READYSTATE_UNINITIALIZED) {
@@ -9413,7 +9413,7 @@ private:
 };
 
 void
-nsDocument::SetAutoFocusElement(Element* aAutoFocusElement)
+nsIDocument::SetAutoFocusElement(Element* aAutoFocusElement)
 {
   if (mAutoFocusFired) {
     // Too late.
@@ -9431,7 +9431,7 @@ nsDocument::SetAutoFocusElement(Element* aAutoFocusElement)
 }
 
 void
-nsDocument::TriggerAutoFocus()
+nsIDocument::TriggerAutoFocus()
 {
   if (mAutoFocusFired) {
     return;
@@ -9799,20 +9799,13 @@ nsDocument::GetStateObject(nsIVariant** aState)
   return NS_OK;
 }
 
-nsDOMNavigationTiming*
-nsDocument::GetNavigationTiming() const
-{
-  return mTiming;
-}
-
-nsresult
-nsDocument::SetNavigationTiming(nsDOMNavigationTiming* aTiming)
+void
+nsIDocument::SetNavigationTiming(nsDOMNavigationTiming* aTiming)
 {
   mTiming = aTiming;
   if (!mLoadingTimeStamp.IsNull() && mTiming) {
-    mTiming->SetDOMLoadingTimeStamp(nsIDocument::GetDocumentURI(), mLoadingTimeStamp);
+    mTiming->SetDOMLoadingTimeStamp(GetDocumentURI(), mLoadingTimeStamp);
   }
-  return NS_OK;
 }
 
 Element*
@@ -13408,7 +13401,7 @@ nsIDocument::GetSelection(ErrorResult& aRv)
 }
 
 void
-nsDocument::RecordNavigationTiming(ReadyState aReadyState)
+nsIDocument::RecordNavigationTiming(ReadyState aReadyState)
 {
   if (!XRE_IsContentProcess()) {
     return;

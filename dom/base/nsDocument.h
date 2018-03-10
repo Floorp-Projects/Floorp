@@ -406,8 +406,6 @@ public:
   virtual void BeginLoad() override;
   virtual void EndLoad() override;
 
-  virtual void SetReadyStateInternal(ReadyState rs) override;
-
   virtual void FlushExternalResources(mozilla::FlushType aType) override;
   virtual void SetXMLDeclaration(const char16_t *aVersion,
                                  const char16_t *aEncoding,
@@ -659,9 +657,6 @@ public:
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
-  virtual void SetAutoFocusElement(Element* aAutoFocusElement) override;
-  virtual void TriggerAutoFocus() override;
-
   virtual void SetScrollToRef(nsIURI *aDocumentURI) override;
   virtual void ScrollToRef() override;
   virtual void ResetScrolledToRefAlready() override;
@@ -688,9 +683,6 @@ public:
   virtual void NotifyMediaFeatureValuesChanged() override;
 
   virtual nsresult GetStateObject(nsIVariant** aResult) override;
-
-  virtual nsDOMNavigationTiming* GetNavigationTiming() const override;
-  virtual nsresult SetNavigationTiming(nsDOMNavigationTiming* aTiming) override;
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) override;
 
@@ -897,9 +889,6 @@ public:
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
-  // Recorded time of change to 'loading' state.
-  mozilla::TimeStamp mLoadingTimeStamp;
-
   bool mHasWarnedAboutBoxObjects:1;
 
   bool mDelayFrameLoaderInitialization:1;
@@ -942,8 +931,6 @@ public:
   nsCOMPtr<nsIApplicationCache> mApplicationCache;
 
   nsCOMPtr<nsIContent> mFirstBaseNodeWithHref;
-
-  RefPtr<nsDOMNavigationTiming> mTiming;
 private:
   friend class nsUnblockOnloadEvent;
   // Recomputes the visibility state but doesn't set the new value.
@@ -1007,8 +994,6 @@ private:
 
   RefPtr<nsContentList> mImageMaps;
 
-  nsWeakPtr mAutoFocusElement;
-
   nsCString mScrollToRef;
   uint8_t mScrolledToRefAlready : 1;
   uint8_t mChangeScrollPosWhenScrollingToRef : 1;
@@ -1037,13 +1022,6 @@ private:
 public:
   bool mWillReparent;
 #endif
-
-private:
-  void RecordNavigationTiming(ReadyState aReadyState);
-  bool mDOMLoadingSet : 1;
-  bool mDOMInteractiveSet : 1;
-  bool mDOMCompleteSet : 1;
-  bool mAutoFocusFired : 1;
 };
 
 class nsDocumentOnStack
