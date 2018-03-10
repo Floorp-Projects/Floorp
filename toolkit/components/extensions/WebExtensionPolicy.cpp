@@ -303,14 +303,14 @@ namespace {
     {}
 
   private:
-    mutable Maybe<AtomSet> mAtomSet;
+    mutable RefPtr<AtomSet> mAtomSet;
     const char* mPref;
   };
 
   const AtomSet&
   AtomSetPref::Get() const
   {
-    if (mAtomSet.isNothing()) {
+    if (!mAtomSet) {
       nsAutoCString eltsString;
       Unused << Preferences::GetCString(mPref, eltsString);
 
@@ -319,17 +319,17 @@ namespace {
         elts.AppendElement(NS_ConvertUTF8toUTF16(elt));
         elts.LastElement().StripWhitespace();
       }
-      mAtomSet.emplace(elts);
+      mAtomSet = new AtomSet(elts);
     }
 
-    return mAtomSet.ref();
+    return *mAtomSet;
   }
 
   NS_IMETHODIMP
   AtomSetPref::Observe(nsISupports *aSubject, const char *aTopic,
                        const char16_t *aData)
   {
-    mAtomSet.reset();
+    mAtomSet = nullptr;
     return NS_OK;
   }
 
