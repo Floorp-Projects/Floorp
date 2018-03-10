@@ -107,11 +107,11 @@ struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
   ~FullscreenRequest();
 
   Element* GetElement() const { return mElement; }
-  nsDocument* GetDocument() const { return mDocument; }
+  nsIDocument* GetDocument() const { return mDocument; }
 
 private:
   RefPtr<Element> mElement;
-  RefPtr<nsDocument> mDocument;
+  RefPtr<nsIDocument> mDocument;
 
 public:
   // This value should be true if the fullscreen request is
@@ -669,18 +669,6 @@ public:
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) override;
 
-  virtual nsTArray<Element*> GetFullscreenStack() const override;
-  virtual void AsyncRequestFullScreen(
-    mozilla::UniquePtr<FullscreenRequest>&& aRequest) override;
-  virtual void RestorePreviousFullScreenState() override;
-  virtual bool IsFullscreenLeaf() override;
-  virtual nsresult
-    RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement) override;
-
-  virtual nsresult RemoteFrameFullscreenReverted() override;
-  virtual nsIDocument* GetFullscreenRoot() override;
-  virtual void SetFullscreenRoot(nsIDocument* aRoot) override;
-
   // Returns the size of the mBlockedTrackingNodes array. (nsIDocument.h)
   //
   // This array contains nodes that have been blocked to prevent
@@ -706,34 +694,6 @@ public:
   // canceled by the URL classifier (Safebrowsing).
   //
   already_AddRefed<nsSimpleContentList> BlockedTrackingNodes() const;
-
-  // Do the "fullscreen element ready check" from the fullscreen spec.
-  // It returns true if the given element is allowed to go into fullscreen.
-  bool FullscreenElementReadyCheck(Element* aElement, bool aWasCallerChrome);
-
-  // This is called asynchronously by nsIDocument::AsyncRequestFullScreen()
-  // to move this document into full-screen mode if allowed.
-  void RequestFullScreen(mozilla::UniquePtr<FullscreenRequest>&& aRequest);
-
-  // Removes all elements from the full-screen stack, removing full-scren
-  // styles from the top element in the stack.
-  void CleanupFullscreenState();
-
-  // Pushes aElement onto the full-screen stack, and removes full-screen styles
-  // from the former full-screen stack top, and its ancestors, and applies the
-  // styles to aElement. aElement becomes the new "full-screen element".
-  bool FullScreenStackPush(Element* aElement);
-
-  // Remove the top element from the full-screen stack. Removes the full-screen
-  // styles from the former top element, and applies them to the new top
-  // element, if there is one.
-  void FullScreenStackPop();
-
-  // Returns the top element from the full-screen stack.
-  Element* FullScreenStackTop() override;
-
-  // DOM-exposed fullscreen API
-  bool FullscreenEnabled(mozilla::dom::CallerType aCallerType) override;
 
   void RequestPointerLock(Element* aElement,
                           mozilla::dom::CallerType aCallerType) override;
@@ -820,26 +780,12 @@ protected:
 
   void EnsureOnloadBlocker();
 
-  // Apply the fullscreen state to the document, and trigger related
-  // events. It returns false if the fullscreen element ready check
-  // fails and nothing gets changed.
-  bool ApplyFullscreen(const FullscreenRequest& aRequest);
-
   // Array of owning references to all children
   nsAttrAndChildArray mChildren;
 
   // Tracker for animations that are waiting to start.
   // nullptr until GetOrCreatePendingAnimationTracker is called.
   RefPtr<mozilla::PendingAnimationTracker> mPendingAnimationTracker;
-
-  // Stack of full-screen elements. When we request full-screen we push the
-  // full-screen element onto this stack, and when we cancel full-screen we
-  // pop one off this stack, restoring the previous full-screen state
-  nsTArray<nsWeakPtr> mFullScreenStack;
-
-  // The root of the doc tree in which this document is in. This is only
-  // non-null when this document is in fullscreen mode.
-  nsWeakPtr mFullscreenRoot;
 
 public:
   RefPtr<mozilla::EventListenerManager> mListenerManager;
@@ -873,8 +819,6 @@ public:
   // pointing to them.  We track whether we ever reported use counters so
   // that we only report them once for the document.
   bool mReportedUseCounters:1;
-
-  uint8_t mPendingFullscreenRequests;
 
   uint8_t mXMLDeclarationBits;
 
