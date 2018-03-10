@@ -73,7 +73,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     objectMetadataTable(nullptr),
     innerViews(zone),
     lazyArrayBuffers(nullptr),
-    wasm(zone->runtimeFromActiveCooperatingThread()),
+    wasm(zone),
     nonSyntacticLexicalEnvironments_(nullptr),
     gcIncomingGrayPointers(nullptr),
     debugModeBits(0),
@@ -183,7 +183,7 @@ JSRuntime::createJitRuntime(JSContext* cx)
     if (!jrt)
         return nullptr;
 
-    // Protect jitRuntime_ from being observed (by jit::InterruptRunningCode)
+    // Protect jitRuntime_ from being observed (by InterruptRunningJitCode)
     // while it is being initialized. Unfortunately, initialization depends on
     // jitRuntime_ being non-null, so we can't just wait to assign jitRuntime_.
     JitRuntime::AutoPreventBackedgePatching apbp(cx->runtime(), jrt);

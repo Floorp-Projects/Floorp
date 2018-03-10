@@ -406,7 +406,7 @@ Instance::Instance(JSContext* cx,
 #endif
     tlsData()->instance = this;
     tlsData()->cx = cx;
-    tlsData()->resetInterrupt(cx);
+    tlsData()->stackLimit = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
     tlsData()->jumpTable = code_->tieringJumpTable();
 
     Tier callerTier = code_->bestTier();

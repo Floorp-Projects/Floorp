@@ -784,6 +784,7 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
       case UnalignedExit:
       case TrapExit:
       case Throw:
+      case Interrupt:
         break;
       default:
         MOZ_CRASH("should use more specific constructor");
@@ -910,24 +911,4 @@ wasm::CreateTlsData(uint32_t globalDataLength)
     tlsData->allocatedBase = allocatedBase;
 
     return UniqueTlsData(tlsData);
-}
-
-void
-TlsData::setInterrupt()
-{
-    interrupt = true;
-    stackLimit = UINTPTR_MAX;
-}
-
-bool
-TlsData::isInterrupted() const
-{
-    return interrupt || stackLimit == UINTPTR_MAX;
-}
-
-void
-TlsData::resetInterrupt(JSContext* cx)
-{
-    interrupt = false;
-    stackLimit = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
 }
