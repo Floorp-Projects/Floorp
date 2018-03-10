@@ -7,7 +7,7 @@
 #ifndef vm_BooleanObject_h
 #define vm_BooleanObject_h
 
-#include "builtin/Boolean.h"
+#include "jsbool.h"
 
 #include "vm/NativeObject.h"
 

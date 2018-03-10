@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_Array_inl_h
-#define builtin_Array_inl_h
+#ifndef vm_jsarrayinlines_h
+#define vm_jsarrayinlines_h
 
-#include "builtin/Array.h"
+#include "jsarray.h"
 
 #include "vm/ArgumentsObject.h"
 #include "vm/JSObject.h"
@@ -36,4 +36,4 @@ GetElement(JSContext* cx, HandleObject obj, uint32_t index, MutableHandleValue v
 
 } // namespace js
 
-#endif // builtin_Array_inl_h
+#endif // vm_jsarrayinlines_h

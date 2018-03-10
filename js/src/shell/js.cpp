@@ -51,6 +51,7 @@
 #endif
 
 #include "jsapi.h"
+#include "jsarray.h"
 #include "jsfriendapi.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -60,7 +61,6 @@
 #endif
 #include "shellmoduleloader.out.h"
 
-#include "builtin/Array.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"

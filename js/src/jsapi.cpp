@@ -23,6 +23,8 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "jsarray.h"
+#include "jsbool.h"
 #include "jsdate.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
@@ -31,9 +33,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/Array.h"
 #include "builtin/AtomicsObject.h"
-#include "builtin/Boolean.h"
 #include "builtin/Eval.h"
 #include "builtin/JSON.h"
 #include "builtin/MapObject.h"

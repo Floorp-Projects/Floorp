@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_Boolean_inl_h
-#define builtin_Boolean_inl_h
+#ifndef jsboolinlines_h
+#define jsboolinlines_h
 
-#include "builtin/Boolean.h"
+#include "jsbool.h"
 
 #include "vm/BooleanObject.h"
 #include "vm/JSContext.h"
@@ -27,4 +27,4 @@ EmulatesUndefined(JSObject* obj)
 
 } /* namespace js */
 
-#endif /* builtin_Boolean_inl_h */
+#endif /* jsboolinlines_h */
