@@ -71,10 +71,9 @@ add_task(function* () {
     "Closed tree item should have aria-expanded unset");
 
   info("Selecting and expanding list container");
-  let updated = waitForMultipleChildrenUpdates(inspector);
   yield selectNode("ul", inspector);
   EventUtils.synthesizeKey("VK_RIGHT", {}, win);
-  yield updated;
+  yield waitForMultipleChildrenUpdates(inspector);
 
   is(rootElt.getAttribute("aria-activedescendant"),
     listContainer.tagLine.getAttribute("id"),
@@ -90,9 +89,8 @@ add_task(function* () {
     "accessibility");
 
   info("Collapsing list container");
-  updated = waitForMultipleChildrenUpdates(inspector);
   EventUtils.synthesizeKey("VK_LEFT", {}, win);
-  yield updated;
+  yield waitForMultipleChildrenUpdates(inspector);
 
   is(listContainer.tagLine.getAttribute("aria-expanded"), "false",
     "Closed tree item should have aria-expanded unset");

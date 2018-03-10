@@ -10,6 +10,11 @@
 
 // Test the webconsole output for various types of DOM Nodes.
 
+// There are shutdown issues for which multiple rejections are left uncaught.
+// See bug 1018184 for resolving these issues.
+const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
+PromiseTestUtils.whitelistRejectionsGlobally(/this\.toolbox is null/);
+
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console-output-dom-elements.html";
 

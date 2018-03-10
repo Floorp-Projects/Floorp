@@ -861,9 +861,10 @@ panelview .toolbarbutton-1,
 }
 
 .PanelUI-subView .subviewbutton-nav::after {
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   content: url(chrome://browser/skin/back-12.svg);
-  fill: GrayText;
+  fill: currentColor;
+  fill-opacity: 0.6;
   float: right;
   transform: translateY(1px);
 }
@@ -892,10 +893,10 @@ panelview .toolbarbutton-1,
 
 .subviewbutton[type="highlight-bookmark"]::after,
 .subviewbutton[type="highlight-history"]::after {
-  -moz-context-properties: fill;
-  fill: GrayText;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.4;
   float: right;
-  opacity: .5;
   /* Centers the icon and resizes it to 12px square. */
   transform: translateY(2px) scaleX(.75);
 }
@@ -1262,15 +1263,16 @@ toolbaritem[overflowedItem=true],
 }
 
 .widget-overflow-list .subviewbutton-nav:-moz-locale-dir(ltr)::after {
-    transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .widget-overflow-list .subviewbutton-nav::after {
-    margin-inline-start: 10px;
-    -moz-context-properties: fill;
-    content: url(chrome://browser/skin/back-12.svg);
-    fill: GrayText;
-    float: right;
+  margin-inline-start: 10px;
+  -moz-context-properties: fill, fill-opacity;
+  content: url(chrome://browser/skin/back-12.svg);
+  fill: currentColor;
+  fill-opacity: 0.6;
+  float: right;
 }
 
 toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
@@ -1542,8 +1544,9 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 
 .subviewbutton.download > .action-button {
   -moz-appearance: none; /* To avoid native Windows hover styling */
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
+  fill-opacity: 1;
 %ifdef XP_MACOSX
   list-style-image: url("chrome://browser/skin/search-glass.svg");
 %else
@@ -1559,8 +1562,8 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 }
 
 .subviewbutton.download:not([openLabel]):not([retryLabel]) > .action-button {
-  fill: GrayText;
-  opacity: .5;
+  fill: currentColor;
+  fill-opacity: 0.4;
 }
 
 .subviewbutton.download:-moz-any([openLabel],[retryLabel]) > .action-button@buttonStateHover@ {

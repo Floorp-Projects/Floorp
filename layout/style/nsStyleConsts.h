@@ -9,8 +9,9 @@
 #ifndef nsStyleConsts_h___
 #define nsStyleConsts_h___
 
-#include "gfxRect.h"
-#include "nsFont.h"
+#include <inttypes.h>
+
+#include "gfxFontConstants.h"
 #include "X11UndefineNone.h"
 
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct

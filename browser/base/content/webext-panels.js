@@ -89,7 +89,16 @@ var gBrowser = {
   },
 };
 
-async function loadPanel(extensionId, extensionUrl, browserStyle) {
+function loadPanel(extensionId, extensionUrl, browserStyle) {
+  let browserEl = document.getElementById("webext-panels-browser");
+  if (browserEl) {
+    if (browserEl.currentURI.spec === extensionUrl) {
+      return;
+    }
+    // Forces runtime disconnect.  Remove the stack (parent).
+    browserEl.parentNode.remove();
+  }
+
   let policy = WebExtensionPolicy.getByID(extensionId);
   let sidebar = {
     uri: extensionUrl,

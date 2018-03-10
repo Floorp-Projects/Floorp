@@ -11,7 +11,7 @@
 
 #include <windows.h>
 #include <winnt.h>
-#include <ImageHlp.h>
+#include <imagehlp.h>
 #include <iostream>
 #include <set>
 #include <sstream>

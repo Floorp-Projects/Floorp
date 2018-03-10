@@ -7,6 +7,11 @@
 // MOZ_TOOLBOX_TEST_SCRIPT env variable. It does that as test resources fetched from
 // chrome://mochitests/ package isn't available from browser toolbox process.
 
+// There are shutdown issues for which multiple rejections are left uncaught.
+// See bug 1018184 for resolving these issues.
+const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
+PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
+
 // On debug test runner, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
