@@ -35,6 +35,11 @@ const HTTP_FOUND = 302;
 const HTTP_SEE_OTHER = 303;
 const HTTP_TEMPORARY_REDIRECT = 307;
 
+// The maximum number of bytes a NetworkResponseListener can hold: 1 MB
+const RESPONSE_BODY_LIMIT = 1048576;
+// Exported for testing.
+exports.RESPONSE_BODY_LIMIT = RESPONSE_BODY_LIMIT;
+
 /**
  * Check if a given network request should be logged by a network monitor
  * based on the specified filters.
@@ -274,16 +279,13 @@ function NetworkResponseListener(owner, httpActivity) {
   this.receivedData = "";
   this.httpActivity = httpActivity;
   this.bodySize = 0;
-  // Indicates if the response had a size greater than response body limit.
+  // Indicates if the response had a size greater than RESPONSE_BODY_LIMIT.
   this.truncated = false;
   // Note that this is really only needed for the non-e10s case.
   // See bug 1309523.
   let channel = this.httpActivity.channel;
   this._wrappedNotificationCallbacks = channel.notificationCallbacks;
   channel.notificationCallbacks = this;
-
-  this.responseBodyLimit = Services.prefs.getIntPref(
-    "devtools.netmonitor.responseBodyLimit");
 }
 
 NetworkResponseListener.prototype = {
@@ -395,7 +397,7 @@ NetworkResponseListener.prototype = {
   /**
    * Stores the received data, if request/response body logging is enabled. It
    * also does limit the number of stored bytes, based on the
-   * `devtools.netmonitor.responseBodyLimit` pref.
+   * RESPONSE_BODY_LIMIT constant.
    *
    * Learn more about nsIStreamListener at:
    * https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIStreamListener
@@ -413,13 +415,10 @@ NetworkResponseListener.prototype = {
     this.bodySize += count;
 
     if (!this.httpActivity.discardResponseBody) {
-      let limit = Services.prefs.getIntPref("devtools.netmonitor.responseBodyLimit");
-      if (this.receivedData.length < limit || limit == 0) {
+      if (this.receivedData.length < RESPONSE_BODY_LIMIT) {
         this.receivedData +=
           NetworkHelper.convertToUnicode(data, request.contentCharset);
-      }
-      if (this.receivedData.length > limit && limit > 0) {
-        this.receivedData = this.receivedData.substr(0, limit);
+      } else {
         this.truncated = true;
       }
     }

@@ -8,8 +8,8 @@
  */
 
 add_task(async function () {
-  let limit = Services.prefs.getIntPref("devtools.netmonitor.responseBodyLimit");
-  let URL = EXAMPLE_URL + "sjs_truncate-test-server.sjs?limit=" + limit;
+  let { RESPONSE_BODY_LIMIT } = require("devtools/shared/webconsole/network-monitor");
+  let URL = EXAMPLE_URL + "sjs_truncate-test-server.sjs?limit=" + RESPONSE_BODY_LIMIT;
   let { monitor, tab } = await initNetMonitor(URL);
 
   info("Starting test... ");
