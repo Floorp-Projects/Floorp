@@ -8,7 +8,6 @@
 
 #include "nsCoord.h"
 #include "nsCSSPropertyID.h"
-#include "nsString.h"
 #include "nsTArrayForwardDeclare.h"
 #include "gfxFontFamilyList.h"
 #include "nsStringFwd.h"

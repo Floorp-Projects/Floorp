@@ -22,7 +22,7 @@
 #include "nsCSSPropertyID.h"
 #include "mozilla/dom/CSSValue.h"
 #include "nsWrapperCache.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 

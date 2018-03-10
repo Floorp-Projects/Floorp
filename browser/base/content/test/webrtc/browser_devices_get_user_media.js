@@ -515,7 +515,7 @@ var gTests = [
         Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
       let elt = win.document.getElementById("audioVideoButton");
       EventUtils.synthesizeMouseAtCenter(elt, {}, win);
-      await promiseWaitForCondition(() => !gIdentityHandler._identityPopup.hidden);
+      await TestUtils.waitForCondition(() => !gIdentityHandler._identityPopup.hidden);
     }
     ok(!gIdentityHandler._identityPopup.hidden, "control center should be open");
 
