@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=482260
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 
@@ -29,22 +30,24 @@ var successCallbackCalled = 0;
 var failureCallbackCalled = 0;
 const totalResults = 100;
 
-function successCallback(position) {
-  successCallbackCalled++;
-  testPassed();
-}
-
-function failureCallback(code) {
-  failureCallbackCalled++;
-  testPassed();
-}
-
 function test1() {
-  for (var x = 0; x < totalResults; x++)
-    navigator.geolocation.watchPosition(successCallback, failureCallback);
+  for (var x = 0; x < totalResults; x++) {
+    let watchID = navigator.geolocation.watchPosition(
+      position => {
+        check_geolocation(position);
+        successCallbackCalled++;
+        watchCallback(watchID);
+      },
+      error => {
+        failureCallbackCalled++;
+        watchCallback(watchID);
+      }
+    );
+  }
 }
 
-function testPassed() {
+function watchCallback(watchID) {
+  navigator.geolocation.clearWatch(watchID);
   if (successCallbackCalled + failureCallbackCalled != totalResults)
     return;
   is(failureCallbackCalled, 0, "no failure callbacks should have been received");
