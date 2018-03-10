@@ -8744,7 +8744,7 @@ PresShell::WillDoReflow()
 
   mPresContext->FlushFontFeatureValues();
 
-  mLastReflowStart = GetPerformanceNow();
+  mLastReflowStart = GetPerformanceNowUnclamped();
 }
 
 void
@@ -8754,7 +8754,7 @@ PresShell::DidDoReflow(bool aInterruptible)
 
   nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
   if (docShell) {
-    DOMHighResTimeStamp now = GetPerformanceNow();
+    DOMHighResTimeStamp now = GetPerformanceNowUnclamped();
     docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
   }
 
@@ -8766,7 +8766,7 @@ PresShell::DidDoReflow(bool aInterruptible)
 }
 
 DOMHighResTimeStamp
-PresShell::GetPerformanceNow()
+PresShell::GetPerformanceNowUnclamped()
 {
   DOMHighResTimeStamp now = 0;
 
@@ -8774,7 +8774,7 @@ PresShell::GetPerformanceNow()
     Performance* perf = window->GetPerformance();
 
     if (perf) {
-      now = perf->Now();
+      now = perf->NowUnclamped();
     }
   }
 
