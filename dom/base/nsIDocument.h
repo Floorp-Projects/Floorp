@@ -1754,7 +1754,7 @@ public:
   virtual void EndLoad() = 0;
 
   enum ReadyState { READYSTATE_UNINITIALIZED = 0, READYSTATE_LOADING = 1, READYSTATE_INTERACTIVE = 3, READYSTATE_COMPLETE = 4};
-  virtual void SetReadyStateInternal(ReadyState rs) = 0;
+  void SetReadyStateInternal(ReadyState rs);
   ReadyState GetReadyStateEnum()
   {
     return mReadyState;
@@ -2707,8 +2707,8 @@ public:
 
   virtual nsISupports* GetCurrentContentSink() = 0;
 
-  virtual void SetAutoFocusElement(Element* aAutoFocusElement) = 0;
-  virtual void TriggerAutoFocus() = 0;
+  void SetAutoFocusElement(Element* aAutoFocusElement);
+  void TriggerAutoFocus();
 
   virtual void SetScrollToRef(nsIURI *aDocumentURI) = 0;
   virtual void ScrollToRef() = 0;
@@ -2770,9 +2770,12 @@ public:
 
   virtual nsresult GetStateObject(nsIVariant** aResult) = 0;
 
-  virtual nsDOMNavigationTiming* GetNavigationTiming() const = 0;
+  nsDOMNavigationTiming* GetNavigationTiming() const
+  {
+    return mTiming;
+  }
 
-  virtual nsresult SetNavigationTiming(nsDOMNavigationTiming* aTiming) = 0;
+  void SetNavigationTiming(nsDOMNavigationTiming* aTiming);
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
 
@@ -3309,6 +3312,8 @@ protected:
   // the classification lists and the classification of parent documents.
   mozilla::dom::FlashClassification ComputeFlashClassification();
 
+  void RecordNavigationTiming(ReadyState aReadyState);
+
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
     return mUseCounters[aUseCounter];
@@ -3737,6 +3742,11 @@ protected:
   // bound to it
   bool mMayHaveTitleElement: 1;
 
+  bool mDOMLoadingSet: 1;
+  bool mDOMInteractiveSet: 1;
+  bool mDOMCompleteSet: 1;
+  bool mAutoFocusFired: 1;
+
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
   unsigned int mIsScopedStyleEnabled : 2;
@@ -3959,6 +3969,13 @@ protected:
 
   nsRevocableEventPtr<nsRunnableMethod<nsIDocument, void, false>>
     mPendingTitleChangeEvent;
+
+  RefPtr<nsDOMNavigationTiming> mTiming;
+
+  // Recorded time of change to 'loading' state.
+  mozilla::TimeStamp mLoadingTimeStamp;
+
+  nsWeakPtr mAutoFocusElement;
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
