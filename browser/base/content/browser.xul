@@ -586,7 +586,7 @@
   <hbox id="titlebar-content">
     <spacer id="titlebar-spacer" flex="1"/>
     <hbox id="titlebar-buttonbox-container">
-      <hbox id="titlebar-buttonbox">
+      <hbox id="titlebar-buttonbox" class="titlebar-color">
         <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
         <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
         <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
@@ -607,7 +607,9 @@
 
   <toolbox id="navigator-toolbox">
     <!-- Menu -->
-    <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
+    <toolbar type="menubar" id="toolbar-menubar"
+             class="chromeclass-menubar titlebar-color"
+             customizable="true"
              mode="icons"
 #ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
@@ -630,6 +632,7 @@
     </toolbar>
 
     <toolbar id="TabsToolbar"
+             class="titlebar-color"
              fullscreentoolbar="true"
              customizable="true"
              mode="icons"

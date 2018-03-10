@@ -741,7 +741,6 @@ impl<'a> DisplayListFlattener<'a> {
                 let mut prim_info = prim_info.clone();
                 prim_info.rect = bounds;
                 self.add_box_shadow(
-                    pipeline_id,
                     clip_and_scroll,
                     &prim_info,
                     &box_shadow_info.offset,
@@ -1312,9 +1311,8 @@ impl<'a> DisplayListFlattener<'a> {
                         *composite_mode = Some(PictureCompositeMode::Blit);
                     }
                 }
-                PictureKind::TextShadow { .. } |
-                PictureKind::BoxShadow { .. } => {
-                    panic!("bug: text/box pictures invalid here");
+                PictureKind::TextShadow { .. } => {
+                    panic!("bug: text pictures invalid here");
                 }
             }
         }
