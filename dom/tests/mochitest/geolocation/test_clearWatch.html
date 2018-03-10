@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 
@@ -37,6 +38,7 @@ function failureCallback(error)
 function successCallback(position) {
   ok(true, "successCallback was called, hasBeenCleared=" + hasBeenCleared +
            ", successWasCalledAfterClear=" + successWasCalledAfterClear);
+  check_geolocation(position);
   if (hasBeenCleared == true) {
     successWasCalledAfterClear = true;
   }
@@ -45,6 +47,8 @@ function successCallback(position) {
     firstCallback = false;
   }
 }
+
+let watchID;
 
 function clearWatch() {
   ok(true, "clearWatch was called, hasBeenCleared=" + hasBeenCleared +
