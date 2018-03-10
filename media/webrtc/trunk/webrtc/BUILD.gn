@@ -62,6 +62,9 @@ config("common_inherited_config") {
   if (is_linux) {
     defines += [ "WEBRTC_LINUX" ]
   }
+  if (is_bsd) {
+    defines += [ "WEBRTC_BSD" ]
+  }
   if (is_mac) {
     defines += [ "WEBRTC_MAC" ]
   }
