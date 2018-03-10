@@ -6,6 +6,7 @@ import android.util.Log;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
+import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
 /**
  * Tests session OOM save behavior.
@@ -45,8 +46,7 @@ public class testSessionFilePreservation extends SessionTest {
 
         // ... and then trigger some session store activity to make sure
         // that a fresh session file is written.
-        Tab tab = Tabs.getInstance().addTab();
-        Tabs.getInstance().closeTab(tab);
+        NavigationHelper.reload();
 
         // Verify sessionstore.js written by Gecko. The session write is delayed
         // to batch successive changes, so the file is repeatedly read until it
