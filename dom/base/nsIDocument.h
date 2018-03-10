@@ -3210,8 +3210,8 @@ public:
   void NotifyIntersectionObservers();
 
   // Dispatch a runnable related to the document.
-  virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
-                            already_AddRefed<nsIRunnable>&& aRunnable) override;
+  nsresult Dispatch(mozilla::TaskCategory aCategory,
+                    already_AddRefed<nsIRunnable>&& aRunnable) final;
 
   virtual nsISerialEventTarget*
   EventTargetFor(mozilla::TaskCategory aCategory) const override;
