@@ -9,8 +9,19 @@ var EXPORTED_SYMBOLS = ["GeckoViewSettings"];
 ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "SafeBrowsing",
-  "resource://gre/modules/SafeBrowsing.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(
+  this, "DESKTOP_USER_AGENT",
+  function() {
+    return Cc["@mozilla.org/network/protocol;1?name=http"]
+           .getService(Ci.nsIHttpProtocolHandler).userAgent
+           .replace(/Android \d.+?; [a-zA-Z]+/, "X11; Linux x86_64")
+           .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
+  });
 
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
     ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
@@ -21,42 +32,28 @@ function debug(aMsg) {
 }
 
 // Handles GeckoView settings including:
-// * tracking protection
 // * multiprocess
+// * user agent override
 class GeckoViewSettings extends GeckoViewModule {
   init() {
     this._isSafeBrowsingInit = false;
-    this._useTrackingProtection = false;
+    this._useDesktopMode = false;
 
     // We only allow to set this setting during initialization, further updates
     // will be ignored.
     this.useMultiprocess = !!this.settings.useMultiprocess;
     this._displayMode = Ci.nsIDocShell.DISPLAY_MODE_BROWSER;
+
+    this.messageManager.loadFrameScript(
+      "chrome://geckoview/content/GeckoViewContentSettings.js", true);
   }
 
   onSettingsUpdate() {
     debug("onSettingsUpdate: " + JSON.stringify(this.settings));
 
-    this.useTrackingProtection = !!this.settings.useTrackingProtection;
     this.displayMode = this.settings.displayMode;
-  }
-
-  get useTrackingProtection() {
-    return this._useTrackingProtection;
-  }
-
-  set useTrackingProtection(aUse) {
-    if (aUse && !this._isSafeBrowsingInit) {
-      SafeBrowsing.init();
-      this._isSafeBrowsingInit = true;
-    }
-    if (aUse != this._useTrackingProtection) {
-      this.messageManager.loadFrameScript("data:," +
-        `docShell.useTrackingProtection = ${aUse}`,
-        true
-      );
-      this._useTrackingProtection = aUse;
-    }
+    this.useTrackingProtection = !!this.settings.useTrackingProtection;
+    this.useDesktopMode = !!this.settings.useDesktopMode;
   }
 
   get useMultiprocess() {
@@ -76,6 +73,45 @@ class GeckoViewSettings extends GeckoViewModule {
       this.browser.removeAttribute("remote");
     }
     parentNode.appendChild(this.browser);
+  }
+
+  set useTrackingProtection(aUse) {
+    if (aUse && !this._isSafeBrowsingInit) {
+      SafeBrowsing.init();
+      this._isSafeBrowsingInit = true;
+    }
+  }
+
+  onUserAgentRequest(aSubject, aTopic, aData) {
+    debug("onUserAgentRequest");
+
+    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+
+    if (this.browser.outerWindowID !== channel.topLevelOuterContentWindowId) {
+      return;
+    }
+
+    if (this.useDesktopMode) {
+      channel.setRequestHeader("User-Agent", DESKTOP_USER_AGENT, false);
+    }
+  }
+
+  get useDesktopMode() {
+    return this._useDesktopMode;
+  }
+
+  set useDesktopMode(aUse) {
+    if (this.useDesktopMode === aUse) {
+      return;
+    }
+    if (aUse) {
+      Services.obs.addObserver(this.onUserAgentRequest.bind(this),
+                               "http-on-useragent-request");
+    } else {
+      Services.obs.removeObserver(this.onUserAgentRequest.bind(this),
+                                  "http-on-useragent-request");
+    }
+    this._useDesktopMode = aUse;
   }
 
   get displayMode() {

@@ -7,10 +7,13 @@
 #include "mozilla/dom/WebAuthnManagerBase.h"
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/dom/Event.h"
+#include "nsGlobalWindowInner.h"
+#include "nsPIWindowRoot.h"
 
 namespace mozilla {
 namespace dom {
 
+NS_NAMED_LITERAL_STRING(kDeactivateEvent, "deactivate");
 NS_NAMED_LITERAL_STRING(kVisibilityChange, "visibilitychange");
 
 WebAuthnManagerBase::WebAuthnManagerBase(nsPIDOMWindowInner* aParent)
@@ -73,14 +76,24 @@ WebAuthnManagerBase::ListenForVisibilityEvents()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIDocument> doc = mParent->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
+  nsCOMPtr<nsPIDOMWindowOuter> outer = mParent->GetOuterWindow();
+  if (NS_WARN_IF(!outer)) {
     return;
   }
 
-  nsresult rv = doc->AddSystemEventListener(kVisibilityChange, this,
-                                            /* use capture */ true,
-                                            /* wants untrusted */ false);
+  nsCOMPtr<EventTarget> windowRoot = outer->GetTopWindowRoot();
+  if (NS_WARN_IF(!windowRoot)) {
+    return;
+  }
+
+  nsresult rv = windowRoot->AddEventListener(kDeactivateEvent, this,
+                                             /* use capture */ true,
+                                             /* wants untrusted */ false);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  rv = windowRoot->AddEventListener(kVisibilityChange, this,
+                                    /* use capture */ true,
+                                    /* wants untrusted */ false);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
@@ -89,13 +102,22 @@ WebAuthnManagerBase::StopListeningForVisibilityEvents()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIDocument> doc = mParent->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
+  nsCOMPtr<nsPIDOMWindowOuter> outer = mParent->GetOuterWindow();
+  if (NS_WARN_IF(!outer)) {
     return;
   }
 
-  nsresult rv = doc->RemoveSystemEventListener(kVisibilityChange, this,
-                                               /* use capture */ true);
+  nsCOMPtr<EventTarget> windowRoot = outer->GetTopWindowRoot();
+  if (NS_WARN_IF(!windowRoot)) {
+    return;
+  }
+
+  nsresult rv = windowRoot->RemoveEventListener(kDeactivateEvent, this,
+                                                /* use capture */ true);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  rv = windowRoot->RemoveEventListener(kVisibilityChange, this,
+                                       /* use capture */ true);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
@@ -107,20 +129,26 @@ WebAuthnManagerBase::HandleEvent(nsIDOMEvent* aEvent)
 
   nsAutoString type;
   aEvent->GetType(type);
-  if (!type.Equals(kVisibilityChange)) {
+  if (!type.Equals(kDeactivateEvent) && !type.Equals(kVisibilityChange)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
-  if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_FAILURE;
+  // The "deactivate" event on the root window has no
+  // "current inner window" and thus GetTarget() is always null.
+  if (type.Equals(kVisibilityChange)) {
+    nsCOMPtr<nsIDocument> doc =
+      do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+    if (NS_WARN_IF(!doc) || !doc->Hidden()) {
+      return NS_OK;
+    }
+
+    nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(doc->GetInnerWindow());
+    if (NS_WARN_IF(!win) || !win->IsTopInnerWindow()) {
+      return NS_OK;
+    }
   }
 
-  if (doc->Hidden()) {
-    CancelTransaction(NS_ERROR_ABORT);
-  }
-
+  CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
   return NS_OK;
 }
 

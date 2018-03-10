@@ -813,6 +813,7 @@ ReloadPrefsCallback(const char* pref, void* data)
     bool spectreStringMitigations =
         Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.string_mitigations");
     bool spectreValueMasking = Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.value_masking");
+    bool spectreJitToCxxCalls = Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.jit_to_C++_calls");
 
     sSharedMemoryEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
 
@@ -880,6 +881,8 @@ ReloadPrefsCallback(const char* pref, void* data)
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_STRING_MITIGATIONS,
                                   spectreStringMitigations);
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_VALUE_MASKING, spectreValueMasking);
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS,
+                                  spectreJitToCxxCalls);
 }
 
 XPCJSContext::~XPCJSContext()

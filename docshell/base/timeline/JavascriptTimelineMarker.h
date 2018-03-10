@@ -8,6 +8,9 @@
 #define mozilla_JavascriptTimelineMarker_h_
 
 #include "TimelineMarker.h"
+
+#include "mozilla/Maybe.h"
+
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -63,7 +66,7 @@ public:
         }
 
         if (JS::IsSavedFrame(asyncStack) &&
-            !JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame, 0)) {
+            !JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame, mozilla::Nothing())) {
           JS_ClearPendingException(aCx);
         } else {
           stackFrame.mAsyncParent = parentFrame;

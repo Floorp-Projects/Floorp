@@ -41,7 +41,9 @@
 #endif
 
 #ifdef XP_WIN
+#include "mozilla/ScopeExit.h"
 #include "mozilla/widget/AudioSession.h"
+#include "mozilla/WinDllServices.h"
 #include <windows.h>
 #if defined(MOZ_SANDBOX)
 #include "sandboxBroker.h"
@@ -1302,6 +1304,12 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         // Plugin may require audio session if installed plugin can initialize
         // asynchronized.
         AutoAudioSession audioSession;
+
+        // Ensure that DLL Services are running
+        RefPtr<DllServices> dllSvc(DllServices::Get());
+        auto dllServicesDisable = MakeScopeExit([&dllSvc]() {
+          dllSvc->Disable();
+        });
 
 #if defined(MOZ_SANDBOX)
         // Required for sandboxed child processes.

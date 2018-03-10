@@ -25,6 +25,7 @@ namespace extensions {
 using dom::WebExtensionInit;
 using dom::WebExtensionLocalizeCallback;
 
+class DocInfo;
 class WebExtensionContentScript;
 
 class WebExtensionPolicy final : public nsISupports
@@ -67,7 +68,8 @@ public:
 
   bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false) const
   {
-    return mHostPermissions && mHostPermissions->Matches(aURI, aExplicit);
+    return (!IsRestrictedURI(aURI) &&
+            mHostPermissions && mHostPermissions->Matches(aURI, aExplicit));
   }
 
   bool IsPathWebAccessible(const nsAString& aPath) const
@@ -83,6 +85,9 @@ public:
   {
     return mPermissions->Contains(aPermission);
   }
+
+  static bool IsRestrictedDoc(const DocInfo& aDoc);
+  static bool IsRestrictedURI(const URLInfo& aURI);
 
   nsCString BackgroundPageHTML() const;
 
