@@ -17,6 +17,7 @@
   <string name="menu_help">সহায়তা</string>
   <string name="menu_rights">আপনার অধিকারসমূহ</string>
   <string name="menu_trackers_blocked_title">ট্র্যাকার ব্লক করা হয়েছে্যা</string>
+  <string name="menu_custom_tab_branding">%1$s পরিচালিত</string>
   <string name="share_dialog_title">শেয়ারের মাধ্যম</string>
   <string name="notification_erase_text">ব্রাউজিং ইতিহাস মুছে দিন</string>
   <string name="notification_action_open">খুলুন</string>
@@ -162,4 +163,8 @@
   <string name="gv_prompt_username_hint">ব্যবহারকারীর নাম</string>
   <string name="gv_prompt_password_hint">পাসওয়ার্ড</string>
   <string name="gv_prompt_clear">পরিষ্কার</string>
+  <string name="security_popup_secure_connection">নিরাপদ সংযোগ</string>
+  <string name="security_popup_insecure_connection">অনিরাপদ সংযোগ</string>
+  <string name="security_popup_security_verified">যাচাইকারী: %1$s</string>
+  <string name="site_security_icon_content_description">সাইট নিরাপত্তা</string>
 </resources>

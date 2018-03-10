@@ -17,6 +17,7 @@
   <string name="menu_help">Adjuta</string>
   <string name="menu_rights">Tu derectos</string>
   <string name="menu_trackers_blocked_title">Traciatores blocate</string>
+  <string name="menu_custom_tab_branding">Potentiate per %1$s</string>
   <string name="share_dialog_title">Compartir con</string>
   <string name="notification_erase_text">Eliminar le chronologia de navigation</string>
   <string name="notification_action_open">Aperir</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Nomine del usator</string>
   <string name="gv_prompt_password_hint">Contrasigno</string>
   <string name="gv_prompt_clear">Clarar</string>
+  <string name="security_popup_secure_connection">Connexion secur</string>
+  <string name="security_popup_insecure_connection">Connexion non secur</string>
+  <string name="security_popup_security_verified">Verificate per: %1$s</string>
+  <string name="site_security_icon_content_description">Securitate del sito</string>
 </resources>

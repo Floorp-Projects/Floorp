@@ -17,6 +17,7 @@
   <string name="menu_help">ช่วยเหลือ</string>
   <string name="menu_rights">สิทธิของคุณ</string>
   <string name="menu_trackers_blocked_title">ตัวติดตามที่ถูกปิดกั้น</string>
+  <string name="menu_custom_tab_branding">ขับเคลื่อนโดย %1$s</string>
   <string name="share_dialog_title">แบ่งปันผ่าน</string>
   <string name="notification_erase_text">ล้างประวัติการท่องเว็บ</string>
   <string name="notification_action_open">เปิด</string>
@@ -57,7 +58,7 @@
   <string name="preference_privacy_block_analytics">ปิดกั้นตัวติดตามของการวิเคราะห์</string>
   <string name="preference_privacy_block_analytics_summary">ใช้เพื่อเก็บรวบรวม วิเคราะห์ และวัดกิจกรรมอย่างการแตะและการเลื่อน</string>
   <string name="preference_privacy_block_social">ปิดกั้นตัวติดตามทางสังคม</string>
-  <string name="preference_privacy_block_social_summary">ฝังอยู่ในไซต์เพื่อติดตามการเยี่ยมชมของคุณและแสดงผลฟังก์ชันอย่างปุ่มแบ่งปัน</string>
+  <string name="preference_privacy_block_social_summary">ฝังอยู่ในไซต์เพื่อติดตามการเยี่ยมชมของคุณและแสดงผลฟังก์ชันการทำงานอย่างปุ่มแบ่งปัน</string>
   <string name="preference_privacy_block_content">ปิดกั้นตัวติดตามของเนื้อหาอื่น ๆ</string>
   <string name="preference_privacy_block_content_summary2">การเปิดใช้งานอาจส่งผลให้หน้าบางส่วนทำงานอย่างไม่คาดคิด</string>
   <string name="preference_privacy_secure_mode">พรางตัว</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">ชื่อผู้ใช้</string>
   <string name="gv_prompt_password_hint">รหัสผ่าน</string>
   <string name="gv_prompt_clear">ล้าง</string>
+  <string name="security_popup_secure_connection">การเชื่อมต่อปลอดภัย</string>
+  <string name="security_popup_insecure_connection">การเชื่อมต่อไม่ปลอดภัย</string>
+  <string name="security_popup_security_verified">ยืนยันโดย: %1$s</string>
+  <string name="site_security_icon_content_description">ความปลอดภัยของไซต์</string>
 </resources>

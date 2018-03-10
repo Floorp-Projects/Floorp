@@ -17,6 +17,7 @@
   <string name="menu_help">Súgó</string>
   <string name="menu_rights">Az Ön jogai</string>
   <string name="menu_trackers_blocked_title">Blokkolt követők</string>
+  <string name="menu_custom_tab_branding">A motorháztető alatt: %1$s</string>
   <string name="share_dialog_title">Megosztás ezzel</string>
   <string name="notification_erase_text">Előzmények törlése</string>
   <string name="notification_action_open">Megnyitás</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Felhasználónév</string>
   <string name="gv_prompt_password_hint">Jelszó</string>
   <string name="gv_prompt_clear">Törlés</string>
+  <string name="security_popup_secure_connection">Biztonságos kapcsolat</string>
+  <string name="security_popup_insecure_connection">Nem biztonságos kapcsolat</string>
+  <string name="security_popup_security_verified">Ellenőrizte: %1$s</string>
+  <string name="site_security_icon_content_description">Webhely biztonsága</string>
 </resources>

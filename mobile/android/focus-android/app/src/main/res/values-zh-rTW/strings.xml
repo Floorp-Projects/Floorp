@@ -17,6 +17,7 @@
   <string name="menu_help">說明</string>
   <string name="menu_rights">您的權利</string>
   <string name="menu_trackers_blocked_title">封鎖的追蹤器數量</string>
+  <string name="menu_custom_tab_branding">由 %1$s 提供</string>
   <string name="share_dialog_title">透過下列程式分享</string>
   <string name="notification_erase_text">清除瀏覽紀錄</string>
   <string name="notification_action_open">開啟</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">使用者名稱</string>
   <string name="gv_prompt_password_hint">密碼</string>
   <string name="gv_prompt_clear">清除</string>
+  <string name="security_popup_secure_connection">安全連線</string>
+  <string name="security_popup_insecure_connection">不安全的連線</string>
+  <string name="security_popup_security_verified">驗證機構: %1$s</string>
+  <string name="site_security_icon_content_description">網站安全性</string>
 </resources>

@@ -8,6 +8,8 @@
   <string name="feedback_erase">Nettlesarhistorikken din har blitt sletta.</string>
   <string name="search_hint">Søk etter %1$s</string>
   <string name="menu_share">Del…</string>
+  <string name="menu_open_with_default_browser2">Opne i %1$s</string>
+  <string name="menu_open_with_a_browser2">Opne i…</string>
   <string name="menu_add_to_home_screen">Legg til på startskjerm</string>
   <string name="menu_whats_new">Kva er nytt</string>
   <string name="menu_settings">Innstillingar</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">Hjelp</string>
   <string name="menu_rights">Dine rettar</string>
   <string name="menu_trackers_blocked_title">Sporarar blokkerte</string>
+  <string name="menu_custom_tab_branding">Driven av %1$s</string>
   <string name="share_dialog_title">Del via</string>
   <string name="notification_erase_text">Slett nettlesarhistorikk</string>
   <string name="notification_action_open">Opne</string>
@@ -181,4 +184,11 @@
   <string name="your_rights_content3"><![CDATA["Du får ingen rettar eller lisensar til varemerka som høyrer til Mozilla Foundation eller nokon part, inkludert Mozilla, Firefox eller %1$s namn eller logoar. Ytterlegare informasjon finn du "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">her</a>.]]></string>
   <string name="your_rights_content4"><![CDATA[Ytterlegare kjeldekode for %1$s er tilgjengeleg under ulike andre frie og opne kjeldekode-<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisensar</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s brukar òg blokklister frå Disconnect, Inc. som separate og uavhengige verk under "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", og er tilgjengelege "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">her</a>.]]></string>
+  <string name="gv_prompt_username_hint">Brukarnamn</string>
+  <string name="gv_prompt_password_hint">Passord</string>
+  <string name="gv_prompt_clear">Tøm</string>
+  <string name="security_popup_secure_connection">Trygg tilkopling</string>
+  <string name="security_popup_insecure_connection">Utrygg tilkopling</string>
+  <string name="security_popup_security_verified">Stadfesta av: %1$s</string>
+  <string name="site_security_icon_content_description">Nettstadsikkerheit</string>
 </resources>

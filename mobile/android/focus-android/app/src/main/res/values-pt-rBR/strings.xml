@@ -182,4 +182,7 @@
   <string name="your_rights_content4"><![CDATA["Código fonte adicionais para o %1$s estão disponíveis sobre várias outras "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licen&#231;as</a>" livres e de código aberto."]]></string>
   <string name="your_rights_content5"><![CDATA["O %1$s também utiliza "<em xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">listas de bloqueios</em>" disponibilizadas pela Disconnect, Inc. como um trabalho independente disponibilizado "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqui</a>", sob a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>.]]></string>
   <string name="gv_prompt_password_hint">Senha</string>
+  <string name="security_popup_secure_connection">Conexão segura</string>
+  <string name="security_popup_insecure_connection">Conexão insegura</string>
+  <string name="site_security_icon_content_description">Segurança do site</string>
 </resources>

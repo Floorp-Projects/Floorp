@@ -15,6 +15,7 @@
   <string name="menu_help">Bantuan</string>
   <string name="menu_rights">Hak Anda</string>
   <string name="menu_trackers_blocked_title">Pelacak terblokir</string>
+  <string name="menu_custom_tab_branding">Diberdayakan oleh %1$s</string>
   <string name="share_dialog_title">Bagikan via</string>
   <string name="notification_erase_text">Hapus riwayat penjelajahan</string>
   <string name="notification_action_open">Buka</string>
@@ -181,4 +182,8 @@
   <string name="your_rights_content3"><![CDATA["Anda tidak diberi izin atau lisensi apa pun atas merek dagang Mozilla Foundation atau pihak mana pun, termasuk nama atau logo Mozilla, Firefox, atau %1$s. Informasi lebih lanjut bisa ditemukan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">di sini</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Kode sumber tambahan untuk %1$s tersedia dengan berbagai "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisensi</a>" bebas dan sumber terbuka lainnya."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s juga menggunakan daftar blokir yang disediakan oleh Disconnect, Inc. sebagai pekerjaan terpisah dan independen di bawah "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dan tersedia "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">di sini</a>.]]></string>
+  <string name="security_popup_secure_connection">Sambungan Aman</string>
+  <string name="security_popup_insecure_connection">Sambungan Tidak Aman</string>
+  <string name="security_popup_security_verified">Diverifikasi oleh: %1$s</string>
+  <string name="site_security_icon_content_description">Keamanan Situs</string>
 </resources>

@@ -8,6 +8,8 @@
   <string name="feedback_erase">페이지 탐색 기록이 삭제되었습니다.</string>
   <string name="search_hint">%1$s 검색</string>
   <string name="menu_share">공유…</string>
+  <string name="menu_open_with_default_browser2">%1$s로/으로 열기</string>
+  <string name="menu_open_with_a_browser2">다른 브라우저로 열기</string>
   <string name="menu_add_to_home_screen">초기 화면에 추가하기</string>
   <string name="menu_whats_new">새로운 기능</string>
   <string name="menu_settings">설정</string>
@@ -181,4 +183,10 @@
   <string name="your_rights_content3"><![CDATA["귀하는 Mozilla와 Firefox, %1$s 명칭이나 로고를 포함한 Mozilla 재단 및 다른 서비스 제공자 소유의 지적재산권으로 보호받는 권리나 라이선스가 부여되는 것이 아님을 인지하셔야 합니다. 추가적인 정보는 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#45796;&#51020;</a>을 참고하시기 바랍니다.]]></string>
   <string name="your_rights_content4"><![CDATA["%1$s의 소스 코드는 기타 다양한 무료 및 오픈 소스 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#46972;&#51060;&#49440;&#49828;</a>" 계약에 따라 무료로 제공됩니다."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s는 Disconnect, Inc에서 제공하는 차단목록에서 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>"를 바탕으로 자체적으로 별도로 관리하는 차단목록을 사용합니다. 자세한 내용은 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#45796;&#51020;</a>에서 확인할 수 있습니다.]]></string>
+  <string name="gv_prompt_username_hint">사용자명</string>
+  <string name="gv_prompt_password_hint">비밀번호</string>
+  <string name="gv_prompt_clear">지우기</string>
+  <string name="security_popup_secure_connection">안전한 연결</string>
+  <string name="security_popup_insecure_connection">안전하지 않은 연결</string>
+  <string name="site_security_icon_content_description">사이트 보안</string>
 </resources>

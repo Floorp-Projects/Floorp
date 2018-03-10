@@ -17,6 +17,7 @@
   <string name="menu_help">Bantuan</string>
   <string name="menu_rights">Hak Anda</string>
   <string name="menu_trackers_blocked_title">Penjejak disekat</string>
+  <string name="menu_custom_tab_branding">Dikuasakan oleh %1$s</string>
   <string name="share_dialog_title">Kongsi via</string>
   <string name="notification_erase_text">Buang sejarah pelayaran</string>
   <string name="notification_action_open">Buka</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Nama pengguna</string>
   <string name="gv_prompt_password_hint">Kata laluan</string>
   <string name="gv_prompt_clear">Buang</string>
+  <string name="security_popup_secure_connection">Sambungan Selamat</string>
+  <string name="security_popup_insecure_connection">Sambungan Tidak Selamat</string>
+  <string name="security_popup_security_verified">Disahkan oleh: %1$s</string>
+  <string name="site_security_icon_content_description">Keselamatan Laman</string>
 </resources>

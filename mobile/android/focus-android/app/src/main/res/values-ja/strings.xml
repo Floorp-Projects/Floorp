@@ -17,6 +17,7 @@
   <string name="menu_help">ヘルプ</string>
   <string name="menu_rights">あなたの権利</string>
   <string name="menu_trackers_blocked_title">追跡者がブロックされました</string>
+  <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">共有方法を選択</string>
   <string name="notification_erase_text">閲覧履歴を消去</string>
   <string name="notification_action_open">開く</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">ユーザー名</string>
   <string name="gv_prompt_password_hint">パスワード</string>
   <string name="gv_prompt_clear">クリア</string>
+  <string name="security_popup_secure_connection">安全な接続</string>
+  <string name="security_popup_insecure_connection">安全でない接続</string>
+  <string name="security_popup_security_verified">認証局: %1$s</string>
+  <string name="site_security_icon_content_description">サイトセキュリティ</string>
 </resources>

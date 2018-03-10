@@ -17,6 +17,7 @@
   <string name="menu_help">Pomocník</string>
   <string name="menu_rights">Vaše práva</string>
   <string name="menu_trackers_blocked_title">Počet zablokovaných sledovacích prvkov</string>
+  <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">Zdieľať cez</string>
   <string name="notification_erase_text">Vymazať históriu prehliadania</string>
   <string name="notification_action_open">Otvoriť</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Používateľské meno</string>
   <string name="gv_prompt_password_hint">Heslo</string>
   <string name="gv_prompt_clear">Vymazať</string>
+  <string name="security_popup_secure_connection">Zabezpečené pripojenie</string>
+  <string name="security_popup_insecure_connection">Nezabezpečené pripojenie</string>
+  <string name="security_popup_security_verified">Overil ju %1$s</string>
+  <string name="site_security_icon_content_description">Zabezpečenie stránky</string>
 </resources>

@@ -8,6 +8,7 @@
   <string name="feedback_erase">तपाईंको ब्राउजिङ इतिहास मेटाईयो ।</string>
   <string name="search_hint">%1$s खोज्नुहोस्</string>
   <string name="menu_share">साझेदारी…</string>
+  <string name="menu_open_with_a_browser2">…मा खोल्नुहोस्</string>
   <string name="menu_add_to_home_screen">गृह स्क्रिनमा थप्नुहोस्</string>
   <string name="menu_whats_new">नयाँ के छ</string>
   <string name="menu_settings">सेटिङ्हरू</string>
@@ -139,4 +140,7 @@
   <string name="notification_browsing_session_channel_name">निजी ब्राउजिङ्ग सत्र</string>
   <string name="tabs_tray_action_erase">ब्राउजिङ्ग इतिहास खाली गर्नुहोस्</string>
   <string name="download_firefox">Firefox डाउनलोड गर्नुहोस्</string>
+  <string name="gv_prompt_username_hint">प्रयोगकर्ता नाम</string>
+  <string name="gv_prompt_password_hint">गोप्यशब्द</string>
+  <string name="gv_prompt_clear">खाली गर्नुहोस्</string>
 </resources>

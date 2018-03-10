@@ -8,6 +8,8 @@
   <string name="feedback_erase">لقد مسح تأريخ تصفحك.</string>
   <string name="search_hint">ابحث عن %1$s</string>
   <string name="menu_share">شارك…</string>
+  <string name="menu_open_with_default_browser2">افتح في %1$s</string>
+  <string name="menu_open_with_a_browser2">افتح في…</string>
   <string name="menu_add_to_home_screen">أضِف إلى شاشة البداية</string>
   <string name="menu_whats_new">ما الجديد</string>
   <string name="menu_settings">الإعدادات</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">مساعدة</string>
   <string name="menu_rights">حقوقك</string>
   <string name="menu_trackers_blocked_title">المتعقبات المحجوبة</string>
+  <string name="menu_custom_tab_branding">تدعمها %1$s</string>
   <string name="share_dialog_title">شارك عبر</string>
   <string name="notification_erase_text">امسح تأريخ التصفح</string>
   <string name="notification_action_open">افتح</string>
@@ -181,4 +184,11 @@
   <string name="your_rights_content3"><![CDATA["لا يعطيك هذا أي حقوق أو تراخيص للعلامات التجارية لمؤسسة موزيلا أو أي طرف آخر، متضمنًا أسماء موزيلا أو فَيَرفُكس أو %1$s أو شعاراتها. يمكنك الاطلاع على مزيد من المعلومات من "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1607;&#1606;&#1575;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["النصوص المصدرية الإضافية لِ‍ %1$s متاحة وفق "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1585;&#1582;&#1589;</a>" البرمجيات الحرة والمفتوحة المصدر الأخرى."]]></string>
   <string name="your_rights_content5"><![CDATA["يستخدم %1$s قوائم المنع التي توفّرها شركة Disconnect, Inc كأعمال منفصلة ومستقرّة برخصة "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1594;&#1606;&#1608; &#1575;&#1604;&#1593;&#1605;&#1608;&#1605;&#1610;&#1577; &#1575;&#1604;&#1573;&#1589;&#1583;&#1575;&#1585;&#1577; &#1575;&#1604;&#1579;&#1575;&#1604;&#1579;&#1577;</a>"، وهي متاحة "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1607;&#1606;&#1575;</a>.]]></string>
+  <string name="gv_prompt_username_hint">اسم المستخدم</string>
+  <string name="gv_prompt_password_hint">كلمة السر</string>
+  <string name="gv_prompt_clear">امسح</string>
+  <string name="security_popup_secure_connection">اتّصال آمن</string>
+  <string name="security_popup_insecure_connection">اتّصال غير آمن</string>
+  <string name="security_popup_security_verified">تثبّت منها: %1$s</string>
+  <string name="site_security_icon_content_description">أمن الموقع</string>
 </resources>

@@ -17,6 +17,7 @@
   <string name="menu_help">Ndihmë</string>
   <string name="menu_rights">Të drejtat Tuaja</string>
   <string name="menu_trackers_blocked_title">U bllokuan gjurmues</string>
+  <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">Ndajeni përmes</string>
   <string name="notification_erase_text">Fshini historik shfletimesh</string>
   <string name="notification_action_open">Hape</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Emër përdoruesi</string>
   <string name="gv_prompt_password_hint">Fjalëkalim</string>
   <string name="gv_prompt_clear">Pastroje</string>
+  <string name="security_popup_secure_connection">Lidhje e Sigurt</string>
+  <string name="security_popup_insecure_connection">Lidhje e Pasigurt</string>
+  <string name="security_popup_security_verified">Verifikuar nga: %1$s</string>
+  <string name="site_security_icon_content_description">Siguri Sajti</string>
 </resources>
