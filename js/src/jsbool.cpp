@@ -8,7 +8,7 @@
  * JS boolean implementation.
  */
 
-#include "builtin/Boolean-inl.h"
+#include "jsboolinlines.h"
 
 #include "jsapi.h"
 #include "jstypes.h"
