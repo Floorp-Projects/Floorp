@@ -16,155 +16,19 @@ window._gBrowser = {
       mURIFixup: ["@mozilla.org/docshell/urifixup;1", "nsIURIFixup"],
     });
 
-    this.ownerGlobal = window;
-    this.ownerDocument = document;
+    Services.obs.addObserver(this, "contextual-identity-updated");
 
-    this.mPanelContainer = document.getElementById("tabbrowser-tabpanels");
-    this.addEventListener = this.mPanelContainer.addEventListener.bind(this.mPanelContainer);
-    this.removeEventListener = this.mPanelContainer.removeEventListener.bind(this.mPanelContainer);
-    this.dispatchEvent = this.mPanelContainer.dispatchEvent.bind(this.mPanelContainer);
-
-    this.initialBrowser = document.getElementById("tabbrowser-initialBrowser");
-
-    this.tabbox = document.getElementById("tabbrowser-tabbox");
-
-    this.tabContainer = document.getElementById("tabbrowser-tabs");
-
-    this.tabs = this.tabContainer.childNodes;
-
-    this.closingTabsEnum = { ALL: 0, OTHER: 1, TO_END: 2 };
-
-    this._visibleTabs = null;
-
-    this.mCurrentTab = null;
-
-    this._lastRelatedTabMap = new WeakMap();
-
-    this.mCurrentBrowser = null;
-
-    this.mProgressListeners = [];
-
-    this.mTabsProgressListeners = [];
-
-    this._tabListeners = new Map();
-
-    this._tabFilters = new Map();
-
-    this.mIsBusy = false;
-
-    this._outerWindowIDBrowserMap = new Map();
-
-    this.arrowKeysShouldWrap = AppConstants == "macosx";
-
-    this._autoScrollPopup = null;
-
-    this._previewMode = false;
-
-    this._lastFindValue = "";
-
-    this._contentWaitingCount = 0;
-
-    this.tabAnimationsInProgress = 0;
-
-    this._XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-    /**
-     * Binding from browser to tab
-     */
-    this._tabForBrowser = new WeakMap();
-
-    /**
-     * Holds a unique ID for the tab change that's currently being timed.
-     * Used to make sure that multiple, rapid tab switches do not try to
-     * create overlapping timers.
-     */
-    this._tabSwitchID = null;
-
-    this._preloadedBrowser = null;
-
-    /**
-     * `_createLazyBrowser` will define properties on the unbound lazy browser
-     * which correspond to properties defined in XBL which will be bound to
-     * the browser when it is inserted into the document.  If any of these
-     * properties are accessed by consumers, `_insertBrowser` is called and
-     * the browser is inserted to ensure that things don't break.  This list
-     * provides the names of properties that may be called while the browser
-     * is in its unbound (lazy) state.
-     */
-    this._browserBindingProperties = [
-      "canGoBack", "canGoForward", "goBack", "goForward", "permitUnload",
-      "reload", "reloadWithFlags", "stop", "loadURI", "loadURIWithFlags",
-      "goHome", "homePage", "gotoIndex", "currentURI", "documentURI",
-      "preferences", "imageDocument", "isRemoteBrowser", "messageManager",
-      "getTabBrowser", "finder", "fastFind", "sessionHistory", "contentTitle",
-      "characterSet", "fullZoom", "textZoom", "webProgress",
-      "addProgressListener", "removeProgressListener", "audioPlaybackStarted",
-      "audioPlaybackStopped", "pauseMedia", "stopMedia",
-      "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
-      "purgeSessionHistory", "stopScroll", "startScroll",
-      "userTypedValue", "userTypedClear", "mediaBlocked",
-      "didStartLoadSinceLastUserTyping"
-    ];
-
-    this._removingTabs = [];
-
-    /**
-     * Tab close requests are ignored if the window is closing anyway,
-     * e.g. when holding Ctrl+W.
-     */
-    this._windowIsClosing = false;
-
-    // This defines a proxy which allows us to access browsers by
-    // index without actually creating a full array of browsers.
-    this.browsers = new Proxy([], {
-      has: (target, name) => {
-        if (typeof name == "string" && Number.isInteger(parseInt(name))) {
-          return (name in this.tabs);
-        }
-        return false;
-      },
-      get: (target, name) => {
-        if (name == "length") {
-          return this.tabs.length;
-        }
-        if (typeof name == "string" && Number.isInteger(parseInt(name))) {
-          if (!(name in this.tabs)) {
-            return undefined;
-          }
-          return this.tabs[name].linkedBrowser;
-        }
-        return target[name];
-      }
-    });
-
-    /**
-     * List of browsers whose docshells must be active in order for print preview
-     * to work.
-     */
-    this._printPreviewBrowsers = new Set();
-
-    this._switcher = null;
-
-    this._soundPlayingAttrRemovalTimer = 0;
-
-    this._hoverTabTimer = null;
+    Services.els.addSystemEventListener(document, "keydown", this, false);
+    if (AppConstants.platform == "macosx") {
+      Services.els.addSystemEventListener(document, "keypress", this, false);
+    }
+    window.addEventListener("sizemodechange", this);
+    window.addEventListener("occlusionstatechange", this);
 
     this.mCurrentBrowser = this.initialBrowser;
     this.mCurrentBrowser.permanentKey = {};
 
-    Services.obs.addObserver(this, "contextual-identity-updated");
-
-    this.mCurrentTab = this.tabContainer.firstChild;
-    const nsIEventListenerService =
-      Ci.nsIEventListenerService;
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-      .getService(nsIEventListenerService);
-    els.addSystemEventListener(document, "keydown", this, false);
-    if (AppConstants.platform == "macosx") {
-      els.addSystemEventListener(document, "keypress", this, false);
-    }
-    window.addEventListener("sizemodechange", this);
-    window.addEventListener("occlusionstatechange", this);
+    this.mCurrentTab = this.tabs[0];
 
     var uniqueId = this._generateUniquePanelID();
     this.mPanelContainer.childNodes[0].id = uniqueId;
@@ -240,6 +104,165 @@ window._gBrowser = {
       "browser.tabs.remote.warmup.unloadDelayMs", 2000);
 
     this._setupEventListeners();
+  },
+
+  ownerGlobal: window,
+
+  ownerDocument: document,
+
+  closingTabsEnum: { ALL: 0, OTHER: 1, TO_END: 2 },
+
+  _visibleTabs: null,
+
+  _lastRelatedTabMap: new WeakMap(),
+
+  mProgressListeners: [],
+
+  mTabsProgressListeners: [],
+
+  _tabListeners: new Map(),
+
+  _tabFilters: new Map(),
+
+  mIsBusy: false,
+
+  _outerWindowIDBrowserMap: new Map(),
+
+  arrowKeysShouldWrap: AppConstants == "macosx",
+
+  _autoScrollPopup: null,
+
+  _previewMode: false,
+
+  _lastFindValue: "",
+
+  _contentWaitingCount: 0,
+
+  tabAnimationsInProgress: 0,
+
+  _XUL_NS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+
+  /**
+   * Binding from browser to tab
+   */
+  _tabForBrowser: new WeakMap(),
+
+  /**
+   * Holds a unique ID for the tab change that's currently being timed.
+   * Used to make sure that multiple, rapid tab switches do not try to
+   * create overlapping timers.
+   */
+  _tabSwitchID: null,
+
+  _preloadedBrowser: null,
+
+  /**
+   * `_createLazyBrowser` will define properties on the unbound lazy browser
+   * which correspond to properties defined in XBL which will be bound to
+   * the browser when it is inserted into the document.  If any of these
+   * properties are accessed by consumers, `_insertBrowser` is called and
+   * the browser is inserted to ensure that things don't break.  This list
+   * provides the names of properties that may be called while the browser
+   * is in its unbound (lazy) state.
+   */
+  _browserBindingProperties: [
+    "canGoBack", "canGoForward", "goBack", "goForward", "permitUnload",
+    "reload", "reloadWithFlags", "stop", "loadURI", "loadURIWithFlags",
+    "goHome", "homePage", "gotoIndex", "currentURI", "documentURI",
+    "preferences", "imageDocument", "isRemoteBrowser", "messageManager",
+    "getTabBrowser", "finder", "fastFind", "sessionHistory", "contentTitle",
+    "characterSet", "fullZoom", "textZoom", "webProgress",
+    "addProgressListener", "removeProgressListener", "audioPlaybackStarted",
+    "audioPlaybackStopped", "pauseMedia", "stopMedia",
+    "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
+    "purgeSessionHistory", "stopScroll", "startScroll",
+    "userTypedValue", "userTypedClear", "mediaBlocked",
+    "didStartLoadSinceLastUserTyping"
+  ],
+
+  _removingTabs: [],
+
+  /**
+   * Tab close requests are ignored if the window is closing anyway,
+   * e.g. when holding Ctrl+W.
+   */
+  _windowIsClosing: false,
+
+  /**
+   * This defines a proxy which allows us to access browsers by
+   * index without actually creating a full array of browsers.
+   */
+  browsers: new Proxy([], {
+    has: (target, name) => {
+      if (typeof name == "string" && Number.isInteger(parseInt(name))) {
+        return (name in gBrowser.tabs);
+      }
+      return false;
+    },
+    get: (target, name) => {
+      if (name == "length") {
+        return gBrowser.tabs.length;
+      }
+      if (typeof name == "string" && Number.isInteger(parseInt(name))) {
+        if (!(name in gBrowser.tabs)) {
+          return undefined;
+        }
+        return gBrowser.tabs[name].linkedBrowser;
+      }
+      return target[name];
+    }
+  }),
+
+  /**
+   * List of browsers whose docshells must be active in order for print preview
+   * to work.
+   */
+  _printPreviewBrowsers: new Set(),
+
+  _switcher: null,
+
+  _soundPlayingAttrRemovalTimer: 0,
+
+  _hoverTabTimer: null,
+
+  get initialBrowser() {
+    delete this.initialBrowser;
+    return this.initialBrowser = document.getElementById("tabbrowser-initialBrowser");
+  },
+
+  get tabContainer() {
+    delete this.tabContainer;
+    return this.tabContainer = document.getElementById("tabbrowser-tabs");
+  },
+
+  get tabs() {
+    delete this.tabs;
+    return this.tabs = this.tabContainer.childNodes;
+  },
+
+  get tabbox() {
+    delete this.tabbox;
+    return this.tabbox = document.getElementById("tabbrowser-tabbox");
+  },
+
+  get mPanelContainer() {
+    delete this.mPanelContainer;
+    return this.mPanelContainer = document.getElementById("tabbrowser-tabpanels");
+  },
+
+  get addEventListener() {
+    delete this.addEventListener;
+    return this.addEventListener = this.mPanelContainer.addEventListener.bind(this.mPanelContainer);
+  },
+
+  get removeEventListener() {
+    delete this.removeEventListener;
+    return this.removeEventListener = this.mPanelContainer.removeEventListener.bind(this.mPanelContainer);
+  },
+
+  get dispatchEvent() {
+    delete this.dispatchEvent;
+    return this.dispatchEvent = this.mPanelContainer.dispatchEvent.bind(this.mPanelContainer);
   },
 
   get visibleTabs() {
