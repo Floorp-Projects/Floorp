@@ -85,6 +85,11 @@ bool Instruction::IsNOP() const {
 }
 
 
+bool Instruction::IsCSDB() const {
+  return Mask(SystemHintMask) == HINT && ImmHint() == CSDB;
+}
+
+
 bool Instruction::IsADR() const {
   return Mask(PCRelAddressingMask) == ADR;
 }

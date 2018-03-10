@@ -27,10 +27,7 @@ int GetEffectiveContentSandboxLevel() {
 #endif
 #ifdef XP_LINUX
   // Level 4 and up will break direct access to audio.
-  // Bug 1438391: also VirtualGL lazily connecting to X.
-  if (level > 3 &&
-      (!Preferences::GetBool("media.cubeb.sandbox") ||
-       PR_GetEnv("VGL_ISACTIVE") != nullptr)) {
+  if (level > 3 && !Preferences::GetBool("media.cubeb.sandbox")) {
     level = 3;
   }
 #endif

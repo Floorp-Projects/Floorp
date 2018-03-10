@@ -7,12 +7,13 @@ ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
+  ErrorPageEventHandler: "chrome://geckoview/content/ErrorPageEventHandler.js",
+  LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-                       {}).AndroidLog.d.bind(null, "ViewNavigationContent"));
+  ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
+                     {}).AndroidLog.d.bind(null, "ViewNavigation[C]"));
 
 function debug(aMsg) {
   // dump(aMsg);
@@ -35,25 +36,13 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
   loadURI(aUri, aWhere, aFlags, aTriggeringPrincipal) {
     debug("loadURI " + (aUri && aUri.spec) + " " + aWhere + " " + aFlags);
 
-    let message = {
-      type: "GeckoView:OnLoadUri",
-      uri: aUri ? aUri.displaySpec : "",
-      where: aWhere,
-      flags: aFlags
-    };
+    // TODO: Remove this when we have a sensible error API.
+    if (aUri && aUri.displaySpec.startsWith("about:certerror")) {
+      addEventListener("click", ErrorPageEventHandler, true);
+    }
 
-    debug("dispatch " + JSON.stringify(message));
-
-    let handled = undefined;
-    this.eventDispatcher.sendRequestForResult(message).then(response => {
-      handled = response;
-    }, () => {
-      // There was an error or listener was not registered in GeckoSession, treat as unhandled.
-      handled = false;
-    });
-    Services.tm.spinEventLoopUntil(() => handled !== undefined);
-
-    return handled;
+    return LoadURIDelegate.load(this.eventDispatcher, aUri, aWhere, aFlags,
+                                aTriggeringPrincipal);
   }
 }
 

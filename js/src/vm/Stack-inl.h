@@ -1009,7 +1009,7 @@ LiveSavedFrameCache::FramePtr::hasCachedSavedFrame() const {
 
 struct LiveSavedFrameCache::FramePtr::SetHasCachedMatcher {
     template<typename Frame>
-    void match(Frame* f) const { f->setHasCachedSavedFrame(); }
+    void match(Frame* f) { f->setHasCachedSavedFrame(); }
 };
 
 inline void

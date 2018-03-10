@@ -5894,6 +5894,7 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(SPECTRE_OBJECT_MITIGATIONS_BARRIERS, "spectre.object-mitigations.barriers") \
     Register(SPECTRE_STRING_MITIGATIONS, "spectre.string-mitigations")      \
     Register(SPECTRE_VALUE_MASKING, "spectre.value-masking")                \
+    Register(SPECTRE_JIT_TO_CXX_CALLS, "spectre.jit-to-C++-calls")          \
     Register(ASMJS_ATOMICS_ENABLE, "asmjs.atomics.enable")                  \
     Register(WASM_FOLD_OFFSETS, "wasm.fold-offsets")                        \
     Register(WASM_DELAY_TIER2, "wasm.delay-tier2")
@@ -6506,14 +6507,14 @@ CaptureCurrentStack(JSContext* cx, MutableHandleObject stackp,
  * Here |asyncStack| is the async stack to prepare.  It is copied into
  * |cx|'s current compartment, and the newest frame is given
  * |asyncCause| as its asynchronous cause.  If |maxFrameCount| is
- * non-zero, capture at most the youngest |maxFrameCount| frames.  The
+ * |Some(n)|, capture at most the youngest |n| frames.  The
  * new stack object is written to |stackp|.  Returns true on success,
  * or sets an exception and returns |false| on error.
  */
 extern JS_PUBLIC_API(bool)
 CopyAsyncStack(JSContext* cx, HandleObject asyncStack,
                HandleString asyncCause, MutableHandleObject stackp,
-               unsigned maxFrameCount);
+               const mozilla::Maybe<size_t>& maxFrameCount);
 
 /*
  * Accessors for working with SavedFrame JSObjects
