@@ -64,7 +64,9 @@ public:
 
   void ClearResourceTimings();
 
-  DOMHighResTimeStamp Now() const;
+  DOMHighResTimeStamp Now();
+
+  DOMHighResTimeStamp NowUnclamped() const;
 
   DOMHighResTimeStamp TimeOrigin();
 
