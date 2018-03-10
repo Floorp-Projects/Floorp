@@ -73,7 +73,7 @@ FeatureRef::FeatureRef(const Face & face,
     unsigned short & bits_offset, uint32 max_val,
     uint32 name, uint16 uiName, uint16 flags,
     FeatureSetting *settings, uint16 num_set) throw()
-: m_pFace(&face),
+: m_face(&face),
   m_nameValues(settings),
   m_mask(mask_over_val(max_val)),
   m_max(max_val),
@@ -135,7 +135,7 @@ bool FeatureMap::readFeats(const Face & face)
         const uint16    flags  = be::read<uint16>(p),
                         uiName = be::read<uint16>(p);
 
-        if (settings_offset > size_t(feat_end - feat_start) 
+        if (settings_offset > size_t(feat_end - feat_start)
             || settings_offset + num_settings * FEATURE_SETTING_SIZE > size_t(feat_end - feat_start))
         {
             free(defVals);
@@ -176,9 +176,9 @@ bool FeatureMap::readFeats(const Face & face)
     for (int i = 0; i < m_numFeats; ++i)
     {
         m_feats[i].applyValToFeature(defVals[i], m_defaultFeatures);
-        m_pNamedFeats[i] = m_feats+i;
+        m_pNamedFeats[i] = m_feats[i];
     }
-    
+
     free(defVals);
 
     qsort(m_pNamedFeats, m_numFeats, sizeof(NameAndFeatureRef), &cmpNameAndFeatures);
@@ -259,7 +259,7 @@ Features* SillMap::cloneFeatures(uint32 langname/*0 means default*/) const
 const FeatureRef *FeatureMap::findFeatureRef(uint32 name) const
 {
     NameAndFeatureRef *it;
-    
+
     for (it = m_pNamedFeats; it < m_pNamedFeats + m_numFeats; ++it)
         if (it->m_name == name)
             return it->m_pFRef;
@@ -267,13 +267,13 @@ const FeatureRef *FeatureMap::findFeatureRef(uint32 name) const
 }
 
 bool FeatureRef::applyValToFeature(uint32 val, Features & pDest) const
-{ 
-    if (val>maxVal() || !m_pFace)
+{
+    if (val>maxVal() || !m_face)
       return false;
     if (pDest.m_pMap==NULL)
-      pDest.m_pMap = &m_pFace->theSill().theFeatureMap();
+      pDest.m_pMap = &m_face->theSill().theFeatureMap();
     else
-      if (pDest.m_pMap!=&m_pFace->theSill().theFeatureMap())
+      if (pDest.m_pMap!=&m_face->theSill().theFeatureMap())
         return false;       //incompatible
     if (m_index >= pDest.size())
         pDest.resize(m_index+1);
@@ -283,11 +283,10 @@ bool FeatureRef::applyValToFeature(uint32 val, Features & pDest) const
 }
 
 uint32 FeatureRef::getFeatureVal(const Features& feats) const
-{ 
-  if (m_index < feats.size() && &m_pFace->theSill().theFeatureMap()==feats.m_pMap) 
-    return (feats[m_index] & m_mask) >> m_bits; 
+{
+  if (m_index < feats.size() && m_face
+      && &m_face->theSill().theFeatureMap()==feats.m_pMap)
+    return (feats[m_index] & m_mask) >> m_bits;
   else
     return 0;
 }
-
-
