@@ -125,6 +125,17 @@
           Services.prefs.addObserver("privacy.userContext", this);
           this.observe(null, "nsPref:changed", "privacy.userContext.enabled");
 
+          XPCOMUtils.defineLazyPreferenceGetter(this, "_tabMinWidthPref",
+            "browser.tabs.tabMinWidth", null,
+            (pref, prevValue, newValue) => this._tabMinWidth = newValue,
+            newValue => {
+              const LIMIT = 50;
+              return Math.max(newValue, LIMIT);
+            },
+          );
+
+          this._tabMinWidth = this._tabMinWidthPref;
+
           this._setPositionalAttributes();
 
           CustomizableUI.addListener(this);
@@ -170,6 +181,13 @@
         <getter>
           return window.gBrowser;
         </getter>
+      </property>
+
+      <property name="_tabMinWidth">
+        <setter>
+          this.style.setProperty("--tab-min-width", val + "px");
+          return val;
+        </setter>
       </property>
 
       <property name="restoreTabsButtonWrapperWidth" readonly="true">
