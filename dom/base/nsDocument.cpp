@@ -5660,7 +5660,7 @@ nsIDocument::GetDoctype() const
 }
 
 DOMImplementation*
-nsDocument::GetImplementation(ErrorResult& rv)
+nsIDocument::GetImplementation(ErrorResult& rv)
 {
   if (!mDOMImplementation) {
     nsCOMPtr<nsIURI> uri;
