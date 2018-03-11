@@ -6581,7 +6581,7 @@ nsIDocument::MatchMedia(const nsAString& aMediaQueryList,
 }
 
 void
-nsDocument::FlushSkinBindings()
+nsIDocument::FlushSkinBindings()
 {
   BindingManager()->FlushSkinBindings();
 }
