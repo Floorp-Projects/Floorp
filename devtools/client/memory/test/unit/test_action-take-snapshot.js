@@ -10,9 +10,9 @@
 let actions = require("devtools/client/memory/actions/snapshot");
 let { snapshotState: states } = require("devtools/client/memory/constants");
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
-  yield front.attach();
+  await front.attach();
   let store = Store();
 
   let unsubscribe = store.subscribe(checkState);
@@ -41,7 +41,7 @@ add_task(function* () {
 
   for (let i = 0; i < 4; i++) {
     store.dispatch(actions.takeSnapshot(front));
-    yield waitUntilState(store, () => foundPendingState && foundDoneState);
+    await waitUntilState(store, () => foundPendingState && foundDoneState);
 
     // reset state trackers
     foundDoneState = foundPendingState = false;

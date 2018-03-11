@@ -16,7 +16,7 @@ Test that collapsed subtrees aren't rendered.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = Task.async(function* () {
+window.onload = async function () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
@@ -26,7 +26,7 @@ window.onload = Task.async(function* () {
 
     isAccessibleTree(tree);
     TEST_TREE.expanded = new Set("MNO".split(""));
-    yield forceRender(tree);
+    await forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -39,7 +39,7 @@ window.onload = Task.async(function* () {
   } finally {
     SimpleTest.finish();
   }
-});
+};
 </script>
 </pre>
 </body>

@@ -43,7 +43,7 @@ var WebAudioEditorController = {
   /**
    * Listen for events emitted by the current tab target.
    */
-  initialize: Task.async(function* () {
+  async initialize() {
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onThemeChange = this._onThemeChange.bind(this);
 
@@ -67,9 +67,9 @@ var WebAudioEditorController = {
     // Store the AudioNode definitions from the WebAudioFront, if the method exists.
     // If not, get the JSON directly. Using the actor method is preferable so the client
     // knows exactly what methods are supported on the server.
-    let actorHasDefinition = yield gTarget.actorHasMethod("webaudio", "getDefinition");
+    let actorHasDefinition = await gTarget.actorHasMethod("webaudio", "getDefinition");
     if (actorHasDefinition) {
-      AUDIO_NODE_DEFINITION = yield gFront.getDefinition();
+      AUDIO_NODE_DEFINITION = await gFront.getDefinition();
     } else {
       AUDIO_NODE_DEFINITION = require("devtools/server/actors/utils/audionodes.json");
     }
@@ -79,7 +79,7 @@ var WebAudioEditorController = {
     // early request to ensure the CallWatcherActor is running and watching for new window
     // globals.
     gFront.setup({ reload: false });
-  }),
+  },
 
   /**
    * Remove events emitted by the current tab target.
@@ -112,7 +112,7 @@ var WebAudioEditorController = {
   // Since node events (create, disconnect, connect) are all async,
   // we have to make sure to wait that the node has finished creating
   // before performing an operation on it.
-  getNode: function* (nodeActor) {
+  getNode: async function (nodeActor) {
     let id = nodeActor.actorID;
     let node = gAudioNodes.get(id);
 
@@ -124,7 +124,7 @@ var WebAudioEditorController = {
           resolve(createdNode);
         }
       });
-      node = yield promise;
+      node = await promise;
     }
     return node;
   },
@@ -142,7 +142,7 @@ var WebAudioEditorController = {
   /**
    * Called for each location change in the debugged tab.
    */
-  _onTabNavigated: Task.async(function* (event, {isFrameSwitching}) {
+  async _onTabNavigated(event, {isFrameSwitching}) {
     switch (event) {
       case "will-navigate": {
         // Clear out current UI.
@@ -173,7 +173,7 @@ var WebAudioEditorController = {
         break;
       }
     }
-  }),
+  },
 
   /**
    * Called after the first audio node is created in an audio context,
@@ -205,34 +205,34 @@ var WebAudioEditorController = {
   /**
    * Called when a node is connected to another node.
    */
-  _onConnectNode: Task.async(function* ({ source: sourceActor, dest: destActor }) {
-    let source = yield WebAudioEditorController.getNode(sourceActor);
-    let dest = yield WebAudioEditorController.getNode(destActor);
+  async _onConnectNode({ source: sourceActor, dest: destActor }) {
+    let source = await WebAudioEditorController.getNode(sourceActor);
+    let dest = await WebAudioEditorController.getNode(destActor);
     source.connect(dest);
-  }),
+  },
 
   /**
    * Called when a node is conneceted to another node's AudioParam.
    */
-  _onConnectParam: Task.async(function* ({ source: sourceActor, dest: destActor, param }) {
-    let source = yield WebAudioEditorController.getNode(sourceActor);
-    let dest = yield WebAudioEditorController.getNode(destActor);
+  async _onConnectParam({ source: sourceActor, dest: destActor, param }) {
+    let source = await WebAudioEditorController.getNode(sourceActor);
+    let dest = await WebAudioEditorController.getNode(destActor);
     source.connect(dest, param);
-  }),
+  },
 
   /**
    * Called when a node is disconnected.
    */
-  _onDisconnectNode: Task.async(function* (nodeActor) {
-    let node = yield WebAudioEditorController.getNode(nodeActor);
+  async _onDisconnectNode(nodeActor) {
+    let node = await WebAudioEditorController.getNode(nodeActor);
     node.disconnect();
-  }),
+  },
 
   /**
    * Called when a node param is changed.
    */
-  _onChangeParam: Task.async(function* ({ actor, param, value }) {
-    let node = yield WebAudioEditorController.getNode(actor);
+  async _onChangeParam({ actor, param, value }) {
+    let node = await WebAudioEditorController.getNode(actor);
     window.emit(EVENTS.CHANGE_PARAM, node, param, value);
-  })
+  }
 };

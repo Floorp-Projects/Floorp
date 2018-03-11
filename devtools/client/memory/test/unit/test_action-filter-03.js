@@ -11,21 +11,21 @@ let { setFilterString, setFilterStringAndRefresh } = require("devtools/client/me
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 let { changeView } = require("devtools/client/memory/actions/view");
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   let { getState, dispatch } = store;
 
   dispatch(changeView(viewState.CENSUS));
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilSnapshotState(store, [states.SAVING]);
+  await waitUntilSnapshotState(store, [states.SAVING]);
 
   dispatch(setFilterString("str"));
 
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVED]);
   equal(getState().filter, "str",
         "should want filtered trees");
@@ -33,18 +33,18 @@ add_task(function* () {
         "snapshot-we-were-in-the-middle-of-saving's census should be filtered");
 
   dispatch(setFilterStringAndRefresh("", heapWorker));
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVING]);
   ok(true, "changing filter string retriggers census");
   ok(!getState().filter, "no longer filtering");
 
   dispatch(setFilterString("obj"));
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVED]);
   equal(getState().filter, "obj", "filtering for obj now");
   equal(getState().snapshots[0].census.filter, "obj",
         "census-we-were-in-the-middle-of-recomputing should be filtered again");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

@@ -6,13 +6,13 @@
  * respective to their recorded animation frame.
  */
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
-  yield reload(target);
+  await reload(target);
 
-  yield recordAndWaitForFirstSnapshot();
+  await recordAndWaitForFirstSnapshot();
   info("First snapshot recorded.");
 
   is(SnapshotsListView.selectedIndex, 0,
@@ -20,7 +20,7 @@ function* ifTestingSupported() {
   is(CallsListView.selectedIndex, -1,
     "There should be no call item automatically selected in the snapshot.");
 
-  yield recordAndWaitForAnotherSnapshot();
+  await recordAndWaitForAnotherSnapshot();
   info("Second snapshot recorded.");
 
   is(SnapshotsListView.selectedIndex, 0,
@@ -32,7 +32,7 @@ function* ifTestingSupported() {
   let snapshotSelected = waitForSnapshotSelection();
   EventUtils.sendMouseEvent({ type: "mousedown" }, secondSnapshotTarget, window);
 
-  yield snapshotSelected;
+  await snapshotSelected;
   info("Second snapshot selected.");
 
   is(SnapshotsListView.selectedIndex, 1,
@@ -44,7 +44,7 @@ function* ifTestingSupported() {
   let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   EventUtils.sendMouseEvent({ type: "mousedown" }, firstDrawCallContents, window);
 
-  yield screenshotDisplayed;
+  await screenshotDisplayed;
   info("First draw call in the second snapshot selected.");
 
   is(SnapshotsListView.selectedIndex, 1,
@@ -56,7 +56,7 @@ function* ifTestingSupported() {
   snapshotSelected = waitForSnapshotSelection();
   EventUtils.sendMouseEvent({ type: "mousedown" }, firstSnapshotTarget, window);
 
-  yield snapshotSelected;
+  await snapshotSelected;
   info("First snapshot re-selected.");
 
   is(SnapshotsListView.selectedIndex, 0,
@@ -88,6 +88,6 @@ function* ifTestingSupported() {
     ]);
   }
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

@@ -13,7 +13,7 @@ var ToolbarView = {
   /**
    * Sets up the view with event binding.
    */
-  initialize: Task.async(function* () {
+  async initialize() {
     this._onFilterPopupShowing = this._onFilterPopupShowing.bind(this);
     this._onFilterPopupHiding = this._onFilterPopupHiding.bind(this);
     this._onHiddenMarkersChanged = this._onHiddenMarkersChanged.bind(this);
@@ -30,7 +30,7 @@ var ToolbarView = {
     let experimentalEnabled = PerformanceController.getOption("experimental");
     this._toggleExperimentalUI(experimentalEnabled);
 
-    yield this.optionsView.initialize();
+    await this.optionsView.initialize();
     this.optionsView.on("pref-changed", this._onPrefChanged);
 
     this._buildMarkersFilterPopup();
@@ -39,7 +39,7 @@ var ToolbarView = {
                                                         this._onFilterPopupShowing);
     $("#performance-filter-menupopup").addEventListener("popuphiding",
                                                         this._onFilterPopupHiding);
-  }),
+  },
 
   /**
    * Unbinds events and cleans up view.

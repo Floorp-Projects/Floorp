@@ -11,30 +11,30 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function () {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   let rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
-  yield DetailsView.selectView("js-flamegraph");
-  yield rendered;
+  await DetailsView.selectView("js-flamegraph");
+  await rendered;
 
   ok(true, "JsFlameGraphView rendered after recording is stopped.");
 
-  yield startRecording(panel);
-  yield stopRecording(panel, {
+  await startRecording(panel);
+  await stopRecording(panel, {
     expectedViewClass: "JsFlameGraphView",
     expectedViewEvent: "UI_JS_FLAMEGRAPH_RENDERED"
   });
 
   ok(true, "JsFlameGraphView rendered again after recording completed a second time.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

@@ -12,23 +12,23 @@ let { actions, snapshotState: states, treeMapState } = require("devtools/client/
 let { exportSnapshot, importSnapshotAndCensus } = require("devtools/client/memory/actions/io");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   let { subscribe, dispatch, getState } = store;
 
-  let destPath = yield createTempFile();
+  let destPath = await createTempFile();
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
+  await waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
 
   let exportEvents = Promise.all([
     waitUntilAction(store, actions.EXPORT_SNAPSHOT_START),
     waitUntilAction(store, actions.EXPORT_SNAPSHOT_END)
   ]);
   dispatch(exportSnapshot(getState().snapshots[0], destPath));
-  yield exportEvents;
+  await exportEvents;
 
   // Now import our freshly exported snapshot
   let snapshotI = 0;
@@ -58,7 +58,7 @@ add_task(function* () {
   let unsubscribe = subscribe(expectStates);
   dispatch(importSnapshotAndCensus(heapWorker, destPath));
 
-  yield waitUntilState(store, () => {
+  await waitUntilState(store, () => {
     return snapshotI === snapshotStates.length &&
            censusI === censusStates.length;
   });

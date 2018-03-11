@@ -9,10 +9,10 @@
 // Test that cookies with domain equal to full host name are listed.
 // E.g., ".example.org" vs. example.org). Bug 1149497.
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
+add_task(async function () {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
 
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org"],
       [
@@ -25,5 +25,5 @@ add_task(function* () {
     ],
   ]);
 
-  yield finishTests();
+  await finishTests();
 });

@@ -5,12 +5,12 @@
  * Tests target navigations are handled correctly in the UI.
  */
 
-function* ifWebGLSupported() {
-  let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
+async function ifWebGLSupported() {
+  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
-  yield promise.all([
+  await promise.all([
     once(gFront, "program-linked"),
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
@@ -29,8 +29,8 @@ function* ifWebGLSupported() {
   is(ShadersListView.selectedIndex, 0,
     "The shaders list has a correct index selected.");
 
-  let vsEditor = yield ShadersEditorsView._getEditor("vs");
-  let fsEditor = yield ShadersEditorsView._getEditor("fs");
+  let vsEditor = await ShadersEditorsView._getEditor("vs");
+  let fsEditor = await ShadersEditorsView._getEditor("fs");
 
   is(vsEditor.getText().indexOf("gl_Position"), 170,
     "The vertex shader editor contains the correct text.");
@@ -41,7 +41,7 @@ function* ifWebGLSupported() {
   let navigated = once(target, "will-navigate");
   navigate(target, "about:blank");
 
-  yield promise.all([navigating, once(panel.panelWin, EVENTS.UI_RESET) ]);
+  await promise.all([navigating, once(panel.panelWin, EVENTS.UI_RESET) ]);
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden while navigating.");
@@ -57,7 +57,7 @@ function* ifWebGLSupported() {
   is(ShadersListView.selectedIndex, -1,
     "The shaders list has a negative index.");
 
-  yield navigated;
+  await navigated;
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should still be hidden after navigating.");
@@ -66,6 +66,6 @@ function* ifWebGLSupported() {
   is($("#content").hidden, true,
     "The tool's content should be still hidden since there's no WebGL content.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

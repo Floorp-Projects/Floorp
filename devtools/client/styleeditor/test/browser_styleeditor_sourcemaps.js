@@ -77,8 +77,8 @@ const origNames = ["sourcemaps.scss", "contained.scss", "test-stylus.styl"];
 
 waitForExplicitFinish();
 
-add_task(function* () {
-  let {ui} = yield openStyleEditorForURL(TESTCASE_URI);
+add_task(async function () {
+  let {ui} = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 4,
     "correct number of editors with source maps enabled");
@@ -87,19 +87,19 @@ add_task(function* () {
   testFirstEditor(ui.editors[0]);
 
   // Test Scss editors
-  yield testEditor(ui.editors[1], origNames);
-  yield testEditor(ui.editors[2], origNames);
-  yield testEditor(ui.editors[3], origNames);
+  await testEditor(ui.editors[1], origNames);
+  await testEditor(ui.editors[2], origNames);
+  await testEditor(ui.editors[3], origNames);
 
   // Test disabling original sources
-  yield togglePref(ui);
+  await togglePref(ui);
 
   is(ui.editors.length, 4, "correct number of editors after pref toggled");
 
   // Test CSS editors
-  yield testEditor(ui.editors[1], cssNames);
-  yield testEditor(ui.editors[2], cssNames);
-  yield testEditor(ui.editors[3], cssNames);
+  await testEditor(ui.editors[1], cssNames);
+  await testEditor(ui.editors[2], cssNames);
+  await testEditor(ui.editors[3], cssNames);
 
   Services.prefs.clearUserPref(PREF);
 });

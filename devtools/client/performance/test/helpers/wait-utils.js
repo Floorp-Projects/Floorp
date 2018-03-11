@@ -5,7 +5,6 @@
 /* globals dump */
 
 const { CC } = require("chrome");
-const { Task } = require("devtools/shared/task");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { once, observeOnce } = require("devtools/client/performance/test/helpers/event-utils");
 
@@ -34,13 +33,13 @@ exports.idleWait = function (time) {
 /**
  * Waits until a predicate returns true.
  */
-exports.waitUntil = function* (predicate, interval = 100, tries = 100) {
+exports.waitUntil = async function (predicate, interval = 100, tries = 100) {
   for (let i = 1; i <= tries; i++) {
-    if (yield Task.spawn(predicate)) {
+    if (await predicate()) {
       dump(`Predicate returned true after ${i} tries.\n`);
       return;
     }
-    yield exports.idleWait(interval);
+    await exports.idleWait(interval);
   }
   throw new Error(`Predicate returned false after ${tries} tries, aborting.\n`);
 };

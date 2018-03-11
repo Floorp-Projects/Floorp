@@ -13,8 +13,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function () {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -25,22 +25,22 @@ add_task(function* () {
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
   Services.prefs.setBoolPref(UI_INVERT_FLAME_PREF, true);
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   let rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
-  yield DetailsView.selectView("memory-flamegraph");
-  yield rendered;
+  await DetailsView.selectView("memory-flamegraph");
+  await rendered;
 
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_INVERT_FLAME_PREF, false);
-  yield rendered;
+  await rendered;
   ok(true, "MemoryFlameGraphView rerendered when toggling invert-call-tree.");
 
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_INVERT_FLAME_PREF, true);
-  yield rendered;
+  await rendered;
   ok(true, "MemoryFlameGraphView rerendered when toggling back invert-call-tree.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

@@ -11,7 +11,6 @@ const {loader, require} = ChromeUtils.import("resource://devtools/shared/Loader.
 const Services = require("Services");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 const {OS} = require("resource://gre/modules/osfile.jsm");
-const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {
@@ -111,28 +110,28 @@ StyleEditorUI.prototype = {
    * Initiates the style editor ui creation, the inspector front to get
    * reference to the walker and the selector highlighter if available
    */
-  initialize: Task.async(function* () {
-    yield this.initializeHighlighter();
+  async initialize() {
+    await this.initializeHighlighter();
 
     this.createUI();
 
-    let styleSheets = yield this._debuggee.getStyleSheets();
-    yield this._resetStyleSheetList(styleSheets);
+    let styleSheets = await this._debuggee.getStyleSheets();
+    await this._resetStyleSheetList(styleSheets);
 
     this._target.on("will-navigate", this._clear);
     this._target.on("navigate", this._onNewDocument);
-  }),
+  },
 
-  initializeHighlighter: Task.async(function* () {
+  async initializeHighlighter() {
     let toolbox = gDevTools.getToolbox(this._target);
-    yield toolbox.initInspector();
+    await toolbox.initInspector();
     this._walker = toolbox.walker;
 
     let hUtils = toolbox.highlighterUtils;
     if (hUtils.supportsCustomHighlighters()) {
       try {
         this._highlighter =
-          yield hUtils.getHighlighterByType(SELECTOR_HIGHLIGHTER_TYPE);
+          await hUtils.getHighlighterByType(SELECTOR_HIGHLIGHTER_TYPE);
       } catch (e) {
         // The selectorHighlighter can't always be instantiated, for example
         // it doesn't work with XUL windows (until bug 1094959 gets fixed);
@@ -141,7 +140,7 @@ StyleEditorUI.prototype = {
           "elements matching hovered selectors will not be highlighted");
       }
     }
-  }),
+  },
 
   /**
    * Build the initial UI and wire buttons with event handlers.
@@ -232,13 +231,13 @@ StyleEditorUI.prototype = {
    * @param  {array} styleSheets
    *         Array of StyleSheetFront
    */
-  _resetStyleSheetList: Task.async(function* (styleSheets) {
+  async _resetStyleSheetList(styleSheets) {
     this._clear();
     this._suppressAdd = false;
 
     for (let sheet of styleSheets) {
       try {
-        yield this._addStyleSheet(sheet);
+        await this._addStyleSheet(sheet);
       } catch (e) {
         console.error(e);
         this.emit("error", { key: LOAD_ERROR, level: "warning" });
@@ -248,7 +247,7 @@ StyleEditorUI.prototype = {
     this._root.classList.remove("loading");
 
     this.emit("stylesheets-reset");
-  }),
+  },
 
   /**
    * Remove all editors and add loading indicator.
@@ -358,7 +357,7 @@ StyleEditorUI.prototype = {
    * @return {Promise} that is resolved with the created StyleSheetEditor when
    *                   the editor is fully initialized or rejected on error.
    */
-  _addStyleSheetEditor: Task.async(function* (styleSheet, isNew) {
+  async _addStyleSheetEditor(styleSheet, isNew) {
     // recall location of saved file for this sheet after page reload
     let file = null;
     let identifier = this.getStyleSheetIdentifier(styleSheet);
@@ -378,11 +377,11 @@ StyleEditorUI.prototype = {
 
     this.editors.push(editor);
 
-    yield editor.fetchSource();
+    await editor.fetchSource();
     this._sourceLoaded(editor);
 
     return editor;
-  }),
+  },
 
   /**
    * Import a style sheet from file and asynchronously create a
@@ -626,12 +625,12 @@ StyleEditorUI.prototype = {
         let showEditor = data.editor;
         this.selectedEditor = showEditor;
 
-        Task.spawn(function* () {
+        (async function () {
           if (!showEditor.sourceEditor) {
             // only initialize source editor when we switch to this view
             let inputElement =
                 details.querySelector(".stylesheet-editor-input");
-            yield showEditor.load(inputElement, this._cssProperties);
+            await showEditor.load(inputElement, this._cssProperties);
           }
 
           showEditor.onShow();
@@ -639,13 +638,13 @@ StyleEditorUI.prototype = {
           this.emit("editor-selected", showEditor);
 
           // Is there any CSS coverage markup to include?
-          let usage = yield csscoverage.getUsage(this._target);
+          let usage = await csscoverage.getUsage(this._target);
           if (usage == null) {
             return;
           }
 
           let sheet = showEditor.styleSheet;
-          let {reports} = yield usage.createEditorReportForSheet(sheet);
+          let {reports} = await usage.createEditorReportForSheet(sheet);
 
           showEditor.removeAllUnusedRegions();
 
@@ -661,7 +660,7 @@ StyleEditorUI.prototype = {
               this.emit("error", { key: "error-compressed", level: "info" });
             }
           }
-        }.bind(this)).catch(console.error);
+        }.bind(this))().catch(console.error);
       }
     });
   },
@@ -883,8 +882,8 @@ StyleEditorUI.prototype = {
    *         Editor to update @media sidebar of
    */
   _updateMediaList: function (editor) {
-    Task.spawn(function* () {
-      let details = yield this.getEditorDetails(editor);
+    (async function () {
+      let details = await this.getEditorDetails(editor);
       let list = details.querySelector(".stylesheet-media-list");
 
       while (list.firstChild) {
@@ -908,7 +907,7 @@ StyleEditorUI.prototype = {
         };
         if (editor.styleSheet.isOriginalSource) {
           let styleSheet = editor.cssSheet;
-          location = yield editor.styleSheet.getOriginalLocation(styleSheet, line,
+          location = await editor.styleSheet.getOriginalLocation(styleSheet, line,
                                                                  column);
         }
 
@@ -948,7 +947,7 @@ StyleEditorUI.prototype = {
       sidebar.hidden = !showSidebar || !inSource;
 
       this.emit("media-list-changed", editor);
-    }.bind(this)).catch(console.error);
+    }.bind(this))().catch(console.error);
   },
 
   /**
@@ -1012,13 +1011,13 @@ StyleEditorUI.prototype = {
    * @param  {object} options
    *         Object with width or/and height properties.
    */
-  _launchResponsiveMode: Task.async(function* (options = {}) {
+  async _launchResponsiveMode(options = {}) {
     let tab = this._target.tab;
     let win = this._target.tab.ownerDocument.defaultView;
 
-    yield ResponsiveUIManager.openIfNeeded(win, tab);
+    await ResponsiveUIManager.openIfNeeded(win, tab);
     ResponsiveUIManager.getResponsiveUIForTab(tab).setViewportSize(options);
-  }),
+  },
 
   /**
    * Jump cursor to the editor for a stylesheet and line number for a rule.

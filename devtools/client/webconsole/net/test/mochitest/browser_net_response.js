@@ -20,18 +20,18 @@ const jsonResponseBody = "name\"John\"";
 /**
  * Validate plain text response
  */
-add_task(function* () {
+add_task(async function () {
   info("Test XHR Spy respone plain body started");
 
-  let {hud} = yield addTestTab(TEST_PAGE_URL);
+  let {hud} = await addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = yield executeAndInspectXhr(hud, {
+  let netInfoBody = await executeAndInspectXhr(hud, {
     method: "GET",
     url: TEXT_XHR_URL,
   });
 
   // Check response body data
-  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "response");
+  let tabBody = await selectNetInfoTab(hud, netInfoBody, "response");
   let responseContent = tabBody.querySelector(
     ".netInfoGroup.raw.opened .netInfoGroupContent");
 
@@ -42,18 +42,18 @@ add_task(function* () {
 /**
  * Validate XML response
  */
-add_task(function* () {
+add_task(async function () {
   info("Test XHR Spy response XML body started");
 
-  let {hud} = yield addTestTab(TEST_PAGE_URL);
+  let {hud} = await addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = yield executeAndInspectXhr(hud, {
+  let netInfoBody = await executeAndInspectXhr(hud, {
     method: "GET",
     url: XML_XHR_URL,
   });
 
   // Check response body data
-  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "response");
+  let tabBody = await selectNetInfoTab(hud, netInfoBody, "response");
   let rawResponseContent = tabBody.querySelector(
     ".netInfoGroup.raw.opened .netInfoGroupContent");
   ok(rawResponseContent, "Raw response group must not be collapsed");
@@ -62,18 +62,18 @@ add_task(function* () {
 /**
  * Validate JSON response
  */
-add_task(function* () {
+add_task(async function () {
   info("Test XHR Spy response JSON body started");
 
-  let {hud} = yield addTestTab(TEST_PAGE_URL);
+  let {hud} = await addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = yield executeAndInspectXhr(hud, {
+  let netInfoBody = await executeAndInspectXhr(hud, {
     method: "GET",
     url: JSON_XHR_URL,
   });
 
   // Check response body data
-  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "response");
+  let tabBody = await selectNetInfoTab(hud, netInfoBody, "response");
   let responseContent = tabBody.querySelector(
     ".netInfoGroup.json .netInfoGroupContent");
 

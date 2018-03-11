@@ -10,8 +10,8 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function () {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -33,16 +33,16 @@ add_task(function* () {
   });
 
   click(recordButton);
-  yield uiStartClick;
+  await uiStartClick;
 
   checkRecordButtonsStates(true, true);
 
-  yield recordingStarted;
+  await recordingStarted;
 
   checkRecordButtonsStates(true, false);
 
-  yield backendStartReady;
-  yield uiStateRecording;
+  await backendStartReady;
+  await uiStateRecording;
 
   let uiStopClick = once(PerformanceView, EVENTS.UI_STOP_RECORDING);
   let recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
@@ -55,15 +55,15 @@ add_task(function* () {
   });
 
   click(recordButton);
-  yield uiStopClick;
-  yield recordingStopped;
+  await uiStopClick;
+  await recordingStopped;
 
   checkRecordButtonsStates(false, false);
 
-  yield backendStopReady;
-  yield uiStateRecorded;
+  await backendStopReady;
+  await uiStateRecorded;
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 
   function checkRecordButtonsStates(checked, locked) {
     for (let button of $$(".record-button")) {

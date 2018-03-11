@@ -6,15 +6,15 @@
 
 "use strict";
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-localstorage.html");
+add_task(async function () {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-localstorage.html");
   showAllColumns(true);
 
-  yield performAdd(["localStorage", "http://test1.example.org"]);
-  yield performAdd(["localStorage", "http://test1.example.org"]);
-  yield performAdd(["localStorage", "http://test1.example.org"]);
-  yield performAdd(["localStorage", "http://test1.example.org"]);
-  yield performAdd(["localStorage", "http://test1.example.org"]);
+  await performAdd(["localStorage", "http://test1.example.org"]);
+  await performAdd(["localStorage", "http://test1.example.org"]);
+  await performAdd(["localStorage", "http://test1.example.org"]);
+  await performAdd(["localStorage", "http://test1.example.org"]);
+  await performAdd(["localStorage", "http://test1.example.org"]);
 
-  yield finishTests();
+  await finishTests();
 });

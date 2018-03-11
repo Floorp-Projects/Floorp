@@ -21,25 +21,25 @@ Services.prefs.setBoolPref("devtools.memory.enabled", true);
 /**
  * Open the memory panel for the given tab.
  */
-this.openMemoryPanel = Task.async(function* (tab) {
+this.openMemoryPanel = async function (tab) {
   info("Opening memory panel.");
   const target = TargetFactory.forTab(tab);
-  const toolbox = yield gDevTools.showToolbox(target, "memory");
+  const toolbox = await gDevTools.showToolbox(target, "memory");
   info("Memory panel shown successfully.");
   let panel = toolbox.getCurrentPanel();
   return { tab, panel };
-});
+};
 
 /**
  * Close the memory panel for the given tab.
  */
-this.closeMemoryPanel = Task.async(function* (tab) {
+this.closeMemoryPanel = async function (tab) {
   info("Closing memory panel.");
   const target = TargetFactory.forTab(tab);
   const toolbox = gDevTools.getToolbox(target);
-  yield toolbox.destroy();
+  await toolbox.destroy();
   info("Closed memory panel successfully.");
-});
+};
 
 /**
  * Return a test function that adds a tab with the given url, opens the memory
@@ -53,27 +53,27 @@ this.closeMemoryPanel = Task.async(function* (tab) {
  *     });
  */
 function makeMemoryTest(url, generator) {
-  return Task.async(function* () {
+  return async function () {
     waitForExplicitFinish();
 
     // It can take a long time to save a snapshot to disk, read the snapshots
     // back from disk, and finally perform analyses on them.
     requestLongerTimeout(2);
 
-    const tab = yield addTab(url);
-    const results = yield openMemoryPanel(tab);
+    const tab = await addTab(url);
+    const results = await openMemoryPanel(tab);
 
     try {
-      yield* generator(results);
+      await generator(results);
     } catch (err) {
       ok(false, "Got an error: " + DevToolsUtils.safeErrorString(err));
     }
 
-    yield closeMemoryPanel(tab);
-    yield removeTab(tab);
+    await closeMemoryPanel(tab);
+    await removeTab(tab);
 
     finish();
-  });
+  };
 }
 
 function dumpn(msg) {

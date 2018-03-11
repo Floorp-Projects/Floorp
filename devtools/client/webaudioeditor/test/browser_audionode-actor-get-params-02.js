@@ -6,16 +6,16 @@
  * from the AudioNode actors.
  */
 
-add_task(function* () {
-  let { target, front } = yield initBackend(SIMPLE_NODES_URL);
-  let [_, nodes] = yield Promise.all([
+add_task(async function () {
+  let { target, front } = await initBackend(SIMPLE_NODES_URL);
+  let [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
     getN(front, "create-node", 15)
   ]);
 
-  yield loadFrameScriptUtils();
+  await loadFrameScriptUtils();
 
-  let allParams = yield Promise.all(nodes.map(node => node.getParams()));
+  let allParams = await Promise.all(nodes.map(node => node.getParams()));
   let types = [
     "AudioDestinationNode", "AudioBufferSourceNode", "ScriptProcessorNode",
     "AnalyserNode", "GainNode", "DelayNode", "BiquadFilterNode", "WaveShaperNode",
@@ -23,7 +23,7 @@ add_task(function* () {
     "DynamicsCompressorNode", "OscillatorNode", "StereoPannerNode"
   ];
 
-  let defaults = yield Promise.all(types.map(type => nodeDefaultValues(type)));
+  let defaults = await Promise.all(types.map(type => nodeDefaultValues(type)));
 
   info(JSON.stringify(defaults));
 
@@ -31,7 +31,7 @@ add_task(function* () {
     compare(params, defaults[i], types[i]);
   });
 
-  yield removeTab(target.tab);
+  await removeTab(target.tab);
 });
 
 function compare(actual, expected, type) {

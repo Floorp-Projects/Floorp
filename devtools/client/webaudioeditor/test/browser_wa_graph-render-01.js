@@ -7,8 +7,8 @@
 
 var connectCount = 0;
 
-add_task(function* () {
-  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(async function () {
+  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
@@ -21,7 +21,7 @@ add_task(function* () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = yield events;
+  let [actors] = await events;
   let [destId, oscId, gainId] = actors.map(actor => actor.actorID);
 
   ok(findGraphNode(panelWin, oscId).classList.contains("type-OscillatorNode"), "found OscillatorNode with class");
@@ -30,13 +30,13 @@ add_task(function* () {
   is(findGraphEdge(panelWin, oscId, gainId).toString(), "[object SVGGElement]", "found edge for osc -> gain");
   is(findGraphEdge(panelWin, gainId, destId).toString(), "[object SVGGElement]", "found edge for gain -> dest");
 
-  yield wait(1000);
+  await wait(1000);
 
   is(connectCount, 2, "Only two node connect events should be fired.");
 
   gAudioNodes.off("connect", onConnectNode);
 
-  yield teardown(target);
+  await teardown(target);
 });
 
 function onConnectNode() {

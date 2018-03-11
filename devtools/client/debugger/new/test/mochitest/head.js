@@ -38,6 +38,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 var { Toolbox } = require("devtools/client/framework/toolbox");
+var { Task } = require("devtools/shared/task");
 const sourceUtils = {
   isLoaded: source => source.get("loadedState") === "loaded"
 };

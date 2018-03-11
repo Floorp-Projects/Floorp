@@ -41,7 +41,7 @@ function test() {
     ConsoleAPIStorage.clearEvents();
 
     // Add a non-private message to the browser console.
-    ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    ContentTask.spawn(gBrowser.selectedBrowser, null, async function () {
       content.console.log("bug874061-not-private");
     });
 

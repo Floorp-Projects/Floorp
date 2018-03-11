@@ -24,7 +24,6 @@ const defer = require("devtools/shared/defer");
 const { extend } = require("devtools/shared/extend");
 const { ViewHelpers, setNamedTimeout } =
   require("devtools/client/shared/widgets/view-helpers");
-const { Task } = require("devtools/shared/task");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 const {PluralForm} = require("devtools/shared/plural-form");
@@ -2776,23 +2775,23 @@ Variable.prototype = extend(Scope.prototype, {
 
     event && event.stopPropagation();
 
-    return Task.spawn(function* () {
-      yield this.toolbox.initInspector();
+    return (async function () {
+      await this.toolbox.initInspector();
 
       let nodeFront = this._nodeFront;
       if (!nodeFront) {
-        nodeFront = yield this.toolbox.walker.getNodeActorFromObjectActor(this._valueGrip.actor);
+        nodeFront = await this.toolbox.walker.getNodeActorFromObjectActor(this._valueGrip.actor);
       }
 
       if (nodeFront) {
-        yield this.toolbox.selectTool("inspector");
+        await this.toolbox.selectTool("inspector");
 
         let inspectorReady = defer();
         this.toolbox.getPanel("inspector").once("inspector-updated", inspectorReady.resolve);
-        yield this.toolbox.selection.setNodeFront(nodeFront, "variables-view");
-        yield inspectorReady.promise;
+        await this.toolbox.selection.setNodeFront(nodeFront, "variables-view");
+        await inspectorReady.promise;
       }
-    }.bind(this));
+    }.bind(this))();
   },
 
   /**

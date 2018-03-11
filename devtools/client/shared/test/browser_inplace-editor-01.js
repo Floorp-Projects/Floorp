@@ -9,16 +9,16 @@ loadHelperScript("helper_inplace_editor.js");
 
 // Test the inplace-editor behavior.
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,inline editor tests");
-  let [host, , doc] = yield createHost();
+add_task(async function () {
+  await addTab("data:text/html;charset=utf-8,inline editor tests");
+  let [host, , doc] = await createHost();
 
-  yield testMultipleInitialization(doc);
-  yield testReturnCommit(doc);
-  yield testBlurCommit(doc);
-  yield testAdvanceCharCommit(doc);
-  yield testAdvanceCharsFunction(doc);
-  yield testEscapeCancel(doc);
+  await testMultipleInitialization(doc);
+  await testReturnCommit(doc);
+  await testBlurCommit(doc);
+  await testAdvanceCharCommit(doc);
+  await testAdvanceCharsFunction(doc);
+  await testEscapeCancel(doc);
 
   host.destroy();
   gBrowser.removeCurrentTab();

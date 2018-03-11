@@ -6,8 +6,8 @@
  * shaders are linked.
  */
 
-function* ifWebGLSupported() {
-  let { target, panel } = yield initShaderEditor(MULTIPLE_CONTEXTS_URL);
+async function ifWebGLSupported() {
+  let { target, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
   let { gFront, EVENTS, L10N, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   is(ShadersListView.itemCount, 0,
@@ -19,7 +19,7 @@ function* ifWebGLSupported() {
 
   reload(target);
 
-  let [firstProgramActor, secondProgramActor] = yield promise.all([
+  let [firstProgramActor, secondProgramActor] = await promise.all([
     getPrograms(gFront, 2, (actors) => {
       // Fired upon each actor addition, we want to check only
       // after the first actor has been added so we can test state
@@ -36,13 +36,13 @@ function* ifWebGLSupported() {
   is(ShadersListView.attachments[1].label, L10N.getFormatStr("shadersList.programLabel", 1),
     "The correct second label is shown in the shaders list.");
 
-  let vertexShader = yield firstProgramActor.getVertexShader();
-  let fragmentShader = yield firstProgramActor.getFragmentShader();
-  let vertSource = yield vertexShader.getText();
-  let fragSource = yield fragmentShader.getText();
+  let vertexShader = await firstProgramActor.getVertexShader();
+  let fragmentShader = await firstProgramActor.getFragmentShader();
+  let vertSource = await vertexShader.getText();
+  let fragSource = await fragmentShader.getText();
 
-  let vsEditor = yield ShadersEditorsView._getEditor("vs");
-  let fsEditor = yield ShadersEditorsView._getEditor("fs");
+  let vsEditor = await ShadersEditorsView._getEditor("vs");
+  let fsEditor = await ShadersEditorsView._getEditor("fs");
 
   is(vertSource, vsEditor.getText(),
     "The vertex shader editor contains the correct text.");
@@ -58,14 +58,14 @@ function* ifWebGLSupported() {
   });
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, ShadersListView.items[1].target);
-  yield shown;
+  await shown;
 
   is(ShadersListView.selectedItem, ShadersListView.items[1],
     "The shaders list has a correct item selected.");
   is(ShadersListView.selectedIndex, 1,
     "The shaders list has a correct index selected.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 
   function checkFirstProgram() {

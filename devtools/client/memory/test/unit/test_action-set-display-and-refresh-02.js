@@ -23,10 +23,10 @@ let CUSTOM = {
   }
 };
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   let { getState, dispatch } = store;
 
@@ -36,7 +36,7 @@ add_task(function* () {
         "CUSTOM display stored in display state.");
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
+  await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
   equal(getState().snapshots[0].census.display, CUSTOM,
   "New snapshot stored CUSTOM display when done taking census");

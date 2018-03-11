@@ -6,14 +6,14 @@
 
 // Test dynamic updates in the storage inspector for localStorage.
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
+add_task(async function () {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
 
   gUI.tree.expandAll();
 
   ok(gUI.sidebar.hidden, "Sidebar is initially hidden");
 
-  yield checkState([
+  await checkState([
     [
       ["localStorage", "http://test1.example.org"],
       ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"]
@@ -22,9 +22,9 @@ add_task(function* () {
 
   gWindow.localStorage.removeItem("ls4");
 
-  yield gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
 
-  yield checkState([
+  await checkState([
     [
       ["localStorage", "http://test1.example.org"],
       ["ls1", "ls2", "ls3", "ls5", "ls6", "ls7"]
@@ -33,10 +33,10 @@ add_task(function* () {
 
   gWindow.localStorage.setItem("ls4", "again");
 
-  yield gUI.once("store-objects-updated");
-  yield gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
 
-  yield checkState([
+  await checkState([
     [
       ["localStorage", "http://test1.example.org"],
       ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"]
@@ -45,24 +45,24 @@ add_task(function* () {
   // Updating a row
   gWindow.localStorage.setItem("ls2", "ls2-changed");
 
-  yield gUI.once("store-objects-updated");
-  yield gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
 
   checkCell("ls2", "value", "ls2-changed");
 
   // Clearing items.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     content.wrappedJSObject.clear();
   });
 
-  yield gUI.once("store-objects-cleared");
+  await gUI.once("store-objects-cleared");
 
-  yield checkState([
+  await checkState([
     [
       ["localStorage", "http://test1.example.org"],
       [ ]
     ],
   ]);
 
-  yield finishTests();
+  await finishTests();
 });

@@ -8,20 +8,20 @@
 
 // Force the old debugger UI since it's directly used (see Bug 1301705)
 Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
-registerCleanupFunction(function* () {
+registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
 });
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
   let { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
-  yield reload(target);
+  await reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
-  yield promise.all([recordingFinished, callListPopulated]);
+  await promise.all([recordingFinished, callListPopulated]);
 
   let callItem = CallsListView.getItemAtIndex(2);
   let locationLink = $(".call-item-location", callItem.target);
@@ -31,7 +31,7 @@ function* ifTestingSupported() {
 
   let callStackDisplayed = once(window, EVENTS.CALL_STACK_DISPLAYED);
   EventUtils.sendMouseEvent({ type: "mousedown" }, locationLink, window);
-  yield callStackDisplayed;
+  await callStackDisplayed;
 
   isnot($(".call-item-stack", callItem.target), null,
     "There should be a stack container available now for the draw call.");
@@ -42,9 +42,9 @@ function* ifTestingSupported() {
 
   let jumpedToSource = once(window, EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
   EventUtils.sendMouseEvent({ type: "mousedown" }, $(".call-item-location", callItem.target));
-  yield jumpedToSource;
+  await jumpedToSource;
 
-  let toolbox = yield gDevTools.getToolbox(target);
+  let toolbox = await gDevTools.getToolbox(target);
   let { panelWin: { DebuggerView: view } } = toolbox.getPanel("jsdebugger");
 
   is(view.Sources.selectedValue, getSourceActor(view.Sources, SIMPLE_CANVAS_DEEP_STACK_URL),
@@ -52,6 +52,6 @@ function* ifTestingSupported() {
   is(view.editor.getCursor().line, 23,
     "The expected source line is highlighted in the debugger.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

@@ -5,16 +5,16 @@
  * Test AudioNode#getParams()
  */
 
-add_task(function* () {
-  let { target, front } = yield initBackend(SIMPLE_NODES_URL);
-  let [_, nodes] = yield Promise.all([
+add_task(async function () {
+  let { target, front } = await initBackend(SIMPLE_NODES_URL);
+  let [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
     getN(front, "create-node", 15)
   ]);
 
-  yield loadFrameScriptUtils();
+  await loadFrameScriptUtils();
 
-  let allNodeParams = yield Promise.all(nodes.map(node => node.getParams()));
+  let allNodeParams = await Promise.all(nodes.map(node => node.getParams()));
   let nodeTypes = [
     "AudioDestinationNode",
     "AudioBufferSourceNode", "ScriptProcessorNode", "AnalyserNode", "GainNode",
@@ -23,7 +23,7 @@ add_task(function* () {
     "StereoPannerNode"
   ];
 
-  let defaults = yield Promise.all(nodeTypes.map(type => nodeDefaultValues(type)));
+  let defaults = await Promise.all(nodeTypes.map(type => nodeDefaultValues(type)));
 
   nodeTypes.map((type, i) => {
     let params = allNodeParams[i];
@@ -45,5 +45,5 @@ add_task(function* () {
     });
   });
 
-  yield removeTab(target.tab);
+  await removeTab(target.tab);
 });

@@ -5,17 +5,17 @@
  * Tests if filtering the items in the call list works properly.
  */
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
   let searchbox = $("#calls-searchbox");
 
-  yield reload(target);
+  await reload(target);
 
   let firstRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
-  yield promise.all([firstRecordingFinished, callListPopulated]);
+  await promise.all([firstRecordingFinished, callListPopulated]);
 
   is(searchbox.value, "",
     "The searchbox should be initially empty.");
@@ -47,10 +47,10 @@ function* ifTestingSupported() {
   callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
 
   SnapshotsListView._onRecordButtonClick();
-  yield secondRecordingFinished;
+  await secondRecordingFinished;
 
   SnapshotsListView.selectedIndex = 1;
-  yield callListPopulated;
+  await callListPopulated;
 
   is(searchbox.value, "clear",
     "The searchbox should still contain the 'clear' string.");
@@ -67,6 +67,6 @@ function* ifTestingSupported() {
   is(CallsListView.visibleItems.length, 8,
     "All the items should be initially visible again in the calls list.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

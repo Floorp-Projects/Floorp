@@ -8,15 +8,15 @@
 
 // Test deleting all storage items from the tree.
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
+add_task(async function () {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   let contextMenu = gPanelWindow.document.getElementById("storage-tree-popup");
   let menuDeleteAllItem = contextMenu.querySelector(
     "#storage-tree-popup-delete-all");
 
   info("test state before delete");
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org"],
       [
@@ -47,7 +47,7 @@ add_task(function* () {
   for (let store of deleteHosts) {
     let storeName = store.join(" > ");
 
-    yield selectTreeItem(store);
+    await selectTreeItem(store);
 
     let eventName = "store-objects-" +
       (store[0] == "cookies" ? "updated" : "cleared");
@@ -56,16 +56,16 @@ add_task(function* () {
     let selector = `[data-id='${JSON.stringify(store)}'] > .tree-widget-item`;
     let target = gPanelWindow.document.querySelector(selector);
     ok(target, `tree item found in ${storeName}`);
-    yield waitForContextMenu(contextMenu, target, () => {
+    await waitForContextMenu(contextMenu, target, () => {
       info(`Opened tree context menu in ${storeName}`);
       menuDeleteAllItem.click();
     });
 
-    yield eventWait;
+    await eventWait;
   }
 
   info("test state after delete");
-  yield checkState([
+  await checkState([
     [["cookies", "http://test1.example.org"], []],
     [["localStorage", "http://test1.example.org"], []],
     [["sessionStorage", "http://test1.example.org"], []],
@@ -73,5 +73,5 @@ add_task(function* () {
     [["Cache", "http://test1.example.org", "plop"], []],
   ]);
 
-  yield finishTests();
+  await finishTests();
 });

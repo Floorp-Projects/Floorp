@@ -7,21 +7,21 @@
 
 const {ELLIPSIS} = require("devtools/shared/l10n");
 
-add_task(function* () {
+add_task(async function () {
   info("Test Object type property started");
 
   const TEST_JSON_URL = "data:application/json,{\"x\":{\"type\":\"string\"}}";
-  yield addJsonViewTab(TEST_JSON_URL);
+  await addJsonViewTab(TEST_JSON_URL);
 
-  let count = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
+  let count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
   is(count, 2, "There must be two rows");
 
   // Collapse auto-expanded node.
-  yield clickJsonNode(".jsonPanelBox .treeTable .treeLabel");
+  await clickJsonNode(".jsonPanelBox .treeTable .treeLabel");
 
-  count = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
+  count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
   is(count, 1, "There must be one row");
 
-  let label = yield getElementText(".jsonPanelBox .treeTable .objectCell");
+  let label = await getElementText(".jsonPanelBox .treeTable .objectCell");
   is(label, `{${ELLIPSIS}}`, "The label must be indicating an object");
 });

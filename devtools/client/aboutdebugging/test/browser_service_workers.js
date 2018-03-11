@@ -8,16 +8,16 @@
 const SERVICE_WORKER = URL_ROOT + "service-workers/empty-sw.js";
 const TAB_URL = URL_ROOT + "service-workers/empty-sw.html";
 
-add_task(function* () {
-  yield enableServiceWorkerDebugging();
+add_task(async function () {
+  await enableServiceWorkerDebugging();
 
-  let { tab, document } = yield openAboutDebugging("workers");
+  let { tab, document } = await openAboutDebugging("workers");
 
-  let swTab = yield addTab(TAB_URL);
+  let swTab = await addTab(TAB_URL);
 
   let serviceWorkersElement = getServiceWorkerList(document);
 
-  yield waitUntil(() => {
+  await waitUntil(() => {
     // Check that the service worker appears in the UI
     let names = [...document.querySelectorAll("#service-workers .target-name")];
     names = names.map(element => element.textContent);
@@ -26,7 +26,7 @@ add_task(function* () {
   info("The service worker url appears in the list");
 
   try {
-    yield unregisterServiceWorker(swTab, serviceWorkersElement);
+    await unregisterServiceWorker(swTab, serviceWorkersElement);
     ok(true, "Service worker registration unregistered");
   } catch (e) {
     ok(false, "SW not unregistered; " + e);
@@ -38,6 +38,6 @@ add_task(function* () {
   ok(!names.includes(SERVICE_WORKER),
     "The service worker url is no longer in the list: " + names);
 
-  yield removeTab(swTab);
-  yield closeAboutDebugging(tab);
+  await removeTab(swTab);
+  await closeAboutDebugging(tab);
 });

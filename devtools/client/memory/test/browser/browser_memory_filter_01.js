@@ -14,7 +14,7 @@ const { changeViewAndRefresh, changeView } = require("devtools/client/memory/act
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
-this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const store = panel.panelWin.gStore;
   const { dispatch } = store;
@@ -25,7 +25,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const takeSnapshotButton = doc.getElementById("take-snapshot");
   EventUtils.synthesizeMouseAtCenter(takeSnapshotButton, {}, panel.panelWin);
 
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots.length === 1 &&
     state.snapshots[0].census &&
     state.snapshots[0].census.state === censusState.SAVING);
@@ -34,13 +34,13 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   EventUtils.synthesizeMouseAtCenter(filterInput, {}, panel.panelWin);
   EventUtils.sendString("js::Shape", panel.panelWin);
 
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots.length === 1 &&
     state.snapshots[0].census &&
     state.snapshots[0].census.state === censusState.SAVING);
   ok(true, "adding a filter string should trigger census recompute");
 
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots.length === 1 &&
     state.snapshots[0].census &&
     state.snapshots[0].census.state === censusState.SAVED);
@@ -58,13 +58,13 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   ok(true, "change view to dominator tree");
 
   // Wait for the dominator tree to be computed and fetched.
-  yield waitUntilDominatorTreeState(store, [dominatorTreeState.LOADED]);
+  await waitUntilDominatorTreeState(store, [dominatorTreeState.LOADED]);
   ok(true, "computed and fetched the dominator tree.");
 
   dispatch(changeViewAndRefresh(viewState.CENSUS, heapWorker));
   ok(true, "change view back to census");
 
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots.length === 1 &&
     state.snapshots[0].census &&
     state.snapshots[0].census.state === censusState.SAVED);

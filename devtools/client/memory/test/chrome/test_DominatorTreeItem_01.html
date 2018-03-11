@@ -16,11 +16,11 @@ Test that we don't display `JS::ubi::RootList` for the root, and instead show "G
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = Task.async(function* () {
+         window.onload = async function () {
            try {
              const container = document.getElementById("container");
 
-             yield renderComponent(DominatorTreeItem({
+             await renderComponent(DominatorTreeItem({
                item: makeTestDominatorTreeNode({ label: ["other", "JS::ubi::RootList"] }),
                depth: 0,
                arrow: dom.div(),
@@ -38,7 +38,7 @@ Test that we don't display `JS::ubi::RootList` for the root, and instead show "G
            } finally {
              SimpleTest.finish();
            }
-         });
+         };
         </script>
     </pre>
 </body>

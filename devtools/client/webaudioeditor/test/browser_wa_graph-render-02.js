@@ -5,8 +5,8 @@
  * Tests more edge rendering for complex graphs.
  */
 
-add_task(function* () {
-  let { target, panel } = yield initWebAudioEditor(COMPLEX_CONTEXT_URL);
+add_task(async function () {
+  let { target, panel } = await initWebAudioEditor(COMPLEX_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$ } = panelWin;
 
@@ -17,7 +17,7 @@ add_task(function* () {
     waitForGraphRendered(panelWin, 8, 8)
   ]);
   reload(target);
-  let [actors] = yield events;
+  let [actors] = await events;
   let nodeIDs = actors.map(actor => actor.actorID);
 
   let types = ["AudioDestinationNode", "OscillatorNode", "GainNode", "ScriptProcessorNode",
@@ -44,5 +44,5 @@ add_task(function* () {
       "found edge for " + msg);
   });
 
-  yield teardown(target);
+  await teardown(target);
 });

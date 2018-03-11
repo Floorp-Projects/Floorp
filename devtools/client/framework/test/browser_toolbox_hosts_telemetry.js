@@ -12,18 +12,18 @@ function getHostHistogram() {
   return Services.telemetry.getHistogramById("DEVTOOLS_TOOLBOX_HOST");
 }
 
-add_task(function* () {
+add_task(async function () {
   // Reset it to make counting easier
   getHostHistogram().clear();
 
   info("Create a test tab and open the toolbox");
-  let tab = yield addTab(URL);
+  let tab = await addTab(URL);
   let target = TargetFactory.forTab(tab);
-  let toolbox = yield gDevTools.showToolbox(target, "webconsole");
+  let toolbox = await gDevTools.showToolbox(target, "webconsole");
 
-  yield changeToolboxHost(toolbox);
-  yield checkResults();
-  yield toolbox.destroy();
+  await changeToolboxHost(toolbox);
+  await checkResults();
+  await toolbox.destroy();
 
   toolbox = target = null;
   gBrowser.removeCurrentTab();
@@ -32,14 +32,14 @@ add_task(function* () {
   getHostHistogram().clear();
 });
 
-function* changeToolboxHost(toolbox) {
+async function changeToolboxHost(toolbox) {
   info("Switch toolbox host");
-  yield toolbox.switchHost(SIDE);
-  yield toolbox.switchHost(WINDOW);
-  yield toolbox.switchHost(BOTTOM);
-  yield toolbox.switchHost(SIDE);
-  yield toolbox.switchHost(WINDOW);
-  yield toolbox.switchHost(BOTTOM);
+  await toolbox.switchHost(SIDE);
+  await toolbox.switchHost(WINDOW);
+  await toolbox.switchHost(BOTTOM);
+  await toolbox.switchHost(SIDE);
+  await toolbox.switchHost(WINDOW);
+  await toolbox.switchHost(BOTTOM);
 }
 
 function checkResults() {

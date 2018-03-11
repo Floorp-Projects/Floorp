@@ -293,7 +293,7 @@ module.exports = {
 `;
 }
 
-function* generateConsoleApiStubs() {
+async function generateConsoleApiStubs() {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html";
 
   // Hiding log messages so we don't get unwanted client/server communication.
@@ -304,7 +304,7 @@ function* generateConsoleApiStubs() {
     packets: [],
   };
 
-  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
   const hud = toolbox.getCurrentPanel().hud;
   let {ui} = hud;
   ok(ui.jsterm, "jsterm exists");
@@ -325,7 +325,7 @@ function* generateConsoleApiStubs() {
       toolbox.target.client.addListener("consoleAPICall", listener);
     });
 
-    yield ContentTask.spawn(
+    await ContentTask.spawn(
       gBrowser.selectedBrowser,
       [key, code],
       function ([subKey, subCode]) {
@@ -338,16 +338,16 @@ function* generateConsoleApiStubs() {
       }
     );
 
-    yield received;
+    await received;
   }
 
   Services.prefs.clearUserPref(PREFS.FILTER.LOG);
 
-  yield closeTabAndToolbox();
+  await closeTabAndToolbox();
   return formatFile(stubs, "ConsoleMessage");
 }
 
-function* generateCssMessageStubs() {
+async function generateCssMessageStubs() {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-css-message.html";
 
   let stubs = {
@@ -355,7 +355,7 @@ function* generateCssMessageStubs() {
     packets: [],
   };
 
-  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
   for (let [key, code] of cssMessage) {
     let received = new Promise(resolve => {
@@ -371,7 +371,7 @@ function* generateCssMessageStubs() {
       });
     });
 
-    yield ContentTask.spawn(
+    await ContentTask.spawn(
       gBrowser.selectedBrowser,
       [key, code],
       function ([subKey, subCode]) {
@@ -382,14 +382,14 @@ function* generateCssMessageStubs() {
       }
     );
 
-    yield received;
+    await received;
   }
 
-  yield closeTabAndToolbox();
+  await closeTabAndToolbox();
   return formatFile(stubs, "ConsoleMessage");
 }
 
-function* generateEvaluationResultStubs() {
+async function generateEvaluationResultStubs() {
   const TEST_URI = "data:text/html;charset=utf-8,stub generation";
 
   let stubs = {
@@ -397,21 +397,21 @@ function* generateEvaluationResultStubs() {
     packets: [],
   };
 
-  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
   for (let [key, code] of evaluationResult) {
-    const packet = yield new Promise(resolve => {
+    const packet = await new Promise(resolve => {
       toolbox.target.activeConsole.evaluateJS(code, resolve);
     });
     stubs.packets.push(formatPacket(key, packet));
     stubs.preparedMessages.push(formatStub(key, packet));
   }
 
-  yield closeTabAndToolbox();
+  await closeTabAndToolbox();
   return formatFile(stubs, "ConsoleMessage");
 }
 
-function* generateNetworkEventStubs() {
+async function generateNetworkEventStubs() {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html";
 
   let stubs = {
@@ -419,7 +419,7 @@ function* generateNetworkEventStubs() {
     packets: [],
   };
 
-  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
   let {ui} = toolbox.getCurrentPanel().hud;
 
   for (let [key, {keys, code}] of networkEvent) {
@@ -461,7 +461,7 @@ function* generateNetworkEventStubs() {
       });
     });
 
-    yield ContentTask.spawn(
+    await ContentTask.spawn(
       gBrowser.selectedBrowser,
       [key, code],
       function ([subKey, subCode]) {
@@ -474,14 +474,14 @@ function* generateNetworkEventStubs() {
       }
     );
 
-    yield Promise.all([onNetwork, onNetworkUpdate]);
+    await Promise.all([onNetwork, onNetworkUpdate]);
   }
 
-  yield closeTabAndToolbox();
+  await closeTabAndToolbox();
   return formatFile(stubs, "NetworkEventMessage");
 }
 
-function* generatePageErrorStubs() {
+async function generatePageErrorStubs() {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html";
 
   let stubs = {
@@ -489,7 +489,7 @@ function* generatePageErrorStubs() {
     packets: [],
   };
 
-  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
   for (let [key, code] of pageError) {
     let received = new Promise(resolve => {
@@ -508,7 +508,7 @@ function* generatePageErrorStubs() {
       expectUncaughtException();
     }
 
-    yield ContentTask.spawn(
+    await ContentTask.spawn(
       gBrowser.selectedBrowser,
       [key, code],
       function ([subKey, subCode]) {
@@ -520,9 +520,9 @@ function* generatePageErrorStubs() {
       }
     );
 
-    yield received;
+    await received;
   }
 
-  yield closeTabAndToolbox();
+  await closeTabAndToolbox();
   return formatFile(stubs, "ConsoleMessage");
 }
