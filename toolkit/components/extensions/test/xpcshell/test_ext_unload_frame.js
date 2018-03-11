@@ -1,22 +1,16 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtensions test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
-</head>
-<body>
-
-<script>
 "use strict";
 
-/* globals delayedNotifyPass */ // Available in the background page of the test extensions.
+const server = createHttpServer({hosts: ["example.com"]});
+server.registerDirectory("/data/", do_get_file("data"));
+
+server.registerPathHandler("/dummy", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "text/html", false);
+  response.write("<!DOCTYPE html><html></html>");
+});
 
 // Background and content script for testSendMessage_*
-function sendMessage_background() {
+function sendMessage_background(delayedNotifyPass) {
   browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     browser.test.assertEq("from frame", msg, "Expected message from frame");
     sendResponse("msg from back"); // Should not throw or anything like that.
@@ -31,12 +25,12 @@ function sendMessage_contentScript(testType) {
   if (testType == "frame") {
     frameElement.remove();
   } else {
-    window.close();
+    browser.test.sendMessage("close-window");
   }
 }
 
 // Background and content script for testConnect_*
-function connect_background() {
+function connect_background(delayedNotifyPass) {
   browser.runtime.onConnect.addListener(port => {
     browser.test.assertEq("port from frame", port.name);
 
@@ -82,7 +76,7 @@ function connect_contentScript(testType) {
   if (testType == "frame") {
     frameElement.remove();
   } else {
-    window.close();
+    browser.test.sendMessage("close-window");
   }
 }
 
@@ -103,12 +97,12 @@ function createTestExtension(testType, backgroundScript, contentScript) {
     browser.test.sendMessage("ping", msg);
   }
   let extension = ExtensionTestUtils.loadExtension({
-    background: `${delayedNotifyPass};(${backgroundScript})();`,
+    background: `(${backgroundScript})(${delayedNotifyPass});`,
     manifest: {
       content_scripts: [{
         js: ["contentscript.js"],
         all_frames: testType == "frame",
-        matches: ["http://mochi.test/*/file_sample.html"],
+        matches: ["http://example.com/data/file_sample.html"],
       }],
     },
     files: {
@@ -125,11 +119,18 @@ add_task(async function testSendMessage_and_remove_frame() {
   let extension = createTestExtension("frame", sendMessage_background, sendMessage_contentScript);
   await extension.startup();
 
-  let frame = document.createElement("iframe");
-  frame.src = "file_sample.html";
-  document.body.appendChild(frame);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy");
+
+  await contentPage.spawn(null, () => {
+    let {document} = this.content;
+    let frame = document.createElement("iframe");
+    frame.src = "/data/file_sample.html";
+    document.body.appendChild(frame);
+  });
 
   await extension.awaitFinish("Received sendMessage from closing frame");
+  await contentPage.close();
   await extension.unload();
 });
 
@@ -137,11 +138,18 @@ add_task(async function testConnect_and_remove_frame() {
   let extension = createTestExtension("frame", connect_background, connect_contentScript);
   await extension.startup();
 
-  let frame = document.createElement("iframe");
-  frame.src = "file_sample.html";
-  document.body.appendChild(frame);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy");
+
+  await contentPage.spawn(null, () => {
+    let {document} = this.content;
+    let frame = document.createElement("iframe");
+    frame.src = "/data/file_sample.html";
+    document.body.appendChild(frame);
+  });
 
   await extension.awaitFinish("Received onDisconnect from closing frame");
+  await contentPage.close();
   await extension.unload();
 });
 
@@ -154,7 +162,10 @@ add_task(async function testSendMessage_and_remove_window() {
   let extension = createTestExtension("window", sendMessage_background, sendMessage_contentScript);
   await extension.startup();
 
-  window.open("file_sample.html");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html");
+  await extension.awaitMessage("close-window");
+  await contentPage.close();
 
   await extension.awaitFinish("Received sendMessage from closing frame");
   await extension.unload();
@@ -169,12 +180,11 @@ add_task(async function testConnect_and_remove_window() {
   let extension = createTestExtension("window", connect_background, connect_contentScript);
   await extension.startup();
 
-  window.open("file_sample.html");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html");
+  await extension.awaitMessage("close-window");
+  await contentPage.close();
 
   await extension.awaitFinish("Received onDisconnect from closing frame");
   await extension.unload();
 });
-
-</script>
-</body>
-</html>
