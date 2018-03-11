@@ -15,7 +15,6 @@ const IGNORE_EXPLICIT_NAME = 0x20;
 const OUTPUT_DESC_FIRST = 0;
 const OUTPUT_DESC_LAST = 1;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Utils", // jshint ignore:line
   "resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "PrefCache", // jshint ignore:line
