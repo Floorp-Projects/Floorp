@@ -2473,7 +2473,7 @@ public:
   /**
    * See FlushSkinBindings on nsBindingManager
    */
-  virtual void FlushSkinBindings() = 0;
+  void FlushSkinBindings();
 
   /**
    * To batch DOMSubtreeModified, document needs to be informed when
