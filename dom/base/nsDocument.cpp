@@ -8243,7 +8243,7 @@ nsDocument::RemovedFromDocShell()
 }
 
 already_AddRefed<nsILayoutHistoryState>
-nsDocument::GetLayoutHistoryState() const
+nsIDocument::GetLayoutHistoryState() const
 {
   nsCOMPtr<nsILayoutHistoryState> state;
   if (!mScriptGlobalObject) {

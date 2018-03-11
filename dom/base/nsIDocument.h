@@ -2326,7 +2326,7 @@ public:
    * for nodes in this document.  This may return null; if that happens state
    * saving and restoration is not possible.
    */
-  virtual already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const = 0;
+  already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const;
 
   /**
    * Methods that can be used to prevent onload firing while an event that
@@ -4412,6 +4412,12 @@ protected:
   nsTArray<RefPtr<nsFrameLoader>> mInitializableFrameLoaders;
   nsTArray<nsCOMPtr<nsIRunnable>> mFrameLoaderFinalizers;
   RefPtr<nsRunnableMethod<nsIDocument>> mFrameLoaderRunner;
+
+  // The layout history state that should be used by nodes in this
+  // document.  We only actually store a pointer to it when:
+  // 1)  We have no script global object.
+  // 2)  We haven't had Destroy() called on us yet.
+  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
 
 public:
   js::ExpandoAndGeneration mExpandoAndGeneration;
