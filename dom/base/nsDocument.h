@@ -371,8 +371,6 @@ public:
 
 protected:
 
-  void UpdateScreenOrientation();
-
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_) do {                     \
     NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
                                              func_, params_);                 \
