@@ -27,6 +27,7 @@
 #include "nsPropertyTable.h"             // for member
 #include "nsStringFwd.h"
 #include "nsTHashtable.h"                // for member
+#include "nsURIHashKey.h"
 #include "mozilla/net/ReferrerPolicy.h"  // for member
 #include "nsWeakReference.h"
 #include "mozilla/UseCounter.h"
@@ -2652,14 +2653,17 @@ public:
    * ResolvePreLoadImage.
    */
 
-  virtual void PreloadPictureOpened() = 0;
+  void PreloadPictureOpened()
+  {
+    mPreloadPictureDepth++;
+  }
 
-  virtual void PreloadPictureClosed() = 0;
+  void PreloadPictureClosed();
 
-  virtual void PreloadPictureImageSource(const nsAString& aSrcsetAttr,
-                                         const nsAString& aSizesAttr,
-                                         const nsAString& aTypeAttr,
-                                         const nsAString& aMediaAttr) = 0;
+  void PreloadPictureImageSource(const nsAString& aSrcsetAttr,
+                                 const nsAString& aSizesAttr,
+                                 const nsAString& aTypeAttr,
+                                 const nsAString& aMediaAttr);
 
   /**
    * Called by the parser to resolve an image for preloading. The parser will
@@ -2670,12 +2674,12 @@ public:
    * If this image is for <picture> or <img srcset>, aIsImgSet will be set to
    * true, false otherwise.
    */
-  virtual already_AddRefed<nsIURI>
-    ResolvePreloadImage(nsIURI *aBaseURI,
-                        const nsAString& aSrcAttr,
-                        const nsAString& aSrcsetAttr,
-                        const nsAString& aSizesAttr,
-                        bool *aIsImgSet) = 0;
+  already_AddRefed<nsIURI>
+  ResolvePreloadImage(nsIURI *aBaseURI,
+                      const nsAString& aSrcAttr,
+                      const nsAString& aSrcsetAttr,
+                      const nsAString& aSizesAttr,
+                      bool *aIsImgSet);
   /**
    * Called by nsParser to preload images. Can be removed and code moved
    * to nsPreloadURIs::PreloadURIs() in file nsParser.cpp whenever the
@@ -2684,16 +2688,16 @@ public:
    * aIsImgSet is the value got from calling ResolvePreloadImage, it is true
    * when this image is for loading <picture> or <img srcset> images.
    */
-  virtual void MaybePreLoadImage(nsIURI* uri,
-                                 const nsAString& aCrossOriginAttr,
-                                 ReferrerPolicyEnum aReferrerPolicy,
-                                 bool aIsImgSet) = 0;
+  void MaybePreLoadImage(nsIURI* uri,
+                         const nsAString& aCrossOriginAttr,
+                         ReferrerPolicyEnum aReferrerPolicy,
+                         bool aIsImgSet);
 
   /**
    * Called by images to forget an image preload when they start doing
    * the real load.
    */
-  virtual void ForgetImagePreload(nsIURI* aURI) = 0;
+  void ForgetImagePreload(nsIURI* aURI);
 
   /**
    * Called by nsParser to preload style sheets.  Can also be merged into the
@@ -2729,7 +2733,7 @@ public:
   /**
    * Called by Parser for link rel=preconnect
    */
-  virtual void MaybePreconnect(nsIURI* uri, mozilla::CORSMode aCORSMode) = 0;
+  void MaybePreconnect(nsIURI* uri, mozilla::CORSMode aCORSMode);
 
   enum DocumentTheme {
     Doc_Theme_Uninitialized, // not determined yet
@@ -3974,7 +3978,24 @@ protected:
   nsIPresShell* mPresShell;
 
   nsCOMArray<nsINode> mSubtreeModifiedTargets;
-  uint32_t            mSubtreeModifiedDepth;
+  uint32_t mSubtreeModifiedDepth;
+
+  // All images in process of being preloaded.  This is a hashtable so
+  // we can remove them as the real image loads start; that way we
+  // make sure to not keep the image load going when no one cares
+  // about it anymore.
+  nsRefPtrHashtable<nsURIHashKey, imgIRequest> mPreloadingImages;
+
+  // A list of preconnects initiated by the preloader. This prevents
+  // the same uri from being used more than once, and allows the dom
+  // builder to not repeat the work of the preloader.
+  nsDataHashtable<nsURIHashKey, bool> mPreloadedPreconnects;
+
+  // Current depth of picture elements from parser
+  uint32_t mPreloadPictureDepth;
+
+  // Set if we've found a URL for the current picture
+  nsString mPreloadPictureFoundSource;
 
   // If we're an external resource document, this will be non-null and will
   // point to our "display document": the one that all resource lookups should
