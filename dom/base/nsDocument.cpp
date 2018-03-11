@@ -1498,6 +1498,8 @@ nsIDocument::nsIDocument()
     mChangeScrollPosWhenScrollingToRef(false),
     mHasWarnedAboutBoxObjects(false),
     mDelayFrameLoaderInitialization(false),
+    mSynchronousDOMContentLoaded(false),
+    mMaybeServiceWorkerControlled(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mPendingFullscreenRequests(0),
     mCompatMode(eCompatibility_FullStandards),
@@ -1553,7 +1555,6 @@ nsIDocument::nsIDocument()
 
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
-  , mSynchronousDOMContentLoaded(false)
   , mParserAborted(false)
   , mReportedUseCounters(false)
   , mXMLDeclarationBits(0)
@@ -1568,7 +1569,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mValidMaxScale(false)
   , mScaleStrEmpty(false)
   , mWidthStrEmpty(false)
-  , mMaybeServiceWorkerControlled(false)
 #ifdef DEBUG
   , mWillReparent(false)
 #endif
@@ -5234,7 +5234,7 @@ nsIDocument::LookupImageElement(const nsAString& aId)
 }
 
 void
-nsDocument::DispatchContentLoadedEvents()
+nsIDocument::DispatchContentLoadedEvents()
 {
   // If you add early returns from this method, make sure you're
   // calling UnblockOnload properly.
@@ -5253,8 +5253,8 @@ nsDocument::DispatchContentLoadedEvents()
   // Dispatch observer notification to notify observers document is interactive.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    nsIPrincipal* principal = GetPrincipal();
-    os->NotifyObservers(static_cast<nsIDocument*>(this),
+    nsIPrincipal* principal = NodePrincipal();
+    os->NotifyObservers(this,
                         nsContentUtils::IsSystemPrincipal(principal) ?
                           "chrome-document-interactive" :
                           "content-document-interactive",
@@ -5264,7 +5264,7 @@ nsDocument::DispatchContentLoadedEvents()
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
-  nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
+  nsContentUtils::DispatchTrustedEvent(this, this,
                                        NS_LITERAL_STRING("DOMContentLoaded"),
                                        true, false);
 
@@ -5343,7 +5343,7 @@ nsDocument::DispatchContentLoadedEvents()
   // event.
   Element* root = GetRootElement();
   if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::manifest)) {
-    nsContentUtils::DispatchChromeEvent(this, static_cast<nsIDocument*>(this),
+    nsContentUtils::DispatchChromeEvent(this, this,
                                         NS_LITERAL_STRING("MozApplicationManifest"),
                                         true, true);
   }
@@ -5397,7 +5397,7 @@ nsDocument::EndLoad()
 }
 
 void
-nsDocument::UnblockDOMContentLoaded()
+nsIDocument::UnblockDOMContentLoaded()
 {
   MOZ_ASSERT(mBlockDOMContentLoaded);
   if (--mBlockDOMContentLoaded != 0 || mDidFireDOMContentLoaded) {
@@ -5412,9 +5412,9 @@ nsDocument::UnblockDOMContentLoaded()
   if (!mSynchronousDOMContentLoaded) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod("nsDocument::DispatchContentLoadedEvents",
+      NewRunnableMethod("nsIDocument::DispatchContentLoadedEvents",
                         this,
-                        &nsDocument::DispatchContentLoadedEvents);
+                        &nsIDocument::DispatchContentLoadedEvents);
     Dispatch(TaskCategory::Other, ev.forget());
   } else {
     DispatchContentLoadedEvents();

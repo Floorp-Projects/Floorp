@@ -1406,6 +1406,8 @@ public:
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
 protected:
+  void DispatchContentLoadedEvents();
+
   void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
                               const nsAString& aType,
                               bool aPersisted);
@@ -2347,7 +2349,7 @@ public:
     ++mBlockDOMContentLoaded;
   }
 
-  virtual void UnblockDOMContentLoaded() = 0;
+  void UnblockDOMContentLoaded();
 
   /**
    * Notification that the page has been shown, for documents which are loaded
@@ -4093,6 +4095,12 @@ protected:
   bool mHasWarnedAboutBoxObjects: 1;
 
   bool mDelayFrameLoaderInitialization: 1;
+
+  bool mSynchronousDOMContentLoaded: 1;
+
+  // Set to true when the document is possibly controlled by the ServiceWorker.
+  // Used to prevent multiple requests to ServiceWorkerManager.
+  bool mMaybeServiceWorkerControlled: 1;
 
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
