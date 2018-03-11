@@ -1406,6 +1406,10 @@ public:
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
 protected:
+  void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
+                              const nsAString& aType,
+                              bool aPersisted);
+
   // Call this before the document does something that will unbind all content.
   // That will stop us from doing a lot of work as each element is removed.
   void DestroyElementMaps();
@@ -2358,7 +2362,7 @@ public:
    * document won't be altered.
    */
   virtual void OnPageShow(bool aPersisted,
-                          mozilla::dom::EventTarget* aDispatchStartTarget) = 0;
+                          mozilla::dom::EventTarget* aDispatchStartTarget);
 
   /**
    * Notification that the page has been hidden, for documents which are loaded
@@ -2372,8 +2376,8 @@ public:
    * Note: if aDispatchStartTarget isn't null, the showing state of the
    * document won't be altered.
    */
-  virtual void OnPageHide(bool aPersisted,
-                          mozilla::dom::EventTarget* aDispatchStartTarget) = 0;
+  void OnPageHide(bool aPersisted,
+                  mozilla::dom::EventTarget* aDispatchStartTarget);
 
   /*
    * We record the set of links in the document that are relevant to

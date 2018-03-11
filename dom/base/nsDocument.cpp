@@ -8451,9 +8451,9 @@ nsIDocument::GetContentInThisDocument(nsIFrame* aFrame) const
 }
 
 void
-nsDocument::DispatchPageTransition(EventTarget* aDispatchTarget,
-                                   const nsAString& aType,
-                                   bool aPersisted)
+nsIDocument::DispatchPageTransition(EventTarget* aDispatchTarget,
+                                    const nsAString& aType,
+                                    bool aPersisted)
 {
   if (!aDispatchTarget) {
     return;
@@ -8485,8 +8485,7 @@ NotifyPageShow(nsIDocument* aDocument, void* aData)
 }
 
 void
-nsDocument::OnPageShow(bool aPersisted,
-                       EventTarget* aDispatchStartTarget)
+nsIDocument::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget)
 {
   mVisible = true;
 
@@ -8527,8 +8526,8 @@ nsDocument::OnPageShow(bool aPersisted,
     // Dispatch observer notification to notify observers page is shown.
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
-      nsIPrincipal *principal = GetPrincipal();
-      os->NotifyObservers(static_cast<nsIDocument*>(this),
+      nsIPrincipal* principal = NodePrincipal();
+      os->NotifyObservers(this,
                           nsContentUtils::IsSystemPrincipal(principal) ?
                             "chrome-page-shown" :
                             "content-page-shown",
@@ -8577,16 +8576,15 @@ DispatchFullScreenChange(nsIDocument* aTarget)
 static void ClearPendingFullscreenRequests(nsIDocument* aDoc);
 
 void
-nsDocument::OnPageHide(bool aPersisted,
-                       EventTarget* aDispatchStartTarget)
+nsIDocument::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget)
 {
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
   Element* root = GetRootElement();
   if (aPersisted && root) {
     RefPtr<nsContentList> links = NS_GetContentList(root,
-                                                      kNameSpaceID_XHTML,
-                                                      NS_LITERAL_STRING("link"));
+                                                    kNameSpaceID_XHTML,
+                                                    NS_LITERAL_STRING("link"));
 
     uint32_t linkCount = links->Length(true);
     for (uint32_t i = 0; i < linkCount; ++i) {
@@ -8618,8 +8616,8 @@ nsDocument::OnPageHide(bool aPersisted,
     // Dispatch observer notification to notify observers page is hidden.
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
-      nsIPrincipal* principal = GetPrincipal();
-      os->NotifyObservers(static_cast<nsIDocument*>(this),
+      nsIPrincipal* principal = NodePrincipal();
+      os->NotifyObservers(this,
                           nsContentUtils::IsSystemPrincipal(principal) ?
                             "chrome-page-hidden" :
                             "content-page-hidden",
