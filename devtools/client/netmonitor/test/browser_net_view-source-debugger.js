@@ -61,7 +61,8 @@ async function checkClickOnNode(toolbox, frameLinkNode) {
   // wait for the promise to resolve
   await onJsDebuggerSelected;
 
-  let dbg = toolbox.getPanel("jsdebugger");
+  let dbg = await toolbox.getPanelWhenReady("jsdebugger");
+  await waitUntil(() => dbg._selectors.getSelectedSource(dbg._getState()));
   is(
     dbg._selectors.getSelectedSource(dbg._getState()).get("url"),
     url,
