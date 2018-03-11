@@ -8922,7 +8922,7 @@ SuppressEventHandlingInDocument(nsIDocument* aDocument, void* aData)
 }
 
 void
-nsDocument::SuppressEventHandling(uint32_t aIncrease)
+nsIDocument::SuppressEventHandling(uint32_t aIncrease)
 {
   mEventsSuppressed += aIncrease;
   UpdateFrameRequestCallbackSchedulingState();
@@ -8934,7 +8934,7 @@ nsDocument::SuppressEventHandling(uint32_t aIncrease)
 }
 
 static void
-FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
+FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument>>& aDocuments,
                          bool aFireEvents)
 {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -9232,20 +9232,18 @@ public:
   }
 
 private:
-  nsTArray<nsCOMPtr<nsIDocument> > mDocuments;
+  nsTArray<nsCOMPtr<nsIDocument>> mDocuments;
 };
 
 static bool
-GetAndUnsuppressSubDocuments(nsIDocument* aDocument,
-                             void* aData)
+GetAndUnsuppressSubDocuments(nsIDocument* aDocument, void* aData)
 {
   if (aDocument->EventHandlingSuppressed() > 0) {
-    static_cast<nsDocument*>(aDocument)->DecreaseEventSuppression();
+    aDocument->DecreaseEventSuppression();
     aDocument->ScriptLoader()->RemoveExecuteBlocker();
   }
 
-  nsTArray<nsCOMPtr<nsIDocument> >* docs =
-    static_cast<nsTArray<nsCOMPtr<nsIDocument> >* >(aData);
+  auto* docs = static_cast<nsTArray<nsCOMPtr<nsIDocument>>*>(aData);
 
   docs->AppendElement(aDocument);
   aDocument->EnumerateSubDocuments(GetAndUnsuppressSubDocuments, aData);
@@ -9253,7 +9251,7 @@ GetAndUnsuppressSubDocuments(nsIDocument* aDocument,
 }
 
 void
-nsDocument::UnsuppressEventHandlingAndFireEvents(bool aFireEvents)
+nsIDocument::UnsuppressEventHandlingAndFireEvents(bool aFireEvents)
 {
   nsTArray<nsCOMPtr<nsIDocument>> documents;
   GetAndUnsuppressSubDocuments(this, &documents);
