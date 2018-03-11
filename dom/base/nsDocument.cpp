@@ -9762,7 +9762,7 @@ nsIDocument::CancelFrameRequestCallback(int32_t aHandle)
 }
 
 nsresult
-nsDocument::GetStateObject(nsIVariant** aState)
+nsIDocument::GetStateObject(nsIVariant** aState)
 {
   // Get the document's current state object. This is the object backing both
   // history.state and popStateEvent.state.
@@ -9783,7 +9783,6 @@ nsDocument::GetStateObject(nsIVariant** aState)
   }
 
   NS_IF_ADDREF(*aState = mStateObjectCached);
-
   return NS_OK;
 }
 

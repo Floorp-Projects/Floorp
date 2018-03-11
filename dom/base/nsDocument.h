@@ -646,8 +646,6 @@ public:
   // the frame and any subframes.
   virtual void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) override;
 
-  virtual nsresult GetStateObject(nsIVariant** aResult) override;
-
   // Returns the size of the mBlockedTrackingNodes array. (nsIDocument.h)
   //
   // This array contains nodes that have been blocked to prevent
