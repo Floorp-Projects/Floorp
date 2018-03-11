@@ -50,6 +50,7 @@ class gfxContext final {
     typedef mozilla::gfx::CompositionOp CompositionOp;
     typedef mozilla::gfx::JoinStyle JoinStyle;
     typedef mozilla::gfx::FillRule FillRule;
+    typedef mozilla::gfx::Float Float;
     typedef mozilla::gfx::Path Path;
     typedef mozilla::gfx::Pattern Pattern;
     typedef mozilla::gfx::Rect Rect;
@@ -286,7 +287,7 @@ public:
      * Paints the current source surface/pattern everywhere in the current
      * clip region.
      */
-    void Paint(gfxFloat alpha = 1.0);
+    void Paint(Float alpha = 1.0);
 
     /**
      ** Painting with a Mask
@@ -303,25 +304,25 @@ public:
      ** Line Properties
      **/
 
-    void SetDash(gfxFloat *dashes, int ndash, gfxFloat offset);
+    void SetDash(const Float *dashes, int ndash, Float offset);
     // Return true if dashing is set, false if it's not enabled or the
     // context is in an error state.  |offset| can be nullptr to mean
     // "don't care".
-    bool CurrentDash(FallibleTArray<gfxFloat>& dashes, gfxFloat* offset) const;
+    bool CurrentDash(FallibleTArray<Float>& dashes, Float* offset) const;
     // Returns 0.0 if dashing isn't enabled.
-    gfxFloat CurrentDashOffset() const;
+    Float CurrentDashOffset() const;
 
     /**
      * Sets the line width that's used for line drawing.
      */
-    void SetLineWidth(gfxFloat width);
+    void SetLineWidth(Float width);
 
     /**
      * Returns the currently set line width.
      *
      * @see SetLineWidth
      */
-    gfxFloat CurrentLineWidth() const;
+    Float CurrentLineWidth() const;
 
     /**
      * Sets the line caps, i.e. how line endings are drawn.
@@ -336,8 +337,8 @@ public:
     void SetLineJoin(JoinStyle join);
     JoinStyle CurrentLineJoin() const;
 
-    void SetMiterLimit(gfxFloat limit);
-    gfxFloat CurrentMiterLimit() const;
+    void SetMiterLimit(Float limit);
+    Float CurrentMiterLimit() const;
 
     /**
      * Sets the operator used for all further drawing. The operator affects
@@ -461,7 +462,6 @@ private:
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Color Color;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
-  typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::PathBuilder PathBuilder;
   typedef mozilla::gfx::SourceSurface SourceSurface;
 
