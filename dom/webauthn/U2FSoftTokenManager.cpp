@@ -688,7 +688,10 @@ U2FSoftTokenManager::Register(const WebAuthnMakeCredentialInfo& aInfo)
   registrationBuf.AppendSECItem(attestCert.get()->derCert);
   registrationBuf.AppendSECItem(signatureItem);
 
-  WebAuthnMakeCredentialResult result((nsTArray<uint8_t>(registrationBuf)));
+  // Will be set by the U2FTokenManager.
+  bool directAttestationPermitted = false;
+  WebAuthnMakeCredentialResult result((nsTArray<uint8_t>(registrationBuf)),
+                                      directAttestationPermitted);
   return U2FRegisterPromise::CreateAndResolve(Move(result), __func__);
 }
 
