@@ -35,7 +35,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 public class MediaControlService extends Service {
     private static final String LOGTAG = "MediaControlService";
 
-    public static final String ACTION_INIT           = "action_init";
     public static final String ACTION_RESUME         = "action_resume";
     public static final String ACTION_PAUSE          = "action_pause";
     public static final String ACTION_STOP           = "action_stop";
@@ -134,14 +133,16 @@ public class MediaControlService extends Service {
         if (!mInitialize) {
             return;
         }
+        mInitialize = false;
 
         Log.d(LOGTAG, "shutdown");
-        setState(State.STOPPED);
+        if (!mMediaState.equals(State.STOPPED)) {
+            setState(State.STOPPED);
+        }
         PrefsHelper.removeObserver(mPrefsObserver);
         mHeadSetStateReceiver.unregisterReceiver(getApplicationContext());
         mSession.release();
 
-        mInitialize = false;
         stopSelf();
     }
 
@@ -156,11 +157,6 @@ public class MediaControlService extends Service {
 
         Log.d(LOGTAG, "HandleIntent, action = " + intent.getAction() + ", mediaState = " + mMediaState);
         switch (intent.getAction()) {
-            case ACTION_INIT :
-                // This action is used to create a service and do the initialization,
-                // the actual operation would be executed via control interface's
-                // pending intent.
-                break;
             case ACTION_RESUME :
                 mController.getTransportControls().play();
                 break;
@@ -342,6 +338,7 @@ public class MediaControlService extends Service {
         if (isNeedToRemoveControlInterface(mMediaState)) {
             stopForeground(false);
             NotificationManagerCompat.from(this).cancel(R.id.mediaControlNotification);
+            shutdown();
             return;
         }
 
