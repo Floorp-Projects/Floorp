@@ -301,13 +301,6 @@ public:
   virtual void BlockOnload() override;
   virtual void UnblockOnload(bool aFireSync) override;
 
-  virtual nsresult NodesFromRectHelper(float aX, float aY,
-                                                   float aTopSize, float aRightSize,
-                                                   float aBottomSize, float aLeftSize,
-                                                   bool aIgnoreRootScrollFrame,
-                                                   bool aFlushLayout,
-                                                   nsIDOMNodeList** aReturn) override;
-
   virtual void FlushSkinBindings() override;
 
   virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) override;
