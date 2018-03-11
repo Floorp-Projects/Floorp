@@ -503,16 +503,6 @@ public:
   virtual void
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData) override;
 
-  virtual void SuppressEventHandling(uint32_t aIncrease) override;
-
-  virtual void UnsuppressEventHandlingAndFireEvents(bool aFireEvents) override;
-
-  void DecreaseEventSuppression() {
-    MOZ_ASSERT(mEventsSuppressed);
-    --mEventsSuppressed;
-    UpdateFrameRequestCallbackSchedulingState();
-  }
-
   virtual nsIDocument* GetTemplateContentsOwner() override;
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
