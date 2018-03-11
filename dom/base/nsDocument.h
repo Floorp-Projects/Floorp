@@ -205,9 +205,6 @@ public:
                                  nsAString& aEncoding,
                                  nsAString& Standalone) override;
 
-  virtual void OnPageShow(bool aPersisted, mozilla::dom::EventTarget* aDispatchStartTarget) override;
-  virtual void OnPageHide(bool aPersisted, mozilla::dom::EventTarget* aDispatchStartTarget) override;
-
   virtual void WillDispatchMutationEvent(nsINode* aTarget) override;
   virtual void MutationEventDispatched(nsINode* aTarget) override;
 
@@ -392,10 +389,6 @@ public:
   bool ContainsMSEContent();
 
 protected:
-
-  void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
-                              const nsAString& aType,
-                              bool aPersisted);
 
   void UpdateScreenOrientation();
 
