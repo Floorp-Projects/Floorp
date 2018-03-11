@@ -503,19 +503,6 @@ public:
   virtual void
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData) override;
 
-  // Returns our (lazily-initialized) animation controller.
-  // If HasAnimationController is true, this is guaranteed to return non-null.
-  nsSMILAnimationController* GetAnimationController() override;
-
-  virtual mozilla::PendingAnimationTracker*
-  GetPendingAnimationTracker() final
-  {
-    return mPendingAnimationTracker;
-  }
-
-  virtual mozilla::PendingAnimationTracker*
-  GetOrCreatePendingAnimationTracker() override;
-
   virtual void SuppressEventHandling(uint32_t aIncrease) override;
 
   virtual void UnsuppressEventHandlingAndFireEvents(bool aFireEvents) override;
@@ -643,10 +630,6 @@ protected:
   virtual ~nsDocument();
 
   void EnsureOnloadBlocker();
-
-  // Tracker for animations that are waiting to start.
-  // nullptr until GetOrCreatePendingAnimationTracker is called.
-  RefPtr<mozilla::PendingAnimationTracker> mPendingAnimationTracker;
 
 public:
   RefPtr<mozilla::EventListenerManager> mListenerManager;
