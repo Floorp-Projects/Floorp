@@ -65,11 +65,39 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
 
+if CONFIG["OS_TARGET"] == "DragonFly":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+if CONFIG["OS_TARGET"] == "FreeBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
 if CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_NSS_CERTS"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+if CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+if CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
@@ -106,6 +134,22 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "DragonFly":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
 
     DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
@@ -121,6 +165,11 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not C
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
@@ -130,6 +179,11 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFI
 
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
 Library("audio_mixer_api_gn")
