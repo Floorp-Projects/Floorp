@@ -340,6 +340,29 @@ async function waitUntilApzStable() {
   await promiseApzRepaintsFlushed();
 }
 
+// This function returns a promise that is resolved after at least one paint
+// has been sent and processed by the compositor. This function can force
+// such a paint to happen if none are pending. This is useful to run after
+// the waitUntilApzStable() but before reading the compositor-side APZ test
+// data, because the test data for the content layers id only gets populated
+// on content layer tree updates *after* the root layer tree has a RefLayer
+// pointing to the contnet layer tree. waitUntilApzStable itself guarantees
+// that the root layer tree is pointing to the content layer tree, but does
+// not guarantee the subsequent paint; this function does that job.
+async function forceLayerTreeToCompositor() {
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  if (!utils.isMozAfterPaintPending) {
+    dump("Forcing a paint since none was pending already...\n");
+    var testMode = utils.isTestControllingRefreshes;
+    utils.advanceTimeAndRefresh(0);
+    if (!testMode) {
+      utils.restoreNormalRefresh();
+    }
+  }
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
+}
+
 function isApzEnabled() {
   var enabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
   if (!enabled) {

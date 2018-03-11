@@ -26,8 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
     // --------------------------------------------------------------------
 
     function testBug1151663() {
-      // Get the content- and compositor-side test data from nsIDOMWindowUtils.
-      var contentTestData = utils.getContentAPZTestData();
+      // Get the compositor-side test data from nsIDOMWindowUtils.
       var compositorTestData = utils.getCompositorAPZTestData();
 
       // Get the sequence number of the last paint on the compositor side.
@@ -39,7 +38,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       var lastCompositorPaintSeqNo = lastCompositorPaint.sequenceNumber;
 
       // Convert the test data into a representation that's easier to navigate.
-      contentTestData = convertTestData(contentTestData);
       compositorTestData = convertTestData(compositorTestData);
       var paint = compositorTestData.paints[lastCompositorPaintSeqNo];
 
@@ -56,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       window.opener.finishTest();
     }
 
-    waitUntilApzStable().then(testBug1151663);
+    waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug1151663);
   </script>
 </head>
 <body style="height: 500px; overflow: scroll">
