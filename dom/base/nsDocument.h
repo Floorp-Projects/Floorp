@@ -374,11 +374,6 @@ public:
 
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) override;
 
-  /**
-   * Get the script loader for this document
-   */
-  virtual mozilla::dom::ScriptLoader* ScriptLoader() override;
-
   virtual void EndUpdate(nsUpdateType aUpdateType) override;
   virtual void BeginLoad() override;
   virtual void EndLoad() override;
@@ -700,7 +695,6 @@ protected:
 
 public:
   RefPtr<mozilla::EventListenerManager> mListenerManager;
-  RefPtr<mozilla::dom::ScriptLoader> mScriptLoader;
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
