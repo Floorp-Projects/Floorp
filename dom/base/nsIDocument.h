@@ -6,7 +6,6 @@
 #ifndef nsIDocument_h___
 #define nsIDocument_h___
 
-#include "jsfriendapi.h"
 #include "mozilla/FlushType.h"           // for enum
 #include "nsAttrAndChildArray.h"
 #include "nsAutoPtr.h"                   // for member
@@ -4422,11 +4421,6 @@ protected:
   // 1)  We have no script global object.
   // 2)  We haven't had Destroy() called on us yet.
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-
-public:
-  js::ExpandoAndGeneration mExpandoAndGeneration;
-
-protected:
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
