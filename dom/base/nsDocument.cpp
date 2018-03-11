@@ -8053,7 +8053,7 @@ nsDocument::Sanitize()
 }
 
 void
-nsDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
+nsIDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
 {
   if (!mSubDocuments) {
     return;
@@ -8077,7 +8077,7 @@ nsDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
 }
 
 void
-nsDocument::CollectDescendantDocuments(
+nsIDocument::CollectDescendantDocuments(
   nsTArray<nsCOMPtr<nsIDocument>>& aDescendants,
   nsDocTestFunc aCallback) const
 {

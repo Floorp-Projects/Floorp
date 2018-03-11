@@ -509,12 +509,6 @@ public:
 
   virtual void Sanitize() override;
 
-  virtual void EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
-                                                 void *aData) override;
-  virtual void CollectDescendantDocuments(
-    nsTArray<nsCOMPtr<nsIDocument>>& aDescendants,
-    nsDocTestFunc aCallback) const override;
-
   virtual bool CanSavePresentation(nsIRequest *aNewRequest) override;
   virtual void Destroy() override;
   virtual void RemovedFromDocShell() override;
