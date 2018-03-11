@@ -14,6 +14,8 @@ ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonTestUtils",
                                "resource://testing-common/AddonTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "ContentTask",
+                               "resource://testing-common/ContentTask.jsm");
 ChromeUtils.defineModuleGetter(this, "Extension",
                                "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
@@ -174,6 +176,10 @@ class ContentPage {
 
   async fetch(url, options) {
     return this.sendMessage("Test:Fetch", {url, options});
+  }
+
+  spawn(params, task) {
+    return ContentTask.spawn(this.browser, params, task);
   }
 
   async close() {
@@ -755,6 +761,8 @@ var ExtensionTestUtils = {
    * @returns {ContentPage}
    */
   loadContentPage(url, {extension = undefined, remote = undefined, redirectUrl = undefined} = {}) {
+    ContentTask.setTestScope(this.currentScope);
+
     let contentPage = new ContentPage(remote, extension && extension.extension);
 
     return contentPage.loadURL(url, redirectUrl).then(() => {

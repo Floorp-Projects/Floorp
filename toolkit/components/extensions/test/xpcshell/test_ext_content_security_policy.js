@@ -1,17 +1,12 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtension CSP test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
 "use strict";
+
+const server = createHttpServer({hosts: ["example.com"]});
+
+server.registerPathHandler("/dummy", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "text/html", false);
+  response.write("<!DOCTYPE html><html></html>");
+});
 
 /**
  * Tests that content security policies for an add-on are actually applied to *
@@ -52,9 +47,9 @@ async function testPolicy(customCSP = null) {
   }
 
   function checkSource(name, policy, expected) {
-    is(JSON.stringify(policy[name].sort()),
-       JSON.stringify(filterSelf(expected[name]).sort()),
-       `Expected value for ${name}`);
+    equal(JSON.stringify(policy[name].sort()),
+          JSON.stringify(filterSelf(expected[name]).sort()),
+          `Expected value for ${name}`);
   }
 
   function checkCSP(csp, location) {
@@ -62,41 +57,36 @@ async function testPolicy(customCSP = null) {
 
     info(`Base policy for ${location}`);
 
-    is(policies[0]["report-only"], false, "Policy is not report-only");
+    equal(policies[0]["report-only"], false, "Policy is not report-only");
     checkSource("object-src", policies[0], baseCSP);
     checkSource("script-src", policies[0], baseCSP);
 
     info(`Add-on policy for ${location}`);
 
-    is(policies[1]["report-only"], false, "Policy is not report-only");
+    equal(policies[1]["report-only"], false, "Policy is not report-only");
     checkSource("object-src", policies[1], addonCSP);
     checkSource("script-src", policies[1], addonCSP);
   }
 
 
-  function getCSP(window) {
-    let {cspJSON} = SpecialPowers.Cu.getObjectPrincipal(window);
-    return JSON.parse(cspJSON);
-  }
-
-  function background(getCSPFn) {
+  function background() {
     browser.test.sendMessage("base-url", browser.extension.getURL("").replace(/\/$/, ""));
 
-    browser.test.sendMessage("background-csp", getCSPFn(window));
+    browser.test.sendMessage("background-csp", window.getCSP());
   }
 
-  function tabScript(getCSPFn) {
-    browser.test.sendMessage("tab-csp", getCSPFn(window));
+  function tabScript() {
+    browser.test.sendMessage("tab-csp", window.getCSP());
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})(${getCSP})`,
+    background,
 
     files: {
       "tab.html": `<html><head><meta charset="utf-8">
                    <script src="tab.js"></${"script"}></head></html>`,
 
-      "tab.js": `(${tabScript})(${getCSP})`,
+      "tab.js": tabScript,
 
       "content.html": `<html><head><meta charset="utf-8"></head></html>`,
     },
@@ -109,6 +99,21 @@ async function testPolicy(customCSP = null) {
   });
 
 
+  function frameScript() {
+    // eslint-disable-next-line mozilla/balanced-listeners
+    addEventListener("DOMWindowCreated", event => {
+      let win = event.target.ownerGlobal;
+      function getCSP() {
+        let {cspJSON} = Cu.getObjectPrincipal(win);
+        return win.wrappedJSObject.JSON.parse(cspJSON);
+      }
+      Cu.exportFunction(getCSP, win, {defineAs: "getCSP"});
+    }, true);
+  }
+  let frameScriptURL = `data:,(${encodeURI(frameScript)}).call(this)`;
+  Services.mm.loadFrameScript(frameScriptURL, true);
+
+
   info(`Testing CSP for policy: ${content_security_policy}`);
 
   await extension.startup();
@@ -116,14 +121,24 @@ async function testPolicy(customCSP = null) {
   baseURL = await extension.awaitMessage("base-url");
 
 
-  window.open(`${baseURL}/tab.html`);
+  let tabPage = await ExtensionTestUtils.loadContentPage(
+    `${baseURL}/tab.html`, {extension});
 
-  let frame = document.createElement("iframe");
-  frame.src = `${baseURL}/content.html`;
-  document.body.appendChild(frame);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy");
 
-  await new Promise(resolve => {
-    frame.onload = resolve;
+  let contentCSP = await contentPage.spawn(`${baseURL}/content.html`, async src => {
+    let doc = this.content.document;
+
+    let frame = doc.createElement("iframe");
+    frame.src = src;
+    doc.body.appendChild(frame);
+
+    await new Promise(resolve => {
+      frame.onload = resolve;
+    });
+
+    return frame.contentWindow.wrappedJSObject.getCSP();
   });
 
 
@@ -133,12 +148,14 @@ async function testPolicy(customCSP = null) {
   let tabCSP = await extension.awaitMessage("tab-csp");
   checkCSP(tabCSP, "tab page");
 
-  let contentCSP = getCSP(frame.contentWindow);
   checkCSP(contentCSP, "content frame");
 
-  frame.remove();
+  await contentPage.close();
+  await tabPage.close();
 
   await extension.unload();
+
+  Services.mm.removeDelayedFrameScript(frameScriptURL);
 }
 
 add_task(async function testCSP() {
@@ -156,5 +173,3 @@ add_task(async function testCSP() {
     "script-src": `'self'`,
   });
 });
-</script>
-</body>
