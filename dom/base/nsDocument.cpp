@@ -5710,9 +5710,9 @@ GetPseudoElementType(const nsString& aString, ErrorResult& aRv)
 }
 
 already_AddRefed<Element>
-nsDocument::CreateElement(const nsAString& aTagName,
-                          const ElementCreationOptionsOrString& aOptions,
-                          ErrorResult& rv)
+nsIDocument::CreateElement(const nsAString& aTagName,
+                           const ElementCreationOptionsOrString& aOptions,
+                           ErrorResult& rv)
 {
   rv = nsContentUtils::CheckQName(aTagName, false);
   if (rv.Failed()) {
@@ -5764,10 +5764,10 @@ nsDocument::CreateElement(const nsAString& aTagName,
 }
 
 already_AddRefed<Element>
-nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
-                            const nsAString& aQualifiedName,
-                            const ElementCreationOptionsOrString& aOptions,
-                            ErrorResult& rv)
+nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
+                             const nsAString& aQualifiedName,
+                             const ElementCreationOptionsOrString& aOptions,
+                             ErrorResult& rv)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
@@ -7966,7 +7966,7 @@ nsDocument::CreateElem(const nsAString& aName, nsAtom *aPrefix,
   qName.Append(aName);
 
   // Note: "a:b:c" is a valid name in non-namespaces XML, and
-  // nsDocument::CreateElement can call us with such a name and no prefix,
+  // nsIDocument::CreateElement can call us with such a name and no prefix,
   // which would cause an error if we just used true here.
   bool nsAware = aPrefix != nullptr || aNamespaceID != GetDefaultNamespaceID();
   NS_ASSERTION(NS_SUCCEEDED(nsContentUtils::CheckQName(qName, nsAware)),

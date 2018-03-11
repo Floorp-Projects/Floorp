@@ -2939,15 +2939,15 @@ public:
 
   nsIDocument* GetTopLevelContentDocument();
 
-  virtual already_AddRefed<Element>
-    CreateElement(const nsAString& aTagName,
+  already_AddRefed<Element>
+  CreateElement(const nsAString& aTagName,
+                const mozilla::dom::ElementCreationOptionsOrString& aOptions,
+                mozilla::ErrorResult& rv);
+  already_AddRefed<Element>
+  CreateElementNS(const nsAString& aNamespaceURI,
+                  const nsAString& aQualifiedName,
                   const mozilla::dom::ElementCreationOptionsOrString& aOptions,
-                  mozilla::ErrorResult& rv) = 0;
-  virtual already_AddRefed<Element>
-    CreateElementNS(const nsAString& aNamespaceURI,
-                    const nsAString& aQualifiedName,
-                    const mozilla::dom::ElementCreationOptionsOrString& aOptions,
-                    mozilla::ErrorResult& rv) = 0;
+                  mozilla::ErrorResult& rv);
   already_AddRefed<mozilla::dom::DocumentFragment>
     CreateDocumentFragment() const;
   already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData) const;
