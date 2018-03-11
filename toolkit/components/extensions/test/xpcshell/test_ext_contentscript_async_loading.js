@@ -1,15 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Test content script async loading</title>
-  <script src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<script>
 "use strict";
+
+const server = createHttpServer({hosts: ["example.com"]});
+
+server.registerPathHandler("/dummy", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "text/html", false);
+  response.write("<!DOCTYPE html><html></html>");
+});
 
 add_task(async function test_async_loading() {
   const adder = `(function add(a = 1) { this.count += a; })();\n`;
@@ -19,12 +16,12 @@ add_task(async function test_async_loading() {
       content_scripts: [
         {
           run_at: "document_start",
-          matches: ["https://example.org/"],
+          matches: ["http://example.com/dummy"],
           js: ["first.js", "second.js"],
         },
         {
           run_at: "document_end",
-          matches: ["https://example.org/"],
+          matches: ["http://example.com/dummy"],
           js: ["third.js"],
         },
       ],
@@ -49,23 +46,23 @@ add_task(async function test_async_loading() {
     },
   };
 
-  async function checkOrder(extension) {
+  async function checkOrder(ext) {
     const [first, second, third] = await Promise.all([
-      extension.awaitMessage("first"),
-      extension.awaitMessage("second"),
-      extension.awaitMessage("third"),
+      ext.awaitMessage("first"),
+      ext.awaitMessage("second"),
+      ext.awaitMessage("third"),
     ]);
 
-    is(first, 1, "first.js finished execution first.");
-    is(second, 2, "second.js finished execution second.");
-    is(third, 3, "third.js finished execution third.");
+    equal(first, 1, "first.js finished execution first.");
+    equal(second, 2, "second.js finished execution second.");
+    equal(third, 3, "third.js finished execution third.");
   }
 
   info("Test pages observed while extension is running");
   const observed = ExtensionTestUtils.loadExtension(extension);
   await observed.startup();
 
-  const win = window.open("https://example.org/");
+  const contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
   await checkOrder(observed);
   await observed.unload();
 
@@ -76,7 +73,5 @@ add_task(async function test_async_loading() {
   await checkOrder(existing);
   await existing.unload();
 
-  win.close();
+  await contentPage.close();
 });
-
-</script>
