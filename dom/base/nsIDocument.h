@@ -2304,7 +2304,7 @@ public:
    * will be ignored when checking for active requests.  If there is no
    * request associated with the new document, this parameter may be null.
    */
-  virtual bool CanSavePresentation(nsIRequest *aNewRequest) = 0;
+  virtual bool CanSavePresentation(nsIRequest* aNewRequest);
 
   /**
    * Notify the document that its associated ContentViewer is being destroyed.
@@ -3619,6 +3619,10 @@ public:
   nsIContent* GetContentInThisDocument(nsIFrame* aFrame) const;
 
 protected:
+
+  bool ContainsEMEContent();
+  bool ContainsMSEContent();
+
   void MaybeInitializeFinalizeFrameLoaders();
 
   /**

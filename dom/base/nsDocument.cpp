@@ -4731,7 +4731,7 @@ CheckIfContainsEMEContent(nsISupports* aSupports, void* aContainsEME)
 }
 
 bool
-nsDocument::ContainsEMEContent()
+nsIDocument::ContainsEMEContent()
 {
   bool containsEME = false;
   EnumerateActivityObservers(CheckIfContainsEMEContent,
@@ -4753,7 +4753,7 @@ CheckIfContainsMSEContent(nsISupports* aSupports, void* aContainsMSE)
 }
 
 bool
-nsDocument::ContainsMSEContent()
+nsIDocument::ContainsMSEContent()
 {
   bool containsMSE = false;
   EnumerateActivityObservers(CheckIfContainsMSEContent,
@@ -8081,7 +8081,7 @@ nsIDocument::CollectDescendantDocuments(
 #endif
 
 bool
-nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
+nsIDocument::CanSavePresentation(nsIRequest *aNewRequest)
 {
   if (EventHandlingSuppressed()) {
     return false;
