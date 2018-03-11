@@ -4,6 +4,7 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -14,6 +15,8 @@ import android.util.Log;
 public class AudioFocusAgent {
     private static final String LOGTAG = "AudioFocusAgent";
 
+    // We're referencing the *application* context, so this is in fact okay.
+    @SuppressLint("StaticFieldLeak")
     private static Context mContext;
     private AudioManager mAudioManager;
     private OnAudioFocusChangeListener mAfChangeListener;
@@ -50,7 +53,7 @@ public class AudioFocusAgent {
             return;
         }
 
-        mContext = context;
+        mContext = context.getApplicationContext();
         mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
         mAfChangeListener = new OnAudioFocusChangeListener() {
@@ -98,6 +101,8 @@ public class AudioFocusAgent {
     }
 
     private static class SingletonHolder {
+        // We're referencing the *application* context, so this is in fact okay.
+        @SuppressLint("StaticFieldLeak")
         private static final AudioFocusAgent INSTANCE = new AudioFocusAgent();
     }
 
