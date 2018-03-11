@@ -4184,9 +4184,9 @@ nsIDocument::FindContentForSubDocument(nsIDocument *aDocument) const
 }
 
 bool
-nsDocument::IsNodeOfType(uint32_t aFlags) const
+nsIDocument::IsNodeOfType(uint32_t aFlags) const
 {
-    return !(aFlags & ~eDOCUMENT);
+  return !(aFlags & ~eDOCUMENT);
 }
 
 Element*
@@ -4203,7 +4203,7 @@ nsIDocument::GetUnfocusedKeyEventTarget()
 }
 
 Element*
-nsDocument::GetRootElementInternal() const
+nsIDocument::GetRootElementInternal() const
 {
   // We invoke GetRootElement() immediately before the servo traversal, so we
   // should always have a cache hit from Servo.
@@ -4215,36 +4215,19 @@ nsDocument::GetRootElementInternal() const
   for (i = mChildren.ChildCount(); i > 0; --i) {
     nsIContent* child = mChildren.ChildAt(i - 1);
     if (child->IsElement()) {
-      const_cast<nsDocument*>(this)->mCachedRootElement = child->AsElement();
+      const_cast<nsIDocument*>(this)->mCachedRootElement = child->AsElement();
       return child->AsElement();
     }
   }
 
-  const_cast<nsDocument*>(this)->mCachedRootElement = nullptr;
+  const_cast<nsIDocument*>(this)->mCachedRootElement = nullptr;
   return nullptr;
 }
 
-nsIContent *
-nsDocument::GetChildAt_Deprecated(uint32_t aIndex) const
-{
-  return mChildren.GetSafeChildAt(aIndex);
-}
-
-int32_t
-nsDocument::ComputeIndexOf(const nsINode* aPossibleChild) const
-{
-  return mChildren.IndexOfChild(aPossibleChild);
-}
-
-uint32_t
-nsDocument::GetChildCount() const
-{
-  return mChildren.ChildCount();
-}
-
 nsresult
-nsDocument::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                            bool aNotify)
+nsIDocument::InsertChildBefore(nsIContent* aKid,
+                               nsIContent* aBeforeThis,
+                               bool aNotify)
 {
   if (aKid->IsElement() && GetRootElement()) {
     NS_WARNING("Inserting root element when we already have one");
@@ -4258,8 +4241,9 @@ nsDocument::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
 }
 
 nsresult
-nsDocument::InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
-                                     bool aNotify)
+nsIDocument::InsertChildAt_Deprecated(nsIContent* aKid,
+                                      uint32_t aIndex,
+                                      bool aNotify)
 {
   if (aKid->IsElement() && GetRootElement()) {
     NS_WARNING("Inserting root element when we already have one");
@@ -4270,7 +4254,7 @@ nsDocument::InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
 }
 
 void
-nsDocument::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
+nsIDocument::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = GetChildAt_Deprecated(aIndex);
   if (!oldKid) {
@@ -4297,7 +4281,7 @@ nsDocument::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 }
 
 void
-nsDocument::RemoveChildNode(nsIContent* aKid, bool aNotify)
+nsIDocument::RemoveChildNode(nsIContent* aKid, bool aNotify)
 {
   if (aKid->IsElement()) {
     // Destroy the link map up front before we mess with the child list.
@@ -8763,7 +8747,7 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
 }
 
 void
-nsDocument::DestroyElementMaps()
+nsIDocument::DestroyElementMaps()
 {
 #ifdef DEBUG
   mStyledLinksCleared = true;
