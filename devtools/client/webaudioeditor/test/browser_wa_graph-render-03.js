@@ -5,8 +5,8 @@
  * Tests to ensure that selected nodes stay selected on graph redraw.
  */
 
-add_task(function* () {
-  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(async function () {
+  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;
 
@@ -15,20 +15,20 @@ add_task(function* () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = yield events;
+  let [actors] = await events;
   let [dest, osc, gain] = actors;
 
-  yield clickGraphNode(panelWin, gain.actorID);
+  await clickGraphNode(panelWin, gain.actorID);
   ok(findGraphNode(panelWin, gain.actorID).classList.contains("selected"),
     "Node selected once.");
 
   // Disconnect a node to trigger a rerender
   osc.disconnect();
 
-  yield once(panelWin, EVENTS.UI_GRAPH_RENDERED);
+  await once(panelWin, EVENTS.UI_GRAPH_RENDERED);
 
   ok(findGraphNode(panelWin, gain.actorID).classList.contains("selected"),
     "Node still selected after rerender.");
 
-  yield teardown(target);
+  await teardown(target);
 });

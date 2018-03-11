@@ -70,7 +70,7 @@ function testFindAgain(ed, inputLine, expectCursor, isFindPrev = false) {
     "find: " + inputLine + " expects cursor: " + expectCursor.toSource());
 }
 
-const testSearchBoxTextIsSelected = Task.async(function* (ed) {
+const testSearchBoxTextIsSelected = async function(ed) {
   let edDoc = ed.container.contentDocument;
   let edWin = edDoc.defaultView;
 
@@ -93,7 +93,7 @@ const testSearchBoxTextIsSelected = Task.async(function* (ed) {
   input = edDoc.querySelector("input[type=search]");
   ok(input, "find command key opens the search box");
 
-  yield dispatchAndWaitForFocus(input);
+  await dispatchAndWaitForFocus(input);
 
   let { selectionStart, selectionEnd, value } = input;
 
@@ -112,9 +112,9 @@ const testSearchBoxTextIsSelected = Task.async(function* (ed) {
 
   // Close search box
   EventUtils.synthesizeKey("VK_ESCAPE", {}, edWin);
-});
+};
 
-const testReplaceBoxTextIsSelected = Task.async(function* (ed) {
+const testReplaceBoxTextIsSelected = async function(ed) {
   let edDoc = ed.container.contentDocument;
   let edWin = edDoc.defaultView;
 
@@ -135,7 +135,7 @@ const testReplaceBoxTextIsSelected = Task.async(function* (ed) {
   // it seems that during the tests can be lost
   input.focus();
 
-  yield dispatchAndWaitForFocus(input);
+  await dispatchAndWaitForFocus(input);
 
   let { selectionStart, selectionEnd, value } = input;
 
@@ -151,10 +151,10 @@ const testReplaceBoxTextIsSelected = Task.async(function* (ed) {
 
   // Close dialog box
   EventUtils.synthesizeKey("VK_ESCAPE", {}, edWin);
-});
+};
 
-add_task(function* () {
-  let { ed, win } = yield setup();
+add_task(async function() {
+  let { ed, win } = await setup();
 
   ed.setText([
     "// line 1",
@@ -164,7 +164,7 @@ add_task(function* () {
     "//     line 5"
   ].join("\n"));
 
-  yield promiseWaitForFocus();
+  await promiseWaitForFocus();
 
   openSearchBox(ed);
 
@@ -204,12 +204,12 @@ add_task(function* () {
   ];
 
   for (let v of testVectors) {
-    yield testFindAgain(ed, ...v);
+    await testFindAgain(ed, ...v);
   }
 
-  yield testSearchBoxTextIsSelected(ed);
+  await testSearchBoxTextIsSelected(ed);
 
-  yield testReplaceBoxTextIsSelected(ed);
+  await testReplaceBoxTextIsSelected(ed);
 
   teardown(ed, win);
 });

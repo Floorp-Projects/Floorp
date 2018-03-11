@@ -2,17 +2,17 @@
 
 info(`START: ${new Error().lineNumber}`);
 
-Task.spawn(function* () {
+(async function () {
   Services.prefs.clearUserPref("devtools.debugger.tabs")
   Services.prefs.clearUserPref("devtools.debugger.pending-selected-location")
 
   info("Waiting for debugger load");
-  yield toolbox.selectTool("jsdebugger");
+  await toolbox.selectTool("jsdebugger");
   let dbg = createDebuggerContext(toolbox);
   let window = dbg.win;
   let document = window.document;
 
-  yield waitForSources(dbg, testUrl);
+  await waitForSources(dbg, testUrl);
 //  yield waitForSourceCount(dbg, 6);
 
   info("Loaded, selecting the test script to debug");
@@ -32,23 +32,23 @@ Task.spawn(function* () {
   script.click();
 
   let onPaused = waitForPaused(dbg);
-  yield addBreakpoint(dbg, fileName, 2);
+  await addBreakpoint(dbg, fileName, 2);
 
-  yield onPaused;
+  await onPaused;
 
   assertPausedLocation(dbg, fileName, 2);
 
-  yield stepIn(dbg);
+  await stepIn(dbg);
 
   assertPausedLocation(dbg, fileName, 3);
 
   // Remove the breakpoint before resuming in order to prevent hitting the breakpoint
   // again during test closing.
   let source = findSource(dbg, fileName);
-  yield removeBreakpoint(dbg, source.id, 2);
+  await removeBreakpoint(dbg, source.id, 2);
 
-  yield resume(dbg);
+  await resume(dbg);
 
   info("Close the browser toolbox");
   toolbox.destroy();
-});
+})();

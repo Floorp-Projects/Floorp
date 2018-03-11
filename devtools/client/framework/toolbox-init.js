@@ -20,7 +20,6 @@ if (url.search.length > 1) {
   const { TargetFactory } = require("devtools/client/framework/target");
   const { DebuggerServer } = require("devtools/server/main");
   const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-  const { Task } = require("devtools/shared/task");
 
   // `host` is the frame element loading the toolbox.
   let host = window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -47,7 +46,7 @@ if (url.search.length > 1) {
   // Specify the default tool to open
   let tool = url.searchParams.get("tool");
 
-  Task.spawn(function* () {
+  (async function() {
     let target;
     if (url.searchParams.has("target")) {
       // Attach toolbox to a given browser iframe (<xul:browser> or <html:iframe
@@ -72,17 +71,17 @@ if (url.search.length > 1) {
       DebuggerServer.registerAllActors();
       let client = new DebuggerClient(DebuggerServer.connectPipe());
 
-      yield client.connect();
+      await client.connect();
       // Creates a target for a given browser iframe.
-      let response = yield client.getTab({ tab });
+      let response = await client.getTab({ tab });
       let form = response.tab;
-      target = yield TargetFactory.forRemoteTab({client, form, chrome: false});
+      target = await TargetFactory.forRemoteTab({client, form, chrome: false});
     } else {
-      target = yield targetFromURL(url);
+      target = await targetFromURL(url);
     }
     let options = { customIframe: host };
-    yield gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
-  }).catch(error => {
+    await gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
+  })().catch(error => {
     console.error("Exception while loading the toolbox", error);
   });
 }

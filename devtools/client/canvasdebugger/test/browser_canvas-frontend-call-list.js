@@ -6,16 +6,16 @@
  * are properly displayed in the UI.
  */
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
-  yield reload(target);
+  await reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
-  yield promise.all([recordingFinished, callListPopulated]);
+  await promise.all([recordingFinished, callListPopulated]);
 
   is(CallsListView.itemCount, 8,
     "All the function calls should now be displayed in the UI.");
@@ -65,6 +65,6 @@ function* ifTestingSupported() {
       "The item's location label has the correct text.");
   }
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

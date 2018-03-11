@@ -8,16 +8,16 @@
 
 const EPSILON = 0.00000001;
 
-function* spawnTest() {
-  let { panel } = yield initPerformance(SIMPLE_URL);
+async function spawnTest() {
+  let { panel } = await initPerformance(SIMPLE_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
   let { TimelineGraph } = require("devtools/client/performance/modules/widgets/graphs");
   let { rowHeight: MARKERS_GRAPH_ROW_HEIGHT } = TimelineGraph.prototype;
 
-  yield startRecording(panel);
+  await startRecording(panel);
   ok(true, "Recording has started.");
 
-  yield waitUntil(() => {
+  await waitUntil(() => {
     // Wait until we get 3 different markers.
     let markers = PerformanceController.getCurrentRecording().getMarkers();
     return markers.some(m => m.name == "Styles") &&
@@ -25,7 +25,7 @@ function* spawnTest() {
            markers.some(m => m.name == "Paint");
   });
 
-  yield stopRecording(panel);
+  await stopRecording(panel);
   ok(true, "Recording has ended.");
 
   // Push some fake markers of a type we do not have a blueprint for
@@ -50,7 +50,7 @@ function* spawnTest() {
   let overview = OverviewView.graphs.get("timeline");
   let originalHeight = overview.fixedHeight;
 
-  yield waterfallRendered;
+  await waterfallRendered;
 
   ok($(".waterfall-marker-bar[type=Styles]"), "Found at least one 'Styles' marker (1)");
   ok($(".waterfall-marker-bar[type=Reflow]"), "Found at least one 'Reflow' marker (1)");
@@ -59,7 +59,7 @@ function* spawnTest() {
 
   let heightBefore = overview.fixedHeight;
   EventUtils.synthesizeMouseAtCenter(menuItem1, {type: "mouseup"}, panel.panelWin);
-  yield waitForOverviewAndCommand(overview, menuItem1);
+  await waitForOverviewAndCommand(overview, menuItem1);
 
   is(overview.fixedHeight, heightBefore, "Overview height hasn't changed");
   ok(!$(".waterfall-marker-bar[type=Styles]"), "No 'Styles' marker (2)");
@@ -69,7 +69,7 @@ function* spawnTest() {
 
   heightBefore = overview.fixedHeight;
   EventUtils.synthesizeMouseAtCenter(menuItem2, {type: "mouseup"}, panel.panelWin);
-  yield waitForOverviewAndCommand(overview, menuItem2);
+  await waitForOverviewAndCommand(overview, menuItem2);
 
   is(overview.fixedHeight, heightBefore, "Overview height hasn't changed");
   ok(!$(".waterfall-marker-bar[type=Styles]"), "No 'Styles' marker (3)");
@@ -79,7 +79,7 @@ function* spawnTest() {
 
   heightBefore = overview.fixedHeight;
   EventUtils.synthesizeMouseAtCenter(menuItem3, {type: "mouseup"}, panel.panelWin);
-  yield waitForOverviewAndCommand(overview, menuItem3);
+  await waitForOverviewAndCommand(overview, menuItem3);
 
   is(overview.fixedHeight, heightBefore - MARKERS_GRAPH_ROW_HEIGHT, "Overview is smaller");
   ok(!$(".waterfall-marker-bar[type=Styles]"), "No 'Styles' marker (4)");
@@ -88,7 +88,7 @@ function* spawnTest() {
   ok($(".waterfall-marker-bar[type=CustomMarker]"), "Found at least one 'Unknown' marker (4)");
 
   EventUtils.synthesizeMouseAtCenter(menuItem4, {type: "mouseup"}, panel.panelWin);
-  yield waitForOverviewAndCommand(overview, menuItem4);
+  await waitForOverviewAndCommand(overview, menuItem4);
 
   ok(!$(".waterfall-marker-bar[type=Styles]"), "No 'Styles' marker (5)");
   ok(!$(".waterfall-marker-bar[type=Reflow]"), "No 'Reflow' marker (5)");
@@ -97,7 +97,7 @@ function* spawnTest() {
 
   for (let item of [menuItem1, menuItem2, menuItem3]) {
     EventUtils.synthesizeMouseAtCenter(item, {type: "mouseup"}, panel.panelWin);
-    yield waitForOverviewAndCommand(overview, item);
+    await waitForOverviewAndCommand(overview, item);
   }
 
   ok($(".waterfall-marker-bar[type=Styles]"), "Found at least one 'Styles' marker (6)");
@@ -107,7 +107,7 @@ function* spawnTest() {
 
   is(overview.fixedHeight, originalHeight, "Overview restored");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }
 

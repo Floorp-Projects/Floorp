@@ -8,10 +8,10 @@
 let { takeSnapshotAndCensus, clearSnapshots } = require("devtools/client/memory/actions/snapshot");
 let { actions, treeMapState } = require("devtools/client/memory/constants");
 
-add_task(function* () {
+add_task(async function() {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
@@ -19,7 +19,7 @@ add_task(function* () {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   ok(true, "snapshots created with a saved census");
-  yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
+  await waitUntilCensusState(store, snapshot => snapshot.treeMap,
                              [treeMapState.SAVED, treeMapState.SAVED]);
 
   let errorHeapWorker = {
@@ -36,10 +36,10 @@ add_task(function* () {
     waitUntilAction(store, actions.SNAPSHOT_ERROR),
   ]);
   dispatch(clearSnapshots(errorHeapWorker));
-  yield deleteEvents;
+  await deleteEvents;
   ok(true, "received delete snapshots and snapshot error events");
   equal(getState().snapshots.length, 0, "no snapshot remaining");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

@@ -10,7 +10,6 @@
  */
 
 const { Cc, Ci } = require("chrome");
-const { Task } = require("devtools/shared/task");
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://mochitests/content/browser/devtools/client/shared/test/frame-script-utils.js";
 
@@ -66,24 +65,24 @@ exports.pmmIsProfilerActive = () => {
 /**
  * Starts the nsProfiler module.
  */
-exports.pmmStartProfiler = Task.async(function* ({ entries, interval, features }) {
-  let isActive = (yield exports.pmmSendProfilerCommand("IsActive")).isActive;
+exports.pmmStartProfiler = async function({ entries, interval, features }) {
+  let isActive = (await exports.pmmSendProfilerCommand("IsActive")).isActive;
   if (!isActive) {
     return exports.pmmSendProfilerCommand("StartProfiler", [entries, interval, features,
                                                             features.length]);
   }
   return null;
-});
+};
 /**
  * Stops the nsProfiler module.
  */
-exports.pmmStopProfiler = Task.async(function* () {
-  let isActive = (yield exports.pmmSendProfilerCommand("IsActive")).isActive;
+exports.pmmStopProfiler = async function() {
+  let isActive = (await exports.pmmSendProfilerCommand("IsActive")).isActive;
   if (isActive) {
     return exports.pmmSendProfilerCommand("StopProfiler");
   }
   return null;
-});
+};
 
 /**
  * Calls a method on the nsProfiler module.

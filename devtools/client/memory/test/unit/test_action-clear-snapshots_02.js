@@ -8,10 +8,10 @@
 let { takeSnapshotAndCensus, clearSnapshots, takeSnapshot } = require("devtools/client/memory/actions/snapshot");
 let { snapshotState: states, treeMapState, actions } = require("devtools/client/memory/constants");
 
-add_task(function* () {
+add_task(async function() {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
@@ -19,8 +19,8 @@ add_task(function* () {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   ok(true, "create a snapshot in SAVED state");
   dispatch(takeSnapshot(front));
-  yield waitUntilSnapshotState(store, [states.SAVED, states.SAVED]);
-  yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
+  await waitUntilSnapshotState(store, [states.SAVED, states.SAVED]);
+  await waitUntilCensusState(store, snapshot => snapshot.treeMap,
                              [treeMapState.SAVED, null]);
   ok(true, "snapshots created with expected states");
 
@@ -30,7 +30,7 @@ add_task(function* () {
     waitUntilAction(store, actions.DELETE_SNAPSHOTS_END)
   ]);
   dispatch(clearSnapshots(heapWorker));
-  yield deleteEvents;
+  await deleteEvents;
   ok(true, "received delete snapshots events");
 
   equal(getState().snapshots.length, 1, "one snapshot remaining");
@@ -41,5 +41,5 @@ add_task(function* () {
     "remaining snapshot doesn't have a census property");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

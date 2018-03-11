@@ -11,11 +11,11 @@ const { appendAndWaitForPaint } = require("devtools/client/performance/test/help
 const { synthesizeCustomTreeClass } = require("devtools/client/performance/test/helpers/synth-utils");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function* () {
+add_task(async function() {
   let { MyCustomTreeItem, myDataSrc } = synthesizeCustomTreeClass();
 
   let container = document.createElement("vbox");
-  yield appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
+  await appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
 
   // Populate the tree and test the root item...
 
@@ -51,11 +51,11 @@ add_task(function* () {
   let receivedFocusEvent = once(treeRoot, "focus");
   mousedown(treeRoot.target.querySelector(".arrow"));
 
-  let [eventItem] = yield receivedExpandEvent;
+  let [eventItem] = await receivedExpandEvent;
   is(eventItem, treeRoot,
     "The 'expand' event target is correct (1).");
 
-  yield receivedFocusEvent;
+  await receivedFocusEvent;
   is(document.commandDispatcher.focusedElement, treeRoot.target,
     "The root node is now focused.");
 
@@ -102,7 +102,7 @@ add_task(function* () {
   receivedFocusEvent = once(treeRoot, "focus", { spreadArgs: true });
   mousedown(fooItem.target);
 
-  [eventItem] = yield receivedFocusEvent;
+  [eventItem] = await receivedFocusEvent;
   is(eventItem, fooItem,
     "The 'focus' event target is correct (2).");
   is(document.commandDispatcher.focusedElement, fooItem.target,
@@ -114,11 +114,11 @@ add_task(function* () {
   receivedFocusEvent = once(treeRoot, "focus");
   dblclick(barItem.target);
 
-  [eventItem] = yield receivedExpandEvent;
+  [eventItem] = await receivedExpandEvent;
   is(eventItem, barItem,
     "The 'expand' event target is correct (3).");
 
-  yield receivedFocusEvent;
+  await receivedFocusEvent;
   is(document.commandDispatcher.focusedElement, barItem.target,
     "The 'foo' node is now focused.");
 

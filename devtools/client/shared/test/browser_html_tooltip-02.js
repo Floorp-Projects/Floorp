@@ -15,63 +15,63 @@ loadHelperScript("helper_html_tooltip.js");
 
 let useXulWrapper;
 
-add_task(function* () {
-  yield addTab("about:blank");
-  let [,, doc] = yield createHost("bottom", TEST_URI);
+add_task(async function() {
+  await addTab("about:blank");
+  let [,, doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
-  yield runTests(doc);
+  await runTests(doc);
 
   info("Run tests for a Tooltip with a XUL panel");
   useXulWrapper = true;
-  yield runTests(doc);
+  await runTests(doc);
 });
 
-function* runTests(doc) {
-  yield testClickInTooltipContent(doc);
-  yield testConsumeOutsideClicksFalse(doc);
-  yield testConsumeOutsideClicksTrue(doc);
-  yield testConsumeWithRightClick(doc);
-  yield testClickInOuterIframe(doc);
-  yield testClickInInnerIframe(doc);
+async function runTests(doc) {
+  await testClickInTooltipContent(doc);
+  await testConsumeOutsideClicksFalse(doc);
+  await testConsumeOutsideClicksTrue(doc);
+  await testConsumeWithRightClick(doc);
+  await testClickInOuterIframe(doc);
+  await testClickInInnerIframe(doc);
 }
 
-function* testClickInTooltipContent(doc) {
+async function testClickInTooltipContent(doc) {
   info("Test a tooltip is not closed when clicking inside itself");
 
   let tooltip = new HTMLTooltip(doc, {useXulWrapper});
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
-  yield showTooltip(tooltip, doc.getElementById("box1"));
+  await showTooltip(tooltip, doc.getElementById("box1"));
 
   let onTooltipContainerClick = once(tooltip.container, "click");
   EventUtils.synthesizeMouseAtCenter(tooltip.container, {}, doc.defaultView);
-  yield onTooltipContainerClick;
+  await onTooltipContainerClick;
   is(tooltip.isVisible(), true, "Tooltip is still visible");
 
   tooltip.destroy();
 }
 
-function* testConsumeOutsideClicksFalse(doc) {
+async function testConsumeOutsideClicksFalse(doc) {
   info("Test closing a tooltip via click with consumeOutsideClicks: false");
   let box4 = doc.getElementById("box4");
 
   let tooltip = new HTMLTooltip(doc, {consumeOutsideClicks: false, useXulWrapper});
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
-  yield showTooltip(tooltip, doc.getElementById("box1"));
+  await showTooltip(tooltip, doc.getElementById("box1"));
 
   let onBox4Clicked = once(box4, "click");
   let onHidden = once(tooltip, "hidden");
   EventUtils.synthesizeMouseAtCenter(box4, {}, doc.defaultView);
-  yield onHidden;
-  yield onBox4Clicked;
+  await onHidden;
+  await onBox4Clicked;
 
   is(tooltip.isVisible(), false, "Tooltip is hidden");
 
   tooltip.destroy();
 }
 
-function* testConsumeOutsideClicksTrue(doc) {
+async function testConsumeOutsideClicksTrue(doc) {
   info("Test closing a tooltip via click with consumeOutsideClicks: true");
   let box4 = doc.getElementById("box4");
 
@@ -81,11 +81,11 @@ function* testConsumeOutsideClicksTrue(doc) {
 
   let tooltip = new HTMLTooltip(doc, {consumeOutsideClicks: true, useXulWrapper});
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
-  yield showTooltip(tooltip, doc.getElementById("box1"));
+  await showTooltip(tooltip, doc.getElementById("box1"));
 
   let onHidden = once(tooltip, "hidden");
   EventUtils.synthesizeMouseAtCenter(box4, {}, doc.defaultView);
-  yield onHidden;
+  await onHidden;
 
   is(box4clicks, 0, "box4 catched no click event");
   is(tooltip.isVisible(), false, "Tooltip is hidden");
@@ -93,13 +93,13 @@ function* testConsumeOutsideClicksTrue(doc) {
   tooltip.destroy();
 }
 
-function* testConsumeWithRightClick(doc) {
+async function testConsumeWithRightClick(doc) {
   info("Test closing a tooltip with a right-click, with consumeOutsideClicks: true");
   let box4 = doc.getElementById("box4");
 
   let tooltip = new HTMLTooltip(doc, {consumeOutsideClicks: true, useXulWrapper});
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
-  yield showTooltip(tooltip, doc.getElementById("box1"));
+  await showTooltip(tooltip, doc.getElementById("box1"));
 
   // Only left-click events should be consumed, so we expect to catch a click when using
   // {button: 2}, which simulates a right-click.
@@ -107,31 +107,31 @@ function* testConsumeWithRightClick(doc) {
   let onBox4Clicked = once(box4, "click");
   let onHidden = once(tooltip, "hidden");
   EventUtils.synthesizeMouseAtCenter(box4, {button: 2}, doc.defaultView);
-  yield onHidden;
-  yield onBox4Clicked;
+  await onHidden;
+  await onBox4Clicked;
 
   is(tooltip.isVisible(), false, "Tooltip is hidden");
 
   tooltip.destroy();
 }
 
-function* testClickInOuterIframe(doc) {
+async function testClickInOuterIframe(doc) {
   info("Test clicking an iframe outside of the tooltip closes the tooltip");
   let frame = doc.getElementById("frame");
 
   let tooltip = new HTMLTooltip(doc, {useXulWrapper});
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
-  yield showTooltip(tooltip, doc.getElementById("box1"));
+  await showTooltip(tooltip, doc.getElementById("box1"));
 
   let onHidden = once(tooltip, "hidden");
   EventUtils.synthesizeMouseAtCenter(frame, {}, doc.defaultView);
-  yield onHidden;
+  await onHidden;
 
   is(tooltip.isVisible(), false, "Tooltip is hidden");
   tooltip.destroy();
 }
 
-function* testClickInInnerIframe(doc) {
+async function testClickInInnerIframe(doc) {
   info("Test clicking an iframe inside the tooltip content does not close the tooltip");
 
   let tooltip = new HTMLTooltip(doc, {consumeOutsideClicks: false, useXulWrapper});
@@ -140,11 +140,11 @@ function* testClickInInnerIframe(doc) {
   iframe.style.width = "100px";
   iframe.style.height = "50px";
   tooltip.setContent(iframe, {width: 100, height: 50});
-  yield showTooltip(tooltip, doc.getElementById("box1"));
+  await showTooltip(tooltip, doc.getElementById("box1"));
 
   let onTooltipContainerClick = once(tooltip.container, "click");
   EventUtils.synthesizeMouseAtCenter(tooltip.container, {}, doc.defaultView);
-  yield onTooltipContainerClick;
+  await onTooltipContainerClick;
 
   is(tooltip.isVisible(), true, "Tooltip is still visible");
 

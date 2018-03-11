@@ -14,12 +14,12 @@ localStorage.setItem("iframe-s-ls1uc1", "foobar");
 sessionStorage.setItem("iframe-s-ss1uc1", "foobar-2");
 dump("added cookies and storage from secured iframe\n");
 
-let idbGenerator = function*() {
+let idbGenerator = async function () {
   let request = indexedDB.open("idb-s1uc1", 1);
   request.onerror = function() {
     throw new Error("error opening db connection");
   };
-  let db = yield new Promise(done => {
+  let db = await new Promise(done => {
     request.onupgradeneeded = event => {
       let db = event.target.result;
       let store1 = db.createObjectStore("obj-s1uc1", { keyPath: "id" });
@@ -28,7 +28,7 @@ let idbGenerator = function*() {
       };
     };
   });
-  yield new Promise(done => {
+  await new Promise(done => {
     request.onsuccess = done;
   });
 
@@ -36,14 +36,14 @@ let idbGenerator = function*() {
   let store1 = transaction.objectStore("obj-s1uc1");
   store1.add({id: 6, name: "foo", email: "foo@bar.com"});
   store1.add({id: 7, name: "foo2", email: "foo2@bar.com"});
-  yield new Promise(success => {
+  await new Promise(success => {
     transaction.oncomplete = success;
   });
 
   db.close();
 
   request = indexedDB.open("idb-s2uc1", 1);
-  let db2 = yield new Promise(done => {
+  let db2 = await new Promise(done => {
     request.onupgradeneeded = event => {
       let db2 = event.target.result;
       let store3 =
@@ -54,14 +54,14 @@ let idbGenerator = function*() {
       };
     };
   });
-  yield new Promise(done => {
+  await new Promise(done => {
     request.onsuccess = done;
   });
 
   transaction = db2.transaction(["obj-s2uc1"], "readwrite");
   let store3 = transaction.objectStore("obj-s2uc1");
   store3.add({id3: 16, name2: "foo", email: "foo@bar.com"});
-  yield new Promise(success => {
+  await new Promise(success => {
     transaction.oncomplete = success;
   });
 
@@ -76,13 +76,13 @@ function deleteDB(dbName) {
   });
 }
 
-window.setup = function*() {
-  yield idbGenerator();
+window.setup = async function () {
+  await idbGenerator();
 };
 
-window.clear = function*() {
-  yield deleteDB("idb-s1uc1");
-  yield deleteDB("idb-s2uc1");
+window.clear = async function () {
+  await deleteDB("idb-s1uc1");
+  await deleteDB("idb-s2uc1");
 
   dump("removed indexedDB data from " + document.location + "\n");
 };

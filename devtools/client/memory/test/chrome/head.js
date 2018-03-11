@@ -10,7 +10,6 @@ var { require } = BrowserLoader({
 });
 var { Assert } = require("resource://testing-common/Assert.jsm");
 var Services = require("Services");
-var { Task } = require("devtools/shared/task");
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 

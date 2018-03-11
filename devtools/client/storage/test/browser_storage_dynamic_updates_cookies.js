@@ -6,14 +6,14 @@
 
 // Test dynamic updates in the storage inspector for cookies.
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
+add_task(async function() {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
 
   gUI.tree.expandAll();
 
   ok(gUI.sidebar.hidden, "Sidebar is initially hidden");
   let c1id = getCookieId("c1", "test1.example.org", "/browser");
-  yield selectTableItem(c1id);
+  await selectTableItem(c1id);
 
   // test that value is something initially
   let initialValue = [[
@@ -36,12 +36,12 @@ add_task(function* () {
   ]];
 
   // Check that sidebar shows correct initial value
-  yield findVariableViewProperties(initialValue[0], false);
+  await findVariableViewProperties(initialValue[0], false);
 
-  yield findVariableViewProperties(initialValue[1], true);
+  await findVariableViewProperties(initialValue[1], true);
 
   // Check if table shows correct initial value
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org"],
       [
@@ -53,13 +53,13 @@ add_task(function* () {
   checkCell(c1id, "value", "1.2.3.4.5.6.7");
 
   gWindow.addCookie("c1", '{"foo": 4,"bar":6}', "/browser");
-  yield gUI.once("sidebar-updated");
-  yield gUI.once("store-objects-updated");
+  await gUI.once("sidebar-updated");
+  await gUI.once("store-objects-updated");
 
-  yield findVariableViewProperties(finalValue[0], false);
-  yield findVariableViewProperties(finalValue[1], true);
+  await findVariableViewProperties(finalValue[0], false);
+  await findVariableViewProperties(finalValue[1], true);
 
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org"],
       [
@@ -73,9 +73,9 @@ add_task(function* () {
   // Add a new entry
   gWindow.addCookie("c3", "booyeah");
 
-  yield gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
 
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org"],
       [
@@ -94,10 +94,10 @@ add_task(function* () {
   gWindow.addCookie("c4", "booyeah");
 
   // Wait once for update and another time for value fetching
-  yield gUI.once("store-objects-updated");
-  yield gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
 
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org"],
       [
@@ -117,10 +117,10 @@ add_task(function* () {
   // Removing cookies
   gWindow.removeCookie("c1", "/browser");
 
-  yield gUI.once("sidebar-updated");
-  yield gUI.once("store-objects-updated");
+  await gUI.once("sidebar-updated");
+  await gUI.once("store-objects-updated");
 
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org"],
       [
@@ -136,14 +136,14 @@ add_task(function* () {
   ok(!gUI.sidebar.hidden, "Sidebar still visible for next row");
 
   // Check if next element's value is visible in sidebar
-  yield findVariableViewProperties([{name: "c2", value: "foobar"}]);
+  await findVariableViewProperties([{name: "c2", value: "foobar"}]);
 
   // Keep deleting till no rows
   gWindow.removeCookie("c3");
 
-  yield gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
 
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org"],
       [
@@ -155,14 +155,14 @@ add_task(function* () {
   ]);
 
   // Check if next element's value is visible in sidebar
-  yield findVariableViewProperties([{name: "c2", value: "foobar"}]);
+  await findVariableViewProperties([{name: "c2", value: "foobar"}]);
 
   gWindow.removeCookie("c2", "/browser");
 
-  yield gUI.once("sidebar-updated");
-  yield gUI.once("store-objects-updated");
+  await gUI.once("sidebar-updated");
+  await gUI.once("store-objects-updated");
 
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org"],
       [
@@ -173,17 +173,17 @@ add_task(function* () {
   ]);
 
   // Check if next element's value is visible in sidebar
-  yield findVariableViewProperties([{name: "c4", value: "booyeah"}]);
+  await findVariableViewProperties([{name: "c4", value: "booyeah"}]);
 
   gWindow.removeCookie("c4");
 
-  yield gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
 
-  yield checkState([
+  await checkState([
     [["cookies", "http://test1.example.org"], [ ]],
   ]);
 
   ok(gUI.sidebar.hidden, "Sidebar is hidden when no rows");
 
-  yield finishTests();
+  await finishTests();
 });

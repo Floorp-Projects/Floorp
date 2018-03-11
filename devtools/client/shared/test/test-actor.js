@@ -14,7 +14,6 @@ const {
   getRect, getAdjustedQuads, getWindowDimensions
 } = require("devtools/shared/layout/utils");
 const defer = require("devtools/shared/defer");
-const {Task} = require("devtools/shared/task");
 const {
   isContentStylesheet,
   getCSSStyleRules
@@ -703,16 +702,16 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
     return deferred.promise;
   },
 
-  getNodeRect: Task.async(function* (selector) {
+  async getNodeRect(selector) {
     let node = this._querySelector(selector);
     return getRect(this.content, node, this.content);
-  }),
+  },
 
-  getTextNodeRect: Task.async(function* (parentSelector, childNodeIndex) {
+  async getTextNodeRect(parentSelector, childNodeIndex) {
     let parentNode = this._querySelector(parentSelector);
     let node = parentNode.childNodes[childNodeIndex];
     return getAdjustedQuads(this.content, node)[0].bounds;
-  }),
+  },
 
   /**
    * Get information about a DOM element, identified by a selector.
@@ -851,11 +850,11 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * @param {String} prefix An optional prefix for logging information to the
    * console.
    */
-  isNodeCorrectlyHighlighted: Task.async(function* (selector, is, prefix = "") {
+  async isNodeCorrectlyHighlighted(selector, is, prefix = "") {
     prefix += (prefix ? " " : "") + selector + " ";
 
-    let boxModel = yield this._getBoxModelStatus();
-    let regions = yield this.getAllAdjustedQuads(selector);
+    let boxModel = await this._getBoxModelStatus();
+    let regions = await this.getAllAdjustedQuads(selector);
 
     for (let boxType of ["content", "padding", "border", "margin"]) {
       let [quad] = regions[boxType];
@@ -866,13 +865,13 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
           prefix + boxType + " point " + point + " y coordinate is correct");
       }
     }
-  }),
+  },
 
   /**
    * Get the current rect of the border region of the box-model highlighter
    */
-  getSimpleBorderRect: Task.async(function* (toolbox) {
-    let {border} = yield this._getBoxModelStatus(toolbox);
+  async getSimpleBorderRect(toolbox) {
+    let {border} = await this._getBoxModelStatus(toolbox);
     let {p1, p2, p4} = border.points;
 
     return {
@@ -881,32 +880,32 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       width: p2.x - p1.x,
       height: p4.y - p1.y
     };
-  }),
+  },
 
   /**
    * Get the current positions and visibility of the various box-model highlighter
    * elements.
    */
-  _getBoxModelStatus: Task.async(function* () {
-    let isVisible = yield this.isHighlighting();
+  async _getBoxModelStatus() {
+    let isVisible = await this.isHighlighting();
 
     let ret = {
       visible: isVisible
     };
 
     for (let region of ["margin", "border", "padding", "content"]) {
-      let points = yield this._getPointsForRegion(region);
-      let visible = yield this._isRegionHidden(region);
+      let points = await this._getPointsForRegion(region);
+      let visible = await this._isRegionHidden(region);
       ret[region] = {points, visible};
     }
 
     ret.guides = {};
     for (let guide of ["top", "right", "bottom", "left"]) {
-      ret.guides[guide] = yield this._getGuideStatus(guide);
+      ret.guides[guide] = await this._getGuideStatus(guide);
     }
 
     return ret;
-  }),
+  },
 
   /**
    * Check that the box-model highlighter is currently highlighting the node matching the
@@ -914,10 +913,10 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * @param {String} selector
    * @return {Boolean}
    */
-  assertHighlightedNode: Task.async(function* (selector) {
-    let rect = yield this.getNodeRect(selector);
-    return yield this.isNodeRectHighlighted(rect);
-  }),
+  async assertHighlightedNode(selector) {
+    let rect = await this.getNodeRect(selector);
+    return this.isNodeRectHighlighted(rect);
+  },
 
   /**
    * Check that the box-model highlighter is currently highlighting the text node that can
@@ -927,18 +926,18 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * @param {Number} childNodeIndex
    * @return {Boolean}
    */
-  assertHighlightedTextNode: Task.async(function* (parentSelector, childNodeIndex) {
-    let rect = yield this.getTextNodeRect(parentSelector, childNodeIndex);
-    return yield this.isNodeRectHighlighted(rect);
-  }),
+  async assertHighlightedTextNode(parentSelector, childNodeIndex) {
+    let rect = await this.getTextNodeRect(parentSelector, childNodeIndex);
+    return this.isNodeRectHighlighted(rect);
+  },
 
   /**
    * Check that the box-model highlighter is currently highlighting the given rect.
    * @param {Object} rect
    * @return {Boolean}
    */
-  isNodeRectHighlighted: Task.async(function* ({ left, top, width, height }) {
-    let {visible, border} = yield this._getBoxModelStatus();
+  async isNodeRectHighlighted({ left, top, width, height }) {
+    let {visible, border} = await this._getBoxModelStatus();
     let points = border.points;
     if (!visible) {
       return false;
@@ -961,14 +960,14 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
            isInside([right, top], points) &&
            isInside([right, bottom], points) &&
            isInside([left, bottom], points);
-  }),
+  },
 
   /**
    * Get the coordinate (points attribute) from one of the polygon elements in the
    * box model highlighter.
    */
-  _getPointsForRegion: Task.async(function* (region) {
-    let d = yield this.getHighlighterNodeAttribute("box-model-" + region, "d");
+  async _getPointsForRegion(region) {
+    let d = await this.getHighlighterNodeAttribute("box-model-" + region, "d");
 
     let polygons = d.match(/M[^M]+/g);
     if (!polygons) {
@@ -997,25 +996,25 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
         y: parseFloat(points[3][1])
       }
     };
-  }),
+  },
 
   /**
    * Is a given region polygon element of the box-model highlighter currently
    * hidden?
    */
-  _isRegionHidden: Task.async(function* (region) {
-    let value = yield this.getHighlighterNodeAttribute("box-model-" + region, "hidden");
+  async _isRegionHidden(region) {
+    let value = await this.getHighlighterNodeAttribute("box-model-" + region, "hidden");
     return value !== null;
-  }),
+  },
 
-  _getGuideStatus: Task.async(function* (location) {
+  async _getGuideStatus(location) {
     let id = "box-model-guide-" + location;
 
-    let hidden = yield this.getHighlighterNodeAttribute(id, "hidden");
-    let x1 = yield this.getHighlighterNodeAttribute(id, "x1");
-    let y1 = yield this.getHighlighterNodeAttribute(id, "y1");
-    let x2 = yield this.getHighlighterNodeAttribute(id, "x2");
-    let y2 = yield this.getHighlighterNodeAttribute(id, "y2");
+    let hidden = await this.getHighlighterNodeAttribute(id, "hidden");
+    let x1 = await this.getHighlighterNodeAttribute(id, "x1");
+    let y1 = await this.getHighlighterNodeAttribute(id, "y1");
+    let x2 = await this.getHighlighterNodeAttribute(id, "x2");
+    let y2 = await this.getHighlighterNodeAttribute(id, "y2");
 
     return {
       visible: !hidden,
@@ -1024,7 +1023,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       x2: x2,
       y2: y2
     };
-  }),
+  },
 
   /**
    * Get the coordinates of the rectangle that is defined by the 4 guides displayed
@@ -1032,11 +1031,11 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * @return {Object} Null if at least one guide is hidden. Otherwise an object
    * with p1, p2, p3, p4 properties being {x, y} objects.
    */
-  getGuidesRectangle: Task.async(function* () {
-    let tGuide = yield this._getGuideStatus("top");
-    let rGuide = yield this._getGuideStatus("right");
-    let bGuide = yield this._getGuideStatus("bottom");
-    let lGuide = yield this._getGuideStatus("left");
+  async getGuidesRectangle() {
+    let tGuide = await this._getGuideStatus("top");
+    let rGuide = await this._getGuideStatus("right");
+    let bGuide = await this._getGuideStatus("bottom");
+    let lGuide = await this._getGuideStatus("left");
 
     if (!tGuide.visible || !rGuide.visible || !bGuide.visible || !lGuide.visible) {
       return null;
@@ -1048,7 +1047,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       p3: {x: +rGuide.x1 + 1, y: +bGuide.y1 + 1},
       p4: {x: lGuide.x1, y: +bGuide.y1 + 1}
     };
-  }),
+  },
 
   waitForHighlighterEvent: protocol.custom(function(event) {
     return this._waitForHighlighterEvent(event, this.toolbox.highlighter.actorID);
@@ -1066,8 +1065,8 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * - points {Array} an array of all the polygons defined by the path. Each box
    *   is itself an Array of points, themselves being [x,y] coordinates arrays.
    */
-  getHighlighterRegionPath: Task.async(function* (region, highlighter) {
-    let d = yield this.getHighlighterNodeAttribute(
+  async getHighlighterRegionPath(region, highlighter) {
+    let d = await this.getHighlighterNodeAttribute(
       `box-model-${region}`, "d", highlighter
     );
     if (!d) {
@@ -1087,7 +1086,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
     }
 
     return {d, points};
-  })
+  }
 });
 
 /**
