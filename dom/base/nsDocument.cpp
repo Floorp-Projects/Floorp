@@ -1496,6 +1496,7 @@ nsIDocument::nsIDocument()
     mAutoFocusFired(false),
     mScrolledToRefAlready(false),
     mChangeScrollPosWhenScrollingToRef(false),
+    mHasWarnedAboutBoxObjects(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mPendingFullscreenRequests(0),
     mCompatMode(eCompatibility_FullStandards),
@@ -1536,6 +1537,7 @@ nsIDocument::nsIDocument()
     mSubDocuments(nullptr),
     mHeaderData(nullptr),
     mFlashClassification(FlashClassification::Unclassified),
+    mBoxObjectTable(nullptr),
     mServoRestyleRootDirtyBits(0),
     mThrowOnDynamicMarkupInsertionCounter(0),
     mIgnoreOpensDuringUnloadCounter(0)
@@ -1548,7 +1550,6 @@ nsIDocument::nsIDocument()
 
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
-  , mHasWarnedAboutBoxObjects(false)
   , mDelayFrameLoaderInitialization(false)
   , mSynchronousDOMContentLoaded(false)
   , mParserAborted(false)
@@ -1556,7 +1557,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mCurrentOrientationType(OrientationType::Portrait_primary)
   , mReportedUseCounters(false)
   , mXMLDeclarationBits(0)
-  , mBoxObjectTable(nullptr)
   , mOnloadBlockCount(0)
   , mAsyncOnloadBlockCount(0)
   , mValidWidth(false)
@@ -6487,7 +6487,7 @@ nsIDocument::DoNotifyPossibleTitleChange()
 }
 
 already_AddRefed<BoxObject>
-nsDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
+nsIDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
 {
   if (!aElement) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -6556,7 +6556,7 @@ nsDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
 }
 
 void
-nsDocument::ClearBoxObjectFor(nsIContent* aContent)
+nsIDocument::ClearBoxObjectFor(nsIContent* aContent)
 {
   if (mBoxObjectTable) {
     if (auto entry = mBoxObjectTable->Lookup(aContent)) {

@@ -484,12 +484,6 @@ public:
   virtual void BlockOnload() override;
   virtual void UnblockOnload(bool aFireSync) override;
 
-  virtual void ClearBoxObjectFor(nsIContent* aContent) override;
-
-  virtual already_AddRefed<mozilla::dom::BoxObject>
-  GetBoxObjectFor(mozilla::dom::Element* aElement,
-                  mozilla::ErrorResult& aRv) override;
-
   virtual Element*
     GetAnonymousElementByAttribute(nsIContent* aElement,
                                    nsAtom* aAttrName,
@@ -664,8 +658,6 @@ public:
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
-  bool mHasWarnedAboutBoxObjects:1;
-
   bool mDelayFrameLoaderInitialization:1;
 
   bool mSynchronousDOMContentLoaded:1;
@@ -692,8 +684,6 @@ public:
   bool mReportedUseCounters:1;
 
   uint8_t mXMLDeclarationBits;
-
-  nsRefPtrHashtable<nsPtrHashKey<nsIContent>, mozilla::dom::BoxObject>* mBoxObjectTable;
 
   // A document "without a browsing context" that owns the content of
   // HTMLTemplateElement.
