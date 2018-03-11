@@ -3909,8 +3909,9 @@ AssertNoStaleServoDataIn(const nsINode& aSubtreeRoot)
 }
 
 already_AddRefed<nsIPresShell>
-nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
-                        StyleSetHandle aStyleSet)
+nsIDocument::CreateShell(nsPresContext* aContext,
+                         nsViewManager* aViewManager,
+                         StyleSetHandle aStyleSet)
 {
   NS_ASSERTION(!mPresShell, "We have a presshell already!");
 
@@ -4023,7 +4024,7 @@ nsIDocument::ShouldThrottleFrameRequests()
 }
 
 void
-nsDocument::DeleteShell()
+nsIDocument::DeleteShell()
 {
   mExternalResourceMap.HideViewers();
   if (nsPresContext* presContext = mPresShell->GetPresContext()) {
