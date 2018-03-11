@@ -9273,7 +9273,7 @@ nsDocument::UnsuppressEventHandlingAndFireEvents(bool aFireEvents)
 }
 
 nsISupports*
-nsDocument::GetCurrentContentSink()
+nsIDocument::GetCurrentContentSink()
 {
   return mParser ? mParser->GetContentSink() : nullptr;
 }
