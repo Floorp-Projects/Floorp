@@ -2764,7 +2764,7 @@ public:
     return mDocumentState;
   }
 
-  virtual nsISupports* GetCurrentContentSink() = 0;
+  nsISupports* GetCurrentContentSink();
 
   void SetAutoFocusElement(Element* aAutoFocusElement);
   void TriggerAutoFocus();
