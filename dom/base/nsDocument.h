@@ -30,7 +30,6 @@
 #include "nsRefPtrHashtable.h"
 #include "nsJSThingHashtable.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsIURI.h"
 #include "nsIRadioGroupContainer.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIRequest.h"
@@ -560,32 +559,6 @@ public:
 
   void MaybeEndOutermostXBLUpdate();
 
-  virtual void PreloadPictureOpened() override;
-  virtual void PreloadPictureClosed() override;
-
-  virtual void
-    PreloadPictureImageSource(const nsAString& aSrcsetAttr,
-                              const nsAString& aSizesAttr,
-                              const nsAString& aTypeAttr,
-                              const nsAString& aMediaAttr) override;
-
-  virtual already_AddRefed<nsIURI>
-    ResolvePreloadImage(nsIURI *aBaseURI,
-                        const nsAString& aSrcAttr,
-                        const nsAString& aSrcsetAttr,
-                        const nsAString& aSizesAttr,
-                        bool *aIsImgSet) override;
-
-  virtual void MaybePreLoadImage(nsIURI* uri,
-                                 const nsAString &aCrossOriginAttr,
-                                 ReferrerPolicy aReferrerPolicy,
-                                 bool aIsImgSet) override;
-
-  virtual void ForgetImagePreload(nsIURI* aURI) override;
-
-  virtual void MaybePreconnect(nsIURI* uri,
-                               mozilla::CORSMode aCORSMode) override;
-
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
@@ -767,23 +740,6 @@ private:
   nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
 
   nsExternalResourceMap mExternalResourceMap;
-
-  // All images in process of being preloaded.  This is a hashtable so
-  // we can remove them as the real image loads start; that way we
-  // make sure to not keep the image load going when no one cares
-  // about it anymore.
-  nsRefPtrHashtable<nsURIHashKey, imgIRequest> mPreloadingImages;
-
-  // A list of preconnects initiated by the preloader. This prevents
-  // the same uri from being used more than once, and allows the dom
-  // builder to not repeat the work of the preloader.
-  nsDataHashtable<nsURIHashKey, bool> mPreloadedPreconnects;
-
-  // Current depth of picture elements from parser
-  int32_t mPreloadPictureDepth;
-
-  // Set if we've found a URL for the current picture
-  nsString mPreloadPictureFoundSource;
 
   // These member variables cache information about the viewport so we don't have to
   // recalculate it each time.
