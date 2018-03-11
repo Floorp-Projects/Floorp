@@ -2769,10 +2769,17 @@ public:
   void SetAutoFocusElement(Element* aAutoFocusElement);
   void TriggerAutoFocus();
 
-  virtual void SetScrollToRef(nsIURI *aDocumentURI) = 0;
-  virtual void ScrollToRef() = 0;
-  virtual void ResetScrolledToRefAlready() = 0;
-  virtual void SetChangeScrollPosWhenScrollingToRef(bool aValue) = 0;
+  void SetScrollToRef(nsIURI* aDocumentURI);
+  void ScrollToRef();
+  void ResetScrolledToRefAlready()
+  {
+    mScrolledToRefAlready = false;
+  }
+
+  void SetChangeScrollPosWhenScrollingToRef(bool aValue)
+  {
+    mChangeScrollPosWhenScrollingToRef = aValue;
+  }
 
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
@@ -3874,6 +3881,9 @@ protected:
   bool mDOMCompleteSet: 1;
   bool mAutoFocusFired: 1;
 
+  bool mScrolledToRefAlready : 1;
+  bool mChangeScrollPosWhenScrollingToRef : 1;
+
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
   unsigned int mIsScopedStyleEnabled : 2;
@@ -4105,6 +4115,8 @@ protected:
   mozilla::TimeStamp mLoadingTimeStamp;
 
   nsWeakPtr mAutoFocusElement;
+
+  nsCString mScrollToRef;
 
   // Weak reference to the scope object (aka the script global object)
   // that, unlike mScriptGlobalObject, is never unset once set. This

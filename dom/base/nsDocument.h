@@ -591,11 +591,6 @@ public:
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
-  virtual void SetScrollToRef(nsIURI *aDocumentURI) override;
-  virtual void ScrollToRef() override;
-  virtual void ResetScrolledToRefAlready() override;
-  virtual void SetChangeScrollPosWhenScrollingToRef(bool aValue) override;
-
   // Returns the size of the mBlockedTrackingNodes array. (nsIDocument.h)
   //
   // This array contains nodes that have been blocked to prevent
@@ -791,10 +786,6 @@ private:
 
   // Set if we've found a URL for the current picture
   nsString mPreloadPictureFoundSource;
-
-  nsCString mScrollToRef;
-  uint8_t mScrolledToRefAlready : 1;
-  uint8_t mChangeScrollPosWhenScrollingToRef : 1;
 
   // These member variables cache information about the viewport so we don't have to
   // recalculate it each time.
