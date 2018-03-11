@@ -3139,6 +3139,12 @@ nsIDocument::GetLastModified(nsAString& aLastModified) const
   }
 }
 
+static void
+IncrementExpandoGeneration(nsIDocument& aDoc)
+{
+  ++static_cast<nsDocument&>(aDoc).mExpandoAndGeneration.generation;
+}
+
 void
 nsIDocument::AddToNameTable(Element* aElement, nsAtom* aName)
 {
@@ -3152,7 +3158,7 @@ nsIDocument::AddToNameTable(Element* aElement, nsAtom* aName)
   if (entry) {
     if (!entry->HasNameElement() &&
         !entry->HasIdElementExposedAsHTMLDocumentProperty()) {
-      ++mExpandoAndGeneration.generation;
+      IncrementExpandoGeneration(*this);
     }
     entry->AddNameElement(this, aElement);
   }
@@ -3172,7 +3178,7 @@ nsIDocument::RemoveFromNameTable(Element* aElement, nsAtom* aName)
   entry->RemoveNameElement(aElement);
   if (!entry->HasNameElement() &&
       !entry->HasIdElementExposedAsHTMLDocumentProperty()) {
-    ++mExpandoAndGeneration.generation;
+    IncrementExpandoGeneration(*this);
   }
 }
 
@@ -3185,7 +3191,7 @@ nsIDocument::AddToIdTable(Element* aElement, nsAtom* aId)
     if (nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(aElement) &&
         !entry->HasNameElement() &&
         !entry->HasIdElementExposedAsHTMLDocumentProperty()) {
-      ++mExpandoAndGeneration.generation;
+      IncrementExpandoGeneration(*this);
     }
     entry->AddIdElement(aElement);
   }
@@ -3209,7 +3215,7 @@ nsIDocument::RemoveFromIdTable(Element* aElement, nsAtom* aId)
   if (nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(aElement) &&
       !entry->HasNameElement() &&
       !entry->HasIdElementExposedAsHTMLDocumentProperty()) {
-    ++mExpandoAndGeneration.generation;
+    IncrementExpandoGeneration(*this);
   }
   if (entry->IsEmpty()) {
     mIdentifierMap.RemoveEntry(entry);
@@ -8747,7 +8753,7 @@ nsIDocument::DestroyElementMaps()
 #endif
   mStyledLinks.Clear();
   mIdentifierMap.Clear();
-  ++mExpandoAndGeneration.generation;
+  IncrementExpandoGeneration(*this);
 }
 
 void
