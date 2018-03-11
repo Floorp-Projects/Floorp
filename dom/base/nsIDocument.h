@@ -1736,7 +1736,10 @@ public:
    * document.  Note that this may be null in some cases (eg if
    * StartDocumentLoad or Reset were never called)
    */
-  virtual nsIChannel* GetChannel() const = 0;
+  nsIChannel* GetChannel() const
+  {
+    return mChannel;
+  }
 
   /**
    * Get this document's attribute stylesheet.  May return null if
