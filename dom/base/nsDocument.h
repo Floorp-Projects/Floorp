@@ -468,8 +468,6 @@ public:
 
   void ReportUseCounters(UseCounterReportKind aKind = UseCounterReportKind::eDefault);
 
-  virtual void NotifyLayerManagerRecreated() override;
-
   bool IsSynthesized();
 
   // Check whether shadow DOM is enabled for the global of aObject.
