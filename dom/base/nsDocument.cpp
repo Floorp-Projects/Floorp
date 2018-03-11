@@ -1494,6 +1494,8 @@ nsIDocument::nsIDocument()
     mDOMInteractiveSet(false),
     mDOMCompleteSet(false),
     mAutoFocusFired(false),
+    mScrolledToRefAlready(false),
+    mChangeScrollPosWhenScrollingToRef(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mPendingFullscreenRequests(0),
     mCompatMode(eCompatibility_FullStandards),
@@ -1557,8 +1559,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mOnloadBlockCount(0)
   , mAsyncOnloadBlockCount(0)
   , mPreloadPictureDepth(0)
-  , mScrolledToRefAlready(0)
-  , mChangeScrollPosWhenScrollingToRef(0)
   , mValidWidth(false)
   , mValidHeight(false)
   , mAutoSize(false)
@@ -9434,7 +9434,7 @@ nsIDocument::TriggerAutoFocus()
 }
 
 void
-nsDocument::SetScrollToRef(nsIURI *aDocumentURI)
+nsIDocument::SetScrollToRef(nsIURI* aDocumentURI)
 {
   if (!aDocumentURI) {
     return;
@@ -9466,7 +9466,7 @@ nsDocument::SetScrollToRef(nsIURI *aDocumentURI)
 }
 
 void
-nsDocument::ScrollToRef()
+nsIDocument::ScrollToRef()
 {
   if (mScrolledToRefAlready) {
     nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -9523,18 +9523,6 @@ nsDocument::ScrollToRef()
       mScrolledToRefAlready = true;
     }
   }
-}
-
-void
-nsDocument::ResetScrolledToRefAlready()
-{
-  mScrolledToRefAlready = false;
-}
-
-void
-nsDocument::SetChangeScrollPosWhenScrollingToRef(bool aValue)
-{
-  mChangeScrollPosWhenScrollingToRef = aValue;
 }
 
 void
