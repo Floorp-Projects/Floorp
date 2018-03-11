@@ -1180,11 +1180,10 @@ public:
    * method is responsible for calling BeginObservingDocument() on the
    * presshell if the presshell should observe document mutations.
    */
-  virtual already_AddRefed<nsIPresShell> CreateShell(
-      nsPresContext* aContext,
-      nsViewManager* aViewManager,
-      mozilla::StyleSetHandle aStyleSet) = 0;
-  virtual void DeleteShell() = 0;
+  already_AddRefed<nsIPresShell> CreateShell(nsPresContext* aContext,
+                                             nsViewManager* aViewManager,
+                                             mozilla::StyleSetHandle aStyleSet);
+  void DeleteShell();
 
   nsIPresShell* GetShell() const
   {
