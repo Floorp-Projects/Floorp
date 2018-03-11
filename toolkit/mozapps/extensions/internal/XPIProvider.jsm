@@ -4929,6 +4929,10 @@ AddonInternal.prototype = {
     return this.signedState > AddonManager.SIGNEDSTATE_MISSING;
   },
 
+  get unpack() {
+    return this.type === "dictionary";
+  },
+
   get isCompatible() {
     return this.isCompatibleWith();
   },
@@ -6537,11 +6541,6 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
   isValidAddon(aAddon) {
     if (aAddon.appDisabled) {
       logger.warn(`System add-on ${aAddon.id} isn't compatible with the application.`);
-      return false;
-    }
-
-    if (aAddon.unpack) {
-      logger.warn(`System add-on ${aAddon.id} isn't a packed add-on.`);
       return false;
     }
 

@@ -64,10 +64,7 @@ function setOldModificationTime() {
   shutdownManager();
   let extension = gProfD.clone();
   extension.append("extensions");
-  if (Services.prefs.getBoolPref("extensions.alwaysUnpack"))
-    extension.append("addon1@tests.mozilla.org");
-  else
-    extension.append("addon1@tests.mozilla.org.xpi");
+  extension.append("addon1@tests.mozilla.org.xpi");
   setExtensionModifiedTime(extension, Date.now() - MAKE_FILE_OLD_DIFFERENCE);
   startupManager(false);
 }
