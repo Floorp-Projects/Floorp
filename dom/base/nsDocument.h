@@ -180,17 +180,6 @@ public:
   virtual void
     SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) override;
 
-  /**
-   * Create a new presentation shell that will use aContext for
-   * its presentation context (presentation contexts <b>must not</b> be
-   * shared among multiple presentation shells).
-   */
-  already_AddRefed<nsIPresShell> CreateShell(nsPresContext* aContext,
-                                             nsViewManager* aViewManager,
-                                             mozilla::StyleSetHandle aStyleSet)
-    final;
-  virtual void DeleteShell() override;
-
   static bool CallerIsTrustedAboutPage(JSContext* aCx, JSObject* aObject);
   static bool IsElementAnimateEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
