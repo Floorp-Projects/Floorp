@@ -1538,6 +1538,8 @@ nsIDocument::nsIDocument()
     mHeaderData(nullptr),
     mFlashClassification(FlashClassification::Unclassified),
     mBoxObjectTable(nullptr),
+    mCurrentOrientationAngle(0),
+    mCurrentOrientationType(OrientationType::Portrait_primary),
     mServoRestyleRootDirtyBits(0),
     mThrowOnDynamicMarkupInsertionCounter(0),
     mIgnoreOpensDuringUnloadCounter(0)
@@ -1553,8 +1555,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mDelayFrameLoaderInitialization(false)
   , mSynchronousDOMContentLoaded(false)
   , mParserAborted(false)
-  , mCurrentOrientationAngle(0)
-  , mCurrentOrientationType(OrientationType::Portrait_primary)
   , mReportedUseCounters(false)
   , mXMLDeclarationBits(0)
   , mOnloadBlockCount(0)
@@ -11405,34 +11405,8 @@ nsIDocument::FullscreenEnabled(CallerType aCallerType)
   return !GetFullscreenError(this, aCallerType == CallerType::System);
 }
 
-uint16_t
-nsDocument::CurrentOrientationAngle() const
-{
-  return mCurrentOrientationAngle;
-}
-
-OrientationType
-nsDocument::CurrentOrientationType() const
-{
-  return mCurrentOrientationType;
-}
-
 void
-nsDocument::SetCurrentOrientation(mozilla::dom::OrientationType aType,
-                                  uint16_t aAngle)
-{
-  mCurrentOrientationType = aType;
-  mCurrentOrientationAngle = aAngle;
-}
-
-Promise*
-nsDocument::GetOrientationPendingPromise() const
-{
-  return mOrientationPendingPromise;
-}
-
-void
-nsDocument::SetOrientationPendingPromise(Promise* aPromise)
+nsIDocument::SetOrientationPendingPromise(Promise* aPromise)
 {
   mOrientationPendingPromise = aPromise;
 }
@@ -11624,7 +11598,7 @@ PointerLockRequest::Run()
 }
 
 void
-nsDocument::RequestPointerLock(Element* aElement, CallerType aCallerType)
+nsIDocument::RequestPointerLock(Element* aElement, CallerType aCallerType)
 {
   NS_ASSERTION(aElement,
     "Must pass non-null element to nsDocument::RequestPointerLock");
@@ -11649,7 +11623,7 @@ nsDocument::RequestPointerLock(Element* aElement, CallerType aCallerType)
 }
 
 bool
-nsDocument::SetPointerLock(Element* aElement, int aCursorStyle)
+nsIDocument::SetPointerLock(Element* aElement, int aCursorStyle)
 {
   MOZ_ASSERT(!aElement || aElement->OwnerDoc() == this,
              "We should be either unlocking pointer (aElement is nullptr), "
