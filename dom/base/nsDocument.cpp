@@ -9969,32 +9969,13 @@ nsDocument::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins)
   EnumerateSubDocuments(AllSubDocumentPluginEnum, &aPlugins);
 }
 
-nsresult
-nsDocument::AddResponsiveContent(nsIContent* aContent)
-{
-  MOZ_ASSERT(aContent);
-  MOZ_ASSERT(aContent->IsHTMLElement(nsGkAtoms::img));
-  mResponsiveContent.PutEntry(aContent);
-  return NS_OK;
-}
-
 void
-nsDocument::RemoveResponsiveContent(nsIContent* aContent)
-{
-  MOZ_ASSERT(aContent);
-  mResponsiveContent.RemoveEntry(aContent);
-}
-
-void
-nsDocument::NotifyMediaFeatureValuesChanged()
+nsIDocument::NotifyMediaFeatureValuesChanged()
 {
   for (auto iter = mResponsiveContent.ConstIter(); !iter.Done();
        iter.Next()) {
-    nsCOMPtr<nsIContent> content = iter.Get()->GetKey();
-    if (content->IsHTMLElement(nsGkAtoms::img)) {
-      auto* imageElement = static_cast<HTMLImageElement*>(content.get());
-      imageElement->MediaFeatureValuesChanged();
-    }
+    RefPtr<HTMLImageElement> imageElement = iter.Get()->GetKey();
+    imageElement->MediaFeatureValuesChanged();
   }
 }
 
