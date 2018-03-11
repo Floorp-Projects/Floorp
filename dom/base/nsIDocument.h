@@ -2785,11 +2785,13 @@ public:
    */
   Element* LookupImageElement(const nsAString& aElementId);
 
-  virtual mozilla::dom::DocumentTimeline* Timeline() = 0;
-  virtual mozilla::LinkedList<mozilla::dom::DocumentTimeline>& Timelines() = 0;
+  mozilla::dom::DocumentTimeline* Timeline();
+  mozilla::LinkedList<mozilla::dom::DocumentTimeline>& Timelines()
+  {
+    return mTimelines;
+  }
 
-  virtual void GetAnimations(
-      nsTArray<RefPtr<mozilla::dom::Animation>>& aAnimations) = 0;
+  void GetAnimations(nsTArray<RefPtr<mozilla::dom::Animation>>& aAnimations);
 
   mozilla::dom::SVGSVGElement* GetSVGRootElement() const;
 
@@ -4131,6 +4133,9 @@ protected:
 
   // Array of owning references to all children
   nsAttrAndChildArray mChildren;
+
+  RefPtr<mozilla::dom::DocumentTimeline> mDocumentTimeline;
+  mozilla::LinkedList<mozilla::dom::DocumentTimeline> mTimelines;
 
 public:
   js::ExpandoAndGeneration mExpandoAndGeneration;

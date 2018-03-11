@@ -360,13 +360,6 @@ public:
   static bool IsElementAnimateEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(mozilla::dom::CallerType aCallerType);
-  virtual mozilla::dom::DocumentTimeline* Timeline() override;
-  virtual void GetAnimations(
-      nsTArray<RefPtr<mozilla::dom::Animation>>& aAnimations) override;
-  mozilla::LinkedList<mozilla::dom::DocumentTimeline>& Timelines() override
-  {
-    return mTimelines;
-  }
 
   virtual nsIChannel* GetChannel() const override {
     return mChannel;
@@ -808,9 +801,6 @@ private:
   nsCString mScrollToRef;
   uint8_t mScrolledToRefAlready : 1;
   uint8_t mChangeScrollPosWhenScrollingToRef : 1;
-
-  RefPtr<mozilla::dom::DocumentTimeline> mDocumentTimeline;
-  mozilla::LinkedList<mozilla::dom::DocumentTimeline> mTimelines;
 
   // These member variables cache information about the viewport so we don't have to
   // recalculate it each time.

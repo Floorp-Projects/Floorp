@@ -3460,7 +3460,7 @@ nsDocument::IsWebAnimationsEnabled(CallerType aCallerType)
 }
 
 DocumentTimeline*
-nsDocument::Timeline()
+nsIDocument::Timeline()
 {
   if (!mDocumentTimeline) {
     mDocumentTimeline = new DocumentTimeline(this, TimeDuration(0));
@@ -3470,7 +3470,7 @@ nsDocument::Timeline()
 }
 
 void
-nsDocument::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
+nsIDocument::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
 {
   // Hold a strong ref for the root element since Element::GetAnimations() calls
   // FlushPendingNotifications() which may destroy the element.
