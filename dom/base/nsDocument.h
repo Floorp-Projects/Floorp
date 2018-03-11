@@ -196,10 +196,6 @@ public:
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(mozilla::dom::CallerType aCallerType);
 
-  virtual nsIChannel* GetChannel() const override {
-    return mChannel;
-  }
-
   virtual nsIChannel* GetFailedChannel() const override {
     return mFailedChannel;
   }
