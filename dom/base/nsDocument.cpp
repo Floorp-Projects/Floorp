@@ -9272,7 +9272,7 @@ nsIDocument::GetCurrentContentSink()
 }
 
 nsIDocument*
-nsDocument::GetTemplateContentsOwner()
+nsIDocument::GetTemplateContentsOwner()
 {
   if (!mTemplateContentsOwner) {
     bool hasHadScriptObject = true;
