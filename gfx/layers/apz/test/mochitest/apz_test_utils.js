@@ -197,6 +197,10 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
     function advanceSubtestExecution() {
       var test = aSubtests[testIndex];
       if (w) {
+        // Run any cleanup functions registered in the subtest
+        if (w.ApzCleanup) { // guard against the subtest not loading apz_test_utils.js
+          w.ApzCleanup.execute();
+        }
         if (typeof test.dp_suppression != 'undefined') {
           // We modified the suppression when starting the test, so now undo that.
           SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(!test.dp_suppression);
@@ -234,6 +238,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       function spawnTest(aFile) {
         w = window.open('', "_blank");
         w.subtestDone = advanceSubtestExecution;
+        w.isApzSubtest = true;
         w.SimpleTest = SimpleTest;
         w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
         w.ok = function(cond, name, diag) { return ok(cond, aFile + " | " + name, diag); };
@@ -369,7 +374,7 @@ function getSnapshot(rect) {
   if (typeof getSnapshot.chromeHelper == 'undefined') {
     // This is the first time getSnapshot is being called; do initialization
     getSnapshot.chromeHelper = SpecialPowers.loadChromeScript(parentProcessSnapshot);
-    SimpleTest.registerCleanupFunction(function() { getSnapshot.chromeHelper.destroy() });
+    ApzCleanup.register(function() { getSnapshot.chromeHelper.destroy() });
   }
 
   return getSnapshot.chromeHelper.sendSyncMessage('snapshot', JSON.stringify(rect)).toString();
@@ -556,3 +561,27 @@ function hitTestScrollbar(params) {
        scrollframeMsg + " - horizontal scrollbar scrollid");
   }
 }
+
+var ApzCleanup = {
+  _cleanups: [],
+
+  register: function(func) {
+    if (this._cleanups.length == 0) {
+      if (!window.isApzSubtest) {
+        SimpleTest.registerCleanupFunction(this.execute.bind(this));
+      } // else ApzCleanup.execute is called from runSubtestsSeriallyInFreshWindows
+    }
+    this._cleanups.push(func);
+  },
+
+  execute: function() {
+    while (this._cleanups.length > 0) {
+      var func = this._cleanups.pop();
+      try {
+        func();
+      } catch (ex) {
+        SimpleTest.ok(false, "Subtest cleanup function [" + func.toString() + "] threw exception [" + ex + "] on page [" + location.href + "]");
+      }
+    }
+  }
+};
