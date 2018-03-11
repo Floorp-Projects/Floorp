@@ -142,7 +142,7 @@ declare_args() {
   # to configure warnings.
   is_clang =
       current_os == "mac" || current_os == "ios" || current_os == "chromeos" ||
-      current_os == "fuchsia" ||
+      current_os == "fuchsia" || current_os == "freebsd" || current_os == "openbsd" ||
       (current_os == "linux" && current_cpu != "s390x" &&
        current_cpu != "s390" && current_cpu != "ppc64" && current_cpu != "ppc")
 
@@ -219,7 +219,7 @@ if (host_toolchain == "") {
   } else if (host_os == "aix") {
     host_toolchain = "//build/toolchain/aix:$host_cpu"
   } else {
-    assert(false, "Unsupported host_os: $host_os")
+    host_toolchain = "//build/toolchain/fallback:default"
   }
 }
 
@@ -261,7 +261,7 @@ if (target_os == "android") {
            target_os == "winrt_10") {
   _default_toolchain = "//build/toolchain/win:winrt_$target_cpu"
 } else {
-  assert(false, "Unsupported target_os: $target_os")
+  _default_toolchain = host_toolchain
 }
 
 # If a custom toolchain has been set in the args, set it as default. Otherwise,
@@ -374,15 +374,25 @@ if (current_os == "win" || current_os == "winrt_81" ||
   is_nacl = false
   is_posix = true
   is_win = false
-} else if (current_os == "aix") {
+} else {
+  # AIX, BSDs, Solaris, etc.
   is_android = false
   is_chromeos = false
+  is_fuchsia = false
   is_ios = false
   is_linux = false
   is_mac = false
   is_nacl = false
   is_posix = true
   is_win = false
+}
+
+# A list of BSD systems maintained by community
+if (current_os == "dragonfly" || current_os == "freebsd" ||
+    current_os == "netbsd" || current_os == "openbsd") {
+  is_bsd = true
+} else {
+  is_bsd = false
 }
 
 # =============================================================================
@@ -454,7 +464,7 @@ if (!is_ios) {
 if (!is_mac && !is_ios) {
   sources_assignment_filter += [ "*.mm" ]
 }
-if (!is_linux) {
+if (!is_linux && !is_bsd) {
   sources_assignment_filter += [
     "*_linux.h",
     "*_linux.cc",
