@@ -99,7 +99,6 @@ public class AudioFocusAgent implements Tabs.OnTabsChangedListener {
                 }
             }
         };
-        notifyMediaControlService(MediaControlService.ACTION_INIT);
     }
 
     @RobocopTarget
