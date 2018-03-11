@@ -342,12 +342,14 @@ U2F::Register(const nsAString& aAppId,
 
   uint32_t adjustedTimeoutMillis = AdjustedTimeoutMillis(opt_aTimeoutSeconds);
 
-  WebAuthnMakeCredentialInfo info(rpIdHash,
+  WebAuthnMakeCredentialInfo info(mOrigin,
+                                  rpIdHash,
                                   clientDataHash,
                                   adjustedTimeoutMillis,
                                   excludeList,
                                   extensions,
-                                  authSelection);
+                                  authSelection,
+                                  false /* RequestDirectAttestation */);
 
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(U2FTransaction(clientData, Move(AsVariant(callback))));
@@ -483,7 +485,8 @@ U2F::Sign(const nsAString& aAppId,
 
   uint32_t adjustedTimeoutMillis = AdjustedTimeoutMillis(opt_aTimeoutSeconds);
 
-  WebAuthnGetAssertionInfo info(rpIdHash,
+  WebAuthnGetAssertionInfo info(mOrigin,
+                                rpIdHash,
                                 clientDataHash,
                                 adjustedTimeoutMillis,
                                 permittedList,

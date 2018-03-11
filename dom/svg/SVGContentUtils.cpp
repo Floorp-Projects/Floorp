@@ -82,7 +82,7 @@ GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
   Float pathScale = 1.0;
 
   if (aContextPaint && aStyleSVG->StrokeDasharrayFromObject()) {
-    const FallibleTArray<gfxFloat>& dashSrc = aContextPaint->GetStrokeDashArray();
+    const FallibleTArray<Float>& dashSrc = aContextPaint->GetStrokeDashArray();
     dashArrayLength = dashSrc.Length();
     if (dashArrayLength <= 0) {
       return eContinuousStroke;

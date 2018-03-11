@@ -157,7 +157,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitMaybeCopyElementsForWrite(LMaybeCopyElementsForWrite* lir);
     void visitGuardShape(LGuardShape* guard);
     void visitGuardObjectGroup(LGuardObjectGroup* guard);
-    void visitGuardClass(LGuardClass* guard);
     void visitGuardObjectIdentity(LGuardObjectIdentity* guard);
     void visitGuardReceiverPolymorphic(LGuardReceiverPolymorphic* lir);
     void visitGuardUnboxedExpando(LGuardUnboxedExpando* lir);
@@ -262,11 +261,11 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitLoadFixedSlotT(LLoadFixedSlotT* ins);
     void visitStoreFixedSlotV(LStoreFixedSlotV* ins);
     void visitStoreFixedSlotT(LStoreFixedSlotT* ins);
-    void emitGetPropertyPolymorphic(LInstruction* lir, Register obj,
+    void emitGetPropertyPolymorphic(LInstruction* lir, Register obj, Register expandoScratch,
                                     Register scratch, const TypedOrValueRegister& output);
     void visitGetPropertyPolymorphicV(LGetPropertyPolymorphicV* ins);
     void visitGetPropertyPolymorphicT(LGetPropertyPolymorphicT* ins);
-    void emitSetPropertyPolymorphic(LInstruction* lir, Register obj,
+    void emitSetPropertyPolymorphic(LInstruction* lir, Register obj, Register expandoScratch,
                                     Register scratch, const ConstantOrRegister& value);
     void visitSetPropertyPolymorphicV(LSetPropertyPolymorphicV* ins);
     void visitSetPropertyPolymorphicT(LSetPropertyPolymorphicT* ins);

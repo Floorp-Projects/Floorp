@@ -5892,6 +5892,7 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(SIMULATOR_ALWAYS_INTERRUPT, "simulator.always-interrupt")      \
     Register(SPECTRE_INDEX_MASKING, "spectre.index-masking")                \
     Register(SPECTRE_OBJECT_MITIGATIONS_BARRIERS, "spectre.object-mitigations.barriers") \
+    Register(SPECTRE_OBJECT_MITIGATIONS_MISC, "spectre.object-mitigations.misc") \
     Register(SPECTRE_STRING_MITIGATIONS, "spectre.string-mitigations")      \
     Register(SPECTRE_VALUE_MASKING, "spectre.value-masking")                \
     Register(SPECTRE_JIT_TO_CXX_CALLS, "spectre.jit-to-C++-calls")          \
