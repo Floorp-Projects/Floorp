@@ -8,6 +8,8 @@ const HOSTS = new Set([
 
 const server = createHttpServer({hosts: HOSTS});
 
+const FETCH_ORIGIN = "http://example.com/dummy";
+
 server.registerPathHandler("/redirect", (request, response) => {
   let params = new URLSearchParams(request.queryString);
   response.setStatusLine(request.httpVersion, 302, "Moved Temporarily");
@@ -21,11 +23,7 @@ server.registerPathHandler("/dummy", (request, response) => {
   response.write("ok");
 });
 
-Cu.importGlobalProperties(["fetch"]);
-
 add_task(async function() {
-  const {fetch} = Cu.Sandbox("http://example.com/", {wantGlobalProperties: ["fetch"]});
-
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       let pending = [];
@@ -88,8 +86,7 @@ add_task(async function() {
     ["http://example.com/redirect?redirect_uri=http://example.net/dummy", "ok"],
     ["http://example.net/redirect?redirect_uri=http://example.com/dummy", "http://example.com/dummy"],
   ].map(async ([url, expectedResponse]) => {
-    let resp = await fetch(url);
-    let text = await resp.text();
+    let text = await ExtensionTestUtils.fetch(FETCH_ORIGIN, url);
     equal(text, expectedResponse, `Expected response for ${url}`);
   });
 
