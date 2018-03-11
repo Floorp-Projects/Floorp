@@ -12399,7 +12399,7 @@ NotifyLayerManagerRecreatedCallback(nsIDocument* aDocument, void* aData)
 }
 
 void
-nsDocument::NotifyLayerManagerRecreated()
+nsIDocument::NotifyLayerManagerRecreated()
 {
   EnumerateActivityObservers(NotifyActivityChanged, nullptr);
   EnumerateSubDocuments(NotifyLayerManagerRecreatedCallback, nullptr);
