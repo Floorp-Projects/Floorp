@@ -18,10 +18,10 @@ const { changeView } = require("devtools/client/memory/actions/view");
 // trigger assertion failures.
 EXPECTED_DTU_ASSERT_FAILURE_COUNT = 2;
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
@@ -32,7 +32,7 @@ add_task(function* () {
   dispatch(takeSnapshot(front, heapWorker));
   dispatch(takeSnapshot(front, heapWorker));
 
-  yield waitUntilSnapshotState(store,
+  await waitUntilSnapshotState(store,
         [snapshotState.SAVED, snapshotState.SAVED, snapshotState.SAVED]);
   dispatch(takeSnapshot(front));
 
@@ -97,5 +97,5 @@ add_task(function* () {
   ok(threw, "Can't select more than two snapshots for diffing");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

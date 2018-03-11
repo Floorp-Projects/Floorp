@@ -5,16 +5,16 @@
  * Tests if the stepping buttons in the call list toolbar work as advertised.
  */
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
-  yield reload(target);
+  await reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
-  yield promise.all([recordingFinished, callListPopulated]);
+  await promise.all([recordingFinished, callListPopulated]);
 
   checkSteppingButtons(1, 1, 1, 1);
   is(CallsListView.selectedIndex, -1,
@@ -71,6 +71,6 @@ function* ifTestingSupported() {
     }
   }
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

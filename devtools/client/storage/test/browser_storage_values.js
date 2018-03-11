@@ -147,8 +147,8 @@ const testCases = [
   ], true]
 ];
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-complex-values.html");
+add_task(async function () {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-complex-values.html");
 
   gUI.tree.expandAll();
 
@@ -156,14 +156,14 @@ add_task(function* () {
     info("clicking for item " + item);
 
     if (Array.isArray(item[0])) {
-      yield selectTreeItem(item[0]);
+      await selectTreeItem(item[0]);
       continue;
     } else if (item[0]) {
-      yield selectTableItem(item[0]);
+      await selectTableItem(item[0]);
     }
 
-    yield findVariableViewProperties(item[1], item[2]);
+    await findVariableViewProperties(item[1], item[2]);
   }
 
-  yield finishTests();
+  await finishTests();
 });

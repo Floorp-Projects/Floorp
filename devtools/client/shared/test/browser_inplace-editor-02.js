@@ -9,12 +9,12 @@ loadHelperScript("helper_inplace_editor.js");
 
 // Test that the trimOutput option for the inplace editor works correctly.
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,inline editor tests");
-  let [host, , doc] = yield createHost();
+add_task(async function () {
+  await addTab("data:text/html;charset=utf-8,inline editor tests");
+  let [host, , doc] = await createHost();
 
-  yield testNonTrimmed(doc);
-  yield testTrimmed(doc);
+  await testNonTrimmed(doc);
+  await testTrimmed(doc);
 
   host.destroy();
   gBrowser.removeCurrentTab();

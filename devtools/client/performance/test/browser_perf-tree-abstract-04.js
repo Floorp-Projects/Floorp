@@ -10,11 +10,11 @@ const { appendAndWaitForPaint } = require("devtools/client/performance/test/help
 const { synthesizeCustomTreeClass } = require("devtools/client/performance/test/helpers/synth-utils");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function* () {
+add_task(async function () {
   let { MyCustomTreeItem, myDataSrc } = synthesizeCustomTreeClass();
 
   let container = document.createElement("vbox");
-  yield appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
+  await appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
 
   // Populate the tree and test the root item...
 
@@ -26,7 +26,7 @@ add_task(function* () {
 
   let receivedFocusEvent = once(treeRoot, "focus");
   dblclick(treeRoot.target.querySelector(".arrow"));
-  yield receivedFocusEvent;
+  await receivedFocusEvent;
 
   is(treeRoot.expanded, originalTreeRootExpandedState,
     "A double click on the arrow was ignored.");

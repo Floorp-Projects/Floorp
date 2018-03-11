@@ -14,11 +14,11 @@ Test that we show a message when the census results are empty.
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = Task.async(function* () {
+         window.onload = async function () {
            try {
              const container = document.getElementById("container");
 
-             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, {
                    report: {
@@ -79,7 +79,7 @@ Test that we show a message when the census results are empty.
                state: censusState.SAVED,
              };
 
-             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, emptyCensus),
                }),
@@ -91,7 +91,7 @@ Test that we show a message when the census results are empty.
 
              // Empty Diffing Report
 
-             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                view: { state: viewState.DIFFING, },
                diffing: {
                  firstSnapshotId: 1,
@@ -108,7 +108,7 @@ Test that we show a message when the census results are empty.
 
              // Empty Filtered Census
 
-             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, immutableUpdate(emptyCensus, {
                    filter: "zzzz"
@@ -125,7 +125,7 @@ Test that we show a message when the census results are empty.
            } finally {
              SimpleTest.finish();
            }
-         });
+         };
         </script>
     </pre>
 </body>

@@ -17,7 +17,6 @@ var { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 var { TargetFactory } = require("devtools/client/framework/target");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
-var { Task } = require("devtools/shared/task");
 var { expectState } = require("devtools/server/actors/common");
 var HeapSnapshotFileUtils = require("devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 var HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
@@ -50,28 +49,28 @@ function StubbedMemoryFront() {
   this.dbg = initDebugger();
 }
 
-StubbedMemoryFront.prototype.attach = Task.async(function* () {
+StubbedMemoryFront.prototype.attach = async function () {
   this.state = "attached";
-});
+};
 
-StubbedMemoryFront.prototype.detach = Task.async(function* () {
+StubbedMemoryFront.prototype.detach = async function () {
   this.state = "detached";
-});
+};
 
 StubbedMemoryFront.prototype.saveHeapSnapshot = expectState("attached",
-  Task.async(function* () {
+  async function () {
     return ChromeUtils.saveHeapSnapshot({ runtime: true });
-  }), "saveHeapSnapshot");
+  }, "saveHeapSnapshot");
 
 StubbedMemoryFront.prototype.startRecordingAllocations = expectState("attached",
-  Task.async(function* () {
+  async function () {
     this.recordingAllocations = true;
-  }));
+  });
 
 StubbedMemoryFront.prototype.stopRecordingAllocations = expectState("attached",
-  Task.async(function* () {
+  async function () {
     this.recordingAllocations = false;
-  }));
+  });
 
 function waitUntilSnapshotState(store, expected) {
   let predicate = () => {
@@ -120,11 +119,11 @@ function waitUntilCensusState(store, getCensus, expected) {
   return waitUntilState(store, predicate);
 }
 
-function* createTempFile() {
+async function createTempFile() {
   let file = FileUtils.getFile("TmpD", ["tmp.fxsnapshot"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   let destPath = file.path;
-  let stat = yield OS.File.stat(destPath);
+  let stat = await OS.File.stat(destPath);
   ok(stat.size === 0, "new file is 0 bytes at start");
   return destPath;
 }

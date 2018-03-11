@@ -9,28 +9,28 @@
 const TEST_DATA = [{ delta: 100, value: 60 }, { delta: 200, value: 1 }];
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function () {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
 });
 
-function* performTest() {
-  let [host,, doc] = yield createHost();
+async function performTest() {
+  let [host,, doc] = await createHost();
 
-  yield testGraph(doc.body, { avg: false });
-  yield testGraph(doc.body, { min: false });
-  yield testGraph(doc.body, { max: false });
-  yield testGraph(doc.body, { min: false, max: false, avg: false });
-  yield testGraph(doc.body, {});
+  await testGraph(doc.body, { avg: false });
+  await testGraph(doc.body, { min: false });
+  await testGraph(doc.body, { max: false });
+  await testGraph(doc.body, { min: false, max: false, avg: false });
+  await testGraph(doc.body, {});
 
   host.destroy();
 }
 
-function* testGraph(parent, options) {
+async function testGraph(parent, options) {
   options.metric = "fps";
   let graph = new LineGraphWidget(parent, options);
-  yield graph.setDataWhenReady(TEST_DATA);
+  await graph.setDataWhenReady(TEST_DATA);
   let shouldGutterShow = options.min === false && options.max === false;
 
   is(graph._gutter.hidden, shouldGutterShow,
@@ -49,5 +49,5 @@ function* testGraph(parent, options) {
   is(graph._avgGutterLine.hidden, options.avg === false,
     `The avg gutter should ${options.avg === false ? "not " : ""}be shown`);
 
-  yield graph.destroy();
+  await graph.destroy();
 }

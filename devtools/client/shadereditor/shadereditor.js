@@ -8,6 +8,7 @@ const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {SideMenuWidget} = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
+const {Task} = require("devtools/shared/task");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const Tooltip = require("devtools/client/shared/widgets/tooltip/Tooltip");
@@ -16,7 +17,6 @@ const {LocalizationHelper} = require("devtools/shared/l10n");
 const {extend} = require("devtools/shared/extend");
 const {WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
-const {Task} = require("devtools/shared/task");
 
 // Use privileged promise in panel documents to prevent having them to freeze
 // during toolbox destruction. See bug 1402779.
@@ -405,14 +405,14 @@ var ShadersEditorsView = {
       editor.clearHistory();
     }
 
-    return Task.spawn(function* () {
-      yield view._toggleListeners("off");
-      yield promise.all([
+    return (async function () {
+      await view._toggleListeners("off");
+      await promise.all([
         view._getEditor("vs").then(e => setTextAndClearHistory(e, sources.vs)),
         view._getEditor("fs").then(e => setTextAndClearHistory(e, sources.fs))
       ]);
-      yield view._toggleListeners("on");
-    }).then(() => window.emit(EVENTS.SOURCES_SHOWN, sources));
+      await view._toggleListeners("on");
+    })().then(() => window.emit(EVENTS.SOURCES_SHOWN, sources));
   },
 
   /**
@@ -498,17 +498,17 @@ var ShadersEditorsView = {
    *        The corresponding shader type for the focused editor (e.g. "vs").
    */
   _doCompile: function (type) {
-    Task.spawn(function* () {
-      let editor = yield this._getEditor(type);
-      let shaderActor = yield ShadersListView.selectedAttachment[type];
+    (async function () {
+      let editor = await this._getEditor(type);
+      let shaderActor = await ShadersListView.selectedAttachment[type];
 
       try {
-        yield shaderActor.compile(editor.getText());
+        await shaderActor.compile(editor.getText());
         this._onSuccessfulCompilation();
       } catch (e) {
         this._onFailedCompilation(type, editor, e);
       }
-    }.bind(this));
+    }.bind(this))();
   },
 
   /**

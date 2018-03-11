@@ -20,8 +20,8 @@
 
         let {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-        Task.spawn(function* () {
-            let win = yield openWebIDE();
+        (async function () {
+            let win = await openWebIDE();
             let winProject = getProjectWindow(win);
             let AppManager = win.AppManager;
 
@@ -34,9 +34,9 @@
 
             let onValidated = waitForUpdate(win, "project-validated");
             let onDetails = waitForUpdate(win, "details");
-            yield winProject.projectList.importPackagedApp(packagedAppLocation);
-            yield onValidated;
-            yield onDetails;
+            await winProject.projectList.importPackagedApp(packagedAppLocation);
+            await onValidated;
+            await onDetails;
 
             let project = win.AppManager.selectedProject;
 
@@ -50,12 +50,12 @@
             project.manifest.name = "xxx";
 
             // Write to disk
-            yield AppManager.writeManifest(project);
+            await AppManager.writeManifest(project);
 
             // Read file
             let manifestPath = OS.Path.join(packagedAppLocation, "manifest.webapp");
             let Decoder = new TextDecoder();
-            let data = yield OS.File.read(manifestPath);
+            let data = await OS.File.read(manifestPath);
             data = new TextDecoder().decode(data);
             let json = JSON.parse(data);
             is(json.name, "xxx", "manifest written on disc");
@@ -64,11 +64,11 @@
             delete json.name;
             let Encoder = new TextEncoder();
             data = Encoder.encode(JSON.stringify(json));
-            yield OS.File.writeAtomic(manifestPath, data , {tmpPath: manifestPath + ".tmp"});
+            await OS.File.writeAtomic(manifestPath, data , {tmpPath: manifestPath + ".tmp"});
 
             // Trigger validation
-            yield AppManager.validateAndUpdateProject(AppManager.selectedProject);
-            yield nextTick();
+            await AppManager.validateAndUpdateProject(AppManager.selectedProject);
+            await nextTick();
 
             ok(!("name" in project.manifest), "manifest has been updated");
             is(project.name, "--", "Placeholder is used for display name");
@@ -76,22 +76,22 @@
 
             // Make the manifest valid on disk
             project.manifest.name = originalName;
-            yield AppManager.writeManifest(project);
+            await AppManager.writeManifest(project);
 
             // Trigger validation
-            yield AppManager.validateAndUpdateProject(AppManager.selectedProject);
-            yield nextTick();
+            await AppManager.validateAndUpdateProject(AppManager.selectedProject);
+            await nextTick();
 
             ok("name" in project.manifest, "manifest includes name");
             is(project.name, originalName, "Display name uses original manifest name");
             ok(isProjectMarkedAsValid(), "project is marked as valid");
 
-            yield closeWebIDE(win);
+            await closeWebIDE(win);
 
-            yield removeAllProjects();
+            await removeAllProjects();
 
             SimpleTest.finish();
-        });
+        })();
       }
     </script>
   </body>

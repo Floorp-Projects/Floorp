@@ -8,12 +8,12 @@
  * of its loop, when the recording starts before the rAFs start.
  */
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(RAF_BEGIN_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(RAF_BEGIN_URL);
   let { window, EVENTS, gFront, SnapshotsListView } = panel.panelWin;
   loadFrameScriptUtils();
 
-  yield reload(target);
+  await reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
@@ -21,14 +21,14 @@ function* ifTestingSupported() {
   // Wait until after the recording started to trigger the content.
   // Use the gFront method rather than the SNAPSHOT_RECORDING_STARTED event
   // which triggers before the underlying actor call
-  yield waitUntil(function* () { return !(yield gFront.isRecording()); });
+  await waitUntil(async function () { return !(await gFront.isRecording()); });
 
   // Start animation in content
   evalInDebuggee("start();");
 
-  yield recordingFinished;
+  await recordingFinished;
   ok(true, "Finished recording a snapshot of the animation loop.");
 
-  yield removeTab(target.tab);
+  await removeTab(target.tab);
   finish();
 }

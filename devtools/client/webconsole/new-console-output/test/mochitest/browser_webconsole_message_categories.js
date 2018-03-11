@@ -30,7 +30,7 @@ const TESTS = [
     category: "HTML",
     matchString: "multipart/form-data",
     onload: function () {
-      ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+      ContentTask.spawn(gBrowser.selectedBrowser, null, async function () {
         let form = content.document.querySelector("form");
         form.submit();
       });

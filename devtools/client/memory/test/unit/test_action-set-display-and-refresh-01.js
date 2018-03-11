@@ -18,10 +18,10 @@ const { changeView } = require("devtools/client/memory/actions/view");
 // We test setting an invalid display, which triggers an assertion failure.
 EXPECTED_DTU_ASSERT_FAILURE_COUNT = 1;
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   let { getState, dispatch } = store;
 
@@ -38,7 +38,7 @@ add_task(function* () {
   // Test invalid displays
   ok(getState().errors.length === 0, "No error actions in the queue.");
   dispatch(setCensusDisplayAndRefresh(heapWorker, {}));
-  yield waitUntilState(store, () => getState().errors.length === 1);
+  await waitUntilState(store, () => getState().errors.length === 1);
   ok(true, "Emits an error action when passing in an invalid display object");
 
   equal(getState().censusDisplay.breakdown.by, "allocationStack",
@@ -46,7 +46,7 @@ add_task(function* () {
 
   // Test new snapshots
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVED]);
 
   equal(getState().snapshots[0].census.display, censusDisplays.allocationStack,
@@ -54,10 +54,10 @@ add_task(function* () {
 
   // Updates when changing display during `SAVING`
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVED, censusState.SAVING]);
   dispatch(setCensusDisplayAndRefresh(heapWorker, censusDisplays.coarseType));
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVED, censusState.SAVED]);
   equal(getState().snapshots[1].census.display, censusDisplays.coarseType,
         "Changing display while saving a snapshot results " +
@@ -65,10 +65,10 @@ add_task(function* () {
 
   // Updates when changing display during `SAVING_CENSUS`
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVED, censusState.SAVED, censusState.SAVING]);
   dispatch(setCensusDisplayAndRefresh(heapWorker, censusDisplays.allocationStack));
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVED, censusState.SAVED, censusState.SAVED]);
   equal(getState().snapshots[2].census.display, censusDisplays.allocationStack,
         "Display can be changed while saving census, stores updated display in snapshot");
@@ -76,16 +76,16 @@ add_task(function* () {
   // Updates census on currently selected snapshot when changing display
   ok(getState().snapshots[2].selected, "Third snapshot currently selected");
   dispatch(setCensusDisplayAndRefresh(heapWorker, censusDisplays.coarseType));
-  yield waitUntilState(store,
+  await waitUntilState(store,
                        state => state.snapshots[2].census.state === censusState.SAVING);
-  yield waitUntilState(store,
+  await waitUntilState(store,
                        state => state.snapshots[2].census.state === censusState.SAVED);
   equal(getState().snapshots[2].census.display, censusDisplays.coarseType,
         "Snapshot census updated when changing displays " +
         "after already generating one census");
 
   dispatch(setCensusDisplayAndRefresh(heapWorker, censusDisplays.allocationStack));
-  yield waitUntilState(store,
+  await waitUntilState(store,
                        state => state.snapshots[2].census.state === censusState.SAVED);
   equal(getState().snapshots[2].census.display, censusDisplays.allocationStack,
         "Snapshot census updated when changing displays " +
@@ -99,9 +99,9 @@ add_task(function* () {
 
   // Updates to current display when switching to stale snapshot.
   dispatch(selectSnapshotAndRefresh(heapWorker, getState().snapshots[1].id));
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVED, censusState.SAVING, censusState.SAVED]);
-  yield waitUntilCensusState(store, snapshot => snapshot.census,
+  await waitUntilCensusState(store, snapshot => snapshot.census,
                              [censusState.SAVED, censusState.SAVED, censusState.SAVED]);
 
   ok(getState().snapshots[1].selected, "Second snapshot selected currently");
@@ -109,5 +109,5 @@ add_task(function* () {
         "Second snapshot using `allocationStack` display and updated to correct display");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

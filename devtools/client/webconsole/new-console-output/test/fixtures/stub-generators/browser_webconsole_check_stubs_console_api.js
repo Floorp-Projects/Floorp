@@ -7,11 +7,11 @@
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-add_task(function* () {
-  let generatedStubs = yield generateConsoleApiStubs();
+add_task(async function () {
+  let generatedStubs = await generateConsoleApiStubs();
 
   let repoStubFilePath = getTestFilePath("../stubs/consoleApi.js");
-  let repoStubFileContent = yield OS.File.read(repoStubFilePath, { encoding: "utf-8" });
+  let repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
 
   if (generatedStubs != repoStubFileContent) {
     ok(false, "The consoleApi stubs file needs to be updated by running " +

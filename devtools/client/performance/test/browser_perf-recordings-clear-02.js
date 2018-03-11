@@ -13,8 +13,8 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { times, once } = require("devtools/client/performance/test/helpers/event-utils");
 const { getRecordingsCount } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(function* () {
-  let { panel } = yield initPanelInNewTab({
+add_task(async function () {
+  let { panel } = await initPanelInNewTab({
     tool: "performance",
     url: SIMPLE_URL,
     win: window
@@ -22,8 +22,8 @@ add_task(function* () {
 
   let { EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   is(getRecordingsCount(panel), 1,
     "The recordings list should have one recording.");
@@ -32,7 +32,7 @@ add_task(function* () {
   isnot(PerformanceController.getCurrentRecording(), null,
     "There should be a current recording.");
 
-  yield startRecording(panel);
+  await startRecording(panel);
 
   is(getRecordingsCount(panel), 2,
     "The recordings list should have two recordings.");
@@ -48,8 +48,8 @@ add_task(function* () {
 
   PerformanceController.clearRecordings();
 
-  yield recordingDeleted;
-  yield recordingStopped;
+  await recordingDeleted;
+  await recordingStopped;
 
   is(getRecordingsCount(panel), 0,
     "The recordings list should be empty.");
@@ -59,11 +59,11 @@ add_task(function* () {
     "There should be no current recording.");
 
   // Bug 1169146: Try another recording after clearing mid-recording.
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   is(getRecordingsCount(panel), 1,
     "The recordings list should have one recording.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

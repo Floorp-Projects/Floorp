@@ -7,15 +7,15 @@
 
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function () {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
   finish();
 });
 
-function* performTest() {
-  let [host,, doc] = yield createHost();
+async function performTest() {
+  let [host,, doc] = await createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
@@ -26,12 +26,12 @@ function* performTest() {
     readyEventEmitted = true;
   });
 
-  yield graph.ready();
+  await graph.ready();
   ok(readyEventEmitted, "The 'ready' event should have been emitted");
 
   testGraph(host, graph);
 
-  yield graph.destroy();
+  await graph.destroy();
   host.destroy();
 }
 

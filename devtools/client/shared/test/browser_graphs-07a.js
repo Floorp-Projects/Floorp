@@ -29,23 +29,23 @@ const TEST_DATA = [
 ];
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function () {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
 });
 
-function* performTest() {
-  let [host,, doc] = yield createHost();
+async function performTest() {
+  let [host,, doc] = await createHost();
   let graph = new LineGraphWidget(doc.body, "fps");
-  yield graph.once("ready");
+  await graph.once("ready");
   testGraph(graph, normalDragStop);
-  yield graph.destroy();
+  await graph.destroy();
 
   let graph2 = new LineGraphWidget(doc.body, "fps");
-  yield graph2.once("ready");
+  await graph2.once("ready");
   testGraph(graph2, buggyDragStop);
-  yield graph2.destroy();
+  await graph2.destroy();
 
   host.destroy();
 }

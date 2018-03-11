@@ -14,20 +14,20 @@ const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapsh
 const { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   let { getState, dispatch } = store;
 
   dispatch(changeView(viewState.CENSUS));
 
-  yield dispatch(setCensusDisplayAndRefresh(heapWorker,
+  await dispatch(setCensusDisplayAndRefresh(heapWorker,
                                             censusDisplays.allocationStack));
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
+  await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
   ok(!getState().snapshots[0].census.display.inverted, "Snapshot is not inverted");
 
@@ -46,8 +46,8 @@ add_task(function* () {
   dispatch(setCensusDisplayAndRefresh(heapWorker,
                                       censusDisplays.invertedAllocationStack));
 
-  yield waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
-  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
+  await waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
+  await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
   ok(getState().snapshots[0].census.display.inverted, "Snapshot is inverted");
 
   result = getSnapshotTotals(getState().snapshots[0].census);

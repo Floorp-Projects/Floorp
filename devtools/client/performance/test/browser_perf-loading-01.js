@@ -13,15 +13,15 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { getSelectedRecording, getDurationLabelText } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function () {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, L10N, PerformanceController } = panel.panelWin;
 
-  yield startRecording(panel);
+  await startRecording(panel);
 
   is(getDurationLabelText(panel, 0),
     L10N.getStr("recordingsList.recordingLabel"),
@@ -35,18 +35,18 @@ add_task(function* () {
   });
   let everythingStopped = stopRecording(panel);
 
-  yield recordingStopping;
+  await recordingStopping;
   is(getDurationLabelText(panel, 0),
     L10N.getStr("recordingsList.loadingLabel"),
     "The duration node should show the 'loading' message while stopping");
 
-  yield recordingStopped;
+  await recordingStopped;
   const selected = getSelectedRecording(panel);
   is(getDurationLabelText(panel, 0),
     L10N.getFormatStr("recordingsList.durationLabel",
     selected.getDuration().toFixed(0)),
     "The duration node should show the duration after the record has stopped");
 
-  yield everythingStopped;
-  yield teardownToolboxAndRemoveTab(panel);
+  await everythingStopped;
+  await teardownToolboxAndRemoveTab(panel);
 });

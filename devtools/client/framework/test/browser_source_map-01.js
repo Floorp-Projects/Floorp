@@ -20,26 +20,26 @@ const PAGE_URL = `${URL_ROOT}doc_empty-tab-01.html`;
 const JS_URL = `${URL_ROOT}code_binary_search.js`;
 const COFFEE_URL = `${URL_ROOT}code_binary_search.coffee`;
 
-add_task(function* () {
-  yield pushPref("devtools.debugger.new-debugger-frontend", true);
+add_task(async function () {
+  await pushPref("devtools.debugger.new-debugger-frontend", true);
 
-  const toolbox = yield openNewTabAndToolbox(PAGE_URL, "jsdebugger");
+  const toolbox = await openNewTabAndToolbox(PAGE_URL, "jsdebugger");
   const service = toolbox.sourceMapURLService;
 
   // Inject JS script
   let sourceSeen = waitForSourceLoad(toolbox, JS_URL);
-  yield createScript(JS_URL);
-  yield sourceSeen;
+  await createScript(JS_URL);
+  await sourceSeen;
 
   let loc1 = { url: JS_URL, line: 6 };
-  let newLoc1 = yield service.originalPositionFor(loc1.url, loc1.line, 4);
+  let newLoc1 = await service.originalPositionFor(loc1.url, loc1.line, 4);
   checkLoc1(loc1, newLoc1);
 
   let loc2 = { url: JS_URL, line: 8, column: 3 };
-  let newLoc2 = yield service.originalPositionFor(loc2.url, loc2.line, loc2.column);
+  let newLoc2 = await service.originalPositionFor(loc2.url, loc2.line, loc2.column);
   checkLoc2(loc2, newLoc2);
 
-  yield toolbox.destroy();
+  await toolbox.destroy();
   gBrowser.removeCurrentTab();
   finish();
 });

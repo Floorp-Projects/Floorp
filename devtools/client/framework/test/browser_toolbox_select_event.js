@@ -9,50 +9,50 @@ const PAGE_URL = "data:text/html;charset=utf-8,test select events";
 
 requestLongerTimeout(2);
 
-add_task(function* () {
-  let tab = yield addTab(PAGE_URL);
+add_task(async function () {
+  let tab = await addTab(PAGE_URL);
 
-  let toolbox = yield openToolboxForTab(tab, "webconsole", "bottom");
-  yield testSelectEvent("inspector");
-  yield testSelectEvent("webconsole");
-  yield testSelectEvent("styleeditor");
-  yield testSelectEvent("inspector");
-  yield testSelectEvent("webconsole");
-  yield testSelectEvent("styleeditor");
+  let toolbox = await openToolboxForTab(tab, "webconsole", "bottom");
+  await testSelectEvent("inspector");
+  await testSelectEvent("webconsole");
+  await testSelectEvent("styleeditor");
+  await testSelectEvent("inspector");
+  await testSelectEvent("webconsole");
+  await testSelectEvent("styleeditor");
 
-  yield testToolSelectEvent("inspector");
-  yield testToolSelectEvent("webconsole");
-  yield testToolSelectEvent("styleeditor");
-  yield toolbox.destroy();
+  await testToolSelectEvent("inspector");
+  await testToolSelectEvent("webconsole");
+  await testToolSelectEvent("styleeditor");
+  await toolbox.destroy();
 
-  toolbox = yield openToolboxForTab(tab, "webconsole", "side");
-  yield testSelectEvent("inspector");
-  yield testSelectEvent("webconsole");
-  yield testSelectEvent("styleeditor");
-  yield testSelectEvent("inspector");
-  yield testSelectEvent("webconsole");
-  yield testSelectEvent("styleeditor");
-  yield toolbox.destroy();
+  toolbox = await openToolboxForTab(tab, "webconsole", "side");
+  await testSelectEvent("inspector");
+  await testSelectEvent("webconsole");
+  await testSelectEvent("styleeditor");
+  await testSelectEvent("inspector");
+  await testSelectEvent("webconsole");
+  await testSelectEvent("styleeditor");
+  await toolbox.destroy();
 
-  toolbox = yield openToolboxForTab(tab, "webconsole", "window");
-  yield testSelectEvent("inspector");
-  yield testSelectEvent("webconsole");
-  yield testSelectEvent("styleeditor");
-  yield testSelectEvent("inspector");
-  yield testSelectEvent("webconsole");
-  yield testSelectEvent("styleeditor");
-  yield toolbox.destroy();
+  toolbox = await openToolboxForTab(tab, "webconsole", "window");
+  await testSelectEvent("inspector");
+  await testSelectEvent("webconsole");
+  await testSelectEvent("styleeditor");
+  await testSelectEvent("inspector");
+  await testSelectEvent("webconsole");
+  await testSelectEvent("styleeditor");
+  await toolbox.destroy();
 
-  yield testSelectToolRace();
+  await testSelectToolRace();
 
   /**
    * Assert that selecting the given toolId raises a select event
    * @param {toolId} Id of the tool to test
    */
-  function* testSelectEvent(toolId) {
+  async function testSelectEvent(toolId) {
     let onSelect = toolbox.once("select");
     toolbox.selectTool(toolId);
-    let id = yield onSelect;
+    let id = await onSelect;
     is(id, toolId, toolId + " selected");
   }
 
@@ -61,18 +61,18 @@ add_task(function* () {
    * selected event
    * @param {toolId} Id of the tool to test
    */
-  function* testToolSelectEvent(toolId) {
+  async function testToolSelectEvent(toolId) {
     let onSelected = toolbox.once(toolId + "-selected");
     toolbox.selectTool(toolId);
-    yield onSelected;
+    await onSelected;
     is(toolbox.currentToolId, toolId, toolId + " tool selected");
   }
 
   /**
    * Assert that two calls to selectTool won't race
    */
-  function* testSelectToolRace() {
-    let toolbox = yield openToolboxForTab(tab, "webconsole");
+  async function testSelectToolRace() {
+    let toolbox = await openToolboxForTab(tab, "webconsole");
     let selected = false;
     let onSelect = (event, id) => {
       if (selected) {
@@ -92,10 +92,10 @@ add_task(function* () {
     };
     p1.then(checkSelectToolResolution);
     p2.then(checkSelectToolResolution);
-    yield p1;
-    yield p2;
+    await p1;
+    await p2;
 
-    yield toolbox.destroy();
+    await toolbox.destroy();
   }
 });
 

@@ -14,15 +14,15 @@ let {
   computeAndFetchDominatorTree,
 } = require("devtools/client/memory/actions/snapshot");
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   let { getState, dispatch } = store;
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
+  await waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
   ok(!getState().snapshots[0].dominatorTree,
      "There shouldn't be a dominator tree model yet since it is not computed " +
      "until we switch to the dominators view.");
@@ -33,26 +33,26 @@ add_task(function* () {
      "Should now have a dominator tree model for the selected snapshot");
 
   // Wait for the dominator tree to start being computed.
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.state === dominatorTreeState.COMPUTING);
   ok(true, "The dominator tree started computing");
   ok(!getState().snapshots[0].dominatorTree.root,
      "When the dominator tree is computing, we should not have its root");
 
   // Wait for the dominator tree to finish computing and start being fetched.
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.state === dominatorTreeState.FETCHING);
   ok(true, "The dominator tree started fetching");
   ok(!getState().snapshots[0].dominatorTree.root,
      "When the dominator tree is fetching, we should not have its root");
 
   // Wait for the dominator tree to finish being fetched.
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
   ok(true, "The dominator tree was fetched");
   ok(getState().snapshots[0].dominatorTree.root,
      "When the dominator tree is loaded, we should have its root");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

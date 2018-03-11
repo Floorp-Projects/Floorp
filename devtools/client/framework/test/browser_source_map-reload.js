@@ -15,36 +15,36 @@ const ORIGINAL_URL_2 = "webpack:///code_reload_2.js";
 const GENERATED_LINE = 86;
 const ORIGINAL_LINE = 13;
 
-add_task(function* () {
-  yield pushPref("devtools.debugger.new-debugger-frontend", true);
+add_task(async function () {
+  await pushPref("devtools.debugger.new-debugger-frontend", true);
 
   // Start with the empty page, then navigate, so that we can properly
   // listen for new sources arriving.
-  const toolbox = yield openNewTabAndToolbox(INITIAL_URL, "webconsole");
+  const toolbox = await openNewTabAndToolbox(INITIAL_URL, "webconsole");
   const service = toolbox.sourceMapURLService;
   const tab = toolbox.target.tab;
 
   let sourceSeen = waitForSourceLoad(toolbox, JS_URL);
   tab.linkedBrowser.loadURI(PAGE_URL);
-  yield sourceSeen;
+  await sourceSeen;
 
   info(`checking original location for ${JS_URL}:${GENERATED_LINE}`);
-  let newLoc = yield service.originalPositionFor(JS_URL, GENERATED_LINE);
+  let newLoc = await service.originalPositionFor(JS_URL, GENERATED_LINE);
   is(newLoc.sourceUrl, ORIGINAL_URL_1, "check mapped URL");
   is(newLoc.line, ORIGINAL_LINE, "check mapped line number");
 
   // Reload the page.  The sjs ensures that a different source file
   // will be loaded.
   sourceSeen = waitForSourceLoad(toolbox, JS_URL);
-  yield refreshTab();
-  yield sourceSeen;
+  await refreshTab();
+  await sourceSeen;
 
   info(`checking post-reload original location for ${JS_URL}:${GENERATED_LINE}`);
-  newLoc = yield service.originalPositionFor(JS_URL, GENERATED_LINE);
+  newLoc = await service.originalPositionFor(JS_URL, GENERATED_LINE);
   is(newLoc.sourceUrl, ORIGINAL_URL_2, "check post-reload mapped URL");
   is(newLoc.line, ORIGINAL_LINE, "check post-reload mapped line number");
 
-  yield toolbox.destroy();
+  await toolbox.destroy();
   gBrowser.removeCurrentTab();
   finish();
 });

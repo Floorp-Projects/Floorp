@@ -6,22 +6,22 @@
  * for a canvas context.
  */
 
-function* ifTestingSupported() {
-  let { target, front } = yield initCanvasDebuggerBackend(SIMPLE_CANVAS_URL);
+async function ifTestingSupported() {
+  let { target, front } = await initCanvasDebuggerBackend(SIMPLE_CANVAS_URL);
 
   let navigated = once(target, "navigate");
 
-  yield front.setup({ reload: true });
+  await front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  yield navigated;
+  await navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = yield front.recordAnimationFrame();
+  let snapshotActor = await front.recordAnimationFrame();
   ok(snapshotActor,
     "A snapshot actor was sent after recording.");
 
-  let animationOverview = yield snapshotActor.getOverview();
+  let animationOverview = await snapshotActor.getOverview();
   ok(snapshotActor,
     "An animation overview could be retrieved after recording.");
 
@@ -70,6 +70,6 @@ function* ifTestingSupported() {
   is(functionCalls[7].callerPreview, "Object",
     "The last called function's caller preview is correct.");
 
-  yield removeTab(target.tab);
+  await removeTab(target.tab);
   finish();
 }

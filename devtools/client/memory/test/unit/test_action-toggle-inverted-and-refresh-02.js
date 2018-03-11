@@ -14,10 +14,10 @@ const {
 } = require("devtools/client/memory/actions/census-display");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   let { getState, dispatch } = store;
 
@@ -28,12 +28,12 @@ add_task(function* () {
         "Should not have an inverted census display");
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilSnapshotState(store, [states.SAVING]);
+  await waitUntilSnapshotState(store, [states.SAVING]);
 
   dispatch(setCensusDisplayAndRefresh(heapWorker,
                                       censusDisplays.invertedAllocationStack));
 
-  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
+  await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
   ok(getState().censusDisplay.inverted,
      "should want inverted trees");
@@ -41,17 +41,17 @@ add_task(function* () {
      "snapshot-we-were-in-the-middle-of-saving's census should be inverted");
 
   dispatch(setCensusDisplayAndRefresh(heapWorker, censusDisplays.allocationStack));
-  yield waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
+  await waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
   ok(true, "toggling inverted retriggers census");
   ok(!getState().censusDisplay.inverted, "no longer inverted");
 
   dispatch(setCensusDisplayAndRefresh(heapWorker,
                                       censusDisplays.invertedAllocationStack));
-  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
+  await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
   ok(getState().censusDisplay.inverted, "inverted again");
   ok(getState().snapshots[0].census.display.inverted,
      "census-we-were-in-the-middle-of-recomputing should be inverted again");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

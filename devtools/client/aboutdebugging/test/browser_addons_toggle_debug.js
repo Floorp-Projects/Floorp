@@ -9,9 +9,9 @@
 const ADDON_ID = "test-devtools@mozilla.org";
 const ADDON_NAME = "test-devtools";
 
-add_task(function* () {
+add_task(async function () {
   info("Turn off addon debugging.");
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     let options = {"set": [
       ["devtools.chrome.enabled", false],
       ["devtools.debugger.remote-enabled", false],
@@ -19,11 +19,11 @@ add_task(function* () {
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
-  let { tab, document } = yield openAboutDebugging("addons");
-  yield waitForInitialAddonList(document);
+  let { tab, document } = await openAboutDebugging("addons");
+  await waitForInitialAddonList(document);
 
   info("Install a test addon.");
-  yield installAddon({
+  await installAddon({
     document,
     path: "addons/unpacked/install.rdf",
     name: ADDON_NAME,
@@ -51,9 +51,9 @@ add_task(function* () {
   info("All debug buttons are disabled again.");
 
   info("Uninstall addon installed earlier.");
-  yield uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
 
-  yield closeAboutDebugging(tab);
+  await closeAboutDebugging(tab);
 });
 
 function getDebugButtons(document) {

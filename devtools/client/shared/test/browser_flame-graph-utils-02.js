@@ -8,13 +8,13 @@
 const {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 const {PALLETTE_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function () {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
 });
 
-function* performTest() {
+function performTest() {
   let out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, {
     flattenRecursion: true
   });

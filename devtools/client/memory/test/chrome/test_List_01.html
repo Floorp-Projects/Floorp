@@ -15,7 +15,7 @@ Test to verify the delete button calls the onDelete handler for an item
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = Task.async(function* () {
+         window.onload = async function () {
           try {
             const container = document.getElementById("container");
 
@@ -26,7 +26,7 @@ Test to verify the delete button calls the onDelete handler for an item
                 index: snapshot.index + index
               }));
 
-            yield renderComponent(
+            await renderComponent(
               List({
                 itemComponent: SnapshotListItem,
                 onClick: noop,
@@ -67,7 +67,7 @@ Test to verify the delete button calls the onDelete handler for an item
           } finally {
             SimpleTest.finish();
           }
-         });
+         };
         </script>
     </pre>
 </body>

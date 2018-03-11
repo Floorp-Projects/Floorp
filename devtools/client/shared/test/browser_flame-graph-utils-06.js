@@ -11,13 +11,13 @@ const {PALLETTE_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
 const MANGLED_FN = "__Z3FooIiEvv";
 const UNMANGLED_FN = "void Foo<int>()";
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function () {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
 });
 
-function* performTest() {
+function performTest() {
   let out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, {
     flattenRecursion: true
   });

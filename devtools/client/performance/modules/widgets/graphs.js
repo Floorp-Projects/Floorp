@@ -7,7 +7,6 @@
  * This file contains the base line graph that all Performance line graphs use.
  */
 
-const { Task } = require("devtools/shared/task");
 const { extend } = require("devtools/shared/extend");
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 const MountainGraphWidget = require("devtools/client/shared/widgets/MountainGraphWidget");
@@ -206,12 +205,12 @@ GraphsController.prototype = {
    * Saves rendering progress as a promise to be consumed by `destroy`,
    * to wait for cleaning up rendering during destruction.
    */
-  render: Task.async(function* (recordingData, resolution) {
+  async render(recordingData, resolution) {
     // Get the previous render promise so we don't start rendering
     // until the previous render cycle completes, which can occur
     // especially when a recording is finished, and triggers a
     // fresh rendering at a higher rate
-    yield (this._rendering && this._rendering.promise);
+    await (this._rendering && this._rendering.promise);
 
     // Check after yielding to ensure we're not tearing down,
     // as this can create a race condition in tests
@@ -220,17 +219,17 @@ GraphsController.prototype = {
     }
 
     this._rendering = defer();
-    for (let graph of (yield this._getEnabled())) {
-      yield graph.setPerformanceData(recordingData, resolution);
+    for (let graph of (await this._getEnabled())) {
+      await graph.setPerformanceData(recordingData, resolution);
       this.emit("rendered", graph.graphName);
     }
     this._rendering.resolve();
-  }),
+  },
 
   /**
    * Destroys the underlying graphs.
    */
-  destroy: Task.async(function* () {
+  async destroy() {
     let primary = this._getPrimaryLink();
 
     this._destroyed = true;
@@ -242,13 +241,13 @@ GraphsController.prototype = {
     // If there was rendering, wait until the most recent render cycle
     // has finished
     if (this._rendering) {
-      yield this._rendering.promise;
+      await this._rendering.promise;
     }
 
     for (let graph of this.getWidgets()) {
-      yield graph.destroy();
+      await graph.destroy();
     }
-  }),
+  },
 
   /**
    * Applies the theme to the underlying graphs. Optionally takes
@@ -267,7 +266,7 @@ GraphsController.prototype = {
    * to the graph if it is enabled once it's ready, or otherwise returns
    * null if disabled.
    */
-  isAvailable: Task.async(function* (graphName) {
+  async isAvailable(graphName) {
     if (!this._enabled.has(graphName)) {
       return null;
     }
@@ -275,12 +274,12 @@ GraphsController.prototype = {
     let graph = this.get(graphName);
 
     if (!graph) {
-      graph = yield this._construct(graphName);
+      graph = await this._construct(graphName);
     }
 
-    yield graph.ready();
+    await graph.ready();
     return graph;
-  }),
+  },
 
   /**
    * Enable or disable a subgraph controlled by GraphsController.
@@ -356,23 +355,23 @@ GraphsController.prototype = {
   /**
    * Makes sure the selection is enabled or disabled in all the graphs.
    */
-  selectionEnabled: Task.async(function* (enabled) {
-    for (let graph of (yield this._getEnabled())) {
+  async selectionEnabled(enabled) {
+    for (let graph of (await this._getEnabled())) {
       graph.selectionEnabled = enabled;
     }
-  }),
+  },
 
   /**
    * Creates the graph `graphName` and initializes it.
    */
-  _construct: Task.async(function* (graphName) {
+  async _construct(graphName) {
     let def = this._definition[graphName];
     let el = this.$(def.selector);
     let filter = this._getFilter();
     let graph = this._graphs[graphName] = new def.constructor(el, filter);
     graph.graphName = graphName;
 
-    yield graph.ready();
+    await graph.ready();
 
     // Sync the graphs' animations and selections together
     if (def.primaryLink) {
@@ -387,7 +386,7 @@ GraphsController.prototype = {
 
     this.setTheme();
     return graph;
-  }),
+  },
 
   /**
    * Returns the main graph for this collection, that all graphs
@@ -410,20 +409,20 @@ GraphsController.prototype = {
    * as those could be enabled. Uses caching, as rendering happens many times per second,
    * compared to how often which graphs/features are changed (rarely).
    */
-  _getEnabled: Task.async(function* () {
+  async _getEnabled() {
     if (this._enabledGraphs) {
       return this._enabledGraphs;
     }
     let enabled = [];
     for (let graphName of this._enabled) {
-      let graph = yield this.isAvailable(graphName);
+      let graph = await this.isAvailable(graphName);
       if (graph) {
         enabled.push(graph);
       }
     }
     this._enabledGraphs = enabled;
     return this._enabledGraphs;
-  }),
+  },
 };
 
 /**
@@ -441,10 +440,10 @@ function OptimizationsGraph(parent) {
 
 OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
 
-  render: Task.async(function* (threadNode, frameNode) {
+  async render(threadNode, frameNode) {
     // Regardless if we draw or clear the graph, wait
     // until it's ready.
-    yield this.ready();
+    await this.ready();
 
     if (!threadNode || !frameNode) {
       this.setData([]);
@@ -477,8 +476,8 @@ OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
     }
 
     this.dataOffsetX = startTime;
-    yield this.setData(data);
-  }),
+    await this.setData(data);
+  },
 
   /**
    * Sets the theme via `theme` to either "light" or "dark",

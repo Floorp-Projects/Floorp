@@ -10,7 +10,7 @@ const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser
 const { viewState, censusState } = require("devtools/client/memory/constants");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
   const { gStore, document } = panel.panelWin;
 
   const { dispatch } = panel.panelWin.gStore;
@@ -20,9 +20,9 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   }
   dispatch(changeView(viewState.CENSUS));
 
-  yield takeSnapshot(panel.panelWin);
+  await takeSnapshot(panel.panelWin);
 
-  yield waitUntilState(gStore, state =>
+  await waitUntilState(gStore, state =>
     state.snapshots[0].census &&
     state.snapshots[0].census.state === censusState.SAVED);
 
@@ -30,7 +30,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   ["Function", "js::Shape", "Object", "strings"].forEach(findNameCell);
 
-  yield setCensusDisplay(panel.panelWin, censusDisplays.allocationStack);
+  await setCensusDisplay(panel.panelWin, censusDisplays.allocationStack);
   info("Check allocation stack heap view");
   [L10N.getStr("tree-item.nostack")].forEach(findNameCell);
 

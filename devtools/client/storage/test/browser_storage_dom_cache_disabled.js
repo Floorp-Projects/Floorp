@@ -8,11 +8,11 @@
 
 // Test the storage inspector when dom.caches.enabled=false.
 
-add_task(function* () {
+add_task(async function () {
   // Disable the DOM cache
   Services.prefs.setBoolPref(DOM_CACHE, false);
 
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   const state = [
     [["localStorage", "http://test1.example.org"],
@@ -31,7 +31,7 @@ add_task(function* () {
       [1, 2, 3]],
   ];
 
-  yield checkState(state);
+  await checkState(state);
 
-  yield finishTests();
+  await finishTests();
 });

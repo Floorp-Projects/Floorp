@@ -15,7 +15,6 @@ const {AppValidator} = require("devtools/client/webide/modules/app-validator");
 const {ConnectionManager, Connection} = require("devtools/shared/client/connection-manager");
 const {getDeviceFront} = require("devtools/shared/fronts/device");
 const {getPreferenceFront} = require("devtools/shared/fronts/preference");
-const {Task} = require("devtools/shared/task");
 const {RuntimeScanners, RuntimeTypes} = require("devtools/client/webide/modules/runtimes");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 const Telemetry = require("devtools/client/shared/telemetry");
@@ -275,14 +274,14 @@ var AppManager = exports.AppManager = {
       return Promise.reject("Can't find app front for selected project");
     }
 
-    return Task.spawn(function* () {
+    return (async function () {
       // Once we asked the app to launch, the app isn't necessary completely loaded.
       // launch request only ask the app to launch and immediatly returns.
       // We have to keep trying to get app tab actors required to create its target.
 
       for (let i = 0; i < 10; i++) {
         try {
-          return yield app.getTarget();
+          return await app.getTarget();
         } catch (e) {}
         return new Promise(resolve => {
           setTimeout(resolve, 500);
@@ -291,7 +290,7 @@ var AppManager = exports.AppManager = {
 
       AppManager.reportError("error_cantConnectToApp", app.manifest.manifestURL);
       throw new Error("can't connect to app");
-    });
+    })();
   },
 
   getProjectManifestURL: function (project) {
@@ -374,7 +373,7 @@ var AppManager = exports.AppManager = {
     return this._selectedProject;
   },
 
-  removeSelectedProject: Task.async(function* () {
+  async removeSelectedProject() {
     let location = this.selectedProject.location;
     AppManager.selectedProject = null;
     // If the user cancels the removeProject operation, don't remove the project
@@ -382,9 +381,9 @@ var AppManager = exports.AppManager = {
       return;
     }
 
-    yield AppProjects.remove(location);
+    await AppProjects.remove(location);
     AppManager.update("project-removed");
-  }),
+  },
 
   _selectedRuntime: null,
   set selectedRuntime(value) {
@@ -463,7 +462,7 @@ var AppManager = exports.AppManager = {
     return deferred;
   },
 
-  _recordRuntimeInfo: Task.async(function* () {
+  async _recordRuntimeInfo() {
     if (!this.connected) {
       return;
     }
@@ -476,7 +475,7 @@ var AppManager = exports.AppManager = {
       this.update("runtime-telemetry");
       return;
     }
-    let d = yield this.deviceFront.getDescription();
+    let d = await this.deviceFront.getDescription();
     this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PROCESSOR",
                              d.processor, true);
     this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_OS",
@@ -488,7 +487,7 @@ var AppManager = exports.AppManager = {
     this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_VERSION",
                              d.version, true);
     this.update("runtime-telemetry");
-  }),
+  },
 
   isMainProcessDebuggable: function () {
     // Fx <39 exposes chrome tab actors on RootActor
@@ -571,11 +570,11 @@ var AppManager = exports.AppManager = {
       return Promise.reject("Can't install");
     }
 
-    return Task.spawn(function* () {
+    return (async function () {
       let self = AppManager;
 
       // Validate project
-      yield self.validateAndUpdateProject(project);
+      await self.validateAndUpdateProject(project);
 
       if (project.errorsCount > 0) {
         self.reportError("error_cantInstallValidationErrors");
@@ -593,7 +592,7 @@ var AppManager = exports.AppManager = {
         let packageDir = project.location;
         console.log("Installing app from " + packageDir);
 
-        response = yield self._appsFront.installPackaged(packageDir,
+        response = await self._appsFront.installPackaged(packageDir,
                                                          project.packagedAppOrigin);
 
         // If the packaged app specified a custom origin override,
@@ -611,7 +610,7 @@ var AppManager = exports.AppManager = {
           origin: origin.spec,
           manifestURL: project.location
         };
-        response = yield self._appsFront.installHosted(appId,
+        response = await self._appsFront.installHosted(appId,
                                             metadata,
                                             project.manifest);
       }
@@ -632,12 +631,12 @@ var AppManager = exports.AppManager = {
             }
           });
         });
-        yield app.launch();
-        yield deferred;
+        await app.launch();
+        await deferred;
       } else {
-        yield app.reload();
+        await app.reload();
       }
-    });
+    })();
   },
 
   stopRunningApp: function () {
@@ -652,7 +651,7 @@ var AppManager = exports.AppManager = {
       return Promise.reject();
     }
 
-    return Task.spawn(function* () {
+    return (async function () {
 
       let packageDir = project.location;
       let validation = new AppValidator({
@@ -661,7 +660,7 @@ var AppManager = exports.AppManager = {
         location: packageDir
       });
 
-      yield validation.validate();
+      await validation.validate();
 
       if (validation.manifest) {
         let manifest = validation.manifest;
@@ -723,15 +722,15 @@ var AppManager = exports.AppManager = {
       }
 
       if (project.type === "hosted" && project.location !== validation.manifestURL) {
-        yield AppProjects.updateLocation(project, validation.manifestURL);
+        await AppProjects.updateLocation(project, validation.manifestURL);
       } else if (AppProjects.get(project.location)) {
-        yield AppProjects.update(project);
+        await AppProjects.update(project);
       }
 
       if (AppManager.selectedProject === project) {
         AppManager.update("project-validated");
       }
-    });
+    })();
   },
 
   /* RUNTIME LIST */

@@ -21,7 +21,7 @@ function checkCells(cells) {
   }
 }
 
-this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const front = panel.panelWin.gFront;
   const { getState, dispatch } = panel.panelWin.gStore;
@@ -29,7 +29,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   dispatch(changeView(viewState.CENSUS));
 
-  yield dispatch(takeSnapshotAndCensus(front, heapWorker));
+  await dispatch(takeSnapshotAndCensus(front, heapWorker));
   is(getState().censusDisplay.breakdown.by, "coarseType",
      "Should be using coarse type breakdown");
 

@@ -6,19 +6,19 @@
 
 "use strict";
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-localstorage.html");
+add_task(async function () {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-localstorage.html");
 
-  yield selectTreeItem(["localStorage", "http://test1.example.org"]);
+  await selectTreeItem(["localStorage", "http://test1.example.org"]);
 
-  yield editCell("TestLS1", "name", "newTestLS1");
-  yield editCell("newTestLS1", "value", "newValueLS1");
+  await editCell("TestLS1", "name", "newTestLS1");
+  await editCell("newTestLS1", "value", "newValueLS1");
 
-  yield editCell("TestLS3", "name", "newTestLS3");
-  yield editCell("newTestLS3", "value", "newValueLS3");
+  await editCell("TestLS3", "name", "newTestLS3");
+  await editCell("newTestLS3", "value", "newValueLS3");
 
-  yield editCell("TestLS5", "name", "newTestLS5");
-  yield editCell("newTestLS5", "value", "newValueLS5");
+  await editCell("TestLS5", "name", "newTestLS5");
+  await editCell("newTestLS5", "value", "newValueLS5");
 
-  yield finishTests();
+  await finishTests();
 });

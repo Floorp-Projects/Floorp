@@ -23,7 +23,7 @@ const { editableField } = require("devtools/client/shared/inplace-editor");
  * @param {String} textContent
  *        (optional) String that will be used as the text content of the span.
  */
-const createInplaceEditorAndClick = Task.async(function* (options, doc, textContent) {
+const createInplaceEditorAndClick = async function (options, doc, textContent) {
   let span = options.element = createSpan(doc);
   if (textContent) {
     span.textContent = textContent;
@@ -34,7 +34,7 @@ const createInplaceEditorAndClick = Task.async(function* (options, doc, textCont
 
   info("Clicking on the inplace-editor field to turn to edit mode");
   span.click();
-});
+};
 
 /**
  * Helper to create a span in the provided document.
@@ -75,7 +75,7 @@ function createSpan(doc) {
  * @param {InplaceEditor} editor
  *        The InplaceEditor instance being tested
  */
-function* testCompletion([key, completion, index, total], editor) {
+async function testCompletion([key, completion, index, total], editor) {
   info("Pressing key " + key);
   info("Expecting " + completion);
 
@@ -97,9 +97,9 @@ function* testCompletion([key, completion, index, total], editor) {
   info("Synthesizing key " + key);
   EventUtils.synthesizeKey(key, {}, editor.input.defaultView);
 
-  yield onSuggest;
-  yield onVisibilityChange;
-  yield waitForTime(5);
+  await onSuggest;
+  await onVisibilityChange;
+  await waitForTime(5);
 
   info("Checking the state");
   if (completion !== null) {

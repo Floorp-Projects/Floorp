@@ -38,7 +38,7 @@ requestLongerTimeout(2);
  */
 
 function runTools(target) {
-  return Task.spawn(function* () {
+  return (async function () {
     let toolIds = gDevTools.getToolDefinitionArray()
                            .filter(def => def.isTargetSupported(target))
                            .map(def => def.id);
@@ -48,7 +48,7 @@ function runTools(target) {
       let toolId = toolIds[index];
 
       info("About to open " + index + "/" + toolId);
-      toolbox = yield gDevTools.showToolbox(target, toolId, "window");
+      toolbox = await gDevTools.showToolbox(target, toolId, "window");
       ok(toolbox, "toolbox exists for " + toolId);
       is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
 
@@ -56,8 +56,8 @@ function runTools(target) {
       ok(panel.isReady, toolId + " panel should be ready");
     }
 
-    yield toolbox.destroy();
-  });
+    await toolbox.destroy();
+  })();
 }
 
 function getClient() {
@@ -88,13 +88,13 @@ function getTarget(client) {
 }
 
 function test() {
-  Task.spawn(function* () {
+  Task.spawn(async function () {
     toggleAllTools(true);
-    yield addTab("about:blank");
+    await addTab("about:blank");
 
-    let client = yield getClient();
-    let target = yield getTarget(client);
-    yield runTools(target);
+    let client = await getClient();
+    let target = await getTarget(client);
+    await runTools(target);
 
     // Actor fronts should be destroyed now that the toolbox has closed, but
     // look for any that remain.

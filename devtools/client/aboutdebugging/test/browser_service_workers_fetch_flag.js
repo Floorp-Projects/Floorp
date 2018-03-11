@@ -8,16 +8,16 @@
 const EMPTY_SW_TAB_URL = URL_ROOT + "service-workers/empty-sw.html";
 const FETCH_SW_TAB_URL = URL_ROOT + "service-workers/fetch-sw.html";
 
-function* testBody(url, expecting) {
-  yield enableServiceWorkerDebugging();
-  let { tab, document } = yield openAboutDebugging("workers");
+async function testBody(url, expecting) {
+  await enableServiceWorkerDebugging();
+  let { tab, document } = await openAboutDebugging("workers");
 
-  let swTab = yield addTab(url);
+  let swTab = await addTab(url);
 
   let serviceWorkersElement = getServiceWorkerList(document);
 
   info("Wait for fetch flag.");
-  yield waitUntil(() => {
+  await waitUntil(() => {
     let fetchFlags =
       [...document.querySelectorAll("#service-workers .service-worker-fetch-flag")];
     fetchFlags = fetchFlags.map(element => element.textContent);
@@ -27,7 +27,7 @@ function* testBody(url, expecting) {
   info("Found correct fetch flag.");
 
   try {
-    yield unregisterServiceWorker(swTab, serviceWorkersElement);
+    await unregisterServiceWorker(swTab, serviceWorkersElement);
     ok(true, "Service worker registration unregistered");
   } catch (e) {
     ok(false, "SW not unregistered; " + e);
@@ -38,11 +38,11 @@ function* testBody(url, expecting) {
   names = names.map(element => element.textContent);
   ok(names.length == 0, "All service workers were removed from the list.");
 
-  yield removeTab(swTab);
-  yield closeAboutDebugging(tab);
+  await removeTab(swTab);
+  await closeAboutDebugging(tab);
 }
 
-add_task(function* () {
-  yield testBody(FETCH_SW_TAB_URL, "Listening for fetch events.");
-  yield testBody(EMPTY_SW_TAB_URL, "Not listening for fetch events.");
+add_task(async function () {
+  await testBody(FETCH_SW_TAB_URL, "Listening for fetch events.");
+  await testBody(EMPTY_SW_TAB_URL, "Not listening for fetch events.");
 });

@@ -13,8 +13,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { isVisible } = require("devtools/client/performance/test/helpers/dom-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function () {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -24,8 +24,8 @@ add_task(function* () {
   // Disable framerate to test.
   Services.prefs.setBoolPref(UI_ENABLE_FRAMERATE_PREF, false);
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withTicks, false,
     "PerformanceFront started without ticks recording.");
@@ -40,13 +40,13 @@ add_task(function* () {
   ok(!isVisible($("#time-framerate")),
     "The fps graph is still hidden if recording does not contain ticks.");
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withTicks, true,
     "PerformanceFront started with ticks recording.");
   ok(isVisible($("#time-framerate")),
     "The fps graph is not hidden when ticks enabled before recording.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });
