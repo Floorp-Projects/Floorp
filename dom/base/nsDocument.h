@@ -503,8 +503,6 @@ public:
   virtual void
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData) override;
 
-  virtual nsIDocument* GetTemplateContentsOwner() override;
-
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
                                                                    nsIDocument)
 
@@ -652,10 +650,6 @@ public:
   bool mReportedUseCounters:1;
 
   uint8_t mXMLDeclarationBits;
-
-  // A document "without a browsing context" that owns the content of
-  // HTMLTemplateElement.
-  nsCOMPtr<nsIDocument> mTemplateContentsOwner;
 
   // The application cache that this document is associated with, if
   // any.  This can change during the lifetime of the document.

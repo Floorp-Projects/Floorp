@@ -2607,7 +2607,7 @@ public:
    * Returns the template content owner document that owns the content of
    * HTMLTemplateElement.
    */
-  virtual nsIDocument* GetTemplateContentsOwner() = 0;
+  nsIDocument* GetTemplateContentsOwner();
 
   /**
    * Returns true if this document is a static clone of a normal document.
@@ -4192,6 +4192,10 @@ protected:
   // Tracker for animations that are waiting to start.
   // nullptr until GetOrCreatePendingAnimationTracker is called.
   RefPtr<mozilla::PendingAnimationTracker> mPendingAnimationTracker;
+
+  // A document "without a browsing context" that owns the content of
+  // HTMLTemplateElement.
+  nsCOMPtr<nsIDocument> mTemplateContentsOwner;
 
 public:
   js::ExpandoAndGeneration mExpandoAndGeneration;
