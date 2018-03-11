@@ -33,15 +33,20 @@ use std::fmt;
 use std::io;
 use std::io::Write;
 use std::str;
-use std::sync::atomic::{ATOMIC_USIZE_INIT, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 
 static MAX_LOG_LEVEL: AtomicUsize = ATOMIC_USIZE_INIT;
+const LOGGED_TARGETS: &'static [&'static str] = &[
+    "geckodriver",
+    "mozprofile",
+    "mozrunner",
+    "mozversion",
+    "webdriver",
+];
 
 /// Logger levels from [Log.jsm].
 ///
-/// [Log.jsm]:
-/// https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.
-/// jsm
+/// [Log.jsm]: https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.jsm
 #[repr(usize)]
 #[derive(Clone, Copy, Eq, Debug, Hash, PartialEq)]
 pub enum Level {
@@ -134,7 +139,8 @@ struct Logger;
 
 impl log::Log for Logger {
     fn enabled(&self, meta: &log::Metadata) -> bool {
-        meta.level() <= log::max_level()
+        LOGGED_TARGETS.iter().any(|&x| meta.target().starts_with(x))
+            && meta.level() <= log::max_level()
     }
 
     fn log(&self, record: &log::Record) {
