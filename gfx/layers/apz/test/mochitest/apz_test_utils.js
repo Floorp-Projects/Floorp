@@ -281,6 +281,60 @@ function pushPrefs(prefs) {
 }
 
 async function waitUntilApzStable() {
+  if (!SpecialPowers.isMainProcess()) {
+    // We use this waitUntilApzStable function during test initialization
+    // and for those scenarios we want to flush the parent-process layer
+    // tree to the compositor and wait for that as well. That way we know
+    // that not only is the content-process layer tree ready in the compositor,
+    // the parent-process layer tree in the compositor has the appropriate
+    // RefLayer pointing to the content-process layer tree.
+
+    // Sadly this helper function cannot reuse any code from other places because
+    // it must be totally self-contained to be shipped over to the parent process.
+    function parentProcessFlush() {
+      addMessageListener("apz-flush", function() {
+        ChromeUtils.import("resource://gre/modules/Services.jsm");
+        var topWin = Services.wm.getMostRecentWindow("navigator:browser");
+        var topUtils = topWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+
+        var repaintDone = function() {
+          Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
+          // send message back to content process
+          sendAsyncMessage("apz-flush-done", null);
+        };
+        var flushRepaint = function() {
+          if (topUtils.isMozAfterPaintPending) {
+            topWin.addEventListener("MozAfterPaint", flushRepaint, { once: true });
+            return;
+          }
+
+          Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
+          if (topUtils.flushApzRepaints()) {
+            dump("Parent process: flushed APZ repaints, waiting for callback...\n");
+          } else {
+            dump("Parent process: flushing APZ repaints was a no-op, triggering callback directly...\n");
+            repaintDone();
+          }
+        }
+
+        // Flush APZ repaints, but wait until all the pending paints have been
+        // sent.
+        flushRepaint();
+      });
+    }
+
+    // This is the first time waitUntilApzStable is being called, do initialization
+    if (typeof waitUntilApzStable.chromeHelper == "undefined") {
+      waitUntilApzStable.chromeHelper = SpecialPowers.loadChromeScript(parentProcessFlush);
+      ApzCleanup.register(() => { waitUntilApzStable.chromeHelper.destroy(); });
+    }
+
+    // Actually trigger the parent-process flush and wait for it to finish
+    waitUntilApzStable.chromeHelper.sendAsyncMessage("apz-flush", null);
+    await waitUntilApzStable.chromeHelper.promiseOneMessage("apz-flush-done");
+  }
+
   await SimpleTest.promiseFocus(window);
   await promiseAllPaintsDone();
   await promiseApzRepaintsFlushed();
