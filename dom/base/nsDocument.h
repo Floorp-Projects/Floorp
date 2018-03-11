@@ -484,11 +484,6 @@ public:
   virtual void BlockOnload() override;
   virtual void UnblockOnload(bool aFireSync) override;
 
-  virtual Element*
-    GetAnonymousElementByAttribute(nsIContent* aElement,
-                                   nsAtom* aAttrName,
-                                   const nsAString& aAttrValue) const override;
-
   virtual nsresult NodesFromRectHelper(float aX, float aY,
                                                    float aTopSize, float aRightSize,
                                                    float aBottomSize, float aLeftSize,
