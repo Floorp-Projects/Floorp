@@ -9797,7 +9797,7 @@ nsIDocument::SetNavigationTiming(nsDOMNavigationTiming* aTiming)
 }
 
 Element*
-nsDocument::FindImageMap(const nsAString& aUseMapValue)
+nsIDocument::FindImageMap(const nsAString& aUseMapValue)
 {
   if (aUseMapValue.IsEmpty()) {
     return nullptr;
