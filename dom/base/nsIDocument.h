@@ -1967,19 +1967,33 @@ public:
    */
   void DispatchFullscreenError(const char* aMessage);
 
-  virtual void RequestPointerLock(Element* aElement,
-                                  mozilla::dom::CallerType aCallerType) = 0;
+  void RequestPointerLock(Element* aElement, mozilla::dom::CallerType);
+  bool SetPointerLock(Element* aElement, int aCursorStyle);
 
   static void UnlockPointer(nsIDocument* aDoc = nullptr);
 
   // ScreenOrientation related APIs
 
-  virtual void SetCurrentOrientation(mozilla::dom::OrientationType aType,
-                                     uint16_t aAngle) = 0;
-  virtual uint16_t CurrentOrientationAngle() const = 0;
-  virtual mozilla::dom::OrientationType CurrentOrientationType() const = 0;
-  virtual void SetOrientationPendingPromise(mozilla::dom::Promise* aPromise) = 0;
-  virtual mozilla::dom::Promise* GetOrientationPendingPromise() const = 0;
+  void SetCurrentOrientation(mozilla::dom::OrientationType aType,
+                             uint16_t aAngle)
+  {
+    mCurrentOrientationType = aType;
+    mCurrentOrientationAngle = aAngle;
+  }
+
+  uint16_t CurrentOrientationAngle() const
+  {
+    return mCurrentOrientationAngle;
+  }
+  mozilla::dom::OrientationType CurrentOrientationType() const
+  {
+    return mCurrentOrientationType;
+  }
+  void SetOrientationPendingPromise(mozilla::dom::Promise* aPromise);
+  mozilla::dom::Promise* GetOrientationPendingPromise() const
+  {
+    return mOrientationPendingPromise;
+  }
 
   //----------------------------------------------------------------------
 
@@ -4369,6 +4383,13 @@ protected:
   nsCOMPtr<nsIDocument> mTemplateContentsOwner;
 
   nsExternalResourceMap mExternalResourceMap;
+
+  // ScreenOrientation "pending promise" as described by
+  // http://www.w3.org/TR/screen-orientation/
+  RefPtr<mozilla::dom::Promise> mOrientationPendingPromise;
+
+  uint16_t mCurrentOrientationAngle;
+  mozilla::dom::OrientationType mCurrentOrientationType;
 
 public:
   js::ExpandoAndGeneration mExpandoAndGeneration;
