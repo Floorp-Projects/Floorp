@@ -1065,7 +1065,7 @@ public:
   /**
    * Are plugins allowed in this document ?
    */
-  bool GetAllowPlugins ();
+  bool GetAllowPlugins();
 
   /**
    * Set the sub document for aContent to aSubDoc.
@@ -2816,9 +2816,25 @@ public:
 
   mozilla::dom::ImageTracker* ImageTracker();
 
-  virtual nsresult AddPlugin(nsIObjectLoadingContent* aPlugin) = 0;
-  virtual void RemovePlugin(nsIObjectLoadingContent* aPlugin) = 0;
-  virtual void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) = 0;
+  // AddPlugin adds a plugin-related element to mPlugins when the element is
+  // added to the tree.
+  void AddPlugin(nsIObjectLoadingContent* aPlugin)
+  {
+    MOZ_ASSERT(aPlugin);
+    mPlugins.PutEntry(aPlugin);
+  }
+
+  // RemovePlugin removes a plugin-related element to mPlugins when the
+  // element is removed from the tree.
+  void RemovePlugin(nsIObjectLoadingContent* aPlugin)
+  {
+    MOZ_ASSERT(aPlugin);
+    mPlugins.RemoveEntry(aPlugin);
+  }
+
+  // GetPlugins returns the plugin-related elements from
+  // the frame and any subframes.
+  void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins);
 
   // Adds an element to mResponsiveContent when the element is
   // added to the tree.
@@ -4109,6 +4125,9 @@ protected:
 
   // A set of responsive images keyed by address pointer.
   nsTHashtable<nsPtrHashKey<mozilla::dom::HTMLImageElement>> mResponsiveContent;
+
+  // Tracking for plugins in the document.
+  nsTHashtable<nsPtrHashKey<nsIObjectLoadingContent>> mPlugins;
 
   // Array of owning references to all children
   nsAttrAndChildArray mChildren;
