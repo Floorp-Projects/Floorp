@@ -5048,12 +5048,6 @@ nsIDocument::GetWindowInternal() const
   return win;
 }
 
-ScriptLoader*
-nsDocument::ScriptLoader()
-{
-  return mScriptLoader;
-}
-
 bool
 nsIDocument::InternalAllowXULXBL()
 {
