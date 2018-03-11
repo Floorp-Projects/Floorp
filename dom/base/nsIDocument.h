@@ -2207,15 +2207,14 @@ public:
    *
    * @param aElement canonical nsIContent pointer of the box object's element
    */
-  virtual void ClearBoxObjectFor(nsIContent *aContent) = 0;
+  void ClearBoxObjectFor(nsIContent* aContent);
 
   /**
    * Get the box object for an element. This is not exposed through a
    * scriptable interface except for XUL documents.
    */
-  virtual already_AddRefed<mozilla::dom::BoxObject>
-    GetBoxObjectFor(mozilla::dom::Element* aElement,
-                    mozilla::ErrorResult& aRv) = 0;
+  already_AddRefed<mozilla::dom::BoxObject>
+    GetBoxObjectFor(mozilla::dom::Element* aElement, mozilla::ErrorResult& aRv);
 
   /**
    * Support for window.matchMedia()
@@ -3888,6 +3887,8 @@ protected:
   bool mScrolledToRefAlready : 1;
   bool mChangeScrollPosWhenScrollingToRef : 1;
 
+  bool mHasWarnedAboutBoxObjects: 1;
+
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
   unsigned int mIsScopedStyleEnabled : 2;
@@ -4174,6 +4175,9 @@ protected:
   mozilla::LinkedList<mozilla::dom::DocumentTimeline> mTimelines;
 
   RefPtr<mozilla::dom::ScriptLoader> mScriptLoader;
+
+  nsRefPtrHashtable<nsPtrHashKey<nsIContent>, mozilla::dom::BoxObject>*
+    mBoxObjectTable;
 
 public:
   js::ExpandoAndGeneration mExpandoAndGeneration;
