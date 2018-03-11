@@ -610,7 +610,7 @@ nsObjectLoadingContent::BindToTree(nsIDocument* aDocument,
                                     aCompileEventHandlers);
 
   if (aDocument) {
-    return aDocument->AddPlugin(this);
+    aDocument->AddPlugin(this);
   }
   return NS_OK;
 }

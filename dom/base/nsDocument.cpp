@@ -9915,35 +9915,18 @@ nsIDocument::ImageTracker()
   return mImageTracker;
 }
 
-nsresult
-nsDocument::AddPlugin(nsIObjectLoadingContent* aPlugin)
-{
-  MOZ_ASSERT(aPlugin);
-  if (!mPlugins.PutEntry(aPlugin)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
-void
-nsDocument::RemovePlugin(nsIObjectLoadingContent* aPlugin)
-{
-  MOZ_ASSERT(aPlugin);
-  mPlugins.RemoveEntry(aPlugin);
-}
-
 static bool
 AllSubDocumentPluginEnum(nsIDocument* aDocument, void* userArg)
 {
   nsTArray<nsIObjectLoadingContent*>* plugins =
-    reinterpret_cast< nsTArray<nsIObjectLoadingContent*>* >(userArg);
+    reinterpret_cast<nsTArray<nsIObjectLoadingContent*>*>(userArg);
   MOZ_ASSERT(plugins);
   aDocument->GetPlugins(*plugins);
   return true;
 }
 
 void
-nsDocument::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins)
+nsIDocument::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins)
 {
   aPlugins.SetCapacity(aPlugins.Length() + mPlugins.Count());
   for (auto iter = mPlugins.ConstIter(); !iter.Done(); iter.Next()) {

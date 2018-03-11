@@ -608,16 +608,6 @@ public:
   virtual void ResetScrolledToRefAlready() override;
   virtual void SetChangeScrollPosWhenScrollingToRef(bool aValue) override;
 
-  // AddPlugin adds a plugin-related element to mPlugins when the element is
-  // added to the tree.
-  virtual nsresult AddPlugin(nsIObjectLoadingContent* aPlugin) override;
-  // RemovePlugin removes a plugin-related element to mPlugins when the
-  // element is removed from the tree.
-  virtual void RemovePlugin(nsIObjectLoadingContent* aPlugin) override;
-  // GetPlugins returns the plugin-related elements from
-  // the frame and any subframes.
-  virtual void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) override;
-
   // Returns the size of the mBlockedTrackingNodes array. (nsIDocument.h)
   //
   // This array contains nodes that have been blocked to prevent
@@ -818,9 +808,6 @@ private:
   nsCString mScrollToRef;
   uint8_t mScrolledToRefAlready : 1;
   uint8_t mChangeScrollPosWhenScrollingToRef : 1;
-
-  // Tracking for plugins in the document.
-  nsTHashtable< nsPtrHashKey<nsIObjectLoadingContent> > mPlugins;
 
   RefPtr<mozilla::dom::DocumentTimeline> mDocumentTimeline;
   mozilla::LinkedList<mozilla::dom::DocumentTimeline> mTimelines;
