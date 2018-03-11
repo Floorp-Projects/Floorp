@@ -1,28 +1,7 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test for content script</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<!-- WORKAROUND: this textarea hack is used to contain the html page source without escaping it -->
-<textarea id="test-asset">
-  <!DOCTYPE HTML>
-  <html>
-    <head>
-      <meta charset="utf-8">
-      <script type="text/javascript" src="content_script_iframe.js"></script>
-    </head>
-  </html>
-</textarea>
-
-<script type="text/javascript">
 "use strict";
+
+const server = createHttpServer({hosts: ["example.com"]});
+server.registerDirectory("/data/", do_get_file("data"));
 
 add_task(async function test_contentscript_create_iframe() {
   function background() {
@@ -49,12 +28,6 @@ add_task(async function test_contentscript_create_iframe() {
 
       browser.test.sendMessage(name);
     });
-  }
-
-  function contentScript() {
-    let iframe = document.createElement("iframe");
-    iframe.setAttribute("src", browser.runtime.getURL("content_script_iframe.html"));
-    document.body.appendChild(iframe);
   }
 
   function contentScriptIframe() {
@@ -87,7 +60,7 @@ add_task(async function test_contentscript_create_iframe() {
       applications: {gecko: {id: ID}},
       content_scripts: [
         {
-          "matches": ["http://mochi.test/*/file_sample.html"],
+          "matches": ["http://example.com/data/file_sample.html"],
           "js": ["content_script.js"],
           "run_at": "document_idle",
         },
@@ -100,66 +73,65 @@ add_task(async function test_contentscript_create_iframe() {
     background,
 
     files: {
-      "content_script.js": contentScript,
-      "content_script_iframe.html": document.querySelector("#test-asset").textContent,
+      "content_script.js"() {
+        let iframe = document.createElement("iframe");
+        iframe.src =  browser.runtime.getURL("content_script_iframe.html");
+        document.body.appendChild(iframe);
+      },
+      "content_script_iframe.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <script type="text/javascript" src="content_script_iframe.js"></script>
+          </head>
+        </html>`,
       "content_script_iframe.js": contentScriptIframe,
     },
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-
-  let contentScriptIframeCreatedPromise = new Promise(resolve => {
-    extension.onMessage("content-script-iframe-loaded", () => { resolve(); });
-  });
-
   await extension.startup();
-  info("extension loaded");
 
-  let win = window.open("file_sample.html");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html");
 
-  await Promise.all([waitForLoad(win), contentScriptIframeCreatedPromise]);
-  info("content script privileged iframe loaded and executed");
+  await extension.awaitMessage("content-script-iframe-loaded");
 
   info("testing APIs availability once the extension is unloaded...");
 
-  let iframeWindow = SpecialPowers.wrap(win)[0];
+  await contentPage.spawn(null, () => {
+    this.iframeWindow = this.content[0];
 
-  ok(iframeWindow, "content script enabled iframe found");
-  ok(/content_script_iframe\.html$/.test(iframeWindow.location), "the found iframe has the expected URL");
+    Assert.ok(this.iframeWindow, "content script enabled iframe found");
+    Assert.ok(/content_script_iframe\.html$/.test(this.iframeWindow.location), "the found iframe has the expected URL");
+  });
 
   await extension.unload();
-  info("extension unloaded");
 
   info("test content script APIs not accessible from the frame once the extension is unloaded");
 
-  let ww = SpecialPowers.Cu.waiveXrays(iframeWindow);
-  let isDeadWrapper = SpecialPowers.Cu.isDeadWrapper(ww.browser);
-  ok(!isDeadWrapper, "the API object should not be a dead object");
+  await contentPage.spawn(null, () => {
+    let win = Cu.waiveXrays(this.iframeWindow);
+    ok(!Cu.isDeadWrapper(win.browser), "the API object should not be a dead object");
 
-  let manifest;
-  let manifestException;
+    let manifest;
+    let manifestException;
+    try {
+      manifest = win.browser.runtime.getManifest();
+    } catch (e) {
+      manifestException = e;
+    }
 
-  try {
-    manifest = ww.browser.runtime.getManifest();
-  } catch (e) {
-    manifestException = e;
-  }
+    Assert.ok(!manifest, "manifest should be undefined");
 
-  ok(!manifest, "manifest should be undefined");
+    Assert.equal(String(manifestException), "TypeError: win.browser.runtime is undefined",
+                 "expected exception received");
 
-  is(String(manifestException), "TypeError: ww.browser.runtime is undefined",
-     "expected exception received");
+    let getManifestException = win.testGetManifestException();
 
-  let getManifestException = ww.testGetManifestException();
+    Assert.equal(getManifestException, "TypeError: can't access dead object",
+                 "expected exception received");
+  });
 
-  is(getManifestException, "TypeError: can't access dead object",
-     "expected exception received");
-
-  win.close();
-
-  info("done");
+  await contentPage.close();
 });
-</script>
-
-</body>
-</html>
