@@ -1,18 +1,22 @@
-<!DOCTYPE html>
-
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>WebRequest response body filter test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<script>
 "use strict";
+
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
+/* eslint-disable no-shadow */
+
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
+
+Cu.importGlobalProperties(["URL"]);
+
+const HOSTS = new Set([
+  "example.com",
+]);
+
+const server = createHttpServer({hosts: HOSTS});
+
+const BASE_URL = "http://example.com";
+const FETCH_ORIGIN = "http://example.com/data/file_sample.html";
 
 const SEQUENTIAL = false;
 
@@ -37,6 +41,47 @@ const PARTS = [
 ].map(part => `${part}\n`);
 
 const TIMEOUT = AppConstants.DEBUG ? 4000 : 800;
+
+function delay(timeout = TIMEOUT) {
+  return new Promise(resolve => setTimeout(resolve, timeout));
+}
+
+server.registerPathHandler("/slow_response.sjs", async (request, response) => {
+  response.processAsync();
+
+  response.setHeader("Content-Type", "text/html", false);
+  response.setHeader("Cache-Control", "no-cache", false);
+
+  await delay();
+
+  for (let part of PARTS) {
+    try {
+      response.write(part);
+    } catch (e) {
+      // This fails if we attempt to write data after the connection has
+      // been closed.
+      break;
+    }
+    await delay();
+  }
+
+  response.finish();
+});
+
+server.registerPathHandler("/lorem.html.gz", async (request, response) => {
+  response.processAsync();
+
+  response.setHeader("Content-Type", "Content-Type: text/html; charset=utf-8", false);
+  response.setHeader("Content-Encoding", "gzip", false);
+
+  let data = await OS.File.read(do_get_file("data/lorem.html.gz").path);
+  response.write(String.fromCharCode(...new Uint8Array(data)));
+
+  response.finish();
+});
+
+server.registerDirectory("/data/", do_get_file("data"));
+
 const TASKS = [
   {
     url: "slow_response.sjs",
@@ -74,12 +119,12 @@ const TASKS = [
           browser.test.assertEq("suspended", filter.status,
                                 `(${num}): Got expected suspended status`);
 
-          let fail = event => {
+          let fail = () => {
             browser.test.fail(`(${num}): Got unexpected data event while suspended`);
           };
           filter.addEventListener("data", fail);
 
-          await new Promise(resolve => setTimeout(resolve, TIMEOUT * 3));
+          await delay(TIMEOUT * 3);
 
           browser.test.assertEq("suspended", filter.status,
                                 `(${num}): Got expected suspended status`);
@@ -91,7 +136,7 @@ const TASKS = [
         } else if (n > 4) {
           filter.disconnect();
 
-          filter.addEventListener("data", event => {
+          filter.addEventListener("data", () => {
             browser.test.fail(`(${num}): Got unexpected data event while disconnected`);
           });
 
@@ -107,7 +152,7 @@ const TASKS = [
       };
     },
     verify(response) {
-      is(response, PARTS.join(""), "Got expected final HTML");
+      equal(response, PARTS.join(""), "Got expected final HTML");
     },
   },
   {
@@ -135,7 +180,7 @@ const TASKS = [
         if (n == 3) {
           filter.suspend();
 
-          await new Promise(resolve => setTimeout(resolve, TIMEOUT * 3));
+          await delay(TIMEOUT * 3);
 
           filter.disconnect();
 
@@ -148,7 +193,7 @@ const TASKS = [
       };
     },
     verify(response) {
-      is(response, PARTS.join(""), "Got expected final HTML");
+      equal(response, PARTS.join(""), "Got expected final HTML");
     },
   },
   {
@@ -181,7 +226,7 @@ const TASKS = [
           filter.suspend();
           checkState("suspended");
 
-          await new Promise(resolve => setTimeout(resolve, TIMEOUT * 3));
+          await delay(TIMEOUT * 3);
 
           checkState("suspended");
           filter.disconnect();
@@ -214,7 +259,7 @@ const TASKS = [
       };
     },
     verify(response) {
-      is(response, PARTS.join(""), "Got expected final HTML");
+      equal(response, PARTS.join(""), "Got expected final HTML");
     },
   },
   {
@@ -277,7 +322,7 @@ const TASKS = [
       };
     },
     verify(response) {
-      is(response, PARTS.slice(0, 3).join(""), "Got expected final HTML");
+      equal(response, PARTS.slice(0, 3).join(""), "Got expected final HTML");
     },
   },
   {
@@ -318,14 +363,12 @@ const TASKS = [
       };
     },
     verify(response) {
-      is(response, PARTS.join(""), "Got expected final HTML");
+      equal(response, PARTS.join(""), "Got expected final HTML");
     },
   },
 ];
 
 function serializeTest(test, num) {
-  /* globals ExtensionTestCommon */
-
   let url = `${test.url}?test_num=${num}`;
   let task = ExtensionTestCommon.serializeFunction(test.task);
 
@@ -360,7 +403,7 @@ add_task(async function() {
           }
         }
       }, {
-        urls: ["http://mochi.test/*?test_num=*"],
+        urls: ["http://example.com/*?test_num=*"],
       },
       ["blocking"]);
   }
@@ -370,6 +413,8 @@ add_task(async function() {
       const PARTS = ${JSON.stringify(PARTS)};
       const TIMEOUT = ${TIMEOUT};
 
+      ${delay}
+
       (${background})([${TASKS.map(serializeTest)}])
     `,
 
@@ -377,7 +422,7 @@ add_task(async function() {
       permissions: [
         "webRequest",
         "webRequestBlocking",
-        "http://mochi.test/",
+        "http://example.com/",
       ],
     },
   });
@@ -385,10 +430,9 @@ add_task(async function() {
   await extension.startup();
 
   async function runTest(test, num) {
-    let url = `${test.url}?test_num=${num}`;
+    let url = `${BASE_URL}/${test.url}?test_num=${num}`;
 
-    let resp = await fetch(url);
-    let body = await resp.text();
+    let body = await ExtensionTestUtils.fetch(FETCH_ORIGIN, url);
 
     await extension.awaitMessage(`finished-${num}`);
 
@@ -409,6 +453,8 @@ add_task(async function() {
 
 // Test that registering a listener for a cached response does not cause a crash.
 add_task(async function test_cachedResponse() {
+  Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
+
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.webRequest.onHeadersReceived.addListener(
@@ -426,7 +472,7 @@ add_task(async function test_cachedResponse() {
             browser.test.sendMessage("from-cache");
           }
         }, {
-          urls: ["http://mochi.test/*/file_sample.html?r=*"],
+          urls: ["http://example.com/*/file_sample.html?r=*"],
         },
         ["blocking"]);
     },
@@ -435,16 +481,16 @@ add_task(async function test_cachedResponse() {
       permissions: [
         "webRequest",
         "webRequestBlocking",
-        "http://mochi.test/",
+        "http://example.com/",
       ],
     },
   });
 
   await extension.startup();
 
-  let url = `file_sample.html?r=${Math.random()}`;
-  await fetch(url);
-  await fetch(url);
+  let url = `${BASE_URL}/data/file_sample.html?r=${Math.random()}`;
+  await ExtensionTestUtils.fetch(FETCH_ORIGIN, url);
+  await ExtensionTestUtils.fetch(FETCH_ORIGIN, url);
   await extension.awaitMessage("from-cache");
 
   await extension.unload();
@@ -471,7 +517,7 @@ add_task(async function test_late_close() {
             browser.test.sendMessage(`done-${data.url}`);
           };
         }, {
-          urls: ["http://mochi.test/*/file_sample.html?*"],
+          urls: ["http://example.com/*/file_sample.html?*"],
         },
         ["blocking"]);
     },
@@ -480,7 +526,7 @@ add_task(async function test_late_close() {
       permissions: [
         "webRequest",
         "webRequestBlocking",
-        "http://mochi.test/",
+        "http://example.com/",
       ],
     },
   });
@@ -491,10 +537,10 @@ add_task(async function test_late_close() {
   // the chances of triggering it.
   let urls = [];
   for (let i = 0; i < 32; i++) {
-    urls.push(new URL(`file_sample.html?r=${Math.random()}`, location).href);
+    urls.push(`${BASE_URL}/data/file_sample.html?r=${Math.random()}`);
   }
 
-  await Promise.all(urls.map(url => fetch(url)));
+  await Promise.all(urls.map(url => ExtensionTestUtils.fetch(FETCH_ORIGIN, url)));
   await Promise.all(urls.map(url => extension.awaitMessage(`done-${url}`)));
 
   await extension.unload();
@@ -512,7 +558,7 @@ add_task(async function test_permissions() {
     manifest: {
       permissions: [
         "webRequest",
-        "http://mochi.test/",
+        "http://example.com/",
       ],
     },
   });
@@ -539,7 +585,7 @@ add_task(async function test_invalidId() {
       permissions: [
         "webRequest",
         "webRequestBlocking",
-        "http://mochi.test/",
+        "http://example.com/",
       ],
     },
   });
@@ -548,6 +594,3 @@ add_task(async function test_invalidId() {
   await extension.awaitFinish("invalid-request-id");
   await extension.unload();
 });
-</script>
-</body>
-</html>
