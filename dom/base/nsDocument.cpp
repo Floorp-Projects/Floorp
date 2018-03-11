@@ -6147,9 +6147,9 @@ GetElementByAttribute(Element* aElement, nsAtom* aAttrName,
 }
 
 Element*
-nsDocument::GetAnonymousElementByAttribute(nsIContent* aElement,
-                                           nsAtom* aAttrName,
-                                           const nsAString& aAttrValue) const
+nsIDocument::GetAnonymousElementByAttribute(nsIContent* aElement,
+                                            nsAtom* aAttrName,
+                                            const nsAString& aAttrValue) const
 {
   nsINodeList* nodeList = BindingManager()->GetAnonymousNodesFor(aElement);
   if (!nodeList)

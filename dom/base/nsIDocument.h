@@ -2244,10 +2244,9 @@ public:
     return mHaveFiredTitleChange;
   }
 
-  virtual Element*
-    GetAnonymousElementByAttribute(nsIContent* aElement,
-                                   nsAtom* aAttrName,
-                                   const nsAString& aAttrValue) const = 0;
+  Element* GetAnonymousElementByAttribute(nsIContent* aElement,
+                                          nsAtom* aAttrName,
+                                          const nsAString& aAttrValue) const;
 
   virtual nsresult NodesFromRectHelper(float aX, float aY,
                                        float aTopSize, float aRightSize,
