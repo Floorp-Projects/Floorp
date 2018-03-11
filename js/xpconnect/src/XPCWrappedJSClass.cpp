@@ -540,17 +540,6 @@ GetFunctionName(JSContext* cx, HandleObject obj)
 
 /***************************************************************************/
 
-// static
-bool
-nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
-{
-    void* result;
-    NS_PRECONDITION(aPtr, "null pointer");
-    return aPtr &&
-           NS_OK == aPtr->QueryInterface(NS_GET_IID(WrappedJSIdentity), &result) &&
-           result == WrappedJSIdentity::GetSingleton();
-}
-
 NS_IMETHODIMP
 nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                              REFNSIID aIID,

@@ -1786,8 +1786,6 @@ public:
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     const char* GetInterfaceName();
 
-    static bool IsWrappedJS(nsISupports* aPtr);
-
     NS_IMETHOD DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,
                                        void** aInstancePtr);
 
