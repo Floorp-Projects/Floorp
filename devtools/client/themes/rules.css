@@ -517,6 +517,29 @@
   background-size: 1em;
 }
 
+.ruleview-rule:not(:hover) .ruleview-fontswatch:not(.active) {
+  visibility: hidden;
+}
+
+.ruleview-fontswatch {
+  background-color: var(--grey-40);
+  background-size: 1em;
+  color: white;
+  cursor: pointer;
+
+  font-size: .8em;
+  position: absolute;
+  right: 2em;
+  bottom: .5em;
+  padding: .1em .2em;
+
+  -moz-user-select: none;
+}
+
+.ruleview-fontswatch.active {
+  background-color: var(--blue-50);
+}
+
 .ruleview-shapeswatch {
   background: url("chrome://devtools/skin/images/tool-shadereditor.svg");
   -moz-context-properties: fill;
