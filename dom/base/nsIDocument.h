@@ -2020,17 +2020,16 @@ public:
    * false to stop.  This will never get passed a null aDocument.
    */
   typedef bool (*nsSubDocEnumFunc)(nsIDocument *aDocument, void *aData);
-  virtual void EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
-                                     void *aData) = 0;
+  void EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData);
 
   /**
    * Collect all the descendant documents for which |aCalback| returns true.
    * The callback function must not mutate any state for the given document.
    */
   typedef bool (*nsDocTestFunc)(const nsIDocument* aDocument);
-  virtual void CollectDescendantDocuments(
+  void CollectDescendantDocuments(
     nsTArray<nsCOMPtr<nsIDocument>>& aDescendants,
-    nsDocTestFunc aCallback) const = 0;
+    nsDocTestFunc aCallback) const;
 
   /**
    * Check whether it is safe to cache the presentation of this document
