@@ -40,17 +40,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsContentList.h"
 #include "nsGkAtoms.h"
-#include "nsIApplicationCache.h"
-#include "nsIApplicationCacheContainer.h"
 #include "mozilla/StyleSetHandle.h"
 #include "PLDHashTable.h"
 #include "nsDOMAttributeMap.h"
-#include "nsIContentViewer.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsILoadContext.h"
-#include "nsIProgressEventSink.h"
-#include "nsISecurityEventSink.h"
-#include "nsIChannelEventSink.h"
 #include "imgIRequest.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
@@ -138,162 +130,6 @@ private:
   ~nsOnloadBlocker() {}
 };
 
-class nsExternalResourceMap
-{
-public:
-  typedef nsIDocument::ExternalResourceLoad ExternalResourceLoad;
-  nsExternalResourceMap();
-
-  /**
-   * Request an external resource document.  This does exactly what
-   * nsIDocument::RequestExternalResource is documented to do.
-   */
-  nsIDocument* RequestResource(nsIURI* aURI,
-                               nsINode* aRequestingNode,
-                               nsDocument* aDisplayDocument,
-                               ExternalResourceLoad** aPendingLoad);
-
-  /**
-   * Enumerate the resource documents.  See
-   * nsIDocument::EnumerateExternalResources.
-   */
-  void EnumerateResources(nsIDocument::nsSubDocEnumFunc aCallback, void* aData);
-
-  /**
-   * Traverse ourselves for cycle-collection
-   */
-  void Traverse(nsCycleCollectionTraversalCallback* aCallback) const;
-
-  /**
-   * Shut ourselves down (used for cycle-collection unlink), as well
-   * as for document destruction.
-   */
-  void Shutdown()
-  {
-    mPendingLoads.Clear();
-    mMap.Clear();
-    mHaveShutDown = true;
-  }
-
-  bool HaveShutDown() const
-  {
-    return mHaveShutDown;
-  }
-
-  // Needs to be public so we can traverse them sanely
-  struct ExternalResource
-  {
-    ~ExternalResource();
-    nsCOMPtr<nsIDocument> mDocument;
-    nsCOMPtr<nsIContentViewer> mViewer;
-    nsCOMPtr<nsILoadGroup> mLoadGroup;
-  };
-
-  // Hide all our viewers
-  void HideViewers();
-
-  // Show all our viewers
-  void ShowViewers();
-
-protected:
-  class PendingLoad : public ExternalResourceLoad,
-                      public nsIStreamListener
-  {
-    ~PendingLoad() {}
-
-  public:
-    explicit PendingLoad(nsDocument* aDisplayDocument) :
-      mDisplayDocument(aDisplayDocument)
-    {}
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSIREQUESTOBSERVER
-
-    /**
-     * Start aURI loading.  This will perform the necessary security checks and
-     * so forth.
-     */
-    nsresult StartLoad(nsIURI* aURI, nsINode* aRequestingNode);
-
-    /**
-     * Set up an nsIContentViewer based on aRequest.  This is guaranteed to
-     * put null in *aViewer and *aLoadGroup on all failures.
-     */
-    nsresult SetupViewer(nsIRequest* aRequest, nsIContentViewer** aViewer,
-                         nsILoadGroup** aLoadGroup);
-
-  private:
-    RefPtr<nsDocument> mDisplayDocument;
-    nsCOMPtr<nsIStreamListener> mTargetListener;
-    nsCOMPtr<nsIURI> mURI;
-  };
-  friend class PendingLoad;
-
-  class LoadgroupCallbacks final : public nsIInterfaceRequestor
-  {
-    ~LoadgroupCallbacks() {}
-  public:
-    explicit LoadgroupCallbacks(nsIInterfaceRequestor* aOtherCallbacks)
-      : mCallbacks(aOtherCallbacks)
-    {}
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIINTERFACEREQUESTOR
-  private:
-    // The only reason it's safe to hold a strong ref here without leaking is
-    // that the notificationCallbacks on a loadgroup aren't the docshell itself
-    // but a shim that holds a weak reference to the docshell.
-    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-
-    // Use shims for interfaces that docshell implements directly so that we
-    // don't hand out references to the docshell.  The shims should all allow
-    // getInterface back on us, but other than that each one should only
-    // implement one interface.
-
-    // XXXbz I wish we could just derive the _allcaps thing from _i
-#define DECL_SHIM(_i, _allcaps)                                              \
-    class _i##Shim final : public nsIInterfaceRequestor,                     \
-                           public _i                                         \
-    {                                                                        \
-      ~_i##Shim() {}                                                         \
-    public:                                                                  \
-      _i##Shim(nsIInterfaceRequestor* aIfreq, _i* aRealPtr)                  \
-        : mIfReq(aIfreq), mRealPtr(aRealPtr)                                 \
-      {                                                                      \
-        NS_ASSERTION(mIfReq, "Expected non-null here");                      \
-        NS_ASSERTION(mRealPtr, "Expected non-null here");                    \
-      }                                                                      \
-      NS_DECL_ISUPPORTS                                                      \
-      NS_FORWARD_NSIINTERFACEREQUESTOR(mIfReq->)                             \
-      NS_FORWARD_##_allcaps(mRealPtr->)                                      \
-    private:                                                                 \
-      nsCOMPtr<nsIInterfaceRequestor> mIfReq;                                \
-      nsCOMPtr<_i> mRealPtr;                                                 \
-    };
-
-    DECL_SHIM(nsILoadContext, NSILOADCONTEXT)
-    DECL_SHIM(nsIProgressEventSink, NSIPROGRESSEVENTSINK)
-    DECL_SHIM(nsIChannelEventSink, NSICHANNELEVENTSINK)
-    DECL_SHIM(nsISecurityEventSink, NSISECURITYEVENTSINK)
-    DECL_SHIM(nsIApplicationCacheContainer, NSIAPPLICATIONCACHECONTAINER)
-#undef DECL_SHIM
-  };
-
-  /**
-   * Add an ExternalResource for aURI.  aViewer and aLoadGroup might be null
-   * when this is called if the URI didn't result in an XML document.  This
-   * function makes sure to remove the pending load for aURI, if any, from our
-   * hashtable, and to notify its observers, if any.
-   */
-  nsresult AddExternalResource(nsIURI* aURI, nsIContentViewer* aViewer,
-                               nsILoadGroup* aLoadGroup,
-                               nsIDocument* aDisplayDocument);
-
-  nsClassHashtable<nsURIHashKey, ExternalResource> mMap;
-  nsRefPtrHashtable<nsURIHashKey, PendingLoad> mPendingLoads;
-  bool mHaveShutDown;
-};
-
 // Base class for our document implementations.
 class nsDocument : public nsIDocument,
                    public nsIDOMDocument,
@@ -377,7 +213,6 @@ public:
   virtual void BeginLoad() override;
   virtual void EndLoad() override;
 
-  virtual void FlushExternalResources(mozilla::FlushType aType) override;
   virtual void SetXMLDeclaration(const char16_t *aVersion,
                                  const char16_t *aEncoding,
                                  const int32_t aStandalone) override;
@@ -496,20 +331,9 @@ public:
   virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) override;
   virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer) override;
   virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) override;
-  virtual nsIDocument*
-    RequestExternalResource(nsIURI* aURI,
-                            nsINode* aRequestingNode,
-                            ExternalResourceLoad** aPendingLoad) override;
-  virtual void
-    EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData) override;
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
                                                                    nsIDocument)
-
-  nsExternalResourceMap& ExternalResourceMap()
-  {
-    return mExternalResourceMap;
-  }
 
   void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
   void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData)
@@ -690,8 +514,6 @@ private:
   RefPtr<nsRunnableMethod<nsDocument> > mFrameLoaderRunner;
 
   nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
-
-  nsExternalResourceMap mExternalResourceMap;
 
   // These member variables cache information about the viewport so we don't have to
   // recalculate it each time.
