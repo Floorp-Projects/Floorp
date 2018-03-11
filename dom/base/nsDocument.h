@@ -301,8 +301,6 @@ public:
   virtual void BlockOnload() override;
   virtual void UnblockOnload(bool aFireSync) override;
 
-  virtual void FlushSkinBindings() override;
-
   virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) override;
   virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer) override;
   virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) override;
