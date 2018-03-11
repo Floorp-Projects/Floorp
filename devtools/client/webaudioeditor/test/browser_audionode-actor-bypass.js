@@ -5,32 +5,32 @@
  * Test AudioNode#bypass(), AudioNode#isBypassed()
  */
 
-add_task(function* () {
-  let { target, front } = yield initBackend(SIMPLE_CONTEXT_URL);
-  let [_, [destNode, oscNode, gainNode]] = yield Promise.all([
+add_task(async function () {
+  let { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
+  let [_, [destNode, oscNode, gainNode]] = await Promise.all([
     front.setup({ reload: true }),
     get3(front, "create-node")
   ]);
 
-  is((yield gainNode.isBypassed()), false, "Nodes start off unbypassed.");
+  is((await gainNode.isBypassed()), false, "Nodes start off unbypassed.");
 
   info("Calling node#bypass(true)");
-  let isBypassed = yield gainNode.bypass(true);
+  let isBypassed = await gainNode.bypass(true);
 
   is(isBypassed, true, "node.bypass(true) resolves to true");
-  is((yield gainNode.isBypassed()), true, "Node is now bypassed.");
+  is((await gainNode.isBypassed()), true, "Node is now bypassed.");
 
   info("Calling node#bypass(false)");
-  isBypassed = yield gainNode.bypass(false);
+  isBypassed = await gainNode.bypass(false);
 
   is(isBypassed, false, "node.bypass(false) resolves to false");
-  is((yield gainNode.isBypassed()), false, "Node back to being unbypassed.");
+  is((await gainNode.isBypassed()), false, "Node back to being unbypassed.");
 
   info("Calling node#bypass(true) on unbypassable node");
-  isBypassed = yield destNode.bypass(true);
+  isBypassed = await destNode.bypass(true);
 
   is(isBypassed, false, "node.bypass(true) resolves to false for unbypassable node");
-  is((yield gainNode.isBypassed()), false, "Unbypassable node is unaffect");
+  is((await gainNode.isBypassed()), false, "Unbypassable node is unaffect");
 
-  yield removeTab(target.tab);
+  await removeTab(target.tab);
 });

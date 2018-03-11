@@ -192,13 +192,13 @@ function runAsyncTests(aScratchpad, aTests)
  * @return Promise
  *         The promise that will be resolved when all tests are finished.
  */
-var runAsyncCallbackTests = Task.async(function* (aScratchpad, aTests) {
+var runAsyncCallbackTests = async function (aScratchpad, aTests) {
   for (let {prepare, method, then} of aTests) {
-    yield prepare();
-    let res = yield aScratchpad[method]();
-    yield then(res);
+    await prepare();
+    let res = await aScratchpad[method]();
+    await then(res);
   }
-});
+};
 
 /**
  * A simple wrapper for ContentTask.spawn for more compact code.

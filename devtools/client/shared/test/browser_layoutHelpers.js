@@ -8,8 +8,8 @@ const {scrollIntoViewIfNeeded} = require("devtools/client/shared/scroll");
 
 const TEST_URI = TEST_URI_ROOT + "doc_layoutHelpers.html";
 
-add_task(function* () {
-  let [host, win] = yield createHost("bottom", TEST_URI);
+add_task(async function() {
+  let [host, win] = await createHost("bottom", TEST_URI);
   runTest(win);
   host.destroy();
 });

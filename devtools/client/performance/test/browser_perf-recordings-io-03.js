@@ -10,25 +10,25 @@
 var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
 
-var test = Task.async(function* () {
-  let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
+var test = async function () {
+  let { target, panel, toolbox } = await initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController } = panel.panelWin;
 
   let file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
-  yield asyncCopy({ bogus: "data" }, file);
+  await asyncCopy({ bogus: "data" }, file);
 
   try {
-    yield PerformanceController.importRecording("", file);
+    await PerformanceController.importRecording("", file);
     ok(false, "The recording succeeded unexpectedly.");
   } catch (e) {
     is(e.message, "Unrecognized recording data file.", "Message is correct.");
     ok(true, "The recording was cancelled.");
   }
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
-});
+};
 
 function getUnicodeConverter() {
   let className = "@mozilla.org/intl/scriptableunicodeconverter";

@@ -10,8 +10,8 @@
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 
-add_task(function* () {
-  let { target, toolbox, panel } = yield initPerformanceInNewTab({
+add_task(async function() {
+  let { target, toolbox, panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -24,5 +24,5 @@ add_task(function* () {
   ok(panel.panelWin.gToolbox, "Should have a toolbox reference on the panel window.");
   ok(panel.panelWin.gFront, "Should have a front reference on the panel window.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

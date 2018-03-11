@@ -8,7 +8,7 @@
 
 const { Poller } = require("devtools/client/shared/poller");
 
-add_task(function* () {
+add_task(async function() {
   let count1 = 0, count2 = 0, count3 = 0;
 
   let poller1 = new Poller(function() {
@@ -26,26 +26,26 @@ add_task(function* () {
   ok(!poller1.isPolling(), "isPolling() returns false for an off poller");
   ok(poller2.isPolling(), "isPolling() returns true for an on poller");
 
-  yield waitUntil(() => count2 > 10);
+  await waitUntil(() => count2 > 10);
 
   ok(count2 > 10, "poller that was turned on polled several times");
   ok(count1 === 0, "poller that was never turned on never polled");
 
-  yield poller2.off();
+  await poller2.off();
   let currentCount2 = count2;
 
   // Really high poll time!
   poller1.on();
   poller3.on();
 
-  yield waitUntil(() => count1 === 1);
+  await waitUntil(() => count1 === 1);
   ok(true, "Poller calls fn immediately when `immediate` is true");
   ok(count3 === 0, "Poller does not call fn immediately when `immediate` is not set");
 
   ok(count2 === currentCount2, "a turned off poller does not continue to poll");
-  yield poller2.off();
-  yield poller2.off();
-  yield poller2.off();
+  await poller2.off();
+  await poller2.off();
+  await poller2.off();
   ok(true, "Poller.prototype.off() is idempotent");
 
   // This should still have not polled a second time
@@ -55,7 +55,7 @@ add_task(function* () {
   ok(!poller2.isPolling(), "isPolling() returns false for an off poller");
 });
 
-add_task(function* () {
+add_task(async function() {
   let count = -1;
   // Create a poller that returns a promise.
   // The promise is resolved asynchronously after adding 9 to the count, ensuring
@@ -77,11 +77,11 @@ add_task(function* () {
   });
 
   asyncPoller.on(1);
-  yield waitUntil(() => count > 50);
-  yield asyncPoller.off();
+  await waitUntil(() => count > 50);
+  await asyncPoller.off();
 });
 
-add_task(function* () {
+add_task(async function() {
   // Create a poller that returns a promise. This poll call
   // is called immediately, and then subsequently turned off.
   // The call to `off` should not resolve until the inflight call
@@ -99,13 +99,13 @@ add_task(function* () {
   }, 1, true);
   asyncPoller.on();
 
-  yield asyncPoller.off();
+  await asyncPoller.off();
   ok(inflightFinished,
      "off() method does not resolve until remaining inflight poll calls finish");
   is(pollCalls, 1, "should only be one poll call to occur before turning off polling");
 });
 
-add_task(function* () {
+add_task(async function() {
   // Create a poller that returns a promise. This poll call
   // is called immediately, and then subsequently turned off.
   // The call to `off` should not resolve until the inflight call
@@ -123,7 +123,7 @@ add_task(function* () {
   }, 1, true);
   asyncPoller.on();
 
-  yield asyncPoller.destroy();
+  await asyncPoller.destroy();
   ok(inflightFinished,
      "destroy() method does not resolve until remaining inflight poll calls finish");
   is(pollCalls, 1, "should only be one poll call to occur before destroying polling");

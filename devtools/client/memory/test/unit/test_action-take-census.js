@@ -15,16 +15,16 @@ var { changeView } = require("devtools/client/memory/actions/view");
 // triggers an assertion failure.
 EXPECTED_DTU_ASSERT_FAILURE_COUNT = 1;
 
-add_task(function* () {
+add_task(async function() {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
 
   store.dispatch(changeView(viewState.CENSUS));
 
   store.dispatch(actions.takeSnapshot(front));
-  yield waitUntilState(store, () => {
+  await waitUntilState(store, () => {
     let snapshots = store.getState().snapshots;
     return snapshots.length === 1 && snapshots[0].state === states.SAVED;
   });
@@ -34,18 +34,18 @@ add_task(function* () {
 
   // Test error case of wrong state.
   store.dispatch(actions.takeCensus(heapWorker, snapshot.id));
-  yield waitUntilState(store, () => store.getState().errors.length === 1);
+  await waitUntilState(store, () => store.getState().errors.length === 1);
 
   dumpn("Found error: " + store.getState().errors[0]);
   ok(/Assertion failure/.test(store.getState().errors[0]),
     "Error thrown when taking a census of a snapshot that has not been read.");
 
   store.dispatch(actions.readSnapshot(heapWorker, snapshot.id));
-  yield waitUntilState(store, () => store.getState().snapshots[0].state === states.READ);
+  await waitUntilState(store, () => store.getState().snapshots[0].state === states.READ);
 
   store.dispatch(actions.takeCensus(heapWorker, snapshot.id));
-  yield waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
-  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
+  await waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
+  await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
   snapshot = store.getState().snapshots[0];
   ok(snapshot.census, "Snapshot has census after saved census");

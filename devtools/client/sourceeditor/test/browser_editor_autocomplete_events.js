@@ -8,30 +8,30 @@ const {InspectorFront} = require("devtools/shared/fronts/inspector");
 const TEST_URI = "data:text/html;charset=UTF-8,<html><body><bar></bar>" +
                  "<div id='baz'></div><body></html>";
 
-add_task(function* () {
-  yield addTab(TEST_URI);
-  yield runTests();
+add_task(async function() {
+  await addTab(TEST_URI);
+  await runTests();
 });
 
-function* runTests() {
+async function runTests() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield target.makeRemote();
+  await target.makeRemote();
   let inspector = InspectorFront(target.client, target.form);
-  let walker = yield inspector.getWalker();
-  let {ed, win, edWin} = yield setup(null, {
+  let walker = await inspector.getWalker();
+  let {ed, win, edWin} = await setup(null, {
     autocomplete: true,
     mode: Editor.modes.css,
     autocompleteOpts: {walker: walker, cssProperties: getClientCssProperties()}
   });
-  yield testMouse(ed, edWin);
-  yield testKeyboard(ed, edWin);
-  yield testKeyboardCycle(ed, edWin);
-  yield testKeyboardCycleForPrefixedString(ed, edWin);
-  yield testKeyboardCSSComma(ed, edWin);
+  await testMouse(ed, edWin);
+  await testKeyboard(ed, edWin);
+  await testKeyboardCycle(ed, edWin);
+  await testKeyboardCycleForPrefixedString(ed, edWin);
+  await testKeyboardCSSComma(ed, edWin);
   teardown(ed, win);
 }
 
-function* testKeyboard(ed, win) {
+async function testKeyboard(ed, win) {
   ed.focus();
   ed.setText("b");
   ed.setCursor({line: 1, ch: 1});
@@ -43,13 +43,13 @@ function* testKeyboard(ed, win) {
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
   info("Waiting for popup to be opened");
-  yield popupOpened;
+  await popupOpened;
 
   EventUtils.synthesizeKey("VK_RETURN", { }, win);
   is(ed.getText(), "bar", "Editor text has been updated");
 }
 
-function* testKeyboardCycle(ed, win) {
+async function testKeyboardCycle(ed, win) {
   ed.focus();
   ed.setText("b");
   ed.setCursor({line: 1, ch: 1});
@@ -61,7 +61,7 @@ function* testKeyboardCycle(ed, win) {
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
   info("Waiting for popup to be opened");
-  yield popupOpened;
+  await popupOpened;
 
   EventUtils.synthesizeKey("VK_DOWN", { }, win);
   is(ed.getText(), "bar", "Editor text has been updated");
@@ -73,7 +73,7 @@ function* testKeyboardCycle(ed, win) {
   is(ed.getText(), "#baz", "Editor text has been updated");
 }
 
-function* testKeyboardCycleForPrefixedString(ed, win) {
+async function testKeyboardCycleForPrefixedString(ed, win) {
   ed.focus();
   ed.setText("#b");
   ed.setCursor({line: 1, ch: 2});
@@ -85,13 +85,13 @@ function* testKeyboardCycleForPrefixedString(ed, win) {
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
   info("Waiting for popup to be opened");
-  yield popupOpened;
+  await popupOpened;
 
   EventUtils.synthesizeKey("VK_DOWN", { }, win);
   is(ed.getText(), "#baz", "Editor text has been updated");
 }
 
-function* testKeyboardCSSComma(ed, win) {
+async function testKeyboardCSSComma(ed, win) {
   ed.focus();
   ed.setText("b");
   ed.setCursor({line: 1, ch: 1});
@@ -104,12 +104,12 @@ function* testKeyboardCSSComma(ed, win) {
 
   EventUtils.synthesizeKey(",", { }, win);
 
-  yield wait(500);
+  await wait(500);
 
   ok(!isPopupOpened, "Autocompletion shouldn't be opened");
 }
 
-function* testMouse(ed, win) {
+async function testMouse(ed, win) {
   ed.focus();
   ed.setText("b");
   ed.setCursor({line: 1, ch: 1});
@@ -121,7 +121,7 @@ function* testMouse(ed, win) {
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
   info("Waiting for popup to be opened");
-  yield popupOpened;
+  await popupOpened;
   ed.getAutocompletionPopup()._list.children[2].click();
   is(ed.getText(), "#baz", "Editor text has been updated");
 }

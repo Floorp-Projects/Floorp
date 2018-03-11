@@ -13,20 +13,20 @@ const { synthesizeProfile } = require("devtools/client/performance/test/helpers/
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function() {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, $, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   let rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
-  yield DetailsView.selectView("js-calltree");
-  yield rendered;
+  await DetailsView.selectView("js-calltree");
+  await rendered;
 
   // Mock the profile used so we can get a deterministic tree created.
   let profile = synthesizeProfile();
@@ -54,5 +54,5 @@ add_task(function* () {
   JsCallTreeView.off("focus", onFocus);
   is(count, 4, "Several focus events are fired for the calltree.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

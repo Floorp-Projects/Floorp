@@ -73,7 +73,7 @@ async function waitForFrameAdded() {
   info("Waiting for framesadded");
   await new Promise(resolve => {
     thread.addOneTimeListener("framesadded", resolve);
-    ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
       content.wrappedJSObject.firstCall();
     });
   });

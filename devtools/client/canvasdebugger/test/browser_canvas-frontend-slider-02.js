@@ -5,20 +5,20 @@
  * Tests if the slider in the calls list view works as advertised.
  */
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, gFront, SnapshotsListView, CallsListView } = panel.panelWin;
 
-  yield reload(target);
+  await reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   let thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
-  yield promise.all([recordingFinished, callListPopulated, thumbnailsDisplayed]);
+  await promise.all([recordingFinished, callListPopulated, thumbnailsDisplayed]);
 
   let firstSnapshot = SnapshotsListView.getItemAtIndex(0);
-  let firstSnapshotOverview = yield firstSnapshot.attachment.actor.getOverview();
+  let firstSnapshotOverview = await firstSnapshot.attachment.actor.getOverview();
 
   let thumbnails = firstSnapshotOverview.thumbnails;
   is(thumbnails.length, 4,
@@ -26,55 +26,55 @@ function* ifTestingSupported() {
 
   let thumbnailImageElementSet = waitForMozSetImageElement(window);
   $("#calls-slider").value = 1;
-  let thumbnailPixels = yield thumbnailImageElementSet;
+  let thumbnailPixels = await thumbnailImageElementSet;
 
   ok(sameArray(thumbnailPixels, thumbnails[0].pixels),
     "The screenshot element should have a thumbnail as an immediate background.");
 
-  yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  await once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   ok(true, "The full-sized screenshot was displayed for the item at index 1.");
 
   thumbnailImageElementSet = waitForMozSetImageElement(window);
   $("#calls-slider").value = 2;
-  thumbnailPixels = yield thumbnailImageElementSet;
+  thumbnailPixels = await thumbnailImageElementSet;
 
   ok(sameArray(thumbnailPixels, thumbnails[1].pixels),
     "The screenshot element should have a thumbnail as an immediate background.");
 
-  yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  await once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   ok(true, "The full-sized screenshot was displayed for the item at index 2.");
 
   thumbnailImageElementSet = waitForMozSetImageElement(window);
   $("#calls-slider").value = 7;
-  thumbnailPixels = yield thumbnailImageElementSet;
+  thumbnailPixels = await thumbnailImageElementSet;
 
   ok(sameArray(thumbnailPixels, thumbnails[3].pixels),
     "The screenshot element should have a thumbnail as an immediate background.");
 
-  yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  await once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   ok(true, "The full-sized screenshot was displayed for the item at index 7.");
 
   thumbnailImageElementSet = waitForMozSetImageElement(window);
   $("#calls-slider").value = 4;
-  thumbnailPixels = yield thumbnailImageElementSet;
+  thumbnailPixels = await thumbnailImageElementSet;
 
   ok(sameArray(thumbnailPixels, thumbnails[2].pixels),
     "The screenshot element should have a thumbnail as an immediate background.");
 
-  yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  await once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   ok(true, "The full-sized screenshot was displayed for the item at index 4.");
 
   thumbnailImageElementSet = waitForMozSetImageElement(window);
   $("#calls-slider").value = 0;
-  thumbnailPixels = yield thumbnailImageElementSet;
+  thumbnailPixels = await thumbnailImageElementSet;
 
   ok(sameArray(thumbnailPixels, thumbnails[0].pixels),
     "The screenshot element should have a thumbnail as an immediate background.");
 
-  yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  await once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   ok(true, "The full-sized screenshot was displayed for the item at index 0.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }
 

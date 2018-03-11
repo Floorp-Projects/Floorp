@@ -59,14 +59,14 @@ const mockGetCSSValuesForPropertyName = function(propertyName) {
   return values[propertyName] || [];
 };
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,inplace editor CSS value autocomplete");
-  let [host,, doc] = yield createHost("bottom", TEST_URI);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8,inplace editor CSS value autocomplete");
+  let [host,, doc] = await createHost("bottom", TEST_URI);
 
   let popup = new AutocompletePopup(doc, { autoSelect: true });
 
   info("Create a CSS_MIXED type autocomplete");
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     createInplaceEditorAndClick({
       initial: "style=",
       start: runAutocompletionTest,
@@ -81,7 +81,7 @@ add_task(function* () {
   gBrowser.removeCurrentTab();
 });
 
-let runAutocompletionTest = Task.async(function* (editor) {
+let runAutocompletionTest = async function(editor) {
   info("Starting autocomplete test for inplace-editor popup offset");
   editor._getCSSPropertyList = mockGetCSSPropertyList;
   editor._getCSSValuesForPropertyName = mockGetCSSValuesForPropertyName;
@@ -97,12 +97,12 @@ let runAutocompletionTest = Task.async(function* (editor) {
       ok(offset > previousOffset, "New popup offset is greater than the previous one");
       previousOffset = offset;
     } else {
-      yield testCompletion(data, editor);
+      await testCompletion(data, editor);
     }
   }
 
   EventUtils.synthesizeKey("VK_RETURN", {}, editor.input.defaultView);
-});
+};
 
 /**
  * Get the autocomplete panel left offset, relative to the provided input's left offset.

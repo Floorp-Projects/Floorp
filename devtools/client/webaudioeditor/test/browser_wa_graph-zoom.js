@@ -5,14 +5,14 @@
  * Tests that the graph's scale and position is reset on a page reload.
  */
 
-add_task(function* () {
-  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(async function () {
+  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, ContextView } = panelWin;
 
   let started = once(gFront, "start-context");
 
-  yield Promise.all([
+  await Promise.all([
     waitForGraphRendered(panelWin, 3, 2),
     reload(target),
   ]);
@@ -30,7 +30,7 @@ add_task(function* () {
   is(ContextView.getCurrentTranslation()[0], 100, "After zoom, x-translation is 100.");
   is(ContextView.getCurrentTranslation()[1], 400, "After zoom, y-translation is 400.");
 
-  yield Promise.all([
+  await Promise.all([
     waitForGraphRendered(panelWin, 3, 2),
     reload(target),
   ]);
@@ -39,5 +39,5 @@ add_task(function* () {
   is(ContextView.getCurrentTranslation()[0], 20, "After refresh, x-translation is 20.");
   is(ContextView.getCurrentTranslation()[1], 20, "After refresh, y-translation is 20.");
 
-  yield teardown(target);
+  await teardown(target);
 });

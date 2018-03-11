@@ -24,20 +24,20 @@ function getTooltipContent(doc) {
   return div;
 }
 
-add_task(function* () {
-  let [,, doc] = yield createHost("bottom", TEST_URI);
+add_task(async function() {
+  let [,, doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
-  yield runTests(doc);
+  await runTests(doc);
 
   info("Run tests for a Tooltip with a XUL panel");
   useXulWrapper = true;
-  yield runTests(doc);
+  await runTests(doc);
 });
 
-function* runTests(doc) {
-  yield addTab("about:blank");
+async function runTests(doc) {
+  await addTab("about:blank");
   let tooltip = new HTMLTooltip(doc, {useXulWrapper});
 
   info("Set tooltip content");
@@ -53,10 +53,10 @@ function* runTests(doc) {
   let onShown = tooltip.once("shown");
   tooltip.show(doc.getElementById("box1"));
 
-  yield onShown;
+  await onShown;
   is(shown, 1, "Event shown was fired once");
 
-  yield waitForReflow(tooltip);
+  await waitForReflow(tooltip);
   is(tooltip.isVisible(), true, "Tooltip is visible");
 
   info("Hide the tooltip and check the expected events are fired.");
@@ -67,10 +67,10 @@ function* runTests(doc) {
   let onPopupHidden = tooltip.once("hidden");
   tooltip.hide();
 
-  yield onPopupHidden;
+  await onPopupHidden;
   is(hidden, 1, "Event hidden was fired once");
 
-  yield waitForReflow(tooltip);
+  await waitForReflow(tooltip);
   is(tooltip.isVisible(), false, "Tooltip is not visible");
 
   tooltip.destroy();

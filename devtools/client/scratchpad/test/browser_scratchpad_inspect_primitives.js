@@ -4,7 +4,6 @@
 // Test that inspecting primitive values uses the object inspector, not an
 // inline comment.
 
-var {Task} = require("devtools/shared/task");
 
 function test() {
   const options = {
@@ -15,26 +14,26 @@ function test() {
     .then(finish, console.error);
 }
 
-function* runTests([win, sp]) {
+async function runTests([win, sp]) {
   // Inspect a number.
-  yield checkResults(sp, 7);
+  await checkResults(sp, 7);
 
   // Inspect a string.
-  yield checkResults(sp, "foobar", true);
+  await checkResults(sp, "foobar", true);
 
   // Inspect a boolean.
-  yield checkResults(sp, true);
+  await checkResults(sp, true);
 }
 
 // Helper function that does the actual testing.
-var checkResults = Task.async(function* (sp, value, isString = false) {
+var checkResults = async function (sp, value, isString = false) {
   let sourceValue = value;
   if (isString) {
     sourceValue = '"' + value + '"';
   }
   let source = "var foobar = " + sourceValue + "; foobar";
   sp.setText(source);
-  yield sp.inspect();
+  await sp.inspect();
 
   let sidebar = sp.sidebar;
   ok(sidebar.visible, "sidebar is open");
@@ -58,4 +57,4 @@ var checkResults = Task.async(function* (sp, value, isString = false) {
   ok(!tabbox.hasAttribute("hidden"), "Scratchpad sidebar visible");
   sidebar.hide();
   ok(tabbox.hasAttribute("hidden"), "Scratchpad sidebar hidden");
-});
+};

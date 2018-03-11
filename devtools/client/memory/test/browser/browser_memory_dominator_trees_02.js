@@ -18,7 +18,7 @@ function clickOnNodeArrow(node, panel) {
                                      {}, panel.panelWin);
 }
 
-this.test = makeMemoryTest(TEST_URL, function* ({ panel }) {
+this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
   // Taking snapshots and computing dominator trees is slow :-/
   requestLongerTimeout(4);
 
@@ -33,7 +33,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ panel }) {
   EventUtils.synthesizeMouseAtCenter(takeSnapshotButton, {}, panel.panelWin);
 
   // Wait for the dominator tree to be computed and fetched.
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0] &&
     state.snapshots[0].dominatorTree &&
     state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
@@ -47,7 +47,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ panel }) {
   const rootNode = doc.querySelector(`.node-${root.nodeId}`);
   clickOnNodeArrow(rootNode, panel);
 
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0] &&
     state.snapshots[0].dominatorTree &&
     !state.snapshots[0].dominatorTree.expanded.has(root.nodeId));
@@ -56,7 +56,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ panel }) {
   // Click on root arrow to expand it again
   clickOnNodeArrow(rootNode, panel);
 
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0] &&
     state.snapshots[0].dominatorTree &&
     state.snapshots[0].dominatorTree.expanded.has(root.nodeId));

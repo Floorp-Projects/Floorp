@@ -25,23 +25,23 @@ const testToolDefinition = {
     }
 };
 
-add_task(function* () {
+add_task(async function () {
   gDevTools.registerTool(testToolDefinition);
-  let tab = yield addTab("about:blank");
+  let tab = await addTab("about:blank");
   let target = TargetFactory.forTab(tab);
 
-  let toolbox = yield gDevTools.showToolbox(target, testToolDefinition.id);
+  let toolbox = await gDevTools.showToolbox(target, testToolDefinition.id);
   is(toolbox.currentToolId, "test-tool", "test-tool was selected");
-  yield gDevTools.closeToolbox(target);
+  await gDevTools.closeToolbox(target);
 
   // Make the previously selected tool unavailable.
   testToolDefinition.isTargetSupported = () => false;
 
   target = TargetFactory.forTab(tab);
-  toolbox = yield gDevTools.showToolbox(target);
+  toolbox = await gDevTools.showToolbox(target);
   is(toolbox.currentToolId, "webconsole", "web console was selected");
 
-  yield gDevTools.closeToolbox(target);
+  await gDevTools.closeToolbox(target);
   gDevTools.unregisterTool(testToolDefinition.id);
   tab = toolbox = target = null;
   gBrowser.removeCurrentTab();

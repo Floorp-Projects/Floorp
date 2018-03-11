@@ -17,7 +17,7 @@ const { changeView } = require("devtools/client/memory/actions/view");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_big_tree.html";
 
-this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   // Taking snapshots and computing dominator trees is slow :-/
   requestLongerTimeout(4);
 
@@ -34,7 +34,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   // Wait for the dominator tree to be computed and fetched.
 
-  yield waitUntilDominatorTreeState(store, [dominatorTreeState.LOADED]);
+  await waitUntilDominatorTreeState(store, [dominatorTreeState.LOADED]);
   ok(true, "Computed and fetched the dominator tree.");
 
   // Expand all the dominator tree nodes that are eagerly fetched, except for
@@ -83,7 +83,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   EventUtils.synthesizeMouseAtCenter(doc.querySelector(`.node-${deepest.nodeId}`),
                                      {},
                                      panel.panelWin);
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.focused.nodeId === deepest.nodeId);
   ok(doc.querySelector(`.node-${deepest.nodeId}`).classList.contains("focused"),
      "The deepest node should be focused now");
@@ -92,7 +92,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   // loaded subtree.
 
   EventUtils.synthesizeKey("VK_RIGHT", {}, panel.panelWin);
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.expanded.has(deepest.nodeId));
   is(getState().snapshots[0].dominatorTree.state,
      dominatorTreeState.INCREMENTAL_FETCHING,
@@ -102,7 +102,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   // Wait for the incremental fetch to complete.
 
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
   ok(true, "And the incremental fetch completes.");
   ok(doc.querySelector(`.node-${deepest.nodeId}`).classList.contains("focused"),
@@ -142,7 +142,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   // Select the newly loaded first child by pressing the right arrow once more.
 
   EventUtils.synthesizeKey("VK_RIGHT", {}, panel.panelWin);
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.focused === firstChild);
   ok(doc.querySelector(`.node-${firstChild.nodeId}`).classList.contains("focused"),
      "The first child should now be focused");

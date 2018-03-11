@@ -19,10 +19,10 @@ const DominatorTreeLazyChildren
 
 const { changeView } = require("devtools/client/memory/actions/view");
 
-add_task(function* () {
+add_task(async function() {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   let { getState, dispatch } = store;
 
@@ -30,7 +30,7 @@ add_task(function* () {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
 
   // Wait for the dominator tree to finish being fetched.
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0] &&
     state.snapshots[0].dominatorTree &&
     state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
@@ -94,7 +94,7 @@ add_task(function* () {
         "Fetching immediately dominated children should put us in the " +
         "INCREMENTAL_FETCHING state");
 
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
   ok(true,
      "The dominator tree should go back to LOADED after the incremental " +
@@ -138,5 +138,5 @@ add_task(function* () {
      "And the new node should have the new children attached");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

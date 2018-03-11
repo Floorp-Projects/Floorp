@@ -18,15 +18,15 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        Task.spawn(function* () {
+        (async function () {
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
-          let win = yield openWebIDE();
+          let win = await openWebIDE();
 
           let detailsIframe = win.document.querySelector("#deck-panel-runtimedetails");
 
-          yield connectToLocalRuntime(win);
+          await connectToLocalRuntime(win);
 
           let details = win.document.querySelector("#cmd_showRuntimeDetails");
 
@@ -37,11 +37,11 @@
           win.Cmds.showRuntimeDetails();
           is(deck.selectedPanel, detailsIframe, "info iframe selected");
 
-          yield nextTick();
+          await nextTick();
 
-          yield lazyIframeIsLoaded(detailsIframe);
+          await lazyIframeIsLoaded(detailsIframe);
 
-          yield detailsIframe.contentWindow.getDescriptionPromise;
+          await detailsIframe.contentWindow.getDescriptionPromise;
 
           // device info and permissions content is checked in other tests
           // We just test one value to make sure we get something
@@ -66,10 +66,10 @@
 
           DebuggerServer.destroy();
 
-          yield closeWebIDE(win);
+          await closeWebIDE(win);
 
           SimpleTest.finish();
-        }).catch(e => {
+        })().catch(e => {
           ok(false, "Exception: " + e);
           SimpleTest.finish();
         });

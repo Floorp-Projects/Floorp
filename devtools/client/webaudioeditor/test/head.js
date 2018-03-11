@@ -62,15 +62,15 @@ function initBackend(aUrl) {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  return Task.spawn(function* () {
-    let tab = yield addTab(aUrl);
+  return (async function () {
+    let tab = await addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
-    yield target.makeRemote();
+    await target.makeRemote();
 
     let front = new WebAudioFront(target.client, target.form);
     return { target, front };
-  });
+  })();
 }
 
 /**
@@ -81,17 +81,17 @@ function initBackend(aUrl) {
 function initWebAudioEditor(aUrl) {
   info("Initializing a web audio editor pane.");
 
-  return Task.spawn(function* () {
-    let tab = yield addTab(aUrl);
+  return (async function () {
+    let tab = await addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
-    yield target.makeRemote();
+    await target.makeRemote();
 
     Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
-    let toolbox = yield gDevTools.showToolbox(target, "webaudioeditor");
+    let toolbox = await gDevTools.showToolbox(target, "webaudioeditor");
     let panel = toolbox.getCurrentPanel();
     return { target, panel, toolbox };
-  });
+  })();
 }
 
 /**
@@ -325,7 +325,7 @@ function countGraphObjects(win) {
 * Forces cycle collection and GC, used in AudioNode destruction tests.
 */
 function forceNodeCollection() {
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function () {
     // Kill the reference keeping stuff alive.
     content.wrappedJSObject.keepAlive = null;
 

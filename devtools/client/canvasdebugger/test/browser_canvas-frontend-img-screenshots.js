@@ -5,17 +5,17 @@
  * Tests if screenshots are properly displayed in the UI.
  */
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, SnapshotsListView } = panel.panelWin;
 
-  yield reload(target);
+  await reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
-  yield promise.all([recordingFinished, callListPopulated, screenshotDisplayed]);
+  await promise.all([recordingFinished, callListPopulated, screenshotDisplayed]);
 
   is($("#screenshot-container").hidden, false,
     "The screenshot container should now be visible.");
@@ -29,6 +29,6 @@ function* ifTestingSupported() {
   ok(window.getComputedStyle($("#screenshot-image")).backgroundImage.includes("#screenshot-rendering"),
     "The screenshot element should have an offscreen canvas element as a background.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

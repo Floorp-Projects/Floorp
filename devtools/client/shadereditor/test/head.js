@@ -68,9 +68,13 @@ function ifWebGLUnsupported() {
   finish();
 }
 
-function test() {
+async function test() {
   let generator = isWebGLSupported(document) ? ifWebGLSupported : ifWebGLUnsupported;
-  Task.spawn(generator).catch(handleError);
+  try {
+    await generator();
+  } catch(e) {
+    handlError(e);
+  }
 }
 
 function createCanvas() {
@@ -112,21 +116,21 @@ function isApproxColor(aFirst, aSecond, aMargin) {
 }
 
 function ensurePixelIs(aFront, aPosition, aColor, aWaitFlag = false, aSelector = "canvas") {
-  return Task.spawn(function* () {
-    let pixel = yield aFront.getPixel({ selector: aSelector, position: aPosition });
+  return (async function () {
+    let pixel = await aFront.getPixel({ selector: aSelector, position: aPosition });
     if (isApproxColor(pixel, aColor)) {
       ok(true, "Expected pixel is shown at: " + aPosition.toSource());
       return;
     }
 
     if (aWaitFlag) {
-      yield aFront.waitForFrame();
+      await aFront.waitForFrame();
       return ensurePixelIs(aFront, aPosition, aColor, aWaitFlag, aSelector);
     }
 
     ok(false, "Expected pixel was not already shown at: " + aPosition.toSource());
     throw new Error("Expected pixel was not already shown at: " + aPosition.toSource());
-  });
+  })();
 }
 
 function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate") {
@@ -155,31 +159,31 @@ function initBackend(aUrl) {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  return Task.spawn(function* () {
-    let tab = yield addTab(aUrl);
+  return (async function () {
+    let tab = await addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
-    yield target.makeRemote();
+    await target.makeRemote();
 
     let front = new WebGLFront(target.client, target.form);
     return { target, front };
-  });
+  })();
 }
 
 function initShaderEditor(aUrl) {
   info("Initializing a shader editor pane.");
 
-  return Task.spawn(function* () {
-    let tab = yield addTab(aUrl);
+  return (async function () {
+    let tab = await addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
-    yield target.makeRemote();
+    await target.makeRemote();
 
     Services.prefs.setBoolPref("devtools.shadereditor.enabled", true);
-    let toolbox = yield gDevTools.showToolbox(target, "shadereditor");
+    let toolbox = await gDevTools.showToolbox(target, "shadereditor");
     let panel = toolbox.getCurrentPanel();
     return { target, panel };
-  });
+  })();
 }
 
 function teardown(aPanel) {

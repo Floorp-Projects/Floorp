@@ -8,9 +8,9 @@ const { actions } = require("../constants");
 const { refresh } = require("./refresh");
 
 exports.setCensusDisplayAndRefresh = function(heapWorker, display) {
-  return function* (dispatch, getState) {
+  return async function(dispatch, getState) {
     dispatch(setCensusDisplay(display));
-    yield dispatch(refresh(heapWorker));
+    await dispatch(refresh(heapWorker));
   };
 };
 

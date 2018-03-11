@@ -5,17 +5,17 @@
  * Tests if thumbnails are properly displayed in the UI.
  */
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, $all, EVENTS, SnapshotsListView } = panel.panelWin;
 
-  yield reload(target);
+  await reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   let thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
-  yield promise.all([recordingFinished, callListPopulated, thumbnailsDisplayed]);
+  await promise.all([recordingFinished, callListPopulated, thumbnailsDisplayed]);
 
   is($all(".filmstrip-thumbnail").length, 4,
     "There should be 4 thumbnails displayed in the UI.");
@@ -60,6 +60,6 @@ function* ifTestingSupported() {
   is(fourthThumbnail.getAttribute("flipped"), "false",
     "The fourth thumbnail should not be flipped vertically.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }
