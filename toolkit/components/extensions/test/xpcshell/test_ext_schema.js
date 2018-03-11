@@ -1,17 +1,6 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test for schema API creation</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
 "use strict";
+
+AddonTestUtils.init(this);
 
 add_task(async function testEmptySchema() {
   function background() {
@@ -34,10 +23,6 @@ add_task(async function testEmptySchema() {
 });
 
 add_task(async function testUnknownProperties() {
-  function background() {
-    browser.test.notifyPass("loaded");
-  }
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["unknownPermission"],
@@ -45,21 +30,17 @@ add_task(async function testUnknownProperties() {
       unknown_property: {},
     },
 
-    background,
+    background() {},
   });
 
-  consoleMonitor.start([
+  let {messages} = await promiseConsoleOutput(async () => {
+    await extension.startup();
+  });
+
+  AddonTestUtils.checkMessages(messages, {expected: [
     {message: /processing permissions\.0: Value "unknownPermission"/},
     {message: /processing unknown_property: An unexpected property was found in the WebExtension manifest/},
-  ]);
+  ]});
 
-  await extension.startup();
-  await extension.awaitFinish("loaded");
-
-  await consoleMonitor.finished();
   await extension.unload();
 });
-</script>
-
-</body>
-</html>

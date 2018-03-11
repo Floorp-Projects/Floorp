@@ -336,7 +336,7 @@ class Context {
   }
 
   get cloneScope() {
-    return this.params.cloneScope;
+    return this.params.cloneScope || undefined;
   }
 
   get url() {
