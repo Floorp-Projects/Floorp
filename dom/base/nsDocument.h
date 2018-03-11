@@ -293,7 +293,6 @@ public:
   virtual bool CanSavePresentation(nsIRequest *aNewRequest) override;
   virtual void Destroy() override;
   virtual void RemovedFromDocShell() override;
-  virtual already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const override;
 
   virtual void BlockOnload() override;
   virtual void UnblockOnload(bool aFireSync) override;
@@ -429,12 +428,6 @@ private:
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
-
-  // The layout history state that should be used by nodes in this
-  // document.  We only actually store a pointer to it when:
-  // 1)  We have no script global object.
-  // 2)  We haven't had Destroy() called on us yet.
-  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
 
   // Currently active onload blockers
   uint32_t mOnloadBlockCount;
