@@ -1467,6 +1467,7 @@ var gBrowserInit = {
     BrowserOffline.init();
     IndexedDBPromptHelper.init();
     CanvasPermissionPromptHelper.init();
+    WebAuthnPromptHelper.init();
 
     // Initialize the full zoom setting.
     // We do this before the session restore service gets initialized so we can
@@ -1937,6 +1938,7 @@ var gBrowserInit = {
       BrowserOffline.uninit();
       IndexedDBPromptHelper.uninit();
       CanvasPermissionPromptHelper.uninit();
+      WebAuthnPromptHelper.uninit();
       PanelUI.uninit();
       AutoShowBookmarksToolbar.uninit();
     }
@@ -6767,6 +6769,133 @@ var CanvasPermissionPromptHelper = {
     PopupNotifications.show(browser, aTopic, message, this._notificationIcon,
                             mainAction, secondaryActions, options);
   }
+};
+
+var WebAuthnPromptHelper = {
+  _icon: "default-notification-icon",
+  _topic: "webauthn-prompt",
+
+  // The current notification, if any. The U2F manager is a singleton, we will
+  // never allow more than one active request. And thus we'll never have more
+  // than one notification either.
+  _current: null,
+
+  // The current transaction ID. Will be checked when we're notified of the
+  // cancellation of an ongoing WebAuthhn request.
+  _tid: 0,
+
+  init() {
+    Services.obs.addObserver(this, this._topic);
+  },
+
+  uninit() {
+    Services.obs.removeObserver(this, this._topic);
+  },
+
+  observe(aSubject, aTopic, aData) {
+    let mgr = aSubject.QueryInterface(Ci.nsIU2FTokenManager);
+    let data = JSON.parse(aData);
+
+    if (data.action == "register") {
+      this.register(mgr, data);
+    } else if (data.action == "register-direct") {
+      this.registerDirect(mgr, data);
+    } else if (data.action == "sign") {
+      this.sign(mgr, data);
+    } else if (data.action == "cancel") {
+      this.cancel(data);
+    }
+  },
+
+  register(mgr, {origin, tid}) {
+    let mainAction = this.buildCancelAction(mgr, tid);
+    this.show(tid, "register", "webauthn.registerPrompt", origin, mainAction);
+  },
+
+  registerDirect(mgr, {origin, tid}) {
+    let mainAction = this.buildProceedAction(mgr, tid);
+    let secondaryActions = [this.buildCancelAction(mgr, tid)];
+
+    let learnMoreURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "webauthn-direct-attestation";
+
+    let options = {
+      learnMoreURL,
+      checkbox: {
+        label: gNavigatorBundle.getString("webauthn.anonymize")
+      }
+    };
+
+    this.show(tid, "register-direct", "webauthn.registerDirectPrompt",
+              origin, mainAction, secondaryActions, options);
+  },
+
+  sign(mgr, {origin, tid}) {
+    let mainAction = this.buildCancelAction(mgr, tid);
+    this.show(tid, "sign", "webauthn.signPrompt", origin, mainAction);
+  },
+
+  show(tid, id, stringId, origin, mainAction, secondaryActions = [], options = {}) {
+    this.reset();
+
+    try {
+      origin = Services.io.newURI(origin).asciiHost;
+    } catch (e) {
+      /* Might fail for arbitrary U2F RP IDs. */
+    }
+
+    let brandShortName =
+      document.getElementById("bundle_brand").getString("brandShortName");
+    let message =
+      gNavigatorBundle.getFormattedString(stringId, ["<>", brandShortName], 1);
+
+    options.name = origin;
+    options.hideClose = true;
+    options.eventCallback = event => {
+      if (event == "removed") {
+        this._current = null;
+        this._tid = 0;
+      }
+    };
+
+    this._tid = tid;
+    this._current = PopupNotifications.show(
+      gBrowser.selectedBrowser, `webauthn-prompt-${id}`, message,
+      this._icon, mainAction, secondaryActions, options);
+  },
+
+  cancel({tid}) {
+    if (this._tid == tid) {
+      this.reset();
+    }
+  },
+
+  reset() {
+    if (this._current) {
+      this._current.remove();
+    }
+  },
+
+  buildProceedAction(mgr, tid) {
+    return {
+      label: gNavigatorBundle.getString("webauthn.proceed"),
+      accessKey: gNavigatorBundle.getString("webauthn.proceed.accesskey"),
+      callback(state) {
+        mgr.resumeRegister(tid, !state.checkboxChecked);
+      }
+    };
+  },
+
+  buildCancelAction(mgr, tid) {
+    return {
+      label: gNavigatorBundle.getString("webauthn.cancel"),
+      accessKey: gNavigatorBundle.getString("webauthn.cancel.accesskey"),
+      callback() {
+        mgr.cancel(tid);
+      }
+    };
+  },
 };
 
 function CanCloseWindow() {
