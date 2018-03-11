@@ -2533,19 +2533,23 @@ public:
   // Getter for this document's SMIL Animation Controller. Performs lazy
   // initialization, if this document supports animation and if
   // mAnimationController isn't yet initialized.
-  virtual nsSMILAnimationController* GetAnimationController() = 0;
+  //
+  // If HasAnimationController is true, this is guaranteed to return non-null.
+  nsSMILAnimationController* GetAnimationController();
 
   // Gets the tracker for animations that are waiting to start.
   // Returns nullptr if there is no pending animation tracker for this document
   // which will be the case if there have never been any CSS animations or
   // transitions on elements in the document.
-  virtual mozilla::PendingAnimationTracker* GetPendingAnimationTracker() = 0;
+  mozilla::PendingAnimationTracker* GetPendingAnimationTracker()
+  {
+    return mPendingAnimationTracker;
+  }
 
   // Gets the tracker for animations that are waiting to start and
   // creates it if it doesn't already exist. As a result, the return value
   // will never be nullptr.
-  virtual mozilla::PendingAnimationTracker*
-  GetOrCreatePendingAnimationTracker() = 0;
+  mozilla::PendingAnimationTracker* GetOrCreatePendingAnimationTracker();
 
   /**
    * Prevents user initiated events from being dispatched to the document and
@@ -4177,6 +4181,10 @@ protected:
 
   nsRefPtrHashtable<nsPtrHashKey<nsIContent>, mozilla::dom::BoxObject>*
     mBoxObjectTable;
+
+  // Tracker for animations that are waiting to start.
+  // nullptr until GetOrCreatePendingAnimationTracker is called.
+  RefPtr<mozilla::PendingAnimationTracker> mPendingAnimationTracker;
 
 public:
   js::ExpandoAndGeneration mExpandoAndGeneration;

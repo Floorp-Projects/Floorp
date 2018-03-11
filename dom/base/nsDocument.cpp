@@ -6723,7 +6723,7 @@ nsDocument::EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData)
 }
 
 nsSMILAnimationController*
-nsDocument::GetAnimationController()
+nsIDocument::GetAnimationController()
 {
   // We create the animation controller lazily because most documents won't want
   // one and only SVG documents and the like will call this
@@ -6754,7 +6754,7 @@ nsDocument::GetAnimationController()
 }
 
 PendingAnimationTracker*
-nsDocument::GetOrCreatePendingAnimationTracker()
+nsIDocument::GetOrCreatePendingAnimationTracker()
 {
   if (!mPendingAnimationTracker) {
     mPendingAnimationTracker = new PendingAnimationTracker(this);
