@@ -8672,7 +8672,7 @@ nsIDocument::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget)
 }
 
 void
-nsDocument::WillDispatchMutationEvent(nsINode* aTarget)
+nsIDocument::WillDispatchMutationEvent(nsINode* aTarget)
 {
   NS_ASSERTION(mSubtreeModifiedDepth != 0 ||
                mSubtreeModifiedTargets.Count() == 0,
@@ -8689,7 +8689,7 @@ nsDocument::WillDispatchMutationEvent(nsINode* aTarget)
 }
 
 void
-nsDocument::MutationEventDispatched(nsINode* aTarget)
+nsIDocument::MutationEventDispatched(nsINode* aTarget)
 {
   --mSubtreeModifiedDepth;
   if (mSubtreeModifiedDepth == 0) {

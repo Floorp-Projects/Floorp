@@ -205,9 +205,6 @@ public:
                                  nsAString& aEncoding,
                                  nsAString& Standalone) override;
 
-  virtual void WillDispatchMutationEvent(nsINode* aTarget) override;
-  virtual void MutationEventDispatched(nsINode* aTarget) override;
-
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
                             nsIRadioVisitor* aVisitor,
