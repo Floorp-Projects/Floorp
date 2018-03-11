@@ -3591,12 +3591,12 @@ nsIDocument::GetCurrentScript()
 }
 
 nsresult
-nsDocument::NodesFromRectHelper(float aX, float aY,
-                                float aTopSize, float aRightSize,
-                                float aBottomSize, float aLeftSize,
-                                bool aIgnoreRootScrollFrame,
-                                bool aFlushLayout,
-                                nsIDOMNodeList** aReturn)
+nsIDocument::NodesFromRectHelper(float aX, float aY,
+                                 float aTopSize, float aRightSize,
+                                 float aBottomSize, float aLeftSize,
+                                 bool aIgnoreRootScrollFrame,
+                                 bool aFlushLayout,
+                                 nsIDOMNodeList** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 

@@ -2463,12 +2463,12 @@ public:
                                           nsAtom* aAttrName,
                                           const nsAString& aAttrValue) const;
 
-  virtual nsresult NodesFromRectHelper(float aX, float aY,
-                                       float aTopSize, float aRightSize,
-                                       float aBottomSize, float aLeftSize,
-                                       bool aIgnoreRootScrollFrame,
-                                       bool aFlushLayout,
-                                       nsIDOMNodeList** aReturn) = 0;
+  nsresult NodesFromRectHelper(float aX, float aY,
+                               float aTopSize, float aRightSize,
+                               float aBottomSize, float aLeftSize,
+                               bool aIgnoreRootScrollFrame,
+                               bool aFlushLayout,
+                               nsIDOMNodeList** aReturn);
 
   /**
    * See FlushSkinBindings on nsBindingManager
