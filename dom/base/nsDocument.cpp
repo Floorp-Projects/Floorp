@@ -820,7 +820,7 @@ nsExternalResourceMap::nsExternalResourceMap()
 nsIDocument*
 nsExternalResourceMap::RequestResource(nsIURI* aURI,
                                        nsINode* aRequestingNode,
-                                       nsDocument* aDisplayDocument,
+                                       nsIDocument* aDisplayDocument,
                                        ExternalResourceLoad** aPendingLoad)
 {
   // If we ever start allowing non-same-origin loads here, we might need to do
@@ -6700,9 +6700,9 @@ nsDocument::TryCancelFrameLoaderInitialization(nsIDocShell* aShell)
 }
 
 nsIDocument*
-nsDocument::RequestExternalResource(nsIURI* aURI,
-                                    nsINode* aRequestingNode,
-                                    ExternalResourceLoad** aPendingLoad)
+nsIDocument::RequestExternalResource(nsIURI* aURI,
+                                     nsINode* aRequestingNode,
+                                     ExternalResourceLoad** aPendingLoad)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aRequestingNode, "Must have a node");
@@ -6717,7 +6717,7 @@ nsDocument::RequestExternalResource(nsIURI* aURI,
 }
 
 void
-nsDocument::EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData)
+nsIDocument::EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData)
 {
   mExternalResourceMap.EnumerateResources(aCallback, aData);
 }
@@ -7603,7 +7603,7 @@ Copy(nsIDocument* aDocument, void* aData)
 }
 
 void
-nsDocument::FlushExternalResources(FlushType aType)
+nsIDocument::FlushExternalResources(FlushType aType)
 {
   NS_ASSERTION(aType >= FlushType::Style,
     "should only need to flush for style or higher in external resources");

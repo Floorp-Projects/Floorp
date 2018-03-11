@@ -14,11 +14,19 @@
 #include "nsCompatibility.h"             // for member
 #include "nsCOMPtr.h"                    // for member
 #include "nsGkAtoms.h"                   // for static class members
+#include "nsIApplicationCache.h"
+#include "nsIApplicationCacheContainer.h"
+#include "nsIContentViewer.h"
 #include "nsIDocumentObserver.h"         // for typedef (nsUpdateType)
+#include "nsIInterfaceRequestor.h"
+#include "nsILoadContext.h"
 #include "nsILoadGroup.h"                // for member (in nsCOMPtr)
 #include "nsINode.h"                     // for base class
 #include "nsIParser.h"
 #include "nsIPresShell.h"
+#include "nsIChannelEventSink.h"
+#include "nsIProgressEventSink.h"
+#include "nsISecurityEventSink.h"
 #include "nsIScriptGlobalObject.h"       // for member (in nsCOMPtr)
 #include "nsIServiceManager.h"
 #include "nsIURI.h"                      // for use in inline functions
@@ -235,6 +243,192 @@ public:
   nsDocHeaderData* mNext;
 };
 
+class nsExternalResourceMap
+{
+  typedef bool (*nsSubDocEnumFunc)(nsIDocument *aDocument, void *aData);
+
+public:
+  /**
+   * A class that represents an external resource load that has begun but
+   * doesn't have a document yet.  Observers can be registered on this object,
+   * and will be notified after the document is created.  Observers registered
+   * after the document has been created will NOT be notified.  When observers
+   * are notified, the subject will be the newly-created document, the topic
+   * will be "external-resource-document-created", and the data will be null.
+   * If document creation fails for some reason, observers will still be
+   * notified, with a null document pointer.
+   */
+  class ExternalResourceLoad : public nsISupports
+  {
+  public:
+    virtual ~ExternalResourceLoad() {}
+
+    void AddObserver(nsIObserver* aObserver)
+    {
+      MOZ_ASSERT(aObserver, "Must have observer");
+      mObservers.AppendElement(aObserver);
+    }
+
+    const nsTArray<nsCOMPtr<nsIObserver>> & Observers()
+    {
+      return mObservers;
+    }
+  protected:
+    AutoTArray<nsCOMPtr<nsIObserver>, 8> mObservers;
+  };
+
+  nsExternalResourceMap();
+
+  /**
+   * Request an external resource document.  This does exactly what
+   * nsIDocument::RequestExternalResource is documented to do.
+   */
+  nsIDocument* RequestResource(nsIURI* aURI,
+                               nsINode* aRequestingNode,
+                               nsIDocument* aDisplayDocument,
+                               ExternalResourceLoad** aPendingLoad);
+
+  /**
+   * Enumerate the resource documents.  See
+   * nsIDocument::EnumerateExternalResources.
+   */
+  void EnumerateResources(nsSubDocEnumFunc aCallback, void* aData);
+
+  /**
+   * Traverse ourselves for cycle-collection
+   */
+  void Traverse(nsCycleCollectionTraversalCallback* aCallback) const;
+
+  /**
+   * Shut ourselves down (used for cycle-collection unlink), as well
+   * as for document destruction.
+   */
+  void Shutdown()
+  {
+    mPendingLoads.Clear();
+    mMap.Clear();
+    mHaveShutDown = true;
+  }
+
+  bool HaveShutDown() const
+  {
+    return mHaveShutDown;
+  }
+
+  // Needs to be public so we can traverse them sanely
+  struct ExternalResource
+  {
+    ~ExternalResource();
+    nsCOMPtr<nsIDocument> mDocument;
+    nsCOMPtr<nsIContentViewer> mViewer;
+    nsCOMPtr<nsILoadGroup> mLoadGroup;
+  };
+
+  // Hide all our viewers
+  void HideViewers();
+
+  // Show all our viewers
+  void ShowViewers();
+
+protected:
+  class PendingLoad : public ExternalResourceLoad,
+                      public nsIStreamListener
+  {
+    ~PendingLoad() {}
+
+  public:
+    explicit PendingLoad(nsIDocument* aDisplayDocument) :
+      mDisplayDocument(aDisplayDocument)
+    {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
+
+    /**
+     * Start aURI loading.  This will perform the necessary security checks and
+     * so forth.
+     */
+    nsresult StartLoad(nsIURI* aURI, nsINode* aRequestingNode);
+
+    /**
+     * Set up an nsIContentViewer based on aRequest.  This is guaranteed to
+     * put null in *aViewer and *aLoadGroup on all failures.
+     */
+    nsresult SetupViewer(nsIRequest* aRequest, nsIContentViewer** aViewer,
+                         nsILoadGroup** aLoadGroup);
+
+  private:
+    nsCOMPtr<nsIDocument> mDisplayDocument;
+    nsCOMPtr<nsIStreamListener> mTargetListener;
+    nsCOMPtr<nsIURI> mURI;
+  };
+  friend class PendingLoad;
+
+  class LoadgroupCallbacks final : public nsIInterfaceRequestor
+  {
+    ~LoadgroupCallbacks() {}
+  public:
+    explicit LoadgroupCallbacks(nsIInterfaceRequestor* aOtherCallbacks)
+      : mCallbacks(aOtherCallbacks)
+    {}
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIINTERFACEREQUESTOR
+  private:
+    // The only reason it's safe to hold a strong ref here without leaking is
+    // that the notificationCallbacks on a loadgroup aren't the docshell itself
+    // but a shim that holds a weak reference to the docshell.
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+
+    // Use shims for interfaces that docshell implements directly so that we
+    // don't hand out references to the docshell.  The shims should all allow
+    // getInterface back on us, but other than that each one should only
+    // implement one interface.
+
+    // XXXbz I wish we could just derive the _allcaps thing from _i
+#define DECL_SHIM(_i, _allcaps)                                              \
+    class _i##Shim final : public nsIInterfaceRequestor,                     \
+                           public _i                                         \
+    {                                                                        \
+      ~_i##Shim() {}                                                         \
+    public:                                                                  \
+      _i##Shim(nsIInterfaceRequestor* aIfreq, _i* aRealPtr)                  \
+        : mIfReq(aIfreq), mRealPtr(aRealPtr)                                 \
+      {                                                                      \
+        NS_ASSERTION(mIfReq, "Expected non-null here");                      \
+        NS_ASSERTION(mRealPtr, "Expected non-null here");                    \
+      }                                                                      \
+      NS_DECL_ISUPPORTS                                                      \
+      NS_FORWARD_NSIINTERFACEREQUESTOR(mIfReq->)                             \
+      NS_FORWARD_##_allcaps(mRealPtr->)                                      \
+    private:                                                                 \
+      nsCOMPtr<nsIInterfaceRequestor> mIfReq;                                \
+      nsCOMPtr<_i> mRealPtr;                                                 \
+    };
+
+    DECL_SHIM(nsILoadContext, NSILOADCONTEXT)
+    DECL_SHIM(nsIProgressEventSink, NSIPROGRESSEVENTSINK)
+    DECL_SHIM(nsIChannelEventSink, NSICHANNELEVENTSINK)
+    DECL_SHIM(nsISecurityEventSink, NSISECURITYEVENTSINK)
+    DECL_SHIM(nsIApplicationCacheContainer, NSIAPPLICATIONCACHECONTAINER)
+#undef DECL_SHIM
+  };
+
+  /**
+   * Add an ExternalResource for aURI.  aViewer and aLoadGroup might be null
+   * when this is called if the URI didn't result in an XML document.  This
+   * function makes sure to remove the pending load for aURI, if any, from our
+   * hashtable, and to notify its observers, if any.
+   */
+  nsresult AddExternalResource(nsIURI* aURI, nsIContentViewer* aViewer,
+                               nsILoadGroup* aLoadGroup,
+                               nsIDocument* aDisplayDocument);
+
+  nsClassHashtable<nsURIHashKey, ExternalResource> mMap;
+  nsRefPtrHashtable<nsURIHashKey, PendingLoad> mPendingLoads;
+  bool mHaveShutDown;
+};
+
 //----------------------------------------------------------------------
 
 // For classifying a flash document based on its principal.
@@ -253,6 +447,7 @@ protected:
   template <typename T> using NotNull = mozilla::NotNull<T>;
 
 public:
+  typedef nsExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicyEnum;
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::FullscreenRequest FullscreenRequest;
@@ -1860,7 +2055,7 @@ public:
    * itself this does nothing. This should only be called with
    * aType >= FlushType::Style.
    */
-  virtual void FlushExternalResources(mozilla::FlushType aType) = 0;
+  void FlushExternalResources(mozilla::FlushType aType);
 
   nsBindingManager* BindingManager() const
   {
@@ -2411,33 +2606,6 @@ public:
   }
 
   /**
-   * A class that represents an external resource load that has begun but
-   * doesn't have a document yet.  Observers can be registered on this object,
-   * and will be notified after the document is created.  Observers registered
-   * after the document has been created will NOT be notified.  When observers
-   * are notified, the subject will be the newly-created document, the topic
-   * will be "external-resource-document-created", and the data will be null.
-   * If document creation fails for some reason, observers will still be
-   * notified, with a null document pointer.
-   */
-  class ExternalResourceLoad : public nsISupports
-  {
-  public:
-    virtual ~ExternalResourceLoad() {}
-
-    void AddObserver(nsIObserver* aObserver) {
-      MOZ_ASSERT(aObserver, "Must have observer");
-      mObservers.AppendElement(aObserver);
-    }
-
-    const nsTArray< nsCOMPtr<nsIObserver> > & Observers() {
-      return mObservers;
-    }
-  protected:
-    AutoTArray< nsCOMPtr<nsIObserver>, 8 > mObservers;
-  };
-
-  /**
    * Request an external resource document for aURI.  This will return the
    * resource document if available.  If one is not available yet, it will
    * start loading as needed, and the pending load object will be returned in
@@ -2450,18 +2618,21 @@ public:
    * @param aRequestingNode the node making the request
    * @param aPendingLoad the pending load for this request, if any
    */
-  virtual nsIDocument*
-    RequestExternalResource(nsIURI* aURI,
-                            nsINode* aRequestingNode,
-                            ExternalResourceLoad** aPendingLoad) = 0;
+  nsIDocument* RequestExternalResource(nsIURI* aURI,
+                                       nsINode* aRequestingNode,
+                                       ExternalResourceLoad** aPendingLoad);
 
   /**
    * Enumerate the external resource documents associated with this document.
    * The enumerator callback should return true to continue enumerating, or
    * false to stop.  This callback will never get passed a null aDocument.
    */
-  virtual void EnumerateExternalResources(nsSubDocEnumFunc aCallback,
-                                          void* aData) = 0;
+  void EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData);
+
+  nsExternalResourceMap& ExternalResourceMap()
+  {
+    return mExternalResourceMap;
+  }
 
   /**
    * Return whether the document is currently showing (in the sense of
@@ -4196,6 +4367,8 @@ protected:
   // A document "without a browsing context" that owns the content of
   // HTMLTemplateElement.
   nsCOMPtr<nsIDocument> mTemplateContentsOwner;
+
+  nsExternalResourceMap mExternalResourceMap;
 
 public:
   js::ExpandoAndGeneration mExpandoAndGeneration;
