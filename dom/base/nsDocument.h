@@ -45,7 +45,6 @@
 #include "nsIApplicationCacheContainer.h"
 #include "mozilla/StyleSetHandle.h"
 #include "PLDHashTable.h"
-#include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIContentViewer.h"
 #include "nsIInterfaceRequestor.h"
@@ -369,8 +368,6 @@ public:
     return mTimelines;
   }
 
-  virtual Element* GetRootElementInternal() const override;
-
   virtual nsIChannel* GetChannel() const override {
     return mChannel;
   }
@@ -406,23 +403,6 @@ public:
 
   virtual void WillDispatchMutationEvent(nsINode* aTarget) override;
   virtual void MutationEventDispatched(nsINode* aTarget) override;
-
-  // nsINode
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
-  virtual nsIContent *GetChildAt_Deprecated(uint32_t aIndex) const override;
-  virtual int32_t ComputeIndexOf(const nsINode* aPossibleChild) const override;
-  virtual uint32_t GetChildCount() const override;
-  virtual nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                     bool aNotify) override;
-  virtual nsresult InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
-                                            bool aNotify) override;
-  virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) override;
-  virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override
-  {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
@@ -695,10 +675,6 @@ protected:
                          NotNull<const Encoding*>& aEncoding,
                          nsHtml5TreeOpExecutor* aExecutor);
 
-  // Call this before the document does something that will unbind all content.
-  // That will stop us from doing a lot of work as each element is removed.
-  void DestroyElementMaps();
-
   nsIContent* GetFirstBaseNodeWithHref();
   nsresult SetFirstBaseNodeWithHref(nsIContent *node);
 
@@ -734,9 +710,6 @@ protected:
   virtual ~nsDocument();
 
   void EnsureOnloadBlocker();
-
-  // Array of owning references to all children
-  nsAttrAndChildArray mChildren;
 
   // Tracker for animations that are waiting to start.
   // nullptr until GetOrCreatePendingAnimationTracker is called.
