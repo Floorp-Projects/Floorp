@@ -3201,13 +3201,32 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
 }
 
 void
-MacroAssembler::branchTestObjGroup(Condition cond, Register obj, const Address& group,
-                                   Register scratch, Label* label)
+MacroAssembler::branchTestObjGroupNoSpectreMitigations(Condition cond, Register obj,
+                                                       const Address& group, Register scratch,
+                                                       Label* label)
 {
     // Note: obj and scratch registers may alias.
+    MOZ_ASSERT(group.base != scratch);
+    MOZ_ASSERT(group.base != obj);
 
     loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
     branchPtr(cond, group, scratch, label);
+}
+
+void
+MacroAssembler::branchTestObjGroup(Condition cond, Register obj, const Address& group,
+                                   Register scratch, Register spectreRegToZero, Label* label)
+{
+    // Note: obj and scratch registers may alias.
+    MOZ_ASSERT(group.base != scratch);
+    MOZ_ASSERT(group.base != obj);
+    MOZ_ASSERT(scratch != spectreRegToZero);
+
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    branchPtr(cond, group, scratch, label);
+
+    if (JitOptions.spectreObjectMitigationsMisc)
+        spectreZeroRegister(cond, scratch, spectreRegToZero);
 }
 
 void
