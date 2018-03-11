@@ -7,9 +7,9 @@
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-add_task(function* () {
-  let fileContent = yield generatePageErrorStubs();
+add_task(async function () {
+  let fileContent = await generatePageErrorStubs();
   let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "pageError.js");
-  yield OS.File.writeAtomic(filePath, fileContent);
+  await OS.File.writeAtomic(filePath, fileContent);
   ok(true, "Make the test not fail");
 });

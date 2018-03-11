@@ -8,10 +8,10 @@
 // context menu item for stylesheets (bug 992947).
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
-add_task(function* () {
-  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
+add_task(async function () {
+  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
-  yield rightClickStyleSheet(ui, ui.editors[0]);
+  await rightClickStyleSheet(ui, ui.editors[0]);
   is(ui._openLinkNewTabItem.getAttribute("disabled"), "false",
     "The menu item is not disabled");
   is(ui._openLinkNewTabItem.getAttribute("hidden"), "false",
@@ -35,15 +35,15 @@ add_task(function* () {
   ui._openLinkNewTabItem.click();
 
   info(`Waiting for a tab to open - ${url}`);
-  yield tabOpenedDefer;
+  await tabOpenedDefer;
 
-  yield rightClickInlineStyleSheet(ui, ui.editors[1]);
+  await rightClickInlineStyleSheet(ui, ui.editors[1]);
   is(ui._openLinkNewTabItem.getAttribute("disabled"), "true",
     "The menu item is disabled");
   is(ui._openLinkNewTabItem.getAttribute("hidden"), "false",
     "The menu item is not hidden");
 
-  yield rightClickNoStyleSheet(ui);
+  await rightClickNoStyleSheet(ui);
   is(ui._openLinkNewTabItem.getAttribute("hidden"), "true",
     "The menu item is not hidden");
 });

@@ -7,10 +7,10 @@
 
 const { toggleDiffing } = require("devtools/client/memory/actions/diffing");
 
-add_task(function* () {
+add_task(async function () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
@@ -23,5 +23,5 @@ add_task(function* () {
   equal(getState().diffing, null, "not diffing again after toggling again");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

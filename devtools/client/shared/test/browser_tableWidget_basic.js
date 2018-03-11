@@ -10,9 +10,9 @@ const TEST_URI = CHROME_URL_ROOT + "doc_tableWidget_basic.html";
 
 const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
 
-add_task(function* () {
-  yield addTab("about:blank");
-  let [host, , doc] = yield createHost("bottom", TEST_URI);
+add_task(async function () {
+  await addTab("about:blank");
+  let [host, , doc] = await createHost("bottom", TEST_URI);
 
   let table = new TableWidget(doc.querySelector("box"), {
     initialColumns: {

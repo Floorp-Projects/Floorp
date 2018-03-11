@@ -13,8 +13,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function () {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -32,12 +32,12 @@ add_task(function* () {
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   let rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
-  yield DetailsView.selectView("memory-flamegraph");
-  yield rendered;
+  await DetailsView.selectView("memory-flamegraph");
+  await rendered;
 
   let allocations1 = PerformanceController.getCurrentRecording().getAllocations();
   let thread1 = RecordingUtils.getProfileThreadFromAllocations(allocations1);
@@ -52,7 +52,7 @@ add_task(function* () {
 
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, false);
-  yield rendered;
+  await rendered;
   ok(true, "MemoryFlameGraphView rerendered when toggling flatten-tree-recursion.");
 
   let allocations2 = PerformanceController.getCurrentRecording().getAllocations();
@@ -68,7 +68,7 @@ add_task(function* () {
 
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
-  yield rendered;
+  await rendered;
   ok(true, "MemoryFlameGraphView rerendered when toggling back flatten-tree-recursion.");
 
   let allocations3 = PerformanceController.getCurrentRecording().getAllocations();
@@ -82,5 +82,5 @@ add_task(function* () {
   isnot(rendering2, rendering3,
     "The rendering data should be different because other options were used (2).");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

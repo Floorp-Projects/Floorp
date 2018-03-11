@@ -161,11 +161,11 @@ var RecordingsView = {
   /**
    * The select listener for this container.
    */
-  _onSelect: Task.async(function* (recording) {
+  async _onSelect(recording) {
     this._listState.selected = recording;
     this.emit(EVENTS.UI_RECORDING_SELECTED, recording);
     this._renderList();
-  }),
+  },
 
   /**
    * The click listener for the "save" button of each item in this container.

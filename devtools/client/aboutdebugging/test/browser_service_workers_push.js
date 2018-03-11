@@ -14,19 +14,19 @@
 const SERVICE_WORKER = URL_ROOT + "service-workers/push-sw.js";
 const TAB_URL = URL_ROOT + "service-workers/push-sw.html";
 
-add_task(function* () {
-  yield enableServiceWorkerDebugging();
-  let { tab, document } = yield openAboutDebugging("workers");
+add_task(async function () {
+  await enableServiceWorkerDebugging();
+  let { tab, document } = await openAboutDebugging("workers");
 
   // Listen for mutations in the service-workers list.
   let serviceWorkersElement = getServiceWorkerList(document);
 
   // Open a tab that registers a push service worker.
-  let swTab = yield addTab(TAB_URL);
+  let swTab = await addTab(TAB_URL);
 
   info("Make the test page notify us when the service worker sends a message.");
 
-  yield ContentTask.spawn(swTab.linkedBrowser, {}, function () {
+  await ContentTask.spawn(swTab.linkedBrowser, {}, function () {
     let win = content.wrappedJSObject;
     win.navigator.serviceWorker.addEventListener("message", function (event) {
       sendAsyncMessage(event.data);
@@ -37,14 +37,14 @@ add_task(function* () {
   let onClaimed = onTabMessage(swTab, "sw-claimed");
 
   info("Wait until the service worker appears in the UI");
-  yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
+  await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   info("Ensure that the registration resolved before trying to interact with " +
     "the service worker.");
-  yield waitForServiceWorkerRegistered(swTab);
+  await waitForServiceWorkerRegistered(swTab);
   ok(true, "Service worker registration resolved");
 
-  yield waitForServiceWorkerActivation(SERVICE_WORKER, document);
+  await waitForServiceWorkerActivation(SERVICE_WORKER, document);
 
   // Retrieve the Push button for the worker.
   let names = [...document.querySelectorAll("#service-workers .target-name")];
@@ -57,26 +57,26 @@ add_task(function* () {
   ok(pushBtn, "Found its push button");
 
   info("Wait for the service worker to claim the test window before proceeding.");
-  yield onClaimed;
+  await onClaimed;
 
   info("Click on the Push button and wait for the service worker to receive " +
     "a push notification");
   let onPushNotification = onTabMessage(swTab, "sw-pushed");
 
   pushBtn.click();
-  yield onPushNotification;
+  await onPushNotification;
   ok(true, "Service worker received a push notification");
 
   // Finally, unregister the service worker itself.
   try {
-    yield unregisterServiceWorker(swTab, serviceWorkersElement);
+    await unregisterServiceWorker(swTab, serviceWorkersElement);
     ok(true, "Service worker registration unregistered");
   } catch (e) {
     ok(false, "SW not unregistered; " + e);
   }
 
-  yield removeTab(swTab);
-  yield closeAboutDebugging(tab);
+  await removeTab(swTab);
+  await closeAboutDebugging(tab);
 });
 
 /**

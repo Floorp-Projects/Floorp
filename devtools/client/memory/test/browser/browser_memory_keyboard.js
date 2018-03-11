@@ -34,7 +34,7 @@ function waitUntilExpanded(store, node) {
     state.snapshots[0].census.expanded.has(node.id));
 }
 
-this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const front = panel.panelWin.gFront;
   const store = panel.panelWin.gStore;
@@ -45,7 +45,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   is(getState().censusDisplay.breakdown.by, "coarseType");
 
-  yield dispatch(takeSnapshotAndCensus(front, heapWorker));
+  await dispatch(takeSnapshotAndCensus(front, heapWorker));
   let census = getState().snapshots[0].census;
   let root1 = census.report.children[0];
   let root2 = census.report.children[0];
@@ -56,51 +56,51 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   info("Click on first node.");
   let firstNode = doc.querySelector(".tree .heap-tree-item-name");
   EventUtils.synthesizeMouseAtCenter(firstNode, {}, panel.panelWin);
-  yield waitUntilFocused(store, root1);
+  await waitUntilFocused(store, root1);
   ok(true, "First root is selected after click.");
 
   info("Press DOWN key, expect second root focused.");
   EventUtils.synthesizeKey("VK_DOWN", {}, panel.panelWin);
-  yield waitUntilFocused(store, root2);
+  await waitUntilFocused(store, root2);
   ok(true, "Second root is selected after pressing DOWN arrow.");
 
   info("Press DOWN key, expect third root focused.");
   EventUtils.synthesizeKey("VK_DOWN", {}, panel.panelWin);
-  yield waitUntilFocused(store, root3);
+  await waitUntilFocused(store, root3);
   ok(true, "Third root is selected after pressing DOWN arrow.");
 
   info("Press DOWN key, expect fourth root focused.");
   EventUtils.synthesizeKey("VK_DOWN", {}, panel.panelWin);
-  yield waitUntilFocused(store, root4);
+  await waitUntilFocused(store, root4);
   ok(true, "Fourth root is selected after pressing DOWN arrow.");
 
   info("Press UP key, expect third root focused.");
   EventUtils.synthesizeKey("VK_UP", {}, panel.panelWin);
-  yield waitUntilFocused(store, root3);
+  await waitUntilFocused(store, root3);
   ok(true, "Third root is selected after pressing UP arrow.");
 
   info("Press UP key, expect second root focused.");
   EventUtils.synthesizeKey("VK_UP", {}, panel.panelWin);
-  yield waitUntilFocused(store, root2);
+  await waitUntilFocused(store, root2);
   ok(true, "Second root is selected after pressing UP arrow.");
 
   info("Press UP key, expect first root focused.");
   EventUtils.synthesizeKey("VK_UP", {}, panel.panelWin);
-  yield waitUntilFocused(store, root1);
+  await waitUntilFocused(store, root1);
   ok(true, "First root is selected after pressing UP arrow.");
 
   info("Press RIGHT key");
   EventUtils.synthesizeKey("VK_RIGHT", {}, panel.panelWin);
-  yield waitUntilExpanded(store, root1);
+  await waitUntilExpanded(store, root1);
   ok(true, "Root node is expanded.");
 
   info("Press RIGHT key, expect first child focused.");
   EventUtils.synthesizeKey("VK_RIGHT", {}, panel.panelWin);
-  yield waitUntilFocused(store, child1);
+  await waitUntilFocused(store, child1);
   ok(true, "First child is selected after pressing RIGHT arrow.");
 
   info("Press LEFT key, expect first root focused.");
   EventUtils.synthesizeKey("VK_LEFT", {}, panel.panelWin);
-  yield waitUntilFocused(store, root1);
+  await waitUntilFocused(store, root1);
   ok(true, "First root is selected after pressing LEFT arrow.");
 });

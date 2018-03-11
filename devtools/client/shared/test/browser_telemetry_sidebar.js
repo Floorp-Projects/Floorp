@@ -10,23 +10,23 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_sidebar.js</
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-add_task(function* () {
-  yield addTab(TEST_URI);
+add_task(async function () {
+  await addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = yield gDevTools.showToolbox(target, "inspector");
+  let toolbox = await gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
-  yield testSidebar(toolbox);
+  await testSidebar(toolbox);
   checkResults(Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);
-  yield gDevTools.closeToolbox(target);
+  await gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });
 
-function* testSidebar(toolbox) {
+function testSidebar(toolbox) {
   info("Testing sidebar");
 
   let inspector = toolbox.getCurrentPanel();

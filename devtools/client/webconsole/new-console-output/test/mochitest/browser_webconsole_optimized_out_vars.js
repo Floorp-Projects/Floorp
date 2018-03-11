@@ -29,7 +29,7 @@ add_task(async function () {
   let fetchedScopes = debuggerPanel.panelWin.once(FETCHED_SCOPES);
 
   // Cause the debuggee to pause
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function () {
     let button = content.document.querySelector("button");
     button.click();
   });

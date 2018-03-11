@@ -5,8 +5,8 @@
  * Tests that params view shows params when they exist, and are hidden otherwise.
  */
 
-add_task(function* () {
-  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(async function () {
+  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
   let gVars = PropertiesView._propsView;
@@ -18,12 +18,12 @@ add_task(function* () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = yield events;
+  let [actors] = await events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   // Gain node
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  yield waitForInspectorRender(panelWin, EVENTS);
+  await waitForInspectorRender(panelWin, EVENTS);
 
   ok(isVisible($("#properties-content")), "Parameters shown when they exist.");
   ok(!isVisible($("#properties-empty")),
@@ -31,12 +31,12 @@ add_task(function* () {
 
   // Destination node
   click(panelWin, findGraphNode(panelWin, nodeIds[0]));
-  yield waitForInspectorRender(panelWin, EVENTS);
+  await waitForInspectorRender(panelWin, EVENTS);
 
   ok(!isVisible($("#properties-content")),
     "Parameters hidden when they don't exist.");
   ok(isVisible($("#properties-empty")),
     "Empty message shown when no AudioParams exist.");
 
-  yield teardown(target);
+  await teardown(target);
 });

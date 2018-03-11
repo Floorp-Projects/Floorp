@@ -28,7 +28,7 @@ Test that when an item in the Tree component is focused by arrow key, the view i
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = Task.async(function* () {
+window.onload = async function () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
@@ -61,7 +61,7 @@ window.onload = Task.async(function* () {
       "---L:false",
     ], "Should render initial correctly");
 
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       const treeElem = document.querySelector(".tree");
       treeElem.addEventListener("scroll", function onScroll() {
         dumpn("Got scroll event");
@@ -74,7 +74,7 @@ window.onload = Task.async(function* () {
     });
 
     dumpn("Forcing re-render");
-    yield forceRender(tree);
+    await forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "-B:false",
@@ -89,7 +89,7 @@ window.onload = Task.async(function* () {
   } finally {
     SimpleTest.finish();
   }
-});
+};
 </script>
 </pre>
 </body>

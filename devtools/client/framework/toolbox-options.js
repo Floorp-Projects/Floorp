@@ -6,7 +6,6 @@
 
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
-const {Task} = require("devtools/shared/task");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
@@ -81,21 +80,21 @@ OptionsPanel.prototype = {
     return this.toolbox.target;
   },
 
-  open: Task.async(function* () {
+  async open() {
     // For local debugging we need to make the target remote.
     if (!this.target.isRemote) {
-      yield this.target.makeRemote();
+      await this.target.makeRemote();
     }
 
     this.setupToolsList();
     this.setupToolbarButtonsList();
     this.setupThemeList();
     this.setupNightlyOptions();
-    yield this.populatePreferences();
+    await this.populatePreferences();
     this.isReady = true;
     this.emit("ready");
     return this;
-  }),
+  },
 
   _addListeners: function () {
     Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged);
@@ -140,9 +139,9 @@ OptionsPanel.prototype = {
     }
   },
 
-  setupToolbarButtonsList: Task.async(function* () {
+  async setupToolbarButtonsList() {
     // Ensure the toolbox is open, and the buttons are all set up.
-    yield this.toolbox.isOpen;
+    await this.toolbox.isOpen;
 
     let enabledToolbarButtonsBox = this.panelDoc.getElementById(
       "enabled-toolbox-buttons-box");
@@ -187,7 +186,7 @@ OptionsPanel.prototype = {
 
       enabledToolbarButtonsBox.appendChild(createCommandCheckbox(button));
     }
-  }),
+  },
 
   setupToolsList: function () {
     let defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
@@ -362,7 +361,7 @@ OptionsPanel.prototype = {
     }
   },
 
-  populatePreferences: Task.async(function* () {
+  async populatePreferences() {
     let prefCheckboxes = this.panelDoc.querySelectorAll(
       "input[type=checkbox][data-pref]");
     for (let prefCheckbox of prefCheckboxes) {
@@ -413,7 +412,7 @@ OptionsPanel.prototype = {
     }
 
     if (this.target.activeTab) {
-      let [ response ] = yield this.target.client.attachTab(this.target.activeTab._actor);
+      let [ response ] = await this.target.client.attachTab(this.target.activeTab._actor);
       this._origJavascriptEnabled = !response.javascriptEnabled;
       this.disableJSNode.checked = this._origJavascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
@@ -421,7 +420,7 @@ OptionsPanel.prototype = {
       // Hide the checkbox and label
       this.disableJSNode.parentNode.style.display = "none";
     }
-  }),
+  },
 
   updateCurrentTheme: function () {
     let currentTheme = GetPref("devtools.theme");

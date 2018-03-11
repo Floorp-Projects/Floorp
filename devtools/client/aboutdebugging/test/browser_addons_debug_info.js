@@ -10,13 +10,13 @@ function testFilePath(container, expectedFilePath) {
   is(filePath.previousElementSibling.textContent, "Location", "file path has label");
 }
 
-add_task(function* testLegacyAddon() {
+add_task(async function testLegacyAddon() {
   let addonId = "test-devtools@mozilla.org";
   let addonName = "test-devtools";
-  let { tab, document } = yield openAboutDebugging("addons");
-  yield waitForInitialAddonList(document);
+  let { tab, document } = await openAboutDebugging("addons");
+  await waitForInitialAddonList(document);
 
-  yield installAddon({
+  await installAddon({
     document,
     path: "addons/unpacked/install.rdf",
     name: addonName,
@@ -25,18 +25,18 @@ add_task(function* testLegacyAddon() {
   let container = document.querySelector(`[data-addon-id="${addonId}"]`);
   testFilePath(container, "browser/devtools/client/aboutdebugging/test/addons/unpacked/");
 
-  yield uninstallAddon({document, id: addonId, name: addonName});
+  await uninstallAddon({document, id: addonId, name: addonName});
 
-  yield closeAboutDebugging(tab);
+  await closeAboutDebugging(tab);
 });
 
-add_task(function* testWebExtension() {
+add_task(async function testWebExtension() {
   let addonId = "test-devtools-webextension-nobg@mozilla.org";
   let addonName = "test-devtools-webextension-nobg";
-  let { tab, document } = yield openAboutDebugging("addons");
+  let { tab, document } = await openAboutDebugging("addons");
 
-  yield waitForInitialAddonList(document);
-  yield installAddon({
+  await waitForInitialAddonList(document);
+  await installAddon({
     document,
     path: "addons/test-devtools-webextension-nobg/manifest.json",
     name: addonName,
@@ -55,17 +55,17 @@ add_task(function* testWebExtension() {
   let manifestURL = container.querySelector(".manifest-url");
   ok(manifestURL.href.startsWith("moz-extension://"), "href for manifestURL exists");
 
-  yield uninstallAddon({document, id: addonId, name: addonName});
+  await uninstallAddon({document, id: addonId, name: addonName});
 
-  yield closeAboutDebugging(tab);
+  await closeAboutDebugging(tab);
 });
 
-add_task(function* testTemporaryWebExtension() {
+add_task(async function testTemporaryWebExtension() {
   let addonName = "test-devtools-webextension-noid";
-  let { tab, document } = yield openAboutDebugging("addons");
+  let { tab, document } = await openAboutDebugging("addons");
 
-  yield waitForInitialAddonList(document);
-  yield installAddon({
+  await waitForInitialAddonList(document);
+  await installAddon({
     document,
     path: "addons/test-devtools-webextension-noid/manifest.json",
     name: addonName,
@@ -83,18 +83,18 @@ add_task(function* testTemporaryWebExtension() {
   let temporaryID = container.querySelector(".temporary-id-url");
   ok(temporaryID, "Temporary ID message does appear");
 
-  yield uninstallAddon({document, id: addonId, name: addonName});
+  await uninstallAddon({document, id: addonId, name: addonName});
 
-  yield closeAboutDebugging(tab);
+  await closeAboutDebugging(tab);
 });
 
-add_task(function* testUnknownManifestProperty() {
+add_task(async function testUnknownManifestProperty() {
   let addonId = "test-devtools-webextension-unknown-prop@mozilla.org";
   let addonName = "test-devtools-webextension-unknown-prop";
-  let { tab, document } = yield openAboutDebugging("addons");
+  let { tab, document } = await openAboutDebugging("addons");
 
-  yield waitForInitialAddonList(document);
-  yield installAddon({
+  await waitForInitialAddonList(document);
+  await installAddon({
     document,
     path: "addons/test-devtools-webextension-unknown-prop/manifest.json",
     name: addonName,
@@ -102,10 +102,10 @@ add_task(function* testUnknownManifestProperty() {
   });
 
   info("Wait until the addon appears in about:debugging");
-  let container = yield waitUntilAddonContainer(addonName, document);
+  let container = await waitUntilAddonContainer(addonName, document);
 
   info("Wait until the installation message appears for the new addon");
-  yield waitUntilElement(".addon-target-messages", container);
+  await waitUntilElement(".addon-target-messages", container);
 
   let messages = container.querySelectorAll(".addon-target-message");
   ok(messages.length === 1, "there is one message");
@@ -114,7 +114,7 @@ add_task(function* testUnknownManifestProperty() {
   ok(messages[0].classList.contains("addon-target-warning-message"),
      "the message is a warning");
 
-  yield uninstallAddon({document, id: addonId, name: addonName});
+  await uninstallAddon({document, id: addonId, name: addonName});
 
-  yield closeAboutDebugging(tab);
+  await closeAboutDebugging(tab);
 });

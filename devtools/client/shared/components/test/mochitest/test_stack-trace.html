@@ -27,7 +27,7 @@ window.onload = function () {
   );
   ok(StackTrace, "Got the StackTrace factory");
 
-  add_task(function* () {
+  add_task(async function () {
     let stacktrace = [
       {
         filename: "http://myfile.com/mahscripts.js",
@@ -49,7 +49,7 @@ window.onload = function () {
     };
 
     let trace = ReactDOM.render(StackTrace(props), window.document.body);
-    yield forceRender(trace);
+    await forceRender(trace);
 
     let traceEl = ReactDOM.findDOMNode(trace);
     ok(traceEl, "Rendered StackTrace has an element");

@@ -12,8 +12,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function () {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -23,12 +23,12 @@ add_task(function* () {
   // Enable allocations to test.
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   let rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
-  yield DetailsView.selectView("memory-calltree");
-  yield rendered;
+  await DetailsView.selectView("memory-calltree");
+  await rendered;
 
   ok(DetailsView.isViewSelected(MemoryCallTreeView), "The call tree is now selected.");
 
@@ -49,7 +49,7 @@ add_task(function* () {
     "function": true
   });
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });
 
 function testCells($, $$, visibleCells) {

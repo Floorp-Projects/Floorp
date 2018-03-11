@@ -10,20 +10,20 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 const LINE_NO = 5;
 const COL_NO = 3;
 
-add_task(function* () {
-  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
+add_task(async function () {
+  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "Two sheets present after load.");
 
   info("Selecting the second editor");
-  yield ui.selectStyleSheet(ui.editors[1].styleSheet, LINE_NO, COL_NO);
+  await ui.selectStyleSheet(ui.editors[1].styleSheet, LINE_NO, COL_NO);
 
-  yield reloadPageAndWaitForStyleSheets(ui);
+  await reloadPageAndWaitForStyleSheets(ui);
 
   is(ui.editors.length, 2, "Two sheets present after reload.");
 
   info("Waiting for source editor to be ready.");
-  yield ui.editors[1].getSourceEditor();
+  await ui.editors[1].getSourceEditor();
 
   is(ui.selectedEditor, ui.editors[1],
     "second editor is selected after reload");

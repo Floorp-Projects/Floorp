@@ -10,11 +10,11 @@
 const { appendAndWaitForPaint } = require("devtools/client/performance/test/helpers/dom-utils");
 const { synthesizeCustomTreeClass } = require("devtools/client/performance/test/helpers/synth-utils");
 
-add_task(function* () {
+add_task(async function () {
   let { MyCustomTreeItem, myDataSrc } = synthesizeCustomTreeClass();
 
   let container = document.createElement("vbox");
-  yield appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
+  await appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
 
   // Populate the tree and test the root item...
 

@@ -5,16 +5,16 @@
 
 "use strict";
 
-add_task(function* () {
+add_task(async function () {
   info("Test ignored charset parameter started");
 
   const encodedChar = "%E2%9D%A4"; // In UTF-8 this is a heavy black heart
   const result = "\u2764"; // ❤
   const TEST_JSON_URL = "data:application/json;charset=ANSI," + encodedChar;
 
-  yield addJsonViewTab(TEST_JSON_URL);
-  yield selectJsonViewContentTab("rawdata");
+  await addJsonViewTab(TEST_JSON_URL);
+  await selectJsonViewContentTab("rawdata");
 
-  let text = yield getElementText(".textPanelBox .data");
+  let text = await getElementText(".textPanelBox .data");
   is(text, result, "The charset parameter is ignored and UTF-8 is used.");
 });

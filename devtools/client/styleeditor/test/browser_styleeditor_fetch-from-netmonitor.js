@@ -8,11 +8,11 @@
 
 const TEST_URL = TEST_BASE_HTTP + "doc_fetch_from_netmonitor.html";
 
-add_task(function* () {
+add_task(async function () {
   info("Opening netmonitor");
-  let tab = yield addTab("about:blank");
+  let tab = await addTab("about:blank");
   let target = TargetFactory.forTab(tab);
-  let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
+  let toolbox = await gDevTools.showToolbox(target, "netmonitor");
   let monitor = toolbox.getPanel("netmonitor");
   let { store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -23,16 +23,16 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   info("Navigating to test page");
-  yield navigateTo(TEST_URL);
+  await navigateTo(TEST_URL);
 
   info("Opening Style Editor");
-  let styleeditor = yield toolbox.selectTool("styleeditor");
+  let styleeditor = await toolbox.selectTool("styleeditor");
   let ui = styleeditor.UI;
 
   info("Waiting for the sources to be loaded.");
-  yield ui.editors[0].getSourceEditor();
-  yield ui.selectStyleSheet(ui.editors[1].styleSheet);
-  yield ui.editors[1].getSourceEditor();
+  await ui.editors[0].getSourceEditor();
+  await ui.selectStyleSheet(ui.editors[1].styleSheet);
+  await ui.editors[1].getSourceEditor();
 
   info("Checking Netmonitor contents.");
   let shortRequests = [];

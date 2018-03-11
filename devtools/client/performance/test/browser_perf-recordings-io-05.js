@@ -7,12 +7,12 @@
  * `getMappedSelection` error.
  */
 
-var test = Task.async(function* () {
-  var { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
+var test = async function () {
+  var { target, panel, toolbox } = await initPerformance(SIMPLE_URL);
   var { EVENTS, PerformanceController, WaterfallView } = panel.panelWin;
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   // Save recording.
 
@@ -20,24 +20,24 @@ var test = Task.async(function* () {
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
   let exported = once(PerformanceController, EVENTS.RECORDING_EXPORTED);
-  yield PerformanceController.exportRecording("", PerformanceController.getCurrentRecording(), file);
+  await PerformanceController.exportRecording("", PerformanceController.getCurrentRecording(), file);
 
-  yield exported;
+  await exported;
   ok(true, "The recording data appears to have been successfully saved.");
 
   // Clear and re-import.
 
-  yield PerformanceController.clearRecordings();
+  await PerformanceController.clearRecordings();
 
   let rendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
-  yield PerformanceController.importRecording("", file);
-  yield imported;
-  yield rendered;
+  await PerformanceController.importRecording("", file);
+  await imported;
+  await rendered;
 
   ok(true, "No error was thrown.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
-});
+};
 /* eslint-enable */

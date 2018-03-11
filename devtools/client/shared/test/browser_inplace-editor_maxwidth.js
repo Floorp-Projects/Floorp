@@ -15,12 +15,12 @@ const LONG_TEXT = "I am a long text and I will not fit in a 300px container. " +
 // Test the inplace-editor behavior with a maxWidth configuration option
 // defined.
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,inplace editor max width tests");
-  let [host, , doc] = yield createHost();
+add_task(async function () {
+  await addTab("data:text/html;charset=utf-8,inplace editor max width tests");
+  let [host, , doc] = await createHost();
 
   info("Testing the maxWidth option in pixels, to precisely check the size");
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     createInplaceEditorAndClick({
       multiline: true,
       maxWidth: MAX_WIDTH,
@@ -33,7 +33,7 @@ add_task(function* () {
   gBrowser.removeCurrentTab();
 });
 
-let testMaxWidth = Task.async(function* (editor) {
+let testMaxWidth = async function (editor) {
   is(editor.input.value, START_TEXT, "Span text content should be used");
   ok(editor.input.offsetWidth < MAX_WIDTH,
     "Input width should be strictly smaller than MAX_WIDTH");
@@ -86,7 +86,7 @@ let testMaxWidth = Task.async(function* (editor) {
 
   info("Leave the inplace-editor");
   EventUtils.sendKey("RETURN");
-});
+};
 
 /**
  * Retrieve the current number of lines displayed in the provided textarea.

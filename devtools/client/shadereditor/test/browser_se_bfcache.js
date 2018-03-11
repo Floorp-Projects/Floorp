@@ -4,8 +4,8 @@
 /**
  * Tests if the shader editor works with bfcache.
  */
-function* ifWebGLSupported() {
-  let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
+async function ifWebGLSupported() {
+  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   // Attach frame scripts if in e10s to perform
@@ -13,19 +13,19 @@ function* ifWebGLSupported() {
   loadFrameScripts();
 
   let reloaded = reload(target);
-  let firstProgram = yield once(gFront, "program-linked");
-  yield reloaded;
+  let firstProgram = await once(gFront, "program-linked");
+  await reloaded;
 
   let navigated = navigate(target, MULTIPLE_CONTEXTS_URL);
-  let [secondProgram, thirdProgram] = yield getPrograms(gFront, 2);
-  yield navigated;
+  let [secondProgram, thirdProgram] = await getPrograms(gFront, 2);
+  await navigated;
 
-  let vsEditor = yield ShadersEditorsView._getEditor("vs");
-  let fsEditor = yield ShadersEditorsView._getEditor("fs");
+  let vsEditor = await ShadersEditorsView._getEditor("vs");
+  let fsEditor = await ShadersEditorsView._getEditor("fs");
 
-  yield navigateInHistory(target, "back", "will-navigate");
-  yield once(panel.panelWin, EVENTS.PROGRAMS_ADDED);
-  yield once(panel.panelWin, EVENTS.SOURCES_SHOWN);
+  await navigateInHistory(target, "back", "will-navigate");
+  await once(panel.panelWin, EVENTS.PROGRAMS_ADDED);
+  await once(panel.panelWin, EVENTS.SOURCES_SHOWN);
 
   is($("#content").hidden, false,
     "The tool's content should not be hidden.");
@@ -39,9 +39,9 @@ function* ifWebGLSupported() {
   is(fsEditor.getText().indexOf("gl_FragColor"), 97,
     "The fragment shader editor contains the correct text.");
 
-  yield navigateInHistory(target, "forward", "will-navigate");
-  yield once(panel.panelWin, EVENTS.PROGRAMS_ADDED);
-  yield once(panel.panelWin, EVENTS.SOURCES_SHOWN);
+  await navigateInHistory(target, "forward", "will-navigate");
+  await once(panel.panelWin, EVENTS.PROGRAMS_ADDED);
+  await once(panel.panelWin, EVENTS.SOURCES_SHOWN);
 
   is($("#content").hidden, false,
     "The tool's content should not be hidden.");
@@ -55,6 +55,6 @@ function* ifWebGLSupported() {
   is(fsEditor.getText().indexOf("gl_FragColor"), 89,
     "The fragment shader editor contains the correct text.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

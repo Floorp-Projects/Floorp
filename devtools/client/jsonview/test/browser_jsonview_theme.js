@@ -7,24 +7,24 @@
 
 const TEST_JSON_URL = URL_ROOT + "valid_json.json";
 
-add_task(function* () {
+add_task(async function () {
   info("Test JSON theme started.");
 
   let oldPref = SpecialPowers.getCharPref("devtools.theme");
   SpecialPowers.setCharPref("devtools.theme", "light");
 
-  yield addJsonViewTab(TEST_JSON_URL);
+  await addJsonViewTab(TEST_JSON_URL);
 
-  is(yield getTheme(), "theme-light", "The initial theme is light");
+  is(await getTheme(), "theme-light", "The initial theme is light");
 
   SpecialPowers.setCharPref("devtools.theme", "dark");
-  is(yield getTheme(), "theme-dark", "Theme changed to dark");
+  is(await getTheme(), "theme-dark", "Theme changed to dark");
 
   SpecialPowers.setCharPref("devtools.theme", "firebug");
-  is(yield getTheme(), "theme-firebug", "Theme changed to firebug");
+  is(await getTheme(), "theme-firebug", "Theme changed to firebug");
 
   SpecialPowers.setCharPref("devtools.theme", "light");
-  is(yield getTheme(), "theme-light", "Theme changed to light");
+  is(await getTheme(), "theme-light", "Theme changed to light");
 
   SpecialPowers.setCharPref("devtools.theme", oldPref);
 });

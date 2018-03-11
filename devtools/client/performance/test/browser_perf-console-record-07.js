@@ -14,21 +14,21 @@ const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require
 const { idleWait } = require("devtools/client/performance/test/helpers/wait-utils");
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(function* () {
-  let { target, console } = yield initConsoleInNewTab({
+add_task(async function () {
+  let { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = yield initPerformanceInTab({ tab: target.tab });
+  let { panel } = await initPerformanceInTab({ tab: target.tab });
   let { PerformanceController } = panel.panelWin;
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
-  yield console.profile();
-  yield started;
+  await console.profile();
+  await started;
 
   started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
@@ -39,8 +39,8 @@ add_task(function* () {
     // in-progress recording is selected, which won't happen
     skipWaitingForViewState: true,
   });
-  yield console.profile("1");
-  yield started;
+  await console.profile("1");
+  await started;
 
   started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
@@ -51,8 +51,8 @@ add_task(function* () {
     // in-progress recording is selected, which won't happen
     skipWaitingForViewState: true,
   });
-  yield console.profile("2");
-  yield started;
+  await console.profile("2");
+  await started;
 
   let recordings = PerformanceController.getRecordings();
   let selected = getSelectedRecording(panel);
@@ -80,8 +80,8 @@ add_task(function* () {
     // finished recording is selected, which won't happen
     skipWaitingForViewState: true,
   });
-  yield console.profileEnd();
-  yield stopped;
+  await console.profileEnd();
+  await stopped;
 
   selected = getSelectedRecording(panel);
   recordings = PerformanceController.getRecordings();
@@ -98,7 +98,7 @@ add_task(function* () {
 
   info("Trying to `profileEnd` a non-existent console recording.");
   console.profileEnd("fxos");
-  yield idleWait(1000);
+  await idleWait(1000);
 
   selected = getSelectedRecording(panel);
   recordings = PerformanceController.getRecordings();
@@ -123,8 +123,8 @@ add_task(function* () {
     // finished recording is selected, which won't happen
     skipWaitingForViewState: true,
   });
-  yield console.profileEnd();
-  yield stopped;
+  await console.profileEnd();
+  await stopped;
 
   selected = getSelectedRecording(panel);
   recordings = PerformanceController.getRecordings();
@@ -143,8 +143,8 @@ add_task(function* () {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
-  yield console.profileEnd();
-  yield stopped;
+  await console.profileEnd();
+  await stopped;
 
   selected = getSelectedRecording(panel);
   recordings = PerformanceController.getRecordings();
@@ -161,10 +161,10 @@ add_task(function* () {
 
   info("Trying to `profileEnd` with no pending recordings.");
   console.profileEnd();
-  yield idleWait(1000);
+  await idleWait(1000);
 
   ok(true, "Calling console.profileEnd() with no argument and no pending recordings " +
     "does not throw.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

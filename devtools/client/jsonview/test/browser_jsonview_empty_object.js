@@ -6,37 +6,37 @@
 "use strict";
 
 function testRootObject(objExpr, summary = objExpr) {
-  return function* () {
+  return async function () {
     info("Test JSON with root empty object " + objExpr + " started");
 
     let TEST_JSON_URL = "data:application/json," + objExpr;
-    yield addJsonViewTab(TEST_JSON_URL);
+    await addJsonViewTab(TEST_JSON_URL);
 
-    let objectText = yield getElementText(
+    let objectText = await getElementText(
       ".jsonPanelBox .panelContent");
     is(objectText, summary, "The root object " + objExpr + " is visible");
   };
 }
 
 function testNestedObject(objExpr, summary = objExpr) {
-  return function* () {
+  return async function () {
     info("Test JSON with nested empty object " + objExpr + " started");
 
     let TEST_JSON_URL = "data:application/json,[" + objExpr + "]";
-    yield addJsonViewTab(TEST_JSON_URL);
+    await addJsonViewTab(TEST_JSON_URL);
 
-    let objectCellCount = yield getElementCount(
+    let objectCellCount = await getElementCount(
       ".jsonPanelBox .treeTable .objectCell");
     is(objectCellCount, 1, "There must be one object cell");
 
-    let objectCellText = yield getElementText(
+    let objectCellText = await getElementText(
       ".jsonPanelBox .treeTable .objectCell");
     is(objectCellText, summary, objExpr + " has a visible summary");
 
     // Collapse auto-expanded node.
-    yield clickJsonNode(".jsonPanelBox .treeTable .treeLabel");
+    await clickJsonNode(".jsonPanelBox .treeTable .treeLabel");
 
-    let textAfter = yield getElementText(
+    let textAfter = await getElementText(
       ".jsonPanelBox .treeTable .objectCell");
     is(textAfter, summary, objExpr + " still has a visible summary");
   };

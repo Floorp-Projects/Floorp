@@ -6,8 +6,8 @@
  * the correct node in the InspectorView
  */
 
-add_task(function* () {
-  let { target, panel } = yield initWebAudioEditor(COMPLEX_CONTEXT_URL);
+add_task(async function () {
+  let { target, panel } = await initWebAudioEditor(COMPLEX_CONTEXT_URL);
   let panelWin = panel.panelWin;
   let { gFront, $, $$, InspectorView } = panelWin;
 
@@ -18,32 +18,32 @@ add_task(function* () {
     waitForGraphRendered(panel.panelWin, 8, 8)
   ]);
   reload(target);
-  let [actors, _] = yield events;
+  let [actors, _] = await events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
 
-  yield clickGraphNode(panelWin, nodeIds[1], true);
+  await clickGraphNode(panelWin, nodeIds[1], true);
 
   ok(InspectorView.isVisible(), "InspectorView visible after selecting a node.");
   is(InspectorView.getCurrentAudioNode().id, nodeIds[1], "InspectorView has correct node set.");
 
-  yield clickGraphNode(panelWin, nodeIds[2]);
+  await clickGraphNode(panelWin, nodeIds[2]);
 
   ok(InspectorView.isVisible(), "InspectorView still visible after selecting another node.");
   is(InspectorView.getCurrentAudioNode().id, nodeIds[2], "InspectorView has correct node set on second node.");
 
-  yield clickGraphNode(panelWin, nodeIds[2]);
+  await clickGraphNode(panelWin, nodeIds[2]);
   is(InspectorView.getCurrentAudioNode().id, nodeIds[2], "Clicking the same node again works (idempotent).");
 
-  yield clickGraphNode(panelWin, $("rect", findGraphNode(panelWin, nodeIds[3])));
+  await clickGraphNode(panelWin, $("rect", findGraphNode(panelWin, nodeIds[3])));
   is(InspectorView.getCurrentAudioNode().id, nodeIds[3], "Clicking on a <rect> works as expected.");
 
-  yield clickGraphNode(panelWin, $("tspan", findGraphNode(panelWin, nodeIds[4])));
+  await clickGraphNode(panelWin, $("tspan", findGraphNode(panelWin, nodeIds[4])));
   is(InspectorView.getCurrentAudioNode().id, nodeIds[4], "Clicking on a <tspan> works as expected.");
 
   ok(InspectorView.isVisible(),
     "InspectorView still visible after several nodes have been clicked.");
 
-  yield teardown(target);
+  await teardown(target);
 });

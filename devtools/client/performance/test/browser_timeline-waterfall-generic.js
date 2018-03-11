@@ -11,21 +11,21 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording, waitForOverviewRenderedWithMarkers } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function () {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { $, $$, EVENTS, WaterfallView } = panel.panelWin;
 
-  yield startRecording(panel);
+  await startRecording(panel);
   ok(true, "Recording has started.");
 
   // Ensure overview is rendering and some markers were received.
-  yield waitForOverviewRenderedWithMarkers(panel);
+  await waitForOverviewRenderedWithMarkers(panel);
 
-  yield stopRecording(panel);
+  await stopRecording(panel);
   ok(true, "Recording has ended.");
 
   // Test the header container.
@@ -82,7 +82,7 @@ add_task(function* () {
 
   let waterfallRerendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   $$(".waterfall-tree-item")[0].click();
-  yield waterfallRerendered;
+  await waterfallRerendered;
 
   let parentWidthAfter = $("#waterfall-view").getBoundingClientRect().width;
   let sidebarWidthAfter = $(".waterfall-sidebar").getBoundingClientRect().width;
@@ -101,5 +101,5 @@ add_task(function* () {
                       - WaterfallView.WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
      "The waterfall width is correct (2).");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

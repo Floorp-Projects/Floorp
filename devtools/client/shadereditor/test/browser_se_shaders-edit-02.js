@@ -6,22 +6,22 @@
  * gets malformed after being edited.
  */
 
-function* ifWebGLSupported() {
-  let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
+async function ifWebGLSupported() {
+  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
-  yield promise.all([
+  await promise.all([
     once(gFront, "program-linked"),
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
-  let vsEditor = yield ShadersEditorsView._getEditor("vs");
-  let fsEditor = yield ShadersEditorsView._getEditor("fs");
+  let vsEditor = await ShadersEditorsView._getEditor("vs");
+  let fsEditor = await ShadersEditorsView._getEditor("fs");
 
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  let [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  let [, error] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
 
   ok(error,
     "The new vertex shader source was compiled with errors.");
@@ -42,7 +42,7 @@ function* ifWebGLSupported() {
 
 
   fsEditor.replaceText("vec4", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  [, error] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
 
   ok(error,
     "The new fragment shader source was compiled with errors.");
@@ -57,20 +57,20 @@ function* ifWebGLSupported() {
     "A constructor error is contained in the info log.");
 
 
-  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
 
   vsEditor.replaceText("vec4", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  [, error] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
   ok(!error, "The new vertex shader source was compiled successfully.");
 
   fsEditor.replaceText("vec3", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  [, error] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
   ok(!error, "The new fragment shader source was compiled successfully.");
 
-  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

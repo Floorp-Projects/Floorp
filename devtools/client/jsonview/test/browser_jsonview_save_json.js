@@ -84,15 +84,15 @@ registerCleanupFunction(function () {
   ok(!destDir.exists(), "Destination dir should be removed");
 });
 
-add_task(function* () {
+add_task(async function () {
   info("Test 1 save JSON started");
 
   const JSON_FILE = "simple_json.json";
   const TEST_JSON_URL = URL_ROOT + JSON_FILE;
-  yield addJsonViewTab(TEST_JSON_URL);
+  await addJsonViewTab(TEST_JSON_URL);
 
   let promise, rawJSON, prettyJSON;
-  yield fetch(new Request(TEST_JSON_URL))
+  await fetch(new Request(TEST_JSON_URL))
     .then(response => response.text())
     .then(function (data) {
       info("Fetched JSON contents.");
@@ -102,7 +102,7 @@ add_task(function* () {
 
   // Attempt to save original JSON via "Save As" command
   promise = awaitFileSave(JSON_FILE, "json");
-  yield new Promise((resolve) => {
+  await new Promise((resolve) => {
     info("Register to handle popupshown.");
     document.addEventListener("popupshown", function (event) {
       info("Context menu opened.");
@@ -116,53 +116,53 @@ add_task(function* () {
     rightClick("body");
     info("Right clicked.");
   });
-  yield promise.then(getFileContents).then(function (data) {
+  await promise.then(getFileContents).then(function (data) {
     is(data, rawJSON, "Original JSON contents should have been saved.");
   });
 
   // Attempt to save original JSON via "Save" button
   promise = awaitFileSave(JSON_FILE, "json");
-  yield click(saveButton);
+  await click(saveButton);
   info("Clicked Save button.");
-  yield promise.then(getFileContents).then(function (data) {
+  await promise.then(getFileContents).then(function (data) {
     is(data, rawJSON, "Original JSON contents should have been saved.");
   });
 
   // Attempt to save prettified JSON via "Save" button
-  yield selectJsonViewContentTab("rawdata");
+  await selectJsonViewContentTab("rawdata");
   info("Switched to Raw Data tab.");
-  yield click(prettifyButton);
+  await click(prettifyButton);
   info("Clicked Pretty Print button.");
   promise = awaitFileSave(JSON_FILE, "json");
-  yield click(saveButton);
+  await click(saveButton);
   info("Clicked Save button.");
-  yield promise.then(getFileContents).then(function (data) {
+  await promise.then(getFileContents).then(function (data) {
     is(data, prettyJSON, "Prettified JSON contents should have been saved.");
   });
 });
 
-add_task(function* () {
+add_task(async function () {
   info("Test 2 save JSON started");
 
   const TEST_JSON_URL = "data:application/json,2";
-  yield addJsonViewTab(TEST_JSON_URL);
+  await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/json adds .json extension by default.");
   let promise = awaitFileSave("index.json", "json");
-  yield click(saveButton);
+  await click(saveButton);
   info("Clicked Save button.");
-  yield promise.then(getFileContents);
+  await promise.then(getFileContents);
 });
 
-add_task(function* () {
+add_task(async function () {
   info("Test 3 save JSON started");
 
   const TEST_JSON_URL = "data:application/manifest+json,3";
-  yield addJsonViewTab(TEST_JSON_URL);
+  await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/manifest+json does not add .json extension.");
   let promise = awaitFileSave("index", null);
-  yield click(saveButton);
+  await click(saveButton);
   info("Clicked Save button.");
-  yield promise.then(getFileContents);
+  await promise.then(getFileContents);
 });

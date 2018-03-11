@@ -12,7 +12,6 @@ const { require } = BrowserLoaderModule.BrowserLoader({
   baseURI: "resource://devtools/client/memory/",
   window
 });
-const { Task } = require("devtools/shared/task");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
@@ -32,7 +31,7 @@ var gToolbox, gFront, gHeapAnalysesClient;
  */
 var gStore, gRoot, gApp, gProvider, unsubscribe, isHighlighted;
 
-var initialize = Task.async(function* () {
+var initialize = async function () {
   gRoot = document.querySelector("#app");
   gStore = Store();
   gApp = createElement(App,
@@ -40,16 +39,16 @@ var initialize = Task.async(function* () {
   gProvider = createElement(Provider, { store: gStore }, gApp);
   ReactDOM.render(gProvider, gRoot);
   unsubscribe = gStore.subscribe(onStateChange);
-});
+};
 
-var destroy = Task.async(function* () {
+var destroy = async function () {
   const ok = ReactDOM.unmountComponentAtNode(gRoot);
   assert(ok, "Should successfully unmount the memory tool's top level React component");
 
   unsubscribe();
 
   gStore = gRoot = gApp = gProvider = unsubscribe = isHighlighted = null;
-});
+};
 
 /**
  * Fired on any state change, currently only handles toggling

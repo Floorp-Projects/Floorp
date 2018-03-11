@@ -16,7 +16,7 @@ Test that we show a place holder for a subtree we are lazily fetching.
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = Task.async(function* () {
+         window.onload = async function () {
            try {
              const container = document.getElementById("container");
 
@@ -26,7 +26,7 @@ Test that we show a place holder for a subtree we are lazily fetching.
              const expanded = new Set();
              expanded.add(root.nodeId);
 
-             yield renderComponent(DominatorTreeComponent(immutableUpdate(TEST_DOMINATOR_TREE_PROPS, {
+             await renderComponent(DominatorTreeComponent(immutableUpdate(TEST_DOMINATOR_TREE_PROPS, {
                dominatorTree: immutableUpdate(TEST_DOMINATOR_TREE_PROPS.dominatorTree, {
                  expanded,
                  root,
@@ -43,7 +43,7 @@ Test that we show a place holder for a subtree we are lazily fetching.
            } finally {
              SimpleTest.finish();
            }
-         });
+         };
         </script>
     </pre>
 </body>
