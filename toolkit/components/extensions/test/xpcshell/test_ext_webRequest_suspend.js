@@ -1,20 +1,31 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test for simple WebExtension</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
 "use strict";
 
-// This file defines content scripts.
-/* eslint-env mozilla/frame-script */
+const HOSTS = new Set([
+  "example.com",
+]);
+
+const server = createHttpServer({hosts: HOSTS});
+
+const BASE_URL = "http://example.com";
+const FETCH_ORIGIN = "http://example.com/dummy";
+
+server.registerPathHandler("/return_headers.sjs", (request, response) => {
+  response.setHeader("Content-Type", "text/plain", false);
+
+  let headers = {};
+  // Why on earth is this a nsISimpleEnumerator...
+  for (let {data: header} of XPCOMUtils.IterSimpleEnumerator(request.headers,
+                                                             Ci.nsISupportsString)) {
+    headers[header.toLowerCase()] = request.getHeader(header);
+  }
+
+  response.write(JSON.stringify(headers));
+});
+
+server.registerPathHandler("/dummy", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.write("ok");
+});
 
 add_task(async function test_suspend() {
   let extension = ExtensionTestUtils.loadExtension({
@@ -22,7 +33,7 @@ add_task(async function test_suspend() {
       permissions: [
         "webRequest",
         "webRequestBlocking",
-        "http://mochi.test/",
+        `${BASE_URL}/`,
       ],
     },
 
@@ -47,6 +58,7 @@ add_task(async function test_suspend() {
           let requestHeaders = details.requestHeaders.concat({name: "Foo", value: "Bar"});
 
           return new Promise(resolve => {
+            // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
             setTimeout(resolve, 500);
           }).then(() => {
             return {requestHeaders};
@@ -59,11 +71,9 @@ add_task(async function test_suspend() {
 
   await extension.startup();
 
-  let result = await fetch(SimpleTest.getTestFileURL("return_headers.sjs"));
+  let headers = JSON.parse(await ExtensionTestUtils.fetch(FETCH_ORIGIN, `${BASE_URL}/return_headers.sjs`));
 
-  let headers = JSON.parse(await result.text());
-
-  is(headers.foo, "Bar", "Request header was correctly set on suspended request");
+  equal(headers.foo, "Bar", "Request header was correctly set on suspended request");
 
   await extension.unload();
 });
@@ -72,30 +82,26 @@ add_task(async function test_suspend() {
 // Test that requests that were canceled while suspended for a blocking
 // listener are correctly resumed.
 add_task(async function test_error_resume() {
-  let chromeScript = SpecialPowers.loadChromeScript(() => {
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+  let observer = channel => {
+    if (channel instanceof Ci.nsIHttpChannel && channel.URI.spec === "http://example.com/dummy") {
+      Services.obs.removeObserver(observer, "http-on-before-connect");
 
-    let observer = channel => {
-      if (channel instanceof Ci.nsIHttpChannel && channel.URI.spec === "http://example.com/") {
-        Services.obs.removeObserver(observer, "http-on-before-connect");
+      // Wait until the next tick to make sure this runs after WebRequest observers.
+      Promise.resolve().then(() => {
+        channel.cancel(Cr.NS_BINDING_ABORTED);
+      });
+    }
+  };
 
-        // Wait until the next tick to make sure this runs after WebRequest observers.
-        Promise.resolve().then(() => {
-          channel.cancel(Cr.NS_BINDING_ABORTED);
-        });
-      }
-    };
+  Services.obs.addObserver(observer, "http-on-before-connect");
 
-    Services.obs.addObserver(observer, "http-on-before-connect");
-  });
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
         "webRequest",
         "webRequestBlocking",
-        "http://example.com/",
-        "http://mochi.test/",
+        `${BASE_URL}/`,
       ],
     },
 
@@ -104,7 +110,7 @@ add_task(async function test_error_resume() {
         details => {
           browser.test.log(`onBeforeSendHeaders({url: ${details.url}})`);
 
-          if (details.url === "http://example.com/") {
+          if (details.url === "http://example.com/dummy") {
             browser.test.sendMessage("got-before-send-headers");
           }
         },
@@ -115,7 +121,7 @@ add_task(async function test_error_resume() {
         details => {
           browser.test.log(`onErrorOccurred({url: ${details.url}})`);
 
-          if (details.url === "http://example.com/") {
+          if (details.url === "http://example.com/dummy") {
             browser.test.sendMessage("got-error-occurred");
           }
         },
@@ -126,7 +132,7 @@ add_task(async function test_error_resume() {
   await extension.startup();
 
   try {
-    await fetch("http://example.com/");
+    await ExtensionTestUtils.fetch(FETCH_ORIGIN, `${BASE_URL}/dummy`);
     ok(false, "Fetch should have failed.");
   } catch (e) {
     ok(true, "Got expected error.");
@@ -135,8 +141,11 @@ add_task(async function test_error_resume() {
   await extension.awaitMessage("got-before-send-headers");
   await extension.awaitMessage("got-error-occurred");
 
+  // Wait for the next tick so the onErrorRecurred response can be
+  // processed before shutting down the extension.
+  await new Promise(resolve => executeSoon(resolve));
+
   await extension.unload();
-  chromeScript.destroy();
 });
 
 
@@ -169,8 +178,9 @@ add_task(async function test_set_responseHeaders() {
 
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  let chromeScript = SpecialPowers.loadChromeScript(() => {
-    ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+  let resolveHeaderPromise;
+  let headerPromise = new Promise(resolve => { resolveHeaderPromise = resolve; });
+  {
     ChromeUtils.import("resource://gre/modules/Services.jsm");
     ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -190,9 +200,9 @@ add_task(async function test_set_responseHeaders() {
         request.QueryInterface(Ci.nsIHttpChannel);
 
         try {
-          sendAsyncMessage("response-header-foo", request.getResponseHeader("foo"));
+          resolveHeaderPromise(request.getResponseHeader("foo"));
         } catch (e) {
-          sendAsyncMessage("response-header-foo", null);
+          resolveHeaderPromise(null);
         }
         request.cancel(Cr.NS_BINDING_ABORTED);
       },
@@ -204,13 +214,12 @@ add_task(async function test_set_responseHeaders() {
         throw new Components.Exception("", Cr.NS_ERROR_FAILURE);
       },
     });
-  });
+  }
 
-  let headerValue = await chromeScript.promiseOneMessage("response-header-foo");
-  is(headerValue, "bar", "Expected Foo header value");
+  let headerValue = await headerPromise;
+  equal(headerValue, "bar", "Expected Foo header value");
 
   await extension.unload();
-  chromeScript.destroy();
 });
 
 // Test that exceptions raised from a blocking webRequest listener that returns
@@ -221,7 +230,7 @@ add_task(async function test_logged_error_on_promise_result() {
       permissions: [
         "webRequest",
         "webRequestBlocking",
-        "http://mochi.test/*",
+        `${BASE_URL}/`,
       ],
     },
 
@@ -241,40 +250,29 @@ add_task(async function test_logged_error_on_promise_result() {
         exceptionRaised = true;
         return onBeforeRequest();
       }, {
-        urls: ["http://mochi.test/*"],
+        urls: ["http://example.com/*"],
         types: ["main_frame"],
       }, ["blocking"]);
 
       browser.webRequest.onBeforeRequest.addListener(() => {
         browser.test.sendMessage("web-request-event-received");
       }, {
-        urls: ["http://mochi.test/*"],
+        urls: ["http://example.com/*"],
         types: ["main_frame"],
       }, ["blocking"]);
-
-      browser.test.sendMessage("background-ready");
     },
   });
 
-  // Start to monitor the console service for the expected console message.
-  consoleMonitor.start([{message: /Expected webRequest exception from a promise result/}]);
+  let {messages} = await promiseConsoleOutput(async () => {
+    await extension.startup();
 
-  await extension.startup();
+    let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/dummy`, {remote: true});
+    await extension.awaitMessage("web-request-event-received");
+    await contentPage.close();
+  });
 
-  await extension.awaitMessage("background-ready");
-
-  const testWin = window.open("http://mochi.test:8888/", "_blank", "width=100,height=100");
-  await waitForLoad(testWin);
-  await extension.awaitMessage("web-request-event-received");
-  testWin.close();
-
-  // Check that the collected messages contains the expected console message, and fails
-  // otherwise.
-  await consoleMonitor.finished();
+  ok(messages.some(msg => /Expected webRequest exception from a promise result/.test(msg.message)),
+     "Got expected console message");
 
   await extension.unload();
 });
-
-</script>
-</body>
-</html>
