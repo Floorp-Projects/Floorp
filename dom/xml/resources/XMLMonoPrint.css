@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#tree,
-.expandable-opening::-moz-list-bullet {
+@import url("chrome://global/content/xml/XMLPrettyPrint.css");
+
+#top > .expander-open {
   font-family: monospace;
   white-space: pre;
 }
