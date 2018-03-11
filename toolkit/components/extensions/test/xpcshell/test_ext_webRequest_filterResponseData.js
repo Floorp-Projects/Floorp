@@ -1,39 +1,12 @@
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(this, "proxyService",
-                                   "@mozilla.org/network/protocol-proxy-service;1",
-                                   "nsIProtocolProxyService");
-
-const server = createHttpServer();
-const gHost = "localhost";
-const gPort = server.identity.primaryPort;
-
 const HOSTS = new Set([
   "example.com",
   "example.org",
   "example.net",
 ]);
 
-for (let host of HOSTS) {
-  server.identity.add("http", host, 80);
-}
-
-const proxyFilter = {
-  proxyInfo: proxyService.newProxyInfo("http", gHost, gPort, 0, 4096, null),
-
-  applyFilter(service, channel, defaultProxyInfo, callback) {
-    if (HOSTS.has(channel.URI.host)) {
-      callback.onProxyFilterResult(this.proxyInfo);
-    } else {
-      callback.onProxyFilterResult(defaultProxyInfo);
-    }
-  },
-};
-
-proxyService.registerChannelFilter(proxyFilter, 0);
-registerCleanupFunction(() => {
-  proxyService.unregisterChannelFilter(proxyFilter);
-});
+const server = createHttpServer({hosts: HOSTS});
 
 server.registerPathHandler("/redirect", (request, response) => {
   let params = new URLSearchParams(request.queryString);
