@@ -115,26 +115,32 @@ function isLayerized(elementId) {
   return false;
 }
 
+function promiseApzRepaintsFlushed(aWindow = window) {
+  return new Promise(function (resolve, reject) {
+    var repaintDone = function() {
+      SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
+      setTimeout(resolve, 0);
+    };
+    SpecialPowers.Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
+    if (SpecialPowers.getDOMWindowUtils(aWindow).flushApzRepaints()) {
+      dump("Flushed APZ repaints, waiting for callback...\n");
+    } else {
+      dump("Flushing APZ repaints was a no-op, triggering callback directly...\n");
+      repaintDone();
+    }
+  });
+}
+
 function flushApzRepaints(aCallback, aWindow = window) {
   if (!aCallback) {
     throw "A callback must be provided!";
   }
-  var repaintDone = function() {
-    SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
-    setTimeout(aCallback, 0);
-  };
-  SpecialPowers.Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
-  if (SpecialPowers.getDOMWindowUtils(aWindow).flushApzRepaints()) {
-    dump("Flushed APZ repaints, waiting for callback...\n");
-  } else {
-    dump("Flushing APZ repaints was a no-op, triggering callback directly...\n");
-    repaintDone();
-  }
+  promiseApzRepaintsFlushed(aWindow).then(aCallback);
 }
 
 // Flush repaints, APZ pending repaints, and any repaints resulting from that
 // flush. This is particularly useful if the test needs to reach some sort of
-// "idle" state in terms of repaints. Usually just doing waitForAllPaints
+// "idle" state in terms of repaints. Usually just waiting for all paints
 // followed by flushApzRepaints is sufficient to flush all APZ state back to
 // the main thread, but it can leave a paint scheduled which will get triggered
 // at some later time. For tests that specifically test for painting at
@@ -143,16 +149,18 @@ function flushApzRepaints(aCallback, aWindow = window) {
 // most tests.
 function waitForApzFlushedRepaints(aCallback) {
   // First flush the main-thread paints and send transactions to the APZ
-  waitForAllPaints(function() {
+  promiseAllPaintsDone()
     // Then flush the APZ to make sure any repaint requests have been sent
-    // back to the main thread
-    flushApzRepaints(function() {
-      // Then flush the main-thread again to process the repaint requests.
-      // Once this is done, we should be in a stable state with nothing
-      // pending, so we can trigger the callback.
-      waitForAllPaints(aCallback);
-    });
-  });
+    // back to the main thread. Note that we need a wrapper function around
+    // promiseApzRepaintsFlushed otherwise the rect produced by
+    // promiseAllPaintsDone gets passed to it as the window parameter.
+    .then(() => promiseApzRepaintsFlushed())
+    // Then flush the main-thread again to process the repaint requests.
+    // Once this is done, we should be in a stable state with nothing
+    // pending, so we can trigger the callback.
+    .then(promiseAllPaintsDone)
+    // Then allow the callback to be triggered.
+    .then(aCallback);
 }
 
 // This function takes a set of subtests to run one at a time in new top-level
@@ -267,14 +275,10 @@ function pushPrefs(prefs) {
   return SpecialPowers.pushPrefEnv({'set': prefs});
 }
 
-function waitUntilApzStable() {
-  return new Promise(function(resolve, reject) {
-    SimpleTest.waitForFocus(function() {
-      waitForAllPaints(function() {
-        flushApzRepaints(resolve);
-      });
-    }, window);
-  });
+async function waitUntilApzStable() {
+  await SimpleTest.promiseFocus(window);
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
 }
 
 function isApzEnabled() {
