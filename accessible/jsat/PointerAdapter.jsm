@@ -8,8 +8,6 @@
 
 var EXPORTED_SYMBOLS = ["PointerRelay", "PointerAdapter"]; // jshint ignore:line
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ChromeUtils.defineModuleGetter(this, "Utils", // jshint ignore:line
   "resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "Logger", // jshint ignore:line
