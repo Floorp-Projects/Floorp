@@ -1497,6 +1497,7 @@ nsIDocument::nsIDocument()
     mScrolledToRefAlready(false),
     mChangeScrollPosWhenScrollingToRef(false),
     mHasWarnedAboutBoxObjects(false),
+    mDelayFrameLoaderInitialization(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mPendingFullscreenRequests(0),
     mCompatMode(eCompatibility_FullStandards),
@@ -1552,7 +1553,6 @@ nsIDocument::nsIDocument()
 
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
-  , mDelayFrameLoaderInitialization(false)
   , mSynchronousDOMContentLoaded(false)
   , mParserAborted(false)
   , mReportedUseCounters(false)
@@ -6600,7 +6600,7 @@ nsIDocument::SetMayStartLayout(bool aMayStartLayout)
 }
 
 nsresult
-nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
+nsIDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
 {
   mInitializableFrameLoaders.RemoveElement(aLoader);
   // Don't even try to initialize.
@@ -6613,9 +6613,9 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
   mInitializableFrameLoaders.AppendElement(aLoader);
   if (!mFrameLoaderRunner) {
     mFrameLoaderRunner =
-      NewRunnableMethod("nsDocument::MaybeInitializeFinalizeFrameLoaders",
+      NewRunnableMethod("nsIDocument::MaybeInitializeFinalizeFrameLoaders",
                         this,
-                        &nsDocument::MaybeInitializeFinalizeFrameLoaders);
+                        &nsIDocument::MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -6623,7 +6623,7 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
 }
 
 nsresult
-nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer)
+nsIDocument::FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer)
 {
   mInitializableFrameLoaders.RemoveElement(aLoader);
   if (mInDestructor) {
@@ -6633,9 +6633,9 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer)
   mFrameLoaderFinalizers.AppendElement(aFinalizer);
   if (!mFrameLoaderRunner) {
     mFrameLoaderRunner =
-      NewRunnableMethod("nsDocument::MaybeInitializeFinalizeFrameLoaders",
+      NewRunnableMethod("nsIDocument::MaybeInitializeFinalizeFrameLoaders",
                         this,
-                        &nsDocument::MaybeInitializeFinalizeFrameLoaders);
+                        &nsIDocument::MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -6643,7 +6643,7 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer)
 }
 
 void
-nsDocument::MaybeInitializeFinalizeFrameLoaders()
+nsIDocument::MaybeInitializeFinalizeFrameLoaders()
 {
   if (mDelayFrameLoaderInitialization || mUpdateNestLevel != 0) {
     // This method will be recalled when mUpdateNestLevel drops to 0,
@@ -6659,9 +6659,9 @@ nsDocument::MaybeInitializeFinalizeFrameLoaders()
         (mInitializableFrameLoaders.Length() ||
          mFrameLoaderFinalizers.Length())) {
       mFrameLoaderRunner =
-        NewRunnableMethod("nsDocument::MaybeInitializeFinalizeFrameLoaders",
+        NewRunnableMethod("nsIDocument::MaybeInitializeFinalizeFrameLoaders",
                           this,
-                          &nsDocument::MaybeInitializeFinalizeFrameLoaders);
+                          &nsIDocument::MaybeInitializeFinalizeFrameLoaders);
       nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
     }
     return;
@@ -6689,7 +6689,7 @@ nsDocument::MaybeInitializeFinalizeFrameLoaders()
 }
 
 void
-nsDocument::TryCancelFrameLoaderInitialization(nsIDocShell* aShell)
+nsIDocument::TryCancelFrameLoaderInitialization(nsIDocShell* aShell)
 {
   uint32_t length = mInitializableFrameLoaders.Length();
   for (uint32_t i = 0; i < length; ++i) {

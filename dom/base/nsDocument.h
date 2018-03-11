@@ -301,10 +301,6 @@ public:
   virtual void BlockOnload() override;
   virtual void UnblockOnload(bool aFireSync) override;
 
-  virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) override;
-  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer) override;
-  virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) override;
-
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
                                                                    nsIDocument)
 
@@ -315,8 +311,6 @@ public:
   }
 
   nsresult CloneDocHelper(nsDocument* clone, bool aPreallocateChildren) const;
-
-  void MaybeInitializeFinalizeFrameLoaders();
 
   void MaybeEndOutermostXBLUpdate();
 
@@ -407,8 +401,6 @@ public:
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
-  bool mDelayFrameLoaderInitialization:1;
-
   bool mSynchronousDOMContentLoaded:1;
 
   // Parser aborted. True if the parser of this document was forcibly
@@ -460,10 +452,6 @@ private:
   // Onload blockers which haven't been activated yet
   uint32_t mAsyncOnloadBlockCount;
   nsCOMPtr<nsIRequest> mOnloadBlocker;
-
-  nsTArray<RefPtr<nsFrameLoader> > mInitializableFrameLoaders;
-  nsTArray<nsCOMPtr<nsIRunnable> > mFrameLoaderFinalizers;
-  RefPtr<nsRunnableMethod<nsDocument> > mFrameLoaderRunner;
 
   nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
 

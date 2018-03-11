@@ -2556,12 +2556,12 @@ public:
   void SetCachedEncoder(already_AddRefed<nsIDocumentEncoder> aEncoder);
 
   // In case of failure, the document really can't initialize the frame loader.
-  virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) = 0;
+  nsresult InitializeFrameLoader(nsFrameLoader* aLoader);
   // In case of failure, the caller must handle the error, for example by
   // finalizing frame loader asynchronously.
-  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer) = 0;
+  nsresult FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer);
   // Removes the frame loader of aShell from the initialization list.
-  virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) = 0;
+  void TryCancelFrameLoaderInitialization(nsIDocShell* aShell);
 
   /**
    * Check whether this document is a root document that is not an
@@ -3617,6 +3617,8 @@ public:
   nsIContent* GetContentInThisDocument(nsIFrame* aFrame) const;
 
 protected:
+  void MaybeInitializeFinalizeFrameLoaders();
+
   /**
    * Returns the title element of the document as defined by the HTML
    * specification, or null if there isn't one.  For documents whose root
@@ -4090,6 +4092,8 @@ protected:
 
   bool mHasWarnedAboutBoxObjects: 1;
 
+  bool mDelayFrameLoaderInitialization: 1;
+
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
   unsigned int mIsScopedStyleEnabled : 2;
@@ -4396,6 +4400,10 @@ protected:
 
   uint16_t mCurrentOrientationAngle;
   mozilla::dom::OrientationType mCurrentOrientationType;
+
+  nsTArray<RefPtr<nsFrameLoader>> mInitializableFrameLoaders;
+  nsTArray<nsCOMPtr<nsIRunnable>> mFrameLoaderFinalizers;
+  RefPtr<nsRunnableMethod<nsIDocument>> mFrameLoaderRunner;
 
 public:
   js::ExpandoAndGeneration mExpandoAndGeneration;
