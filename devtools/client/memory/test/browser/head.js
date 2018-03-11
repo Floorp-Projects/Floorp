@@ -48,7 +48,7 @@ this.closeMemoryPanel = async function (tab) {
  *
  * Example usage:
  *
- *     this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
+ *     this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
  *         // Your tests go here...
  *     });
  */
