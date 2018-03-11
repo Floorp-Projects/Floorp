@@ -110,7 +110,6 @@ GetObject(const MDefinition* ins)
       case MDefinition::Opcode::GuardReceiverPolymorphic:
       case MDefinition::Opcode::GuardObjectGroup:
       case MDefinition::Opcode::GuardObjectIdentity:
-      case MDefinition::Opcode::GuardClass:
       case MDefinition::Opcode::GuardUnboxedExpando:
       case MDefinition::Opcode::LoadUnboxedExpando:
       case MDefinition::Opcode::LoadSlot:

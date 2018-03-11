@@ -224,7 +224,9 @@ U2FHIDTokenManager::HandleRegisterResult(UniquePtr<U2FResult>&& aResult)
     return;
   }
 
-  WebAuthnMakeCredentialResult result(registration);
+  // Will be set by the U2FTokenManager.
+  bool directAttestationPermitted = false;
+  WebAuthnMakeCredentialResult result(registration, directAttestationPermitted);
   mRegisterPromise.Resolve(Move(result), __func__);
 }
 

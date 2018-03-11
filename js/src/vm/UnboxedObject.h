@@ -297,7 +297,7 @@ class UnboxedPlainObject : public UnboxedObject
     bool setValue(JSContext* cx, const UnboxedLayout::Property& property, const Value& v);
     Value getValue(const UnboxedLayout::Property& property, bool maybeUninitialized = false);
 
-    static bool convertToNative(JSContext* cx, JSObject* obj);
+    static NativeObject* convertToNative(JSContext* cx, JSObject* obj);
     static UnboxedPlainObject* create(JSContext* cx, HandleObjectGroup group,
                                       NewObjectKind newKind);
     static JSObject* createWithProperties(JSContext* cx, HandleObjectGroup group,

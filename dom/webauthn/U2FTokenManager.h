@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_U2FTokenManager_h
 #define mozilla_dom_U2FTokenManager_h
 
+#include "nsIU2FTokenManager.h"
 #include "mozilla/dom/U2FTokenTransport.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
 
@@ -26,10 +27,12 @@ namespace dom {
 class U2FSoftTokenManager;
 class WebAuthnTransactionParent;
 
-class U2FTokenManager final
+class U2FTokenManager final : public nsIU2FTokenManager
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(U2FTokenManager)
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIU2FTOKENMANAGER
+
   static U2FTokenManager* Get();
   void Register(PWebAuthnTransactionParent* aTransactionParent,
                 const uint64_t& aTransactionId,
@@ -43,16 +46,27 @@ public:
   static void Initialize();
 private:
   U2FTokenManager();
-  ~U2FTokenManager();
+  ~U2FTokenManager() { }
   RefPtr<U2FTokenTransport> GetTokenManagerImpl();
   void AbortTransaction(const uint64_t& aTransactionId, const nsresult& aError);
   void ClearTransaction();
+  // Step two of "Register", kicking off the actual transaction.
+  void DoRegister(const WebAuthnMakeCredentialInfo& aInfo);
   void MaybeConfirmRegister(const uint64_t& aTransactionId,
                             const WebAuthnMakeCredentialResult& aResult);
   void MaybeAbortRegister(const uint64_t& aTransactionId, const nsresult& aError);
   void MaybeConfirmSign(const uint64_t& aTransactionId,
                         const WebAuthnGetAssertionResult& aResult);
   void MaybeAbortSign(const uint64_t& aTransactionId, const nsresult& aError);
+  // The main thread runnable function for "nsIU2FTokenManager.ResumeRegister".
+  void RunResumeRegister(uint64_t aTransactionId, bool aPermitDirectAttestation);
+  // The main thread runnable function for "nsIU2FTokenManager.Cancel".
+  void RunCancel(uint64_t aTransactionId);
+  // Sends a "webauthn-prompt" observer notification with the given data.
+  template<typename ...T>
+  void SendPromptNotification(const char16_t* aFormat, T... aArgs);
+  // The main thread runnable function for "SendPromptNotification".
+  void RunSendPromptNotification(nsString aJSON);
   // Using a raw pointer here, as the lifetime of the IPC object is managed by
   // the PBackground protocol code. This means we cannot be left holding an
   // invalid IPC protocol object after the transaction is finished.
@@ -64,6 +78,8 @@ private:
   // guards any cancel messages to ensure we don't cancel newer transactions
   // due to a stale message.
   uint64_t mLastTransactionId;
+  // Pending registration info while we wait for user input.
+  Maybe<WebAuthnMakeCredentialInfo> mPendingRegisterInfo;
 };
 
 } // namespace dom
