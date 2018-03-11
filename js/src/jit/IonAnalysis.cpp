@@ -3542,8 +3542,12 @@ PassthroughOperand(MDefinition* def)
         return def->toConvertElementsToDoubles()->elements();
     if (def->isMaybeCopyElementsForWrite())
         return def->toMaybeCopyElementsForWrite()->object();
-    if (def->isConvertUnboxedObjectToNative())
-        return def->toConvertUnboxedObjectToNative()->object();
+    if (!JitOptions.spectreObjectMitigationsMisc) {
+        // If Spectre mitigations are enabled, LConvertUnboxedObjectToNative
+        // needs to have its own def.
+        if (def->isConvertUnboxedObjectToNative())
+            return def->toConvertUnboxedObjectToNative()->object();
+    }
     return nullptr;
 }
 
