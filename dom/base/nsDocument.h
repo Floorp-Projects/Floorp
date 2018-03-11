@@ -288,7 +288,6 @@ public:
                                                int32_t aNamespaceID,
                                                const nsAString* aIs = nullptr) override;
 
-  virtual void Sanitize() override;
 
   virtual bool CanSavePresentation(nsIRequest *aNewRequest) override;
   virtual void Destroy() override;

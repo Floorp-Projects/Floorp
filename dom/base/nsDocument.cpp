@@ -7975,7 +7975,7 @@ nsIDocument::IsSafeToFlush() const
 }
 
 void
-nsDocument::Sanitize()
+nsIDocument::Sanitize()
 {
   // Sanitize the document by resetting all password fields and any form
   // fields with autocomplete=off to their default values.  We do this now,
