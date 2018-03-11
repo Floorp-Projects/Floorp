@@ -289,7 +289,6 @@ public:
                                                const nsAString* aIs = nullptr) override;
 
 
-  virtual bool CanSavePresentation(nsIRequest *aNewRequest) override;
   virtual void Destroy() override;
   virtual void RemovedFromDocShell() override;
 
@@ -357,14 +356,6 @@ protected:
 
   nsIContent* GetFirstBaseNodeWithHref();
   nsresult SetFirstBaseNodeWithHref(nsIContent *node);
-
-public:
-
-  bool ContainsEMEContent();
-
-  bool ContainsMSEContent();
-
-protected:
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_) do {                     \
     NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
