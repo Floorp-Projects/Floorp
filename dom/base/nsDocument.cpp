@@ -1515,6 +1515,7 @@ nsIDocument::nsIDocument()
     mMarkedCCGeneration(0),
     mPresShell(nullptr),
     mSubtreeModifiedDepth(0),
+    mPreloadPictureDepth(0),
     mEventsSuppressed(0),
     mIgnoreDestructiveWritesCounter(0),
     mFrameRequestCallbackCounter(0),
@@ -1558,7 +1559,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mBoxObjectTable(nullptr)
   , mOnloadBlockCount(0)
   , mAsyncOnloadBlockCount(0)
-  , mPreloadPictureDepth(0)
   , mValidWidth(false)
   , mValidHeight(false)
   , mAutoSize(false)
@@ -8959,27 +8959,20 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
 }
 
 void
-nsDocument::PreloadPictureOpened()
+nsIDocument::PreloadPictureClosed()
 {
-  mPreloadPictureDepth++;
-}
-
-void
-nsDocument::PreloadPictureClosed()
-{
+  MOZ_ASSERT(mPreloadPictureDepth > 0);
   mPreloadPictureDepth--;
   if (mPreloadPictureDepth == 0) {
     mPreloadPictureFoundSource.SetIsVoid(true);
-  } else {
-    MOZ_ASSERT(mPreloadPictureDepth >= 0);
   }
 }
 
 void
-nsDocument::PreloadPictureImageSource(const nsAString& aSrcsetAttr,
-                                      const nsAString& aSizesAttr,
-                                      const nsAString& aTypeAttr,
-                                      const nsAString& aMediaAttr)
+nsIDocument::PreloadPictureImageSource(const nsAString& aSrcsetAttr,
+                                       const nsAString& aSizesAttr,
+                                       const nsAString& aTypeAttr,
+                                       const nsAString& aMediaAttr)
 {
   // Nested pictures are not valid syntax, so while we'll eventually load them,
   // it's not worth tracking sources mixed between nesting levels to preload
@@ -9000,11 +8993,11 @@ nsDocument::PreloadPictureImageSource(const nsAString& aSrcsetAttr,
 }
 
 already_AddRefed<nsIURI>
-nsDocument::ResolvePreloadImage(nsIURI *aBaseURI,
-                                const nsAString& aSrcAttr,
-                                const nsAString& aSrcsetAttr,
-                                const nsAString& aSizesAttr,
-                                bool *aIsImgSet)
+nsIDocument::ResolvePreloadImage(nsIURI *aBaseURI,
+                                 const nsAString& aSrcAttr,
+                                 const nsAString& aSrcsetAttr,
+                                 const nsAString& aSizesAttr,
+                                 bool *aIsImgSet)
 {
   nsString sourceURL;
   bool isImgSet;
@@ -9046,13 +9039,15 @@ nsDocument::ResolvePreloadImage(nsIURI *aBaseURI,
 }
 
 void
-nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr,
-                              ReferrerPolicy aReferrerPolicy, bool aIsImgSet)
+nsIDocument::MaybePreLoadImage(nsIURI* uri,
+                               const nsAString &aCrossOriginAttr,
+                               enum ReferrerPolicy aReferrerPolicy,
+                               bool aIsImgSet)
 {
   // Early exit if the img is already present in the img-cache
   // which indicates that the "real" load has already started and
   // that we shouldn't preload it.
-  if (nsContentUtils::IsImageInCache(uri, static_cast<nsIDocument *>(this))) {
+  if (nsContentUtils::IsImageInCache(uri, this)) {
     return;
   }
 
@@ -9089,7 +9084,7 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr,
 }
 
 void
-nsDocument::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode)
+nsIDocument::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode)
 {
   NS_MutateURI mutator(aOrigURI);
   if (NS_FAILED(mutator.GetStatus())) {
@@ -9135,7 +9130,7 @@ nsDocument::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode)
 }
 
 void
-nsDocument::ForgetImagePreload(nsIURI* aURI)
+nsIDocument::ForgetImagePreload(nsIURI* aURI)
 {
   // Checking count is faster than hashing the URI in the common
   // case of empty table.
