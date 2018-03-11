@@ -48,7 +48,7 @@ declare_args() {
 # These variables depend on other variables and can't be set externally.
 
 # Indicates if the UI toolkit depends on X11.
-use_x11 = is_linux && !use_ozone
+use_x11 = (is_linux || is_bsd) && !use_ozone
 
 # Turn off glib if Ozone is enabled.
 if (use_ozone) {
