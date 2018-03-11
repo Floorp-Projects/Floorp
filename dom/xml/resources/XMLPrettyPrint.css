@@ -12,36 +12,30 @@
   margin-bottom: 1em;
 }
 
-#tree,
-.expandable-children {
-  margin-inline-start: 1em;
+.expander-content {
+  padding-left: 1em;
 }
 
-.expandable-body {
-  display: inline-block;
-}
-
-.expandable-body[open] {
-  display: block;
-}
-
-.expandable-opening {
-  list-style: '+' outside;
-}
-
-[open] > .expandable-opening {
-  list-style-type: '−';
-}
-
-.expandable-opening::-moz-list-bullet {
+.expander {
   cursor: pointer;
-  padding-inline-end: 2px;
-  /* Don't want to inherit the styling from pi and comment elements */
-  color: initial;
-  font: initial;
+  -moz-user-select: none;
+  text-align: center;
+  vertical-align: top;
+  width: 1em;
+  display: inline-block;
+  margin-left: -1em;
+}
+
+#top > .expander-open, #top > .expander-closed {
+  margin-left: 1em;
+}
+
+.expander-closed > .expander-content {
+  display: none;
 }
 
 .comment {
   font-family: monospace;
   white-space: pre;
 }
+
