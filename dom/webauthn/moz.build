@@ -11,6 +11,12 @@ IPDL_SOURCES += [
     'PWebAuthnTransaction.ipdl'
 ]
 
+XPIDL_SOURCES += [
+    'nsIU2FTokenManager.idl'
+]
+
+XPIDL_MODULE = 'dom_webauthn'
+
 EXPORTS.mozilla.dom += [
     'AuthenticatorAssertionResponse.h',
     'AuthenticatorAttestationResponse.h',

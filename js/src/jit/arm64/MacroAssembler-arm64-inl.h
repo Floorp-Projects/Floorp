@@ -1867,6 +1867,13 @@ MacroAssembler::spectreMovePtr(Condition cond, Register src, Register dest)
 }
 
 void
+MacroAssembler::spectreZeroRegister(Condition cond, Register, Register dest)
+{
+    Csel(ARMRegister(dest, 64), ARMRegister(dest, 64), vixl::xzr,
+         Assembler::InvertCondition(cond));
+}
+
+void
 MacroAssembler::boundsCheck32ForLoad(Register index, Register length, Register scratch,
                                      Label* failure)
 {

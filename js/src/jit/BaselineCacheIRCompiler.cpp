@@ -210,32 +210,60 @@ BaselineCacheIRCompiler::compile()
 bool
 BaselineCacheIRCompiler::emitGuardShape()
 {
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    AutoScratchRegister scratch(allocator, masm);
+    ObjOperandId objId = reader.objOperandId();
+    Register obj = allocator.useRegister(masm, objId);
+    AutoScratchRegister scratch1(allocator, masm);
+
+    bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
+
+    Maybe<AutoScratchRegister> maybeScratch2;
+    if (needSpectreMitigations)
+        maybeScratch2.emplace(allocator, masm);
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
 
     Address addr(stubAddress(reader.stubOffset()));
-    masm.loadPtr(addr, scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, obj, scratch, failure->label());
+    masm.loadPtr(addr, scratch1);
+    if (needSpectreMitigations) {
+        masm.branchTestObjShape(Assembler::NotEqual, obj, scratch1, *maybeScratch2, obj,
+                                failure->label());
+    } else {
+        masm.branchTestObjShapeNoSpectreMitigations(Assembler::NotEqual, obj, scratch1,
+                                                    failure->label());
+    }
+
     return true;
 }
 
 bool
 BaselineCacheIRCompiler::emitGuardGroup()
 {
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    AutoScratchRegister scratch(allocator, masm);
+    ObjOperandId objId = reader.objOperandId();
+    Register obj = allocator.useRegister(masm, objId);
+    AutoScratchRegister scratch1(allocator, masm);
+
+    bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
+
+    Maybe<AutoScratchRegister> maybeScratch2;
+    if (needSpectreMitigations)
+        maybeScratch2.emplace(allocator, masm);
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
 
     Address addr(stubAddress(reader.stubOffset()));
-    masm.loadPtr(addr, scratch);
-    masm.branchTestObjGroup(Assembler::NotEqual, obj, scratch, failure->label());
+    masm.loadPtr(addr, scratch1);
+    if (needSpectreMitigations) {
+        masm.branchTestObjGroup(Assembler::NotEqual, obj, scratch1, *maybeScratch2, obj,
+                                failure->label());
+    } else {
+        masm.branchTestObjGroupNoSpectreMitigations(Assembler::NotEqual, obj, scratch1,
+                                                    failure->label());
+    }
+
     return true;
 }
 
@@ -290,7 +318,8 @@ BaselineCacheIRCompiler::emitGuardCompartment()
 bool
 BaselineCacheIRCompiler::emitGuardAnyClass()
 {
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ObjOperandId objId = reader.objOperandId();
+    Register obj = allocator.useRegister(masm, objId);
     AutoScratchRegister scratch(allocator, masm);
 
     FailurePath* failure;
@@ -298,7 +327,14 @@ BaselineCacheIRCompiler::emitGuardAnyClass()
         return false;
 
     Address testAddr(stubAddress(reader.stubOffset()));
-    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, testAddr, failure->label());
+    if (objectGuardNeedsSpectreMitigations(objId)) {
+        masm.branchTestObjClass(Assembler::NotEqual, obj, testAddr, scratch, obj,
+                                failure->label());
+    } else {
+        masm.branchTestObjClassNoSpectreMitigations(Assembler::NotEqual, obj, testAddr, scratch,
+                                                    failure->label());
+    }
+
     return true;
 }
 
@@ -403,9 +439,11 @@ BaselineCacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto()
     Address shapeWrapperAddress(stubAddress(reader.stubOffset()));
 
     AutoScratchRegister scratch(allocator, masm);
-    Maybe<AutoScratchRegister> scratch2;
-    if (hasExpando)
+    Maybe<AutoScratchRegister> scratch2, scratch3;
+    if (hasExpando) {
         scratch2.emplace(allocator, masm);
+        scratch3.emplace(allocator, masm);
+    }
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
@@ -427,7 +465,8 @@ BaselineCacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto()
 
         masm.loadPtr(shapeWrapperAddress, scratch2.ref());
         LoadShapeWrapperContents(masm, scratch2.ref(), scratch2.ref(), failure->label());
-        masm.branchTestObjShape(Assembler::NotEqual, scratch, scratch2.ref(), failure->label());
+        masm.branchTestObjShape(Assembler::NotEqual, scratch, *scratch2, *scratch3, scratch,
+                                failure->label());
 
         // The reserved slots on the expando should all be in fixed slots.
         Address protoAddress(scratch, NativeObject::getFixedSlotOffset(GetXrayJitInfo()->expandoProtoSlot));
@@ -2030,7 +2069,10 @@ BaselineCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape()
     masm.debugAssertIsObject(val);
     masm.loadPtr(shapeAddr, shapeScratch);
     masm.unboxObject(val, objScratch);
-    masm.branchTestObjShape(Assembler::NotEqual, objScratch, shapeScratch, failure->label());
+    // The expando object is not used in this case, so we don't need Spectre
+    // mitigations.
+    masm.branchTestObjShapeNoSpectreMitigations(Assembler::NotEqual, objScratch, shapeScratch,
+                                                failure->label());
 
     masm.bind(&done);
     return true;

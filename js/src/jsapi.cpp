@@ -7281,6 +7281,9 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS_BARRIERS:
         jit::JitOptions.spectreObjectMitigationsBarriers = !!value;
         break;
+      case JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS_MISC:
+        jit::JitOptions.spectreObjectMitigationsMisc = !!value;
+        break;
       case JSJITCOMPILER_SPECTRE_STRING_MITIGATIONS:
         jit::JitOptions.spectreStringMitigations = !!value;
         break;

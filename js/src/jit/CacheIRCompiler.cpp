@@ -1410,7 +1410,8 @@ CacheIRCompiler::emitGuardType()
 bool
 CacheIRCompiler::emitGuardClass()
 {
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ObjOperandId objId = reader.objOperandId();
+    Register obj = allocator.useRegister(masm, objId);
     AutoScratchRegister scratch(allocator, masm);
 
     FailurePath* failure;
@@ -1435,9 +1436,15 @@ CacheIRCompiler::emitGuardClass()
         clasp = &JSFunction::class_;
         break;
     }
-
     MOZ_ASSERT(clasp);
-    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, clasp, failure->label());
+
+    if (objectGuardNeedsSpectreMitigations(objId)) {
+        masm.branchTestObjClass(Assembler::NotEqual, obj, clasp, scratch, obj, failure->label());
+    } else {
+        masm.branchTestObjClassNoSpectreMitigations(Assembler::NotEqual, obj, clasp, scratch,
+                                                    failure->label());
+    }
+
     return true;
 }
 
@@ -1454,7 +1461,7 @@ CacheIRCompiler::emitGuardIsNativeFunction()
 
     // Ensure obj is a function.
     const Class* clasp = &JSFunction::class_;
-    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, clasp, failure->label());
+    masm.branchTestObjClass(Assembler::NotEqual, obj, clasp, scratch, obj, failure->label());
 
     // Ensure function native matches.
     masm.branchPtr(Assembler::NotEqual, Address(obj, JSFunction::offsetOfNativeOrEnv()),
