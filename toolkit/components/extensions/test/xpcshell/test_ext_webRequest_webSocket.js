@@ -1,17 +1,15 @@
-<!DOCTYPE HTML>
-<html>
-<!--
--->
-<head>
-  <title>Basic websocket test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-
-<script class="testbody" type="text/javascript">
 "use strict";
+
+const HOSTS = new Set([
+  "example.com",
+]);
+
+const server = createHttpServer({hosts: HOSTS});
+
+server.registerPathHandler("/dummy", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.write("ok");
+});
 
 add_task(async function test_webSocket() {
   let extension = ExtensionTestUtils.loadExtension({
@@ -26,10 +24,10 @@ add_task(async function test_webSocket() {
       browser.webRequest.onBeforeRequest.addListener(details => {
         browser.test.assertEq("ws:", new URL(details.url).protocol, "ws protocol worked");
         browser.test.notifyPass("websocket");
-      }, {urls: ["ws://mochi.test/*"]}, ["blocking"]);
+      }, {urls: ["ws://example.com/*"]}, ["blocking"]);
 
       browser.test.onMessage.addListener(msg => {
-        let ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket_hello");
+        let ws = new WebSocket("ws://example.com/dummy");
         ws.onopen = (e) => {
           ws.send("data");
         };
@@ -46,11 +44,10 @@ add_task(async function test_webSocket() {
   await extension.awaitMessage("ready");
   extension.sendMessage("go");
   await extension.awaitFinish("websocket");
+
+  // Wait until the next tick so that listener responses are processed
+  // before we unload.
+  await new Promise(executeSoon);
+
   await extension.unload();
 });
-
-</script>
-</head>
-<body>
-</body>
-</html>
