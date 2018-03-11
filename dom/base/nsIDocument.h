@@ -2555,19 +2555,26 @@ public:
    * Prevents user initiated events from being dispatched to the document and
    * subdocuments.
    */
-  virtual void SuppressEventHandling(uint32_t aIncrease = 1) = 0;
+  void SuppressEventHandling(uint32_t aIncrease = 1);
 
   /**
    * Unsuppress event handling.
    * @param aFireEvents If true, delayed events (focus/blur) will be fired
    *                    asynchronously.
    */
-  virtual void UnsuppressEventHandlingAndFireEvents(bool aFireEvents) = 0;
+  void UnsuppressEventHandlingAndFireEvents(bool aFireEvents);
 
   uint32_t EventHandlingSuppressed() const { return mEventsSuppressed; }
 
   bool IsEventHandlingEnabled() {
     return !EventHandlingSuppressed() && mScriptGlobalObject;
+  }
+
+  void DecreaseEventSuppression()
+  {
+    MOZ_ASSERT(mEventsSuppressed);
+    --mEventsSuppressed;
+    UpdateFrameRequestCallbackSchedulingState();
   }
 
   /**
