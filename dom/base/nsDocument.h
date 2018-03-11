@@ -703,15 +703,6 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 
-  // WebIDL bits
-  virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,
-                                                  const mozilla::dom::ElementCreationOptionsOrString& aOptions,
-                                                  ErrorResult& rv) override;
-  virtual already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,
-                                                    const nsAString& aQualifiedName,
-                                                    const mozilla::dom::ElementCreationOptionsOrString& aOptions,
-                                                    mozilla::ErrorResult& rv) override;
-
   virtual void UnblockDOMContentLoaded() override;
 
 protected:
