@@ -9,10 +9,10 @@
 // Test that cookies with domain equal to full host name and port are listed.
 // E.g., ".example.org:8000" vs. example.org:8000).
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN_WITH_PORT + "storage-cookies.html");
+add_task(async function() {
+  await openTabAndSetupStorage(MAIN_DOMAIN_WITH_PORT + "storage-cookies.html");
 
-  yield checkState([
+  await checkState([
     [
       ["cookies", "http://test1.example.org:8000"],
       [
@@ -25,5 +25,5 @@ add_task(function* () {
     ],
   ]);
 
-  yield finishTests();
+  await finishTests();
 });

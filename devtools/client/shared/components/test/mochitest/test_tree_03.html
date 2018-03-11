@@ -16,7 +16,7 @@ Test Tree's autoExpandDepth.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = Task.async(function* () {
+window.onload = async function () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
@@ -40,7 +40,7 @@ window.onload = Task.async(function* () {
   } finally {
     SimpleTest.finish();
   }
-});
+};
 </script>
 </pre>
 </body>

@@ -10,15 +10,15 @@ const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
 const {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(function* () {
-  let { toolbox, ui } = yield openStyleEditorForURL(TESTCASE_URI);
+add_task(async function() {
+  let { toolbox, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "There are 2 style sheets initially");
 
   info("Changing toolbox host to a window.");
-  yield toolbox.switchHost(Toolbox.HostType.WINDOW);
+  await toolbox.switchHost(Toolbox.HostType.WINDOW);
 
-  let editor = yield ui.editors[0].getSourceEditor();
+  let editor = await ui.editors[0].getSourceEditor();
   let originalSourceEditor = editor.sourceEditor;
 
   let hostWindow = toolbox.win.parent;

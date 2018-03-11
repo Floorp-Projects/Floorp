@@ -33,11 +33,11 @@ var DetailsSubview = {
       this._wasRendered = true;
     };
 
-    this.render = Task.async(function* (...args) {
-      let maybeRetval = yield originalRenderFn.apply(self, args);
+    this.render = async function(...args) {
+      let maybeRetval = await originalRenderFn.apply(self, args);
       afterRenderFn();
       return maybeRetval;
-    });
+    };
   },
 
   /**

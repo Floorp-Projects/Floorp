@@ -7,7 +7,6 @@ const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", 
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const Services = require("Services");
-const { Task } = require("devtools/shared/task");
 const { AppProjects } = require("devtools/client/webide/modules/app-projects");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
@@ -40,7 +39,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.lastConnectedRuntime");
 });
 
-var openWebIDE = Task.async(function* (autoInstallAddons) {
+var openWebIDE = async function (autoInstallAddons) {
   info("opening WebIDE");
 
   Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", !!autoInstallAddons);
@@ -48,7 +47,7 @@ var openWebIDE = Task.async(function* (autoInstallAddons) {
   let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
   let win = ww.openWindow(null, "chrome://webide/content/", "webide", "chrome,centerscreen,resizable", null);
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     win.addEventListener("load", function () {
       SimpleTest.requestCompleteLog();
       SimpleTest.executeSoon(resolve);
@@ -58,7 +57,7 @@ var openWebIDE = Task.async(function* (autoInstallAddons) {
   info("WebIDE open");
 
   return win;
-});
+};
 
 function closeWebIDE(win) {
   info("Closing WebIDE");
@@ -74,15 +73,15 @@ function closeWebIDE(win) {
 }
 
 function removeAllProjects() {
-  return Task.spawn(function* () {
-    yield AppProjects.load();
+  return (async function () {
+    await AppProjects.load();
     // use a new array so we're not iterating over the same
     // underlying array that's being modified by AppProjects
     let projects = AppProjects.projects.map(p => p.location);
     for (let i = 0; i < projects.length; i++) {
-      yield AppProjects.remove(projects[i]);
+      await AppProjects.remove(projects[i]);
     }
-  });
+  })();
 }
 
 function nextTick() {

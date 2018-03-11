@@ -9,15 +9,15 @@
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function() {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { DetailsView, JsCallTreeView } = panel.panelWin;
 
-  yield DetailsView.selectView("js-calltree");
+  await DetailsView.selectView("js-calltree");
 
   // Manually call the _onPrefChanged function so we can catch an error.
   try {
@@ -27,5 +27,5 @@ add_task(function* () {
     ok(false, "Toggling preferences before there are any recordings should not fail.");
   }
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

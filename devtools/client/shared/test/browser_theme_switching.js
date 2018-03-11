@@ -4,9 +4,9 @@
 
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = yield gDevTools.showToolbox(target);
+  let toolbox = await gDevTools.showToolbox(target);
   let doc = toolbox.doc;
   let root = doc.documentElement;
 
@@ -39,7 +39,7 @@ add_task(function* () {
        "There is a stylesheet for " + themeSheet);
   }
 
-  yield toolbox.destroy();
+  await toolbox.destroy();
 });
 
 function getPlatform() {

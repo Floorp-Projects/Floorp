@@ -6,8 +6,6 @@
 
 "use strict";
 
-const {Task} = require("devtools/shared/task");
-
 const DEFAULT_TOGGLE_DELAY = 50;
 
 /**
@@ -144,14 +142,14 @@ TooltipToggle.prototype = {
    * @return {Promise} a promise that will resolve the anchor to use for the
    *         tooltip or null if no valid target was found.
    */
-  isValidHoverTarget: Task.async(function* (target) {
-    let res = yield this._targetNodeCb(target, this.tooltip);
+  async isValidHoverTarget(target) {
+    let res = await this._targetNodeCb(target, this.tooltip);
     if (res) {
       return res.nodeName ? res : target;
     }
 
     return null;
-  }),
+  },
 
   _onMouseOut: function(event) {
     // Only hide the tooltip if the mouse leaves baseNode.

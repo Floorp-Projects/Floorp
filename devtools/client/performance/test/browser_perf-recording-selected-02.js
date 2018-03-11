@@ -13,21 +13,21 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { getSelectedRecordingIndex, setSelectedRecording, getRecordingsCount } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(function* () {
+add_task(async function() {
   // This test seems to take a very long time to finish on Linux VMs.
   requestLongerTimeout(4);
 
-  let { panel } = yield initPerformanceInNewTab({
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, PerformanceController } = panel.panelWin;
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
-  yield startRecording(panel);
+  await startRecording(panel);
 
   is(getRecordingsCount(panel), 2,
     "There should be two recordings visible.");
@@ -36,7 +36,7 @@ add_task(function* () {
 
   let selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 0);
-  yield selected;
+  await selected;
 
   is(getRecordingsCount(panel), 2,
     "There should still be two recordings visible.");
@@ -45,14 +45,14 @@ add_task(function* () {
 
   selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 1);
-  yield selected;
+  await selected;
 
   is(getRecordingsCount(panel), 2,
     "There should still be two recordings visible.");
   is(getSelectedRecordingIndex(panel), 1,
     "The second recording item should be selected again.");
 
-  yield stopRecording(panel);
+  await stopRecording(panel);
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

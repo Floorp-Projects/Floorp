@@ -6,7 +6,6 @@
 // Test the completions using numbers.
 const source = "0x1.";
 const completions = ["toExponential", "toFixed", "toString"];
-const { Task } = require("devtools/shared/task");
 
 function test() {
   const options = { tabContent: "test scratchpad autocomplete" };
@@ -16,14 +15,14 @@ function test() {
 }
 
 
-function* runTests([win, sp]) {
+async function runTests([win, sp]) {
   const {editor} = sp;
   const editorWin = editor.container.contentWindow;
 
   // Show the completions popup.
   sp.setText(source);
   sp.editor.setCursor({ line: 0, ch: source.length });
-  yield keyOnce("suggestion-entered", " ", { ctrlKey: true });
+  await keyOnce("suggestion-entered", " ", { ctrlKey: true });
 
   // Get the hints popup container.
   const hints = editorWin.document.querySelector(".CodeMirror-hints");
@@ -38,18 +37,18 @@ function* runTests([win, sp]) {
     let active = hints.querySelector(".CodeMirror-hint-active");
     is(active.textContent, completion,
        "Check that completion " + i++ + " is what is expected.");
-    yield keyOnce("suggestion-entered", "VK_DOWN");
+    await keyOnce("suggestion-entered", "VK_DOWN");
   }
 
   // We should have looped around to the first suggestion again. Accept it.
-  yield keyOnce("after-suggest", "VK_RETURN");
+  await keyOnce("after-suggest", "VK_RETURN");
 
   is(sp.getText(), source + completions[0],
      "Autocompletion should work and select the right element.");
 
   // Check that the information tooltips work.
   sp.setText("5");
-  yield keyOnce("show-information", " ", { ctrlKey: true, shiftKey: true });
+  await keyOnce("show-information", " ", { ctrlKey: true, shiftKey: true });
 
   // Get the information container.
   const info = editorWin.document.querySelector(".CodeMirror-Tern-information");

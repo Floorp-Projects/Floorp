@@ -8,7 +8,6 @@ const Services = require("Services");
 const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {Task} = require("devtools/shared/task");
 const utils = require("devtools/client/webide/modules/utils");
 const Telemetry = require("devtools/client/shared/telemetry");
 
@@ -69,7 +68,7 @@ ProjectList.prototype = {
   newApp: function (testOptions) {
     let parentWindow = this._parentWindow;
     let self = this;
-    return this._UI.busyUntil(Task.spawn(function* () {
+    return this._UI.busyUntil((async function () {
       // Open newapp.xul, which will feed ret.location
       let ret = {location: null, testOptions: testOptions};
       parentWindow.openDialog("chrome://webide/content/newapp.xul", "newapp", "chrome,modal", ret);
@@ -83,36 +82,36 @@ ProjectList.prototype = {
       AppManager.selectedProject = project;
 
       self._telemetry.actionOccurred("webideNewProject");
-    }), "creating new app");
+    })(), "creating new app");
   },
 
   importPackagedApp: function (location) {
     let parentWindow = this._parentWindow;
     let UI = this._UI;
-    return UI.busyUntil(Task.spawn(function* () {
-      let directory = yield utils.getPackagedDirectory(parentWindow, location);
+    return UI.busyUntil((async function () {
+      let directory = await utils.getPackagedDirectory(parentWindow, location);
 
       if (!directory) {
         // User cancelled directory selection
         return;
       }
 
-      yield UI.importAndSelectApp(directory);
-    }), "importing packaged app");
+      await UI.importAndSelectApp(directory);
+    })(), "importing packaged app");
   },
 
   importHostedApp: function (location) {
     let parentWindow = this._parentWindow;
     let UI = this._UI;
-    return UI.busyUntil(Task.spawn(function* () {
+    return UI.busyUntil((async function () {
       let url = utils.getHostedURL(parentWindow, location);
 
       if (!url) {
         return;
       }
 
-      yield UI.importAndSelectApp(url);
-    }), "importing hosted app");
+      await UI.importAndSelectApp(url);
+    })(), "importing hosted app");
   },
 
   /**
