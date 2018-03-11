@@ -3737,8 +3737,8 @@ protected:
    * a mutation event.
    * To make this easy and painless, use the mozAutoSubtreeModified helper class.
    */
-  virtual void WillDispatchMutationEvent(nsINode* aTarget) = 0;
-  virtual void MutationEventDispatched(nsINode* aTarget) = 0;
+  void WillDispatchMutationEvent(nsINode* aTarget);
+  void MutationEventDispatched(nsINode* aTarget);
   friend class mozAutoSubtreeModified;
 
   virtual Element* GetNameSpaceElement() override
