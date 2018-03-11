@@ -658,8 +658,6 @@ public:
 
   virtual nsresult GetStateObject(nsIVariant** aResult) override;
 
-  virtual Element* FindImageMap(const nsAString& aNormalizedMapName) override;
-
   // Returns the size of the mBlockedTrackingNodes array. (nsIDocument.h)
   //
   // This array contains nodes that have been blocked to prevent
@@ -866,8 +864,6 @@ private:
 
   // Set if we've found a URL for the current picture
   nsString mPreloadPictureFoundSource;
-
-  RefPtr<nsContentList> mImageMaps;
 
   nsCString mScrollToRef;
   uint8_t mScrolledToRefAlready : 1;

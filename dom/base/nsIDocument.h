@@ -2798,7 +2798,7 @@ public:
 
   void SetNavigationTiming(nsDOMNavigationTiming* aTiming);
 
-  virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
+  Element* FindImageMap(const nsAString& aNormalizedMapName);
 
   // Add aLink to the set of links that need their status resolved.
   void RegisterPendingLinkUpdate(mozilla::dom::Link* aLink);
@@ -4054,10 +4054,13 @@ protected:
 
   RefPtr<mozilla::dom::DOMImplementation> mDOMImplementation;
 
+  RefPtr<nsContentList> mImageMaps;
+
 public:
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
 protected:
+
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
 
