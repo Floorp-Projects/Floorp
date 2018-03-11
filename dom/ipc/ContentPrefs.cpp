@@ -131,6 +131,7 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "javascript.options.spectre.index_masking",
   "javascript.options.spectre.jit_to_C++_calls",
   "javascript.options.spectre.object_mitigations.barriers",
+  "javascript.options.spectre.object_mitigations.misc",
   "javascript.options.spectre.string_mitigations",
   "javascript.options.spectre.value_masking",
   "javascript.options.streams",
