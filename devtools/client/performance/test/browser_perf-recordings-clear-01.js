@@ -12,8 +12,8 @@ const { initPanelInNewTab, teardownToolboxAndRemoveTab } = require("devtools/cli
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { getRecordingsCount } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(async function () {
-  let { panel } = await initPanelInNewTab({
+add_task(function* () {
+  let { panel } = yield initPanelInNewTab({
     tool: "performance",
     url: SIMPLE_URL,
     win: window
@@ -21,8 +21,8 @@ add_task(async function () {
 
   let { PerformanceController, PerformanceView } = panel.panelWin;
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   is(getRecordingsCount(panel), 1,
     "The recordings list should have one recording.");
@@ -31,8 +31,8 @@ add_task(async function () {
   isnot(PerformanceController.getCurrentRecording(), null,
     "There should be a current recording.");
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   is(getRecordingsCount(panel), 2,
     "The recordings list should have two recordings.");
@@ -41,7 +41,7 @@ add_task(async function () {
   isnot(PerformanceController.getCurrentRecording(), null,
     "There should be a current recording.");
 
-  await PerformanceController.clearRecordings();
+  yield PerformanceController.clearRecordings();
 
   is(getRecordingsCount(panel), 0,
     "The recordings list should be empty.");
@@ -50,5 +50,5 @@ add_task(async function () {
   is(PerformanceController.getCurrentRecording(), null,
     "There should be no current recording.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

@@ -10,10 +10,10 @@ const TESTCASE_URI = TEST_BASE_HTTP + "autocomplete.html";
 // Pref which decides if CSS autocompletion is enabled in Style Editor or not.
 const AUTOCOMPLETION_PREF = "devtools.styleeditor.autocompletion-enabled";
 
-add_task(async function () {
+add_task(function* () {
   Services.prefs.setBoolPref(AUTOCOMPLETION_PREF, false);
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
-  let editor = await ui.editors[0].getSourceEditor();
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
+  let editor = yield ui.editors[0].getSourceEditor();
 
   is(editor.sourceEditor.getOption("autocomplete"), false,
      "Autocompletion option does not exist");

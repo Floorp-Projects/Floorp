@@ -22,8 +22,8 @@ function getTooltipContent(doc) {
   return div;
 }
 
-add_task(async function () {
-  let [,, doc] = await createHost("bottom", TEST_URI);
+add_task(function* () {
+  let [,, doc] = yield createHost("bottom", TEST_URI);
 
   let box1 = doc.getElementById("box1");
   let box2 = doc.getElementById("box2");
@@ -54,7 +54,7 @@ add_task(async function () {
   checkTooltipGeometry(tooltip, box4, {position: "top", width, height});
 
   info("Hide tooltip before leaving test");
-  await hideTooltip(tooltip);
+  yield hideTooltip(tooltip);
 
   tooltip.destroy();
 });

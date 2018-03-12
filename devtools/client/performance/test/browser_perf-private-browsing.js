@@ -14,25 +14,25 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 
 let gPanelWinTuples = [];
 
-add_task(async function () {
-  await testNormalWindow();
-  await testPrivateWindow();
-  await testRecordingFailingInWindow(0);
-  await testRecordingFailingInWindow(1);
-  await teardownPerfInWindow(1, { shouldCloseWindow: true, dontWaitForTabClose: true });
-  await testRecordingSucceedingInWindow(0);
-  await teardownPerfInWindow(0, { shouldCloseWindow: false });
+add_task(function* () {
+  yield testNormalWindow();
+  yield testPrivateWindow();
+  yield testRecordingFailingInWindow(0);
+  yield testRecordingFailingInWindow(1);
+  yield teardownPerfInWindow(1, { shouldCloseWindow: true, dontWaitForTabClose: true });
+  yield testRecordingSucceedingInWindow(0);
+  yield teardownPerfInWindow(0, { shouldCloseWindow: false });
 
   gPanelWinTuples = null;
 });
 
-async function createPanelInNewWindow(options) {
-  let win = await addWindow(options);
-  return createPanelInWindow(options, win);
+function* createPanelInNewWindow(options) {
+  let win = yield addWindow(options);
+  return yield createPanelInWindow(options, win);
 }
 
-async function createPanelInWindow(options, win = window) {
-  let { panel } = await initPerformanceInNewTab({
+function* createPanelInWindow(options, win = window) {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: win
   }, options);
@@ -41,8 +41,8 @@ async function createPanelInWindow(options, win = window) {
   return { panel, win };
 }
 
-async function testNormalWindow() {
-  let { panel } = await createPanelInWindow({
+function* testNormalWindow() {
+  let { panel } = yield createPanelInWindow({
     private: false
   });
 
@@ -52,8 +52,8 @@ async function testNormalWindow() {
     "The initial state of the performance panel view is correct (1).");
 }
 
-async function testPrivateWindow() {
-  let { panel } = await createPanelInNewWindow({
+function* testPrivateWindow() {
+  let { panel } = yield createPanelInNewWindow({
     private: true,
     // The add-on SDK can't seem to be able to listen to "ready" or "close"
     // events for private tabs. Don't really absolutely need to though.
@@ -66,7 +66,7 @@ async function testPrivateWindow() {
     "The initial state of the performance panel view is correct (2).");
 }
 
-async function testRecordingFailingInWindow(index) {
+function* testRecordingFailingInWindow(index) {
   let { panel } = gPanelWinTuples[index];
   let { EVENTS, PerformanceController } = panel.panelWin;
 
@@ -79,13 +79,13 @@ async function testRecordingFailingInWindow(index) {
   let whenFailed = once(PerformanceController,
                         EVENTS.BACKEND_FAILED_AFTER_RECORDING_START);
   PerformanceController.startRecording();
-  await whenFailed;
+  yield whenFailed;
   ok(true, "Recording has failed.");
 
   PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, onRecordingStarted);
 }
 
-async function testRecordingSucceedingInWindow(index) {
+function* testRecordingSucceedingInWindow(index) {
   let { panel } = gPanelWinTuples[index];
   let { EVENTS, PerformanceController } = panel.panelWin;
 
@@ -96,17 +96,17 @@ async function testRecordingSucceedingInWindow(index) {
   PerformanceController.on(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
                            onRecordingFailed);
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
   ok(true, "Recording has succeeded.");
 
   PerformanceController.off(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
                            onRecordingFailed);
 }
 
-async function teardownPerfInWindow(index, options) {
+function* teardownPerfInWindow(index, options) {
   let { panel, win } = gPanelWinTuples[index];
-  await teardownToolboxAndRemoveTab(panel, options);
+  yield teardownToolboxAndRemoveTab(panel, options);
 
   if (options.shouldCloseWindow) {
     win.close();

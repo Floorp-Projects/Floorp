@@ -14,7 +14,7 @@ const PIXEL_SCROLL_MODE = 0;
 const PIXEL_DELTA = 10;
 const MAX_RAF_LOOP = 1000;
 
-this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const panelWin = panel.panelWin;
   const panelDoc = panelWin.document;
   const div = panelDoc.createElement("div");

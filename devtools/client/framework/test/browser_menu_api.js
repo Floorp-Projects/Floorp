@@ -11,18 +11,18 @@ const URL = "data:text/html;charset=utf8,test page for menu api";
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
-add_task(async function () {
+add_task(function* () {
   info("Create a test tab and open the toolbox");
-  let tab = await addTab(URL);
+  let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
+  let toolbox = yield gDevTools.showToolbox(target, "webconsole");
 
-  await testMenuItems();
-  await testMenuPopup(toolbox);
-  await testSubmenu(toolbox);
+  yield testMenuItems();
+  yield testMenuPopup(toolbox);
+  yield testSubmenu(toolbox);
 });
 
-function testMenuItems() {
+function* testMenuItems() {
   let menu = new Menu();
   let menuItem1 = new MenuItem();
   let menuItem2 = new MenuItem();
@@ -35,7 +35,7 @@ function testMenuItems() {
   is(menu.items[1], menuItem2, "Correct reference to MenuItem");
 }
 
-async function testMenuPopup(toolbox) {
+function* testMenuPopup(toolbox) {
   let clickFired = false;
 
   let menu = new Menu({
@@ -102,16 +102,16 @@ async function testMenuPopup(toolbox) {
   is(menuItems[3].getAttribute("label"), MENU_ITEMS[3].label, "Correct label");
   is(menuItems[3].getAttribute("disabled"), "true", "disabled attr menuitem");
 
-  await once(menu, "open");
+  yield once(menu, "open");
   let closed = once(menu, "close");
   EventUtils.synthesizeMouseAtCenter(menuItems[0], {}, toolbox.win);
-  await closed;
+  yield closed;
   ok(clickFired, "Click has fired");
 
   ok(!toolbox.doc.querySelector("#menu-popup"), "Popup removed from the DOM");
 }
 
-async function testSubmenu(toolbox) {
+function* testSubmenu(toolbox) {
   let clickFired = false;
   let menu = new Menu({
     id: "menu-popup",
@@ -156,26 +156,26 @@ async function testSubmenu(toolbox) {
   is(subMenuItems.length, 1, "Correct number of submenu items");
   is(subMenuItems[0].getAttribute("label"), "Submenu item", "Correct label");
 
-  await once(menu, "open");
+  yield once(menu, "open");
   let closed = once(menu, "close");
 
   info("Using keyboard navigation to open, close, and reopen the submenu");
   let shown = once(menus[0], "popupshown");
   EventUtils.synthesizeKey("KEY_ArrowDown");
   EventUtils.synthesizeKey("KEY_ArrowRight");
-  await shown;
+  yield shown;
 
   let hidden = once(menus[0], "popuphidden");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
-  await hidden;
+  yield hidden;
 
   shown = once(menus[0], "popupshown");
   EventUtils.synthesizeKey("KEY_ArrowRight");
-  await shown;
+  yield shown;
 
   info("Clicking the submenu item");
   EventUtils.synthesizeMouseAtCenter(subMenuItems[0], {}, toolbox.win);
 
-  await closed;
+  yield closed;
   ok(clickFired, "Click has fired");
 }

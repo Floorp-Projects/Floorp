@@ -10,9 +10,9 @@ const TEST_URI = "data:text/html;charset=utf-8,<head>" +
   "ets.css'></head><body><div></div><span></span></body>";
 const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 
-add_task(async function () {
-  await addTab("about:blank");
-  let [host,, doc] = await createHost("bottom", TEST_URI);
+add_task(function* () {
+  yield addTab("about:blank");
+  let [host,, doc] = yield createHost("bottom", TEST_URI);
 
   let tree = new TreeWidget(doc.querySelector("div"), {
     defaultType: "store"

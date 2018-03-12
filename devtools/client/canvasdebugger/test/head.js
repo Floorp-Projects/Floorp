@@ -68,13 +68,9 @@ function ifTestingUnsupported() {
   finish();
 }
 
-async function test() {
+function test() {
   let generator = isTestingSupported() ? ifTestingSupported : ifTestingUnsupported;
-  try {
-    await generator();
-  } catch(e) {
-    handleError(e);
-  }
+  Task.spawn(generator).catch(handleError);
 }
 
 function createCanvas() {
@@ -118,46 +114,46 @@ function initCallWatcherBackend(aUrl) {
   info("Initializing a call watcher front.");
   initServer();
 
-  return (async function () {
-    let tab = await addTab(aUrl);
+  return Task.spawn(function* () {
+    let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
-    await target.makeRemote();
+    yield target.makeRemote();
 
     let front = new CallWatcherFront(target.client, target.form);
     return { target, front };
-  })();
+  });
 }
 
 function initCanvasDebuggerBackend(aUrl) {
   info("Initializing a canvas debugger front.");
   initServer();
 
-  return (async function () {
-    let tab = await addTab(aUrl);
+  return Task.spawn(function* () {
+    let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
-    await target.makeRemote();
+    yield target.makeRemote();
 
     let front = new CanvasFront(target.client, target.form);
     return { target, front };
-  })();
+  });
 }
 
 function initCanvasDebuggerFrontend(aUrl) {
   info("Initializing a canvas debugger pane.");
 
-  return (async function () {
-    let tab = await addTab(aUrl);
+  return Task.spawn(function* () {
+    let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
-    await target.makeRemote();
+    yield target.makeRemote();
 
     Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", true);
-    let toolbox = await gDevTools.showToolbox(target, "canvasdebugger");
+    let toolbox = yield gDevTools.showToolbox(target, "canvasdebugger");
     let panel = toolbox.getCurrentPanel();
     return { target, panel };
-  })();
+  });
 }
 
 function teardown({target}) {

@@ -11,8 +11,8 @@ const { UI_ENABLE_MEMORY_PREF, UI_ENABLE_ALLOCATIONS_PREF } = require("devtools/
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -50,7 +50,7 @@ add_task(async function () {
   ok(!(OverviewView.graphs.get("framerate")),
     "The framerate graph should still not have been created yet.");
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   is(PerformanceView.getState(), "recording",
     "The current state of the performance panel view is 'recording'.");
@@ -59,7 +59,7 @@ add_task(async function () {
   ok(OverviewView.graphs.get("framerate"),
     "The framerate graph should have been created now.");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   is(PerformanceView.getState(), "recorded",
     "The current state of the performance panel view is 'recorded'.");
@@ -72,7 +72,7 @@ add_task(async function () {
   ok(!DetailsView.components["memory-flamegraph"].initialized,
     "The memory-flamegraph detail view should still not have been created yet.");
 
-  await DetailsView.selectView("js-calltree");
+  yield DetailsView.selectView("js-calltree");
 
   is(PerformanceView.getState(), "recorded",
     "The current state of the performance panel view is still 'recorded'.");
@@ -85,7 +85,7 @@ add_task(async function () {
   ok(!DetailsView.components["memory-flamegraph"].initialized,
     "The memory-flamegraph detail view should still not have been created yet.");
 
-  await DetailsView.selectView("memory-calltree");
+  yield DetailsView.selectView("memory-calltree");
 
   is(PerformanceView.getState(), "recorded",
     "The current state of the performance panel view is still 'recorded'.");
@@ -98,5 +98,5 @@ add_task(async function () {
   ok(!DetailsView.components["memory-flamegraph"].initialized,
     "The memory-flamegraph detail view should still not have been created yet.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

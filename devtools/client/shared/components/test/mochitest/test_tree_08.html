@@ -18,7 +18,7 @@ other inputs.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = async function () {
+window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
@@ -42,7 +42,7 @@ window.onload = async function () {
     is(document.activeElement, input, "The text input should be focused.");
 
     document.querySelector(".tree-node").click();
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isnot(document.activeElement, input,
           "The input should have had it's focus stolen by clicking on a tree item.");
@@ -51,7 +51,7 @@ window.onload = async function () {
   } finally {
     SimpleTest.finish();
   }
-};
+});
 </script>
 </pre>
 </body>

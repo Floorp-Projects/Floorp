@@ -20,10 +20,10 @@ const {
 } = require("devtools/client/memory/actions/snapshot");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-add_task(async function () {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  await front.attach();
+  yield front.attach();
   let store = Store();
   let { getState, dispatch } = store;
 
@@ -37,7 +37,7 @@ add_task(async function () {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
 
-  await waitUntilCensusState(store, s => s.census,
+  yield waitUntilCensusState(store, s => s.census,
                              [censusState.SAVED, censusState.SAVED, censusState.SAVED]);
   ok(true, "saved 3 snapshots and took a census of each of them");
 
@@ -45,13 +45,13 @@ add_task(async function () {
   dispatch(setCensusDisplayAndRefresh(heapWorker,
                                       censusDisplays.invertedAllocationStack));
 
-  await waitUntilCensusState(store, s => s.census,
+  yield waitUntilCensusState(store, s => s.census,
                              [censusState.SAVED, censusState.SAVED, censusState.SAVING]);
   ok(true, "toggling inverted should recompute the selected snapshot's census");
 
   equal(getState().censusDisplay.inverted, true, "now inverted");
 
-  await waitUntilCensusState(store, s => s.census,
+  yield waitUntilCensusState(store, s => s.census,
                              [censusState.SAVED, censusState.SAVED, censusState.SAVED]);
 
   equal(getState().snapshots[0].census.display.inverted, false);
@@ -59,11 +59,11 @@ add_task(async function () {
   equal(getState().snapshots[2].census.display.inverted, true);
 
   dispatch(selectSnapshotAndRefresh(heapWorker, getState().snapshots[1].id));
-  await waitUntilCensusState(store, s => s.census,
+  yield waitUntilCensusState(store, s => s.census,
                              [censusState.SAVED, censusState.SAVING, censusState.SAVED]);
   ok(true, "selecting non-inverted census should trigger a recompute");
 
-  await waitUntilCensusState(store, s => s.census,
+  yield waitUntilCensusState(store, s => s.census,
                              [censusState.SAVED, censusState.SAVED, censusState.SAVED]);
 
   equal(getState().snapshots[0].census.display.inverted, false);
@@ -71,5 +71,5 @@ add_task(async function () {
   equal(getState().snapshots[2].census.display.inverted, true);
 
   heapWorker.destroy();
-  await front.detach();
+  yield front.detach();
 });

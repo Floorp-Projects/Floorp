@@ -24,8 +24,8 @@ const DOCUMENT_WITH_LONG_SHEET = "data:text/html;charset=UTF-8," +
           ].join("\n"));
 const LINE_TO_SELECT = 201;
 
-add_task(async function () {
-  let { ui } = await openStyleEditorForURL(DOCUMENT_WITH_LONG_SHEET);
+add_task(function* () {
+  let { ui } = yield openStyleEditorForURL(DOCUMENT_WITH_LONG_SHEET);
 
   is(ui.editors.length, 2, "Two editors present.");
 
@@ -38,8 +38,8 @@ add_task(async function () {
   // position as scrolling occurs after selectStyleSheet resolves but before the
   // event is emitted.
   let selectEventPromise = waitForEditorToBeSelected(longEditor, ui);
-  await ui.selectStyleSheet(longEditor.styleSheet, LINE_TO_SELECT);
-  await selectEventPromise;
+  yield ui.selectStyleSheet(longEditor.styleSheet, LINE_TO_SELECT);
+  yield selectEventPromise;
 
   info("Checking that the correct line is visible after initial load");
 
@@ -53,18 +53,18 @@ add_task(async function () {
   info(`Storing scrollTop = ${initialScrollTop} for later comparison.`);
 
   info("Selecting the first editor (simple.css)");
-  await ui.selectStyleSheet(simpleEditor.styleSheet);
+  yield ui.selectStyleSheet(simpleEditor.styleSheet);
 
   info("Selecting doc_long.css again.");
   selectEventPromise = waitForEditorToBeSelected(longEditor, ui);
 
   // Can't use ui.selectStyleSheet here as it will scroll the editor back to top
   // and we want to check that the previous scroll position is restored.
-  let summary = await ui.getEditorSummary(longEditor);
+  let summary = yield ui.getEditorSummary(longEditor);
   ui._view.activeSummary = summary;
 
   info("Waiting for doc_long.css to be selected.");
-  await selectEventPromise;
+  yield selectEventPromise;
 
   let scrollTop = longEditor.sourceEditor.getScrollInfo().top;
   is(scrollTop, initialScrollTop,
@@ -79,13 +79,13 @@ add_task(async function () {
  * @param {StyleEditorUI} ui
  *        The StyleEditorUI the editor belongs to.
  */
-var waitForEditorToBeSelected = async function (editor, ui) {
+var waitForEditorToBeSelected = Task.async(function* (editor, ui) {
   info(`Waiting for ${editor.friendlyName} to be selected.`);
-  let selected = await ui.once("editor-selected");
+  let selected = yield ui.once("editor-selected");
   while (selected != editor) {
     info(`Ignored editor-selected for editor ${editor.friendlyName}.`);
-    selected = await ui.once("editor-selected");
+    selected = yield ui.once("editor-selected");
   }
 
   info(`Got editor-selected for ${editor.friendlyName}.`);
-};
+});

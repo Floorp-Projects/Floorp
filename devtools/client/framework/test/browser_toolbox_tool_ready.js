@@ -8,7 +8,7 @@
 requestLongerTimeout(5);
 
 function performChecks(target) {
-  return (async function () {
+  return Task.spawn(function* () {
     let toolIds = gDevTools.getToolDefinitionArray()
                            .filter(def => def.isTargetSupported(target))
                            .map(def => def.id);
@@ -18,7 +18,7 @@ function performChecks(target) {
       let toolId = toolIds[index];
 
       info("About to open " + index + "/" + toolId);
-      toolbox = await gDevTools.showToolbox(target, toolId);
+      toolbox = yield gDevTools.showToolbox(target, toolId);
       ok(toolbox, "toolbox exists for " + toolId);
       is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
 
@@ -26,17 +26,17 @@ function performChecks(target) {
       ok(panel.isReady, toolId + " panel should be ready");
     }
 
-    await toolbox.destroy();
-  })();
+    yield toolbox.destroy();
+  });
 }
 
 function test() {
-  Task.spawn(async function () {
+  Task.spawn(function* () {
     toggleAllTools(true);
-    let tab = await addTab("about:blank");
+    let tab = yield addTab("about:blank");
     let target = TargetFactory.forTab(tab);
-    await target.makeRemote();
-    await performChecks(target);
+    yield target.makeRemote();
+    yield performChecks(target);
     gBrowser.removeCurrentTab();
     toggleAllTools(false);
     finish();

@@ -6,19 +6,19 @@
  * forms if the method's signature does not expect an enum. Bug 999687.
  */
 
-async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(WEBGL_ENUM_URL);
+function* ifTestingSupported() {
+  let { target, front } = yield initCanvasDebuggerBackend(WEBGL_ENUM_URL);
 
   let navigated = once(target, "navigate");
 
-  await front.setup({ reload: true });
+  yield front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  await navigated;
+  yield navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
-  let animationOverview = await snapshotActor.getOverview();
+  let snapshotActor = yield front.recordAnimationFrame();
+  let animationOverview = yield snapshotActor.getOverview();
   let functionCalls = animationOverview.calls;
 
   is(functionCalls[0].name, "clear",
@@ -31,6 +31,6 @@ async function ifTestingSupported() {
   is(functionCalls[1].argsPreview, "TEXTURE_2D, null",
     "The bits passed into `gl.bindTexture` have been cast to their enum values.");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

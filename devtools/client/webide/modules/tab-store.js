@@ -7,6 +7,7 @@ const { Cu } = require("chrome");
 const { TargetFactory } = require("devtools/client/framework/target");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Connection } = require("devtools/shared/client/connection-manager");
+const { Task } = require("devtools/shared/task");
 
 const _knownTabStores = new WeakMap();
 
@@ -154,18 +155,18 @@ TabStore.prototype = {
       return this._selectedTabTargetPromise;
     }
     let store = this;
-    this._selectedTabTargetPromise = (async function () {
+    this._selectedTabTargetPromise = Task.spawn(function* () {
       // If you connect to a tab, then detach from it, the root actor may have
       // de-listed the actors that belong to the tab.  This breaks the toolbox
       // if you try to connect to the same tab again.  To work around this
       // issue, we force a "listTabs" request before connecting to a tab.
-      await store.listTabs();
+      yield store.listTabs();
       return TargetFactory.forRemoteTab({
         form: store._selectedTab,
         client: store._connection.client,
         chrome: false
       });
-    })();
+    });
     this._selectedTabTargetPromise.then(target => {
       target.once("close", () => {
         this._selectedTabTargetPromise = null;

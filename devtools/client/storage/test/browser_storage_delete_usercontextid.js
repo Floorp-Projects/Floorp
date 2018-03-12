@@ -105,7 +105,7 @@ function testTree(tests) {
 /**
  * Test that correct table entries are shown for each of the tree item
  */
-async function testTables(tests) {
+function* testTables(tests) {
   let doc = gPanelWindow.document;
   // Expand all nodes so that the synthesized click event actually works
   gUI.tree.expandAll();
@@ -118,7 +118,7 @@ async function testTables(tests) {
 
   // Click rest of the tree items and wait for the table to be updated
   for (let [treeItem, items] of tests.slice(1)) {
-    await selectTreeItem(treeItem);
+    yield selectTreeItem(treeItem);
 
     // Check whether correct number of items are present in the table
     is(doc.querySelectorAll(
@@ -133,14 +133,14 @@ async function testTables(tests) {
   }
 }
 
-add_task(async function () {
+add_task(function* () {
   // First, open a tab with the default userContextId and setup its storages.
-  let tabDefault = await openTab(MAIN_DOMAIN + "storage-listings.html");
+  let tabDefault = yield openTab(MAIN_DOMAIN + "storage-listings.html");
 
   // Second, start testing for userContextId 1.
   // We use the same item name as the default page has to see deleting items
   // from userContextId 1 will affect default one or not.
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html", {userContextId: 1});
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html", {userContextId: 1});
 
   let contextMenu = gPanelWindow.document.getElementById("storage-table-popup");
   let menuDeleteItem = contextMenu.querySelector("#storage-table-popup-delete");
@@ -149,14 +149,14 @@ add_task(async function () {
     let treeItemName = treeItem.join(" > ");
 
     info(`Selecting tree item ${treeItemName}`);
-    await selectTreeItem(treeItem);
+    yield selectTreeItem(treeItem);
 
     let row = getRowCells(rowName);
     ok(gUI.table.items.has(rowName), `There is a row '${rowName}' in ${treeItemName}`);
 
     let eventWait = gUI.once("store-objects-updated");
 
-    await waitForContextMenu(contextMenu, row[cellToClick], () => {
+    yield waitForContextMenu(contextMenu, row[cellToClick], () => {
       info(`Opened context menu in ${treeItemName}, row '${rowName}'`);
       menuDeleteItem.click();
       let truncatedRowName = String(rowName).replace(SEPARATOR_GUID, "-").substr(0, 16);
@@ -164,18 +164,18 @@ add_task(async function () {
         `Context menu item label contains '${rowName}' (maybe truncated)`);
     });
 
-    await eventWait;
+    yield eventWait;
 
     ok(!gUI.table.items.has(rowName),
       `There is no row '${rowName}' in ${treeItemName} after deletion`);
   }
 
   // Final, we see that the default tab is intact or not.
-  await BrowserTestUtils.switchTab(gBrowser, tabDefault);
-  await openStoragePanel();
+  yield BrowserTestUtils.switchTab(gBrowser, tabDefault);
+  yield openStoragePanel();
 
   testTree(storageItemsForDefault);
-  await testTables(storageItemsForDefault);
+  yield testTables(storageItemsForDefault);
 
-  await finishTests();
+  yield finishTests();
 });

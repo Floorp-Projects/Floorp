@@ -30,27 +30,27 @@ const KEY_CODE_RIGHT = 39;
 
 var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 
-add_task(async function () {
-  await addTab("about:blank");
-  await performTest();
+add_task(function* () {
+  yield addTab("about:blank");
+  yield performTest();
   gBrowser.removeCurrentTab();
 });
 
-async function performTest() {
-  let [host,, doc] = await createHost();
+function* performTest() {
+  let [host,, doc] = yield createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
   let graph = new FlameGraph(doc.body, TEST_DPI_DENSITIY);
-  await graph.ready();
+  yield graph.ready();
 
-  await testGraph(host, graph);
+  yield testGraph(host, graph);
 
-  await graph.destroy();
+  yield graph.destroy();
   host.destroy();
 }
 
-async function testGraph(host, graph) {
+function* testGraph(host, graph) {
   graph.setData({ data: TEST_DATA, bounds: TEST_BOUNDS });
 
   is(graph._selection.start, 0,
@@ -58,7 +58,7 @@ async function testGraph(host, graph) {
   is(graph._selection.end, TEST_BOUNDS.endTime * TEST_DPI_DENSITIY,
     "The graph's selection end value is initially correct.");
 
-  await pressKeyForTime(graph, KEY_CODE_LEFT, 1000);
+  yield pressKeyForTime(graph, KEY_CODE_LEFT, 1000);
 
   is(graph._selection.start, 0,
     "The graph's selection start value is correct after pressing LEFT.");
@@ -69,7 +69,7 @@ async function testGraph(host, graph) {
   graph._selection.end = TEST_BOUNDS.endTime * TEST_DPI_DENSITIY;
   info("Graph selection was reset (1).");
 
-  await pressKeyForTime(graph, KEY_CODE_RIGHT, 1000);
+  yield pressKeyForTime(graph, KEY_CODE_RIGHT, 1000);
 
   ok(graph._selection.start > 0,
     "The graph's selection start value is correct after pressing RIGHT.");
@@ -80,7 +80,7 @@ async function testGraph(host, graph) {
   graph._selection.end = TEST_BOUNDS.endTime * TEST_DPI_DENSITIY;
   info("Graph selection was reset (2).");
 
-  await pressKeyForTime(graph, KEY_CODE_UP, 1000);
+  yield pressKeyForTime(graph, KEY_CODE_UP, 1000);
 
   ok(graph._selection.start > 0,
     "The graph's selection start value is correct after pressing UP.");

@@ -6,8 +6,8 @@
  * with correct arguments from the content.
  */
 
-add_task(async function () {
-  let { target, front } = await initBackend(AUTOMATION_URL);
+add_task(function* () {
+  let { target, front } = yield initBackend(AUTOMATION_URL);
   let events = [];
 
   let expected = [
@@ -19,7 +19,7 @@ add_task(async function () {
 
   front.on("automation-event", onAutomationEvent);
 
-  let [_, __, [destNode, oscNode, gainNode], [connect1, connect2]] = await Promise.all([
+  let [_, __, [destNode, oscNode, gainNode], [connect1, connect2]] = yield Promise.all([
     front.setup({ reload: true }),
     once(front, "start-context"),
     get3(front, "create-node"),
@@ -48,5 +48,5 @@ add_task(async function () {
   }
 
   front.off("automation-event", onAutomationEvent);
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
 });

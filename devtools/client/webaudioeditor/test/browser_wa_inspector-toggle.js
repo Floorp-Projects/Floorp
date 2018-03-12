@@ -6,8 +6,8 @@
  * the inspector panel as intended.
  */
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
   let gVars = InspectorView._propsView;
@@ -19,14 +19,14 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
+  let [actors] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
 
   // Open inspector pane
   $("#inspector-pane-toggle").click();
-  await once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED);
+  yield once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED);
 
   ok(InspectorView.isVisible(), "InspectorView shown after toggling.");
 
@@ -37,24 +37,24 @@ add_task(async function () {
 
   // Close inspector pane
   $("#inspector-pane-toggle").click();
-  await once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED);
+  yield once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED);
 
   ok(!InspectorView.isVisible(), "InspectorView back to being hidden.");
 
   // Open again to test node loading while open
   $("#inspector-pane-toggle").click();
-  await once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED);
+  yield once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED);
 
   ok(InspectorView.isVisible(), "InspectorView being shown.");
   ok(!isVisible($("#web-audio-editor-tabs")),
     "InspectorView tabs are still hidden.");
 
-  await clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[1]));
+  yield clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[1]));
 
   ok(!isVisible($("#web-audio-editor-details-pane-empty")),
     "Empty message hides even when loading node while open.");
   ok(isVisible($("#web-audio-editor-tabs")),
     "Switches to tab view when loading node while open.");
 
-  await teardown(target);
+  yield teardown(target);
 });

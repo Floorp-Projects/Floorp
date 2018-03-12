@@ -10,15 +10,15 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-add_task(async function () {
+add_task(function* () {
   info("Activate the canvasdebugger");
   let originalPref = Services.prefs.getBoolPref("devtools.canvasdebugger.enabled");
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", true);
 
-  await addTab(TEST_URI);
+  yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
-  await openAndCloseToolbox(2, TOOL_DELAY, "canvasdebugger");
+  yield openAndCloseToolbox(2, TOOL_DELAY, "canvasdebugger");
   checkTelemetryResults(Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);

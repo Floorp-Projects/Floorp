@@ -5,9 +5,9 @@
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-add_task(async function () {
-  let fileContent = await generateCssMessageStubs();
+add_task(function* () {
+  let fileContent = yield generateCssMessageStubs();
   let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "cssMessage.js");
-  await OS.File.writeAtomic(filePath, fileContent);
+  yield OS.File.writeAtomic(filePath, fileContent);
   ok(true, "Make the test not fail");
 });

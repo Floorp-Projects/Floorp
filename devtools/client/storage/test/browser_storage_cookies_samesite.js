@@ -8,8 +8,8 @@
 
 // Test that the samesite cookie attribute is displayed correctly.
 
-add_task(async function () {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies-samesite.html");
+add_task(function* () {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies-samesite.html");
 
   let id1 = getCookieId("test1", "test1.example.org",
                         "/browser/devtools/client/storage/test/");
@@ -18,7 +18,7 @@ add_task(async function () {
   let id3 = getCookieId("test3", "test1.example.org",
                         "/browser/devtools/client/storage/test/");
 
-  await checkState([
+  yield checkState([
     [
       ["cookies", "http://test1.example.org"],
       [ id1, id2, id3 ]
@@ -33,5 +33,5 @@ add_task(async function () {
   is(sameSite2, "Lax", `sameSite2 is "Lax"`);
   is(sameSite3, "Strict", `sameSite3 is "Strict"`);
 
-  await finishTests();
+  yield finishTests();
 });

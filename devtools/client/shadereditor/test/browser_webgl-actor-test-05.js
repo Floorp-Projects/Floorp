@@ -6,22 +6,22 @@
  * shader actors.
  */
 
-async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+function* ifWebGLSupported() {
+  let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: true });
 
-  let programActor = await once(front, "program-linked");
-  let vertexShader = await programActor.getVertexShader();
-  let fragmentShader = await programActor.getFragmentShader();
+  let programActor = yield once(front, "program-linked");
+  let vertexShader = yield programActor.getVertexShader();
+  let fragmentShader = yield programActor.getFragmentShader();
 
-  let vertSource = await vertexShader.getText();
+  let vertSource = yield vertexShader.getText();
   ok(vertSource.includes("gl_Position"),
     "The correct vertex shader source was retrieved.");
 
-  let fragSource = await fragmentShader.getText();
+  let fragSource = yield fragmentShader.getText();
   ok(fragSource.includes("gl_FragColor"),
     "The correct fragment shader source was retrieved.");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

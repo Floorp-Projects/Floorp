@@ -10,22 +10,22 @@
 let actions = require("devtools/client/memory/actions/snapshot");
 let { snapshotState: states } = require("devtools/client/memory/constants");
 
-add_task(async function () {
+add_task(function* () {
   let front = new StubbedMemoryFront();
-  await front.attach();
+  yield front.attach();
   let store = Store();
 
   for (let i = 0; i < 5; i++) {
     store.dispatch(actions.takeSnapshot(front));
   }
 
-  await waitUntilState(store,
+  yield waitUntilState(store,
     ({ snapshots }) => snapshots.length === 5 && snapshots.every(isDone));
 
   for (let i = 0; i < 5; i++) {
     info(`Selecting snapshot[${i}]`);
     store.dispatch(actions.selectSnapshot(store.getState().snapshots[i].id));
-    await waitUntilState(store, ({ snapshots }) => snapshots[i].selected);
+    yield waitUntilState(store, ({ snapshots }) => snapshots[i].selected);
 
     let { snapshots } = store.getState();
     ok(snapshots[i].selected, `snapshot[${i}] selected`);

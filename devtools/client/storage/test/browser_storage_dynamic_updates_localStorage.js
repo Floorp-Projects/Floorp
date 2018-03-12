@@ -6,14 +6,14 @@
 
 // Test dynamic updates in the storage inspector for localStorage.
 
-add_task(async function () {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
+add_task(function* () {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
 
   gUI.tree.expandAll();
 
   ok(gUI.sidebar.hidden, "Sidebar is initially hidden");
 
-  await checkState([
+  yield checkState([
     [
       ["localStorage", "http://test1.example.org"],
       ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"]
@@ -22,9 +22,9 @@ add_task(async function () {
 
   gWindow.localStorage.removeItem("ls4");
 
-  await gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-updated");
 
-  await checkState([
+  yield checkState([
     [
       ["localStorage", "http://test1.example.org"],
       ["ls1", "ls2", "ls3", "ls5", "ls6", "ls7"]
@@ -33,10 +33,10 @@ add_task(async function () {
 
   gWindow.localStorage.setItem("ls4", "again");
 
-  await gUI.once("store-objects-updated");
-  await gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-updated");
 
-  await checkState([
+  yield checkState([
     [
       ["localStorage", "http://test1.example.org"],
       ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"]
@@ -45,24 +45,24 @@ add_task(async function () {
   // Updating a row
   gWindow.localStorage.setItem("ls2", "ls2-changed");
 
-  await gUI.once("store-objects-updated");
-  await gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-updated");
 
   checkCell("ls2", "value", "ls2-changed");
 
   // Clearing items.
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     content.wrappedJSObject.clear();
   });
 
-  await gUI.once("store-objects-cleared");
+  yield gUI.once("store-objects-cleared");
 
-  await checkState([
+  yield checkState([
     [
       ["localStorage", "http://test1.example.org"],
       [ ]
     ],
   ]);
 
-  await finishTests();
+  yield finishTests();
 });

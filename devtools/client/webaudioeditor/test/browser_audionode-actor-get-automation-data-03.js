@@ -6,20 +6,20 @@
  * its argument.
  */
 
-add_task(async function () {
-  let { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
-  let [_, [destNode, oscNode, gainNode]] = await Promise.all([
+add_task(function* () {
+  let { target, front } = yield initBackend(SIMPLE_CONTEXT_URL);
+  let [_, [destNode, oscNode, gainNode]] = yield Promise.all([
     front.setup({ reload: true }),
     get3(front, "create-node")
   ]);
 
-  await oscNode.addAutomationEvent("frequency", "setValueAtTime", [300, 0]);
-  await oscNode.addAutomationEvent("frequency", "linearRampToValueAtTime", [500, 0.9]);
-  await oscNode.addAutomationEvent("frequency", "setValueAtTime", [700, 1]);
-  await oscNode.addAutomationEvent("frequency", "exponentialRampToValueAtTime", [1000, 2]);
-  await oscNode.addAutomationEvent("frequency", "cancelScheduledValues", [1]);
+  yield oscNode.addAutomationEvent("frequency", "setValueAtTime", [300, 0]);
+  yield oscNode.addAutomationEvent("frequency", "linearRampToValueAtTime", [500, 0.9]);
+  yield oscNode.addAutomationEvent("frequency", "setValueAtTime", [700, 1]);
+  yield oscNode.addAutomationEvent("frequency", "exponentialRampToValueAtTime", [1000, 2]);
+  yield oscNode.addAutomationEvent("frequency", "cancelScheduledValues", [1]);
 
-  var { events, values } = await oscNode.getAutomationData("frequency");
+  var { events, values } = yield oscNode.getAutomationData("frequency");
 
   is(events.length, 2, "2 recorded events returned.");
   is(values.length, 2000, "2000 value points returned");
@@ -30,5 +30,5 @@ add_task(async function () {
   checkAutomationValue(values, 1, 499.9);
   checkAutomationValue(values, 2, 499.9);
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
 });

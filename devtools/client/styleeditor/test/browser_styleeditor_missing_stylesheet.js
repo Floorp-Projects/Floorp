@@ -8,8 +8,8 @@
 
 const TESTCASE_URI = TEST_BASE + "missing.html";
 
-add_task(async function () {
-  let { ui, toolbox, panel } = await openStyleEditorForURL(TESTCASE_URI);
+add_task(function* () {
+  let { ui, toolbox, panel } = yield openStyleEditorForURL(TESTCASE_URI);
 
   // Note that we're not testing for a specific number of stylesheet editors
   // below because the test-page is loaded with chrome:// URL and, right now,

@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const { MemoryFront } = require("devtools/shared/fronts/memory");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
@@ -16,7 +17,7 @@ function MemoryPanel(iframeWindow, toolbox) {
 }
 
 MemoryPanel.prototype = {
-  async open() {
+  open: Task.async(function* () {
     if (this._opening) {
       return this._opening;
     }
@@ -24,13 +25,13 @@ MemoryPanel.prototype = {
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gTarget = this.target;
 
-    const rootForm = await this.target.root;
+    const rootForm = yield this.target.root;
     this.panelWin.gFront = new MemoryFront(this.target.client,
                                            this.target.form,
                                            rootForm);
     this.panelWin.gHeapAnalysesClient = new HeapAnalysesClient();
 
-    await this.panelWin.gFront.attach();
+    yield this.panelWin.gFront.attach();
 
     this._opening = this.panelWin.initialize().then(() => {
       this.isReady = true;
@@ -39,7 +40,7 @@ MemoryPanel.prototype = {
     });
 
     return this._opening;
-  },
+  }),
 
   // DevToolPanel API
 
@@ -47,13 +48,13 @@ MemoryPanel.prototype = {
     return this._toolbox.target;
   },
 
-  async destroy() {
+  destroy: Task.async(function* () {
     // Make sure this panel is not already destroyed.
     if (this._destroyer) {
       return this._destroyer;
     }
 
-    await this.panelWin.gFront.detach();
+    yield this.panelWin.gFront.detach();
 
     this._destroyer = this.panelWin.destroy().then(() => {
       // Destroy front to ensure packet handler is removed from client
@@ -66,7 +67,7 @@ MemoryPanel.prototype = {
     });
 
     return this._destroyer;
-  }
+  })
 };
 
 exports.MemoryPanel = MemoryPanel;

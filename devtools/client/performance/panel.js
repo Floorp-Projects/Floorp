@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { Task } = require("devtools/shared/task");
 const defer = require("devtools/shared/defer");
 
 loader.lazyRequireGetter(this, "EventEmitter",
@@ -27,7 +28,7 @@ PerformancePanel.prototype = {
    *         A promise that is resolved when the Performance tool
    *         completes opening.
    */
-  async open() {
+  open: Task.async(function* () {
     if (this._opening) {
       return this._opening;
     }
@@ -42,7 +43,7 @@ PerformancePanel.prototype = {
     // the same front, and the toolbox will also initialize the front,
     // but redo it here so we can hook into the same event to prevent race conditions
     // in the case of the front still being in the process of opening.
-    let front = await this.panelWin.gToolbox.initPerformance();
+    let front = yield this.panelWin.gToolbox.initPerformance();
 
     // This should only happen if this is completely unsupported (when profiler
     // does not exist), and in that case, the tool shouldn't be available,
@@ -55,7 +56,7 @@ PerformancePanel.prototype = {
     let { PerformanceController, EVENTS } = this.panelWin;
     PerformanceController.on(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
-    await this.panelWin.startupPerformance();
+    yield this.panelWin.startupPerformance();
 
     // Fire this once incase we have an in-progress recording (console profile)
     // that caused this start up, and no state change yet, so we can highlight the
@@ -67,7 +68,7 @@ PerformancePanel.prototype = {
 
     deferred.resolve(this);
     return this._opening;
-  },
+  }),
 
   // DevToolPanel API
 
@@ -75,7 +76,7 @@ PerformancePanel.prototype = {
     return this.toolbox.target;
   },
 
-  async destroy() {
+  destroy: Task.async(function* () {
     // Make sure this panel is not already destroyed.
     if (this._destroyed) {
       return;
@@ -84,10 +85,10 @@ PerformancePanel.prototype = {
     let { PerformanceController, EVENTS } = this.panelWin;
     PerformanceController.off(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
-    await this.panelWin.shutdownPerformance();
+    yield this.panelWin.shutdownPerformance();
     this.emit("destroyed");
     this._destroyed = true;
-  },
+  }),
 
   _checkRecordingStatus: function () {
     if (this.panelWin.PerformanceController.isRecording()) {

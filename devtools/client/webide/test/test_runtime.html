@@ -21,16 +21,16 @@
         let win;
 
         SimpleTest.registerCleanupFunction(() => {
-          (async function () {
+          Task.spawn(function*() {
             if (win) {
-              await closeWebIDE(win);
+              yield closeWebIDE(win);
             }
             DebuggerServer.destroy();
-            await removeAllProjects();
-          })();
+            yield removeAllProjects();
+          });
         });
 
-        (async function () {
+        Task.spawn(function*() {
           function isPlayActive() {
             return !win.document.querySelector("#cmd_play").hasAttribute("disabled");
           }
@@ -42,7 +42,7 @@
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
-          win = await openWebIDE();
+          win = yield openWebIDE();
           let docRuntime = getRuntimeDocument(win);
           let docProject = getProjectDocument(win);
           let winProject = getProjectWindow(win);
@@ -51,9 +51,9 @@
 
           let onValidated = waitForUpdate(win, "project-validated");
           let onDetails = waitForUpdate(win, "details");
-          await winProject.projectList.importPackagedApp(packagedAppLocation);
-          await onValidated;
-          await onDetails;
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
+          yield onValidated;
+          yield onDetails;
 
           win.AppManager.runtimeList.usb.push({
             connect: function(connection) {
@@ -100,12 +100,12 @@
           items[0].click();
 
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
-          await win.UI._busyPromise;
+          yield win.UI._busyPromise;
 
-          await connectionsChanged;
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 2, "Connected");
 
-          await waitForUpdate(win, "runtime-global-actors");
+          yield waitForUpdate(win, "runtime-global-actors");
 
           // Play button always disabled now, webapps actor removed
           ok(!isPlayActive(), "play button is disabled");
@@ -113,22 +113,22 @@
           let oldProject = win.AppManager.selectedProject;
           win.AppManager.selectedProject = null;
 
-          await nextTick();
+          yield nextTick();
 
           ok(!isPlayActive(), "play button is disabled");
           ok(!isStopActive(), "stop button is disabled");
           win.AppManager._selectedProject = oldProject;
           win.UI.updateCommands();
 
-          await nextTick();
+          yield nextTick();
 
           ok(!isPlayActive(), "play button is enabled");
           ok(!isStopActive(), "stop button is disabled");
 
           connectionsChanged = waitForConnectionChange("closed", 2);
-          await win.Cmds.disconnectRuntime();
+          yield win.Cmds.disconnectRuntime();
 
-          await connectionsChanged;
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
 
           ok(win.AppManager.selectedProject, "A project is still selected");
@@ -138,9 +138,9 @@
           connectionsChanged = waitForConnectionChange("opened", 2);
           docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
 
-          await waitForUpdate(win, "runtime-targets");
+          yield waitForUpdate(win, "runtime-targets");
 
-          await connectionsChanged;
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 2, "Locally connected");
 
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
@@ -150,13 +150,13 @@
             docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
           });
 
-          await waitForUpdate(win, "project");
+          yield waitForUpdate(win, "project");
 
           // Toolbox opens automatically for main process / runtime apps
           ok(win.UI.toolboxPromise, "Toolbox promise exists");
-          await win.UI.toolboxPromise;
+          yield win.UI.toolboxPromise;
 
-          await win.Cmds.disconnectRuntime();
+          yield win.Cmds.disconnectRuntime();
 
           Services.prefs.setIntPref("devtools.webide.busyTimeout", 100);
 
@@ -191,7 +191,7 @@
           });
 
           SimpleTest.finish();
-        })();
+        });
       }
     </script>
   </body>

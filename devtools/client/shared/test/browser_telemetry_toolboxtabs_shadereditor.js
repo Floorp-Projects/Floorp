@@ -11,15 +11,15 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 const TOOL_DELAY = 200;
 const TOOL_PREF = "devtools.shadereditor.enabled";
 
-add_task(async function () {
+add_task(function* () {
   info("Active the sharer editor");
   let originalPref = Services.prefs.getBoolPref(TOOL_PREF);
   Services.prefs.setBoolPref(TOOL_PREF, true);
 
-  await addTab(TEST_URI);
+  yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
-  await openAndCloseToolbox(2, TOOL_DELAY, "shadereditor");
+  yield openAndCloseToolbox(2, TOOL_DELAY, "shadereditor");
   checkTelemetryResults(Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);

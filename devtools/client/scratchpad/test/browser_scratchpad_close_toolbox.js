@@ -4,6 +4,7 @@
 // Test that closing the toolbox after having opened a scratchpad leaves the
 // latter in a functioning state.
 
+var {Task} = require("devtools/shared/task");
 var {TargetFactory} = require("devtools/client/framework/target");
 
 function test() {
@@ -15,23 +16,23 @@ function test() {
     .then(finish, console.error);
 }
 
-async function runTests([win, sp]) {
+function* runTests([win, sp]) {
   // Use the scratchpad before opening the toolbox.
   const source = "window.foobar = 7;";
   sp.setText(source);
-  let [,, result] = await sp.display();
+  let [,, result] = yield sp.display();
   is(result, 7, "Display produced the expected output.");
 
   // Now open the toolbox and close it again.
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
+  let toolbox = yield gDevTools.showToolbox(target, "webconsole");
   ok(toolbox, "Toolbox was opened.");
-  let closed = await gDevTools.closeToolbox(target);
+  let closed = yield gDevTools.closeToolbox(target);
   is(closed, true, "Toolbox was closed.");
 
   // Now see if using the scratcphad works as expected.
   sp.setText(source);
-  let [,, result2] = await sp.display();
+  let [,, result2] = yield sp.display();
   is(result2, 7,
      "Display produced the expected output after the toolbox was gone.");
 }

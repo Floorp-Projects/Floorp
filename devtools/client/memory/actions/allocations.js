@@ -6,13 +6,13 @@
 const { actions, ALLOCATION_RECORDING_OPTIONS } = require("../constants");
 
 exports.toggleRecordingAllocationStacks = function (front) {
-  return async function (dispatch, getState) {
+  return function* (dispatch, getState) {
     dispatch({ type: actions.TOGGLE_RECORD_ALLOCATION_STACKS_START });
 
     if (getState().recordingAllocationStacks) {
-      await front.stopRecordingAllocations();
+      yield front.stopRecordingAllocations();
     } else {
-      await front.startRecordingAllocations(ALLOCATION_RECORDING_OPTIONS);
+      yield front.startRecordingAllocations(ALLOCATION_RECORDING_OPTIONS);
     }
 
     dispatch({ type: actions.TOGGLE_RECORD_ALLOCATION_STACKS_END });

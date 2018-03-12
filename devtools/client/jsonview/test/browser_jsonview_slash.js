@@ -5,12 +5,12 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(function* () {
   info("Test JSON with slash started.");
 
   const TEST_JSON_URL = "data:application/json,{\"a/b\":[1,2],\"a\":{\"b\":[3,4]}}";
-  await addJsonViewTab(TEST_JSON_URL);
+  yield addJsonViewTab(TEST_JSON_URL);
 
-  let countBefore = await getElementCount(".jsonPanelBox .treeTable .treeRow");
+  let countBefore = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
   is(countBefore, 7, "There must be seven rows");
 });

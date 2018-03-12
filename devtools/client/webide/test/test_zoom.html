@@ -18,8 +18,8 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
-            let win = await openWebIDE();
+        Task.spawn(function* () {
+            let win = yield openWebIDE();
             let viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIWebNavigation)
                             .QueryInterface(Ci.nsIDocShell)
@@ -52,9 +52,9 @@
             roundZoom = Math.round(10 * viewer.fullZoom) / 10;
             is(roundZoom, 1.4, "Reach max zoom");
 
-            await closeWebIDE(win);
+            yield closeWebIDE(win);
 
-            win = await openWebIDE();
+            win = yield openWebIDE();
             viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIDocShell)
@@ -67,10 +67,10 @@
 
             is(viewer.fullZoom, 1, "Zoom reset");
 
-            await closeWebIDE(win);
+            yield closeWebIDE(win);
 
             SimpleTest.finish();
-        })();
+        });
       }
     </script>
   </body>

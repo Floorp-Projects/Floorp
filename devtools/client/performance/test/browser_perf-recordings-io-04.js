@@ -69,8 +69,8 @@ var PROFILER_DATA = (function () {
   return data;
 })();
 
-var test = async function () {
-  let { target, panel, toolbox } = await initPerformance(SIMPLE_URL);
+var test = Task.async(function* () {
+  let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, PerformanceController, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;
 
   // Enable memory to test the memory-calltree and memory-flamegraph.
@@ -90,20 +90,20 @@ var test = async function () {
   // Save recording as an old profiler data.
   let file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
-  await asyncCopy(oldProfilerData, file);
+  yield asyncCopy(oldProfilerData, file);
 
   // Import recording.
 
   let calltreeRendered = once(OverviewView, EVENTS.UI_FRAMERATE_GRAPH_RENDERED);
   let fpsRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
-  await PerformanceController.importRecording("", file);
+  yield PerformanceController.importRecording("", file);
 
-  await imported;
+  yield imported;
   ok(true, "The original profiler data appears to have been successfully imported.");
 
-  await calltreeRendered;
-  await fpsRendered;
+  yield calltreeRendered;
+  yield fpsRendered;
   ok(true, "The imported data was re-rendered.");
 
   // Ensure that only framerate and js calltree/flamegraph view are available
@@ -148,9 +148,9 @@ var test = async function () {
     }
   }
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
-};
+});
 
 function getUnicodeConverter() {
   let className = "@mozilla.org/intl/scriptableunicodeconverter";

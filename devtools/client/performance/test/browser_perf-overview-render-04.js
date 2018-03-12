@@ -15,8 +15,8 @@ const { waitUntil } = require("devtools/client/performance/test/helpers/wait-uti
 const { isVisible } = require("devtools/client/performance/test/helpers/dom-utils");
 const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -32,23 +32,23 @@ add_task(async function () {
   let updated = 0;
   OverviewView.on(EVENTS.UI_OVERVIEW_RENDERED, () => updated++);
 
-  await startRecording(panel, { skipWaitingForOverview: true });
+  yield startRecording(panel, { skipWaitingForOverview: true });
 
   is(isVisible($("#overview-pane")), false, "Overview graphs hidden.");
   is(updated, 0, "Overview graphs have not been updated");
 
-  await waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);
-  await waitUntil(() => PerformanceController.getCurrentRecording().getMemory().length);
-  await waitUntil(() => PerformanceController.getCurrentRecording().getTicks().length);
+  yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);
+  yield waitUntil(() => PerformanceController.getCurrentRecording().getMemory().length);
+  yield waitUntil(() => PerformanceController.getCurrentRecording().getTicks().length);
   is(isVisible($("#overview-pane")), false, "Overview graphs still hidden.");
   is(updated, 0, "Overview graphs have still not been updated");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   is(isVisible($("#overview-pane")), true, "Overview graphs no longer hidden.");
   is(updated, 1, "Overview graphs rendered upon completion.");
 
-  await startRecording(panel, { skipWaitingForOverview: true });
+  yield startRecording(panel, { skipWaitingForOverview: true });
 
   is(isVisible($("#overview-pane")), false,
      "Overview graphs hidden again when starting new recording.");
@@ -64,11 +64,11 @@ add_task(async function () {
      "Overview graphs hidden again when going back to inprogress recording.");
   is(updated, 1, "Overview graphs have not been updated again.");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   is(isVisible($("#overview-pane")), true,
      "overview graphs no longer hidden when recording finishes");
   is(updated, 2, "Overview graphs rendered again upon completion.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

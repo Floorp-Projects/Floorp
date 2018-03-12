@@ -19,39 +19,39 @@ const IFRAME_URL = URL_ROOT + "browser_toolbox_window_title_changes_page.html";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
-add_task(async function () {
+add_task(function* () {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
-  await addTab(URL);
+  yield addTab(URL);
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, null,
+  let toolbox = yield gDevTools.showToolbox(target, null,
     Toolbox.HostType.BOTTOM);
 
   let onTitleChanged = waitForTitleChange(toolbox);
-  await toolbox.selectTool("inspector");
-  await onTitleChanged;
+  yield toolbox.selectTool("inspector");
+  yield onTitleChanged;
 
-  await toolbox.switchHost(Toolbox.HostType.WINDOW);
+  yield toolbox.switchHost(Toolbox.HostType.WINDOW);
   // Wait for title change event *after* switch host, in order to listen
   // for the event on the WINDOW host window, which only exists after switchHost
-  await waitForTitleChange(toolbox);
+  yield waitForTitleChange(toolbox);
 
   is(getTitle(), `Developer Tools - Page title - ${URL}`,
     "Devtools title correct after switching to detached window host");
 
   // Wait for tick to avoid unexpected 'popuphidden' event, which
   // blocks the frame popup menu opened below. See also bug 1276873
-  await waitForTick();
+  yield waitForTick();
 
   let btn = toolbox.doc.getElementById("command-button-frames");
 
-  await testShortcutToOpenFrames(btn, toolbox);
+  yield testShortcutToOpenFrames(btn, toolbox);
 
   // Open frame menu and wait till it's available on the screen.
   // Also check 'open' attribute on the command button.
   ok(!btn.classList.contains("checked"), "The checked class must not be present");
-  let menu = await toolbox.showFramesMenu({target: btn});
-  await once(menu, "open");
+  let menu = yield toolbox.showFramesMenu({target: btn});
+  yield once(menu, "open");
 
   ok(btn.classList.contains("checked"), "The checked class must be set");
 
@@ -75,16 +75,16 @@ add_task(async function () {
   info("Select the iframe");
   iframeBtn.click();
 
-  await willNavigate;
-  await newRoot;
-  await onTitleChanged;
+  yield willNavigate;
+  yield newRoot;
+  yield onTitleChanged;
 
   info("Navigation to the iframe is done, the inspector should be back up");
   is(getTitle(), `Developer Tools - Page title - ${URL}`,
     "Devtools title was not updated after changing inspected frame");
 
   info("Cleanup toolbox and test preferences.");
-  await toolbox.destroy();
+  yield toolbox.destroy();
   toolbox = null;
   gBrowser.removeCurrentTab();
   Services.prefs.clearUserPref("devtools.toolbox.host");
@@ -98,7 +98,7 @@ function getTitle() {
   return Services.wm.getMostRecentWindow("devtools:toolbox").document.title;
 }
 
-async function testShortcutToOpenFrames(btn, toolbox) {
+function* testShortcutToOpenFrames(btn, toolbox) {
   info("Tests if shortcut Alt+Down opens the frames");
   // focus the button so that keyPress can be performed
   btn.focus();
@@ -107,14 +107,14 @@ async function testShortcutToOpenFrames(btn, toolbox) {
   synthesizeKeyShortcut(shortcut, toolbox.win);
 
   // wait for 200 ms for UI to render
-  await wait(200);
+  yield wait(200);
 
   // btn should now have the checked class set
   ok(btn.classList.contains("checked"), "The checked class must be set");
 
   // pressing Esc should hide the menu again
   synthesizeKeyShortcut("Esc", toolbox.win);
-  await wait(200);
+  yield wait(200);
 
   // btn shouldn't have the checked class set
   ok(!btn.classList.contains("checked"), "The checked class must not be set");

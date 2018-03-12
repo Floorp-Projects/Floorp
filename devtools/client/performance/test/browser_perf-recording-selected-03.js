@@ -14,31 +14,31 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { $, EVENTS, PerformanceController } = panel.panelWin;
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   info("Selecting recording #0 and waiting for it to be displayed.");
 
   let selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 0);
-  await selected;
+  yield selected;
 
   ok($("#main-record-button").classList.contains("checked"),
     "Button is still checked after selecting another item.");
   ok(!$("#main-record-button").hasAttribute("disabled"),
     "Button is not locked after selecting another item.");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

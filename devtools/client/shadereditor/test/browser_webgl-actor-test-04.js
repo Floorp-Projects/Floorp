@@ -6,22 +6,22 @@
  * and that the corresponding vertex and fragment actors can be retrieved.
  */
 
-async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+function* ifWebGLSupported() {
+  let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: true });
 
-  let programActor = await once(front, "program-linked");
+  let programActor = yield once(front, "program-linked");
   ok(programActor,
     "A program actor was sent along with the 'program-linked' notification.");
 
-  let vertexShader = await programActor.getVertexShader();
+  let vertexShader = yield programActor.getVertexShader();
   ok(programActor,
     "A vertex shader actor was retrieved from the program actor.");
 
-  let fragmentShader = await programActor.getFragmentShader();
+  let fragmentShader = yield programActor.getFragmentShader();
   ok(programActor,
     "A fragment shader actor was retrieved from the program actor.");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

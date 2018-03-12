@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { Task } = require("devtools/shared/task");
+
 loader.lazyRequireGetter(this, "gDevTools",
   "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "TargetFactory",
@@ -40,28 +42,28 @@ exports.debugWorker = function (client, workerActor) {
  *         - {Array} workers
  *           Array of WorkerActor forms
  */
-exports.getWorkerForms = async function (client) {
+exports.getWorkerForms = Task.async(function* (client) {
   let registrations = [];
   let workers = [];
 
   try {
     // List service worker registrations
     ({ registrations } =
-      await client.mainRoot.listServiceWorkerRegistrations());
+      yield client.mainRoot.listServiceWorkerRegistrations());
 
     // List workers from the Parent process
-    ({ workers } = await client.mainRoot.listWorkers());
+    ({ workers } = yield client.mainRoot.listWorkers());
 
     // And then from the Child processes
-    let { processes } = await client.mainRoot.listProcesses();
+    let { processes } = yield client.mainRoot.listProcesses();
     for (let process of processes) {
       // Ignore parent process
       if (process.parent) {
         continue;
       }
-      let { form } = await client.getProcess(process.id);
+      let { form } = yield client.getProcess(process.id);
       let processActor = form.actor;
-      let response = await client.request({
+      let response = yield client.request({
         to: processActor,
         type: "listWorkers"
       });
@@ -72,4 +74,4 @@ exports.getWorkerForms = async function (client) {
   }
 
   return { registrations, workers };
-};
+});

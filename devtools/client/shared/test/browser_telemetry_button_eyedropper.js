@@ -6,27 +6,27 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_button_eyedropper.js</p><div>test</div>";
 const EYEDROPPER_OPENED = "devtools.toolbar.eyedropper.opened";
 
-add_task(async function () {
-  await addTab(TEST_URI);
+add_task(function* () {
+  yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "inspector");
+  let toolbox = yield gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
   info("testing the eyedropper button");
-  await testButton(toolbox, Telemetry);
+  yield testButton(toolbox, Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);
-  await gDevTools.closeToolbox(target);
+  yield gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });
 
-async function testButton(toolbox, Telemetry) {
+function* testButton(toolbox, Telemetry) {
   info("Calling the eyedropper button's callback");
   // We call the button callback directly because we don't need to test the UI here, we're
   // only concerned about testing the telemetry probe.
-  await toolbox.getPanel("inspector").showEyeDropper();
+  yield toolbox.getPanel("inspector").showEyeDropper();
 
   checkTelemetryResults(Telemetry);
 }

@@ -13,8 +13,8 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { setSelectedRecording, getSelectedRecordingIndex } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -43,7 +43,7 @@ add_task(async function () {
   is(memCallBtn.hidden, true,
     "The `memory-calltree` button is hidden when tool starts.");
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   is(waterfallBtn.hidden, true,
     "The `waterfall` button is hidden when recording starts.");
@@ -56,7 +56,7 @@ add_task(async function () {
   is(memCallBtn.hidden, true,
     "The `memory-calltree` button is hidden when recording starts.");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   is(waterfallBtn.hidden, false,
     "The `waterfall` button is visible when recording ends.");
@@ -69,7 +69,7 @@ add_task(async function () {
   is(memCallBtn.hidden, true,
     "The `memory-calltree` button is hidden when recording ends.");
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   is(waterfallBtn.hidden, true,
     "The `waterfall` button is hidden when another recording starts.");
@@ -85,8 +85,8 @@ add_task(async function () {
   let selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   let rendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   setSelectedRecording(panel, 0);
-  await selected;
-  await rendered;
+  yield selected;
+  yield rendered;
 
   let selectedIndex = getSelectedRecordingIndex(panel);
   is(selectedIndex, 0,
@@ -105,7 +105,7 @@ add_task(async function () {
 
   selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 1);
-  await selected;
+  yield selected;
 
   selectedIndex = getSelectedRecordingIndex(panel);
   is(selectedIndex, 1,
@@ -123,8 +123,8 @@ add_task(async function () {
     "The `memory-calltree button` still is hidden when second recording selected.");
 
   rendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
-  await stopRecording(panel);
-  await rendered;
+  yield stopRecording(panel);
+  yield rendered;
 
   selectedIndex = getSelectedRecordingIndex(panel);
   is(selectedIndex, 1,
@@ -141,5 +141,5 @@ add_task(async function () {
   is(memCallBtn.hidden, true,
     "The `memory-calltree` button is hidden when second recording finished.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

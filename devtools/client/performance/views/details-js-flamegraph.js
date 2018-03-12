@@ -24,32 +24,32 @@ var JsFlameGraphView = extend(DetailsSubview, {
   /**
    * Sets up the view with event binding.
    */
-  async initialize() {
+  initialize: Task.async(function* () {
     DetailsSubview.initialize.call(this);
 
     this.graph = new FlameGraph($("#js-flamegraph-view"));
     this.graph.timelineTickUnits = L10N.getStr("graphs.ms");
     this.graph.setTheme(PerformanceController.getTheme());
-    await this.graph.ready();
+    yield this.graph.ready();
 
     this._onRangeChangeInGraph = this._onRangeChangeInGraph.bind(this);
     this._onThemeChanged = this._onThemeChanged.bind(this);
 
     PerformanceController.on(EVENTS.THEME_CHANGED, this._onThemeChanged);
     this.graph.on("selecting", this._onRangeChangeInGraph);
-  },
+  }),
 
   /**
    * Unbinds events.
    */
-  async destroy() {
+  destroy: Task.async(function* () {
     DetailsSubview.destroy.call(this);
 
     PerformanceController.off(EVENTS.THEME_CHANGED, this._onThemeChanged);
     this.graph.off("selecting", this._onRangeChangeInGraph);
 
-    await this.graph.destroy();
-  },
+    yield this.graph.destroy();
+  }),
 
   /**
    * Method for handling all the set up for rendering a new flamegraph.

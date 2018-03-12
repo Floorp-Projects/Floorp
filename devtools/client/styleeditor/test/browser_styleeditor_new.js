@@ -9,18 +9,18 @@ const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
 const TESTCASE_CSS_SOURCE = "body{background-color:red;";
 
-add_task(async function () {
-  let { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
+add_task(function* () {
+  let { panel, ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
-  let editor = await createNew(ui, panel.panelWindow);
-  await testInitialState(editor);
+  let editor = yield createNew(ui, panel.panelWindow);
+  yield testInitialState(editor);
 
   let originalHref = editor.styleSheet.href;
   let waitForPropertyChange = onPropertyChange(editor);
 
-  await typeInEditor(editor, panel.panelWindow);
+  yield typeInEditor(editor, panel.panelWindow);
 
-  await waitForPropertyChange;
+  yield waitForPropertyChange;
 
   testUpdated(editor, originalHref);
 });
@@ -57,7 +57,7 @@ function onPropertyChange(editor) {
   });
 }
 
-async function testInitialState(editor) {
+function* testInitialState(editor) {
   info("Testing the initial state of the new editor");
 
   let summary = editor.summary;
@@ -71,7 +71,7 @@ async function testInitialState(editor) {
   let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
   is(parseInt(ruleCount, 10), 0, "new editor initially shows 0 rules");
 
-  let color = await getComputedStyleProperty({
+  let color = yield getComputedStyleProperty({
     selector: "body",
     name: "background-color"
   });

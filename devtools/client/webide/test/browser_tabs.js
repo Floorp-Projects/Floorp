@@ -8,27 +8,27 @@ function test() {
   waitForExplicitFinish();
   requestCompleteLog();
 
-  (async function () {
+  Task.spawn(function* () {
     // Since we test the connections set below, destroy the server in case it
     // was left open.
     DebuggerServer.destroy();
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
 
-    let tab = await addTab(TEST_URI);
+    let tab = yield addTab(TEST_URI);
 
-    let win = await openWebIDE();
+    let win = yield openWebIDE();
     let docProject = getProjectDocument(win);
     let docRuntime = getRuntimeDocument(win);
 
-    await connectToLocal(win, docRuntime);
+    yield connectToLocal(win, docRuntime);
 
     is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
 
-    await selectTabProject(win, docProject);
+    yield selectTabProject(win, docProject);
 
     ok(win.UI.toolboxPromise, "Toolbox promise exists");
-    await win.UI.toolboxPromise;
+    yield win.UI.toolboxPromise;
 
     let project = win.AppManager.selectedProject;
     is(project.location, TEST_URI, "Location is correct");
@@ -37,30 +37,30 @@ function test() {
     // Ensure tab list changes are noticed
     let tabsNode = docProject.querySelector("#project-panel-tabs");
     is(tabsNode.querySelectorAll(".panel-item").length, 2, "2 tabs available");
-    await removeTab(tab);
-    await waitForUpdate(win, "project");
-    await waitForUpdate(win, "runtime-targets");
+    yield removeTab(tab);
+    yield waitForUpdate(win, "project");
+    yield waitForUpdate(win, "runtime-targets");
     is(tabsNode.querySelectorAll(".panel-item").length, 1, "1 tab available");
 
-    tab = await addTab(TEST_URI);
+    tab = yield addTab(TEST_URI);
 
     is(tabsNode.querySelectorAll(".panel-item").length, 2, "2 tabs available");
 
-    await removeTab(tab);
+    yield removeTab(tab);
 
     is(tabsNode.querySelectorAll(".panel-item").length, 2, "2 tabs available");
 
     docProject.querySelector("#refresh-tabs").click();
 
-    await waitForUpdate(win, "runtime-targets");
+    yield waitForUpdate(win, "runtime-targets");
 
     is(tabsNode.querySelectorAll(".panel-item").length, 1, "1 tab available");
 
-    await win.Cmds.disconnectRuntime();
-    await closeWebIDE(win);
+    yield win.Cmds.disconnectRuntime();
+    yield closeWebIDE(win);
 
     DebuggerServer.destroy();
-  })().then(finish, handleError);
+  }).then(finish, handleError);
 }
 
 function connectToLocal(win, docRuntime) {
@@ -73,12 +73,12 @@ function connectToLocal(win, docRuntime) {
 }
 
 function selectTabProject(win, docProject) {
-  return (async function () {
-    await waitForUpdate(win, "runtime-targets");
+  return Task.spawn(function* () {
+    yield waitForUpdate(win, "runtime-targets");
     let tabsNode = docProject.querySelector("#project-panel-tabs");
     let tabNode = tabsNode.querySelectorAll(".panel-item")[1];
     let project = waitForUpdate(win, "project");
     tabNode.click();
-    await project;
-  })();
+    yield project;
+  });
 }

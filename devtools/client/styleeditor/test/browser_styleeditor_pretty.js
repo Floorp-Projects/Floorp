@@ -48,24 +48,24 @@ const ORIGINAL_SOURCE = "" +
 
 const EXPAND_TAB = "devtools.editor.expandtab";
 
-add_task(async function () {
+add_task(function* () {
   let oldExpandTabPref = SpecialPowers.getBoolPref(EXPAND_TAB);
   // The 'EXPAND_TAB' preference has to be set to false because
   // the constant 'PRETTIFIED_SOURCE' uses tabs for indentation.
   SpecialPowers.setBoolPref(EXPAND_TAB, false);
 
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
   is(ui.editors.length, 2, "Two sheets present.");
 
   info("Testing minified style sheet.");
-  let editor = await ui.editors[0].getSourceEditor();
+  let editor = yield ui.editors[0].getSourceEditor();
 
   let prettifiedSourceRE = new RegExp(PRETTIFIED_SOURCE);
   ok(prettifiedSourceRE.test(editor.sourceEditor.getText()),
      "minified source has been prettified automatically");
 
   info("Selecting second, non-minified style sheet.");
-  await ui.selectStyleSheet(ui.editors[1].styleSheet);
+  yield ui.selectStyleSheet(ui.editors[1].styleSheet);
 
   editor = ui.editors[1];
 

@@ -12,7 +12,6 @@ const TEST_BASE_HTTPS = "https://example.com/browser/devtools/client/commandline
 
 var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 var flags = require("devtools/shared/flags");
-var { Task } = require("devtools/shared/task");
 
 // Import the GCLI test helper
 var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));

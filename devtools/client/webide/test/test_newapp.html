@@ -18,11 +18,11 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
-          let win = await openWebIDE();
+        Task.spawn(function* () {
+          let win = yield openWebIDE();
           let winProject = getProjectWindow(win);
           let tmpDir = FileUtils.getDir("TmpD", []);
-          await winProject.projectList.newApp({
+          yield winProject.projectList.newApp({
             index: 0,
             name: "webideTmpApp",
             folder: tmpDir
@@ -36,10 +36,10 @@
 
           // Clean up
           tmpDir.remove(true);
-          await closeWebIDE(win);
-          await removeAllProjects();
+          yield closeWebIDE(win);
+          yield removeAllProjects();
           SimpleTest.finish();
-        })();
+        });
       }
     </script>
   </body>

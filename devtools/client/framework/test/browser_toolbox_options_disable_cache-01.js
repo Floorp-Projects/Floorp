@@ -11,9 +11,9 @@ requestLongerTimeout(2);
 // are not toggled.
 loadHelperScript("helper_disable_cache.js");
 
-add_task(async function () {
+add_task(function* () {
   // Disable rcwn to make cache behavior deterministic.
-  await pushPref("network.http.rcwn.enabled", false);
+  yield pushPref("network.http.rcwn.enabled", false);
 
   // Ensure that the setting is cleared after the test.
   registerCleanupFunction(() => {
@@ -23,15 +23,15 @@ add_task(async function () {
 
   // Initialise tabs: 1 and 2 with a toolbox, 3 and 4 without.
   for (let tab of tabs) {
-    await initTab(tab, tab.startToolbox);
+    yield initTab(tab, tab.startToolbox);
   }
 
   // Ensure cache is enabled for all tabs.
-  await checkCacheStateForAllTabs([true, true, true, true]);
+  yield checkCacheStateForAllTabs([true, true, true, true]);
 
   // Check the checkbox in tab 0 and ensure cache is disabled for tabs 0 and 1.
-  await setDisableCacheCheckboxChecked(tabs[0], true);
-  await checkCacheStateForAllTabs([false, false, true, true]);
+  yield setDisableCacheCheckboxChecked(tabs[0], true);
+  yield checkCacheStateForAllTabs([false, false, true, true]);
 
-  await finishUp();
+  yield finishUp();
 });

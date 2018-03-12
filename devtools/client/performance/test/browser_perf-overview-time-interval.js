@@ -12,8 +12,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -34,14 +34,14 @@ add_task(async function () {
     ok(true, "Getting the time interval didn't work, as expected.");
   }
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   // Get/set the time interval and wait for the event propagation.
 
   let rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED);
   OverviewView.setTimeInterval({ startTime: 10, endTime: 20 });
-  await rangeSelected;
+  yield rangeSelected;
 
   let firstInterval = OverviewView.getTimeInterval();
   info("First interval start time: " + firstInterval.startTime);
@@ -69,5 +69,5 @@ add_task(async function () {
   is(Math.round(secondInterval.endTime), 40,
     "The interval's end time was properly set again.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

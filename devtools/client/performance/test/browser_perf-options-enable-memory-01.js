@@ -13,8 +13,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { isVisible } = require("devtools/client/performance/test/helpers/dom-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -24,8 +24,8 @@ add_task(async function () {
   // Disable memory to test.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, false);
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, false,
     "PerformanceFront started without memory recording.");
@@ -44,8 +44,8 @@ add_task(async function () {
   ok(!isVisible($("#memory-overview")), "memory graph is still hidden after enabling " +
                                         "if recording did not start recording memory");
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, true,
     "PerformanceFront started with memory recording.");
@@ -54,5 +54,5 @@ add_task(async function () {
   ok(isVisible($("#memory-overview")),
     "The memory graph is not hidden when memory enabled before recording.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

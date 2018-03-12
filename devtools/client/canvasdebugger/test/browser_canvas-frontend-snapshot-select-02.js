@@ -6,11 +6,11 @@
  * respective to their recorded animation frame.
  */
 
-async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
-  await reload(target);
+  yield reload(target);
 
   SnapshotsListView._onRecordButtonClick();
   let snapshotTarget = SnapshotsListView.getItemAtIndex(0).target;
@@ -23,8 +23,8 @@ async function ifTestingSupported() {
 
   let finished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
-  await finished;
+  yield finished;
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

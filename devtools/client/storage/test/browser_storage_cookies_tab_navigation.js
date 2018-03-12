@@ -6,12 +6,12 @@
 
 "use strict";
 
-add_task(async function () {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
+add_task(function* () {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
   showAllColumns(true);
 
   let id = getCookieId("test1", ".test1.example.org", "/browser");
-  await startCellEdit(id, "name");
+  yield startCellEdit(id, "name");
 
   PressKeyXTimes("VK_TAB", 18);
   is(getCurrentEditorValue(), "value3",
@@ -21,5 +21,5 @@ add_task(async function () {
   is(getCurrentEditorValue(), "test1",
      "We have shift-tabbed to the correct cell.");
 
-  await finishTests();
+  yield finishTests();
 });

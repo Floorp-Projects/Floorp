@@ -21,13 +21,13 @@ const DOCUMENT = "data:text/html;charset=UTF-8," +
 const CONTENTS = "// Note that this file must be utf-16 with a " +
       "BOM for the test to make sense.\n";
 
-add_task(async function () {
-  let {ui} = await openStyleEditorForURL(DOCUMENT);
+add_task(function* () {
+  let {ui} = yield openStyleEditorForURL(DOCUMENT);
 
   is(ui.editors.length, 1, "correct number of editors");
 
   let editor = ui.editors[0];
-  await editor.getSourceEditor();
+  yield editor.getSourceEditor();
 
   let text = editor.sourceEditor.getText();
   is(text, CONTENTS, "editor contains expected text");
