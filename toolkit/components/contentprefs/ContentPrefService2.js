@@ -6,6 +6,10 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");
 ChromeUtils.import("resource://gre/modules/ContentPrefStore.jsm");
+ChromeUtils.defineModuleGetter(this, "OS",
+                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "Sqlite",
+                               "resource://gre/modules/Sqlite.jsm");
 
 const CACHE_MAX_GROUP_ENTRIES = 100;
 
@@ -22,16 +26,10 @@ function ContentPrefService2() {
              .ContentPrefServiceChild;
   }
 
-  // If this throws an exception, it causes the getService call to fail,
-  // but the next time a consumer tries to retrieve the service, we'll try
-  // to initialize the database again, which might work if the failure
-  // was due to a temporary condition (like being out of disk space).
-  this._dbInit();
-
   Services.obs.addObserver(this, "last-pb-context-exited");
 
   // Observe shutdown so we can shut down the database connection.
-  Services.obs.addObserver(this, "xpcom-shutdown");
+  Services.obs.addObserver(this, "profile-before-change");
 }
 
 const cache = new ContentPrefStore();
@@ -58,15 +56,9 @@ ContentPrefService2.prototype = {
 
   // Destruction
 
-  _destroy: function ContentPrefService__destroy() {
-    Services.obs.removeObserver(this, "xpcom-shutdown");
+  _destroy: function CPS2__destroy() {
+    Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "last-pb-context-exited");
-
-    this.destroy();
-
-    this._dbConnection.asyncClose(() => {
-      Services.obs.notifyObservers(null, "content-prefs-db-closed");
-    });
 
     // Delete references to XPCOM components to make sure we don't leak them
     // (although we haven't observed leakage in tests).  Also delete references
@@ -82,6 +74,25 @@ ContentPrefService2.prototype = {
 
   _cache: cache,
   _pbStore: privModeStorage,
+
+  _connPromise: null,
+
+  get conn() {
+    if (this._connPromise) {
+      return this._connPromise;
+    }
+
+    return this._connPromise = new Promise(async (resolve, reject) => {
+      let conn;
+      try {
+        conn = await this._getConnection();
+      } catch (e) {
+        this.log("Failed to establish database connection: " + e);
+        reject(e);
+      }
+      resolve(conn);
+    });
+  },
 
   // nsIContentPrefService
 
@@ -119,14 +130,14 @@ ContentPrefService2.prototype = {
     stmt2.params.name = name;
 
     this._execStmts([stmt1, stmt2], {
-      onRow: function onRow(row) {
+      onRow: row => {
         let grp = row.getResultByName("grp");
         let val = row.getResultByName("value");
         this._cache.set(grp, name, val);
         if (!pbPrefs.has(grp, name))
           cbHandleResult(callback, new ContentPref(grp, name, val));
       },
-      onDone: function onDone(reason, ok, gotRow) {
+      onDone: (reason, ok, gotRow) => {
         if (ok) {
           for (let [pbGroup, pbName, pbVal] of pbPrefs) {
             cbHandleResult(callback, new ContentPref(pbGroup, pbName, pbVal));
@@ -134,7 +145,7 @@ ContentPrefService2.prototype = {
         }
         cbHandleCompletion(callback, reason);
       },
-      onError: function onError(nsresult) {
+      onError: nsresult => {
         cbHandleError(callback, nsresult);
       }
     });
@@ -174,14 +185,14 @@ ContentPrefService2.prototype = {
     }
 
     this._execStmts([this._commonGetStmt(group, name, includeSubdomains)], {
-      onRow: function onRow(row) {
+      onRow: row => {
         let grp = row.getResultByName("grp");
         let val = row.getResultByName("value");
         this._cache.set(grp, name, val);
         if (!pbPrefs.has(group, name))
           cbHandleResult(callback, new ContentPref(grp, name, val));
       },
-      onDone: function onDone(reason, ok, gotRow) {
+      onDone: (reason, ok, gotRow) => {
         if (ok) {
           if (!gotRow)
             this._cache.set(group, name, undefined);
@@ -191,13 +202,15 @@ ContentPrefService2.prototype = {
         }
         cbHandleCompletion(callback, reason);
       },
-      onError: function onError(nsresult) {
+      onError: nsresult => {
         cbHandleError(callback, nsresult);
       }
     });
   },
 
-  _commonGetStmt: function CPS2__commonGetStmt(group, name, includeSubdomains) {
+  _commonGetStmt: function CPS2__commonGetStmt(group,
+                                               name,
+                                               includeSubdomains) {
     let stmt = group ?
       this._stmtWithGroupClause(group, includeSubdomains, `
         SELECT groups.name AS grp, prefs.value AS value
@@ -219,10 +232,11 @@ ContentPrefService2.prototype = {
   _stmtWithGroupClause: function CPS2__stmtWithGroupClause(group,
                                                            includeSubdomains,
                                                            sql) {
-    let stmt = this._stmt(sql);
+    let stmt = this._stmt(sql, false);
     stmt.params.group = group;
     stmt.params.includeSubdomains = includeSubdomains || false;
-    stmt.params.pattern = "%." + stmt.escapeStringForLIKE(group, "/");
+    stmt.params.pattern = "%." + (group == null ? null :
+      group.replace(/\/|%|_/g, "/$&"));
     return stmt;
   },
 
@@ -359,14 +373,14 @@ ContentPrefService2.prototype = {
     stmts.push(stmt);
 
     this._execStmts(stmts, {
-      onDone: function onDone(reason, ok) {
+      onDone: (reason, ok) => {
         if (ok)
           this._cache.setWithCast(group, name, value);
         cbHandleCompletion(callback, reason);
         if (ok)
           this._notifyPrefSet(group, name, value, context && context.usePrivateBrowsing);
       },
-      onError: function onError(nsresult) {
+      onError: nsresult => {
         cbHandleError(callback, nsresult);
       }
     });
@@ -425,12 +439,12 @@ ContentPrefService2.prototype = {
 
     let isPrivate = context && context.usePrivateBrowsing;
     this._execStmts(stmts, {
-      onRow: function onRow(row) {
+      onRow: row => {
         let grp = row.getResultByName("grp");
         prefs.set(grp, name, undefined);
         this._cache.set(grp, name, undefined);
       },
-      onDone: function onDone(reason, ok) {
+      onDone: (reason, ok) => {
         if (ok) {
           this._cache.set(group, name, undefined);
           if (isPrivate) {
@@ -448,7 +462,7 @@ ContentPrefService2.prototype = {
           }
         }
       },
-      onError: function onError(nsresult) {
+      onError: nsresult => {
         cbHandleError(callback, nsresult);
       }
     });
@@ -537,13 +551,13 @@ ContentPrefService2.prototype = {
 
     let isPrivate = context && context.usePrivateBrowsing;
     this._execStmts(stmts, {
-      onRow: function onRow(row) {
+      onRow: row => {
         let grp = row.getResultByName("grp");
         let name = row.getResultByName("name");
         prefs.set(grp, name, undefined);
         this._cache.set(grp, name, undefined);
       },
-      onDone: function onDone(reason, ok) {
+      onDone: (reason, ok) => {
         if (ok && isPrivate) {
           for (let [sgroup, sname, ] of this._pbStore) {
             if (!group ||
@@ -561,7 +575,7 @@ ContentPrefService2.prototype = {
           }
         }
       },
-      onError: function onError(nsresult) {
+      onError: nsresult => {
         cbHandleError(callback, nsresult);
       }
     });
@@ -603,13 +617,13 @@ ContentPrefService2.prototype = {
     let prefs = new ContentPrefStore();
     let isPrivate = context && context.usePrivateBrowsing;
     this._execStmts(stmts, {
-      onRow: function onRow(row) {
+      onRow: row => {
         let grp = row.getResultByName("grp");
         let name = row.getResultByName("name");
         prefs.set(grp, name, undefined);
         this._cache.set(grp, name, undefined);
       },
-      onDone: function onDone(reason, ok) {
+      onDone: (reason, ok) => {
         // This nukes all the groups in _pbStore since we don't have their timestamp
         // information.
         if (ok && isPrivate) {
@@ -627,7 +641,7 @@ ContentPrefService2.prototype = {
           }
         }
       },
-      onError: function onError(nsresult) {
+      onError: nsresult => {
         cbHandleError(callback, nsresult);
       }
     });
@@ -695,12 +709,12 @@ ContentPrefService2.prototype = {
     let isPrivate = context && context.usePrivateBrowsing;
 
     this._execStmts(stmts, {
-      onRow: function onRow(row) {
+      onRow: row => {
         let grp = row.getResultByName("grp");
         prefs.set(grp, name, undefined);
         this._cache.set(grp, name, undefined);
       },
-      onDone: function onDone(reason, ok) {
+      onDone: (reason, ok) => {
         if (ok && isPrivate) {
           for (let [sgroup, sname, ] of this._pbStore) {
             if (sname === name) {
@@ -716,19 +730,10 @@ ContentPrefService2.prototype = {
           }
         }
       },
-      onError: function onError(nsresult) {
+      onError: nsresult => {
         cbHandleError(callback, nsresult);
       }
     });
-  },
-
-  destroy: function CPS2_destroy() {
-    if (this._statements) {
-      for (let sql in this._statements) {
-        let stmt = this._statements[sql];
-        stmt.finalize();
-      }
-    }
   },
 
   /**
@@ -738,12 +743,12 @@ ContentPrefService2.prototype = {
    * @param sql  The SQL query string.
    * @return     The cached, possibly new, statement.
    */
-  _stmt: function CPS2__stmt(sql) {
-    if (!this._statements)
-      this._statements = {};
-    if (!this._statements[sql])
-      this._statements[sql] = this._dbConnection.createAsyncStatement(sql);
-    return this._statements[sql];
+  _stmt: function CPS2__stmt(sql, cachable = true) {
+    return {
+      sql,
+      cachable,
+      params: {},
+    };
   },
 
   /**
@@ -763,42 +768,43 @@ ContentPrefService2.prototype = {
    *                     Called on error.
    *                     nsresult: The error code.
    */
-  _execStmts: function CPS2__execStmts(stmts, callbacks) {
-    let self = this;
+  _execStmts: async function CPS2__execStmts(stmts, callbacks) {
+    let conn = await this.conn;
+    let ok = true;
     let gotRow = false;
-    this._dbConnection.executeAsync(stmts, stmts.length, {
-      handleResult: function handleResult(results) {
+    let { onRow, onError } = callbacks;
+    await conn.executeTransaction(async () => {
+      for (let {sql, params, cachable} of stmts) {
         try {
-          let row = null;
-          while ((row = results.getNextRow())) {
+          let execute = cachable ? conn.executeCached : conn.execute;
+          await execute.call(conn, sql, params, row => {
             gotRow = true;
-            if (callbacks.onRow)
-              callbacks.onRow.call(self, row);
+            if (onRow) {
+              try {
+                onRow(row);
+              } catch (e) {
+                Cu.reportError(e);
+              }
+            }
+          });
+        } catch (e) {
+          try {
+            onError(Cr.NS_ERROR_FAILURE);
+          } catch (err) {
+            ok = false;
+            Cu.reportError(e);
           }
-        } catch (err) {
-          Cu.reportError(err);
-        }
-      },
-      handleCompletion: function handleCompletion(reason) {
-        try {
-          let ok = reason == Ci.mozIStorageStatementCallback.REASON_FINISHED;
-          callbacks.onDone.call(self,
-                                ok ? Ci.nsIContentPrefCallback2.COMPLETE_OK :
-                                  Ci.nsIContentPrefCallback2.COMPLETE_ERROR,
-                                ok, gotRow);
-        } catch (err) {
-          Cu.reportError(err);
-        }
-      },
-      handleError: function handleError(error) {
-        try {
-          if (callbacks.onError)
-            callbacks.onError.call(self, Cr.NS_ERROR_FAILURE);
-        } catch (err) {
-          Cu.reportError(err);
         }
       }
     });
+
+    try {
+      callbacks.onDone(ok ? Ci.nsIContentPrefCallback2.COMPLETE_OK :
+                       Ci.nsIContentPrefCallback2.COMPLETE_ERROR,
+                       ok, gotRow);
+    } catch (e) {
+      Cu.reportError(e);
+    }
   },
 
   __grouper: null,
@@ -921,7 +927,7 @@ ContentPrefService2.prototype = {
    */
   observe: function CPS2_observe(subj, topic, data) {
     switch (topic) {
-    case "xpcom-shutdown":
+    case "profile-before-change":
       this._destroy();
       break;
     case "last-pb-context-exited":
@@ -933,7 +939,7 @@ ContentPrefService2.prototype = {
       break;
     case "test:db":
       let obj = subj.QueryInterface(Ci.xpcIJSWeakReference).get();
-      obj.value = this._dbConnection;
+      obj.value = this.conn;
       break;
     }
   },
@@ -943,7 +949,7 @@ ContentPrefService2.prototype = {
    *
    * @param callback  A function that will be called when done.
    */
-  _reset: function CPS2__reset(callback) {
+  async _reset(callback) {
     this._pbStore.removeAll();
     this._cache.removeAll();
 
@@ -952,7 +958,9 @@ ContentPrefService2.prototype = {
 
     let tables = ["prefs", "groups", "settings"];
     let stmts = tables.map(t => this._stmt(`DELETE FROM ${t}`));
-    this._execStmts(stmts, { onDone: () => callback() });
+    this._execStmts(stmts, { onDone: () => {
+      callback();
+    } });
   },
 
   QueryInterface: function CPS2_QueryInterface(iid) {
@@ -1001,45 +1009,53 @@ ContentPrefService2.prototype = {
     }
   },
 
-  _dbConnection: null,
+  _debugLog: false,
 
-  // _dbInit and the methods it calls (_dbCreate, _dbMigrate, and version-
-  // specific migration methods) must be careful not to call any method
-  // of the service that assumes the database connection has already been
-  // initialized, since it won't be initialized until at the end of _dbInit.
+  log: function CPS2_log(aMessage) {
+    if (this._debugLog) {
+      Services.console.logStringMessage("ContentPrefService2: " + aMessage);
+    }
+  },
 
-  _dbInit: function ContentPrefService__dbInit() {
-    var dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    dbFile.append("content-prefs.sqlite");
-
-    var dbConnection;
-
-    if (!dbFile.exists())
-      dbConnection = this._dbCreate(dbFile);
-    else {
-      try {
-        dbConnection = Services.storage.openDatabase(dbFile);
-      } catch (e) {
-        // If the connection isn't ready after we open the database, that means
-        // the database has been corrupted, so we back it up and then recreate it.
-        if (e.result != Cr.NS_ERROR_FILE_CORRUPTED)
-          throw e;
-        dbConnection = this._dbBackUpAndRecreate(dbFile, dbConnection);
+  async _getConnection(aAttemptNum = 0) {
+    let path = OS.Path.join(OS.Constants.Path.profileDir, "content-prefs.sqlite");
+    let conn;
+    let resetAndRetry = async e => {
+      if (e.status != Cr.NS_ERROR_FILE_CORRUPTED) {
+        throw e;
       }
 
-      // Get the version of the schema in the file.
-      var version = dbConnection.schemaVersion;
-
-      // Try to migrate the schema in the database to the current schema used by
-      // the service.  If migration fails, back up the database and recreate it.
-      if (version != this._dbVersion) {
-        try {
-          this._dbMigrate(dbConnection, version, this._dbVersion);
-        } catch (ex) {
-          Cu.reportError("error migrating DB: " + ex + "; backing up and recreating");
-          dbConnection = this._dbBackUpAndRecreate(dbFile, dbConnection);
+      if (aAttemptNum >= this.MAX_ATTEMPTS) {
+        if (conn) {
+          await conn.close();
         }
+        this.log("Establishing connection failed too many times. Giving up.");
+        throw e;
       }
+
+      try {
+        await this._failover(conn, path);
+      } catch (e) {
+        Cu.reportError(e);
+        throw e;
+      }
+      return this._getConnection(++aAttemptNum);
+    };
+    try {
+      conn = await Sqlite.openConnection({ path });
+      Sqlite.shutdown.addBlocker(
+        "Closing ContentPrefService2 connection.",
+        () => conn.close());
+    } catch (e) {
+      Cu.reportError(e);
+      return resetAndRetry(e);
+    }
+
+    try {
+      await this._dbMaybeInit(conn);
+    } catch (e) {
+      Cu.reportError(e);
+      return resetAndRetry(e);
     }
 
     // Turn off disk synchronization checking to reduce disk churn and speed up
@@ -1055,67 +1071,66 @@ ContentPrefService2.prototype = {
     // (FULL synchronization), in which case mozStorageConnection::Initialize
     // will use that value, and we won't override it here.
     if (!Services.prefs.prefHasUserValue("toolkit.storage.synchronous"))
-      dbConnection.executeSimpleSQL("PRAGMA synchronous = OFF");
+      await conn.execute("PRAGMA synchronous = OFF");
 
-    this._dbConnection = dbConnection;
+    return conn;
   },
 
-  _dbCreate: function ContentPrefService__dbCreate(aDBFile) {
-    var dbConnection = Services.storage.openDatabase(aDBFile);
-
-    try {
-      this._dbCreateSchema(dbConnection);
-      dbConnection.schemaVersion = this._dbVersion;
-    } catch (ex) {
-      // If we failed to create the database (perhaps because the disk ran out
-      // of space), then remove the database file so we don't leave it in some
-      // half-created state from which we won't know how to recover.
-      dbConnection.close();
-      aDBFile.remove(false);
-      throw ex;
+  async _failover(aConn, aPath) {
+    this.log("Cleaning up DB file - close & remove & backup.");
+    if (aConn) {
+      await aConn.close();
     }
-
-    return dbConnection;
+    let backupFile = aPath + ".corrupt";
+    let { file, path: uniquePath } =
+      await OS.File.openUnique(backupFile, { humanReadable: true });
+    await file.close();
+    await OS.File.copy(aPath, uniquePath);
+    await OS.File.remove(aPath);
+    this.log("Completed DB cleanup.");
   },
 
-  _dbCreateSchema: function ContentPrefService__dbCreateSchema(aDBConnection) {
-    this._dbCreateTables(aDBConnection);
-    this._dbCreateIndices(aDBConnection);
-  },
+  _dbMaybeInit: async function CPS2__dbMaybeInit(aConn) {
+    let version = parseInt(await aConn.getSchemaVersion(), 10);
+    this.log("Schema version: " + version);
 
-  _dbCreateTables: function ContentPrefService__dbCreateTables(aDBConnection) {
-    for (let name in this._dbSchema.tables)
-      aDBConnection.createTable(name, this._dbSchema.tables[name]);
-  },
-
-  _dbCreateIndices: function ContentPrefService__dbCreateIndices(aDBConnection) {
-    for (let name in this._dbSchema.indices) {
-      let index = this._dbSchema.indices[name];
-      let statement = `
-        CREATE INDEX IF NOT EXISTS ${name} ON ${index.table}
-        (${index.columns.join(", ")})
-      `;
-      aDBConnection.executeSimpleSQL(statement);
+    if (version == 0) {
+      await this._dbCreateSchema(aConn);
+    } else if (version != this._dbVersion) {
+      await this._dbMigrate(aConn, version, this._dbVersion);
     }
   },
 
-  _dbBackUpAndRecreate: function ContentPrefService__dbBackUpAndRecreate(aDBFile,
-                                                                         aDBConnection) {
-    Services.storage.backupDatabaseFile(aDBFile, "content-prefs.sqlite.corrupt");
-
-    // Close the database, ignoring the "already closed" exception, if any.
-    // It'll be open if we're here because of a migration failure but closed
-    // if we're here because of database corruption.
-    try { aDBConnection.close(); } catch (ex) {}
-
-    aDBFile.remove(false);
-
-    let dbConnection = this._dbCreate(aDBFile);
-
-    return dbConnection;
+  _createTable: async function CPS2__createTable(aConn, aName) {
+    let tSQL = this._dbSchema.tables[aName];
+    this.log("Creating table " + aName + " with " + tSQL);
+    await aConn.execute(`CREATE TABLE ${aName} (${tSQL})`);
   },
 
-  _dbMigrate: function ContentPrefService__dbMigrate(aDBConnection, aOldVersion, aNewVersion) {
+  _createIndex: async function CPS2__createTable(aConn, aName) {
+    let index = this._dbSchema.indices[aName];
+    let statement = "CREATE INDEX IF NOT EXISTS " + aName + " ON " + index.table +
+                    "(" + index.columns.join(", ") + ")";
+    await aConn.execute(statement);
+  },
+
+  _dbCreateSchema: async function CPS2__dbCreateSchema(aConn) {
+    await aConn.executeTransaction(async () => {
+      this.log("Creating DB -- tables");
+      for (let name in this._dbSchema.tables) {
+        await this._createTable(aConn, name);
+      }
+
+      this.log("Creating DB -- indices");
+      for (let name in this._dbSchema.indices) {
+        await this._createIndex(aConn, name);
+      }
+
+      await aConn.setSchemaVersion(this._dbVersion);
+    });
+  },
+
+  _dbMigrate: async function CPS2__dbMigrate(aConn, aOldVersion, aNewVersion) {
     /**
      * Migrations should follow the template rules in bug 1074817 comment 3 which are:
      * 1. Migration should be incremental and non-breaking.
@@ -1123,64 +1138,50 @@ ContentPrefService2.prototype = {
      * On downgrade:
      * 1. Decrement schema version so that upgrade runs the migrations again.
      */
-    aDBConnection.beginTransaction();
-
-    try {
-       /**
-       * If the schema version is 0, that means it was never set, which means
-       * the database was somehow created without the schema being applied, perhaps
-       * because the system ran out of disk space (although we check for this
-       * in _createDB) or because some other code created the database file without
-       * applying the schema.  In any case, recover by simply reapplying the schema.
-       */
-      if (aOldVersion == 0) {
-        this._dbCreateSchema(aDBConnection);
-      } else {
-        for (let i = aOldVersion; i < aNewVersion; i++) {
-          let migrationName = "_dbMigrate" + i + "To" + (i + 1);
-          if (typeof this[migrationName] != "function") {
-            throw new Error("no migrator function from version " + aOldVersion + " to version " +
-                            aNewVersion);
-          }
-          this[migrationName](aDBConnection);
+    await aConn.executeTransaction(async () => {
+      for (let i = aOldVersion; i < aNewVersion; i++) {
+        let migrationName = "_dbMigrate" + i + "To" + (i + 1);
+        if (typeof this[migrationName] != "function") {
+          throw new Error("no migrator function from version " + aOldVersion + " to version " +
+                          aNewVersion);
         }
+        await this[migrationName](aConn);
       }
-      aDBConnection.schemaVersion = aNewVersion;
-      aDBConnection.commitTransaction();
-    } catch (ex) {
-      aDBConnection.rollbackTransaction();
-      throw ex;
-    }
+      await aConn.setSchemaVersion(aNewVersion);
+    });
   },
 
-  _dbMigrate1To2: function ContentPrefService___dbMigrate1To2(aDBConnection) {
-    aDBConnection.executeSimpleSQL("ALTER TABLE groups RENAME TO groupsOld");
-    aDBConnection.createTable("groups", this._dbSchema.tables.groups);
-    aDBConnection.executeSimpleSQL(`
+  _dbMigrate1To2: async function CPS2___dbMigrate1To2(aConn) {
+    await aConn.execute("ALTER TABLE groups RENAME TO groupsOld");
+    await this._createTable(aConn, "groups");
+    await aConn.execute(`
       INSERT INTO groups (id, name)
       SELECT id, name FROM groupsOld
     `);
 
-    aDBConnection.executeSimpleSQL("DROP TABLE groupers");
-    aDBConnection.executeSimpleSQL("DROP TABLE groupsOld");
+    await aConn.execute("DROP TABLE groupers");
+    await aConn.execute("DROP TABLE groupsOld");
   },
 
-  _dbMigrate2To3: function ContentPrefService__dbMigrate2To3(aDBConnection) {
-    this._dbCreateIndices(aDBConnection);
+  _dbMigrate2To3: async function CPS2__dbMigrate2To3(aConn) {
+    for (let name in this._dbSchema.indices) {
+      await this._createIndex(aConn, name);
+    }
   },
 
-  _dbMigrate3To4: function ContentPrefService__dbMigrate3To4(aDBConnection) {
+  _dbMigrate3To4: async function CPS2__dbMigrate3To4(aConn) {
     // Add timestamp column if it does not exist yet. This operation is idempotent.
     try {
-      let stmt = aDBConnection.createStatement("SELECT timestamp FROM prefs");
-      stmt.finalize();
+      await aConn.execute("SELECT timestamp FROM prefs");
     } catch (e) {
-      aDBConnection.executeSimpleSQL("ALTER TABLE prefs ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0");
+      await aConn.execute("ALTER TABLE prefs ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0");
     }
 
     // To modify prefs_idx drop it and create again.
-    aDBConnection.executeSimpleSQL("DROP INDEX IF EXISTS prefs_idx");
-    this._dbCreateIndices(aDBConnection);
+    await aConn.execute("DROP INDEX IF EXISTS prefs_idx");
+    for (let name in this._dbSchema.indices) {
+      await this._createIndex(aConn, name);
+    }
   },
 };
 
