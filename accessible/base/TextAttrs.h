@@ -8,6 +8,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsColor.h"
+#include "nsString.h"
 #include "nsStyleConsts.h"
 
 class nsIFrame;
