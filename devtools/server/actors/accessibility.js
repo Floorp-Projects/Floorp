@@ -825,11 +825,19 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    */
   async _findAndAttachAccessible(event) {
     let target = event.originalTarget || event.target;
-    let rawAccessible = this.a11yService.getAccessibleFor(target);
+    let rawAccessible;
+    // Find a first accessible object in the target's ancestry, including
+    // target. Note: not all DOM nodes have corresponding accessible objects
+    // (for example, a <DIV> element that is used as a container for other
+    // things) thus we need to find one that does.
+    while (!rawAccessible && target) {
+      rawAccessible = this.a11yService.getAccessibleFor(target);
+      target = target.parentNode;
+    }
     // If raw accessible object is defunct or detached, no need to cache it and
     // its ancestry.
     if (!rawAccessible || isDefunct(rawAccessible) || rawAccessible.indexInParent < 0) {
-      return {};
+      return null;
     }
 
     const doc = await this.getDocument();
