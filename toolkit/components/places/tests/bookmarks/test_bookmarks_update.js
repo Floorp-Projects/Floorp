@@ -88,7 +88,7 @@ add_task(async function move_roots_fail() {
     Assert.rejects(PlacesUtils.bookmarks.update({
       guid,
       index: -1,
-      parentGuid: PlacesUtils.bookmarks.rootGuid,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     }), /It's not possible to move Places root folders\./,
     `Should reject when attempting to move ${guid}`);
   }
@@ -302,6 +302,36 @@ add_task(async function update_move_folder_into_descendant_throws() {
   } catch (ex) {
     Assert.ok(/Cannot insert a folder into itself or one of its descendants/.test(ex));
   }
+});
+
+add_task(async function update_move_into_root_folder_rejects() {
+  let folder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER
+  });
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://example.com/",
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK
+  });
+
+  Assert.throws(() =>
+    PlacesUtils.bookmarks.update({
+      guid: bm.guid,
+      index: -1,
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+    }), /Invalid value for property 'parentGuid'/,
+      "Should reject when attempting to move a bookmark into the root"
+  );
+
+  Assert.throws(() =>
+    PlacesUtils.bookmarks.update({
+      guid: folder.guid,
+      index: -1,
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+    }), /Invalid value for property 'parentGuid'/,
+      "Should reject when attempting to move a bookmark into the root"
+  );
 });
 
 add_task(async function update_move() {

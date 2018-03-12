@@ -50,7 +50,7 @@ add_task(function* () {
     yield selectTreeItem(store);
 
     let eventName = "store-objects-" +
-      (store[0] == "cookies" ? "updated" : "cleared");
+      (store[0] == "cookies" ? "edit" : "cleared");
     let eventWait = gUI.once(eventName);
 
     let selector = `[data-id='${JSON.stringify(store)}'] > .tree-widget-item`;
