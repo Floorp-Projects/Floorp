@@ -257,6 +257,8 @@ WebRenderAPI::Create(layers::CompositorBridgeParentBase* aBridge,
 {
   MOZ_ASSERT(aBridge);
   MOZ_ASSERT(aWidget);
+  static_assert(sizeof(size_t) == sizeof(uintptr_t),
+      "The FFI bindings assume size_t is the same size as uintptr_t!");
 
   static uint64_t sNextId = 1;
   auto id = NewWindowId(sNextId++);
