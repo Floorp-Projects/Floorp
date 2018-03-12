@@ -17,7 +17,7 @@
 class GrContext;
 class GrContextThreadSafeProxy;
 class GrTextureProxy;
-class GrSamplerParams;
+class GrSamplerState;
 class SkBitmap;
 class SkData;
 class SkMatrix;
@@ -35,22 +35,28 @@ public:
     uint32_t uniqueID() const { return fUniqueID; }
 
     /**
-     *  Return a ref to the encoded (i.e. compressed) representation,
-     *  of this data. If the GrContext is non-null, then the caller is only interested in
-     *  gpu-specific formats, so the impl may return null even if they have encoded data,
-     *  assuming they know it is not suitable for the gpu.
+     *  Return a ref to the encoded (i.e. compressed) representation
+     *  of this data.
      *
      *  If non-NULL is returned, the caller is responsible for calling
      *  unref() on the data when it is finished.
      */
-    SkData* refEncodedData(GrContext* ctx = nullptr) {
-        return this->onRefEncodedData(ctx);
+    SkData* refEncodedData() {
+        return this->onRefEncodedData();
     }
 
     /**
      *  Return the ImageInfo associated with this generator.
      */
     const SkImageInfo& getInfo() const { return fInfo; }
+
+    /**
+     *  Can this generator be used to produce images that will be drawable to the specified context
+     *  (or to CPU, if context is nullptr)?
+     */
+    bool isValid(GrContext* context) const {
+        return this->onIsValid(context);
+    }
 
     /**
      *  Decode into the given pixels, a block of memory of size at
@@ -60,7 +66,7 @@ public:
      *  Repeated calls to this function should give the same results,
      *  allowing the PixelRef to be immutable.
      *
-     *  @param info A description of the format (config, size)
+     *  @param info A description of the format
      *         expected by the caller.  This can simply be identical
      *         to the info returned by getInfo().
      *
@@ -70,23 +76,23 @@ public:
      *
      *         A size that does not match getInfo() implies a request
      *         to scale. If the generator cannot perform this scale,
-     *         it will return kInvalidScale.
+     *         it will return false.
      *
-     *  If info is kIndex8_SkColorType, then the caller must provide storage for up to 256
-     *  SkPMColor values in ctable. On success the generator must copy N colors into that storage,
-     *  (where N is the logical number of table entries) and set ctableCount to N.
-     *
-     *  If info is not kIndex8_SkColorType, then the last two parameters may be NULL. If ctableCount
-     *  is not null, it will be set to 0.
+     *         kIndex_8_SkColorType is not supported.
      *
      *  @return true on success.
      */
-    bool getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-                   SkPMColor ctable[], int* ctableCount);
+    struct Options {
+        Options()
+            : fBehavior(SkTransferFunctionBehavior::kIgnore)
+        {}
+
+        SkTransferFunctionBehavior fBehavior;
+    };
+    bool getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes, const Options* options);
 
     /**
-     *  Simplified version of getPixels() that asserts that info is NOT kIndex8_SkColorType and
-     *  uses the default Options.
+     *  Simplified version of getPixels() that uses the default Options.
      */
     bool getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes);
 
@@ -134,9 +140,16 @@ public:
      *  It must be non-NULL. The generator should only succeed if:
      *  - its internal context is the same
      *  - it can somehow convert its texture into one that is valid for the provided context.
+     *
+     *  If the willNeedMipMaps flag is true, the generator should try to create a TextureProxy that
+     *  at least has the mip levels allocated and the base layer filled in. If this is not possible,
+     *  the generator is allowed to return a non mipped proxy, but this will have some additional
+     *  overhead in later allocating mips and copying of the base layer.
      */
     sk_sp<GrTextureProxy> generateTexture(GrContext*, const SkImageInfo& info,
-                                          const SkIPoint& origin);
+                                          const SkIPoint& origin,
+                                          SkTransferFunctionBehavior behavior,
+                                          bool willNeedMipMaps);
 #endif
 
     /**
@@ -163,45 +176,30 @@ protected:
 
     SkImageGenerator(const SkImageInfo& info, uint32_t uniqueId = kNeedNewImageUniqueID);
 
-    virtual SkData* onRefEncodedData(GrContext* ctx);
-
-    virtual bool onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-                             SkPMColor ctable[], int* ctableCount);
-
-    virtual bool onQueryYUV8(SkYUVSizeInfo*, SkYUVColorSpace*) const {
-        return false;
-    }
-    virtual bool onGetYUV8Planes(const SkYUVSizeInfo&, void*[3] /*planes*/) {
-        return false;
-    }
-
-    struct Options {
-        Options()
-            : fColorTable(nullptr)
-            , fColorTableCount(nullptr)
-            , fBehavior(SkTransferFunctionBehavior::kRespect)
-        {}
-
-        SkPMColor*                 fColorTable;
-        int*                       fColorTableCount;
-        SkTransferFunctionBehavior fBehavior;
-    };
-    bool getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes, const Options* opts);
-    virtual bool onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-                             const Options& opts) {
-        return this->onGetPixels(info, pixels, rowBytes, opts.fColorTable, opts.fColorTableCount);
-    }
+    virtual SkData* onRefEncodedData() { return nullptr; }
+    virtual bool onGetPixels(const SkImageInfo&, void*, size_t, const Options&) { return false; }
+    virtual bool onIsValid(GrContext*) const { return true; }
+    virtual bool onQueryYUV8(SkYUVSizeInfo*, SkYUVColorSpace*) const { return false; }
+    virtual bool onGetYUV8Planes(const SkYUVSizeInfo&, void*[3] /*planes*/) { return false; }
 
 #if SK_SUPPORT_GPU
-    virtual sk_sp<GrTextureProxy> onGenerateTexture(GrContext*, const SkImageInfo&,
-                                                    const SkIPoint&);
+    enum class TexGenType {
+        kNone,           //image generator does not implement onGenerateTexture
+        kCheap,          //onGenerateTexture is implemented and it is fast (does not render offscreen)
+        kExpensive,      //onGenerateTexture is implemented and it is relatively slow
+    };
+
+    virtual TexGenType onCanGenerateTexture() const { return TexGenType::kNone; }
+    virtual sk_sp<GrTextureProxy> onGenerateTexture(GrContext*, const SkImageInfo&, const SkIPoint&,
+                                                    SkTransferFunctionBehavior,
+                                                    bool willNeedMipMaps);  // returns nullptr
 #endif
 
 private:
     const SkImageInfo fInfo;
     const uint32_t fUniqueID;
 
-    friend class SkImageCacherator;
+    friend class SkImage_Lazy;
 
     // This is our default impl, which may be different on different platforms.
     // It is called from NewFromEncoded() after it has checked for any runtime factory.

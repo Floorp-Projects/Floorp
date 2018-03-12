@@ -12,13 +12,14 @@
 #include "GrContext.h"
 #include "GrGpuResourcePriv.h"
 #include "GrSurfaceProxyPriv.h"
-#include "GrTexture.h"
 #include "SkAtomics.h"
 #include "SkBitmap.h"
 #include "SkGr.h"
 #include "SkImagePriv.h"
 #include "SkImage_Base.h"
 #include "SkSurface.h"
+
+class GrTexture;
 
 class SkImage_Gpu : public SkImage_Base {
 public:
@@ -32,16 +33,14 @@ public:
     bool getROPixels(SkBitmap*, SkColorSpace* dstColorSpace, CachingHint) const override;
     sk_sp<SkImage> onMakeSubset(const SkIRect&) const override;
 
+    GrContext* context() const override { return fContext; }
     GrTextureProxy* peekProxy() const override {
         return fProxy.get();
-    }
-    GrTexture* peekTexture() const override {
-        return fProxy->instantiate(fContext->resourceProvider());
     }
     sk_sp<GrTextureProxy> asTextureProxyRef() const override {
         return fProxy;
     }
-    sk_sp<GrTextureProxy> asTextureProxyRef(GrContext*, const GrSamplerParams&, SkColorSpace*,
+    sk_sp<GrTextureProxy> asTextureProxyRef(GrContext*, const GrSamplerState&, SkColorSpace*,
                                             sk_sp<SkColorSpace>*,
                                             SkScalar scaleAdjust[2]) const override;
 
@@ -53,16 +52,15 @@ public:
                                        GrSurfaceOrigin* origin) const override;
     GrTexture* onGetTexture() const override;
 
-    bool onReadYUV8Planes(const SkISize sizes[3], void* const planes[3],
-                          const size_t rowBytes[3], SkYUVColorSpace colorSpace) const override;
-
     bool onReadPixels(const SkImageInfo&, void* dstPixels, size_t dstRowBytes,
                       int srcX, int srcY, CachingHint) const override;
 
-    GrContext* context() { return fContext; }
     sk_sp<SkColorSpace> refColorSpace() { return fColorSpace; }
 
-    sk_sp<SkImage> onMakeColorSpace(sk_sp<SkColorSpace>) const override;
+    sk_sp<SkImage> onMakeColorSpace(sk_sp<SkColorSpace>, SkColorType,
+                                    SkTransferFunctionBehavior) const override;
+
+    bool onIsValid(GrContext*) const override;
 
 private:
     GrContext*             fContext;

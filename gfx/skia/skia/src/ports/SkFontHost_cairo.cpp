@@ -58,11 +58,6 @@ typedef enum FT_LcdFilter_
 #define SK_FONTHOST_CAIRO_STANDALONE 1
 #endif
 
-extern "C" {
-    extern void mozilla_LockFTLibrary(FT_Library aFTLibrary);
-    extern void mozilla_UnlockFTLibrary(FT_Library aFTLibrary);
-}
-
 static cairo_user_data_key_t kSkTypefaceKey;
 
 static bool gFontHintingEnabled = true;
@@ -161,7 +156,7 @@ static bool bothZero(SkScalar a, SkScalar b) {
 }
 
 // returns false if there is any non-90-rotation or skew
-static bool isAxisAligned(const SkScalerContext::Rec& rec) {
+static bool isAxisAligned(const SkScalerContextRec& rec) {
     return 0 == rec.fPreSkewX &&
            (bothZero(rec.fPost2x2[0][1], rec.fPost2x2[1][0]) ||
             bothZero(rec.fPost2x2[0][0], rec.fPost2x2[1][1]));
@@ -188,11 +183,9 @@ public:
 
     virtual SkStreamAsset* onOpenStream(int*) const override { return nullptr; }
 
-    virtual SkAdvancedTypefaceMetrics*
-        onGetAdvancedTypefaceMetrics(PerGlyphInfo,
-                                     const uint32_t*, uint32_t) const override
+    virtual std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override
     {
-        SkDEBUGCODE(SkDebugf("SkCairoFTTypeface::onGetAdvancedTypefaceMetrics unimplemented\n"));
+        SkDEBUGCODE(SkDebugf("SkCairoFTTypeface::onGetAdvancedMetrics unimplemented\n"));
         return nullptr;
     }
 
@@ -754,7 +747,6 @@ void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)
         isLCD(glyph) &&
         gSetLcdFilter;
     if (useLcdFilter) {
-        mozilla_LockFTLibrary(face->glyph->library);
         gSetLcdFilter(face->glyph->library, fLcdFilter);
     }
 
@@ -769,7 +761,6 @@ void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)
 
     if (useLcdFilter) {
         gSetLcdFilter(face->glyph->library, FT_LCD_FILTER_NONE);
-        mozilla_UnlockFTLibrary(face->glyph->library);
     }
 }
 

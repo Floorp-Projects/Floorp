@@ -43,17 +43,12 @@ sk_sp<SkShader> SkMakeBitmapShader(const SkBitmap& src, SkShader::TileMode, SkSh
  *  SkImageInfo, or the bitmap's pixels cannot be accessed, this will return
  *  nullptr.
  */
-extern sk_sp<SkImage> SkMakeImageFromRasterBitmap(const SkBitmap&, SkCopyPixelsMode);
+extern SK_API sk_sp<SkImage> SkMakeImageFromRasterBitmap(const SkBitmap&, SkCopyPixelsMode);
 
 // Given an image created from SkNewImageFromBitmap, return its pixelref. This
 // may be called to see if the surface and the image share the same pixelref,
 // in which case the surface may need to perform a copy-on-write.
 extern const SkPixelRef* SkBitmapImageGetPixelRef(const SkImage* rasterImage);
-
-// Update the texture wrapped by an image created with NewTexture. This
-// is called when a surface and image share the same GrTexture and the
-// surface needs to perform a copy-on-write
-extern void SkTextureImageSetTexture(SkImage* image, GrTexture* texture);
 
 /**
  *  Will attempt to upload and lock the contents of the image as a texture, so that subsequent

@@ -8,7 +8,6 @@
 #ifndef GrTexturePriv_DEFINED
 #define GrTexturePriv_DEFINED
 
-#include "GrExternalTextureData.h"
 #include "GrTexture.h"
 
 /** Class that adds methods to GrTexture that are only intended for use internal to Skia.
@@ -18,28 +17,23 @@
     implemented privately in GrTexture with a inline public method here). */
 class GrTexturePriv {
 public:
-    void setFlag(GrSurfaceFlags flags) {
-        fTexture->fDesc.fFlags = fTexture->fDesc.fFlags | flags;
+    void markMipMapsDirty() {
+        fTexture->markMipMapsDirty();
     }
 
-    void resetFlag(GrSurfaceFlags flags) {
-        fTexture->fDesc.fFlags = fTexture->fDesc.fFlags & ~flags;
-    }
-
-    bool isSetFlag(GrSurfaceFlags flags) const {
-        return 0 != (fTexture->fDesc.fFlags & flags);
-    }
-
-    void dirtyMipMaps(bool mipMapsDirty) {
-        fTexture->dirtyMipMaps(mipMapsDirty);
+    void markMipMapsClean() {
+        fTexture->markMipMapsClean();
     }
 
     bool mipMapsAreDirty() const {
-        return GrTexture::kValid_MipMapsStatus != fTexture->fMipMapsStatus;
+        return GrMipMapsStatus::kValid != fTexture->fMipMapsStatus;
     }
 
-    bool hasMipMaps() const {
-        return GrTexture::kNotAllocated_MipMapsStatus != fTexture->fMipMapsStatus;
+    GrMipMapped mipMapped() const {
+        if (GrMipMapsStatus::kNotAllocated != fTexture->fMipMapsStatus) {
+            return GrMipMapped::kYes;
+        }
+        return GrMipMapped::kNo;
     }
 
     void setMaxMipMapLevel(int maxMipMapLevel) const {
@@ -50,34 +44,21 @@ public:
         return fTexture->fMaxMipMapLevel;
     }
 
-    GrSLType imageStorageType() const {
-        if (GrPixelConfigIsSint(fTexture->config())) {
-            return kIImageStorage2D_GrSLType;
-        } else {
-            return kImageStorage2D_GrSLType;
-        }
-    }
-
     GrSLType samplerType() const { return fTexture->fSamplerType; }
 
     /** The filter used is clamped to this value in GrProcessor::TextureSampler. */
-    GrSamplerParams::FilterMode highestFilterMode() const { return fTexture->fHighestFilterMode; }
+    GrSamplerState::Filter highestFilterMode() const { return fTexture->fHighestFilterMode; }
 
     void setMipColorMode(SkDestinationSurfaceColorMode colorMode) const {
         fTexture->fMipColorMode = colorMode;
     }
     SkDestinationSurfaceColorMode mipColorMode() const { return fTexture->fMipColorMode; }
 
-    /**
-     *  Return the native bookkeeping data for this texture, and detach the backend object from
-     *  this GrTexture. It's lifetime will no longer be managed by Ganesh, and this GrTexture will
-     *  no longer refer to it. Leaves this GrTexture in an orphan state.
-     */
-    std::unique_ptr<GrExternalTextureData> detachBackendTexture() {
-        return fTexture->detachBackendTexture();
-    }
-
     static void ComputeScratchKey(const GrSurfaceDesc&, GrScratchKey*);
+    static void ComputeScratchKey(GrPixelConfig config, int width, int height,
+                                  bool isRenderTarget, int sampleCnt,
+                                  GrMipMapped, GrScratchKey* key);
+
 
 private:
     GrTexturePriv(GrTexture* texture) : fTexture(texture) { }

@@ -42,7 +42,7 @@ int SkPathOpsDebug::gSortCount;
 #endif
 
 #if DEBUG_ACTIVE_OP
-const char* SkPathOpsDebug::kPathOpStr[] = {"diff", "sect", "union", "xor"};
+const char* SkPathOpsDebug::kPathOpStr[] = {"diff", "sect", "union", "xor", "rdiff"};
 #endif
 
 #if defined SK_DEBUG || !FORCE_RELEASE
@@ -1089,7 +1089,11 @@ void SkOpSegment::debugMoveNearby(SkPathOpsDebug::GlitchLog* glitches) const {
     spanBase = &fHead;
     do {  // iterate through all spans associated with start
         const SkOpSpanBase* test = spanBase->upCast()->next();
-        if (this->spansNearby(spanBase, test)) {
+        bool found;
+        if (!this->spansNearby(spanBase, test, &found)) {
+            glitches->record(SkPathOpsDebug::kMoveNearbyMergeFinal_Glitch, test);
+        }
+        if (found) {
             if (test->final()) {
                 if (spanBase->prev()) {
                     glitches->record(SkPathOpsDebug::kMoveNearbyMergeFinal_Glitch, test);
@@ -1118,7 +1122,7 @@ void SkOpSegment::debugSetCoinT(int index, SkScalar t) const {
         fDebugBaseMin = SkTMin(t, fDebugBaseMin);
         fDebugBaseMax = SkTMax(t, fDebugBaseMax);
         return;
-    } 
+    }
     SkASSERT(fDebugBaseMin >= t || t >= fDebugBaseMax);
     if (fDebugLastMax < 0 || fDebugLastIndex == index) {
         fDebugLastIndex = index;
@@ -1836,8 +1840,8 @@ void SkOpCoincidence::debugAddOrOverlap(SkPathOpsDebug::GlitchLog* log,
     }
     this->debugValidate();
     RETURN_FALSE_IF(csDeleted, coinSeg);
-    RETURN_FALSE_IF(osDeleted, oppSeg); 
-    RETURN_FALSE_IF(ceDeleted, coinSeg); 
+    RETURN_FALSE_IF(osDeleted, oppSeg);
+    RETURN_FALSE_IF(ceDeleted, coinSeg);
     RETURN_FALSE_IF(oeDeleted, oppSeg);
     RETURN_FALSE_IF(!cs || !ce || cs == ce || cs->contains(ce) || !os || !oe || os == oe || os->contains(oe), coinSeg);
     bool result = true;
@@ -2504,7 +2508,7 @@ void SkOpSpanBase::debugMergeMatches(SkPathOpsDebug::GlitchLog* log, const SkOpS
             }
             const SkOpSpanBase* innerBase = inner->span();
             SkASSERT(innerBase->ptT() == inner);
-            // when the intersection is first detected, the span base is marked if there are 
+            // when the intersection is first detected, the span base is marked if there are
             // more than one point in the intersection.
 //            if (!innerBase->hasMultipleHint() && !testBase->hasMultipleHint()) {
                 if (!zero_or_one(inner->fT)) {
@@ -2533,7 +2537,7 @@ void SkOpSpanBase::debugMergeMatches(SkPathOpsDebug::GlitchLog* log, const SkOpS
                     SkOPASSERT(0);
                 }
 #endif
-                break; 
+                break;
 //            }
             break;
         } while ((inner = inner->next()) != innerStop);
@@ -2789,13 +2793,13 @@ const SkOpPtT* SkOpPtT::debugOppPrev(const SkOpPtT* opp) const {
 
 void SkOpPtT::debugResetCoinT() const {
 #if DEBUG_COINCIDENCE_ORDER
-    this->segment()->debugResetCoinT(); 
+    this->segment()->debugResetCoinT();
 #endif
 }
 
 void SkOpPtT::debugSetCoinT(int index) const {
 #if DEBUG_COINCIDENCE_ORDER
-    this->segment()->debugSetCoinT(index, fT); 
+    this->segment()->debugSetCoinT(index, fT);
 #endif
 }
 

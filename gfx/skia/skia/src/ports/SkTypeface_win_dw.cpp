@@ -6,7 +6,7 @@
  */
 
 #include "SkTypes.h"
-#if defined(SK_BUILD_FOR_WIN32)
+#if defined(SK_BUILD_FOR_WIN)
 
 // SkTypes will include Windows.h, which will pull in all of the GDI defines.
 // GDI #defines GetGlyphIndices to GetGlyphIndicesA or GetGlyphIndicesW, but
@@ -251,7 +251,7 @@ SkScalerContext* DWriteFontTypeface::onCreateScalerContext(const SkScalerContext
     return new SkScalerContext_DW(sk_ref_sp(const_cast<DWriteFontTypeface*>(this)), effects, desc);
 }
 
-void DWriteFontTypeface::onFilterRec(SkScalerContext::Rec* rec) const {
+void DWriteFontTypeface::onFilterRec(SkScalerContextRec* rec) const {
     if (rec->fFlags & SkScalerContext::kLCD_Vertical_Flag) {
         rec->fMaskFormat = SkMask::kA8_Format;
         rec->fFlags |= SkScalerContext::kGenA8FromLCD_Flag;
@@ -327,12 +327,9 @@ static void populate_glyph_to_unicode(IDWriteFontFace* fontFace,
     SkTDArray<SkUnichar>(glyphToUni, maxGlyph + 1).swap(*glyphToUnicode);
 }
 
-SkAdvancedTypefaceMetrics* DWriteFontTypeface::onGetAdvancedTypefaceMetrics(
-        PerGlyphInfo perGlyphInfo,
-        const uint32_t* glyphIDs,
-        uint32_t glyphIDsCount) const {
+std::unique_ptr<SkAdvancedTypefaceMetrics> DWriteFontTypeface::onGetAdvancedMetrics() const {
 
-    SkAdvancedTypefaceMetrics* info = nullptr;
+    std::unique_ptr<SkAdvancedTypefaceMetrics> info(nullptr);
 
     HRESULT hr = S_OK;
 
@@ -341,7 +338,7 @@ SkAdvancedTypefaceMetrics* DWriteFontTypeface::onGetAdvancedTypefaceMetrics(
     DWRITE_FONT_METRICS dwfm;
     fDWriteFontFace->GetMetrics(&dwfm);
 
-    info = new SkAdvancedTypefaceMetrics;
+    info.reset(new SkAdvancedTypefaceMetrics);
 
     info->fAscent = SkToS16(dwfm.ascent);
     info->fDescent = SkToS16(dwfm.descent);
@@ -350,32 +347,18 @@ SkAdvancedTypefaceMetrics* DWriteFontTypeface::onGetAdvancedTypefaceMetrics(
     // SkAdvancedTypefaceMetrics::fFontName is in theory supposed to be
     // the PostScript name of the font. However, due to the way it is currently
     // used, it must actually be a family name.
-    if (fDWriteFontFamily) {
-      SkTScopedComPtr<IDWriteLocalizedStrings> familyNames;
-      hr = fDWriteFontFamily->GetFamilyNames(&familyNames);
+    SkTScopedComPtr<IDWriteLocalizedStrings> familyNames;
+    hr = fDWriteFontFamily->GetFamilyNames(&familyNames);
 
-      UINT32 familyNameLen;
-      hr = familyNames->GetStringLength(0, &familyNameLen);
+    UINT32 familyNameLen;
+    hr = familyNames->GetStringLength(0, &familyNameLen);
 
-      SkSMallocWCHAR familyName(familyNameLen+1);
-      hr = familyNames->GetString(0, familyName.get(), familyNameLen+1);
+    SkSMallocWCHAR familyName(familyNameLen+1);
+    hr = familyNames->GetString(0, familyName.get(), familyNameLen+1);
 
-      hr = sk_wchar_to_skstring(familyName.get(), familyNameLen, &info->fFontName);
-    } else {
-      // The name length would be passed to WideCharToMultiByte. It allows
-      // setting -1 in WideCharToMultiByte. The document says "If this
-      // parameter is -1, the function processes the entire input string,
-      // including the terminating null character. Therefore, the resulting
-      // character string has a terminating null character, and the length
-      // returned by the function includes this character."
-      // https://msdn.microsoft.com/library/windows/desktop/dd374130(v=vs.85).aspx
-      hr = sk_wchar_to_skstring(L"Unknown", -1 /* == strlen("Unknown") + 1 */,
-                                &info->fFontName);
-    }
+    hr = sk_wchar_to_skstring(familyName.get(), familyNameLen, &info->fFontName);
 
-    if (perGlyphInfo & kToUnicode_PerGlyphInfo) {
-        populate_glyph_to_unicode(fDWriteFontFace.get(), glyphCount, &(info->fGlyphToUnicode));
-    }
+    populate_glyph_to_unicode(fDWriteFontFace.get(), glyphCount, &(info->fGlyphToUnicode));
 
     DWRITE_FONT_FACE_TYPE fontType = fDWriteFontFace->GetType();
     if (fontType != DWRITE_FONT_FACE_TYPE_TRUETYPE &&
@@ -396,6 +379,8 @@ SkAdvancedTypefaceMetrics* DWriteFontTypeface::onGetAdvancedTypefaceMetrics(
     if (!headTable.fExists || !postTable.fExists || !hheaTable.fExists || !os2Table.fExists) {
         return info;
     }
+
+    SkOTUtils::SetAdvancedTypefaceFlags(os2Table->version.v4.fsType, info.get());
 
     // There are versions of DirectWrite which support named instances for system variation fonts,
     // but no means to indicate that such a typeface is a variation.
@@ -445,4 +430,4 @@ SkAdvancedTypefaceMetrics* DWriteFontTypeface::onGetAdvancedTypefaceMetrics(
                                     (int32_t)SkEndian_SwapBE16((uint16_t)headTable->yMin));
     return info;
 }
-#endif//defined(SK_BUILD_FOR_WIN32)
+#endif//defined(SK_BUILD_FOR_WIN)

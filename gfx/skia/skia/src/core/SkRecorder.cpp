@@ -54,7 +54,8 @@ void SkRecorder::reset(SkRecord* record, const SkRect& bounds,
     this->forgetRecord();
     fDrawPictureMode = dpm;
     fRecord = record;
-    this->resetForNextPicture(bounds.roundOut());
+    SkIRect rounded = bounds.roundOut();
+    this->resetCanvas(rounded.right(), rounded.bottom());
     fMiniRecorder = mr;
 }
 
@@ -237,12 +238,13 @@ void SkRecorder::onDrawImageNine(const SkImage* image, const SkIRect& center,
 
 void SkRecorder::onDrawImageLattice(const SkImage* image, const Lattice& lattice, const SkRect& dst,
                                     const SkPaint* paint) {
-    int flagCount = lattice.fFlags ? (lattice.fXCount + 1) * (lattice.fYCount + 1) : 0;
+    int flagCount = lattice.fRectTypes ? (lattice.fXCount + 1) * (lattice.fYCount + 1) : 0;
     SkASSERT(lattice.fBounds);
     APPEND(DrawImageLattice, this->copy(paint), sk_ref_sp(image),
            lattice.fXCount, this->copy(lattice.fXDivs, lattice.fXCount),
            lattice.fYCount, this->copy(lattice.fYDivs, lattice.fYCount),
-           flagCount, this->copy(lattice.fFlags, flagCount), *lattice.fBounds, dst);
+           flagCount, this->copy(lattice.fRectTypes, flagCount),
+           this->copy(lattice.fColors, flagCount), *lattice.fBounds, dst);
 }
 
 void SkRecorder::onDrawText(const void* text, size_t byteLength,
@@ -309,23 +311,6 @@ void SkRecorder::onDrawPicture(const SkPicture* pic, const SkMatrix* matrix, con
     }
 }
 
-void SkRecorder::onDrawShadowedPicture(const SkPicture* pic, const SkMatrix* matrix,
-                                       const SkPaint* paint, const SkShadowParams& params) {
-    if (fDrawPictureMode == Record_DrawPictureMode) {
-        fApproxBytesUsedBySubPictures += pic->approximateBytesUsed();
-        APPEND(DrawShadowedPicture, this->copy(paint),
-                                    sk_ref_sp(pic),
-                                    matrix ? *matrix : SkMatrix::I(),
-                                    params);
-    } else {
-        // TODO update pic->playback(this) to draw the shadowed pic
-        SkASSERT(fDrawPictureMode == Playback_DrawPictureMode);
-        SkAutoCanvasMatrixPaint acmp(this,  matrix, paint, pic->cullRect());
-        pic->playback(this);
-    }
-}
-
-
 void SkRecorder::onDrawVerticesObject(const SkVertices* vertices, SkBlendMode bmode,
                                       const SkPaint& paint) {
     APPEND(DrawVertices, paint, sk_ref_sp(const_cast<SkVertices*>(vertices)), bmode);
@@ -354,8 +339,16 @@ void SkRecorder::onDrawAtlas(const SkImage* atlas, const SkRSXform xform[], cons
            this->copy(cull));
 }
 
+void SkRecorder::onDrawShadowRec(const SkPath& path, const SkDrawShadowRec& rec) {
+    APPEND(DrawShadowRec, path, rec);
+}
+
 void SkRecorder::onDrawAnnotation(const SkRect& rect, const char key[], SkData* value) {
     APPEND(DrawAnnotation, rect, SkString(key), sk_ref_sp(value));
+}
+
+void SkRecorder::onFlush() {
+    APPEND(Flush);
 }
 
 void SkRecorder::willSave() {
@@ -366,6 +359,8 @@ SkCanvas::SaveLayerStrategy SkRecorder::getSaveLayerStrategy(const SaveLayerRec&
     APPEND(SaveLayer, this->copy(rec.fBounds)
                     , this->copy(rec.fPaint)
                     , sk_ref_sp(rec.fBackdrop)
+                    , sk_ref_sp(rec.fClipMask)
+                    , this->copy(rec.fClipMatrix)
                     , rec.fSaveLayerFlags);
     return SkCanvas::kNoLayer_SaveLayerStrategy;
 }
@@ -384,12 +379,6 @@ void SkRecorder::didSetMatrix(const SkMatrix& matrix) {
 
 void SkRecorder::didTranslate(SkScalar dx, SkScalar dy) {
     APPEND(Translate, dx, dy);
-}
-
-void SkRecorder::didTranslateZ(SkScalar z) {
-#ifdef SK_EXPERIMENTAL_SHADOWING
-    APPEND(TranslateZ, z);
-#endif
 }
 
 void SkRecorder::onClipRect(const SkRect& rect, SkClipOp op, ClipEdgeStyle edgeStyle) {

@@ -9,7 +9,6 @@
 #ifndef GrGLTypes_DEFINED
 #define GrGLTypes_DEFINED
 
-#include "GrExternalTextureData.h"
 #include "GrGLConfig.h"
 #include "SkRefCnt.h"
 
@@ -106,33 +105,23 @@ typedef unsigned int GrEGLBoolean;
 ///////////////////////////////////////////////////////////////////////////////
 /**
  * Types for interacting with GL resources created externally to Skia. GrBackendObjects for GL
- * textures are really const GrGLTexture*
+ * textures are really const GrGLTexture*. The fFormat here should be a sized, internal format
+ * for the texture. We will try to use the sized format if the GL Context supports it, otherwise
+ * we will internally fall back to using the base internal formats.
  */
-
 struct GrGLTextureInfo {
     GrGLenum fTarget;
     GrGLuint fID;
-};
-
-class GrSemaphore;
-
-class GrGLExternalTextureData : public GrExternalTextureData {
-public:
-    GrGLExternalTextureData(const GrGLTextureInfo& info, sk_sp<GrSemaphore> semaphore, GrContext*);
-    GrBackend getBackend() const override { return kOpenGL_GrBackend; }
-
-protected:
-    GrBackendObject getBackendObject() const override {
-        return reinterpret_cast<GrBackendObject>(&fInfo);
-    }
-    void attachToContext(GrContext*) override;
-
-    GrGLTextureInfo fInfo;
-    sk_sp<GrSemaphore> fSemaphore;
-
-    typedef GrExternalTextureData INHERITED;
+    GrGLenum fFormat = 0;
 };
 
 GR_STATIC_ASSERT(sizeof(GrBackendObject) >= sizeof(const GrGLTextureInfo*));
+
+struct GrGLFramebufferInfo {
+    GrGLuint fFBOID;
+    GrGLenum fFormat = 0;
+};
+
+GR_STATIC_ASSERT(sizeof(GrBackendObject) >= sizeof(const GrGLFramebufferInfo*));
 
 #endif
