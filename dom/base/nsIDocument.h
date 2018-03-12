@@ -1307,7 +1307,7 @@ public:
    * NOTE: If the site is optimized for mobile (via the doctype), this
    * will return viewport information that specifies default information.
    */
-  virtual nsViewportInfo GetViewportInfo(const mozilla::ScreenIntSize& aDisplaySize) = 0;
+  nsViewportInfo GetViewportInfo(const mozilla::ScreenIntSize& aDisplaySize);
 
   /**
    * True iff this doc will ignore manual character encoding overrides.
@@ -3631,6 +3631,8 @@ public:
   nsIContent* GetContentInThisDocument(nsIFrame* aFrame) const;
 
 protected:
+  // Returns true if the scheme for the url for this document is "about".
+  bool IsAboutPage() const;
 
   bool ContainsEMEContent();
   bool ContainsMSEContent();
@@ -4127,6 +4129,18 @@ protected:
   // Used to prevent multiple requests to ServiceWorkerManager.
   bool mMaybeServiceWorkerControlled: 1;
 
+  // These member variables cache information about the viewport so we don't
+  // have to recalculate it each time.
+  bool mValidWidth: 1;
+  bool mValidHeight: 1;
+  bool mAutoSize: 1;
+  bool mAllowZoom: 1;
+  bool mAllowDoubleTapZoom: 1;
+  bool mValidScaleFloat: 1;
+  bool mValidMaxScale: 1;
+  bool mScaleStrEmpty: 1;
+  bool mWidthStrEmpty: 1;
+
   uint8_t mPendingFullscreenRequests;
 
   uint8_t mXMLDeclarationBits;
@@ -4441,6 +4455,14 @@ protected:
   // 1)  We have no script global object.
   // 2)  We haven't had Destroy() called on us yet.
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
+
+  // These member variables cache information about the viewport so we don't
+  // have to recalculate it each time.
+  mozilla::LayoutDeviceToScreenScale mScaleMinFloat;
+  mozilla::LayoutDeviceToScreenScale mScaleMaxFloat;
+  mozilla::LayoutDeviceToScreenScale mScaleFloat;
+  mozilla::CSSToLayoutDeviceScale mPixelRatio;
+  mozilla::CSSSize mViewportSize;
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
