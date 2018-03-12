@@ -330,8 +330,6 @@
 @BINPATH@/components/ContentPrefService2.js
 @BINPATH@/components/nsHandlerService-json.manifest
 @BINPATH@/components/nsHandlerService-json.js
-@BINPATH@/components/nsHandlerService.manifest
-@BINPATH@/components/nsHandlerService.js
 @BINPATH@/components/nsWebHandlerApp.manifest
 @BINPATH@/components/nsWebHandlerApp.js
 @BINPATH@/components/satchel.manifest

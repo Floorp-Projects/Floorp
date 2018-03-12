@@ -14,9 +14,6 @@ ChromeUtils.defineModuleGetter(this, "JSONFile",
 XPCOMUtils.defineLazyServiceGetter(this, "gExternalProtocolService",
                                    "@mozilla.org/uriloader/external-protocol-service;1",
                                    "nsIExternalProtocolService");
-XPCOMUtils.defineLazyServiceGetter(this, "gHandlerServiceRDF",
-                                   "@mozilla.org/uriloader/handler-service-rdf;1",
-                                   "nsIHandlerService");
 XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
                                    "@mozilla.org/mime;1",
                                    "nsIMIMEService");
@@ -56,10 +53,7 @@ HandlerService.prototype = {
       this.__storeInitialized = true;
       this.__store.ensureDataReady();
 
-      // We have to inject new default protocol handlers only if we haven't
-      // already done this when migrating data from the RDF back-end.
-      let alreadyInjected = this._migrateFromRDFIfNeeded();
-      this._injectDefaultProtocolHandlersIfNeeded(alreadyInjected);
+      this._injectDefaultProtocolHandlersIfNeeded();
 
       Services.obs.notifyObservers(null, "handlersvc-store-initialized");
     }
@@ -74,64 +68,10 @@ HandlerService.prototype = {
   },
 
   /**
-   * Migrates data from the RDF back-end, returning true if this happened.
-   */
-  _migrateFromRDFIfNeeded() {
-    try {
-      if (Services.prefs.getBoolPref("gecko.handlerService.migrated")) {
-        return false;
-      }
-    } catch (ex) {
-      // If the preference does not exist, we need to import.
-    }
-
-    try {
-      // Don't initialize the RDF back-end if the file does not exist, improving
-      // performance on first use for new profiles.
-      let rdfFile = FileUtils.getFile("ProfD", ["mimeTypes.rdf"]);
-      if (rdfFile.exists()) {
-        this._migrateFromRDF();
-        return true;
-      }
-    } catch (ex) {
-      Cu.reportError(ex);
-    } finally {
-      // Don't attempt to import again even if the operation failed.
-      Services.prefs.setBoolPref("gecko.handlerService.migrated", true);
-    }
-
-    return false;
-  },
-
-  _migrateFromRDF() {
-    // Initializing the RDF back-end has the side effect of triggering the
-    // injection of the default protocol handlers. If the version number is
-    // newer and this happens, then the "enumerate" call in the RDF back-end
-    // will re-enter the JSON back-end through the MIME service, but this is
-    // harmless. The injection will not be repeated in the JSON back-end, so we
-    // rely on the new handlers injected by the RDF back-end.
-    let handlerInfoEnumerator = gHandlerServiceRDF.enumerate();
-    while (handlerInfoEnumerator.hasMoreElements()) {
-      let handlerInfo = handlerInfoEnumerator.getNext()
-                                             .QueryInterface(Ci.nsIHandlerInfo);
-      try {
-        // If the import from RDF is repeated by flipping the preference, then
-        // handlerInfo might already include some data from the JSON back-end,
-        // but any duplication is removed by the "store" method.
-        gHandlerServiceRDF.fillHandlerInfo(handlerInfo, "");
-        this.store(handlerInfo);
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-    }
-  },
-
-  /**
    * Injects new default protocol handlers if the version in the preferences is
-   * newer than the one in the data store. If we just imported data from the RDF
-   * back-end, we only need to update the version in the data store.
+   * newer than the one in the data store.
    */
-  _injectDefaultProtocolHandlersIfNeeded(alreadyInjected) {
+  _injectDefaultProtocolHandlersIfNeeded() {
     let prefsDefaultHandlersVersion;
     try {
       prefsDefaultHandlersVersion = Services.prefs.getComplexValue(
@@ -153,9 +93,7 @@ HandlerService.prototype = {
       let defaultHandlersVersion =
           this._store.data.defaultHandlersVersion[locale] || 0;
       if (defaultHandlersVersion < prefsDefaultHandlersVersion) {
-        if (!alreadyInjected) {
-          this._injectDefaultProtocolHandlers();
-        }
+        this._injectDefaultProtocolHandlers();
         this._store.data.defaultHandlersVersion[locale] =
           prefsDefaultHandlersVersion;
       }
@@ -195,9 +133,9 @@ HandlerService.prototype = {
 
       // This clause is essentially a reimplementation of
       // nsIExternalProtocolHandlerService.getProtocolHandlerInfo().
-      // Necessary because we want to use this instance of the service,
-      // but nsIExternalProtocolHandlerService would call the RDF-based based version
-      // until we complete the conversion.
+      // Necessary because calling that from here would make XPConnect barf
+      // when getService tried to re-enter the constructor for this
+      // service.
       let osDefaultHandlerFound = {};
       let protoInfo = gExternalProtocolService.getProtocolHandlerInfoFromOS(scheme,
                                                                             osDefaultHandlerFound);

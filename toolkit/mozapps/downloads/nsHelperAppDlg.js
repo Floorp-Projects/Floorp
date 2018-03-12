@@ -856,8 +856,8 @@ nsUnknownContentTypeDialog.prototype = {
 
     // One last special case: If the input "always ask" flag was false, then we always
     // update.  In that case we are displaying the helper app dialog for the first
-    // time for this mime type and we need to store the user's action in the mimeTypes.rdf
-    // data source (whether that action has changed or not; if it didn't change, then we need
+    // time for this mime type and we need to store the user's action in the handler service
+    // (whether that action has changed or not; if it didn't change, then we need
     // to store the "always ask" flag so the helper app dialog will or won't display
     // next time, per the user's selection).
     needUpdate = needUpdate || !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
@@ -868,8 +868,8 @@ nsUnknownContentTypeDialog.prototype = {
     return needUpdate && !discardUpdate;
   },
 
-  // See if the user changed things, and if so, update the
-  // mimeTypes.rdf entry for this mime type.
+  // See if the user changed things, and if so, store this mime type in the
+  // handler service.
   updateHelperAppPref: function() {
     var handlerInfo = this.mLauncher.MIMEInfo;
     var hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
