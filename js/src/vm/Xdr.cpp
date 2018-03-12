@@ -11,7 +11,6 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsutil.h"
 
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
@@ -171,12 +170,6 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
         mode == XDR_DECODE ? TraceLogger_DecodeScript : TraceLogger_EncodeScript;
     AutoTraceLog tl(logger, event);
 
-    // This should be a no-op when encoding, but when decoding it would eat any
-    // miss-aligned bytes if when encoding the XDR buffer is appended at the end
-    // of an existing buffer, such as in XDRIncrementalEncoder::linearize
-    // function.
-    if (!codeAlign(sizeof(js::XDRAlignment)))
-        return false;
     AutoXDRTree scriptTree(this, getTopLevelTreeKey());
 
     if (mode == XDR_DECODE)
@@ -194,9 +187,6 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
         scriptp.set(nullptr);
         return false;
     }
-
-    if (!codeAlign(sizeof(js::XDRAlignment)))
-        return false;
 
     return true;
 }
@@ -216,16 +206,12 @@ AutoXDRTree::AutoXDRTree(XDRCoderBase* xdr, AutoXDRTree::Key key)
     parent_(this),
     xdr_(xdr)
 {
-    // Expect sub-tree to start with the maximum alignment required.
-    MOZ_ASSERT(xdr->isAligned(sizeof(js::XDRAlignment)));
     if (key_ != AutoXDRTree::noKey)
         xdr->createOrReplaceSubTree(this);
 }
 
 AutoXDRTree::~AutoXDRTree()
 {
-    // Expect sub-tree to end with the maximum alignment required.
-    MOZ_ASSERT(xdr_->isAligned(sizeof(js::XDRAlignment)));
     if (key_ != AutoXDRTree::noKey)
         xdr_->endSubTree();
 }
@@ -354,18 +340,6 @@ XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer)
     // Do not linearize while we are currently adding bytes.
     MOZ_ASSERT(scope_ == nullptr);
 
-    // Ensure the content of the buffer is properly aligned within the buffer.
-    // This alignment difference should be consumed by the codeAlign function
-    // call of codeScript when decoded.
-    size_t alignLen = sizeof(js::XDRAlignment);
-    if (buffer.length() % alignLen) {
-        alignLen = ComputeByteAlignment(buffer.length(), alignLen);
-        if (!buffer.appendN(0, alignLen)) {
-            ReportOutOfMemory(cx());
-            return fail(JS::TranscodeResult_Throw);
-        }
-    }
-
     // Visit the tree parts in a depth first order, to linearize the bits.
     Vector<SlicesNode::ConstRange> depthFirst(cx());
 
@@ -390,8 +364,6 @@ XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer)
         // buffer which would be serialized.
         MOZ_ASSERT(slice.sliceBegin <= slices_.length());
         MOZ_ASSERT(slice.sliceBegin + slice.sliceLength <= slices_.length());
-        MOZ_ASSERT(buffer.length() % sizeof(XDRAlignment) == 0);
-        MOZ_ASSERT(slice.sliceLength % sizeof(XDRAlignment) == 0);
         if (!buffer.append(slices_.begin() + slice.sliceBegin, slice.sliceLength)) {
             ReportOutOfMemory(cx());
             return fail(JS::TranscodeResult_Throw);
