@@ -464,6 +464,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
 
     void visitInterruptCheck(LInterruptCheck* lir);
     void visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImplicit* ins);
+    void visitWasmInterruptCheck(LWasmInterruptCheck* lir);
     void visitWasmTrap(LWasmTrap* lir);
     void visitWasmLoadTls(LWasmLoadTls* ins);
     void visitWasmBoundsCheck(LWasmBoundsCheck* ins);

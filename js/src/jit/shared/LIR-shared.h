@@ -1663,6 +1663,24 @@ class LInterruptCheck : public LInstructionHelper<0, 0, 1>
     }
 };
 
+class LWasmInterruptCheck : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(WasmInterruptCheck)
+
+    explicit LWasmInterruptCheck(const LAllocation& tlsData)
+      : LInstructionHelper(classOpcode)
+    {
+        setOperand(0, tlsData);
+    }
+    MWasmInterruptCheck* mir() const {
+        return mir_->toWasmInterruptCheck();
+    }
+    const LAllocation* tlsPtr() {
+        return getOperand(0);
+    }
+};
+
 class LDefVar : public LCallInstructionHelper<0, 1, 0>
 {
   public:

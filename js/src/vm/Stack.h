@@ -1808,7 +1808,8 @@ class JitActivation : public Activation
     void startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset, const wasm::RegisterState& state);
     void finishWasmTrap();
     bool isWasmTrapping() const;
-    void* wasmTrapPC() const;
+    void* wasmTrapResumePC() const;
+    void* wasmTrapUnwoundPC() const;
     uint32_t wasmTrapBytecodeOffset() const;
 };
 
