@@ -435,8 +435,19 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
       return true;
     } else {
       // the blacklisted entry has expired
-      mTRRBLStorage->Remove(hashkey, privateBrowsing ?
-                            DataStorage_Private : DataStorage_Persistent);
+      RefPtr<DataStorage> storage = mTRRBLStorage;
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableFunction("proxyStorageRemove",
+                               [storage, hashkey, privateBrowsing]() {
+                                 storage->Remove(hashkey, privateBrowsing ?
+                                                 DataStorage_Private :
+                                                 DataStorage_Persistent);
+                               });
+      if (!NS_IsMainThread()) {
+        NS_DispatchToMainThread(runnable);
+      } else {
+        runnable->Run();
+      }
     }
   }
   return false;
