@@ -999,18 +999,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
   public:
     js::RuntimeCaches& caches() { return caches_.ref(); }
 
-    // When wasm traps or is interrupted, the signal handler records some data
-    // for unwinding purposes. Wasm code can't interrupt or trap reentrantly.
-    js::ActiveThreadData<
-        mozilla::MaybeOneOf<js::wasm::TrapData, js::wasm::InterruptData>
-    > wasmUnwindData;
-
-    js::wasm::TrapData& wasmTrapData() {
-        return wasmUnwindData.ref().ref<js::wasm::TrapData>();
-    }
-    js::wasm::InterruptData& wasmInterruptData() {
-        return wasmUnwindData.ref().ref<js::wasm::InterruptData>();
-    }
+    // When wasm traps, the signal handler records some data for unwinding
+    // purposes. Wasm code can't trap reentrantly.
+    js::ActiveThreadData<mozilla::Maybe<js::wasm::TrapData>> wasmTrapData;
 
   public:
 #if defined(NIGHTLY_BUILD)

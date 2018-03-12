@@ -44,7 +44,6 @@
 #include "vm/JSScript.h"
 #include "vm/TraceLogging.h"
 #include "vm/TraceLoggingGraph.h"
-#include "wasm/WasmSignalHandlers.h"
 
 #include "gc/GC-inl.h"
 #include "vm/JSContext-inl.h"
@@ -598,7 +597,7 @@ JSContext::requestInterrupt(InterruptMode mode)
         if (fx.isWaiting())
             fx.wake(FutexThread::WakeForJSInterrupt);
         fx.unlock();
-        InterruptRunningJitCode(this);
+        jit::InterruptRunningCode(this);
     }
 }
 
