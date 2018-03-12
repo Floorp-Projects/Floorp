@@ -2171,16 +2171,17 @@
 <binding id="noControls">
 
   <resources>
-    <stylesheet src="chrome://global/content/bindings/videocontrols.css"/>
-    <stylesheet src="chrome://global/skin/media/videocontrols.css"/>
+    <stylesheet src="chrome://global/skin/media/videocontrols-html.css"/>
   </resources>
 
-  <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="mediaControlsFrame">
-    <vbox flex="1" class="statusOverlay" hidden="true">
-      <box flex="1">
-        <box class="clickToPlay" flex="1"/>
-      </box>
-    </vbox>
+  <xbl:content xmlns="http://www.w3.org/1999/xhtml" class="mediaControlsFrame">
+    <div anonid="controlsContainer" class="controlsContainer" role="none" hidden="true">
+      <div class="controlsOverlay stackItem">
+        <div class="controlsSpacerStack">
+          <div anonid="clickToPlay" class="clickToPlay"></div>
+        </div>
+      </div>
+    </div>
   </xbl:content>
 
   <implementation>
@@ -2259,8 +2260,8 @@
         this.randomID = Math.random();
         this.binding.randomID = this.randomID;
         this.video = binding.parentNode;
-        this.clickToPlay       = document.getAnonymousElementByAttribute(binding, "class", "clickToPlay");
-        this.noControlsOverlay = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
+        this.clickToPlay       = document.getAnonymousElementByAttribute(binding, "anonid", "clickToPlay");
+        this.noControlsOverlay = document.getAnonymousElementByAttribute(binding, "anonid", "controlsContainer");
 
         let self = this;
         function addListener(elem, eventName, func) {

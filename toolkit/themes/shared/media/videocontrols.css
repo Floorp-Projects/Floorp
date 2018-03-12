@@ -12,12 +12,24 @@ audio > xul|videocontrols {
   height: 100%;
   display: inline-block;
   overflow: hidden;
+
+  direction: ltr;
+  /* Prevent unwanted style inheritance. See bug 554717. */
+  text-align: left;
+  list-style-image: none !important;
+  font: normal normal normal 100%/normal sans-serif !important;
+  text-decoration: none !important;
+}
+
+.controlsContainer {
+  --clickToPlay-size: 48px;
 }
 
 /* Some CSS custom properties defined here are referenced by videocontrols.xml in JavaScript */
 .controlBar {
-  --clickToPlay-width: 48px;
-  --clickToPlay-height: var(--clickToPlay-width);
+  /* Do not delete: these variables are accessed by JavaScript directly.
+     see videocontrols.xml and search for |-width|. */
+  --clickToPlay-width: var(--clickToPlay-size);
   --playButton-width: 30px;
   --playButton-height: var(--playButton-width);
   --scrubberStack-width: 64px;
@@ -376,8 +388,8 @@ audio > xul|videocontrols {
 
 /* Overlay Play button */
 .clickToPlay {
-  min-width: var(--clickToPlay-width);
-  min-height: var(--clickToPlay-height);
+  min-width: var(--clickToPlay-size);
+  min-height: var(--clickToPlay-size);
   border-radius: 50%;
   background-image: url(chrome://global/skin/media/playButton.svg);
   background-repeat: no-repeat;
