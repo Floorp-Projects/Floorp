@@ -33,7 +33,7 @@ class SkSurface;
 struct SkPoint;
 
 ///////////////////////////////////////////////////////////////////////////////
-class SK_API SkBitmapDevice : public SkBaseDevice {
+class SkBitmapDevice : public SkBaseDevice {
 public:
     /**
      *  Construct a new device with the specified bitmap as its backend. It is
@@ -59,6 +59,8 @@ public:
 
     static SkBitmapDevice* Create(const SkImageInfo&, const SkSurfaceProps&,
                                   SkRasterHandleAllocator* = nullptr);
+
+    sk_sp<SkImage> snapshotImage() override;
 
 protected:
     bool onShouldDisableLCD(const SkPaint&) const override;
@@ -89,7 +91,7 @@ protected:
      */
     void drawPath(const SkPath&, const SkPaint&, const SkMatrix* prePathMatrix,
                           bool pathIsMutable) override;
-    void drawBitmap(const SkBitmap&, const SkMatrix&, const SkPaint&) override;
+    void drawBitmap(const SkBitmap&, SkScalar x, SkScalar y, const SkPaint&) override;
     void drawSprite(const SkBitmap&, int x, int y, const SkPaint&) override;
 
     /**
@@ -112,15 +114,16 @@ protected:
 
     ///////////////////////////////////////////////////////////////////////////
 
-    void drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&) override;
+    void drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&,
+                     SkImage*, const SkMatrix&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
     sk_sp<SkSpecialImage> snapSpecial() override;
 
     ///////////////////////////////////////////////////////////////////////////
 
-    bool onReadPixels(const SkImageInfo&, void*, size_t, int x, int y) override;
-    bool onWritePixels(const SkImageInfo&, const void*, size_t, int, int) override;
+    bool onReadPixels(const SkPixmap&, int x, int y) override;
+    bool onWritePixels(const SkPixmap&, int, int) override;
     bool onPeekPixels(SkPixmap*) override;
     bool onAccessPixels(SkPixmap*) override;
 

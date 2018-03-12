@@ -8,6 +8,8 @@
 #include "SkCanvas.h"
 #include "SkData.h"
 #include "SkDrawFilter.h"
+#include "SkDrawShadowInfo.h"
+#include "SkImage.h"
 #include "SkImageFilter.h"
 #include "SkLiteDL.h"
 #include "SkMath.h"
@@ -45,17 +47,16 @@ static const D* pod(const T* op, size_t offset = 0) {
 }
 
 namespace {
-#define TYPES(M)                                                                \
-    M(SetDrawFilter) M(Save) M(Restore) M(SaveLayer)                            \
-    M(Concat) M(SetMatrix) M(Translate) M(TranslateZ)                           \
+#define TYPES(M)                                                               \
+    M(SetDrawFilter) M(Flush) M(Save) M(Restore) M(SaveLayer)                   \
+    M(Concat) M(SetMatrix) M(Translate)                                         \
     M(ClipPath) M(ClipRect) M(ClipRRect) M(ClipRegion)                          \
     M(DrawPaint) M(DrawPath) M(DrawRect) M(DrawRegion) M(DrawOval) M(DrawArc)   \
     M(DrawRRect) M(DrawDRRect) M(DrawAnnotation) M(DrawDrawable) M(DrawPicture) \
-    M(DrawShadowedPicture)                                                      \
     M(DrawImage) M(DrawImageNine) M(DrawImageRect) M(DrawImageLattice)          \
     M(DrawText) M(DrawPosText) M(DrawPosTextH)                                  \
     M(DrawTextOnPath) M(DrawTextRSXform) M(DrawTextBlob)                        \
-    M(DrawPatch) M(DrawPoints) M(DrawVertices) M(DrawAtlas)
+    M(DrawPatch) M(DrawPoints) M(DrawVertices) M(DrawAtlas) M(DrawShadowRec)
 
 #define M(T) T,
     enum class Type : uint8_t { TYPES(M) };
@@ -80,6 +81,11 @@ namespace {
         }
     };
 
+    struct Flush final : Op {
+        static const auto kType = Type::Flush;
+        void draw(SkCanvas* c, const SkMatrix&) const { c->flush(); }
+    };
+
     struct Save final : Op {
         static const auto kType = Type::Save;
         void draw(SkCanvas* c, const SkMatrix&) const { c->save(); }
@@ -91,18 +97,24 @@ namespace {
     struct SaveLayer final : Op {
         static const auto kType = Type::SaveLayer;
         SaveLayer(const SkRect* bounds, const SkPaint* paint,
-                  const SkImageFilter* backdrop, SkCanvas::SaveLayerFlags flags) {
+                  const SkImageFilter* backdrop, const SkImage* clipMask,
+                  const SkMatrix* clipMatrix, SkCanvas::SaveLayerFlags flags) {
             if (bounds) { this->bounds = *bounds; }
             if (paint)  { this->paint  = *paint;  }
             this->backdrop = sk_ref_sp(backdrop);
+            this->clipMask = sk_ref_sp(clipMask);
+            this->clipMatrix = clipMatrix ? *clipMatrix : SkMatrix::I();
             this->flags = flags;
         }
         SkRect                     bounds = kUnset;
         SkPaint                    paint;
         sk_sp<const SkImageFilter> backdrop;
+        sk_sp<const SkImage>       clipMask;
+        SkMatrix                   clipMatrix;
         SkCanvas::SaveLayerFlags   flags;
         void draw(SkCanvas* c, const SkMatrix&) const {
-            c->saveLayer({ maybe_unset(bounds), &paint, backdrop.get(), flags });
+            c->saveLayer({ maybe_unset(bounds), &paint, backdrop.get(), clipMask.get(),
+                           clipMatrix.isIdentity() ? nullptr : &clipMatrix, flags });
         }
     };
 
@@ -126,16 +138,6 @@ namespace {
         SkScalar dx,dy;
         void draw(SkCanvas* c, const SkMatrix&) const {
             c->translate(dx, dy);
-        }
-    };
-    struct TranslateZ final : Op {
-        static const auto kType = Type::TranslateZ;
-        TranslateZ(SkScalar dz) : dz(dz) {}
-        SkScalar dz;
-        void draw(SkCanvas* c, const SkMatrix&) const {
-        #ifdef SK_EXPERIMENTAL_SHADOWING
-            c->translateZ(dz);
-        #endif
         }
     };
 
@@ -270,25 +272,6 @@ namespace {
             c->drawPicture(picture.get(), &matrix, has_paint ? &paint : nullptr);
         }
     };
-    struct DrawShadowedPicture final : Op {
-        static const auto kType = Type::DrawShadowedPicture;
-        DrawShadowedPicture(const SkPicture* picture, const SkMatrix* matrix,
-                            const SkPaint* paint, const SkShadowParams& params)
-            : picture(sk_ref_sp(picture)) {
-            if (matrix) { this->matrix = *matrix; }
-            if (paint)  { this->paint  = *paint;  }
-            this->params = params;
-        }
-        sk_sp<const SkPicture> picture;
-        SkMatrix               matrix = SkMatrix::I();
-        SkPaint                paint;
-        SkShadowParams         params;
-        void draw(SkCanvas* c, const SkMatrix&) const {
-        #ifdef SK_EXPERIMENTAL_SHADOWING
-            c->drawShadowedPicture(picture.get(), &matrix, &paint, params);
-        #endif
-        }
-    };
 
     struct DrawImage final : Op {
         static const auto kType = Type::DrawImage;
@@ -347,9 +330,13 @@ namespace {
         void draw(SkCanvas* c, const SkMatrix&) const {
             auto xdivs = pod<int>(this, 0),
                  ydivs = pod<int>(this, xs*sizeof(int));
+            auto colors = (0 == fs) ? nullptr :
+                          pod<SkColor>(this, (xs+ys)*sizeof(int));
             auto flags = (0 == fs) ? nullptr :
-                                     pod<SkCanvas::Lattice::Flags>(this, (xs+ys)*sizeof(int));
-            c->drawImageLattice(image.get(), {xdivs, ydivs, flags, xs, ys, &src}, dst, &paint);
+                         pod<SkCanvas::Lattice::RectType>(this, (xs+ys)*sizeof(int)+
+                                                          fs*sizeof(SkColor));
+            c->drawImageLattice(image.get(), {xdivs, ydivs, flags, xs, ys, &src, colors}, dst,
+                                &paint);
         }
     };
 
@@ -408,16 +395,21 @@ namespace {
     };
     struct DrawTextRSXform final : Op {
         static const auto kType = Type::DrawTextRSXform;
-        DrawTextRSXform(size_t bytes, const SkRect* cull, const SkPaint& paint)
-            : bytes(bytes), paint(paint) {
+        DrawTextRSXform(size_t bytes, int xforms, const SkRect* cull, const SkPaint& paint)
+            : bytes(bytes), xforms(xforms), paint(paint) {
             if (cull) { this->cull = *cull; }
         }
         size_t  bytes;
+        int     xforms;
         SkRect  cull = kUnset;
         SkPaint paint;
         void draw(SkCanvas* c, const SkMatrix&) const {
-            c->drawTextRSXform(pod<void>(this), bytes, pod<SkRSXform>(this, bytes),
-                               maybe_unset(cull), paint);
+            // For alignment, the SkRSXforms are first in the pod section, followed by the text.
+            c->drawTextRSXform(pod<void>(this,xforms*sizeof(SkRSXform)),
+                               bytes,
+                               pod<SkRSXform>(this),
+                               maybe_unset(cull),
+                               paint);
         }
     };
     struct DrawTextBlob final : Op {
@@ -500,6 +492,17 @@ namespace {
                          maybe_unset(cull), &paint);
         }
     };
+    struct DrawShadowRec final : Op {
+        static const auto kType = Type::DrawShadowRec;
+        DrawShadowRec(const SkPath& path, const SkDrawShadowRec& rec)
+            : fPath(path), fRec(rec)
+        {}
+        SkPath          fPath;
+        SkDrawShadowRec fRec;
+        void draw(SkCanvas* c, const SkMatrix&) const {
+            c->private_draw_shadow_rec(fPath, fRec);
+        }
+    };
 }
 
 template <typename T, typename... Args>
@@ -541,17 +544,19 @@ void SkLiteDL::setDrawFilter(SkDrawFilter* df) {
 }
 #endif
 
+void SkLiteDL::flush() { this->push<Flush>(0); }
+
 void SkLiteDL::   save() { this->push   <Save>(0); }
 void SkLiteDL::restore() { this->push<Restore>(0); }
 void SkLiteDL::saveLayer(const SkRect* bounds, const SkPaint* paint,
-                         const SkImageFilter* backdrop, SkCanvas::SaveLayerFlags flags) {
-    this->push<SaveLayer>(0, bounds, paint, backdrop, flags);
+                         const SkImageFilter* backdrop, const SkImage* clipMask,
+                         const SkMatrix* clipMatrix, SkCanvas::SaveLayerFlags flags) {
+    this->push<SaveLayer>(0, bounds, paint, backdrop, clipMask, clipMatrix, flags);
 }
 
 void SkLiteDL::   concat(const SkMatrix& matrix)   { this->push   <Concat>(0, matrix); }
 void SkLiteDL::setMatrix(const SkMatrix& matrix)   { this->push<SetMatrix>(0, matrix); }
 void SkLiteDL::translate(SkScalar dx, SkScalar dy) { this->push<Translate>(0, dx, dy); }
-void SkLiteDL::translateZ(SkScalar dz) { this->push<TranslateZ>(0, dz); }
 
 void SkLiteDL::clipPath(const SkPath& path, SkClipOp op, bool aa) {
     this->push<ClipPath>(0, path, op, aa);
@@ -604,11 +609,6 @@ void SkLiteDL::drawPicture(const SkPicture* picture,
                            const SkMatrix* matrix, const SkPaint* paint) {
     this->push<DrawPicture>(0, picture, matrix, paint);
 }
-void SkLiteDL::drawShadowedPicture(const SkPicture* picture, const SkMatrix* matrix,
-                                   const SkPaint* paint, const SkShadowParams& params) {
-    push<DrawShadowedPicture>(0, picture, matrix, paint, params);
-}
-
 void SkLiteDL::drawImage(sk_sp<const SkImage> image, SkScalar x, SkScalar y, const SkPaint* paint) {
     this->push<DrawImage>(0, std::move(image), x,y, paint);
 }
@@ -623,14 +623,16 @@ void SkLiteDL::drawImageRect(sk_sp<const SkImage> image, const SkRect* src, cons
 void SkLiteDL::drawImageLattice(sk_sp<const SkImage> image, const SkCanvas::Lattice& lattice,
                                 const SkRect& dst, const SkPaint* paint) {
     int xs = lattice.fXCount, ys = lattice.fYCount;
-    int fs = lattice.fFlags ? (xs + 1) * (ys + 1) : 0;
-    size_t bytes = (xs + ys) * sizeof(int) + fs * sizeof(SkCanvas::Lattice::Flags);
+    int fs = lattice.fRectTypes ? (xs + 1) * (ys + 1) : 0;
+    size_t bytes = (xs + ys) * sizeof(int) + fs * sizeof(SkCanvas::Lattice::RectType)
+                   + fs * sizeof(SkColor);
     SkASSERT(lattice.fBounds);
     void* pod = this->push<DrawImageLattice>(bytes, std::move(image), xs, ys, fs, *lattice.fBounds,
                                              dst, paint);
     copy_v(pod, lattice.fXDivs, xs,
                 lattice.fYDivs, ys,
-                lattice.fFlags, fs);
+                lattice.fColors, fs,
+                lattice.fRectTypes, fs);
 }
 
 void SkLiteDL::drawText(const void* text, size_t bytes,
@@ -658,8 +660,8 @@ void SkLiteDL::drawTextOnPath(const void* text, size_t bytes,
 void SkLiteDL::drawTextRSXform(const void* text, size_t bytes,
                                const SkRSXform xforms[], const SkRect* cull, const SkPaint& paint) {
     int n = paint.countText(text, bytes);
-    void* pod = this->push<DrawTextRSXform>(bytes+n*sizeof(SkRSXform), bytes, cull, paint);
-    copy_v(pod, (const char*)text,bytes, xforms,n);
+    void* pod = this->push<DrawTextRSXform>(bytes+n*sizeof(SkRSXform), bytes, n, cull, paint);
+    copy_v(pod, xforms,n, (const char*)text,bytes);
 }
 void SkLiteDL::drawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) {
     this->push<DrawTextBlob>(0, blob, x,y, paint);
@@ -689,6 +691,9 @@ void SkLiteDL::drawAtlas(const SkImage* atlas, const SkRSXform xforms[], const S
     copy_v(pod, xforms, count,
                   texs, count,
                 colors, colors ? count : 0);
+}
+void SkLiteDL::drawShadowRec(const SkPath& path, const SkDrawShadowRec& rec) {
+    this->push<DrawShadowRec>(0, path, rec);
 }
 
 typedef void(*draw_fn)(const void*,  SkCanvas*, const SkMatrix&);
