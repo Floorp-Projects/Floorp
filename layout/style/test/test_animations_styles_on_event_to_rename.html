@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>
+    Test that mouse movement immediately after finish() should involve
+    restyling for finished state (Bug 1228137)
+  </title>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
     src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript"
     src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript"
     src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
   <style type="text/css">
     @keyframes anim {
       0% { transform: translateX(0px) }
@@ -19,20 +26,12 @@
       background-color: white;
     }
   </style>
-  <script>
-    var is = opener.is.bind(opener);
-    var ok = opener.ok.bind(opener);
-    var todo = opener.todo.bind(opener);
-    function finish() {
-      var o = opener;
-      self.close();
-      o.SimpleTest.finish();
-    }
-  </script>
 </head>
 <body>
 <div id="display"></div>
 <script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
 window.onload = function () {
   // To avoid the effect that newly created element's styles are
   // not updated immediately, we need to add an element without
@@ -51,7 +50,7 @@ window.onload = function () {
          "The target of the animation should receive the mouse move event " +
          "on the position of the animation's effect end.");
       done_div();
-      finish();
+      SimpleTest.finish();
     });
 
     var animation = div.getAnimations()[0];

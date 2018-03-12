@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>
+    Test for Animation.effect.timing.duration on compositor animations
+  </title>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
     src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
   <style type="text/css">
     @keyframes anim {
       0% { transform: translate(0px) }
@@ -16,27 +22,17 @@
       background-color: white;
     }
   </style>
-  <script>
-    var ok = opener.ok.bind(opener);
-    var is = opener.is.bind(opener);
-    var todo = opener.todo.bind(opener);
-    function finish() {
-      var o = opener;
-      self.close();
-      o.SimpleTest.finish();
-    }
-  </script>
 </head>
 <body>
 <div id="display"></div>
 <script type="application/javascript">
 "use strict";
 
+SimpleTest.waitForExplicitFinish();
+
 runOMTATest(function() {
-  runAllAsyncAnimTests().then(function() {
-    finish();
-  });
-}, finish, opener.SpecialPowers);
+  runAllAsyncAnimTests().then(SimpleTest.finish);
+}, SimpleTest.finish, SpecialPowers);
 
 addAsyncAnimTest(async function() {
   var [ div ] = new_div("");
