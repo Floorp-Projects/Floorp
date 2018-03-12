@@ -461,23 +461,23 @@ gfxContext::CurrentAntialiasMode() const
 }
 
 void
-gfxContext::SetDash(gfxFloat *dashes, int ndash, gfxFloat offset)
+gfxContext::SetDash(const Float *dashes, int ndash, Float offset)
 {
   CURRENTSTATE_CHANGED()
   AzureState &state = CurrentState();
 
   state.dashPattern.SetLength(ndash);
   for (int i = 0; i < ndash; i++) {
-    state.dashPattern[i] = Float(dashes[i]);
+    state.dashPattern[i] = dashes[i];
   }
   state.strokeOptions.mDashLength = ndash;
-  state.strokeOptions.mDashOffset = Float(offset);
+  state.strokeOptions.mDashOffset = offset;
   state.strokeOptions.mDashPattern = ndash ? state.dashPattern.Elements()
                                            : nullptr;
 }
 
 bool
-gfxContext::CurrentDash(FallibleTArray<gfxFloat>& dashes, gfxFloat* offset) const
+gfxContext::CurrentDash(FallibleTArray<Float>& dashes, Float* offset) const
 {
   const AzureState &state = CurrentState();
   int count = state.strokeOptions.mDashLength;
@@ -486,28 +486,26 @@ gfxContext::CurrentDash(FallibleTArray<gfxFloat>& dashes, gfxFloat* offset) cons
     return false;
   }
 
-  for (int i = 0; i < count; i++) {
-    dashes[i] = state.dashPattern[i];
-  }
+  dashes = state.dashPattern;
 
   *offset = state.strokeOptions.mDashOffset;
 
   return true;
 }
 
-gfxFloat
+Float
 gfxContext::CurrentDashOffset() const
 {
   return CurrentState().strokeOptions.mDashOffset;
 }
 
 void
-gfxContext::SetLineWidth(gfxFloat width)
+gfxContext::SetLineWidth(Float width)
 {
-  CurrentState().strokeOptions.mLineWidth = Float(width);
+  CurrentState().strokeOptions.mLineWidth = width;
 }
 
-gfxFloat
+Float
 gfxContext::CurrentLineWidth() const
 {
   return CurrentState().strokeOptions.mLineWidth;
@@ -553,13 +551,13 @@ gfxContext::CurrentLineJoin() const
 }
 
 void
-gfxContext::SetMiterLimit(gfxFloat limit)
+gfxContext::SetMiterLimit(Float limit)
 {
   CURRENTSTATE_CHANGED()
-  CurrentState().strokeOptions.mMiterLimit = Float(limit);
+  CurrentState().strokeOptions.mMiterLimit = limit;
 }
 
-gfxFloat
+Float
 gfxContext::CurrentMiterLimit() const
 {
   return CurrentState().strokeOptions.mMiterLimit;
@@ -760,7 +758,7 @@ gfxContext::Mask(SourceSurface *surface, float alpha, const Point& offset)
 }
 
 void
-gfxContext::Paint(gfxFloat alpha)
+gfxContext::Paint(Float alpha)
 {
   AUTO_PROFILER_LABEL("gfxContext::Paint", GRAPHICS);
 
@@ -769,7 +767,7 @@ gfxContext::Paint(gfxFloat alpha)
   Rect paintRect = mat.TransformBounds(Rect(Point(0, 0), Size(mDT->GetSize())));
 
   mDT->FillRect(paintRect, PatternFromState(this),
-                DrawOptions(Float(alpha), GetOp()));
+                DrawOptions(alpha, GetOp()));
 }
 
 void

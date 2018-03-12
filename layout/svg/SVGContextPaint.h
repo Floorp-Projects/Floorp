@@ -51,6 +51,7 @@ class SVGContextPaint : public RefCounted<SVGContextPaint>
 {
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::Float Float;
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
   SVGContextPaint()
@@ -96,15 +97,15 @@ public:
   void InitStrokeGeometry(gfxContext *aContext,
                           float devUnitsPerSVGUnit);
 
-  const FallibleTArray<gfxFloat>& GetStrokeDashArray() const {
+  const FallibleTArray<Float>& GetStrokeDashArray() const {
     return mDashes;
   }
 
-  gfxFloat GetStrokeDashOffset() const {
+  Float GetStrokeDashOffset() const {
     return mDashOffset;
   }
 
-  gfxFloat GetStrokeWidth() const {
+  Float GetStrokeWidth() const {
     return mStrokeWidth;
   }
 
@@ -123,9 +124,9 @@ public:
 
 private:
   // Member-vars are initialized in InitStrokeGeometry.
-  FallibleTArray<gfxFloat> mDashes;
-  MOZ_INIT_OUTSIDE_CTOR gfxFloat mDashOffset;
-  MOZ_INIT_OUTSIDE_CTOR gfxFloat mStrokeWidth;
+  FallibleTArray<Float> mDashes;
+  MOZ_INIT_OUTSIDE_CTOR Float mDashOffset;
+  MOZ_INIT_OUTSIDE_CTOR Float mStrokeWidth;
 };
 
 /**

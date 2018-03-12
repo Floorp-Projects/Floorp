@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #include "mozilla/Assertions.h"
@@ -243,5 +244,39 @@ SandboxBrokerClient::Readlink(const char* aPath, void* aBuff, size_t aSize)
   return DoCall(&req, aPath, nullptr, aBuff, false);
 }
 
-} // namespace mozilla
+int
+SandboxBrokerClient::Connect(const sockaddr_un* aAddr, size_t aLen, int aType)
+{
+  static const size_t maxLen = sizeof(aAddr->sun_path);
+  const char* path = aAddr->sun_path;
+  const auto addrEnd = reinterpret_cast<const char*>(aAddr) + aLen;
+  // Ensure that the length isn't impossibly small.
+  if (addrEnd <= path) {
+    return -EINVAL;
+  }
+  // Unix domain only
+  if (aAddr->sun_family != AF_UNIX) {
+    return -EAFNOSUPPORT;
+  }
+  // How much of sun_path may be accessed?
+  auto bufLen = static_cast<size_t>(addrEnd - path);
+  if (bufLen > maxLen) {
+    bufLen = maxLen;
+  }
+  // Require null-termination.  (Linux doesn't require it, but
+  // applications usually null-terminate for portability, and not
+  // handling unterminated strings means we don't have to copy the path.)
+  const size_t pathLen = strnlen(path, bufLen);
+  if (pathLen == bufLen) {
+    return -ENAMETOOLONG;
+  }
+  // Abstract addresses aren't handled (yet?).
+  if (pathLen == 0) {
+    return -ECONNREFUSED;
+  }
 
+  const Request req = { SANDBOX_SOCKET_CONNECT, aType, 0 };
+  return DoCall(&req, path, nullptr, nullptr, true);
+}
+
+} // namespace mozilla

@@ -1323,6 +1323,10 @@ var PanelView = class extends AssociatedToNode {
       collectItems();
     } else {
       await this.window.promiseDocumentFlushed(collectItems);
+      // Bail out if the panel was closed in the meantime.
+      if (!this.node.panelMultiView) {
+        return;
+      }
     }
 
     // Removing the 'height' property will only cause a layout flush in the next
@@ -1342,6 +1346,10 @@ var PanelView = class extends AssociatedToNode {
       measureItems();
     } else {
       await this.window.promiseDocumentFlushed(measureItems);
+      // Bail out if the panel was closed in the meantime.
+      if (!this.node.panelMultiView) {
+        return;
+      }
     }
 
     // Now we can make all the necessary DOM changes at once.

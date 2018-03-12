@@ -39,8 +39,8 @@ add_task(function* () {
   yield findVariableViewProperties(initialValue[0], false);
 
   yield findVariableViewProperties(initialValue[1], true);
-  // Check if table shows correct initial value
 
+  // Check if table shows correct initial value
   yield checkState([
     [
       ["cookies", "http://test1.example.org"],
@@ -54,6 +54,7 @@ add_task(function* () {
 
   gWindow.addCookie("c1", '{"foo": 4,"bar":6}', "/browser");
   yield gUI.once("sidebar-updated");
+  yield gUI.once("store-objects-updated");
 
   yield findVariableViewProperties(finalValue[0], false);
   yield findVariableViewProperties(finalValue[1], true);
@@ -72,8 +73,6 @@ add_task(function* () {
   // Add a new entry
   gWindow.addCookie("c3", "booyeah");
 
-  // Wait once for update and another time for value fetching
-  yield gUI.once("store-objects-updated");
   yield gUI.once("store-objects-updated");
 
   yield checkState([
@@ -119,6 +118,7 @@ add_task(function* () {
   gWindow.removeCookie("c1", "/browser");
 
   yield gUI.once("sidebar-updated");
+  yield gUI.once("store-objects-updated");
 
   yield checkState([
     [
@@ -160,6 +160,7 @@ add_task(function* () {
   gWindow.removeCookie("c2", "/browser");
 
   yield gUI.once("sidebar-updated");
+  yield gUI.once("store-objects-updated");
 
   yield checkState([
     [

@@ -375,14 +375,9 @@ ChannelWrapper::IsSystemLoad() const
 }
 
 bool
-ChannelWrapper::GetCanModify(ErrorResult& aRv) const
+ChannelWrapper::CanModify() const
 {
-  nsCOMPtr<nsIURI> uri = FinalURI();
-  nsAutoCString spec;
-  if (uri) {
-    uri->GetSpec(spec);
-  }
-  if (!uri || AddonManagerWebAPI::IsValidSite(uri)) {
+  if (WebExtensionPolicy::IsRestrictedURI(FinalURLInfo())) {
     return false;
   }
 
@@ -392,10 +387,9 @@ ChannelWrapper::GetCanModify(ErrorResult& aRv) const
         return false;
       }
 
-      if (prin->GetIsCodebasePrincipal() &&
-          (NS_FAILED(prin->GetURI(getter_AddRefs(uri))) ||
-           AddonManagerWebAPI::IsValidSite(uri))) {
-          return false;
+      auto* docURI = DocumentURLInfo();
+      if (docURI && WebExtensionPolicy::IsRestrictedURI(*docURI)) {
+        return false;
       }
     }
   }
@@ -647,7 +641,7 @@ ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon, nsITa
 {
   // We can't attach new listeners after the response has started, so don't
   // bother registering anything.
-  if (mResponseStarted) {
+  if (mResponseStarted || !CanModify()) {
     return;
   }
 

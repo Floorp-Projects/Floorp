@@ -2451,6 +2451,7 @@ public:
   }
 
   AutoTArray(const self_type& aOther)
+    : nsTArray<E>()
   {
     Init();
     this->AppendElements(aOther);

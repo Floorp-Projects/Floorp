@@ -15,7 +15,7 @@
 #include "vm/JSCompartment.h"
 #include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 #include "wasm/WasmJS.h"
 
 namespace js {

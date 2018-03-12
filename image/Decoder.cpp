@@ -63,6 +63,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mHaveExplicitOutputSize(false)
   , mInFrame(false)
   , mFinishedNewFrame(false)
+  , mHasFrameToTake(false)
   , mReachedTerminalState(false)
   , mDecodeDone(false)
   , mError(false)
@@ -293,6 +294,8 @@ Decoder::AllocateFrame(uint32_t aFrameNum,
                                         mCurrentFrame.get());
 
   if (mCurrentFrame) {
+    mHasFrameToTake = true;
+
     // Gather the raw pointers the decoders will use.
     mCurrentFrame->GetImageData(&mImageData, &mImageDataLength);
     mCurrentFrame->GetPaletteData(&mColormap, &mColormapSize);
@@ -532,6 +535,7 @@ Decoder::PostError()
     mCurrentFrame->Abort();
     mInFrame = false;
     --mFrameCount;
+    mHasFrameToTake = false;
   }
 }
 

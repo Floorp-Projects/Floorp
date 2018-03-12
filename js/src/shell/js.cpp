@@ -90,6 +90,8 @@
 #include "threading/ExclusiveData.h"
 #include "threading/LockGuard.h"
 #include "threading/Thread.h"
+#include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
@@ -105,7 +107,6 @@
 #include "vm/Printer.h"
 #include "vm/Shape.h"
 #include "vm/SharedArrayObject.h"
-#include "vm/StringBuffer.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
@@ -8598,13 +8599,17 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
         if (strcmp(str, "on") == 0) {
             jit::JitOptions.spectreIndexMasking = true;
             jit::JitOptions.spectreObjectMitigationsBarriers = true;
+            jit::JitOptions.spectreObjectMitigationsMisc = true;
             jit::JitOptions.spectreStringMitigations = true;
             jit::JitOptions.spectreValueMasking = true;
+            jit::JitOptions.spectreJitToCxxCalls = true;
         } else if (strcmp(str, "off") == 0) {
             jit::JitOptions.spectreIndexMasking = false;
             jit::JitOptions.spectreObjectMitigationsBarriers = false;
+            jit::JitOptions.spectreObjectMitigationsMisc = false;
             jit::JitOptions.spectreStringMitigations = false;
             jit::JitOptions.spectreValueMasking = false;
+            jit::JitOptions.spectreJitToCxxCalls = false;
         } else {
             return OptionFailure("spectre-mitigations", str);
         }

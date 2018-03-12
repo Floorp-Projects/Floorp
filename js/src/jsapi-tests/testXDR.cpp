@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsfriendapi.h"
-#include "jsstr.h"
+#include "builtin/String.h"
 
 #include "jsapi-tests/tests.h"
 #include "vm/JSScript.h"

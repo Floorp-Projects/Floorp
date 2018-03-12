@@ -113,14 +113,6 @@ const GPU_TAG_BRUSH_SOLID: GpuProfileTag = GpuProfileTag {
     label: "B_Solid",
     color: debug_colors::RED,
 };
-const GPU_TAG_BRUSH_MASK: GpuProfileTag = GpuProfileTag {
-    label: "B_Mask",
-    color: debug_colors::BLACK,
-};
-const GPU_TAG_BRUSH_PICTURE: GpuProfileTag = GpuProfileTag {
-    label: "B_Picture",
-    color: debug_colors::SILVER,
-};
 const GPU_TAG_BRUSH_LINE: GpuProfileTag = GpuProfileTag {
     label: "Line",
     color: debug_colors::DARKRED,
@@ -221,7 +213,6 @@ impl BatchKind {
             BatchKind::SplitComposite => "SplitComposite",
             BatchKind::Brush(kind) => {
                 match kind {
-                    BrushBatchKind::Picture => "Brush (Picture)",
                     BrushBatchKind::Solid => "Brush (Solid)",
                     BrushBatchKind::Line => "Brush (Line)",
                     BrushBatchKind::Image(..) => "Brush (Image)",
@@ -242,7 +233,6 @@ impl BatchKind {
             BatchKind::SplitComposite => GPU_TAG_PRIM_SPLIT_COMPOSITE,
             BatchKind::Brush(kind) => {
                 match kind {
-                    BrushBatchKind::Picture => GPU_TAG_BRUSH_PICTURE,
                     BrushBatchKind::Solid => GPU_TAG_BRUSH_SOLID,
                     BrushBatchKind::Line => GPU_TAG_BRUSH_LINE,
                     BrushBatchKind::Image(..) => GPU_TAG_BRUSH_IMAGE,
@@ -1602,8 +1592,6 @@ pub struct Renderer {
     cs_blur_rgba8: LazilyCompiledShader,
 
     // Brush shaders
-    brush_mask_rounded_rect: LazilyCompiledShader,
-    brush_picture: BrushShader,
     brush_solid: BrushShader,
     brush_line: BrushShader,
     brush_image: Vec<Option<BrushShader>>,
@@ -1617,6 +1605,7 @@ pub struct Renderer {
     /// draw clip instances into the cached clip mask. The results
     /// of these shaders are also used by the primitive shaders.
     cs_clip_rectangle: LazilyCompiledShader,
+    cs_clip_box_shadow: LazilyCompiledShader,
     cs_clip_image: LazilyCompiledShader,
     cs_clip_border: LazilyCompiledShader,
 
@@ -1801,14 +1790,6 @@ impl Renderer {
                                       options.precache_shaders)
         };
 
-        let brush_mask_rounded_rect = try!{
-            LazilyCompiledShader::new(ShaderKind::Brush,
-                                      "brush_mask_rounded_rect",
-                                      &[],
-                                      &mut device,
-                                      options.precache_shaders)
-        };
-
         let brush_solid = try!{
             BrushShader::new("brush_solid",
                              &mut device,
@@ -1832,13 +1813,6 @@ impl Renderer {
 
         let brush_mix_blend = try!{
             BrushShader::new("brush_mix_blend",
-                             &mut device,
-                             &[],
-                             options.precache_shaders)
-        };
-
-        let brush_picture = try!{
-            BrushShader::new("brush_picture",
                              &mut device,
                              &[],
                              options.precache_shaders)
@@ -1885,6 +1859,14 @@ impl Renderer {
         let cs_clip_rectangle = try!{
             LazilyCompiledShader::new(ShaderKind::ClipCache,
                                       "cs_clip_rectangle",
+                                      &[],
+                                      &mut device,
+                                      options.precache_shaders)
+        };
+
+        let cs_clip_box_shadow = try!{
+            LazilyCompiledShader::new(ShaderKind::ClipCache,
+                                      "cs_clip_box_shadow",
                                       &[],
                                       &mut device,
                                       options.precache_shaders)
@@ -2272,8 +2254,6 @@ impl Renderer {
             cs_text_run,
             cs_blur_a8,
             cs_blur_rgba8,
-            brush_mask_rounded_rect,
-            brush_picture,
             brush_solid,
             brush_line,
             brush_image,
@@ -2283,6 +2263,7 @@ impl Renderer {
             brush_radial_gradient,
             brush_linear_gradient,
             cs_clip_rectangle,
+            cs_clip_box_shadow,
             cs_clip_border,
             cs_clip_image,
             ps_text_run,
@@ -2515,6 +2496,11 @@ impl Renderer {
             target.clip_batcher.borders.len(),
         );
         debug_target.add(
+            debug_server::BatchKind::Clip,
+            "BoxShadows",
+            target.clip_batcher.box_shadows.len(),
+        );
+        debug_target.add(
             debug_server::BatchKind::Cache,
             "Vertical Blur",
             target.vertical_blurs.len(),
@@ -2528,11 +2514,6 @@ impl Renderer {
             debug_server::BatchKind::Clip,
             "Rectangles",
             target.clip_batcher.rectangles.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Rectangle Brush (Rounded Rect)",
-            target.brush_mask_rounded_rects.len(),
         );
         for (_, items) in target.clip_batcher.images.iter() {
             debug_target.add(debug_server::BatchKind::Clip, "Image mask", items.len());
@@ -3201,15 +3182,6 @@ impl Renderer {
                                 0,
                                 &mut self.renderer_errors,
                             );
-                    }
-                    BrushBatchKind::Picture => {
-                        self.brush_picture.bind(
-                            &mut self.device,
-                            key.blend_mode,
-                            projection,
-                            0,
-                            &mut self.renderer_errors,
-                        );
                     }
                     BrushBatchKind::Line => {
                         self.brush_line.bind(
@@ -3977,20 +3949,6 @@ impl Renderer {
 
         self.handle_scaling(render_tasks, &target.scalings, SourceTexture::CacheA8);
 
-        if !target.brush_mask_rounded_rects.is_empty() {
-            self.device.set_blend(false);
-
-            let _timer = self.gpu_profile.start_timer(GPU_TAG_BRUSH_MASK);
-            self.brush_mask_rounded_rect
-                .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-            self.draw_instanced_batch(
-                &target.brush_mask_rounded_rects,
-                VertexArrayKind::Primitive,
-                &BatchTextures::no_texture(),
-                stats,
-            );
-        }
-
         // Draw the clip items into the tiled alpha mask.
         {
             let _timer = self.gpu_profile.start_timer(GPU_TAG_CACHE_CLIP);
@@ -4050,6 +4008,26 @@ impl Renderer {
                     stats,
                 );
             }
+            // draw box-shadow clips
+            for (mask_texture_id, items) in target.clip_batcher.box_shadows.iter() {
+                let _gm2 = self.gpu_profile.start_marker("box-shadows");
+                let textures = BatchTextures {
+                    colors: [
+                        mask_texture_id.clone(),
+                        SourceTexture::Invalid,
+                        SourceTexture::Invalid,
+                    ],
+                };
+                self.cs_clip_box_shadow
+                    .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
+                self.draw_instanced_batch(
+                    items,
+                    VertexArrayKind::Clip,
+                    &textures,
+                    stats,
+                );
+            }
+
             // draw image masks
             for (mask_texture_id, items) in target.clip_batcher.images.iter() {
                 let _gm2 = self.gpu_profile.start_marker("clip images");
@@ -4683,8 +4661,6 @@ impl Renderer {
         self.cs_text_run.deinit(&mut self.device);
         self.cs_blur_a8.deinit(&mut self.device);
         self.cs_blur_rgba8.deinit(&mut self.device);
-        self.brush_mask_rounded_rect.deinit(&mut self.device);
-        self.brush_picture.deinit(&mut self.device);
         self.brush_solid.deinit(&mut self.device);
         self.brush_line.deinit(&mut self.device);
         self.brush_blend.deinit(&mut self.device);
@@ -4692,6 +4668,7 @@ impl Renderer {
         self.brush_radial_gradient.deinit(&mut self.device);
         self.brush_linear_gradient.deinit(&mut self.device);
         self.cs_clip_rectangle.deinit(&mut self.device);
+        self.cs_clip_box_shadow.deinit(&mut self.device);
         self.cs_clip_image.deinit(&mut self.device);
         self.cs_clip_border.deinit(&mut self.device);
         self.ps_text_run.deinit(&mut self.device);

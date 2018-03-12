@@ -34,6 +34,7 @@ jobs:
             REVIEWERS: sfraser
          command:
             - /runme.sh
+         taskcluster-proxy: true
          artifacts:
             - name: 'public/build/nsSTSPreloadList.diff'
               path: '/home/worker/artifacts/nsSTSPreloadList.diff'

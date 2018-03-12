@@ -5,6 +5,11 @@
 
 "use strict";
 
+// There are shutdown issues for which multiple rejections are left uncaught.
+// See bug 1018184 for resolving these issues.
+const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
+PromiseTestUtils.whitelistRejectionsGlobally(/this\.worker is null/);
+
 // Empty page
 const PAGE_URL = `${URL_ROOT}doc_empty-tab-01.html`;
 const JS_URL = `${URL_ROOT}code_binary_search_absolute.js`;

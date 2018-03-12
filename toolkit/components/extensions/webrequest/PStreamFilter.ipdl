@@ -18,11 +18,13 @@ parent:
   async Resume();
   async Close();
   async Disconnect();
+  async Destroy();
 
 child:
   async Resumed();
   async Suspended();
   async Closed();
+  async Error(nsCString error);
 
   async FlushData();
 

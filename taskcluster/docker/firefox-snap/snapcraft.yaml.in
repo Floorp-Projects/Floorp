@@ -49,7 +49,6 @@ parts:
       - libmirclient9
       - desktop-file-utils
       - ffmpeg
-      - xdg-utils
       - libc-bin
       - locales-all
     after: [desktop-gtk3]

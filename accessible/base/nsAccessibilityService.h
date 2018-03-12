@@ -311,7 +311,7 @@ private:
   /**
    * Set accessibility service consumers.
    */
-  void SetConsumers(uint32_t aConsumers);
+  void SetConsumers(uint32_t aConsumers, bool aNotify = true);
 
   /**
    * Unset accessibility service consumers.

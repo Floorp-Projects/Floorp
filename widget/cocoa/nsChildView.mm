@@ -4596,14 +4596,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   bool defaultPrevented =
     (mGeckoChild->DispatchInputEvent(&geckoEvent) == nsEventStatus_eConsumeNoDefault);
 
-  // Check to see if we are double-clicking in the titlebar.
-  CGFloat locationInTitlebar = [[self window] frame].size.height - [theEvent locationInWindow].y;
+  // Check to see if we are double-clicking in draggable parts of the window.
   LayoutDeviceIntPoint pos = geckoEvent.mRefPoint;
   if (!defaultPrevented && [theEvent clickCount] == 2 &&
-      !mGeckoChild->GetNonDraggableRegion().Contains(pos.x, pos.y) &&
-      [[self window] isKindOfClass:[ToolbarWindow class]] &&
-      (locationInTitlebar < [(ToolbarWindow*)[self window] titlebarHeight] ||
-       locationInTitlebar < [(ToolbarWindow*)[self window] unifiedToolbarHeight])) {
+      !mGeckoChild->GetNonDraggableRegion().Contains(pos.x, pos.y)) {
     if ([self shouldZoomOnDoubleClick]) {
       [[self window] performZoom:nil];
     } else if ([self shouldMinimizeOnTitlebarDoubleClick]) {

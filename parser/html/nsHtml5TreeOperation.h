@@ -112,7 +112,7 @@ class nsHtml5TreeOperation final {
      */
     static inline already_AddRefed<nsAtom> Reget(nsAtom* aAtom)
     {
-      if (!aAtom || aAtom->IsStaticAtom()) {
+      if (!aAtom || aAtom->IsStatic()) {
         return dont_AddRef(aAtom);
       }
       nsAutoString str;

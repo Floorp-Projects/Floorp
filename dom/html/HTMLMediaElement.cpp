@@ -107,6 +107,7 @@
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
 #include "SVGObserverUtils.h"
+#include "nsMimeTypes.h"
 
 #ifdef MOZ_ANDROID_HLS_SUPPORT
 #include "HLSDecoder.h"
@@ -7817,9 +7818,9 @@ HTMLMediaElement::ReportCanPlayTelemetry()
         MOZ_ASSERT(hr == S_OK);
 #endif
         bool aac = MP4Decoder::IsSupportedType(
-          MediaContainerType(MEDIAMIMETYPE("audio/mp4")), nullptr);
+          MediaContainerType(MEDIAMIMETYPE(AUDIO_MP4)), nullptr);
         bool h264 = MP4Decoder::IsSupportedType(
-          MediaContainerType(MEDIAMIMETYPE("video/mp4")), nullptr);
+          MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)), nullptr);
 #if XP_WIN
         CoUninitialize();
 #endif

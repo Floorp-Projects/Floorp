@@ -10,7 +10,6 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.geckoview.GeckoSession;
 
 import android.util.Log;
 
@@ -36,12 +35,15 @@ import android.util.Log;
                                       final GeckoSession session,
                                       final String[] events,
                                       final boolean alwaysListen) {
+        session.handlersCount++;
+
         mAlwaysListen = alwaysListen;
         mModuleName = module;
         mEvents = events;
 
         if (alwaysListen) {
             register(session.getEventDispatcher());
+            setSessionIsReady(session.getEventDispatcher(), /* ready */ true);
         }
     }
 
@@ -55,29 +57,41 @@ import android.util.Log;
             return;
         }
 
-        if (!mAlwaysListen && mDelegate != null) {
+        final boolean unsettingOldDelegate = mDelegate != null &&
+                                             delegate == null;
+        final boolean settingNewDelegate = mDelegate == null &&
+                                           delegate != null;
+
+        if (!mAlwaysListen && unsettingOldDelegate) {
             unregister(eventDispatcher);
         }
 
         mDelegate = delegate;
 
-        if (!mAlwaysListen && mDelegate != null) {
+        if (!mAlwaysListen && settingNewDelegate) {
             register(eventDispatcher);
         }
     }
 
     private void unregister(final EventDispatcher eventDispatcher) {
-        final GeckoBundle msg = new GeckoBundle(1);
-        msg.putString("module", mModuleName);
-        eventDispatcher.dispatch("GeckoView:Unregister", msg);
+        setSessionIsReady(eventDispatcher, /* ready */ false);
         eventDispatcher.unregisterUiThreadListener(this, mEvents);
     }
 
     private void register(final EventDispatcher eventDispatcher) {
+        eventDispatcher.registerUiThreadListener(this, mEvents);
+        setSessionIsReady(eventDispatcher, /* ready */ true);
+    }
+
+    public void setSessionIsReady(final EventDispatcher eventDispatcher, final boolean ready) {
+        if (!mAlwaysListen && mDelegate == null) {
+            return;
+        }
+
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putString("module", mModuleName);
-        eventDispatcher.dispatch("GeckoView:Register", msg);
-        eventDispatcher.registerUiThreadListener(this, mEvents);
+        eventDispatcher.dispatch(ready ? "GeckoView:Register"
+                                       : "GeckoView:Unregister", msg);
     }
 
     @Override
@@ -90,7 +104,7 @@ import android.util.Log;
         if (mDelegate != null) {
             handleMessage(mDelegate, event, message, callback);
         } else {
-            callback.sendError("No listener registered");
+            callback.sendError("No delegate registered");
         }
     }
 

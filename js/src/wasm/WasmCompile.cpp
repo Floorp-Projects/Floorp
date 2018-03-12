@@ -22,6 +22,7 @@
 #include "mozilla/Unused.h"
 
 #include "jit/ProcessExecutableMemory.h"
+#include "util/Text.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmGenerator.h"
@@ -89,7 +90,7 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
     baselineEnabled = cx->options().wasmBaseline();
     ionEnabled = cx->options().wasmIon();
     sharedMemoryEnabled = cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-    testTiering = cx->options().testWasmAwaitTier2();
+    testTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
 
     // Debug information such as source view or debug traps will require
     // additional memory and permanently stay in baseline code, so we try to
@@ -315,9 +316,6 @@ static const double spaceCutoffPct = 0.9;
 static bool
 TieringBeneficial(uint32_t codeSize)
 {
-    if (!CanUseExtraThreads())
-        return false;
-
     uint32_t cpuCount = HelperThreadState().cpuCount;
     MOZ_ASSERT(cpuCount > 0);
 
@@ -401,7 +399,7 @@ InitialCompileFlags(const CompileArgs& args, Decoder& d, CompileMode* mode, Tier
     // HasCompilerSupport() should prevent failure here
     MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled);
 
-    if (baselineEnabled && ionEnabled && !debugEnabled &&
+    if (baselineEnabled && ionEnabled && !debugEnabled && CanUseExtraThreads() &&
         (TieringBeneficial(codeSectionSize) || args.testTiering))
     {
         *mode = CompileMode::Tier1;

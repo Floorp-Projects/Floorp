@@ -568,6 +568,18 @@ describe("Message reducer:", () => {
       const dirxmlMessage = getLastMessage(getState());
       expect(dirxmlMessage.level).toEqual(MESSAGE_TYPE.LOG);
     });
+
+    it("does not throw when adding incomplete console.count packet", () => {
+      const { dispatch, getState } = setupStore();
+      const packet = clonePacket(stubPackets.get(`console.count('bar')`));
+
+      // Remove counter information to mimick packet we receive in the browser console.
+      delete packet.message.counter;
+
+      dispatch(actions.messagesAdd([packet]));
+      // The message should not be added to the state.
+      expect(getAllMessagesById(getState()).size).toBe(0);
+    });
   });
 
   describe("expandedMessageIds", () => {

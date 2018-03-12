@@ -216,6 +216,7 @@
 @RESPATH@/components/dom_security.xpt
 @RESPATH@/components/dom_sidebar.xpt
 @RESPATH@/components/dom_storage.xpt
+@RESPATH@/components/dom_webauthn.xpt
 #ifdef MOZ_WEBSPEECH
 @RESPATH@/components/dom_webspeechrecognition.xpt
 #endif
@@ -424,9 +425,6 @@
 #endif
 @RESPATH@/components/nsUpdateTimerManager.manifest
 @RESPATH@/components/nsUpdateTimerManager.js
-@RESPATH@/components/addoncompat.manifest
-@RESPATH@/components/multiprocessShims.js
-@RESPATH@/components/defaultShims.js
 @RESPATH@/components/utils.manifest
 @RESPATH@/components/simpleServices.js
 @RESPATH@/components/pluginGlue.manifest

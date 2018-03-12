@@ -11,7 +11,6 @@
 #include "jsapi.h"
 #include "xpcpublic.h"
 
-#include "nsIAddonInterposition.h"
 #include "nsIAppStartup.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsIFile.h"

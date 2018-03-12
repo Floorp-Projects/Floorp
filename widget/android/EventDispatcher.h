@@ -45,8 +45,6 @@ public:
                       java::GeckoBundle::Param aData = nullptr,
                       nsIAndroidEventCallback* aCallback = nullptr);
 
-    using NativesBase::DisposeNative;
-
     bool HasGeckoListener(jni::String::Param aEvent);
     void DispatchToGecko(jni::String::Param aEvent,
                          jni::Object::Param aData,
@@ -56,9 +54,12 @@ public:
                                 jni::Object::Param aData,
                                 JS::MutableHandleValue aOut);
 
+    static void DisposeNative(const java::EventDispatcher::LocalRef& aInstance);
+
 private:
     java::EventDispatcher::GlobalRef mDispatcher;
     nsCOMPtr<nsPIDOMWindowOuter> mDOMWindow;
+    int32_t mAttachCount{0};
 
     virtual ~EventDispatcher() {}
 

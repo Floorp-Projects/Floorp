@@ -112,6 +112,17 @@ function clearPrefs() {
   ].forEach(prefsService.clearUserPref);
 }
 
+function getPrivatePacket(key) {
+  const packet = clonePacket(stubPackets.get(key));
+  if (packet.message) {
+    packet.message.private = true;
+  }
+  if (Object.getOwnPropertyNames(packet).includes("private")) {
+    packet.private = true;
+  }
+  return packet;
+}
+
 module.exports = {
   clearPrefs,
   clonePacket,
@@ -119,6 +130,7 @@ module.exports = {
   getFirstMessage,
   getLastMessage,
   getMessageAt,
+  getPrivatePacket,
   prefsService,
   setupActions,
   setupStore,

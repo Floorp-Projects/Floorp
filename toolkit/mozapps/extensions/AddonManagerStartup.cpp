@@ -28,7 +28,6 @@
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
 #include "nsChromeRegistry.h"
-#include "nsIAddonInterposition.h"
 #include "nsIDOMWindowUtils.h" // for nsIJSRAIIHelper
 #include "nsIFileURL.h"
 #include "nsIIOService.h"
@@ -511,23 +510,6 @@ InstallLocation::InstallLocation(JSContext* cx, const JS::Value& value)
  * XPC interfacing
  *****************************************************************************/
 
-static void
-EnableShimsAndCPOWs(const nsAString& addonId, bool enableShims)
-{
-  NS_ConvertUTF16toUTF8 id(addonId);
-
-  if (enableShims) {
-    nsCOMPtr<nsIAddonInterposition> interposition =
-      do_GetService("@mozilla.org/addons/multiprocess-shims;1");
-
-    if (!interposition || !xpc::SetAddonInterposition(id, interposition)) {
-      return;
-    }
-  }
-
-  Unused << xpc::AllowCPOWsInAddon(id, true);
-}
-
 Result<Ok, nsresult>
 AddonManagerStartup::AddInstallLocation(Addon& addon)
 {
@@ -613,8 +595,6 @@ AddonManagerStartup::InitializeExtensions(JS::HandleValue locations, JSContext* 
     return NS_OK;
   }
 
-  bool enableInterpositions = Preferences::GetBool("extensions.interposition.enabled", false);
-
   JS::RootedObject locs(cx, &locations.toObject());
   for (auto e1 : PropertyIter(cx, locs)) {
     InstallLocation loc(e1);
@@ -626,7 +606,8 @@ AddonManagerStartup::InitializeExtensions(JS::HandleValue locations, JSContext* 
         Unused << AddInstallLocation(addon);
 
         if (addon.ShimsEnabled()) {
-          EnableShimsAndCPOWs(addon.Id(), enableInterpositions);
+          NS_ConvertUTF16toUTF8 id(addon.Id());
+          Unused << xpc::AllowCPOWsInAddon(id, true);
         }
       }
     }

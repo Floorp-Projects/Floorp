@@ -1006,9 +1006,13 @@ JSTerm.prototype = {
    * This method emits the "private-messages-cleared" notification.
    */
   clearPrivateMessages: function () {
-    let nodes = this.hud.outputNode.querySelectorAll(".message[private]");
-    for (let node of nodes) {
-      this.hud.removeOutputMessage(node);
+    if (this.hud.NEW_CONSOLE_OUTPUT_ENABLED) {
+      this.hud.newConsoleOutput.dispatchPrivateMessagesClear();
+    } else {
+      let nodes = this.hud.outputNode.querySelectorAll(".message[private]");
+      for (let node of nodes) {
+        this.hud.removeOutputMessage(node);
+      }
     }
     this.emit("private-messages-cleared");
   },

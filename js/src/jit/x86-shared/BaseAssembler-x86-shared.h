@@ -3743,9 +3743,13 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         m_formatter.immediate16u(imm);
     }
 
+    void lfence() {
+        spew("lfence");
+        m_formatter.twoByteOp(OP_FENCE, (RegisterID)0, 0b101);
+    }
     void mfence() {
         spew("mfence");
-        m_formatter.twoByteOp(OP_FENCE, (RegisterID)0, 6);
+        m_formatter.twoByteOp(OP_FENCE, (RegisterID)0, 0b110);
     }
 
     // Assembler admin methods:

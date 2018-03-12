@@ -1058,6 +1058,26 @@ private:
                                                   const uint32_t& aFlags,
                                                   const nsCString& aCategory) override;
 
+  virtual mozilla::ipc::IPCResult RecvScriptErrorWithStack(const nsString& aMessage,
+                                                           const nsString& aSourceName,
+                                                           const nsString& aSourceLine,
+                                                           const uint32_t& aLineNumber,
+                                                           const uint32_t& aColNumber,
+                                                           const uint32_t& aFlags,
+                                                           const nsCString& aCategory,
+                                                           const ClonedMessageData& aStack) override;
+
+private:
+  mozilla::ipc::IPCResult RecvScriptErrorInternal(const nsString& aMessage,
+                                                  const nsString& aSourceName,
+                                                  const nsString& aSourceLine,
+                                                  const uint32_t& aLineNumber,
+                                                  const uint32_t& aColNumber,
+                                                  const uint32_t& aFlags,
+                                                  const nsCString& aCategory,
+                                                  const ClonedMessageData* aStack = nullptr);
+
+public:
   virtual mozilla::ipc::IPCResult RecvPrivateDocShellsExist(const bool& aExist) override;
 
   virtual mozilla::ipc::IPCResult RecvFirstIdle() override;

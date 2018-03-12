@@ -78,6 +78,14 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
+    /**
+     * Temporary diagnostic function for startup crashes in bug 1403348:
+     *
+     * Annotate the crash report with the contents of the async shutdown
+     * module/component scripts.
+     */
+    nsresult AnnotateCrashReport();
+
  protected:
     virtual ~mozJSComponentLoader();
 

@@ -131,6 +131,15 @@ URLInfo::Host() const
   return mHost;
 }
 
+const nsAtom*
+URLInfo::HostAtom() const
+{
+  if (!mHostAtom) {
+    mHostAtom = NS_Atomize(Host());
+  }
+  return mHostAtom;
+}
+
 const nsString&
 URLInfo::FilePath() const
 {

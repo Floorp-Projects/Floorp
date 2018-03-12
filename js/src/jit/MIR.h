@@ -11762,43 +11762,6 @@ class MGuardObjectIdentity
     }
 };
 
-// Guard on an object's class.
-class MGuardClass
-  : public MUnaryInstruction,
-    public SingleObjectPolicy::Data
-{
-    const Class* class_;
-
-    MGuardClass(MDefinition* obj, const Class* clasp)
-      : MUnaryInstruction(classOpcode, obj),
-        class_(clasp)
-    {
-        setGuard();
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(GuardClass)
-    TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
-
-    const Class* getClass() const {
-        return class_;
-    }
-    bool congruentTo(const MDefinition* ins) const override {
-        if (!ins->isGuardClass())
-            return false;
-        if (getClass() != ins->toGuardClass()->getClass())
-            return false;
-        return congruentIfOperandsEqual(ins);
-    }
-    AliasSet getAliasSet() const override {
-        return AliasSet::Load(AliasSet::ObjectFields);
-    }
-
-    ALLOW_CLONE(MGuardClass)
-};
-
 // Guard on the presence or absence of an unboxed object's expando.
 class MGuardUnboxedExpando
   : public MUnaryInstruction,

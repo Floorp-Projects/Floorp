@@ -1,3 +1,4 @@
+// |jit-test| allow-overrecursed
 g = newGlobal()
 g.parent = this
 g.eval("new Debugger(parent).onExceptionUnwind = function(){}");
@@ -16,6 +17,4 @@ function test() {
     }
     f(80);
 }
-try {
-    test();
-} catch(e) {}
+test();

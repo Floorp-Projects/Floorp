@@ -66,7 +66,7 @@ nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo)
 {
   MOZ_ASSERT(IsNonInheritingAnonBox(aPseudo));
   for (NonInheritingBase i = 0; i < ArrayLength(sCSSAnonBoxAtomSetup); ++i) {
-    if (*sCSSAnonBoxAtomSetup[i].mAtom == aPseudo) {
+    if (*sCSSAnonBoxAtomSetup[i].mAtomp == aPseudo) {
       return static_cast<NonInheriting>(i);
     }
   }
@@ -78,5 +78,5 @@ nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo)
 nsCSSAnonBoxes::GetNonInheritingPseudoAtom(NonInheriting aBoxType)
 {
   MOZ_ASSERT(aBoxType < NonInheriting::_Count);
-  return *sCSSAnonBoxAtomSetup[static_cast<NonInheritingBase>(aBoxType)].mAtom;
+  return *sCSSAnonBoxAtomSetup[static_cast<NonInheritingBase>(aBoxType)].mAtomp;
 }

@@ -33,6 +33,7 @@ stubPreparedMessages.set("GET request", new NetworkEventMessage({
   "securityState": null,
   "securityInfo": null,
   "requestHeadersFromUploadStream": null,
+  "private": false,
   "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
   "urlDetails": {
     "baseNameWithQuery": "inexistent.html",
@@ -111,6 +112,7 @@ stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
   "securityState": null,
   "securityInfo": null,
   "requestHeadersFromUploadStream": null,
+  "private": false,
   "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
   "urlDetails": {
     "baseNameWithQuery": "inexistent.html",
@@ -189,6 +191,7 @@ stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
   "securityState": null,
   "securityInfo": null,
   "requestHeadersFromUploadStream": null,
+  "private": false,
   "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
   "urlDetails": {
     "baseNameWithQuery": "inexistent.html",

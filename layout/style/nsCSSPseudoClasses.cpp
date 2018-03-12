@@ -116,14 +116,14 @@ nsCSSPseudoClasses::PseudoTypeToString(Type aType, nsAString& aString)
 {
   MOZ_ASSERT(aType < Type::Count, "Unexpected type");
   auto idx = static_cast<CSSPseudoClassTypeBase>(aType);
-  (*sCSSPseudoClassAtomSetup[idx].mAtom)->ToString(aString);
+  (*sCSSPseudoClassAtomSetup[idx].mAtomp)->ToString(aString);
 }
 
 /* static */ CSSPseudoClassType
 nsCSSPseudoClasses::GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState)
 {
   for (uint32_t i = 0; i < ArrayLength(sCSSPseudoClassAtomSetup); ++i) {
-    if (*sCSSPseudoClassAtomSetup[i].mAtom == aAtom) {
+    if (*sCSSPseudoClassAtomSetup[i].mAtomp == aAtom) {
       Type type = Type(i);
       return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
     }

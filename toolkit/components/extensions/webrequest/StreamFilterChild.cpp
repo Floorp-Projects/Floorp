@@ -305,6 +305,18 @@ StreamFilterChild::RecvInitialized(bool aSuccess)
 }
 
 IPCResult
+StreamFilterChild::RecvError(const nsCString& aError)
+{
+  mState = State::Error;
+  if (mStreamFilter) {
+    mStreamFilter->FireErrorEvent(NS_ConvertUTF8toUTF16(aError));
+    mStreamFilter = nullptr;
+  }
+  SendDestroy();
+  return IPC_OK();
+}
+
+IPCResult
 StreamFilterChild::RecvClosed() {
   MOZ_DIAGNOSTIC_ASSERT(mState == State::Closing);
 

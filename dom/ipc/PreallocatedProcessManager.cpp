@@ -43,6 +43,7 @@ public:
   void RemoveBlocker(ContentParent* aParent);
   already_AddRefed<ContentParent> Take();
   bool Provide(ContentParent* aParent);
+  void Disable();
 
 private:
   static mozilla::StaticRefPtr<PreallocatedProcessManagerImpl> sSingleton;
@@ -60,7 +61,6 @@ private:
 
   void RereadPrefs();
   void Enable();
-  void Disable();
   void CloseProcess();
 
   void ObserveProcessShutdown(nsISupports* aSubject);
@@ -333,6 +333,12 @@ PreallocatedProcessManager::Take()
 PreallocatedProcessManager::Provide(ContentParent* aParent)
 {
   return GetPPMImpl()->Provide(aParent);
+}
+
+/* static */ void
+PreallocatedProcessManager::Disable()
+{
+  GetPPMImpl()->Disable();
 }
 
 } // namespace mozilla

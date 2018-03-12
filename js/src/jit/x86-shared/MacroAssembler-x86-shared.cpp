@@ -1418,4 +1418,16 @@ MacroAssembler::atomicFetchOpJS(Scalar::Type arrayType, const Synchronization& s
     AtomicFetchOpJS(*this, arrayType, sync, op, value, mem, temp1, temp2, output);
 }
 
+// ========================================================================
+// Spectre Mitigations.
+
+void
+MacroAssembler::speculationBarrier()
+{
+    // Spectre mitigation recommended by Intel and AMD suggest to use lfence as
+    // a way to force all speculative execution of instructions to end.
+    MOZ_ASSERT(HasSSE2());
+    masm.lfence();
+}
+
 //}}} check_macroassembler_style

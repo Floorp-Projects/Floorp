@@ -512,11 +512,12 @@
               <xul:label class="popup-notification-origin header"
                          xbl:inherits="value=origin,tooltiptext=origin"
                          crop="center"/>
-              <xul:description class="popup-notification-description"
-                               xbl:inherits="popupid">
-                <!-- These need to be on the same line to avoid creating whitespace between them (whitespace is added in the localization file, if necessary). -->
-                <html:span xbl:inherits="xbl:text=label,popupid"/><html:b xbl:inherits="xbl:text=name,popupid"/><html:span xbl:inherits="xbl:text=endlabel,popupid"/>
-              </xul:description>
+              <!-- These need to be on the same line to avoid creating
+                   whitespace between them (whitespace is added in the
+                   localization file, if necessary). -->
+              <xul:description class="popup-notification-description" xbl:inherits="popupid"><html:span
+                xbl:inherits="xbl:text=label,popupid"/><html:b xbl:inherits="xbl:text=name,popupid"/><html:span
+              xbl:inherits="xbl:text=endlabel,popupid"/></xul:description>
             </xul:vbox>
             <xul:toolbarbutton anonid="closebutton"
                                class="messageCloseButton close-icon popup-notification-closebutton tabbable"

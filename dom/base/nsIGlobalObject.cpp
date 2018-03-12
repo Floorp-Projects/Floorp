@@ -7,6 +7,7 @@
 #include "nsIGlobalObject.h"
 
 #include "mozilla/dom/ServiceWorker.h"
+#include "mozilla/dom/ServiceWorkerRegistration.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsHostObjectProtocolHandler.h"
@@ -17,6 +18,8 @@ using mozilla::DOMEventTargetHelper;
 using mozilla::dom::ClientInfo;
 using mozilla::dom::ServiceWorker;
 using mozilla::dom::ServiceWorkerDescriptor;
+using mozilla::dom::ServiceWorkerRegistration;
+using mozilla::dom::ServiceWorkerRegistrationDescriptor;
 
 nsIGlobalObject::~nsIGlobalObject()
 {
@@ -193,6 +196,13 @@ RefPtr<ServiceWorker>
 nsIGlobalObject::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDescriptor)
 {
   MOZ_DIAGNOSTIC_ASSERT(false, "this global should not have any service workers");
+  return nullptr;
+}
+
+RefPtr<ServiceWorkerRegistration>
+nsIGlobalObject::GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  MOZ_DIAGNOSTIC_ASSERT(false, "this global should not have any service worker registrations");
   return nullptr;
 }
 

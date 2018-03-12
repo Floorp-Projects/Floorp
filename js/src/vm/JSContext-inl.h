@@ -16,7 +16,7 @@
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
 #include "vm/JSCompartment.h"
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 
 namespace js {
 

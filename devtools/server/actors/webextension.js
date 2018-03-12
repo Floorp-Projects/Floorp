@@ -60,6 +60,18 @@ function WebExtensionChildActor(conn, chromeGlobal, prefix, addonId) {
   this._prefix = prefix;
   this.id = addonId;
 
+  // Redefine the messageManager getter to return the chromeGlobal
+  // as the messageManager for this actor (which is the browser XUL
+  // element used by the parent actor running in the main process to
+  // connect to the extension process).
+  Object.defineProperty(this, "messageManager", {
+    enumerable: true,
+    configurable: true,
+    get: () => {
+      return this._chromeGlobal;
+    }
+  });
+
   // Bind the _allowSource helper to this, it is used in the
   // TabActor to lazily create the TabSources instance.
   this._allowSource = this._allowSource.bind(this);

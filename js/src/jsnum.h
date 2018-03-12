@@ -14,7 +14,7 @@
 
 #include "js/Conversions.h"
 
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 
 // This macro is should be `one' if current compiler supports builtin functions

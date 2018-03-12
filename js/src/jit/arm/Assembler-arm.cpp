@@ -2163,6 +2163,16 @@ Assembler::as_isb_trap()
     return writeInst(0xee070f94);
 }
 
+BufferOffset
+Assembler::as_csdb()
+{
+    // NOP (see as_nop) on architectures where this instruction is not defined.
+    //
+    // https://developer.arm.com/-/media/developer/pdf/Cache_Speculation_Side-channels_22Feb18.pdf
+    // CSDB A32: 1110_0011_0010_0000_1111_0000_0001_0100
+    return writeInst(0xe320f000 | 0x14);
+}
+
 // Control flow stuff:
 
 // bx can *only* branch to a register, never to an immediate.

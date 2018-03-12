@@ -41,7 +41,7 @@ of the License or (at your option) any later version.
 using namespace graphite2;
 
 #if !defined GRAPHITE2_NTRACING
-json *global_log = NULL;
+json *global_log = 0;
 #endif
 
 extern "C" {
@@ -120,6 +120,7 @@ void gr_stop_logging(GR_MAYBE_UNUSED gr_face * face)
     {
         FILE * log = global_log->stream();
         delete global_log;
+        global_log = 0;
         fclose(log);
     }
 #endif
@@ -214,7 +215,7 @@ json & graphite2::operator << (json & j, const dslot & ds) throw()
     j << "user" << json::flat << json::array;
     for (int n = 0; n!= seg.numAttrs(); ++n)
         j   << s.userAttrs()[n];
-        j   << json::close;
+    j       << json::close;
     if (s.firstChild())
     {
         j   << "children" << json::flat << json::array;

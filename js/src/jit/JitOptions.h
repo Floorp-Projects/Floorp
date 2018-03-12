@@ -74,6 +74,7 @@ struct DefaultJitOptions
     bool osr;
     bool asmJSAtomicsEnable;
     bool wasmFoldOffsets;
+    bool wasmDelayTier2;
     bool ionInterruptWithoutSignals;
     bool simulatorAlwaysInterrupt;
     uint32_t baselineWarmUpThreshold;
@@ -99,8 +100,10 @@ struct DefaultJitOptions
     // concept.
     bool spectreIndexMasking;
     bool spectreObjectMitigationsBarriers;
+    bool spectreObjectMitigationsMisc;
     bool spectreStringMitigations;
     bool spectreValueMasking;
+    bool spectreJitToCxxCalls;
 
     // The options below affect the rest of the VM, and not just the JIT.
     bool disableUnboxedObjects;

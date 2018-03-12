@@ -538,19 +538,24 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
     return true;
 }
 
-/* static */ bool
+/* static */ NativeObject*
 UnboxedPlainObject::convertToNative(JSContext* cx, JSObject* obj)
 {
+    // This function returns the original object (instead of bool) to make sure
+    // Ion's LConvertUnboxedObjectToNative works correctly. If we return bool
+    // and use defineReuseInput, the object register is not preserved across the
+    // call.
+
     const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layout();
     UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
 
     if (!layout.nativeGroup()) {
         if (!UnboxedLayout::makeNativeGroup(cx, obj->group()))
-            return false;
+            return nullptr;
 
         // makeNativeGroup can reentrantly invoke this method.
         if (obj->is<PlainObject>())
-            return true;
+            return &obj->as<PlainObject>();
     }
 
     AutoValueVector values(cx);
@@ -559,7 +564,7 @@ UnboxedPlainObject::convertToNative(JSContext* cx, JSObject* obj)
         // initialized yet. Make sure any double values we read here are
         // canonicalized.
         if (!values.append(obj->as<UnboxedPlainObject>().getValue(layout.properties()[i], true)))
-            return false;
+            return nullptr;
     }
 
     // We are eliminating the expando edge with the conversion, so trigger a
@@ -579,42 +584,43 @@ UnboxedPlainObject::convertToNative(JSContext* cx, JSObject* obj)
     for (size_t i = 0; i < values.length(); i++)
         obj->as<PlainObject>().initSlotUnchecked(i, values[i]);
 
-    if (expando) {
-        // Add properties from the expando object to the object, in order.
-        // Suppress GC here, so that callers don't need to worry about this
-        // method collecting. The stuff below can only fail due to OOM, in
-        // which case the object will not have been completely filled back in.
-        gc::AutoSuppressGC suppress(cx);
+    if (!expando)
+        return &obj->as<PlainObject>();
 
-        Vector<jsid> ids(cx);
-        for (Shape::Range<NoGC> r(expando->lastProperty()); !r.empty(); r.popFront()) {
-            if (!ids.append(r.front().propid()))
-                return false;
-        }
-        for (size_t i = 0; i < expando->getDenseInitializedLength(); i++) {
-            if (!expando->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE)) {
-                if (!ids.append(INT_TO_JSID(i)))
-                    return false;
-            }
-        }
-        ::Reverse(ids.begin(), ids.end());
+    // Add properties from the expando object to the object, in order.
+    // Suppress GC here, so that callers don't need to worry about this
+    // method collecting. The stuff below can only fail due to OOM, in
+    // which case the object will not have been completely filled back in.
+    gc::AutoSuppressGC suppress(cx);
 
-        RootedPlainObject nobj(cx, &obj->as<PlainObject>());
-        Rooted<UnboxedExpandoObject*> nexpando(cx, expando);
-        RootedId id(cx);
-        Rooted<PropertyDescriptor> desc(cx);
-        for (size_t i = 0; i < ids.length(); i++) {
-            id = ids[i];
-            if (!GetOwnPropertyDescriptor(cx, nexpando, id, &desc))
-                return false;
-            ObjectOpResult result;
-            if (!DefineProperty(cx, nobj, id, desc, result))
-                return false;
-            MOZ_ASSERT(result.ok());
+    Vector<jsid> ids(cx);
+    for (Shape::Range<NoGC> r(expando->lastProperty()); !r.empty(); r.popFront()) {
+        if (!ids.append(r.front().propid()))
+            return nullptr;
+    }
+    for (size_t i = 0; i < expando->getDenseInitializedLength(); i++) {
+        if (!expando->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE)) {
+            if (!ids.append(INT_TO_JSID(i)))
+                return nullptr;
         }
     }
+    ::Reverse(ids.begin(), ids.end());
 
-    return true;
+    RootedPlainObject nobj(cx, &obj->as<PlainObject>());
+    Rooted<UnboxedExpandoObject*> nexpando(cx, expando);
+    RootedId id(cx);
+    Rooted<PropertyDescriptor> desc(cx);
+    for (size_t i = 0; i < ids.length(); i++) {
+        id = ids[i];
+        if (!GetOwnPropertyDescriptor(cx, nexpando, id, &desc))
+            return nullptr;
+        ObjectOpResult result;
+        if (!DefineProperty(cx, nobj, id, desc, result))
+            return nullptr;
+        MOZ_ASSERT(result.ok());
+    }
+
+    return nobj;
 }
 
 /* static */ JS::Result<UnboxedObject*, JS::OOM&>

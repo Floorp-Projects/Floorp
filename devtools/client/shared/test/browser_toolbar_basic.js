@@ -5,6 +5,11 @@
 
 // Tests that the developer toolbar works properly
 
+// There are shutdown issues for which multiple rejections are left uncaught.
+// See bug 1018184 for resolving these issues.
+const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
+PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
+
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 
 const TEST_URI = TEST_URI_ROOT + "doc_toolbar_basic.html";

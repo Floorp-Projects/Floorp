@@ -1738,6 +1738,14 @@ public:
   void FlushPendingNotifications(mozilla::FlushType aType);
 
   /**
+   * Another variant of the above FlushPendingNotifications.  This function
+   * takes a ChangesToFlush to specify whether throttled animations are flushed
+   * or not.
+   * If in doublt, use the above FlushPendingNotifications.
+   */
+  void FlushPendingNotifications(mozilla::ChangesToFlush aFlush);
+
+  /**
    * Calls FlushPendingNotifications on any external resources this document
    * has. If this document has no external resources or is an external resource
    * itself this does nothing. This should only be called with

@@ -2,13 +2,10 @@
 
 "use strict";
 
-// The following intermittent rejection should not be left uncaught. This test
-// has been whitelisted until the issue is fixed.
-//
-// NOTE: Whitelisting a class of rejections should be limited. Normally you
-//       should use "expectUncaughtRejection" to flag individual failures.
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/[object Object]/);
+// There are shutdown issues for which multiple rejections are left uncaught.
+// See bug 1018184 for resolving these issues.
+const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
+PromiseTestUtils.whitelistRejectionsGlobally(/connection just closed/);
 
 const TAB_URL = EXAMPLE_URL + "doc_WorkerActor.attachThread-tab.html";
 const WORKER_URL = "code_WorkerActor.attachThread-worker.js";

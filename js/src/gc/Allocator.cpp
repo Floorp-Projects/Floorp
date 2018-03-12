@@ -13,7 +13,7 @@
 #include "threading/CpuCount.h"
 #include "vm/JSContext.h"
 #include "vm/Runtime.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 #include "gc/ArenaList-inl.h"
 #include "gc/Heap-inl.h"

@@ -49,4 +49,17 @@ this.EnterprisePolicyTesting = {
     Services.obs.notifyObservers(null, "EnterprisePolicies:Restart");
     return promise;
   },
+
+  resetRunOnceState: function resetRunOnceState() {
+    const runOnceBaseKeys = [
+      "browser.policies.runonce.",
+      "browser.policies.runOncePerModification."
+    ];
+    for (let base of runOnceBaseKeys) {
+      for (let key of Services.prefs.getChildList(base, {})) {
+        if (Services.prefs.prefHasUserValue(key))
+          Services.prefs.clearUserPref(key);
+      }
+    }
+  },
 };

@@ -307,7 +307,9 @@ class nsTransitionManager final
 public:
   explicit nsTransitionManager(nsPresContext *aPresContext)
     : mozilla::CommonAnimationManager<mozilla::dom::CSSTransition>(aPresContext)
+#ifdef MOZ_OLD_STYLE
     , mInAnimationOnlyStyleUpdate(false)
+#endif
   {
   }
 
@@ -357,7 +359,6 @@ public:
   void PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                  mozilla::CSSPseudoElementType aPseudoType,
                                  mozilla::GeckoStyleContext* aNewStyleContext);
-#endif
 
   void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {
     mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;
@@ -366,6 +367,7 @@ public:
   bool InAnimationOnlyStyleUpdate() const {
     return mInAnimationOnlyStyleUpdate;
   }
+#endif
 
 protected:
   virtual ~nsTransitionManager() {}
@@ -398,7 +400,9 @@ protected:
                                bool* aStartedAny,
                                nsCSSPropertyIDSet* aWhichStarted);
 
+#ifdef MOZ_OLD_STYLE
   bool mInAnimationOnlyStyleUpdate;
+#endif
 };
 
 #endif /* !defined(nsTransitionManager_h_) */

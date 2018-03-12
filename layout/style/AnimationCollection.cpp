@@ -116,6 +116,7 @@ AnimationCollection<AnimationType>::GetOrCreateAnimationCollection(
   return collection;
 }
 
+#ifdef MOZ_OLD_STYLE
 template <class AnimationType>
 void
 AnimationCollection<AnimationType>::UpdateCheckGeneration(
@@ -123,6 +124,7 @@ AnimationCollection<AnimationType>::UpdateCheckGeneration(
 {
   mCheckGeneration = aPresContext->RestyleManager()->GetAnimationGeneration();
 }
+#endif
 
 template<class AnimationType>
 /*static*/ nsAtom*

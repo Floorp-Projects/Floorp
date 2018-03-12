@@ -4380,7 +4380,8 @@ BaselineCompiler::emit_JSOP_SUPERFUN()
     masm.branchPtr(Assembler::BelowOrEqual, proto, ImmWord(1), &needVMCall);
 
     // Use VMCall for non-JSFunction objects (eg. Proxy)
-    masm.branchTestObjClass(Assembler::NotEqual, proto, scratch, &JSFunction::class_, &needVMCall);
+    masm.branchTestObjClass(Assembler::NotEqual, proto, &JSFunction::class_, scratch, proto,
+                            &needVMCall);
 
     // Use VMCall if not constructor
     masm.load16ZeroExtend(Address(proto, JSFunction::offsetOfFlags()), scratch);

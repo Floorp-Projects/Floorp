@@ -71,7 +71,7 @@ pub use self::svg::{SVGLength, SVGOpacity, SVGPaint, SVGPaintKind};
 pub use self::svg::{SVGPaintOrder, SVGStrokeDashArray, SVGWidth};
 pub use self::svg::MozContextProperties;
 pub use self::table::XSpan;
-pub use self::text::{InitialLetter, LetterSpacing, LineHeight, MozTabSize, TextAlign};
+pub use self::text::{InitialLetter, LetterSpacing, LineHeight, MozTabSize, TextAlign, TextEmphasisStyle};
 pub use self::text::{TextAlignKeyword, TextDecorationLine, TextOverflow, WordSpacing};
 pub use self::time::Time;
 pub use self::transform::{Rotate, Scale, TimingFunction, Transform};
@@ -158,7 +158,7 @@ fn parse_number_with_clamping_mode<'i, 't>(
 #[allow(missing_docs)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, Ord, Parse, PartialEq)]
-#[derive(PartialOrd, ToCss)]
+#[derive(PartialOrd, ToComputedValue, ToCss)]
 pub enum BorderStyle {
     None = -1,
     Solid = 6,

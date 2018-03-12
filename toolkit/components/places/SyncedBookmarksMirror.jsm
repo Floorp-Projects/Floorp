@@ -1043,7 +1043,7 @@ class SyncedBookmarksMirror {
                   ) THEN :livemarkKind
                   ELSE :folderKind END)
                 ELSE :separatorKind END) AS kind,
-             b.lastModified, b.syncChangeCounter
+             b.lastModified / 1000 AS localModified, b.syncChangeCounter
       FROM moz_bookmarks b
       JOIN moz_bookmarks p ON p.id = b.parent
       JOIN syncedItems s ON s.id = b.id
@@ -1086,9 +1086,9 @@ class SyncedBookmarksMirror {
   }
 
   /**
-   * Fetches content info for all NEW local items that don't exist in the
-   * mirror. We'll try to dedupe them to changed items with similar contents and
-   * different GUIDs in the mirror.
+   * Fetches content info for all NEW and UNKNOWN local items that don't exist
+   * in the mirror. We'll try to dedupe them to changed items with similar
+   * contents and different GUIDs in the mirror.
    *
    * @return {Map.<String, BookmarkContent>}
    *         New items in Places that don't exist in the mirror, keyed by their
@@ -1535,7 +1535,9 @@ class SyncedBookmarksMirror {
       JOIN mergeStates r ON r.mergedGuid = b.guid
       JOIN items v ON v.guid = r.mergedGuid
       WHERE r.valueState = :valueState AND
-            b.dateAdded < v.dateAdded`,
+            /* "b.dateAdded" is in microseconds; "v.dateAdded" is in
+               milliseconds. */
+            b.dateAdded / 1000 < v.dateAdded`,
       { valueState: BookmarkMergeState.TYPE.REMOTE });
 
     // Stage remaining locally changed items for upload.
@@ -1553,8 +1555,9 @@ class SyncedBookmarksMirror {
                                 url, tags, description, loadInSidebar,
                                 smartBookmarkName, keyword, feedURL, siteURL,
                                 position)
-      SELECT b.id, b.guid, b.syncChangeCounter, p.guid, p.title, b.dateAdded,
-             b.type, b.title, IFNULL(SUBSTR(h.url, 1, 6) = 'place:', 0), h.url,
+      SELECT b.id, b.guid, b.syncChangeCounter, p.guid, p.title,
+             b.dateAdded / 1000, b.type, b.title,
+             IFNULL(SUBSTR(h.url, 1, 6) = 'place:', 0), h.url,
              (SELECT GROUP_CONCAT(t.title, ',') FROM moz_bookmarks e
               JOIN moz_bookmarks t ON t.id = e.parent
               JOIN moz_bookmarks r ON r.id = t.parent
@@ -1650,7 +1653,7 @@ class SyncedBookmarksMirror {
     await this.db.execute(`
       INSERT OR IGNORE INTO itemsToUpload(guid, syncChangeCounter, isDeleted,
                                           dateAdded)
-      SELECT guid, 1, 1, dateRemoved FROM moz_bookmarks_deleted`);
+      SELECT guid, 1, 1, dateRemoved / 1000 FROM moz_bookmarks_deleted`);
   }
 
   /**
@@ -1706,8 +1709,6 @@ class SyncedBookmarksMirror {
 
       let parentGuid = row.getResultByName("parentGuid");
       let parentRecordId = PlacesSyncUtils.bookmarks.guidToRecordId(parentGuid);
-      let dateAdded = PlacesUtils.toDate(
-        row.getResultByName("dateAdded")).getTime();
 
       let type = row.getResultByName("type");
       switch (type) {
@@ -1729,7 +1730,8 @@ class SyncedBookmarksMirror {
               // deduping logic.
               hasDupe: true,
               parentName: row.getResultByName("parentTitle"),
-              dateAdded,
+              // Omit `dateAdded` from the record if it's not set locally.
+              dateAdded: row.getResultByName("dateAdded") || undefined,
               bmkUri: row.getResultByName("url"),
               title: row.getResultByName("title"),
               queryId: row.getResultByName("smartBookmarkName"),
@@ -1751,7 +1753,7 @@ class SyncedBookmarksMirror {
             parentid: parentRecordId,
             hasDupe: true,
             parentName: row.getResultByName("parentTitle"),
-            dateAdded,
+            dateAdded: row.getResultByName("dateAdded") || undefined,
             bmkUri: row.getResultByName("url"),
             title: row.getResultByName("title"),
           };
@@ -1787,7 +1789,7 @@ class SyncedBookmarksMirror {
               parentid: parentRecordId,
               hasDupe: true,
               parentName: row.getResultByName("parentTitle"),
-              dateAdded,
+              dateAdded: row.getResultByName("dateAdded") || undefined,
               title: row.getResultByName("title"),
               feedUri: feedURLHref,
             };
@@ -1810,7 +1812,7 @@ class SyncedBookmarksMirror {
             parentid: parentRecordId,
             hasDupe: true,
             parentName: row.getResultByName("parentTitle"),
-            dateAdded,
+            dateAdded: row.getResultByName("dateAdded") || undefined,
             title: row.getResultByName("title"),
           };
           let description = row.getResultByName("description");
@@ -1832,7 +1834,7 @@ class SyncedBookmarksMirror {
             parentid: parentRecordId,
             hasDupe: true,
             parentName: row.getResultByName("parentTitle"),
-            dateAdded,
+            dateAdded: row.getResultByName("dateAdded") || undefined,
             // Older Desktops use `pos` for deduping.
             pos: row.getResultByName("position"),
           };
@@ -1937,7 +1939,7 @@ async function initializeMirrorDatabase(db) {
     needsMerge BOOLEAN NOT NULL DEFAULT 0,
     isDeleted BOOLEAN NOT NULL DEFAULT 0,
     kind INTEGER NOT NULL DEFAULT -1,
-    /* The creation date, in microseconds. */
+    /* The creation date, in milliseconds. */
     dateAdded INTEGER NOT NULL DEFAULT 0,
     title TEXT,
     urlId INTEGER REFERENCES urls(id)
@@ -2094,8 +2096,9 @@ async function initializeTempMirrorEntities(db) {
   // that Places uses to maintain schema coherency.
   await db.execute(`
     CREATE TEMP VIEW itemsToMerge(localId, remoteId, hasRemoteValue, newLevel,
-                                  oldGuid, newGuid, newType, newDateAdded,
-                                  newTitle, oldPlaceId, newPlaceId, newKeyword,
+                                  oldGuid, newGuid, newType,
+                                  newDateAddedMicroseconds, newTitle,
+                                  oldPlaceId, newPlaceId, newKeyword,
                                   newDescription, newLoadInSidebar,
                                   newSmartBookmarkName, newFeedURL,
                                   newSiteURL) AS
@@ -2110,8 +2113,10 @@ async function initializeTempMirrorEntities(db) {
                         SyncedBookmarksMirror.KIND.LIVEMARK,
                       ].join(",")}) THEN ${PlacesUtils.bookmarks.TYPE_FOLDER}
                  ELSE ${PlacesUtils.bookmarks.TYPE_SEPARATOR} END),
-           (CASE WHEN b.dateAdded < v.dateAdded THEN b.dateAdded
-                 ELSE v.dateAdded END),
+           /* Take the older creation date. "b.dateAdded" is in microseconds;
+              "v.dateAdded" is in milliseconds. */
+           (CASE WHEN b.dateAdded / 1000 < v.dateAdded THEN b.dateAdded
+                 ELSE v.dateAdded * 1000 END),
            v.title, h.id, u.newPlaceId, v.keyword, v.description,
            v.loadInSidebar, v.smartBookmarkName, v.feedURL, v.siteURL
     FROM items v
@@ -2135,9 +2140,10 @@ async function initializeTempMirrorEntities(db) {
     BEGIN
       /* We update GUIDs here, instead of in the "updateExistingLocalItems"
          trigger, because deduped items where we're keeping the local value
-         state won't have "needsMerge" set. */
+         state won't have "hasRemoteValue" set. */
       UPDATE moz_bookmarks SET
-        guid = OLD.newGuid
+        guid = OLD.newGuid,
+        syncStatus = ${PlacesUtils.bookmarks.SYNC_STATUS.NORMAL}
       WHERE OLD.oldGuid <> OLD.newGuid AND
             id = OLD.localId;
 
@@ -2201,7 +2207,7 @@ async function initializeTempMirrorEntities(db) {
                                 dateAdded, lastModified, syncStatus,
                                 syncChangeCounter)
       VALUES(OLD.newGuid, -1, -1, OLD.newType, OLD.newPlaceId, OLD.newTitle,
-             OLD.newDateAdded,
+             OLD.newDateAddedMicroseconds,
              STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
              ${PlacesUtils.bookmarks.SYNC_STATUS.NORMAL}, 0);
 
@@ -2263,7 +2269,7 @@ async function initializeTempMirrorEntities(db) {
 
       UPDATE moz_bookmarks SET
         title = OLD.newTitle,
-        dateAdded = OLD.newDateAdded,
+        dateAdded = OLD.newDateAddedMicroseconds,
         lastModified = STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
         syncStatus = ${PlacesUtils.bookmarks.SYNC_STATUS.NORMAL},
         syncChangeCounter = 0
@@ -2500,7 +2506,7 @@ async function initializeTempMirrorEntities(db) {
              ${PlacesUtils.bookmarks.TYPE_BOOKMARK}, NEW.placeId,
              STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
              STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000
-        WHERE NEW.placeId NOT NULL;
+      WHERE NEW.placeId NOT NULL;
 
       /* Record an item added notification for the tag entry. */
       INSERT INTO itemsAdded(guid, isTagging)
@@ -2580,7 +2586,7 @@ async function initializeTempMirrorEntities(db) {
     isDeleted BOOLEAN NOT NULL DEFAULT 0,
     parentGuid TEXT,
     parentTitle TEXT,
-    dateAdded INTEGER,
+    dateAdded INTEGER, /* In milliseconds. */
     type INTEGER,
     title TEXT,
     isQuery BOOLEAN NOT NULL DEFAULT 0,
@@ -2619,9 +2625,8 @@ function determineServerModified(record) {
 // Determines a Sync record's creation date.
 function determineDateAdded(record) {
   let serverModified = determineServerModified(record);
-  let dateAdded = PlacesSyncUtils.bookmarks.ratchetTimestampBackwards(
+  return PlacesSyncUtils.bookmarks.ratchetTimestampBackwards(
     record.dateAdded, serverModified);
-  return dateAdded ? PlacesUtils.toPRTime(new Date(dateAdded)) : 0;
 }
 
 function validateTitle(rawTitle) {
@@ -2855,9 +2860,9 @@ class BookmarkNode {
     let guid = row.getResultByName("guid");
 
     // Note that this doesn't account for local clock skew. `localModified`
-    // is in *microseconds*.
-    let localModified = row.getResultByName("lastModified");
-    let age = Math.max(localTimeSeconds - localModified / 1000000, 0) || 0;
+    // is in milliseconds.
+    let localModified = row.getResultByName("localModified");
+    let age = Math.max(localTimeSeconds - localModified / 1000, 0) || 0;
 
     let kind = row.getResultByName("kind");
 
@@ -2881,7 +2886,7 @@ class BookmarkNode {
   static fromRemoteRow(row, remoteTimeSeconds) {
     let guid = row.getResultByName("guid");
 
-    // `serverModified` is in *milliseconds*.
+    // `serverModified` is in milliseconds.
     let serverModified = row.getResultByName("serverModified");
     let age = Math.max(remoteTimeSeconds - serverModified / 1000, 0) || 0;
 

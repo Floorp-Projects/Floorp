@@ -595,13 +595,13 @@ const JNINativeMethod GeckoSession::Window::Natives<Impl>::methods[] = {
             mozilla::jni::NativeStub<GeckoSession::Window::DisposeNative_t, Impl>
             ::template Wrap<&Impl::DisposeNative>),
 
-    mozilla::jni::MakeNativeMethod<GeckoSession::Window::Open_t>(
-            mozilla::jni::NativeStub<GeckoSession::Window::Open_t, Impl>
-            ::template Wrap<&Impl::Open>),
-
     mozilla::jni::MakeNativeMethod<GeckoSession::Window::Transfer_t>(
             mozilla::jni::NativeStub<GeckoSession::Window::Transfer_t, Impl>
-            ::template Wrap<&Impl::Transfer>)
+            ::template Wrap<&Impl::Transfer>),
+
+    mozilla::jni::MakeNativeMethod<GeckoSession::Window::Open_t>(
+            mozilla::jni::NativeStub<GeckoSession::Window::Open_t, Impl>
+            ::template Wrap<&Impl::Open>)
 };
 
 } /* java */

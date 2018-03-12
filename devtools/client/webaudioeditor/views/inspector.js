@@ -141,7 +141,7 @@ var InspectorView = {
    * Called on EVENTS.UI_SELECT_NODE, and takes an actorID `id`
    * and calls `setCurrentAudioNode` to scaffold the inspector view.
    */
-  _onNodeSelect: function (_, id) {
+  _onNodeSelect: function (id) {
     this.setCurrentAudioNode(gAudioNodes.get(id));
 
     // Ensure inspector is visible when selecting a new node

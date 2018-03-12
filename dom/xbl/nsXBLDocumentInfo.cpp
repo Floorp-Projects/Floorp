@@ -328,6 +328,12 @@ size_t
 nsXBLDocumentInfo::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
+  if (mDocument) {
+    SizeOfState state(aMallocSizeOf);
+    nsWindowSizes windowSizes(state);
+    mDocument->DocAddSizeOfIncludingThis(windowSizes);
+    n += windowSizes.getTotalSize();
+  }
   if (mBindingTable) {
     n += mBindingTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
     for (auto iter = mBindingTable->Iter(); !iter.Done(); iter.Next()) {

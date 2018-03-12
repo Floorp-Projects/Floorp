@@ -265,7 +265,6 @@
     _(GuardReceiverPolymorphic)     \
     _(GuardObjectGroup)             \
     _(GuardObjectIdentity)          \
-    _(GuardClass)                   \
     _(GuardUnboxedExpando)          \
     _(LoadUnboxedExpando)           \
     _(TypeBarrierV)                 \

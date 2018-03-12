@@ -622,7 +622,7 @@ nsAppShell::Observe(nsISupports* aSubject,
                         java::GeckoThread::State::RUNNING());
             }
             const auto window = static_cast<nsWindow*>(widget.get());
-            window->EnableEventDispatcher();
+            window->OnGeckoViewReady();
         }
     } else if (!strcmp(aTopic, "quit-application")) {
         if (jni::IsAvailable()) {
