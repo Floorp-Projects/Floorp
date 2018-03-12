@@ -147,7 +147,7 @@ private:
 class xptiInterfaceEntry
 {
 public:
-    static xptiInterfaceEntry* Create(const XPTInterfaceDirectoryEntry* aEntry,
+    static xptiInterfaceEntry* Create(const XPTInterfaceDescriptor* aIface,
                                       xptiTypelibGuts* aTypelib);
 
     enum {
@@ -243,7 +243,7 @@ public:
     nsresult GetIIDForParamNoAlloc(uint16_t methodIndex, const nsXPTParamInfo * param, nsIID *iid);
 
 private:
-    xptiInterfaceEntry(const XPTInterfaceDirectoryEntry* aDescriptor,
+    xptiInterfaceEntry(const XPTInterfaceDescriptor* aIface,
                        xptiTypelibGuts* aTypelib);
     ~xptiInterfaceEntry();
 
