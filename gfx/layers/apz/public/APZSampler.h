@@ -96,10 +96,13 @@ public:
       bool aScrollbarIsDescendant,
       AsyncTransformComponentMatrix* aOutClipTransform);
 
+  ParentLayerPoint GetCurrentAsyncScrollOffset(const LayerMetricsWrapper& aLayer);
   AsyncTransform GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer);
   AsyncTransformComponentMatrix GetOverscrollTransform(const LayerMetricsWrapper& aLayer);
+  AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(const LayerMetricsWrapper& aLayer);
 
   void MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer);
+  bool HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer);
 
 protected:
   virtual ~APZSampler();
