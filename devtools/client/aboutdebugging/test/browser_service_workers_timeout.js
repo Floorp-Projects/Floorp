@@ -11,22 +11,22 @@ const TAB_URL = URL_ROOT + "service-workers/empty-sw.html";
 
 const SW_TIMEOUT = 1000;
 
-add_task(async function () {
-  await enableServiceWorkerDebugging();
-  await pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
-  await pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
+add_task(function* () {
+  yield enableServiceWorkerDebugging();
+  yield pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
+  yield pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
 
-  let { tab, document } = await openAboutDebugging("workers");
+  let { tab, document } = yield openAboutDebugging("workers");
 
   let serviceWorkersElement = getServiceWorkerList(document);
 
-  let swTab = await addTab(TAB_URL);
+  let swTab = yield addTab(TAB_URL);
 
   info("Wait until the service worker appears in about:debugging");
-  await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
+  yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   // Ensure that the registration resolved before trying to connect to the sw
-  await waitForServiceWorkerRegistered(swTab);
+  yield waitForServiceWorkerRegistered(swTab);
   ok(true, "Service worker registration resolved");
 
   // Retrieve the DEBUG button for the worker
@@ -45,12 +45,12 @@ add_task(async function () {
   });
   debugBtn.click();
 
-  let toolbox = await onToolboxReady;
+  let toolbox = yield onToolboxReady;
 
   // Wait for more than the regular timeout,
   // so that if the worker freezing doesn't work,
   // it will be destroyed and removed from the list
-  await new Promise(done => {
+  yield new Promise(done => {
     setTimeout(done, SW_TIMEOUT * 2);
   });
 
@@ -58,20 +58,20 @@ add_task(async function () {
   ok(targetElement.querySelector(".debug-button"),
     "The debug button is still there");
 
-  await toolbox.destroy();
+  yield toolbox.destroy();
   toolbox = null;
 
   // Now ensure that the worker is correctly destroyed
   // after we destroy the toolbox.
   // The DEBUG button should disappear once the worker is destroyed.
   info("Wait until the debug button disappears");
-  await waitUntil(() => {
+  yield waitUntil(() => {
     return !targetElement.querySelector(".debug-button");
   });
 
   // Finally, unregister the service worker itself.
   try {
-    await unregisterServiceWorker(swTab, serviceWorkersElement);
+    yield unregisterServiceWorker(swTab, serviceWorkersElement);
     ok(true, "Service worker registration unregistered");
   } catch (e) {
     ok(false, "SW not unregistered; " + e);
@@ -79,6 +79,6 @@ add_task(async function () {
 
   assertHasTarget(false, document, "service-workers", SERVICE_WORKER);
 
-  await removeTab(swTab);
-  await closeAboutDebugging(tab);
+  yield removeTab(swTab);
+  yield closeAboutDebugging(tab);
 });

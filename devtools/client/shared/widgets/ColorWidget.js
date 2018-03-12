@@ -9,6 +9,7 @@
 
 "use strict";
 
+const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {colorUtils} = require("devtools/shared/css/color");
 const {LocalizationHelper} = require("devtools/shared/l10n");
@@ -385,7 +386,7 @@ ColorWidget.prototype = {
     this.hslaValue.addEventListener("input", this.onHslaInputChange);
   },
 
-  async show() {
+  show: Task.async(function* () {
     this.initializeColorWidget();
     this.element.classList.add("colorwidget-show");
 
@@ -399,12 +400,12 @@ ColorWidget.prototype = {
 
     if (this.inspector && this.inspector.selection.nodeFront && this.contrastEnabled) {
       let node = this.inspector.selection.nodeFront;
-      this.closestBackgroundColor = await node.getClosestBackgroundColor();
+      this.closestBackgroundColor = yield node.getClosestBackgroundColor();
     }
     this.updateContrast();
 
     this.updateUI();
-  },
+  }),
 
   onElementClick: function (e) {
     e.stopPropagation();

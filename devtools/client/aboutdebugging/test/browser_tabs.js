@@ -5,12 +5,12 @@
 
 const TAB_URL = "data:text/html,<title>foo</title>";
 
-add_task(async function () {
-  let { tab, document } = await openAboutDebugging("tabs");
+add_task(function* () {
+  let { tab, document } = yield openAboutDebugging("tabs");
 
   // Wait for initial tabs list which may be empty
   let tabsElement = getTabList(document);
-  await waitUntilElement(".target-name", tabsElement);
+  yield waitUntilElement(".target-name", tabsElement);
 
   // Refresh tabsElement to get the .target-list element
   tabsElement = getTabList(document);
@@ -19,13 +19,13 @@ add_task(async function () {
   let initialTabCount = names.length;
 
   info("Open a new background tab");
-  let newTab = await addTab(TAB_URL, { background: true });
+  let newTab = yield addTab(TAB_URL, { background: true });
 
   info("Wait for the tab to appear in the list with the correct name");
-  let container = await waitUntilTabContainer("foo", document);
+  let container = yield waitUntilTabContainer("foo", document);
 
   info("Wait until the title to update");
-  await waitUntil(() => {
+  yield waitUntil(() => {
     return container.querySelector(".target-name").title === TAB_URL;
   }, 100);
 
@@ -33,7 +33,7 @@ add_task(async function () {
   ok(icon && icon.src, "Tab icon found and src attribute is not empty");
 
   info("Check if the tab icon is a valid image");
-  await new Promise(r => {
+  yield new Promise(r => {
     let image = new Image();
     image.onload = () => {
       ok(true, "Favicon is not a broken image");
@@ -47,16 +47,16 @@ add_task(async function () {
   });
 
   // Finally, close the tab
-  await removeTab(newTab);
+  yield removeTab(newTab);
 
   info("Wait until the tab container is removed");
-  await waitUntil(() => !getTabContainer("foo", document), 100);
+  yield waitUntil(() => !getTabContainer("foo", document), 100);
 
   // Check that the tab disappeared from the UI
   names = [...tabsElement.querySelectorAll("#tabs .target-name")];
   is(names.length, initialTabCount, "The tab disappeared from the UI");
 
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
 });
 
 function getTabContainer(name, document) {
@@ -69,8 +69,8 @@ function getTabContainer(name, document) {
   return null;
 }
 
-async function waitUntilTabContainer(name, document) {
-  await waitUntil(() => {
+function* waitUntilTabContainer(name, document) {
+  yield waitUntil(() => {
     return getTabContainer(name, document);
   });
   return getTabContainer(name, document);

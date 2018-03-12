@@ -14,13 +14,13 @@ const TEST_ARRAY = [
 /**
  * Basic test that checks content of the DOM panel.
  */
-add_task(async function () {
+add_task(function* () {
   info("Test DOM Panel Array Expansion started");
 
-  let { panel } = await addTestTab(TEST_PAGE_URL);
+  let { panel } = yield addTestTab(TEST_PAGE_URL);
 
   // Expand specified row and wait till children are displayed.
-  await expandRow(panel, "_a");
+  yield expandRow(panel, "_a");
 
   // Verify that children is displayed now.
   let childRows = getAllRowsForLabel(panel, "_a");

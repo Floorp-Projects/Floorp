@@ -6,15 +6,15 @@
 
 "use strict";
 
-add_task(async function () {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-sessionstorage.html");
+add_task(function* () {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-sessionstorage.html");
   showAllColumns(true);
 
-  await performAdd(["sessionStorage", "http://test1.example.org"]);
-  await performAdd(["sessionStorage", "http://test1.example.org"]);
-  await performAdd(["sessionStorage", "http://test1.example.org"]);
-  await performAdd(["sessionStorage", "http://test1.example.org"]);
-  await performAdd(["sessionStorage", "http://test1.example.org"]);
+  yield performAdd(["sessionStorage", "http://test1.example.org"]);
+  yield performAdd(["sessionStorage", "http://test1.example.org"]);
+  yield performAdd(["sessionStorage", "http://test1.example.org"]);
+  yield performAdd(["sessionStorage", "http://test1.example.org"]);
+  yield performAdd(["sessionStorage", "http://test1.example.org"]);
 
-  await finishTests();
+  yield finishTests();
 });

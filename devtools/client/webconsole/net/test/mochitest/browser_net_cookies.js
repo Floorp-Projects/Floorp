@@ -13,18 +13,18 @@ const JSON_XHR_URL = URL_ROOT + "test-cookies.json";
  * networks details in the Console panel and checks that
  * Cookies are properly displayed.
  */
-add_task(async function () {
+add_task(function* () {
   info("Test XHR Spy cookies started");
 
-  let {hud} = await addTestTab(TEST_PAGE_URL);
+  let {hud} = yield addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = await executeAndInspectXhr(hud, {
+  let netInfoBody = yield executeAndInspectXhr(hud, {
     method: "GET",
     url: JSON_XHR_URL
   });
 
   // Select "Cookies" tab
-  let tabBody = await selectNetInfoTab(hud, netInfoBody, "cookies");
+  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "cookies");
 
   let requestCookieName = tabBody.querySelector(
     ".netInfoGroup.requestCookies .netInfoParamName > span[title='bar']");

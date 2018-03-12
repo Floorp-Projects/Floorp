@@ -7,14 +7,14 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(function* () {
   const TESTPAGE = MAIN_DOMAIN + "storage-indexeddb-duplicate-names.html";
 
   setPermission(TESTPAGE, "indexedDB");
 
-  await openTabAndSetupStorage(TESTPAGE);
+  yield openTabAndSetupStorage(TESTPAGE);
 
-  await checkState([
+  yield checkState([
     [
       ["indexedDB", "http://test1.example.org"], [
         "idb1 (default)",
@@ -27,5 +27,5 @@ add_task(async function () {
     ]
   ]);
 
-  await finishTests();
+  yield finishTests();
 });

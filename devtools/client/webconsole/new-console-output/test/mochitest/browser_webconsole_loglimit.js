@@ -16,7 +16,7 @@ add_task(async function () {
   hud.jsterm.clearOutput();
 
   let onMessage = waitForMessage(hud, "test message [149]");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     for (let i = 0; i < 150; i++) {
       content.console.log(`test message [${i}]`);
     }
@@ -29,7 +29,7 @@ add_task(async function () {
   is(findMessages(hud, "").length, 140, "Number of displayed messages is correct");
 
   onMessage = waitForMessage(hud, "hello world");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     content.console.log("hello world");
   });
   await onMessage;

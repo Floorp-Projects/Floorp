@@ -60,11 +60,11 @@ class TempWebExt {
   }
 }
 
-add_task(async function reloadButtonReloadsAddon() {
-  const { tab, document, window } = await openAboutDebugging("addons");
+add_task(function* reloadButtonReloadsAddon() {
+  const { tab, document, window } = yield openAboutDebugging("addons");
   const { AboutDebugging } = window;
-  await waitForInitialAddonList(document);
-  await installAddon({
+  yield waitForInitialAddonList(document);
+  yield installAddon({
     document,
     path: "addons/unpacked/install.rdf",
     name: ADDON_NAME,
@@ -84,21 +84,21 @@ add_task(async function reloadButtonReloadsAddon() {
 
   let reloaded = once(AboutDebugging, "addon-reload");
   reloadButton.click();
-  await reloaded;
+  yield reloaded;
 
-  const [reloadedAddon] = await onInstalled;
+  const [reloadedAddon] = yield onInstalled;
   is(reloadedAddon.name, ADDON_NAME,
      "Add-on was reloaded: " + reloadedAddon.name);
 
-  await onBootstrapInstallCalled;
-  await tearDownAddon(reloadedAddon);
-  await closeAboutDebugging(tab);
+  yield onBootstrapInstallCalled;
+  yield tearDownAddon(reloadedAddon);
+  yield closeAboutDebugging(tab);
 });
 
-add_task(async function reloadButtonRefreshesMetadata() {
-  const { tab, document, window } = await openAboutDebugging("addons");
+add_task(function* reloadButtonRefreshesMetadata() {
+  const { tab, document, window } = yield openAboutDebugging("addons");
   const { AboutDebugging } = window;
-  await waitForInitialAddonList(document);
+  yield waitForInitialAddonList(document);
 
   const manifestBase = {
     "manifest_version": 2,
@@ -115,13 +115,13 @@ add_task(async function reloadButtonRefreshesMetadata() {
   tempExt.writeManifest(manifestBase);
 
   const onInstalled = promiseAddonEvent("onInstalled");
-  await AddonManager.installTemporaryAddon(tempExt.sourceDir);
+  yield AddonManager.installTemporaryAddon(tempExt.sourceDir);
 
   info("Wait until addon onInstalled event is received");
-  await onInstalled;
+  yield onInstalled;
 
   info("Wait until addon appears in about:debugging#addons");
-  await waitUntilAddonContainer("Temporary web extension", document);
+  yield waitUntilAddonContainer("Temporary web extension", document);
 
   const newName = "Temporary web extension (updated)";
   tempExt.writeManifest(Object.assign({}, manifestBase, {name: newName}));
@@ -131,34 +131,34 @@ add_task(async function reloadButtonRefreshesMetadata() {
   const reloadButton = getReloadButton(document, manifestBase.name);
   let reloaded = once(AboutDebugging, "addon-reload");
   reloadButton.click();
-  await reloaded;
+  yield reloaded;
 
   info("Wait until addon onInstalled event is received again");
-  const [reloadedAddon] = await onReInstall;
+  const [reloadedAddon] = yield onReInstall;
 
   info("Wait until addon name is updated in about:debugging#addons");
-  await waitUntilAddonContainer(newName, document);
+  yield waitUntilAddonContainer(newName, document);
 
-  await tearDownAddon(reloadedAddon);
+  yield tearDownAddon(reloadedAddon);
   tempExt.remove();
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
 });
 
-add_task(async function onlyTempInstalledAddonsCanBeReloaded() {
-  const { tab, document } = await openAboutDebugging("addons");
-  await waitForInitialAddonList(document);
-  await installAddonWithManager(getSupportsFile("addons/bug1273184.xpi").file);
+add_task(function* onlyTempInstalledAddonsCanBeReloaded() {
+  const { tab, document } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
+  yield installAddonWithManager(getSupportsFile("addons/bug1273184.xpi").file);
 
   info("Wait until addon appears in about:debugging#addons");
-  await waitUntilAddonContainer(PACKAGED_ADDON_NAME, document);
+  yield waitUntilAddonContainer(PACKAGED_ADDON_NAME, document);
 
   info("Retrieved the installed addon from the addon manager");
-  const addon = await getAddonByID(PACKAGED_ADDON_ID);
+  const addon = yield getAddonByID(PACKAGED_ADDON_ID);
   is(addon.name, PACKAGED_ADDON_NAME, "Addon name is correct");
 
   const reloadButton = getReloadButton(document, addon.name);
   ok(!reloadButton, "There should not be a reload button");
 
-  await tearDownAddon(addon);
-  await closeAboutDebugging(tab);
+  yield tearDownAddon(addon);
+  yield closeAboutDebugging(tab);
 });

@@ -5,16 +5,16 @@
  * Tests that a recording that does not have a rAF cycle fails after timeout.
  */
 
-async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(NO_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, panel } = yield initCanvasDebuggerFrontend(NO_CANVAS_URL);
   let { window, EVENTS, $, SnapshotsListView } = panel.panelWin;
 
-  await reload(target);
+  yield reload(target);
 
   let recordingStarted = once(window, EVENTS.SNAPSHOT_RECORDING_STARTED);
   SnapshotsListView._onRecordButtonClick();
 
-  await recordingStarted;
+  yield recordingStarted;
 
   is($("#empty-notice").hidden, true, "Empty notice not shown");
   is($("#waiting-notice").hidden, false, "Waiting notice shown");
@@ -22,7 +22,7 @@ async function ifTestingSupported() {
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let recordingCancelled = once(window, EVENTS.SNAPSHOT_RECORDING_CANCELLED);
 
-  await promise.all([recordingFinished, recordingCancelled]);
+  yield promise.all([recordingFinished, recordingCancelled]);
 
   ok(true, "Recording stopped and was considered failed.");
 
@@ -30,6 +30,6 @@ async function ifTestingSupported() {
   is($("#empty-notice").hidden, false, "Empty notice shown");
   is($("#waiting-notice").hidden, true, "Waiting notice not shown");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

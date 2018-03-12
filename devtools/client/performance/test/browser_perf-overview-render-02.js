@@ -14,8 +14,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { times } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -25,7 +25,7 @@ add_task(async function () {
   // Enable memory to test.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   let framerate = OverviewView.graphs.get("framerate");
   let markers = OverviewView.graphs.get("timeline");
@@ -53,7 +53,7 @@ add_task(async function () {
     "The memory overview shouldn't have a selection before recording.");
 
   // Ensure overview keeps rendering.
-  await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
+  yield times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
     expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
   });
 
@@ -78,7 +78,7 @@ add_task(async function () {
   is(memory.hasSelection(), false,
     "The memory overview still shouldn't have a selection before recording.");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   is(framerate.selectionEnabled, true,
     "The selection should now be enabled for the framerate overview.");
@@ -87,5 +87,5 @@ add_task(async function () {
   is(memory.selectionEnabled, true,
     "The selection should now be enabled for the memory overview.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

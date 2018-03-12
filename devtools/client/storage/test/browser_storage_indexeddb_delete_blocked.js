@@ -8,51 +8,51 @@
 
 // Test what happens when deleting indexedDB database is blocked
 
-add_task(async function () {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-idb-delete-blocked.html");
+add_task(function* () {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-idb-delete-blocked.html");
 
   info("test state before delete");
-  await checkState([
+  yield checkState([
     [["indexedDB", "http://test1.example.org"], ["idb (default)"]]
   ]);
 
   info("do the delete");
-  await selectTreeItem(["indexedDB", "http://test1.example.org"]);
+  yield selectTreeItem(["indexedDB", "http://test1.example.org"]);
   let front = gUI.getCurrentFront();
-  let result = await front.removeDatabase("http://test1.example.org", "idb (default)");
+  let result = yield front.removeDatabase("http://test1.example.org", "idb (default)");
 
   ok(result.blocked, "removeDatabase attempt is blocked");
 
   info("test state after blocked delete");
-  await checkState([
+  yield checkState([
     [["indexedDB", "http://test1.example.org"], ["idb (default)"]]
   ]);
 
   let eventWait = gUI.once("store-objects-updated");
 
   info("telling content to close the db");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
     let win = content.wrappedJSObject;
-    await win.closeDb();
+    yield win.closeDb();
   });
 
   info("waiting for store update events");
-  await eventWait;
+  yield eventWait;
 
   info("test state after real delete");
-  await checkState([
+  yield checkState([
     [["indexedDB", "http://test1.example.org"], []]
   ]);
 
   info("try to delete database from nonexistent host");
   let errorThrown = false;
   try {
-    result = await front.removeDatabase("http://test2.example.org", "idb (default)");
+    result = yield front.removeDatabase("http://test2.example.org", "idb (default)");
   } catch (ex) {
     errorThrown = true;
   }
 
   ok(errorThrown, "error was reported when trying to delete");
 
-  await finishTests();
+  yield finishTests();
 });

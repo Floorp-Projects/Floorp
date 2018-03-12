@@ -6,8 +6,8 @@
  * like AudioBuffer and Float32Array in properties of AudioNodes.
  */
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(BUFFER_AND_ARRAY_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(BUFFER_AND_ARRAY_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
   let gVars = PropertiesView._propsView;
@@ -19,11 +19,11 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
+  let [actors] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  await waitForInspectorRender(panelWin, EVENTS);
+  yield waitForInspectorRender(panelWin, EVENTS);
   checkVariableView(gVars, 0, {
     "curve": "Float32Array"
   }, "WaveShaper's `curve` is listed as an `Float32Array`.");
@@ -33,7 +33,7 @@ add_task(async function () {
   ok(state, "Float32Array property should not have a dropdown.");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
-  await waitForInspectorRender(panelWin, EVENTS);
+  yield waitForInspectorRender(panelWin, EVENTS);
   checkVariableView(gVars, 0, {
     "buffer": "AudioBuffer"
   }, "AudioBufferSourceNode's `buffer` is listed as an `AudioBuffer`.");
@@ -42,5 +42,5 @@ add_task(async function () {
   state = aVar.target.querySelector(".theme-twisty").hasAttribute("invisible");
   ok(state, "AudioBuffer property should not have a dropdown.");
 
-  await teardown(target);
+  yield teardown(target);
 });

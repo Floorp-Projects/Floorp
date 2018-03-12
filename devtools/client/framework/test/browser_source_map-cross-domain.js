@@ -28,12 +28,12 @@ const ORIGINAL_URL = "webpack:///code_cross_domain.js";
 const GENERATED_LINE = 82;
 const ORIGINAL_LINE = 12;
 
-add_task(async function () {
-  const toolbox = await openNewTabAndToolbox(PAGE_URL, "webconsole");
+add_task(function* () {
+  const toolbox = yield openNewTabAndToolbox(PAGE_URL, "webconsole");
   const service = toolbox.sourceMapURLService;
 
   info(`checking original location for ${JS_URL}:${GENERATED_LINE}`);
-  let newLoc = await service.originalPositionFor(JS_URL, GENERATED_LINE);
+  let newLoc = yield service.originalPositionFor(JS_URL, GENERATED_LINE);
   is(newLoc.sourceUrl, ORIGINAL_URL, "check mapped URL");
   is(newLoc.line, ORIGINAL_LINE, "check mapped line number");
 });

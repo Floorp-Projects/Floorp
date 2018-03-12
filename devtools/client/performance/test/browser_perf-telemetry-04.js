@@ -10,13 +10,13 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(async function () {
-  let { target, console } = await initConsoleInNewTab({
+add_task(function* () {
+  let { target, console } = yield initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
+  let { panel } = yield initPerformanceInTab({ tab: target.tab });
   let { PerformanceController } = panel.panelWin;
 
   let telemetry = PerformanceController._telemetry;
@@ -29,15 +29,15 @@ add_task(async function () {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
-  await console.profile("rust");
-  await started;
+  yield console.profile("rust");
+  yield started;
 
   let stopped = waitForRecordingStoppedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
-  await console.profileEnd("rust");
-  await stopped;
+  yield console.profileEnd("rust");
+  yield stopped;
 
   is(logs[DURATION].length, 1, `There is one entry for ${DURATION}.`);
   ok(logs[DURATION].every(d => typeof d === "number"),
@@ -46,5 +46,5 @@ add_task(async function () {
   is(logs[FEATURES].length, 4,
      `There is one recording worth of entries for ${FEATURES}.`);
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

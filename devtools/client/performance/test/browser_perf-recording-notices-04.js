@@ -15,15 +15,15 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(async function () {
+add_task(function* () {
   // Make sure the profiler module is stopped so we can set a new buffer limit.
   pmmLoadFrameScripts(gBrowser);
-  await pmmStopProfiler();
+  yield pmmStopProfiler();
 
   // Keep the profiler's buffer small, to get to 100% really quickly.
   Services.prefs.setIntPref(PROFILER_BUFFER_SIZE_PREF, 10000);
 
-  let { panel } = await initPerformanceInNewTab({
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -31,17 +31,17 @@ add_task(async function () {
   let { gFront, EVENTS, $, PerformanceController, PerformanceView } = panel.panelWin;
 
   // Set a fast profiler-status update interval
-  await gFront.setProfilerStatusInterval(10);
+  yield gFront.setProfilerStatusInterval(10);
 
   let DETAILS_CONTAINER = $("#details-pane-container");
   let NORMAL_BUFFER_STATUS_MESSAGE = $("#recording-notice .buffer-status-message");
   let gPercent;
 
   // Start a manual recording.
-  await startRecording(panel);
+  yield startRecording(panel);
 
-  await waitUntil(async function () {
-    [, gPercent] = await once(PerformanceView,
+  yield waitUntil(function* () {
+    [, gPercent] = yield once(PerformanceView,
                               EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
                               { spreadArgs: true });
     return gPercent == 100;
@@ -58,9 +58,9 @@ add_task(async function () {
     "Buffer status text has correct percentage.");
 
   // Stop the manual recording.
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 
   pmmClearFrameScripts();
 });

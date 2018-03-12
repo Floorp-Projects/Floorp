@@ -7,9 +7,9 @@
 // Test that hovering over a simple selector in the style-editor requests the
 // highlighting of the corresponding nodes
 
-add_task(async function () {
+add_task(function* () {
   let url = TEST_BASE_HTTP + "selector-highlighter.html";
-  let { ui } = await openStyleEditorForURL(url);
+  let { ui } = yield openStyleEditorForURL(url);
   let editor = ui.editors[0];
 
   // Mock the highlighter so we can locally assert that things happened
@@ -34,7 +34,7 @@ add_task(async function () {
 
   info("Simulate a mousemove event on the div selector");
   editor._onMouseMove({clientX: 56, clientY: 10});
-  await onHighlighted;
+  yield onHighlighted;
 
   ok(editor.highlighter.isShown, "The highlighter is now shown");
   is(editor.highlighter.options.selector, "div", "The selector is correct");

@@ -13,14 +13,14 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/" +
                  "test-bug-859170-longstring-hang.html";
 
-add_task(async function () {
-  await loadTab(TEST_URI);
+add_task(function* () {
+  yield loadTab(TEST_URI);
 
-  let hud = await openConsole();
+  let hud = yield openConsole();
 
   info("wait for the initial long string");
 
-  let results = await waitForMessages({
+  let results = yield waitForMessages({
     webconsole: hud,
     messages: [
       {
@@ -41,7 +41,7 @@ add_task(async function () {
 
   info("wait for long string expansion");
 
-  await waitForMessages({
+  yield waitForMessages({
     webconsole: hud,
     messages: [
       {

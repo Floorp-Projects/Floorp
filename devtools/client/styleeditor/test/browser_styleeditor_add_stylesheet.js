@@ -7,8 +7,8 @@
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
-add_task(async function () {
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+add_task(function* () {
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "Two sheets present after load.");
 
@@ -25,13 +25,13 @@ add_task(async function () {
   });
 
   info("Adding a style sheet");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     let document = content.document;
     const style = document.createElement("style");
     style.appendChild(document.createTextNode("div { background: #f06; }"));
     document.head.appendChild(style);
   });
-  await added;
+  yield added;
 
   is(ui.editors.length, 3, "Three sheets present after new style sheet");
 });

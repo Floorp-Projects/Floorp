@@ -5,8 +5,8 @@
  * Tests to ensure that param connections trigger graph redraws
  */
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;
 
@@ -15,14 +15,14 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2, 0)
   ]);
   reload(target);
-  let [actors] = await events;
+  let [actors] = yield events;
   let [dest, osc, gain] = actors;
 
-  await osc.disconnect();
+  yield osc.disconnect();
 
   osc.connectParam(gain, "gain");
-  await waitForGraphRendered(panelWin, 3, 1, 1);
+  yield waitForGraphRendered(panelWin, 3, 1, 1);
   ok(true, "Graph re-rendered upon param connection");
 
-  await teardown(target);
+  yield teardown(target);
 });

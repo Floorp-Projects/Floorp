@@ -16,7 +16,7 @@ Test that we only render visible tree items.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = async function () {
+window.onload = Task.async(function* () {
   try {
     function getSpacerHeights() {
       return {
@@ -37,7 +37,7 @@ window.onload = async function () {
 
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
 
-    await setState(tree, {
+    yield setState(tree, {
       height: 3 * ITEM_HEIGHT,
       scroll: 1 * ITEM_HEIGHT
     });
@@ -55,7 +55,7 @@ window.onload = async function () {
     is(spacers.top, 0, "Top spacer has the correct height");
     is(spacers.bottom, 10 * ITEM_HEIGHT, "Bottom spacer has the correct height");
 
-    await setState(tree, {
+    yield setState(tree, {
       height: 2 * ITEM_HEIGHT,
       scroll: 3 * ITEM_HEIGHT
     });
@@ -74,7 +74,7 @@ window.onload = async function () {
 
     // Set height to 2 items + 1 pixel at each end, scroll so that 4 items are visible
     // (2 fully, 2 partially with 1 visible pixel)
-    await setState(tree, {
+    yield setState(tree, {
       height: 2 * ITEM_HEIGHT + 2,
       scroll: 3 * ITEM_HEIGHT - 1
     });
@@ -92,7 +92,7 @@ window.onload = async function () {
     is(spacers.top, 1 * ITEM_HEIGHT, "Top spacer has the correct height");
     is(spacers.bottom, 8 * ITEM_HEIGHT, "Bottom spacer has the correct height");
 
-    await setState(tree, {
+    yield setState(tree, {
       height: 20 * ITEM_HEIGHT,
       scroll: 0
     });
@@ -123,7 +123,7 @@ window.onload = async function () {
   } finally {
     SimpleTest.finish();
   }
-};
+});
 </script>
 </pre>
 </body>

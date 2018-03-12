@@ -225,12 +225,12 @@ function waitForDispatch(panel, type, eventRepeat = 1) {
   const actionType = constants[type];
   let count = 0;
 
-  return (async function () {
+  return Task.spawn(function* () {
     info("Waiting for " + type + " to dispatch " + eventRepeat + " time(s)");
     while (count < eventRepeat) {
-      await _afterDispatchDone(store, actionType);
+      yield _afterDispatchDone(store, actionType);
       count++;
       info(type + " dispatched " + count + " time(s)");
     }
-  })();
+  });
 }

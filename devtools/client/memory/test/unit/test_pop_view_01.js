@@ -25,10 +25,10 @@ const TEST_STATES = [
   individualsState.FETCHED,
 ];
 
-add_task(async function () {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  await front.attach();
+  yield front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
@@ -37,7 +37,7 @@ add_task(async function () {
 
   dispatch(changeView(viewState.CENSUS));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  await waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
   const root = getState().snapshots[0].census.report;
   ok(root, "Should have a census");
@@ -58,7 +58,7 @@ add_task(async function () {
                               reportLeafIndex));
 
     // Wait for the expected test state.
-    await waitUntilState(store, s => {
+    yield waitUntilState(store, s => {
       return s.view.state === viewState.INDIVIDUALS &&
              s.individuals &&
              s.individuals.state === state;
@@ -67,12 +67,12 @@ add_task(async function () {
 
     // Pop back to the CENSUS state.
     dispatch(popViewAndRefresh(heapWorker));
-    await waitUntilState(store, s => {
+    yield waitUntilState(store, s => {
       return s.view.state === viewState.CENSUS;
     });
     ok(!getState().individuals, "Should no longer have individuals");
   }
 
   heapWorker.destroy();
-  await front.detach();
+  yield front.detach();
 });

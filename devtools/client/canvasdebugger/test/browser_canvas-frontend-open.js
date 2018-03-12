@@ -5,8 +5,8 @@
  * Tests that the frontend UI is properly configured when opening the tool.
  */
 
-async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { $ } = panel.panelWin;
 
   is($("#snapshots-pane").hasAttribute("hidden"), false,
@@ -36,6 +36,6 @@ async function ifTestingSupported() {
   is($("#debugging-pane-contents").getAttribute("hidden"), "true",
     "The rest of the UI should initially be hidden.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

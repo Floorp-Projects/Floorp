@@ -15,11 +15,11 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
-add_task(async function () {
+add_task(function* () {
   info("Create a test tab and open the toolbox");
-  let tab = await addTab(URL);
+  let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
+  let toolbox = yield gDevTools.showToolbox(target, "webconsole");
 
   let shortcut = L10N.getStr("toolbox.toggleHost.key");
 
@@ -29,25 +29,25 @@ add_task(async function () {
   info("Switching from bottom to side");
   let onHostChanged = toolbox.once("host-changed");
   synthesizeKeyShortcut(shortcut, toolbox.win);
-  await onHostChanged;
+  yield onHostChanged;
   checkHostType(toolbox, SIDE, BOTTOM);
 
   info("Switching from side to bottom");
   onHostChanged = toolbox.once("host-changed");
   synthesizeKeyShortcut(shortcut, toolbox.win);
-  await onHostChanged;
+  yield onHostChanged;
   checkHostType(toolbox, BOTTOM, SIDE);
 
   info("Switching to window");
-  await toolbox.switchHost(WINDOW);
+  yield toolbox.switchHost(WINDOW);
   checkHostType(toolbox, WINDOW, BOTTOM);
 
   info("Switching from window to bottom");
   onHostChanged = toolbox.once("host-changed");
   synthesizeKeyShortcut(shortcut, toolbox.win);
-  await onHostChanged;
+  yield onHostChanged;
   checkHostType(toolbox, BOTTOM, WINDOW);
 
-  await toolbox.destroy();
+  yield toolbox.destroy();
   gBrowser.removeCurrentTab();
 });

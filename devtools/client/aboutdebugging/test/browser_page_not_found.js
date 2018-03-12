@@ -6,36 +6,36 @@
 // error page.
 // Every url navigating including #invalid-hash should be kept in history and
 // navigate back as expected.
-add_task(async function () {
-  let { tab, document } = await openAboutDebugging("invalid-hash");
+add_task(function* () {
+  let { tab, document } = yield openAboutDebugging("invalid-hash");
   let element = document.querySelector(".header-name");
   is(element.textContent, "Page not found", "Show error page");
 
   info("Opening addons-panel panel");
   document.querySelector("[aria-controls='addons-panel']").click();
-  await waitUntilElement("#addons-panel", document);
+  yield waitUntilElement("#addons-panel", document);
 
-  await waitForInitialAddonList(document);
+  yield waitForInitialAddonList(document);
   element = document.querySelector(".header-name");
   is(element.textContent, "Add-ons", "Show Addons");
 
   info("Opening about:debugging#invalid-hash");
   window.openUILinkIn("about:debugging#invalid-hash", "current");
-  await waitUntilElement(".error-page", document);
+  yield waitUntilElement(".error-page", document);
 
   element = document.querySelector(".header-name");
   is(element.textContent, "Page not found", "Show error page");
 
   gBrowser.goBack();
-  await waitUntilElement("#addons-panel", document);
-  await waitForInitialAddonList(document);
+  yield waitUntilElement("#addons-panel", document);
+  yield waitForInitialAddonList(document);
   element = document.querySelector(".header-name");
   is(element.textContent, "Add-ons", "Show Addons");
 
   gBrowser.goBack();
-  await waitUntilElement(".error-page", document);
+  yield waitUntilElement(".error-page", document);
   element = document.querySelector(".header-name");
   is(element.textContent, "Page not found", "Show error page");
 
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
 });

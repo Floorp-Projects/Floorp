@@ -6,24 +6,24 @@
  * for a canvas context profiling.
  */
 
-async function ifTestingSupported() {
+function* ifTestingSupported() {
   let currentTime = window.performance.now();
   info("Start to estimate WebGL drawArrays function.");
-  var { target, front } = await initCanvasDebuggerBackend(WEBGL_DRAW_ARRAYS);
+  var { target, front } = yield initCanvasDebuggerBackend(WEBGL_DRAW_ARRAYS);
 
   let navigated = once(target, "navigate");
 
-  await front.setup({ reload: true });
+  yield front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  await navigated;
+  yield navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
+  let snapshotActor = yield front.recordAnimationFrame();
   ok(snapshotActor,
     "A snapshot actor was sent after recording.");
 
-  let animationOverview = await snapshotActor.getOverview();
+  let animationOverview = yield snapshotActor.getOverview();
   ok(animationOverview,
     "An animation overview could be retrieved after recording.");
 
@@ -39,24 +39,24 @@ async function ifTestingSupported() {
   is(animationOverview.primitive.points, 4, "The count of points is correct.");
   is(animationOverview.primitive.lines, 8, "The count of lines is correct.");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
 
   info("Start to estimate WebGL drawElements function.");
-  var { target, front } = await initCanvasDebuggerBackend(WEBGL_DRAW_ELEMENTS);
+  var { target, front } = yield initCanvasDebuggerBackend(WEBGL_DRAW_ELEMENTS);
 
   navigated = once(target, "navigate");
 
-  await front.setup({ reload: true });
+  yield front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  await navigated;
+  yield navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  snapshotActor = await front.recordAnimationFrame();
+  snapshotActor = yield front.recordAnimationFrame();
   ok(snapshotActor,
     "A snapshot actor was sent after recording.");
   
-  animationOverview = await snapshotActor.getOverview();
+  animationOverview = yield snapshotActor.getOverview();
   ok(animationOverview,
     "An animation overview could be retrieved after recording.");
   
@@ -72,7 +72,7 @@ async function ifTestingSupported() {
   is(animationOverview.primitive.points, 4, "The count of points is correct.");
   is(animationOverview.primitive.lines, 8, "The count of lines is correct.");
   
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }
 

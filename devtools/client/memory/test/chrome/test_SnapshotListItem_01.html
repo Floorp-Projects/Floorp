@@ -16,11 +16,11 @@ path.
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
+         window.onload = Task.async(function* () {
           try {
             const container = document.getElementById("container");
 
-            await renderComponent(
+            yield renderComponent(
               SnapshotListItem(TEST_SNAPSHOT_LIST_ITEM_PROPS),
               container
             );
@@ -33,7 +33,7 @@ path.
                 {item: immutableUpdate(TEST_SNAPSHOT, {path: null})}
             );
 
-            await renderComponent(
+            yield renderComponent(
               SnapshotListItem(pathlessProps),
               container
             );
@@ -46,7 +46,7 @@ path.
           } finally {
             SimpleTest.finish();
           }
-         };
+         });
         </script>
     </pre>
 </body>

@@ -15,8 +15,8 @@ const ADDON_NAME = "test-devtools";
 
 const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
 
-add_task(async function () {
-  await new Promise(resolve => {
+add_task(function* () {
+  yield new Promise(resolve => {
     let options = {"set": [
       // Force enabling of addons debugging
       ["devtools.chrome.enabled", true],
@@ -29,9 +29,9 @@ add_task(async function () {
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
-  let { tab, document } = await openAboutDebugging("addons");
-  await waitForInitialAddonList(document);
-  await installAddon({
+  let { tab, document } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
+  yield installAddon({
     document,
     path: "addons/unpacked/install.rdf",
     name: ADDON_NAME,
@@ -77,12 +77,12 @@ add_task(async function () {
 
   debugBtn.click();
 
-  await onCustomMessage;
+  yield onCustomMessage;
   ok(true, "Received the notification message from the bootstrap.js function");
 
-  await onToolboxClose;
+  yield onToolboxClose;
   ok(true, "Addon toolbox closed");
 
-  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
-  await closeAboutDebugging(tab);
+  yield uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  yield closeAboutDebugging(tab);
 });

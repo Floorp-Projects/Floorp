@@ -16,8 +16,8 @@ const DOCUMENT_WITH_ONE_STYLESHEET = "data:text/html;charset=UTF-8," +
            "</html>"
           ].join("\n"));
 
-add_task(async function () {
-  let { ui } = await openStyleEditorForURL(DOCUMENT_WITH_ONE_STYLESHEET);
+add_task(function* () {
+  let { ui } = yield openStyleEditorForURL(DOCUMENT_WITH_ONE_STYLESHEET);
 
   // Spam the _onNewDocument callback multiple times before the
   // StyleEditorActor has a chance to respond to the first one.
@@ -28,7 +28,7 @@ add_task(async function () {
 
   // Wait for the StyleEditorActor to respond to each "newDocument"
   // message.
-  await new Promise(resolve => {
+  yield new Promise(resolve => {
     let loadCount = 0;
     ui.on("stylesheets-reset", function onReset() {
       ++loadCount;

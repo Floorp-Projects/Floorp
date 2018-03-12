@@ -21,20 +21,20 @@
         let win;
 
         SimpleTest.registerCleanupFunction(() => {
-          (async function () {
+          Task.spawn(function*() {
             if (win) {
-              await closeWebIDE(win);
+              yield closeWebIDE(win);
             }
             DebuggerServer.destroy();
-            await removeAllProjects();
-          })();
+            yield removeAllProjects();
+          });
         });
 
-        (async function () {
+        Task.spawn(function*() {
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
-          win = await openWebIDE();
+          win = yield openWebIDE();
           let docRuntime = getRuntimeDocument(win);
           let docProject = getProjectDocument(win);
 
@@ -49,11 +49,11 @@
           docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
 
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
-          await win.UI._busyPromise;
+          yield win.UI._busyPromise;
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
 
-          await waitForUpdate(win, "runtime-global-actors");
+          yield waitForUpdate(win, "runtime-global-actors");
 
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
 
@@ -62,30 +62,30 @@
             docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
           });
 
-          await waitForUpdate(win, "project");
+          yield waitForUpdate(win, "project");
 
           // Toolbox opens automatically for main process / runtime apps
           ok(win.UI.toolboxPromise, "Toolbox promise exists");
-          let toolbox = await win.UI.toolboxPromise;
+          let toolbox = yield win.UI.toolboxPromise;
 
-          await toolbox.destroy();
+          yield toolbox.destroy();
 
           ok(!win.UI.toolboxPromise, "Toolbox promise should be unset once toolbox.destroy()'s promise resolves");
 
           // Reopen the toolbox right after to check races and also
           // opening a toolbox more than just once against the same target
-          await win.Cmds.toggleToolbox();
+          yield win.Cmds.toggleToolbox();
 
           ok(win.UI.toolboxPromise, "Toolbox promise exists");
 
-          await win.UI.destroyToolbox();
+          yield win.UI.destroyToolbox();
 
           ok(!win.UI.toolboxPromise, "Toolbox promise is also nullified the second times");
 
-          await win.Cmds.disconnectRuntime();
+          yield win.Cmds.disconnectRuntime();
 
           SimpleTest.finish();
-        })();
+        });
       }
     </script>
   </body>

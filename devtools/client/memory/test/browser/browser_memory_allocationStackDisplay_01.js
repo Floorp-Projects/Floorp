@@ -13,7 +13,7 @@ const { changeView } = require("devtools/client/memory/actions/view");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
-this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const front = panel.panelWin.gFront;
   const { getState, dispatch } = panel.panelWin.gStore;
@@ -24,13 +24,13 @@ this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
   dispatch(censusDisplayActions.setCensusDisplay(censusDisplays.invertedAllocationStack));
   is(getState().censusDisplay.breakdown.by, "allocationStack");
 
-  await dispatch(toggleRecordingAllocationStacks(front));
+  yield dispatch(toggleRecordingAllocationStacks(front));
   ok(getState().allocations.recording);
 
   // Let some allocations build up.
-  await waitForTime(500);
+  yield waitForTime(500);
 
-  await dispatch(takeSnapshotAndCensus(front, heapWorker));
+  yield dispatch(takeSnapshotAndCensus(front, heapWorker));
 
   const names = [...doc.querySelectorAll(".frame-link-function-display-name")];
   ok(names.length, "Should have rendered some allocation stack tree items");

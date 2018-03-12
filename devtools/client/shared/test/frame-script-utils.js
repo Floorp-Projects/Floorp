@@ -6,6 +6,7 @@
 /* global addMessageListener, sendAsyncMessage, content */
 "use strict";
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { Task } = require("devtools/shared/task");
 const Services = require("Services");
 
 addMessageListener("devtools:test:history", function ({ data }) {
@@ -100,17 +101,17 @@ function promiseXHR(data) {
  *   response: XMLHttpRequest.response
  * }
  */
-addMessageListener("devtools:test:xhr", async function ({ data }) {
+addMessageListener("devtools:test:xhr", Task.async(function* ({ data }) {
   let requests = Array.isArray(data) ? data : [data];
   let responses = [];
 
   for (let request of requests) {
-    let response = await promiseXHR(request);
+    let response = yield promiseXHR(request);
     responses.push(response);
   }
 
   sendAsyncMessage("devtools:test:xhr", responses);
-});
+}));
 
 addMessageListener("devtools:test:profiler", function ({ data }) {
   let { method, args, id } = data;

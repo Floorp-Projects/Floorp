@@ -6,8 +6,8 @@
  * the graph.
  */
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $ } = panelWin;
 
@@ -16,7 +16,7 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  await events;
+  yield events;
 
   let { nodes, edges } = countGraphObjects(panelWin);
   is(nodes, 3, "should only be 3 nodes.");
@@ -27,11 +27,11 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  await events;
+  yield events;
 
   ({ nodes, edges } = countGraphObjects(panelWin));
   is(nodes, 3, "after reload, should only be 3 nodes.");
   is(edges, 2, "after reload, should only be 2 edges.");
 
-  await teardown(target);
+  yield teardown(target);
 });

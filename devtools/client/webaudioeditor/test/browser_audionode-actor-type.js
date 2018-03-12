@@ -5,9 +5,9 @@
  * Test AudioNode#type
  */
 
-add_task(async function () {
-  let { target, front } = await initBackend(SIMPLE_NODES_URL);
-  let [_, nodes] = await Promise.all([
+add_task(function* () {
+  let { target, front } = yield initBackend(SIMPLE_NODES_URL);
+  let [_, nodes] = yield Promise.all([
     front.setup({ reload: true }),
     getN(front, "create-node", 14)
   ]);
@@ -24,5 +24,5 @@ add_task(async function () {
     is(actualTypes[i], type, type + " successfully created with correct type");
   });
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
 });

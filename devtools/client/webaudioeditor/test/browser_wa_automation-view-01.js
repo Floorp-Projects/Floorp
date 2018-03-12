@@ -6,8 +6,8 @@
  * or params exist.
  */
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(AUTOMATION_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(AUTOMATION_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;
 
@@ -18,14 +18,14 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
+  let [actors] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   let $tabbox = $("#web-audio-editor-tabs");
 
   // Oscillator node
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
-  await waitForInspectorRender(panelWin, EVENTS);
+  yield waitForInspectorRender(panelWin, EVENTS);
   $tabbox.selectedIndex = 1;
 
   ok(isVisible($("#automation-graph-container")), "graph container should be visible");
@@ -35,7 +35,7 @@ add_task(async function () {
 
   // Gain node
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  await waitForInspectorRender(panelWin, EVENTS);
+  yield waitForInspectorRender(panelWin, EVENTS);
   $tabbox.selectedIndex = 1;
 
   ok(!isVisible($("#automation-graph-container")), "graph container should not be visible");
@@ -45,7 +45,7 @@ add_task(async function () {
 
   // destination node
   click(panelWin, findGraphNode(panelWin, nodeIds[0]));
-  await waitForInspectorRender(panelWin, EVENTS);
+  yield waitForInspectorRender(panelWin, EVENTS);
   $tabbox.selectedIndex = 1;
 
   ok(!isVisible($("#automation-graph-container")), "graph container should not be visible");
@@ -53,5 +53,5 @@ add_task(async function () {
   ok(!isVisible($("#automation-no-events")), "no-events panel should not be visible");
   ok(isVisible($("#automation-empty")), "empty panel should be visible");
 
-  await teardown(target);
+  yield teardown(target);
 });

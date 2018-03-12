@@ -13,14 +13,14 @@ const CATEGORIES = [
   { color: "#70bf53", label: "Baz" }
 ];
 
-add_task(async function () {
-  await addTab("about:blank");
-  await performTest();
+add_task(function* () {
+  yield addTab("about:blank");
+  yield performTest();
   gBrowser.removeCurrentTab();
 });
 
-async function performTest() {
-  let [host,, doc] = await createHost();
+function* performTest() {
+  let [host,, doc] = yield createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
@@ -28,14 +28,14 @@ async function performTest() {
   graph.fixedWidth = 200;
   graph.fixedHeight = 100;
 
-  await graph.once("ready");
-  await testGraph(graph);
+  yield graph.once("ready");
+  yield testGraph(graph);
 
-  await graph.destroy();
+  yield graph.destroy();
   host.destroy();
 }
 
-async function testGraph(graph) {
+function* testGraph(graph) {
   graph.format = CATEGORIES;
   graph.dataOffsetX = 1000;
   graph.setData([{
@@ -60,19 +60,19 @@ async function testGraph(graph) {
   is(legendItems.length, 3,
     "Three legend items should exist in the entire graph.");
 
-  await testLegend(graph, 0, {
+  yield testLegend(graph, 0, {
     highlights: "[{type:0, start:34.33333333333333, end:66.66666666666666, top:85, bottom:100}, {type:0, start:67.66666666666666, end:100, top:70, bottom:100}, {type:0, start:134.33333333333331, end:166.66666666666666, top:55, bottom:100}, {type:0, start:167.66666666666666, end:200, top:55, bottom:100}]",
     selection: "({start:34.33333333333333, end:200})",
     leftmost: "({type:0, start:34.33333333333333, end:66.66666666666666, top:85, bottom:100})",
     rightmost: "({type:0, start:167.66666666666666, end:200, top:55, bottom:100})"
   });
-  await testLegend(graph, 1, {
+  yield testLegend(graph, 1, {
     highlights: "[{type:1, start:0, end:33.33333333333333, top:70, bottom:100}, {type:1, start:67.66666666666666, end:100, top:54, bottom:69}, {type:1, start:101, end:133.33333333333331, top:55, bottom:100}, {type:1, start:167.66666666666666, end:200, top:24, bottom:54}]",
     selection: "({start:0, end:200})",
     leftmost: "({type:1, start:0, end:33.33333333333333, top:70, bottom:100})",
     rightmost: "({type:1, start:167.66666666666666, end:200, top:24, bottom:54})"
   });
-  await testLegend(graph, 2, {
+  yield testLegend(graph, 2, {
     highlights: "[{type:2, start:0, end:33.33333333333333, top:24, bottom:69}, {type:2, start:34.33333333333333, end:66.66666666666666, top:54, bottom:84}, {type:2, start:101, end:133.33333333333331, top:39, bottom:54}, {type:2, start:134.33333333333331, end:166.66666666666666, top:24, bottom:54}]",
     selection: "({start:0, end:166.66666666666666})",
     leftmost: "({type:2, start:0, end:33.33333333333333, top:24, bottom:69})",
@@ -81,7 +81,7 @@ async function testGraph(graph) {
   /* eslint-enable max-len */
 }
 
-async function testLegend(graph, index, { highlights, selection, leftmost, rightmost }) {
+function* testLegend(graph, index, { highlights, selection, leftmost, rightmost }) {
   // Hover.
 
   let legendItems = graph._document.querySelectorAll(".bar-graph-widget-legend-item");
@@ -91,7 +91,7 @@ async function testLegend(graph, index, { highlights, selection, leftmost, right
   graph._onLegendMouseOver({ target: colorBlock });
   ok(!graph.hasMask(), "The graph shouldn't get highlights immediately.");
 
-  let [type, rects] = await debounced;
+  let [type, rects] = yield debounced;
   ok(graph.hasMask(), "The graph should now have highlights.");
 
   is(type, index,
@@ -105,7 +105,7 @@ async function testLegend(graph, index, { highlights, selection, leftmost, right
   graph._onLegendMouseOut();
   ok(!graph.hasMask(), "The graph shouldn't have highlights anymore.");
 
-  await unhovered;
+  yield unhovered;
   ok(true, "The 'legend-mouseout' event was emitted.");
 
   // Select.
@@ -115,7 +115,7 @@ async function testLegend(graph, index, { highlights, selection, leftmost, right
   ok(graph.hasSelection(), "The graph should now have a selection.");
   is(graph.getSelection().toSource(), selection, "The graph has a correct selection.");
 
-  let [left, right] = await selected;
+  let [left, right] = yield selected;
   is(left.toSource(), leftmost, "The correct leftmost data block was found.");
   is(right.toSource(), rightmost, "The correct rightmost data block was found.");
 

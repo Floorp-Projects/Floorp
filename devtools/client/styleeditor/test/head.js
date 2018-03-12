@@ -50,50 +50,50 @@ var navigateTo = function (url) {
   return BrowserTestUtils.browserLoaded(browser);
 };
 
-var navigateToAndWaitForStyleSheets = async function (url, ui) {
+var navigateToAndWaitForStyleSheets = Task.async(function* (url, ui) {
   let onReset = ui.once("stylesheets-reset");
-  await navigateTo(url);
-  await onReset;
-};
+  yield navigateTo(url);
+  yield onReset;
+});
 
-var reloadPageAndWaitForStyleSheets = async function (ui) {
+var reloadPageAndWaitForStyleSheets = Task.async(function* (ui) {
   info("Reloading the page.");
 
   let onReset = ui.once("stylesheets-reset");
   let browser = gBrowser.selectedBrowser;
-  await ContentTask.spawn(browser, null, "() => content.location.reload()");
-  await onReset;
-};
+  yield ContentTask.spawn(browser, null, "() => content.location.reload()");
+  yield onReset;
+});
 
 /**
  * Open the style editor for the current tab.
  */
-var openStyleEditor = async function (tab) {
+var openStyleEditor = Task.async(function* (tab) {
   if (!tab) {
     tab = gBrowser.selectedTab;
   }
   let target = TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target, "styleeditor");
+  let toolbox = yield gDevTools.showToolbox(target, "styleeditor");
   let panel = toolbox.getPanel("styleeditor");
   let ui = panel.UI;
 
   // The stylesheet list appears with an animation. Let this animation finish.
   let animations = ui._root.getAnimations({subtree: true});
-  await Promise.all(animations.map(a => a.finished));
+  yield Promise.all(animations.map(a => a.finished));
 
   return { toolbox, panel, ui };
-};
+});
 
 /**
  * Creates a new tab in specified window navigates it to the given URL and
  * opens style editor in it.
  */
-var openStyleEditorForURL = async function (url, win) {
-  let tab = await addTab(url, win);
-  let result = await openStyleEditor(tab);
+var openStyleEditorForURL = Task.async(function* (url, win) {
+  let tab = yield addTab(url, win);
+  let result = yield openStyleEditor(tab);
   result.tab = tab;
   return result;
-};
+});
 
 /**
  * Send an async message to the frame script and get back the requested
@@ -106,8 +106,8 @@ var openStyleEditorForURL = async function (url, win) {
  * @param {String} name
  *        name of the property.
  */
-var getComputedStyleProperty = async function (args) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, args,
+var getComputedStyleProperty = function* (args) {
+  return yield ContentTask.spawn(gBrowser.selectedBrowser, args,
     function ({selector, pseudo, name}) {
       let element = content.document.querySelector(selector);
       let style = content.getComputedStyle(element, pseudo);

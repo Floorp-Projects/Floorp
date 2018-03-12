@@ -20,11 +20,11 @@ Test that the Tree Map correctly renders onto 2 managed canvases.
   <pre id="test">
     <script src="head.js" type="application/javascript"></script>
     <script type="application/javascript">
-      window.onload = async function () {
+      window.onload = Task.async(function*() {
         try {
           const container = document.getElementById("container");
 
-          await renderComponent(TreeMap(TEST_TREE_MAP_PROPS), container);
+          yield renderComponent(TreeMap(TEST_TREE_MAP_PROPS), container);
 
           let treeMapContainer = container.querySelector(".tree-map-container");
           ok(treeMapContainer, "Component creates a container");
@@ -37,7 +37,7 @@ Test that the Tree Map correctly renders onto 2 managed canvases.
         } finally {
           SimpleTest.finish();
         }
-      };
+      });
     </script>
   </pre>
 </body>

@@ -14,11 +14,11 @@ Test that we show the "hey you're not recording allocation stacks" message at th
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
+         window.onload = Task.async(function* () {
            try {
              const container = document.getElementById("container");
 
-             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, {
                    report: {
@@ -49,7 +49,7 @@ Test that we show the "hey you're not recording allocation stacks" message at th
              ok(container.querySelector(".no-allocation-stacks"),
                 "When there are no allocation stacks, we should show the message");
 
-             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, {
                    report: {
@@ -90,7 +90,7 @@ Test that we show the "hey you're not recording allocation stacks" message at th
              ok(!container.querySelector(".no-allocation-stacks"),
                 "When there are allocation stacks, we should not show the message");
 
-             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, {
                    report: {
@@ -114,7 +114,7 @@ Test that we show the "hey you're not recording allocation stacks" message at th
            } finally {
              SimpleTest.finish();
            }
-         };
+         });
         </script>
     </pre>
 </body>

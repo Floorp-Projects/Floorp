@@ -6,19 +6,19 @@
  * defective shader source.
  */
 
-async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+function* ifWebGLSupported() {
+  let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: true });
 
-  let programActor = await once(front, "program-linked");
-  let vertexShader = await programActor.getVertexShader();
-  let fragmentShader = await programActor.getFragmentShader();
+  let programActor = yield once(front, "program-linked");
+  let vertexShader = yield programActor.getVertexShader();
+  let fragmentShader = yield programActor.getFragmentShader();
 
-  let oldVertSource = await vertexShader.getText();
+  let oldVertSource = yield vertexShader.getText();
   let newVertSource = oldVertSource.replace("vec4", "vec3");
 
   try {
-    await vertexShader.compile(newVertSource);
+    yield vertexShader.compile(newVertSource);
     ok(false, "Vertex shader was compiled with a defective source!");
   } catch (error) {
     ok(error,
@@ -39,19 +39,19 @@ async function ifWebGLSupported() {
       "An assignment error is contained in the info log.");
   }
 
-  await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
   ok(true, "The shader was reverted to the old source.");
 
-  let vertSource = await vertexShader.getText();
+  let vertSource = yield vertexShader.getText();
   ok(vertSource.includes("vec4(aVertexPosition, 1.0);"),
     "The previous correct vertex shader source was preserved.");
 
-  let oldFragSource = await fragmentShader.getText();
+  let oldFragSource = yield fragmentShader.getText();
   let newFragSource = oldFragSource.replace("vec3", "vec4");
 
   try {
-    await fragmentShader.compile(newFragSource);
+    yield fragmentShader.compile(newFragSource);
     ok(false, "Fragment shader was compiled with a defective source!");
   } catch (error) {
     ok(error,
@@ -68,24 +68,24 @@ async function ifWebGLSupported() {
       "A constructor error is contained in the info log.");
   }
 
-  await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
   ok(true, "The shader was reverted to the old source.");
 
-  let fragSource = await fragmentShader.getText();
+  let fragSource = yield fragmentShader.getText();
   ok(fragSource.includes("vec3 vFragmentColor;"),
     "The previous correct fragment shader source was preserved.");
 
-  await programActor.highlight([0, 1, 0, 1]);
-  await ensurePixelIs(front, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  yield programActor.highlight([0, 1, 0, 1]);
+  yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
   ok(true, "Highlighting worked after setting a defective fragment source.");
 
-  await programActor.unhighlight();
-  await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  yield programActor.unhighlight();
+  yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
   ok(true, "Unhighlighting worked after setting a defective vertex source.");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

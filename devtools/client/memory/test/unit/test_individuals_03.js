@@ -29,10 +29,10 @@ const EXPECTED_INDIVIDUAL_STATES = [
   individualsState.FETCHED,
 ];
 
-add_task(async function () {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  await front.attach();
+  yield front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
@@ -42,14 +42,14 @@ add_task(async function () {
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  await waitUntilCensusState(store, s => s.census,
+  yield waitUntilCensusState(store, s => s.census,
                              [censusState.SAVED, censusState.SAVED]);
 
   dispatch(changeView(viewState.DIFFING));
   dispatch(selectSnapshotForDiffingAndRefresh(heapWorker, getState().snapshots[0]));
   dispatch(selectSnapshotForDiffingAndRefresh(heapWorker, getState().snapshots[1]));
 
-  await waitUntilState(store, state => {
+  yield waitUntilState(store, state => {
     return state.diffing &&
            state.diffing.state === diffingState.TOOK_DIFF;
   });
@@ -73,7 +73,7 @@ add_task(async function () {
                             reportLeafIndex));
 
   for (let state of EXPECTED_INDIVIDUAL_STATES) {
-    await waitUntilState(store, s => {
+    yield waitUntilState(store, s => {
       return s.view.state === viewState.INDIVIDUALS &&
              s.individuals &&
              s.individuals.state === state;
@@ -90,7 +90,7 @@ add_task(async function () {
 
   dispatch(popViewAndRefresh(heapWorker));
 
-  await waitUntilState(store, state => {
+  yield waitUntilState(store, state => {
     return state.diffing &&
       state.diffing.state === diffingState.TOOK_DIFF;
   });
@@ -99,5 +99,5 @@ add_task(async function () {
      "We have our census diff again after popping back to the last view");
 
   heapWorker.destroy();
-  await front.detach();
+  yield front.detach();
 });

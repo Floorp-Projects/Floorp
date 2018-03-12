@@ -6,18 +6,18 @@
  * Tests if the sidebar is properly updated with worker markers.
  */
 
-async function spawnTest() {
-  let { panel } = await initPerformance(WORKER_URL);
+function* spawnTest() {
+  let { panel } = yield initPerformance(WORKER_URL);
   let { $$, $, PerformanceController } = panel.panelWin;
 
   loadFrameScripts();
 
-  await startRecording(panel);
+  yield startRecording(panel);
   ok(true, "Recording has started.");
 
   evalInDebuggee("performWork()");
 
-  await waitUntil(() => {
+  yield waitUntil(() => {
     // Wait until we get the worker markers.
     let markers = PerformanceController.getCurrentRecording().getMarkers();
     if (!markers.some(m => m.name == "Worker") ||
@@ -32,14 +32,14 @@ async function spawnTest() {
     return true;
   });
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
   ok(true, "Recording has ended.");
 
   for (let node of $$(".waterfall-marker-name[value=Worker")) {
     testWorkerMarkerUI(node.parentNode.parentNode);
   }
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }
 

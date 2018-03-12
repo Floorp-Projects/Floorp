@@ -46,7 +46,7 @@ const selectSnapshotForDiffing = exports.selectSnapshotForDiffing = function (sn
  * @param {snapshotModel} second
  */
 const takeCensusDiff = exports.takeCensusDiff = function (heapWorker, first, second) {
-  return async function (dispatch, getState) {
+  return function* (dispatch, getState) {
     assert(snapshotIsDiffable(first),
            `First snapshot must be in a diffable state, found ${first.state}`);
     assert(snapshotIsDiffable(second),
@@ -88,7 +88,7 @@ const takeCensusDiff = exports.takeCensusDiff = function (heapWorker, first, sec
       opts.filter = filter || null;
 
       try {
-        ({ delta: report, parentMap } = await heapWorker.takeCensusDiff(
+        ({ delta: report, parentMap } = yield heapWorker.takeCensusDiff(
           first.path,
           second.path,
           { breakdown: display.breakdown },
@@ -122,7 +122,7 @@ const takeCensusDiff = exports.takeCensusDiff = function (heapWorker, first, sec
  * @param {HeapAnalysesClient} heapWorker
  */
 const refreshDiffing = exports.refreshDiffing = function (heapWorker) {
-  return function (dispatch, getState) {
+  return function* (dispatch, getState) {
     if (getState().diffing.secondSnapshotId === null) {
       return;
     }
@@ -152,11 +152,11 @@ const refreshDiffing = exports.refreshDiffing = function (heapWorker) {
  * @param {snapshotModel} snapshot
  */
 exports.selectSnapshotForDiffingAndRefresh = function (heapWorker, snapshot) {
-  return async function (dispatch, getState) {
+  return function* (dispatch, getState) {
     assert(getState().diffing,
            "If we are selecting for diffing, we must be in diffing mode");
     dispatch(selectSnapshotForDiffing(snapshot));
-    await dispatch(refreshDiffing(heapWorker));
+    yield dispatch(refreshDiffing(heapWorker));
   };
 };
 

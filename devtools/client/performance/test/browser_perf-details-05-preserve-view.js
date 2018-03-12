@@ -12,33 +12,33 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, PerformanceController, DetailsView, JsCallTreeView } = panel.panelWin;
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   let selected = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED);
   let rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
-  await DetailsView.selectView("js-calltree");
-  await selected;
-  await rendered;
+  yield DetailsView.selectView("js-calltree");
+  yield selected;
+  yield rendered;
 
   ok(DetailsView.isViewSelected(JsCallTreeView),
     "The js calltree view is now selected in the details view.");
 
   let cleared = once(PerformanceController, EVENTS.RECORDING_SELECTED,
                      { expectedArgs: { "1": null } });
-  await PerformanceController.clearRecordings();
-  await cleared;
+  yield PerformanceController.clearRecordings();
+  yield cleared;
 
-  await startRecording(panel);
-  await stopRecording(panel, {
+  yield startRecording(panel);
+  yield stopRecording(panel, {
     expectedViewClass: "JsCallTreeView",
     expectedViewEvent: "UI_JS_CALL_TREE_RENDERED"
   });
@@ -46,5 +46,5 @@ add_task(async function () {
   ok(DetailsView.isViewSelected(JsCallTreeView),
     "The js calltree view is still selected in the details view.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

@@ -30,15 +30,15 @@ const TEST_DATA = [
   }
 ];
 
-add_task(async function () {
+add_task(function* () {
   for (let testData of TEST_DATA) {
-    await testCheckboxState(testData);
+    yield testCheckboxState(testData);
   }
 });
 
-async function testCheckboxState(testData) {
+function* testCheckboxState(testData) {
   info("Set preferences as defined by the current test data.");
-  await new Promise(resolve => {
+  yield new Promise(resolve => {
     let options = {"set": [
       ["devtools.chrome.enabled", testData.chromeEnabled],
       ["devtools.debugger.remote-enabled", testData.debuggerRemoteEnable],
@@ -46,11 +46,11 @@ async function testCheckboxState(testData) {
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
-  let { tab, document } = await openAboutDebugging("addons");
-  await waitForInitialAddonList(document);
+  let { tab, document } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
 
   info("Install a test addon.");
-  await installAddon({
+  yield installAddon({
     document,
     path: "addons/unpacked/install.rdf",
     name: ADDON_NAME,
@@ -67,7 +67,7 @@ async function testCheckboxState(testData) {
     "Debug buttons should be in the expected state");
 
   info("Uninstall test addon installed earlier.");
-  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  yield uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
 
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
 }

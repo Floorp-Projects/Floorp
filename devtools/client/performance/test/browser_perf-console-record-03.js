@@ -13,21 +13,21 @@ const { waitForRecordingStoppedEvents } = require("devtools/client/performance/t
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(async function () {
-  let { target, console } = await initConsoleInNewTab({
+add_task(function* () {
+  let { target, console } = yield initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  await console.profile("rust");
-  await console.profileEnd("rust");
-  await console.profile("rust2");
+  yield console.profile("rust");
+  yield console.profileEnd("rust");
+  yield console.profile("rust2");
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
+  let { panel } = yield initPerformanceInTab({ tab: target.tab });
   let { PerformanceController, WaterfallView } = panel.panelWin;
 
-  await waitUntil(() => PerformanceController.getRecordings().length == 2);
-  await waitUntil(() => WaterfallView.wasRenderedAtLeastOnce);
+  yield waitUntil(() => PerformanceController.getRecordings().length == 2);
+  yield waitUntil(() => WaterfallView.wasRenderedAtLeastOnce);
 
   let recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
@@ -51,8 +51,8 @@ add_task(async function () {
     skipWaitingForOverview: true,
     skipWaitingForSubview: true,
   });
-  await console.profileEnd("rust2");
-  await stopped;
+  yield console.profileEnd("rust2");
+  yield stopped;
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

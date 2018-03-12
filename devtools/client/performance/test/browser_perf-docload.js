@@ -11,18 +11,18 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording, reload } = require("devtools/client/performance/test/helpers/actions");
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
-add_task(async function () {
-  let { panel, target } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel, target } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { PerformanceController } = panel.panelWin;
 
-  await startRecording(panel);
-  await reload(target);
+  yield startRecording(panel);
+  yield reload(target);
 
-  await waitUntil(() => {
+  yield waitUntil(() => {
     // Wait until we get the necessary markers.
     let markers = PerformanceController.getCurrentRecording().getMarkers();
     if (!markers.some(m => m.name == "document::DOMContentLoaded") ||
@@ -38,6 +38,6 @@ add_task(async function () {
     return true;
   });
 
-  await stopRecording(panel);
-  await teardownToolboxAndRemoveTab(panel);
+  yield stopRecording(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

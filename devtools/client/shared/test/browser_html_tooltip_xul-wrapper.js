@@ -20,11 +20,11 @@ loadHelperScript("helper_html_tooltip.js");
 const TOOLTIP_HEIGHT = 160;
 const TOOLTIP_WIDTH = 200;
 
-add_task(async function () {
+add_task(function* () {
   // Force the toolbox to be 200px high;
-  await pushPref("devtools.toolbox.footer.height", 200);
+  yield pushPref("devtools.toolbox.footer.height", 200);
 
-  let [, win, doc] = await createHost("bottom", TEST_URI);
+  let [, win, doc] = yield createHost("bottom", TEST_URI);
 
   info("Resize and move the window to have space below.");
   let originalWidth = win.top.outerWidth;
@@ -51,15 +51,15 @@ add_task(async function () {
 
   // Above box1: check that the tooltip can overflow onto the content page.
   info("Display the tooltip above box1.");
-  await showTooltip(tooltip, box1, {position: "top"});
+  yield showTooltip(tooltip, box1, {position: "top"});
   checkTooltip(tooltip, "top", TOOLTIP_HEIGHT);
-  await hideTooltip(tooltip);
+  yield hideTooltip(tooltip);
 
   // Below box1: check that the tooltip can overflow out of the browser window.
   info("Display the tooltip below box1.");
-  await showTooltip(tooltip, box1, {position: "bottom"});
+  yield showTooltip(tooltip, box1, {position: "bottom"});
   checkTooltip(tooltip, "bottom", TOOLTIP_HEIGHT);
-  await hideTooltip(tooltip);
+  yield hideTooltip(tooltip);
 
   is(tooltip.isVisible(), false, "Tooltip is not visible");
 

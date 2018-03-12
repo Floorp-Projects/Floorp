@@ -14,22 +14,22 @@ const SCOPE = URL_ROOT + "service-workers/";
 const SERVICE_WORKER = SCOPE + "empty-sw.js";
 const TAB_URL = SCOPE + "empty-sw.html";
 
-add_task(async function () {
-  await enableServiceWorkerDebugging();
+add_task(function* () {
+  yield enableServiceWorkerDebugging();
 
-  let { tab, document } = await openAboutDebugging("workers");
+  let { tab, document } = yield openAboutDebugging("workers");
 
   // Open a tab that registers an empty service worker.
-  let swTab = await addTab(TAB_URL);
+  let swTab = yield addTab(TAB_URL);
 
   info("Wait until the service worker appears in about:debugging");
-  await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
+  yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
-  await waitForServiceWorkerActivation(SERVICE_WORKER, document);
+  yield waitForServiceWorkerActivation(SERVICE_WORKER, document);
 
   info("Ensure that the registration resolved before trying to interact with " +
     "the service worker.");
-  await waitForServiceWorkerRegistered(swTab);
+  yield waitForServiceWorkerRegistered(swTab);
   ok(true, "Service worker registration resolved");
 
   let targets = document.querySelectorAll("#service-workers .target");
@@ -51,10 +51,10 @@ add_task(async function () {
   unregisterLink.click();
 
   info("Wait until the service worker disappears");
-  await waitUntil(() => {
+  yield waitUntil(() => {
     return !document.querySelector("#service-workers .target");
   });
 
-  await removeTab(swTab);
-  await closeAboutDebugging(tab);
+  yield removeTab(swTab);
+  yield closeAboutDebugging(tab);
 });

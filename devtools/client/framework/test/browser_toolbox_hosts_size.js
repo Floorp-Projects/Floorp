@@ -10,16 +10,16 @@ const URL = "data:text/html;charset=utf8,test for host sizes";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(async function () {
+add_task(function* () {
   // Set size prefs to make the hosts way too big, so that the size has
   // to be clamped to fit into the browser window.
   Services.prefs.setIntPref("devtools.toolbox.footer.height", 10000);
   Services.prefs.setIntPref("devtools.toolbox.sidebar.width", 10000);
 
-  let tab = await addTab(URL);
+  let tab = yield addTab(URL);
   let nbox = gBrowser.getNotificationBox();
   let {clientHeight: nboxHeight, clientWidth: nboxWidth} = nbox;
-  let toolbox = await gDevTools.showToolbox(TargetFactory.forTab(tab));
+  let toolbox = yield gDevTools.showToolbox(TargetFactory.forTab(tab));
 
   is(nbox.clientHeight, nboxHeight, "Opening the toolbox hasn't changed the height of the nbox");
   is(nbox.clientWidth, nboxWidth, "Opening the toolbox hasn't changed the width of the nbox");
@@ -27,24 +27,24 @@ add_task(async function () {
   let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
   is(iframe.clientHeight, nboxHeight - 25, "The iframe fits within the available space");
 
-  await toolbox.switchHost(Toolbox.HostType.SIDE);
+  yield toolbox.switchHost(Toolbox.HostType.SIDE);
   iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
   is(iframe.clientWidth, nboxWidth - 25, "The iframe fits within the available space");
 
-  await cleanup(toolbox);
+  yield cleanup(toolbox);
 });
 
-add_task(async function () {
+add_task(function* () {
   // Set size prefs to something reasonable, so we can check to make sure
   // they are being set properly.
   Services.prefs.setIntPref("devtools.toolbox.footer.height", 100);
   Services.prefs.setIntPref("devtools.toolbox.sidebar.width", 100);
 
-  let tab = await addTab(URL);
+  let tab = yield addTab(URL);
   let nbox = gBrowser.getNotificationBox();
   let {clientHeight: nboxHeight, clientWidth: nboxWidth} = nbox;
-  let toolbox = await gDevTools.showToolbox(TargetFactory.forTab(tab));
+  let toolbox = yield gDevTools.showToolbox(TargetFactory.forTab(tab));
 
   is(nbox.clientHeight, nboxHeight, "Opening the toolbox hasn't changed the height of the nbox");
   is(nbox.clientWidth, nboxWidth, "Opening the toolbox hasn't changed the width of the nbox");
@@ -52,18 +52,18 @@ add_task(async function () {
   let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
   is(iframe.clientHeight, 100, "The iframe is resized properly");
 
-  await toolbox.switchHost(Toolbox.HostType.SIDE);
+  yield toolbox.switchHost(Toolbox.HostType.SIDE);
   iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
   is(iframe.clientWidth, 100, "The iframe is resized properly");
 
-  await cleanup(toolbox);
+  yield cleanup(toolbox);
 });
 
-async function cleanup(toolbox) {
+function* cleanup(toolbox) {
   Services.prefs.clearUserPref("devtools.toolbox.host");
   Services.prefs.clearUserPref("devtools.toolbox.footer.height");
   Services.prefs.clearUserPref("devtools.toolbox.sidebar.width");
-  await toolbox.destroy();
+  yield toolbox.destroy();
   gBrowser.removeCurrentTab();
 }

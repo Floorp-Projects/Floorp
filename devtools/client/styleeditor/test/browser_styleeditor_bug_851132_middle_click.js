@@ -7,25 +7,25 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "four.html";
 
-add_task(async function () {
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+add_task(function* () {
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
   gBrowser.tabContainer.addEventListener("TabOpen", onTabAdded);
 
-  await ui.editors[0].getSourceEditor();
+  yield ui.editors[0].getSourceEditor();
   info("first editor selected");
 
   info("Left-clicking on the second editor link.");
-  await clickOnStyleSheetLink(ui.editors[1], 0);
+  yield clickOnStyleSheetLink(ui.editors[1], 0);
 
   info("Waiting for the second editor to be selected.");
-  let editor = await ui.once("editor-selected");
+  let editor = yield ui.once("editor-selected");
 
   ok(editor.sourceEditor.hasFocus(),
      "Left mouse click gave second editor focus.");
 
   // middle mouse click should not open a new tab
   info("Middle clicking on the third editor link.");
-  await clickOnStyleSheetLink(ui.editors[2], 1);
+  yield clickOnStyleSheetLink(ui.editors[2], 1);
 });
 
 /**
@@ -36,12 +36,12 @@ add_task(async function () {
  * @param {MouseEvent.button} button
  *        The button to click the link with.
  */
-async function clickOnStyleSheetLink(editor, button) {
+function* clickOnStyleSheetLink(editor, button) {
   let window = editor._window;
   let link = editor.summary.querySelector(".stylesheet-name");
 
   info("Waiting for focus.");
-  await SimpleTest.promiseFocus(window);
+  yield SimpleTest.promiseFocus(window);
 
   info("Pressing button " + button + " on style sheet name link.");
   EventUtils.synthesizeMouseAtCenter(link, { button }, window);

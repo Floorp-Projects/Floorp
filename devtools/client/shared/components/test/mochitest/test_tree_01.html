@@ -17,7 +17,7 @@ depth.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = async function () {
+window.onload = Task.async(function* () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
@@ -34,7 +34,7 @@ window.onload = async function () {
     isAccessibleTree(tree);
 
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -58,7 +58,7 @@ window.onload = async function () {
   } finally {
     SimpleTest.finish();
   }
-};
+});
 </script>
 </pre>
 </body>

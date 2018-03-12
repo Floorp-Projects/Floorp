@@ -18,11 +18,11 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
+        Task.spawn(function*() {
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
-          let win = await openWebIDE();
+          let win = yield openWebIDE();
           let docRuntime = getRuntimeDocument(win);
 
           let fakeRuntime = {
@@ -53,39 +53,39 @@
           items[0].click();
 
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
-          await win.UI._busyPromise;
+          yield win.UI._busyPromise;
 
-          await connectionsChanged;
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 2, "Connected");
 
           connectionsChanged = waitForConnectionChange("closed", 2);
 
-          await nextTick();
-          await closeWebIDE(win);
+          yield nextTick();
+          yield closeWebIDE(win);
 
-          await connectionsChanged;
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
 
           connectionsChanged = waitForConnectionChange("opened", 2);
 
-          win = await openWebIDE();
+          win = yield openWebIDE();
 
           win.AppManager.runtimeList.usb.push(fakeRuntime);
           win.AppManager.update("runtime-list");
 
-          await waitForUpdate(win, "runtime-targets");
+          yield waitForUpdate(win, "runtime-targets");
 
-          await connectionsChanged;
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 2, "Automatically reconnected");
 
-          await win.Cmds.disconnectRuntime();
+          yield win.Cmds.disconnectRuntime();
 
-          await closeWebIDE(win);
+          yield closeWebIDE(win);
 
           DebuggerServer.destroy();
 
           SimpleTest.finish();
-        })();
+        });
       }
     </script>
   </body>

@@ -5,17 +5,17 @@
  * Tests that the frontend UI is properly reconfigured after reloading.
  */
 
-async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS } = panel.panelWin;
 
   let reset = once(window, EVENTS.UI_RESET);
   let navigated = reload(target);
 
-  await reset;
+  yield reset;
   ok(true, "The UI was reset after the refresh button was clicked.");
 
-  await navigated;
+  yield navigated;
   ok(true, "The target finished reloading.");
 
   is($("#snapshots-pane").hasAttribute("hidden"), false,
@@ -50,6 +50,6 @@ async function ifTestingSupported() {
   is($("#debugging-pane-contents").getAttribute("hidden"), "true",
     "The rest of the UI should still be hidden.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

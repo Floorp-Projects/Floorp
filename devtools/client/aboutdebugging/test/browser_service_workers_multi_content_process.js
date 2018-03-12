@@ -10,12 +10,12 @@
 const SERVICE_WORKER = URL_ROOT + "service-workers/empty-sw.js";
 const TAB_URL = URL_ROOT + "service-workers/empty-sw.html";
 
-add_task(async function () {
-  await enableServiceWorkerDebugging();
+add_task(function* () {
+  yield enableServiceWorkerDebugging();
   info("Force two content processes");
-  await pushPref("dom.ipc.processCount", 2);
+  yield pushPref("dom.ipc.processCount", 2);
 
-  let { tab, document } = await openAboutDebugging("workers");
+  let { tab, document } = yield openAboutDebugging("workers");
 
   let warningSection = document.querySelector(".service-worker-multi-process");
   let img = warningSection.querySelector(".warning");
@@ -23,12 +23,12 @@ add_task(async function () {
 
   let serviceWorkersElement = getServiceWorkerList(document);
 
-  let swTab = await addTab(TAB_URL, { background: true });
+  let swTab = yield addTab(TAB_URL, { background: true });
 
   info("Wait for service worker to appear in the list");
   // Check that the service worker appears in the UI
   let serviceWorkerContainer =
-    await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
+    yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   info("Check that service worker buttons are disabled.");
   let debugButton = getDebugButton(serviceWorkerContainer);
@@ -39,8 +39,8 @@ add_task(async function () {
     let hasWarning = document.querySelector(".service-worker-multi-process");
     return !hasWarning && !debugButton.disabled;
   }, 100);
-  await pushPref("dom.ipc.processCount", 1);
-  await onWarningCleared;
+  yield pushPref("dom.ipc.processCount", 1);
+  yield onWarningCleared;
   ok(!debugButton.disabled, "Debug button is enabled.");
 
   info("Update the preference back to 2");
@@ -48,8 +48,8 @@ add_task(async function () {
     let hasWarning = document.querySelector(".service-worker-multi-process");
     return hasWarning && getDebugButton(serviceWorkerContainer).disabled;
   }, 100);
-  await pushPref("dom.ipc.processCount", 2);
-  await onWarningRestored;
+  yield pushPref("dom.ipc.processCount", 2);
+  yield onWarningRestored;
 
   // Update the reference to the debugButton, as the previous DOM element might have been
   // deleted.
@@ -58,14 +58,14 @@ add_task(async function () {
 
   info("Unregister service worker");
   try {
-    await unregisterServiceWorker(swTab, serviceWorkersElement);
+    yield unregisterServiceWorker(swTab, serviceWorkersElement);
     ok(true, "Service worker registration unregistered");
   } catch (e) {
     ok(false, "SW not unregistered; " + e);
   }
 
-  await removeTab(swTab);
-  await closeAboutDebugging(tab);
+  yield removeTab(swTab);
+  yield closeAboutDebugging(tab);
 });
 
 function getDebugButton(serviceWorkerContainer) {

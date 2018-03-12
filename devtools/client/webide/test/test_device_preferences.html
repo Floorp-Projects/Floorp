@@ -18,18 +18,18 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
+        Task.spawn(function* () {
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
-          let win = await openWebIDE();
+          let win = yield openWebIDE();
 
           let prefIframe = win.document.querySelector("#deck-panel-devicepreferences");
           let docRuntime = getRuntimeDocument(win);
 
           win.AppManager.update("runtime-list");
 
-          await connectToLocalRuntime(win);
+          yield connectToLocalRuntime(win);
 
           let prefs = docRuntime.querySelector("#runtime-preferences");
 
@@ -40,11 +40,11 @@
           win.Cmds.showDevicePrefs();
           is(deck.selectedPanel, prefIframe, "device preferences iframe selected");
 
-          await nextTick();
+          yield nextTick();
 
-          await lazyIframeIsLoaded(prefIframe);
+          yield lazyIframeIsLoaded(prefIframe);
 
-          await prefIframe.contentWindow.getAllPrefs;
+          yield prefIframe.contentWindow.getAllPrefs;
 
           setDocument(prefIframe);
 
@@ -62,9 +62,9 @@
 
           addNewFieldInteger();
 
-          await editFieldInteger();
+          yield editFieldInteger();
 
-          await resetExistingField("accessibility.accesskeycausesactivation");
+          yield resetExistingField("accessibility.accesskeycausesactivation");
 
           addNewFieldBoolean();
 
@@ -72,10 +72,10 @@
 
           DebuggerServer.destroy();
 
-          await closeWebIDE(win);
+          yield closeWebIDE(win);
 
           SimpleTest.finish();
-        })().catch(e => {
+        }).catch(e => {
           ok(false, "Exception: " + e);
           SimpleTest.finish();
         });

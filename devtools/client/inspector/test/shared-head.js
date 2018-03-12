@@ -5,10 +5,8 @@
 "use strict";
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* globals registerTestActor, getTestActor, openToolboxForTab, gBrowser */
+/* globals registerTestActor, getTestActor, Task, openToolboxForTab, gBrowser */
 /* import-globals-from ../../shared/test/shared-head.js */
-
-const { Task } = require("devtools/shared/task");
 
 var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 

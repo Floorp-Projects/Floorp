@@ -14,16 +14,16 @@ const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser")
 
 const TEST_URI = TEST_URI_ROOT + "doc_toolbar_basic.html";
 
-add_task(async function () {
+add_task(function* () {
   info("Starting browser_toolbar_basic.js");
-  await addTab(TEST_URI);
+  yield addTab(TEST_URI);
 
   let toolbar = gDevToolsBrowser.getDeveloperToolbar(window);
   ok(!toolbar.visible, "DeveloperToolbar is not visible in to start");
 
   let shown = oneTimeObserve(toolbar.NOTIFICATIONS.SHOW);
   document.getElementById("menu_devToolbar").doCommand();
-  await shown;
+  yield shown;
   ok(toolbar.visible, "DeveloperToolbar is visible in checkOpen");
 
   let close = document.getElementById("developer-toolbar-closebutton");
@@ -34,10 +34,10 @@ add_task(async function () {
   ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  await gDevTools.showToolbox(target, "inspector");
+  yield gDevTools.showToolbox(target, "inspector");
   ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
 
-  await addTab("about:blank");
+  yield addTab("about:blank");
   info("Opened a new tab");
 
   ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
@@ -46,19 +46,19 @@ add_task(async function () {
 
   let hidden = oneTimeObserve(toolbar.NOTIFICATIONS.HIDE);
   document.getElementById("menu_devToolbar").doCommand();
-  await hidden;
+  yield hidden;
   ok(!toolbar.visible, "DeveloperToolbar is not visible in hidden");
 
   shown = oneTimeObserve(toolbar.NOTIFICATIONS.SHOW);
   document.getElementById("menu_devToolbar").doCommand();
-  await shown;
+  yield shown;
   ok(toolbar.visible, "DeveloperToolbar is visible in after open");
 
   ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
 
   hidden = oneTimeObserve(toolbar.NOTIFICATIONS.HIDE);
   document.getElementById("developer-toolbar-closebutton").doCommand();
-  await hidden;
+  yield hidden;
 
   ok(!toolbar.visible, "DeveloperToolbar is not visible after re-close");
 });

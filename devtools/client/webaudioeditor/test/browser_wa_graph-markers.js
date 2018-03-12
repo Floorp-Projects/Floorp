@@ -7,8 +7,8 @@
 
 const { setTheme } = require("devtools/client/shared/theme");
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, MARKER_STYLING } = panelWin;
 
@@ -24,7 +24,7 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
+  let [actors] = yield events;
 
   is(getFill($("#arrowhead")), MARKER_STYLING[currentTheme],
     "marker initially matches theme.");
@@ -49,7 +49,7 @@ add_task(async function () {
   is(getFill($("#arrowhead")), MARKER_STYLING.light,
     "marker styling switches back to light once again.");
 
-  await teardown(target);
+  yield teardown(target);
 });
 
 /**

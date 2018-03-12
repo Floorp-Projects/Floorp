@@ -7,8 +7,8 @@
  * for each marker.
  */
 
-async function spawnTest() {
-  let { target, panel } = await initPerformance(MARKERS_URL);
+function* spawnTest() {
+  let { target, panel } = yield initPerformance(MARKERS_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
 
   // Hijack the markers massaging part of creating the waterfall view,
@@ -23,16 +23,16 @@ async function spawnTest() {
     "Styles", "Reflow", "ConsoleTime", "TimeStamp"
   ];
 
-  await startRecording(panel);
+  yield startRecording(panel);
   ok(true, "Recording has started.");
 
-  await waitUntil(() => {
+  yield waitUntil(() => {
     // Wait until we get all the different markers.
     let markers = PerformanceController.getCurrentRecording().getMarkers();
     return MARKER_TYPES.every(type => markers.some(m => m.name === type));
   });
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
   ok(true, "Recording has ended.");
 
   info("No need to select everything in the timeline.");
@@ -127,7 +127,7 @@ async function spawnTest() {
     }
   }
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }
 

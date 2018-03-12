@@ -22,23 +22,23 @@ const {
   takeSnapshotAndCensus,
 } = require("devtools/client/memory/actions/snapshot");
 
-add_task(async function () {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  await front.attach();
+  yield front.attach();
   let store = Store();
   let { getState, dispatch } = store;
 
   dispatch(changeView(viewState.DOMINATOR_TREE));
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  await waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
+  yield waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
   ok(!getState().snapshots[0].dominatorTree,
      "There shouldn't be a dominator tree model yet since it is not computed " +
      "until we switch to the dominators view.");
 
   // Wait for the dominator tree to finish being fetched.
-  await waitUntilState(store, state =>
+  yield waitUntilState(store, state =>
     state.snapshots[0] &&
     state.snapshots[0].dominatorTree &&
     state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
@@ -57,13 +57,13 @@ add_task(async function () {
     heapWorker,
     labelDisplays.allocationStack));
 
-  await waitUntilState(store, state =>
+  yield waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.state === dominatorTreeState.FETCHING);
   ok(true,
      "switching display types caused the dominator tree to be fetched " +
      "again.");
 
-  await waitUntilState(store, state =>
+  yield waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
   equal(getState().snapshots[0].dominatorTree.display,
         labelDisplays.allocationStack,
@@ -73,5 +73,5 @@ add_task(async function () {
         "as is our requested dominator tree display");
 
   heapWorker.destroy();
-  await front.detach();
+  yield front.detach();
 });
