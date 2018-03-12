@@ -3074,7 +3074,7 @@ pref("layout.css.prefixes.webkit", true);
 // Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
 // (Note: this pref has no effect if the master 'layout.css.prefixes.webkit'
 // pref is set to false.)
-pref("layout.css.prefixes.device-pixel-ratio-webkit", false);
+pref("layout.css.prefixes.device-pixel-ratio-webkit", true);
 
 // Is support for <style scoped> enabled in content documents?
 //
