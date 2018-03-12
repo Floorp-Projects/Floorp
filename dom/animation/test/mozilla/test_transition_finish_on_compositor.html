@@ -9,11 +9,14 @@ setup({explicit_done: true});
 // This test appears like it might get racey and cause a timeout with too low of a
 // precision, so we hardcode it to something reasonable.
 SpecialPowers.pushPrefEnv(
-  { "set":
-      [["dom.animations-api.core.enabled", true],
-       ["privacy.reduceTimerPrecision", true],
-       ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000]]},
+  {
+    set: [
+      ['privacy.reduceTimerPrecision', true],
+      ['privacy.resistFingerprinting.reduceTimerPrecision.microseconds', 2000],
+    ],
+  },
   function() {
-    window.open("file_transition_finish_on_compositor.html");
-  });
+    window.open('file_transition_finish_on_compositor.html');
+  }
+);
 </script>
