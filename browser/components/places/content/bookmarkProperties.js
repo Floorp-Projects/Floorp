@@ -58,6 +58,7 @@
  */
 
 /* import-globals-from editBookmarkOverlay.js */
+/* import-globals-from controller.js */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",

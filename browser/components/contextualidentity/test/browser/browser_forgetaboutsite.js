@@ -4,7 +4,7 @@
 
 const CC = Components.Constructor;
 
-ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
+let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm", {});
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
 

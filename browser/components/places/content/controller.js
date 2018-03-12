@@ -3,6 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from ../PlacesUIUtils.jsm */
+/* import-globals-from ../../../../toolkit/content/globalOverlay.js */
+/* import-globals-from ../../../../toolkit/components/places/PlacesUtils.jsm */
+/* import-globals-from ../../../../toolkit/components/places/PlacesTransactions.jsm */
+
 /**
  * Represents an insertion point within a container where we can insert
  * items.
@@ -224,6 +229,7 @@ PlacesController.prototype = {
         host = queries[0].domain;
       } else
         host = Services.io.newURI(this._view.selectedNode.uri).host;
+      let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm", {});
       ForgetAboutSite.removeDataFromDomain(host)
                      .catch(Cu.reportError);
       break;
