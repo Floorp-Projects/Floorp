@@ -183,7 +183,7 @@ JSRuntime::createJitRuntime(JSContext* cx)
     if (!jrt)
         return nullptr;
 
-    // Protect jitRuntime_ from being observed (by InterruptRunningJitCode)
+    // Protect jitRuntime_ from being observed (by jit::InterruptRunningCode)
     // while it is being initialized. Unfortunately, initialization depends on
     // jitRuntime_ being non-null, so we can't just wait to assign jitRuntime_.
     JitRuntime::AutoPreventBackedgePatching apbp(cx->runtime(), jrt);
