@@ -213,6 +213,7 @@ UNIFIED_SOURCES += [
     'jit/AliasAnalysis.cpp',
     'jit/AliasAnalysisShared.cpp',
     'jit/AlignmentMaskAnalysis.cpp',
+    'jit/AsyncInterrupt.cpp',
     'jit/BacktrackingAllocator.cpp',
     'jit/Bailouts.cpp',
     'jit/BaselineBailouts.cpp',

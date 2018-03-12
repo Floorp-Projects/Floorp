@@ -50,15 +50,14 @@ class ProcessCodeSegmentMap
     CodeSegmentVector segments1_;
     CodeSegmentVector segments2_;
 
-    // Because of sampling/interruptions/stack iteration in general, the
-    // thread running wasm might need to know to which CodeSegment the
-    // current PC belongs, during a call to lookup(). A lookup is a
-    // read-only operation, and we don't want to take a lock then
+    // Because of profiling, the thread running wasm might need to know to which
+    // CodeSegment the current PC belongs, during a call to lookup(). A lookup
+    // is a read-only operation, and we don't want to take a lock then
     // (otherwise, we could have a deadlock situation if an async lookup
     // happened on a given thread that was holding mutatorsMutex_ while getting
-    // interrupted/sampled). Since the writer could be modifying the data that
-    // is getting looked up, the writer functions use spin-locks to know if
-    // there are any observers (i.e. calls to lookup()) of the atomic data.
+    // sampled). Since the writer could be modifying the data that is getting
+    // looked up, the writer functions use spin-locks to know if there are any
+    // observers (i.e. calls to lookup()) of the atomic data.
 
     Atomic<size_t> observers_;
 
