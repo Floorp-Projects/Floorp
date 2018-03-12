@@ -598,7 +598,7 @@ fails-if(Android&&!asyncPan) != 367247-l-hidden.html 367247-l-scroll.html
 == 367612-1e.html 367612-1-ref.html
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
-fuzzy-if(skiaContent,1,28) fuzzy-if(winWidget||gtkWidget,32,34) == 368020-1.html 368020-1-ref.html
+fuzzy-if(skiaContent,32,33) fuzzy-if(d2d,5,2) == 368020-1.html 368020-1-ref.html
 == 368020-2.html 368020-2-ref.html
 == 368020-3.html 368020-3-ref.html
 pref(layout.css.box-decoration-break.enabled,true) == 368020-5.html 368020-5-ref.html
@@ -1012,7 +1012,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421419-1.html 421419-1-ref.html
 == 421436-1a.html 421436-1-ref.html
 == 421436-1b.html 421436-1-ref.html
-fuzzy-if(skiaContent,1,5) == 421632-1.html 421632-1-ref.html
+fuzzy-if(skiaContent,1,40) == 421632-1.html 421632-1-ref.html
 != 421710-1.html about:blank
 fails-if(Android) fails-if(usesRepeatResampling) == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
