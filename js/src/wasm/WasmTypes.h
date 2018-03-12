@@ -1064,7 +1064,6 @@ class CodeRange
         OutOfBoundsExit,   // stub jumped to by non-standard asm.js SIMD/Atomics
         UnalignedExit,     // stub jumped to by wasm Atomics and non-standard
                            // ARM unaligned trap
-        Interrupt,         // stub executes asynchronously to interrupt wasm
         Throw              // special stack-unwinding stub jumped to by other stubs
     };
 
@@ -1373,7 +1372,6 @@ enum class SymbolicAddress
     LogD,
     PowD,
     ATan2D,
-    HandleExecutionInterrupt,
     HandleDebugTrap,
     HandleThrow,
     ReportTrap,

@@ -206,13 +206,6 @@ class Simulator {
     template <typename T>
     T get_pc_as() const { return reinterpret_cast<T>(get_pc()); }
 
-    void trigger_wasm_interrupt() {
-        // This can be called several times if a single interrupt isn't caught
-        // and handled by the simulator, but this is fine; once the current
-        // instruction is done executing, the interrupt will be handled anyhow.
-        wasm_interrupt_ = true;
-    }
-
     void enable_single_stepping(SingleStepCallback cb, void* arg);
     void disable_single_stepping();
 
@@ -319,8 +312,6 @@ class Simulator {
     void increaseStopCounter(uint32_t code);
     void printStopInfo(uint32_t code);
 
-    // Handle a wasm interrupt triggered by an async signal handler.
-    void handleWasmInterrupt();
     JS::ProfilingFrameIterator::RegisterState registerState();
 
     // Handle any wasm faults, returning true if the fault was handled.
@@ -377,9 +368,6 @@ class Simulator {
     bool pc_modified_;
     int64_t icount_;
     int64_t break_count_;
-
-    // wasm async interrupt support
-    bool wasm_interrupt_;
 
     // Debugger input.
     char* lastDebuggerInput_;

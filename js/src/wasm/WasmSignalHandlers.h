@@ -30,11 +30,6 @@
 #include "wasm/WasmTypes.h"
 
 namespace js {
-
-// Force any currently-executing asm.js/ion code to call HandleExecutionInterrupt.
-extern void
-InterruptRunningJitCode(JSContext* cx);
-
 namespace wasm {
 
 // Ensure the given JSRuntime is set up to use signals. Failure to enable signal
@@ -43,17 +38,10 @@ namespace wasm {
 MOZ_MUST_USE bool
 EnsureSignalHandlers(JSContext* cx);
 
-// Return whether signals can be used in this process for interrupts or
-// asm.js/wasm out-of-bounds.
+// Return whether signals can be used in this process for asm.js/wasm
+// out-of-bounds.
 bool
 HaveSignalHandlers();
-
-class ModuleSegment;
-
-// Returns true if wasm code is on top of the activation stack (and fills out
-// the code segment outparam in this case), or false otherwise.
-bool
-InInterruptibleCode(JSContext* cx, uint8_t* pc, const ModuleSegment** ms);
 
 #if defined(XP_DARWIN)
 // On OSX we are forced to use the lower-level Mach exception mechanism instead
@@ -79,23 +67,7 @@ class MachExceptionHandler
 };
 #endif
 
-// Typed wrappers encapsulating the data saved by the signal handler on async
-// interrupt or trap. On interrupt, the PC at which to resume is saved. On trap,
-// the bytecode offset to be reported in callstacks is saved.
-
-struct InterruptData
-{
-    // The pc to use for unwinding purposes which is kept consistent with fp at
-    // call boundaries.
-    void* unwindPC;
-
-    // The pc at which we should return if the interrupt doesn't stop execution.
-    void* resumePC;
-
-    InterruptData(void* unwindPC, void* resumePC)
-      : unwindPC(unwindPC), resumePC(resumePC)
-    {}
-};
+// On trap, the bytecode offset to be reported in callstacks is saved.
 
 struct TrapData
 {

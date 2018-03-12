@@ -61,27 +61,6 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
         return;
     }
 
-    // When asynchronously interrupted, exitFP is set to the interrupted frame
-    // itself and so we do not want to skip it. Instead, we can recover the
-    // Code and CodeRange from the JitActivation, which are set when control
-    // flow was interrupted. There is no CallSite (b/c the interrupt was
-    // async), but this is fine because CallSite is only used for line number
-    // for which we can use the beginning of the function from the CodeRange
-    // instead.
-
-    if (activation->isWasmInterrupted()) {
-        code_ = &fp_->tls->instance->code();
-        MOZ_ASSERT(code_ == LookupCode(activation->wasmInterruptUnwindPC()));
-
-        codeRange_ = code_->lookupFuncRange(activation->wasmInterruptUnwindPC());
-        MOZ_ASSERT(codeRange_);
-
-        lineOrBytecode_ = codeRange_->funcLineOrBytecode();
-
-        MOZ_ASSERT(!done());
-        return;
-    }
-
     // Otherwise, execution exits wasm code via an exit stub which sets exitFP
     // to the exit stub's frame. Thus, in this case, we want to start iteration
     // at the caller of the exit frame, whose Code, CodeRange and CallSite are
@@ -111,14 +90,12 @@ WasmFrameIter::operator++()
     // popping each frame and, once onLeaveFrame is called for a given frame,
     // that frame must not be visible to subsequent stack iteration (or it
     // could be added as a "new" frame just as it becomes garbage).  When the
-    // frame is "interrupted", then exitFP is included in the callstack
-    // (otherwise, it is skipped, as explained above). So to unwind the
-    // innermost frame, we just clear the interrupt state.
+    // frame is trapping, then exitFP is included in the callstack (otherwise,
+    // it is skipped, as explained above). So to unwind the innermost frame, we
+    // just clear the trapping state.
 
     if (unwind_ == Unwind::True) {
-        if (activation_->isWasmInterrupted())
-            activation_->finishWasmInterrupt();
-        else if (activation_->isWasmTrapping())
+        if (activation_->isWasmTrapping())
             activation_->finishWasmTrap();
         activation_->setWasmExitFP(fp_);
     }
@@ -760,10 +737,8 @@ ProfilingFrameIterator::initFromExitFP(const Frame* fp)
     // This means that the innermost frame is skipped. This is fine because:
     //  - for import exit calls, the innermost frame is a thunk, so the first
     //    frame that shows up is the function calling the import;
-    //  - for Math and other builtin calls as well as interrupts, we note the
-    //    absence of an exit reason and inject a fake "builtin" frame; and
-    //  - for async interrupts, we just accept that we'll lose the innermost
-    //    frame.
+    //  - for Math and other builtin calls, we note the absence of an exit
+    //    reason and inject a fake "builtin" frame; and
     switch (codeRange_->kind()) {
       case CodeRange::InterpEntry:
         callerPC_ = nullptr;
@@ -791,7 +766,6 @@ ProfilingFrameIterator::initFromExitFP(const Frame* fp)
       case CodeRange::OutOfBoundsExit:
       case CodeRange::UnalignedExit:
       case CodeRange::Throw:
-      case CodeRange::Interrupt:
       case CodeRange::FarJumpIsland:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
@@ -1012,11 +986,6 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
         // the entire activation. To simplify testing, we simply pretend throw
         // stubs have already popped the entire stack.
         return false;
-      case CodeRange::Interrupt:
-        // When the PC is in the async interrupt stub, the fp may be garbage and
-        // so we cannot blindly unwind it. Since the percent of time spent in
-        // the interrupt stub is extremely small, just ignore the stack.
-        return false;
     }
 
     unwindState->code = code;
@@ -1142,7 +1111,6 @@ ProfilingFrameIterator::operator++()
         MOZ_CRASH("should have had null caller fp");
       case CodeRange::JitEntry:
         MOZ_CRASH("should have been guarded above");
-      case CodeRange::Interrupt:
       case CodeRange::Throw:
         MOZ_CRASH("code range doesn't have frame");
     }
@@ -1155,7 +1123,6 @@ ThunkedNativeToDescription(SymbolicAddress func)
 {
     MOZ_ASSERT(NeedsBuiltinThunk(func));
     switch (func) {
-      case SymbolicAddress::HandleExecutionInterrupt:
       case SymbolicAddress::HandleDebugTrap:
       case SymbolicAddress::HandleThrow:
       case SymbolicAddress::ReportTrap:
@@ -1311,8 +1278,7 @@ ProfilingFrameIterator::label() const
       case CodeRange::OutOfBoundsExit:   return "out-of-bounds stub (in wasm)";
       case CodeRange::UnalignedExit:     return "unaligned trap stub (in wasm)";
       case CodeRange::FarJumpIsland:     return "interstitial (in wasm)";
-      case CodeRange::Throw:             MOZ_FALLTHROUGH;
-      case CodeRange::Interrupt:         MOZ_CRASH("does not have a frame");
+      case CodeRange::Throw:             MOZ_CRASH("does not have a frame");
     }
 
     MOZ_CRASH("bad code range kind");
