@@ -25,8 +25,7 @@ SimpleTest.waitForExplicitFinish();
  * pref we will need to substitute some other pref:property combination.
  */
 SpecialPowers.pushPrefEnv(
-  { 'set': [[ 'dom.animations-api.core.enabled', true ],
-            [ 'layout.css.prefixes.webkit', false ]] },
+  { 'set': [[ 'layout.css.prefixes.webkit', false ]] },
   () => window.open('file_animations_with_disabled_properties.html'));
 </script>
 </pre>
