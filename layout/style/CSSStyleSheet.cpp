@@ -186,7 +186,6 @@ CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     //
     // The following members are not measured:
     // - s->mOwnerRule, because it's non-owning
-    // - s->mScopeElement, because it's non-owning
 
     s = s->mNext ? s->mNext->AsGecko() : nullptr;
   }
@@ -319,7 +318,6 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
     mInRuleProcessorCache(false),
-    mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
   mInner = new CSSStyleSheetInner(aCORSMode, aReferrerPolicy,
@@ -333,7 +331,6 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              const SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
     mInRuleProcessorCache(false),
-    mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
   mInner = new CSSStyleSheetInner(aCORSMode, aReferrerPolicy,
@@ -352,7 +349,6 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
                aDocumentToUse,
                aOwningNodeToUse)
   , mInRuleProcessorCache(false)
-  , mScopeElement(nullptr)
   , mRuleProcessors(nullptr)
 {
   if (HasForcedUniqueInner()) { // CSSOM's been there, force full copy now
@@ -451,13 +447,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSStyleSheet)
   // of child sheets and null out the back-references to it, if we got
   // unlinked before it does.
   tmp->DropRuleCollection();
-  tmp->mScopeElement = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(StyleSheet)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSStyleSheet, StyleSheet)
   // We do not traverse mNext; our parent will handle that.  See
   // comments in Unlink for why.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleCollection)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScopeElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 nsresult
@@ -627,12 +621,6 @@ CSSStyleSheet::RegisterNamespaceRule(css::Rule* aRule)
 
   AddNamespaceRuleToMap(aRule, Inner()->mNameSpaceMap);
   return NS_OK;
-}
-
-void
-CSSStyleSheet::SetScopeElement(dom::Element* aScopeElement)
-{
-  mScopeElement = aScopeElement;
 }
 
 CSSRuleList*

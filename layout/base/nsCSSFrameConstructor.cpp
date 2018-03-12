@@ -2633,7 +2633,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   }
 
   TreeMatchContext::AutoAncestorPusher ancestorPusher(state.mTreeMatchContext);
-  ancestorPusher.PushAncestorAndStyleScope(aDocElement);
+  ancestorPusher.PushAncestor(aDocElement);
 
   // Make sure to start any background image loads for the root element now.
   styleContext->StartBackgroundImageLoads();
@@ -4020,9 +4020,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   if (adcp.isSome() && adcp->IsEmpty() && parent &&
       parent->IsActiveChildrenElement()) {
     if (aState.HasAncestorFilter()) {
-      insertionPointPusher.PushAncestorAndStyleScope(parent);
-    } else {
-      insertionPointPusher.PushStyleScope(parent);
+      insertionPointPusher.PushAncestor(parent);
     }
   }
 
@@ -4037,9 +4035,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   TreeMatchContext::AutoAncestorPusher
     ancestorPusher(aState.mTreeMatchContext);
   if (aState.HasAncestorFilter()) {
-    ancestorPusher.PushAncestorAndStyleScope(content);
-  } else {
-    ancestorPusher.PushStyleScope(content);
+    ancestorPusher.PushAncestor(content);
   }
 
   nsIFrame* newFrame;
@@ -4773,9 +4769,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
   if (scrollNAC.Length() > 0) {
     TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
     if (aState.HasAncestorFilter()) {
-      ancestorPusher.PushAncestorAndStyleScope(aContent->AsElement());
-    } else {
-      ancestorPusher.PushStyleScope(aContent->AsElement());
+      ancestorPusher.PushAncestor(aContent->AsElement());
     }
 
     AutoFrameConstructionItemList items(this);
@@ -6179,9 +6173,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
     TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
     if (aState.HasAncestorFilter()) {
-      ancestorPusher.PushAncestorAndStyleScope(aContent->AsElement());
-    } else {
-      ancestorPusher.PushStyleScope(aContent->AsElement());
+      ancestorPusher.PushAncestor(aContent->AsElement());
     }
 
     if (aParentFrame) {
@@ -6207,9 +6199,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
       if (parent != aContent && parent->IsElement()) {
         if (aState.HasAncestorFilter()) {
-          ancestorPusher.PushAncestorAndStyleScope(parent->AsElement());
-        } else {
-          ancestorPusher.PushStyleScope(parent->AsElement());
+          ancestorPusher.PushAncestor(parent->AsElement());
         }
       }
 
@@ -7384,12 +7374,11 @@ nsCSSFrameConstructor::CreateNeededFrames(
 
       // Handle stuff like xbl:children.
       if (child->GetParent() != aContent && child->GetParent()->IsElement()) {
-        insertionPointPusher.PushAncestorAndStyleScope(
-            child->GetParent()->AsElement());
+        insertionPointPusher.PushAncestor(child->GetParent()->AsElement());
       }
 
       TreeMatchContext::AutoAncestorPusher pusher(&aTreeMatchContext);
-      pusher.PushAncestorAndStyleScope(child);
+      pusher.PushAncestor(child);
 
       CreateNeededFrames(child, aTreeMatchContext);
     }
@@ -11098,9 +11087,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
         insertion.mContainer = child->GetFlattenedTreeParent();
         MOZ_ASSERT(insertion.mContainer == GetInsertionPoint(child).mContainer);
         if (aState.HasAncestorFilter()) {
-          ancestorPusher.PushAncestorAndStyleScope(parent->AsElement());
-        } else {
-          ancestorPusher.PushStyleScope(parent->AsElement());
+          ancestorPusher.PushAncestor(parent->AsElement());
         }
       }
 
@@ -12288,9 +12275,7 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
 
   TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
   if (aState.HasAncestorFilter()) {
-    ancestorPusher.PushAncestorAndStyleScope(parentContent->AsElement());
-  } else {
-    ancestorPusher.PushStyleScope(parentContent->AsElement());
+    ancestorPusher.PushAncestor(parentContent->AsElement());
   }
 
   if (!aItemIsWithinSVGText) {
@@ -12329,9 +12314,7 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
       TreeMatchContext::AutoAncestorPusher insertionPointPusher(aState.mTreeMatchContext);
       if (contentParent != parentContent && contentParent->IsElement()) {
         if (aState.HasAncestorFilter()) {
-          insertionPointPusher.PushAncestorAndStyleScope(contentParent->AsElement());
-        } else {
-          insertionPointPusher.PushStyleScope(contentParent->AsElement());
+          insertionPointPusher.PushAncestor(contentParent->AsElement());
         }
       }
 

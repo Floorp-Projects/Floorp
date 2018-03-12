@@ -305,9 +305,6 @@ skip-if(!skiaPdf||styloVsGecko) include printing/reftest.list
 # pagination
 include pagination/reftest.list
 
-# <style scoped>
-include scoped-style/reftest.list
-
 # scrolling
 include scrolling/reftest.list
 
