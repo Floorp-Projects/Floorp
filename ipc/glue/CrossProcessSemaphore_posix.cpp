@@ -76,6 +76,8 @@ CrossProcessSemaphore::Create(CrossProcessSemaphoreHandle aHandle)
     return nullptr;
   }
 
+  sharedBuffer->CloseHandle();
+
   SemaphoreData* data = static_cast<SemaphoreData*>(sharedBuffer->memory());
 
   if (!data) {
@@ -160,6 +162,12 @@ CrossProcessSemaphore::ShareToProcess(base::ProcessId aTargetPid)
   }
 
   return result;
+}
+
+void
+CrossProcessSemaphore::CloseHandle()
+{
+  mSharedBuffer->CloseHandle();
 }
 
 } // namespace mozilla

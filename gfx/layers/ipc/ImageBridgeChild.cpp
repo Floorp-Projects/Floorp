@@ -141,16 +141,11 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
       return;
     }
 
-    ReadLockDescriptor readLock;
-    ReadLockHandle readLockHandle;
-    if (t.mTextureClient->SerializeReadLock(readLock)) {
-      readLockHandle = mTxn->AddReadLock(readLock);
-    }
-
+    bool readLocked = t.mTextureClient->OnForwardedToHost();
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
-                                        readLockHandle,
                                         t.mTimeStamp, t.mPictureRect,
-                                        t.mFrameID, t.mProducerID));
+                                        t.mFrameID, t.mProducerID,
+                                        readLocked));
 
     // Wait end of usage on host side if TextureFlags::RECYCLE is set
     HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
@@ -965,6 +960,7 @@ ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 
 PTextureChild*
 ImageBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
+                                     const ReadLockDescriptor&,
                                      const LayersBackend&,
                                      const TextureFlags&,
                                      const uint64_t& aSerial,
@@ -1035,6 +1031,7 @@ ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&
 
 PTextureChild*
 ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
+                                const ReadLockDescriptor& aReadLock,
                                 LayersBackend aLayersBackend,
                                 TextureFlags aFlags,
                                 uint64_t aSerial,
@@ -1042,7 +1039,7 @@ ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
                                 nsIEventTarget* aTarget)
 {
   MOZ_ASSERT(CanSend());
-  return SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, aSerial, aExternalImageId);
+  return SendPTextureConstructor(aSharedData, aReadLock, aLayersBackend, aFlags, aSerial, aExternalImageId);
 }
 
 static bool
