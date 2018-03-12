@@ -5,9 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Math operations that implement wraparound semantics on overflow or underflow
- * without performing C++ undefined behavior or tripping up compiler-based
- * integer-overflow sanitizers.
+ * Math operations that implement wraparound semantics on overflow or underflow.
+ *
+ * While in some cases (but not all of them!) plain old C++ operators and casts
+ * will behave just like these functions, there are three reasons you should use
+ * these functions:
+ *
+ *   1) These functions make *explicit* the desire for and dependence upon
+ *      wraparound semantics, just as Rust's i32::wrapping_add and similar
+ *      functions explicitly produce wraparound in Rust.
+ *   2) They implement this functionality *safely*, without invoking signed
+ *      integer overflow that has undefined behavior in C++.
+ *   3) They play nice with compiler-based integer-overflow sanitizers (see
+ *      build/autoconf/sanitize.m4), that in appropriately configured builds
+ *      verify at runtime that integral arithmetic doesn't overflow.
  */
 
 #ifndef mozilla_WrappingOperations_h
@@ -89,7 +100,29 @@ WrapToSigned(UnsignedType aValue)
   return detail::WrapToSignedHelper<UnsignedType>::compute(aValue);
 }
 
+// The |mozilla::Wrapping*| functions aren't constexpr because MSVC warns about
+// well-defined unsigned integer overflows that may occur within the constexpr
+// math.  If/when MSVC fix this bug, we should make them all constexpr.
+//
+//   https://msdn.microsoft.com/en-us/library/4kze989h.aspx (C4307)
+//   https://developercommunity.visualstudio.com/content/problem/211134/unsigned-integer-overflows-in-constexpr-functionsa.html (bug report)
+//
+// For now there's no practical, readable way to avoid such overflows in pure
+// C++.  And we can't add narrow #pragmas where overflow can occur to disable
+// the warnings, because constexpr apparently causes the warning to be emitted
+// at the outermost call *sites* (so every user of |mozilla::Wrapping*| would
+// have to add them).
+
 namespace detail {
+
+template<typename T>
+inline constexpr T
+ToResult(typename MakeUnsigned<T>::Type aUnsigned)
+{
+  // We could *always* return WrapToSigned and rely on unsigned conversion to
+  // undo the wrapping when |T| is unsigned, but this seems clearer.
+  return IsSigned<T>::value ? WrapToSigned(aUnsigned) : aUnsigned;
+}
 
 template<typename T>
 struct WrappingAddHelper
@@ -97,44 +130,19 @@ struct WrappingAddHelper
 private:
   using UnsignedT = typename MakeUnsigned<T>::Type;
 
-  static T
-  toResult(UnsignedT aSum)
-  {
-    // We could always return WrapToSigned and rely on unsigned conversion
-    // undoing the wrapping when |T| is unsigned, but this seems clearer.
-    return IsSigned<T>::value
-           ? WrapToSigned(aSum)
-           : aSum;
-  }
-
 public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
   static T compute(T aX, T aY)
   {
-    // |mozilla::WrappingAdd| isn't constexpr because MSVC warns about well-
-    // defined unsigned integer overflows that may happen here.
-    // https://msdn.microsoft.com/en-us/library/4kze989h.aspx  And constexpr
-    // seems to cause the warning to be emitted at |WrappingAdd| call *sites*
-    // instead of here, so #pragmas are ineffective.
-    //
-    // https://stackoverflow.com/questions/37658794/integer-constant-overflow-warning-in-constexpr
-    //
-    // If/when MSVC fix this bug, we should make these functions constexpr.
-    return toResult(static_cast<UnsignedT>(aX) + static_cast<UnsignedT>(aY));
+    return ToResult<T>(static_cast<UnsignedT>(aX) + static_cast<UnsignedT>(aY));
   }
 };
 
 } // namespace detail
 
 /**
- * Add two integers of the same type, and return the result converted to
- * that type using wraparound semantics.  This function:
- *
- *   1) makes explicit the desire for and dependence upon wraparound semantics,
- *   2) provides wraparound semantics *safely* with no signed integer overflow
- *      that would have undefined behavior, and
- *   3) won't trip up {,un}signed-integer overflow sanitizers (see
- *      build/autoconf/sanitize.m4) at runtime.
+ * Add two integers of the same type and return the result converted to that
+ * type using wraparound semantics, without triggering overflow sanitizers.
  *
  * For N-bit unsigned integer types, this is equivalent to adding the two
  * numbers, then taking the result mod 2**N:
@@ -142,22 +150,19 @@ public:
  *   WrappingAdd(uint32_t(42), uint32_t(17)) is 59 (59 mod 2**32);
  *   WrappingAdd(uint8_t(240), uint8_t(20)) is 4 (260 mod 2**8).
  *
- * Use this function for any unsigned addition that can wrap (instead of normal
- * C++ addition) to play nice with the sanitizers.  WrappingAdd on unsigned
- * types is otherwise the same as C++ addition.
+ * Unsigned WrappingAdd acts exactly like C++ unsigned addition.
  *
  * For N-bit signed integer types, this is equivalent to adding the two numbers
- * wrapped to unsigned, taking the sum mod 2**N, then wrapping that number to
- * the signed range:
+ * wrapped to unsigned, then wrapping the sum mod 2**N to the signed range:
  *
  *   WrappingAdd(int16_t(32767), int16_t(3)) is -32766 ((32770 mod 2**16) - 2**16);
  *   WrappingAdd(int8_t(-128), int8_t(-128)) is 0 (256 mod 2**8);
  *   WrappingAdd(int32_t(-42), int32_t(-17)) is -59 ((8589934533 mod 2**32) - 2**32).
  *
- * There is no ready equivalent to this operation in C++, as C++ addition of
- * signed integers that triggers overflow has undefined behavior.  But it's how
- * addition *tends* to behave with most compilers, unless an optimization or
- * similar happens to -- quite permissibly -- trigger different behavior.
+ * There's no equivalent to this operation in C++, as C++ signed addition that
+ * overflows has undefined behavior.  But it's how such addition *tends* to
+ * behave with most compilers, unless an optimization or similar -- quite
+ * permissibly -- triggers different behavior.
  */
 template<typename T>
 inline T
@@ -174,54 +179,23 @@ struct WrappingMultiplyHelper
 private:
   using UnsignedT = typename MakeUnsigned<T>::Type;
 
-  MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
-  static UnsignedT
-  multiply(UnsignedT aX, UnsignedT aY)
-  {
-  // |mozilla::WrappingMultiply| isn't constexpr because MSVC warns about well-
-  // defined unsigned integer overflows that may happen here.
-  // https://msdn.microsoft.com/en-us/library/4kze989h.aspx  And constexpr
-  // seems to cause the warning to be emitted at |WrappingMultiply| call *sites*
-  // instead of here, so these #pragmas are ineffective.
-  //
-  // https://stackoverflow.com/questions/37658794/integer-constant-overflow-warning-in-constexpr
-  //
-  // If/when MSVC fix this bug, we should make these functions constexpr.
-
-    // Begin with |1U| to ensure the overall operation chain is never promoted
-    // to signed integer operations that might have *signed* integer overflow.
-    return static_cast<UnsignedT>(1U * aX * aY);
-  }
-
-  static T
-  toResult(UnsignedT aX, UnsignedT aY)
-  {
-    // We could always return WrapToSigned and rely on unsigned conversion
-    // undoing the wrapping when |T| is unsigned, but this seems clearer.
-    return IsSigned<T>::value
-           ? WrapToSigned(multiply(aX, aY))
-           : multiply(aX, aY);
-  }
-
 public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
   static T compute(T aX, T aY)
   {
-    return toResult(static_cast<UnsignedT>(aX), static_cast<UnsignedT>(aY));
+    // Begin with |1U| to ensure the overall operation chain is never promoted
+    // to signed integer operations that might have *signed* integer overflow.
+    return ToResult<T>(static_cast<UnsignedT>(1U *
+                                              static_cast<UnsignedT>(aX) *
+                                              static_cast<UnsignedT>(aY)));
   }
 };
 
 } // namespace detail
 
 /**
- * Multiply two integers of the same type, and return the result converted to
- * that type using wraparound semantics.  This function:
- *
- *   1) makes explicit the desire for and dependence upon wraparound semantics,
- *   2) provides wraparound semantics *safely* with no signed integer overflow
- *      that would have undefined behavior, and
- *   3) won't trip up {,un}signed-integer overflow sanitizers (see
- *      build/autoconf/sanitize.m4) at runtime.
+ * Multiply two integers of the same type and return the result converted to
+ * that type using wraparound semantics, without triggering overflow sanitizers.
  *
  * For N-bit unsigned integer types, this is equivalent to multiplying the two
  * numbers, then taking the result mod 2**N:
@@ -230,28 +204,27 @@ public:
  *   WrappingMultiply(uint8_t(16), uint8_t(24)) is 128 (384 mod 2**8);
  *   WrappingMultiply(uint16_t(3), uint16_t(32768)) is 32768 (98304 mod 2*16).
  *
- * Use this function for any unsigned multiplication that can wrap (instead of
- * normal C++ multiplication) to play nice with the sanitizers.  But it's
- * especially important to use it for uint16_t multiplication: in most compilers
- * for uint16_t*uint16_t some operand values will trigger signed integer
- * overflow with undefined behavior!  http://kqueue.org/blog/2013/09/17/cltq/
- * has the grody details.  Other than that one weird case, WrappingMultiply on
- * unsigned types is the same as C++ multiplication.
+ * Unsigned WrappingMultiply is *not* identical to C++ multiplication: with most
+ * compilers, in rare cases uint16_t*uint16_t can invoke *signed* integer
+ * overflow having undefined behavior!  http://kqueue.org/blog/2013/09/17/cltq/
+ * has the grody details.  (Some compilers do this for uint32_t, not uint16_t.)
+ * So it's especially important to use WrappingMultiply for wraparound math with
+ * uint16_t.  That quirk aside, this function acts like you *thought* C++
+ * unsigned multiplication always worked.
  *
  * For N-bit signed integer types, this is equivalent to multiplying the two
- * numbers wrapped to unsigned, taking the product mod 2**N, then wrapping that
- * number to the signed range:
+ * numbers wrapped to unsigned, then wrapping the product mod 2**N to the signed
+ * range:
  *
  *   WrappingMultiply(int16_t(-456), int16_t(123)) is 9448 ((-56088 mod 2**16) + 2**16);
  *   WrappingMultiply(int32_t(-7), int32_t(-9)) is 63 (63 mod 2**32);
  *   WrappingMultiply(int8_t(16), int8_t(24)) is -128 ((384 mod 2**8) - 2**8);
  *   WrappingMultiply(int8_t(16), int8_t(255)) is -16 ((4080 mod 2**8) - 2**8).
  *
- * There is no ready equivalent to this operation in C++, as applying C++
- * multiplication to signed integer types in ways that trigger overflow has
- * undefined behavior.  However, it's how multiplication *tends* to behave with
- * most compilers in most situations, even though it's emphatically not required
- * to do so.
+ * There's no equivalent to this operation in C++, as C++ signed
+ * multiplication that overflows has undefined behavior.  But it's how such
+ * multiplication *tends* to behave with most compilers, unless an optimization
+ * or similar -- quite permissibly -- triggers different behavior.
  */
 template<typename T>
 inline T
