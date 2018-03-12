@@ -31,6 +31,9 @@ class MochiRemote(MochitestDesktop):
     def __init__(self, automation, devmgr, options):
         MochitestDesktop.__init__(self, options.flavor, vars(options))
 
+        if hasattr(options, 'log'):
+            delattr(options, 'log')
+
         self._automation = automation
         self._dm = devmgr
         self.chromePushed = False
