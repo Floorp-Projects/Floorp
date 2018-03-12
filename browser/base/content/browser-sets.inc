@@ -116,12 +116,7 @@
 #endif
   </commandset>
 
-  <commandset id="placesCommands">
-    <command id="Browser:ShowAllBookmarks"
-             oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"/>
-    <command id="Browser:ShowAllHistory"
-             oncommand="PlacesCommandHook.showPlacesOrganizer('History');"/>
-  </commandset>
+#include ../../components/places/content/placesCommands.inc.xul
 
   <broadcasterset id="mainBroadcasterSet">
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"

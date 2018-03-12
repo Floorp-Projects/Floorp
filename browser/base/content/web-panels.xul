@@ -5,8 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
-<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <!DOCTYPE page [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
@@ -23,6 +22,23 @@
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
   <script type="application/javascript" src="chrome://browser/content/web-panels.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"><![CDATA[
+    ChromeUtils.defineModuleGetter(window,
+      "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
+    ChromeUtils.defineModuleGetter(window,
+      "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
+    ChromeUtils.defineModuleGetter(window,
+      "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
+
+    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+    XPCOMUtils.defineLazyScriptGetter(window, "PlacesTreeView",
+      "chrome://browser/content/places/treeView.js");
+    XPCOMUtils.defineLazyScriptGetter(window,
+      ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
+       "chrome://browser/content/places/controller.js");
+  ]]></script>
 
   <broadcasterset id="mainBroadcasterSet">
     <broadcaster id="isFrameImage"/>

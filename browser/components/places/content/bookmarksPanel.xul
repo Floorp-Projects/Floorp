@@ -6,9 +6,13 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
-<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
-<!DOCTYPE page SYSTEM "chrome://browser/locale/places/places.dtd">
+<!DOCTYPE page [
+<!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
+%placesDTD;
+<!ENTITY % editMenuOverlayDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuOverlayDTD;
+]>
 
 <page id="bookmarksPanel"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -20,13 +24,30 @@
           src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/bookmarks/bookmarksPanel.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"><![CDATA[
+    ChromeUtils.defineModuleGetter(window,
+      "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
+    ChromeUtils.defineModuleGetter(window,
+      "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
+    ChromeUtils.defineModuleGetter(window,
+      "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
 
-  <commandset id="placesCommands"/>
+    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+    XPCOMUtils.defineLazyScriptGetter(window, "PlacesTreeView",
+      "chrome://browser/content/places/treeView.js");
+    XPCOMUtils.defineLazyScriptGetter(window,
+      ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
+       "chrome://browser/content/places/controller.js");
+  ]]></script>
+
+#include placesCommands.inc.xul
 #include ../../../../toolkit/content/editMenuCommands.inc.xul
-  <menupopup id="placesContext"/>
-
-  <!-- Bookmarks and history tooltip -->
-  <tooltip id="bhTooltip"/>
+#include placesContextMenu.inc.xul
+#include bookmarksHistoryTooltip.inc.xul
 
   <hbox id="sidebar-search-container" align="center">
     <textbox id="search-box" flex="1" type="search"
