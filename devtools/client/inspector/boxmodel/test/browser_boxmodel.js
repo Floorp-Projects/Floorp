@@ -157,27 +157,27 @@ add_task(function* () {
   let html = "<style>" + style + "</style><div></div>";
 
   yield addTab("data:text/html," + encodeURIComponent(html));
-  let {inspector, view, testActor} = yield openBoxModelView();
+  let {inspector, boxmodel, testActor} = yield openLayoutView();
   yield selectNode("div", inspector);
 
-  yield testInitialValues(inspector, view);
-  yield testChangingValues(inspector, view, testActor);
+  yield testInitialValues(inspector, boxmodel);
+  yield testChangingValues(inspector, boxmodel, testActor);
 });
 
-function* testInitialValues(inspector, view) {
+function* testInitialValues(inspector, boxmodel) {
   info("Test that the initial values of the box model are correct");
-  let viewdoc = view.document;
+  let doc = boxmodel.document;
 
   for (let i = 0; i < res1.length; i++) {
-    let elt = viewdoc.querySelector(res1[i].selector);
+    let elt = doc.querySelector(res1[i].selector);
     is(elt.textContent, res1[i].value,
        res1[i].selector + " has the right value.");
   }
 }
 
-function* testChangingValues(inspector, view, testActor) {
+function* testChangingValues(inspector, boxmodel, testActor) {
   info("Test that changing the document updates the box model");
-  let viewdoc = view.document;
+  let doc = boxmodel.document;
 
   let onUpdated = waitForUpdate(inspector);
   yield testActor.setAttribute("div", "style",
@@ -185,7 +185,7 @@ function* testChangingValues(inspector, view, testActor) {
   yield onUpdated;
 
   for (let i = 0; i < res2.length; i++) {
-    let elt = viewdoc.querySelector(res2[i].selector);
+    let elt = doc.querySelector(res2[i].selector);
     is(elt.textContent, res2[i].value,
        res2[i].selector + " has the right value after style update.");
   }
