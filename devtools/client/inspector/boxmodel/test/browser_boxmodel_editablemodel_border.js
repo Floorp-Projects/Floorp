@@ -16,7 +16,7 @@ const TEST_URI = "<style>" +
 
 add_task(function* () {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = yield openBoxModelView();
+  let {inspector, boxmodel, testActor} = yield openLayoutView();
 
   is((yield getStyle(testActor, "#div1", "border-top-width")), "",
      "Should have the right border");
@@ -24,15 +24,15 @@ add_task(function* () {
      "Should have the right border");
   yield selectNode("#div1", inspector);
 
-  let span = view.document.querySelector(".boxmodel-border.boxmodel-top > span");
+  let span = boxmodel.document.querySelector(".boxmodel-border.boxmodel-top > span");
   is(span.textContent, 0, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
-  let editor = view.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
+  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "0", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("1", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("1", {}, boxmodel.document.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "1", "Should have the right value in the editor.");
@@ -41,7 +41,7 @@ add_task(function* () {
   is((yield getStyle(testActor, "#div1", "border-top-style")), "solid",
      "Should have the right border");
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, boxmodel.document.defaultView);
   yield waitForUpdate(inspector);
 
   is((yield getStyle(testActor, "#div1", "border-top-width")), "",
