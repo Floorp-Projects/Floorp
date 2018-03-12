@@ -9,7 +9,7 @@
 "use strict";
 
 addEventListener("message", async function(event) {
-  const url = `${window.location.href.replace("file_page_xhr.html", "return_headers.sjs")}`;
+  const url = new URL("/return_headers.sjs", location).href;
 
   const webpageFetchResult = await fetch(url).then(res => res.json());
   const webpageXhrResult = await new Promise(resolve => {

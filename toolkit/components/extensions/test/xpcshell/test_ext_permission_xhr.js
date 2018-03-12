@@ -1,17 +1,25 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtension Test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
 "use strict";
+
+const server = createHttpServer({hosts: ["xpcshell.test", "example.com", "example.org"]});
+server.registerDirectory("/data/", do_get_file("data"));
+
+server.registerPathHandler("/example.txt", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.write("ok");
+});
+
+server.registerPathHandler("/return_headers.sjs", (request, response) => {
+  response.setHeader("Content-Type", "text/plain", false);
+
+  let headers = {};
+  // Why on earth is this a nsISimpleEnumerator...
+  for (let {data: header} of XPCOMUtils.IterSimpleEnumerator(request.headers,
+                                                             Ci.nsISupportsString)) {
+    headers[header.toLowerCase()] = request.getHeader(header);
+  }
+
+  response.write(JSON.stringify(headers));
+});
 
 /* eslint-disable mozilla/balanced-listeners */
 
@@ -72,7 +80,7 @@ add_task(async function test_simple() {
     manifest: {
       permissions: ["http://example.com/"],
       content_scripts: [{
-        "matches": ["http://mochi.test/*/file_permission_xhr.html"],
+        "matches": ["http://xpcshell.test/data/file_permission_xhr.html"],
         "js": ["content.js"],
       }],
     },
@@ -106,9 +114,10 @@ add_task(async function test_simple() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
-  let win = window.open("file_permission_xhr.html");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://xpcshell.test/data/file_permission_xhr.html");
   await extension.awaitMessage("content-script-finished");
-  win.close();
+  await contentPage.close();
 
   await extension.awaitFinish("permission_xhr");
   await extension.unload();
@@ -145,7 +154,7 @@ add_task(async function test_page_xhr() {
       window.postMessage({}, "*");
     });
 
-    const url = `${window.location.href.replace("file_page_xhr.html", "return_headers.sjs")}`;
+    const url = new URL("/return_headers.sjs", location).href;
 
     await Promise.all([
       new Promise((resolve, reject) => {
@@ -174,7 +183,7 @@ add_task(async function test_page_xhr() {
   let extensionData = {
     manifest: {
       content_scripts: [{
-        "matches": ["http://mochi.test/*"],
+        "matches": ["http://xpcshell.test/*"],
         "js": ["content.js"],
       }],
     },
@@ -186,14 +195,10 @@ add_task(async function test_page_xhr() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
-  let win = window.open("file_page_xhr.html");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://xpcshell.test/data/file_page_xhr.html");
   await extension.awaitFinish("content-script-page-xhr");
-  win.close();
+  await contentPage.close();
 
   await extension.unload();
 });
-
-</script>
-
-</body>
-</html>
