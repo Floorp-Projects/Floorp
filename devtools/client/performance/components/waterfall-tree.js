@@ -163,7 +163,6 @@ class WaterfallTree extends Component {
 
   render() {
     return Tree({
-      preventNavigationOnArrowRight: false,
       getRoots: this._getRoots,
       getParent: this._getParent,
       getChildren: this._getChildren,
