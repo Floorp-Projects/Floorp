@@ -1,12 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/*
- * Loaded by "test_handlerService_json.js" and "test_handlerService_rdf.js" to
- * check that the nsIHandlerService interface has the same behavior with both
- * the JSON and RDF backends.
- */
-
 HandlerServiceTestUtils.handlerService = gHandlerService;
 
 // Set up an nsIWebHandlerApp instance that can be used in multiple tests.
