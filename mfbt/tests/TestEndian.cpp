@@ -6,14 +6,12 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/MathAlgorithms.h"
 
 #include <stddef.h>
 
 using mozilla::BigEndian;
 using mozilla::LittleEndian;
 using mozilla::NativeEndian;
-using mozilla::RotateRight;
 
 template<typename T>
 void
@@ -370,20 +368,12 @@ main()
     BigEndian::readUint64(&unsigned_bytes[0]) == 0x0102030405060708ULL);
 
   if (sizeof(uintptr_t) == 8) {
-    // Comparing a uint32_t (in 32-bit builds) against a non-uint32_t uint64_t
-    // value causes constantly-false compiler warnings with some compilers.
-    // Hack around this by ensuring both sides are uint64_t, then rotating by
-    // identical amounts to fake out compiler range analysis.
-    //
-    // C++17 adds an |if constexpr(...)| statement construct that compilers use
-    // to not-compile things like invalid template uses, that may eventually
-    // allow a clean fix for this.
     MOZ_RELEASE_ASSERT(
-      RotateRight(uint64_t(LittleEndian::readUintptr(&unsigned_bytes[0])), 5) ==
-      RotateRight(0x0807060504030201ULL, 5));
+      LittleEndian::readUintptr(&unsigned_bytes[0]) ==
+      static_cast<uintptr_t>(0x0807060504030201ULL));
     MOZ_RELEASE_ASSERT(
-      RotateRight(uint64_t(BigEndian::readUintptr(&unsigned_bytes[0])), 5) ==
-      RotateRight(0x0102030405060708ULL, 5));
+      BigEndian::readUintptr(&unsigned_bytes[0]) ==
+      static_cast<uintptr_t>(0x0102030405060708ULL));
   } else {
     MOZ_RELEASE_ASSERT(
       LittleEndian::readUintptr(&unsigned_bytes[0]) == 0x04030201U);
