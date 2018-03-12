@@ -393,8 +393,8 @@ struct TexturedTileDescriptor {
   PTexture texture;
   MaybeTexture textureOnWhite;
   IntRect updateRect;
-  ReadLockDescriptor sharedLock;
-  ReadLockDescriptor sharedLockOnWhite;
+  bool readLocked;
+  bool readLockedOnWhite;
   bool wasPlaceholder;
 };
 
@@ -439,11 +439,11 @@ struct OpRemoveTexture {
 
 struct TimedTexture {
   PTexture texture;
-  ReadLockHandle sharedLock;
   TimeStamp timeStamp;
   IntRect picture;
   uint32_t frameID;
   uint32_t producerID;
+  bool readLocked;
 };
 
 /**
@@ -463,8 +463,8 @@ struct OpUseTexture {
 struct OpUseComponentAlphaTextures {
   PTexture textureOnBlack;
   PTexture textureOnWhite;
-  ReadLockHandle sharedLockBlack;
-  ReadLockHandle sharedLockWhite;
+  bool readLockedBlack;
+  bool readLockedWhite;
 };
 
 union MaybeRegion {

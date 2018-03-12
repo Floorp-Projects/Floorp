@@ -82,6 +82,7 @@ public:
                                           const uint64_t& aFwdTransactionId) override;
 
   virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                              const ReadLockDescriptor& aReadLock,
                                               const LayersBackend& aLayersBackend,
                                               const TextureFlags& aFlags,
                                               const uint64_t& aSerial,

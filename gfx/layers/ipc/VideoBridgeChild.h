@@ -27,6 +27,7 @@ public:
 
   // PVideoBridgeChild
   PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,
+                                    const ReadLockDescriptor& aReadLock,
                                     const LayersBackend& aLayersBackend,
                                     const TextureFlags& aFlags,
                                     const uint64_t& aSerial) override;
@@ -47,6 +48,7 @@ public:
 
   // TextureForwarder
   PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
+                               const ReadLockDescriptor& aReadLock,
                                LayersBackend aLayersBackend,
                                TextureFlags aFlags,
                                uint64_t aSerial,

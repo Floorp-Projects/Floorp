@@ -321,15 +321,17 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
 
     tile.mTextureHost = TextureHost::AsTextureHost(texturedDesc.textureParent());
     tile.mTextureHost->SetTextureSourceProvider(aLayerManager->GetCompositor());
-    tile.mTextureHost->DeserializeReadLock(texturedDesc.sharedLock(), aAllocator);
+    if (texturedDesc.readLocked()) {
+      tile.mTextureHost->SetReadLocked();
+    }
 
     if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
       tile.mTextureHostOnWhite = TextureHost::AsTextureHost(
         texturedDesc.textureOnWhite().get_PTextureParent()
       );
-      tile.mTextureHostOnWhite->DeserializeReadLock(
-        texturedDesc.sharedLockOnWhite(), aAllocator
-      );
+      if (texturedDesc.readLockedOnWhite()) {
+        tile.mTextureHostOnWhite->SetReadLocked();
+      }
     }
 
     tile.mTilePosition = newTiles.TilePosition(i);
