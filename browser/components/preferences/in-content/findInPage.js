@@ -27,10 +27,9 @@ var gSearchResultsPane = {
       // Initialize other panes in an idle callback.
       window.requestIdleCallback(() => this.initializeCategories());
     }
-    let strings = this.strings;
-    this.searchInput.placeholder = AppConstants.platform == "win" ?
-      strings.getString("searchInput.labelWin") :
-      strings.getString("searchInput.labelUnix");
+    let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
+    let helpContainer = document.getElementById("need-help");
+    helpContainer.querySelector("a").href = helpUrl;
   },
 
   handleEvent(event) {
@@ -197,11 +196,6 @@ var gSearchResultsPane = {
     return selection;
   },
 
-  get strings() {
-    delete this.strings;
-    return this.strings = document.getElementById("searchResultBundle");
-  },
-
   /**
    * Shows or hides content according to search input
    *
@@ -294,25 +288,21 @@ var gSearchResultsPane = {
       if (!resultsFound) {
         let noResultsEl = document.querySelector(".no-results-message");
         noResultsEl.setAttribute("query", this.query);
-        noResultsEl.hidden = false;
 
-        let strings = this.strings;
+        let msgElem = document.getElementById("sorry-message");
+        document.l10n.setAttributes(msgElem, "search-results-sorry-message", {
+          query: this.query
+        });
 
-        document.getElementById("sorry-message").textContent = AppConstants.platform == "win" ?
-          strings.getFormattedString("searchResults.sorryMessageWin", [this.query]) :
-          strings.getFormattedString("searchResults.sorryMessageUnix", [this.query]);
-        let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
-        let brandName = document.getElementById("bundleBrand").getString("brandShortName");
-        let helpString = strings.getString("searchResults.needHelp3");
-        let helpContainer = document.getElementById("need-help");
-        let link = document.createElement("label");
-        link.className = "text-link";
-        link.setAttribute("href", helpUrl);
-        link.textContent = strings.getFormattedString("searchResults.needHelpSupportLink", [brandName]);
-
-        helpContainer.innerHTML = "";
-        let fragment = BrowserUtils.getLocalizedFragment(document, helpString, link);
-        helpContainer.appendChild(fragment);
+        // We want to unhide this section only when the translation for the
+        // `sorry-message` is displayed. Since that's going to happen
+        // in the next animation frame, we will unhide it then.
+        window.requestAnimationFrame(() => {
+          // Making sure that the query didn't change in the meantime.
+          if (query === this.query) {
+            noResultsEl.hidden = false;
+          }
+        });
       } else {
         // Creating tooltips for all the instances found
         for (let anchorNode of this.listSearchTooltips) {
