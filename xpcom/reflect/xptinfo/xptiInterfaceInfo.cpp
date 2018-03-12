@@ -16,32 +16,32 @@
 using namespace mozilla;
 
 /* static */ xptiInterfaceEntry*
-xptiInterfaceEntry::Create(const XPTInterfaceDirectoryEntry* aEntry,
+xptiInterfaceEntry::Create(const XPTInterfaceDescriptor* aIface,
                            xptiTypelibGuts* aTypelib)
 {
     void* place = XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry));
     if (!place) {
         return nullptr;
     }
-    return new (place) xptiInterfaceEntry(aEntry, aTypelib);
+    return new (place) xptiInterfaceEntry(aIface, aTypelib);
 }
 
-xptiInterfaceEntry::xptiInterfaceEntry(const XPTInterfaceDirectoryEntry* aEntry,
+xptiInterfaceEntry::xptiInterfaceEntry(const XPTInterfaceDescriptor* aIface,
                                        xptiTypelibGuts* aTypelib)
-    : mIID(aEntry->mIID)
-    , mDescriptor(aEntry->InterfaceDescriptor())
+    : mIID(aIface->mIID)
+    , mDescriptor(aIface)
     , mTypelib(aTypelib)
     , mParent(nullptr)
     , mInfo(nullptr)
     , mMethodBaseIndex(0)
     , mConstantBaseIndex(0)
     , mFlags(0)
-    , mName(aEntry->Name())
+    , mName(aIface->Name())
 {
     SetResolvedState(PARTIALLY_RESOLVED);
-    SetScriptableFlag(mDescriptor->IsScriptable());
-    SetBuiltinClassFlag(mDescriptor->IsBuiltinClass());
-    SetMainProcessScriptableOnlyFlag(mDescriptor->IsMainProcessScriptableOnly());
+    SetScriptableFlag(aIface->IsScriptable());
+    SetBuiltinClassFlag(aIface->IsBuiltinClass());
+    SetMainProcessScriptableOnlyFlag(aIface->IsMainProcessScriptableOnly());
 }
 
 bool
