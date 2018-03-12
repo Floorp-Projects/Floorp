@@ -1,7 +1,17 @@
 use mozprofile::preferences::Pref;
 
+// ALL CHANGES TO THIS FILE MUST HAVE REVIEW FROM A GECKODRIVER PEER!
+//
+// The Marionette Python client is used out-of-tree with release
+// channel builds of Firefox.  Removing a preference from this file
+// will cause regressions, so please be careful and get review from
+// a Testing :: Marionette peer before you make any changes to this file.
+
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 78] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 80] = [
+        // Make sure Shield doesn't hit the network.
+        ("app.normandy.api_url", Pref::new("")),
+
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
@@ -110,6 +120,7 @@ lazy_static! {
 
         // Do not show datareporting policy notifications which can
         // interfere with tests
+        ("datareporting.healthreport.about.reportUrl", Pref::new("http://%(server)s/dummy/abouthealthreport/")),  // removed in Firefox 59
         ("datareporting.healthreport.documentServerURI", Pref::new("http://%(server)s/dummy/healthreport/")),
         ("datareporting.healthreport.logging.consoleEnabled", Pref::new(false)),
         ("datareporting.healthreport.service.enabled", Pref::new(false)),
@@ -144,7 +155,8 @@ lazy_static! {
         ("extensions.installDistroAddons", Pref::new(false)),
 
         // Make sure Shield doesn't hit the network.
-        ("app.normandy.api_url", Pref::new("")),
+        // Removed in Firefox 60.
+        ("extensions.shield-recipe-client.api_url", Pref::new("")),
 
         ("extensions.showMismatchUI", Pref::new(false)),
 
