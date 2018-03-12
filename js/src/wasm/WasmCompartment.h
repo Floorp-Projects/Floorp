@@ -24,6 +24,8 @@
 namespace js {
 namespace wasm {
 
+typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
+
 // wasm::Compartment lives in JSCompartment and contains the wasm-related
 // per-compartment state. wasm::Compartment tracks every live instance in the
 // compartment and must be notified, via registerInstance(), of any new
@@ -31,11 +33,10 @@ namespace wasm {
 
 class Compartment
 {
-    JSRuntime* runtime_;
     InstanceVector instances_;
 
   public:
-    explicit Compartment(JSRuntime* rt);
+    explicit Compartment(Zone* zone);
     ~Compartment();
 
     // Before a WasmInstanceObject can be considered fully constructed and
@@ -62,19 +63,6 @@ class Compartment
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* compartmentTables);
 };
-
-// Interrupt all running wasm Instances that have been registered with
-// wasm::Compartments in the given JSContext.
-
-extern void
-InterruptRunningCode(JSContext* cx);
-
-// After a wasm Instance sees an interrupt request and calls
-// CheckForInterrupt(), it should call RunningCodeInterrupted() to clear the
-// interrupt request for all wasm Instances to avoid spurious trapping.
-
-void
-ResetInterruptState(JSContext* cx);
 
 } // namespace wasm
 } // namespace js

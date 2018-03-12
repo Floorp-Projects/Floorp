@@ -276,7 +276,6 @@ namespace jit {
     _(InstanceOf)                                                           \
     _(InstanceOfCache)                                                      \
     _(InterruptCheck)                                                       \
-    _(WasmInterruptCheck)                                                   \
     _(GetDOMProperty)                                                       \
     _(GetDOMMember)                                                         \
     _(SetDOMProperty)                                                       \
