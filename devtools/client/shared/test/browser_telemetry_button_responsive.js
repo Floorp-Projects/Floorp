@@ -32,29 +32,29 @@ registerCleanupFunction(() => {
 
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 
-add_task(async function () {
-  await addTab(TEST_URI);
+add_task(function* () {
+  yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "inspector");
+  let toolbox = yield gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
   info("testing the responsivedesign button");
-  await testButton(toolbox, Telemetry);
+  yield testButton(toolbox, Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);
-  await gDevTools.closeToolbox(target);
+  yield gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });
 
-async function testButton(toolbox, Telemetry) {
+function* testButton(toolbox, Telemetry) {
   info("Testing command-button-responsive");
 
   let button = toolbox.doc.querySelector("#command-button-responsive");
   ok(button, "Captain, we have the button");
 
-  await delayedClicks(button, 4);
+  yield delayedClicks(button, 4);
 
   checkResults("_RESPONSIVE_", Telemetry);
 }
@@ -71,16 +71,16 @@ function waitForToggle() {
   });
 }
 
-var delayedClicks = async function (node, clicks) {
+var delayedClicks = Task.async(function* (node, clicks) {
   for (let i = 0; i < clicks; i++) {
     info("Clicking button " + node.id);
     let toggled = waitForToggle();
     node.click();
-    await toggled;
+    yield toggled;
     // See TOOL_DELAY for why we need setTimeout here
-    await DevToolsUtils.waitForTime(TOOL_DELAY);
+    yield DevToolsUtils.waitForTime(TOOL_DELAY);
   }
-};
+});
 
 function checkResults(histIdFocus, Telemetry) {
   let result = Telemetry.prototype.telemetryInfo;

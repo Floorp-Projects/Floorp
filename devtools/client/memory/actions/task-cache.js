@@ -65,7 +65,7 @@ TaskCache.declareCacheableTask = function ({ getCacheKey, task }) {
   const cache = new TaskCache();
 
   return function (...args) {
-    return async function (dispatch, getState) {
+    return function* (dispatch, getState) {
       const key = getCacheKey(...args);
 
       const extantResult = cache.get(key);
@@ -80,10 +80,10 @@ TaskCache.declareCacheableTask = function ({ getCacheKey, task }) {
         resolve = r;
       }));
 
-      resolve(dispatch(async function () {
+      resolve(dispatch(function* () {
         try {
           args.push(() => cache.remove(key), dispatch, getState);
-          return await task(...args);
+          return yield* task(...args);
         } catch (error) {
           // Don't perma-cache errors.
           if (cache.get(key)) {
@@ -93,7 +93,7 @@ TaskCache.declareCacheableTask = function ({ getCacheKey, task }) {
         }
       }));
 
-      return cache.get(key);
+      return yield cache.get(key);
     };
   };
 };

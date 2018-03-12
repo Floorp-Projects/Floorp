@@ -15,7 +15,7 @@ Test that rendering a dominator tree error is handled correctly.
         <script src="head.js" type="application/javascript"></script>
 
         <script type="application/javascript">
-         window.onload = async function () {
+         window.onload = Task.async(function* () {
            try {
              ok(React, "Should get React");
              ok(Heap, "Should get Heap");
@@ -33,7 +33,7 @@ Test that rendering a dominator tree error is handled correctly.
                })
              });
 
-             await renderComponent(Heap(props), container);
+             yield renderComponent(Heap(props), container);
 
              ok(container.querySelector(".error"), "Should render an error view");
              ok(container.textContent.includes(errorMessage),
@@ -43,7 +43,7 @@ Test that rendering a dominator tree error is handled correctly.
            } finally {
              SimpleTest.finish();
            }
-         };
+         });
         </script>
     </pre>
 </body>

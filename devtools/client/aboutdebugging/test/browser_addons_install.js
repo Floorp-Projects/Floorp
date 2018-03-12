@@ -34,26 +34,26 @@ function promiseWriteWebManifestForExtension(manifest, dir) {
     dir.path, manifest.applications.gecko.id, files, true);
 }
 
-add_task(async function testLegacyInstallSuccess() {
-  let { tab, document } = await openAboutDebugging("addons");
-  await waitForInitialAddonList(document);
+add_task(function* testLegacyInstallSuccess() {
+  let { tab, document } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
 
   // Install this add-on, and verify that it appears in the about:debugging UI
-  await installAddon({
+  yield installAddon({
     document,
     path: "addons/unpacked/install.rdf",
     name: ADDON_NAME,
   });
 
   // Install the add-on, and verify that it disappears in the about:debugging UI
-  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  yield uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
 
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
 });
 
-add_task(async function testWebextensionInstallError() {
-  let { tab, document, window } = await openAboutDebugging("addons");
-  await waitForInitialAddonList(document);
+add_task(function* testWebextensionInstallError() {
+  let { tab, document, window } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
 
   // Trigger the file picker by clicking on the button
   mockFilePicker(window, getSupportsFile("addons/bad/manifest.json").file);
@@ -61,14 +61,14 @@ add_task(async function testWebextensionInstallError() {
 
   info("wait for the install error to appear");
   let top = document.querySelector(".addons-top");
-  await waitUntilElement(".addons-install-error", top);
+  yield waitUntilElement(".addons-install-error", top);
 
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
 });
 
-add_task(async function testWebextensionInstallErrorRetry() {
-  let { tab, document, window } = await openAboutDebugging("addons");
-  await waitForInitialAddonList(document);
+add_task(function* testWebextensionInstallErrorRetry() {
+  let { tab, document, window } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
 
   let tempdir = AddonTestUtils.tempDir.clone();
   let addonId = "invalid-addon-install-retry@mozilla.org";
@@ -85,7 +85,7 @@ add_task(async function testWebextensionInstallErrorRetry() {
     content_scripts: { matches: "http://*/", js: "foo.js" },
   };
 
-  await promiseWriteWebManifestForExtension(manifest, tempdir);
+  yield promiseWriteWebManifestForExtension(manifest, tempdir);
 
   // Mock the file picker to select a test addon.
   let manifestFile = tempdir.clone();
@@ -97,7 +97,7 @@ add_task(async function testWebextensionInstallErrorRetry() {
 
   info("wait for the install error to appear");
   let top = document.querySelector(".addons-top");
-  await waitUntilElement(".addons-install-error", top);
+  yield waitUntilElement(".addons-install-error", top);
 
   let retryButton = document.querySelector("button.addons-install-retry");
   is(retryButton.textContent, "Retry", "Retry button has a good label");
@@ -108,7 +108,7 @@ add_task(async function testWebextensionInstallErrorRetry() {
     matches: ["http://*/"],
     js: ["foo.js"],
   }];
-  await promiseWriteWebManifestForExtension(manifest, tempdir);
+  yield promiseWriteWebManifestForExtension(manifest, tempdir);
 
   let addonEl = document.querySelector(`[data-addon-id="${addonId}"]`);
   // Verify this add-on isn't installed yet.
@@ -118,11 +118,11 @@ add_task(async function testWebextensionInstallErrorRetry() {
   retryButton.click();
 
   info("Wait for the add-on to be shown");
-  await waitUntilElement(`[data-addon-id="${addonId}"]`, document);
+  yield waitUntilElement(`[data-addon-id="${addonId}"]`, document);
   info("Addon is installed");
 
   // Install the add-on, and verify that it disappears in the about:debugging UI
-  await uninstallAddon({document, id: addonId, name: addonName});
+  yield uninstallAddon({document, id: addonId, name: addonName});
 
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
 });

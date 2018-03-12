@@ -12,10 +12,10 @@ const { refresh } = require("./refresh");
  * current data.
  */
 exports.setLabelDisplayAndRefresh = function (heapWorker, display) {
-  return async function (dispatch, getState) {
+  return function* (dispatch, getState) {
     // Clears out all stored census data and sets the display.
     dispatch(setLabelDisplay(display));
-    await dispatch(refresh(heapWorker));
+    yield dispatch(refresh(heapWorker));
   };
 };
 

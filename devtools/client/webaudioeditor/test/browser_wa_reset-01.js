@@ -6,8 +6,8 @@
  * event and reshow the tools after reloading.
  */
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { gFront, $ } = panel.panelWin;
 
   is($("#reload-notice").hidden, false,
@@ -22,7 +22,7 @@ add_task(async function () {
 
   reload(target);
 
-  await navigating;
+  yield navigating;
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden when navigating.");
@@ -31,7 +31,7 @@ add_task(async function () {
   is($("#content").hidden, true,
     "The tool's content should still be hidden.");
 
-  await started;
+  yield started;
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden after context found.");
@@ -45,7 +45,7 @@ add_task(async function () {
 
   reload(target);
 
-  await Promise.all([navigating, started]);
+  yield Promise.all([navigating, started]);
   let rendered = waitForGraphRendered(panel.panelWin, 3, 2);
 
   is($("#reload-notice").hidden, true,
@@ -55,7 +55,7 @@ add_task(async function () {
   is($("#content").hidden, false,
     "The tool's content should reappear without closing and reopening the toolbox.");
 
-  await rendered;
+  yield rendered;
 
-  await teardown(target);
+  yield teardown(target);
 });

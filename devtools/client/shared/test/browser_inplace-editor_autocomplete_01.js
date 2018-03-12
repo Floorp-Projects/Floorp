@@ -42,14 +42,14 @@ const mockGetCSSPropertyList = function () {
   ];
 };
 
-add_task(async function () {
-  await addTab("data:text/html;charset=utf-8," +
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," +
     "inplace editor CSS property autocomplete");
-  let [host, win, doc] = await createHost();
+  let [host, win, doc] = yield createHost();
 
   let xulDocument = win.top.document;
   let popup = new AutocompletePopup(xulDocument, { autoSelect: true });
-  await new Promise(resolve => {
+  yield new Promise(resolve => {
     createInplaceEditorAndClick({
       start: runPropertyAutocompletionTest,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
@@ -63,13 +63,13 @@ add_task(async function () {
   gBrowser.removeCurrentTab();
 });
 
-let runPropertyAutocompletionTest = async function (editor) {
+let runPropertyAutocompletionTest = Task.async(function* (editor) {
   info("Starting to test for css property completion");
   editor._getCSSPropertyList = mockGetCSSPropertyList;
 
   for (let data of testData) {
-    await testCompletion(data, editor);
+    yield testCompletion(data, editor);
   }
 
   EventUtils.synthesizeKey("VK_RETURN", {}, editor.input.defaultView);
-};
+});

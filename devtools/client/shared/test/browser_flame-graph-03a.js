@@ -26,14 +26,14 @@ const TEST_HEIGHT = 100;
 
 const {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 
-add_task(async function () {
-  await addTab("about:blank");
-  await performTest();
+add_task(function* () {
+  yield addTab("about:blank");
+  yield performTest();
   gBrowser.removeCurrentTab();
 });
 
-async function performTest() {
-  let [host,, doc] = await createHost();
+function* performTest() {
+  let [host,, doc] = yield createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
@@ -43,11 +43,11 @@ async function performTest() {
   graph.horizontalPanThreshold = 0;
   graph.verticalPanThreshold = 0;
 
-  await graph.ready();
+  yield graph.ready();
 
   testGraph(graph);
 
-  await graph.destroy();
+  yield graph.destroy();
   host.destroy();
 }
 

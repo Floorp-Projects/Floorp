@@ -115,7 +115,7 @@ var PerformanceView = {
   /**
    * Sets up the view with event binding and main subviews.
    */
-  async initialize() {
+  initialize: Task.async(function* () {
     this._onRecordButtonClick = this._onRecordButtonClick.bind(this);
     this._onImportButtonClick = this._onImportButtonClick.bind(this);
     this._onClearButtonClick = this._onClearButtonClick.bind(this);
@@ -133,7 +133,7 @@ var PerformanceView = {
     PerformanceController.on(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
                              this._onNewRecordingFailed);
 
-    if (await PerformanceController.canCurrentlyRecord()) {
+    if (yield PerformanceController.canCurrentlyRecord()) {
       this.setState("empty");
     } else {
       this.setState("unavailable");
@@ -141,10 +141,10 @@ var PerformanceView = {
 
     // Initialize the ToolbarView first, because other views may need access
     // to the OptionsView via the controller, to read prefs.
-    await ToolbarView.initialize();
-    await RecordingsView.initialize();
-    await OverviewView.initialize();
-    await DetailsView.initialize();
+    yield ToolbarView.initialize();
+    yield RecordingsView.initialize();
+    yield OverviewView.initialize();
+    yield DetailsView.initialize();
 
     // DE-XUL: Begin migrating the toolbar to React. Temporarily hold state here.
     this._recordingControlsState = {
@@ -161,7 +161,7 @@ var PerformanceView = {
                                         .map(createHtmlMount);
 
     this._renderRecordingControls();
-  },
+  }),
 
   /**
    * DE-XUL: Render the recording controls and buttons using React.
@@ -177,7 +177,7 @@ var PerformanceView = {
   /**
    * Unbinds events and destroys subviews.
    */
-  async destroy() {
+  destroy: Task.async(function* () {
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
     PerformanceController.off(EVENTS.RECORDING_PROFILER_STATUS_UPDATE,
                               this._onProfilerStatusUpdated);
@@ -187,11 +187,11 @@ var PerformanceView = {
     PerformanceController.off(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START,
                               this._onNewRecordingFailed);
 
-    await ToolbarView.destroy();
-    await RecordingsView.destroy();
-    await OverviewView.destroy();
-    await DetailsView.destroy();
-  },
+    yield ToolbarView.destroy();
+    yield RecordingsView.destroy();
+    yield OverviewView.destroy();
+    yield DetailsView.destroy();
+  }),
 
   /**
    * Sets the state of the profiler view. Possible options are "unavailable",

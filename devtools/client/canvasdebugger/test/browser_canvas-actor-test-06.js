@@ -5,19 +5,19 @@
  * Tests if screenshots for arbitrary draw calls are generated properly.
  */
 
-async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(SIMPLE_CANVAS_TRANSPARENT_URL);
+function* ifTestingSupported() {
+  let { target, front } = yield initCanvasDebuggerBackend(SIMPLE_CANVAS_TRANSPARENT_URL);
 
   let navigated = once(target, "navigate");
 
-  await front.setup({ reload: true });
+  yield front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  await navigated;
+  yield navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
-  let animationOverview = await snapshotActor.getOverview();
+  let snapshotActor = yield front.recordAnimationFrame();
+  let animationOverview = yield snapshotActor.getOverview();
 
   let functionCalls = animationOverview.calls;
   ok(functionCalls,
@@ -34,10 +34,10 @@ async function ifTestingSupported() {
   is(functionCalls[6].name, "fillRect",
     "The fourth called function's name is correct.");
 
-  let firstDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[0]);
-  let secondDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[2]);
-  let thirdDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[4]);
-  let fourthDrawCallScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[6]);
+  let firstDrawCallScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[0]);
+  let secondDrawCallScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[2]);
+  let thirdDrawCallScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[4]);
+  let fourthDrawCallScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[6]);
 
   ok(firstDrawCallScreenshot,
     "The first draw call has a screenshot attached.");
@@ -90,7 +90,7 @@ async function ifTestingSupported() {
   isnot(thirdDrawCallScreenshot.pixels, fourthDrawCallScreenshot.pixels,
     "The screenshots taken on consecutive draw calls are different (3).");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }
 

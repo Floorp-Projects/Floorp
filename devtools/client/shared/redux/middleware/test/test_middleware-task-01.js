@@ -16,26 +16,26 @@ function run_test() {
   run_next_test();
 }
 
-add_task(async function () {
+add_task(function* () {
   let store = applyMiddleware(task)(createStore)(reducer);
 
   store.dispatch(fetch1("generator"));
-  await waitUntilState(store, () => store.getState().length === 1);
+  yield waitUntilState(store, () => store.getState().length === 1);
   equal(store.getState()[0].data, "generator",
         "task middleware async dispatches an action via generator");
 
   store.dispatch(fetch2("sync"));
-  await waitUntilState(store, () => store.getState().length === 2);
+  yield waitUntilState(store, () => store.getState().length === 2);
   equal(store.getState()[1].data, "sync",
         "task middleware sync dispatches an action via sync");
 });
 
 function fetch1(data) {
-  return async function (dispatch, getState) {
+  return function* (dispatch, getState) {
     equal(getState().length, 0, "`getState` is accessible in a generator action");
-    let moreData = await new Promise(resolve => resolve(data));
+    let moreData = yield new Promise(resolve => resolve(data));
     // Ensure it handles more than one yield
-    moreData = await new Promise(resolve => resolve(data));
+    moreData = yield new Promise(resolve => resolve(data));
     dispatch({ type: "fetch1", data: moreData });
   };
 }

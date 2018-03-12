@@ -7,11 +7,11 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "four.html";
 
-add_task(async function () {
-  let { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
+add_task(function* () {
+  let { panel, ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
   info("Waiting for source editor to load.");
-  await ui.editors[0].getSourceEditor();
+  yield ui.editors[0].getSourceEditor();
 
   let selected = ui.once("editor-selected");
 
@@ -19,7 +19,7 @@ add_task(async function () {
   testKeyboardNavigation(ui.editors[0], panel);
 
   info("Waiting for editor #2 to be selected due to keyboard navigation.");
-  await selected;
+  yield selected;
 
   ok(ui.editors[2].sourceEditor.hasFocus(), "Editor #2 has focus.");
 });

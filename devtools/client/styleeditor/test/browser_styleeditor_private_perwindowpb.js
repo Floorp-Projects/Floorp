@@ -10,23 +10,23 @@
 const TEST_URL = "http://" + TEST_HOST + "/browser/devtools/client/" +
   "styleeditor/test/test_private.html";
 
-add_task(async function () {
+add_task(function* () {
   info("Opening a new private window");
   let win = OpenBrowserWindow({private: true});
-  await waitForDelayedStartupFinished(win);
+  yield waitForDelayedStartupFinished(win);
 
   info("Clearing the browser cache");
   Services.cache2.clear();
 
-  let { toolbox, ui } = await openStyleEditorForURL(TEST_URL, win);
+  let { toolbox, ui } = yield openStyleEditorForURL(TEST_URL, win);
 
   is(ui.editors.length, 1, "The style editor contains one sheet.");
   let editor = ui.editors[0];
 
-  await editor.getSourceEditor();
-  await checkDiskCacheFor(TEST_HOST);
+  yield editor.getSourceEditor();
+  yield checkDiskCacheFor(TEST_HOST);
 
-  await toolbox.destroy();
+  yield toolbox.destroy();
 
   let onUnload = new Promise(done => {
     win.addEventListener("unload", function listener(event) {
@@ -37,7 +37,7 @@ add_task(async function () {
     });
   });
   win.close();
-  await onUnload;
+  yield onUnload;
 });
 
 function checkDiskCacheFor(host) {

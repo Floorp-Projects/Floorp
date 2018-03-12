@@ -21,25 +21,25 @@ Services.prefs.setBoolPref("devtools.memory.enabled", true);
 /**
  * Open the memory panel for the given tab.
  */
-this.openMemoryPanel = async function (tab) {
+this.openMemoryPanel = Task.async(function* (tab) {
   info("Opening memory panel.");
   const target = TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "memory");
+  const toolbox = yield gDevTools.showToolbox(target, "memory");
   info("Memory panel shown successfully.");
   let panel = toolbox.getCurrentPanel();
   return { tab, panel };
-};
+});
 
 /**
  * Close the memory panel for the given tab.
  */
-this.closeMemoryPanel = async function (tab) {
+this.closeMemoryPanel = Task.async(function* (tab) {
   info("Closing memory panel.");
   const target = TargetFactory.forTab(tab);
   const toolbox = gDevTools.getToolbox(target);
-  await toolbox.destroy();
+  yield toolbox.destroy();
   info("Closed memory panel successfully.");
-};
+});
 
 /**
  * Return a test function that adds a tab with the given url, opens the memory
@@ -48,32 +48,32 @@ this.closeMemoryPanel = async function (tab) {
  *
  * Example usage:
  *
- *     this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+ *     this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
  *         // Your tests go here...
  *     });
  */
 function makeMemoryTest(url, generator) {
-  return async function () {
+  return Task.async(function* () {
     waitForExplicitFinish();
 
     // It can take a long time to save a snapshot to disk, read the snapshots
     // back from disk, and finally perform analyses on them.
     requestLongerTimeout(2);
 
-    const tab = await addTab(url);
-    const results = await openMemoryPanel(tab);
+    const tab = yield addTab(url);
+    const results = yield openMemoryPanel(tab);
 
     try {
-      await generator(results);
+      yield* generator(results);
     } catch (err) {
       ok(false, "Got an error: " + DevToolsUtils.safeErrorString(err));
     }
 
-    await closeMemoryPanel(tab);
-    await removeTab(tab);
+    yield closeMemoryPanel(tab);
+    yield removeTab(tab);
 
     finish();
-  };
+  });
 }
 
 function dumpn(msg) {

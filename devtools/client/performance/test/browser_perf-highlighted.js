@@ -12,37 +12,37 @@ const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab }
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
-add_task(async function () {
-  let { target, toolbox, console } = await initConsoleInNewTab({
+add_task(function* () {
+  let { target, toolbox, console } = yield initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let tab = toolbox.doc.getElementById("toolbox-tab-performance");
 
-  await console.profile("rust");
-  await waitUntil(() => tab.classList.contains("highlighted"));
+  yield console.profile("rust");
+  yield waitUntil(() => tab.classList.contains("highlighted"));
 
   ok(tab.classList.contains("highlighted"), "Performance tab is highlighted during " +
     "recording from console.profile when unloaded.");
 
-  await console.profileEnd("rust");
-  await waitUntil(() => !tab.classList.contains("highlighted"));
+  yield console.profileEnd("rust");
+  yield waitUntil(() => !tab.classList.contains("highlighted"));
 
   ok(!tab.classList.contains("highlighted"),
     "Performance tab is no longer highlighted when console.profile recording finishes.");
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
+  let { panel } = yield initPerformanceInTab({ tab: target.tab });
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   ok(tab.classList.contains("highlighted"),
     "Performance tab is highlighted during recording while in performance tool.");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   ok(!tab.classList.contains("highlighted"),
     "Performance tab is no longer highlighted when recording finishes.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });
