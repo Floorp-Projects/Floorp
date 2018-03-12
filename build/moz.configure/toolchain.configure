@@ -1463,6 +1463,26 @@ def rust_compiler_flags(opt_level, debug_rust, debug_symbols):
 
 set_config('MOZ_RUST_DEFAULT_FLAGS', rust_compiler_flags)
 
+# Rust incremental compilation
+# ==============================================================
+
+
+@depends('MOZ_AUTOMATION')
+def cargo_incremental(automation):
+    """Return a value for the CARGO_INCREMENTAL environment variable."""
+
+    # We never want to use incremental compilation in automation.  sccache
+    # handles our automation use case much better than incremental compilation
+    # would.
+    if automation:
+        return '0'
+
+    # Don't do anything special in other situations.
+    return
+
+
+set_config('CARGO_INCREMENTAL', cargo_incremental)
+
 # Linker detection
 # ==============================================================
 
