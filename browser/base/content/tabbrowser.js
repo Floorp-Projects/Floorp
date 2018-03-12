@@ -158,7 +158,7 @@ window._gBrowser = {
     "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
     "purgeSessionHistory", "stopScroll", "startScroll",
     "userTypedValue", "userTypedClear", "mediaBlocked",
-    "didStartLoadSinceLastUserTyping"
+    "didStartLoadSinceLastUserTyping", "audioMuted"
   ],
 
   _removingTabs: [],
@@ -1953,7 +1953,7 @@ window._gBrowser = {
       let setter;
       switch (name) {
         case "audioMuted":
-          getter = () => false;
+          getter = () => aTab.hasAttribute("muted");
           break;
         case "contentTitle":
           getter = () => SessionStore.getLazyTabValue(aTab, "title");
