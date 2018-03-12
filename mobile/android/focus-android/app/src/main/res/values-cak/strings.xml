@@ -17,6 +17,7 @@
   <string name="menu_help">To\'ïk</string>
   <string name="menu_rights">Taq Ach\'ojib\'al</string>
   <string name="menu_trackers_blocked_title">Eq\'aton ojqanela\'</string>
+  <string name="menu_custom_tab_branding">B\'anon ruma %1$s</string>
   <string name="share_dialog_title">Tikomonïx b\'ey</string>
   <string name="notification_erase_text">Tiyuj runatab\'al okem pa k\'amaya\'l</string>
   <string name="notification_action_open">Tijaq</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Rub\'i\' okisanel</string>
   <string name="gv_prompt_password_hint">Ewan tzij</string>
   <string name="gv_prompt_clear">Tijosq\'ïx</string>
+  <string name="security_popup_secure_connection">Ütz Okem</string>
+  <string name="security_popup_insecure_connection">Me\'utz Okem</string>
+  <string name="security_popup_security_verified">Jikib\'an ruma: %1$s</string>
+  <string name="site_security_icon_content_description">Rujikomal Ruxaq K\'amaya\'l</string>
 </resources>

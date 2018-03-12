@@ -17,6 +17,7 @@
   <string name="menu_help">Cymorth</string>
   <string name="menu_rights">Eich Hawliau</string>
   <string name="menu_trackers_blocked_title">Rhwystro tracwyr</string>
+  <string name="menu_custom_tab_branding">Grym %1$s</string>
   <string name="share_dialog_title">Rhannu drwy</string>
   <string name="notification_erase_text">Dileu\'r hanes pori</string>
   <string name="notification_action_open">Agor</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Enw Defnyddiwr</string>
   <string name="gv_prompt_password_hint">Cyfrinair</string>
   <string name="gv_prompt_clear">Clirio</string>
+  <string name="security_popup_secure_connection">Cysylltiad Diogel</string>
+  <string name="security_popup_insecure_connection">Cysylltiad Anniogel</string>
+  <string name="security_popup_security_verified">Dilyswyd gan: %1$s</string>
+  <string name="site_security_icon_content_description">Diogelwch Gwefan</string>
 </resources>

@@ -17,6 +17,7 @@
   <string name="menu_help">Көмек</string>
   <string name="menu_rights">Құқықтарыңыз</string>
   <string name="menu_trackers_blocked_title">Блокталған трекерлер</string>
+  <string name="menu_custom_tab_branding">%1$s негізінде</string>
   <string name="share_dialog_title">Арқылы бөлісу</string>
   <string name="notification_erase_text">Шолу тарихын өшіру</string>
   <string name="notification_action_open">Ашу</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Пайдаланушы аты</string>
   <string name="gv_prompt_password_hint">Пароль</string>
   <string name="gv_prompt_clear">Тазарту</string>
+  <string name="security_popup_secure_connection">Қауіпсіз байланыс</string>
+  <string name="security_popup_insecure_connection">Қауіпсіз емес байланыс</string>
+  <string name="security_popup_security_verified">Растаған: %1$s</string>
+  <string name="site_security_icon_content_description">Сайт қауіпсіздігі</string>
 </resources>

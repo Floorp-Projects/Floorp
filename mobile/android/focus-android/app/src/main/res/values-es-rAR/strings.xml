@@ -17,6 +17,7 @@
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Sus derechos</string>
   <string name="menu_trackers_blocked_title">Rastreadores bloqueados</string>
+  <string name="menu_custom_tab_branding">Impulsado por %1$s</string>
   <string name="share_dialog_title">Compartir vía</string>
   <string name="notification_erase_text">Borrar historial de navegación</string>
   <string name="notification_action_open">Abrir</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Nombre de usuario</string>
   <string name="gv_prompt_password_hint">Contraseña</string>
   <string name="gv_prompt_clear">Eliminar</string>
+  <string name="security_popup_secure_connection">Conexión segura</string>
+  <string name="security_popup_insecure_connection">Conexión insegura</string>
+  <string name="security_popup_security_verified">Verificado por: %1$s</string>
+  <string name="site_security_icon_content_description">Seguridad del sitio</string>
 </resources>

@@ -17,6 +17,7 @@
   <string name="menu_help">Pomoć</string>
   <string name="menu_rights">Vaša prava</string>
   <string name="menu_trackers_blocked_title">Blokirani pratioci</string>
+  <string name="menu_custom_tab_branding">Pokreće ga %1$s</string>
   <string name="share_dialog_title">Dijeli putem</string>
   <string name="notification_erase_text">Izbrišite historiju pretraživanja</string>
   <string name="notification_action_open">Otvori</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Korisničko ime</string>
   <string name="gv_prompt_password_hint">Lozinka</string>
   <string name="gv_prompt_clear">Očisti</string>
+  <string name="security_popup_secure_connection">Sigurna veza</string>
+  <string name="security_popup_insecure_connection">Nesigurna veza</string>
+  <string name="security_popup_security_verified">Provjerio: %1$s</string>
+  <string name="site_security_icon_content_description">Sigurnost stranice</string>
 </resources>

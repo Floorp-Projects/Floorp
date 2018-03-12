@@ -17,6 +17,7 @@
   <string name="menu_help">დახმარება</string>
   <string name="menu_rights">თქვენი უფლებები</string>
   <string name="menu_trackers_blocked_title">შეზღუდული მეთვალყურეები</string>
+  <string name="menu_custom_tab_branding">უზრუნველყოფს %1$s</string>
   <string name="share_dialog_title">გაზიარება</string>
   <string name="notification_erase_text">ისტორიის წაშლა</string>
   <string name="notification_action_open">გახსნა</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">სახელი</string>
   <string name="gv_prompt_password_hint">პაროლი</string>
   <string name="gv_prompt_clear">გასუფთავება</string>
+  <string name="security_popup_secure_connection">დაცული კავშირი</string>
+  <string name="security_popup_insecure_connection">დაუცველი კავშირი</string>
+  <string name="security_popup_security_verified">დამმოწმებელი: %1$s</string>
+  <string name="site_security_icon_content_description">საიტის უსაფრთხოება</string>
 </resources>

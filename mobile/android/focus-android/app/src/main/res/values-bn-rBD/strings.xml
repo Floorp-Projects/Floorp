@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_title_add">কাস্টোম URL যোগ করুন</string>
   <string name="preference_autocomplete_title_remove">কাস্টোম URL মুছে দিন</string>
   <string name="preference_autocomplete_learn_more">আরও জানুন</string>
+  <string name="preference_autocomplete_custom_summary">কাস্টোম অটোকমপ্লিট URLs যোগ এবং ম্যানেজ করুন।</string>
   <string name="preference_autocomplete_add_title">URL যোগ করতে</string>
   <string name="preference_autocomplete_add_hint">URL পেস্ট অথবা প্রবেশ করান</string>
   <string name="preference_autocomplete_add_example">উদাহরণ: example.com</string>
@@ -79,8 +80,12 @@
   <string name="tutorial_search_manually_add">ম্যানুয়ালি যোগ করুন</string>
   <string name="tutorial_search_title">অনুসন্ধান ইঞ্জিন যোগ</string>
   <string name="tutorial_search_step1">1. অনুসন্ধান ইঞ্জিন নীড়পাতায় যান।</string>
+  <string name="tutorial_search_step2">2. সার্চ ইঞ্জিনের সার্চ ফিল্ডটিতে আলতো চাপুন।</string>
+  <string name="tutorial_search_step2_alternative">2. সার্চ ইঞ্জিনের সার্চ ফিল্ডটি দীর্ঘক্ষণ টিপুন।</string>
+  <string name="tutorial_search_step3">3. সার্চ ইঞ্জিন যোগ করার জন্য কীবোর্ডের উপরে ম্যাগনিফিকেশনের আইকনটি আলতো চাপুন।</string>
   <string name="action_option_add_search_engine">অনুসন্ধান ইঞ্জিন যোগ</string>
   <string name="tutorial_search_step3_alternative">3. ট্যাপ %1$s</string>
+  <string name="tutorial_search_finish">GET STARTED</string>
   <string name="search_add_manually_name">যে নাম দেখাবে</string>
   <string name="search_add_manually_name_hint">অনুসন্ধান ইঞ্জিন নাম</string>
   <string name="search_add_manually_string">ব্যবহারের জন্য অনুসন্ধান বাক্য</string>
@@ -92,6 +97,7 @@
   <string name="search_add_error_empty_name">অনুসন্ধান ইঞ্জিনের নাম দিন</string>
   <string name="search_add_error_duplicate_name">ইনস্টল করা কোন অনুসন্ধান ইঞ্জিন ইতিমধ্যে এই নাম ব্যবহার করছে।</string>
   <string name="search_add_error_empty_search">অনুসন্ধান বাক্য দিন</string>
+  <string name="search_add_error_format">সার্চ স্ট্রিংটি যেটি উদাহরণ ফরম্যাটের সাথে মেলে তা চেক করুন</string>
   <string name="content_description_clear_input">ইনপুট পরিস্কার</string>
   <string name="content_description_dismiss_input">খারিজ</string>
   <string name="content_description_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
@@ -146,6 +152,7 @@
   <string name="contextmenu_open_in_new_tab">নতুন ট্যাবে লিঙ্ক খুলুন</string>
   <string name="firstrun_defaultbrowser_title">আপনার গোপনীয়তা কঠোর করুন</string>
   <string name="firstrun_defaultbrowser_text2">ব্যাক্তিগত ব্রাউজিং কে আরেক উচ্চতায় নিয়ে যান। বিজ্ঞাপন আর অন্যান্য কনটেন্ট ব্লক করুন, যারা আপনাকে সকল ওয়েবসাইটে অনুসরণ করে বেড়ায় আর আপনার পেজ লোডিং টাইম অনেকগুন বাড়িয়ে দেয়।</string>
+  <string name="firstrun_search_text">অন্য কিছু খুঁজছেন? সেটিংস এ অন্য ডিফল্ট সার্চ ইঞ্জিন পছন্দ করুন।</string>
   <string name="firstrun_shortcut_title">নীড় স্ক্রিনে শর্টকাট যোগ করুন</string>
   <string name="firstrun_privacy_title">গোপনীয়তাকে অভ্যাসে পরিনত করুন</string>
   <string name="firstrun_close_button">ঠিক আছে, বুঝতে পেরেছি!</string>

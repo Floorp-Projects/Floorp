@@ -17,6 +17,7 @@
   <string name="menu_help">도움말</string>
   <string name="menu_rights">사용자 권리</string>
   <string name="menu_trackers_blocked_title">차단된 추적기</string>
+  <string name="menu_custom_tab_branding">%1$s에서 지원</string>
   <string name="share_dialog_title">다음으로 공유</string>
   <string name="notification_erase_text">방문 기록 지우기</string>
   <string name="notification_action_open">열기</string>
@@ -188,5 +189,6 @@
   <string name="gv_prompt_clear">지우기</string>
   <string name="security_popup_secure_connection">안전한 연결</string>
   <string name="security_popup_insecure_connection">안전하지 않은 연결</string>
+  <string name="security_popup_security_verified">인증: %1$s</string>
   <string name="site_security_icon_content_description">사이트 보안</string>
 </resources>

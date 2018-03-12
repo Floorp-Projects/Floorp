@@ -17,6 +17,7 @@
   <string name="menu_help">Допомога</string>
   <string name="menu_rights">Ваші права</string>
   <string name="menu_trackers_blocked_title">Заблоковано стеження</string>
+  <string name="menu_custom_tab_branding">За підтримки %1$s</string>
   <string name="share_dialog_title">Поділитись через</string>
   <string name="notification_erase_text">Стерти історію перегляду</string>
   <string name="notification_action_open">Відкрити</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Ім\'я користувача</string>
   <string name="gv_prompt_password_hint">Пароль</string>
   <string name="gv_prompt_clear">Очистити</string>
+  <string name="security_popup_secure_connection">Захищене з\'єднання</string>
+  <string name="security_popup_insecure_connection">Незахищене з’єднання</string>
+  <string name="security_popup_security_verified">Засвідчено: %1$s</string>
+  <string name="site_security_icon_content_description">Безпека сайту</string>
 </resources>
