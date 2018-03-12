@@ -494,7 +494,7 @@ var Sanitizer = {
             }
             for (let tab of tabBrowser.tabs) {
               if (tabBrowser.isFindBarInitialized(tab))
-                tabBrowser.getFindBar(tab).clear();
+                tabBrowser.getCachedFindBar(tab).clear();
             }
             // Clear any saved find value
             tabBrowser._lastFindValue = "";
