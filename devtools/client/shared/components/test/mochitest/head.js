@@ -16,6 +16,7 @@ var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var flags = require("devtools/shared/flags");
+var { Task } = require("devtools/shared/task");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 

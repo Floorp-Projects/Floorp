@@ -6,24 +6,24 @@
  * in the event no rAF loop is found.
  */
 
-async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(NO_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, front } = yield initCanvasDebuggerBackend(NO_CANVAS_URL);
   loadFrameScriptUtils();
 
   let navigated = once(target, "navigate");
 
-  await front.setup({ reload: true });
+  yield front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  await navigated;
+  yield navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
   let startRecording = front.recordAnimationFrame();
-  await front.stopRecordingAnimationFrame();
+  yield front.stopRecordingAnimationFrame();
 
-  ok(!(await startRecording),
+  ok(!(yield startRecording),
     "recordAnimationFrame() does not return a SnapshotActor when cancelled.");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

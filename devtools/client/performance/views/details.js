@@ -46,7 +46,7 @@ var DetailsView = {
   /**
    * Sets up the view with event binding, initializes subviews.
    */
-  async initialize() {
+  initialize: Task.async(function* () {
     this.el = $("#details-pane");
     this.toolbar = $("#performance-toolbar-controls-detail-views");
 
@@ -58,25 +58,25 @@ var DetailsView = {
       button.addEventListener("command", this._onViewToggle);
     }
 
-    await this.setAvailableViews();
+    yield this.setAvailableViews();
 
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE,
                              this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.RECORDING_SELECTED,
                              this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.PREF_CHANGED, this.setAvailableViews);
-  },
+  }),
 
   /**
    * Unbinds events, destroys subviews.
    */
-  async destroy() {
+  destroy: Task.async(function* () {
     for (let button of $$("toolbarbutton[data-view]", this.toolbar)) {
       button.removeEventListener("command", this._onViewToggle);
     }
 
     for (let component of Object.values(this.components)) {
-      component.initialized && (await component.view.destroy());
+      component.initialized && (yield component.view.destroy());
     }
 
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE,
@@ -84,7 +84,7 @@ var DetailsView = {
     PerformanceController.off(EVENTS.RECORDING_SELECTED,
                               this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.PREF_CHANGED, this.setAvailableViews);
-  },
+  }),
 
   /**
    * Sets the possible views based off of recording features and server actor support
@@ -92,7 +92,7 @@ var DetailsView = {
    * if currently selected. Called when a preference changes in
    * `devtools.performance.ui.`.
    */
-  async setAvailableViews() {
+  setAvailableViews: Task.async(function* () {
     let recording = PerformanceController.getCurrentRecording();
     let isCompleted = recording && recording.isCompleted();
     let invalidCurrentView = false;
@@ -119,9 +119,9 @@ var DetailsView = {
     // use a default now that we have the recording configurations
     if ((this._initialized && isCompleted && invalidCurrentView) ||
         (!this._initialized && isCompleted && recording)) {
-      await this.selectDefaultView();
+      yield this.selectDefaultView();
     }
-  },
+  }),
 
   /**
    * Takes a view name and determines if the current recording
@@ -151,11 +151,11 @@ var DetailsView = {
    * @param String viewName
    *        Name of the view to be shown.
    */
-  async selectView(viewName) {
+  selectView: Task.async(function* (viewName) {
     let component = this.components[viewName];
     this.el.selectedPanel = $("#" + component.id);
 
-    await this._whenViewInitialized(component);
+    yield this._whenViewInitialized(component);
 
     for (let button of $$("toolbarbutton[data-view]", this.toolbar)) {
       if (button.getAttribute("data-view") === viewName) {
@@ -170,7 +170,7 @@ var DetailsView = {
     this._initialized = true;
 
     this.emit(EVENTS.UI_DETAILS_VIEW_SELECTED, viewName);
-  },
+  }),
 
   /**
    * Selects a default view based off of protocol support
@@ -220,12 +220,12 @@ var DetailsView = {
    * @param object component
    *        A component descriptor from DetailsView.components
    */
-  async _whenViewInitialized(component) {
+  _whenViewInitialized: Task.async(function* (component) {
     if (component.initialized) {
       return;
     }
     component.initialized = true;
-    await component.view.initialize();
+    yield component.view.initialize();
 
     // If this view is initialized *after* a recording is shown, it won't display
     // any data. Make sure it's populated by setting `shouldUpdateWhenShown`.
@@ -235,7 +235,7 @@ var DetailsView = {
     if (recording && recording.isCompleted()) {
       component.view.shouldUpdateWhenShown = true;
     }
-  },
+  }),
 
   /**
    * Called when recording stops or is selected.

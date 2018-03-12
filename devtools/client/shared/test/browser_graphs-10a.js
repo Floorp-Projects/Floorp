@@ -29,37 +29,37 @@ const TEST_DATA = [
 ];
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(async function () {
-  await addTab("about:blank");
-  await performTest();
+add_task(function* () {
+  yield addTab("about:blank");
+  yield performTest();
   gBrowser.removeCurrentTab();
 });
 
-async function performTest() {
-  let [host,, doc] = await createHost("window");
+function* performTest() {
+  let [host,, doc] = yield createHost("window");
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
   let graph = new LineGraphWidget(doc.body, "fps");
-  await graph.once("ready");
+  yield graph.once("ready");
 
   let refreshCount = 0;
   graph.on("refresh", () => refreshCount++);
 
-  await testGraph(host, graph);
+  yield testGraph(host, graph);
 
   is(refreshCount, 2, "The graph should've been refreshed 2 times.");
 
-  await graph.destroy();
+  yield graph.destroy();
   host.destroy();
 }
 
-async function testGraph(host, graph) {
+function* testGraph(host, graph) {
   graph.setData(TEST_DATA);
   let initialBounds = host.frame.getBoundingClientRect();
 
   host._window.resizeBy(-100, -100);
-  await graph.once("refresh");
+  yield graph.once("refresh");
   let newBounds = host.frame.getBoundingClientRect();
 
   is(initialBounds.width - newBounds.width, 100,
@@ -99,7 +99,7 @@ async function testGraph(host, graph) {
     "The current selection end value is correct (3).");
 
   host._window.resizeBy(100, 100);
-  await graph.once("refresh");
+  yield graph.once("refresh");
   let newerBounds = host.frame.getBoundingClientRect();
 
   is(initialBounds.width - newerBounds.width, 0,

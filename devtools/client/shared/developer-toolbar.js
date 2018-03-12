@@ -11,6 +11,7 @@ const { TargetFactory } = require("devtools/client/framework/target");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const {Task} = require("devtools/shared/task");
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 
@@ -42,7 +43,7 @@ var CommandUtils = {
   /**
    * Utility to execute a command string on a given target
    */
-  async executeOnTarget(target, command) {
+  executeOnTarget: Task.async(function* (target, command) {
     let requisitionPromise = this._requisitions.get(target);
     if (!requisitionPromise) {
       requisitionPromise = this.createRequisition(target, {
@@ -51,9 +52,9 @@ var CommandUtils = {
       // Store the promise to avoid races by storing the promise immediately
       this._requisitions.set(target, requisitionPromise);
     }
-    let requisition = await requisitionPromise;
+    let requisition = yield requisitionPromise;
     requisition.updateExec(command);
-  },
+  }),
 
   /**
    * Utility to ensure that things are loaded in the correct order
@@ -370,15 +371,15 @@ DeveloperToolbar.prototype.show = function (focus) {
     return this._showPromise;
   }
 
-  this._showPromise = ((async function () {
+  this._showPromise = Task.spawn((function* () {
     // hide() is async, so ensure we don't need to wait for hide() to
     // finish.  We unconditionally yield here, even if _hidePromise is
     // null, so that the spawn call returns a promise before starting
     // to do any real work.
-    await this._hidePromise;
+    yield this._hidePromise;
 
     // Append the browser-level stylesheet to the browser document.
-    await gDevToolsBrowser.loadBrowserStyleSheet(this._chromeWindow);
+    yield gDevToolsBrowser.loadBrowserStyleSheet(this._chromeWindow);
 
     this.createToolbar();
 
@@ -396,7 +397,7 @@ DeveloperToolbar.prototype.show = function (focus) {
       TooltipPanel.create(this),
       OutputPanel.create(this)
     ];
-    let panels = await promise.all(panelPromises);
+    let panels = yield promise.all(panelPromises);
 
     [ this.tooltipPanel, this.outputPanel ] = panels;
 
@@ -407,13 +408,13 @@ DeveloperToolbar.prototype.show = function (focus) {
       environment: CommandUtils.createEnvironment(this, "target"),
       document: this.outputPanel.document,
     };
-    let requisition = await CommandUtils.createRequisition(this.target, options);
+    let requisition = yield CommandUtils.createRequisition(this.target, options);
     this.requisition = requisition;
 
     // The <textbox> `value` may still be undefined on the XUL binding if
     // we fetch it early
     let value = this._input.value || "";
-    await this.requisition.update(value);
+    yield this.requisition.update(value);
 
     const Inputter = require("gcli/mozui/inputter").Inputter;
     const Completer = require("gcli/mozui/completer").Completer;
@@ -469,7 +470,7 @@ DeveloperToolbar.prototype.show = function (focus) {
     this._element.hidden = false;
 
     if (focus) {
-      await this.focus();
+      yield this.focus();
     }
     this._notify(NOTIFICATIONS.SHOW);
 
@@ -480,7 +481,7 @@ DeveloperToolbar.prototype.show = function (focus) {
                            this.outputPanel);
       DeveloperToolbar.introShownThisSession = true;
     }
-  }).bind(this))();
+  }).bind(this));
 
   return this._showPromise;
 };

@@ -12,6 +12,7 @@ var {gDevTools} = require("devtools/client/framework/devtools");
 var {TargetFactory} = require("devtools/client/framework/target");
 var {Toolbox} = require("devtools/client/framework/toolbox");
 var {DebuggerClient} = require("devtools/shared/client/debugger-client");
+var {Task} = require("devtools/shared/task");
 var {LocalizationHelper} = require("devtools/shared/l10n");
 var L10N = new LocalizationHelper("devtools/client/locales/connection-screen.properties");
 
@@ -47,7 +48,7 @@ window.addEventListener("DOMContentLoaded", function () {
 /**
  * Called when the "connect" button is clicked.
  */
-var submit = async function () {
+var submit = Task.async(function* () {
   // Show the "connecting" screen
   document.body.classList.add("connecting");
 
@@ -63,23 +64,23 @@ var submit = async function () {
   }
 
   // Initiate the connection
-  let transport = await DebuggerClient.socketConnect({ host, port });
+  let transport = yield DebuggerClient.socketConnect({ host, port });
   gClient = new DebuggerClient(transport);
   let delay = Services.prefs.getIntPref("devtools.debugger.remote-timeout");
   gConnectionTimeout = setTimeout(handleConnectionTimeout, delay);
-  let response = await gClient.connect();
-  await onConnectionReady(...response);
-};
+  let response = yield gClient.connect();
+  yield onConnectionReady(...response);
+});
 
 /**
  * Connection is ready. List actors and build buttons.
  */
-var onConnectionReady = async function ([aType, aTraits]) {
+var onConnectionReady = Task.async(function* ([aType, aTraits]) {
   clearTimeout(gConnectionTimeout);
 
   let addons = [];
   try {
-    let response = await gClient.listAddons();
+    let response = yield gClient.listAddons();
     if (!response.error && response.addons.length > 0) {
       addons = response.addons;
     }
@@ -103,7 +104,7 @@ var onConnectionReady = async function ([aType, aTraits]) {
     parent.remove();
   }
 
-  let response = await gClient.listTabs();
+  let response = yield gClient.listTabs();
 
   parent = document.getElementById("tabActors");
 
@@ -155,7 +156,7 @@ var onConnectionReady = async function ([aType, aTraits]) {
   if (firstLink) {
     firstLink.focus();
   }
-};
+});
 
 /**
  * Build one button for an add-on actor.

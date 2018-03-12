@@ -139,7 +139,7 @@ function runTests2() {
   });
 }
 
-var continueTests = async function (toolbox, panel) {
+var continueTests = Task.async(function* (toolbox, panel) {
   ok(toolbox.getCurrentPanel(), "panel value is correct");
   is(toolbox.currentToolId, toolId2, "toolbox _currentToolId is correct");
 
@@ -151,11 +151,11 @@ var continueTests = async function (toolbox, panel) {
 
   info("Testing toolbox tool-unregistered event");
   let toolSelected = toolbox.once("select");
-  let unregisteredTool = await new Promise(resolve => {
+  let unregisteredTool = yield new Promise(resolve => {
     toolbox.once("tool-unregistered", (e, id) => resolve(id));
     gDevTools.unregisterTool(toolId2);
   });
-  await toolSelected;
+  yield toolSelected;
 
   is(unregisteredTool, toolId2, "Event returns correct id");
   ok(!toolbox.isToolRegistered(toolId2),
@@ -164,7 +164,7 @@ var continueTests = async function (toolbox, panel) {
     "The tool is no longer registered");
 
   info("Testing toolbox tool-registered event");
-  let registeredTool = await new Promise(resolve => {
+  let registeredTool = yield new Promise(resolve => {
     toolbox.once("tool-registered", (e, id) => resolve(id));
     gDevTools.registerTool(toolDefinition);
   });
@@ -180,7 +180,7 @@ var continueTests = async function (toolbox, panel) {
 
   info("Destroying toolbox");
   destroyToolbox(toolbox);
-};
+});
 
 function destroyToolbox(toolbox) {
   toolbox.destroy().then(function () {

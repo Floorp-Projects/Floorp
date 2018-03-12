@@ -5,14 +5,14 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(function* () {
   info("Test JSON with NUL started.");
 
   const TEST_JSON_URL = "data:application/json,\"foo_%00_bar\"";
-  await addJsonViewTab(TEST_JSON_URL);
+  yield addJsonViewTab(TEST_JSON_URL);
 
-  await selectJsonViewContentTab("rawdata");
-  let rawData = await getElementText(".textPanelBox .data");
+  yield selectJsonViewContentTab("rawdata");
+  let rawData = yield getElementText(".textPanelBox .data");
   is(rawData, "\"foo_\u0000_bar\"",
      "The NUL character has been preserved.");
 });

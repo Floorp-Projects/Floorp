@@ -12,16 +12,16 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { command } = require("devtools/client/performance/test/helpers/input-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, $, DetailsView } = panel.panelWin;
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   info("Checking views on startup.");
   checkViews(DetailsView, $, "waterfall");
@@ -30,25 +30,25 @@ add_task(async function () {
   let viewChanged = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED,
                          { spreadArgs: true });
   command($("toolbarbutton[data-view='js-calltree']"));
-  let [, viewName] = await viewChanged;
+  let [, viewName] = yield viewChanged;
   is(viewName, "js-calltree", "UI_DETAILS_VIEW_SELECTED fired with view name");
   checkViews(DetailsView, $, "js-calltree");
 
   // Select js flamegraph view.
   viewChanged = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED, { spreadArgs: true });
   command($("toolbarbutton[data-view='js-flamegraph']"));
-  [, viewName] = await viewChanged;
+  [, viewName] = yield viewChanged;
   is(viewName, "js-flamegraph", "UI_DETAILS_VIEW_SELECTED fired with view name");
   checkViews(DetailsView, $, "js-flamegraph");
 
   // Select waterfall view.
   viewChanged = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED, { spreadArgs: true });
   command($("toolbarbutton[data-view='waterfall']"));
-  [, viewName] = await viewChanged;
+  [, viewName] = yield viewChanged;
   is(viewName, "waterfall", "UI_DETAILS_VIEW_SELECTED fired with view name");
   checkViews(DetailsView, $, "waterfall");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });
 
 function checkViews(DetailsView, $, currentView) {

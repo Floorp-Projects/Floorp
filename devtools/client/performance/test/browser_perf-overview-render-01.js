@@ -12,23 +12,23 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { times } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, OverviewView } = panel.panelWin;
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   // Ensure overview keeps rendering.
-  await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
+  yield times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
     expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
   });
 
   ok(true, "Overview was rendered while recording.");
 
-  await stopRecording(panel);
-  await teardownToolboxAndRemoveTab(panel);
+  yield stopRecording(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

@@ -77,7 +77,7 @@ var OverviewView = {
   /**
    * Unbinds events.
    */
-  async destroy() {
+  destroy: Task.async(function* () {
     PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceController.off(EVENTS.THEME_CHANGED, this._onThemeChanged);
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE,
@@ -85,8 +85,8 @@ var OverviewView = {
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
     this.graphs.off("selecting", this._onGraphSelecting);
     this.graphs.off("rendered", this._onGraphRendered);
-    await this.graphs.destroy();
-  },
+    yield this.graphs.destroy();
+  }),
 
   /**
    * Returns true if any of the overview graphs have mouse dragging active,
@@ -173,27 +173,27 @@ var OverviewView = {
    * @param number resolution
    *        The fps graph resolution. @see Graphs.js
    */
-  async render(resolution) {
+  render: Task.async(function* (resolution) {
     if (this.isDisabled()) {
       return;
     }
 
     let recording = PerformanceController.getCurrentRecording();
-    await this.graphs.render(recording.getAllData(), resolution);
+    yield this.graphs.render(recording.getAllData(), resolution);
 
     // Finished rendering all graphs in this overview.
     this.emit(EVENTS.UI_OVERVIEW_RENDERED, resolution);
-  },
+  }),
 
   /**
    * Called at most every OVERVIEW_UPDATE_INTERVAL milliseconds
    * and uses data fetched from the controller to render
    * data into all the corresponding overview graphs.
    */
-  async _onRecordingTick() {
-    await this.render(FRAMERATE_GRAPH_LOW_RES_INTERVAL);
+  _onRecordingTick: Task.async(function* () {
+    yield this.render(FRAMERATE_GRAPH_LOW_RES_INTERVAL);
     this._prepareNextTick();
-  },
+  }),
 
   /**
    * Called to refresh the timer to keep firing _onRecordingTick.
@@ -209,8 +209,8 @@ var OverviewView = {
   /**
    * Called when recording state changes.
    */
-  _onRecordingStateChange:
-    OverviewViewOnStateChange(async function (_, state, recording) {
+  _onRecordingStateChange: OverviewViewOnStateChange(Task.async(
+    function* (_, state, recording) {
       if (state !== "recording-stopped") {
         return;
       }
@@ -223,22 +223,22 @@ var OverviewView = {
         return;
       }
       this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
-      await this._checkSelection(recording);
-    }),
+      yield this._checkSelection(recording);
+    })),
 
   /**
    * Called when a new recording is selected.
    */
-  _onRecordingSelected: OverviewViewOnStateChange(async function (_, recording) {
+  _onRecordingSelected: OverviewViewOnStateChange(Task.async(function* (_, recording) {
     this._setGraphVisibilityFromRecordingFeatures(recording);
 
     // If this recording is complete, render the high res graph
     if (recording.isCompleted()) {
-      await this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
+      yield this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
     }
-    await this._checkSelection(recording);
+    yield this._checkSelection(recording);
     this.graphs.dropSelection();
-  }),
+  })),
 
   /**
    * Start the polling for rendering the overview graph.
@@ -266,10 +266,10 @@ var OverviewView = {
    * Makes sure the selection is enabled or disabled in all the graphs,
    * based on whether a recording currently exists and is not in progress.
    */
-  async _checkSelection(recording) {
+  _checkSelection: Task.async(function* (recording) {
     let isEnabled = recording ? recording.isCompleted() : false;
-    await this.graphs.selectionEnabled(isEnabled);
-  },
+    yield this.graphs.selectionEnabled(isEnabled);
+  }),
 
   /**
    * Fired when the graph selection has changed. Called by
@@ -303,10 +303,10 @@ var OverviewView = {
    * because those will set values on a recording model, and
    * the graphs will render based on the existence.
    */
-  async _onPrefChanged(_, prefName, prefValue) {
+  _onPrefChanged: Task.async(function* (_, prefName, prefValue) {
     switch (prefName) {
       case "hidden-markers": {
-        let graph = await this.graphs.isAvailable("timeline");
+        let graph = yield this.graphs.isAvailable("timeline");
         if (graph) {
           let filter = PerformanceController.getPref("hidden-markers");
           graph.setFilter(filter);
@@ -315,7 +315,7 @@ var OverviewView = {
         break;
       }
     }
-  },
+  }),
 
   _setGraphVisibilityFromRecordingFeatures: function (recording) {
     for (let [graphName, requirements] of Object.entries(GRAPH_REQUIREMENTS)) {

@@ -10,6 +10,7 @@ const ObjectClient = require("devtools/shared/client/object-client");
 
 const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/old-event-emitter");
+const { Task } = require("devtools/shared/task");
 
 /**
  * This object represents DOM panel. It's responsibility is to
@@ -35,7 +36,7 @@ DomPanel.prototype = {
    * @return object
    *         A promise that is resolved when the DOM panel completes opening.
    */
-  async open() {
+  open: Task.async(function* () {
     if (this._opening) {
       return this._opening;
     }
@@ -45,7 +46,7 @@ DomPanel.prototype = {
 
     // Local monitoring needs to make the target remote.
     if (!this.target.isRemote) {
-      await this.target.makeRemote();
+      yield this.target.makeRemote();
     }
 
     this.initialize();
@@ -55,7 +56,7 @@ DomPanel.prototype = {
     deferred.resolve(this);
 
     return this._opening;
-  },
+  }),
 
   // Initialization
 
@@ -77,7 +78,7 @@ DomPanel.prototype = {
     this.shouldRefresh = true;
   },
 
-  async destroy() {
+  destroy: Task.async(function* () {
     if (this._destroying) {
       return this._destroying;
     }
@@ -92,7 +93,7 @@ DomPanel.prototype = {
 
     deferred.resolve();
     return this._destroying;
-  },
+  }),
 
   // Events
 

@@ -17,7 +17,7 @@ with optional columns, unknown and non-URL sources.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = async function () {
+window.onload = Task.async(function* () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
@@ -25,7 +25,7 @@ window.onload = async function () {
     ok(Frame, "Should get Frame");
 
     // Check when there's a column
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         line: 55,
@@ -40,7 +40,7 @@ window.onload = async function () {
     });
 
     // Check when there's no column
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         line: 55,
@@ -53,7 +53,7 @@ window.onload = async function () {
     });
 
     // Check when column === 0
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         line: 55,
@@ -68,7 +68,7 @@ window.onload = async function () {
 
     // Check when there's no parseable URL source;
     // should not link but should render line/columns
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "self-hosted",
         line: 1,
@@ -79,7 +79,7 @@ window.onload = async function () {
       shouldLink: false,
       tooltip: "self-hosted:1",
     });
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "self-hosted",
         line: 1,
@@ -95,7 +95,7 @@ window.onload = async function () {
 
     // Check when there's no source;
     // should not link but should render line/columns
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         line: 1,
       }
@@ -105,7 +105,7 @@ window.onload = async function () {
       shouldLink: false,
       tooltip: "(unknown):1",
     });
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         line: 1,
         column: 10,
@@ -120,7 +120,7 @@ window.onload = async function () {
 
     // Check when there's a column, but no line;
     // no line/column info should render
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         column: 55,
@@ -133,7 +133,7 @@ window.onload = async function () {
 
     // Check when line is 0; this should be an invalid
     // line option, so don't render line/column
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         line: 0,
@@ -147,7 +147,7 @@ window.onload = async function () {
 
     // Check when source is via Scratchpad; we should render out the
     // lines and columns as this is linkable.
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "Scratchpad/1",
         line: 10,
@@ -162,7 +162,7 @@ window.onload = async function () {
     });
 
     // Check that line and column can be strings
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         line: "10",
@@ -178,7 +178,7 @@ window.onload = async function () {
 
     // Check that line and column can be strings,
     // and that the `0` rendering rules apply when they are strings as well
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         line: "0",
@@ -191,7 +191,7 @@ window.onload = async function () {
     });
 
     // Check that the showFullSourceUrl option works correctly
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         line: 0,
@@ -204,7 +204,7 @@ window.onload = async function () {
     });
 
     // Check that the showFunctionName option works correctly
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         functionDisplayName: "myfun",
         source: "http://myfile.com/mahscripts.js",
@@ -217,7 +217,7 @@ window.onload = async function () {
       tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
     });
 
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         functionDisplayName: "myfun",
         source: "http://myfile.com/mahscripts.js",
@@ -232,7 +232,7 @@ window.onload = async function () {
     });
 
     // Check that anonymous function name is not displayed unless explicitly enabled
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         line: 0,
@@ -245,7 +245,7 @@ window.onload = async function () {
       tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
     });
 
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://myfile.com/mahscripts.js",
         line: 0,
@@ -260,7 +260,7 @@ window.onload = async function () {
     });
 
     // Check if file is rendered with "/" for root documents when showEmptyPathAsHost is false
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://www.cnn.com/",
         line: "1",
@@ -274,7 +274,7 @@ window.onload = async function () {
     });
 
     // Check if file is rendered with hostname for root documents when showEmptyPathAsHost is true
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
         source: "http://www.cnn.com/",
         line: "1",
@@ -300,7 +300,7 @@ window.onload = async function () {
       unsubscribe: function (url, line, column, callback) {
       },
     };
-    await checkFrameComponent({
+    yield checkFrameComponent({
       frame: {
 	line: 97,
 	source: "https://bugzilla.mozilla.org/bundle.js",
@@ -314,7 +314,7 @@ window.onload = async function () {
       source: "https://bugzilla.mozilla.org/original.js",
     });
 
-    function checkFrameComponent(input, expected) {
+    function* checkFrameComponent(input, expected) {
       let props = Object.assign({ onClick: () => {} }, input);
       let frame = ReactDOM.render(Frame(props), window.document.body);
       let el = ReactDOM.findDOMNode(frame);
@@ -328,7 +328,7 @@ window.onload = async function () {
   } finally {
     SimpleTest.finish();
   }
-};
+});
 </script>
 </pre>
 </body>

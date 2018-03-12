@@ -8,24 +8,24 @@
 const TEST_DATA = [];
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(async function () {
-  await addTab("about:blank");
-  await performTest();
+add_task(function* () {
+  yield addTab("about:blank");
+  yield performTest();
   gBrowser.removeCurrentTab();
 });
 
-async function performTest() {
-  let [host,, doc] = await createHost();
+function* performTest() {
+  let [host,, doc] = yield createHost();
   let graph = new LineGraphWidget(doc.body, "fps");
 
-  await testGraph(graph);
+  yield testGraph(graph);
 
-  await graph.destroy();
+  yield graph.destroy();
   host.destroy();
 }
 
-async function testGraph(graph) {
-  await graph.setDataWhenReady(TEST_DATA);
+function* testGraph(graph) {
+  yield graph.setDataWhenReady(TEST_DATA);
 
   is(graph._gutter.hidden, true,
     "The gutter should be hidden, since there's no data available.");

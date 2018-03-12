@@ -12,7 +12,7 @@
 const TEST_URI = "data:text/html;charset=utf8,test for bug 787981 - check " +
                  "that long strings can be expanded in the output.";
 
-add_task(async function () {
+add_task(function* () {
   let { DebuggerServer } = require("devtools/server/main");
 
   let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 4))
@@ -20,14 +20,14 @@ add_task(async function () {
   let initialString =
     longString.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
 
-  await loadTab(TEST_URI);
+  yield loadTab(TEST_URI);
 
-  let hud = await openConsole();
+  let hud = yield openConsole();
 
   hud.jsterm.clearOutput(true);
   hud.jsterm.execute("console.log('bazbaz', '" + longString + "', 'boom')");
 
-  let [result] = await waitForMessages({
+  let [result] = yield waitForMessages({
     webconsole: hud,
     messages: [{
       name: "console.log output",
@@ -44,7 +44,7 @@ add_task(async function () {
 
   EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
 
-  await waitForMessages({
+  yield waitForMessages({
     webconsole: hud,
     messages: [{
       name: "full string",
@@ -55,7 +55,7 @@ add_task(async function () {
   });
 
   hud.jsterm.clearOutput(true);
-  let msg = await execute(hud, "'" + longString + "'");
+  let msg = yield execute(hud, "'" + longString + "'");
 
   isnot(msg.textContent.indexOf(initialString), -1,
       "initial string is shown");
@@ -69,7 +69,7 @@ add_task(async function () {
 
   EventUtils.synthesizeMouse(clickable, 3, 4, {}, hud.iframeWindow);
 
-  await waitForMessages({
+  yield waitForMessages({
     webconsole: hud,
     messages: [{
       name: "full string",

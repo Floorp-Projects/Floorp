@@ -32,8 +32,8 @@ function waitForDeviceClosed() {
   });
 }
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(MEDIA_NODES_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(MEDIA_NODES_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
   let gVars = PropertiesView._propsView;
@@ -42,14 +42,14 @@ add_task(async function () {
   let mediaPermissionPref = Services.prefs.getBoolPref(MEDIA_PERMISSION);
   Services.prefs.setBoolPref(MEDIA_PERMISSION, true);
 
-  await loadFrameScriptUtils();
+  yield loadFrameScriptUtils();
 
   let events = Promise.all([
     getN(gFront, "create-node", 4),
     waitForGraphRendered(panelWin, 4, 0)
   ]);
   reload(target);
-  let [actors] = await events;
+  let [actors] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   let types = [
@@ -57,18 +57,18 @@ add_task(async function () {
     "MediaStreamAudioSourceNode", "MediaStreamAudioDestinationNode"
   ];
 
-  let defaults = await Promise.all(types.map(type => nodeDefaultValues(type)));
+  let defaults = yield Promise.all(types.map(type => nodeDefaultValues(type)));
 
   for (let i = 0; i < types.length; i++) {
     click(panelWin, findGraphNode(panelWin, nodeIds[i]));
-    await waitForInspectorRender(panelWin, EVENTS);
+    yield waitForInspectorRender(panelWin, EVENTS);
     checkVariableView(gVars, 0, defaults[i], types[i]);
   }
 
   // Reset permissions on getUserMedia
   Services.prefs.setBoolPref(MEDIA_PERMISSION, mediaPermissionPref);
 
-  await teardown(target);
+  yield teardown(target);
 
-  await waitForDeviceClosed();
+  yield waitForDeviceClosed();
 });

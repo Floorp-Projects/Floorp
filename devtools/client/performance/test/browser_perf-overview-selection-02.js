@@ -11,8 +11,8 @@ const { UI_ENABLE_MEMORY_PREF } = require("devtools/client/performance/test/help
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -22,7 +22,7 @@ add_task(async function () {
   // Enable memory to test.
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   let markersOverview = OverviewView.graphs.get("timeline");
   let memoryGraph = OverviewView.graphs.get("memory");
@@ -42,7 +42,7 @@ add_task(async function () {
   ok(!framerateGraph.selectionEnabled,
     "Selection shouldn't be enabled when the first recording started (1).");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   ok(markersOverview.selectionEnabled,
     "Selection should be enabled when the first recording finishes (2).");
@@ -51,7 +51,7 @@ add_task(async function () {
   ok(framerateGraph.selectionEnabled,
     "Selection should be enabled when the first recording finishes (1).");
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   ok(!markersOverview.selectionEnabled,
     "Selection shouldn't be enabled when the second recording started (2).");
@@ -60,7 +60,7 @@ add_task(async function () {
   ok(!framerateGraph.selectionEnabled,
     "Selection shouldn't be enabled when the second recording started (1).");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   ok(markersOverview.selectionEnabled,
     "Selection should be enabled when the first second finishes (2).");
@@ -69,5 +69,5 @@ add_task(async function () {
   ok(framerateGraph.selectionEnabled,
     "Selection should be enabled when the first second finishes (1).");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

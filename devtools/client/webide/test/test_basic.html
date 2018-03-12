@@ -18,11 +18,11 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
-            let win = await openWebIDE();
+        Task.spawn(function* () {
+            let win = yield openWebIDE();
 
             const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
-            await gDevToolsBrowser.isWebIDEInitialized.promise;
+            yield gDevToolsBrowser.isWebIDEInitialized.promise;
             ok(true, "WebIDE was initialized");
 
             ok(win, "Found a window");
@@ -41,15 +41,15 @@
               });
             });
             try {
-              await win.UI.busyUntil(deferred, "xx");
+              yield win.UI.busyUntil(deferred, "xx");
             } catch(e) {/* This *will* fail */}
             notification =  nbox.getNotificationWithValue("webide:errornotification");
             ok(notification, "Error has been reported");
 
-            await closeWebIDE(win);
+            yield closeWebIDE(win);
 
             SimpleTest.finish();
-        })();
+        });
       }
     </script>
   </body>

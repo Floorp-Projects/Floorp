@@ -13,8 +13,8 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { scrollCanvasGraph, HORIZONTAL_AXIS } = require("devtools/client/performance/test/helpers/input-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -28,24 +28,24 @@ add_task(async function () {
     JsFlameGraphView
   } = panel.panelWin;
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   let waterfallRendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   OverviewView.setTimeInterval({ startTime: 10, endTime: 20 });
-  await waterfallRendered;
+  yield waterfallRendered;
 
   // Select the call tree to make sure it's initialized and ready to receive
   // redrawing requests once reselected.
   let callTreeRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
-  await DetailsView.selectView("js-calltree");
-  await callTreeRendered;
+  yield DetailsView.selectView("js-calltree");
+  yield callTreeRendered;
 
   // Switch to the flamegraph and perform a scroll over the visualization.
   // The waterfall and call tree should get rerendered when reselected.
   let flamegraphRendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
-  await DetailsView.selectView("js-flamegraph");
-  await flamegraphRendered;
+  yield DetailsView.selectView("js-flamegraph");
+  yield flamegraphRendered;
 
   let overviewRangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED);
   let waterfallRerendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
@@ -64,16 +64,16 @@ add_task(async function () {
     x: 10
   });
 
-  await overviewRangeSelected;
+  yield overviewRangeSelected;
   ok(true, "Overview range was changed.");
 
-  await DetailsView.selectView("waterfall");
-  await waterfallRerendered;
+  yield DetailsView.selectView("waterfall");
+  yield waterfallRerendered;
   ok(true, "Waterfall rerendered by flame graph changing interval.");
 
-  await DetailsView.selectView("js-calltree");
-  await callTreeRerendered;
+  yield DetailsView.selectView("js-calltree");
+  yield callTreeRerendered;
   ok(true, "CallTree rerendered by flame graph changing interval.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

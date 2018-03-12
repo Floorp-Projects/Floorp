@@ -5,6 +5,7 @@
 
 const { loader, require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");

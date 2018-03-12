@@ -10,19 +10,19 @@ const {getClientCssProperties} = require("devtools/shared/fronts/css-properties"
 
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
-add_task(async function () {
-  let [,, doc] = await createHost("bottom", TEST_URI);
+add_task(function* () {
+  let [,, doc] = yield createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
   let widget = new CSSFilterEditorWidget(container, "none", cssIsValid);
   // First render
-  await widget.once("render");
+  yield widget.once("render");
 
   const VALUE = "blur(2px) contrast(150%)";
   const NAME = "Test";
 
-  await showFilterPopupPresetsAndCreatePreset(widget, NAME, VALUE);
+  yield showFilterPopupPresetsAndCreatePreset(widget, NAME, VALUE);
 
   let preset = widget.el.querySelector(".preset");
   is(preset.querySelector("label").textContent, NAME,
@@ -30,7 +30,7 @@ add_task(async function () {
   is(preset.querySelector("span").textContent, VALUE,
      "Should show preset value preview correctly");
 
-  let list = await widget.getPresets();
+  let list = yield widget.getPresets();
   let input = widget.el.querySelector(".presets-list .footer input");
   let data = list[0];
 
@@ -45,12 +45,12 @@ add_task(async function () {
 
   widget.setCssValue(VALUE_2);
 
-  await savePreset(widget);
+  yield savePreset(widget);
 
   is(widget.el.querySelectorAll(".preset").length, 1,
      "Should override the preset with the same name - render");
 
-  list = await widget.getPresets();
+  list = yield widget.getPresets();
   data = list[0];
 
   is(list.length, 1,
@@ -61,14 +61,14 @@ add_task(async function () {
   is(data.value, VALUE_2,
      "Should override the preset with the same name - prop value");
 
-  await widget.setPresets([]);
+  yield widget.setPresets([]);
 
   info("Test saving a preset without name");
   input.value = "";
 
-  await savePreset(widget, "preset-save-error");
+  yield savePreset(widget, "preset-save-error");
 
-  list = await widget.getPresets();
+  list = yield widget.getPresets();
   is(list.length, 0,
      "Should not add a preset without name");
 
@@ -77,9 +77,9 @@ add_task(async function () {
   input.value = NAME;
   widget.setCssValue("none");
 
-  await savePreset(widget, "preset-save-error");
+  yield savePreset(widget, "preset-save-error");
 
-  list = await widget.getPresets();
+  list = yield widget.getPresets();
   is(list.length, 0,
      "Should not add a preset without filters (value: none)");
 });

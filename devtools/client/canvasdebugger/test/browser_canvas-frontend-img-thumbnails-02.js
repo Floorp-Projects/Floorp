@@ -6,18 +6,18 @@
  * function call items and their respective screenshots.
  */
 
-async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
-  await reload(target);
+  yield reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   let thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
   let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([
+  yield promise.all([
     recordingFinished,
     callListPopulated,
     thumbnailsDisplayed,
@@ -30,7 +30,7 @@ async function ifTestingSupported() {
     "There should be no selected item in the calls list view.");
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, $all(".filmstrip-thumbnail")[0], window);
-  await once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   info("The first draw call was selected, by clicking the first thumbnail.");
 
   isnot($(".filmstrip-thumbnail[highlighted][index='0']"), null,
@@ -41,7 +41,7 @@ async function ifTestingSupported() {
     "The first draw call should be selected in the calls list view.");
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, $all(".call-item-view")[1], window);
-  await once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   info("The second context call was selected, by clicking the second call item.");
 
   isnot($(".filmstrip-thumbnail[highlighted][index='0']"), null,
@@ -52,7 +52,7 @@ async function ifTestingSupported() {
     "The second draw call should be selected in the calls list view.");
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, $all(".call-item-view")[2], window);
-  await once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
+  yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   info("The second draw call was selected, by clicking the third call item.");
 
   isnot($(".filmstrip-thumbnail[highlighted][index='2']"), null,
@@ -62,6 +62,6 @@ async function ifTestingSupported() {
   is(CallsListView.selectedIndex, 2,
     "The second draw call should be selected in the calls list view.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

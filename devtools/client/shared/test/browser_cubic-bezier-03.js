@@ -12,27 +12,27 @@ const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets"
 
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-01.html";
 
-add_task(async function () {
-  let [host,, doc] = await createHost("bottom", TEST_URI);
+add_task(function* () {
+  let [host,, doc] = yield createHost("bottom", TEST_URI);
 
   let container = doc.querySelector("#cubic-bezier-container");
   let w = new CubicBezierWidget(container, PREDEFINED.linear);
 
-  await coordinatesCanBeChangedByProvidingAnArray(w);
-  await coordinatesCanBeChangedByProvidingAValue(w);
+  yield coordinatesCanBeChangedByProvidingAnArray(w);
+  yield coordinatesCanBeChangedByProvidingAValue(w);
 
   w.destroy();
   host.destroy();
 });
 
-async function coordinatesCanBeChangedByProvidingAnArray(widget) {
+function* coordinatesCanBeChangedByProvidingAnArray(widget) {
   info("Listening for the update event");
   let onUpdated = widget.once("updated");
 
   info("Setting new coordinates");
   widget.coordinates = [0, 1, 1, 0];
 
-  let bezier = await onUpdated;
+  let bezier = yield onUpdated;
   ok(true, "The updated event was fired as a result of setting coordinates");
 
   is(bezier.P1[0], 0, "The new P1 time coordinate is correct");
@@ -41,13 +41,13 @@ async function coordinatesCanBeChangedByProvidingAnArray(widget) {
   is(bezier.P2[1], 0, "The new P2 progress coordinate is correct");
 }
 
-async function coordinatesCanBeChangedByProvidingAValue(widget) {
+function* coordinatesCanBeChangedByProvidingAValue(widget) {
   info("Listening for the update event");
   let onUpdated = widget.once("updated");
 
   info("Setting linear css value");
   widget.cssCubicBezierValue = "linear";
-  let bezier = await onUpdated;
+  let bezier = yield onUpdated;
   ok(true, "The updated event was fired as a result of setting cssValue");
 
   is(bezier.P1[0], 0, "The new P1 time coordinate is correct");
@@ -58,7 +58,7 @@ async function coordinatesCanBeChangedByProvidingAValue(widget) {
   info("Setting a custom cubic-bezier css value");
   onUpdated = widget.once("updated");
   widget.cssCubicBezierValue = "cubic-bezier(.25,-0.5, 1, 1.25)";
-  bezier = await onUpdated;
+  bezier = yield onUpdated;
   ok(true, "The updated event was fired as a result of setting cssValue");
 
   is(bezier.P1[0], .25, "The new P1 time coordinate is correct");

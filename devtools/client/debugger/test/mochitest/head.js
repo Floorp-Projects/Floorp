@@ -21,7 +21,6 @@ var ObjectClient = require("devtools/shared/client/object-client");
 var { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 var EventEmitter = require("devtools/shared/old-event-emitter");
 var { Toolbox } = require("devtools/client/framework/toolbox");
-var { Task } = require("devtools/shared/task");
 
 const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
 

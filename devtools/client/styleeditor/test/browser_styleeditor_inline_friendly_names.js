@@ -10,17 +10,17 @@ const FIRST_TEST_PAGE = TEST_BASE_HTTP + "inline-1.html";
 const SECOND_TEST_PAGE = TEST_BASE_HTTP + "inline-2.html";
 const SAVE_PATH = "test.css";
 
-add_task(async function () {
-  let { ui } = await openStyleEditorForURL(FIRST_TEST_PAGE);
+add_task(function* () {
+  let { ui } = yield openStyleEditorForURL(FIRST_TEST_PAGE);
 
   testIndentifierGeneration(ui);
 
-  await saveFirstInlineStyleSheet(ui);
-  await testFriendlyNamesAfterSave(ui);
-  await reloadPageAndWaitForStyleSheets(ui);
-  await testFriendlyNamesAfterSave(ui);
-  await navigateToAndWaitForStyleSheets(SECOND_TEST_PAGE, ui);
-  await testFriendlyNamesAfterNavigation(ui);
+  yield saveFirstInlineStyleSheet(ui);
+  yield testFriendlyNamesAfterSave(ui);
+  yield reloadPageAndWaitForStyleSheets(ui);
+  yield testFriendlyNamesAfterSave(ui);
+  yield navigateToAndWaitForStyleSheets(SECOND_TEST_PAGE, ui);
+  yield testFriendlyNamesAfterNavigation(ui);
 });
 
 function testIndentifierGeneration(ui) {

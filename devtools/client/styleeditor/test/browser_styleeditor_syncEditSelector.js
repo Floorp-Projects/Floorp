@@ -19,21 +19,21 @@ const expectedText = `
   }
   `;
 
-add_task(async function () {
-  await addTab(TESTCASE_URI);
-  let { inspector, view } = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab(TESTCASE_URI);
+  let { inspector, view } = yield openRuleView();
+  yield selectNode("#testid", inspector);
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  let editor = yield focusEditableField(view, ruleEditor.selectorText);
   editor.input.value = "#testid, span";
   let onRuleViewChanged = once(view, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
-  let { ui } = await openStyleEditor();
+  let { ui } = yield openStyleEditor();
 
-  editor = await ui.editors[0].getSourceEditor();
+  editor = yield ui.editors[0].getSourceEditor();
   let text = editor.sourceEditor.getText();
   is(text, expectedText, "selector edits are synced");
 });

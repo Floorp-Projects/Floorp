@@ -55,11 +55,11 @@ function getSourceActor(aSources, aURL) {
  * @return nsIDOMWindow
  *         The new window object that holds Scratchpad.
  */
-async function openScratchpadWindow() {
+function* openScratchpadWindow() {
   let { promise: p, resolve } = defer();
   let win = ScratchpadManager.openScratchpad();
 
-  await once(win, "load");
+  yield once(win, "load");
 
   win.Scratchpad.addObserver({
     onReady: function () {

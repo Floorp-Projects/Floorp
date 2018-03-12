@@ -17,26 +17,26 @@ const NEW_RULE = "\n@media (max-width: 600px) { div { color: blue; } }";
 
 waitForExplicitFinish();
 
-add_task(async function () {
-  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
+add_task(function* () {
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "correct number of editors");
 
   // Test first plain css editor
   let plainEditor = ui.editors[0];
-  await openEditor(plainEditor);
+  yield openEditor(plainEditor);
   testPlainEditor(plainEditor);
 
   // Test editor with @media rules
   let mediaEditor = ui.editors[1];
-  await openEditor(mediaEditor);
+  yield openEditor(mediaEditor);
   testMediaEditor(mediaEditor);
 
   // Test that sidebar hides when flipping pref
-  await testShowHide(ui, mediaEditor);
+  yield testShowHide(ui, mediaEditor);
 
   // Test adding a rule updates the list
-  await testMediaRuleAdded(ui, mediaEditor);
+  yield testMediaRuleAdded(ui, mediaEditor);
 
   // Test resizing and seeing @media matching state change
   let originalWidth = window.outerWidth;
@@ -44,7 +44,7 @@ add_task(async function () {
 
   let onMatchesChange = listenForMediaChange(ui);
   window.resizeTo(RESIZE, RESIZE);
-  await onMatchesChange;
+  yield onMatchesChange;
 
   testMediaMatchChanged(mediaEditor);
 
@@ -79,29 +79,29 @@ function testMediaMatchChanged(editor) {
      "media rule is now matched after resizing");
 }
 
-async function testShowHide(UI, editor) {
+function* testShowHide(UI, editor) {
   let sidebarChange = listenForMediaChange(UI);
   Services.prefs.setBoolPref(MEDIA_PREF, false);
-  await sidebarChange;
+  yield sidebarChange;
 
   let sidebar = editor.details.querySelector(".stylesheet-sidebar");
   is(sidebar.hidden, true, "sidebar is hidden after flipping pref");
 
   sidebarChange = listenForMediaChange(UI);
   Services.prefs.clearUserPref(MEDIA_PREF);
-  await sidebarChange;
+  yield sidebarChange;
 
   is(sidebar.hidden, false, "sidebar is showing after flipping pref back");
 }
 
-async function testMediaRuleAdded(UI, editor) {
-  await editor.getSourceEditor();
+function* testMediaRuleAdded(UI, editor) {
+  yield editor.getSourceEditor();
   let text = editor.sourceEditor.getText();
   text += NEW_RULE;
 
   let listChange = listenForMediaChange(UI);
   editor.sourceEditor.setText(text);
-  await listChange;
+  yield listChange;
 
   let sidebar = editor.details.querySelector(".stylesheet-sidebar");
   let entries = [...sidebar.querySelectorAll(".media-rule-label")];

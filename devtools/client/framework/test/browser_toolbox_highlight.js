@@ -10,49 +10,49 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 var toolbox = null;
 
 function test() {
-  (async function () {
+  Task.spawn(function* () {
     const URL = "data:text/plain;charset=UTF-8,Nothing to see here, move along";
 
     const TOOL_ID_1 = "jsdebugger";
     const TOOL_ID_2 = "webconsole";
-    await addTab(URL);
+    yield addTab(URL);
 
     const target = TargetFactory.forTab(gBrowser.selectedTab);
-    toolbox = await gDevTools.showToolbox(target, TOOL_ID_1, Toolbox.HostType.BOTTOM);
+    toolbox = yield gDevTools.showToolbox(target, TOOL_ID_1, Toolbox.HostType.BOTTOM);
 
     // select tool 2
-    await toolbox.selectTool(TOOL_ID_2);
+    yield toolbox.selectTool(TOOL_ID_2);
     // and highlight the first one
-    await highlightTab(TOOL_ID_1);
+    yield highlightTab(TOOL_ID_1);
     // to see if it has the proper class.
-    await checkHighlighted(TOOL_ID_1);
+    yield checkHighlighted(TOOL_ID_1);
     // Now switch back to first tool
-    await toolbox.selectTool(TOOL_ID_1);
+    yield toolbox.selectTool(TOOL_ID_1);
     // to check again. But there is no easy way to test if
     // it is showing orange or not.
-    await checkNoHighlightWhenSelected(TOOL_ID_1);
+    yield checkNoHighlightWhenSelected(TOOL_ID_1);
     // Switch to tool 2 again
-    await toolbox.selectTool(TOOL_ID_2);
+    yield toolbox.selectTool(TOOL_ID_2);
     // and check again.
-    await checkHighlighted(TOOL_ID_1);
+    yield checkHighlighted(TOOL_ID_1);
     // Highlight another tool
-    await highlightTab(TOOL_ID_2);
+    yield highlightTab(TOOL_ID_2);
     // Check that both tools are highlighted.
-    await checkHighlighted(TOOL_ID_1);
+    yield checkHighlighted(TOOL_ID_1);
     // Check second tool being both highlighted and selected.
-    await checkNoHighlightWhenSelected(TOOL_ID_2);
+    yield checkNoHighlightWhenSelected(TOOL_ID_2);
     // Select tool 1
-    await toolbox.selectTool(TOOL_ID_1);
+    yield toolbox.selectTool(TOOL_ID_1);
     // Check second tool is still highlighted
-    await checkHighlighted(TOOL_ID_2);
+    yield checkHighlighted(TOOL_ID_2);
     // Unhighlight the second tool
-    await unhighlightTab(TOOL_ID_2);
+    yield unhighlightTab(TOOL_ID_2);
     // to see the classes gone.
-    await checkNoHighlight(TOOL_ID_2);
+    yield checkNoHighlight(TOOL_ID_2);
     // Now unhighlight the tool
-    await unhighlightTab(TOOL_ID_1);
+    yield unhighlightTab(TOOL_ID_1);
     // to see the classes gone.
-    await checkNoHighlight(TOOL_ID_1);
+    yield checkNoHighlight(TOOL_ID_1);
 
     // Now close the toolbox and exit.
     executeSoon(() => {
@@ -62,7 +62,7 @@ function test() {
         finish();
       });
     });
-  })()
+  })
   .catch(error => {
     ok(false, "There was an error running the test.");
   });

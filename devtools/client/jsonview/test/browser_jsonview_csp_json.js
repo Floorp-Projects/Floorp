@@ -7,11 +7,11 @@
 
 const TEST_JSON_URL = URL_ROOT + "csp_json.json";
 
-add_task(async function () {
+add_task(function* () {
   info("Test CSP JSON started");
 
-  await addJsonViewTab(TEST_JSON_URL);
+  yield addJsonViewTab(TEST_JSON_URL);
 
-  let count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
+  let count = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
   is(count, 1, "There must be one row");
 });

@@ -5,11 +5,11 @@
  * Tests whether the frontend behaves correctly while reording a snapshot.
  */
 
-async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, EVENTS, $, SnapshotsListView } = panel.panelWin;
 
-  await reload(target);
+  yield reload(target);
 
   is($("#record-snapshot").hasAttribute("checked"), false,
     "The 'record snapshot' button should initially be unchecked.");
@@ -27,7 +27,7 @@ async function ifTestingSupported() {
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
 
-  await recordingStarted;
+  yield recordingStarted;
   ok(true, "Started recording a snapshot of the animation loop.");
 
   is($("#record-snapshot").getAttribute("checked"), "true",
@@ -40,7 +40,7 @@ async function ifTestingSupported() {
   is(SnapshotsListView.selectedIndex, -1,
     "There should be no selected item in the snapshots list view yet.");
 
-  await recordingFinished;
+  yield recordingFinished;
   ok(true, "Finished recording a snapshot of the animation loop.");
 
   is($("#record-snapshot").hasAttribute("checked"), false,
@@ -55,6 +55,6 @@ async function ifTestingSupported() {
   is(SnapshotsListView.selectedIndex, 0,
     "There should be one selected item in the snapshots list view now.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

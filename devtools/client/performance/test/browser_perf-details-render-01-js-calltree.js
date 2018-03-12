@@ -11,30 +11,30 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, DetailsView, JsCallTreeView } = panel.panelWin;
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   let rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
-  await DetailsView.selectView("js-calltree");
-  await rendered;
+  yield DetailsView.selectView("js-calltree");
+  yield rendered;
 
   ok(true, "JsCallTreeView rendered after recording is stopped.");
 
-  await startRecording(panel);
-  await stopRecording(panel, {
+  yield startRecording(panel);
+  yield stopRecording(panel, {
     expectedViewClass: "JsCallTreeView",
     expectedViewEvent: "UI_JS_CALL_TREE_RENDERED"
   });
 
   ok(true, "JsCallTreeView rendered again after recording completed a second time.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

@@ -9,11 +9,11 @@ const {
   addDevice
 } = require("devtools/client/shared/devices");
 
-add_task(async function () {
+add_task(function* () {
   Services.prefs.setCharPref("devtools.devices.url",
                              TEST_URI_ROOT + "browser_devices.json");
 
-  let devices = await getDevices();
+  let devices = yield getDevices();
 
   is(devices.TYPES.length, 1, "Found 1 device type.");
 
@@ -34,7 +34,7 @@ add_task(async function () {
     firefoxOS: true
   };
   addDevice(device1, type1);
-  devices = await getDevices();
+  devices = yield getDevices();
 
   is(devices[type1].length, 3, "Added new device of type #1.");
   ok(devices[type1].filter(d => d.name === device1.name), "Found the new device.");
@@ -50,7 +50,7 @@ add_task(async function () {
     firefoxOS: true
   };
   addDevice(device2, type2);
-  devices = await getDevices();
+  devices = yield getDevices();
 
   is(devices.TYPES.length, 2, "Added device type #2.");
   is(devices[type2].length, 1, "Added new device of type #2.");

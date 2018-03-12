@@ -14,10 +14,10 @@ let { snapshotState, dominatorTreeState, viewState, treeMapState } =
 let { importSnapshotAndCensus } = require("devtools/client/memory/actions/io");
 let { changeViewAndRefresh } = require("devtools/client/memory/actions/view");
 
-add_task(async function () {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  await front.attach();
+  yield front.attach();
   let store = Store();
   let { subscribe, dispatch, getState } = store;
 
@@ -45,10 +45,10 @@ add_task(async function () {
   };
 
   let unsubscribe = subscribe(expectStates);
-  const snapshotPath = await front.saveHeapSnapshot();
+  const snapshotPath = yield front.saveHeapSnapshot();
   dispatch(importSnapshotAndCensus(heapWorker, snapshotPath));
 
-  await waitUntilState(store, () => i === expected.length);
+  yield waitUntilState(store, () => i === expected.length);
   unsubscribe();
   equal(i, expected.length, "importSnapshotAndCensus() produces the correct " +
     "sequence of states in a snapshot");

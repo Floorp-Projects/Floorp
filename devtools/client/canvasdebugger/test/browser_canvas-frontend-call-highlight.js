@@ -5,16 +5,16 @@
  * Tests if certain function calls are properly highlighted in the UI.
  */
 
-async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
-  await reload(target);
+  yield reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([recordingFinished, callListPopulated]);
+  yield promise.all([recordingFinished, callListPopulated]);
 
   is(CallsListView.itemCount, 8,
     "All the function calls should now be displayed in the UI.");
@@ -36,6 +36,6 @@ async function ifTestingSupported() {
   is($(".call-item-view", CallsListView.getItemAtIndex(7).target).hasAttribute("draw-call"), false,
     "The eigth item's node should not have a draw-call attribute.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

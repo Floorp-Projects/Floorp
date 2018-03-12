@@ -18,31 +18,31 @@ const xmlPostBody = "<xml><name>John</name></xml>";
  * networks details in the Console panel and checks that
  * Post data are properly rendered.
  */
-add_task(async function () {
+add_task(function* () {
   info("Test XHR Spy post plain body started");
 
-  let {hud} = await addTestTab(TEST_PAGE_URL);
+  let {hud} = yield addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = await executeAndInspectXhr(hud, {
+  let netInfoBody = yield executeAndInspectXhr(hud, {
     method: "POST",
     url: JSON_XHR_URL,
     body: plainPostBody
   });
 
   // Check post body data
-  let tabBody = await selectNetInfoTab(hud, netInfoBody, "post");
+  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "post");
   let postContent = tabBody.querySelector(
     ".netInfoGroup.raw.opened .netInfoGroupContent");
   is(postContent.textContent, plainPostBody,
     "Post body must be properly rendered");
 });
 
-add_task(async function () {
+add_task(function* () {
   info("Test XHR Spy post JSON body started");
 
-  let {hud} = await addTestTab(TEST_PAGE_URL);
+  let {hud} = yield addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = await executeAndInspectXhr(hud, {
+  let netInfoBody = yield executeAndInspectXhr(hud, {
     method: "POST",
     url: JSON_XHR_URL,
     body: jsonData,
@@ -53,7 +53,7 @@ add_task(async function () {
   });
 
   // Check post body data
-  let tabBody = await selectNetInfoTab(hud, netInfoBody, "post");
+  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "post");
   let postContent = tabBody.querySelector(
     ".netInfoGroup.json.opened .netInfoGroupContent");
   is(postContent.textContent, jsonRendered,
@@ -64,12 +64,12 @@ add_task(async function () {
   ok(!rawPostContent, "Raw response group must be collapsed");
 });
 
-add_task(async function () {
+add_task(function* () {
   info("Test XHR Spy post XML body started");
 
-  let {hud} = await addTestTab(TEST_PAGE_URL);
+  let {hud} = yield addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = await executeAndInspectXhr(hud, {
+  let netInfoBody = yield executeAndInspectXhr(hud, {
     method: "POST",
     url: JSON_XHR_URL,
     body: xmlPostBody,
@@ -80,7 +80,7 @@ add_task(async function () {
   });
 
   // Check post body data
-  let tabBody = await selectNetInfoTab(hud, netInfoBody, "post");
+  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "post");
   let rawPostContent = tabBody.querySelector(
     ".netInfoGroup.raw.opened .netInfoGroupContent");
   is(rawPostContent.textContent, xmlPostBody,

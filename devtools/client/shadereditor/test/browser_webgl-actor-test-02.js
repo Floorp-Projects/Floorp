@@ -6,8 +6,8 @@
  * if the front wasn't set up first.
  */
 
-async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+function* ifWebGLSupported() {
+  let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
 
   once(front, "program-linked").then(() => {
     ok(false, "A 'program-linked' notification shouldn't have been sent!");
@@ -15,7 +15,7 @@ async function ifWebGLSupported() {
 
   ok(true, "Each test requires at least one pass, fail or todo so here is a pass.");
 
-  await reload(target);
-  await removeTab(target.tab);
+  yield reload(target);
+  yield removeTab(target.tab);
   finish();
 }

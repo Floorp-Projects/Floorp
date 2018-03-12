@@ -17,7 +17,7 @@ Test that when an item in the Tree component is expanded or collapsed the approp
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = async function () {
+window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
@@ -59,14 +59,14 @@ window.onload = async function () {
 
     // Expand "A" via the keyboard and then let the component re-render.
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     is(lastExpandedItem, "A", "Our onExpand callback should have been fired.");
     is(numberOfExpands, 1);
 
     // Now collapse "A" via the keyboard and then let the component re-render.
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     is(lastCollapsedItem, "A", "Our onCollapsed callback should have been fired.");
     is(numberOfCollapses, 1);
@@ -75,7 +75,7 @@ window.onload = async function () {
   } finally {
     SimpleTest.finish();
   }
-};
+});
 </script>
 </pre>
 </body>

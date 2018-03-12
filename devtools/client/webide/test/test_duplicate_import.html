@@ -17,42 +17,42 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
-          let win = await openWebIDE();
+        Task.spawn(function*() {
+          let win = yield openWebIDE();
           let docProject = getProjectDocument(win);
           let winProject = getProjectWindow(win);
           let packagedAppLocation = getTestFilePath("app");
           let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
 
-          await win.AppProjects.load();
+          yield win.AppProjects.load();
           is(win.AppProjects.projects.length, 0, "IDB is empty");
 
           let onValidated = waitForUpdate(win, "project-validated");
           let onDetails = waitForUpdate(win, "details");
-          await winProject.projectList.importPackagedApp(packagedAppLocation);
-          await onValidated;
-          await onDetails;
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
+          yield onValidated;
+          yield onDetails;
 
-          await winProject.projectList.importHostedApp(hostedAppManifest);
-          await waitForUpdate(win, "project-validated");
-          await nextTick();
+          yield winProject.projectList.importHostedApp(hostedAppManifest);
+          yield waitForUpdate(win, "project-validated");
+          yield nextTick();
 
           onValidated = waitForUpdate(win, "project-validated");
           onDetails = waitForUpdate(win, "details");
-          await winProject.projectList.importPackagedApp(packagedAppLocation);
-          await onValidated;
-          await onDetails;
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
+          yield onValidated;
+          yield onDetails;
 
           let project = win.AppManager.selectedProject;
           is(project.location, packagedAppLocation, "Correctly reselected existing packaged app.");
-          await nextTick();
+          yield nextTick();
 
           info("to call importHostedApp(" + hostedAppManifest + ") again");
-          await winProject.projectList.importHostedApp(hostedAppManifest);
-          await waitForUpdate(win, "project-validated");
+          yield winProject.projectList.importHostedApp(hostedAppManifest);
+          yield waitForUpdate(win, "project-validated");
           project = win.AppManager.selectedProject;
           is(project.location, hostedAppManifest, "Correctly reselected existing hosted app.");
-          await nextTick();
+          yield nextTick();
 
           let panelNode = docProject.querySelector("#project-panel");
           let items = panelNode.querySelectorAll(".panel-item");
@@ -61,12 +61,12 @@
           is(items[3].querySelector("span").textContent, "A name (in app directory)", "Panel text is correct");
           is(items[4].querySelector("span").textContent, "hosted manifest name property", "Panel text is correct");
 
-          await closeWebIDE(win);
+          yield closeWebIDE(win);
 
-          await removeAllProjects();
+          yield removeAllProjects();
 
           SimpleTest.finish();
-        })().catch(e => {
+        }).catch(e => {
           ok(false, "Exception: " + e);
           SimpleTest.finish();
         });

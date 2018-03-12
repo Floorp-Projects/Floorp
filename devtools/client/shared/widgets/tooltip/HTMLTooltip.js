@@ -9,6 +9,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const {TooltipToggle} = require("devtools/client/shared/widgets/tooltip/TooltipToggle");
 const {listenOnce} = require("devtools/shared/async-utils");
+const {Task} = require("devtools/shared/task");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -323,7 +324,7 @@ HTMLTooltip.prototype = {
    *        - {Number} x: optional, horizontal offset between the anchor and the tooltip
    *        - {Number} y: optional, vertical offset between the anchor and the tooltip
    */
-  async show(anchor, {position, x = 0, y = 0} = {}) {
+  show: Task.async(function* (anchor, {position, x = 0, y = 0} = {}) {
     // Get anchor geometry
     let anchorRect = getRelativeRect(anchor, this.doc);
     if (this.useXulWrapper) {
@@ -372,7 +373,7 @@ HTMLTooltip.prototype = {
     }
 
     if (this.useXulWrapper) {
-      await this._showXulWrapperAt(left, top);
+      yield this._showXulWrapperAt(left, top);
     } else {
       this.container.style.left = left + "px";
       this.container.style.top = top + "px";
@@ -391,7 +392,7 @@ HTMLTooltip.prototype = {
       this.topWindow.addEventListener("click", this._onClick, true);
       this.emit("shown");
     }, 0);
-  },
+  }),
 
   /**
    * Calculate the rect of the viewport that limits the tooltip dimensions. When using a
@@ -445,7 +446,7 @@ HTMLTooltip.prototype = {
    * Hide the current tooltip. The event "hidden" will be fired when the tooltip
    * is hidden.
    */
-  async hide() {
+  hide: Task.async(function* () {
     this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     if (!this.isVisible()) {
       this.emit("hidden");
@@ -455,7 +456,7 @@ HTMLTooltip.prototype = {
     this.topWindow.removeEventListener("click", this._onClick, true);
     this.container.classList.remove("tooltip-visible");
     if (this.useXulWrapper) {
-      await this._hideXulWrapper();
+      yield this._hideXulWrapper();
     }
 
     this.emit("hidden");
@@ -465,7 +466,7 @@ HTMLTooltip.prototype = {
       this._focusedElement.focus();
       this._focusedElement = null;
     }
-  },
+  }),
 
   /**
    * Check if the tooltip is currently displayed.

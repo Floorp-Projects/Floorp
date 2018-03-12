@@ -10,39 +10,39 @@ const TEST_JSON_URL = URL_ROOT + "simple_json.json";
 let jsonText = "{\"name\": \"value\"}\n";
 let prettyJson = "{\n  \"name\": \"value\"\n}";
 
-add_task(async function () {
+add_task(function* () {
   info("Test copy raw data started");
 
-  await addJsonViewTab(TEST_JSON_URL);
+  yield addJsonViewTab(TEST_JSON_URL);
 
   // Select the RawData tab
-  await selectJsonViewContentTab("rawdata");
+  yield selectJsonViewContentTab("rawdata");
 
   // Check displayed JSON
-  let text = await getElementText(".textPanelBox .data");
+  let text = yield getElementText(".textPanelBox .data");
   is(text, jsonText, "Proper JSON must be displayed in DOM");
 
   let browser = gBrowser.selectedBrowser;
 
   // Verify JSON copy into the clipboard.
-  await waitForClipboardPromise(function setup() {
+  yield waitForClipboardPromise(function setup() {
     BrowserTestUtils.synthesizeMouseAtCenter(
       ".textPanelBox .toolbar button.copy",
       {}, browser);
   }, jsonText);
 
   // Click 'Pretty Print' button
-  await BrowserTestUtils.synthesizeMouseAtCenter(
+  yield BrowserTestUtils.synthesizeMouseAtCenter(
     ".textPanelBox .toolbar button.prettyprint",
     {}, browser);
 
-  let prettyText = await getElementText(".textPanelBox .data");
+  let prettyText = yield getElementText(".textPanelBox .data");
   prettyText = normalizeNewLines(prettyText);
   ok(prettyText.startsWith(prettyJson),
     "Pretty printed JSON must be displayed");
 
   // Verify JSON copy into the clipboard.
-  await waitForClipboardPromise(function setup() {
+  yield waitForClipboardPromise(function setup() {
     BrowserTestUtils.synthesizeMouseAtCenter(
       ".textPanelBox .toolbar button.copy",
       {}, browser);

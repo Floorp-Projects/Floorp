@@ -6,23 +6,23 @@
  * after generating screenshots using the actor.
  */
 
-async function ifTestingSupported() {
-  let { target, front } = await initCanvasDebuggerBackend(WEBGL_BINDINGS_URL);
+function* ifTestingSupported() {
+  let { target, front } = yield initCanvasDebuggerBackend(WEBGL_BINDINGS_URL);
   loadFrameScriptUtils();
 
   let navigated = once(target, "navigate");
 
-  await front.setup({ reload: true });
+  yield front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  await navigated;
+  yield navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
-  let animationOverview = await snapshotActor.getOverview();
+  let snapshotActor = yield front.recordAnimationFrame();
+  let animationOverview = yield snapshotActor.getOverview();
   let functionCalls = animationOverview.calls;
 
-  let firstScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[0]);
+  let firstScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[0]);
   is(firstScreenshot.index, -1,
     "The first screenshot didn't encounter any draw call.");
   is(firstScreenshot.scaling, 0.25,
@@ -36,29 +36,29 @@ async function ifTestingSupported() {
   is(firstScreenshot.pixels.length, 0,
     "The first screenshot should be empty.");
 
-  is((await evalInDebuggee("gl.getParameter(gl.FRAMEBUFFER_BINDING) === customFramebuffer")),
+  is((yield evalInDebuggee("gl.getParameter(gl.FRAMEBUFFER_BINDING) === customFramebuffer")),
     true,
     "The debuggee's gl context framebuffer wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.RENDERBUFFER_BINDING) === customRenderbuffer")),
+  is((yield evalInDebuggee("gl.getParameter(gl.RENDERBUFFER_BINDING) === customRenderbuffer")),
     true,
     "The debuggee's gl context renderbuffer wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.TEXTURE_BINDING_2D) === customTexture")),
+  is((yield evalInDebuggee("gl.getParameter(gl.TEXTURE_BINDING_2D) === customTexture")),
     true,
     "The debuggee's gl context texture binding wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.VIEWPORT)[0]")),
+  is((yield evalInDebuggee("gl.getParameter(gl.VIEWPORT)[0]")),
     128,
     "The debuggee's gl context viewport's left coord. wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.VIEWPORT)[1]")),
+  is((yield evalInDebuggee("gl.getParameter(gl.VIEWPORT)[1]")),
     256,
     "The debuggee's gl context viewport's left coord. wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.VIEWPORT)[2]")),
+  is((yield evalInDebuggee("gl.getParameter(gl.VIEWPORT)[2]")),
     384,
     "The debuggee's gl context viewport's left coord. wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.VIEWPORT)[3]")),
+  is((yield evalInDebuggee("gl.getParameter(gl.VIEWPORT)[3]")),
     512,
     "The debuggee's gl context viewport's left coord. wasn't changed.");
 
-  let secondScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[1]);
+  let secondScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[1]);
   is(secondScreenshot.index, 1,
     "The second screenshot has the correct index.");
   is(secondScreenshot.width, CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT,
@@ -80,28 +80,28 @@ async function ifTestingSupported() {
   is(secondScreenshot.pixels[3], 255,
     "The second screenshot has the correct alpha component.");
 
-  is((await evalInDebuggee("gl.getParameter(gl.FRAMEBUFFER_BINDING) === customFramebuffer")),
+  is((yield evalInDebuggee("gl.getParameter(gl.FRAMEBUFFER_BINDING) === customFramebuffer")),
     true,
     "The debuggee's gl context framebuffer still wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.RENDERBUFFER_BINDING) === customRenderbuffer")),
+  is((yield evalInDebuggee("gl.getParameter(gl.RENDERBUFFER_BINDING) === customRenderbuffer")),
     true,
     "The debuggee's gl context renderbuffer still wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.TEXTURE_BINDING_2D) === customTexture")),
+  is((yield evalInDebuggee("gl.getParameter(gl.TEXTURE_BINDING_2D) === customTexture")),
     true,
     "The debuggee's gl context texture binding still wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.VIEWPORT)[0]")),
+  is((yield evalInDebuggee("gl.getParameter(gl.VIEWPORT)[0]")),
     128,
     "The debuggee's gl context viewport's left coord. still wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.VIEWPORT)[1]")),
+  is((yield evalInDebuggee("gl.getParameter(gl.VIEWPORT)[1]")),
     256,
     "The debuggee's gl context viewport's left coord. still wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.VIEWPORT)[2]")),
+  is((yield evalInDebuggee("gl.getParameter(gl.VIEWPORT)[2]")),
     384,
     "The debuggee's gl context viewport's left coord. still wasn't changed.");
-  is((await evalInDebuggee("gl.getParameter(gl.VIEWPORT)[3]")),
+  is((yield evalInDebuggee("gl.getParameter(gl.VIEWPORT)[3]")),
     512,
     "The debuggee's gl context viewport's left coord. still wasn't changed.");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

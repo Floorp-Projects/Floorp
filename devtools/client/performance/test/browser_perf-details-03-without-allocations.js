@@ -16,8 +16,8 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -37,8 +37,8 @@ add_task(async function () {
   // Disable allocations to prevent recording them.
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, false);
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   ok(DetailsView.isViewSelected(WaterfallView),
     "The waterfall view is selected by default in the details view.");
@@ -48,8 +48,8 @@ add_task(async function () {
 
   // The toolbar buttons will always be hidden when a recording isn't available,
   // so make sure we have one that's finished.
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   ok(DetailsView.isViewSelected(WaterfallView),
     "The waterfall view is still selected in the details view.");
@@ -62,8 +62,8 @@ add_task(async function () {
   let selected = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED);
   let rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
   DetailsView.selectView("memory-calltree");
-  await selected;
-  await rendered;
+  yield selected;
+  yield rendered;
 
   ok(DetailsView.isViewSelected(MemoryCallTreeView),
     "The memory call tree view can now be selected.");
@@ -71,8 +71,8 @@ add_task(async function () {
   selected = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED);
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   DetailsView.selectView("memory-flamegraph");
-  await selected;
-  await rendered;
+  yield selected;
+  yield rendered;
 
   ok(DetailsView.isViewSelected(MemoryFlameGraphView),
     "The memory flamegraph view can now be selected.");
@@ -81,8 +81,8 @@ add_task(async function () {
   selected = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED);
   rendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   setSelectedRecording(panel, 0);
-  await selected;
-  await rendered;
+  yield selected;
+  yield rendered;
 
   ok(DetailsView.isViewSelected(WaterfallView), "The waterfall view is now selected " +
     "when switching back to a recording that does not have memory data.");
@@ -95,7 +95,7 @@ add_task(async function () {
   // Go back to the recording with memory data.
   rendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   setSelectedRecording(panel, 1);
-  await rendered;
+  yield rendered;
 
   ok(DetailsView.isViewSelected(WaterfallView),
     "The waterfall view is still selected in the details view.");
@@ -108,8 +108,8 @@ add_task(async function () {
   selected = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED);
   rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
   DetailsView.selectView("memory-calltree");
-  await selected;
-  await rendered;
+  yield selected;
+  yield rendered;
 
   ok(DetailsView.isViewSelected(MemoryCallTreeView), "The memory call tree view can be " +
     "selected again after going back to the view with memory data.");
@@ -117,11 +117,11 @@ add_task(async function () {
   selected = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED);
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   DetailsView.selectView("memory-flamegraph");
-  await selected;
-  await rendered;
+  yield selected;
+  yield rendered;
 
   ok(DetailsView.isViewSelected(MemoryFlameGraphView), "The memory flamegraph view can " +
     "be selected again after going back to the view with memory data.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

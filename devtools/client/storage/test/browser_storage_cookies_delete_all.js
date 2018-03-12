@@ -8,7 +8,7 @@
 
 // Test deleting all cookies
 
-async function performDelete(store, rowName, action) {
+function* performDelete(store, rowName, action) {
   let contextMenu = gPanelWindow.document.getElementById(
     "storage-table-popup");
   let menuDeleteAllItem = contextMenu.querySelector(
@@ -20,12 +20,12 @@ async function performDelete(store, rowName, action) {
 
   let storeName = store.join(" > ");
 
-  await selectTreeItem(store);
+  yield selectTreeItem(store);
 
   let eventWait = gUI.once("store-objects-updated");
   let cells = getRowCells(rowName, true);
 
-  await waitForContextMenu(contextMenu, cells.name, () => {
+  yield waitForContextMenu(contextMenu, cells.name, () => {
     info(`Opened context menu in ${storeName}, row '${rowName}'`);
     switch (action) {
       case "deleteAll":
@@ -43,14 +43,14 @@ async function performDelete(store, rowName, action) {
     }
   });
 
-  await eventWait;
+  yield eventWait;
 }
 
-add_task(async function () {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
+add_task(function* () {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   info("test state before delete");
-  await checkState([
+  yield checkState([
     [
       ["cookies", "http://test1.example.org"], [
         getCookieId("c1", "test1.example.org", "/browser"),
@@ -78,10 +78,10 @@ add_task(async function () {
   info("delete all from domain");
   // delete only cookies that match the host exactly
   let id = getCookieId("c1", "test1.example.org", "/browser");
-  await performDelete(["cookies", "http://test1.example.org"], id, "deleteAllFrom");
+  yield performDelete(["cookies", "http://test1.example.org"], id, "deleteAllFrom");
 
   info("test state after delete all from domain");
-  await checkState([
+  yield checkState([
     // Domain cookies (.example.org) must not be deleted.
     [
       ["cookies", "http://test1.example.org"],
@@ -110,11 +110,11 @@ add_task(async function () {
   info("delete all session cookies");
   // delete only session cookies
   id = getCookieId("cs2", ".example.org", "/");
-  await performDelete(["cookies", "http://sectest1.example.org"], id,
+  yield performDelete(["cookies", "http://sectest1.example.org"], id,
     "deleteAllSessionCookies");
 
   info("test state after delete all session cookies");
-  await checkState([
+  yield checkState([
     // Cookies with expiry date must not be deleted.
     [
       ["cookies", "http://test1.example.org"],
@@ -137,15 +137,15 @@ add_task(async function () {
   info("delete all");
   // delete all cookies for host, including domain cookies
   id = getCookieId("uc2", ".example.org", "/");
-  await performDelete(["cookies", "http://sectest1.example.org"], id, "deleteAll");
+  yield performDelete(["cookies", "http://sectest1.example.org"], id, "deleteAll");
 
   info("test state after delete all");
-  await checkState([
+  yield checkState([
     // Domain cookies (.example.org) are deleted too, so deleting in sectest1
     // also removes stuff from test1.
     [["cookies", "http://test1.example.org"], []],
     [["cookies", "https://sectest1.example.org"], []],
   ]);
 
-  await finishTests();
+  yield finishTests();
 });

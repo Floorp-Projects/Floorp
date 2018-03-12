@@ -17,7 +17,7 @@ Test that arrows get the open attribute when their item's children are expanded.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = async function () {
+window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const React = browserRequire("devtools/client/shared/vendor/react");
@@ -40,7 +40,7 @@ window.onload = async function () {
     const tree = ReactDOM.render(Tree(treeProps), window.document.body);
 
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
-    await forceRender(tree);
+    yield forceRender(tree);
 
     let arrows = document.querySelectorAll(".arrow");
     for (let a of arrows) {
@@ -48,7 +48,7 @@ window.onload = async function () {
     }
 
     TEST_TREE.expanded = new Set();
-    await forceRender(tree);
+    yield forceRender(tree);
 
     arrows = document.querySelectorAll(".arrow");
     for (let a of arrows) {
@@ -59,7 +59,7 @@ window.onload = async function () {
   } finally {
     SimpleTest.finish();
   }
-};
+});
 </script>
 </pre>
 </body>

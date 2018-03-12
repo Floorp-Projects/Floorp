@@ -6,8 +6,8 @@
  * loads the correct node inside the inspector.
  */
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
   let gVars = InspectorView._propsView;
@@ -19,7 +19,7 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
+  let [actors] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
@@ -29,7 +29,7 @@ add_task(async function () {
     "InspectorView tabs view should be hidden when no node's selected.");
 
   // Wait for the node to be set as well as the inspector to come fully into the view
-  await clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[1]), true);
+  yield clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[1]), true);
 
   ok(InspectorView.isVisible(), "InspectorView shown once node selected.");
   ok(!isVisible($("#web-audio-editor-details-pane-empty")),
@@ -40,7 +40,7 @@ add_task(async function () {
   is($("#web-audio-editor-tabs").selectedIndex, 0,
     "default tab selected should be the parameters tab.");
 
-  await clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[2]));
+  yield clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[2]));
 
-  await teardown(target);
+  yield teardown(target);
 });

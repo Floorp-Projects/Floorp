@@ -7,6 +7,7 @@ var {Ci, Cu} = require("chrome");
 
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const Services = require("Services");
+const {Task} = require("devtools/shared/task");
 var strings = Services.strings.createBundle("chrome://devtools/locale/app-manager.properties");
 
 function AppValidator({ type, location }) {
@@ -118,16 +119,16 @@ AppValidator.findManifestPath = function (manifestURL) {
 };
 
 AppValidator.checkAlternateManifest = function (manifestURL) {
-  return (async function () {
+  return Task.spawn(function* () {
     let result;
     try {
-      result = await AppValidator.findManifestPath(manifestURL);
+      result = yield AppValidator.findManifestPath(manifestURL);
     } catch (e) {
-      result = await AppValidator.findManifestAtOrigin(manifestURL);
+      result = yield AppValidator.findManifestAtOrigin(manifestURL);
     }
 
     return result;
-  })();
+  });
 };
 
 AppValidator.prototype._fetchManifest = function (manifestURL) {

@@ -46,14 +46,14 @@ function testTree() {
 /**
  * Test that correct table entries are shown for each of the tree item
  */
-let testTables = async function () {
+let testTables = function* () {
   let doc = gPanelWindow.document;
   // Expand all nodes so that the synthesized click event actually works
   gUI.tree.expandAll();
 
   // Click the tree items and wait for the table to be updated
   for (let [item, ids] of storeItems) {
-    await selectTreeItem(item);
+    yield selectTreeItem(item);
 
     // Check whether correct number of items are present in the table
     is(doc.querySelectorAll(
@@ -68,10 +68,10 @@ let testTables = async function () {
   }
 };
 
-add_task(async function () {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-empty-objectstores.html");
+add_task(function* () {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-empty-objectstores.html");
 
   testTree();
-  await testTables();
-  await finishTests();
+  yield testTables();
+  yield finishTests();
 });

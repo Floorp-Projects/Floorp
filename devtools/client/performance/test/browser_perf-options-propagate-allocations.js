@@ -12,8 +12,8 @@ const { MEMORY_SAMPLE_PROB_PREF, MEMORY_MAX_LOG_LEN_PREF, UI_ENABLE_ALLOCATIONS_
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(async function () {
-  let { panel, toolbox } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel, toolbox } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -23,14 +23,14 @@ add_task(async function () {
   Services.prefs.setCharPref(MEMORY_SAMPLE_PROB_PREF, "0.213");
   Services.prefs.setIntPref(MEMORY_MAX_LOG_LEN_PREF, 777777);
 
-  await startRecording(panel);
-  let { probability, maxLogLength } = await toolbox.performance.getConfiguration();
-  await stopRecording(panel);
+  yield startRecording(panel);
+  let { probability, maxLogLength } = yield toolbox.performance.getConfiguration();
+  yield stopRecording(panel);
 
   is(probability, 0.213,
     "The allocations probability option is set on memory actor.");
   is(maxLogLength, 777777,
     "The allocations max log length option is set on memory actor.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

@@ -7,9 +7,9 @@
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-add_task(async function () {
-  let fileContent = await generateNetworkEventStubs();
+add_task(function* () {
+  let fileContent = yield generateNetworkEventStubs();
   let filePath = OS.Path.join(`${BASE_PATH}/stubs/networkEvent.js`);
-  await OS.File.writeAtomic(filePath, fileContent);
+  yield OS.File.writeAtomic(filePath, fileContent);
   ok(true, "Make the test not fail");
 });

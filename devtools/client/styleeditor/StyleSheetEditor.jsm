@@ -13,6 +13,7 @@ const promise = require("promise");
 const {shortSource, prettifyCSS} = require("devtools/shared/inspector/css-logic");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/old-event-emitter");
+const {Task} = require("devtools/shared/task");
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
@@ -587,7 +588,7 @@ StyleSheetEditor.prototype = {
    * @param {Number} x
    * @param {Number} y
    */
-  async _highlightSelectorAt(x, y) {
+  _highlightSelectorAt: Task.async(function* (x, y) {
     let pos = this.sourceEditor.getPositionFromCoords({left: x, top: y});
     let info = this.sourceEditor.getInfoAt(pos);
     if (!info || info.state !== "selector") {
@@ -595,8 +596,8 @@ StyleSheetEditor.prototype = {
     }
 
     let node =
-        await this.walker.getStyleSheetOwnerNode(this.styleSheet.actorID);
-    await this.highlighter.show(node, {
+        yield this.walker.getStyleSheetOwnerNode(this.styleSheet.actorID);
+    yield this.highlighter.show(node, {
       selector: info.selector,
       hideInfoBar: true,
       showOnly: "border",
@@ -604,7 +605,7 @@ StyleSheetEditor.prototype = {
     });
 
     this.emit("node-highlighted");
-  },
+  }),
 
   /**
    * Save the editor contents into a file and set savedFile property.

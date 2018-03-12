@@ -14,21 +14,21 @@ const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require
 const { times } = require("devtools/client/performance/test/helpers/event-utils");
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(async function () {
-  let { target, console } = await initConsoleInNewTab({
+add_task(function* () {
+  let { target, console } = yield initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = await initPerformanceInTab({ tab: target.tab });
+  let { panel } = yield initPerformanceInTab({ tab: target.tab });
   let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
-  await console.profile("rust");
-  await started;
+  yield console.profile("rust");
+  yield started;
 
   let recordings = PerformanceController.getRecordings();
   is(recordings.length, 1, "One recording found in the performance panel.");
@@ -43,7 +43,7 @@ add_task(async function () {
     "The profile label for the first recording is correct.");
 
   // Ensure overview is still rendering.
-  await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
+  yield times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
     expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
   });
 
@@ -51,8 +51,8 @@ add_task(async function () {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
-  await console.profileEnd("rust");
-  await stopped;
+  yield console.profileEnd("rust");
+  yield stopped;
 
   started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
@@ -63,8 +63,8 @@ add_task(async function () {
     // in-progress recording is selected, which won't happen
     skipWaitingForViewState: true,
   });
-  await console.profile("rust");
-  await started;
+  yield console.profile("rust");
+  yield started;
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
@@ -85,8 +85,8 @@ add_task(async function () {
     skipWaitingForOverview: true,
     skipWaitingForSubview: true,
   });
-  await console.profileEnd("rust");
-  await stopped;
+  yield console.profileEnd("rust");
+  yield stopped;
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

@@ -12,7 +12,7 @@ const { changeView } = require("devtools/client/memory/actions/view");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
-this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const front = panel.panelWin.gFront;
   const { getState, dispatch } = panel.panelWin.gStore;
@@ -20,7 +20,7 @@ this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
 
   dispatch(changeView(viewState.CENSUS));
 
-  await dispatch(takeSnapshotAndCensus(front, heapWorker));
+  yield dispatch(takeSnapshotAndCensus(front, heapWorker));
 
   is(getState().allocations.recording, false);
   const recordingCheckbox = doc.getElementById("record-allocation-stacks-checkbox");

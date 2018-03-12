@@ -26,12 +26,12 @@ const testToolDefinition = {
   }
 };
 
-add_task(async function () {
-  let tab = await addTab("about:blank");
+add_task(function* () {
+  let tab = yield addTab("about:blank");
   let target = TargetFactory.forTab(tab);
 
   gDevTools.registerTool(testToolDefinition);
-  let toolbox = await gDevTools.showToolbox(target, testToolDefinition.id);
+  let toolbox = yield gDevTools.showToolbox(target, testToolDefinition.id);
 
   let toolPanel = toolbox.getPanel(testToolDefinition.id);
   let tabbox = toolPanel.panelDoc.getElementById("sidebar");
@@ -73,8 +73,8 @@ add_task(async function () {
   sidebar._onTabBoxUnderflow();
   is(allTabsMenu.getAttribute("hidden"), "true", "The all-tabs menu is hidden");
 
-  await sidebar.destroy();
-  await toolbox.destroy();
+  yield sidebar.destroy();
+  yield toolbox.destroy();
   gDevTools.unregisterTool(testToolDefinition.id);
   gBrowser.removeCurrentTab();
 });

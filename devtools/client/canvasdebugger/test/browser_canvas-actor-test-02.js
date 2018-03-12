@@ -6,12 +6,12 @@
  * and that their stack is successfully retrieved.
  */
 
-async function ifTestingSupported() {
-  let { target, front } = await initCallWatcherBackend(SIMPLE_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, front } = yield initCallWatcherBackend(SIMPLE_CANVAS_URL);
 
   let navigated = once(target, "navigate");
 
-  await front.setup({
+  yield front.setup({
     tracedGlobals: ["CanvasRenderingContext2D", "WebGLRenderingContext"],
     startRecording: true,
     performReload: true,
@@ -19,13 +19,13 @@ async function ifTestingSupported() {
   });
   ok(true, "The front was setup up successfully.");
 
-  await navigated;
+  yield navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
   // Allow the content to execute some functions.
-  await waitForTick();
+  yield waitForTick();
 
-  let functionCalls = await front.pauseRecording();
+  let functionCalls = yield front.pauseRecording();
   ok(functionCalls,
     "An array of function call actors was sent after reloading.");
   ok(functionCalls.length > 0,
@@ -45,7 +45,7 @@ async function ifTestingSupported() {
   is(functionCalls[0].argsPreview, "0, 0, 128, 128",
     "The called function's args preview is correct.");
 
-  let details = await functionCalls[1].getDetails();
+  let details = yield functionCalls[1].getDetails();
   ok(details,
     "The first called function has some details available.");
 
@@ -73,6 +73,6 @@ async function ifTestingSupported() {
   is(details.stack[2].line, 33,
     "The called function's stack is correct (3.3).");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

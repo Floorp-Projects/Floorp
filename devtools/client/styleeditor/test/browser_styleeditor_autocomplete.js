@@ -105,22 +105,22 @@ function getTestCases(cssProperties) {
   ];
 }
 
-add_task(async function () {
-  let { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
-  let { cssProperties } = await initCssProperties(panel._toolbox);
+add_task(function* () {
+  let { panel, ui } = yield openStyleEditorForURL(TESTCASE_URI);
+  let { cssProperties } = yield initCssProperties(panel._toolbox);
   let testCases = getTestCases(cssProperties);
 
-  await ui.selectStyleSheet(ui.editors[1].styleSheet);
-  let editor = await ui.editors[1].getSourceEditor();
+  yield ui.selectStyleSheet(ui.editors[1].styleSheet);
+  let editor = yield ui.editors[1].getSourceEditor();
 
   let sourceEditor = editor.sourceEditor;
   let popup = sourceEditor.getAutocompletionPopup();
 
-  await SimpleTest.promiseFocus(panel.panelWindow);
+  yield SimpleTest.promiseFocus(panel.panelWindow);
 
   for (let index in testCases) {
-    await testState(testCases, index, sourceEditor, popup, panel.panelWindow);
-    await checkState(testCases, index, sourceEditor, popup);
+    yield testState(testCases, index, sourceEditor, popup, panel.panelWindow);
+    yield checkState(testCases, index, sourceEditor, popup);
   }
 });
 

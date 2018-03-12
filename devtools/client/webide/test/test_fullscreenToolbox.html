@@ -27,8 +27,8 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
-          let win = await openWebIDE();
+        Task.spawn(function* () {
+          let win = yield openWebIDE();
           let docProject = getProjectDocument(win);
           let docRuntime = getRuntimeDocument(win);
           win.AppManager.update("runtime-list");
@@ -36,15 +36,15 @@
           connectToLocal(win, docRuntime);
 
           // Select main process
-          await waitForUpdate(win, "runtime-targets");
+          yield waitForUpdate(win, "runtime-targets");
           SimpleTest.executeSoon(() => {
             docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
           });
 
-          await waitForUpdate(win, "project");
+          yield waitForUpdate(win, "project");
 
           ok(win.UI.toolboxPromise, "Toolbox promise exists");
-          await win.UI.toolboxPromise;
+          yield win.UI.toolboxPromise;
 
           let nbox = win.document.querySelector("#notificationbox");
           ok(!nbox.hasAttribute("toolboxfullscreen"), "Toolbox is not fullscreen");
@@ -53,14 +53,14 @@
 
           ok(!nbox.hasAttribute("toolboxfullscreen"), "Toolbox is not fullscreen");
 
-          await win.Cmds.disconnectRuntime();
+          yield win.Cmds.disconnectRuntime();
 
-          await closeWebIDE(win);
+          yield closeWebIDE(win);
 
           DebuggerServer.destroy();
 
           SimpleTest.finish();
-        })();
+        });
       }
     </script>
   </body>

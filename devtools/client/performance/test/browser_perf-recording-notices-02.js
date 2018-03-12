@@ -13,8 +13,8 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -32,10 +32,10 @@ add_task(async function () {
   let RECORDING = $("#recording-notice");
   let DETAILS = $("#details-pane");
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   is(PerformanceView.getState(), "recording", "Correct state during recording.");
   is(MAIN_CONTAINER.selectedPanel, CONTENT, "Showing main view with timeline.");
@@ -43,7 +43,7 @@ add_task(async function () {
 
   let selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 0);
-  await selected;
+  yield selected;
 
   is(PerformanceView.getState(), "recorded",
      "Correct state during recording but selecting a completed recording.");
@@ -52,14 +52,14 @@ add_task(async function () {
 
   selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 1);
-  await selected;
+  yield selected;
 
   is(PerformanceView.getState(), "recording",
      "Correct state when switching back to recording in progress.");
   is(MAIN_CONTAINER.selectedPanel, CONTENT, "Showing main view with timeline.");
   is(DETAILS_CONTAINER.selectedPanel, RECORDING, "Showing recording panel.");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

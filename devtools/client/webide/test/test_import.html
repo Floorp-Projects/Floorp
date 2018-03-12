@@ -17,13 +17,13 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
-          let win = await openWebIDE();
+        Task.spawn(function*() {
+          let win = yield openWebIDE();
           let docProject = getProjectDocument(win);
           let winProject = getProjectWindow(win);
           let packagedAppLocation = getTestFilePath("app");
 
-          await win.AppProjects.load();
+          yield win.AppProjects.load();
           is(win.AppProjects.projects.length, 0, "IDB is empty");
 
           info("to call importPackagedApp(" + packagedAppLocation + ")");
@@ -31,9 +31,9 @@
 
           let onValidated = waitForUpdate(win, "project-validated");
           let onDetails = waitForUpdate(win, "details");
-          await winProject.projectList.importPackagedApp(packagedAppLocation);
-          await onValidated;
-          await onDetails;
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
+          yield onValidated;
+          yield onDetails;
 
           let project = win.AppManager.selectedProject;
           is(project.location, packagedAppLocation, "Location is valid");
@@ -41,21 +41,21 @@
           is(project.manifest.launch_path, "/index.html", "manifest found. launch_path valid.");
           is(project.manifest.description, "desc", "manifest found. description valid");
 
-          await nextTick();
+          yield nextTick();
 
           let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
-          await winProject.projectList.importHostedApp(hostedAppManifest);
-          await waitForUpdate(win, "project-validated");
+          yield winProject.projectList.importHostedApp(hostedAppManifest);
+          yield waitForUpdate(win, "project-validated");
 
           project = win.AppManager.selectedProject;
           is(project.location, hostedAppManifest, "Location is valid");
           is(project.name, "hosted manifest name property", "name field has been updated");
 
-          await nextTick();
+          yield nextTick();
 
           hostedAppManifest = TEST_BASE + "/app";
-          await winProject.projectList.importHostedApp(hostedAppManifest);
-          await waitForUpdate(win, "project-validated");
+          yield winProject.projectList.importHostedApp(hostedAppManifest);
+          yield waitForUpdate(win, "project-validated");
 
           project = win.AppManager.selectedProject;
           ok(project.location.endsWith('manifest.webapp'), "The manifest was found and the project was updated");
@@ -67,12 +67,12 @@
           is(items[3].querySelector("span").textContent, "A name (in app directory)", "Panel text is correct");
           is(items[4].querySelector("span").textContent, "hosted manifest name property", "Panel text is correct");
 
-          await closeWebIDE(win);
+          yield closeWebIDE(win);
 
-          await removeAllProjects();
+          yield removeAllProjects();
 
           SimpleTest.finish();
-        })().catch(e => {
+        }).catch(e => {
           ok(false, "Exception: " + e);
           SimpleTest.finish();
         });

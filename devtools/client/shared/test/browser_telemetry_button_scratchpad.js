@@ -11,26 +11,26 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-add_task(async function () {
-  await addTab(TEST_URI);
+add_task(function* () {
+  yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
-  await pushPref("devtools.command-button-scratchpad.enabled", true);
+  yield pushPref("devtools.command-button-scratchpad.enabled", true);
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(target, "inspector");
+  let toolbox = yield gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
   let onAllWindowsOpened = trackScratchpadWindows();
 
   info("testing the scratchpad button");
-  await testButton(toolbox, Telemetry);
-  await onAllWindowsOpened;
+  yield testButton(toolbox, Telemetry);
+  yield onAllWindowsOpened;
 
   checkResults("_SCRATCHPAD_", Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);
-  await gDevTools.closeToolbox(target);
+  yield gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });
 
@@ -68,12 +68,12 @@ function trackScratchpadWindows() {
   });
 }
 
-async function testButton(toolbox, Telemetry) {
+function* testButton(toolbox, Telemetry) {
   info("Testing command-button-scratchpad");
   let button = toolbox.doc.querySelector("#command-button-scratchpad");
   ok(button, "Captain, we have the button");
 
-  await delayedClicks(button, 4);
+  yield delayedClicks(button, 4);
 }
 
 function delayedClicks(node, clicks) {

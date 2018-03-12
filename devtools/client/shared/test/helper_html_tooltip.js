@@ -20,10 +20,10 @@
  * @return {Promise} promise that resolves when "shown" has been fired, reflow
  *         and repaint done.
  */
-async function showTooltip(tooltip, anchor, {position, x, y} = {}) {
+function* showTooltip(tooltip, anchor, {position, x, y} = {}) {
   let onShown = tooltip.once("shown");
   tooltip.show(anchor, {position, x, y});
-  await onShown;
+  yield onShown;
   return waitForReflow(tooltip);
 }
 
@@ -36,10 +36,10 @@ async function showTooltip(tooltip, anchor, {position, x, y} = {}) {
  * @return {Promise} promise that resolves when "hidden" has been fired, reflow
  *         and repaint done.
  */
-async function hideTooltip(tooltip) {
+function* hideTooltip(tooltip) {
   let onPopupHidden = tooltip.once("hidden");
   tooltip.hide();
-  await onPopupHidden;
+  yield onPopupHidden;
   return waitForReflow(tooltip);
 }
 

@@ -11,8 +11,8 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -29,17 +29,17 @@ add_task(async function () {
   is(PerformanceView.getState(), "empty", "Correct default state.");
   is(MAIN_CONTAINER.selectedPanel, EMPTY, "Showing empty panel on load.");
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   is(PerformanceView.getState(), "recording", "Correct state during recording.");
   is(MAIN_CONTAINER.selectedPanel, CONTENT, "Showing main view with timeline.");
   is(DETAILS_CONTAINER.selectedPanel, RECORDING, "Showing recording panel.");
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   is(PerformanceView.getState(), "recorded", "Correct state after recording.");
   is(MAIN_CONTAINER.selectedPanel, CONTENT, "Showing main view with timeline.");
   is(DETAILS_CONTAINER.selectedPanel, DETAILS, "Showing rendered graphs.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

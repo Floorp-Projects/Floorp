@@ -12,8 +12,8 @@ const { UI_ENABLE_MEMORY_PREF } = require("devtools/client/performance/test/help
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -29,13 +29,13 @@ add_task(async function () {
 
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, false);
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   is(logs[DURATION].length, 2, `There are two entries for ${DURATION}.`);
   ok(logs[DURATION].every(d => typeof d === "number"),
@@ -49,5 +49,5 @@ add_task(async function () {
   ok(logs[FEATURES].find(r => r[0] === "withMemory" && r[1] === false),
     "One feature entry for memory disabled.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

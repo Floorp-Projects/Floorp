@@ -6,23 +6,23 @@
  * for a canvas context profiling.
  */
 
-async function ifTestingSupported() {
+function* ifTestingSupported() {
   let currentTime = window.performance.now();
-  let { target, front } = await initCanvasDebuggerBackend(SIMPLE_CANVAS_URL);
+  let { target, front } = yield initCanvasDebuggerBackend(SIMPLE_CANVAS_URL);
 
   let navigated = once(target, "navigate");
 
-  await front.setup({ reload: true });
+  yield front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  await navigated;
+  yield navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = await front.recordAnimationFrame();
+  let snapshotActor = yield front.recordAnimationFrame();
   ok(snapshotActor,
     "A snapshot actor was sent after recording.");
 
-  let animationOverview = await snapshotActor.getOverview();
+  let animationOverview = yield snapshotActor.getOverview();
   ok(animationOverview,
     "An animation overview could be retrieved after recording.");
 
@@ -40,6 +40,6 @@ async function ifTestingSupported() {
     ok(functionCalls[i + 1].timestamp >= functionCalls[i].timestamp, "The timestamp of the called function is correct.");
   }
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

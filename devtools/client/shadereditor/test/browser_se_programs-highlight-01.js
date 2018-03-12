@@ -5,8 +5,8 @@
  * Tests if highlighting a program works properly.
  */
 
-async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
+function* ifWebGLSupported() {
+  let { target, panel } = yield initShaderEditor(MULTIPLE_CONTEXTS_URL);
   let { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   once(panel.panelWin, EVENTS.SHADER_COMPILED).then(() => {
@@ -14,13 +14,13 @@ async function ifWebGLSupported() {
   });
 
   reload(target);
-  let [[firstProgramActor, secondProgramActor]] = await promise.all([
+  let [[firstProgramActor, secondProgramActor]] = yield promise.all([
     getPrograms(gFront, 2),
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
-  let vsEditor = await ShadersEditorsView._getEditor("vs");
-  let fsEditor = await ShadersEditorsView._getEditor("fs");
+  let vsEditor = yield ShadersEditorsView._getEditor("vs");
+  let fsEditor = yield ShadersEditorsView._getEditor("fs");
 
   vsEditor.once("change", () => {
     ok(false, "The vertex shader source was unexpectedly changed.");
@@ -32,53 +32,53 @@ async function ifWebGLSupported() {
     ok(false, "No sources should be changed form this point onward.");
   });
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
 
   ShadersListView._onProgramMouseOver({ target: getItemLabel(panel, 0) });
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 0, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
   ok(true, "The first program was correctly highlighted.");
 
   ShadersListView._onProgramMouseOut({ target: getItemLabel(panel, 0) });
   ShadersListView._onProgramMouseOver({ target: getItemLabel(panel, 1) });
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 0, b: 64, a: 255 }, true, "#canvas2");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 0, b: 64, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 0, b: 64, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 0, b: 64, a: 255 }, true, "#canvas2");
   ok(true, "The second program was correctly highlighted.");
 
   ShadersListView._onProgramMouseOut({ target: getItemLabel(panel, 1) });
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
   ok(true, "The two programs were correctly unhighlighted.");
 
   ShadersListView._onProgramMouseOver({ target: getBlackBoxCheckbox(panel, 0) });
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
   ok(true, "The two programs were left unchanged after hovering a blackbox checkbox.");
 
   ShadersListView._onProgramMouseOut({ target: getBlackBoxCheckbox(panel, 0) });
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
-  await ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
   ok(true, "The two programs were left unchanged after unhovering a blackbox checkbox.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }
 

@@ -21,18 +21,18 @@ loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsiv
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const responsiveModeToggleClass = ".media-responsive-mode-toggle";
 
-add_task(async function () {
-  let {ui} = await openStyleEditorForURL(TESTCASE_URI);
+add_task(function* () {
+  let {ui} = yield openStyleEditorForURL(TESTCASE_URI);
 
   let editor = ui.editors[1];
-  await openEditor(editor);
+  yield openEditor(editor);
 
   let tab = gBrowser.selectedTab;
   testNumberOfLinks(editor);
-  await testMediaLink(editor, tab, ui, 2, "width", 400);
-  await testMediaLink(editor, tab, ui, 3, "height", 300);
+  yield testMediaLink(editor, tab, ui, 2, "width", 400);
+  yield testMediaLink(editor, tab, ui, 3, "height", 300);
 
-  await closeRDM(tab, ui);
+  yield closeRDM(tab, ui);
   doFinalChecks(editor);
 });
 
@@ -51,7 +51,7 @@ function testNumberOfLinks(editor) {
        "There should be 2 responsive mode links in the media rule");
 }
 
-async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
+function* testMediaLink(editor, tab, ui, itemIndex, type, value) {
   let sidebar = editor.details.querySelector(".stylesheet-sidebar");
   let conditions = sidebar.querySelectorAll(".media-rule-condition");
 
@@ -65,8 +65,8 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
   rdmUI.transitionsEnabled = false;
 
   info("Waiting for the @media list to update");
-  await onMediaChange;
-  await onContentResize;
+  yield onMediaChange;
+  yield onContentResize;
 
   ok(ResponsiveUIManager.isActiveForTab(tab),
     "Responsive mode should be active.");
@@ -74,16 +74,16 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
   ok(!conditions[itemIndex].classList.contains("media-condition-unmatched"),
      "media rule should now be matched after responsive mode is active");
 
-  let dimension = (await getSizing(rdmUI))[type];
+  let dimension = (yield getSizing(rdmUI))[type];
   is(dimension, value, `${type} should be properly set.`);
 }
 
-async function closeRDM(tab, ui) {
+function* closeRDM(tab, ui) {
   info("Closing responsive mode");
   ResponsiveUIManager.toggle(window, tab);
   let onMediaChange = waitForNEvents(ui, "media-list-changed", 2);
-  await once(ResponsiveUIManager, "off");
-  await onMediaChange;
+  yield once(ResponsiveUIManager, "off");
+  yield onMediaChange;
   ok(!ResponsiveUIManager.isActiveForTab(tab),
      "Responsive mode should no longer be active.");
 }
@@ -114,9 +114,9 @@ function waitForResizeTo(rdmUI, type, value) {
   });
 }
 
-async function getSizing(rdmUI) {
+function* getSizing(rdmUI) {
   let browser = rdmUI.getViewportBrowser();
-  let sizing = await ContentTask.spawn(browser, {}, async function () {
+  let sizing = yield ContentTask.spawn(browser, {}, function* () {
     return {
       width: content.innerWidth,
       height: content.innerHeight

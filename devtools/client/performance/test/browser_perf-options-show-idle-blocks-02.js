@@ -12,8 +12,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -24,22 +24,22 @@ add_task(async function () {
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
   Services.prefs.setBoolPref(UI_SHOW_IDLE_BLOCKS_PREF, true);
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   let rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
-  await DetailsView.selectView("memory-flamegraph");
-  await rendered;
+  yield DetailsView.selectView("memory-flamegraph");
+  yield rendered;
 
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_SHOW_IDLE_BLOCKS_PREF, false);
-  await rendered;
+  yield rendered;
   ok(true, "MemoryFlameGraphView rerendered when toggling show-idle-blocks.");
 
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_SHOW_IDLE_BLOCKS_PREF, true);
-  await rendered;
+  yield rendered;
   ok(true, "MemoryFlameGraphView rerendered when toggling back show-idle-blocks.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

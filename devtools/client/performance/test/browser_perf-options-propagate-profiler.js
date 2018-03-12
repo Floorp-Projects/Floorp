@@ -12,8 +12,8 @@ const { PROFILER_BUFFER_SIZE_PREF, PROFILER_SAMPLE_RATE_PREF } = require("devtoo
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(async function () {
-  let { panel, toolbox } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel, toolbox } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -21,12 +21,12 @@ add_task(async function () {
   Services.prefs.setIntPref(PROFILER_BUFFER_SIZE_PREF, 1000);
   Services.prefs.setIntPref(PROFILER_SAMPLE_RATE_PREF, 2);
 
-  await startRecording(panel);
-  let { entries, interval } = await toolbox.performance.getConfiguration();
-  await stopRecording(panel);
+  yield startRecording(panel);
+  let { entries, interval } = yield toolbox.performance.getConfiguration();
+  yield stopRecording(panel);
 
   is(entries, 1000, "profiler entries option is set on profiler");
   is(interval, 0.5, "profiler interval option is set on profiler");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

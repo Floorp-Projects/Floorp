@@ -7,25 +7,25 @@
 
 const TEST_JSON_URL = URL_ROOT + "valid_json.json";
 
-add_task(async function () {
+add_task(function* () {
   info("Test valid JSON started");
 
-  await addJsonViewTab(TEST_JSON_URL);
+  yield addJsonViewTab(TEST_JSON_URL);
 
   // Select the RawData tab
-  await selectJsonViewContentTab("headers");
+  yield selectJsonViewContentTab("headers");
 
   // Check displayed headers
-  let count = await getElementCount(".headersPanelBox .netHeadersGroup");
+  let count = yield getElementCount(".headersPanelBox .netHeadersGroup");
   is(count, 2, "There must be two header groups");
 
-  let text = await getElementText(".headersPanelBox .netInfoHeadersTable");
+  let text = yield getElementText(".headersPanelBox .netInfoHeadersTable");
   isnot(text, "", "Headers text must not be empty");
 
   let browser = gBrowser.selectedBrowser;
 
   // Verify JSON copy into the clipboard.
-  await waitForClipboardPromise(function setup() {
+  yield waitForClipboardPromise(function setup() {
     BrowserTestUtils.synthesizeMouseAtCenter(
       ".headersPanelBox .toolbar button.copy",
       {}, browser);

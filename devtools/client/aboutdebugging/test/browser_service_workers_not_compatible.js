@@ -11,8 +11,8 @@
 
 var imgClass = ".service-worker-disabled .warning";
 
-add_task(async function () {
-  await new Promise(done => {
+add_task(function* () {
+  yield new Promise(done => {
     info("disable service workers");
     let options = {"set": [
       ["dom.serviceWorkers.enabled", false],
@@ -20,16 +20,16 @@ add_task(async function () {
     SpecialPowers.pushPrefEnv(options, done);
   });
 
-  let { tab, document } = await openAboutDebugging("workers");
+  let { tab, document } = yield openAboutDebugging("workers");
   // Check that the warning img appears in the UI
   let img = document.querySelector(imgClass);
   ok(img, "warning message is rendered");
 
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
 });
 
-add_task(async function () {
-  await new Promise(done => {
+add_task(function* () {
+  yield new Promise(done => {
     info("set private browsing mode as default");
     let options = {"set": [
       ["browser.privatebrowsing.autostart", true],
@@ -37,24 +37,24 @@ add_task(async function () {
     SpecialPowers.pushPrefEnv(options, done);
   });
 
-  let { tab, document } = await openAboutDebugging("workers");
+  let { tab, document } = yield openAboutDebugging("workers");
   // Check that the warning img appears in the UI
   let img = document.querySelector(imgClass);
   ok(img, "warning message is rendered");
 
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
 });
 
-add_task(async function () {
+add_task(function* () {
   info("Opening a new private window");
   let win = OpenBrowserWindow({private: true});
-  await waitForDelayedStartupFinished(win);
+  yield waitForDelayedStartupFinished(win);
 
-  let { tab, document } = await openAboutDebugging("workers", win);
+  let { tab, document } = yield openAboutDebugging("workers", win);
   // Check that the warning img appears in the UI
   let img = document.querySelector(imgClass);
   ok(img, "warning message is rendered");
 
-  await closeAboutDebugging(tab);
+  yield closeAboutDebugging(tab);
   win.close();
 });

@@ -13,19 +13,19 @@ const JSON_XHR_URL = URL_ROOT + "test.json";
  * networks details in the Console panel and checks that
  * HTTP parameters (query string) are there.
  */
-add_task(async function () {
+add_task(function* () {
   info("Test XHR Spy params started");
 
-  let {hud} = await addTestTab(TEST_PAGE_URL);
+  let {hud} = yield addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = await executeAndInspectXhr(hud, {
+  let netInfoBody = yield executeAndInspectXhr(hud, {
     method: "GET",
     url: JSON_XHR_URL,
     queryString: "?foo=bar"
   });
 
   // Check headers
-  let tabBody = await selectNetInfoTab(hud, netInfoBody, "params");
+  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "params");
 
   let paramName = tabBody.querySelector(
     ".netInfoParamName > span[title='foo']");
@@ -44,19 +44,19 @@ add_task(async function () {
 /**
  * Test URL parameters with the same name.
  */
-add_task(async function () {
+add_task(function* () {
   info("Test XHR Spy params started");
 
-  let {hud} = await addTestTab(TEST_PAGE_URL);
+  let {hud} = yield addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = await executeAndInspectXhr(hud, {
+  let netInfoBody = yield executeAndInspectXhr(hud, {
     method: "GET",
     url: JSON_XHR_URL,
     queryString: "?box[]=123&box[]=456"
   });
 
   // Check headers
-  let tabBody = await selectNetInfoTab(hud, netInfoBody, "params");
+  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "params");
 
   let params = tabBody.querySelectorAll(
     ".netInfoParamName > span[title='box[]']");

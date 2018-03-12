@@ -8,6 +8,7 @@ const Services = require("Services");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const {Task} = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", true);
 loader.lazyRequireGetter(this, "Hosts", "devtools/client/framework/toolbox-hosts", true);
@@ -63,8 +64,8 @@ function ToolboxHostManager(target, hostType, hostOptions) {
 }
 
 ToolboxHostManager.prototype = {
-  async create(toolId) {
-    await this.host.create();
+  create: Task.async(function* (toolId) {
+    yield this.host.create();
 
     this.host.frame.setAttribute("aria-label", L10N.getStr("toolbox.label"));
     this.host.frame.ownerDocument.defaultView.addEventListener("message", this);
@@ -82,7 +83,7 @@ ToolboxHostManager.prototype = {
     }
 
     return toolbox;
-  },
+  }),
 
   handleEvent(event) {
     switch (event.type) {
@@ -185,7 +186,7 @@ ToolboxHostManager.prototype = {
     });
   },
 
-  async switchHost(hostType) {
+  switchHost: Task.async(function* (hostType) {
     if (hostType == "previous") {
       // Switch to the last used host for the toolbox UI.
       // This is determined by the devtools.toolbox.previousHost pref.
@@ -203,7 +204,7 @@ ToolboxHostManager.prototype = {
     }
     let iframe = this.host.frame;
     let newHost = this.createHost(hostType);
-    let newIframe = await newHost.create();
+    let newIframe = yield newHost.create();
     // change toolbox document's parent to the new host
     newIframe.swapFrameLoaders(iframe);
 
@@ -228,7 +229,7 @@ ToolboxHostManager.prototype = {
       name: "switched-host",
       hostType
     });
-  },
+  }),
 
   /**
    * Destroy the current host, and remove event listeners from its frame.
