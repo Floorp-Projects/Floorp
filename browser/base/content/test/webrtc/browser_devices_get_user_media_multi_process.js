@@ -89,7 +89,7 @@ var gTests = [
     await BrowserTestUtils.removeTab(tab);
 
     // Check that we still show the sharing indicators for the first tab's stream.
-    await promiseWaitForCondition(() => !webrtcUI.showCameraIndicator);
+    await TestUtils.waitForCondition(() => !webrtcUI.showCameraIndicator);
     ok(webrtcUI.showGlobalIndicator, "webrtcUI wants the global indicator shown");
     ok(!webrtcUI.showCameraIndicator, "webrtcUI wants the camera indicator hidden");
     ok(webrtcUI.showMicrophoneIndicator, "webrtcUI wants the mic indicator shown");
@@ -192,7 +192,7 @@ var gTests = [
     await BrowserTestUtils.removeTab(tab);
 
     // Check that we still show the sharing indicators for the first tab's stream.
-    await promiseWaitForCondition(() => webrtcUI.showCameraIndicator);
+    await TestUtils.waitForCondition(() => !webrtcUI.showCameraIndicator);
     ok(webrtcUI.showGlobalIndicator, "webrtcUI wants the global indicator shown");
     ok(webrtcUI.showCameraIndicator, "webrtcUI wants the camera indicator shown");
     ok(!webrtcUI.showMicrophoneIndicator, "webrtcUI wants the mic indicator hidden");
