@@ -52,7 +52,6 @@
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/Shape.h"
-#include "wasm/WasmSignalHandlers.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
@@ -102,7 +101,7 @@ JSContext::init(ContextKind kind)
 {
     // Skip most of the initialization if this thread will not be running JS.
     if (kind == ContextKind::Cooperative) {
-        // Get a platform-native handle for this thread, used by js::InterruptRunningJitCode.
+        // Get a platform-native handle for this thread, used by jit::InterruptRunningCode.
 #ifdef XP_WIN
         size_t openFlags = THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME |
                            THREAD_QUERY_INFORMATION;
@@ -123,11 +122,12 @@ JSContext::init(ContextKind kind)
             return false;
 
 #ifdef JS_SIMULATOR
-        simulator_ = js::jit::Simulator::Create(this);
+        simulator_ = jit::Simulator::Create(this);
         if (!simulator_)
             return false;
 #endif
 
+        jit::EnsureAsyncInterrupt(this);
         if (!wasm::EnsureSignalHandlers(this))
             return false;
     }
