@@ -1003,6 +1003,11 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // purposes. Wasm code can't trap reentrantly.
     js::ActiveThreadData<mozilla::Maybe<js::wasm::TrapData>> wasmTrapData;
 
+    // List of all the live wasm::Instances in the runtime. Equal to the union
+    // of all instances registered in all JSCompartments. Accessed from watchdog
+    // threads for purposes of wasm::InterruptRunningCode().
+    js::ExclusiveData<js::wasm::InstanceVector> wasmInstances;
+
   public:
 #if defined(NIGHTLY_BUILD)
     // Support for informing the embedding of any error thrown.

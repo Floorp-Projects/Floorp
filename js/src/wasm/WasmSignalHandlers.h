@@ -71,13 +71,10 @@ class MachExceptionHandler
 
 struct TrapData
 {
-    void* pc;
+    void* resumePC;
+    void* unwoundPC;
     Trap trap;
     uint32_t bytecodeOffset;
-
-    TrapData(void* pc, Trap trap, uint32_t bytecodeOffset)
-      : pc(pc), trap(trap), bytecodeOffset(bytecodeOffset)
-    {}
 };
 
 } // namespace wasm
