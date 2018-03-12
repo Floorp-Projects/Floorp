@@ -6,7 +6,6 @@
 
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include <stdint.h>                     // for uint32_t
-#include "apz/src/AsyncPanZoomController.h"
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "LayerManagerComposite.h"      // for LayerManagerComposite, etc
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
@@ -708,8 +707,7 @@ AsyncCompositionManager::RecordShadowTransforms(Layer* aLayer)
       [this] (Layer* layer)
       {
         for (uint32_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
-          AsyncPanZoomController* apzc = layer->GetAsyncPanZoomController(i);
-          if (!apzc) {
+          if (!layer->GetFrameMetrics(i).IsScrollable()) {
             continue;
           }
           gfx::Matrix4x4 shadowTransform = layer->AsHostLayer()->GetShadowBaseTransform();
@@ -885,144 +883,146 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
           }
         }
 
-        for (uint32_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
-          AsyncPanZoomController* controller = layer->GetAsyncPanZoomController(i);
-          if (!controller) {
-            continue;
-          }
+        if (RefPtr<APZSampler> sampler = mCompositorBridge->GetAPZSampler()) {
+          for (uint32_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
+            LayerMetricsWrapper wrapper(layer, i);
+            const FrameMetrics& metrics = wrapper.Metrics();
+            if (!metrics.IsScrollable()) {
+              continue;
+            }
 
-          hasAsyncTransform = true;
+            hasAsyncTransform = true;
 
-          AsyncTransform asyncTransformWithoutOverscroll =
-              controller->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);
-          AsyncTransformComponentMatrix overscrollTransform =
-              controller->GetOverscrollTransform(AsyncPanZoomController::eForCompositing);
-          AsyncTransformComponentMatrix asyncTransform =
-              AsyncTransformComponentMatrix(asyncTransformWithoutOverscroll)
-            * overscrollTransform;
+            AsyncTransform asyncTransformWithoutOverscroll =
+                sampler->GetCurrentAsyncTransform(wrapper);
+            AsyncTransformComponentMatrix overscrollTransform =
+                sampler->GetOverscrollTransform(wrapper);
+            AsyncTransformComponentMatrix asyncTransform =
+                AsyncTransformComponentMatrix(asyncTransformWithoutOverscroll)
+              * overscrollTransform;
 
-          if (!layer->IsScrollableWithoutContent()) {
-            controller->MarkAsyncTransformAppliedToContent();
-          }
+            if (!layer->IsScrollableWithoutContent()) {
+              sampler->MarkAsyncTransformAppliedToContent(wrapper);
+            }
 
-          const ScrollMetadata& scrollMetadata = layer->GetScrollMetadata(i);
-          const FrameMetrics& metrics = scrollMetadata.GetMetrics();
+            const ScrollMetadata& scrollMetadata = wrapper.Metadata();
 
 #if defined(MOZ_WIDGET_ANDROID)
-          // If we find a metrics which is the root content doc, use that. If not, use
-          // the root layer. Since this function recurses on children first we should
-          // only end up using the root layer if the entire tree was devoid of a
-          // root content metrics. This is a temporary solution; in the long term we
-          // should not need the root content metrics at all. See bug 1201529 comment
-          // 6 for details.
-          if (!(*aOutFoundRoot)) {
-            *aOutFoundRoot = metrics.IsRootContent() ||       /* RCD */
-                  (layer->GetParent() == nullptr &&          /* rootmost metrics */
-                   i + 1 >= layer->GetScrollMetadataCount());
-            if (*aOutFoundRoot) {
-              mRootScrollableId = metrics.GetScrollId();
-              Compositor* compositor = mLayerManager->GetCompositor();
-              if (CompositorBridgeParent* bridge = compositor->GetCompositorBridgeParent()) {
-                AndroidDynamicToolbarAnimator* animator = bridge->GetAndroidDynamicToolbarAnimator();
-                MOZ_ASSERT(animator);
-                if (mIsFirstPaint) {
-                  animator->UpdateRootFrameMetrics(metrics);
-                  animator->FirstPaint();
-                  mIsFirstPaint = false;
+            // If we find a metrics which is the root content doc, use that. If not, use
+            // the root layer. Since this function recurses on children first we should
+            // only end up using the root layer if the entire tree was devoid of a
+            // root content metrics. This is a temporary solution; in the long term we
+            // should not need the root content metrics at all. See bug 1201529 comment
+            // 6 for details.
+            if (!(*aOutFoundRoot)) {
+              *aOutFoundRoot = metrics.IsRootContent() ||       /* RCD */
+                    (layer->GetParent() == nullptr &&          /* rootmost metrics */
+                     i + 1 >= layer->GetScrollMetadataCount());
+              if (*aOutFoundRoot) {
+                mRootScrollableId = metrics.GetScrollId();
+                Compositor* compositor = mLayerManager->GetCompositor();
+                if (CompositorBridgeParent* bridge = compositor->GetCompositorBridgeParent()) {
+                  AndroidDynamicToolbarAnimator* animator = bridge->GetAndroidDynamicToolbarAnimator();
+                  MOZ_ASSERT(animator);
+                  if (mIsFirstPaint) {
+                    animator->UpdateRootFrameMetrics(metrics);
+                    animator->FirstPaint();
+                    mIsFirstPaint = false;
+                  }
+                  if (mLayersUpdated) {
+                    animator->NotifyLayersUpdated();
+                    mLayersUpdated = false;
+                  }
+                  // If this is not actually the root content then the animator is not getting updated in AsyncPanZoomController::NotifyLayersUpdated
+                  // because the root content document is not scrollable. So update it here so it knows if the root composition size has changed.
+                  if (!metrics.IsRootContent()) {
+                    animator->MaybeUpdateCompositionSizeAndRootFrameMetrics(metrics);
+                  }
                 }
-                if (mLayersUpdated) {
-                  animator->NotifyLayersUpdated();
-                  mLayersUpdated = false;
-                }
-                // If this is not actually the root content then the animator is not getting updated in AsyncPanZoomController::NotifyLayersUpdated
-                // because the root content document is not scrollable. So update it here so it knows if the root composition size has changed.
-                if (!metrics.IsRootContent()) {
-                  animator->MaybeUpdateCompositionSizeAndRootFrameMetrics(metrics);
-                }
+                fixedLayerMargins = mFixedLayerMargins;
               }
-              fixedLayerMargins = mFixedLayerMargins;
             }
-          }
 #else
-          *aOutFoundRoot = false;
-          // Non-Android platforms still care about this flag being cleared after
-          // the first call to TransformShadowTree().
-          mIsFirstPaint = false;
+            *aOutFoundRoot = false;
+            // Non-Android platforms still care about this flag being cleared after
+            // the first call to TransformShadowTree().
+            mIsFirstPaint = false;
 #endif
 
-          // Transform the current local clips by this APZC's async transform. If we're
-          // using containerful scrolling, then the clip is not part of the scrolled
-          // frame and should not be transformed.
-          if (!scrollMetadata.UsesContainerScrolling()) {
-            MOZ_ASSERT(asyncTransform.Is2D());
-            if (clipParts.mFixedClip) {
-              *clipParts.mFixedClip = TransformBy(asyncTransform, *clipParts.mFixedClip);
+            // Transform the current local clips by this APZC's async transform. If we're
+            // using containerful scrolling, then the clip is not part of the scrolled
+            // frame and should not be transformed.
+            if (!scrollMetadata.UsesContainerScrolling()) {
+              MOZ_ASSERT(asyncTransform.Is2D());
+              if (clipParts.mFixedClip) {
+                *clipParts.mFixedClip = TransformBy(asyncTransform, *clipParts.mFixedClip);
+              }
+              if (clipParts.mScrolledClip) {
+                *clipParts.mScrolledClip = TransformBy(asyncTransform, *clipParts.mScrolledClip);
+              }
             }
-            if (clipParts.mScrolledClip) {
-              *clipParts.mScrolledClip = TransformBy(asyncTransform, *clipParts.mScrolledClip);
+            // Note: we don't set the layer's shadow clip rect property yet;
+            // AlignFixedAndStickyLayers will use the clip parts from the clip parts
+            // cache.
+
+            combinedAsyncTransform *= asyncTransform;
+
+            // For the purpose of aligning fixed and sticky layers, we disregard
+            // the overscroll transform as well as any OMTA transform when computing the
+            // 'aCurrentTransformForRoot' parameter. This ensures that the overscroll
+            // and OMTA transforms are not unapplied, and therefore that the visual
+            // effects apply to fixed and sticky layers. We do this by using
+            // GetTransform() as the base transform rather than GetLocalTransform(),
+            // which would include those factors.
+            LayerToParentLayerMatrix4x4 transformWithoutOverscrollOrOmta =
+                layer->GetTransformTyped()
+              * CompleteAsyncTransform(
+                  AdjustForClip(asyncTransformWithoutOverscroll, layer));
+
+            AlignFixedAndStickyLayers(layer, layer, metrics.GetScrollId(), oldTransform,
+                                      transformWithoutOverscrollOrOmta, fixedLayerMargins,
+                                      &clipPartsCache);
+
+            // Combine the local clip with the ancestor scrollframe clip. This is not
+            // included in the async transform above, since the ancestor clip should not
+            // move with this APZC.
+            if (scrollMetadata.HasScrollClip()) {
+              ParentLayerIntRect clip = scrollMetadata.ScrollClip().GetClipRect();
+              if (layer->GetParent() && layer->GetParent()->GetTransformIsPerspective()) {
+                // If our parent layer has a perspective transform, we want to apply
+                // our scroll clip to it instead of to this layer (see bug 1168263).
+                // A layer with a perspective transform shouldn't have multiple
+                // children with FrameMetrics, nor a child with multiple FrameMetrics.
+                // (A child with multiple FrameMetrics would mean that there's *another*
+                // scrollable element between the one with the CSS perspective and the
+                // transformed element. But you'd have to use preserve-3d on the inner
+                // scrollable element in order to have the perspective apply to the
+                // transformed child, and preserve-3d is not supported on scrollable
+                // elements, so this case can't occur.)
+                MOZ_ASSERT(!stackDeferredClips.top());
+                stackDeferredClips.top().emplace(clip);
+              } else {
+                clipParts.mScrolledClip = IntersectMaybeRects(Some(clip),
+                    clipParts.mScrolledClip);
+              }
             }
-          }
-          // Note: we don't set the layer's shadow clip rect property yet;
-          // AlignFixedAndStickyLayers will use the clip parts from the clip parts
-          // cache.
 
-          combinedAsyncTransform *= asyncTransform;
-
-          // For the purpose of aligning fixed and sticky layers, we disregard
-          // the overscroll transform as well as any OMTA transform when computing the
-          // 'aCurrentTransformForRoot' parameter. This ensures that the overscroll
-          // and OMTA transforms are not unapplied, and therefore that the visual
-          // effects apply to fixed and sticky layers. We do this by using
-          // GetTransform() as the base transform rather than GetLocalTransform(),
-          // which would include those factors.
-          LayerToParentLayerMatrix4x4 transformWithoutOverscrollOrOmta =
-              layer->GetTransformTyped()
-            * CompleteAsyncTransform(
-                AdjustForClip(asyncTransformWithoutOverscroll, layer));
-
-          AlignFixedAndStickyLayers(layer, layer, metrics.GetScrollId(), oldTransform,
-                                    transformWithoutOverscrollOrOmta, fixedLayerMargins,
-                                    &clipPartsCache);
-
-          // Combine the local clip with the ancestor scrollframe clip. This is not
-          // included in the async transform above, since the ancestor clip should not
-          // move with this APZC.
-          if (scrollMetadata.HasScrollClip()) {
-            ParentLayerIntRect clip = scrollMetadata.ScrollClip().GetClipRect();
-            if (layer->GetParent() && layer->GetParent()->GetTransformIsPerspective()) {
-              // If our parent layer has a perspective transform, we want to apply
-              // our scroll clip to it instead of to this layer (see bug 1168263).
-              // A layer with a perspective transform shouldn't have multiple
-              // children with FrameMetrics, nor a child with multiple FrameMetrics.
-              // (A child with multiple FrameMetrics would mean that there's *another*
-              // scrollable element between the one with the CSS perspective and the
-              // transformed element. But you'd have to use preserve-3d on the inner
-              // scrollable element in order to have the perspective apply to the
-              // transformed child, and preserve-3d is not supported on scrollable
-              // elements, so this case can't occur.)
-              MOZ_ASSERT(!stackDeferredClips.top());
-              stackDeferredClips.top().emplace(clip);
-            } else {
-              clipParts.mScrolledClip = IntersectMaybeRects(Some(clip),
-                  clipParts.mScrolledClip);
+            // Do the same for the ancestor mask layers: ancestorMaskLayers contains
+            // the ancestor mask layers for scroll frames *inside* the current scroll
+            // frame, so these are the ones we need to shift by our async transform.
+            for (Layer* ancestorMaskLayer : ancestorMaskLayers) {
+              SetShadowTransform(ancestorMaskLayer,
+                  ancestorMaskLayer->GetLocalTransformTyped() * asyncTransform);
             }
-          }
 
-          // Do the same for the ancestor mask layers: ancestorMaskLayers contains
-          // the ancestor mask layers for scroll frames *inside* the current scroll
-          // frame, so these are the ones we need to shift by our async transform.
-          for (Layer* ancestorMaskLayer : ancestorMaskLayers) {
-            SetShadowTransform(ancestorMaskLayer,
-                ancestorMaskLayer->GetLocalTransformTyped() * asyncTransform);
-          }
-
-          // Append the ancestor mask layer for this scroll frame to ancestorMaskLayers.
-          if (scrollMetadata.HasScrollClip()) {
-            const LayerClip& scrollClip = scrollMetadata.ScrollClip();
-            if (scrollClip.GetMaskLayerIndex()) {
-              size_t maskLayerIndex = scrollClip.GetMaskLayerIndex().value();
-              Layer* ancestorMaskLayer = layer->GetAncestorMaskLayerAt(maskLayerIndex);
-              ancestorMaskLayers.AppendElement(ancestorMaskLayer);
+            // Append the ancestor mask layer for this scroll frame to ancestorMaskLayers.
+            if (scrollMetadata.HasScrollClip()) {
+              const LayerClip& scrollClip = scrollMetadata.ScrollClip();
+              if (scrollClip.GetMaskLayerIndex()) {
+                size_t maskLayerIndex = scrollClip.GetMaskLayerIndex().value();
+                Layer* ancestorMaskLayer = layer->GetAncestorMaskLayerAt(maskLayerIndex);
+                ancestorMaskLayers.AppendElement(ancestorMaskLayer);
+              }
             }
           }
         }
@@ -1069,11 +1069,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
 static bool
 LayerIsScrollbarTarget(const LayerMetricsWrapper& aTarget, Layer* aScrollbar)
 {
-  AsyncPanZoomController* apzc = aTarget.GetApzc();
-  if (!apzc) {
+  const FrameMetrics& metrics = aTarget.Metrics();
+  if (!metrics.IsScrollable()) {
     return false;
   }
-  const FrameMetrics& metrics = aTarget.Metrics();
   if (metrics.GetScrollId() != aScrollbar->GetScrollbarTargetContainerId()) {
     return false;
   }
