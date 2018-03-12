@@ -266,7 +266,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitGuardObjectIdentity(MGuardObjectIdentity* ins) override;
     void visitGuardShape(MGuardShape* ins) override;
     void visitGuardObjectGroup(MGuardObjectGroup* ins) override;
-    void visitGuardClass(MGuardClass* ins) override;
     void visitGuardObject(MGuardObject* ins) override;
     void visitGuardString(MGuardString* ins) override;
     void visitGuardReceiverPolymorphic(MGuardReceiverPolymorphic* ins) override;

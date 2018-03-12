@@ -205,7 +205,7 @@ int8 Segment::getSlotBidiClass(Slot *s) const
 inline
 void Segment::finalise(const Font *font, bool reverse)
 {
-    if (!m_first) return;
+    if (!m_first || !m_last) return;
 
     m_advance = positionSlots(font, m_first, m_last, m_silf->dir(), true);
     //associateChars(0, m_numCharinfo);

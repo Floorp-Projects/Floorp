@@ -366,6 +366,16 @@ impl<T: NumCast + Copy, U> TypedVector2D<T, U> {
         self.cast().unwrap()
     }
 
+    /// Cast into an `u32` vector, truncating decimals if any.
+    ///
+    /// When casting from floating vector vectors, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
+    #[inline]
+    pub fn to_u32(&self) -> TypedVector2D<u32, U> {
+        self.cast().unwrap()
+    }
+
     /// Cast into an i32 vector, truncating decimals if any.
     ///
     /// When casting from floating vector vectors, it is worth considering whether
@@ -766,6 +776,16 @@ impl<T: NumCast + Copy, U> TypedVector3D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_usize(&self) -> TypedVector3D<usize, U> {
+        self.cast().unwrap()
+    }
+
+    /// Cast into an `u32` vector, truncating decimals if any.
+    ///
+    /// When casting from floating vector vectors, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
+    #[inline]
+    pub fn to_u32(&self) -> TypedVector3D<u32, U> {
         self.cast().unwrap()
     }
 

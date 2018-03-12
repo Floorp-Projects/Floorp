@@ -58,7 +58,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         }
     }
 
-    fun GeckoSession.openWindow() =
+    fun GeckoSession.open() =
             sessionRule.openSession(this)
 
     fun GeckoSession.waitForPageStop() =

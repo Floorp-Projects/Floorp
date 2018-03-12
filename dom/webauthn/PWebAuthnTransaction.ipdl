@@ -47,19 +47,23 @@ union WebAuthnExtensionResult {
 };
 
 struct WebAuthnMakeCredentialInfo {
+  nsString Origin;
   uint8_t[] RpIdHash;
   uint8_t[] ClientDataHash;
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] ExcludeList;
   WebAuthnExtension[] Extensions;
   WebAuthnAuthenticatorSelection AuthenticatorSelection;
+  bool RequestDirectAttestation;
 };
 
 struct WebAuthnMakeCredentialResult {
   uint8_t[] RegBuffer;
+  bool DirectAttestationPermitted;
 };
 
 struct WebAuthnGetAssertionInfo {
+  nsString Origin;
   uint8_t[] RpIdHash;
   uint8_t[] ClientDataHash;
   uint32_t TimeoutMS;

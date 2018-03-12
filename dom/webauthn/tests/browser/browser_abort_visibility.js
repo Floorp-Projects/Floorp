@@ -74,15 +74,19 @@ function startGetAssertionRequest(tab) {
   });
 }
 
+add_task(async function test_setup() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["security.webauth.webauthn", true],
+      ["security.webauth.webauthn_enable_softtoken", false],
+      ["security.webauth.webauthn_enable_usbtoken", true]
+    ]
+  });
+});
 
 // Test that MakeCredential() and GetAssertion() requests
 // are aborted when the current tab loses its focus.
-add_task(async function test_abort() {
-  // Enable the USB token.
-  Services.prefs.setBoolPref("security.webauth.webauthn", true);
-  Services.prefs.setBoolPref("security.webauth.webauthn_enable_softtoken", false);
-  Services.prefs.setBoolPref("security.webauth.webauthn_enable_usbtoken", true);
-
+add_task(async function test_switch_tab() {
   // Create a new tab for the MakeCredential() request.
   let tab_create = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
@@ -105,9 +109,90 @@ add_task(async function test_abort() {
   // Close tabs.
   await BrowserTestUtils.removeTab(tab_create);
   await BrowserTestUtils.removeTab(tab_get);
+});
 
-  // Cleanup.
-  Services.prefs.clearUserPref("security.webauth.webauthn");
-  Services.prefs.clearUserPref("security.webauth.webauthn_enable_softtoken");
-  Services.prefs.clearUserPref("security.webauth.webauthn_enable_usbtoken");
+add_task(async function test_new_window_make() {
+  // Create a new tab for the MakeCredential() request.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  // Start a MakeCredential request.
+  await startMakeCredentialRequest(tab);
+  await assertStatus(tab, "pending");
+
+  // Open a new window. The tab will lose focus.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await waitForStatus(tab, "aborted");
+  await BrowserTestUtils.closeWindow(win);
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_new_window_get() {
+  // Create a new tab for the GetAssertion() request.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  // Start a GetAssertion request.
+  await startGetAssertionRequest(tab);
+  await assertStatus(tab, "pending");
+
+  // Open a new window. The tab will lose focus.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await waitForStatus(tab, "aborted");
+  await BrowserTestUtils.closeWindow(win);
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_minimize_make() {
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
+  // Minimizing windows doesn't supported in headless mode.
+  if (env.get("MOZ_HEADLESS")) {
+    return;
+  }
+
+  // Create a new tab for the MakeCredential() request.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  // Start a MakeCredential request.
+  await startMakeCredentialRequest(tab);
+  await assertStatus(tab, "pending");
+
+  // Minimize the window.
+  window.minimize();
+  await waitForStatus(tab, "aborted");
+
+  // Restore the window.
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve, window));
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_minimize_get() {
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
+  // Minimizing windows doesn't supported in headless mode.
+  if (env.get("MOZ_HEADLESS")) {
+    return;
+  }
+
+  // Create a new tab for the GetAssertion() request.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  // Start a GetAssertion request.
+  await startGetAssertionRequest(tab);
+  await assertStatus(tab, "pending");
+
+  // Minimize the window.
+  window.minimize();
+  await waitForStatus(tab, "aborted");
+
+  // Restore the window.
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve, window));
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab);
 });

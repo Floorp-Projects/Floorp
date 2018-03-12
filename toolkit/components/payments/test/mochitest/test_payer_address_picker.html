@@ -1,0 +1,207 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the paymentOptions address-picker
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the paymentOptions address-picker</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="payments_common.js"></script>
+
+  <script src="custom-elements.min.js"></script>
+  <script src="PaymentsStore.js"></script>
+  <script src="ObservedPropertiesMixin.js"></script>
+  <script src="PaymentStateSubscriberMixin.js"></script>
+  <script src="payment-dialog.js"></script>
+
+  <script src="rich-select.js"></script>
+  <script src="address-picker.js"></script>
+  <script src="rich-option.js"></script>
+  <script src="address-option.js"></script>
+  <script src="currency-amount.js"></script>
+  <link rel="stylesheet" type="text/css" href="rich-select.css"/>
+  <link rel="stylesheet" type="text/css" href="address-option.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="paymentRequest.css"/>
+</head>
+<body>
+  <p id="display">
+    <iframe id="templateFrame" src="paymentRequest.xhtml" width="0" height="0"></iframe>
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+/** Test the payer requested details functionality **/
+
+/* import-globals-from payments_common.js */
+
+function getVisiblePickerOptions(picker) {
+  let select = picker.querySelector(":scope > rich-select");
+  let options = select.querySelectorAll("address-option");
+  let visibleOptions = Array.from(options).filter(isVisible);
+  return visibleOptions;
+}
+
+function isVisible(elem) {
+  let result = elem.getBoundingClientRect().height > 0;
+  return result;
+}
+
+function setPaymentOptions(requestStore, options) {
+  let {request} = requestStore.getState();
+  request = Object.assign({}, request, {
+    paymentOptions: options,
+  });
+  return requestStore.setState({ request });
+}
+
+const SAVED_ADDRESSES = {
+  "48bnds6854t": {
+    "address-level1": "MI",
+    "address-level2": "Some City",
+    "country": "US",
+    "guid": "48bnds6854t",
+    "name": "Mr. Foo",
+    "postal-code": "90210",
+    "street-address": "123 Sesame Street,\nApt 40",
+    "tel": "+1 519 555-5555",
+    "email": "foo@example.com",
+  },
+  "68gjdh354j": {
+    "address-level1": "CA",
+    "address-level2": "Mountain View",
+    "country": "US",
+    "guid": "68gjdh354j",
+    "name": "Mrs. Bar",
+    "postal-code": "94041",
+    "street-address": "P.O. Box 123",
+    "tel": "+1 650 555-5555",
+    "email": "bar@example.com",
+  },
+};
+
+let elPicker;
+let elDialog;
+let initialState;
+
+add_task(async function setup_once() {
+  let templateFrame = document.getElementById("templateFrame");
+  await SimpleTest.promiseFocus(templateFrame.contentWindow);
+
+  let displayEl = document.getElementById("display");
+  // Import the templates from the real shipping dialog to avoid duplication.
+  for (let template of templateFrame.contentDocument.querySelectorAll("template")) {
+    let imported = document.importNode(template, true);
+    displayEl.appendChild(imported);
+  }
+
+  elDialog = document.createElement("payment-dialog");
+  displayEl.appendChild(elDialog);
+  elPicker = elDialog.querySelector("address-picker.payer-related");
+
+  initialState = Object.assign({}, elDialog.requestStore.getState(), {
+    changesPrevented: false,
+    completionState: "initial",
+    orderDetailsShowing: false,
+  });
+});
+
+async function setup() {
+  // reset the store back to a known, default state
+  elDialog.requestStore.setState(deepClone(initialState));
+  await asyncElementRendered();
+}
+
+add_task(async function test_empty() {
+  await setup();
+
+  let {request, savedAddresses} = elPicker.requestStore.getState();
+  ok(!savedAddresses || !savedAddresses.length,
+     "Check initial state has no saved addresses");
+
+  let {paymentOptions} = request;
+  let payerRequested = paymentOptions.requestPayerName ||
+                   paymentOptions.requestPayerEmail ||
+                   paymentOptions.requestPayerPhone;
+  ok(!payerRequested, "Check initial state has no payer details requested");
+  ok(elPicker, "Check elPicker exists");
+  is(elPicker.dropdown.popupBox.children.length, 0, "Check dropdown is empty");
+  is(isVisible(elPicker), false, "The address-picker is not visible");
+});
+
+// paymentOptions properties are acurately reflected in the address-fields attribute
+add_task(async function test_visible_fields() {
+  await setup();
+  let requestStore = elPicker.requestStore;
+  setPaymentOptions(requestStore, {
+    requestPayerName: true,
+    requestPayerEmail: true,
+    requestPayerPhone: true,
+  });
+
+  requestStore.setState({
+    savedAddresses: SAVED_ADDRESSES,
+    selectedPayerAddress: "48bnds6854t",
+  });
+
+  await asyncElementRendered();
+
+  let visibleOptions = getVisiblePickerOptions(elPicker);
+  let visibleOption = visibleOptions[0];
+
+  is(elPicker.dropdown.popupBox.children.length, 2, "Check dropdown has 2 addresses");
+  is(visibleOptions.length, 1, "One option should be visible");
+  is(visibleOption.getAttribute("guid"), "48bnds6854t", "expected option is visible");
+
+  for (let fieldName of ["name", "email", "tel"]) {
+    let elem = visibleOption.querySelector(`.${fieldName}`);
+    ok(elem, `field ${fieldName} exists`);
+    ok(isVisible(elem), `field ${fieldName} is visible`);
+  }
+  ok(!isVisible(visibleOption.querySelector(".street-address")), "street-address is not visible");
+});
+
+add_task(async function test_selective_fields() {
+  await setup();
+  let requestStore = elPicker.requestStore;
+
+  requestStore.setState({
+    savedAddresses: SAVED_ADDRESSES,
+    selectedPayerAddress: "48bnds6854t",
+  });
+
+  let payerFieldVariations = [
+    {requestPayerName: true, requestPayerEmail: false, requestPayerPhone: false },
+    {requestPayerName: false, requestPayerEmail: true, requestPayerPhone: false },
+    {requestPayerName: false, requestPayerEmail: false, requestPayerPhone: true },
+    {requestPayerName: true, requestPayerEmail: true, requestPayerPhone: false },
+    {requestPayerName: false, requestPayerEmail: true, requestPayerPhone: true },
+    {requestPayerName: true, requestPayerEmail: false, requestPayerPhone: true },
+  ];
+
+  for (let payerFields of payerFieldVariations) {
+    setPaymentOptions(requestStore, payerFields);
+    await asyncElementRendered();
+
+    let visibleOption = getVisiblePickerOptions(elPicker)[0];
+    let elName = visibleOption.querySelector(".name");
+    let elEmail = visibleOption.querySelector(".email");
+    let elPhone = visibleOption.querySelector(".tel");
+
+    is(isVisible(elName), payerFields.requestPayerName,
+       "name field is correctly toggled");
+    is(isVisible(elEmail), payerFields.requestPayerEmail,
+       "email field is correctly toggled");
+    is(isVisible(elPhone), payerFields.requestPayerPhone,
+       "tel field is correctly toggled");
+  }
+});
+</script>
+
+</body>
+</html>

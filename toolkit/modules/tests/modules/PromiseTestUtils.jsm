@@ -132,8 +132,9 @@ var PromiseTestUtils = {
   // UncaughtRejectionObserver
   onLeftUncaught(promise) {
     let message = "(Unable to convert rejection reason to string.)";
+    let reason = null;
     try {
-      let reason = PromiseDebugging.getState(promise).reason;
+      reason = PromiseDebugging.getState(promise).reason;
       if (reason === this._ensureDOMPromiseRejectionsProcessedReason) {
         // Ignore the special promise for ensureDOMPromiseRejectionsProcessed.
         return;
@@ -146,7 +147,12 @@ var PromiseTestUtils = {
     // later, if the error occurred in a context that has been unloaded.
     let stack = "(Unable to convert rejection stack to string.)";
     try {
-      stack = "" + PromiseDebugging.getRejectionStack(promise);
+      // In some cases, the rejection stack from `PromiseDebugging` may be null.
+      // If the rejection reason was an Error object, use its `stack` to recover
+      // a meaningful value.
+      stack = "" + (PromiseDebugging.getRejectionStack(promise) ||
+                    (reason && reason.stack) ||
+                    "(No stack available.)");
     } catch (ex) {}
 
     // Always add a newline at the end of the stack for consistent reporting.

@@ -49,7 +49,7 @@
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Stack.h"
 #include "vm/Stopwatch.h"
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 #include "wasm/WasmSignalHandlers.h"
 
 #ifdef _MSC_VER

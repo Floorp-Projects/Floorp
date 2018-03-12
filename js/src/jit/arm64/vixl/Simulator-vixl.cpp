@@ -2326,6 +2326,7 @@ void Simulator::VisitSystem(const Instruction* instr) {
     VIXL_ASSERT(instr->Mask(SystemHintMask) == HINT);
     switch (instr->ImmHint()) {
       case NOP: break;
+      case CSDB: break;
       default: VIXL_UNIMPLEMENTED();
     }
   } else if (instr->Mask(MemBarrierFMask) == MemBarrierFixed) {

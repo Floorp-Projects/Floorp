@@ -10,7 +10,7 @@
 #include "NamespaceImports.h"
 #include "ds/Bitmap.h"
 #include "threading/ProtectedData.h"
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 
 namespace js {
 namespace gc {

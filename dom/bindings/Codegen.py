@@ -3400,66 +3400,28 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             "\n").define()
 
 
-class CGGetPerInterfaceObject(CGAbstractMethod):
-    """
-    A method for getting a per-interface object (a prototype object or interface
-    constructor object).
-    """
-    def __init__(self, descriptor, name, idPrefix="", extraArgs=[]):
-        args = [Argument('JSContext*', 'aCx')] + extraArgs
-        CGAbstractMethod.__init__(self, descriptor, name,
-                                  'JS::Handle<JSObject*>', args)
-        self.id = idPrefix + "id::" + self.descriptor.name
-
-    def definition_body(self):
-        return fill(
-            """
-            /* Make sure our global is sane.  Hopefully we can remove this sometime */
-            JSObject* global = JS::CurrentGlobalOrNull(aCx);
-            if (!(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL)) {
-              return nullptr;
-            }
-
-            /* Check to see whether the interface objects are already installed */
-            ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(global);
-            if (!protoAndIfaceCache.HasEntryInSlot(${id})) {
-              JS::Rooted<JSObject*> rootedGlobal(aCx, global);
-              CreateInterfaceObjects(aCx, rootedGlobal, protoAndIfaceCache, aDefineOnGlobal);
-            }
-
-            /*
-             * The object might _still_ be null, but that's OK.
-             *
-             * Calling fromMarkedLocation() is safe because protoAndIfaceCache is
-             * traced by TraceProtoAndIfaceCache() and its contents are never
-             * changed after they have been set.
-             *
-             * Calling address() avoids the read read barrier that does gray
-             * unmarking, but it's not possible for the object to be gray here.
-             */
-
-            const JS::Heap<JSObject*>& entrySlot = protoAndIfaceCache.EntrySlotMustExist(${id});
-            MOZ_ASSERT(JS::ObjectIsNotGray(entrySlot));
-            return JS::Handle<JSObject*>::fromMarkedLocation(entrySlot.address());
-            """,
-            id=self.id)
-
-
-class CGGetProtoObjectHandleMethod(CGGetPerInterfaceObject):
+class CGGetProtoObjectHandleMethod(CGAbstractMethod):
     """
     A method for getting the interface prototype object.
     """
     def __init__(self, descriptor):
-        CGGetPerInterfaceObject.__init__(self, descriptor, "GetProtoObjectHandle",
-                                         "prototypes::")
+        CGAbstractMethod.__init__(
+            self, descriptor, "GetProtoObjectHandle",
+            'JS::Handle<JSObject*>',
+            [Argument('JSContext*', 'aCx')],
+            inline=True)
 
     def definition_body(self):
-        return dedent("""
+        return fill(
+            """
             /* Get the interface prototype object for this class.  This will create the
                object as needed. */
-            bool aDefineOnGlobal = true;
+            return GetPerInterfaceObjectHandle(aCx, prototypes::id::${name},
+                                               &CreateInterfaceObjects,
+                                               /* aDefineOnGlobal = */ true);
 
-            """) + CGGetPerInterfaceObject.definition_body(self)
+            """,
+            name=self.descriptor.name)
 
 
 class CGGetProtoObjectMethod(CGAbstractMethod):
@@ -3475,22 +3437,29 @@ class CGGetProtoObjectMethod(CGAbstractMethod):
         return "return GetProtoObjectHandle(aCx);\n"
 
 
-class CGGetConstructorObjectHandleMethod(CGGetPerInterfaceObject):
+class CGGetConstructorObjectHandleMethod(CGAbstractMethod):
     """
     A method for getting the interface constructor object.
     """
     def __init__(self, descriptor):
-        CGGetPerInterfaceObject.__init__(
+        CGAbstractMethod.__init__(
             self, descriptor, "GetConstructorObjectHandle",
-            "constructors::",
-            extraArgs=[Argument("bool", "aDefineOnGlobal", "true")])
+            'JS::Handle<JSObject*>',
+            [Argument('JSContext*', 'aCx'),
+             Argument('bool', 'aDefineOnGlobal', 'true')],
+            inline=True)
 
     def definition_body(self):
-        return dedent("""
+        return fill(
+            """
             /* Get the interface object for this class.  This will create the object as
                needed. */
 
-            """) + CGGetPerInterfaceObject.definition_body(self)
+            return GetPerInterfaceObjectHandle(aCx, constructors::id::${name},
+                                               &CreateInterfaceObjects,
+                                               aDefineOnGlobal);
+            """,
+            name=self.descriptor.name)
 
 
 class CGGetConstructorObjectMethod(CGAbstractMethod):
@@ -14386,6 +14355,7 @@ class CGBindingRoot(CGThing):
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
                                               isJSImplemented=True)
         bindingDeclareHeaders["nsWeakReference.h"] = jsImplemented
+        bindingDeclareHeaders["mozilla/dom/PrototypeList.h"] = descriptors
         bindingHeaders["nsIGlobalObject.h"] = jsImplemented
         bindingHeaders["AtomList.h"] = hasNonEmptyDictionaries or jsImplemented or callbackDescriptors
 
@@ -17332,6 +17302,7 @@ class GlobalGenRoots():
         idEnum = CGWrapper(idEnum, post='\n')
 
         curr = CGList([CGGeneric(define="#include <stdint.h>\n\n"),
+                       CGGeneric(declare='#include "jsfriendapi.h"\n\n'),
                        idEnum])
 
         # Let things know the maximum length of the prototype chain.

@@ -309,6 +309,7 @@ class Instruction {
   bool IsCBNZ() const;
   bool IsLDR() const;
   bool IsNOP() const;
+  bool IsCSDB() const;
   bool IsADR() const;
   bool IsADRP() const;
   bool IsMovz() const;

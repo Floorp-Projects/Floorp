@@ -233,8 +233,8 @@
 #include "vm/Printer.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
-#include "vm/String.h"
-#include "vm/Symbol.h"
+#include "vm/StringType.h"
+#include "vm/SymbolType.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
@@ -247,7 +247,7 @@
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
-#include "vm/String-inl.h"
+#include "vm/StringType-inl.h"
 
 using namespace js;
 using namespace js::gc;

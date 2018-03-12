@@ -267,6 +267,9 @@ AnimationSurfaceProvider::CheckForNewFrameAtYield()
 
     // Try to get the new frame from the decoder.
     RawAccessFrameRef frame = mDecoder->GetCurrentFrameRef();
+    MOZ_ASSERT(mDecoder->HasFrameToTake());
+    mDecoder->ClearHasFrameToTake();
+
     if (!frame) {
       MOZ_ASSERT_UNREACHABLE("Decoder yielded but didn't produce a frame?");
       return true;
@@ -309,6 +312,18 @@ AnimationSurfaceProvider::CheckForNewFrameAtTerminalState()
     // The decoder may or may not have a new frame for us at this point. Avoid
     // reinserting the same frame again.
     RawAccessFrameRef frame = mDecoder->GetCurrentFrameRef();
+
+    // If the decoder didn't finish a new frame (ie if, after starting the
+    // frame, it got an error and aborted the frame and the rest of the decode)
+    // that means it won't be reporting it to the image or FrameAnimator so we
+    // should ignore it too, that's what HasFrameToTake tracks basically.
+    if (!mDecoder->HasFrameToTake()) {
+      frame = RawAccessFrameRef();
+    } else {
+      MOZ_ASSERT(frame);
+      mDecoder->ClearHasFrameToTake();
+    }
+
     if (!frame || (!mFrames.Frames().IsEmpty() &&
                    mFrames.Frames().LastElement().get() == frame.get())) {
       return mFrames.MarkComplete();

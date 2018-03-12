@@ -453,6 +453,38 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
     rv = scriptError->GetFlags(&flags);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    {
+      AutoJSAPI jsapi;
+      jsapi.Init();
+      JSContext* cx = jsapi.cx();
+
+      JS::RootedValue stack(cx);
+      rv = scriptError->GetStack(&stack);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (stack.isObject()) {
+        JSAutoCompartment ac(cx, &stack.toObject());
+
+        StructuredCloneData data;
+        ErrorResult err;
+        data.Write(cx, stack, err);
+        if (err.Failed()) {
+          return err.StealNSResult();
+        }
+
+        ClonedMessageData cloned;
+        if (!data.BuildClonedMessageDataForChild(mChild, cloned)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        mChild->SendScriptErrorWithStack(msg, sourceName, sourceLine,
+                                         lineNum, colNum, flags, category,
+                                         cloned);
+        return NS_OK;
+      }
+    }
+
+
     mChild->SendScriptError(msg, sourceName, sourceLine,
                             lineNum, colNum, flags, category);
     return NS_OK;

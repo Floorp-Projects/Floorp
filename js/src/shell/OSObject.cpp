@@ -22,15 +22,16 @@
 #include "jsapi.h"
 // For JSFunctionSpecWithHelp
 #include "jsfriendapi.h"
-#include "jsstr.h"
 
+#include "builtin/String.h"
 #include "gc/FreeOp.h"
 #include "js/Conversions.h"
 #include "js/Wrapper.h"
 #include "shell/jsshell.h"
+#include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/JSObject.h"
-#include "vm/StringBuffer.h"
 #include "vm/TypedArrayObject.h"
 
 #include "vm/JSObject-inl.h"

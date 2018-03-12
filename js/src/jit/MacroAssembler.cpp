@@ -3201,13 +3201,32 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
 }
 
 void
-MacroAssembler::branchTestObjGroup(Condition cond, Register obj, const Address& group,
-                                   Register scratch, Label* label)
+MacroAssembler::branchTestObjGroupNoSpectreMitigations(Condition cond, Register obj,
+                                                       const Address& group, Register scratch,
+                                                       Label* label)
 {
     // Note: obj and scratch registers may alias.
+    MOZ_ASSERT(group.base != scratch);
+    MOZ_ASSERT(group.base != obj);
 
     loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
     branchPtr(cond, group, scratch, label);
+}
+
+void
+MacroAssembler::branchTestObjGroup(Condition cond, Register obj, const Address& group,
+                                   Register scratch, Register spectreRegToZero, Label* label)
+{
+    // Note: obj and scratch registers may alias.
+    MOZ_ASSERT(group.base != scratch);
+    MOZ_ASSERT(group.base != obj);
+    MOZ_ASSERT(scratch != spectreRegToZero);
+
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    branchPtr(cond, group, scratch, label);
+
+    if (JitOptions.spectreObjectMitigationsMisc)
+        spectreZeroRegister(cond, scratch, spectreRegToZero);
 }
 
 void
@@ -3656,6 +3675,44 @@ MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type, Register tem
     branchTestPtr(Assembler::NonZero, temp2, temp1, noBarrier);
 }
 
+// ========================================================================
+// Spectre Mitigations.
+
+void
+MacroAssembler::spectreMaskIndex(Register index, Register length, Register output)
+{
+    MOZ_ASSERT(JitOptions.spectreIndexMasking);
+    MOZ_ASSERT(length != output);
+    MOZ_ASSERT(index != output);
+
+    move32(Imm32(0), output);
+    cmp32Move32(Assembler::Below, index, length, index, output);
+}
+
+void
+MacroAssembler::spectreMaskIndex(Register index, const Address& length, Register output)
+{
+    MOZ_ASSERT(JitOptions.spectreIndexMasking);
+    MOZ_ASSERT(index != length.base);
+    MOZ_ASSERT(length.base != output);
+    MOZ_ASSERT(index != output);
+
+    move32(Imm32(0), output);
+    cmp32Move32(Assembler::Below, index, length, index, output);
+}
+
+void
+MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure)
+{
+    MOZ_ASSERT(mozilla::IsPowerOfTwo(length));
+    branch32(Assembler::AboveOrEqual, index, Imm32(length), failure);
+
+    // Note: it's fine to clobber the input register, as this is a no-op: it
+    // only affects speculative execution.
+    if (JitOptions.spectreIndexMasking)
+        and32(Imm32(length - 1), index);
+}
+
 //}}} check_macroassembler_style
 
 void
@@ -3705,41 +3762,6 @@ MacroAssembler::debugAssertObjHasFixedSlots(Register obj, Register scratch)
     assumeUnreachable("Expected a fixed slot");
     bind(&hasFixedSlots);
 #endif
-}
-
-void
-MacroAssembler::spectreMaskIndex(Register index, Register length, Register output)
-{
-    MOZ_ASSERT(JitOptions.spectreIndexMasking);
-    MOZ_ASSERT(length != output);
-    MOZ_ASSERT(index != output);
-
-    move32(Imm32(0), output);
-    cmp32Move32(Assembler::Below, index, length, index, output);
-}
-
-void
-MacroAssembler::spectreMaskIndex(Register index, const Address& length, Register output)
-{
-    MOZ_ASSERT(JitOptions.spectreIndexMasking);
-    MOZ_ASSERT(index != length.base);
-    MOZ_ASSERT(length.base != output);
-    MOZ_ASSERT(index != output);
-
-    move32(Imm32(0), output);
-    cmp32Move32(Assembler::Below, index, length, index, output);
-}
-
-void
-MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure)
-{
-    MOZ_ASSERT(mozilla::IsPowerOfTwo(length));
-    branch32(Assembler::AboveOrEqual, index, Imm32(length), failure);
-
-    // Note: it's fine to clobber the input register, as this is a no-op: it
-    // only affects speculative execution.
-    if (JitOptions.spectreIndexMasking)
-        and32(Imm32(length - 1), index);
 }
 
 template <typename T, size_t N, typename P>

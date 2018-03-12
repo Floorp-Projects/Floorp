@@ -20,7 +20,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsTArrayForwardDeclare.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 #include "mozilla/CORSMode.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/net/ReferrerPolicy.h"

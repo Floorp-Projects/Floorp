@@ -21,6 +21,7 @@
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "nsString.h"
 #include "nsStyleCoord.h"               // for nsStyleCoord
+#include "PLDHashTable.h"               // for PLDHashNumber
 
 namespace IPC {
 template <typename T> struct ParamTraits;

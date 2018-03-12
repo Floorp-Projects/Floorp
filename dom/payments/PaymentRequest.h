@@ -161,8 +161,10 @@ protected:
   RefPtr<Promise> mAbortPromise;
   // Resolve mAcceptPromise with mResponse if user accepts the request.
   RefPtr<PaymentResponse> mResponse;
-  // It is populated when the user provides a shipping address.
+  // The redacted shipping address.
   RefPtr<PaymentAddress> mShippingAddress;
+  // The full shipping address to be used in the response upon payment.
+  RefPtr<PaymentAddress> mFullShippingAddress;
   // It is populated when the user chooses a shipping option.
   nsString mShippingOption;
 

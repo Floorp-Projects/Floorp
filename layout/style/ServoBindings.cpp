@@ -1208,38 +1208,6 @@ Gecko_ReleaseAtom(nsAtom* aAtom)
   NS_RELEASE(aAtom);
 }
 
-const uint16_t*
-Gecko_GetAtomAsUTF16(nsAtom* aAtom, uint32_t* aLength)
-{
-  static_assert(sizeof(char16_t) == sizeof(uint16_t), "Servo doesn't know what a char16_t is");
-  MOZ_ASSERT(aAtom);
-  *aLength = aAtom->GetLength();
-
-  // We need to manually cast from char16ptr_t to const char16_t* to handle the
-  // MOZ_USE_CHAR16_WRAPPER we use on WIndows.
-  return reinterpret_cast<const uint16_t*>(static_cast<const char16_t*>(aAtom->GetUTF16String()));
-}
-
-bool
-Gecko_AtomEqualsUTF8(nsAtom* aAtom, const char* aString, uint32_t aLength)
-{
-  // XXXbholley: We should be able to do this without converting, I just can't
-  // find the right thing to call.
-  nsDependentAtomString atomStr(aAtom);
-  NS_ConvertUTF8toUTF16 inStr(nsDependentCSubstring(aString, aLength));
-  return atomStr.Equals(inStr);
-}
-
-bool
-Gecko_AtomEqualsUTF8IgnoreCase(nsAtom* aAtom, const char* aString, uint32_t aLength)
-{
-  // XXXbholley: We should be able to do this without converting, I just can't
-  // find the right thing to call.
-  nsDependentAtomString atomStr(aAtom);
-  NS_ConvertUTF8toUTF16 inStr(nsDependentCSubstring(aString, aLength));
-  return nsContentUtils::EqualsIgnoreASCIICase(atomStr, inStr);
-}
-
 void
 Gecko_nsTArray_FontFamilyName_AppendNamed(nsTArray<FontFamilyName>* aNames,
                                           nsAtom* aName,
@@ -2419,12 +2387,6 @@ Gecko_GetBindingParent(RawGeckoElementBorrowed aElement)
 {
   nsIContent* parent = aElement->GetBindingParent();
   return parent ? parent->AsElement() : nullptr;
-}
-
-RawGeckoXBLBindingBorrowedOrNull
-Gecko_GetXBLBinding(RawGeckoElementBorrowed aElement)
-{
-  return aElement->GetXBLBinding();
 }
 
 RawServoAuthorStylesBorrowedOrNull

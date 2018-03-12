@@ -23,10 +23,6 @@ import mozinfo
 import pytoml
 
 from .data import (
-    AndroidAssetsDirs,
-    AndroidExtraPackages,
-    AndroidExtraResDirs,
-    AndroidResDirs,
     BaseRustProgram,
     BaseSources,
     ChromeManifestEntry,
@@ -1380,18 +1376,19 @@ class TreeMetadataEmitter(LoggingMixin):
                         raise SandboxValidationError(
                             'Script for generating %s does not end in .py: %s'
                             % (f, script), context)
-
-                    for i in flags.inputs:
-                        p = Path(context, i)
-                        if (isinstance(p, SourcePath) and
-                                not os.path.exists(p.full_path)):
-                            raise SandboxValidationError(
-                                'Input for generating %s does not exist: %s'
-                                % (f, p.full_path), context)
-                        inputs.append(p)
                 else:
                     script = None
                     method = None
+
+                for i in flags.inputs:
+                    p = Path(context, i)
+                    if (isinstance(p, SourcePath) and
+                            not os.path.exists(p.full_path)):
+                        raise SandboxValidationError(
+                            'Input for generating %s does not exist: %s'
+                            % (f, p.full_path), context)
+                    inputs.append(p)
+
                 yield GeneratedFile(context, script, method, outputs, inputs,
                                     flags.flags, localized=localized)
 

@@ -54,10 +54,17 @@ let extensionData = {
 
     "web_accessible_resources": ["foo.css", "foo.txt", "locale.css"],
 
-    "content_scripts": [{
-      "matches": ["http://*/*/file_sample.html"],
-      "css": ["foo.css"],
-    }],
+    "content_scripts": [
+      {
+        "matches": ["http://*/*/file_sample.html"],
+        "css": ["foo.css"],
+        "run_at": "document_start",
+      },
+      {
+        "matches": ["http://*/*/file_sample.html"],
+        "js": ["content.js"],
+      },
+    ],
 
     "default_locale": "en",
   },
@@ -69,6 +76,11 @@ let extensionData = {
         "description": "foo",
       },
     }),
+
+    "content.js": function() {
+      let style = getComputedStyle(document.body);
+      browser.test.sendMessage("content-maxWidth", style.maxWidth);
+    },
 
     "foo.css": "body { __MSG_foo__; }",
     "bar.CsS": "body { __MSG_foo__; }",
@@ -101,15 +113,7 @@ async function test_i18n_css(options = {}) {
 
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  // workaround for extension may not be ready for applying foo.css
-  await new Promise(executeSoon);
-
-  let maxWidth = await ContentTask.spawn(contentPage.browser, {}, async function() {
-    /* globals content */
-    let style = content.getComputedStyle(content.document.body);
-
-    return style.maxWidth;
-  });
+  let maxWidth = await extension.awaitMessage("content-maxWidth");
 
   equal(maxWidth, "42px", "stylesheet correctly applied");
 

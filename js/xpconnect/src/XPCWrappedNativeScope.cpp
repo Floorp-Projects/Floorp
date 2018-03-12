@@ -13,7 +13,6 @@
 #include "ExpandedPrincipal.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
-#include "nsIAddonInterposition.h"
 #include "nsIXULRuntime.h"
 #include "mozJSComponentLoader.h"
 
@@ -28,8 +27,6 @@ using namespace JS;
 XPCWrappedNativeScope* XPCWrappedNativeScope::gScopes = nullptr;
 XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nullptr;
 bool XPCWrappedNativeScope::gShutdownObserverInitialized = false;
-XPCWrappedNativeScope::InterpositionMap* XPCWrappedNativeScope::gInterpositionMap = nullptr;
-InterpositionWhitelistArray* XPCWrappedNativeScope::gInterpositionWhitelists = nullptr;
 XPCWrappedNativeScope::AddonSet* XPCWrappedNativeScope::gAllowCPOWAddonSet = nullptr;
 
 NS_IMPL_ISUPPORTS(XPCWrappedNativeScope::ClearInterpositionsObserver, nsIObserver)
@@ -40,20 +37,6 @@ XPCWrappedNativeScope::ClearInterpositionsObserver::Observe(nsISupports* subject
                                                             const char16_t* data)
 {
     MOZ_ASSERT(strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
-
-    // The interposition map holds strong references to interpositions, which
-    // may themselves be involved in cycles. We need to drop these strong
-    // references before the cycle collector shuts down. Otherwise we'll
-    // leak. This observer always runs before CC shutdown.
-    if (gInterpositionMap) {
-        delete gInterpositionMap;
-        gInterpositionMap = nullptr;
-    }
-
-    if (gInterpositionWhitelists) {
-        delete gInterpositionWhitelists;
-        gInterpositionWhitelists = nullptr;
-    }
 
     if (gAllowCPOWAddonSet) {
         delete gAllowCPOWAddonSet;
@@ -144,31 +127,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
         mUseContentXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
     }
 
-    JSAddonId* addonId = JS::AddonIdOfObject(aGlobal);
-    if (gInterpositionMap) {
-        bool isSystem = nsContentUtils::IsSystemPrincipal(principal);
-        bool waiveInterposition = priv->waiveInterposition;
-        InterpositionMap::Ptr interposition = gInterpositionMap->lookup(addonId);
-        if (!waiveInterposition && interposition) {
-            MOZ_RELEASE_ASSERT(isSystem);
-            mInterposition = interposition->value();
-            priv->hasInterposition = HasInterposition();
-        }
-        // We also want multiprocessCompatible add-ons to have a default interposition.
-        if (!mInterposition && addonId && isSystem) {
-            bool interpositionEnabled = mozilla::Preferences::GetBool(
-                "extensions.interposition.enabled", false);
-            if (interpositionEnabled) {
-                mInterposition = do_GetService("@mozilla.org/addons/default-addon-shims;1");
-                MOZ_ASSERT(mInterposition);
-                priv->hasInterposition = true;
-                UpdateInterpositionWhitelist(cx, mInterposition);
-            }
-        }
-        MOZ_ASSERT(HasInterposition() == priv->hasInterposition);
-    }
-
-    if (addonId) {
+    if (JSAddonId* addonId = JS::AddonIdOfObject(aGlobal)) {
         // We forbid CPOWs unless they're specifically allowed.
         priv->allowCPOWs = gAllowCPOWAddonSet ? gAllowCPOWAddonSet->has(addonId) : false;
         MOZ_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(aGlobal),
@@ -775,31 +734,6 @@ XPCWrappedNativeScope::SetExpandoChain(JSContext* cx, HandleObject target,
 }
 
 /* static */ bool
-XPCWrappedNativeScope::SetAddonInterposition(JSContext* cx,
-                                             JSAddonId* addonId,
-                                             nsIAddonInterposition* interp)
-{
-    if (!gInterpositionMap) {
-        gInterpositionMap = new InterpositionMap();
-        bool ok = gInterpositionMap->init();
-        NS_ENSURE_TRUE(ok, false);
-
-        if (!gShutdownObserverInitialized) {
-            gShutdownObserverInitialized = true;
-            nsContentUtils::RegisterShutdownObserver(new ClearInterpositionsObserver());
-        }
-    }
-    if (interp) {
-        bool ok = gInterpositionMap->put(addonId, interp);
-        NS_ENSURE_TRUE(ok, false);
-        UpdateInterpositionWhitelist(cx, interp);
-    } else {
-        gInterpositionMap->remove(addonId);
-    }
-    return true;
-}
-
-/* static */ bool
 XPCWrappedNativeScope::AllowCPOWsInAddon(JSContext* cx,
                                          JSAddonId* addonId,
                                          bool allow)
@@ -823,121 +757,6 @@ XPCWrappedNativeScope::AllowCPOWsInAddon(JSContext* cx,
     return true;
 }
 
-nsCOMPtr<nsIAddonInterposition>
-XPCWrappedNativeScope::GetInterposition()
-{
-    return mInterposition;
-}
-
-/* static */ InterpositionWhitelist*
-XPCWrappedNativeScope::GetInterpositionWhitelist(nsIAddonInterposition* interposition)
-{
-    if (!gInterpositionWhitelists)
-        return nullptr;
-
-    InterpositionWhitelistArray& wls = *gInterpositionWhitelists;
-    for (size_t i = 0; i < wls.Length(); i++) {
-        if (wls[i].interposition == interposition)
-            return &wls[i].whitelist;
-    }
-
-    return nullptr;
-}
-
-/* static */ bool
-XPCWrappedNativeScope::UpdateInterpositionWhitelist(JSContext* cx,
-                                                    nsIAddonInterposition* interposition)
-{
-    // We want to set the interpostion whitelist only once.
-    InterpositionWhitelist* whitelist = GetInterpositionWhitelist(interposition);
-    if (whitelist)
-        return true;
-
-    // The hashsets in gInterpositionWhitelists do not have a copy constructor so
-    // a reallocation for the array will lead to a memory corruption. If you
-    // need more interpositions, change the capacity of the array please.
-    static const size_t MAX_INTERPOSITION = 8;
-    if (!gInterpositionWhitelists)
-        gInterpositionWhitelists = new InterpositionWhitelistArray(MAX_INTERPOSITION);
-
-    MOZ_RELEASE_ASSERT(MAX_INTERPOSITION > gInterpositionWhitelists->Length() + 1);
-    InterpositionWhitelistPair* newPair = gInterpositionWhitelists->AppendElement();
-    newPair->interposition = interposition;
-    if (!newPair->whitelist.init()) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    whitelist = &newPair->whitelist;
-
-    RootedValue whitelistVal(cx);
-    nsresult rv = interposition->GetWhitelist(&whitelistVal);
-    if (NS_FAILED(rv)) {
-        JS_ReportErrorASCII(cx, "Could not get the whitelist from the interposition.");
-        return false;
-    }
-
-    if (!whitelistVal.isObject()) {
-        JS_ReportErrorASCII(cx, "Whitelist must be an array.");
-        return false;
-    }
-
-    // We want to enter the whitelist's compartment to avoid any wrappers.
-    // To be on the safe side let's make sure that it's a system compartment
-    // and we don't accidentally trigger some content function here by parsing
-    // the whitelist object.
-    RootedObject whitelistObj(cx, &whitelistVal.toObject());
-    whitelistObj = js::UncheckedUnwrap(whitelistObj);
-    if (!AccessCheck::isChrome(whitelistObj)) {
-        JS_ReportErrorASCII(cx, "Whitelist must be from system scope.");
-        return false;
-    }
-
-    {
-        JSAutoCompartment ac(cx, whitelistObj);
-
-        bool isArray;
-        if (!JS_IsArrayObject(cx, whitelistObj, &isArray))
-            return false;
-
-        if (!isArray) {
-            JS_ReportErrorASCII(cx, "Whitelist must be an array.");
-            return false;
-        }
-
-        uint32_t length;
-        if (!JS_GetArrayLength(cx, whitelistObj, &length))
-            return false;
-
-        for (uint32_t i = 0; i < length; i++) {
-            RootedValue idval(cx);
-            if (!JS_GetElement(cx, whitelistObj, i, &idval))
-                return false;
-
-            if (!idval.isString()) {
-                JS_ReportErrorASCII(cx, "Whitelist must contain strings only.");
-                return false;
-            }
-
-            RootedString str(cx, idval.toString());
-            str = JS_AtomizeAndPinJSString(cx, str);
-            if (!str) {
-                JS_ReportErrorASCII(cx, "String internization failed.");
-                return false;
-            }
-
-            // By internizing the id's we ensure that they won't get
-            // GCed so we can use them as hash keys.
-            jsid id = INTERNED_STRING_TO_JSID(cx, str);
-            if (!whitelist->put(JSID_BITS(id))) {
-                JS_ReportOutOfMemory(cx);
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
 
 /***************************************************************************/
 

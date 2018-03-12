@@ -254,9 +254,13 @@ MacPowerInformationService::HandleChange(void* aContext) {
       continue;
     }
 
-    // Get a battery level estimate. This key is required.
+    // Get a battery level estimate. This key is required but does not always
+    // exist.
     int currentCapacity = 0;
     const void* cfRef = ::CFDictionaryGetValue(currPowerSourceDesc, CFSTR(kIOPSCurrentCapacityKey));
+    if (!cfRef) {
+      continue;
+    }
     ::CFNumberGetValue((CFNumberRef)cfRef, kCFNumberSInt32Type, &currentCapacity);
 
     // This key is also required.

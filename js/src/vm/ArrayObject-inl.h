@@ -10,7 +10,7 @@
 #include "vm/ArrayObject.h"
 
 #include "gc/GCTrace.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/TypeInference-inl.h"

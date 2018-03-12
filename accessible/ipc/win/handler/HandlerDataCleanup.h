@@ -7,7 +7,7 @@
 #ifndef mozilla_a11y_HandlerDataCleanup_h
 #define mozilla_a11y_HandlerDataCleanup_h
 
-#include <OleAuto.h>
+#include <oleauto.h>
 #include "HandlerData.h"
 
 namespace mozilla {

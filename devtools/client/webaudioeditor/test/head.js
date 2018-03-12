@@ -151,7 +151,7 @@ function waitForGraphRendered(front, nodeCount, edgeCount, paramEdgeCount) {
   info(`Wait for graph rendered with ${nodeCount} nodes, ${edgeCount} edges`);
 
   return new Promise((resolve, reject) => {
-    front.on(eventName, function onGraphRendered(_, nodes, edges, pEdges) {
+    front.on(eventName, function onGraphRendered(nodes, edges, pEdges) {
       let paramEdgesDone = paramEdgeCount != null ? paramEdgeCount === pEdges : true;
       info(`Got graph rendered with ${nodes} / ${nodeCount} nodes, ` +
            `${edges} / ${edgeCount} edges`);
@@ -207,8 +207,17 @@ function modifyVariableView(win, view, index, prop, value) {
   scope.expand();
 
   return new Promise((resolve, reject) => {
-    win.on(win.EVENTS.UI_SET_PARAM, handleSetting);
-    win.on(win.EVENTS.UI_SET_PARAM_ERROR, handleSetting);
+    const onParamSetSuccess = () => {
+      win.off(win.EVENTS.UI_SET_PARAM_ERROR, onParamSetError);
+      resolve();
+    }
+
+    const onParamSetError = () => {
+      win.off(win.EVENTS.UI_SET_PARAM, onParamSetSuccess);
+      reject();
+    }
+    win.once(win.EVENTS.UI_SET_PARAM, onParamSetSuccess);
+    win.once(win.EVENTS.UI_SET_PARAM_ERROR, onParamSetError);
 
     // Focus and select the variable to begin editing
     win.focus();
@@ -224,15 +233,6 @@ function modifyVariableView(win, view, index, prop, value) {
       }
       EventUtils.sendKey("RETURN", win);
     });
-
-    function handleSetting(eventName) {
-      win.off(win.EVENTS.UI_SET_PARAM, handleSetting);
-      win.off(win.EVENTS.UI_SET_PARAM_ERROR, handleSetting);
-      if (eventName === win.EVENTS.UI_SET_PARAM)
-        resolve();
-      if (eventName === win.EVENTS.UI_SET_PARAM_ERROR)
-        reject();
-    }
   });
 }
 

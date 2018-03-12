@@ -10,9 +10,7 @@ function test() {
   gBrowser.selectedTab = tabTwo;
 
   let browser = gBrowser.getBrowserForTab(tabTwo);
-  let onLoad = function() {
-    browser.removeEventListener("load", onLoad, true);
-
+  BrowserTestUtils.browserLoaded(browser).then(() => {
     gBrowser.showOnlyTheseTabs([tabTwo]);
 
     is(gBrowser.visibleTabs.length, 1, "Only one tab is visible");
@@ -29,6 +27,5 @@ function test() {
     });
 
     finish();
-  };
-  browser.addEventListener("load", onLoad, true);
+  });
 }

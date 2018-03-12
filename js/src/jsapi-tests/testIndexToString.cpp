@@ -6,13 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsnum.h"
-#include "jsstr.h"
 
+#include "builtin/String.h"
 #include "jsapi-tests/tests.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 
-#include "vm/String-inl.h"
+#include "vm/StringType-inl.h"
 
 using mozilla::ArrayLength;
 

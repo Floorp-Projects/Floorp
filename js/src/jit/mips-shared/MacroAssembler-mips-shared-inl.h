@@ -1037,6 +1037,12 @@ MacroAssembler::spectreMovePtr(Condition cond, Register src, Register dest)
     MOZ_CRASH();
 }
 
+void
+MacroAssembler::spectreZeroRegister(Condition cond, Register scratch, Register dest)
+{
+    MOZ_CRASH();
+}
+
 // ========================================================================
 // Memory access primitives.
 void

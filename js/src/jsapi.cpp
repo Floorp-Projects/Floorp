@@ -30,7 +30,6 @@
 #include "jsfriendapi.h"
 #include "jsmath.h"
 #include "jsnum.h"
-#include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
@@ -41,7 +40,8 @@
 #include "builtin/Promise.h"
 #include "builtin/RegExp.h"
 #include "builtin/Stream.h"
-#include "builtin/SymbolObject.h"
+#include "builtin/String.h"
+#include "builtin/Symbol.h"
 #ifdef ENABLE_SIMD
 # include "builtin/SIMD.h"
 #endif
@@ -66,6 +66,8 @@
 #include "js/StructuredClone.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
+#include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/DateObject.h"
@@ -85,9 +87,8 @@
 #include "vm/SavedStacks.h"
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
-#include "vm/String.h"
-#include "vm/StringBuffer.h"
-#include "vm/Symbol.h"
+#include "vm/StringType.h"
+#include "vm/SymbolType.h"
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
 #include "wasm/AsmJS.h"
@@ -99,7 +100,7 @@
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/SavedStacks-inl.h"
-#include "vm/String-inl.h"
+#include "vm/StringType-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -7280,17 +7281,26 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS_BARRIERS:
         jit::JitOptions.spectreObjectMitigationsBarriers = !!value;
         break;
+      case JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS_MISC:
+        jit::JitOptions.spectreObjectMitigationsMisc = !!value;
+        break;
       case JSJITCOMPILER_SPECTRE_STRING_MITIGATIONS:
         jit::JitOptions.spectreStringMitigations = !!value;
         break;
       case JSJITCOMPILER_SPECTRE_VALUE_MASKING:
         jit::JitOptions.spectreValueMasking = !!value;
         break;
+      case JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS:
+        jit::JitOptions.spectreJitToCxxCalls = !!value;
+        break;
       case JSJITCOMPILER_ASMJS_ATOMICS_ENABLE:
         jit::JitOptions.asmJSAtomicsEnable = !!value;
         break;
       case JSJITCOMPILER_WASM_FOLD_OFFSETS:
         jit::JitOptions.wasmFoldOffsets = !!value;
+        break;
+      case JSJITCOMPILER_WASM_DELAY_TIER2:
+        jit::JitOptions.wasmDelayTier2 = !!value;
         break;
       case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
         jit::JitOptions.ionInterruptWithoutSignals = !!value;
@@ -7754,7 +7764,7 @@ JS::CaptureCurrentStack(JSContext* cx, JS::MutableHandleObject stackp,
 JS_PUBLIC_API(bool)
 JS::CopyAsyncStack(JSContext* cx, JS::HandleObject asyncStack,
                    JS::HandleString asyncCause, JS::MutableHandleObject stackp,
-                   unsigned maxFrameCount)
+                   const Maybe<size_t>& maxFrameCount)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);

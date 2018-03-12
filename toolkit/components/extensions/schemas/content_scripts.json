@@ -31,7 +31,6 @@
         "id": "RegisteredContentScriptOptions",
         "type": "object",
         "description": "Details of a content script registered programmatically",
-        "additionalProperties": { "$ref": "UnrecognizedProperty" },
         "properties": {
           "matches": {
             "type": "array",

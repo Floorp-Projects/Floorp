@@ -30,6 +30,8 @@ namespace mozilla {
 class DOMEventTargetHelper;
 namespace dom {
 class ServiceWorker;
+class ServiceWorkerRegistration;
+class ServiceWorkerRegistrationDescriptor;
 } // namespace dom
 } // namespace mozilla
 
@@ -118,6 +120,11 @@ public:
   // Creation can still fail and return nullptr during shutdown, etc.
   virtual RefPtr<mozilla::dom::ServiceWorker>
   GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor);
+
+  // Get the DOM object for the given descriptor or attempt to create one.
+  // Creation can still fail and return nullptr during shutdown, etc.
+  virtual RefPtr<mozilla::dom::ServiceWorkerRegistration>
+  GetOrCreateServiceWorkerRegistration(const mozilla::dom::ServiceWorkerRegistrationDescriptor& aDescriptor);
 
 protected:
   virtual ~nsIGlobalObject();

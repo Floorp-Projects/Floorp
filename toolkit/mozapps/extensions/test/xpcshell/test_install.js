@@ -1403,60 +1403,7 @@ function finish_test_27(aInstall) {
 
   ensure_test_completed();
 
-  run_test_28();
-}
-
-// Tests that an install that isn't strictly compatible and has
-// binary components correctly has appDisabled set (see bug 702868).
-function run_test_28() {
-  prepare_test({ }, [
-    "onNewInstall"
-  ]);
-
-  let url = "http://localhost:" + gPort + "/addons/test_install5.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
-    ensure_test_completed();
-
-    Assert.notEqual(install, null);
-    Assert.equal(install.version, "1.0");
-    Assert.equal(install.name, "Real Test 5");
-    Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
-
-    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
-      Assert.equal(activeInstalls.length, 1);
-      Assert.equal(activeInstalls[0], install);
-
-      prepare_test({}, [
-        "onDownloadStarted",
-        "onDownloadEnded",
-        "onInstallStarted"
-      ], check_test_28);
-      install.install();
-    });
-  }, "application/x-xpinstall", null, "Real Test 5", null, "1.0");
-}
-
-function check_test_28(install) {
-  ensure_test_completed();
-  Assert.equal(install.version, "1.0");
-  Assert.equal(install.name, "Real Test 5");
-  Assert.equal(install.state, AddonManager.STATE_INSTALLING);
-  Assert.equal(install.existingAddon, null);
-  Assert.ok(!install.addon.isCompatible);
-  Assert.ok(install.addon.appDisabled);
-
-  prepare_test({}, [
-    "onInstallCancelled"
-  ], finish_test_28);
-  return false;
-}
-
-function finish_test_28(install) {
-  prepare_test({}, [
-    "onDownloadCancelled"
-  ], run_test_29);
-
-  install.cancel();
+  run_test_29();
 }
 
 // Tests that an install with a matching compatibility override has appDisabled

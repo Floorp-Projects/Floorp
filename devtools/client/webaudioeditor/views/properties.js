@@ -119,7 +119,7 @@ var PropertiesView = {
   /**
    * Called when the inspector view determines a node is selected.
    */
-  _onNodeSet: function (_, id) {
+  _onNodeSet: function (id) {
     this._setAudioNode(gAudioNodes.get(id));
   },
 

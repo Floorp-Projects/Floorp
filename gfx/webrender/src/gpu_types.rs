@@ -9,6 +9,15 @@ use render_task::RenderTaskAddress;
 
 // Contains type that must exactly match the same structures declared in GLSL.
 
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+pub enum RasterizationSpace {
+    Local = 0,
+    Screen = 1,
+}
+
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -195,16 +204,6 @@ impl From<BrushInstance> for PrimitiveInstance {
     }
 }
 
-// Defines how a brush image is stretched onto the primitive.
-// In the future, we may draw with segments for each portion
-// of the primitive, in which case this will be redundant.
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub enum BrushImageKind {
-    Simple = 0,     // A normal rect
-    NinePatch = 1,  // A nine-patch image (stretch inside segments)
-}
-
 #[derive(Copy, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -244,7 +243,6 @@ pub struct ClipChainRectIndex(pub usize);
 pub enum PictureType {
     Image = 1,
     TextShadow = 2,
-    BoxShadow = 3,
 }
 
 #[derive(Debug, Copy, Clone)]

@@ -846,7 +846,7 @@ class BookmarkValidator {
 
     let sameType = client.type === server.type;
     if (!sameType) {
-      if (server.type === "query" && client.type === "bookmark" &
+      if (server.type === "query" && client.type === "bookmark" &&
           client.bmkUri.startsWith(QUERY_PROTOCOL)) {
         sameType = true;
       }

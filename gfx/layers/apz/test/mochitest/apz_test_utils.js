@@ -115,26 +115,32 @@ function isLayerized(elementId) {
   return false;
 }
 
+function promiseApzRepaintsFlushed(aWindow = window) {
+  return new Promise(function (resolve, reject) {
+    var repaintDone = function() {
+      SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
+      setTimeout(resolve, 0);
+    };
+    SpecialPowers.Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
+    if (SpecialPowers.getDOMWindowUtils(aWindow).flushApzRepaints()) {
+      dump("Flushed APZ repaints, waiting for callback...\n");
+    } else {
+      dump("Flushing APZ repaints was a no-op, triggering callback directly...\n");
+      repaintDone();
+    }
+  });
+}
+
 function flushApzRepaints(aCallback, aWindow = window) {
   if (!aCallback) {
     throw "A callback must be provided!";
   }
-  var repaintDone = function() {
-    SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
-    setTimeout(aCallback, 0);
-  };
-  SpecialPowers.Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
-  if (SpecialPowers.getDOMWindowUtils(aWindow).flushApzRepaints()) {
-    dump("Flushed APZ repaints, waiting for callback...\n");
-  } else {
-    dump("Flushing APZ repaints was a no-op, triggering callback directly...\n");
-    repaintDone();
-  }
+  promiseApzRepaintsFlushed(aWindow).then(aCallback);
 }
 
 // Flush repaints, APZ pending repaints, and any repaints resulting from that
 // flush. This is particularly useful if the test needs to reach some sort of
-// "idle" state in terms of repaints. Usually just doing waitForAllPaints
+// "idle" state in terms of repaints. Usually just waiting for all paints
 // followed by flushApzRepaints is sufficient to flush all APZ state back to
 // the main thread, but it can leave a paint scheduled which will get triggered
 // at some later time. For tests that specifically test for painting at
@@ -143,16 +149,18 @@ function flushApzRepaints(aCallback, aWindow = window) {
 // most tests.
 function waitForApzFlushedRepaints(aCallback) {
   // First flush the main-thread paints and send transactions to the APZ
-  waitForAllPaints(function() {
+  promiseAllPaintsDone()
     // Then flush the APZ to make sure any repaint requests have been sent
-    // back to the main thread
-    flushApzRepaints(function() {
-      // Then flush the main-thread again to process the repaint requests.
-      // Once this is done, we should be in a stable state with nothing
-      // pending, so we can trigger the callback.
-      waitForAllPaints(aCallback);
-    });
-  });
+    // back to the main thread. Note that we need a wrapper function around
+    // promiseApzRepaintsFlushed otherwise the rect produced by
+    // promiseAllPaintsDone gets passed to it as the window parameter.
+    .then(() => promiseApzRepaintsFlushed())
+    // Then flush the main-thread again to process the repaint requests.
+    // Once this is done, we should be in a stable state with nothing
+    // pending, so we can trigger the callback.
+    .then(promiseAllPaintsDone)
+    // Then allow the callback to be triggered.
+    .then(aCallback);
 }
 
 // This function takes a set of subtests to run one at a time in new top-level
@@ -189,6 +197,10 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
     function advanceSubtestExecution() {
       var test = aSubtests[testIndex];
       if (w) {
+        // Run any cleanup functions registered in the subtest
+        if (w.ApzCleanup) { // guard against the subtest not loading apz_test_utils.js
+          w.ApzCleanup.execute();
+        }
         if (typeof test.dp_suppression != 'undefined') {
           // We modified the suppression when starting the test, so now undo that.
           SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(!test.dp_suppression);
@@ -226,6 +238,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       function spawnTest(aFile) {
         w = window.open('', "_blank");
         w.subtestDone = advanceSubtestExecution;
+        w.isApzSubtest = true;
         w.SimpleTest = SimpleTest;
         w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
         w.ok = function(cond, name, diag) { return ok(cond, aFile + " | " + name, diag); };
@@ -267,14 +280,87 @@ function pushPrefs(prefs) {
   return SpecialPowers.pushPrefEnv({'set': prefs});
 }
 
-function waitUntilApzStable() {
-  return new Promise(function(resolve, reject) {
-    SimpleTest.waitForFocus(function() {
-      waitForAllPaints(function() {
-        flushApzRepaints(resolve);
+async function waitUntilApzStable() {
+  if (!SpecialPowers.isMainProcess()) {
+    // We use this waitUntilApzStable function during test initialization
+    // and for those scenarios we want to flush the parent-process layer
+    // tree to the compositor and wait for that as well. That way we know
+    // that not only is the content-process layer tree ready in the compositor,
+    // the parent-process layer tree in the compositor has the appropriate
+    // RefLayer pointing to the content-process layer tree.
+
+    // Sadly this helper function cannot reuse any code from other places because
+    // it must be totally self-contained to be shipped over to the parent process.
+    function parentProcessFlush() {
+      addMessageListener("apz-flush", function() {
+        ChromeUtils.import("resource://gre/modules/Services.jsm");
+        var topWin = Services.wm.getMostRecentWindow("navigator:browser");
+        var topUtils = topWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+
+        var repaintDone = function() {
+          Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
+          // send message back to content process
+          sendAsyncMessage("apz-flush-done", null);
+        };
+        var flushRepaint = function() {
+          if (topUtils.isMozAfterPaintPending) {
+            topWin.addEventListener("MozAfterPaint", flushRepaint, { once: true });
+            return;
+          }
+
+          Services.obs.addObserver(repaintDone, "apz-repaints-flushed");
+          if (topUtils.flushApzRepaints()) {
+            dump("Parent process: flushed APZ repaints, waiting for callback...\n");
+          } else {
+            dump("Parent process: flushing APZ repaints was a no-op, triggering callback directly...\n");
+            repaintDone();
+          }
+        }
+
+        // Flush APZ repaints, but wait until all the pending paints have been
+        // sent.
+        flushRepaint();
       });
-    }, window);
-  });
+    }
+
+    // This is the first time waitUntilApzStable is being called, do initialization
+    if (typeof waitUntilApzStable.chromeHelper == "undefined") {
+      waitUntilApzStable.chromeHelper = SpecialPowers.loadChromeScript(parentProcessFlush);
+      ApzCleanup.register(() => { waitUntilApzStable.chromeHelper.destroy(); });
+    }
+
+    // Actually trigger the parent-process flush and wait for it to finish
+    waitUntilApzStable.chromeHelper.sendAsyncMessage("apz-flush", null);
+    await waitUntilApzStable.chromeHelper.promiseOneMessage("apz-flush-done");
+  }
+
+  await SimpleTest.promiseFocus(window);
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
+}
+
+// This function returns a promise that is resolved after at least one paint
+// has been sent and processed by the compositor. This function can force
+// such a paint to happen if none are pending. This is useful to run after
+// the waitUntilApzStable() but before reading the compositor-side APZ test
+// data, because the test data for the content layers id only gets populated
+// on content layer tree updates *after* the root layer tree has a RefLayer
+// pointing to the contnet layer tree. waitUntilApzStable itself guarantees
+// that the root layer tree is pointing to the content layer tree, but does
+// not guarantee the subsequent paint; this function does that job.
+async function forceLayerTreeToCompositor() {
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  if (!utils.isMozAfterPaintPending) {
+    dump("Forcing a paint since none was pending already...\n");
+    var testMode = utils.isTestControllingRefreshes;
+    utils.advanceTimeAndRefresh(0);
+    if (!testMode) {
+      utils.restoreNormalRefresh();
+    }
+  }
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
 }
 
 function isApzEnabled() {
@@ -365,7 +451,7 @@ function getSnapshot(rect) {
   if (typeof getSnapshot.chromeHelper == 'undefined') {
     // This is the first time getSnapshot is being called; do initialization
     getSnapshot.chromeHelper = SpecialPowers.loadChromeScript(parentProcessSnapshot);
-    SimpleTest.registerCleanupFunction(function() { getSnapshot.chromeHelper.destroy() });
+    ApzCleanup.register(function() { getSnapshot.chromeHelper.destroy() });
   }
 
   return getSnapshot.chromeHelper.sendSyncMessage('snapshot', JSON.stringify(rect)).toString();
@@ -552,3 +638,27 @@ function hitTestScrollbar(params) {
        scrollframeMsg + " - horizontal scrollbar scrollid");
   }
 }
+
+var ApzCleanup = {
+  _cleanups: [],
+
+  register: function(func) {
+    if (this._cleanups.length == 0) {
+      if (!window.isApzSubtest) {
+        SimpleTest.registerCleanupFunction(this.execute.bind(this));
+      } // else ApzCleanup.execute is called from runSubtestsSeriallyInFreshWindows
+    }
+    this._cleanups.push(func);
+  },
+
+  execute: function() {
+    while (this._cleanups.length > 0) {
+      var func = this._cleanups.pop();
+      try {
+        func();
+      } catch (ex) {
+        SimpleTest.ok(false, "Subtest cleanup function [" + func.toString() + "] threw exception [" + ex + "] on page [" + location.href + "]");
+      }
+    }
+  }
+};

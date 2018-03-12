@@ -25,13 +25,18 @@ class GeckoViewModule {
     this.moduleName = aModuleName;
 
     this.eventDispatcher.registerListener(
-      () => this.onSettingsUpdate(), "GeckoView:UpdateSettings"
+      (aEvent, aData, aCallback) => {
+        this.messageManager.sendAsyncMessage("GeckoView:UpdateSettings",
+                                             this.settings);
+        this.onSettingsUpdate();
+      }, "GeckoView:UpdateSettings"
     );
 
     this.eventDispatcher.registerListener(
       (aEvent, aData, aCallback) => {
         if (aData.module == this.moduleName) {
           this._register();
+          aData.settings = this.settings;
           this.messageManager.sendAsyncMessage("GeckoView:Register", aData);
         }
       }, "GeckoView:Register"

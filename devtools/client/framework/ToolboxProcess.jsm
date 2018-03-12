@@ -346,7 +346,10 @@ BrowserToolboxProcess.prototype = {
       return;
     }
 
+    this.closed = true;
+
     dumpn("Cleaning up the chrome debugging process.");
+
     Services.obs.removeObserver(this.close, "quit-application");
 
     this._dbgProcess.stdout.close();
@@ -360,7 +363,6 @@ BrowserToolboxProcess.prototype = {
     }
 
     dumpn("Chrome toolbox is now closed...");
-    this.closed = true;
     this.emit("close", this);
     processes.delete(this);
 

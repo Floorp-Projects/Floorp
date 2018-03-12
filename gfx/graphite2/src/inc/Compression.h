@@ -47,7 +47,10 @@ typedef uint32_t u32;
 typedef uint64_t u64;
 #endif
 
-ptrdiff_t const     MINMATCH  = 4;
+ptrdiff_t const     MINMATCH = 4,
+                    LASTLITERALS = 5,
+                    MINCODA  = LASTLITERALS+1,
+                    MINSRCSIZE = 13;
 
 template<int S>
 inline 

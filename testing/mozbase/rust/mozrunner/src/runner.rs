@@ -1,16 +1,18 @@
 use mozprofile::prefreader::PrefReaderError;
 use mozprofile::profile::Profile;
-use std::ascii::AsciiExt;
 use std::collections::HashMap;
 use std::convert::From;
 use std::env;
 use std::error::Error;
 use std::ffi::{OsStr, OsString};
 use std::fmt;
-use std::io::{Error as IoError, ErrorKind, Result as IoResult};
+use std::io;
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, Stdio};
 use std::process;
+use std::process::{Child, Command, Stdio};
+use std::thread;
+use std::time;
 
 pub trait Runner {
     type Process;
@@ -47,14 +49,40 @@ pub trait Runner {
 }
 
 pub trait RunnerProcess {
-    fn status(&mut self) -> IoResult<Option<process::ExitStatus>>;
-    fn stop(&mut self) -> IoResult<process::ExitStatus>;
-    fn is_running(&mut self) -> bool;
+    /// Attempts to collect the exit status of the process if it has already exited.
+    ///
+    /// This function will not block the calling thread and will only advisorily check to see if
+    /// the child process has exited or not.  If the process has exited then on Unix the process ID
+    /// is reaped.  This function is guaranteed to repeatedly return a successful exit status so
+    /// long as the child has already exited.
+    ///
+    /// If the process has exited, then `Ok(Some(status))` is returned.  If the exit status is not
+    /// available at this time then `Ok(None)` is returned.  If an error occurs, then that error is
+    /// returned.
+    fn try_wait(&mut self) -> io::Result<Option<process::ExitStatus>>;
+
+    /// Waits for the process to exit completely, killing it if it does not stop within `timeout`,
+    /// and returns the status that it exited with.
+    ///
+    /// Firefox' integrated background monitor observes long running threads during shutdown and
+    /// kills these after 63 seconds.  If the process fails to exit within the duration of
+    /// `timeout`, it is forcefully killed.
+    ///
+    /// This function will continue to have the same return value after it has been called at least
+    /// once.
+    fn wait(&mut self, timeout: time::Duration) -> io::Result<process::ExitStatus>;
+
+    /// Determine if the process is still running.
+    fn running(&mut self) -> bool;
+
+    /// Forces the process to exit and returns the exit status.  This is
+    /// equivalent to sending a SIGKILL on Unix platforms.
+    fn kill(&mut self) -> io::Result<process::ExitStatus>;
 }
 
 #[derive(Debug)]
 pub enum RunnerError {
-    Io(IoError),
+    Io(io::Error),
     PrefReader(PrefReaderError),
 }
 
@@ -85,8 +113,8 @@ impl Error for RunnerError {
     }
 }
 
-impl From<IoError> for RunnerError {
-    fn from(value: IoError) -> RunnerError {
+impl From<io::Error> for RunnerError {
+    fn from(value: io::Error) -> RunnerError {
         RunnerError::Io(value)
     }
 }
@@ -100,19 +128,30 @@ impl From<PrefReaderError> for RunnerError {
 #[derive(Debug)]
 pub struct FirefoxProcess {
     process: Child,
-    profile: Profile
+    profile: Profile,
 }
 
 impl RunnerProcess for FirefoxProcess {
-    fn status(&mut self) -> IoResult<Option<process::ExitStatus>> {
+    fn try_wait(&mut self) -> io::Result<Option<process::ExitStatus>> {
         self.process.try_wait()
     }
 
-    fn is_running(&mut self) -> bool {
-        self.status().unwrap().is_none()
+    fn wait(&mut self, timeout: time::Duration) -> io::Result<process::ExitStatus> {
+        let now = time::Instant::now();
+        while self.running() {
+            if now.elapsed() >= timeout {
+                break;
+            }
+            thread::sleep(time::Duration::from_millis(100));
+        }
+        self.kill()
     }
 
-    fn stop(&mut self) -> IoResult<process::ExitStatus> {
+    fn running(&mut self) -> bool {
+        self.try_wait().unwrap().is_none()
+    }
+
+    fn kill(&mut self) -> io::Result<process::ExitStatus> {
         self.process.kill()?;
         self.process.wait()
     }

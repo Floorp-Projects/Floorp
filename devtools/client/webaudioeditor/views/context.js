@@ -285,7 +285,7 @@ var ContextView = {
   /**
    * Fired when the devtools theme changes.
    */
-  _onThemeChange: function (eventName, theme) {
+  _onThemeChange: function (theme) {
     let markerColor = MARKER_STYLING[theme];
     let marker = $("#arrowhead");
     if (marker) {

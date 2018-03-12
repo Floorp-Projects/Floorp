@@ -203,47 +203,6 @@ describe("Reducers", () => {
       const insertedSection = newState.find(section => section.id === "foo_bar_5");
       assert.propertyVal(insertedSection, "title", action.data.title);
     });
-    it("should ensure sections are sorted by property `order` (increasing) on SECTION_REGISTER", () => {
-      let newState = [];
-      const state = Object.assign([], oldState);
-      state.forEach(section => {
-        Object.assign(section, {order: 5 - section.order});
-        const action = {type: at.SECTION_REGISTER, data: section};
-        newState = Sections(newState, action);
-      });
-      // Should have been inserted into newState in reverse order
-      assert.deepEqual(newState.map(section => section.id), state.map(section => section.id).reverse());
-      const newSection = {id: "new_section", order: 2.5};
-      const action = {type: at.SECTION_REGISTER, data: newSection};
-      newState = Sections(newState, action);
-      // Should have been inserted at index 2, between second and third section
-      assert.equal(newState[2].id, newSection.id);
-    });
-    it("should insert sections without an `order` at the top on SECTION_REGISTER", () => {
-      const newSection = {id: "new_section"};
-      const action = {type: at.SECTION_REGISTER, data: newSection};
-      const newState = Sections(oldState, action);
-      assert.equal(newState[0].id, newSection.id);
-      assert.ok(newState[0].order < newState[1].order);
-    });
-    it("should insert sections with a 0 `order` at the top on SECTION_REGISTER", () => {
-      const newSection = {id: "new_section", order: 0};
-      const action = {type: at.SECTION_REGISTER, data: newSection};
-      const newState = Sections(oldState, action);
-      assert.equal(newState[0].id, newSection.id);
-    });
-    it("should insert sections with a 1 `order` in the right spot on SECTION_REGISTER", () => {
-      const newSection = {id: "new_section", order: 1};
-      const action = {type: at.SECTION_REGISTER, data: newSection};
-      const newState = Sections(oldState, action);
-      assert.equal(newState[1].id, newSection.id);
-    });
-    it("should insert sections with higher `order` than any existing at the bottom on SECTION_REGISTER", () => {
-      const newSection = {id: "new_section", order: 10000};
-      const action = {type: at.SECTION_REGISTER, data: newSection};
-      const newState = Sections(oldState, action);
-      assert.equal(newState[newState.length - 1].id, newSection.id);
-    });
     it("should set newSection.rows === [] if no rows are provided on SECTION_REGISTER", () => {
       const action = {type: at.SECTION_REGISTER, data: {id: "foo_bar_5", title: "Foo Bar 5"}};
       const newState = Sections(oldState, action);
@@ -560,6 +519,14 @@ describe("Reducers", () => {
     it("should reset to the initial state on a SNIPPETS_RESET action", () => {
       const state = Snippets({initalized: true, foo: "bar"}, {type: at.SNIPPETS_RESET});
       assert.equal(state, INITIAL_STATE.Snippets);
+    });
+    it("should set the new blocklist on SNIPPET_BLOCKED", () => {
+      const state = Snippets({blockList: []}, {type: at.SNIPPET_BLOCKED, data: 1});
+      assert.deepEqual(state.blockList, [1]);
+    });
+    it("should clear the blocklist on SNIPPETS_BLOCKLIST_CLEARED", () => {
+      const state = Snippets({blockList: [1, 2]}, {type: at.SNIPPETS_BLOCKLIST_CLEARED});
+      assert.deepEqual(state.blockList, []);
     });
   });
   describe("PreferencesPane", () => {

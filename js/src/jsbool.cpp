@@ -14,12 +14,12 @@
 #include "jstypes.h"
 
 #include "jit/InlinableNatives.h"
+#include "util/StringBuffer.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
-#include "vm/StringBuffer.h"
 
 #include "vm/BooleanObject-inl.h"
 

@@ -61,7 +61,8 @@ class TempWebExt {
 }
 
 add_task(function* reloadButtonReloadsAddon() {
-  const { tab, document } = yield openAboutDebugging("addons");
+  const { tab, document, window } = yield openAboutDebugging("addons");
+  const { AboutDebugging } = window;
   yield waitForInitialAddonList(document);
   yield installAddon({
     document,
@@ -81,7 +82,9 @@ add_task(function* reloadButtonReloadsAddon() {
     }, ADDON_NAME);
   });
 
+  let reloaded = once(AboutDebugging, "addon-reload");
   reloadButton.click();
+  yield reloaded;
 
   const [reloadedAddon] = yield onInstalled;
   is(reloadedAddon.name, ADDON_NAME,
@@ -93,7 +96,8 @@ add_task(function* reloadButtonReloadsAddon() {
 });
 
 add_task(function* reloadButtonRefreshesMetadata() {
-  const { tab, document } = yield openAboutDebugging("addons");
+  const { tab, document, window } = yield openAboutDebugging("addons");
+  const { AboutDebugging } = window;
   yield waitForInitialAddonList(document);
 
   const manifestBase = {
@@ -125,7 +129,9 @@ add_task(function* reloadButtonRefreshesMetadata() {
   // Wait for the add-on list to be updated with the reloaded name.
   const onReInstall = promiseAddonEvent("onInstalled");
   const reloadButton = getReloadButton(document, manifestBase.name);
+  let reloaded = once(AboutDebugging, "addon-reload");
   reloadButton.click();
+  yield reloaded;
 
   info("Wait until addon onInstalled event is received again");
   const [reloadedAddon] = yield onReInstall;

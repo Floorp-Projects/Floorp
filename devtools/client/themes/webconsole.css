@@ -290,9 +290,9 @@ a {
   border-radius: 3px;
   font-weight: bold;
   font-size: 10px;
-  padding: 2px;
+  padding: 1px 2px;
   line-height: 10px;
-  margin-inline-start: 3px;
+  margin-inline-start: 0;
   margin-inline-end: 1ex;
 }
 
@@ -610,10 +610,8 @@ textbox.jsterm-input-node[focused="true"] {
 }
 
 .message .theme-twisty {
-  display: inline-block;
-  vertical-align: middle;
-  margin: 3px 0 0 0;
-  flex-shrink: 0;
+  position: relative;
+  top: 0.1em;
 }
 
 /*Do not mirror the twisty because container force to ltr */

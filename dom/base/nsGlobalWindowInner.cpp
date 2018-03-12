@@ -1263,8 +1263,6 @@ nsGlobalWindowInner::CleanUp()
     mIdleTimer = nullptr;
   }
 
-  mServiceWorkerRegistrationTable.Clear();
-
   mIntlUtils = nullptr;
 }
 
@@ -1468,8 +1466,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPerformance)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerRegistrationTable)
-
 #ifdef MOZ_WEBSPEECH
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSpeechSynthesis)
 #endif
@@ -1553,7 +1549,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mServiceWorkerRegistrationTable)
 
 #ifdef MOZ_WEBSPEECH
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSpeechSynthesis)
@@ -5205,26 +5200,6 @@ nsGlobalWindowInner::GetCaches(ErrorResult& aRv)
   return ref.forget();
 }
 
-already_AddRefed<ServiceWorkerRegistration>
-nsPIDOMWindowInner::GetServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor)
-{
-  NS_ConvertUTF8toUTF16 scope(aDescriptor.Scope());
-  RefPtr<ServiceWorkerRegistration> registration;
-  if (!mServiceWorkerRegistrationTable.Get(scope,
-                                           getter_AddRefs(registration))) {
-    registration =
-      ServiceWorkerRegistration::CreateForMainThread(this, aDescriptor);
-    mServiceWorkerRegistrationTable.Put(scope, registration);
-  }
-  return registration.forget();
-}
-
-void
-nsPIDOMWindowInner::InvalidateServiceWorkerRegistration(const nsAString& aScope)
-{
-  mServiceWorkerRegistrationTable.Remove(aScope);
-}
-
 void
 nsGlobalWindowInner::FireOfflineStatusEventIfChanged()
 {
@@ -6435,6 +6410,28 @@ nsGlobalWindowInner::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDe
   return ref.forget();
 }
 
+RefPtr<ServiceWorkerRegistration>
+nsGlobalWindowInner::GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<ServiceWorkerRegistration> ref;
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget, bool* aDoneOut) {
+    RefPtr<ServiceWorkerRegistration> swr = do_QueryObject(aTarget);
+    if (!swr || !swr->MatchesDescriptor(aDescriptor)) {
+      return;
+    }
+
+    ref = swr.forget();
+    *aDoneOut = true;
+  });
+
+  if (!ref) {
+    ref = ServiceWorkerRegistration::CreateForMainThread(this, aDescriptor);
+  }
+
+  return ref.forget();
+}
+
 nsresult
 nsGlobalWindowInner::FireDelayedDOMEvents()
 {
@@ -7428,7 +7425,7 @@ nsGlobalWindowInner::PromiseDocumentFlushed(PromiseDocumentFlushedCallback& aCal
   UniquePtr<PromiseDocumentFlushedResolver> flushResolver(
     new PromiseDocumentFlushedResolver(resultPromise, aCallback));
 
-  if (!shell->NeedFlush(FlushType::Style)) {
+  if (!shell->NeedStyleFlush() && !shell->NeedLayoutFlush()) {
     flushResolver->Call();
     return resultPromise.forget();
   }
@@ -7523,10 +7520,11 @@ nsGlobalWindowInner::DidRefresh()
   nsIPresShell* shell = mDoc->GetShell();
   MOZ_ASSERT(shell);
 
-  if (shell->NeedStyleFlush() || shell->HasPendingReflow()) {
+  if (shell->NeedStyleFlush() || shell->NeedLayoutFlush()) {
     // By the time our observer fired, something has already invalidated
-    // style and maybe layout. We'll wait until the next refresh driver
-    // tick instead.
+    // style or layout - or perhaps we're still in the middle of a flush that
+    // was interrupted. In either case, we'll wait until the next refresh driver
+    // tick instead and try again.
     rejectionGuard.release();
     return;
   }

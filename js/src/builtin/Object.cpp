@@ -8,17 +8,16 @@
 
 #include "mozilla/MaybeOneOf.h"
 
-#include "jsstr.h"
-
 #include "builtin/Eval.h"
 #include "builtin/SelfHostingDefines.h"
+#include "builtin/String.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/InlinableNatives.h"
 #include "js/UniquePtr.h"
+#include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
-#include "vm/StringBuffer.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

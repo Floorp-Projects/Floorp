@@ -172,6 +172,11 @@ WebGL2Context::GetActiveUniforms(JSContext* cx, const WebGLProgram& program,
     if (!ValidateObject("getActiveUniforms: program", program))
         return;
 
+    if (!program.IsLinked()) {
+        ErrorInvalidOperation("%s: `program` must be linked.", funcName);
+        return;
+    }
+
     const auto& numActiveUniforms = program.LinkInfo()->uniforms.size();
     for (const auto& curIndex : uniformIndices) {
         if (curIndex >= numActiveUniforms) {

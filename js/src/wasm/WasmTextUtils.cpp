@@ -18,7 +18,7 @@
 
 #include "wasm/WasmTextUtils.h"
 
-#include "vm/StringBuffer.h"
+#include "util/StringBuffer.h"
 #include "wasm/WasmTypes.h"
 
 using namespace js;

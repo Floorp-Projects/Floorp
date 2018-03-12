@@ -35,11 +35,7 @@
 #include "D3D11ShareHandleImage.h"
 #include "DeviceAttachmentsD3D11.h"
 
-#ifdef __MINGW32__
 #include <versionhelpers.h> // For IsWindows8OrGreater
-#else
-#include <VersionHelpers.h> // For IsWindows8OrGreater
-#endif
 #include <winsdkver.h>
 
 namespace mozilla {
