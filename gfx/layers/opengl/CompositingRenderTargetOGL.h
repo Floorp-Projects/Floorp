@@ -185,7 +185,7 @@ private:
    * the target is always cleared at the end of a frame.
    */
   RefPtr<CompositorOGL> mCompositor;
-  GLContext* mGL;
+  RefPtr<GLContext> mGL;
   GLuint mTextureHandle;
   GLuint mFBO;
 };
