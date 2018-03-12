@@ -885,7 +885,7 @@ StripURIForReporting(nsIURI* aURI,
 
 nsresult
 nsCSPContext::GatherSecurityPolicyViolationEventData(
-  nsIURI* aBlockedURI,
+  nsISupports* aBlockedContentSource,
   nsIURI* aOriginalURI,
   nsAString& aViolatedDirective,
   uint32_t aViolatedPolicyIndex,
@@ -909,9 +909,23 @@ nsCSPContext::GatherSecurityPolicyViolationEventData(
   aViolationEventInit.mReferrer = mReferrer;
 
   // blocked-uri
-  if (aBlockedURI) {
+  if (aBlockedContentSource) {
     nsAutoCString reportBlockedURI;
-    StripURIForReporting(aBlockedURI, mSelfURI, reportBlockedURI);
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(aBlockedContentSource);
+    // could be a string or URI
+    if (uri) {
+      StripURIForReporting(uri, mSelfURI, reportBlockedURI);
+    } else {
+      nsCOMPtr<nsISupportsCString> cstr = do_QueryInterface(aBlockedContentSource);
+      if (cstr) {
+        cstr->GetData(reportBlockedURI);
+      }
+    }
+    if (reportBlockedURI.IsEmpty()) {
+      // this can happen for frame-ancestors violation where the violating
+      // ancestor is cross-origin.
+      NS_WARNING("No blocked URI (null aBlockedContentSource) for CSP violation report.");
+    }
     aViolationEventInit.mBlockedURI = NS_ConvertUTF8toUTF16(reportBlockedURI);
   }
 
@@ -1240,10 +1254,8 @@ class CSPReportSenderRunnable final : public Runnable
 
       // 0) prepare violation data
       mozilla::dom::SecurityPolicyViolationEventInit init;
-      // mBlockedContentSource could be a URI or a string.
-      nsCOMPtr<nsIURI> blockedURI = do_QueryInterface(mBlockedContentSource);
       rv = mCSPContext->GatherSecurityPolicyViolationEventData(
-        blockedURI, mOriginalURI,
+        mBlockedContentSource, mOriginalURI,
         mViolatedDirective, mViolatedPolicyIndex,
         mSourceFile, mScriptSample, mLineNum,
         init);
@@ -1261,6 +1273,8 @@ class CSPReportSenderRunnable final : public Runnable
       mCSPContext->SendReports(init, mViolatedPolicyIndex);
 
       // 3) log to console (one per policy violation)
+      // mBlockedContentSource could be a URI or a string.
+      nsCOMPtr<nsIURI> blockedURI = do_QueryInterface(mBlockedContentSource);
       // if mBlockedContentSource is not a URI, it could be a string
       nsCOMPtr<nsISupportsCString> blockedString = do_QueryInterface(mBlockedContentSource);
 
