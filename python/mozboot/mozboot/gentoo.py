@@ -62,7 +62,7 @@ class GentooBootstrapper(StyloInstall, BaseBootstrapper):
         # configuration files and doing so without user supervision is dangerous
         self.run_as_root(['emerge', '--noreplace', '--quiet',
                           '--autounmask-continue', '--ask',
-                          '=dev-java/oracle-jdk-bin-1.8.0.162'])
+                          '=dev-java/oracle-jdk-bin-1.8.0.162-r1'])
 
         from mozboot import android
         android.ensure_android('linux', artifact_mode=artifact_mode,

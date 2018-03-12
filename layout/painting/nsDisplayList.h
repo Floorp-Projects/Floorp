@@ -3998,7 +3998,6 @@ protected:
   typedef class mozilla::layers::ImageLayer ImageLayer;
 
   bool CanBuildWebRenderDisplayItems(LayerManager* aManager);
-  bool TryOptimizeToImageLayer(LayerManager* aManager, nsDisplayListBuilder* aBuilder);
   nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder,
                            nsIFrame* aFrameForBounds = nullptr);
 

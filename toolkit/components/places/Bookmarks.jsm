@@ -241,7 +241,9 @@ var Bookmarks = Object.freeze({
         index: { defaultValue: this.DEFAULT_INDEX },
         url: { requiredIf: b => b.type == this.TYPE_BOOKMARK,
                validIf: b => b.type == this.TYPE_BOOKMARK },
-        parentGuid: { required: true },
+        parentGuid: { required: true,
+                      // Inserting into the root folder is not allowed.
+                      validIf: b => b.parentGuid != this.rootGuid },
         title: { defaultValue: "",
                  validIf: b => b.type == this.TYPE_BOOKMARK ||
                                b.type == this.TYPE_FOLDER ||
@@ -610,6 +612,7 @@ var Bookmarks = Object.freeze({
       { guid: { required: true },
         index: { requiredIf: b => b.hasOwnProperty("parentGuid"),
                  validIf: b => b.index >= 0 || b.index == this.DEFAULT_INDEX },
+        parentGuid: { validIf: b => b.parentGuid != this.rootGuid },
         source: { defaultValue: this.SOURCES.DEFAULT }
       });
 
