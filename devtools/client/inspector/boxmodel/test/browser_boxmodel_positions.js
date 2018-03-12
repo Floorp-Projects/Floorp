@@ -44,21 +44,21 @@ const res1 = [
 
 add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openBoxModelView();
+  let {inspector, boxmodel} = yield openLayoutView();
   let node = yield getNodeFront("div", inspector);
   let children = yield inspector.markup.walker.children(node);
   let beforeElement = children.nodes[0];
 
   yield selectNode(beforeElement, inspector);
-  yield testPositionValues(inspector, view);
+  yield testPositionValues(inspector, boxmodel);
 });
 
-function* testPositionValues(inspector, view) {
+function* testPositionValues(inspector, boxmodel) {
   info("Test that the position values of the box model are correct");
-  let viewdoc = view.document;
+  let doc = boxmodel.document;
 
   for (let i = 0; i < res1.length; i++) {
-    let elt = viewdoc.querySelector(res1[i].selector);
+    let elt = doc.querySelector(res1[i].selector);
     is(elt.textContent, res1[i].value,
        res1[i].selector + " has the right value.");
   }
