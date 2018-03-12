@@ -116,6 +116,8 @@ StreamFilterParent::StreamFilterParent()
 
 StreamFilterParent::~StreamFilterParent()
 {
+  NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mChannel",
+                                    mChannel.forget());
   NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mOrigListener",
                                     mOrigListener.forget());
   NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mContext",
