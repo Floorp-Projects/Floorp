@@ -852,6 +852,7 @@ CompositorBridgeChild::SendAllPluginsCaptured()
 
 PTextureChild*
 CompositorBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
+                                          const ReadLockDescriptor&,
                                           const LayersBackend&,
                                           const TextureFlags&,
                                           const uint64_t&,
@@ -1004,6 +1005,7 @@ CompositorBridgeChild::GetTileLockAllocator()
 
 PTextureChild*
 CompositorBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
+                                     const ReadLockDescriptor& aReadLock,
                                      LayersBackend aLayersBackend,
                                      TextureFlags aFlags,
                                      uint64_t aSerial,
@@ -1011,7 +1013,7 @@ CompositorBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
                                      nsIEventTarget* aTarget)
 {
   PTextureChild* textureChild = AllocPTextureChild(
-    aSharedData, aLayersBackend, aFlags, 0 /* FIXME */, aSerial, aExternalImageId);
+    aSharedData, aReadLock, aLayersBackend, aFlags, 0 /* FIXME */, aSerial, aExternalImageId);
 
   // Do the DOM labeling.
   if (aTarget) {
@@ -1019,7 +1021,7 @@ CompositorBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
   }
 
   return SendPTextureConstructor(
-    textureChild, aSharedData, aLayersBackend, aFlags, 0 /* FIXME? */, aSerial, aExternalImageId);
+    textureChild, aSharedData, aReadLock, aLayersBackend, aFlags, 0 /* FIXME? */, aSerial, aExternalImageId);
 }
 
 bool

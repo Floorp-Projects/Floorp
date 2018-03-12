@@ -57,7 +57,7 @@ parent:
   // before sending closing the channel.
   sync WillClose();
 
-  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
+  async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
   async PMediaSystemResourceManager();
 
   sync NewCompositable(CompositableHandle aHandle, TextureInfo aInfo, LayersBackend aBackend);

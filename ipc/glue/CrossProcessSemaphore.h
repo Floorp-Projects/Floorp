@@ -78,6 +78,8 @@ public:
    */
   CrossProcessSemaphoreHandle ShareToProcess(base::ProcessId aTargetPid);
 
+  void CloseHandle();
+
 private:
   friend struct IPC::ParamTraits<CrossProcessSemaphore>;
 

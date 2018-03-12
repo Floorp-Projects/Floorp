@@ -173,6 +173,7 @@ public:
 
   virtual PTextureChild*
   AllocPTextureChild(const SurfaceDescriptor& aSharedData,
+                     const ReadLockDescriptor& aReadLock,
                      const LayersBackend& aLayersBackend,
                      const TextureFlags& aFlags,
                      const uint64_t& aSerial,
@@ -331,6 +332,7 @@ public:
 
   virtual PTextureChild* CreateTexture(
     const SurfaceDescriptor& aSharedData,
+    const ReadLockDescriptor& aReadLock,
     LayersBackend aLayersBackend,
     TextureFlags aFlags,
     uint64_t aSerial,
