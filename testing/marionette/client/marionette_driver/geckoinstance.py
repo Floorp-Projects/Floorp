@@ -22,6 +22,14 @@ from six import reraise
 from . import errors
 
 
+# ALL CHANGES TO THIS FILE MUST HAVE REVIEW FROM A MARIONETTE PEER!
+#
+# The Marionette Python client is used out-of-tree with release
+# channel builds of Firefox.  Removing a preference from this file
+# will cause regressions, so please be careful and get review from
+# a Testing :: Marionette peer before you make any changes to this file.
+
+
 class GeckoInstance(object):
     required_prefs = {
         # Make sure Shield doesn't hit the network.
