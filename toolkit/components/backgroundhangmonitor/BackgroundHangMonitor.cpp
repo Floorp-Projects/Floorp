@@ -26,7 +26,6 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "GeckoProfiler.h"
-#include "nsNetCID.h"
 #include "HangDetails.h"
 
 #ifdef MOZ_GECKO_PROFILER
@@ -70,7 +69,7 @@ private:
   static void MonitorThread(void* aData)
   {
     AUTO_PROFILER_REGISTER_THREAD("BgHangMonitor");
-    NS_SetCurrentThreadName("BgHangManager");
+    NS_SetCurrentThreadName("BHMgr Monitor");
 
     /* We do not hold a reference to BackgroundHangManager here
        because the monitor thread only exists as long as the
@@ -101,10 +100,10 @@ public:
   PRIntervalTime mIntervalNow;
   // List of BackgroundHangThread instances associated with each thread
   LinkedList<BackgroundHangThread> mHangThreads;
-  // A reference to the StreamTransportService. This is gotten on the main
-  // thread, and carried around, as nsStreamTransportService::Init is
-  // non-threadsafe.
-  nsCOMPtr<nsIEventTarget> mSTS;
+
+  // Unwinding and reporting of hangs is despatched to this thread.
+  nsCOMPtr<nsIThread> mHangProcessingThread;
+
   // Allows us to watch CPU usage and annotate hangs when the system is
   // under high external load.
   CPUUsageWatcher mCPUUsageWatcher;
@@ -257,7 +256,6 @@ BackgroundHangManager::BackgroundHangManager()
   : mShutdown(false)
   , mLock("BackgroundHangManager")
   , mIntervalNow(0)
-  , mSTS(do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID))
 {
   // Lock so we don't race against the new monitor thread
   MonitorAutoLock autoLock(mLock);
@@ -266,7 +264,13 @@ BackgroundHangManager::BackgroundHangManager()
     PR_USER_THREAD, MonitorThread, this,
     PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
 
-  MOZ_ASSERT(mHangMonitorThread, "Failed to create monitor thread");
+  MOZ_ASSERT(mHangMonitorThread, "Failed to create BHR monitor thread");
+
+  DebugOnly<nsresult> rv
+    = NS_NewNamedThread("BHMgr Processor",
+                        getter_AddRefs(mHangProcessingThread));
+  MOZ_ASSERT(NS_SUCCEEDED(rv) && mHangProcessingThread,
+             "Failed to create BHR processing thread");
 }
 
 BackgroundHangManager::~BackgroundHangManager()
@@ -274,11 +278,17 @@ BackgroundHangManager::~BackgroundHangManager()
   MOZ_ASSERT(mShutdown, "Destruction without Shutdown call");
   MOZ_ASSERT(mHangThreads.isEmpty(), "Destruction with outstanding monitors");
   MOZ_ASSERT(mHangMonitorThread, "No monitor thread");
+  MOZ_ASSERT(mHangProcessingThread, "No processing thread");
 
   // PR_CreateThread could have failed above due to resource limitation
   if (mHangMonitorThread) {
     // The monitor thread can only live as long as the instance lives
     PR_JoinThread(mHangMonitorThread);
+  }
+
+  // Similarly, NS_NewNamedThread above could have failed.
+  if (mHangProcessingThread) {
+    mHangProcessingThread->Shutdown();
   }
 }
 
@@ -489,15 +499,16 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
     Move(annotations)
   );
 
-  // If we have the stream transport service avaliable, we can process the
-  // native stack on it. Otherwise, we are unable to report a native stack, so
-  // we just report without one.
-  if (mManager->mSTS) {
+  // If the hang processing thread exists, we can process the native stack
+  // on it. Otherwise, we are unable to report a native stack, so we just
+  // report without one.
+  if (mManager->mHangProcessingThread) {
     nsCOMPtr<nsIRunnable> processHangStackRunnable =
       new ProcessHangStackRunnable(Move(hangDetails));
-    mManager->mSTS->Dispatch(processHangStackRunnable.forget());
+    mManager->mHangProcessingThread
+            ->Dispatch(processHangStackRunnable.forget());
   } else {
-    NS_WARNING("Unable to report native stack without a StreamTransportService");
+    NS_WARNING("Unable to report native stack without a BHR processing thread");
     RefPtr<nsHangDetails> hd = new nsHangDetails(Move(hangDetails));
     hd->Submit();
   }
