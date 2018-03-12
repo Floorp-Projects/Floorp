@@ -1467,8 +1467,8 @@ set_config('MOZ_RUST_DEFAULT_FLAGS', rust_compiler_flags)
 # ==============================================================
 
 
-@depends('MOZ_AUTOMATION')
-def cargo_incremental(automation):
+@depends(rustc_opt_level, debug_rust, 'MOZ_AUTOMATION')
+def cargo_incremental(opt_level, debug_rust, automation):
     """Return a value for the CARGO_INCREMENTAL environment variable."""
 
     # We never want to use incremental compilation in automation.  sccache
@@ -1477,8 +1477,21 @@ def cargo_incremental(automation):
     if automation:
         return '0'
 
-    # Don't do anything special in other situations.
-    return
+    # Incremental compilation is automatically turned on for debug builds, so
+    # we don't need to do anything special here.
+    if debug_rust:
+        return
+
+    # --enable-release automatically sets -O2 for Rust code, and people can
+    # set RUSTC_OPT_LEVEL to 2 or even 3 if they want to profile Rust code.
+    # Let's assume that if Rust code is using -O2 or higher, we shouldn't
+    # be using incremental compilation, because we'd be imposing a
+    # significant runtime cost.
+    if opt_level not in ('0', '1'):
+        return
+
+    # We're clear to use incremental compilation!
+    return '1'
 
 
 set_config('CARGO_INCREMENTAL', cargo_incremental)
