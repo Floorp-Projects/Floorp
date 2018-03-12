@@ -24,7 +24,7 @@ sync protocol PVideoBridge
   manages PTexture;
 
 parent:
-  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend,
+  async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend,
                  TextureFlags aTextureFlags, uint64_t aSerial);
 };
 

@@ -85,4 +85,9 @@ CrossProcessSemaphore::ShareToProcess(base::ProcessId aTargetPid)
   return newHandle;
 }
 
+void
+CrossProcessSemaphore::CloseHandle()
+{
+}
+
 }
