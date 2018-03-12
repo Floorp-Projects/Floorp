@@ -13,6 +13,8 @@
 #include "Role.h"
 
 #include "nsFocusManager.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
+#include "mozilla/a11y/DocManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
