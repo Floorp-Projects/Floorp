@@ -94,12 +94,15 @@ add_task(async function testEnterKeyBehaviors() {
     EventUtils.synthesizeKey("KEY_ArrowUp");
     focusedElement = document.commandDispatcher.focusedElement;
   }
+  let findBarPromise = gBrowser.isFindBarInitialized() ?
+    null : BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabFindInitialized");
   Assert.equal(focusedElement.id, kFindButtonId, "Find button should be selected");
 
   promise = promisePanelHidden(window);
   EventUtils.synthesizeKey("KEY_Enter");
   await promise;
 
+  await findBarPromise;
   Assert.ok(!gFindBar.hidden, "Findbar should have opened");
   gFindBar.close();
 });
