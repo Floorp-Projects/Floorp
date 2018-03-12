@@ -34,6 +34,10 @@ add_task(async function() {
   await ui.selectStyleSheet(ui.editors[1].styleSheet);
   await ui.editors[1].getSourceEditor();
 
+  // Wait till there is 5 requests in Netmonitor store.
+  // (i.e. the Styleeditor panel performed one request).
+  await waitUntil(() => getSortedRequests(store.getState()).length == 5);
+
   info("Checking Netmonitor contents.");
   let shortRequests = [];
   let longRequests = [];
