@@ -19,7 +19,7 @@ function* testSteps()
     return;
   }
 
-  getWasmBinary("(module (func (nop)))");
+  getWasmBinary(`(module (func (export "run") (result i32) (i32.const 13)))`);
   let binary = yield undefined;
   wasmData.value = getWasmModule(binary);
 
