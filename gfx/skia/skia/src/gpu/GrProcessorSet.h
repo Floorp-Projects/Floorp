@@ -12,14 +12,23 @@
 #include "GrPaint.h"
 #include "GrProcessorAnalysis.h"
 #include "SkTemplates.h"
+#include "GrXferProcessor.h"
 
 class GrAppliedClip;
-class GrXferProcessor;
 class GrXPFactory;
 
-class GrProcessorSet : private SkNoncopyable {
+class GrProcessorSet {
+private:
+    // Arbitrary constructor arg for empty set and analysis
+    enum class Empty { kEmpty };
+
 public:
-    GrProcessorSet(GrPaint&& paint);
+    GrProcessorSet(GrPaint&&);
+    GrProcessorSet(SkBlendMode);
+    GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP);
+    GrProcessorSet(GrProcessorSet&&);
+    GrProcessorSet(const GrProcessorSet&) = delete;
+    GrProcessorSet& operator=(const GrProcessorSet&) = delete;
 
     ~GrProcessorSet();
 
@@ -27,16 +36,14 @@ public:
     int numCoverageFragmentProcessors() const {
         return this->numFragmentProcessors() - fColorFragmentProcessorCnt;
     }
-    int numFragmentProcessors() const {
-        return fFragmentProcessors.count() - fFragmentProcessorOffset;
-    }
 
     const GrFragmentProcessor* colorFragmentProcessor(int idx) const {
         SkASSERT(idx < fColorFragmentProcessorCnt);
-        return fFragmentProcessors[idx + fFragmentProcessorOffset];
+        return fFragmentProcessors[idx + fFragmentProcessorOffset].get();
     }
     const GrFragmentProcessor* coverageFragmentProcessor(int idx) const {
-        return fFragmentProcessors[idx + fColorFragmentProcessorCnt + fFragmentProcessorOffset];
+        return fFragmentProcessors[idx + fColorFragmentProcessorCnt +
+                                   fFragmentProcessorOffset].get();
     }
 
     const GrXferProcessor* xferProcessor() const {
@@ -48,11 +55,15 @@ public:
         return sk_ref_sp(fXP.fProcessor);
     }
 
-    bool usesDistanceVectorField() const { return SkToBool(fFlags & kUseDistanceVectorField_Flag); }
-    bool disableOutputConversionToSRGB() const {
-        return SkToBool(fFlags & kDisableOutputConversionToSRGB_Flag);
+    std::unique_ptr<const GrFragmentProcessor> detachColorFragmentProcessor(int idx) {
+        SkASSERT(idx < fColorFragmentProcessorCnt);
+        return std::move(fFragmentProcessors[idx + fFragmentProcessorOffset]);
     }
-    bool allowSRGBInputs() const { return SkToBool(fFlags & kAllowSRGBInputs_Flag); }
+
+    std::unique_ptr<const GrFragmentProcessor> detachCoverageFragmentProcessor(int idx) {
+        return std::move(
+                fFragmentProcessors[idx + fFragmentProcessorOffset + fColorFragmentProcessorCnt]);
+    }
 
     /** Comparisons are only legal on finalized processor sets. */
     bool operator==(const GrProcessorSet& that) const;
@@ -84,6 +95,14 @@ public:
         }
 
     private:
+        constexpr Analysis(Empty)
+                : fUsesLocalCoords(false)
+                , fCompatibleWithCoverageAsAlpha(true)
+                , fRequiresDstTexture(false)
+                , fCanCombineOverlappedStencilAndCover(true)
+                , fRequiresBarrierBetweenOverlappingDraws(false)
+                , fIsInitialized(true)
+                , fInputColorType(kOriginal_InputColorType) {}
         enum InputColorType : uint32_t {
             kOriginal_InputColorType,
             kOverridden_InputColorType,
@@ -122,23 +141,50 @@ public:
      */
     Analysis finalize(const GrProcessorAnalysisColor& colorInput,
                       const GrProcessorAnalysisCoverage coverageInput, const GrAppliedClip*,
-                      bool isMixedSamples, const GrCaps&, GrColor* inputColorOverride);
+                      bool isMixedSamples, const GrCaps&, GrPixelConfigIsClamped,
+                      GrColor* inputColorOverride);
 
     bool isFinalized() const { return SkToBool(kFinalized_Flag & fFlags); }
 
+    /** These are valid only for non-LCD coverage. */
+    static const GrProcessorSet& EmptySet();
+    static GrProcessorSet MakeEmptySet();
+    static constexpr const Analysis EmptySetAnalysis() { return Analysis(Empty::kEmpty); }
+
+    SkString dumpProcessors() const;
+
+    void visitProxies(const std::function<void(GrSurfaceProxy*)>& func) const {
+        for (int i = 0; i < this->numFragmentProcessors(); ++i) {
+            GrFragmentProcessor::TextureAccessIter iter(this->fragmentProcessor(i));
+            while (const GrResourceIOProcessor::TextureSampler* sampler = iter.next()) {
+                func(sampler->proxy());
+            }
+        }
+    }
+
 private:
+    GrProcessorSet(Empty) : fXP((const GrXferProcessor*)nullptr), fFlags(kFinalized_Flag) {}
+
+    int numFragmentProcessors() const {
+        return fFragmentProcessors.count() - fFragmentProcessorOffset;
+    }
+
+    const GrFragmentProcessor* fragmentProcessor(int idx) const {
+        return fFragmentProcessors[idx + fFragmentProcessorOffset].get();
+    }
+
     // This absurdly large limit allows Analysis and this to pack fields together.
     static constexpr int kMaxColorProcessors = UINT8_MAX;
 
-    enum Flags : uint16_t {
-        kUseDistanceVectorField_Flag = 0x1,
-        kDisableOutputConversionToSRGB_Flag = 0x2,
-        kAllowSRGBInputs_Flag = 0x4,
-        kFinalized_Flag = 0x8
-    };
+    enum Flags : uint16_t { kFinalized_Flag = 0x1 };
 
     union XP {
         XP(const GrXPFactory* factory) : fFactory(factory) {}
+        XP(const GrXferProcessor* processor) : fProcessor(processor) {}
+        XP(XP&& that) : fProcessor(that.fProcessor) {
+            SkASSERT(fProcessor == that.fProcessor);
+            that.fProcessor = nullptr;
+        }
         const GrXPFactory* fFactory;
         const GrXferProcessor* fProcessor;
     };
@@ -148,9 +194,9 @@ private:
         return fXP.fFactory;
     }
 
-    SkAutoSTArray<4, const GrFragmentProcessor*> fFragmentProcessors;
+    SkAutoSTArray<4, std::unique_ptr<const GrFragmentProcessor>> fFragmentProcessors;
     XP fXP;
-    uint8_t fColorFragmentProcessorCnt;
+    uint8_t fColorFragmentProcessorCnt = 0;
     uint8_t fFragmentProcessorOffset = 0;
     uint8_t fFlags;
 };
