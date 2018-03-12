@@ -12,7 +12,7 @@ ChromeUtils.defineModuleGetter(this, "ExtensionParent",
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "DevToolsShim",
-                               "chrome://devtools-shim/content/DevToolsShim.jsm");
+                               "chrome://devtools-startup/content/DevToolsShim.jsm");
 
 this.runtime = class extends ExtensionAPI {
   getAPI(context) {
