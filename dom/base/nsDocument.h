@@ -227,8 +227,6 @@ public:
   nsRadioGroupStruct* GetRadioGroup(const nsAString& aName) const;
   nsRadioGroupStruct* GetOrCreateRadioGroup(const nsAString& aName);
 
-  virtual nsViewportInfo GetViewportInfo(const mozilla::ScreenIntSize& aDisplaySize) override;
-
   enum class UseCounterReportKind {
     // Flush the document's use counters only; the use counters for any
     // external resource documents will be flushed when the external
@@ -412,9 +410,6 @@ private:
 
   void ClearAllBoxObjects();
 
-  // Returns true if the scheme for the url for this document is "about"
-  bool IsAboutPage() const;
-
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
@@ -426,16 +421,6 @@ private:
   nsCOMPtr<nsIRequest> mOnloadBlocker;
 
   nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
-
-  // These member variables cache information about the viewport so we don't have to
-  // recalculate it each time.
-  bool mValidWidth, mValidHeight;
-  mozilla::LayoutDeviceToScreenScale mScaleMinFloat;
-  mozilla::LayoutDeviceToScreenScale mScaleMaxFloat;
-  mozilla::LayoutDeviceToScreenScale mScaleFloat;
-  mozilla::CSSToLayoutDeviceScale mPixelRatio;
-  bool mAutoSize, mAllowZoom, mAllowDoubleTapZoom, mValidScaleFloat, mValidMaxScale, mScaleStrEmpty, mWidthStrEmpty;
-  mozilla::CSSSize mViewportSize;
 
 #ifdef DEBUG
 public:
