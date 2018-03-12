@@ -156,18 +156,9 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry
 
     // Build a new xptiInterfaceEntry object and hook it up.
 
-    entry = xptiInterfaceEntry::Create(iface->mName,
-                                       iface->mIID,
-                                       iface->mInterfaceDescriptor,
-                                       typelib);
+    entry = xptiInterfaceEntry::Create(iface, typelib);
     if (!entry)
         return;
-
-    //XXX  We should SetHeader too as part of the validation, no?
-    entry->SetScriptableFlag(iface->mInterfaceDescriptor->IsScriptable());
-    entry->SetBuiltinClassFlag(iface->mInterfaceDescriptor->IsBuiltinClass());
-    entry->SetMainProcessScriptableOnlyFlag(
-      iface->mInterfaceDescriptor->IsMainProcessScriptableOnly());
 
     mWorkingSet.mIIDTable.Put(entry->IID(), entry);
     mWorkingSet.mNameTable.Put(entry->GetTheName(), entry);
