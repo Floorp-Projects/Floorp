@@ -267,12 +267,10 @@ BookmarkImporter.prototype = {
         continue;
       }
 
-      // Places is moving away from supporting user-defined folders at the top
-      // of the tree, however, until we have a migration strategy we need to
-      // ensure any non-built-in folders are created (xref bug 1310299).
+      // Drop any roots whose guid we don't recognise - we don't support anything
+      // apart from the built-in roots.
       if (!PlacesUtils.bookmarks.userContentRoots.includes(node.guid)) {
-        node.parentGuid = PlacesUtils.bookmarks.rootGuid;
-        await PlacesUtils.bookmarks.insert(node);
+        continue;
       }
 
       await PlacesUtils.bookmarks.insertTree(node, { fixupOrSkipInvalidEntries: true });
