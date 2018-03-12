@@ -39,6 +39,7 @@ UNIFIED_SOURCES += [
     'nsLookAndFeel.mm',
     'nsMacCursor.mm',
     'nsMacDockSupport.mm',
+    'nsMacSharingService.mm',
     'nsMacWebAppUtils.mm',
     'nsMenuBarX.mm',
     'nsMenuGroupOwnerX.mm',
