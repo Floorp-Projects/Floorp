@@ -3376,7 +3376,19 @@ MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef, Registe
 void
 MacroAssembler::wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset)
 {
-    append(trap, wasm::TrapSite(wasmTrapInstruction().offset(), bytecodeOffset));
+    uint32_t trapOffset = wasmTrapInstruction().offset();
+    MOZ_ASSERT_IF(!oom(), currentOffset() - trapOffset == WasmTrapInstructionLength);
+
+    append(trap, wasm::TrapSite(trapOffset, bytecodeOffset));
+}
+
+void
+MacroAssembler::wasmInterruptCheck(Register tls, wasm::BytecodeOffset bytecodeOffset)
+{
+    Label ok;
+    branch32(Assembler::Equal, Address(tls, offsetof(wasm::TlsData, interrupt)), Imm32(0), &ok);
+    wasmTrap(wasm::Trap::CheckInterrupt, bytecodeOffset);
+    bind(&ok);
 }
 
 void
