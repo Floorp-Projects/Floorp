@@ -25,26 +25,7 @@ window._gBrowser = {
     window.addEventListener("sizemodechange", this);
     window.addEventListener("occlusionstatechange", this);
 
-    this.mCurrentBrowser = this.initialBrowser;
-    this.mCurrentBrowser.permanentKey = {};
-
-    this.mCurrentTab = this.tabs[0];
-
-    var uniqueId = this._generateUniquePanelID();
-    this.mPanelContainer.childNodes[0].id = uniqueId;
-    this.mCurrentTab.linkedPanel = uniqueId;
-    this.mCurrentTab.permanentKey = this.mCurrentBrowser.permanentKey;
-    this.mCurrentTab._tPos = 0;
-    this.mCurrentTab._fullyOpen = true;
-    this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
-    this._tabForBrowser.set(this.mCurrentBrowser, this.mCurrentTab);
-
-    // set up the shared autoscroll popup
-    this._autoScrollPopup = this.mCurrentBrowser._createAutoScrollPopup();
-    this._autoScrollPopup.id = "autoscroller";
-    document.getElementById("mainPopupSet").appendChild(this._autoScrollPopup);
-    this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
-    this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
+    this._setupInitialBrowserAndTab();
 
     // Hook up the event listeners to the first browser
     var tabListener = new TabProgressListener(this.mCurrentTab, this.mCurrentBrowser, true, false);
@@ -225,11 +206,6 @@ window._gBrowser = {
 
   _hoverTabTimer: null,
 
-  get initialBrowser() {
-    delete this.initialBrowser;
-    return this.initialBrowser = document.getElementById("tabbrowser-initialBrowser");
-  },
-
   get tabContainer() {
     delete this.tabContainer;
     return this.tabContainer = document.getElementById("tabbrowser-tabs");
@@ -308,6 +284,36 @@ window._gBrowser = {
 
   get selectedBrowser() {
     return this.mCurrentBrowser;
+  },
+
+  get initialBrowser() {
+    delete this.initialBrowser;
+    return this.initialBrowser = document.getElementById("tabbrowser-initialBrowser");
+  },
+
+  _setupInitialBrowserAndTab() {
+    let browser = this.initialBrowser;
+    this.mCurrentBrowser = browser;
+
+    browser.permanentKey = {};
+    browser.droppedLinkHandler = handleDroppedLink;
+
+    this._autoScrollPopup = browser._createAutoScrollPopup();
+    this._autoScrollPopup.id = "autoscroller";
+    document.getElementById("mainPopupSet").appendChild(this._autoScrollPopup);
+    browser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
+
+    let tab = this.tabs[0];
+    this.mCurrentTab = tab;
+
+    let uniqueId = this._generateUniquePanelID();
+    this.mPanelContainer.childNodes[0].id = uniqueId;
+    tab.linkedPanel = uniqueId;
+    tab.permanentKey = browser.permanentKey;
+    tab._tPos = 0;
+    tab._fullyOpen = true;
+    tab.linkedBrowser = browser;
+    this._tabForBrowser.set(browser, tab);
   },
 
   /**

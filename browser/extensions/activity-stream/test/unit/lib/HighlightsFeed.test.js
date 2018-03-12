@@ -13,6 +13,9 @@ describe("Highlights Feed", () => {
   let HighlightsFeed;
   let SECTION_ID;
   let MANY_EXTRA_LENGTH;
+  let SYNC_BOOKMARKS_FINISHED_EVENT;
+  let BOOKMARKS_RESTORE_SUCCESS_EVENT;
+  let BOOKMARKS_RESTORE_FAILED_EVENT;
   let feed;
   let globals;
   let sandbox;
@@ -56,13 +59,15 @@ describe("Highlights Feed", () => {
 
     globals.set("NewTabUtils", fakeNewTabUtils);
     globals.set("PageThumbs", fakePageThumbs);
-    ({HighlightsFeed, SECTION_ID, MANY_EXTRA_LENGTH} = injector({
+    ({HighlightsFeed, SECTION_ID, MANY_EXTRA_LENGTH, SYNC_BOOKMARKS_FINISHED_EVENT, BOOKMARKS_RESTORE_SUCCESS_EVENT, BOOKMARKS_RESTORE_FAILED_EVENT} = injector({
       "lib/FilterAdult.jsm": {filterAdult: filterAdultStub},
       "lib/ShortURL.jsm": {shortURL: shortURLStub},
       "lib/SectionsManager.jsm": {SectionsManager: sectionsManagerStub},
       "lib/Screenshots.jsm": {Screenshots: fakeScreenshot},
       "common/Dedupe.jsm": {Dedupe}
     }));
+    sandbox.spy(global.Services.obs, "addObserver");
+    sandbox.spy(global.Services.obs, "removeObserver");
     feed = new HighlightsFeed();
     feed.store = {
       dispatch: sinon.spy(),
@@ -90,6 +95,12 @@ describe("Highlights Feed", () => {
     it("should register a expiration filter", () => {
       assert.calledOnce(fakePageThumbs.addExpirationFilter);
     });
+    it("should add the sync observer", () => {
+      feed.onAction({type: at.INIT});
+      assert.calledWith(global.Services.obs.addObserver, feed, SYNC_BOOKMARKS_FINISHED_EVENT);
+      assert.calledWith(global.Services.obs.addObserver, feed, BOOKMARKS_RESTORE_SUCCESS_EVENT);
+      assert.calledWith(global.Services.obs.addObserver, feed, BOOKMARKS_RESTORE_FAILED_EVENT);
+    });
     it("should call SectionsManager.onceInitialized on INIT", () => {
       feed.onAction({type: at.INIT});
       assert.calledOnce(sectionsManagerStub.onceInitialized);
@@ -103,6 +114,31 @@ describe("Highlights Feed", () => {
       feed.fetchHighlights = sinon.spy();
       feed.postInit();
       assert.calledOnce(feed.fetchHighlights);
+    });
+  });
+  describe("#observe", () => {
+    beforeEach(() => {
+      feed.fetchHighlights = sinon.spy();
+    });
+    it("should fetch higlights when we are done a sync for bookmarks", () => {
+      feed.observe(null, SYNC_BOOKMARKS_FINISHED_EVENT, "bookmarks");
+      assert.calledWith(feed.fetchHighlights, {broadcast: true});
+    });
+    it("should fetch highlights after a successful import", () => {
+      feed.observe(null, BOOKMARKS_RESTORE_SUCCESS_EVENT, "html");
+      assert.calledWith(feed.fetchHighlights, {broadcast: true});
+    });
+    it("should fetch highlights after a failed import", () => {
+      feed.observe(null, BOOKMARKS_RESTORE_FAILED_EVENT, "json");
+      assert.calledWith(feed.fetchHighlights, {broadcast: true});
+    });
+    it("should not fetch higlights when we are doing a sync for something that is not bookmarks", () => {
+      feed.observe(null, SYNC_BOOKMARKS_FINISHED_EVENT, "tabs");
+      assert.notCalled(feed.fetchHighlights);
+    });
+    it("should not fetch higlights for other events", () => {
+      feed.observe(null, "someotherevent", "bookmarks");
+      assert.notCalled(feed.fetchHighlights);
     });
   });
   describe("#filterForThumbnailExpiration", () => {
@@ -366,6 +402,12 @@ describe("Highlights Feed", () => {
     it("should remove the expiration filter", () => {
       feed.onAction({type: at.UNINIT});
       assert.calledOnce(fakePageThumbs.removeExpirationFilter);
+    });
+    it("should remove the sync and Places observers", () => {
+      feed.onAction({type: at.UNINIT});
+      assert.calledWith(global.Services.obs.removeObserver, feed, SYNC_BOOKMARKS_FINISHED_EVENT);
+      assert.calledWith(global.Services.obs.removeObserver, feed, BOOKMARKS_RESTORE_SUCCESS_EVENT);
+      assert.calledWith(global.Services.obs.removeObserver, feed, BOOKMARKS_RESTORE_FAILED_EVENT);
     });
   });
   describe("#onAction", () => {

@@ -416,38 +416,6 @@ NS_IMETHODIMP xpcProperty::GetValue(nsIVariant * *aValue)
 }
 
 /***************************************************************************/
-// This 'WrappedJSIdentity' class and singleton allow us to figure out if
-// any given nsISupports* is implemented by a WrappedJS object. This is done
-// using a QueryInterface call on the interface pointer with our ID. If
-// that call returns NS_OK and the pointer is to our singleton, then the
-// interface must be implemented by a WrappedJS object. NOTE: the
-// 'WrappedJSIdentity' object is not a real XPCOM object and should not be
-// used for anything else (hence it is declared in this implementation file).
-
-// {5C5C3BB0-A9BA-11d2-BA64-00805F8A5DD7}
-#define NS_IXPCONNECT_WRAPPED_JS_IDENTITY_CLASS_IID                           \
-{ 0x5c5c3bb0, 0xa9ba, 0x11d2,                                                 \
-  { 0xba, 0x64, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-
-class WrappedJSIdentity
-{
-    // no instance methods...
-public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_IDENTITY_CLASS_IID)
-
-    static void* GetSingleton()
-    {
-        static WrappedJSIdentity* singleton = nullptr;
-        if (!singleton)
-            singleton = new WrappedJSIdentity();
-        return (void*) singleton;
-    }
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(WrappedJSIdentity,
-                              NS_IXPCONNECT_WRAPPED_JS_IDENTITY_CLASS_IID)
-
-/***************************************************************************/
 
 namespace {
 
@@ -540,17 +508,6 @@ GetFunctionName(JSContext* cx, HandleObject obj)
 
 /***************************************************************************/
 
-// static
-bool
-nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
-{
-    void* result;
-    NS_PRECONDITION(aPtr, "null pointer");
-    return aPtr &&
-           NS_OK == aPtr->QueryInterface(NS_GET_IID(WrappedJSIdentity), &result) &&
-           result == WrappedJSIdentity::GetSingleton();
-}
-
 NS_IMETHODIMP
 nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                              REFNSIID aIID,
@@ -559,14 +516,6 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     if (aIID.Equals(NS_GET_IID(nsIXPConnectJSObjectHolder))) {
         NS_ADDREF(self);
         *aInstancePtr = (void*) static_cast<nsIXPConnectJSObjectHolder*>(self);
-        return NS_OK;
-    }
-
-    // Objects internal to xpconnect are the only objects that even know *how*
-    // to ask for this iid. And none of them bother refcounting the thing.
-    if (aIID.Equals(NS_GET_IID(WrappedJSIdentity))) {
-        // asking to find out if this is a wrapper object
-        *aInstancePtr = WrappedJSIdentity::GetSingleton();
         return NS_OK;
     }
 
