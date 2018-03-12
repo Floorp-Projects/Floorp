@@ -2137,12 +2137,12 @@ public:
    * was no standalone parameter in the declaration, that it was given as no,
    * or that it was given as yes.
    */
-  virtual void SetXMLDeclaration(const char16_t *aVersion,
-                                 const char16_t *aEncoding,
-                                 const int32_t aStandalone) = 0;
-  virtual void GetXMLDeclaration(nsAString& aVersion,
-                                 nsAString& aEncoding,
-                                 nsAString& Standalone) = 0;
+  void SetXMLDeclaration(const char16_t* aVersion,
+                         const char16_t* aEncoding,
+                         const int32_t aStandalone);
+  void GetXMLDeclaration(nsAString& aVersion,
+                         nsAString& aEncoding,
+                         nsAString& Standalone);
 
   /**
    * Returns true if this is what HTML 5 calls an "HTML document" (for example
@@ -4133,6 +4133,8 @@ protected:
   unsigned int mIsScopedStyleEnabled : 2;
 
   uint8_t mPendingFullscreenRequests;
+
+  uint8_t mXMLDeclarationBits;
 
   // Compatibility mode
   nsCompatibility mCompatMode;
