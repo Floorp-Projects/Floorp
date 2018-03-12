@@ -63,7 +63,7 @@ ThreadClient.prototype = {
     return this.client._transport;
   },
 
-  _assertPaused: function (command) {
+  _assertPaused: function(command) {
     if (!this.paused) {
       throw Error(command + " command sent while not paused. Currently " + this._state);
     }
@@ -84,7 +84,7 @@ ThreadClient.prototype = {
     type: "resume",
     resumeLimit: arg(0)
   }, {
-    before: function (packet) {
+    before: function(packet) {
       this._assertPaused("resume");
 
       // Put the client in a tentative "resuming" state so we can prevent
@@ -103,7 +103,7 @@ ThreadClient.prototype = {
       }
       return packet;
     },
-    after: function (response) {
+    after: function(response) {
       if (response.error && this._state == "resuming") {
         // There was an error resuming, update the state to the new one
         // reported by the server, if given (only on wrongState), otherwise
@@ -135,7 +135,7 @@ ThreadClient.prototype = {
   /**
    * Resume a paused thread.
    */
-  resume: function (onResponse) {
+  resume: function(onResponse) {
     return this._doResume(null, onResponse);
   },
 
@@ -145,7 +145,7 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet.
    */
-  resumeThenPause: function (onResponse) {
+  resumeThenPause: function(onResponse) {
     return this._doResume({ type: "break" }, onResponse);
   },
 
@@ -155,7 +155,7 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet.
    */
-  stepOver: function (onResponse) {
+  stepOver: function(onResponse) {
     return this._doResume({ type: "next" }, onResponse);
   },
 
@@ -165,7 +165,7 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet.
    */
-  stepIn: function (onResponse) {
+  stepIn: function(onResponse) {
     return this._doResume({ type: "step" }, onResponse);
   },
 
@@ -175,7 +175,7 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet.
    */
-  stepOut: function (onResponse) {
+  stepOut: function(onResponse) {
     return this._doResume({ type: "finish" }, onResponse);
   },
 
@@ -185,7 +185,7 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet.
    */
-  interrupt: function (onResponse) {
+  interrupt: function(onResponse) {
     return this._doInterrupt(null, onResponse);
   },
 
@@ -195,7 +195,7 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet.
    */
-  breakOnNext: function (onResponse) {
+  breakOnNext: function(onResponse) {
     return this._doInterrupt("onNext", onResponse);
   },
 
@@ -220,7 +220,7 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet.
    */
-  pauseOnExceptions: function (pauseOnExceptions,
+  pauseOnExceptions: function(pauseOnExceptions,
                                ignoreCaughtExceptions,
                                onResponse = noop) {
     this._pauseOnExceptions = pauseOnExceptions;
@@ -254,7 +254,7 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet in a future turn of the event loop.
    */
-  pauseOnDOMEvents: function (events, onResponse = noop) {
+  pauseOnDOMEvents: function(events, onResponse = noop) {
     this._pauseOnDOMEvents = events;
     // If the debuggee is paused, the value of the array will be communicated in
     // the next resumption. Otherwise we have to force a pause in order to send
@@ -290,14 +290,14 @@ ThreadClient.prototype = {
     frame: arg(0),
     expression: arg(1)
   }, {
-    before: function (packet) {
+    before: function(packet) {
       this._assertPaused("eval");
       // Put the client in a tentative "resuming" state so we can prevent
       // further requests that should only be sent in the paused state.
       this._state = "resuming";
       return packet;
     },
-    after: function (response) {
+    after: function(response) {
       if (response.error) {
         // There was an error resuming, back to paused state.
         this._state = "paused";
@@ -315,7 +315,7 @@ ThreadClient.prototype = {
   detach: DebuggerClient.requester({
     type: "detach"
   }, {
-    after: function (response) {
+    after: function(response) {
       this.client.unregisterClient(this);
       this._parent.thread = null;
       return response;
@@ -370,7 +370,7 @@ ThreadClient.prototype = {
    * Clear the thread's source script cache. A scriptscleared event
    * will be sent.
    */
-  _clearScripts: function () {
+  _clearScripts: function() {
     if (Object.keys(this._scriptCache).length > 0) {
       this._scriptCache = {};
       this.emit("scriptscleared");
@@ -417,7 +417,7 @@ ThreadClient.prototype = {
    *
    * @param frameId string
    */
-  getEnvironment: function (frameId) {
+  getEnvironment: function(frameId) {
     return this.request({ to: frameId, type: "getEnvironment" });
   },
 
@@ -432,7 +432,7 @@ ThreadClient.prototype = {
    *        Optional callback function called when frames have been loaded
    * @returns true if a framesadded notification should be expected.
    */
-  fillFrames: function (total, callback = noop) {
+  fillFrames: function(total, callback = noop) {
     this._assertPaused("fillFrames");
     if (this._frameCache.length >= total) {
       return false;
@@ -477,7 +477,7 @@ ThreadClient.prototype = {
    * Clear the thread's stack frame cache. A framescleared event
    * will be sent.
    */
-  _clearFrames: function () {
+  _clearFrames: function() {
     if (this._frameCache.length > 0) {
       this._frameCache = [];
       this.emit("framescleared");
@@ -490,7 +490,7 @@ ThreadClient.prototype = {
    * @param grip object
    *        A pause-lifetime object grip returned by the protocol.
    */
-  pauseGrip: function (grip) {
+  pauseGrip: function(grip) {
     if (grip.actor in this._pauseGrips) {
       return this._pauseGrips[grip.actor];
     }
@@ -510,7 +510,7 @@ ThreadClient.prototype = {
    *        The property name of the grip client cache to check for existing
    *        clients in.
    */
-  _longString: function (grip, gripCacheName) {
+  _longString: function(grip, gripCacheName) {
     if (grip.actor in this[gripCacheName]) {
       return this[gripCacheName][grip.actor];
     }
@@ -527,7 +527,7 @@ ThreadClient.prototype = {
    * @param grip Object
    *        The long string grip returned by the protocol.
    */
-  pauseLongString: function (grip) {
+  pauseLongString: function(grip) {
     return this._longString(grip, "_pauseGrips");
   },
 
@@ -538,7 +538,7 @@ ThreadClient.prototype = {
    * @param grip Object
    *        The long string grip returned by the protocol.
    */
-  threadLongString: function (grip) {
+  threadLongString: function(grip) {
     return this._longString(grip, "_threadGrips");
   },
 
@@ -552,7 +552,7 @@ ThreadClient.prototype = {
    *        The property name of the grip client cache to check for existing
    *        clients in.
    */
-  _arrayBuffer: function (grip, gripCacheName) {
+  _arrayBuffer: function(grip, gripCacheName) {
     if (grip.actor in this[gripCacheName]) {
       return this[gripCacheName][grip.actor];
     }
@@ -569,7 +569,7 @@ ThreadClient.prototype = {
    * @param grip Object
    *        The ArrayBuffer grip returned by the protocol.
    */
-  threadArrayBuffer: function (grip) {
+  threadArrayBuffer: function(grip) {
     return this._arrayBuffer(grip, "_threadGrips");
   },
 
@@ -579,7 +579,7 @@ ThreadClient.prototype = {
    * @param gripCacheName
    *        The property name of the grip cache we want to clear.
    */
-  _clearObjectClients: function (gripCacheName) {
+  _clearObjectClients: function(gripCacheName) {
     for (let id in this[gripCacheName]) {
       this[gripCacheName][id].valid = false;
     }
@@ -590,7 +590,7 @@ ThreadClient.prototype = {
    * Invalidate pause-lifetime grip clients and clear the list of current grip
    * clients.
    */
-  _clearPauseGrips: function () {
+  _clearPauseGrips: function() {
     this._clearObjectClients("_pauseGrips");
   },
 
@@ -598,7 +598,7 @@ ThreadClient.prototype = {
    * Invalidate thread-lifetime grip clients and clear the list of current grip
    * clients.
    */
-  _clearThreadGrips: function () {
+  _clearThreadGrips: function() {
     this._clearObjectClients("_threadGrips");
   },
 
@@ -606,7 +606,7 @@ ThreadClient.prototype = {
    * Handle thread state change by doing necessary cleanup and notifying all
    * registered listeners.
    */
-  _onThreadState: function (packet) {
+  _onThreadState: function(packet) {
     this._state = ThreadStateTypes[packet.type];
     // The debugger UI may not be initialized yet so we want to keep
     // the packet around so it knows what to pause state to display
@@ -618,21 +618,21 @@ ThreadClient.prototype = {
     this.client._eventsEnabled && this.emit(packet.type, packet);
   },
 
-  getLastPausePacket: function () {
+  getLastPausePacket: function() {
     return this._lastPausePacket;
   },
 
   /**
    * Return an EnvironmentClient instance for the given environment actor form.
    */
-  environment: function (form) {
+  environment: function(form) {
     return new EnvironmentClient(this.client, form);
   },
 
   /**
    * Return an instance of SourceClient for the given source actor form.
    */
-  source: function (form) {
+  source: function(form) {
     if (form.actor in this._threadGrips) {
       return this._threadGrips[form.actor];
     }

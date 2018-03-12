@@ -27,8 +27,8 @@ function test() {
   SpecialPowers.pushPrefEnv(
     { set: [["privacy.reduceTimerPrecision", true],
             ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000]]},
-    function () {
-      addTab(URI).then(function (tab) {
+    function() {
+      addTab(URI).then(function(tab) {
         runCodeMirrorTest(tab.linkedBrowser);
       });
     });

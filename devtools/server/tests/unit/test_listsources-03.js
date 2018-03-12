@@ -15,9 +15,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-sources");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-sources",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_simple_listsources();
                            });
@@ -26,17 +26,17 @@ function run_test() {
 }
 
 function test_simple_listsources() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
-    gThreadClient.getSources(function (response) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+    gThreadClient.getSources(function(response) {
       Assert.ok(
         !response.error,
         "There shouldn't be an error fetching large amounts of sources.");
 
-      Assert.ok(response.sources.some(function (s) {
+      Assert.ok(response.sources.some(function(s) {
         return s.url.match(/foo-999.js$/);
       }));
 
-      gThreadClient.resume(function () {
+      gThreadClient.resume(function() {
         finishClient(gClient);
       });
     });

@@ -140,12 +140,12 @@ function getTableItems(data = {}, type, headers = null) {
   let columns = new Map();
   let items = [];
 
-  let addItem = function (item) {
+  let addItem = function(item) {
     items.push(item);
     Object.keys(item).forEach(key => addColumn(key));
   };
 
-  let addColumn = function (columnIndex) {
+  let addColumn = function(columnIndex) {
     let columnExists = columns.has(columnIndex);
     let hasMaxColumns = columns.size == TABLE_COLUMN_MAX_ITEMS;
     let hasCustomHeaders = Array.isArray(headers);

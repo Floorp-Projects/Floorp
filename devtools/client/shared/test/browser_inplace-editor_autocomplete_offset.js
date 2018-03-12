@@ -42,7 +42,7 @@ const testData = [
   ["checkPopupOffset"],
 ];
 
-const mockGetCSSPropertyList = function () {
+const mockGetCSSPropertyList = function() {
   return [
     "clear",
     "color",
@@ -51,7 +51,7 @@ const mockGetCSSPropertyList = function () {
   ];
 };
 
-const mockGetCSSValuesForPropertyName = function (propertyName) {
+const mockGetCSSValuesForPropertyName = function(propertyName) {
   let values = {
     "color": ["blue", "red"],
     "display": ["block", "flex", "none"]

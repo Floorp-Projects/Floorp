@@ -8,7 +8,7 @@ const { FrontClassWithSpec } = require("devtools/shared/protocol");
 const { flexboxSpec, gridSpec, layoutSpec } = require("devtools/shared/specs/layout");
 
 const FlexboxFront = FrontClassWithSpec(flexboxSpec, {
-  form: function (form, detail) {
+  form: function(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -30,7 +30,7 @@ const FlexboxFront = FrontClassWithSpec(flexboxSpec, {
 });
 
 const GridFront = FrontClassWithSpec(gridSpec, {
-  form: function (form, detail) {
+  form: function(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;

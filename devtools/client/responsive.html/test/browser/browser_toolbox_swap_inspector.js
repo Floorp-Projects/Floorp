@@ -7,12 +7,12 @@
 
 const TEST_URL = "http://example.com/";
 
-let checkToolbox = async function (tab, location) {
+let checkToolbox = async function(tab, location) {
   let target = TargetFactory.forTab(tab);
   ok(!!gDevTools.getToolbox(target), `Toolbox exists ${location}`);
 };
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URL);
 
   info("Open toolbox outside RDM");

@@ -203,7 +203,7 @@ let url = new window.URL(href);
 if (window.location.protocol === "chrome:" && url.search.length > 1) {
   const { targetFromURL } = require("devtools/client/framework/target-from-url");
 
-  (async function () {
+  (async function() {
     try {
       let target = await targetFromURL(url);
 

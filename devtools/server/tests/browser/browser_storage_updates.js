@@ -9,7 +9,7 @@ const {StorageFront} = require("devtools/shared/fronts/storage");
 const TESTS = [
   // index 0
   {
-    action: function (win) {
+    action: function(win) {
       info('win.addCookie("c1", "foobar1")');
       win.addCookie("c1", "foobar1");
 
@@ -38,7 +38,7 @@ const TESTS = [
 
   // index 1
   {
-    action: function (win) {
+    action: function(win) {
       info('win.addCookie("c1", "new_foobar1")');
       win.addCookie("c1", "new_foobar1");
 
@@ -64,7 +64,7 @@ const TESTS = [
 
   // index 2
   {
-    action: function (win) {
+    action: function(win) {
       info('win.removeCookie("c2")');
       win.removeCookie("c2");
 
@@ -96,7 +96,7 @@ const TESTS = [
 
   // index 3
   {
-    action: function (win) {
+    action: function(win) {
       info('win.removeCookie("c1")');
       win.removeCookie("c1");
 
@@ -148,7 +148,7 @@ const TESTS = [
 
   // index 4
   {
-    action: function (win) {
+    action: function(win) {
       info('win.sessionStorage.removeItem("s1")');
       win.sessionStorage.removeItem("s1");
     },
@@ -163,7 +163,7 @@ const TESTS = [
 
   // index 5
   {
-    action: function (win) {
+    action: function(win) {
       info("win.clearCookies()");
       win.clearCookies();
     },
@@ -242,7 +242,7 @@ function onStoresUpdate(expected, {added, changed, deleted}, index) {
 
 function runTest({action, expected}, front, win, index) {
   return new Promise(resolve => {
-    front.once("stores-update", function (addedChangedDeleted) {
+    front.once("stores-update", function(addedChangedDeleted) {
       onStoresUpdate(expected, addedChangedDeleted, index);
       resolve();
     });
@@ -296,7 +296,7 @@ async function finishTests(client) {
   finish();
 }
 
-add_task(async function () {
+add_task(async function() {
   let browser = await addTab(MAIN_DOMAIN + "storage-updates.html");
   // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = browser.contentDocumentAsCPOW;

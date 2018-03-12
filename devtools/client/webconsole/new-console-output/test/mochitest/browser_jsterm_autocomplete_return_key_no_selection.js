@@ -16,7 +16,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 </head>
 <body>bug 873250 - test pressing return with open popup, but no selection</body>`;
 
-add_task(async function () {
+add_task(async function() {
   let { jsterm } = await openNewTabAndConsole(TEST_URI);
   const {
     autocompletePopup: popup,

@@ -16,7 +16,7 @@ const TEST_URI_ROOT = "http://example.com/browser/devtools/client/shared/test/";
 const OPTIONS_VIEW_URL = TEST_URI_ROOT + "doc_options-view.xul";
 
 function catchFail(func) {
-  return function () {
+  return function() {
     try {
       return func.apply(null, arguments);
     } catch (ex) {
@@ -93,7 +93,7 @@ function waitForValue(options) {
 
 function oneTimeObserve(name, callback) {
   return new Promise((resolve) => {
-    let func = function () {
+    let func = function() {
       Services.obs.removeObserver(func, name);
       if (callback) {
         callback();
@@ -131,7 +131,7 @@ function checkTelemetryResults(Telemetry) {
     if (histId.endsWith("OPENED_COUNT")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element === true;
       });
 
@@ -139,7 +139,7 @@ function checkTelemetryResults(Telemetry) {
     } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element > 0;
       });
 
@@ -200,7 +200,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function () {
+    setTimeout(function() {
       waitUntil(predicate).then(() => resolve(true));
     }, interval);
   });

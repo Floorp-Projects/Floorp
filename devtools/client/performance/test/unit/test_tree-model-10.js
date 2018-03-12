@@ -7,7 +7,7 @@
  * frame nodes. The model-only version of browser_profiler-tree-view-10.js
  */
 
-add_task(function () {
+add_task(function() {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
   let thread = new ThreadNode(gThread, { invertTree: true, startTime: 0, endTime: 50 });
 
@@ -55,7 +55,7 @@ add_task(function () {
 
 function compareFrameInfo(root, parent) {
   parent = parent || root;
-  return function (def) {
+  return function(def) {
     let [total, self, name, children] = def;
     let node = getFrameNodePath(parent, name);
     let data = node.getInfo({ root });

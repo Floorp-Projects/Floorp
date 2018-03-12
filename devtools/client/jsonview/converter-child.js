@@ -12,7 +12,7 @@ const Services = require("Services");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
                                "devtools/shared/webconsole/network-helper");
-loader.lazyGetter(this, "debug", function () {
+loader.lazyGetter(this, "debug", function() {
   let {AppConstants} = require("resource://gre/modules/AppConstants.jsm");
   return !!(AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES);
 });
@@ -61,22 +61,22 @@ Converter.prototype = {
    * 5. convert does nothing, it's just the synchronous version
    *    of asyncConvertData
    */
-  convert: function (fromStream, fromType, toType, ctx) {
+  convert: function(fromStream, fromType, toType, ctx) {
     return fromStream;
   },
 
-  asyncConvertData: function (fromType, toType, listener, ctx) {
+  asyncConvertData: function(fromType, toType, listener, ctx) {
     this.listener = listener;
   },
 
-  onDataAvailable: function (request, context, inputStream, offset, count) {
+  onDataAvailable: function(request, context, inputStream, offset, count) {
     // Decode and insert data.
     let buffer = new ArrayBuffer(count);
     new BinaryInput(inputStream).readArrayBuffer(count, buffer);
     this.decodeAndInsertBuffer(buffer);
   },
 
-  onStartRequest: function (request, context) {
+  onStartRequest: function(request, context) {
     // Set the content type to HTML in order to parse the doctype, styles
     // and scripts. The JSON will be manually inserted as text.
     request.QueryInterface(Ci.nsIChannel);
@@ -114,7 +114,7 @@ Converter.prototype = {
     this.listener.onDataAvailable(request, context, stream, 0, stream.available());
   },
 
-  onStopRequest: function (request, context, statusCode) {
+  onStopRequest: function(request, context, statusCode) {
     // Flush data.
     this.decodeAndInsertBuffer(new ArrayBuffer(0), true);
 
@@ -126,7 +126,7 @@ Converter.prototype = {
   },
 
   // Decodes an ArrayBuffer into a string and inserts it into the page.
-  decodeAndInsertBuffer: function (buffer, flush = false) {
+  decodeAndInsertBuffer: function(buffer, flush = false) {
     // Decode the buffer into a string.
     let data = this.decoder.decode(buffer, {stream: !flush});
 
@@ -194,12 +194,12 @@ function exportData(win, request) {
   // (e.g. in case of data: URLs)
   if (request instanceof Ci.nsIHttpChannel) {
     request.visitResponseHeaders({
-      visitHeader: function (name, value) {
+      visitHeader: function(name, value) {
         headers.response.push({name: name, value: value});
       }
     });
     request.visitRequestHeaders({
-      visitHeader: function (name, value) {
+      visitHeader: function(name, value) {
         headers.request.push({name: name, value: value});
       }
     });
@@ -263,7 +263,7 @@ function initialHTML(doc) {
 // However, the HTML parser is not synchronous, so this function uses a mutation
 // observer to detect the creation of the element. Then the text node is appended.
 function insertJsonData(win, json) {
-  new win.MutationObserver(function (mutations, observer) {
+  new win.MutationObserver(function(mutations, observer) {
     for (let {target, addedNodes} of mutations) {
       if (target.nodeType == 1 && target.id == "content") {
         for (let node of addedNodes) {
@@ -282,12 +282,12 @@ function insertJsonData(win, json) {
 }
 
 function keepThemeUpdated(win) {
-  let listener = function () {
+  let listener = function() {
     let theme = Services.prefs.getCharPref("devtools.theme");
     win.document.documentElement.className = "theme-" + theme;
   };
   Services.prefs.addObserver("devtools.theme", listener);
-  win.addEventListener("unload", function (event) {
+  win.addEventListener("unload", function(event) {
     Services.prefs.removeObserver("devtools.theme", listener);
     win = null;
   }, {once: true});

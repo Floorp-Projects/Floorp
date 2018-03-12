@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   let newWindowPromise = BrowserTestUtils.waitForNewWindow();
   window.open("data:text/html;charset=utf-8,", "_blank");
   let newWindow = await newWindowPromise;

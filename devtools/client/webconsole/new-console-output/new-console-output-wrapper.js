@@ -40,7 +40,7 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
   store = configureStore(this.jsterm.hud);
 }
 NewConsoleOutputWrapper.prototype = {
-  init: function () {
+  init: function() {
     return new Promise((resolve) => {
       const attachRefToHud = (id, node) => {
         this.jsterm.hud[id] = node;
@@ -229,7 +229,7 @@ NewConsoleOutputWrapper.prototype = {
     });
   },
 
-  dispatchMessageAdd: function (packet, waitForResponse) {
+  dispatchMessageAdd: function(packet, waitForResponse) {
     // Wait for the message to render to resolve with the DOM node.
     // This is just for backwards compatibility with old tests, and should
     // be removed once it's not needed anymore.
@@ -261,11 +261,11 @@ NewConsoleOutputWrapper.prototype = {
     return promise;
   },
 
-  dispatchMessagesAdd: function (messages) {
+  dispatchMessagesAdd: function(messages) {
     store.dispatch(actions.messagesAdd(messages));
   },
 
-  dispatchMessagesClear: function () {
+  dispatchMessagesClear: function() {
     // We might still have pending message additions and updates when the clear action is
     // triggered, so we need to flush them to make sure we don't have unexpected behavior
     // in the ConsoleOutput.
@@ -275,7 +275,7 @@ NewConsoleOutputWrapper.prototype = {
     store.dispatch(actions.messagesClear());
   },
 
-  dispatchPrivateMessagesClear: function () {
+  dispatchPrivateMessagesClear: function() {
     // We might still have pending private message additions when the private messages
     // clear action is triggered. We need to remove any private-window-issued packets from
     // the queue so they won't appear in the output.
@@ -318,11 +318,11 @@ NewConsoleOutputWrapper.prototype = {
     store.dispatch(actions.privateMessagesClear());
   },
 
-  dispatchTimestampsToggle: function (enabled) {
+  dispatchTimestampsToggle: function(enabled) {
     store.dispatch(actions.timestampsToggle(enabled));
   },
 
-  dispatchMessageUpdate: function (message, res) {
+  dispatchMessageUpdate: function(message, res) {
     // network-message-updated will emit when all the update message arrives.
     // Since we can't ensure the order of the network update, we check
     // that networkInfo.updates has all we need.
@@ -339,25 +339,25 @@ NewConsoleOutputWrapper.prototype = {
     }
   },
 
-  dispatchRequestUpdate: function (id, data) {
+  dispatchRequestUpdate: function(id, data) {
     this.batchedRequestUpdates({ id, data });
   },
 
-  dispatchSidebarClose: function () {
+  dispatchSidebarClose: function() {
     store.dispatch(actions.sidebarClose());
   },
 
-  batchedMessageUpdates: function (info) {
+  batchedMessageUpdates: function(info) {
     this.queuedMessageUpdates.push(info);
     this.setTimeoutIfNeeded();
   },
 
-  batchedRequestUpdates: function (message) {
+  batchedRequestUpdates: function(message) {
     this.queuedRequestUpdates.push(message);
     this.setTimeoutIfNeeded();
   },
 
-  batchedMessagesAdd: function (message) {
+  batchedMessagesAdd: function(message) {
     this.queuedMessageAdds.push(message);
     this.setTimeoutIfNeeded();
   },
@@ -365,14 +365,14 @@ NewConsoleOutputWrapper.prototype = {
   /**
    * Returns a Promise that resolves once any async dispatch is finally dispatched.
    */
-  waitAsyncDispatches: function () {
+  waitAsyncDispatches: function() {
     if (!this.throttledDispatchPromise) {
       return Promise.resolve();
     }
     return this.throttledDispatchPromise;
   },
 
-  setTimeoutIfNeeded: function () {
+  setTimeoutIfNeeded: function() {
     if (this.throttledDispatchPromise) {
       return;
     }
@@ -412,7 +412,7 @@ NewConsoleOutputWrapper.prototype = {
   },
 
   // Should be used for test purpose only.
-  getStore: function () {
+  getStore: function() {
     return store;
   }
 };

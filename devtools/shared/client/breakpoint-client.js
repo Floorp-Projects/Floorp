@@ -59,7 +59,7 @@ BreakpointClient.prototype = {
   /**
    * Determines if this breakpoint has a condition
    */
-  hasCondition: function () {
+  hasCondition: function() {
     let root = this._client.mainRoot;
     // XXX bug 990137: We will remove support for client-side handling of
     // conditional breakpoints
@@ -76,7 +76,7 @@ BreakpointClient.prototype = {
    * different property when moving it server-side to ensure that we
    * are testing the right code.
    */
-  getCondition: function () {
+  getCondition: function() {
     let root = this._client.mainRoot;
     if (root.traits.conditionalBreakpoints) {
       return this.condition;
@@ -87,7 +87,7 @@ BreakpointClient.prototype = {
   /**
    * Set the condition of this breakpoint
    */
-  setCondition: function (gThreadClient, condition) {
+  setCondition: function(gThreadClient, condition) {
     let root = this._client.mainRoot;
     let deferred = promise.defer();
 

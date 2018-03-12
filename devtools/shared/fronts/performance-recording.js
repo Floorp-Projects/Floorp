@@ -19,7 +19,7 @@ loader.lazyRequireGetter(this, "RecordingUtils",
  */
 const PerformanceRecordingFront = FrontClassWithSpec(performanceRecordingSpec,
 Object.assign({
-  form: function (form, detail) {
+  form: function(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -51,7 +51,7 @@ Object.assign({
     }
   },
 
-  initialize: function (client, form, config) {
+  initialize: function(client, form, config) {
     Front.prototype.initialize.call(this, client, form);
     this._markers = [];
     this._frames = [];
@@ -60,7 +60,7 @@ Object.assign({
     this._allocations = { sites: [], timestamps: [], frames: [], sizes: [] };
   },
 
-  destroy: function () {
+  destroy: function() {
     Front.prototype.destroy.call(this);
   },
 
@@ -70,7 +70,7 @@ Object.assign({
    * @param nsIFile file
    *        The file to stream the data into.
    */
-  exportRecording: function (file) {
+  exportRecording: function(file) {
     let recordingData = this.getAllData();
     return PerformanceIO.saveRecordingToFile(recordingData, file);
   },
@@ -78,7 +78,7 @@ Object.assign({
   /**
    * Fired whenever the PerformanceFront emits markers, memory or ticks.
    */
-  _addTimelineData: function (eventName, data) {
+  _addTimelineData: function(eventName, data) {
     let config = this.getConfiguration();
 
     switch (eventName) {

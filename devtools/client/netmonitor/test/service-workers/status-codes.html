@@ -34,7 +34,7 @@
               if (sw.controller) {
                 resolve();
               } else {
-                sw.addEventListener("controllerchange", function () {
+                sw.addEventListener("controllerchange", function() {
                   resolve();
                 }, {once: true});
               }

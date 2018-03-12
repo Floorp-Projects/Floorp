@@ -7,7 +7,7 @@
  * Tests if copying a request's request/response headers works.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 

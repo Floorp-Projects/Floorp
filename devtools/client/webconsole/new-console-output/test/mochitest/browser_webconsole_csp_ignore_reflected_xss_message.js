@@ -19,7 +19,7 @@ const TEST_FILE = "http://example.com/browser/devtools/client/webconsole/" +
 const TEST_URI =
   "data:text/html;charset=utf8,Web Console CSP ignoring reflected XSS (bug 1045902)";
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await loadDocument(TEST_FILE);
 

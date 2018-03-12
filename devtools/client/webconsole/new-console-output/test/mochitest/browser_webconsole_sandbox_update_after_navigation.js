@@ -16,7 +16,7 @@ const BASE_URI = "browser/devtools/client/webconsole/" +
 const TEST_URI1 = "http://example.com/" + BASE_URI;
 const TEST_URI2 = "http://example.org/" + BASE_URI;
 
-add_task(async function () {
+add_task(async function() {
   pushPref("devtools.webconsole.persistlog", false);
 
   let hud = await openNewTabAndConsole(TEST_URI1);

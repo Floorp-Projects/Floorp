@@ -40,7 +40,7 @@ function checkCellLength(len) {
 function checkCellValues(order) {
   let cells = [...gPanelWindow.document
                               .querySelectorAll("#name .table-widget-cell")];
-  cells.forEach(function (cell, index, arr) {
+  cells.forEach(function(cell, index, arr) {
     let i = order === "ASC" ? index + 1 : arr.length - index;
     is(cell.value, `item-${i}`, `Cell value is correct (${order}).`);
   });

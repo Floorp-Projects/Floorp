@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247243
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   const {AnimationsFront} = require("devtools/shared/fronts/animation");
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
@@ -26,7 +26,7 @@ window.onload = function () {
     info("Setting up inspector and animation actors.");
 
     let url = document.getElementById("animationContent").href;
-    attachURL(url, function (err, client, tab, doc) {
+    attachURL(url, function(err, client, tab, doc) {
       let inspector = InspectorFront(client, tab);
 
       animationsFront = new AnimationsFront(client, tab);

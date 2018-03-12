@@ -30,7 +30,7 @@ function testNonTrimmed(doc) {
     trimOutput: false,
     multiline: true,
     initial: initial,
-    start: function (editor) {
+    start: function(editor) {
       is(editor.input.value, initial, "Explicit initial value should be used.");
       editor.input.value = changed;
       EventUtils.sendKey("return");
@@ -50,7 +50,7 @@ function testTrimmed(doc) {
   createInplaceEditorAndClick({
     initial: initial,
     multiline: true,
-    start: function (editor) {
+    start: function(editor) {
       is(editor.input.value, initial, "Explicit initial value should be used.");
       editor.input.value = changed;
       EventUtils.sendKey("return");
@@ -62,7 +62,7 @@ function testTrimmed(doc) {
 }
 
 function onDone(value, isCommit, def) {
-  return function (actualValue, actualCommit) {
+  return function(actualValue, actualCommit) {
     info("Inplace-editor's done callback executed, checking its state");
     is(actualValue, value, "The value is correct");
     is(actualCommit, isCommit, "The commit boolean is correct");

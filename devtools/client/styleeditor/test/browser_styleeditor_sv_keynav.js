@@ -31,7 +31,7 @@ function getStylesheetNameLinkFor(editor) {
 function testKeyboardNavigation(editor, panel) {
   let panelWindow = panel.panelWindow;
   let ui = panel.UI;
-  waitForFocus(function () {
+  waitForFocus(function() {
     let summary = editor.summary;
     EventUtils.synthesizeMouseAtCenter(summary, {}, panelWindow);
 

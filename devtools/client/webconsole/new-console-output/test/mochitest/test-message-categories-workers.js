@@ -8,7 +8,7 @@
 
 "use strict";
 
-var onmessage = function () {
+var onmessage = function() {
   fooBarWorker();
 };
 

@@ -25,7 +25,7 @@ function squarePromiseReject(x) {
   return new Promise((_, reject) => reject("Nope"));
 }
 
-add_task(async function () {
+add_task(async function() {
   let fn = workerify(square);
   is((await fn(5)), 25, "return primitives successful");
   fn.destroy();

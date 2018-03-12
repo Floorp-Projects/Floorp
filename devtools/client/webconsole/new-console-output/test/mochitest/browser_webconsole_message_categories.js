@@ -29,7 +29,7 @@ const TESTS = [
     file: "test-message-categories-html.html",
     category: "HTML",
     matchString: "multipart/form-data",
-    onload: function () {
+    onload: function() {
       ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
         let form = content.document.querySelector("form");
         form.submit();
@@ -88,7 +88,7 @@ const TESTS = [
   },
 ];
 
-add_task(async function () {
+add_task(async function() {
   requestLongerTimeout(2);
 
   await pushPref("devtools.webconsole.filter.css", true);

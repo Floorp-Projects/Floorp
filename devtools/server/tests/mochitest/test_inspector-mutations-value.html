@@ -15,14 +15,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 
 const WalkerActor = require("devtools/server/actors/inspector/walker");
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
 
 const testSummaryLength = 10;
 WalkerActor.setValueSummaryLength(testSummaryLength);
-SimpleTest.registerCleanupFunction(function () {
+SimpleTest.registerCleanupFunction(function() {
   WalkerActor.setValueSummaryLength(WalkerActor.DEFAULT_VALUE_SUMMARY_LENGTH);
 });
 
@@ -37,7 +37,7 @@ var shortString2 = "str2";
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function (err, client, tab, doc) {
+  attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspectorFront = InspectorFront(client, tab);

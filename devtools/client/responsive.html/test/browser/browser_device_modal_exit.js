@@ -8,7 +8,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = "data:text/html;charset=utf-8,";
 const Types = require("devtools/client/responsive.html/types");
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { store, document } = ui.toolWindow;
   let modal = document.querySelector("#device-modal-wrapper");
   let closeButton = document.querySelector("#device-close-button");

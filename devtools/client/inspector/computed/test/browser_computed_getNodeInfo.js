@@ -53,7 +53,7 @@ const TEST_DATA = [
     getHoveredNode: function* () {
       return null;
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo, null);
     }
   },
@@ -62,7 +62,7 @@ const TEST_DATA = [
     getHoveredNode: function* (view) {
       return view.element;
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo, null);
     }
   },
@@ -71,7 +71,7 @@ const TEST_DATA = [
     getHoveredNode: function* (view) {
       return getComputedViewProperty(view, "color").nameSpan;
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_PROPERTY_TYPE);
       ok("property" in nodeInfo.value);
       ok("value" in nodeInfo.value);
@@ -84,7 +84,7 @@ const TEST_DATA = [
     getHoveredNode: function* (view) {
       return getComputedViewProperty(view, "color").valueSpan;
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_VALUE_TYPE);
       ok("property" in nodeInfo.value);
       ok("value" in nodeInfo.value);
@@ -98,7 +98,7 @@ const TEST_DATA = [
       let {valueSpan} = getComputedViewProperty(view, "background-image");
       return valueSpan.querySelector(".theme-link");
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_IMAGE_URL_TYPE);
       ok("property" in nodeInfo.value);
       ok("value" in nodeInfo.value);
@@ -114,7 +114,7 @@ const TEST_DATA = [
       let el = yield getComputedViewMatchedRules(view, "background-color");
       return el.querySelector(".bestmatch");
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_SELECTOR_TYPE);
       is(nodeInfo.value, "div div");
     }
@@ -125,7 +125,7 @@ const TEST_DATA = [
       let el = yield getComputedViewMatchedRules(view, "background-color");
       return el.querySelector(".matched");
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_SELECTOR_TYPE);
       is(nodeInfo.value, "div");
     }
@@ -136,7 +136,7 @@ const TEST_DATA = [
       let el = yield getComputedViewMatchedRules(view, "color");
       return el.querySelector(".parentmatch");
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_SELECTOR_TYPE);
       is(nodeInfo.value, "body");
     }
@@ -147,7 +147,7 @@ const TEST_DATA = [
       let el = yield getComputedViewMatchedRules(view, "color");
       return el.querySelector(".computed-other-property-value");
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_VALUE_TYPE);
       is(nodeInfo.value.property, "color");
       is(nodeInfo.value.value, "red");
@@ -159,7 +159,7 @@ const TEST_DATA = [
       let el = yield getComputedViewMatchedRules(view, "color");
       return el.querySelector(".rule-link .theme-link");
     },
-    assertNodeInfo: function (nodeInfo) {
+    assertNodeInfo: function(nodeInfo) {
       is(nodeInfo, null);
     }
   }

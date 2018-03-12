@@ -12,7 +12,7 @@ const URL = EXAMPLE_URL.replace("http:", "https:");
 
 const TEST_URL = URL + "service-workers/status-codes.html";
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(TEST_URL, true);
   info("Starting test... ");
 
@@ -41,13 +41,13 @@ add_task(async function () {
   ];
 
   info("Registering the service worker...");
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     await content.wrappedJSObject.registerServiceWorker();
   });
 
   info("Performing requests...");
   let wait = waitForNetworkEvents(monitor, REQUEST_DATA.length);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequests();
   });
   await wait;
@@ -96,7 +96,7 @@ add_task(async function () {
   }
 
   info("Unregistering the service worker...");
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     await content.wrappedJSObject.unregisterServiceWorker();
   });
 

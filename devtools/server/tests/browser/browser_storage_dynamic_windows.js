@@ -242,7 +242,7 @@ function testRemoveIframe(front) {
   });
 }
 
-add_task(async function () {
+add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-dynamic-windows.html");
 
   initDebuggerServer();

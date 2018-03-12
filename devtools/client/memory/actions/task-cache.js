@@ -61,10 +61,10 @@ const TaskCache = module.exports = class TaskCache {
  *
  * @returns Cacheable, Action-Creating Task
  */
-TaskCache.declareCacheableTask = function ({ getCacheKey, task }) {
+TaskCache.declareCacheableTask = function({ getCacheKey, task }) {
   const cache = new TaskCache();
 
-  return function (...args) {
+  return function(...args) {
     return function* (dispatch, getState) {
       const key = getCacheKey(...args);
 

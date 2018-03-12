@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-(function (exports) {
+(function(exports) {
   const CC = Components.Constructor;
 
   const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
@@ -43,7 +43,7 @@
 
   // Ensure fetching a live TabActor form for the targeted app
   // (helps fetching the test actor registered dynamically)
-  let getUpdatedForm = function (client, tab) {
+  let getUpdatedForm = function(client, tab) {
     return client.getTab({tab: tab})
                  .then(response => response.tab);
   };
@@ -75,7 +75,7 @@
   });
 
   // Fetch the content of a URI
-  let request = function (uri) {
+  let request = function(uri) {
     return fetch(uri).then(({ content }) => content);
   };
 

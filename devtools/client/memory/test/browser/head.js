@@ -216,7 +216,7 @@ function createRAFMock() {
   let queuedFns = [];
   let mock = { timesCalled: 0 };
 
-  mock.nextFrame = function () {
+  mock.nextFrame = function() {
     let thisQueue = queuedFns;
     queuedFns = [];
     for (let i = 0; i < thisQueue.length; i++) {
@@ -224,7 +224,7 @@ function createRAFMock() {
     }
   };
 
-  mock.raf = function (fn) {
+  mock.raf = function(fn) {
     mock.timesCalled++;
     queuedFns.push(fn);
   };

@@ -179,7 +179,7 @@ NewWebConsoleFrame.prototype = {
    *         A promise object that is resolved/reject based on the connection
    *         result.
    */
-  _initConnection: function () {
+  _initConnection: function() {
     if (this._initDefer) {
       return this._initDefer.promise;
     }
@@ -199,7 +199,7 @@ NewWebConsoleFrame.prototype = {
     return this._initDefer.promise;
   },
 
-  _initUI: function () {
+  _initUI: function() {
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
 
@@ -228,7 +228,7 @@ NewWebConsoleFrame.prototype = {
     this._initShortcuts();
   },
 
-  _initShortcuts: function () {
+  _initShortcuts: function() {
     let shortcuts = new KeyShortcuts({
       window: this.window
     });
@@ -269,7 +269,7 @@ NewWebConsoleFrame.prototype = {
    * @param string title
    *        New page title.
    */
-  onLocationChange: function (uri, title) {
+  onLocationChange: function(uri, title) {
     this.contentLocation = uri;
     if (this.owner.onLocationChange) {
       this.owner.onLocationChange(uri, title);
@@ -283,7 +283,7 @@ NewWebConsoleFrame.prototype = {
    * @param string actor
    *        The actor ID you want to release.
    */
-  _releaseObject: function (actor) {
+  _releaseObject: function(actor) {
     if (this.proxy) {
       this.proxy.releaseActor(actor);
     }
@@ -292,7 +292,7 @@ NewWebConsoleFrame.prototype = {
   /**
    * Called when the message timestamp pref changes.
    */
-  _onToolboxPrefChanged: function () {
+  _onToolboxPrefChanged: function() {
     let newValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
     this.newConsoleOutput.dispatchTimestampsToggle(newValue);
   },
@@ -305,7 +305,7 @@ NewWebConsoleFrame.prototype = {
    * @param object packet
    *        Notification packet received from the server.
    */
-  handleTabNavigated: async function (event, packet) {
+  handleTabNavigated: async function(event, packet) {
     if (event == "will-navigate") {
       if (this.persistLog) {
         // Add a _type to hit convertCachedPacket.

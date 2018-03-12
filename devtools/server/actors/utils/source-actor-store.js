@@ -23,7 +23,7 @@ SourceActorStore.prototype = {
   /**
    * Lookup an existing actor id that represents this source, if available.
    */
-  getReusableActorId: function (source, originalUrl) {
+  getReusableActorId: function(source, originalUrl) {
     let url = this.getUniqueKey(source, originalUrl);
     if (url && url in this._sourceActorIds) {
       return this._sourceActorIds[url];
@@ -34,7 +34,7 @@ SourceActorStore.prototype = {
   /**
    * Update a source with an actorID.
    */
-  setReusableActorId: function (source, originalUrl, actorID) {
+  setReusableActorId: function(source, originalUrl, actorID) {
     let url = this.getUniqueKey(source, originalUrl);
     if (url) {
       this._sourceActorIds[url] = actorID;
@@ -44,7 +44,7 @@ SourceActorStore.prototype = {
   /**
    * Make a unique URL from a source that identifies it across reloads.
    */
-  getUniqueKey: function (source, originalUrl) {
+  getUniqueKey: function(source, originalUrl) {
     if (originalUrl) {
       // Original source from a sourcemap.
       return originalUrl;

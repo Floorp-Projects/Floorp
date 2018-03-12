@@ -9,7 +9,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/" +
                  "test-location-styleeditor-link.html";
 
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.webconsole.filter.css", true);
   let hud = await openNewTabAndConsole(TEST_URI);
   let target = TargetFactory.forTab(gBrowser.selectedTab);
@@ -59,7 +59,7 @@ async function onStyleEditorReady(panel) {
 
   info("Waiting the style editor to be focused");
   return new Promise(resolve => {
-    waitForFocus(function () {
+    waitForFocus(function() {
       resolve();
     }, win);
   });

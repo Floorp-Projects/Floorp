@@ -19,11 +19,11 @@ const {
   getWaterfallScale,
 } = require("../selectors/index");
 
-loader.lazyGetter(this, "setImageTooltip", function () {
+loader.lazyGetter(this, "setImageTooltip", function() {
   return require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper")
     .setImageTooltip;
 });
-loader.lazyGetter(this, "getImageDimensions", function () {
+loader.lazyGetter(this, "getImageDimensions", function() {
   return require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper")
     .getImageDimensions;
 });

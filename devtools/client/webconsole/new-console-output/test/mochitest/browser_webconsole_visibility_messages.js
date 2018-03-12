@@ -23,7 +23,7 @@ const HTML = `
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 const MESSAGES_COUNT = 10;
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = gDevTools.getToolbox(hud.target);
 
@@ -78,7 +78,7 @@ add_task(async function () {
 
 // Similar scenario, but with the split console on the inspector panel.
 // Here, the messages should still be logged.
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = gDevTools.getToolbox(hud.target);
 

@@ -50,7 +50,7 @@ function testReturnCommit(doc) {
 
   createInplaceEditorAndClick({
     initial: "explicit initial",
-    start: function (editor) {
+    start: function(editor) {
       is(editor.input.value, "explicit initial",
         "Explicit initial value should be used.");
       editor.input.value = "Test Value";
@@ -67,7 +67,7 @@ function testBlurCommit(doc) {
   let def = defer();
 
   createInplaceEditorAndClick({
-    start: function (editor) {
+    start: function(editor) {
       is(editor.input.value, "Edit Me!", "textContent of the span used.");
       editor.input.value = "Test Value";
       editor.input.blur();
@@ -84,7 +84,7 @@ function testAdvanceCharCommit(doc) {
 
   createInplaceEditorAndClick({
     advanceChars: ":",
-    start: function (editor) {
+    start: function(editor) {
       EventUtils.sendString("Test:");
     },
     done: onDone("Test", true, def)
@@ -101,7 +101,7 @@ function testAdvanceCharsFunction(doc) {
 
   createInplaceEditorAndClick({
     initial: "",
-    advanceChars: function (charCode, text, insertionPoint) {
+    advanceChars: function(charCode, text, insertionPoint) {
       if (charCode !== KeyboardEvent.DOM_VK_COLON) {
         return false;
       }
@@ -113,7 +113,7 @@ function testAdvanceCharsFunction(doc) {
       // Just to make sure we check it somehow.
       return text.length > 0;
     },
-    start: function (editor) {
+    start: function(editor) {
       for (let ch of ":Test:") {
         EventUtils.sendChar(ch);
       }
@@ -130,7 +130,7 @@ function testEscapeCancel(doc) {
 
   createInplaceEditorAndClick({
     initial: "initial text",
-    start: function (editor) {
+    start: function(editor) {
       editor.input.value = "Test Value";
       EventUtils.sendKey("escape");
     },
@@ -141,7 +141,7 @@ function testEscapeCancel(doc) {
 }
 
 function onDone(value, isCommit, def) {
-  return function (actualValue, actualCommit) {
+  return function(actualValue, actualCommit) {
     info("Inplace-editor's done callback executed, checking its state");
     is(actualValue, value, "The value is correct");
     is(actualCommit, isCommit, "The commit boolean is correct");

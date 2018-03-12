@@ -10,7 +10,7 @@
 // still, so we want the AnimationsActor to preserve the corresponding
 // AnimationPlayerActor.
 
-add_task(async function () {
+add_task(async function() {
   let {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 

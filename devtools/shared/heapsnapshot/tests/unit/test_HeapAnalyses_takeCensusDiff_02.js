@@ -26,7 +26,7 @@ const BREAKDOWN = {
   },
 };
 
-add_task(async function () {
+add_task(async function() {
   const firstSnapshotFilePath = saveNewHeapSnapshot();
   const secondSnapshotFilePath = saveNewHeapSnapshot();
 

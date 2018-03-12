@@ -9,14 +9,14 @@ const Services = require("Services");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
-SimpleTest.registerCleanupFunction(function () {
+SimpleTest.registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
 if (!DebuggerServer.initialized) {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
-  SimpleTest.registerCleanupFunction(function () {
+  SimpleTest.registerCleanupFunction(function() {
     DebuggerServer.destroy();
   });
 }
@@ -38,7 +38,7 @@ async function attachURL(url) {
   let win = window.open(url, "_blank");
   let client = null;
 
-  let cleanup = async function () {
+  let cleanup = async function() {
     if (client) {
       await client.close();
       client = null;

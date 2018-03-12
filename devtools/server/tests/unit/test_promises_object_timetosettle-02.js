@@ -13,7 +13,7 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {}
 
 var EventEmitter = require("devtools/shared/event-emitter");
 
-add_task(async function () {
+add_task(async function() {
   let client = await startTestDebuggerServer("test-promises-timetosettle");
   let chromeActors = await getChromeActors(client);
   await attachTab(client, chromeActors);

@@ -7,7 +7,7 @@
  * Tests if different response content types are handled correctly.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
@@ -22,7 +22,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
-  await ContentTask.spawn(tab.linkedBrowser, {}, function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
     content.wrappedJSObject.performRequests();
   });
   await wait;

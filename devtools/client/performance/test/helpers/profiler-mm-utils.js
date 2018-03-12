@@ -36,7 +36,7 @@ exports.pmmClearFrameScripts = () => {
  * Resolves a returned promise when the response is received from the message
  * listener, with the same id as part of the response payload data.
  */
-exports.pmmUniqueMessage = function (message, payload) {
+exports.pmmUniqueMessage = function(message, payload) {
   if (!gMM) {
     throw new Error("`pmmLoadFrameScripts()` must be called when using MessageManager.");
   }
@@ -103,7 +103,7 @@ exports.pmmEvalInDebuggee = (script) => {
 /**
  * Evaluates a console method in content.
  */
-exports.pmmConsoleMethod = function (method, ...args) {
+exports.pmmConsoleMethod = function(method, ...args) {
   // Terrible ugly hack -- this gets stringified when it uses the
   // message manager, so an undefined arg in `console.profileEnd()`
   // turns into a stringified "null", which is terrible. This method

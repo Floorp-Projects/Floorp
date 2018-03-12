@@ -47,7 +47,7 @@ waitForExplicitFinish();
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   if (DevToolsUtils.assertionFailureCount !==
       EXPECTED_DTU_ASSERT_FAILURE_COUNT) {
     ok(false,
@@ -66,7 +66,7 @@ registerCleanupFunction(function () {
 const ConsoleObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  observe: function (subject) {
+  observe: function(subject) {
     let message = subject.wrappedJSObject.arguments[0];
 
     if (message && /Failed propType/.test(message.toString())) {
@@ -176,7 +176,7 @@ var removeTab = Task.async(function* (tab) {
  * @param {Object} tab The tab to be refreshed. Defaults to the currently selected tab.
  * @return Promise<undefined> resolved when the tab is successfully refreshed.
  */
-var refreshTab = async function (tab = gBrowser.selectedTab) {
+var refreshTab = async function(tab = gBrowser.selectedTab) {
   info("Refreshing tab.");
   const finished = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.reloadTab(tab);
@@ -457,7 +457,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function () {
+    setTimeout(function() {
       waitUntil(predicate, interval).then(() => resolve(true));
     }, interval);
   });
@@ -597,7 +597,7 @@ function loadTelemetryAndRecordLogs() {
   let Telemetry = require("devtools/client/shared/telemetry");
   Telemetry.prototype.telemetryInfo = {};
   Telemetry.prototype._oldlog = Telemetry.prototype.log;
-  Telemetry.prototype.log = function (histogramId, value) {
+  Telemetry.prototype.log = function(histogramId, value) {
     if (!this.telemetryInfo) {
       // Telemetry instance still in use after stopRecordingTelemetryLogs
       return;
@@ -612,7 +612,7 @@ function loadTelemetryAndRecordLogs() {
   Telemetry.prototype._oldlogScalar = Telemetry.prototype.logScalar;
   Telemetry.prototype.logScalar = Telemetry.prototype.log;
   Telemetry.prototype._oldlogKeyed = Telemetry.prototype.logKeyed;
-  Telemetry.prototype.logKeyed = function (histogramId, key, value) {
+  Telemetry.prototype.logKeyed = function(histogramId, key, value) {
     this.log(`${histogramId}|${key}`, value);
   };
 
@@ -725,7 +725,7 @@ async function injectEventUtilsInContentTask(browser) {
     EventUtils.KeyboardEvent = content.KeyboardEvent;
 
     EventUtils.synthesizeClick = element => new Promise(resolve => {
-      element.addEventListener("click", function () {
+      element.addEventListener("click", function() {
         resolve();
       }, {once: true});
 

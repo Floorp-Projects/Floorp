@@ -9,7 +9,7 @@
  * It is largely inspired from https://mozilla.github.io/basket-example/
  */
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
   // Timeout for the subscribe XHR.
@@ -92,7 +92,7 @@ window.addEventListener("load", function () {
 
     let xhr = new XMLHttpRequest();
 
-    xhr.onload = function (r) {
+    xhr.onload = function(r) {
       if (r.target.status >= 200 && r.target.status < 300) {
         let {response} = r.target;
 

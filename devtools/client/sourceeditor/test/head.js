@@ -27,7 +27,7 @@ function promiseWaitForFocus() {
 }
 
 function setup(cb, additionalOpts = {}) {
-  cb = cb || function () {};
+  cb = cb || function() {};
   return new Promise(resolve => {
     const opt = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
@@ -45,8 +45,8 @@ function setup(cb, additionalOpts = {}) {
       opts[o] = additionalOpts[o];
     }
 
-    win.addEventListener("load", function () {
-      waitForFocus(function () {
+    win.addEventListener("load", function() {
+      waitForFocus(function() {
         let box = win.document.querySelector("box");
         let editor = new Editor(opts);
 

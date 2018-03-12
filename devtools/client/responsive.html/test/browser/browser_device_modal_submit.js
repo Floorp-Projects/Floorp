@@ -21,7 +21,7 @@ const addedDevice = {
 const TEST_URL = "data:text/html;charset=utf-8,";
 const Types = require("devtools/client/responsive.html/types");
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { store, document } = ui.toolWindow;
   let modal = document.querySelector("#device-modal-wrapper");
   let select = document.querySelector(".viewport-device-selector");
@@ -110,7 +110,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   addDeviceForTest(addedDevice);
 });
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { store, document } = ui.toolWindow;
   let select = document.querySelector(".viewport-device-selector");
 

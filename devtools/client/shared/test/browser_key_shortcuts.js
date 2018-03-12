@@ -419,6 +419,6 @@ function testInvalidShortcutString(shortcuts) {
   let shortcut = KeyShortcuts.parseElectronKey(window, "Cmmd+F");
   ok(!shortcut, "Passing a invalid shortcut string should return a null object");
 
-  shortcuts.on("Cmmd+F", function () {});
+  shortcuts.on("Cmmd+F", function() {});
   ok(true, "on() shouldn't throw when passing invalid shortcut string");
 }

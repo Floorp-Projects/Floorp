@@ -7,7 +7,7 @@
 // Test that the AnimationsActor emits events about changed animations on a
 // node after getAnimationPlayersForNode was called on that node.
 
-add_task(async function () {
+add_task(async function() {
   let {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 

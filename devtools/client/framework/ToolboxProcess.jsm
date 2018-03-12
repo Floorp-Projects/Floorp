@@ -13,13 +13,13 @@ const { require, DevToolsLoader } = ChromeUtils.import("resource://devtools/shar
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Subprocess", "resource://gre/modules/Subprocess.jsm");
-XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
+XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
   return require("devtools/client/shared/telemetry");
 });
-XPCOMUtils.defineLazyGetter(this, "EventEmitter", function () {
+XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
   return require("devtools/shared/old-event-emitter");
 });
-XPCOMUtils.defineLazyGetter(this, "system", function () {
+XPCOMUtils.defineLazyGetter(this, "system", function() {
   return require("devtools/shared/system");
 });
 const promise = require("promise");
@@ -45,7 +45,7 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(onClose, onRun, opti
   this.off = emitter.off.bind(emitter);
   this.once = emitter.once.bind(emitter);
   // Forward any events to the shared emitter.
-  this.emit = function (...args) {
+  this.emit = function(...args) {
     emitter.emit(...args);
     BrowserToolboxProcess.emit(...args);
   };
@@ -89,7 +89,7 @@ EventEmitter.decorate(BrowserToolboxProcess);
  * Initializes and starts a chrome toolbox process.
  * @return object
  */
-BrowserToolboxProcess.init = function (onClose, onRun, options) {
+BrowserToolboxProcess.init = function(onClose, onRun, options) {
   if (!Services.prefs.getBoolPref("devtools.chrome.enabled") ||
       !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
     console.error("Could not start Browser Toolbox, you need to enable it.");
@@ -102,7 +102,7 @@ BrowserToolboxProcess.init = function (onClose, onRun, options) {
  * Figure out if there are any open Browser Toolboxes that'll need to be restored.
  * @return bool
  */
-BrowserToolboxProcess.getBrowserToolboxSessionState = function () {
+BrowserToolboxProcess.getBrowserToolboxSessionState = function() {
   for (let process of processes.values()) {
     // Don't worry about addon toolboxes, we only want to restore the Browser Toolbox.
     if (!process._options || !process._options.addonID) {
@@ -121,7 +121,7 @@ BrowserToolboxProcess.getBrowserToolboxSessionState = function () {
  *        The options.
  * @return a promise that will be resolved when complete.
  */
-BrowserToolboxProcess.setAddonOptions = function (id, options) {
+BrowserToolboxProcess.setAddonOptions = function(id, options) {
   let promises = [];
 
   for (let process of processes.values()) {
@@ -135,7 +135,7 @@ BrowserToolboxProcess.prototype = {
   /**
    * Initializes the debugger server.
    */
-  _initServer: function () {
+  _initServer: function() {
     if (this.debuggerServer) {
       dumpn("The chrome toolbox server is already running.");
       return;
@@ -184,7 +184,7 @@ BrowserToolboxProcess.prototype = {
   /**
    * Initializes a profile for the remote debugger process.
    */
-  _initProfile: function () {
+  _initProfile: function() {
     dumpn("Initializing the chrome toolbox user profile.");
 
     // We used to use `ProfLD` instead of `ProfD`, so migrate old profiles if they exist.
@@ -260,7 +260,7 @@ BrowserToolboxProcess.prototype = {
   /**
    * Creates and initializes the profile & process for the remote debugger.
    */
-  _create: function () {
+  _create: function() {
     dumpn("Initializing chrome debugging process.");
 
     let command = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
@@ -333,7 +333,7 @@ BrowserToolboxProcess.prototype = {
    * @param {DebuggerServerConnection} connection
    *        The connection that was opened or closed.
    */
-  _onConnectionChange: function (what, connection) {
+  _onConnectionChange: function(what, connection) {
     let wrappedJSObject = { what, connection };
     Services.obs.notifyObservers({ wrappedJSObject }, "toolbox-connection-change");
   },
@@ -341,7 +341,7 @@ BrowserToolboxProcess.prototype = {
   /**
    * Closes the remote debugging server and kills the toolbox process.
    */
-  close: async function () {
+  close: async function() {
     if (this.closed) {
       return;
     }

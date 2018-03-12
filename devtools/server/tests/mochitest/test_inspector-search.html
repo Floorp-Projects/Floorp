@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835896
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
   const {WalkerSearch, WalkerIndex} =
@@ -36,7 +36,7 @@ window.onload = function () {
 
     // eslint-disable-next-line new-cap
     await new Promise(resolve => {
-      attachURL(url, function (err, client, tab, doc) {
+      attachURL(url, function(err, client, tab, doc) {
         inspectee = doc;
         inspector = InspectorFront(client, tab);
         resolve();

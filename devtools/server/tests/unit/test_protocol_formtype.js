@@ -29,7 +29,7 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
     };
   },
 
-  getChild: function () {
+  getChild: function() {
     return this;
   }
 });
@@ -110,19 +110,19 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     };
   },
 
-  getDefault: function () {
+  getDefault: function() {
     return this;
   },
 
-  getDetail1: function () {
+  getDetail1: function() {
     return this;
   },
 
-  getDetail2: function () {
+  getDetail2: function() {
     return this;
   },
 
-  getUnknownDetail: function () {
+  getUnknownDetail: function() {
     return this;
   }
 });
@@ -141,7 +141,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   }
 });
 
-const run_test = Test(async function () {
+const run_test = Test(async function() {
   DebuggerServer.createRootActor = (conn => {
     return RootActor(conn);
   });

@@ -9,24 +9,24 @@ const {longStringSpec, SimpleStringFront} = require("devtools/shared/specs/strin
 const protocol = require("devtools/shared/protocol");
 
 const LongStringFront = protocol.FrontClassWithSpec(longStringSpec, {
-  initialize: function (client) {
+  initialize: function(client) {
     protocol.Front.prototype.initialize.call(this, client);
   },
 
-  destroy: function () {
+  destroy: function() {
     this.initial = null;
     this.length = null;
     this.strPromise = null;
     protocol.Front.prototype.destroy.call(this);
   },
 
-  form: function (form) {
+  form: function(form) {
     this.actorID = form.actor;
     this.initial = form.initial;
     this.length = form.length;
   },
 
-  string: function () {
+  string: function() {
     if (!this.strPromise) {
       let promiseRest = (thusFar) => {
         if (thusFar.length === this.length) {

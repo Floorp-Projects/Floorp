@@ -11,13 +11,13 @@ const { Poller } = require("devtools/client/shared/poller");
 add_task(function* () {
   let count1 = 0, count2 = 0, count3 = 0;
 
-  let poller1 = new Poller(function () {
+  let poller1 = new Poller(function() {
     count1++;
   }, 1000000000, true);
-  let poller2 = new Poller(function () {
+  let poller2 = new Poller(function() {
     count2++;
   }, 10);
-  let poller3 = new Poller(function () {
+  let poller3 = new Poller(function() {
     count3++;
   }, 1000000000);
 
@@ -60,10 +60,10 @@ add_task(function* () {
   // Create a poller that returns a promise.
   // The promise is resolved asynchronously after adding 9 to the count, ensuring
   // that on every poll, we have a multiple of 10.
-  let asyncPoller = new Poller(function () {
+  let asyncPoller = new Poller(function() {
     count++;
     ok(!(count % 10), `Async poller called with a multiple of 10: ${count}`);
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
       let add9 = 9;
       let interval = setInterval(() => {
         if (add9--) {
@@ -88,9 +88,9 @@ add_task(function* () {
   // finishes.
   let inflightFinished = null;
   let pollCalls = 0;
-  let asyncPoller = new Poller(function () {
+  let asyncPoller = new Poller(function() {
     pollCalls++;
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
       setTimeout(() => {
         inflightFinished = true;
         resolve();
@@ -112,9 +112,9 @@ add_task(function* () {
   // finishes.
   let inflightFinished = null;
   let pollCalls = 0;
-  let asyncPoller = new Poller(function () {
+  let asyncPoller = new Poller(function() {
     pollCalls++;
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
       setTimeout(() => {
         inflightFinished = true;
         resolve();

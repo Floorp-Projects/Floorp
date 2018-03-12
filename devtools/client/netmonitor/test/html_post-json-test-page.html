@@ -23,7 +23,7 @@
         xhr.open("POST", address, true);
         xhr.setRequestHeader("Content-Type", "application/json");
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
             callback();
           }
@@ -32,7 +32,7 @@
       }
 
       function performRequests() {
-        post("sjs_simple-test-server.sjs", JSON.stringify({a: 1}), function () {
+        post("sjs_simple-test-server.sjs", JSON.stringify({a: 1}), function() {
           // Done.
         });
       }

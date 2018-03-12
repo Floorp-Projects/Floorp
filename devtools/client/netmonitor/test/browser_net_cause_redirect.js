@@ -8,7 +8,7 @@
  * redirected without hitting the network (HSTS is one of such cases)
  */
 
-add_task(async function () {
+add_task(async function() {
   const EXPECTED_REQUESTS = [
     // Request to HTTP URL, redirects to HTTPS, has callstack
     { status: 302, hasStack: true },
@@ -63,7 +63,7 @@ add_task(async function () {
   await teardown(monitor);
 
   function performRequests(count, url) {
-    return ContentTask.spawn(tab.linkedBrowser, { count, url }, async function (args) {
+    return ContentTask.spawn(tab.linkedBrowser, { count, url }, async function(args) {
       content.wrappedJSObject.performRequests(args.count, args.url);
     });
   }

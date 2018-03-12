@@ -33,7 +33,7 @@ add_task(function* testWebExtensionsToolboxWebConsole() {
   // which lives in another process. So do not try to use any scope variable!
   let env = Cc["@mozilla.org/process/environment;1"]
               .getService(Ci.nsIEnvironment);
-  let testScript = function () {
+  let testScript = function() {
     /* eslint-disable no-undef */
     function findMessages(hud, text, selector = ".message") {
       const messages = hud.ui.outputNode.querySelectorAll(selector);

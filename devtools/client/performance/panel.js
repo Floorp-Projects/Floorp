@@ -90,7 +90,7 @@ PerformancePanel.prototype = {
     this._destroyed = true;
   }),
 
-  _checkRecordingStatus: function () {
+  _checkRecordingStatus: function() {
     if (this.panelWin.PerformanceController.isRecording()) {
       this.toolbox.highlightTool("performance");
     } else {

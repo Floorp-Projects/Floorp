@@ -15,13 +15,13 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-breakpoints");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestThread(gClient, "test-breakpoints", testBreakpoint);
   });
   do_test_pending();
 }
 
-const testBreakpoint = async function (threadResponse, tabClient,
+const testBreakpoint = async function(threadResponse, tabClient,
                                              threadClient, tabResponse) {
   evalSetupCode();
 

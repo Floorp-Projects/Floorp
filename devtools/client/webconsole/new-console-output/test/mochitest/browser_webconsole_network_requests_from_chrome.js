@@ -12,12 +12,12 @@
 
 const TEST_URI = "http://example.com/";
 
-add_task(async function () {
+add_task(async function() {
   // Start a listener on the console service.
   let good = true;
   const listener = {
     QueryInterface: XPCOMUtils.generateQI([ Ci.nsIObserver ]),
-    observe: function (subject) {
+    observe: function(subject) {
       if (subject instanceof Ci.nsIScriptError &&
           subject.category === "XPConnect JavaScript" &&
           subject.sourceName.includes("webconsole")) {

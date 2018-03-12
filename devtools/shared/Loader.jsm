@@ -26,7 +26,7 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
  */
 function BuiltinProvider() {}
 BuiltinProvider.prototype = {
-  load: function () {
+  load: function() {
     const paths = {
       // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
       "devtools": "resource://devtools",
@@ -72,7 +72,7 @@ BuiltinProvider.prototype = {
     });
   },
 
-  unload: function (reason) {
+  unload: function(reason) {
     unload(this.loader, reason);
     delete this.loader;
   },
@@ -92,7 +92,7 @@ this.DevToolsLoader = function DevToolsLoader() {
 };
 
 DevToolsLoader.prototype = {
-  destroy: function (reason = "shutdown") {
+  destroy: function(reason = "shutdown") {
     Services.obs.removeObserver(this, "devtools-unload");
 
     if (this._provider) {
@@ -123,7 +123,7 @@ DevToolsLoader.prototype = {
    * this is first called.  This will then be replaced by the real version.
    * @see setProvider
    */
-  require: function () {
+  require: function() {
     if (!this._provider) {
       this._loadProvider();
     }
@@ -134,14 +134,14 @@ DevToolsLoader.prototype = {
    * Return true if |id| refers to something requiring help from a
    * loader plugin.
    */
-  isLoaderPluginId: function (id) {
+  isLoaderPluginId: function(id) {
     return id.startsWith("raw!");
   },
 
   /**
    * Override the provider used to load the tools.
    */
-  setProvider: function (provider) {
+  setProvider: function(provider) {
     if (provider === this._provider) {
       return;
     }
@@ -193,7 +193,7 @@ DevToolsLoader.prototype = {
   /**
    * Choose a default tools provider based on the preferences.
    */
-  _loadProvider: function () {
+  _loadProvider: function() {
     this.setProvider(new BuiltinProvider());
   },
 
@@ -203,7 +203,7 @@ DevToolsLoader.prototype = {
    * @param String data
    *    reason passed to modules when unloaded
    */
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic != "devtools-unload") {
       return;
     }

@@ -16,20 +16,20 @@ const FileReader = require("FileReader");
 exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   _desc: null,
 
-  getDescription: function () {
+  getDescription: function() {
     return getSystemInfo();
   },
 
-  getWallpaper: function () {
+  getWallpaper: function() {
     let deferred = defer();
     getSetting("wallpaper.image").then((blob) => {
       let reader = new FileReader();
       let conn = this.conn;
-      reader.addEventListener("load", function () {
+      reader.addEventListener("load", function() {
         let str = new LongStringActor(conn, reader.result);
         deferred.resolve(str);
       });
-      reader.addEventListener("error", function () {
+      reader.addEventListener("error", function() {
         deferred.reject(reader.error);
       });
       reader.readAsDataURL(blob);
@@ -37,7 +37,7 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
     return deferred.promise;
   },
 
-  screenshotToDataURL: function () {
+  screenshotToDataURL: function() {
     let window = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
     let { devicePixelRatio } = window;
     let canvas = window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");

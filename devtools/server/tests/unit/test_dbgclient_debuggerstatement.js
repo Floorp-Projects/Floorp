@@ -14,8 +14,8 @@ function run_test() {
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect().then(function ([type, traits]) {
-    attachTestTab(gClient, "test-1", function (reply, tabClient) {
+  gClient.connect().then(function([type, traits]) {
+    attachTestTab(gClient, "test-1", function(reply, tabClient) {
       gTabClient = tabClient;
       test_threadAttach(reply.threadActor);
     });
@@ -25,10 +25,10 @@ function run_test() {
 
 function test_threadAttach(threadActorID) {
   info("Trying to attach to thread " + threadActorID);
-  gTabClient.attachThread({}, function (response, threadClient) {
+  gTabClient.attachThread({}, function(response, threadClient) {
     Assert.equal(threadClient.state, "paused");
     Assert.equal(threadClient.actor, threadActorID);
-    threadClient.resume(function () {
+    threadClient.resume(function() {
       Assert.equal(threadClient.state, "attached");
       test_debugger_statement(threadClient);
     });
@@ -36,7 +36,7 @@ function test_threadAttach(threadActorID) {
 }
 
 function test_debugger_statement(threadClient) {
-  threadClient.addListener("paused", function (event, packet) {
+  threadClient.addListener("paused", function(event, packet) {
     Assert.equal(threadClient.state, "paused");
     // Reach around the protocol to check that the debuggee is in the state
     // we expect.
@@ -56,7 +56,7 @@ function test_debugger_statement(threadClient) {
 }
 
 function cleanup() {
-  gClient.addListener("closed", function (event) {
+  gClient.addListener("closed", function(event) {
     do_test_finished();
   });
 

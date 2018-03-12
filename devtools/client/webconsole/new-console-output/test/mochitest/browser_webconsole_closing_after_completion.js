@@ -13,7 +13,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-console.html";
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URI);
   const browser = tab.linkedBrowser;
   const hud = await openConsole();

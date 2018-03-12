@@ -7,7 +7,7 @@
 
 const TEST_URL = "http://example.com/";
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URL);
 
   let { ui } = await openRDM(tab);
@@ -26,7 +26,7 @@ add_task(async function () {
   await removeTab(tab);
 });
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URL);
 
   let { ui } = await openRDM(tab);

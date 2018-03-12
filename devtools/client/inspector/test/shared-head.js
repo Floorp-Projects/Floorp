@@ -124,10 +124,10 @@ function openLayoutView() {
     // The actual highligher show/hide methods are mocked in box model tests.
     // The highlighter is tested in devtools/inspector/test.
     function mockHighlighter({highlighter}) {
-      highlighter.showBoxModel = function () {
+      highlighter.showBoxModel = function() {
         return promise.resolve();
       };
-      highlighter.hideBoxModel = function () {
+      highlighter.hideBoxModel = function() {
         return promise.resolve();
       };
     }
@@ -212,7 +212,7 @@ function manualDebounce() {
   let calls = [];
 
   function debounce(func, wait, scope) {
-    return function () {
+    return function() {
       let existingCall = calls.find(call => call.func === func);
       if (existingCall) {
         existingCall.args = arguments;
@@ -222,7 +222,7 @@ function manualDebounce() {
     };
   }
 
-  debounce.flush = function () {
+  debounce.flush = function() {
     calls.forEach(({func, scope, args}) => func.apply(scope, args));
     calls = [];
   };

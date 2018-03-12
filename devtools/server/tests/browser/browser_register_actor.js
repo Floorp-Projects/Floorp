@@ -51,7 +51,7 @@ function getCount(actor, callback) {
   }, callback);
 }
 
-var checkActorState = async function (helloActor, callback) {
+var checkActorState = async function(helloActor, callback) {
   let response = await getCount(helloActor);
   ok(!response.error, "No error");
   is(response.count, 1, "The counter must be valid");

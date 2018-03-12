@@ -11,7 +11,7 @@
 // main thread. It is exposed as a built-in global to every module by the
 // worker loader. To make sure the worker loader can access it, it needs to be
 // defined before loading the worker loader script below.
-this.rpc = function (method, ...params) {
+this.rpc = function(method, ...params) {
   let id = nextId++;
 
   postMessage(JSON.stringify({
@@ -37,7 +37,7 @@ var makeDebugger = worker.require("devtools/server/actors/utils/make-debugger");
 var { DebuggerServer } = worker.require("devtools/server/main");
 
 DebuggerServer.init();
-DebuggerServer.createRootActor = function () {
+DebuggerServer.createRootActor = function() {
   throw new Error("Should never get here!");
 };
 
@@ -45,7 +45,7 @@ var connections = Object.create(null);
 var nextId = 0;
 var rpcDeferreds = [];
 
-this.addEventListener("message", function (event) {
+this.addEventListener("message", function(event) {
   let packet = JSON.parse(event.data);
   switch (packet.type) {
     case "connect":

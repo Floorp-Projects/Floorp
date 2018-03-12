@@ -50,7 +50,7 @@ function naturalSortCaseInsensitive(a, b) {
  */
 function naturalSort(a, b, insensitive) {
   // convert all to strings strip whitespace
-  let i = function (s) {
+  let i = function(s) {
     return (insensitive && ("" + s).toLowerCase() || "" + s)
                                    .replace(sre, "");
   };
@@ -62,7 +62,7 @@ function naturalSort(a, b, insensitive) {
   // numeric, hex or date detection
   let xD = parseInt(x.match(hre), 16) || (xN.length !== 1 && Date.parse(x));
   let yD = parseInt(y.match(hre), 16) || xD && y.match(dre) && Date.parse(y) || null;
-  let normChunk = function (s, l) {
+  let normChunk = function(s, l) {
     // normalize spaces; find floats not starting with '0', string or 0 if
     // not defined (Clint Priest)
     return (!s.match(ore) || l == 1) &&

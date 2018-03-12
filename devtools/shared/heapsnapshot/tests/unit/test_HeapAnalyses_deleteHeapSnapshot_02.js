@@ -4,7 +4,7 @@
 
 // Test deleteHeapSnapshot is a noop if the provided path matches no snapshot
 
-add_task(async function () {
+add_task(async function() {
   const client = new HeapAnalysesClient();
 
   let threw = false;

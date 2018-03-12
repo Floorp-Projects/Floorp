@@ -61,7 +61,7 @@ const GRAPH_REGION_STRIPES_COLOR = "rgba(237,38,85,0.2)";
  *  `max`: Boolean whether to show the max tooltip/gutter/line (default: true)
  *  `avg`: Boolean whether to show the avg tooltip/gutter/line (default: true)
  */
-this.LineGraphWidget = function (parent, options = {}, ...args) {
+this.LineGraphWidget = function(parent, options = {}, ...args) {
   let { metric, min, max, avg } = options;
 
   this._showMin = min !== false;
@@ -162,7 +162,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    * Renders the graph's data source.
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
-  buildGraphImage: function () {
+  buildGraphImage: function() {
     let { canvas, ctx } = this._getNamedCanvas("line-graph-data");
     let width = this._width;
     let height = this._height;
@@ -243,7 +243,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    * @param number avgValue
    * @param number dataScaleY
    */
-  _drawOverlays: function (ctx, minValue, maxValue, avgValue, dataScaleY) {
+  _drawOverlays: function(ctx, minValue, maxValue, avgValue, dataScaleY) {
     let width = this._width;
     let height = this._height;
     let totalTicks = this._data.length;
@@ -342,7 +342,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    * Creates the gutter node when constructing this graph.
    * @return nsIDOMNode
    */
-  _createGutter: function () {
+  _createGutter: function() {
     let gutter = this._document.createElementNS(HTML_NS, "div");
     gutter.className = "line-graph-widget-gutter";
     gutter.setAttribute("hidden", true);
@@ -355,7 +355,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    * Creates the gutter line nodes when constructing this graph.
    * @return nsIDOMNode
    */
-  _createGutterLine: function (type) {
+  _createGutterLine: function(type) {
     let line = this._document.createElementNS(HTML_NS, "div");
     line.className = "line-graph-widget-gutter-line";
     line.setAttribute("type", type);
@@ -368,7 +368,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
    * Creates the tooltip nodes when constructing this graph.
    * @return nsIDOMNode
    */
-  _createTooltip: function (type, arrow, info, metric) {
+  _createTooltip: function(type, arrow, info, metric) {
     let tooltip = this._document.createElementNS(HTML_NS, "div");
     tooltip.className = "line-graph-widget-tooltip";
     tooltip.setAttribute("type", type);

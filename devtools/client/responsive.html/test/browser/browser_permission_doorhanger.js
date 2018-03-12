@@ -20,7 +20,7 @@ function waitForGeolocationPrompt(win, browser) {
   });
 }
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(DUMMY_URL);
   let browser = tab.linkedBrowser;
   let win = browser.ownerGlobal;

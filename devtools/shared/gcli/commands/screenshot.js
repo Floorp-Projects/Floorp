@@ -46,7 +46,7 @@ const filenameParam = {
  * Both commands have almost the same set of standard optional parameters, except for the
  * type of the --selector option, which can be a node only on the server.
  */
-const getScreenshotCommandParams = function (isClient) {
+const getScreenshotCommandParams = function(isClient) {
   return {
     group: l10n.lookup("screenshotGroupOptions"),
     params: [
@@ -126,7 +126,7 @@ exports.items = [
     item: "converter",
     from: "imageSummary",
     to: "dom",
-    exec: function (imageSummary, context) {
+    exec: function(imageSummary, context) {
       const document = context.document;
       const root = document.createElement("div");
 
@@ -186,7 +186,7 @@ exports.items = [
       filenameParam,
       clientScreenshotParams,
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       // Re-execute the command on the server
       const command = context.typed.replace(/^screenshot/, "screenshot_server");
       let capture = context.updateExec(command).then(output => {
@@ -207,7 +207,7 @@ exports.items = [
       filenameParam,
       serverScreenshotParams,
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       return captureScreenshot(args, context.environment.document);
     },
   }
@@ -345,7 +345,7 @@ function getFilename(defaultName) {
   const date = new Date();
   let dateString = date.getFullYear() + "-" + (date.getMonth() + 1) +
                   "-" + date.getDate();
-  dateString = dateString.split("-").map(function (part) {
+  dateString = dateString.split("-").map(function(part) {
     if (part.length == 1) {
       part = "0" + part;
     }
@@ -441,7 +441,7 @@ function uploadToImgur(reply) {
     xhr.send(fd);
     xhr.responseType = "json";
 
-    xhr.onreadystatechange = function () {
+    xhr.onreadystatechange = function() {
       if (xhr.readyState == 4) {
         if (xhr.status == 200) {
           reply.href = xhr.response.data.link;
@@ -489,7 +489,7 @@ function DownloadListener(win, transfer) {
 }
 
 DownloadListener.prototype = {
-  QueryInterface: function (iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(Ci.nsIInterfaceRequestor) ||
         iid.equals(Ci.nsIWebProgressListener) ||
         iid.equals(Ci.nsIWebProgressListener2) ||
@@ -499,7 +499,7 @@ DownloadListener.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  getInterface: function (iid) {
+  getInterface: function(iid) {
     if (iid.equals(Ci.nsIAuthPrompt) ||
         iid.equals(Ci.nsIAuthPrompt2)) {
       let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
@@ -510,7 +510,7 @@ DownloadListener.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStateChange: function (webProgress, request, state, status) {
+  onStateChange: function(webProgress, request, state, status) {
     // Check if the download has completed
     if ((state & Ci.nsIWebProgressListener.STATE_STOP) &&
         (state & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {

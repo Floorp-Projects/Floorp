@@ -61,10 +61,10 @@ var AboutDebugging = {
 // Used to track async requests in tests.  See bug 1444424 for better ideas.
 EventEmitter.decorate(AboutDebugging);
 
-window.addEventListener("DOMContentLoaded", function () {
+window.addEventListener("DOMContentLoaded", function() {
   AboutDebugging.init();
 }, {once: true});
 
-window.addEventListener("unload", function () {
+window.addEventListener("unload", function() {
   AboutDebugging.destroy();
 }, {once: true});

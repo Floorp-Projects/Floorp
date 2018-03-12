@@ -56,7 +56,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
    */
-  render: function (interval = {}) {
+  render: function(interval = {}) {
     let recording = PerformanceController.getCurrentRecording();
     let duration = recording.getDuration();
     let allocations = recording.getAllocations();
@@ -87,7 +87,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
   /**
    * Fired when a range is selected or cleared in the FlameGraph.
    */
-  _onRangeChangeInGraph: function () {
+  _onRangeChangeInGraph: function() {
     let interval = this.graph.getViewRange();
 
     // Squelch rerendering this view when we update the range here
@@ -101,7 +101,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
   /**
    * Called whenever a pref is changed and this view needs to be rerendered.
    */
-  _onRerenderPrefChanged: function () {
+  _onRerenderPrefChanged: function() {
     let recording = PerformanceController.getCurrentRecording();
     let allocations = recording.getAllocations();
     let thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
@@ -111,7 +111,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
   /**
    * Called when `devtools.theme` changes.
    */
-  _onThemeChanged: function (_, theme) {
+  _onThemeChanged: function(_, theme) {
     this.graph.setTheme(theme);
     this.graph.refresh({ force: true });
   },

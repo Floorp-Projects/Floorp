@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -24,7 +24,7 @@ let gCleanupConnection = null;
 
 function setup(callback) {
   let url = document.getElementById("inspectorContent").href;
-  gCleanupConnection = attachURL(url, function (err, client, tab, doc) {
+  gCleanupConnection = attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
@@ -80,7 +80,7 @@ function doMoves(moves) {
 var gDummySerial = 0;
 
 function mutationTest(testSpec) {
-  return function () {
+  return function() {
     setup(() => {
       promiseDone(loadSelectors(testSpec.load || ["html"]).then(() => {
         gWalker.autoCleanup = !!testSpec.autoCleanup;
@@ -119,7 +119,7 @@ function mutationTest(testSpec) {
 // Verify that our dummy mutation works.
 addTest(mutationTest({
   autoCleanup: false,
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     is(mutations.length, 0, "Dummy mutation is filtered out.");
   }
 }));
@@ -132,7 +132,7 @@ addTest(mutationTest({
   moves: [
     ["#a", "#longlist"]
   ],
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     let remove = mutations[0];
     is(remove.type, "childList", "First mutation should be a childList.");
     ok(remove.removed.length > 0, "First mutation should be a removal.");
@@ -154,7 +154,7 @@ addTest(mutationTest({
   moves: [
     ["#a", "#longlist-sibling"]
   ],
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     let remove = mutations[0];
     is(remove.type, "childList", "First mutation should be a childList.");
     ok(remove.removed.length > 0, "First mutation should be a removal.");
@@ -176,7 +176,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist-sibling", "#longlist"]
   ],
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     is(mutations.length, 2, "Should generate two mutations");
     is(mutations[0].type, "childList", "Should be childList mutations.");
     is(mutations[0].added.length, 0, "Should have no adds.");
@@ -195,7 +195,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist-sibling-firstchild", "#longlist"]
   ],
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate two mutations");
     is(mutations[0].type, "childList", "Should be childList mutations.");
     is(mutations[0].added.length, 0, "Should have no adds.");
@@ -210,7 +210,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist-sibling", "#longlist"]
   ],
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     is(mutations.length, 0, "Should generate no mutations.");
   }
 }));
@@ -222,7 +222,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist", null]
   ],
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
     let change = mutations[0];
     is(change.type, "childList", "Should be a childList.");
@@ -241,7 +241,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist", null]
   ],
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
     let change = mutations[0];
     is(change.type, "childList", "Should be a childList.");
@@ -258,7 +258,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist", "#longlist-sibling"]
   ],
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
     let change = mutations[0];
     is(change.type, "childList", "Should be a childList.");
@@ -278,7 +278,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist", "#longlist-sibling"]
   ],
-  postCheck: function (mutations) {
+  postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
     let change = mutations[0];
     is(change.type, "childList", "Should be a childList.");
