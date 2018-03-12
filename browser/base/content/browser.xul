@@ -1232,6 +1232,15 @@
                              selectmenulist="ContentSelectDropdown"
                              datetimepicker="DateTimePickerPanel"/>
                   </stack>
+                  <hbox id="statuspanel" inactive="true" layer="true">
+                    <hbox id="statuspanel-inner">
+                      <label id="statuspanel-label"
+                             role="status"
+                             aria-live="off"
+                             flex="1"
+                             crop="end"/>
+                    </hbox>
+                  </hbox>
                 </vbox>
               </hbox>
             </notificationbox>
