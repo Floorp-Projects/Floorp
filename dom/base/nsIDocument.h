@@ -4128,10 +4128,6 @@ protected:
   // Used to prevent multiple requests to ServiceWorkerManager.
   bool mMaybeServiceWorkerControlled: 1;
 
-  // Whether <style scoped> support is enabled in this document.
-  enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
-  unsigned int mIsScopedStyleEnabled : 2;
-
   uint8_t mPendingFullscreenRequests;
 
   uint8_t mXMLDeclarationBits;

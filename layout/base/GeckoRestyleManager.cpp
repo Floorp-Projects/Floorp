@@ -3237,7 +3237,7 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint      aChildRestyleHint,
   UndisplayedNode* undisplayed = aUndisplayed;
   TreeMatchContext::AutoAncestorPusher pusher(&mTreeMatchContext);
   if (undisplayed) {
-    pusher.PushAncestorAndStyleScope(undisplayedParent);
+    pusher.PushAncestor(undisplayedParent);
   }
   for (; undisplayed; undisplayed = undisplayed->getNext()) {
     NS_ASSERTION(undisplayedParent ||
@@ -3257,7 +3257,7 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint      aChildRestyleHint,
     nsIContent* parent = undisplayed->mContent->GetParent();
     TreeMatchContext::AutoAncestorPusher insertionPointPusher(&mTreeMatchContext);
     if (parent && parent->IsActiveChildrenElement()) {
-      insertionPointPusher.PushAncestorAndStyleScope(parent);
+      insertionPointPusher.PushAncestor(parent);
     }
 
     nsRestyleHint thisChildHint = aChildRestyleHint;
@@ -3465,7 +3465,7 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
   nsIFrame::ChildListIterator lists(aParent);
   TreeMatchContext::AutoAncestorPusher ancestorPusher(&mTreeMatchContext);
   if (!lists.IsDone()) {
-    ancestorPusher.PushAncestorAndStyleScope(mContent);
+    ancestorPusher.PushAncestor(mContent);
   }
   for (; !lists.IsDone(); lists.Next()) {
     for (nsIFrame* child : lists.CurrentList()) {
@@ -3483,7 +3483,7 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
         nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
         TreeMatchContext::AutoAncestorPusher insertionPointPusher(&mTreeMatchContext);
         if (parent && parent->IsActiveChildrenElement()) {
-          insertionPointPusher.PushAncestorAndStyleScope(parent);
+          insertionPointPusher.PushAncestor(parent);
         }
 
         // only do frames that are in flow
@@ -3677,7 +3677,6 @@ AutoDisplayContentsAncestorPusher::AutoDisplayContentsAncestorPusher(
       if (hasFilter) {
         mTreeMatchContext.mAncestorFilter.PushAncestor(mAncestors[i]);
       }
-      mTreeMatchContext.PushStyleScope(mAncestors[i]);
     }
   }
 }
@@ -3692,7 +3691,6 @@ AutoDisplayContentsAncestorPusher::~AutoDisplayContentsAncestorPusher()
     if (hasFilter) {
       mTreeMatchContext.mAncestorFilter.PopAncestor();
     }
-    mTreeMatchContext.PopStyleScope(mAncestors[i]);
   }
 }
 
