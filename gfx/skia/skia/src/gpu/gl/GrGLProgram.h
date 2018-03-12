@@ -68,8 +68,8 @@ public:
         }
 
         /**
-         * Gets a vec4 that adjusts the position from Skia device coords to GL's normalized device
-         * coords. Assuming the transformed position, pos, is a homogeneous vec3, the vec, v, is
+         * Gets a float4 that adjusts the position from Skia device coords to GL's normalized device
+         * coords. Assuming the transformed position, pos, is a homogeneous float3, the vec, v, is
          * applied as such:
          * pos.x = dot(v.xy, pos.xz)
          * pos.y = dot(v.zw, pos.yz)
@@ -111,21 +111,23 @@ protected:
                 const BuiltinUniformHandles&,
                 GrGLuint programID,
                 const UniformInfoArray& uniforms,
-                const UniformInfoArray& samplers,
-                const UniformInfoArray& imageStorages,
+                const UniformInfoArray& textureSamplers,
+                const UniformInfoArray& texelBuffers,
                 const VaryingInfoArray&, // used for NVPR only currently
-                GrGLSLPrimitiveProcessor* geometryProcessor,
-                GrGLSLXferProcessor* xferProcessor,
+                std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
+                std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
                 const GrGLSLFragProcs& fragmentProcessors);
 
     // A helper to loop over effects, set the transforms (via subclass) and bind textures
-    void setFragmentData(const GrPrimitiveProcessor&, const GrPipeline&, int* nextSamplerIdx);
+    void setFragmentData(const GrPrimitiveProcessor&, const GrPipeline&, int* nextTexSamplerIdx,
+                         int* nextTexelBufferIdx);
 
     // Helper for setData() that sets the view matrix and loads the render target height uniform
-    void setRenderTargetState(const GrPrimitiveProcessor&, const GrRenderTarget*);
+    void setRenderTargetState(const GrPrimitiveProcessor&, const GrRenderTargetProxy*);
 
     // Helper for setData() that binds textures and texel buffers to the appropriate texture units
-    void bindTextures(const GrResourceIOProcessor&, bool allowSRGBInputs, int* nextSamplerIdx);
+    void bindTextures(const GrResourceIOProcessor&, bool allowSRGBInputs, int* nextSamplerIdx,
+                      int* nextTexelBufferIdx);
 
     // Helper for generateMipmaps() that ensures mipmaps are up to date
     void generateMipmaps(const GrResourceIOProcessor&, bool allowSRGBInputs);
@@ -143,6 +145,9 @@ protected:
     GrProgramDesc fDesc;
     GrGLGpu* fGpu;
     GrGLProgramDataManager fProgramDataManager;
+
+    int fNumTextureSamplers;
+    int fNumTexelBuffers;
 
     friend class GrGLProgramBuilder;
 

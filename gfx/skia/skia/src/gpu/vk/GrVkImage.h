@@ -23,16 +23,10 @@ private:
     class Resource;
 
 public:
-    enum Wrapped {
-        kNot_Wrapped,
-        kAdopted_Wrapped,
-        kBorrowed_Wrapped,
-    };
-
-    GrVkImage(const GrVkImageInfo& info, Wrapped wrapped)
+    GrVkImage(const GrVkImageInfo& info, GrBackendObjectOwnership ownership)
         : fInfo(info)
-        , fIsBorrowed(kBorrowed_Wrapped == wrapped) {
-        if (kBorrowed_Wrapped == wrapped) {
+        , fIsBorrowed(GrBackendObjectOwnership::kBorrowed == ownership) {
+        if (fIsBorrowed) {
             fResource = new BorrowedResource(info.fImage, info.fAlloc, info.fImageTiling);
         } else {
             fResource = new Resource(info.fImage, info.fAlloc, info.fImageTiling);
@@ -48,6 +42,7 @@ public:
     bool isLinearTiled() const {
         return SkToBool(VK_IMAGE_TILING_LINEAR == fInfo.fImageTiling);
     }
+    bool isBorrowed() const { return fIsBorrowed; }
 
     VkImageLayout currentLayout() const { return fInfo.fImageLayout; }
 
@@ -84,6 +79,12 @@ public:
     // Destroys the internal VkImage and VkDeviceMemory in the GrVkImageInfo
     static void DestroyImageInfo(const GrVkGpu* gpu, GrVkImageInfo*);
 
+    // These match the definitions in SkImage, for whence they came
+    typedef void* ReleaseCtx;
+    typedef void (*ReleaseProc)(ReleaseCtx);
+
+    void setResourceRelease(sk_sp<GrReleaseProcHelper> releaseHelper);
+
 protected:
     void releaseImage(const GrVkGpu* gpu);
     void abandonImage();
@@ -97,24 +98,36 @@ private:
     class Resource : public GrVkResource {
     public:
         Resource()
-            : INHERITED()
-            , fImage(VK_NULL_HANDLE) {
+                : fImage(VK_NULL_HANDLE) {
             fAlloc.fMemory = VK_NULL_HANDLE;
             fAlloc.fOffset = 0;
         }
 
         Resource(VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling)
-            : fImage(image), fAlloc(alloc), fImageTiling(tiling) {}
+            : fImage(image)
+            , fAlloc(alloc)
+            , fImageTiling(tiling) {}
 
-        ~Resource() override {}
+        ~Resource() override {
+            SkASSERT(!fReleaseHelper);
+        }
 
 #ifdef SK_TRACE_VK_RESOURCES
         void dumpInfo() const override {
             SkDebugf("GrVkImage: %d (%d refs)\n", fImage, this->getRefCnt());
         }
 #endif
+        void setRelease(sk_sp<GrReleaseProcHelper> releaseHelper) {
+            fReleaseHelper = std::move(releaseHelper);
+        }
+    protected:
+        mutable sk_sp<GrReleaseProcHelper> fReleaseHelper;
+
     private:
         void freeGPUData(const GrVkGpu* gpu) const override;
+        void abandonGPUData() const override {
+            SkASSERT(!fReleaseHelper);
+        }
 
         VkImage        fImage;
         GrVkAlloc      fAlloc;
@@ -130,10 +143,19 @@ private:
             : Resource(image, alloc, tiling) {
         }
     private:
+        void invokeReleaseProc() const {
+            if (fReleaseHelper) {
+                // Depending on the ref count of fReleaseHelper this may or may not actually trigger
+                // the ReleaseProc to be called.
+                fReleaseHelper.reset();
+            }
+        }
+
         void freeGPUData(const GrVkGpu* gpu) const override;
+        void abandonGPUData() const override;
     };
 
-    const Resource* fResource;
+    Resource* fResource;
 
     friend class GrVkRenderTarget;
 };

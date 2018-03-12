@@ -8,10 +8,10 @@
 #ifndef SkRecord_DEFINED
 #define SkRecord_DEFINED
 
+#include "SkArenaAlloc.h"
 #include "SkRecords.h"
 #include "SkTLogic.h"
 #include "SkTemplates.h"
-#include "SkVarAlloc.h"
 
 // SkRecord represents a sequence of SkCanvas calls, saved for future use.
 // These future uses may include: replay, optimization, serialization, or combinations of those.
@@ -27,7 +27,7 @@
 
 class SkRecord : public SkRefCnt {
 public:
-    SkRecord();
+    SkRecord() = default;
     ~SkRecord();
 
     // Returns the number of canvas commands in this SkRecord.
@@ -55,7 +55,11 @@ public:
     // Here T can be any class, not just those from SkRecords.  Throws on failure.
     template <typename T>
     T* alloc(size_t count = 1) {
-        return (T*)fAlloc.alloc(sizeof(T) * count);
+        struct RawBytes {
+            alignas(T) char data[sizeof(T)];
+        };
+        fApproxBytesAllocated += count * sizeof(T) + alignof(T);
+        return (T*)fAlloc.makeArrayDefault<RawBytes>(count);
     }
 
     // Add a new command of type T to the end of this SkRecord.
@@ -161,7 +165,8 @@ private:
             switch(this->type()) { SK_RECORD_TYPES(CASE) }
         #undef CASE
             SkDEBUGFAIL("Unreachable");
-            return f(SkRecords::NoOp());
+            static const SkRecords::NoOp noop{};
+            return f(noop);
         }
 
         // Mutate this record with functor F (see public API above).
@@ -171,18 +176,21 @@ private:
             switch(this->type()) { SK_RECORD_TYPES(CASE) }
         #undef CASE
             SkDEBUGFAIL("Unreachable");
-            return f((SkRecords::NoOp*)nullptr);
+            static const SkRecords::NoOp noop{};
+            return f(const_cast<SkRecords::NoOp*>(&noop));
         }
     };
 
     // fRecords needs to be a data structure that can append fixed length data, and need to
     // support efficient random access and forward iteration.  (It doesn't need to be contiguous.)
-    int fCount, fReserved;
+    int fCount{0},
+        fReserved{0};
     SkAutoTMalloc<Record> fRecords;
 
     // fAlloc needs to be a data structure which can append variable length data in contiguous
     // chunks, returning a stable handle to that data for later retrieval.
-    SkVarAlloc fAlloc;
+    SkArenaAlloc fAlloc{256};
+    size_t       fApproxBytesAllocated{0};
 };
 
 #endif//SkRecord_DEFINED

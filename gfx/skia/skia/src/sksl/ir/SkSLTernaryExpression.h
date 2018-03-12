@@ -17,13 +17,17 @@ namespace SkSL {
  * A ternary expression (test ? ifTrue : ifFalse).
  */
 struct TernaryExpression : public Expression {
-    TernaryExpression(Position position, std::unique_ptr<Expression> test,
+    TernaryExpression(int offset, std::unique_ptr<Expression> test,
                       std::unique_ptr<Expression> ifTrue, std::unique_ptr<Expression> ifFalse)
-    : INHERITED(position, kTernary_Kind, ifTrue->fType)
+    : INHERITED(offset, kTernary_Kind, ifTrue->fType)
     , fTest(std::move(test))
     , fIfTrue(std::move(ifTrue))
     , fIfFalse(std::move(ifFalse)) {
         ASSERT(fIfTrue->fType == fIfFalse->fType);
+    }
+
+    bool hasSideEffects() const override {
+        return fTest->hasSideEffects() || fIfTrue->hasSideEffects() || fIfFalse->hasSideEffects();
     }
 
     String description() const override {

@@ -9,7 +9,6 @@
 #ifndef GrVkTypes_DEFINED
 #define GrVkTypes_DEFINED
 
-#include "GrExternalTextureData.h"
 #include "GrTypes.h"
 #include "vk/GrVkDefines.h"
 
@@ -32,14 +31,17 @@
  * Vulkan textures are really const GrVkImageInfo*
  */
 struct GrVkAlloc {
-    VkDeviceMemory fMemory;  // can be VK_NULL_HANDLE iff Tex is an RT and uses borrow semantics
-    VkDeviceSize   fOffset;
-    VkDeviceSize   fSize;    // this can be indeterminate iff Tex uses borrow semantics
-    uint32_t       fFlags;
+    VkDeviceMemory fMemory = VK_NULL_HANDLE;  // can be VK_NULL_HANDLE iff is an RT and is borrowed
+    VkDeviceSize   fOffset = 0;
+    VkDeviceSize   fSize = 0;    // this can be indeterminate iff Tex uses borrow semantics
+    uint32_t       fFlags= 0;
 
     enum Flag {
         kNoncoherent_Flag = 0x1,   // memory must be flushed to device after mapping
     };
+private:
+    friend class GrVkHeap; // For access to usesSystemHeap
+    bool fUsesSystemHeap = false;
 };
 
 struct GrVkImageInfo {
@@ -58,24 +60,6 @@ struct GrVkImageInfo {
     // while we're still holding onto the wrapped texture. They will first need to get a handle
     // to our internal GrVkImageInfo by calling getTextureHandle on a GrVkTexture.
     void updateImageLayout(VkImageLayout layout) { fImageLayout = layout; }
-};
-
-class GrVkExternalTextureData : public GrExternalTextureData {
-public:
-    GrVkExternalTextureData(const GrVkImageInfo& info) : fInfo(info) {}
-    GrBackend getBackend() const override { return kVulkan_GrBackend; }
-
-protected:
-    GrBackendObject getBackendObject() const override {
-        return reinterpret_cast<GrBackendObject>(&fInfo);
-    }
-    void attachToContext(GrContext*) override {
-        // TODO: Implement this
-    }
-
-    GrVkImageInfo fInfo;
-
-    typedef GrExternalTextureData INHERITED;
 };
 
 GR_STATIC_ASSERT(sizeof(GrBackendObject) >= sizeof(const GrVkImageInfo*));

@@ -9,12 +9,12 @@
 #include "SkColorFilter.h"
 #include "SkDraw.h"
 #include "SkDrawFilter.h"
-#include "SkImageCacherator.h"
 #include "SkImageFilter.h"
 #include "SkImageFilterCache.h"
 #include "SkImagePriv.h"
 #include "SkImage_Base.h"
 #include "SkLatticeIter.h"
+#include "SkMatrixPriv.h"
 #include "SkPatchUtils.h"
 #include "SkPathMeasure.h"
 #include "SkPathPriv.h"
@@ -25,13 +25,14 @@
 #include "SkTLazy.h"
 #include "SkTextBlobRunIterator.h"
 #include "SkTextToPathIter.h"
+#include "SkUtils.h"
 #include "SkVertices.h"
 
 SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfaceProps)
     : fInfo(info)
     , fSurfaceProps(surfaceProps)
 {
-    fOrigin.setZero();
+    fOrigin = {0, 0};
     fCTM.reset();
 }
 
@@ -125,9 +126,11 @@ void SkBaseDevice::drawDRRect(const SkRRect& outer,
 }
 
 void SkBaseDevice::drawPatch(const SkPoint cubics[12], const SkColor colors[4],
-                             const SkPoint texCoords[4], SkBlendMode bmode, const SkPaint& paint) {
+                             const SkPoint texCoords[4], SkBlendMode bmode,
+                             bool interpColorsLinearly, const SkPaint& paint) {
     SkISize lod = SkPatchUtils::GetLevelOfDetail(cubics, &this->ctm());
-    auto vertices = SkPatchUtils::MakeVertices(cubics, colors, texCoords, lod.width(), lod.height());
+    auto vertices = SkPatchUtils::MakeVertices(cubics, colors, texCoords, lod.width(), lod.height(),
+                                               interpColorsLinearly);
     if (vertices) {
         this->drawVertices(vertices.get(), bmode, paint);
     }
@@ -167,7 +170,7 @@ void SkBaseDevice::drawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
                               SkPoint::Make(x, y), runPaint);
             break;
         default:
-            SkFAIL("unhandled positioning mode");
+            SK_ABORT("unhandled positioning mode");
         }
 
         if (drawFilter) {
@@ -181,7 +184,7 @@ void SkBaseDevice::drawImage(const SkImage* image, SkScalar x, SkScalar y,
                              const SkPaint& paint) {
     SkBitmap bm;
     if (as_IB(image)->getROPixels(&bm, this->imageInfo().colorSpace())) {
-        this->drawBitmap(bm, SkMatrix::MakeTrans(x, y), paint);
+        this->drawBitmap(bm, x, y, paint);
     }
 }
 
@@ -220,8 +223,24 @@ void SkBaseDevice::drawImageLattice(const SkImage* image,
     SkLatticeIter iter(lattice, dst);
 
     SkRect srcR, dstR;
-    while (iter.next(&srcR, &dstR)) {
-        this->drawImageRect(image, &srcR, dstR, paint, SkCanvas::kStrict_SrcRectConstraint);
+    SkColor c;
+    bool isFixedColor = false;
+    const SkImageInfo info = SkImageInfo::Make(1, 1, kBGRA_8888_SkColorType, kUnpremul_SkAlphaType);
+
+    while (iter.next(&srcR, &dstR, &isFixedColor, &c)) {
+          if (isFixedColor || (srcR.width() <= 1.0f && srcR.height() <= 1.0f &&
+                               image->readPixels(info, &c, 4, srcR.fLeft, srcR.fTop))) {
+              // Fast draw with drawRect, if this is a patch containing a single color
+              // or if this is a patch containing a single pixel.
+              if (0 != c || !paint.isSrcOver()) {
+                   SkPaint paintCopy(paint);
+                   int alpha = SkAlphaMul(SkColorGetA(c), SkAlpha255To256(paint.getAlpha()));
+                   paintCopy.setColor(SkColorSetA(c, alpha));
+                   this->drawRect(dstR, paintCopy);
+              }
+        } else {
+            this->drawImageRect(image, &srcR, dstR, paint, SkCanvas::kStrict_SrcRectConstraint);
+        }
     }
 }
 
@@ -236,63 +255,73 @@ void SkBaseDevice::drawBitmapLattice(const SkBitmap& bitmap,
     }
 }
 
+static SkPoint* quad_to_tris(SkPoint tris[6], const SkPoint quad[4]) {
+    tris[0] = quad[0];
+    tris[1] = quad[1];
+    tris[2] = quad[2];
+
+    tris[3] = quad[0];
+    tris[4] = quad[2];
+    tris[5] = quad[3];
+
+    return tris + 6;
+}
+
 void SkBaseDevice::drawAtlas(const SkImage* atlas, const SkRSXform xform[],
-                             const SkRect tex[], const SkColor colors[], int count,
+                             const SkRect tex[], const SkColor colors[], int quadCount,
                              SkBlendMode mode, const SkPaint& paint) {
-    SkPath path;
-    path.setIsVolatile(true);
+    const int triCount = quadCount << 1;
+    const int vertexCount = triCount * 3;
+    uint32_t flags = SkVertices::kHasTexCoords_BuilderFlag;
+    if (colors) {
+        flags |= SkVertices::kHasColors_BuilderFlag;
+    }
+    SkVertices::Builder builder(SkVertices::kTriangles_VertexMode, vertexCount, 0, flags);
 
-    for (int i = 0; i < count; ++i) {
-        SkPoint quad[4];
-        xform[i].toQuad(tex[i].width(), tex[i].height(), quad);
+    SkPoint* vPos = builder.positions();
+    SkPoint* vTex = builder.texCoords();
+    SkColor* vCol = builder.colors();
+    for (int i = 0; i < quadCount; ++i) {
+        SkPoint tmp[4];
+        xform[i].toQuad(tex[i].width(), tex[i].height(), tmp);
+        vPos = quad_to_tris(vPos, tmp);
 
-        SkMatrix localM;
-        localM.setRSXform(xform[i]);
-        localM.preTranslate(-tex[i].left(), -tex[i].top());
-
-        SkPaint pnt(paint);
-        sk_sp<SkShader> shader = atlas->makeShader(SkShader::kClamp_TileMode,
-                                                   SkShader::kClamp_TileMode,
-                                                   &localM);
-        if (!shader) {
-            break;
-        }
-        pnt.setShader(std::move(shader));
+        tex[i].toQuad(tmp);
+        vTex = quad_to_tris(vTex, tmp);
 
         if (colors) {
-            pnt.setColorFilter(SkColorFilter::MakeModeFilter(colors[i], (SkBlendMode)mode));
+            sk_memset32(vCol, colors[i], 6);
+            vCol += 6;
         }
-
-        path.rewind();
-        path.addPoly(quad, 4, true);
-        path.setConvexity(SkPath::kConvex_Convexity);
-        this->drawPath(path, pnt, nullptr, true);
     }
+    SkPaint p(paint);
+    p.setShader(atlas->makeShader());
+    this->drawVertices(builder.detach().get(), mode, p);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SkBaseDevice::drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&) {}
+void SkBaseDevice::drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&,
+                               SkImage*, const SkMatrix&) {}
 sk_sp<SkSpecialImage> SkBaseDevice::makeSpecial(const SkBitmap&) { return nullptr; }
 sk_sp<SkSpecialImage> SkBaseDevice::makeSpecial(const SkImage*) { return nullptr; }
 sk_sp<SkSpecialImage> SkBaseDevice::snapSpecial() { return nullptr; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool SkBaseDevice::readPixels(const SkImageInfo& info, void* dstP, size_t rowBytes, int x, int y) {
-    return this->onReadPixels(info, dstP, rowBytes, x, y);
+bool SkBaseDevice::readPixels(const SkPixmap& pm, int x, int y) {
+    return this->onReadPixels(pm, x, y);
 }
 
-bool SkBaseDevice::writePixels(const SkImageInfo& info, const void* pixels, size_t rowBytes,
-                               int x, int y) {
-    return this->onWritePixels(info, pixels, rowBytes, x, y);
+bool SkBaseDevice::writePixels(const SkPixmap& pm, int x, int y) {
+    return this->onWritePixels(pm, x, y);
 }
 
-bool SkBaseDevice::onWritePixels(const SkImageInfo&, const void*, size_t, int, int) {
+bool SkBaseDevice::onWritePixels(const SkPixmap&, int, int) {
     return false;
 }
 
-bool SkBaseDevice::onReadPixels(const SkImageInfo&, void*, size_t, int x, int y) {
+bool SkBaseDevice::onReadPixels(const SkPixmap&, int x, int y) {
     return false;
 }
 
@@ -316,7 +345,7 @@ bool SkBaseDevice::peekPixels(SkPixmap* pmap) {
 
 static void morphpoints(SkPoint dst[], const SkPoint src[], int count,
                         SkPathMeasure& meas, const SkMatrix& matrix) {
-    SkMatrix::MapXYProc proc = matrix.getMapXYProc();
+    SkMatrixPriv::MapXYProc proc = SkMatrixPriv::GetMapXYProc(matrix);
 
     for (int i = 0; i < count; i++) {
         SkPoint pos;
@@ -373,6 +402,10 @@ static void morphpath(SkPath* dst, const SkPath& src, SkPathMeasure& meas,
             case SkPath::kQuad_Verb:
                 morphpoints(dstP, &srcP[1], 2, meas, matrix);
                 dst->quadTo(dstP[0], dstP[1]);
+                break;
+            case SkPath::kConic_Verb:
+                morphpoints(dstP, &srcP[1], 2, meas, matrix);
+                dst->conicTo(dstP[0], dstP[1], iter.conicWeight());
                 break;
             case SkPath::kCubic_Verb:
                 morphpoints(dstP, &srcP[1], 3, meas, matrix);

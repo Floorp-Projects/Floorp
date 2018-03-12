@@ -51,7 +51,7 @@ enum DrawType {
     DRAW_TEXT,
     DRAW_TEXT_ON_PATH,
     DRAW_TEXT_TOP_BOTTOM,   // fast variant of DRAW_TEXT
-    DRAW_VERTICES_RETIRED_03_2017,
+    DRAW_VERTICES_RETIRED_03_2017_REMOVED_01_2018,
     RESTORE,
     ROTATE,
     SAVE,
@@ -61,9 +61,9 @@ enum DrawType {
     SKEW,
     TRANSLATE,
     NOOP,
-    BEGIN_COMMENT_GROUP, // deprecated (M44)
-    COMMENT,             // deprecated (M44)
-    END_COMMENT_GROUP,   // deprecated (M44)
+    BEGIN_COMMENT_GROUP_obsolete,
+    COMMENT_obsolete,
+    END_COMMENT_GROUP_obsolete,
 
     // new ops -- feel free to re-alphabetize on next version bump
     DRAW_DRRECT,
@@ -74,12 +74,12 @@ enum DrawType {
     DRAW_PICTURE_MATRIX_PAINT,
     DRAW_TEXT_BLOB,
     DRAW_IMAGE,
-    DRAW_IMAGE_RECT_STRICT, // deprecated (M45)
+    DRAW_IMAGE_RECT_STRICT_obsolete,
     DRAW_ATLAS,
     DRAW_IMAGE_NINE,
     DRAW_IMAGE_RECT,
 
-    SAVE_LAYER_SAVELAYERFLAGS_DEPRECATED_JAN_2016,
+    SAVE_LAYER_SAVELAYERFLAGS_DEPRECATED_JAN_2016_REMOVED_01_2018,
     SAVE_LAYER_SAVELAYERREC,
 
     DRAW_ANNOTATION,
@@ -87,15 +87,17 @@ enum DrawType {
     DRAW_DRAWABLE_MATRIX,
     DRAW_TEXT_RSXFORM,
 
-    TRANSLATE_Z,
+    TRANSLATE_Z, // deprecated (M60)
 
-    DRAW_SHADOWED_PICTURE_LIGHTS,
+    DRAW_SHADOW_REC,
     DRAW_IMAGE_LATTICE,
     DRAW_ARC,
     DRAW_REGION,
     DRAW_VERTICES_OBJECT,
 
-    LAST_DRAWTYPE_ENUM = DRAW_VERTICES_OBJECT
+    FLUSH,
+
+    LAST_DRAWTYPE_ENUM = FLUSH
 };
 
 // In the 'match' method, this constant will match any flavor of DRAW_BITMAP*
@@ -122,6 +124,8 @@ enum SaveLayerRecFlatFlags {
     SAVELAYERREC_HAS_PAINT      = 1 << 1,
     SAVELAYERREC_HAS_BACKDROP   = 1 << 2,
     SAVELAYERREC_HAS_FLAGS      = 1 << 3,
+    SAVELAYERREC_HAS_CLIPMASK   = 1 << 4,
+    SAVELAYERREC_HAS_CLIPMATRIX = 1 << 5,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
