@@ -73,7 +73,7 @@ fuzzy-if(skiaContent,73,900) == twostops-1e.html twostops-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent&&layersGPUAccelerated,8,20000) == aja-linear-1a.html aja-linear-1-ref.html
-fails-if(!d2d&&!skiaContent) fuzzy-if(webrender,1,10125) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
+fails-if(!d2d&&!skiaContent) fuzzy-if(webrender,1,10125) fuzzy-if(skiaContent,1,20000) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-1c.html aja-linear-1-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-1d.html aja-linear-1-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-1e.html aja-linear-1-ref.html 
