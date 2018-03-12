@@ -201,7 +201,7 @@ def migrate(ctx):
                 id=FTL.Identifier('home-page-header'),
                 value=COPY(
                     'browser/chrome/browser/preferences/main.dtd',
-                    'startupUserHomePage.label',
+                    'homepage2.label',
                 )
             ),
             FTL.Message(
