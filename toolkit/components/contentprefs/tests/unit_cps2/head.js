@@ -4,84 +4,17 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var cps;
-var asyncRunner;
-var next;
-
 let loadContext = Cc["@mozilla.org/loadcontext;1"].
                     createInstance(Ci.nsILoadContext);
 let privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].
                            createInstance(Ci.nsILoadContext);
 
-(function init() {
-  // There has to be a profile directory before the CPS service is gotten.
-  do_get_profile();
-})();
+// There has to be a profile directory before the CPS service is gotten.
+do_get_profile();
+let cps = Cc["@mozilla.org/content-pref/service;1"].
+          getService(Ci.nsIContentPrefService2);
 
-function runAsyncTests(tests, dontResetBefore = false) {
-  do_test_pending();
-
-  cps = Cc["@mozilla.org/content-pref/service;1"].
-        getService(Ci.nsIContentPrefService2);
-
-  let s = {};
-  ChromeUtils.import("resource://test/AsyncRunner.jsm", s);
-  asyncRunner = new s.AsyncRunner({
-    done: do_test_finished,
-    error(err) {
-      // xpcshell test functions like equal throw NS_ERROR_ABORT on
-      // failure.  Ignore those and catch only uncaught exceptions.
-      if (err !== Cr.NS_ERROR_ABORT) {
-        if (err.stack) {
-          err = err + "\n\nTraceback (most recent call first):\n" + err.stack +
-                      "\nUseless do_throw stack:";
-        }
-        do_throw(err);
-      }
-    },
-    consoleError(scriptErr) {
-      // Previously, this code checked for console errors related to the test,
-      // and treated them as failures. This was problematic, because our current
-      // very-broken exception reporting machinery in XPCWrappedJSClass reports
-      // errors to the console even if there's actually JS on the stack above
-      // that will catch them. And a lot of the tests here intentionally trigger
-      // error conditions on the JS-implemented XPCOM component (see erroneous()
-      // in test_getSubdomains.js, for example). In the old world, we got lucky,
-      // and the errors were never reported to the console due to happenstantial
-      // JSContext reasons that aren't really worth going into.
-      //
-      // So. We make sure to dump this stuff so that it shows up in the logs, but
-      // don't turn them into duplicate failures of the exception that was already
-      // propagated to the caller.
-      dump("AsyncRunner.jsm observed console error: " + scriptErr + "\n");
-    }
-  });
-
-  next = asyncRunner.next.bind(asyncRunner);
-
-  registerCleanupFunction(function() {
-    asyncRunner.destroy();
-    asyncRunner = null;
-  });
-
-  tests.forEach(function(test) {
-    function* gen() {
-      info("Running " + test.name);
-      yield test();
-      yield reset();
-    }
-    asyncRunner.appendIterator(gen());
-  });
-
-  // reset() ends up calling asyncRunner.next(), starting the tests.
-  if (dontResetBefore) {
-    next();
-  } else {
-    reset();
-  }
-}
-
-function makeCallback(callbacks, success = null) {
+function makeCallback(resolve, callbacks, success = null) {
   callbacks = callbacks || {};
   if (!callbacks.handleError) {
     callbacks.handleError = function(error) {
@@ -99,16 +32,16 @@ function makeCallback(callbacks, success = null) {
       if (success) {
         success();
       } else {
-        next();
+        resolve();
       }
     };
   return callbacks;
 }
 
-function do_check_throws(fn) {
+async function do_check_throws(fn) {
   let threw = false;
   try {
-    fn();
+    await fn();
   } catch (err) {
     threw = true;
   }
@@ -123,69 +56,51 @@ function sendMessage(msg, callback) {
 }
 
 function reset() {
-  sendMessage("reset", next);
+  return new Promise(resolve => {
+    sendMessage("reset", resolve);
+  });
 }
 
 function setWithDate(group, name, val, timestamp, context) {
-  function updateDate() {
-    let db = sendMessage("db");
-    let stmt = db.createAsyncStatement(`
-      UPDATE prefs SET timestamp = :timestamp
+  return new Promise(resolve => {
+    async function updateDate() {
+      let conn = await sendMessage("db");
+      await conn.execute(`
+        UPDATE prefs SET timestamp = :timestamp
+        WHERE
+          settingID = (SELECT id FROM settings WHERE name = :name)
+          AND groupID = (SELECT id FROM groups WHERE name = :group)
+      `, {name, group, timestamp: timestamp / 1000});
+
+      resolve();
+    }
+
+    cps.set(group, name, val, context, makeCallback(null, null, updateDate));
+  });
+}
+
+async function getDate(group, name, context) {
+  let conn = await sendMessage("db");
+  let [result] = await conn.execute(`
+      SELECT timestamp FROM prefs
       WHERE
         settingID = (SELECT id FROM settings WHERE name = :name)
         AND groupID = (SELECT id FROM groups WHERE name = :group)
-    `);
-    stmt.params.timestamp = timestamp / 1000;
-    stmt.params.name = name;
-    stmt.params.group = group;
+  `, {name, group});
 
-    stmt.executeAsync({
-      handleCompletion(reason) {
-        next();
-      },
-      handleError(err) {
-        do_throw(err);
-      }
-    });
-    stmt.finalize();
-  }
-
-  cps.set(group, name, val, context, makeCallback(null, updateDate));
-}
-
-function getDate(group, name, context) {
-  let db = sendMessage("db");
-  let stmt = db.createAsyncStatement(`
-    SELECT timestamp FROM prefs
-    WHERE
-      settingID = (SELECT id FROM settings WHERE name = :name)
-      AND groupID = (SELECT id FROM groups WHERE name = :group)
-  `);
-  stmt.params.name = name;
-  stmt.params.group = group;
-
-  let res;
-  stmt.executeAsync({
-    handleResult(results) {
-      let row = results.getNextRow();
-      res = row.getResultByName("timestamp");
-    },
-    handleCompletion(reason) {
-      next(res * 1000);
-    },
-    handleError(err) {
-      do_throw(err);
-    }
-  });
-  stmt.finalize();
+  return result.getResultByName("timestamp") * 1000;
 }
 
 function set(group, name, val, context) {
-  cps.set(group, name, val, context, makeCallback());
+  return new Promise(resolve => {
+    cps.set(group, name, val, context, makeCallback(resolve));
+  });
 }
 
 function setGlobal(name, val, context) {
-  cps.setGlobal(name, val, context, makeCallback());
+  return new Promise(resolve => {
+    cps.setGlobal(name, val, context, makeCallback(resolve));
+  });
 }
 
 function prefOK(actual, expected, strict) {
@@ -198,39 +113,41 @@ function prefOK(actual, expected, strict) {
     equal(actual.value, expected.value);
 }
 
-function* getOK(args, expectedVal, expectedGroup, strict) {
+async function getOK(args, expectedVal, expectedGroup, strict) {
   if (args.length == 2)
     args.push(undefined);
   let expectedPrefs = expectedVal === undefined ? [] :
                       [{ domain: expectedGroup || args[0],
                          name: args[1],
                          value: expectedVal }];
-  yield getOKEx("getByDomainAndName", args, expectedPrefs, strict);
+  await getOKEx("getByDomainAndName", args, expectedPrefs, strict);
 }
 
-function* getSubdomainsOK(args, expectedGroupValPairs) {
+async function getSubdomainsOK(args, expectedGroupValPairs) {
   if (args.length == 2)
     args.push(undefined);
   let expectedPrefs = expectedGroupValPairs.map(function([group, val]) {
     return { domain: group, name: args[1], value: val };
   });
-  yield getOKEx("getBySubdomainAndName", args, expectedPrefs);
+  await getOKEx("getBySubdomainAndName", args, expectedPrefs);
 }
 
-function* getGlobalOK(args, expectedVal) {
+async function getGlobalOK(args, expectedVal) {
   if (args.length == 1)
     args.push(undefined);
   let expectedPrefs = expectedVal === undefined ? [] :
                       [{ domain: null, name: args[0], value: expectedVal }];
-  yield getOKEx("getGlobal", args, expectedPrefs);
+  await getOKEx("getGlobal", args, expectedPrefs);
 }
 
-function* getOKEx(methodName, args, expectedPrefs, strict, context) {
+async function getOKEx(methodName, args, expectedPrefs, strict, context) {
   let actualPrefs = [];
-  args.push(makeCallback({
-    handleResult: pref => actualPrefs.push(pref)
-  }));
-  yield cps[methodName].apply(cps, args);
+  await new Promise(resolve => {
+    args.push(makeCallback(resolve, {
+      handleResult: pref => actualPrefs.push(pref)
+    }));
+    cps[methodName].apply(cps, args);
+  });
   arraysOfArraysOK([actualPrefs], [expectedPrefs], function(actual, expected) {
     prefOK(actual, expected, strict);
   });
@@ -301,9 +218,9 @@ function arraysOfArraysOK(actual, expected, cmp) {
   });
 }
 
-function dbOK(expectedRows) {
-  let db = sendMessage("db");
-  let stmt = db.createAsyncStatement(`
+async function dbOK(expectedRows) {
+  let conn = await sendMessage("db");
+  let stmt = `
     SELECT groups.name AS grp, settings.name AS name, prefs.value AS value
     FROM prefs
     LEFT JOIN groups ON groups.id = prefs.groupID
@@ -332,30 +249,19 @@ function dbOK(expectedRows) {
     )
 
     ORDER BY value ASC, grp ASC, name ASC
-  `);
+  `;
 
-  let actualRows = [];
   let cols = ["grp", "name", "value"];
 
-  db.executeAsync([stmt], 1, {
-    handleCompletion(reason) {
-      arraysOfArraysOK(actualRows, expectedRows);
-      next();
-    },
-    handleResult(results) {
-      let row = null;
-      while ((row = results.getNextRow())) {
-        actualRows.push(cols.map(c => row.getResultByName(c)));
-      }
-    },
-    handleError(err) {
-      do_throw(err);
-    }
-  });
-  stmt.finalize();
+  let actualRows = (await conn.execute(stmt)).map(row => (cols.map(c => row.getResultByName(c))));
+  arraysOfArraysOK(actualRows, expectedRows);
 }
 
 function on(event, names, dontRemove) {
+  return onEx(event, names, dontRemove).promise;
+}
+
+function onEx(event, names, dontRemove) {
   let args = {
     reset() {
       for (let prop in this) {
@@ -366,14 +272,25 @@ function on(event, names, dontRemove) {
   };
 
   let observers = {};
+  let deferred = null;
+  let triggered = false;
 
   names.forEach(function(name) {
     let obs = {};
     ["onContentPrefSet", "onContentPrefRemoved"].forEach(function(meth) {
-      obs[meth] = () => do_throw(meth + " should not be called");
+      obs[meth] = () => do_throw(meth + " should not be called for " + name);
     });
     obs["onContentPref" + event] = function() {
       args[name].push(Array.slice(arguments));
+
+      if (!triggered) {
+        triggered = true;
+        executeSoon(function() {
+          if (!dontRemove)
+            names.forEach(n => cps.removeObserverForName(n, observers[n]));
+          deferred.resolve(args);
+        });
+      }
     };
     observers[name] = obs;
     args[name] = [];
@@ -381,20 +298,21 @@ function on(event, names, dontRemove) {
     cps.addObserverForName(name, obs);
   });
 
-  executeSoon(function() {
-    if (!dontRemove)
-      names.forEach(n => cps.removeObserverForName(n, observers[n]));
-    next(args);
-  });
+  return {
+    observers,
+    promise: new Promise(resolve => {
+      deferred = {resolve};
+    }),
+  };
 }
 
-function schemaVersionIs(expectedVersion) {
-  let db = sendMessage("db");
-  equal(db.schemaVersion, expectedVersion);
+async function schemaVersionIs(expectedVersion) {
+  let db = await sendMessage("db");
+  equal(await db.getSchemaVersion(), expectedVersion);
 }
 
 function wait() {
-  executeSoon(next);
+  return new Promise(resolve => executeSoon(resolve));
 }
 
 function observerArgsOK(actualArgs, expectedArgs) {
