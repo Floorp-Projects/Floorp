@@ -1762,7 +1762,13 @@ jit::JitActivation::startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset,
     if (unwound)
         bytecodeOffset = code.lookupCallSite(pc)->lineOrBytecode();
 
-    cx_->runtime()->wasmTrapData.ref().emplace(pc, trap, bytecodeOffset);
+    wasm::TrapData trapData;
+    trapData.resumePC = ((uint8_t*)state.pc) + jit::WasmTrapInstructionLength;
+    trapData.unwoundPC = pc;
+    trapData.trap = trap;
+    trapData.bytecodeOffset = bytecodeOffset;
+
+    cx_->runtime()->wasmTrapData = Some(trapData);
     setWasmExitFP(fp);
 }
 
@@ -1789,17 +1795,22 @@ jit::JitActivation::isWasmTrapping() const
     if (act != this)
         return false;
 
-    DebugOnly<const wasm::Frame*> fp = wasmExitFP();
-    DebugOnly<void*> unwindPC = rt->wasmTrapData->pc;
-    MOZ_ASSERT(fp->instance()->code().containsCodePC(unwindPC));
+    MOZ_ASSERT(wasmExitFP()->instance()->code().containsCodePC(rt->wasmTrapData->unwoundPC));
     return true;
 }
 
 void*
-jit::JitActivation::wasmTrapPC() const
+jit::JitActivation::wasmTrapResumePC() const
 {
     MOZ_ASSERT(isWasmTrapping());
-    return cx_->runtime()->wasmTrapData->pc;
+    return cx_->runtime()->wasmTrapData->resumePC;
+}
+
+void*
+jit::JitActivation::wasmTrapUnwoundPC() const
+{
+    MOZ_ASSERT(isWasmTrapping());
+    return cx_->runtime()->wasmTrapData->unwoundPC;
 }
 
 uint32_t

@@ -2393,6 +2393,11 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
         KIND_OTHER, rtStats.runtime.tracelogger,
         "The memory used for the tracelogger, including the graph and events.");
 
+    // Report the numbers for memory used by wasm Runtime state.
+    REPORT_BYTES(NS_LITERAL_CSTRING("wasm-runtime"),
+        KIND_OTHER, rtStats.runtime.wasmRuntime,
+        "The memory used for wasm runtime bookkeeping.");
+
     // Report the numbers for memory outside of compartments.
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/gc-heap/unused-chunks"),
