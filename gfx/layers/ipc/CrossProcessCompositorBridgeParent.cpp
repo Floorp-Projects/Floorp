@@ -618,39 +618,6 @@ CrossProcessCompositorBridgeParent::IsSameProcess() const
   return OtherPid() == base::GetCurrentProcId();
 }
 
-mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
-                                                                         const uint32_t& aPresShellId)
-{
-  CompositorBridgeParent* parent;
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    parent = sIndirectLayerTrees[aLayersId].mParent;
-  }
-  if (parent) {
-    parent->ClearApproximatelyVisibleRegions(aLayersId, Some(aPresShellId));
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                                                         const CSSIntRegion& aRegion)
-{
-  CompositorBridgeParent* parent;
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    parent = sIndirectLayerTrees[aGuid.mLayersId].mParent;
-  }
-  if (parent) {
-    if (!parent->RecvNotifyApproximatelyVisibleRegion(aGuid, aRegion)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-    return IPC_OK();;
-  }
-  return IPC_OK();
-}
-
 void
 CrossProcessCompositorBridgeParent::UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime)
 {
