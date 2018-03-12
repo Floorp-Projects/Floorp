@@ -54,4 +54,10 @@ CrossProcessSemaphore::ShareToProcess(base::ProcessId aTargetPid)
   return 0;
 }
 
+void
+CrossProcessSemaphore::CloseHandle()
+{
+  MOZ_CRASH("Cross-process semaphores not allowed on this platform - woah! We should've aborted by now!");
+}
+
 }

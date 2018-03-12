@@ -268,6 +268,7 @@ public:
   AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) override { return mCompositionManager; }
 
   PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                      const ReadLockDescriptor& aReadLock,
                                       const LayersBackend& aLayersBackend,
                                       const TextureFlags& aFlags,
                                       const uint64_t& aId,

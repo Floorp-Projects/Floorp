@@ -111,13 +111,13 @@ CanvasClient2D::Update(gfx::IntSize aSize, ShareableCanvasRenderer* aCanvasRende
     if (mTextureFlags & TextureFlags::ORIGIN_BOTTOM_LEFT) {
       flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
     }
+    flags |= TextureFlags::NON_BLOCKING_READ_LOCK;
 
     mBackBuffer = CreateTextureClientForCanvas(surfaceFormat, aSize, flags, aCanvasRenderer);
     if (!mBackBuffer) {
       NS_WARNING("Failed to allocate the TextureClient");
       return;
     }
-    mBackBuffer->EnableReadLock();
     MOZ_ASSERT(mBackBuffer->CanExposeDrawTarget());
 
     bufferCreated = true;

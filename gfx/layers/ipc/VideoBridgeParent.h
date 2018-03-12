@@ -29,6 +29,7 @@ public:
   // PVideoBridgeParent
   void ActorDestroy(ActorDestroyReason aWhy) override;
   PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                      const ReadLockDescriptor& aReadLock,
                                       const LayersBackend& aLayersBackend,
                                       const TextureFlags& aFlags,
                                       const uint64_t& aSerial) override;

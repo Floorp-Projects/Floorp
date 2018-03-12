@@ -104,6 +104,7 @@ public:
   RecvHideAllPlugins(const uintptr_t& aParentWidget) override;
 
   virtual PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,
+                                            const ReadLockDescriptor& aReadLock,
                                             const LayersBackend& aLayersBackend,
                                             const TextureFlags& aFlags,
                                             const uint64_t& aId,
@@ -115,6 +116,7 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
+                                       const ReadLockDescriptor& aReadLock,
                                        LayersBackend aLayersBackend,
                                        TextureFlags aFlags,
                                        uint64_t aSerial,

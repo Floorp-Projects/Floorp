@@ -161,7 +161,9 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         t->mPictureRect = timedTexture.picture();
         t->mFrameID = timedTexture.frameID();
         t->mProducerID = timedTexture.producerID();
-        t->mTexture->SetReadLock(FindReadLock(timedTexture.sharedLock()));
+        if (timedTexture.readLocked()) {
+          t->mTexture->SetReadLocked();
+        }
       }
       if (textures.Length() > 0) {
         compositable->UseTextureHost(textures);
@@ -186,8 +188,12 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       const OpUseComponentAlphaTextures& op = aEdit.detail().get_OpUseComponentAlphaTextures();
       RefPtr<TextureHost> texOnBlack = TextureHost::AsTextureHost(op.textureOnBlackParent());
       RefPtr<TextureHost> texOnWhite = TextureHost::AsTextureHost(op.textureOnWhiteParent());
-      texOnBlack->SetReadLock(FindReadLock(op.sharedLockBlack()));
-      texOnWhite->SetReadLock(FindReadLock(op.sharedLockWhite()));
+      if (op.readLockedBlack()) {
+        texOnBlack->SetReadLocked();
+      }
+      if (op.readLockedWhite()) {
+        texOnWhite->SetReadLocked();
+      }
 
       MOZ_ASSERT(texOnBlack && texOnWhite);
       compositable->UseComponentAlphaTextures(texOnBlack, texOnWhite);
