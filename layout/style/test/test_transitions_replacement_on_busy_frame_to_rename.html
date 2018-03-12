@@ -5,9 +5,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1167519
 -->
 <head>
   <meta charset=utf-8>
+  <title>Test for bug 1167519</title>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
     src="/tests/SimpleTest/paint_listener.js"></script>
   <script src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
   <style>
     #target {
       height: 100px;
@@ -22,22 +26,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1167519
 <script>
 'use strict';
 
-var ok = opener.ok.bind(opener);
-var isnot = opener.isnot.bind(opener);
-
-function finish() {
-  var o = opener;
-  self.close();
-  o.SimpleTest.finish();
-}
+SimpleTest.waitForExplicitFinish();
 
 var OMTAPrefKey = "layers.offmainthreadcomposition.async-animations";
 var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
-                  opener.SpecialPowers.getBoolPref(OMTAPrefKey);
+                  SpecialPowers.getBoolPref(OMTAPrefKey);
 window.addEventListener("load", function() {
   if (!omtaEnabled) {
     ok(true, "Skipping the test since OMTA is disabled");
-    finish();
+    SimpleTest.finish();
     return;
   }
 
@@ -89,7 +86,7 @@ window.addEventListener("load", function() {
               previousKeyframeValue,
               "Keyframe value of transition is updated since the moment when " +
               "it was generated");
-        finish();
+        SimpleTest.finish();
       });
     });
   });
