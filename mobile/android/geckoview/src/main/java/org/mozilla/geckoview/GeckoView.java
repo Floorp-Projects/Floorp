@@ -24,6 +24,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -47,6 +49,7 @@ public class GeckoView extends FrameLayout {
 
     protected final Display mDisplay = new Display();
     protected GeckoSession mSession;
+    protected GeckoRuntime mRuntime;
     private boolean mStateSaved;
 
     protected SurfaceView mSurfaceView;
@@ -217,15 +220,45 @@ public class GeckoView extends FrameLayout {
         return session;
     }
 
-    public void setSession(final GeckoSession session) {
+    /**
+     * Attach a session to this view. The session should be opened before
+     * attaching.
+     *
+     * @param session The session to be attached.
+     */
+    public void setSession(@NonNull final GeckoSession session) {
+        if (!session.isOpen()) {
+            throw new IllegalArgumentException("Session must be open before attaching");
+        }
+
+        setSession(session, session.getRuntime());
+    }
+
+    /**
+     * Attach a session to this view. The session should be opened before
+     * attaching or a runtime needs to be provided for automatic opening.
+     *
+     * @param session The session to be attached.
+     * @param runtime The runtime to be used for opening the session.
+     */
+    public void setSession(@NonNull final GeckoSession session,
+                           @Nullable final GeckoRuntime runtime) {
         if (mSession != null && mSession.isOpen()) {
             throw new IllegalStateException("Current session is open");
         }
 
         releaseSession();
+
         mSession = session;
-        if (mSession == null) {
-          return;
+        mRuntime = runtime;
+
+        if (session.isOpen()) {
+            if (runtime != null && runtime != session.getRuntime()) {
+                throw new IllegalArgumentException("Session was opened with non-matching runtime");
+            }
+            mRuntime = session.getRuntime();
+        } else if (runtime == null) {
+            throw new IllegalArgumentException("Session must be open before attaching");
         }
 
         mDisplay.acquire(session.acquireDisplay());
@@ -346,10 +379,11 @@ public class GeckoView extends FrameLayout {
         final SavedState ss = (SavedState) state;
         super.onRestoreInstanceState(ss.getSuperState());
 
-        if (mSession == null) {
-            setSession(ss.session);
+        if (mSession == null && ss.session != null) {
+            setSession(ss.session, ss.session.getRuntime());
         } else if (ss.session != null) {
             mSession.transferFrom(ss.session);
+            mRuntime = ss.session.getRuntime();
         }
     }
 
