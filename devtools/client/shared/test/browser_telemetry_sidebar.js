@@ -42,7 +42,7 @@ function* testSidebar(toolbox) {
       let tool = sidebarTools.pop();
       if (tool) {
         inspector.sidebar.select(tool);
-        setTimeout(function () {
+        setTimeout(function() {
           setTimeout(selectSidebarTab, TOOL_DELAY);
         }, TOOL_DELAY);
       } else {
@@ -67,7 +67,7 @@ function checkResults(Telemetry) {
     } else if (histId.endsWith("OPENED_COUNT")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element === true;
       });
 
@@ -75,7 +75,7 @@ function checkResults(Telemetry) {
     } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element > 0;
       });
 

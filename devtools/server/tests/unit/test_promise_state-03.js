@@ -13,11 +13,11 @@ function run_test() {
   initTestDebuggerServer();
   const debuggee = addTestGlobal("test-promise-state");
   const client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect().then(function () {
+  client.connect().then(function() {
     attachTestTabAndResume(
       client, "test-promise-state",
-      function (response, tabClient, threadClient) {
-        (async function () {
+      function(response, tabClient, threadClient) {
+        (async function() {
           const packet = await executeOnNextTickAndWaitForPause(
             () => evalCode(debuggee), client);
 

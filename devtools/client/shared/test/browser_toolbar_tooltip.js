@@ -97,8 +97,8 @@ function getLeftMargin() {
 }
 
 function observeOnce(topic, ownsWeak = false) {
-  return new Promise(function (resolve, reject) {
-    let resolver = function (subject) {
+  return new Promise(function(resolve, reject) {
+    let resolver = function(subject) {
       Services.obs.removeObserver(resolver, topic);
       resolve(subject);
     };

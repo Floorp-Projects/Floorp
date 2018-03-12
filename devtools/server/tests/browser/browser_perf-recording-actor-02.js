@@ -12,7 +12,7 @@ var config = { bufferSize: BUFFER_SIZE };
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-add_task(async function () {
+add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();

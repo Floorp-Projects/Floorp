@@ -5,11 +5,11 @@
 
 const TEST_URI = "data:text/html,Test <code>clear()</code> jsterm helper";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   let onMessage = waitForMessage(hud, "message");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log("message");
   });
   await onMessage;

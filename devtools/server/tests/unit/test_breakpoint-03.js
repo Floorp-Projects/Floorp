@@ -16,7 +16,7 @@ var gThreadClient;
 var gCallback;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -27,17 +27,17 @@ function run_test_with_server(server, callback) {
   initTestDebuggerServer(server);
   gDebuggee = addTestGlobal("test-stack", server);
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient,
                            "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_skip_breakpoint();
                            });
   });
 }
 
-var test_no_skip_breakpoint = async function (source, location) {
+var test_no_skip_breakpoint = async function(source, location) {
   let [response, bpClient] = await source.setBreakpoint(
     Object.assign({}, location, { noSliding: true })
   );
@@ -47,8 +47,8 @@ var test_no_skip_breakpoint = async function (source, location) {
   await bpClient.remove();
 };
 
-var test_skip_breakpoint = function () {
-  gThreadClient.addOneTimeListener("paused", async function (event, packet) {
+var test_skip_breakpoint = function() {
+  gThreadClient.addOneTimeListener("paused", async function(event, packet) {
     let location = { line: gDebuggee.line0 + 3 };
     let source = gThreadClient.source(packet.frame.where.source);
 
@@ -62,7 +62,7 @@ var test_skip_breakpoint = function () {
     Assert.equal(response.actualLocation.source.actor, source.actor);
     Assert.equal(response.actualLocation.line, location.line + 1);
 
-    gThreadClient.addOneTimeListener("paused", function (event, packet) {
+    gThreadClient.addOneTimeListener("paused", function(event, packet) {
       // Check the return value.
       Assert.equal(packet.type, "paused");
       Assert.equal(packet.frame.where.source.actor, source.actor);
@@ -74,8 +74,8 @@ var test_skip_breakpoint = function () {
       Assert.equal(gDebuggee.b, undefined);
 
       // Remove the breakpoint.
-      bpClient.remove(function (response) {
-        gThreadClient.resume(function () {
+      bpClient.remove(function(response) {
+        gThreadClient.resume(function() {
           gClient.close().then(gCallback);
         });
       });

@@ -77,7 +77,7 @@ const EXPECTED_REQUESTS = [
   },
 ];
 
-add_task(async function () {
+add_task(async function() {
   // Async stacks aren't on by default in all builds
   await SpecialPowers.pushPrefEnv({ set: [["javascript.options.asyncstack", true]] });
 

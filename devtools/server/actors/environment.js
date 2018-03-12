@@ -22,7 +22,7 @@ const { environmentSpec } = require("devtools/shared/specs/environment");
  *        The parent thread actor that contains this environment.
  */
 let EnvironmentActor = ActorClassWithSpec(environmentSpec, {
-  initialize: function (environment, threadActor) {
+  initialize: function(environment, threadActor) {
     this.obj = environment;
     this.threadActor = threadActor;
   },
@@ -32,14 +32,14 @@ let EnvironmentActor = ActorClassWithSpec(environmentSpec, {
    * Debugger.Environment.actor field so that environment does not
    * reference a destroyed actor.
    */
-  destroy: function () {
+  destroy: function() {
     this.obj.actor = null;
   },
 
   /**
    * Return an environment form for use in a protocol message.
    */
-  form: function () {
+  form: function() {
     let form = { actor: this.actorID };
 
     // What is this environment's type?
@@ -86,7 +86,7 @@ let EnvironmentActor = ActorClassWithSpec(environmentSpec, {
    * @param any value
    *        The value to be assigned.
    */
-  assign: function (name, value) {
+  assign: function(name, value) {
     // TODO: enable the commented-out part when getVariableDescriptor lands
     // (bug 725815).
     /* let desc = this.obj.getVariableDescriptor(name);
@@ -117,7 +117,7 @@ let EnvironmentActor = ActorClassWithSpec(environmentSpec, {
    * Handle a protocol request to fully enumerate the bindings introduced by the
    * lexical environment.
    */
-  bindings: function () {
+  bindings: function() {
     let bindings = { arguments: [], variables: {} };
 
     // TODO: this part should be removed in favor of the commented-out part

@@ -19,12 +19,12 @@ add_task(function* () {
          "<html>",
          "<head>",
          "<title>Bug 740541</title>"],
-        stylesheets.map(function (sheet) {
+        stylesheets.map(function(sheet) {
           return '<link rel="stylesheet" type="text/css" href="' + sheet + '">';
         }),
         ["</head>",
          "<body>"],
-        framedDocuments.map(function (doc) {
+        framedDocuments.map(function(doc) {
           return '<iframe src="' + doc + '"></iframe>';
         }),
         ["</body>",

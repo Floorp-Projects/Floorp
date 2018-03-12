@@ -10,7 +10,7 @@ let reducers = {
 
 };
 
-module.exports = function (events = INITIAL_EVENTS, action) {
+module.exports = function(events = INITIAL_EVENTS, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return events;

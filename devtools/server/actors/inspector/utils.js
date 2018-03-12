@@ -27,7 +27,7 @@ const IMAGE_FETCHING_TIMEOUT = 500;
  * @return {String}
  *         Properly cased version of the node tag name
  */
-const getNodeDisplayName = function (rawNode) {
+const getNodeDisplayName = function(rawNode) {
   if (rawNode.nodeName && !rawNode.localName) {
     // The localName & prefix APIs have been moved from the Node interface to the Element
     // interface. Use Node.nodeName as a fallback.
@@ -189,7 +189,7 @@ function ensureImageLoaded(image, timeout) {
  *
  * If something goes wrong, the promise is rejected.
  */
-const imageToImageData = async function (node, maxDim) {
+const imageToImageData = async function(node, maxDim) {
   let { HTMLCanvasElement, HTMLImageElement } = node.ownerGlobal;
 
   let isImg = node instanceof HTMLImageElement;

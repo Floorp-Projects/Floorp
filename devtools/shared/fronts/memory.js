@@ -12,7 +12,7 @@ loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
                          "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 
 const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
-  initialize: function (client, form, rootForm = null) {
+  initialize: function(client, form, rootForm = null) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this._client = client;
     this.actorID = form.memoryActor;
@@ -40,7 +40,7 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
    *
    * @returns Promise<String>
    */
-  saveHeapSnapshot: protocol.custom(async function (options = {}) {
+  saveHeapSnapshot: protocol.custom(async function(options = {}) {
     const snapshotId = await this._saveHeapSnapshotImpl(options.boundaries);
 
     if (!options.forceCopy &&
@@ -62,7 +62,7 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
    *
    * @returns Promise<String>
    */
-  transferHeapSnapshot: protocol.custom(function (snapshotId) {
+  transferHeapSnapshot: protocol.custom(function(snapshotId) {
     if (!this.heapSnapshotFileActorID) {
       throw new Error("MemoryFront initialized without a rootForm");
     }
@@ -79,7 +79,7 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
       const outFile = new FileUtils.File(outFilePath);
 
       const outFileStream = FileUtils.openSafeFileOutputStream(outFile);
-      request.on("bulk-reply", async function ({ copyTo }) {
+      request.on("bulk-reply", async function({ copyTo }) {
         await copyTo(outFileStream);
         FileUtils.closeSafeFileOutputStream(outFileStream);
         resolve(outFilePath);

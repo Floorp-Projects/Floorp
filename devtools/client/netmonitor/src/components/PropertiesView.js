@@ -16,23 +16,23 @@ const { FILTER_SEARCH_DELAY } = require("../constants");
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const TreeView = createFactory(TreeViewClass);
 
-loader.lazyGetter(this, "SearchBox", function () {
+loader.lazyGetter(this, "SearchBox", function() {
   return createFactory(require("devtools/client/shared/components/SearchBox"));
 });
-loader.lazyGetter(this, "TreeRow", function () {
+loader.lazyGetter(this, "TreeRow", function() {
   return createFactory(require("devtools/client/shared/components/tree/TreeRow"));
 });
-loader.lazyGetter(this, "SourceEditor", function () {
+loader.lazyGetter(this, "SourceEditor", function() {
   return createFactory(require("./SourceEditor"));
 });
-loader.lazyGetter(this, "HTMLPreview", function () {
+loader.lazyGetter(this, "HTMLPreview", function() {
   return createFactory(require("./HtmlPreview"));
 });
 
-loader.lazyGetter(this, "Rep", function () {
+loader.lazyGetter(this, "Rep", function() {
   return require("devtools/client/shared/components/reps/reps").REPS.Rep;
 });
-loader.lazyGetter(this, "MODE", function () {
+loader.lazyGetter(this, "MODE", function() {
   return require("devtools/client/shared/components/reps/reps").MODE;
 });
 

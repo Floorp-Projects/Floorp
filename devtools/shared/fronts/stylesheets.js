@@ -20,18 +20,18 @@ loader.lazyRequireGetter(this, "getIndentationFromString",
  * Corresponding client-side front for a MediaRuleActor.
  */
 const MediaRuleFront = FrontClassWithSpec(mediaRuleSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     Front.prototype.initialize.call(this, client, form);
 
     this._onMatchesChange = this._onMatchesChange.bind(this);
     this.on("matches-change", this._onMatchesChange);
   },
 
-  _onMatchesChange: function (matches) {
+  _onMatchesChange: function(matches) {
     this._form.matches = matches;
   },
 
-  form: function (form, detail) {
+  form: function(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -66,23 +66,23 @@ exports.MediaRuleFront = MediaRuleFront;
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
  */
 const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
-  initialize: function (conn, form) {
+  initialize: function(conn, form) {
     Front.prototype.initialize.call(this, conn, form);
 
     this._onPropertyChange = this._onPropertyChange.bind(this);
     this.on("property-change", this._onPropertyChange);
   },
 
-  destroy: function () {
+  destroy: function() {
     this.off("property-change", this._onPropertyChange);
     Front.prototype.destroy.call(this);
   },
 
-  _onPropertyChange: function (property, value) {
+  _onPropertyChange: function(property, value) {
     this._form[property] = value;
   },
 
-  form: function (form, detail) {
+  form: function(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -122,14 +122,14 @@ const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
    * @return {Promise} A promise that will resolve to a string that
    * should be used to indent a block in this style sheet.
    */
-  guessIndentation: function () {
+  guessIndentation: function() {
     let prefIndent = getIndentationFromPrefs();
     if (prefIndent) {
       let {indentUnit, indentWithTabs} = prefIndent;
       return promise.resolve(indentWithTabs ? "\t" : " ".repeat(indentUnit));
     }
 
-    return (async function () {
+    return (async function() {
       let longStr = await this.getText();
       let source = await longStr.string();
 
@@ -146,7 +146,7 @@ exports.StyleSheetFront = StyleSheetFront;
  * The corresponding Front object for the StyleSheetsActor.
  */
 const StyleSheetsFront = FrontClassWithSpec(styleSheetsSpec, {
-  initialize: function (client, tabForm) {
+  initialize: function(client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.styleSheetsActor;
     this.manage(this);

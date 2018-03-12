@@ -48,19 +48,19 @@ exports.items = [
     description: l10n.lookup("resizeModeToggleDesc"),
     manual: l10n.lookupFormat("resizeModeManual2", [BRAND_SHORT_NAME]),
     state: {
-      isChecked: function (target) {
+      isChecked: function(target) {
         if (!target.tab) {
           return false;
         }
         return ResponsiveUIManager.isActiveForTab(target.tab);
       },
-      onChange: function (target, changeHandler) {
+      onChange: function(target, changeHandler) {
         if (target.tab) {
           ResponsiveUIManager.on("on", changeHandler);
           ResponsiveUIManager.on("off", changeHandler);
         }
       },
-      offChange: function (target, changeHandler) {
+      offChange: function(target, changeHandler) {
         // Do not check for target.tab as it may already be null during destroy
         ResponsiveUIManager.off("on", changeHandler);
         ResponsiveUIManager.off("off", changeHandler);

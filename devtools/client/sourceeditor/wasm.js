@@ -37,7 +37,7 @@ function getWasmLineNumberFormatter(subject) {
   let buffer =
     [codeOf0, codeOf0, codeOf0, codeOf0, codeOf0, codeOf0, codeOf0, codeOf0];
   let last0 = 7;
-  return function (number) {
+  return function(number) {
     let offset = lineToWasmOffset(subject, number - 1);
     if (offset === undefined) {
       return "";

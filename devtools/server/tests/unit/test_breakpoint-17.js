@@ -24,9 +24,9 @@ function run_test_with_server(server, callback) {
   initTestDebuggerServer(server);
   gDebuggee = addTestGlobal("test-breakpoints", server);
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-breakpoints",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_breakpoints_columns();
                            });
@@ -34,8 +34,8 @@ function run_test_with_server(server, callback) {
 }
 
 const code =
-"(" + function (global) {
-  global.foo = function () {
+"(" + function(global) {
+  global.foo = function() {
     Math.abs(-1); Math.log(0.5);
     debugger;
   };
@@ -62,13 +62,13 @@ function set_breakpoints(event, packet) {
   let first, second;
   let source = gThreadClient.source(packet.frame.where.source);
 
-  source.setBreakpoint(firstLocation, function ({ error, actualLocation },
+  source.setBreakpoint(firstLocation, function({ error, actualLocation },
                                         breakpointClient) {
     Assert.ok(!error, "Should not get an error setting the breakpoint");
     Assert.ok(!actualLocation, "Should not get an actualLocation");
     first = breakpointClient;
 
-    source.setBreakpoint(secondLocation, function ({ error, actualLocation },
+    source.setBreakpoint(secondLocation, function({ error, actualLocation },
                                                           breakpointClient) {
       Assert.ok(!error, "Should not get an error setting the breakpoint");
       Assert.ok(!actualLocation, "Should not get an actualLocation");
@@ -86,7 +86,7 @@ function test_different_actors(first, second) {
 }
 
 function test_remove_one(first, second) {
-  first.remove(function ({error}) {
+  first.remove(function({error}) {
     Assert.ok(!error, "Should not get an error removing a breakpoint");
 
     let hitSecond;

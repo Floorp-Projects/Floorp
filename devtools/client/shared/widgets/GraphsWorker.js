@@ -18,7 +18,7 @@ const { createTask } = require("resource://devtools/shared/worker/helper.js");
  * @param number interval
  * @param number duration
  */
-createTask(self, "plotTimestampsGraph", function ({ timestamps,
+createTask(self, "plotTimestampsGraph", function({ timestamps,
                                                     interval, duration }) {
   let plottedData = plotTimestamps(timestamps, interval);
   let plottedMinMaxSum = getMinMaxAvg(plottedData, timestamps, duration);

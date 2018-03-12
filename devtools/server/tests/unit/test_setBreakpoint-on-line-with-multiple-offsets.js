@@ -3,7 +3,7 @@
 var SOURCE_URL = getFileUrl("setBreakpoint-on-line-with-multiple-offsets.js");
 
 function run_test() {
-  return (async function () {
+  return (async function() {
     do_test_pending();
 
     DebuggerServer.registerModule("xpcshell-test/testactors");
@@ -32,7 +32,7 @@ function run_test() {
     Assert.ok(!packet.isPending);
     Assert.equal(false, "actualLocation" in packet);
 
-    packet = await executeOnNextTickAndWaitForPause(function () {
+    packet = await executeOnNextTickAndWaitForPause(function() {
       Cu.evalInSandbox("f()", global);
     }, client);
     Assert.equal(packet.type, "paused");
@@ -47,7 +47,7 @@ function run_test() {
     let variables = frame.environment.bindings.variables;
     Assert.equal(variables.i.value.type, "undefined");
 
-    packet = await executeOnNextTickAndWaitForPause(function () {
+    packet = await executeOnNextTickAndWaitForPause(function() {
       resume(threadClient);
     }, client);
     Assert.equal(packet.type, "paused");

@@ -24,7 +24,7 @@ const device2 = Object.assign({}, device, {
   name: "Test Device 2",
 });
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
@@ -89,7 +89,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   ok(!deviceOption2, "Test device 2 option removed");
 });
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 

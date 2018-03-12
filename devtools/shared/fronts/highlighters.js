@@ -11,13 +11,13 @@ const {
 
 const HighlighterFront = FrontClassWithSpec(highlighterSpec, {
   // Update the object given a form representation off the wire.
-  form: function (json) {
+  form: function(json) {
     this.actorID = json.actor;
     // FF42+ HighlighterActors starts exposing custom form, with traits object
     this.traits = json.traits || {};
   },
 
-  pick: custom(function (doFocus) {
+  pick: custom(function(doFocus) {
     if (doFocus && this.pickAndFocus) {
       return this.pickAndFocus();
     }

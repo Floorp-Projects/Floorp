@@ -44,7 +44,7 @@ function* testColorValueSpanClickWithoutNameChange(propEditor, view) {
 
   // The property-value-updated is emitted when the valueSpan markup is being
   // re-populated, which should not be the case when not modifying the property name
-  let onPropertyValueUpdated = function () {
+  let onPropertyValueUpdated = function() {
     ok(false, "The \"property-value-updated\" should not be emitted");
   };
   view.on("property-value-updated", onPropertyValueUpdated);

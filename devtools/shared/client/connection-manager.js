@@ -81,14 +81,14 @@ const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
 
 var ConnectionManager = {
   _connections: new Set(),
-  createConnection: function (host, port) {
+  createConnection: function(host, port) {
     let c = new Connection(host, port);
     c.once("destroy", (event) => this.destroyConnection(c));
     this._connections.add(c);
     this.emit("new", c);
     return c;
   },
-  destroyConnection: function (connection) {
+  destroyConnection: function(connection) {
     if (this._connections.has(connection)) {
       this._connections.delete(connection);
       if (connection.status != Connection.Status.DESTROYED) {
@@ -99,7 +99,7 @@ var ConnectionManager = {
   get connections() {
     return [...this._connections];
   },
-  getFreeTCPPort: function () {
+  getFreeTCPPort: function() {
     let serv = Cc["@mozilla.org/network/server-socket;1"]
                  .createInstance(Ci.nsIServerSocket);
     serv.init(-1, true, -1);
@@ -148,7 +148,7 @@ Connection.Events = {
 
 Connection.prototype = {
   logs: "",
-  log: function (str) {
+  log: function(str) {
     let d = new Date();
     let hours = ("0" + d.getHours()).slice(-2);
     let minutes = ("0" + d.getMinutes()).slice(-2);
@@ -246,7 +246,7 @@ Connection.prototype = {
     this.advertisement = null;
   },
 
-  disconnect: function (force) {
+  disconnect: function(force) {
     if (this.status == Connection.Status.DESTROYED) {
       return;
     }
@@ -261,7 +261,7 @@ Connection.prototype = {
     }
   },
 
-  connect: function (transport) {
+  connect: function(transport) {
     if (this.status == Connection.Status.DESTROYED) {
       return;
     }
@@ -285,7 +285,7 @@ Connection.prototype = {
     }
   },
 
-  destroy: function () {
+  destroy: function() {
     this.log("killing connection");
     clearTimeout(this._timeoutID);
     this.keepConnecting = false;
@@ -308,7 +308,7 @@ Connection.prototype = {
     return transport;
   },
 
-  _clientConnect: function () {
+  _clientConnect: function() {
     this._getTransport().then(transport => {
       if (!transport) {
         return;
@@ -335,7 +335,7 @@ Connection.prototype = {
     return this._status;
   },
 
-  _setStatus: function (value) {
+  _setStatus: function(value) {
     if (this._status && this._status == value) {
       return;
     }
@@ -344,7 +344,7 @@ Connection.prototype = {
     this.emit(Connection.Events.STATUS_CHANGED, value);
   },
 
-  _onDisconnected: function () {
+  _onDisconnected: function() {
     this._client = null;
     this._customTransport = null;
 
@@ -370,13 +370,13 @@ Connection.prototype = {
     this._setStatus(Connection.Status.DISCONNECTED);
   },
 
-  _onConnected: function () {
+  _onConnected: function() {
     this.log("connected");
     clearTimeout(this._timeoutID);
     this._setStatus(Connection.Status.CONNECTED);
   },
 
-  _onTimeout: function () {
+  _onTimeout: function() {
     this.log("connection timeout. Possible causes: didn't click on 'accept' (prompt).");
     this.emit(Connection.Events.TIMEOUT);
     this.disconnect();

@@ -40,7 +40,7 @@ var OverviewView = {
   /**
    * Sets up the view with event binding.
    */
-  initialize: function () {
+  initialize: function() {
     this.graphs = new GraphsController({
       root: $("#overview-pane"),
       getFilter: () => PerformanceController.getPref("hidden-markers"),
@@ -104,7 +104,7 @@ var OverviewView = {
    * timeline, ticks or memory data to show, so just block rendering and hide
    * the panel.
    */
-  disable: function () {
+  disable: function() {
     this._disabled = true;
     this.graphs.disableAll();
   },
@@ -114,7 +114,7 @@ var OverviewView = {
    *
    * @return boolean
    */
-  isDisabled: function () {
+  isDisabled: function() {
     return this._disabled;
   },
 
@@ -124,7 +124,7 @@ var OverviewView = {
    * @param object interval
    *        The { startTime, endTime }, in milliseconds.
    */
-  setTimeInterval: function (interval, options = {}) {
+  setTimeInterval: function(interval, options = {}) {
     let recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
       throw new Error("A recording should be available in order to set the selection.");
@@ -146,7 +146,7 @@ var OverviewView = {
    * @return object
    *         The { startTime, endTime }, in milliseconds.
    */
-  getTimeInterval: function () {
+  getTimeInterval: function() {
     let recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
       throw new Error("A recording should be available in order to get the selection.");
@@ -198,7 +198,7 @@ var OverviewView = {
   /**
    * Called to refresh the timer to keep firing _onRecordingTick.
    */
-  _prepareNextTick: function () {
+  _prepareNextTick: function() {
     // Check here to see if there's still a _timeoutId, incase
     // `stop` was called before the _prepareNextTick call was executed.
     if (this.isRendering()) {
@@ -243,14 +243,14 @@ var OverviewView = {
   /**
    * Start the polling for rendering the overview graph.
    */
-  _startPolling: function () {
+  _startPolling: function() {
     this._timeoutId = setTimeout(this._onRecordingTick, this.OVERVIEW_UPDATE_INTERVAL);
   },
 
   /**
    * Stop the polling for rendering the overview graph.
    */
-  _stopPolling: function () {
+  _stopPolling: function() {
     clearTimeout(this._timeoutId);
     this._timeoutId = null;
   },
@@ -258,7 +258,7 @@ var OverviewView = {
   /**
    * Whether or not the overview view is in a state of polling rendering.
    */
-  isRendering: function () {
+  isRendering: function() {
     return !!this._timeoutId;
   },
 
@@ -275,7 +275,7 @@ var OverviewView = {
    * Fired when the graph selection has changed. Called by
    * mouseup and scroll events.
    */
-  _onGraphSelecting: function () {
+  _onGraphSelecting: function() {
     if (this._stopSelectionChangeEventPropagation) {
       return;
     }
@@ -283,7 +283,7 @@ var OverviewView = {
     this.emit(EVENTS.UI_OVERVIEW_RANGE_SELECTED, this.getTimeInterval());
   },
 
-  _onGraphRendered: function (_, graphName) {
+  _onGraphRendered: function(_, graphName) {
     switch (graphName) {
       case "timeline":
         this.emit(EVENTS.UI_MARKERS_GRAPH_RENDERED);
@@ -317,7 +317,7 @@ var OverviewView = {
     }
   }),
 
-  _setGraphVisibilityFromRecordingFeatures: function (recording) {
+  _setGraphVisibilityFromRecordingFeatures: function(recording) {
     for (let [graphName, requirements] of Object.entries(GRAPH_REQUIREMENTS)) {
       this.graphs.enable(graphName,
                          PerformanceController.isFeatureSupported(requirements.features));
@@ -330,7 +330,7 @@ var OverviewView = {
    *
    * @return {boolean}
    */
-  isRealtimeRenderingEnabled: function () {
+  isRealtimeRenderingEnabled: function() {
     return this._multiprocessData.enabled;
   },
 
@@ -341,7 +341,7 @@ var OverviewView = {
    *
    * @param {RecordingModel} recording
    */
-  _showGraphsPanel: function (recording) {
+  _showGraphsPanel: function(recording) {
     this._setGraphVisibilityFromRecordingFeatures(recording);
     $("#overview-pane").classList.remove("hidden");
   },
@@ -349,14 +349,14 @@ var OverviewView = {
   /**
    * Hide the graphs container completely.
    */
-  _hideGraphsPanel: function () {
+  _hideGraphsPanel: function() {
     $("#overview-pane").classList.add("hidden");
   },
 
   /**
    * Called when `devtools.theme` changes.
    */
-  _onThemeChanged: function (_, theme) {
+  _onThemeChanged: function(_, theme) {
     this.graphs.setTheme({ theme, redraw: true });
   },
 

@@ -23,7 +23,7 @@ const SplitBox = createFactory(require("devtools/client/shared/components/splitt
 const RequestList = createFactory(require("./RequestList"));
 const Toolbar = createFactory(require("./Toolbar"));
 
-loader.lazyGetter(this, "NetworkDetailsPanel", function () {
+loader.lazyGetter(this, "NetworkDetailsPanel", function() {
   return createFactory(require("./NetworkDetailsPanel"));
 });
 

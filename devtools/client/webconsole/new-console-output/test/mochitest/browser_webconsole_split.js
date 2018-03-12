@@ -11,7 +11,7 @@ const {Toolbox} = require("devtools/client/framework/toolbox");
 // Test is slow on Linux EC2 instances - Bug 962931
 requestLongerTimeout(2);
 
-add_task(async function () {
+add_task(async function() {
   let toolbox;
 
   await addTab(TEST_URI);

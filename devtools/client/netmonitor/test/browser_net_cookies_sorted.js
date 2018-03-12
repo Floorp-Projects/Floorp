@@ -6,7 +6,7 @@
 /**
  * Tests if Request-Cookies and Response-Cookies are sorted in Cookies tab.
  */
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(SIMPLE_UNSORTED_COOKIES_SJS);
   info("Starting test... ");
 
@@ -35,7 +35,7 @@ add_task(async function () {
                              "foo", "httpOnly", "value", "tom", "httpOnly", "value",
                              "Request cookies", "bob", "foo", "tom"];
   let labelCells = document.querySelectorAll(".treeLabelCell");
-  labelCells.forEach(function (val, index) {
+  labelCells.forEach(function(val, index) {
     is(val.innerText, expectedLabelValues[index],
     "Actual label value " + val.innerText + " not equal to expected label value "
     + expectedLabelValues[index]);

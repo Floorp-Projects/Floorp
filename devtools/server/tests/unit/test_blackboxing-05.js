@@ -16,10 +16,10 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(
       gClient, "test-black-box",
-      function (response, tabClient, threadClient) {
+      function(response, tabClient, threadClient) {
         gThreadClient = threadClient;
         // XXX: We have to do an executeSoon so that the error isn't caught and
         // reported by DebuggerClient.requester (because we are using the local
@@ -53,7 +53,7 @@ function test_black_box() {
   Cu.evalInSandbox(
     "" + function runTest() {                   // line 1
       doStuff(                                  // line 2
-        function (n) {                          // line 3
+        function(n) {                          // line 3
           debugger;                             // line 4
         }                                       // line 5
       );                                        // line 6
@@ -69,17 +69,17 @@ function test_black_box() {
 }
 
 function test_black_box_exception() {
-  gThreadClient.getSources(function ({error, sources}) {
+  gThreadClient.getSources(function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
     let sourceClient = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 
-    sourceClient.blackBox(function ({error}) {
+    sourceClient.blackBox(function({error}) {
       Assert.ok(!error, "Should not get an error: " + error);
       gThreadClient.pauseOnExceptions(true);
 
-      gClient.addOneTimeListener("paused", function (event, packet) {
+      gClient.addOneTimeListener("paused", function(event, packet) {
         Assert.equal(packet.frame.where.source.url, SOURCE_URL,
                      "We shouldn't pause while in the black boxed source.");
         finishClient(gClient);

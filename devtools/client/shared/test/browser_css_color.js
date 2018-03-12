@@ -65,21 +65,21 @@ function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
   let target;
   let ctx = canvas.getContext("2d");
 
-  let clearCanvas = function () {
+  let clearCanvas = function() {
     canvas.width = 1;
   };
-  let setColor = function (color) {
+  let setColor = function(color) {
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, 1, 1);
   };
-  let setTargetColor = function () {
+  let setTargetColor = function() {
     clearCanvas();
     // All colors have rgba so we can use this to compare against.
     setColor(rgba);
     let [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
     target = {r: r, g: g, b: b, a: a};
   };
-  let test = function (color, type) {
+  let test = function(color, type) {
     // hsla -> rgba -> hsla produces inaccurate results so we
     // need some tolerence here.
     let tolerance = 3;

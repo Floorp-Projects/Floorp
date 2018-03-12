@@ -16,9 +16,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-black-box",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              testBlackBox();
                            });
@@ -29,7 +29,7 @@ function run_test() {
 const BLACK_BOXED_URL = "http://example.com/black-boxed.min.js";
 const SOURCE_URL = "http://example.com/source.js";
 
-const testBlackBox = async function () {
+const testBlackBox = async function() {
   await executeOnNextTickAndWaitForPause(evalCode, gClient);
 
   const { sources } = await getSources(gThreadClient);

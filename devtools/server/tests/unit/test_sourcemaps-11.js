@@ -17,10 +17,10 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(
       gClient, "test-source-map",
-      function (response, tabClient, threadClient) {
+      function(response, tabClient, threadClient) {
         gThreadClient = threadClient;
         Promise.resolve(define_code())
           .then(run_code)
@@ -62,8 +62,8 @@ function define_code() {
 
 function run_code() {
   const d = defer();
-  gClient.addOneTimeListener("paused", function () {
-    gThreadClient.getFrames(0, 3, function (response) {
+  gClient.addOneTimeListener("paused", function() {
+    gThreadClient.getFrames(0, 3, function(response) {
       d.resolve(response);
       gThreadClient.resume();
     });

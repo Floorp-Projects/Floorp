@@ -156,7 +156,7 @@ var tests = [
     template: '<p save="${element}">${name}</p>',
     data: { name: "pass 8" },
     result: "<p>pass 8</p>",
-    also: function (options) {
+    also: function(options) {
       ok(options.data.element.innerHTML, "pass 9", "saveElement saved");
       delete options.data.element;
     }
@@ -167,7 +167,7 @@ var tests = [
     template: '<p id="pass9">${adjust(__element)}</p>',
     options: { allowEval: true },
     data: {
-      adjust: function (element) {
+      adjust: function(element) {
         is("pass9", element.id, "useElement adjust");
         return "pass 9b";
       }
@@ -221,7 +221,7 @@ var tests = [
     template: "<p>${foo()}</p>",
     options: { allowEval: true },
     data: {
-      foo: function () {}
+      foo: function() {}
     },
     result: "<p>undefined</p>"
   }),

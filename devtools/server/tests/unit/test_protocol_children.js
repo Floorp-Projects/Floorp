@@ -91,25 +91,25 @@ const childSpec = protocol.generateActorSpec({
 
 var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   // Actors returned by this actor should be owned by the root actor.
-  marshallPool: function () {
+  marshallPool: function() {
     return this.parent();
   },
 
-  toString: function () {
+  toString: function() {
     return "[ChildActor " + this.childID + "]";
   },
 
-  initialize: function (conn, id) {
+  initialize: function(conn, id) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.childID = id;
   },
 
-  destroy: function () {
+  destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
     this.destroyed = true;
   },
 
-  form: function (detail) {
+  form: function(detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -120,23 +120,23 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
     };
   },
 
-  echo: function (str) {
+  echo: function(str) {
     return str;
   },
 
-  getDetail1: function () {
+  getDetail1: function() {
     return this;
   },
 
-  getDetail2: function () {
+  getDetail2: function() {
     return this;
   },
 
-  getIDDetail: function () {
+  getIDDetail: function() {
     return this;
   },
 
-  getIntArray: function (inputArray) {
+  getIntArray: function(inputArray) {
     // Test that protocol.js converts an iterator to an array.
     let f = function* () {
       for (let i of inputArray) {
@@ -146,11 +146,11 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
     return f();
   },
 
-  getSibling: function (id) {
+  getSibling: function(id) {
     return this.parent().getChild(id);
   },
 
-  emitEvents: function () {
+  emitEvents: function() {
     EventEmitter.emit(this, "event1", 1, 2, 3);
     EventEmitter.emit(this, "event2", 4, 5, 6);
     EventEmitter.emit(this, "named-event", 1, 2, 3);
@@ -158,28 +158,28 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
     EventEmitter.emit(this, "array-object-event", [this]);
   },
 
-  release: function () { },
+  release: function() { },
 });
 
 var ChildFront = protocol.FrontClassWithSpec(childSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   },
 
-  destroy: function () {
+  destroy: function() {
     this.destroyed = true;
     protocol.Front.prototype.destroy.call(this);
   },
 
-  marshallPool: function () {
+  marshallPool: function() {
     return this.parent();
   },
 
-  toString: function () {
+  toString: function() {
     return "[child front " + this.childID + "]";
   },
 
-  form: function (form, detail) {
+  form: function(form, detail) {
     if (detail === "actorid") {
       return;
     }
@@ -187,17 +187,17 @@ var ChildFront = protocol.FrontClassWithSpec(childSpec, {
     this.detail = form.detail;
   },
 
-  onEvent1: preEvent("event1", function (a, b, c) {
+  onEvent1: preEvent("event1", function(a, b, c) {
     this.event1arg3 = c;
   }),
 
-  onEvent2a: preEvent("event2", function (a, b, c) {
+  onEvent2a: preEvent("event2", function(a, b, c) {
     return Promise.resolve().then(() => {
       this.event2arg3 = c;
     });
   }),
 
-  onEvent2b: preEvent("event2", function (a, b, c) {
+  onEvent2b: preEvent("event2", function(a, b, c) {
     this.event2arg2 = b;
   }),
 });
@@ -238,11 +238,11 @@ const rootSpec = protocol.generateActorSpec({
 
 var rootActor = null;
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  toString: function () {
+  toString: function() {
     return "[root actor]";
   },
 
-  initialize: function (conn) {
+  initialize: function(conn) {
     rootActor = this;
     this.actorID = "root";
     this._children = {};
@@ -253,7 +253,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   sayHello: simpleHello,
 
-  getChild: function (id) {
+  getChild: function(id) {
     if (id in this._children) {
       return this._children[id];
     }
@@ -262,11 +262,11 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return child;
   },
 
-  getChildren: function (ids) {
+  getChildren: function(ids) {
     return ids.map(id => this.getChild(id));
   },
 
-  getChildren2: function (ids) {
+  getChildren2: function(ids) {
     let f = function* () {
       for (let c of ids) {
         yield c;
@@ -275,7 +275,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return f();
   },
 
-  getManyChildren: function () {
+  getManyChildren: function() {
     return {
       // note that this isn't in the specialization array.
       foo: "bar",
@@ -285,14 +285,14 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 
   // This should remind you of a pause actor.
-  getTemporaryChild: function (id) {
+  getTemporaryChild: function(id) {
     if (!this._temporaryHolder) {
       this._temporaryHolder = this.manage(new protocol.Actor(this.conn));
     }
     return new ChildActor(this.conn, id);
   },
 
-  clearTemporaryChildren: function (id) {
+  clearTemporaryChildren: function(id) {
     if (!this._temporaryHolder) {
       return;
     }
@@ -302,17 +302,17 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  toString: function () {
+  toString: function() {
     return "[root front]";
   },
-  initialize: function (client) {
+  initialize: function(client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
     // Root actor owns itself.
     this.manage(this);
   },
 
-  getTemporaryChild: protocol.custom(function (id) {
+  getTemporaryChild: protocol.custom(function(id) {
     if (!this._temporaryHolder) {
       this._temporaryHolder = new protocol.Front(this.conn);
       this._temporaryHolder.actorID = this.actorID + "_temp";
@@ -323,7 +323,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
     impl: "_getTemporaryChild"
   }),
 
-  clearTemporaryChildren: protocol.custom(function () {
+  clearTemporaryChildren: protocol.custom(function() {
     if (!this._temporaryHolder) {
       return Promise.resolve(undefined);
     }
@@ -519,7 +519,7 @@ function run_test() {
         set.delete("array-object-event");
       });
 
-      let fail = function () {
+      let fail = function() {
         do_throw("Unexpected event");
       };
       ret[1].on("event1", fail);

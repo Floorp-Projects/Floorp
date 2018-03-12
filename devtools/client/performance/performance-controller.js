@@ -155,7 +155,7 @@ var PerformanceController = {
   /**
    * Remove events handled by the PerformanceController
    */
-  destroy: function () {
+  destroy: function() {
     this._telemetry.destroy();
     this._prefs.off("pref-changed", this._onPrefChanged);
     this._prefs.unregisterObserver();
@@ -183,21 +183,21 @@ var PerformanceController = {
    * start handling backend events before the view finishes if the event
    * listeners are added too soon.
    */
-  enableFrontEventListeners: function () {
+  enableFrontEventListeners: function() {
     gFront.on("*", this._onFrontEvent);
   },
 
   /**
    * Disables front event listeners.
    */
-  disableFrontEventListeners: function () {
+  disableFrontEventListeners: function() {
     gFront.off("*", this._onFrontEvent);
   },
 
   /**
    * Returns the current devtools theme.
    */
-  getTheme: function () {
+  getTheme: function() {
     return Services.prefs.getCharPref("devtools.theme");
   },
 
@@ -209,7 +209,7 @@ var PerformanceController = {
    * @param string prefName
    * @return boolean
    */
-  getOption: function (prefName) {
+  getOption: function(prefName) {
     return ToolbarView.optionsView.getPref(prefName);
   },
 
@@ -220,7 +220,7 @@ var PerformanceController = {
    * @param string prefName
    * @return any
    */
-  getPref: function (prefName) {
+  getPref: function(prefName) {
     return this._prefs[prefName];
   },
 
@@ -231,7 +231,7 @@ var PerformanceController = {
    * @param string prefName
    * @param any prefValue
    */
-  setPref: function (prefName, prefValue) {
+  setPref: function(prefName, prefValue) {
     this._prefs[prefName] = prefValue;
   },
 
@@ -356,7 +356,7 @@ var PerformanceController = {
    * are when clearing the view.
    * @param PerformanceRecording recording
    */
-  setCurrentRecording: function (recording) {
+  setCurrentRecording: function(recording) {
     if (this._currentRecording !== recording) {
       this._currentRecording = recording;
       this.emit(EVENTS.RECORDING_SELECTED, recording);
@@ -367,7 +367,7 @@ var PerformanceController = {
    * Gets the currently active PerformanceRecording.
    * @return PerformanceRecording
    */
-  getCurrentRecording: function () {
+  getCurrentRecording: function() {
     return this._currentRecording;
   },
 
@@ -375,7 +375,7 @@ var PerformanceController = {
    * Get most recently added recording that was triggered manually (via UI).
    * @return PerformanceRecording
    */
-  getLatestManualRecording: function () {
+  getLatestManualRecording: function() {
     for (let i = this._recordings.length - 1; i >= 0; i--) {
       let model = this._recordings[i];
       if (!model.isConsole() && !model.isImported()) {
@@ -389,7 +389,7 @@ var PerformanceController = {
    * Fired from RecordingsView, we listen on the PerformanceController so we can
    * set it here and re-emit on the controller, where all views can listen.
    */
-  _onRecordingSelectFromView: function (_, recording) {
+  _onRecordingSelectFromView: function(_, recording) {
     this.setCurrentRecording(recording);
   },
 
@@ -397,14 +397,14 @@ var PerformanceController = {
    * Fired when the ToolbarView fires a PREF_CHANGED event.
    * with the value.
    */
-  _onPrefChanged: function (_, prefName, prefValue) {
+  _onPrefChanged: function(_, prefName, prefValue) {
     this.emit(EVENTS.PREF_CHANGED, prefName, prefValue);
   },
 
   /*
    * Called when the developer tools theme changes.
    */
-  _onThemeChanged: function () {
+  _onThemeChanged: function() {
     let newValue = Services.prefs.getCharPref("devtools.theme");
     this.emit(EVENTS.THEME_CHANGED, newValue);
   },
@@ -412,7 +412,7 @@ var PerformanceController = {
   /**
    * Fired from the front on any event. Propagates to other handlers from here.
    */
-  _onFrontEvent: function (eventName, ...data) {
+  _onFrontEvent: function(eventName, ...data) {
     switch (eventName) {
       case "profiler-status":
         let [profilerStatus] = data;
@@ -433,7 +433,7 @@ var PerformanceController = {
    *
    * @param {PerformanceRecordingFront} recording
    */
-  _addRecordingIfUnknown: function (recording) {
+  _addRecordingIfUnknown: function(recording) {
     if (!this._recordings.includes(recording)) {
       this._recordings.push(recording);
       this.emit(EVENTS.RECORDING_ADDED, recording);
@@ -444,28 +444,28 @@ var PerformanceController = {
    * Takes a recording and returns a value between 0 and 1 indicating how much
    * of the buffer is used.
    */
-  getBufferUsageForRecording: function (recording) {
+  getBufferUsageForRecording: function(recording) {
     return gFront.getBufferUsageForRecording(recording);
   },
 
   /**
    * Returns a boolean indicating if any recordings are currently in progress or not.
    */
-  isRecording: function () {
+  isRecording: function() {
     return this._recordings.some(r => r.isRecording());
   },
 
   /**
    * Returns the internal store of recording models.
    */
-  getRecordings: function () {
+  getRecordings: function() {
     return this._recordings;
   },
 
   /**
    * Returns traits from the front.
    */
-  getTraits: function () {
+  getTraits: function() {
     return gFront.traits;
   },
 
@@ -480,7 +480,7 @@ var PerformanceController = {
    *
    * @return boolean
    */
-  isFeatureSupported: function (features) {
+  isFeatureSupported: function(features) {
     if (!features) {
       return true;
     }
@@ -502,7 +502,7 @@ var PerformanceController = {
    *
    * @param {Array<PerformanceRecordingFront>} recordings
    */
-  populateWithRecordings: function (recordings = []) {
+  populateWithRecordings: function(recordings = []) {
     for (let recording of recordings) {
       PerformanceController._addRecordingIfUnknown(recording);
     }
@@ -516,7 +516,7 @@ var PerformanceController = {
    *
    * @return {object}
    */
-  getMultiprocessStatus: function () {
+  getMultiprocessStatus: function() {
     // If testing, set enabled to true so we have realtime rendering tests
     // in non-e10s. This function is overridden wholesale in tests
     // when we want to test multiprocess support
@@ -554,7 +554,7 @@ var PerformanceController = {
    * "disabled" if e10s is possible on the platform and just not on, or "unsupported"
    * if e10s is not possible on the platform. If e10s is on, no attribute is set.
    */
-  _setMultiprocessAttributes: function () {
+  _setMultiprocessAttributes: function() {
     let { enabled } = this.getMultiprocessStatus();
     if (!enabled) {
       $("#performance-view").setAttribute("e10s", "disabled");
@@ -564,7 +564,7 @@ var PerformanceController = {
   /**
    * Pipes an event from some source to the PerformanceController.
    */
-  _pipe: function (eventName, ...data) {
+  _pipe: function(eventName, ...data) {
     this.emit(eventName, ...data);
   },
 

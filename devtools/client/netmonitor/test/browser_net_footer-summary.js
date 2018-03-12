@@ -7,7 +7,7 @@
  * Test if the summary text displayed in the network requests menu footer is correct.
  */
 
-add_task(async function () {
+add_task(async function() {
   const {
     getFormattedSize,
     getFormattedTime
@@ -31,7 +31,7 @@ add_task(async function () {
   for (let i = 0; i < 2; i++) {
     info(`Performing requests in batch #${i}`);
     let wait = waitForNetworkEvents(monitor, 8);
-    await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+    await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
       content.wrappedJSObject.performRequests('{ "getMedia": true, "getFlash": true }');
     });
     await wait;

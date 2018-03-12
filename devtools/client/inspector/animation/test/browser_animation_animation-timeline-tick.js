@@ -16,7 +16,7 @@ const { findOptimalTimeInterval } =
 // AnimationTimeTickList component.
 const TIME_GRADUATION_MIN_SPACING = 40;
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   const { animationInspector, inspector, panel } = await openAnimationInspector();
   const timeScale = new TimeScale(animationInspector.animations);

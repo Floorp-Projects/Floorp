@@ -14,7 +14,7 @@ const {
 } = require("./snapshot");
 const VALID_EXPORT_STATES = [states.SAVED, states.READ];
 
-exports.pickFileAndExportSnapshot = function (snapshot) {
+exports.pickFileAndExportSnapshot = function(snapshot) {
   return function* (dispatch, getState) {
     let outputFile = yield openFilePicker({
       title: L10N.getFormatStr("snapshot.io.save.window"),
@@ -31,7 +31,7 @@ exports.pickFileAndExportSnapshot = function (snapshot) {
   };
 };
 
-const exportSnapshot = exports.exportSnapshot = function (snapshot, dest) {
+const exportSnapshot = exports.exportSnapshot = function(snapshot, dest) {
   return function* (dispatch, getState) {
     dispatch({ type: actions.EXPORT_SNAPSHOT_START, snapshot });
 
@@ -49,7 +49,7 @@ const exportSnapshot = exports.exportSnapshot = function (snapshot, dest) {
   };
 };
 
-exports.pickFileAndImportSnapshotAndCensus = function (heapWorker) {
+exports.pickFileAndImportSnapshotAndCensus = function(heapWorker) {
   return function* (dispatch, getState) {
     let input = yield openFilePicker({
       title: L10N.getFormatStr("snapshot.io.import.window"),
@@ -65,7 +65,7 @@ exports.pickFileAndImportSnapshotAndCensus = function (heapWorker) {
   };
 };
 
-const importSnapshotAndCensus = function (heapWorker, path) {
+const importSnapshotAndCensus = function(heapWorker, path) {
   return function* (dispatch, getState) {
     const snapshot = immutableUpdate(createSnapshot(getState()), {
       path,

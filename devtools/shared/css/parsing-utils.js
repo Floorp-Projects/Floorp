@@ -546,7 +546,7 @@ RuleRewriter.prototype = {
    *
    * @param {String} inputString the input to use
    */
-  startInitialization: function (inputString) {
+  startInitialization: function(inputString) {
     this.inputString = inputString;
     // Whether there are any newlines in the input text.
     this.hasNewLine = /[\r\n]/.test(this.inputString);
@@ -563,7 +563,7 @@ RuleRewriter.prototype = {
    *
    * @param {Number} index The index of the property to modify
    */
-  completeInitialization: function (index) {
+  completeInitialization: function(index) {
     if (index < 0) {
       throw new Error("Invalid index " + index + ". Expected positive integer");
     }
@@ -589,7 +589,7 @@ RuleRewriter.prototype = {
    * @param {Number} offset the offset at which to compute the indentation
    * @return {String} the indentation at the indicated position
    */
-  getIndentation: function (string, offset) {
+  getIndentation: function(string, offset) {
     let originalOffset = offset;
     for (--offset; offset >= 0; --offset) {
       let c = string[offset];
@@ -622,7 +622,7 @@ RuleRewriter.prototype = {
    *                  where |text| is the text that has been rewritten
    *                  to be "lexically safe".
    */
-  sanitizePropertyValue: function (text) {
+  sanitizePropertyValue: function(text) {
     // Start by stripping any trailing ";".  This is done here to
     // avoid the case where the user types "url(" (which is turned
     // into "url(;" by the rule view before coming here), being turned
@@ -734,7 +734,7 @@ RuleRewriter.prototype = {
    * @param {Number} index the index at which to start
    * @return {Number} index of the first non-whitespace character, or -1
    */
-  skipWhitespaceBackward: function (string, index) {
+  skipWhitespaceBackward: function(string, index) {
     for (--index;
          index >= 0 && (string[index] === " " || string[index] === "\t");
          --index) {
@@ -750,7 +750,7 @@ RuleRewriter.prototype = {
    *                       terminate.  It might be invalid, so this
    *                       function must check for that.
    */
-  maybeTerminateDecl: function (index) {
+  maybeTerminateDecl: function(index) {
     if (index < 0 || index >= this.declarations.length
         // No need to rewrite declarations in comments.
         || ("commentOffsets" in this.declarations[index])) {
@@ -798,7 +798,7 @@ RuleRewriter.prototype = {
    * @param {Number} index The index of the property.
    * @return {String} The sanitized text.
    */
-  sanitizeText: function (text, index) {
+  sanitizeText: function(text, index) {
     let [anySanitized, sanitizedText] = this.sanitizePropertyValue(text);
     if (anySanitized) {
       this.changedDeclarations[index] = sanitizedText;
@@ -813,7 +813,7 @@ RuleRewriter.prototype = {
    * @param {String} name current name of the property
    * @param {String} newName new name of the property
    */
-  renameProperty: function (index, name, newName) {
+  renameProperty: function(index, name, newName) {
     this.completeInitialization(index);
     this.result += CSS.escape(newName);
     // We could conceivably compute the name offsets instead so we
@@ -829,7 +829,7 @@ RuleRewriter.prototype = {
    * @param {Boolean} isEnabled true if the property should be enabled;
    *                        false if it should be disabled
    */
-  setPropertyEnabled: function (index, name, isEnabled) {
+  setPropertyEnabled: function(index, name, isEnabled) {
     this.completeInitialization(index);
     const decl = this.decl;
     let copyOffset = decl.offsets[1];
@@ -883,7 +883,7 @@ RuleRewriter.prototype = {
    *         that holds the default indentation that should be used
    *         for edits to the rule.
    */
-  getDefaultIndentation: function () {
+  getDefaultIndentation: function() {
     return this.rule.parentStyleSheet.guessIndentation();
   },
 
@@ -966,7 +966,7 @@ RuleRewriter.prototype = {
    * @param {Boolean} enabled True if the new property should be
    *                          enabled, false if disabled
    */
-  createProperty: function (index, name, value, priority, enabled) {
+  createProperty: function(index, name, value, priority, enabled) {
     this.editPromise = this.internalCreateProperty(index, name, value,
                                                    priority, enabled);
   },
@@ -984,7 +984,7 @@ RuleRewriter.prototype = {
    * @param {String} priority the property's priority, either the empty
    *                          string or "important"
    */
-  setProperty: function (index, name, value, priority) {
+  setProperty: function(index, name, value, priority) {
     this.completeInitialization(index);
     // We might see a "set" on a previously non-existent property; in
     // that case, act like "create".
@@ -1012,7 +1012,7 @@ RuleRewriter.prototype = {
    * @param {Number} index index of the property in the rule.
    * @param {String} name the name of the property to remove
    */
-  removeProperty: function (index, name) {
+  removeProperty: function(index, name) {
     this.completeInitialization(index);
 
     // If asked to remove a property that does not exist, bail out.
@@ -1059,7 +1059,7 @@ RuleRewriter.prototype = {
    * @param {Number} copyOffset Offset into |inputString| of the
    *        final text to copy to the output string.
    */
-  completeCopying: function (copyOffset) {
+  completeCopying: function(copyOffset) {
     // Add the trailing text.
     this.result += this.inputString.substring(copyOffset);
   },
@@ -1070,7 +1070,7 @@ RuleRewriter.prototype = {
    * @return {Promise} A promise which will be resolved when the modifications
    *         are complete.
    */
-  apply: function () {
+  apply: function() {
     return promise.resolve(this.editPromise).then(() => {
       return this.rule.setRuleText(this.result);
     });
@@ -1086,7 +1086,7 @@ RuleRewriter.prototype = {
    *                  whose value is the new text of the property.
    *                  |text| is the rewritten text of the rule.
    */
-  getResult: function () {
+  getResult: function() {
     return {changed: this.changedDeclarations, text: this.result};
   },
 };

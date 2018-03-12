@@ -23,7 +23,7 @@ const TEST_IMAGE = "http://example.com/browser/devtools/client/webconsole/" +
 
 const ObjectClient = require("devtools/shared/client/object-client");
 
-add_task(async function () {
+add_task(async function() {
   await addTab(TEST_URI);
 
   let opened = waitForBrowserConsole();

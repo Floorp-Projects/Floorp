@@ -80,7 +80,7 @@ add_task(function* () {
   is(pushURL.textContent, FAKE_ENDPOINT, "The push service URL looks correct");
 
   // Unsubscribe from the push service.
-  ContentTask.spawn(swTab.linkedBrowser, {}, function () {
+  ContentTask.spawn(swTab.linkedBrowser, {}, function() {
     let win = content.wrappedJSObject;
     return win.sub.unsubscribe();
   });

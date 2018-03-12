@@ -77,7 +77,7 @@ function checkResults(histIdFocus, Telemetry) {
     if (histId.endsWith("OPENED_COUNT")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element === true;
       });
 
@@ -85,7 +85,7 @@ function checkResults(histIdFocus, Telemetry) {
     } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element > 0;
       });
 

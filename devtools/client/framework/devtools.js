@@ -396,7 +396,7 @@ DevTools.prototype = {
    * @param {Object} state
    *                 A SessionStore state object that gets modified by reference
    */
-  saveDevToolsSession: function (state) {
+  saveDevToolsSession: function(state) {
     state.browserConsole = HUDService.getBrowserConsoleSessionState();
     state.browserToolbox = BrowserToolboxProcess.getBrowserToolboxSessionState();
 
@@ -410,7 +410,7 @@ DevTools.prototype = {
   /**
    * Restore the devtools session state as provided by SessionStore.
    */
-  restoreDevToolsSession: function ({scratchpads, browserConsole, browserToolbox}) {
+  restoreDevToolsSession: function({scratchpads, browserConsole, browserToolbox}) {
     if (scratchpads) {
       ScratchpadManager.restoreSession(scratchpads);
     }
@@ -573,7 +573,7 @@ DevTools.prototype = {
    *
    * @return {TabTarget} A target object
    */
-  getTargetForTab: function (tab) {
+  getTargetForTab: function(tab) {
     return TargetFactory.forTab(tab);
   },
 
@@ -584,7 +584,7 @@ DevTools.prototype = {
    * web-extensions need to use dedicated instances of TabTarget and cannot reuse the
    * cached instances managed by DevTools target factory.
    */
-  createTargetForTab: function (tab) {
+  createTargetForTab: function(tab) {
     return new TabTarget(tab);
   },
 
@@ -592,7 +592,7 @@ DevTools.prototype = {
    * Compatibility layer for web-extensions. Used by DevToolsShim for
    * browser/components/extensions/ext-devtools-inspectedWindow.js
    */
-  createWebExtensionInspectedWindowFront: function (tabTarget) {
+  createWebExtensionInspectedWindowFront: function(tabTarget) {
     return new WebExtensionInspectedWindowFront(tabTarget.client, tabTarget.form);
   },
 
@@ -600,7 +600,7 @@ DevTools.prototype = {
    * Compatibility layer for web-extensions. Used by DevToolsShim for
    * toolkit/components/extensions/ext-c-toolkit.js
    */
-  openBrowserConsole: function () {
+  openBrowserConsole: function() {
     let {HUDService} = require("devtools/client/webconsole/hudservice");
     HUDService.openBrowserConsoleOrFocus();
   },

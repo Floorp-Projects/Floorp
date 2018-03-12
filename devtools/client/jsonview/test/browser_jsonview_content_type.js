@@ -60,7 +60,7 @@ add_task(function* () {
   }
 
   // Restore old pref
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     MockFilePicker.cleanup();
     SpecialPowers.setBoolPref("browser.download.useDownloadDir", useDownloadDir);
   });
@@ -68,13 +68,13 @@ add_task(function* () {
 
 function testType(isValid, type, params = "") {
   const TEST_JSON_URL = "data:" + type + params + ",[1,2,3]";
-  return addJsonViewTab(TEST_JSON_URL).then(async function () {
+  return addJsonViewTab(TEST_JSON_URL).then(async function() {
     ok(isValid, "The JSON Viewer should only load for valid content types.");
     is(await evalInContent("document.contentType"), type, "Got the right content type");
 
     let count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
     is(count, 3, "There must be expected number of rows");
-  }, function () {
+  }, function() {
     ok(!isValid, "The JSON Viewer should only not load for invalid content types.");
   });
 }

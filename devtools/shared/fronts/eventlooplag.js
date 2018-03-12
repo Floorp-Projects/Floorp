@@ -7,7 +7,7 @@ const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const { eventLoopLagSpec } = require("devtools/shared/specs/eventlooplag");
 
 exports.EventLoopLagFront = FrontClassWithSpec(eventLoopLagSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.eventLoopLagActor;
     this.manage(this);

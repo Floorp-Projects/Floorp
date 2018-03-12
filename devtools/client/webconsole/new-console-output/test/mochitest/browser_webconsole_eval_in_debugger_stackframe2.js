@@ -14,7 +14,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-eval-in-stackframe.html";
 
-add_task(async function () {
+add_task(async function() {
   // Force the old debugger UI since it's directly used (see Bug 1301705).
   await pushPref("devtools.debugger.new-debugger-frontend", false);
 

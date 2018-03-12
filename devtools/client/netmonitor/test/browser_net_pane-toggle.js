@@ -7,7 +7,7 @@
  * Tests if toggling the details pane works as expected.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 

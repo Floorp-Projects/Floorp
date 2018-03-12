@@ -10,7 +10,7 @@ const TEST_URL = `${URL_ROOT}doc_page_state.html`;
 const DUMMY_2_URL = "http://example.com/browser/";
 const DUMMY_3_URL = "http://example.com/browser/devtools/";
 
-add_task(async function () {
+add_task(async function() {
   // Load up a sequence of pages:
   // 0. DUMMY_1_URL
   // 1. TEST_URL

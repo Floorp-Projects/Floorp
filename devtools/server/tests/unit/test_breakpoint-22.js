@@ -13,7 +13,7 @@ var gClient;
 var gThreadClient;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -23,17 +23,17 @@ function run_test_with_server(server, callback) {
   initTestDebuggerServer(server);
   gDebuggee = addTestGlobal("test-breakpoints", server);
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient,
                            "test-breakpoints",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test();
                            });
   });
 }
 
-const test = async function () {
+const test = async function() {
   // Populate the `ScriptStore` so that we only test that the script
   // is added through `onNewScript`
   await getSources(gThreadClient);

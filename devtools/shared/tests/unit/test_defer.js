@@ -17,7 +17,7 @@ function testReject() {
   return deferred.promise;
 }
 
-add_task(async function () {
+add_task(async function() {
   const success = await testResolve();
   equal(success, "success");
 

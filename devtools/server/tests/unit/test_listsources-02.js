@@ -16,17 +16,17 @@ function run_test() {
   initTestDebuggerServer();
   addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.request = (function (origRequest) {
-    return function (request, onResponse) {
+  gClient.request = (function(origRequest) {
+    return function(request, onResponse) {
       if (request.type === "sources") {
         ++gNumTimesSourcesSent;
       }
       return origRequest.call(this, request, onResponse);
     };
   }(gClient.request));
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_listing_zero_sources();
                            });
@@ -35,7 +35,7 @@ function run_test() {
 }
 
 function test_listing_zero_sources() {
-  gThreadClient.getSources(function (packet) {
+  gThreadClient.getSources(function(packet) {
     Assert.ok(!packet.error);
     Assert.ok(!!packet.sources);
     Assert.equal(packet.sources.length, 0);

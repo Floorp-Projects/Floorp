@@ -6,7 +6,7 @@
 const TEST_URI =
   "data:text/html,Test evaluating null and undefined";
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const jsterm = hud.jsterm;
 

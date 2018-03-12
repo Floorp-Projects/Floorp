@@ -38,7 +38,7 @@ let reducers = {
 
 };
 
-module.exports = function (highlighterSettings = INITIAL_HIGHLIGHTER_SETTINGS, action) {
+module.exports = function(highlighterSettings = INITIAL_HIGHLIGHTER_SETTINGS, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return highlighterSettings;

@@ -15,10 +15,10 @@ Bug 1068171 - Test controlling the memory actor's allocation sampling probabilit
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  (async function () {
+  (async function() {
     let { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 
@@ -29,7 +29,7 @@ window.onload = function () {
       }
     }
 
-    let testProbability = async function (p, expected) {
+    let testProbability = async function(p, expected) {
       info("probability = " + p);
       await memory.startRecordingAllocations({
         probability: p

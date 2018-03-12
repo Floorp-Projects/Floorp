@@ -10,7 +10,7 @@ let reducers = {
 
 };
 
-module.exports = function (changes = INITIAL_CHANGES, action) {
+module.exports = function(changes = INITIAL_CHANGES, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return changes;

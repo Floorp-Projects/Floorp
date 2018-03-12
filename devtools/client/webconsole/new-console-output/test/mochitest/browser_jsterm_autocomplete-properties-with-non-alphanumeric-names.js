@@ -9,7 +9,7 @@
 // autocompleted (bug 967468).
 const TEST_URI = "data:text/html;charset=utf8,test autocompletion with $ or _";
 
-add_task(async function () {
+add_task(async function() {
   let { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   await jsterm.execute("var testObject = {$$aaab: '', $$aaac: ''}");

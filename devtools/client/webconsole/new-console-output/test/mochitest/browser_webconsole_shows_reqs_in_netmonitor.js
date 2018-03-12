@@ -19,7 +19,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(NET_PREF);
 });
 
-add_task(async function () {
+add_task(async function() {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "netmonitor");
   info("Network panel is open.");
 

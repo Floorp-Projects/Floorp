@@ -21,7 +21,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
   </script>`;
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   info("Call the log function defined in the test page");

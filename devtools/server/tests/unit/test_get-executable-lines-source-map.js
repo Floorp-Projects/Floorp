@@ -22,7 +22,7 @@ function run_test() {
     attachTestTabAndResume(
       gClient,
       "test-get-executable-lines",
-      function (response, tabClient, threadClient) {
+      function(response, tabClient, threadClient) {
         gThreadClient = threadClient;
         test_executable_lines();
       }
@@ -36,10 +36,10 @@ function test_executable_lines() {
   gThreadClient.addOneTimeListener("newSource", function _onNewSource(evt, packet) {
     Assert.equal(evt, "newSource");
 
-    gThreadClient.getSources(function ({error, sources}) {
+    gThreadClient.getSources(function({error, sources}) {
       Assert.ok(!error);
       let source = gThreadClient.source(sources[0]);
-      source.getExecutableLines(function (lines) {
+      source.getExecutableLines(function(lines) {
         Assert.ok(arrays_equal([1, 2, 4, 6], lines));
         finishClient(gClient);
       });

@@ -50,7 +50,7 @@ this.DevToolsShim = {
    *
    * @return {Boolean} true if DevTools are installed.
    */
-  isInstalled: function () {
+  isInstalled: function() {
     return Services.io.getProtocolHandler("resource")
              .QueryInterface(Ci.nsIResProtocolHandler)
              .hasSubstitution("devtools");
@@ -61,7 +61,7 @@ this.DevToolsShim = {
    * enabled, initializing DevTools will open the onboarding page. Some entry points
    * should no-op in this case.
    */
-  isEnabled: function () {
+  isEnabled: function() {
     let enabled = Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
     return enabled && !this.isDisabledByPolicy();
   },
@@ -70,7 +70,7 @@ this.DevToolsShim = {
    * Returns true if the devtools are completely disabled and can not be enabled. All
    * entry points should return without throwing, initDevTools should never be called.
    */
-  isDisabledByPolicy: function () {
+  isDisabledByPolicy: function() {
     return Services.prefs.getBoolPref(DEVTOOLS_POLICY_DISABLED_PREF, false);
   },
 
@@ -79,7 +79,7 @@ this.DevToolsShim = {
    *
    * @return {Boolean} true if DevTools are initialized.
    */
-  isInitialized: function () {
+  isInitialized: function() {
     return !!this._gDevTools;
   },
 
@@ -88,7 +88,7 @@ this.DevToolsShim = {
    *
    * @param {DevTools} a devtools instance (from client/framework/devtools)
    */
-  register: function (gDevTools) {
+  register: function(gDevTools) {
     this._gDevTools = gDevTools;
     this._onDevToolsRegistered();
     this._gDevTools.emit("devtools-registered");
@@ -98,7 +98,7 @@ this.DevToolsShim = {
    * Unregister the current instance of gDevTools. Should be called by DevTools during
    * shutdown.
    */
-  unregister: function () {
+  unregister: function() {
     if (this.isInitialized()) {
       this._gDevTools.emit("devtools-unregistered");
       this._gDevTools = null;
@@ -119,7 +119,7 @@ this.DevToolsShim = {
    * - toolbox-created
    * - toolbox-destroyed
    */
-  on: function (event, listener) {
+  on: function(event, listener) {
     if (this.isInitialized()) {
       this._gDevTools.on(event, listener);
     } else {
@@ -131,7 +131,7 @@ this.DevToolsShim = {
    * This method is currently only used by devtools code, but is kept here for consistency
    * with on().
    */
-  off: function (event, listener) {
+  off: function(event, listener) {
     if (this.isInitialized()) {
       this._gDevTools.off(event, listener);
     } else {
@@ -145,7 +145,7 @@ this.DevToolsShim = {
    * @param {Object} state
    *                 A SessionStore state object that gets modified by reference
    */
-  saveDevToolsSession: function (state) {
+  saveDevToolsSession: function(state) {
     if (!this.isInitialized()) {
       return;
     }
@@ -157,7 +157,7 @@ this.DevToolsShim = {
    * Called from SessionStore.jsm in mozilla-central when restoring a previous session.
    * Will always be called, even if the session does not contain DevTools related items.
    */
-  restoreDevToolsSession: function (session) {
+  restoreDevToolsSession: function(session) {
     if (!this.isEnabled()) {
       return;
     }
@@ -187,7 +187,7 @@ this.DevToolsShim = {
    * @return {Promise} a promise that resolves when the node is selected in the inspector
    *         markup view or that resolves immediately if DevTools are not installed.
    */
-  inspectNode: function (tab, selectors) {
+  inspectNode: function(tab, selectors) {
     if (!this.isEnabled()) {
       if (!this.isDisabledByPolicy()) {
         DevtoolsStartup.openInstallPage("ContextMenu");
@@ -206,7 +206,7 @@ this.DevToolsShim = {
     return this._gDevTools.inspectNode(tab, selectors, startTime);
   },
 
-  _onDevToolsRegistered: function () {
+  _onDevToolsRegistered: function() {
     // Register all pending event listeners on the real gDevTools object.
     for (let [event, listener] of this.listeners) {
       this._gDevTools.on(event, listener);
@@ -224,7 +224,7 @@ this.DevToolsShim = {
    *        optional, if provided should be a valid entry point for DEVTOOLS_ENTRY_POINT
    *        in toolkit/components/telemetry/Histograms.json
    */
-  initDevTools: function (reason) {
+  initDevTools: function(reason) {
     if (!this.isEnabled()) {
       throw new Error("DevTools are not enabled and can not be initialized.");
     }
@@ -250,7 +250,7 @@ let webExtensionsMethods = [
 ];
 
 for (let method of webExtensionsMethods) {
-  this.DevToolsShim[method] = function () {
+  this.DevToolsShim[method] = function() {
     if (!this.isEnabled()) {
       throw new Error("Could not call a DevToolsShim webextension method ('" + method +
         "'): DevTools are not initialized.");

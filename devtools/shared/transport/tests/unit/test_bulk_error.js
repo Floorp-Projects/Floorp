@@ -7,7 +7,7 @@ function run_test() {
   initTestDebuggerServer();
   add_test_bulk_actor();
 
-  add_task(async function () {
+  add_task(async function() {
     await test_string_error(socket_transport, json_reply);
     await test_string_error(local_transport, json_reply);
     DebuggerServer.destroy();
@@ -24,7 +24,7 @@ TestBulkActor.prototype = {
 
   actorPrefix: "testBulk",
 
-  jsonReply: function ({length, reader, reply, done}) {
+  jsonReply: function({length, reader, reply, done}) {
     Assert.equal(length, really_long().length);
 
     return {
@@ -44,7 +44,7 @@ function add_test_bulk_actor() {
 
 /** * Tests ***/
 
-var test_string_error = async function (transportFactory, onReady) {
+var test_string_error = async function(transportFactory, onReady) {
   let transport = await transportFactory();
 
   let client = new DebuggerClient(transport);

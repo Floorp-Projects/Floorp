@@ -7,7 +7,7 @@
  * works properly.
  */
 
-add_task(function () {
+add_task(function() {
   let FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
 
   let isContent = (frame) => {

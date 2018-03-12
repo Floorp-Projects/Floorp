@@ -78,7 +78,7 @@ async function openRequestAfterUpdates(target, hud) {
   let message = waitForMessage(hud, xhrUrl);
 
   // Fire an XHR POST request.
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.testXhrPostSlowResponse();
   });
 
@@ -107,7 +107,7 @@ async function openRequestBeforeUpdates(target, hud, tab) {
   let message = waitForMessage(hud, xhrUrl);
 
   // Fire an XHR POST request.
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.testXhrPostSlowResponse();
   });
 

@@ -1,6 +1,6 @@
 "use strict";
 
-const run_test = Test(async function () {
+const run_test = Test(async function() {
   initTestDebuggerServer();
   const connection = DebuggerServer.connectPipe();
   const client = Async(new DebuggerClient(connection));

@@ -15,10 +15,10 @@ Bug 1192335 - Test getting the byte sizes for allocations.
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  (async function () {
+  (async function() {
     let { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 

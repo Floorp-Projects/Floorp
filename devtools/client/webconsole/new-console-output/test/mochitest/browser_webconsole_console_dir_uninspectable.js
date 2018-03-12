@@ -14,7 +14,7 @@ const TEST_URI = "data:text/html;charset=utf8,test console.dir on uninspectable 
 const FIRST_LOG_MESSAGE = "fooBug773466a";
 const SECOND_LOG_MESSAGE = "fooBug773466b";
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const {jsterm} = hud;
 

@@ -11,15 +11,15 @@ const { Ci, Cc, CC } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
-XPCOMUtils.defineLazyGetter(this, "ZipWriter", function () {
+XPCOMUtils.defineLazyGetter(this, "ZipWriter", function() {
   return CC("@mozilla.org/zipwriter;1", "nsIZipWriter");
 });
 
-XPCOMUtils.defineLazyGetter(this, "LocalFile", function () {
+XPCOMUtils.defineLazyGetter(this, "LocalFile", function() {
   return new CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 });
 
-XPCOMUtils.defineLazyGetter(this, "getMostRecentBrowserWindow", function () {
+XPCOMUtils.defineLazyGetter(this, "getMostRecentBrowserWindow", function() {
   return Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
 });
 
@@ -47,7 +47,7 @@ function formatDate(date) {
  * Helper API for HAR export features.
  */
 var HarUtils = {
-  getHarFileName: function (defaultFileName, jsonp, compress) {
+  getHarFileName: function(defaultFileName, jsonp, compress) {
     let extension = jsonp ? ".harp" : ".har";
 
     let now = new Date();
@@ -74,7 +74,7 @@ var HarUtils = {
    * @param {String} jsonString HAR data (JSON or JSONP)
    * @param {Boolean} compress The result file is zipped if set to true.
    */
-  saveToFile: function (file, jsonString, compress) {
+  saveToFile: function(file, jsonString, compress) {
     let openFlags = OPEN_FLAGS.WRONLY | OPEN_FLAGS.CREATE_FILE |
       OPEN_FLAGS.TRUNCATE;
 
@@ -150,7 +150,7 @@ var HarUtils = {
     return false;
   },
 
-  getLocalDirectory: function (path) {
+  getLocalDirectory: function(path) {
     let dir;
 
     if (!path) {

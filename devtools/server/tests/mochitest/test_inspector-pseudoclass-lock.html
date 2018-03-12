@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 
 const KNOWN_PSEUDOCLASSES = [":hover", ":active", ":focus"];
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -26,7 +26,7 @@ let gCleanupConnection = null;
 
 function setup(callback) {
   let url = document.getElementById("inspectorContent").href;
-  gCleanupConnection = attachURL(url, function (err, client, tab, doc) {
+  gCleanupConnection = attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);

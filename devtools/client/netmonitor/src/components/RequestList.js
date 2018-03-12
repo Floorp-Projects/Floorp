@@ -12,10 +12,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 // Components
 const StatusBar = createFactory(require("./StatusBar"));
 
-loader.lazyGetter(this, "RequestListContent", function () {
+loader.lazyGetter(this, "RequestListContent", function() {
   return createFactory(require("./RequestListContent"));
 });
-loader.lazyGetter(this, "RequestListEmptyNotice", function () {
+loader.lazyGetter(this, "RequestListEmptyNotice", function() {
   return createFactory(require("./RequestListEmptyNotice"));
 });
 

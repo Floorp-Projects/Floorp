@@ -41,7 +41,7 @@ function awaitFileSave(name, ext) {
       destFile.append(fileName);
       MockFilePicker.setFiles([destFile]);
       MockFilePicker.showCallback = null;
-      mockTransferCallback = function (downloadSuccess) {
+      mockTransferCallback = function(downloadSuccess) {
         ok(downloadSuccess, "JSON should have been downloaded successfully");
         ok(destFile.exists(), "The downloaded file should exist.");
         resolve(destFile);
@@ -52,7 +52,7 @@ function awaitFileSave(name, ext) {
 
 function getFileContents(file) {
   return new Promise((resolve, reject) => {
-    NetUtil.asyncFetch(file, function (inputStream, status) {
+    NetUtil.asyncFetch(file, function(inputStream, status) {
       if (Components.isSuccessCode(status)) {
         info("Fetched downloaded contents.");
         resolve(NetUtil.readInputStreamToString(inputStream, inputStream.available()));
@@ -77,7 +77,7 @@ function createTemporarySaveDirectory() {
 let destDir = createTemporarySaveDirectory();
 mockTransferRegisterer.register();
 MockFilePicker.displayDirectory = destDir;
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   mockTransferRegisterer.unregister();
   MockFilePicker.cleanup();
   destDir.remove(true);
@@ -94,7 +94,7 @@ add_task(function* () {
   let promise, rawJSON, prettyJSON;
   yield fetch(new Request(TEST_JSON_URL))
     .then(response => response.text())
-    .then(function (data) {
+    .then(function(data) {
       info("Fetched JSON contents.");
       rawJSON = data;
       prettyJSON = JSON.stringify(JSON.parse(data), null, "  ");
@@ -104,7 +104,7 @@ add_task(function* () {
   promise = awaitFileSave(JSON_FILE, "json");
   yield new Promise((resolve) => {
     info("Register to handle popupshown.");
-    document.addEventListener("popupshown", function (event) {
+    document.addEventListener("popupshown", function(event) {
       info("Context menu opened.");
       let savePageCommand = document.getElementById("context-savepage");
       savePageCommand.doCommand();
@@ -116,7 +116,7 @@ add_task(function* () {
     rightClick("body");
     info("Right clicked.");
   });
-  yield promise.then(getFileContents).then(function (data) {
+  yield promise.then(getFileContents).then(function(data) {
     is(data, rawJSON, "Original JSON contents should have been saved.");
   });
 
@@ -124,7 +124,7 @@ add_task(function* () {
   promise = awaitFileSave(JSON_FILE, "json");
   yield click(saveButton);
   info("Clicked Save button.");
-  yield promise.then(getFileContents).then(function (data) {
+  yield promise.then(getFileContents).then(function(data) {
     is(data, rawJSON, "Original JSON contents should have been saved.");
   });
 
@@ -136,7 +136,7 @@ add_task(function* () {
   promise = awaitFileSave(JSON_FILE, "json");
   yield click(saveButton);
   info("Clicked Save button.");
-  yield promise.then(getFileContents).then(function (data) {
+  yield promise.then(getFileContents).then(function(data) {
     is(data, prettyJSON, "Prettified JSON contents should have been saved.");
   });
 });

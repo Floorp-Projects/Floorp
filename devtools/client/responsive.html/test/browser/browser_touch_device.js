@@ -22,7 +22,7 @@ const testDevice = {
 // Add the new device to the list
 addDeviceForTest(testDevice);
 
-addRDMTask(TEST_URL, async function ({ ui, manager }) {
+addRDMTask(TEST_URL, async function({ ui, manager }) {
   reloadOnTouchChange(true);
 
   await waitStartup(ui);

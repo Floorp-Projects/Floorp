@@ -6,7 +6,7 @@
 const { actions } = require("../constants");
 const { refresh } = require("./refresh");
 
-const setFilterString = exports.setFilterString = function (filterString) {
+const setFilterString = exports.setFilterString = function(filterString) {
   return {
     type: actions.SET_FILTER_STRING,
     filter: filterString
@@ -21,7 +21,7 @@ const FILTER_INPUT_DEBOUNCE_MS = 250;
 // The timer id for the debounced census refresh.
 let timerId = null;
 
-exports.setFilterStringAndRefresh = function (filterString, heapWorker) {
+exports.setFilterStringAndRefresh = function(filterString, heapWorker) {
   return function* (dispatch, getState) {
     dispatch(setFilterString(filterString));
 

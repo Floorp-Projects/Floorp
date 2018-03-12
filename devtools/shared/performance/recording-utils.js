@@ -468,7 +468,7 @@ function UniqueStrings() {
   this._stringHash = Object.create(null);
 }
 
-UniqueStrings.prototype.getOrAddStringIndex = function (s) {
+UniqueStrings.prototype.getOrAddStringIndex = function(s) {
   if (!s) {
     return null;
   }
@@ -538,19 +538,19 @@ function UniqueStacks() {
   this._uniqueStrings = new UniqueStrings();
 }
 
-UniqueStacks.prototype.getStackTableWithSchema = function () {
+UniqueStacks.prototype.getStackTableWithSchema = function() {
   return stackTableWithSchema(this._stackTable);
 };
 
-UniqueStacks.prototype.getFrameTableWithSchema = function () {
+UniqueStacks.prototype.getFrameTableWithSchema = function() {
   return frameTableWithSchema(this._frameTable);
 };
 
-UniqueStacks.prototype.getStringTable = function () {
+UniqueStacks.prototype.getStringTable = function() {
   return this._uniqueStrings.stringTable;
 };
 
-UniqueStacks.prototype.getOrAddFrameIndex = function (frame) {
+UniqueStacks.prototype.getOrAddFrameIndex = function(frame) {
   // Schema:
   //   [location, implementation, optimizations, line, category]
 
@@ -583,7 +583,7 @@ UniqueStacks.prototype.getOrAddFrameIndex = function (frame) {
   return index;
 };
 
-UniqueStacks.prototype.getOrAddStackIndex = function (prefixIndex, frameIndex) {
+UniqueStacks.prototype.getOrAddStackIndex = function(prefixIndex, frameIndex) {
   // Schema:
   //   [prefix, frame]
 
@@ -604,7 +604,7 @@ UniqueStacks.prototype.getOrAddStackIndex = function (prefixIndex, frameIndex) {
   return index;
 };
 
-UniqueStacks.prototype.getOrAddStringIndex = function (s) {
+UniqueStacks.prototype.getOrAddStringIndex = function(s) {
   return this._uniqueStrings.getOrAddStringIndex(s);
 };
 

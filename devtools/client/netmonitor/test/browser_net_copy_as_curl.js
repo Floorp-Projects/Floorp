@@ -7,7 +7,7 @@
  * Tests if Copy as cURL works.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CURL_URL);
   info("Starting test... ");
 
@@ -44,7 +44,7 @@ add_task(async function () {
   let { document } = monitor.panelWin;
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function (url) {
+  await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function(url) {
     content.wrappedJSObject.performRequest(url);
   });
   await wait;

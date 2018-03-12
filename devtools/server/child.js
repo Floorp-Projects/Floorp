@@ -10,7 +10,7 @@ try {
   var chromeGlobal = this;
 
   // Encapsulate in its own scope to allows loading this frame script more than once.
-  (function () {
+  (function() {
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
     const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -25,7 +25,7 @@ try {
 
     let connections = new Map();
 
-    let onConnect = DevToolsUtils.makeInfallible(function (msg) {
+    let onConnect = DevToolsUtils.makeInfallible(function(msg) {
       removeMessageListener("debug:connect", onConnect);
 
       let mm = msg.target;
@@ -96,7 +96,7 @@ try {
 
     addMessageListener("debug:setup-in-child", onSetupInChild);
 
-    let onDisconnect = DevToolsUtils.makeInfallible(function (msg) {
+    let onDisconnect = DevToolsUtils.makeInfallible(function(msg) {
       let prefix = msg.data.prefix;
       let conn = connections.get(prefix);
       if (!conn) {

@@ -36,18 +36,18 @@ AnimationDetails.prototype = {
   NON_PROPERTIES: ["easing", "composite", "computedOffset",
                    "offset", "simulateComputeValuesFailure"],
 
-  init: function (containerEl) {
+  init: function(containerEl) {
     this.containerEl = containerEl;
   },
 
-  destroy: function () {
+  destroy: function() {
     this.unrender();
     this.containerEl = null;
     this.serverTraits = null;
     this.progressIndicatorEl = null;
   },
 
-  unrender: function () {
+  unrender: function() {
     for (let component of this.keyframeComponents) {
       component.destroy();
     }
@@ -58,7 +58,7 @@ AnimationDetails.prototype = {
     }
   },
 
-  getPerfDataForProperty: function (animation, propertyName) {
+  getPerfDataForProperty: function(animation, propertyName) {
     let warning = "";
     let className = "";
     if (animation.state.propertyState) {
@@ -135,7 +135,7 @@ AnimationDetails.prototype = {
       new this.win.Animation(new this.win.KeyframeEffect(null, null, timing), null);
   }),
 
-  renderAnimatedPropertiesHeader: function () {
+  renderAnimatedPropertiesHeader: function() {
     // Add animated property header.
     const headerEl = createNode({
       parent: this.containerEl,
@@ -172,7 +172,7 @@ AnimationDetails.prototype = {
     }
   },
 
-  renderAnimatedPropertiesBody: function (animationTypes) {
+  renderAnimatedPropertiesBody: function(animationTypes) {
     // Add animated property body.
     const bodyEl = createNode({
       parent: this.containerEl,
@@ -237,7 +237,7 @@ AnimationDetails.prototype = {
     }
   },
 
-  renderProgressIndicator: function () {
+  renderProgressIndicator: function() {
     // The wrapper represents the area which the indicator is displayable.
     const progressIndicatorWrapperEl = createNode({
       parent: this.containerEl,
@@ -259,7 +259,7 @@ AnimationDetails.prototype = {
     });
   },
 
-  indicateProgress: function (time) {
+  indicateProgress: function(time) {
     if (!this.progressIndicatorEl) {
       // Not displayed yet.
       return;

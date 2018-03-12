@@ -42,7 +42,7 @@ const CHROME_LOCATIONS = [
   "EnterJIT",
 ].map(argify);
 
-add_task(function () {
+add_task(function() {
   const { computeIsContentAndCategory, parseLocation } = require("devtools/client/performance/modules/logic/frame-utils");
   let isContent = (frame) => {
     computeIsContentAndCategory(frame);

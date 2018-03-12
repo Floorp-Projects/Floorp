@@ -8,7 +8,7 @@
  * is selected.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -21,7 +21,7 @@ add_task(async function () {
     "https://example.com" + CORS_SJS_PATH,
     "http://example.com" + CORS_SJS_PATH,
   ];
-  await ContentTask.spawn(tab.linkedBrowser, REQUEST_URLS, async function (urls) {
+  await ContentTask.spawn(tab.linkedBrowser, REQUEST_URLS, async function(urls) {
     for (let url of urls) {
       content.wrappedJSObject.performRequests(1, url);
     }

@@ -189,7 +189,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_easings.html");
 
   const { inspector, panel } = await openAnimationInspector();

@@ -26,55 +26,55 @@ var GeoProp = {
   SIDES: ["top", "right", "bottom", "left"],
   SIZES: ["width", "height"],
 
-  allProps: function () {
+  allProps: function() {
     return [...this.SIDES, ...this.SIZES];
   },
 
-  isSide: function (name) {
+  isSide: function(name) {
     return this.SIDES.includes(name);
   },
 
-  isSize: function (name) {
+  isSize: function(name) {
     return this.SIZES.includes(name);
   },
 
-  containsSide: function (names) {
+  containsSide: function(names) {
     return names.some(name => this.SIDES.includes(name));
   },
 
-  containsSize: function (names) {
+  containsSize: function(names) {
     return names.some(name => this.SIZES.includes(name));
   },
 
-  isHorizontal: function (name) {
+  isHorizontal: function(name) {
     return name === "left" || name === "right" || name === "width";
   },
 
-  isInverted: function (name) {
+  isInverted: function(name) {
     return name === "right" || name === "bottom";
   },
 
-  mainAxisStart: function (name) {
+  mainAxisStart: function(name) {
     return this.isHorizontal(name) ? "left" : "top";
   },
 
-  crossAxisStart: function (name) {
+  crossAxisStart: function(name) {
     return this.isHorizontal(name) ? "top" : "left";
   },
 
-  mainAxisSize: function (name) {
+  mainAxisSize: function(name) {
     return this.isHorizontal(name) ? "width" : "height";
   },
 
-  crossAxisSize: function (name) {
+  crossAxisSize: function(name) {
     return this.isHorizontal(name) ? "height" : "width";
   },
 
-  axis: function (name) {
+  axis: function(name) {
     return this.isHorizontal(name) ? "x" : "y";
   },
 
-  crossAxis: function (name) {
+  crossAxis: function(name) {
     return this.isHorizontal(name) ? "y" : "x";
   }
 };

@@ -14,7 +14,7 @@ var gThreadClient;
 var gCallback;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -25,9 +25,9 @@ function run_test_with_server(server, callback) {
   initTestDebuggerServer(server);
   gDebuggee = addTestGlobal("test-stack", server);
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_breakpoint_running();
                            });
@@ -35,24 +35,24 @@ function run_test_with_server(server, callback) {
 }
 
 function test_breakpoint_running() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let location = { line: gDebuggee.line0 + 3 };
 
     gThreadClient.resume();
 
     // Setting the breakpoint later should interrupt the debuggee.
-    gThreadClient.addOneTimeListener("paused", function (event, packet) {
+    gThreadClient.addOneTimeListener("paused", function(event, packet) {
       Assert.equal(packet.type, "paused");
       Assert.equal(packet.why.type, "interrupted");
     });
 
     let source = gThreadClient.source(packet.frame.where.source);
-    source.setBreakpoint(location, function (response) {
+    source.setBreakpoint(location, function(response) {
       // Eval scripts don't stick around long enough for the breakpoint to be set,
       // so just make sure we got the expected response from the actor.
       Assert.notEqual(response.error, "noScript");
 
-      executeSoon(function () {
+      executeSoon(function() {
         gClient.close().then(gCallback);
       });
     });

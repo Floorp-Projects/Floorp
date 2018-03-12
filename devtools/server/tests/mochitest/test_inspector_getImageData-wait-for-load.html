@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1192536
 
 const flags = require("devtools/shared/flags");
 const wasTesting = flags.testing;
-SimpleTest.registerCleanupFunction(function () {
+SimpleTest.registerCleanupFunction(function() {
   flags.testing = wasTesting;
 });
 
@@ -31,7 +31,7 @@ const DELAYED_IMAGE = BASE_IMAGE + "?delay=300";
 const TIMEOUT_IMAGE = BASE_IMAGE + "?delay=50000";
 const NONEXISTENT_IMAGE = PATH + "this-does-not-exist.png";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -42,7 +42,7 @@ let gWalker = null;
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function (err, client, tab, doc) {
+  attachURL(url, function(err, client, tab, doc) {
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
 

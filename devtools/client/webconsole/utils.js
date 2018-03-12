@@ -34,7 +34,7 @@ var WebConsoleUtils = {
    * @param string string
    * @return nsISupportsString
    */
-  supportsString: function (string) {
+  supportsString: function(string) {
     let str = Cc["@mozilla.org/supports-string;1"]
               .createInstance(Ci.nsISupportsString);
     str.data = string;
@@ -57,7 +57,7 @@ var WebConsoleUtils = {
    * @return object
    *         The cloned object.
    */
-  cloneObject: function (object, recursive, filter) {
+  cloneObject: function(object, recursive, filter) {
     if (typeof object != "object") {
       return object;
     }
@@ -66,7 +66,7 @@ var WebConsoleUtils = {
 
     if (Array.isArray(object)) {
       temp = [];
-      Array.forEach(object, function (value, index) {
+      Array.forEach(object, function(value, index) {
         if (!filter || filter(index, value, object)) {
           temp.push(recursive ? WebConsoleUtils.cloneObject(value) : value);
         }
@@ -93,7 +93,7 @@ var WebConsoleUtils = {
    * @param nsIDOMNode to
    *        The destination node.
    */
-  copyTextStyles: function (from, to) {
+  copyTextStyles: function(from, to) {
     let win = from.ownerDocument.defaultView;
     let style = win.getComputedStyle(from);
     to.style.fontFamily = style.fontFamily;
@@ -112,7 +112,7 @@ var WebConsoleUtils = {
    * @return boolean
    *         True if the content is mixed, false if not.
    */
-  isMixedHTTPSRequest: function (request, location) {
+  isMixedHTTPSRequest: function(request, location) {
     try {
       let requestURI = Services.io.newURI(request);
       let contentURI = Services.io.newURI(location);
@@ -130,7 +130,7 @@ var WebConsoleUtils = {
    * @return string
    *         Function name.
    */
-  getFunctionName: function (func) {
+  getFunctionName: function(func) {
     let name = null;
     if (func.name) {
       name = func.name;
@@ -165,7 +165,7 @@ var WebConsoleUtils = {
    * @return string
    *         The object class name.
    */
-  getObjectClassName: function (object) {
+  getObjectClassName: function(object) {
     if (object === null) {
       return "null";
     }
@@ -205,7 +205,7 @@ var WebConsoleUtils = {
    * @return boolean
    *         True if the given value is a grip with an actor.
    */
-  isActorGrip: function (grip) {
+  isActorGrip: function(grip) {
     return grip && typeof (grip) == "object" && grip.actor;
   },
 
@@ -241,8 +241,8 @@ var WebConsoleUtils = {
    * @returns A function to be added as a handler to 'paste' and
    *'drop' events on the input field
    */
-  pasteHandlerGen: function (inputField, notificationBox, msg, okstring) {
-    let handler = function (event) {
+  pasteHandlerGen: function(inputField, notificationBox, msg, okstring) {
+    let handler = function(event) {
       if (WebConsoleUtils.usageCount >= CONSOLE_ENTRY_THRESHOLD) {
         inputField.removeEventListener("paste", handler);
         inputField.removeEventListener("drop", handler);
@@ -257,7 +257,7 @@ var WebConsoleUtils = {
       let notification = notificationBox.appendNotification(msg,
         "selfxss-notification", null,
         notificationBox.PRIORITY_WARNING_HIGH, null,
-        function (eventType) {
+        function(eventType) {
           // Cleanup function if notification is dismissed
           if (eventType == "removed") {
             inputField.removeEventListener("keyup", pasteKeyUpHandler);

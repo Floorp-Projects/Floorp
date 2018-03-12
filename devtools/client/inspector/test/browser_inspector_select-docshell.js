@@ -36,7 +36,7 @@ add_task(function* () {
   let frames = menu.items.slice();
   is(frames.length, 2, "We have both frames in the menu");
 
-  frames.sort(function (a, b) {
+  frames.sort(function(a, b) {
     return a.label.localeCompare(b.label);
   });
 

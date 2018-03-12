@@ -21,7 +21,7 @@ const TEST_URI3 = "data:text/html;charset=utf-8,<script>" +
 const TEST_URI4 = "data:text/html;charset=utf-8," +
                   "<script>console.timeEnd('bTimer');</script>";
 
-add_task(async function () {
+add_task(async function() {
   // Calling console.time('aTimer') followed by console.timeEnd('aTimer')
   // should result in the aTimer being ended, and a message like aTimer: 123ms
   // printed to the console

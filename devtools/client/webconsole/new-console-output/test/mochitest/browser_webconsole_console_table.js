@@ -131,7 +131,7 @@ add_task(function* () {
     }
   }];
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, testCases, function (tests) {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, testCases, function(tests) {
     tests.forEach((test) => {
       content.wrappedJSObject.doConsoleTable(test.input, test.headers);
     });

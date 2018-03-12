@@ -8,7 +8,7 @@ var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {
 function run_test() {
   initTestDebuggerServer();
 
-  add_task(async function () {
+  add_task(async function() {
     await test_bulk_transfer_transport(socket_transport);
     await test_bulk_transfer_transport(local_transport);
     DebuggerServer.destroy();
@@ -22,7 +22,7 @@ function run_test() {
 /**
  * This tests a one-way bulk transfer at the transport layer.
  */
-var test_bulk_transfer_transport = async function (transportFactory) {
+var test_bulk_transfer_transport = async function(transportFactory) {
   info("Starting bulk transfer test at " + new Date().toTimeString());
 
   let clientDeferred = defer();
@@ -42,7 +42,7 @@ var test_bulk_transfer_transport = async function (transportFactory) {
     NetUtil.asyncFetch({
       uri: NetUtil.newURI(getTestTempFile("bulk-input")),
       loadUsingSystemPrincipal: true
-    }, function (input, status) {
+    }, function(input, status) {
       copyFrom(input).then(() => {
         input.close();
       });
@@ -74,7 +74,7 @@ var test_bulk_transfer_transport = async function (transportFactory) {
 
   // Client
   transport.hooks = {
-    onPacket: function (packet) {
+    onPacket: function(packet) {
       // We've received the initial start up packet
       Assert.equal(packet.from, "root");
 
@@ -98,7 +98,7 @@ var test_bulk_transfer_transport = async function (transportFactory) {
       }).then(write_data);
     },
 
-    onClosed: function () {
+    onClosed: function() {
       do_throw("Transport closed before we expected");
     }
   };

@@ -44,7 +44,7 @@ var ToolbarView = {
   /**
    * Unbinds events and cleans up view.
    */
-  destroy: function () {
+  destroy: function() {
     $("#performance-filter-menupopup").removeEventListener("popupshowing",
                                                            this._onFilterPopupShowing);
     $("#performance-filter-menupopup").removeEventListener("popuphiding",
@@ -58,7 +58,7 @@ var ToolbarView = {
   /**
    * Creates the timeline markers filter popup.
    */
-  _buildMarkersFilterPopup: function () {
+  _buildMarkersFilterPopup: function() {
     for (let [markerName, markerDetails] of Object.entries(TIMELINE_BLUEPRINT)) {
       let menuitem = document.createElement("menuitem");
       menuitem.setAttribute("closemenu", "none");
@@ -79,7 +79,7 @@ var ToolbarView = {
   /**
    * Updates the menu items checked state in the timeline markers filter popup.
    */
-  _updateHiddenMarkersPopup: function () {
+  _updateHiddenMarkersPopup: function() {
     let menuItems = $$("#performance-filter-menupopup menuitem[marker-type]");
     let hiddenMarkers = PerformanceController.getPref("hidden-markers");
 
@@ -106,7 +106,7 @@ var ToolbarView = {
    *
    * @param {boolean} isEnabled
    */
-  _toggleExperimentalUI: function (isEnabled) {
+  _toggleExperimentalUI: function(isEnabled) {
     if (isEnabled) {
       $(".theme-body").classList.add("experimental-enabled");
       this._popup.classList.add("experimental-enabled");
@@ -119,21 +119,21 @@ var ToolbarView = {
   /**
    * Fired when the markers filter popup starts to show.
    */
-  _onFilterPopupShowing: function () {
+  _onFilterPopupShowing: function() {
     $("#filter-button").setAttribute("open", "true");
   },
 
   /**
    * Fired when the markers filter popup starts to hide.
    */
-  _onFilterPopupHiding: function () {
+  _onFilterPopupHiding: function() {
     $("#filter-button").removeAttribute("open");
   },
 
   /**
    * Fired when a menu item in the markers filter popup is checked or unchecked.
    */
-  _onHiddenMarkersChanged: function () {
+  _onHiddenMarkersChanged: function() {
     let checkedMenuItems =
       $$("#performance-filter-menupopup menuitem[marker-type]:not([checked])");
     let hiddenMarkers = Array.map(checkedMenuItems, e => e.getAttribute("marker-type"));
@@ -144,7 +144,7 @@ var ToolbarView = {
    * Fired when a preference changes in the underlying OptionsView.
    * Propogated by the PerformanceController.
    */
-  _onPrefChanged: function (prefName) {
+  _onPrefChanged: function(prefName) {
     let value = PerformanceController.getOption(prefName);
 
     if (prefName === "experimental") {

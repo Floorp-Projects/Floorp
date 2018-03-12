@@ -13,7 +13,7 @@ const snapshot = require("./snapshot");
  *
  * @param {HeapAnalysesWorker} heapWorker
  */
-exports.refresh = function (heapWorker) {
+exports.refresh = function(heapWorker) {
   return function* (dispatch, getState) {
     switch (getState().view.state) {
       case viewState.DIFFING:
