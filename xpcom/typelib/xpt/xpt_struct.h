@@ -178,6 +178,15 @@ union XPTConstValue {
   uint16_t ui16;
   int32_t i32;
   uint32_t ui32;
+
+  // These constructors are needed to statically initialize different cases of
+  // the union because MSVC does not support the use of designated initializers
+  // in C++ code. They need to be constexpr to ensure that no initialization code
+  // is run at startup, to enable sharing of this memory between Firefox processes.
+  explicit constexpr XPTConstValue(int16_t aInt) : i16(aInt) {}
+  explicit constexpr XPTConstValue(uint16_t aInt) : ui16(aInt) {}
+  explicit constexpr XPTConstValue(int32_t aInt) : i32(aInt) {}
+  explicit constexpr XPTConstValue(uint32_t aInt) : ui32(aInt) {}
 };
 
 struct XPTConstDescriptor {
@@ -187,7 +196,7 @@ struct XPTConstDescriptor {
 
   uint32_t mName; // Index into XPTHeader::mStrings.
   XPTTypeDescriptor mType;
-  union XPTConstValue mValue;
+  XPTConstValue mValue;
 };
 
 /*
