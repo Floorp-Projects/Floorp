@@ -7,7 +7,10 @@
 #include "mozilla/layers/APZSampler.h"
 
 #include "APZCTreeManager.h"
+#include "AsyncPanZoomController.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/LayerMetricsWrapper.h"
+#include "TreeTraversal.h"
 
 namespace mozilla {
 namespace layers {
@@ -120,6 +123,30 @@ APZSampler::SetTestAsyncZoom(uint64_t aLayersId,
   } else {
     NS_WARNING("Unable to find APZC in SetTestAsyncZoom");
   }
+}
+
+bool
+APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
+                             const TimeStamp& aSampleTime)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
+  // TODO: eventually we can drop the aLayer argument and just walk the APZ
+  // tree directly in mApz.
+
+  bool activeAnimations = false;
+
+  ForEachNodePostOrder<ForwardIterator>(aLayer,
+      [&activeAnimations, &aSampleTime](LayerMetricsWrapper aLayerMetrics)
+      {
+        if (AsyncPanZoomController* apzc = aLayerMetrics.GetApzc()) {
+          apzc->ReportCheckerboard(aSampleTime);
+          activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
+        }
+      }
+  );
+
+  return activeAnimations;
 }
 
 } // namespace layers

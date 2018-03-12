@@ -256,7 +256,7 @@ private:
   TimeStamp mPreviousFrameTimeStamp;
   AnimationMetricsTracker mAnimationMetricsTracker;
 
-  CompositorBridgeParent* mCompositorBridge;
+  MOZ_NON_OWNING_REF CompositorBridgeParent* mCompositorBridge;
 
 #ifdef MOZ_WIDGET_ANDROID
 public:
