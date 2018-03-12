@@ -26,6 +26,7 @@
 #ifdef MOZ_WIDGET_GTK
 #include "nsApplicationChooser.h"
 #endif
+#include "TaskbarProgress.h"
 #include "nsColorPicker.h"
 #include "nsFilePicker.h"
 #include "nsSound.h"
@@ -71,6 +72,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDragService, nsDragService::GetInstan
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISound, nsSound::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ScreenManager, ScreenManager::GetAddRefedSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
+NS_GENERIC_FACTORY_CONSTRUCTOR(TaskbarProgress)
 
 
 // from nsWindow.cpp
@@ -203,6 +205,7 @@ NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 #ifdef MOZ_WIDGET_GTK
 NS_DEFINE_NAMED_CID(NS_APPLICATIONCHOOSER_CID);
 #endif
+NS_DEFINE_NAMED_CID(NS_GTK_TASKBARPROGRESS_CID);
 NS_DEFINE_NAMED_CID(NS_SOUND_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 #ifdef MOZ_X11
@@ -237,6 +240,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 #ifdef MOZ_WIDGET_GTK
     { &kNS_APPLICATIONCHOOSER_CID, false, nullptr, nsApplicationChooserConstructor, Module::MAIN_PROCESS_ONLY },
 #endif
+    { &kNS_GTK_TASKBARPROGRESS_CID, false, nullptr, TaskbarProgressConstructor},
     { &kNS_SOUND_CID, false, nullptr, nsISoundConstructor, Module::MAIN_PROCESS_ONLY },
     { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
 #ifdef MOZ_X11
@@ -273,6 +277,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 #ifdef MOZ_WIDGET_GTK
     { "@mozilla.org/applicationchooser;1", &kNS_APPLICATIONCHOOSER_CID, Module::MAIN_PROCESS_ONLY },
 #endif
+    { "@mozilla.org/widget/taskbarprogress/gtk;1", &kNS_GTK_TASKBARPROGRESS_CID },
     { "@mozilla.org/sound;1", &kNS_SOUND_CID, Module::MAIN_PROCESS_ONLY },
     { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
 #ifdef MOZ_X11

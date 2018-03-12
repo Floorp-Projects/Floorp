@@ -5,7 +5,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/debug.js");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -216,7 +215,6 @@ if (AppConstants.DEBUG) {
  * @throws resultCode
  */
 function ERROR(message, resultCode) {
-  NS_ASSERT(false, SEARCH_LOG_PREFIX + message);
   throw Components.Exception(message, resultCode);
 }
 
@@ -259,7 +257,6 @@ function limitURILength(str, len) {
  * @throws resultCode
  */
 function ENSURE_WARN(assertion, message, resultCode) {
-  NS_ASSERT(assertion, SEARCH_LOG_PREFIX + message);
   if (!assertion)
     throw Components.Exception(message, resultCode);
 }

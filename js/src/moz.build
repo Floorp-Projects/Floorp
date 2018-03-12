@@ -32,7 +32,7 @@ for gcfile in ['devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools/gctrace'
     with Files(gcfile):
         BUG_COMPONENT = component_gc
 
-for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*']:
+for stlfile in ['jsdate.*', 'jsnum.*']:
     with Files(stlfile):
         BUG_COMPONENT = component_stl
 
@@ -148,6 +148,7 @@ EXPORTS.js += [
 
 UNIFIED_SOURCES += [
     'builtin/AtomicsObject.cpp',
+    'builtin/Boolean.cpp',
     'builtin/DataViewObject.cpp',
     'builtin/Eval.cpp',
     'builtin/intl/Collator.cpp',
@@ -287,7 +288,6 @@ UNIFIED_SOURCES += [
     'jit/VMFunctions.cpp',
     'jit/WasmBCE.cpp',
     'jsapi.cpp',
-    'jsbool.cpp',
     'jsdate.cpp',
     'jsexn.cpp',
     'jsfriendapi.cpp',
@@ -399,7 +399,7 @@ UNIFIED_SOURCES += [
     'wasm/WasmValidate.cpp'
 ]
 
-# jsarray.cpp and vm/JSAtom.cpp cannot be built in unified mode because
+# builtin/Array.cpp and vm/JSAtom.cpp cannot be built in unified mode because
 #   xpcshell is broken during packaging when compiled with gcc-4.8.2
 # builtin/RegExp.cpp cannot be built in unified mode because it is built
 #   without PGO
@@ -417,10 +417,10 @@ UNIFIED_SOURCES += [
 # vm/Interpreter.cpp is gigantic and destroys incremental build times for any
 #   files unlucky enough to be unified with it.
 SOURCES += [
+    'builtin/Array.cpp',
     'builtin/RegExp.cpp',
     'frontend/Parser.cpp',
     'gc/StoreBuffer.cpp',
-    'jsarray.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
     'util/DoubleToString.cpp',

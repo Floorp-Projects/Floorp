@@ -6,8 +6,8 @@
 
 /* JS Array interface. */
 
-#ifndef jsarray_h
-#define jsarray_h
+#ifndef builtin_Array_h
+#define builtin_Array_h
 
 #include "jspubtd.h"
 
@@ -280,4 +280,4 @@ class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final
 
 } /* namespace js */
 
-#endif /* jsarray_h */
+#endif /* builtin_Array_h */

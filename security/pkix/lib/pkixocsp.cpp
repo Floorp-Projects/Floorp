@@ -46,16 +46,16 @@ enum class CertStatus : uint8_t {
 class Context final
 {
 public:
-  Context(TrustDomain& trustDomain, const CertID& certID, Time time,
-          uint16_t maxLifetimeInDays, /*optional out*/ Time* thisUpdate,
-          /*optional out*/ Time* validThrough)
-    : trustDomain(trustDomain)
-    , certID(certID)
-    , time(time)
-    , maxLifetimeInDays(maxLifetimeInDays)
+  Context(TrustDomain& aTrustDomain, const CertID& aCertID, Time aTime,
+          uint16_t aMaxLifetimeInDays, /*optional out*/ Time* aThisUpdate,
+          /*optional out*/ Time* aValidThrough)
+    : trustDomain(aTrustDomain)
+    , certID(aCertID)
+    , time(aTime)
+    , maxLifetimeInDays(aMaxLifetimeInDays)
     , certStatus(CertStatus::Unknown)
-    , thisUpdate(thisUpdate)
-    , validThrough(validThrough)
+    , thisUpdate(aThisUpdate)
+    , validThrough(aValidThrough)
     , expired(false)
     , matchFound(false)
   {
@@ -173,9 +173,13 @@ static Result ExtensionNotUnderstood(Reader& extnID, Input extnValue,
 static Result RememberSingleExtension(Context& context, Reader& extnID,
                                       Input extnValue, bool critical,
                                       /*out*/ bool& understood);
-static inline Result CertID(Reader& input,
-                            const Context& context,
-                            /*out*/ bool& match);
+// It is convention to name the function after the part of the data structure
+// we're parsing from the RFC (e.g. OCSPResponse, ResponseBytes).
+// But since we also have a C++ type called CertID, this function doesn't
+// follow the convention to prevent shadowing.
+static inline Result MatchCertID(Reader& input,
+                                 const Context& context,
+                                 /*out*/ bool& match);
 static Result MatchKeyHash(TrustDomain& trustDomain,
                            Input issuerKeyHash,
                            Input issuerSubjectPublicKeyInfo,
@@ -438,12 +442,13 @@ BasicResponse(Reader& input, Context& context)
                      der::SEQUENCE, [&certs](Reader& certsDER) -> Result {
       while (!certsDER.AtEnd()) {
         Input cert;
-        Result rv = der::ExpectTagAndGetTLV(certsDER, der::SEQUENCE, cert);
-        if (rv != Success) {
-          return rv;
+        Result nestedRv =
+          der::ExpectTagAndGetTLV(certsDER, der::SEQUENCE, cert);
+        if (nestedRv != Success) {
+          return nestedRv;
         }
-        rv = certs.Append(cert);
-        if (rv != Success) {
+        nestedRv = certs.Append(cert);
+        if (nestedRv != Success) {
           return Result::ERROR_BAD_DER; // Too many certs
         }
       }
@@ -538,7 +543,7 @@ SingleResponse(Reader& input, Context& context)
 {
   bool match = false;
   Result rv = der::Nested(input, der::SEQUENCE, [&context, &match](Reader& r) {
-    return CertID(r, context, match);
+    return MatchCertID(r, context, match);
   });
   if (rv != Success) {
     return rv;
@@ -695,7 +700,7 @@ SingleResponse(Reader& input, Context& context)
 //        issuerKeyHash       OCTET STRING, -- Hash of issuer's public key
 //        serialNumber        CertificateSerialNumber }
 static inline Result
-CertID(Reader& input, const Context& context, /*out*/ bool& match)
+MatchCertID(Reader& input, const Context& context, /*out*/ bool& match)
 {
   match = false;
 

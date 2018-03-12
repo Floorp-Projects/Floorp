@@ -864,10 +864,8 @@ cargo_rustc_flags += -C lto
 endif
 endif
 
-# Disable incremental Rust compilation in automation builds, where
-# the lack of environmental continuity makes it unhelpful.
-ifdef MOZ_AUTOMATION
-cargo_incremental := CARGO_INCREMENTAL=0
+ifdef CARGO_INCREMENTAL
+cargo_incremental := CARGO_INCREMENTAL=$(CARGO_INCREMENTAL)
 endif
 
 rustflags_override = RUSTFLAGS='$(MOZ_RUST_DEFAULT_FLAGS) $(RUSTFLAGS)'

@@ -106,7 +106,7 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
   RefPtr<TextureClient> texture = TextureClient::CreateForDrawing(
     aKnowsCompositor, aFormat, aSize,
     BackendSelector::Canvas,
-    TextureFlags::DEFAULT,
+    TextureFlags::DEFAULT | TextureFlags::NON_BLOCKING_READ_LOCK,
     TextureAllocationFlags::ALLOC_DEFAULT
   );
 
@@ -190,7 +190,7 @@ PersistentBufferProviderShared::SetKnowsCompositor(KnowsCompositor* aKnowsCompos
       RefPtr<TextureClient> newTexture = TextureClient::CreateForDrawing(
         aKnowsCompositor, mFormat, mSize,
         BackendSelector::Canvas,
-        TextureFlags::DEFAULT,
+        TextureFlags::DEFAULT | TextureFlags::NON_BLOCKING_READ_LOCK,
         TextureAllocationFlags::ALLOC_DEFAULT
       );
 
@@ -322,7 +322,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(const gfx::IntRect& aPersistedR
     RefPtr<TextureClient> newTexture = TextureClient::CreateForDrawing(
       mKnowsCompositor, mFormat, mSize,
       BackendSelector::Canvas,
-      TextureFlags::DEFAULT,
+      TextureFlags::DEFAULT | TextureFlags::NON_BLOCKING_READ_LOCK,
       TextureAllocationFlags::ALLOC_DEFAULT
     );
 
@@ -383,9 +383,7 @@ PersistentBufferProviderShared::GetTextureClient()
   // Can't access the front buffer while drawing.
   MOZ_ASSERT(!mDrawTarget);
   TextureClient* texture = GetTexture(mFront);
-  if (texture) {
-    texture->EnableReadLock();
-  } else {
+  if (!texture) {
     gfxCriticalNote << "PersistentBufferProviderShared: front buffer unavailable";
   }
   return texture;

@@ -99,14 +99,3 @@ function goSetCommandEnabled(aID, aEnabled) {
       node.setAttribute("disabled", "true");
   }
 }
-
-Object.defineProperty(this, "NS_ASSERT", {
-  configurable: true,
-  enumerable: true,
-  get() {
-    delete this.NS_ASSERT;
-    var tmpScope = {};
-    ChromeUtils.import("resource://gre/modules/debug.js", tmpScope);
-    return this.NS_ASSERT = tmpScope.NS_ASSERT;
-  },
-});

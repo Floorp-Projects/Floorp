@@ -977,10 +977,10 @@ public:
     {
     }
 
-    bool SetCertTrust(const ByteString& certDER, TrustLevel certTrustLevel)
+    bool SetCertTrust(const ByteString& aCertDER, TrustLevel aCertTrustLevel)
     {
-      this->certDER = certDER;
-      this->certTrustLevel = certTrustLevel;
+      this->certDER = aCertDER;
+      this->certTrustLevel = aCertTrustLevel;
       return true;
     }
   private:
