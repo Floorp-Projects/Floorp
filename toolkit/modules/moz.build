@@ -187,7 +187,6 @@ EXTRA_JS_MODULES += [
     'Console.jsm',
     'css-selector.js',
     'DateTimePickerHelper.jsm',
-    'debug.js',
     'DeferredTask.jsm',
     'Deprecated.jsm',
     'E10SUtils.jsm',

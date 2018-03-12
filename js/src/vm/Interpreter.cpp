@@ -17,10 +17,10 @@
 
 #include <string.h>
 
-#include "jsarray.h"
 #include "jslibmath.h"
 #include "jsnum.h"
 
+#include "builtin/Array.h"
 #include "builtin/Eval.h"
 #include "builtin/String.h"
 #include "jit/AtomicOperations.h"
@@ -47,8 +47,7 @@
 #include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 
-#include "jsboolinlines.h"
-
+#include "builtin/Boolean-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"

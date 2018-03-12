@@ -78,6 +78,7 @@ VideoBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 
 PTextureChild*
 VideoBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
+                                     const ReadLockDescriptor&,
                                      const LayersBackend&,
                                      const TextureFlags&,
                                      const uint64_t& aSerial)
@@ -106,6 +107,7 @@ VideoBridgeChild::DeallocPVideoBridgeChild()
 
 PTextureChild*
 VideoBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
+                                const ReadLockDescriptor& aReadLock,
                                 LayersBackend aLayersBackend,
                                 TextureFlags aFlags,
                                 uint64_t aSerial,
@@ -113,7 +115,7 @@ VideoBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
                                 nsIEventTarget* aTarget)
 {
   MOZ_ASSERT(CanSend());
-  return SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, aSerial);
+  return SendPTextureConstructor(aSharedData, aReadLock, aLayersBackend, aFlags, aSerial);
 }
 
 bool VideoBridgeChild::IsSameProcess() const

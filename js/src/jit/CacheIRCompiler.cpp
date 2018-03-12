@@ -9,7 +9,7 @@
 #include "jit/IonIC.h"
 #include "jit/SharedICHelpers.h"
 
-#include "jsboolinlines.h"
+#include "builtin/Boolean-inl.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "vm/JSCompartment-inl.h"
