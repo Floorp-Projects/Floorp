@@ -2739,6 +2739,13 @@ LIRGenerator::visitInterruptCheck(MInterruptCheck* ins)
 }
 
 void
+LIRGenerator::visitWasmInterruptCheck(MWasmInterruptCheck* ins)
+{
+    auto* lir = new(alloc()) LWasmInterruptCheck(useRegisterAtStart(ins->tlsPtr()));
+    add(lir, ins);
+}
+
+void
 LIRGenerator::visitWasmTrap(MWasmTrap* ins)
 {
     add(new(alloc()) LWasmTrap, ins);

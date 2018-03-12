@@ -3604,9 +3604,10 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.loadConstantDouble(d, dest);
     }
 
-    void addInterruptCheck()
-    {
-        // TODO
+    void addInterruptCheck() {
+        ScratchI32 tmp(*this);
+        masm.loadWasmTlsRegFromFrame(tmp);
+        masm.wasmInterruptCheck(tmp, bytecodeOffset());
     }
 
     void jumpTable(const LabelVector& labels, Label* theTable) {

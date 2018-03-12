@@ -158,6 +158,7 @@ static_assert(CodeAlignment % SimdMemoryAlignment == 0,
   "alignment for SIMD constants.");
 
 static const uint32_t WasmStackAlignment = SimdMemoryAlignment;
+static const uint32_t WasmTrapInstructionLength = 4;
 
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
 static constexpr bool SupportsUint32x4FloatConversions = false;
@@ -443,6 +444,7 @@ static constexpr FloatRegister ABINonArgDoubleReg = { FloatRegisters::s16, Float
 // Note: these three registers are all guaranteed to be different
 static constexpr Register ABINonArgReturnReg0 = r8;
 static constexpr Register ABINonArgReturnReg1 = r9;
+static constexpr Register ABINonVolatileReg { Registers::x19 };
 
 // This register is guaranteed to be clobberable during the prologue and
 // epilogue of an ABI call which must preserve both ABI argument, return
