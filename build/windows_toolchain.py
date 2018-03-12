@@ -52,7 +52,7 @@ PATTERNS = [
         ],
     },
     {
-        'srcdir': '%(vs_path)s/VC/Tools/MSVC/14.11.25503',
+        'srcdir': '%(vs_path)s/VC/Tools/MSVC/14.13.26128',
         'dstdir': 'VC',
         'files': [
             # ATL is needed by Breakpad.
@@ -86,7 +86,7 @@ PATTERNS = [
         ],
     },
     {
-        'srcdir': '%(vs_path)s/VC/Redist/MSVC/14.11.25325',
+        'srcdir': '%(vs_path)s/VC/Redist/MSVC/14.13.26020',
         'dstdir': 'VC/redist',
         'files': [
             {
