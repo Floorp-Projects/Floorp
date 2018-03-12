@@ -103,9 +103,7 @@ def lint(paths, config, fix=None, **lintargs):
                 # Silence some warnings:
                 # 1: disable warnings about wrong encoding
                 # 2: disable warnings about binary file
-		# 4: shut down warnings about automatic fixes
-                #    that were disabled in dictionary.
-                '--quiet-level=4',
+                '--quiet-level=3',
                 ]
 
 # Disabled for now because of
