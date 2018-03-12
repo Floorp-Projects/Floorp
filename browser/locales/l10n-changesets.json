@@ -767,7 +767,7 @@
             "macosx64", 
             "macosx64-devedition"
         ], 
-        "revision": "56aa308e1ccd"
+        "revision": "9f3d365ba942"
     }, 
     "ka": {
         "platforms": [
@@ -872,7 +872,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "8d636cecfb90"
+        "revision": "6e4012b76984"
     }, 
     "lt": {
         "platforms": [
@@ -1007,7 +1007,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "b57d53ad588a"
+        "revision": "6adb3688d3e8"
     }, 
     "ne-NP": {
         "platforms": [
