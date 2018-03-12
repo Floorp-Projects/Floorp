@@ -20,9 +20,10 @@ add_task(function* () {
     ],
   ]);
 
-  yield setSessionStorageItem("ss4", "new-item");
+  gWindow.sessionStorage.setItem("ss4", "new-item");
 
-  yield gUI.once("store-objects-edit");
+  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-updated");
 
   yield checkState([
     [
@@ -33,13 +34,13 @@ add_task(function* () {
 
   // deleting item
 
-  yield removeSessionStorageItem("ss3");
+  gWindow.sessionStorage.removeItem("ss3");
 
-  yield gUI.once("store-objects-edit");
+  yield gUI.once("store-objects-updated");
 
-  yield removeSessionStorageItem("ss1");
+  gWindow.sessionStorage.removeItem("ss1");
 
-  yield gUI.once("store-objects-edit");
+  yield gUI.once("store-objects-updated");
 
   yield checkState([
     [
@@ -55,7 +56,7 @@ add_task(function* () {
   // Checking for correct value in sidebar before update
   yield findVariableViewProperties([{name: "ss2", value: "foobar"}]);
 
-  yield setSessionStorageItem("ss2", "changed=ss2");
+  gWindow.sessionStorage.setItem("ss2", "changed=ss2");
 
   yield gUI.once("sidebar-updated");
 
@@ -79,19 +80,3 @@ add_task(function* () {
 
   yield finishTests();
 });
-
-function* setSessionStorageItem(key, value) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, [key, value],
-    ([innerKey, innerValue]) => {
-      content.wrappedJSObject.sessionStorage.setItem(innerKey, innerValue);
-    }
-  );
-}
-
-function* removeSessionStorageItem(key) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, key,
-    innerKey => {
-      content.wrappedJSObject.sessionStorage.removeItem(innerKey);
-    }
-  );
-}
