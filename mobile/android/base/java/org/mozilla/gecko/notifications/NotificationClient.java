@@ -182,7 +182,7 @@ public final class NotificationClient implements NotificationListener {
         if (ongoing != isOngoing(mNotifications.get(name))) {
             // In order to change notification from ongoing to non-ongoing, or vice versa,
             // we have to remove the previous notification, because ongoing notifications
-            // use a different id value than non-ongoing notifications.
+            // might use a different id value than non-ongoing notifications.
             onNotificationClose(name);
         }
 
@@ -200,6 +200,8 @@ public final class NotificationClient implements NotificationListener {
             // Shortcut to update the current foreground notification, instead of
             // going through the service.
             mNotificationManager.notify(R.id.foregroundNotification, notification);
+        } else {
+            mNotificationManager.notify(name, 0, notification);
         }
     }
 
@@ -317,6 +319,10 @@ public final class NotificationClient implements NotificationListener {
         for (final String name : mNotifications.keySet()) {
             final Notification notification = mNotifications.get(name);
             if (isOngoing(notification)) {
+                // The same reasoning as above applies - the current foreground notification
+                // uses a special ID, so we need to close its old instantiation and then
+                // re-add it with the new ID through the NotificationService.
+                onNotificationClose(name);
                 setForegroundNotificationLocked(name, notification);
                 return;
             }

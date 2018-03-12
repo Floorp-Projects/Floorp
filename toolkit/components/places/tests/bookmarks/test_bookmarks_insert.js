@@ -91,6 +91,25 @@ add_task(async function invalid_properties_for_bookmark_type() {
                 /Invalid value for property 'title'/);
 });
 
+add_task(async function test_insert_into_root_throws() {
+  Assert.throws(() =>
+    PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+      url: "http://example.com",
+    }),
+    /Invalid value for property 'parentGuid'/,
+    "Should throw when inserting a bookmark into the root."
+  );
+  Assert.throws(() =>
+    PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    }),
+    /Invalid value for property 'parentGuid'/,
+    "Should throw when inserting a folder into the root."
+  );
+});
+
 add_task(async function long_title_trim() {
   let longtitle = "a";
   for (let i = 0; i < 4096; i++) {
