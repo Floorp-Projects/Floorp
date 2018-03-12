@@ -285,6 +285,7 @@ dependencies {
     }
 
     compile 'org.mozilla.telemetry:telemetry:1.1.1'
+    compile 'org.mozilla.components:ktx:0.1'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.19.3"

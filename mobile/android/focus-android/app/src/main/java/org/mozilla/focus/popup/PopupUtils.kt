@@ -16,8 +16,8 @@ import android.webkit.URLUtil
 import android.widget.ImageView
 import android.widget.PopupWindow
 import android.widget.TextView
+import mozilla.components.ktx.android.graphics.drawable.toBitmap
 import org.mozilla.focus.R
-import org.mozilla.focus.ext.toBitmap
 import org.mozilla.focus.session.Session
 import org.mozilla.focus.utils.DrawableUtils
 import java.net.URL

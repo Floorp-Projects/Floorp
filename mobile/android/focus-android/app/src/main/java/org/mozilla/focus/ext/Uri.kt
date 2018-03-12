@@ -5,6 +5,7 @@
 package org.mozilla.focus.ext
 
 import android.net.Uri
+import mozilla.components.ktx.kotlin.ELLIPSIS
 
 // Extension functions for the android.net.Uri class
 

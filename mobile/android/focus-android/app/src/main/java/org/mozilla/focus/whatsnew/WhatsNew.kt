@@ -7,7 +7,7 @@ package org.mozilla.focus.whatsnew
 import android.content.Context
 import android.preference.PreferenceManager
 import android.support.annotation.VisibleForTesting
-import org.mozilla.focus.ext.appVersionName
+import mozilla.components.ktx.android.content.appVersionName
 
 /**
  * Helper class tracking whether the application was recently updated in order to show "What's new"
