@@ -10,31 +10,31 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { DetailsView, WaterfallView } = panel.panelWin;
 
-  await startRecording(panel);
+  yield startRecording(panel);
   // Already waits for EVENTS.UI_WATERFALL_RENDERED.
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   ok(DetailsView.isViewSelected(WaterfallView),
     "The waterfall view is selected by default in the details view.");
 
   ok(true, "WaterfallView rendered after recording is stopped.");
 
-  await startRecording(panel);
+  yield startRecording(panel);
   // Already waits for EVENTS.UI_WATERFALL_RENDERED.
-  await stopRecording(panel);
+  yield stopRecording(panel);
 
   ok(DetailsView.isViewSelected(WaterfallView),
     "The waterfall view is still selected in the details view.");
 
   ok(true, "WaterfallView rendered again after recording completed a second time.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

@@ -6,72 +6,72 @@
  * when there's a shader compilation error.
  */
 
-async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
+function* ifWebGLSupported() {
+  let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
-  await promise.all([
+  yield promise.all([
     once(gFront, "program-linked"),
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
-  let vsEditor = await ShadersEditorsView._getEditor("vs");
-  let fsEditor = await ShadersEditorsView._getEditor("fs");
+  let vsEditor = yield ShadersEditorsView._getEditor("vs");
+  let fsEditor = yield ShadersEditorsView._getEditor("fs");
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  let [, vertError] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  let [, vertError] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   info("Error marks added in the vertex shader editor.");
 
   vsEditor.insertText(" ", { line: 1, ch: 0 });
-  await once(panel.panelWin, EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
+  yield once(panel.panelWin, EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
   is(vsEditor.getText(1), "       precision lowp float;", "Typed space.");
   checkHasVertFirstError(false, vertError);
   checkHasVertSecondError(false, vertError);
   info("Error marks removed while typing in the vertex shader editor.");
 
-  [, vertError] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  [, vertError] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   info("Error marks were re-added after recompiling the vertex shader.");
 
   fsEditor.replaceText("vec4", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  let [, fragError] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  let [, fragError] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   checkHasFragError(true, fragError);
   info("Error marks added in the fragment shader editor.");
 
   fsEditor.insertText(" ", { line: 1, ch: 0 });
-  await once(panel.panelWin, EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
+  yield once(panel.panelWin, EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
   is(fsEditor.getText(1), "       precision lowp float;", "Typed space.");
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   checkHasFragError(false, fragError);
   info("Error marks removed while typing in the fragment shader editor.");
 
-  [, fragError] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  [, fragError] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   checkHasFragError(true, fragError);
   info("Error marks were re-added after recompiling the fragment shader.");
 
   vsEditor.replaceText("2", { line: 3, ch: 19 }, { line: 3, ch: 20 });
-  await once(panel.panelWin, EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
+  yield once(panel.panelWin, EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
   checkHasVertFirstError(false, vertError);
   checkHasVertSecondError(false, vertError);
   checkHasFragError(true, fragError);
   info("Error marks removed while typing in the vertex shader editor again.");
 
-  [, vertError] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  [, vertError] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(true, vertError);
   checkHasFragError(true, fragError);
   info("Error marks were re-added after recompiling the fragment shader again.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 
   function checkHasVertFirstError(bool, error) {

@@ -5,8 +5,8 @@
  * Tests if the shader editor shows the appropriate UI when opened.
  */
 
-async function ifWebGLSupported() {
-  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
+function* ifWebGLSupported() {
+  let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, $ } = panel.panelWin;
 
   is($("#reload-notice").hidden, false,
@@ -20,7 +20,7 @@ async function ifWebGLSupported() {
   let linked = once(gFront, "program-linked");
   reload(target);
 
-  await navigating;
+  yield navigating;
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden when navigating.");
@@ -29,7 +29,7 @@ async function ifWebGLSupported() {
   is($("#content").hidden, true,
     "The tool's content should still be hidden.");
 
-  await linked;
+  yield linked;
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden after linking.");
@@ -38,6 +38,6 @@ async function ifWebGLSupported() {
   is($("#content").hidden, false,
     "The tool's content should not be hidden anymore.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

@@ -17,24 +17,24 @@ const PAGE_URL = `${TEST_ROOT}doc_empty-tab-01.html`;
 const JS_URL = `${TEST_ROOT}code_inline_bundle.js`;
 const ORIGINAL_URL = "webpack:///code_inline_original.js";
 
-add_task(async function () {
-  await pushPref("devtools.debugger.new-debugger-frontend", true);
+add_task(function* () {
+  yield pushPref("devtools.debugger.new-debugger-frontend", true);
 
-  const toolbox = await openNewTabAndToolbox(PAGE_URL, "jsdebugger");
+  const toolbox = yield openNewTabAndToolbox(PAGE_URL, "jsdebugger");
   const service = toolbox.sourceMapURLService;
 
   // Inject JS script
   let sourceSeen = waitForSourceLoad(toolbox, JS_URL);
-  await createScript(JS_URL);
-  await sourceSeen;
+  yield createScript(JS_URL);
+  yield sourceSeen;
 
   info(`checking original location for ${JS_URL}:84`);
-  let newLoc = await service.originalPositionFor(JS_URL, 84);
+  let newLoc = yield service.originalPositionFor(JS_URL, 84);
 
   is(newLoc.sourceUrl, ORIGINAL_URL, "check mapped URL");
   is(newLoc.line, 11, "check mapped line number");
 
-  await toolbox.destroy();
+  yield toolbox.destroy();
   gBrowser.removeCurrentTab();
   finish();
 });

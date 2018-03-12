@@ -12,8 +12,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -28,12 +28,12 @@ add_task(async function () {
 
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   let rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
-  await DetailsView.selectView("js-flamegraph");
-  await rendered;
+  yield DetailsView.selectView("js-flamegraph");
+  yield rendered;
 
   let thread1 = PerformanceController.getCurrentRecording().getProfile().threads[0];
   let rendering1 = FlameGraphUtils._cache.get(thread1);
@@ -45,7 +45,7 @@ add_task(async function () {
 
   rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, false);
-  await rendered;
+  yield rendered;
   ok(true, "JsFlameGraphView rerendered when toggling flatten-tree-recursion.");
 
   let thread2 = PerformanceController.getCurrentRecording().getProfile().threads[0];
@@ -58,7 +58,7 @@ add_task(async function () {
 
   rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
-  await rendered;
+  yield rendered;
   ok(true, "JsFlameGraphView rerendered when toggling back flatten-tree-recursion.");
 
   let thread3 = PerformanceController.getCurrentRecording().getProfile().threads[0];
@@ -69,5 +69,5 @@ add_task(async function () {
   isnot(rendering2, rendering3,
     "The rendering data should be different because other options were used (2).");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

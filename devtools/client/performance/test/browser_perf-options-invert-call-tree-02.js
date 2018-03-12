@@ -12,8 +12,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -24,22 +24,22 @@ add_task(async function () {
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
   Services.prefs.setBoolPref(UI_INVERT_CALL_TREE_PREF, true);
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   let rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
-  await DetailsView.selectView("memory-calltree");
-  await rendered;
+  yield DetailsView.selectView("memory-calltree");
+  yield rendered;
 
   rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
   Services.prefs.setBoolPref(UI_INVERT_CALL_TREE_PREF, false);
-  await rendered;
+  yield rendered;
   ok(true, "MemoryCallTreeView rerendered when toggling invert-call-tree.");
 
   rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
   Services.prefs.setBoolPref(UI_INVERT_CALL_TREE_PREF, true);
-  await rendered;
+  yield rendered;
   ok(true, "MemoryCallTreeView rerendered when toggling back invert-call-tree.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

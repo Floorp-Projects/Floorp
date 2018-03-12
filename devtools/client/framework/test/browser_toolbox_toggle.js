@@ -12,7 +12,7 @@ const URL = "data:text/html;charset=utf-8,Toggling devtools using shortcuts";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(async function () {
+add_task(function* () {
   // Make sure this test starts with the selectedTool pref cleared. Previous
   // tests select various tools, and that sets this pref.
   Services.prefs.clearUserPref("devtools.toolbox.selectedTool");
@@ -21,7 +21,7 @@ add_task(async function () {
   // - toolbox-key-toggle in devtools/client/framework/toolbox-window.xul
   // - key_devToolboxMenuItem in browser/base/content/browser.xul
   info("Test toggle using CTRL+SHIFT+I/CMD+ALT+I");
-  await testToggle("I", {
+  yield testToggle("I", {
     accelKey: true,
     shiftKey: !navigator.userAgent.match(/Mac/),
     altKey: navigator.userAgent.match(/Mac/)
@@ -29,20 +29,20 @@ add_task(async function () {
 
   // Test with F12 ; no modifiers
   info("Test toggle using F12");
-  await testToggle("VK_F12", {});
+  yield testToggle("VK_F12", {});
 });
 
-async function testToggle(key, modifiers) {
-  let tab = await addTab(URL + " ; key : '" + key + "'");
-  await gDevTools.showToolbox(TargetFactory.forTab(tab));
+function* testToggle(key, modifiers) {
+  let tab = yield addTab(URL + " ; key : '" + key + "'");
+  yield gDevTools.showToolbox(TargetFactory.forTab(tab));
 
-  await testToggleDockedToolbox(tab, key, modifiers);
-  await testToggleDetachedToolbox(tab, key, modifiers);
+  yield testToggleDockedToolbox(tab, key, modifiers);
+  yield testToggleDetachedToolbox(tab, key, modifiers);
 
-  await cleanup();
+  yield cleanup();
 }
 
-async function testToggleDockedToolbox(tab, key, modifiers) {
+function* testToggleDockedToolbox(tab, key, modifiers) {
   let toolbox = getToolboxForTab(tab);
 
   isnot(toolbox.hostType, Toolbox.HostType.WINDOW,
@@ -51,33 +51,33 @@ async function testToggleDockedToolbox(tab, key, modifiers) {
   info("verify docked toolbox is destroyed when using toggle key");
   let onToolboxDestroyed = once(gDevTools, "toolbox-destroyed");
   EventUtils.synthesizeKey(key, modifiers);
-  await onToolboxDestroyed;
+  yield onToolboxDestroyed;
   ok(true, "Docked toolbox is destroyed when using a toggle key");
 
   info("verify new toolbox is created when using toggle key");
   let onToolboxReady = once(gDevTools, "toolbox-ready");
   EventUtils.synthesizeKey(key, modifiers);
-  await onToolboxReady;
+  yield onToolboxReady;
   ok(true, "Toolbox is created by using when toggle key");
 }
 
-async function testToggleDetachedToolbox(tab, key, modifiers) {
+function* testToggleDetachedToolbox(tab, key, modifiers) {
   let toolbox = getToolboxForTab(tab);
 
   info("change the toolbox hostType to WINDOW");
 
-  await toolbox.switchHost(Toolbox.HostType.WINDOW);
+  yield toolbox.switchHost(Toolbox.HostType.WINDOW);
   is(toolbox.hostType, Toolbox.HostType.WINDOW,
     "Toolbox opened on separate window");
 
   info("Wait for focus on the toolbox window");
-  await new Promise(res => waitForFocus(res, toolbox.win));
+  yield new Promise(res => waitForFocus(res, toolbox.win));
 
   info("Focus main window to put the toolbox window in the background");
 
   let onMainWindowFocus = once(window, "focus");
   window.focus();
-  await onMainWindowFocus;
+  yield onMainWindowFocus;
   ok(true, "Main window focused");
 
   info("Verify windowed toolbox is focused instead of closed when using " +
@@ -85,7 +85,7 @@ async function testToggleDetachedToolbox(tab, key, modifiers) {
   let toolboxWindow = toolbox.win.top;
   let onToolboxWindowFocus = once(toolboxWindow, "focus", true);
   EventUtils.synthesizeKey(key, modifiers);
-  await onToolboxWindowFocus;
+  yield onToolboxWindowFocus;
   ok(true, "Toolbox focused and not destroyed");
 
   info("Verify windowed toolbox is destroyed when using toggle key from its " +
@@ -93,7 +93,7 @@ async function testToggleDetachedToolbox(tab, key, modifiers) {
 
   let onToolboxDestroyed = once(gDevTools, "toolbox-destroyed");
   EventUtils.synthesizeKey(key, modifiers, toolboxWindow);
-  await onToolboxDestroyed;
+  yield onToolboxDestroyed;
   ok(true, "Toolbox destroyed");
 }
 
@@ -101,7 +101,7 @@ function getToolboxForTab(tab) {
   return gDevTools.getToolbox(TargetFactory.forTab(tab));
 }
 
-function cleanup() {
+function* cleanup() {
   Services.prefs.setCharPref("devtools.toolbox.host",
     Toolbox.HostType.BOTTOM);
   gBrowser.removeCurrentTab();

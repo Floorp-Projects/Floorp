@@ -9,8 +9,8 @@
 
 const BUG_1125817_URL = EXAMPLE_URL + "doc_bug_1125817.html";
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(BUG_1125817_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(BUG_1125817_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
@@ -20,9 +20,9 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 2, 0)
   ]);
   reload(target);
-  await events;
+  yield events;
 
   ok(true, "Successfully disconnected a just-created node.");
 
-  await teardown(target);
+  yield teardown(target);
 });

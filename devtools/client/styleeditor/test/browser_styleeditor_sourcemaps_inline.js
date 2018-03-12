@@ -30,30 +30,30 @@ body > h1 {
 "4gICAgY29sb3I6IHdoaXRlO1xuICB9XG59XG4iXSwKIm5hbWVzIjogW10sCiJmaWxlIjogInRlc" +
 "3QuY3NzIgp9Cg== */";
 
-add_task(async function () {
-  let {ui} = await openStyleEditorForURL(TESTCASE_URI);
+add_task(function* () {
+  let {ui} = yield openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 1,
     "correct number of editors with source maps enabled");
 
-  await testEditor(ui.editors[0], "test.scss", sassContent);
+  yield testEditor(ui.editors[0], "test.scss", sassContent);
 
   // Test disabling original sources
-  await togglePref(ui);
+  yield togglePref(ui);
 
   is(ui.editors.length, 1, "correct number of editors after pref toggled");
 
   // Test CSS editors
-  await testEditor(ui.editors[0], "<inline style sheet #1>", cssContent);
+  yield testEditor(ui.editors[0], "<inline style sheet #1>", cssContent);
 
   Services.prefs.clearUserPref(PREF);
 });
 
-async function testEditor(editor, expectedName, expectedText) {
+function* testEditor(editor, expectedName, expectedText) {
   let name = getStylesheetNameFor(editor);
   is(expectedName, name, name + " editor name is correct");
 
-  await openEditor(editor);
+  yield openEditor(editor);
   let text = editor.sourceEditor.getText();
   is(text, expectedText, name + " editor contains expected text");
 }

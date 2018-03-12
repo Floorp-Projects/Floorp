@@ -14,93 +14,93 @@
 const URL = "data:text/html;charset=utf8,test page";
 const {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(async function () {
+add_task(function* () {
   info("Create a test tab and open the toolbox");
-  let tab = await addTab(URL);
+  let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
+  let toolbox = yield gDevTools.showToolbox(target, "webconsole");
 
   let button = toolbox.doc.querySelector("#toolbox-dock-bottom-minimize");
   ok(button, "The minimize button exists in the default bottom host");
 
   info("Try to minimize the toolbox");
-  await minimize(toolbox);
+  yield minimize(toolbox);
   ok(parseInt(toolbox._host.frame.style.marginBottom, 10) < 0,
      "The toolbox host has been hidden away with a negative-margin");
 
   info("Try to maximize again the toolbox");
-  await maximize(toolbox);
+  yield maximize(toolbox);
   ok(parseInt(toolbox._host.frame.style.marginBottom, 10) == 0,
      "The toolbox host is shown again");
 
   info("Try to minimize again using the keyboard shortcut");
-  await minimizeWithShortcut(toolbox);
+  yield minimizeWithShortcut(toolbox);
   ok(parseInt(toolbox._host.frame.style.marginBottom, 10) < 0,
      "The toolbox host has been hidden away with a negative-margin");
 
   info("Try to maximize again using the keyboard shortcut");
-  await maximizeWithShortcut(toolbox);
+  yield maximizeWithShortcut(toolbox);
   ok(parseInt(toolbox._host.frame.style.marginBottom, 10) == 0,
      "The toolbox host is shown again");
 
   info("Minimize again and switch to another tool");
-  await minimize(toolbox);
+  yield minimize(toolbox);
   let onMaximized = toolbox._host.once("maximized");
-  await toolbox.selectTool("inspector");
-  await onMaximized;
+  yield toolbox.selectTool("inspector");
+  yield onMaximized;
 
   info("Minimize again and click on the tab of the current tool");
-  await minimize(toolbox);
+  yield minimize(toolbox);
   onMaximized = toolbox._host.once("maximized");
   let tabButton = toolbox.doc.querySelector("#toolbox-tab-inspector");
   EventUtils.synthesizeMouseAtCenter(tabButton, {}, toolbox.win);
-  await onMaximized;
+  yield onMaximized;
 
   info("Minimize again and click on the settings tab");
-  await minimize(toolbox);
+  yield minimize(toolbox);
   onMaximized = toolbox._host.once("maximized");
   let settingsButton = toolbox.doc.querySelector("#toolbox-tab-options");
   EventUtils.synthesizeMouseAtCenter(settingsButton, {}, toolbox.win);
-  await onMaximized;
+  yield onMaximized;
 
   info("Switch to a different host");
-  await toolbox.switchHost(Toolbox.HostType.SIDE);
+  yield toolbox.switchHost(Toolbox.HostType.SIDE);
   button = toolbox.doc.querySelector("#toolbox-dock-bottom-minimize");
   ok(!button, "The minimize button doesn't exist in the side host");
 
   Services.prefs.clearUserPref("devtools.toolbox.host");
-  await toolbox.destroy();
+  yield toolbox.destroy();
   gBrowser.removeCurrentTab();
 });
 
-async function minimize(toolbox) {
+function* minimize(toolbox) {
   let button = toolbox.doc.querySelector("#toolbox-dock-bottom-minimize");
   let onMinimized = toolbox._host.once("minimized");
   EventUtils.synthesizeMouseAtCenter(button, {}, toolbox.win);
-  await onMinimized;
+  yield onMinimized;
 }
 
-async function minimizeWithShortcut(toolbox) {
+function* minimizeWithShortcut(toolbox) {
   let key = toolbox.doc.getElementById("toolbox-minimize-key")
                        .getAttribute("key");
   let onMinimized = toolbox._host.once("minimized");
   EventUtils.synthesizeKey(key, {accelKey: true, shiftKey: true},
                            toolbox.win);
-  await onMinimized;
+  yield onMinimized;
 }
 
-async function maximize(toolbox) {
+function* maximize(toolbox) {
   let button = toolbox.doc.querySelector("#toolbox-dock-bottom-minimize");
   let onMaximized = toolbox._host.once("maximized");
   EventUtils.synthesizeMouseAtCenter(button, {}, toolbox.win);
-  await onMaximized;
+  yield onMaximized;
 }
 
-async function maximizeWithShortcut(toolbox) {
+function* maximizeWithShortcut(toolbox) {
   let key = toolbox.doc.getElementById("toolbox-minimize-key")
                        .getAttribute("key");
   let onMaximized = toolbox._host.once("maximized");
   EventUtils.synthesizeKey(key, {accelKey: true, shiftKey: true},
                            toolbox.win);
-  await onMaximized;
+  yield onMaximized;
 }

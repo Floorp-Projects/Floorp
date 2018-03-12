@@ -5,8 +5,8 @@
  * Tests if the sidebar is properly updated when a marker is selected.
  */
 
-async function spawnTest() {
-  let { target, panel } = await initPerformance(SIMPLE_URL);
+function* spawnTest() {
+  let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, PerformanceController, WaterfallView } = panel.panelWin;
   let { L10N } = require("devtools/client/performance/modules/global");
   let { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
@@ -19,10 +19,10 @@ async function spawnTest() {
     return { submarkers: markers };
   };
 
-  await startRecording(panel);
+  yield startRecording(panel);
   ok(true, "Recording has started.");
 
-  await waitUntil(() => {
+  yield waitUntil(() => {
     // Wait until we get 3 different markers.
     let markers = PerformanceController.getCurrentRecording().getMarkers();
     return markers.some(m => m.name == "Styles") &&
@@ -30,7 +30,7 @@ async function spawnTest() {
            markers.some(m => m.name == "Paint");
   });
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
   ok(true, "Recording has ended.");
 
   info("No need to select everything in the timeline.");
@@ -71,7 +71,7 @@ async function spawnTest() {
     ok(tooltip.includes(toMs(mkr.end)), "Tooltip has end time.");
   }
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }
 /* eslint-enable */

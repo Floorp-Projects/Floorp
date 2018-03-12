@@ -26,7 +26,7 @@ let contentTypes = {
   ],
 };
 
-add_task(async function () {
+add_task(function* () {
   info("Test JSON content types started");
 
   // Prevent saving files to disk.
@@ -46,8 +46,8 @@ add_task(async function () {
       mimeInfo.alwaysAskBeforeHandling = false;
       handlerSvc.store(mimeInfo);
 
-      await testType(isValid, type);
-      await testType(isValid, type, ";foo=bar+json");
+      yield testType(isValid, type);
+      yield testType(isValid, type, ";foo=bar+json");
 
       // Restore old nsIMIMEInfo
       if (exists) {

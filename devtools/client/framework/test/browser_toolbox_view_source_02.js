@@ -12,18 +12,18 @@ var JS_URL = `${URL_ROOT}code_math.js`;
 
 // Force the old debugger UI since it's directly used (see Bug 1301705)
 Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
-registerCleanupFunction(function() {
+registerCleanupFunction(function* () {
   Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
 });
 
-async function viewSource() {
-  let toolbox = await openNewTabAndToolbox(URL);
-  let { panelWin: debuggerWin } = await toolbox.selectTool("jsdebugger");
+function* viewSource() {
+  let toolbox = yield openNewTabAndToolbox(URL);
+  let { panelWin: debuggerWin } = yield toolbox.selectTool("jsdebugger");
   let debuggerEvents = debuggerWin.EVENTS;
   let { DebuggerView } = debuggerWin;
   let Sources = DebuggerView.Sources;
 
-  await debuggerWin.once(debuggerEvents.SOURCE_SHOWN);
+  yield debuggerWin.once(debuggerEvents.SOURCE_SHOWN);
   ok("A source was shown in the debugger.");
 
   is(Sources.selectedValue, getSourceActor(Sources, JS_URL),
@@ -31,7 +31,7 @@ async function viewSource() {
   is(DebuggerView.editor.getCursor().line, 0,
     "The correct line is initially highlighted in the debugger's source editor.");
 
-  await toolbox.viewSourceInDebugger(JS_URL, 2);
+  yield toolbox.viewSourceInDebugger(JS_URL, 2);
 
   let debuggerPanel = toolbox.getPanel("jsdebugger");
   ok(debuggerPanel, "The debugger panel was opened.");
@@ -42,12 +42,12 @@ async function viewSource() {
   is(DebuggerView.editor.getCursor().line + 1, 2,
     "The correct line is highlighted in the debugger's source editor.");
 
-  await closeToolboxAndTab(toolbox);
+  yield closeToolboxAndTab(toolbox);
   finish();
 }
 
 function test() {
-  viewSource().then(finish, (aError) => {
+  Task.spawn(viewSource).then(finish, (aError) => {
     ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
     finish();
   });

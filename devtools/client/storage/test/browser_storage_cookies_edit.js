@@ -6,24 +6,24 @@
 
 "use strict";
 
-add_task(async function () {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
+add_task(function* () {
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
   showAllColumns(true);
 
   let id = getCookieId("test3", ".test1.example.org", "/browser");
-  await editCell(id, "name", "newTest3");
+  yield editCell(id, "name", "newTest3");
 
   id = getCookieId("newTest3", ".test1.example.org", "/browser");
-  await editCell(id, "host", "test1.example.org");
+  yield editCell(id, "host", "test1.example.org");
 
   id = getCookieId("newTest3", "test1.example.org", "/browser");
-  await editCell(id, "path", "/");
+  yield editCell(id, "path", "/");
 
   id = getCookieId("newTest3", "test1.example.org", "/");
-  await editCell(id, "expires", "Tue, 14 Feb 2040 17:41:14 GMT");
-  await editCell(id, "value", "newValue3");
-  await editCell(id, "isSecure", "true");
-  await editCell(id, "isHttpOnly", "true");
+  yield editCell(id, "expires", "Tue, 14 Feb 2040 17:41:14 GMT");
+  yield editCell(id, "value", "newValue3");
+  yield editCell(id, "isSecure", "true");
+  yield editCell(id, "isHttpOnly", "true");
 
-  await finishTests();
+  yield finishTests();
 });

@@ -76,7 +76,7 @@ var InspectorView = {
    * Takes a AudioNodeView `node` and sets it as the current
    * node and scaffolds the inspector view based off of the new node.
    */
-  async setCurrentAudioNode(node) {
+  setCurrentAudioNode: Task.async(function* (node) {
     this._currentNode = node || null;
 
     // If no node selected, set the inspector back to "no AudioNode selected"
@@ -93,7 +93,7 @@ var InspectorView = {
       this._buildToolbar();
       window.emit(EVENTS.UI_INSPECTOR_NODE_SET, this._currentNode.id);
     }
-  },
+  }),
 
   /**
    * Returns the current AudioNodeView.

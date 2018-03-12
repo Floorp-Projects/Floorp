@@ -5,16 +5,16 @@
  * Tests if clearing the snapshots list works as expected.
  */
 
-async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+function* ifTestingSupported() {
+  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, EVENTS, SnapshotsListView } = panel.panelWin;
 
-  await reload(target);
+  yield reload(target);
 
   let firstRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
 
-  await firstRecordingFinished;
+  yield firstRecordingFinished;
   ok(true, "Finished recording a snapshot of the animation loop.");
 
   is(SnapshotsListView.itemCount, 1,
@@ -23,7 +23,7 @@ async function ifTestingSupported() {
   let secondRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   SnapshotsListView._onRecordButtonClick();
 
-  await secondRecordingFinished;
+  yield secondRecordingFinished;
   ok(true, "Finished recording another snapshot of the animation loop.");
 
   is(SnapshotsListView.itemCount, 2,
@@ -32,12 +32,12 @@ async function ifTestingSupported() {
   let clearingFinished = once(window, EVENTS.SNAPSHOTS_LIST_CLEARED);
   SnapshotsListView._onClearButtonClick();
 
-  await clearingFinished;
+  yield clearingFinished;
   ok(true, "Finished recording all snapshots.");
 
   is(SnapshotsListView.itemCount, 0,
     "There should be no items available in the snapshots list.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

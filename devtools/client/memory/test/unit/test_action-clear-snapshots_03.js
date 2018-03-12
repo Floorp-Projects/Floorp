@@ -8,25 +8,25 @@
 let { takeSnapshotAndCensus, clearSnapshots } = require("devtools/client/memory/actions/snapshot");
 let { snapshotState: states, treeMapState, actions } = require("devtools/client/memory/constants");
 
-add_task(async function () {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  await front.attach();
+  yield front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
   ok(true, "create a snapshot with a treeMap");
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  await waitUntilSnapshotState(store, [states.SAVED]);
+  yield waitUntilSnapshotState(store, [states.SAVED]);
   ok(true, "snapshot created with a SAVED state");
-  await waitUntilCensusState(store, snapshot => snapshot.treeMap,
+  yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
                              [treeMapState.SAVED]);
   ok(true, "treeMap created with a SAVED state");
 
   ok(true, "set snapshot state to error");
   let id = getState().snapshots[0].id;
   dispatch({ type: actions.SNAPSHOT_ERROR, id, error: new Error("_") });
-  await waitUntilSnapshotState(store, [states.ERROR]);
+  yield waitUntilSnapshotState(store, [states.ERROR]);
   ok(true, "snapshot set to error state");
 
   ok(true, "dispatch clearSnapshots action");
@@ -35,10 +35,10 @@ add_task(async function () {
     waitUntilAction(store, actions.DELETE_SNAPSHOTS_END)
   ]);
   dispatch(clearSnapshots(heapWorker));
-  await deleteEvents;
+  yield deleteEvents;
   ok(true, "received delete snapshots events");
   equal(getState().snapshots.length, 0, "error snapshot deleted");
 
   heapWorker.destroy();
-  await front.detach();
+  yield front.detach();
 });

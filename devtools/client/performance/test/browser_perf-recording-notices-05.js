@@ -9,8 +9,8 @@
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -18,7 +18,7 @@ add_task(async function () {
   let { gFront, $, PerformanceController } = panel.panelWin;
 
   // Set a fast profiler-status update interval
-  await gFront.setProfilerStatusInterval(10);
+  yield gFront.setProfilerStatusInterval(10);
 
   let enabled = false;
 
@@ -36,5 +36,5 @@ add_task(async function () {
   ok($("#performance-view").getAttribute("e10s"), "",
     "When e10s is enabled, there should be no e10s attribute.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

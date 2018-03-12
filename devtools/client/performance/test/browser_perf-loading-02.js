@@ -15,8 +15,8 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { getSelectedRecordingIndex, setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -27,7 +27,7 @@ add_task(async function () {
   let loadingNotice = $("#loading-notice");
   let detailsPane = $("#details-pane");
 
-  await startRecording(panel);
+  yield startRecording(panel);
 
   is(detailsContainer.selectedPanel, recordingNotice,
     "The recording-notice is shown while recording.");
@@ -40,21 +40,21 @@ add_task(async function () {
   });
   let everythingStopped = stopRecording(panel);
 
-  await recordingStopping;
+  yield recordingStopping;
   is(detailsContainer.selectedPanel, loadingNotice,
     "The loading-notice is shown while the record is stopping.");
 
-  await recordingStopped;
+  yield recordingStopped;
   is(detailsContainer.selectedPanel, detailsPane,
     "The details panel is shown after the record has stopped.");
 
-  await everythingStopped;
-  await startRecording(panel);
+  yield everythingStopped;
+  yield startRecording(panel);
 
   info("While the 2nd record is still going, switch to the first one.");
   let recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 0);
-  await recordingSelected;
+  yield recordingSelected;
 
   recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
     expectedArgs: { "1": "recording-stopping" }
@@ -64,19 +64,19 @@ add_task(async function () {
   });
   everythingStopped = stopRecording(panel);
 
-  await recordingStopping;
+  yield recordingStopping;
   is(detailsContainer.selectedPanel, detailsPane,
     "The details panel is still shown while the 2nd record is being stopped.");
   is(getSelectedRecordingIndex(panel), 0,
     "The first record is still selected.");
 
-  await recordingStopped;
+  yield recordingStopped;
 
   is(detailsContainer.selectedPanel, detailsPane,
     "The details panel is still shown after the 2nd record has stopped.");
   is(getSelectedRecordingIndex(panel), 1,
     "The second record is now selected.");
 
-  await everythingStopped;
-  await teardownToolboxAndRemoveTab(panel);
+  yield everythingStopped;
+  yield teardownToolboxAndRemoveTab(panel);
 });

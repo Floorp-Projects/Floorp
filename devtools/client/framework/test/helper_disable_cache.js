@@ -29,36 +29,36 @@ var tabs = [
     startToolbox: false
   }];
 
-async function initTab(tabX, startToolbox) {
-  tabX.tab = await addTab(TEST_URI);
+function* initTab(tabX, startToolbox) {
+  tabX.tab = yield addTab(TEST_URI);
   tabX.target = TargetFactory.forTab(tabX.tab);
 
   if (startToolbox) {
-    tabX.toolbox = await gDevTools.showToolbox(tabX.target, "options");
+    tabX.toolbox = yield gDevTools.showToolbox(tabX.target, "options");
   }
 }
 
-async function checkCacheStateForAllTabs(states) {
+function* checkCacheStateForAllTabs(states) {
   for (let i = 0; i < tabs.length; i++) {
     let tab = tabs[i];
-    await checkCacheEnabled(tab, states[i]);
+    yield checkCacheEnabled(tab, states[i]);
   }
 }
 
-async function checkCacheEnabled(tabX, expected) {
+function* checkCacheEnabled(tabX, expected) {
   gBrowser.selectedTab = tabX.tab;
 
-  await reloadTab(tabX);
+  yield reloadTab(tabX);
 
-  let oldGuid = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  let oldGuid = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     let doc = content.document;
     let h1 = doc.querySelector("h1");
     return h1.textContent;
   });
 
-  await reloadTab(tabX);
+  yield reloadTab(tabX);
 
-  let guid = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  let guid = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     let doc = content.document;
     let h1 = doc.querySelector("h1");
     return h1.textContent;
@@ -71,7 +71,7 @@ async function checkCacheEnabled(tabX, expected) {
   }
 }
 
-async function setDisableCacheCheckboxChecked(tabX, state) {
+function* setDisableCacheCheckboxChecked(tabX, state) {
   gBrowser.selectedTab = tabX.tab;
 
   let panel = tabX.toolbox.getCurrentPanel();
@@ -83,7 +83,7 @@ async function setDisableCacheCheckboxChecked(tabX, state) {
 
     // We need to wait for all checkboxes to be updated and the docshells to
     // apply the new cache settings.
-    await waitForTick();
+    yield waitForTick();
   }
 }
 
@@ -103,7 +103,7 @@ function reloadTab(tabX) {
   return def.promise;
 }
 
-async function destroyTab(tabX) {
+function* destroyTab(tabX) {
   let toolbox = gDevTools.getToolbox(tabX.target);
 
   let onceDestroyed = promise.resolve();
@@ -116,12 +116,12 @@ async function destroyTab(tabX) {
   info("Removed tab " + tabX.title);
 
   info("Waiting for toolbox-destroyed");
-  await onceDestroyed;
+  yield onceDestroyed;
 }
 
-async function finishUp() {
+function* finishUp() {
   for (let tab of tabs) {
-    await destroyTab(tab);
+    yield destroyTab(tab);
   }
 
   tabs = null;

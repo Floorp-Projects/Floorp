@@ -11,19 +11,19 @@ const expectedText = `
 #testid {
 }`;
 
-add_task(async function () {
-  await addTab(TESTCASE_URI);
-  let { inspector, view } = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab(TESTCASE_URI);
+  let { inspector, view } = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   let onRuleViewChanged = once(view, "ruleview-changed");
   view.addRuleButton.click();
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
-  let { ui } = await openStyleEditor();
+  let { ui } = yield openStyleEditor();
 
   info("Selecting the second editor");
-  await ui.selectStyleSheet(ui.editors[1].styleSheet);
+  yield ui.selectStyleSheet(ui.editors[1].styleSheet);
 
   let editor = ui.editors[1];
   let text = editor.sourceEditor.getText();

@@ -14,11 +14,11 @@ Services.scriptloader.loadSubScript(
 const TEST_URI = "http://example.com/browser/devtools/client/styleeditor/" +
                  "test/browser_styleeditor_cmd_edit.html";
 
-add_task(async function () {
-  let options = await helpers.openTab(TEST_URI);
-  await helpers.openToolbar(options);
+add_task(function* () {
+  let options = yield helpers.openTab(TEST_URI);
+  yield helpers.openToolbar(options);
 
-  await helpers.audit(options, [
+  yield helpers.audit(options, [
     {
       setup: "edit",
       check: {
@@ -192,7 +192,7 @@ add_task(async function () {
   let toolbox = gDevTools.getToolbox(options.target);
   ok(toolbox == null, "toolbox is closed");
 
-  await helpers.audit(options, [
+  yield helpers.audit(options, [
     {
       setup: "edit css#style2",
       check: {
@@ -208,8 +208,8 @@ add_task(async function () {
   let styleEditor = toolbox.getCurrentPanel();
   ok(typeof styleEditor.selectStyleSheet === "function", "styleeditor is open");
 
-  await toolbox.destroy();
+  yield toolbox.destroy();
 
-  await helpers.closeToolbar(options);
-  await helpers.closeTab(options);
+  yield helpers.closeToolbar(options);
+  yield helpers.closeTab(options);
 });
