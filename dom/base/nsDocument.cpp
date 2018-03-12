@@ -1503,6 +1503,7 @@ nsIDocument::nsIDocument()
     mMaybeServiceWorkerControlled(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mPendingFullscreenRequests(0),
+    mXMLDeclarationBits(0),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
     mStyleBackendType(StyleBackendType::None),
@@ -1558,7 +1559,6 @@ nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
   , mParserAborted(false)
   , mReportedUseCounters(false)
-  , mXMLDeclarationBits(0)
   , mOnloadBlockCount(0)
   , mAsyncOnloadBlockCount(0)
   , mValidWidth(false)
@@ -7728,9 +7728,9 @@ nsIDocument::FlushExternalResources(FlushType aType)
 }
 
 void
-nsDocument::SetXMLDeclaration(const char16_t *aVersion,
-                              const char16_t *aEncoding,
-                              const int32_t aStandalone)
+nsIDocument::SetXMLDeclaration(const char16_t* aVersion,
+                               const char16_t* aEncoding,
+                               const int32_t aStandalone)
 {
   if (!aVersion || *aVersion == '\0') {
     mXMLDeclarationBits = 0;
@@ -7753,8 +7753,9 @@ nsDocument::SetXMLDeclaration(const char16_t *aVersion,
 }
 
 void
-nsDocument::GetXMLDeclaration(nsAString& aVersion, nsAString& aEncoding,
-                              nsAString& aStandalone)
+nsIDocument::GetXMLDeclaration(nsAString& aVersion,
+                               nsAString& aEncoding,
+                               nsAString& aStandalone)
 {
   aVersion.Truncate();
   aEncoding.Truncate();
