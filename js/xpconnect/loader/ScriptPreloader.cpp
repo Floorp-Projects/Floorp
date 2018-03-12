@@ -52,16 +52,6 @@ using namespace mozilla::loader;
 
 ProcessType ScriptPreloader::sProcessType;
 
-// This type correspond to js::vm::XDRAlignment type, which is used as a size
-// reference for alignment of XDR buffers.
-using XDRAlign = uint16_t;
-static const uint8_t sAlignPadding[sizeof(XDRAlign)] = { 0, 0 };
-
-static inline size_t
-ComputeByteAlignment(size_t bytes, size_t align)
-{
-    return (align - (bytes % align)) % align;
-}
 
 nsresult
 ScriptPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
@@ -470,8 +460,6 @@ ScriptPreloader::InitCacheInternal(JS::HandleObject scope)
     }
 
     auto data = mCacheData.get<uint8_t>();
-    uint8_t* start = data.get();
-    MOZ_ASSERT(reinterpret_cast<uintptr_t>(start) % sizeof(XDRAlign) == 0);
     auto end = data + size;
 
     if (memcmp(MAGIC, data.get(), sizeof(MAGIC))) {
@@ -498,10 +486,6 @@ ScriptPreloader::InitCacheInternal(JS::HandleObject scope)
 
         InputBuffer buf(header);
 
-        size_t len = data.get() - start;
-        size_t alignLen = ComputeByteAlignment(len, sizeof(XDRAlign));
-        data += alignLen;
-
         size_t offset = 0;
         while (!buf.finished()) {
             auto script = MakeUnique<CachedScript>(*this, buf);
@@ -519,7 +503,6 @@ ScriptPreloader::InitCacheInternal(JS::HandleObject scope)
             }
             offset += script->mSize;
 
-            MOZ_ASSERT(reinterpret_cast<uintptr_t>(scriptData.get()) % sizeof(XDRAlign) == 0);
             script->mXDRRange.emplace(scriptData, scriptData + script->mSize);
 
             // Don't pre-decode the script unless it was used in this process type during the
@@ -674,7 +657,6 @@ ScriptPreloader::WriteCache()
         OutputBuffer buf;
         size_t offset = 0;
         for (auto script : scripts) {
-            MOZ_ASSERT(offset % sizeof(XDRAlign) == 0);
             script->mOffset = offset;
             script->Code(buf);
 
@@ -684,22 +666,11 @@ ScriptPreloader::WriteCache()
         uint8_t headerSize[4];
         LittleEndian::writeUint32(headerSize, buf.cursor());
 
-        size_t len = 0;
         MOZ_TRY(Write(fd, MAGIC, sizeof(MAGIC)));
-        len += sizeof(MAGIC);
         MOZ_TRY(Write(fd, headerSize, sizeof(headerSize)));
-        len += sizeof(headerSize);
         MOZ_TRY(Write(fd, buf.Get(), buf.cursor()));
-        len += buf.cursor();
-        size_t alignLen = ComputeByteAlignment(len, sizeof(XDRAlign));
-        if (alignLen) {
-            MOZ_TRY(Write(fd, sAlignPadding, alignLen));
-            len += alignLen;
-        }
         for (auto script : scripts) {
-            MOZ_ASSERT(script->mSize % sizeof(XDRAlign) == 0);
             MOZ_TRY(Write(fd, script->Range().begin().get(), script->mSize));
-            len += script->mSize;
 
             if (script->mScript) {
                 script->FreeData();
