@@ -7,8 +7,9 @@
 
 #include "SkMipMap.h"
 #include "SkBitmap.h"
-#include "SkColorPriv.h"
+#include "SkColorData.h"
 #include "SkHalf.h"
+#include "SkImageInfoPriv.h"
 #include "SkMathPriv.h"
 #include "SkNx.h"
 #include "SkPM4fPriv.h"
@@ -779,14 +780,9 @@ bool SkMipMap::extractLevel(const SkSize& scaleSize, Level* levelPtr) const {
 //
 SkMipMap* SkMipMap::Build(const SkBitmap& src, SkDestinationSurfaceColorMode colorMode,
                           SkDiscardableFactoryProc fact) {
-    SkAutoPixmapUnlock srcUnlocker;
-    if (!src.requestLock(&srcUnlocker)) {
+    SkPixmap srcPixmap;
+    if (!src.peekPixels(&srcPixmap)) {
         return nullptr;
-    }
-    const SkPixmap& srcPixmap = srcUnlocker.pixmap();
-    // Try to catch where we might have returned nullptr for src crbug.com/492818
-    if (nullptr == srcPixmap.addr()) {
-        sk_throw();
     }
     return Build(srcPixmap, colorMode, fact);
 }
@@ -796,7 +792,7 @@ int SkMipMap::countLevels() const {
 }
 
 bool SkMipMap::getLevel(int index, Level* levelPtr) const {
-    if (NULL == fLevels) {
+    if (nullptr == fLevels) {
         return false;
     }
     if (index < 0) {

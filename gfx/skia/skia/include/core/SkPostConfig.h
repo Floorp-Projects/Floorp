@@ -10,10 +10,6 @@
 #ifndef SkPostConfig_DEFINED
 #define SkPostConfig_DEFINED
 
-#if defined(SK_BUILD_FOR_WIN32)
-#  define SK_BUILD_FOR_WIN
-#endif
-
 #if !defined(SK_DEBUG) && !defined(SK_RELEASE)
     #ifdef NDEBUG
         #define SK_RELEASE
@@ -89,6 +85,12 @@
 #  define SK_SUPPORT_GPU 1
 #endif
 
+#if !defined(SK_SUPPORT_ATLAS_TEXT)
+#  define SK_SUPPORT_ATLAS_TEXT 0
+#elif SK_SUPPORT_ATLAS_TEXT && !SK_SUPPORT_GPU
+#  error "SK_SUPPORT_ATLAS_TEXT requires SK_SUPPORT_GPU"
+#endif
+
 /**
  * The clang static analyzer likes to know that when the program is not
  * expected to continue (crash, assertion failure, etc). It will notice that
@@ -123,7 +125,7 @@
 #
 #endif
 
-#if defined(GOOGLE3)
+#if defined(SK_BUILD_FOR_GOOGLE3)
     void SkDebugfForDumpStackTrace(const char* data, void* unused);
     void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
 #  define SK_DUMP_GOOGLE3_STACK() DumpStackTrace(0, SkDebugfForDumpStackTrace, nullptr)
@@ -131,11 +133,20 @@
 #  define SK_DUMP_GOOGLE3_STACK()
 #endif
 
+#ifdef SK_BUILD_FOR_WIN
+// permits visual studio to follow error back to source
+#define SK_DUMP_LINE_FORMAT(message) \
+    SkDebugf("%s(%d): fatal error: \"%s\"\n", __FILE__, __LINE__, message)
+#else
+#define SK_DUMP_LINE_FORMAT(message) \
+    SkDebugf("%s:%d: fatal error: \"%s\"\n", __FILE__, __LINE__, message)
+#endif
+
 #ifndef SK_ABORT
 #  define SK_ABORT(message) \
     do { \
        SkNO_RETURN_HINT(); \
-       SkDebugf("%s:%d: fatal error: \"%s\"\n", __FILE__, __LINE__, message); \
+       SK_DUMP_LINE_FORMAT(message); \
        SK_DUMP_GOOGLE3_STACK(); \
        sk_abort_no_print(); \
     } while (false)
@@ -192,7 +203,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined SK_DEBUG && defined SK_BUILD_FOR_WIN32
+#if defined SK_DEBUG && defined SK_BUILD_FOR_WIN
 #  ifdef free
 #    undef free
 #  endif
@@ -236,7 +247,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #if !defined(SK_UNUSED)
-#  if defined(_MSC_VER)
+#  if !defined(__clang__) && defined(_MSC_VER)
 #    define SK_UNUSED __pragma(warning(suppress:4189))
 #  else
 #    define SK_UNUSED SK_ATTRIBUTE(unused)
@@ -246,14 +257,6 @@
 #if !defined(SK_ATTR_DEPRECATED)
    // FIXME: we ignore msg for now...
 #  define SK_ATTR_DEPRECATED(msg) SK_ATTRIBUTE(deprecated)
-#endif
-
-#if !defined(SK_ATTR_EXTERNALLY_DEPRECATED)
-#  if !defined(SK_INTERNAL)
-#    define SK_ATTR_EXTERNALLY_DEPRECATED(msg) SK_ATTR_DEPRECATED(msg)
-#  else
-#    define SK_ATTR_EXTERNALLY_DEPRECATED(msg)
-#  endif
 #endif
 
 /**
@@ -308,7 +311,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #ifndef SK_SIZE_T_SPECIFIER
-#  if defined(_MSC_VER)
+#  if defined(_MSC_VER) && !defined(__clang__)
 #    define SK_SIZE_T_SPECIFIER "%Iu"
 #  else
 #    define SK_SIZE_T_SPECIFIER "%zu"
@@ -340,7 +343,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #ifndef GR_TEST_UTILS
-#  define GR_TEST_UTILS 1
+#  define GR_TEST_UTILS 0
 #endif
 
 //////////////////////////////////////////////////////////////////////

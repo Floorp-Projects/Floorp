@@ -9,6 +9,7 @@
 #define SKSL_FILEOUTPUTSTREAM
 
 #include "SkSLOutputStream.h"
+#include "SkSLUtil.h"
 #include <stdio.h>
 
 namespace SkSL {
@@ -16,10 +17,10 @@ namespace SkSL {
 class FileOutputStream : public OutputStream {
 public:
     FileOutputStream(const char* name) {
-        fFile = fopen(name, "w");
+        fFile = fopen(name, "wb");
     }
 
-    ~FileOutputStream() {
+    ~FileOutputStream() override {
         ASSERT(!fOpen);
     }
 

@@ -5,11 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmapSourceDeserializer.h"
-#include "SkDashPathEffect.h"
+#include "../../src/effects/SkDashImpl.h"
 #include "SkGradientShader.h"
 #include "SkImageSource.h"
-#include "SkLayerRasterizer.h"
 
 // Security note:
 //
@@ -29,16 +27,11 @@
  *  will automatically be called before any of skia's effects are asked to be deserialized.
  */
 void SkFlattenable::PrivateInitializer::InitEffects() {
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkBitmapSourceDeserializer)
-
-    // Rasterizer
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkLayerRasterizer)
-
     // Shader
     SkGradientShader::InitializeFlattenables();
 
     // PathEffect
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkDashPathEffect)
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkDashImpl)
 
     // ImageFilter
     SkImageFilter::InitializeFlattenables();

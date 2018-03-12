@@ -8,18 +8,28 @@
 #ifndef SkJumper_misc_DEFINED
 #define SkJumper_misc_DEFINED
 
-#include "SkJumper.h"  // for memcpy()
+#include <string.h>  // for memcpy()
 
-// Miscellany used by SkJumper_stages.cpp and SkJumper_vectors.h.
+// Miscellany used by SkJumper_stages.cpp and SkJumper_stages_lowp.cpp.
 
 // Every function in this file should be marked static and inline using SI.
-#define SI static inline
+#if defined(__clang__)
+    #define SI __attribute__((always_inline)) static inline
+#else
+    #define SI static inline
+#endif
+
 
 template <typename T, typename P>
 SI T unaligned_load(const P* p) {  // const void* would work too, but const P* helps ARMv7 codegen.
     T v;
     memcpy(&v, p, sizeof(v));
     return v;
+}
+
+template <typename T, typename P>
+SI void unaligned_store(P* p, T v) {
+    memcpy(p, &v, sizeof(v));
 }
 
 template <typename Dst, typename Src>
@@ -36,22 +46,38 @@ SI Dst widen_cast(const Src& src) {
     return dst;
 }
 
-// A couple functions for embedding constants directly into code,
-// so that no .const or .literal4 section is created.
-SI int C(int x) {
-#if defined(JUMPER) && defined(__x86_64__)
-    // Move x-the-compile-time-constant as a literal into x-the-register.
-    asm("mov %1, %0" : "=r"(x) : "i"(x));
+// Our program is an array of void*, either
+//   - 1 void* per stage with no context pointer, the next stage;
+//   - 2 void* per stage with a context pointer, first the context pointer, then the next stage.
+
+// load_and_inc() steps the program forward by 1 void*, returning that pointer.
+SI void* load_and_inc(void**& program) {
+#if defined(__GNUC__) && defined(__x86_64__)
+    // If program is in %rsi (we try to make this likely) then this is a single instruction.
+    void* rax;
+    asm("lodsq" : "=a"(rax), "+S"(program));  // Write-only %rax, read-write %rsi.
+    return rax;
+#else
+    // On ARM *program++ compiles into pretty ideal code without any handholding.
+    return *program++;
 #endif
-    return x;
-}
-SI float C(float f) {
-    int x = C(unaligned_load<int>(&f));
-    return unaligned_load<float>(&x);
 }
 
-// Syntax sugar to make C() easy to use for constant literals.
-SI int   operator "" _i(unsigned long long int i) { return C(  (int)i); }
-SI float operator "" _f(           long double f) { return C((float)f); }
+// Lazily resolved on first cast.  Does nothing if cast to Ctx::None.
+struct Ctx {
+    struct None {};
+
+    void*   ptr;
+    void**& program;
+
+    explicit Ctx(void**& p) : ptr(nullptr), program(p) {}
+
+    template <typename T>
+    operator T*() {
+        if (!ptr) { ptr = load_and_inc(program); }
+        return (T*)ptr;
+    }
+    operator None() { return None{}; }
+};
 
 #endif//SkJumper_misc_DEFINED

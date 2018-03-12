@@ -18,12 +18,16 @@ namespace SkSL {
  * always eventually replaced by Constructors in valid programs.
  */
 struct TypeReference : public Expression {
-    TypeReference(const Context& context, Position position, const Type& type)
-    : INHERITED(position, kTypeReference_Kind, *context.fInvalid_Type)
+    TypeReference(const Context& context, int offset, const Type& type)
+    : INHERITED(offset, kTypeReference_Kind, *context.fInvalid_Type)
     , fValue(type) {}
 
+    bool hasSideEffects() const override {
+        return false;
+    }
+
     String description() const override {
-        return fValue.name();
+        return String(fValue.fName);
     }
 
     const Type& fValue;

@@ -166,7 +166,7 @@ static_assert(sizeof(SkString) == sizeof(void*), "SkString_size");
 class SkPDFAtom final : public SkPDFObject {
 public:
     void emitObject(SkWStream* stream,
-                    const SkPDFObjNumMap& objNumMap) final override;
+                    const SkPDFObjNumMap& objNumMap) final;
     void addResources(SkPDFObjNumMap* const final;
     SkPDFAtom(SkPDFUnion&& v) : fValue(std::move(v) {}
 
@@ -247,6 +247,9 @@ public:
      */
     int size() const;
 
+    /** Preallocate space for n key-value pairs */
+    void reserve(int n);
+
     /** Add the value to the dictionary with the given key.
      *  @param key   The text of the key for this dictionary entry.
      *  @param value The value for this dictionary entry.
@@ -278,11 +281,6 @@ private:
     struct Record {
         SkPDFUnion fKey;
         SkPDFUnion fValue;
-        Record(SkPDFUnion&&, SkPDFUnion&&);
-        Record(Record&&) = default;
-        Record& operator=(Record&&) = default;
-        Record(const Record&) = delete;
-        Record& operator=(const Record&) = delete;
     };
     SkTArray<Record> fRecords;
     SkDEBUGCODE(bool fDumped;)
@@ -334,7 +332,7 @@ public:
     // The SkPDFObject interface.
     void emitObject(SkWStream* stream,
                     const SkPDFObjNumMap& objNumMap) const override;
-    void addResources(SkPDFObjNumMap*) const final override;
+    void addResources(SkPDFObjNumMap*) const final;
     void drop() override;
 
 protected:
@@ -361,12 +359,6 @@ private:
 */
 class SkPDFObjNumMap : SkNoncopyable {
 public:
-    /** Add the passed object to the catalog.
-     *  @param obj         The object to add.
-     *  @return True iff the object was not already added to the catalog.
-     */
-    bool addObject(SkPDFObject* obj);
-
     /** Add the passed object to the catalog, as well as all its dependencies.
      *  @param obj   The object to add.  If nullptr, this is a noop.
      */

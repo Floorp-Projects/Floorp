@@ -26,12 +26,16 @@ struct FieldAccess : public Expression {
 
     FieldAccess(std::unique_ptr<Expression> base, int fieldIndex,
                 OwnerKind ownerKind = kDefault_OwnerKind)
-    : INHERITED(base->fPosition, kFieldAccess_Kind, *base->fType.fields()[fieldIndex].fType)
+    : INHERITED(base->fOffset, kFieldAccess_Kind, *base->fType.fields()[fieldIndex].fType)
     , fBase(std::move(base))
     , fFieldIndex(fieldIndex)
     , fOwnerKind(ownerKind) {}
 
-    virtual String description() const override {
+    bool hasSideEffects() const override {
+        return fBase->hasSideEffects();
+    }
+
+    String description() const override {
         return fBase->description() + "." + fBase->fType.fields()[fFieldIndex].fName;
     }
 

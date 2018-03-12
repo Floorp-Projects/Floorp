@@ -23,13 +23,13 @@ class GrOp;
  * to json.
  *
  * Capturing this information is expensive and consumes a lot of memory, therefore it is important
- * to enable auditing only when required and disable it promptly. The AutoEnable class helps to 
+ * to enable auditing only when required and disable it promptly. The AutoEnable class helps to
  * ensure that the audit trail is disabled in a timely fashion. Once the information has been dealt
  * with, be sure to call reset(), or the log will simply keep growing.
  */
 class GrAuditTrail {
 public:
-    GrAuditTrail() 
+    GrAuditTrail()
     : fClientID(kGrAuditTrailInvalidID)
     , fEnabled(false) {}
 
@@ -81,9 +81,7 @@ public:
         fCurrentStackTrace.push_back(SkString(framename));
     }
 
-    void addOp(const GrOp*,
-               GrGpuResource::UniqueID resourceID,
-               GrRenderTargetProxy::UniqueID proxyID);
+    void addOp(const GrOp*, GrRenderTargetProxy::UniqueID proxyID);
 
     void opsCombined(const GrOp* consumer, const GrOp* consumed);
 
@@ -106,21 +104,12 @@ public:
     // We could just return our internal bookkeeping struct if copying the data out becomes
     // a performance issue, but until then its nice to decouple
     struct OpInfo {
-        // Will the resourceID comparison yield the same decision as the proxyID comparison?
-        bool sameDecision(GrGpuResource::UniqueID resourceUniqueID,
-                          GrSurfaceProxy::UniqueID proxyUniqueID) const {
-            return (fResourceUniqueID == resourceUniqueID) ==
-                   (fProxyUniqueID == proxyUniqueID);
-        }
-
         struct Op {
             int    fClientID;
             SkRect fBounds;
         };
 
         SkRect                   fBounds;
-        // MDB TODO: remove fResourceUniqueID
-        GrGpuResource::UniqueID  fResourceUniqueID;
         GrSurfaceProxy::UniqueID fProxyUniqueID;
         SkTArray<Op>             fOps;
     };
@@ -148,15 +137,11 @@ private:
     typedef SkTArray<Op*> Ops;
 
     struct OpNode {
-        OpNode(const GrGpuResource::UniqueID& resourceID, const GrSurfaceProxy::UniqueID& proxyID)
-            : fResourceUniqueID(resourceID)
-            , fProxyUniqueID(proxyID) {
-        }
+        OpNode(const GrSurfaceProxy::UniqueID& proxyID) : fProxyUniqueID(proxyID) { }
         SkString toJson() const;
 
         SkRect                         fBounds;
         Ops                            fChildren;
-        const GrGpuResource::UniqueID  fResourceUniqueID;
         const GrSurfaceProxy::UniqueID fProxyUniqueID;
     };
     typedef SkTArray<std::unique_ptr<OpNode>, true> OpList;
@@ -189,8 +174,8 @@ private:
 #define GR_AUDIT_TRAIL_RESET(audit_trail) \
     //GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, fullReset);
 
-#define GR_AUDIT_TRAIL_ADD_OP(audit_trail, op, resource_id, proxy_id) \
-    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addOp, op, resource_id, proxy_id);
+#define GR_AUDIT_TRAIL_ADD_OP(audit_trail, op, proxy_id) \
+    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addOp, op, proxy_id);
 
 #define GR_AUDIT_TRAIL_OPS_RESULT_COMBINED(audit_trail, combineWith, op) \
     GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, opsCombined, combineWith, op);

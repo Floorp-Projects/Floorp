@@ -7,6 +7,8 @@
 
 #include "vk/GrVkPipelineStateBuilder.h"
 
+#include "GrContext.h"
+#include "GrContextPriv.h"
 #include "GrShaderCaps.h"
 #include "vk/GrVkDescriptorSetManager.h"
 #include "vk/GrVkGpu.h"
@@ -25,10 +27,7 @@ GrVkPipelineState* GrVkPipelineStateBuilder::CreatePipelineState(
     // uniforms, varyings, textures, etc
     GrVkPipelineStateBuilder builder(gpu, pipeline, primProc, desc);
 
-    GrGLSLExpr4 inputColor;
-    GrGLSLExpr4 inputCoverage;
-
-    if (!builder.emitAndInstallProcs(&inputColor, &inputCoverage)) {
+    if (!builder.emitAndInstallProcs()) {
         builder.cleanupFragmentProcessors();
         return nullptr;
     }
@@ -83,7 +82,7 @@ bool GrVkPipelineStateBuilder::createVkShaderModule(VkShaderStageFlagBits stage,
     }
     if (inputs.fFlipY) {
         desc->setSurfaceOriginKey(GrGLSLFragmentShaderBuilder::KeyForSurfaceOrigin(
-                                                     this->pipeline().getRenderTarget()->origin()));
+                                                     this->pipeline().proxy()->origin()));
         desc->finalize();
     }
     return result;
@@ -93,19 +92,27 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(const GrStencilSettings& s
                                                       GrPrimitiveType primitiveType,
                                                       const GrVkRenderPass& renderPass,
                                                       GrVkPipelineState::Desc* desc) {
-    VkDescriptorSetLayout dsLayout[2];
+    VkDescriptorSetLayout dsLayout[3];
     VkPipelineLayout pipelineLayout;
-    VkShaderModule vertShaderModule;
-    VkShaderModule fragShaderModule;
+    VkShaderModule vertShaderModule = VK_NULL_HANDLE;
+    VkShaderModule geomShaderModule = VK_NULL_HANDLE;
+    VkShaderModule fragShaderModule = VK_NULL_HANDLE;
 
     GrVkResourceProvider& resourceProvider = fGpu->resourceProvider();
     // These layouts are not owned by the PipelineStateBuilder and thus should not be destroyed
     dsLayout[GrVkUniformHandler::kUniformBufferDescSet] = resourceProvider.getUniformDSLayout();
 
     GrVkDescriptorSetManager::Handle samplerDSHandle;
-    resourceProvider.getSamplerDescriptorSetHandle(fUniformHandler, &samplerDSHandle);
+    resourceProvider.getSamplerDescriptorSetHandle(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                                   fUniformHandler, &samplerDSHandle);
     dsLayout[GrVkUniformHandler::kSamplerDescSet] =
             resourceProvider.getSamplerDSLayout(samplerDSHandle);
+
+    GrVkDescriptorSetManager::Handle texelBufferDSHandle;
+    resourceProvider.getSamplerDescriptorSetHandle(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,
+                                                   fUniformHandler, &texelBufferDSHandle);
+    dsLayout[GrVkUniformHandler::kTexelBufferDescSet] =
+            resourceProvider.getSamplerDSLayout(texelBufferDSHandle);
 
     // Create the VkPipelineLayout
     VkPipelineLayoutCreateInfo layoutCreateInfo;
@@ -113,7 +120,7 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(const GrStencilSettings& s
     layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutCreateInfo.pNext = 0;
     layoutCreateInfo.flags = 0;
-    layoutCreateInfo.setLayoutCount = 2;
+    layoutCreateInfo.setLayoutCount = 3;
     layoutCreateInfo.pSetLayouts = dsLayout;
     layoutCreateInfo.pushConstantRangeCount = 0;
     layoutCreateInfo.pPushConstantRanges = nullptr;
@@ -132,18 +139,17 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(const GrStencilSettings& s
 
     this->finalizeShaders();
 
-    VkPipelineShaderStageCreateInfo shaderStageInfo[2];
+    VkPipelineShaderStageCreateInfo shaderStageInfo[3];
     SkSL::Program::Settings settings;
-    settings.fFlipY = this->pipeline().getRenderTarget()->origin() != kTopLeft_GrSurfaceOrigin;
+    settings.fCaps = this->caps()->shaderCaps();
+    settings.fFlipY = this->pipeline().proxy()->origin() != kTopLeft_GrSurfaceOrigin;
+    settings.fSharpenTextures = this->gpu()->getContext()->contextPriv().sharpenMipmappedTextures();
     SkAssertResult(this->createVkShaderModule(VK_SHADER_STAGE_VERTEX_BIT,
                                               fVS,
                                               &vertShaderModule,
                                               &shaderStageInfo[0],
                                               settings,
                                               desc));
-
-    // TODO: geometry shader support.
-    SkASSERT(!this->primitiveProcessor().willUseGeoShader());
 
     SkAssertResult(this->createVkShaderModule(VK_SHADER_STAGE_FRAGMENT_BIT,
                                               fFS,
@@ -152,11 +158,22 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(const GrStencilSettings& s
                                               settings,
                                               desc));
 
+    int numShaderStages = 2; // We always have at least vertex and fragment stages.
+    if (this->primitiveProcessor().willUseGeoShader()) {
+        SkAssertResult(this->createVkShaderModule(VK_SHADER_STAGE_GEOMETRY_BIT,
+                                                  fGS,
+                                                  &geomShaderModule,
+                                                  &shaderStageInfo[2],
+                                                  settings,
+                                                  desc));
+        ++numShaderStages;
+    }
+
     GrVkPipeline* pipeline = resourceProvider.createPipeline(fPipeline,
                                                              stencil,
                                                              fPrimProc,
                                                              shaderStageInfo,
-                                                             2,
+                                                             numShaderStages,
                                                              primitiveType,
                                                              renderPass,
                                                              pipelineLayout);
@@ -164,6 +181,12 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(const GrStencilSettings& s
                                                         nullptr));
     GR_VK_CALL(fGpu->vkInterface(), DestroyShaderModule(fGpu->device(), fragShaderModule,
                                                         nullptr));
+    // This if check should not be needed since calling destroy on a VK_NULL_HANDLE is allowed.
+    // However this is causing a crash in certain drivers (e.g. NVidia).
+    if (this->primitiveProcessor().willUseGeoShader()) {
+        GR_VK_CALL(fGpu->vkInterface(), DestroyShaderModule(fGpu->device(), geomShaderModule,
+                                                            nullptr));
+    }
 
     if (!pipeline) {
         GR_VK_CALL(fGpu->vkInterface(), DestroyPipelineLayout(fGpu->device(), pipelineLayout,
@@ -177,13 +200,15 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(const GrStencilSettings& s
                                  pipeline,
                                  pipelineLayout,
                                  samplerDSHandle,
+                                 texelBufferDSHandle,
                                  fUniformHandles,
                                  fUniformHandler.fUniforms,
-                                 fUniformHandler.fCurrentVertexUBOOffset,
+                                 fUniformHandler.fCurrentGeometryUBOOffset,
                                  fUniformHandler.fCurrentFragmentUBOOffset,
                                  (uint32_t)fUniformHandler.numSamplers(),
-                                 fGeometryProcessor,
-                                 fXferProcessor,
+                                 (uint32_t)fUniformHandler.numTexelBuffers(),
+                                 std::move(fGeometryProcessor),
+                                 std::move(fXferProcessor),
                                  fFragmentProcessors);
 }
 

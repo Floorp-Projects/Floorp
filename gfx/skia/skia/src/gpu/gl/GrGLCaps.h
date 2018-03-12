@@ -41,11 +41,9 @@ public:
          */
         kNone_MSFBOType = 0,
         /**
-         * OpenGL < 3.0 with GL_EXT_framebuffer_object. Doesn't allow rendering to ALPHA.
-         */
-        kEXT_MSFBOType,
-        /**
-         * OpenGL 3.0+, OpenGL ES 3.0+, and GL_ARB_framebuffer_object.
+         * OpenGL 3.0+, OpenGL ES 3.0+, GL_ARB_framebuffer_object,
+         * GL_CHROMIUM_framebuffer_multisample, GL_ANGLE_framebuffer_multisample,
+         * or GL_EXT_framebuffer_multisample
          */
         kStandard_MSFBOType,
         /**
@@ -118,16 +116,17 @@ public:
         return SkToBool(fConfigTable[config].fFlags & ConfigInfo::kTextureable_Flag);
     }
 
-    bool isConfigRenderable(GrPixelConfig config, bool withMSAA) const override {
-        if (withMSAA) {
-            return SkToBool(fConfigTable[config].fFlags & ConfigInfo::kRenderableWithMSAA_Flag);
-        } else {
-            return SkToBool(fConfigTable[config].fFlags & ConfigInfo::kRenderable_Flag);
-        }
+    int getRenderTargetSampleCount(int requestedCount, GrPixelConfig config) const override;
+    int maxRenderTargetSampleCount(GrPixelConfig config) const override;
+
+    bool isConfigCopyable(GrPixelConfig config) const override {
+        // In GL we have three ways to be able to copy. CopyTexImage, blit, and draw. CopyTexImage
+        // requires the src to be an FBO attachment, blit requires both src and dst to be FBO
+        // attachments, and draw requires the dst to be an FBO attachment. Thus to copy from and to
+        // the same config, we need that config to be renderable so we can attach it to an FBO.
+        return this->isConfigRenderable(config, false);
     }
-    bool canConfigBeImageStorage(GrPixelConfig config) const override {
-        return SkToBool(fConfigTable[config].fFlags & ConfigInfo::kCanUseAsImageStorage_Flag);
-    }
+
     bool canConfigBeFBOColorAttachment(GrPixelConfig config) const {
         return SkToBool(fConfigTable[config].fFlags & ConfigInfo::kFBOColorAttachment_Flag);
     }
@@ -152,8 +151,6 @@ public:
     bool getTexImageFormats(GrPixelConfig surfaceConfig, GrPixelConfig externalConfig,
                             GrGLenum* internalFormat, GrGLenum* externalFormat,
                             GrGLenum* externalType) const;
-
-    bool getCompressedTexImageFormats(GrPixelConfig surfaceConfig, GrGLenum* internalFormat) const;
 
     bool getReadPixelsFormat(GrPixelConfig surfaceConfig, GrPixelConfig externalConfig,
                              GrGLenum* externalFormat, GrGLenum* externalType) const;
@@ -284,17 +281,14 @@ public:
     /// Is there support for texture parameter GL_TEXTURE_USAGE
     bool textureUsageSupport() const { return fTextureUsageSupport; }
 
-    /// Is there support for GL_RED and GL_R8
-    bool textureRedSupport() const { return fTextureRedSupport; }
+    /// Is GL_ALPHA8 renderable
+    bool alpha8IsRenderable() const { return fAlpha8IsRenderable; }
 
     /// Is GL_ARB_IMAGING supported
     bool imagingSupport() const { return fImagingSupport; }
 
     /// Is there support for Vertex Array Objects?
     bool vertexArrayObjectSupport() const { return fVertexArrayObjectSupport; }
-
-    /// Is there support for GL_EXT_direct_state_access?
-    bool directStateAccessSupport() const { return fDirectStateAccessSupport; }
 
     /// Is there support for GL_KHR_debug?
     bool debugSupport() const { return fDebugSupport; }
@@ -322,6 +316,8 @@ public:
     /// Use indices or vertices in CPU arrays rather than VBOs for dynamic content.
     bool useNonVBOVertexAndIndexDynamicData() const { return fUseNonVBOVertexAndIndexDynamicData; }
 
+    bool surfaceSupportsWritePixels(const GrSurface* surface) const override;
+
     /// Does ReadPixels support reading readConfig pixels from a FBO that is surfaceConfig?
     bool readPixelsSupported(GrPixelConfig surfaceConfig,
                              GrPixelConfig readConfig,
@@ -345,13 +341,9 @@ public:
 
     bool doManualMipmapping() const { return fDoManualMipmapping; }
 
-    bool srgbDecodeDisableSupport() const { return fSRGBDecodeDisableSupport; }
     bool srgbDecodeDisableAffectsMipmaps() const { return fSRGBDecodeDisableAffectsMipmaps; }
 
-    /**
-     * Returns a string containing the caps info.
-     */
-    SkString dump() const override;
+    void onDumpJSON(SkJSONWriter*) const override;
 
     bool rgba8888PixelsOpsAreSlow() const { return fRGBA8888PixelsOpsAreSlow; }
     bool partialFBOReadIsSlow() const { return fPartialFBOReadIsSlow; }
@@ -359,8 +351,66 @@ public:
         return fRGBAToBGRAReadbackConversionsAreSlow;
     }
 
+    // Certain Intel GPUs on Mac fail to clear if the glClearColor is made up of only 1s and 0s.
+    bool clearToBoundaryValuesIsBroken() const { return fClearToBoundaryValuesIsBroken; }
+
+    /// glClearTex(Sub)Image support
+    bool clearTextureSupport() const { return fClearTextureSupport; }
+
+    // Adreno/MSAA drops a draw on the imagefiltersbase GM if the base vertex param to
+    // glDrawArrays is nonzero.
+    // https://bugs.chromium.org/p/skia/issues/detail?id=6650
+    bool drawArraysBaseVertexIsBroken() const { return fDrawArraysBaseVertexIsBroken; }
+
+    // Many drivers have issues with color clears.
+    bool useDrawToClearColor() const { return fUseDrawToClearColor; }
+
+    /// Adreno 4xx devices experience an issue when there are a large number of stencil clip bit
+    /// clears. The minimal repro steps are not precisely known but drawing a rect with a stencil
+    /// op instead of using glClear seems to resolve the issue.
+    bool useDrawToClearStencilClip() const { return fUseDrawToClearStencilClip; }
+
+    // If true then we must use an intermediate surface to perform partial updates to unorm textures
+    // that have ever been bound to a FBO.
+    bool disallowTexSubImageForUnormConfigTexturesEverBoundToFBO() const {
+        return fDisallowTexSubImageForUnormConfigTexturesEverBoundToFBO;
+    }
+
+    // Use an intermediate surface to write pixels (full or partial overwrite) to into a texture
+    // that is bound to an FBO.
+    bool useDrawInsteadOfAllRenderTargetWrites() const {
+        return fUseDrawInsteadOfAllRenderTargetWrites;
+    }
+
+    // At least some Adreno 3xx drivers draw lines incorrectly after drawing non-lines. Toggling
+    // face culling on and off seems to resolve this.
+    bool requiresCullFaceEnableDisableWhenDrawingLinesAfterNonLines() const {
+        return fRequiresCullFaceEnableDisableWhenDrawingLinesAfterNonLines;
+    }
+
+    // Returns the observed maximum number of instances the driver can handle in a single call to
+    // glDrawArraysInstanced without crashing, or 'pendingInstanceCount' if this
+    // workaround is not necessary.
+    // NOTE: the return value may be larger than pendingInstanceCount.
+    int maxInstancesPerDrawArraysWithoutCrashing(int pendingInstanceCount) const {
+        return fMaxInstancesPerDrawArraysWithoutCrashing ? fMaxInstancesPerDrawArraysWithoutCrashing
+                                                         : pendingInstanceCount;
+    }
+
     bool initDescForDstCopy(const GrRenderTargetProxy* src, GrSurfaceDesc* desc,
                             bool* rectsMustMatch, bool* disallowSubrect) const override;
+
+    bool programBinarySupport() const {
+        return fProgramBinarySupport;
+    }
+
+    bool validateBackendTexture(const GrBackendTexture&, SkColorType,
+                                GrPixelConfig*) const override;
+    bool validateBackendRenderTarget(const GrBackendRenderTarget&, SkColorType,
+                                     GrPixelConfig*) const override;
+
+    bool getConfigFromBackendFormat(const GrBackendFormat&, SkColorType,
+                                    GrPixelConfig*) const override;
 
 private:
     enum ExternalFormatUsage {
@@ -375,19 +425,24 @@ private:
                            GrGLenum* externalType) const;
 
     void init(const GrContextOptions&, const GrGLContextInfo&, const GrGLInterface*);
-    void initGLSL(const GrGLContextInfo&);
+    void initGLSL(const GrGLContextInfo&, const GrGLInterface*);
     bool hasPathRenderingSupport(const GrGLContextInfo&, const GrGLInterface*);
+
+    void applyDriverCorrectnessWorkarounds(const GrGLContextInfo&, const GrContextOptions&,
+                                           GrShaderCaps*);
 
     void onApplyOptionsOverrides(const GrContextOptions& options) override;
 
-    void initFSAASupport(const GrGLContextInfo&, const GrGLInterface*);
+    bool onIsMixedSamplesSupportedForRT(const GrBackendRenderTarget&) const override;
+    bool onIsWindowRectanglesSupportedForRT(const GrBackendRenderTarget&) const override;
+
+    void initFSAASupport(const GrContextOptions& contextOptions, const GrGLContextInfo&,
+                         const GrGLInterface*);
     void initBlendEqationSupport(const GrGLContextInfo&);
-    void initStencilFormats(const GrGLContextInfo&);
+    void initStencilSupport(const GrGLContextInfo&);
     // This must be called after initFSAASupport().
     void initConfigTable(const GrContextOptions&, const GrGLContextInfo&, const GrGLInterface*,
                          GrShaderCaps*);
-
-    void initShaderPrecisionTable(const GrGLContextInfo&, const GrGLInterface*, GrShaderCaps*);
 
     GrGLStandard fStandard;
 
@@ -405,10 +460,9 @@ private:
     bool fPackRowLengthSupport : 1;
     bool fPackFlipYSupport : 1;
     bool fTextureUsageSupport : 1;
-    bool fTextureRedSupport : 1;
+    bool fAlpha8IsRenderable: 1;
     bool fImagingSupport  : 1;
     bool fVertexArrayObjectSupport : 1;
-    bool fDirectStateAccessSupport : 1;
     bool fDebugSupport : 1;
     bool fES2CompatibilitySupport : 1;
     bool fDrawInstancedSupport : 1;
@@ -426,9 +480,20 @@ private:
     bool fTextureSwizzleSupport : 1;
     bool fMipMapLevelAndLodControlSupport : 1;
     bool fRGBAToBGRAReadbackConversionsAreSlow : 1;
+    bool fClearTextureSupport : 1;
+    bool fProgramBinarySupport : 1;
+
+    // Driver workarounds
     bool fDoManualMipmapping : 1;
-    bool fSRGBDecodeDisableSupport : 1;
     bool fSRGBDecodeDisableAffectsMipmaps : 1;
+    bool fClearToBoundaryValuesIsBroken : 1;
+    bool fDrawArraysBaseVertexIsBroken : 1;
+    bool fUseDrawToClearColor : 1;
+    bool fUseDrawToClearStencilClip : 1;
+    bool fDisallowTexSubImageForUnormConfigTexturesEverBoundToFBO : 1;
+    bool fUseDrawInsteadOfAllRenderTargetWrites : 1;
+    bool fRequiresCullFaceEnableDisableWhenDrawingLinesAfterNonLines : 1;
+    int fMaxInstancesPerDrawArraysWithoutCrashing;
 
     uint32_t fBlitFramebufferFlags;
 
@@ -487,7 +552,9 @@ private:
         };
 
         // Index fStencilFormats.
-        int      fStencilFormatIndex;
+        int fStencilFormatIndex;
+
+        SkTDArray<int> fColorSampleCounts;
 
         enum {
             kVerifiedColorAttachment_Flag = 0x1,
@@ -499,7 +566,6 @@ private:
             kFBOColorAttachment_Flag      = 0x10,
             kCanUseTexStorage_Flag        = 0x20,
             kCanUseWithTexelBuffer_Flag   = 0x40,
-            kCanUseAsImageStorage_Flag    = 0x80,
         };
         uint32_t fFlags;
 
