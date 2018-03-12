@@ -455,6 +455,9 @@ protected:
     // key events asynchronously.  I.e., filtered key event may come again
     // later.
     bool mIsIMInAsyncKeyHandlingMode;
+    // mIsKeySnooped is set to true if IM uses key snooper to listen key events.
+    // In such case, we won't receive key events if IME consumes the event.
+    bool mIsKeySnooped;
 
     // sLastFocusedContext is a pointer to the last focused instance of this
     // class.  When a instance is destroyed and sLastFocusedContext refers it,
@@ -620,13 +623,14 @@ protected:
      * dispatches a keyboard event, this sets mKeyboardEventWasDispatched
      * to true.
      *
+     * @param aFollowingEvent       The following event message.
      * @return                      If the caller can continue to handle
      *                              composition, returns true.  Otherwise,
      *                              false.  For example, if focus is moved
      *                              by dispatched keyboard event, returns
      *                              false.
      */
-    bool MaybeDispatchKeyEventAsProcessedByIME();
+    bool MaybeDispatchKeyEventAsProcessedByIME(EventMessage aFollowingEvent);
 
     /**
      * Dispatches a composition start event.
