@@ -36,8 +36,8 @@ of Windows 7 or 10 (such as in a VM). Installing all updates through
 Windows Update is not only acceptable - it is encouraged. Although it
 shouldn't matter.
 
-Next, install Visual Studio 2015 Community. The download link can be
-found at https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx.
+Next, install Visual Studio 2017 Community. The download link can be found
+at https://www.visualstudio.com/vs/community/.
 Be sure to follow these install instructions:
 
 1. Choose a ``Custom`` installation and click ``Next``
@@ -47,11 +47,11 @@ Be sure to follow these install instructions:
    ``Universal Windows App Development Tools`` and the items under it
    (should be ``Tools (1.3.1)...`` and the ``Windows 10 SDK``).
 
-Once Visual Studio 2015 Community has been installed, from a checkout
+Once Visual Studio 2017 Community has been installed, from a checkout
 of mozilla-central, run something like the following to produce a ZIP
 archive::
 
-   $ ./mach python build/windows_toolchain.py create-zip vs2017_15.4.2
+   $ ./mach python build/windows_toolchain.py create-zip vs2017_15.6.0
 
 The produced archive will be the argument to ``create-zip`` + ``.zip``.
 
