@@ -2,9 +2,12 @@
 <head>
 <meta charset=utf-8>
 <title>Test setting easing in sandbox</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
 <script src="../testcommon.js"></script>
 </head>
 <body>
+<div id="log"></div>
 <script>
 "use strict";
 
@@ -29,6 +32,5 @@ test(function(t) {
   SpecialPowers.Cu.evalInSandbox(`(${contentScript.toSource()})()`, sandbox);
 }, 'Setting easing should not throw any exceptions in sandbox');
 
-done();
 </script>
 </body>
