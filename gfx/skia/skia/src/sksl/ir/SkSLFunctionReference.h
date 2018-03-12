@@ -19,12 +19,16 @@ namespace SkSL {
  * always eventually replaced by FunctionCalls in valid programs.
  */
 struct FunctionReference : public Expression {
-    FunctionReference(const Context& context, Position position,
+    FunctionReference(const Context& context, int offset,
                       std::vector<const FunctionDeclaration*> function)
-    : INHERITED(position, kFunctionReference_Kind, *context.fInvalid_Type)
+    : INHERITED(offset, kFunctionReference_Kind, *context.fInvalid_Type)
     , fFunctions(function) {}
 
-    virtual String description() const override {
+    bool hasSideEffects() const override {
+        return false;
+    }
+
+    String description() const override {
         ASSERT(false);
         return String("<function>");
     }

@@ -11,7 +11,6 @@
 #define GrPaint_DEFINED
 
 #include "GrColor.h"
-#include "GrColorSpaceXform.h"
 #include "GrFragmentProcessor.h"
 #include "SkBlendMode.h"
 #include "SkRefCnt.h"
@@ -41,8 +40,9 @@ class GrXPFactory;
 class GrPaint {
 public:
     GrPaint() = default;
-    explicit GrPaint(const GrPaint&) = default;
     ~GrPaint() = default;
+
+    static GrPaint Clone(const GrPaint& src) { return GrPaint(src); }
 
     /**
      * The initial color of the drawn primitive. Defaults to solid white.
@@ -70,20 +70,18 @@ public:
     bool getAllowSRGBInputs() const { return fAllowSRGBInputs; }
 
     /**
-     * Does one of the fragment processors need a field of distance vectors to the nearest edge?
-     */
-    bool usesDistanceVectorField() const { return fUsesDistanceVectorField; }
-
-    /**
      * Should rendering be gamma-correct, end-to-end. Causes sRGB render targets to behave
      * as such (with linear blending), and sRGB inputs to be filtered and decoded correctly.
      */
     void setGammaCorrect(bool gammaCorrect) {
-        setDisableOutputConversionToSRGB(!gammaCorrect);
-        setAllowSRGBInputs(gammaCorrect);
+        this->setDisableOutputConversionToSRGB(!gammaCorrect);
+        this->setAllowSRGBInputs(gammaCorrect);
     }
 
-    void setXPFactory(const GrXPFactory* xpFactory) { fXPFactory = xpFactory; }
+    void setXPFactory(const GrXPFactory* xpFactory) {
+        fXPFactory = xpFactory;
+        fTrivial &= !SkToBool(xpFactory);
+    }
 
     void setPorterDuffXPFactory(SkBlendMode mode);
 
@@ -92,34 +90,30 @@ public:
     /**
      * Appends an additional color processor to the color computation.
      */
-    void addColorFragmentProcessor(sk_sp<GrFragmentProcessor> fp) {
+    void addColorFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) {
         SkASSERT(fp);
-        fUsesDistanceVectorField |= fp->usesDistanceVectorField();
         fColorFragmentProcessors.push_back(std::move(fp));
+        fTrivial = false;
     }
 
     /**
      * Appends an additional coverage processor to the coverage computation.
      */
-    void addCoverageFragmentProcessor(sk_sp<GrFragmentProcessor> fp) {
+    void addCoverageFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) {
         SkASSERT(fp);
-        fUsesDistanceVectorField |= fp->usesDistanceVectorField();
         fCoverageFragmentProcessors.push_back(std::move(fp));
+        fTrivial = false;
     }
 
     /**
      * Helpers for adding color or coverage effects that sample a texture. The matrix is applied
      * to the src space position to compute texture coordinates.
      */
-    void addColorTextureProcessor(GrResourceProvider*, sk_sp<GrTextureProxy>,
-                                  sk_sp<GrColorSpaceXform>, const SkMatrix&);
-    void addColorTextureProcessor(GrResourceProvider*, sk_sp<GrTextureProxy>,
-                                  sk_sp<GrColorSpaceXform>, const SkMatrix&,
-                                  const GrSamplerParams&);
+    void addColorTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&);
+    void addColorTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&, const GrSamplerState&);
 
-    void addCoverageTextureProcessor(GrResourceProvider*, sk_sp<GrTextureProxy>, const SkMatrix&);
-    void addCoverageTextureProcessor(GrResourceProvider*, sk_sp<GrTextureProxy>,
-                                     const SkMatrix&, const GrSamplerParams&);
+    void addCoverageTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&);
+    void addCoverageTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&, const GrSamplerState&);
 
     int numColorFragmentProcessors() const { return fColorFragmentProcessors.count(); }
     int numCoverageFragmentProcessors() const { return fCoverageFragmentProcessors.count(); }
@@ -143,61 +137,27 @@ public:
      */
     bool isConstantBlendedColor(GrColor* constantColor) const;
 
-private:
-    template <bool> class MoveOrImpl;
-
-public:
     /**
-     * A temporary instance of this class can be used to select between moving an existing paint or
-     * a temporary copy of an existing paint into a call site. MoveOrClone(paint, false) is a rvalue
-     * reference to paint while MoveOrClone(paint, true) is a rvalue reference to a copy of paint.
-     */
-    using MoveOrClone = MoveOrImpl<true>;
-
-    /**
-     * A temporary instance of this class can be used to select between moving an existing or a
-     * newly default constructed paint into a call site. MoveOrNew(paint, false) is a rvalue
-     * reference to paint while MoveOrNew(paint, true) is a rvalue reference to a default paint.
-     */
-    using MoveOrNew = MoveOrImpl<false>;
+     * A trivial paint is one that uses src-over and has no fragment processors.
+     * It may have variable sRGB settings.
+     **/
+    bool isTrivial() const { return fTrivial; }
 
 private:
+    // Since paint copying is expensive if there are fragment processors, we require going through
+    // the Clone() method.
+    GrPaint(const GrPaint&);
     GrPaint& operator=(const GrPaint&) = delete;
 
     friend class GrProcessorSet;
 
     const GrXPFactory* fXPFactory = nullptr;
-    SkSTArray<4, sk_sp<GrFragmentProcessor>>  fColorFragmentProcessors;
-    SkSTArray<2, sk_sp<GrFragmentProcessor>>  fCoverageFragmentProcessors;
+    SkSTArray<4, std::unique_ptr<GrFragmentProcessor>> fColorFragmentProcessors;
+    SkSTArray<2, std::unique_ptr<GrFragmentProcessor>> fCoverageFragmentProcessors;
     bool fDisableOutputConversionToSRGB = false;
     bool fAllowSRGBInputs = false;
-    bool fUsesDistanceVectorField = false;
+    bool fTrivial = true;
     GrColor4f fColor = GrColor4f::OpaqueWhite();
-};
-
-/** This is the implementation of MoveOrCopy and MoveOrNew. */
-template <bool COPY_IF_NEW>
-class GrPaint::MoveOrImpl {
-public:
-    MoveOrImpl(GrPaint& paint, bool newPaint) {
-        if (newPaint) {
-            if (COPY_IF_NEW) {
-                fStorage.init(paint);
-            } else {
-                fStorage.init();
-            };
-            fPaint = fStorage.get();
-        } else {
-            fPaint = &paint;
-        }
-    }
-
-    operator GrPaint&&() && { return std::move(*fPaint); }
-    GrPaint& paint() { return *fPaint; }
-
-private:
-    SkTLazy<GrPaint> fStorage;
-    GrPaint* fPaint;
 };
 
 #endif
