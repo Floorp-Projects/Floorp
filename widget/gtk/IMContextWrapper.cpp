@@ -584,40 +584,39 @@ IMContextWrapper::OnDestroyWindow(nsWindow* aWindow)
          this));
 }
 
-// Work around gtk bug http://bugzilla.gnome.org/show_bug.cgi?id=483223:
-// (and the similar issue of GTK+ IIIM)
-// The GTK+ XIM and IIIM modules register handlers for the "closed" signal
-// on the display, but:
-//  * The signal handlers are not disconnected when the module is unloaded.
-//
-// The GTK+ XIM module has another problem:
-//  * When the signal handler is run (with the module loaded) it tries
-//    XFree (and fails) on a pointer that did not come from Xmalloc.
-//
-// To prevent these modules from being unloaded, use static variables to
-// hold ref of GtkIMContext class.
-// For GTK+ XIM module, to prevent the signal handler from being run,
-// find the signal handlers and remove them.
-//
-// GtkIMContextXIMs share XOpenIM connections and display closed signal
-// handlers (where possible).
-
 void
 IMContextWrapper::PrepareToDestroyContext(GtkIMContext* aContext)
 {
-    GtkIMContext *slave = nullptr; //TODO GTK3
-    if (!slave) {
-        return;
-    }
-
-    GType slaveType = G_TYPE_FROM_INSTANCE(slave);
-    const gchar *im_type_name = g_type_name(slaveType);
-    if (strcmp(im_type_name, "GtkIMContextIIIM") == 0) {
-        // Add a reference to prevent the IIIM module from being unloaded
-        static gpointer gtk_iiim_context_class =
-            g_type_class_ref(slaveType);
-        // Mute unused variable warning:
-        (void)gtk_iiim_context_class;
+    if (mIMContextID == IMContextID::eIIIMF) {
+        // IIIM module registers handlers for the "closed" signal on the
+        // display, but the signal handler is not disconnected when the module
+        // is unloaded.  To prevent the module from being unloaded, use static
+        // variable to hold reference of slave context class declared by IIIM.
+        // Note that this does not grab any instance, it grabs the "class".
+        static gpointer sGtkIIIMContextClass = nullptr;
+        if (!sGtkIIIMContextClass) {
+            // We retrieved slave context class with g_type_name() and actual
+            // slave context instance when our widget was GTK2.  That must be
+            // _GtkIMContext::priv::slave in GTK3.  However, _GtkIMContext::priv
+            // is an opacity struct named _GtkIMMulticontextPrivate, i.e., it's
+            // not exposed by GTK3.  Therefore, we cannot access the instance
+            // safely.  So, we need to retrieve the slave context class with
+            // g_type_from_name("GtkIMContextIIIM") directly (anyway, we needed
+            // to compare the class name with "GtkIMContextIIIM").
+            GType IIMContextType = g_type_from_name("GtkIMContextIIIM");
+            if (IIMContextType) {
+                sGtkIIIMContextClass = g_type_class_ref(IIMContextType);
+                MOZ_LOG(gGtkIMLog, LogLevel::Info,
+                    ("0x%p PrepareToDestroyContext(), added to reference to "
+                     "GtkIMContextIIIM class to prevent it from being unloaded",
+                     this));
+            } else {
+                MOZ_LOG(gGtkIMLog, LogLevel::Error,
+                    ("0x%p PrepareToDestroyContext(), FAILED to prevent the "
+                     "IIIM module from being uploaded",
+                     this));
+            }
+        }
     }
 }
 
