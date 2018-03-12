@@ -3,12 +3,12 @@ Change log
 
 All notable changes to this program is documented in this file.
 
-Unreleased
-----------
+0.20.0 (2018-03-08)
+-------------------
 
 ### Added
 
-- New `--jsdebugger` flag to open the Browser Toolbox when Firefox
+- New `--jsdebugger` flag to open the [Browser Toolbox] when Firefox
   launches.  This is useful for debugging Marionette internals.
 
 - Introduced the temporary, boolean capability
@@ -18,19 +18,35 @@ Unreleased
 ### Changed
 
 - HTTP status code for the [`StaleElementReference`] error changed
-  from 400 (Bad Request) to 404 (Not Found)
+  from 400 (Bad Request) to 404 (Not Found).
 
 - Backtraces from geckodriver no longer substitute for missing
-  Marionette stacktraces
+  Marionette stacktraces.
 
-- `Delete Session` now allows Firefox to safely shutdown within 70s before
-  force-killing the process
-
-- Changed preference used to disable shield studies to `app.normandy.api_url`.
+- [webdriver crate] upgraded to 0.35.0.
 
 ### Fixed
 
-- Improved error messages for malformed capabilities
+- The Firefox process is now given ample time to shut down, allowing
+  enough time for the Firefox shutdown hang monitor to kick in.
+
+  Firefox has an integrated background monitor that observes
+  long-running threads during shutdown.  These threads will be
+  killed after 63 seconds in the event of a hang.  To allow Firefox
+  to shut down these threads on its own, geckodriver has to wait
+  that time and some additional seconds.
+
+- Grapheme clusters are now accepted as input for keyboard input
+  to actions.
+
+  Input to the `value` field of the `keyDown` and `keyUp` action
+  primitives used to only accept single characters, which means
+  geckodriver would error when a valid grapheme cluster was sent in,
+  for example with the tamil nadu character U+0BA8 U+0BBF.
+
+  Thanks to Greg Fraley for fixing this bug.
+
+- Improved error messages for malformed capability values.
 
 
 0.19.1 (2017-10-30)
@@ -793,9 +809,11 @@ and greater.
 
 
 [README]: https://github.com/mozilla/geckodriver/blob/master/README.md
+[Browser Toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
 
 [`CloseWindowResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CloseWindowResponse.html
 [`CookieResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CookieResponse.html
+[`DeleteSession`]: https://docs.rs/webdriver/newest/webdriver/command/enum.WebDriverCommand.html#variant.DeleteSession
 [`ElementClickIntercepted`]: https://docs.rs/webdriver/newest/webdriver/error/enum.ErrorStatus.html#variant.ElementClickIntercepted
 [`ElementNotInteractable`]: https://docs.rs/webdriver/newest/webdriver/error/enum.ErrorStatus.html#variant.ElementNotInteractable
 [`FullscreenWindow`]: https://docs.rs/webdriver/newest/webdriver/command/enum.WebDriverCommand.html#variant.FullscreenWindow
@@ -821,15 +839,16 @@ and greater.
 [webdriver crate]: https://crates.io/crates/webdriver
 
 [Actions]: https://w3c.github.io/webdriver/webdriver-spec.html#actions
+[Delete Session]: https://w3c.github.io/webdriver/webdriver-spec.html#delete-session
 [Element Click]: https://w3c.github.io/webdriver/webdriver-spec.html#element-click
 [Get Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#get-timeouts
-[Set Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#set-timeouts
 [Get Window Rect]: https://w3c.github.io/webdriver/webdriver-spec.html#get-window-rect
-[Set Window Rect]: https://w3c.github.io/webdriver/webdriver-spec.html#set-window-rect
 [insecure certificate]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-insecure-certificate
 [Minimize Window]: https://w3c.github.io/webdriver/webdriver-spec.html#minimize-window
 [New Session]: https://w3c.github.io/webdriver/webdriver-spec.html#new-session
 [Send Alert Text]: https://w3c.github.io/webdriver/webdriver-spec.html#send-alert-text
+[Set Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#set-timeouts
+[Set Window Rect]: https://w3c.github.io/webdriver/webdriver-spec.html#set-window-rect
 [Status]: https://w3c.github.io/webdriver/webdriver-spec.html#status
 [Take Element Screenshot]: https://w3c.github.io/webdriver/webdriver-spec.html#take-element-screenshot
 [WebDriver errors]: https://w3c.github.io/webdriver/webdriver-spec.html#handling-errors
