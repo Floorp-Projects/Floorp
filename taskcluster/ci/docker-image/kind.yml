@@ -98,3 +98,5 @@ jobs:
     symbol: I(diff)
   periodic-updates:
     symbol: I(file)
+  firefox-snap:
+    symbol: I(snap)
