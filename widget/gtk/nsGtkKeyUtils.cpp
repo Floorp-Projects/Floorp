@@ -931,19 +931,14 @@ KeymapWrapper::ComputeDOMCodeNameIndex(const GdkEventKey* aGdkKeyEvent)
 
 /* static */ void
 KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
-                            GdkEventKey* aGdkKeyEvent,
-                            bool aIsProcessedByIME)
+                            GdkEventKey* aGdkKeyEvent)
 {
-    MOZ_ASSERT(!aIsProcessedByIME || aKeyEvent.mMessage != eKeyPress,
-      "If the key event is handled by IME, keypress event shouldn't be fired");
-
     KeymapWrapper* keymapWrapper = GetInstance();
 
     aKeyEvent.mCodeNameIndex = ComputeDOMCodeNameIndex(aGdkKeyEvent);
     MOZ_ASSERT(aKeyEvent.mCodeNameIndex != CODE_NAME_INDEX_USE_STRING);
     aKeyEvent.mKeyNameIndex =
-        aIsProcessedByIME ? KEY_NAME_INDEX_Process :
-                            keymapWrapper->ComputeDOMKeyNameIndex(aGdkKeyEvent);
+        keymapWrapper->ComputeDOMKeyNameIndex(aGdkKeyEvent);
     if (aKeyEvent.mKeyNameIndex == KEY_NAME_INDEX_Unidentified) {
         uint32_t charCode = GetCharCodeFor(aGdkKeyEvent);
         if (!charCode) {
@@ -956,11 +951,10 @@ KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
             AppendUCS4ToUTF16(charCode, aKeyEvent.mKeyValue);
         }
     }
+    aKeyEvent.mKeyCode = ComputeDOMKeyCode(aGdkKeyEvent);
 
-    if (aIsProcessedByIME) {
-        aKeyEvent.mKeyCode = NS_VK_PROCESSKEY;
-    } else if (aKeyEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING ||
-               aKeyEvent.mMessage != eKeyPress) {
+    if (aKeyEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING ||
+        aKeyEvent.mMessage != eKeyPress) {
         aKeyEvent.mKeyCode = ComputeDOMKeyCode(aGdkKeyEvent);
     } else {
         aKeyEvent.mKeyCode = 0;
