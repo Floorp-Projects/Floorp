@@ -507,11 +507,12 @@ def check_compiler(compiler, language, target):
                                               cxx14_version):
             append_flag('-std=gnu++14')
 
-    # We force clang-cl to emulate Visual C++ 2017 version 15.4
-    if info.type == 'clang-cl' and info.version != '19.11.25547':
+    # We force clang-cl to emulate Visual C++ 2017 version 15.6.0
+    msvc_version = '19.13.26128'
+    if info.type == 'clang-cl' and info.version != msvc_version:
         # This flag is a direct clang-cl flag that doesn't need -Xclang,
         # add it directly.
-        flags.append('-fms-compatibility-version=19.11.25547')
+        flags.append('-fms-compatibility-version=%s' % msvc_version)
 
     # Check compiler target
     # --------------------------------------------------------------------
