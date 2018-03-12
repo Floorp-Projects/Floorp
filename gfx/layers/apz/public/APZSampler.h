@@ -9,6 +9,7 @@
 
 #include "LayersTypes.h"
 #include "mozilla/layers/APZTestData.h"
+#include "mozilla/layers/AsyncCompositionManager.h" // for AsyncTransform
 #include "mozilla/Maybe.h"
 #include "nsTArray.h"
 #include "Units.h"
@@ -94,6 +95,11 @@ public:
       const ScrollThumbData& aThumbData,
       bool aScrollbarIsDescendant,
       AsyncTransformComponentMatrix* aOutClipTransform);
+
+  AsyncTransform GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer);
+  AsyncTransformComponentMatrix GetOverscrollTransform(const LayerMetricsWrapper& aLayer);
+
+  void MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer);
 
 protected:
   virtual ~APZSampler();
