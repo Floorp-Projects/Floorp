@@ -491,14 +491,12 @@ function verifyView(view1, view2)
 
 function verifyWasmModule(module1, module2)
 {
-  let testingFunctions = Cu.getJSTestingFunctions();
-  let exp1 = testingFunctions.wasmExtractCode(module1, "ion");
-  let exp2 = testingFunctions.wasmExtractCode(module2, "ion");
-  let code1 = exp1.code;
-  let code2 = exp2.code;
-  ok(code1 instanceof Uint8Array, "Instance of Uint8Array");
-  ok(code1.length == code2.length, "Correct length");
-  verifyBuffers(code1, code2);
+  // We assume the given modules have no imports and export a single function
+  // named 'run'.
+  var instance1 = new WebAssembly.Instance(module1);
+  var instance2 = new WebAssembly.Instance(module2);
+  is(instance1.exports.run(), instance2.exports.run(), "same run() result");
+
   continueToNextStep();
 }
 
