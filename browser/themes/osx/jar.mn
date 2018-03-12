@@ -56,6 +56,7 @@ browser.jar:
 * skin/classic/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
 * skin/classic/browser/preferences/in-content/dialog.css      (preferences/in-content/dialog.css)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
+  skin/classic/browser/share.svg                            (share.svg)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator@2x.png)
   skin/classic/browser/e10s-64@2x.png                                  (../shared/e10s-64@2x.png)

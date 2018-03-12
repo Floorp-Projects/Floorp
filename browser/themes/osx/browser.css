@@ -335,6 +335,10 @@ html|input.urlbar-input {
   color: GrayText;
 }
 
+#pageAction-panel-shareURL {
+  list-style-image: url("chrome://browser/skin/share.svg");
+}
+
 %include ../shared/urlbarSearchSuggestionsNotification.inc.css
 
 /* ----- AUTOCOMPLETE ----- */

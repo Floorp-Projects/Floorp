@@ -994,6 +994,8 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY pageAction.sendTabToDevice.label "Send Tab to Device">
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
 
+<!ENTITY pageAction.shareUrl.label "Share">
+
 <!ENTITY libraryButton.tooltip "View history, saved bookmarks, and more">
 
 <!-- LOCALIZATION NOTE: (accessibilityIndicator.tooltip): This is used to

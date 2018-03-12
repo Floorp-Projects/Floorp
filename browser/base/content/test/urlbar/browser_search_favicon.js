@@ -11,6 +11,10 @@ registerCleanupFunction(() => {
 
 add_task(async function() {
   Services.prefs.setBoolPref(gRestyleSearchesPref, true);
+
+  // This test is sensitive to the mouse position hovering awesome
+  // bar elements, so make sure it doesnt
+  await EventUtils.synthesizeNativeMouseMove(document.documentElement, 0, 0);
 });
 
 add_task(async function() {

@@ -1258,3 +1258,60 @@ BrowserPageActions.addSearchEngine = {
     });
   },
 };
+
+// share URL
+BrowserPageActions.shareURL = {
+  onShowingInPanel(buttonNode) {
+    this._cached = false;
+  },
+
+  onPlacedInPanel(buttonNode) {
+    let action = PageActions.actionForID("shareURL");
+    BrowserPageActions.takeActionTitleFromPanel(action);
+  },
+
+  onShowingSubview(panelViewNode) {
+    // We cache the providers + the UI if the user selects the share
+    // panel multiple times while the panel is open.
+    if (this._cached) {
+      return;
+    }
+
+    let sharingService = this._sharingService;
+    let url = gBrowser.selectedBrowser.currentURI;
+    let currentURI = gURLBar.makeURIReadable(url).displaySpec;
+    let shareProviders = sharingService.getSharingProviders(currentURI);
+    let fragment = document.createDocumentFragment();
+
+    shareProviders.forEach(function(share) {
+      let item = document.createElement("toolbarbutton");
+      item.setAttribute("label", share.menuItemTitle);
+      item.setAttribute("share-title", share.title);
+      item.setAttribute("image", share.image);
+      item.classList.add("subviewbutton", "subviewbutton-iconic");
+
+      item.addEventListener("command", event => {
+        let shareTitle = event.target.getAttribute("share-title");
+        if (shareTitle) {
+          sharingService.shareUrl(shareTitle, currentURI);
+        }
+        PanelMultiView.hidePopup(BrowserPageActions.panelNode);
+      });
+
+      fragment.appendChild(item);
+    });
+
+    let bodyNode = panelViewNode.querySelector(".panel-subview-body");
+    while (bodyNode.firstChild) {
+      bodyNode.firstChild.remove();
+    }
+    bodyNode.appendChild(fragment);
+    this._cached = true;
+  }
+};
+
+// Attach sharingService here so tests can override the implementation
+XPCOMUtils.defineLazyServiceGetter(BrowserPageActions.shareURL,
+                                   "_sharingService",
+                                   "@mozilla.org/widget/macsharingservice;1",
+                                   "nsIMacSharingService");

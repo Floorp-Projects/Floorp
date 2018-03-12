@@ -1167,6 +1167,25 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
   });
 }
 
+if (AppConstants.platform == "macosx") {
+  gBuiltInActions.push(
+  // Share URL
+  {
+    id: "shareURL",
+    title: "shareURL-title",
+    onShowingInPanel(buttonNode) {
+      browserPageActions(buttonNode).shareURL.onShowingInPanel(buttonNode);
+    },
+    onPlacedInPanel(buttonNode) {
+      browserPageActions(buttonNode).shareURL.onPlacedInPanel(buttonNode);
+    },
+    wantsSubview: true,
+    onSubviewShowing(panelViewNode) {
+        browserPageActions(panelViewNode).shareURL
+          .onShowingSubview(panelViewNode);
+    },
+  });
+}
 
 /**
  * Gets a BrowserPageActions object in a browser window.

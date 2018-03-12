@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/gfx/PrintTargetCG.h"
 #include "mozilla/Preferences.h"
 
 #include "nsPrintDialogX.h"
@@ -22,6 +23,7 @@
 #include "nsObjCExceptions.h"
 
 using namespace mozilla;
+using mozilla::gfx::PrintTarget;
 
 NS_IMPL_ISUPPORTS(nsPrintDialogServiceX, nsIPrintDialogService)
 
