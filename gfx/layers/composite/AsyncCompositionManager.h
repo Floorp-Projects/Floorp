@@ -24,7 +24,6 @@
 namespace mozilla {
 namespace layers {
 
-class AsyncPanZoomController;
 class Layer;
 class LayerManagerComposite;
 class AutoResolveRefLayers;
