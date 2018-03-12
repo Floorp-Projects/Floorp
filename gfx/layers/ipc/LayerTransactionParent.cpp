@@ -59,6 +59,7 @@ LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
   , mDestroyed(false)
   , mIPCOpen(false)
 {
+  MOZ_ASSERT(mId != 0);
 }
 
 LayerTransactionParent::~LayerTransactionParent()
