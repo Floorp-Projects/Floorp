@@ -12,6 +12,10 @@ UNIFIED_SOURCES += [
     'xpt_arena.cpp',
 ]
 
+SOURCES += [
+    '!XPTInfo.cpp',
+]
+
 EXPORTS += [
     'xpt_arena.h',
     'xpt_struct.h',
