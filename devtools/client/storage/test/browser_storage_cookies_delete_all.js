@@ -22,7 +22,7 @@ function* performDelete(store, rowName, action) {
 
   yield selectTreeItem(store);
 
-  let eventWait = gUI.once("store-objects-edit");
+  let eventWait = gUI.once("store-objects-updated");
   let cells = getRowCells(rowName, true);
 
   yield waitForContextMenu(contextMenu, cells.name, () => {

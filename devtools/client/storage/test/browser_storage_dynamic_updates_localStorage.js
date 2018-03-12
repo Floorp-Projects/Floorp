@@ -20,9 +20,9 @@ add_task(function* () {
     ],
   ]);
 
-  yield removeLocalStorageItem("ls4");
+  gWindow.localStorage.removeItem("ls4");
 
-  yield gUI.once("store-objects-edit");
+  yield gUI.once("store-objects-updated");
 
   yield checkState([
     [
@@ -31,9 +31,10 @@ add_task(function* () {
     ],
   ]);
 
-  yield setLocalStorageItem("ls4", "again");
+  gWindow.localStorage.setItem("ls4", "again");
 
-  yield gUI.once("store-objects-edit");
+  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-updated");
 
   yield checkState([
     [
@@ -42,9 +43,10 @@ add_task(function* () {
     ],
   ]);
   // Updating a row
-  yield setLocalStorageItem("ls2", "ls2-changed");
+  gWindow.localStorage.setItem("ls2", "ls2-changed");
 
-  yield gUI.once("store-objects-edit");
+  yield gUI.once("store-objects-updated");
+  yield gUI.once("store-objects-updated");
 
   checkCell("ls2", "value", "ls2-changed");
 
@@ -64,19 +66,3 @@ add_task(function* () {
 
   yield finishTests();
 });
-
-function* setLocalStorageItem(key, value) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, [key, value],
-    ([innerKey, innerValue]) => {
-      content.wrappedJSObject.localStorage.setItem(innerKey, innerValue);
-    }
-  );
-}
-
-function* removeLocalStorageItem(key) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, key,
-    innerKey => {
-      content.wrappedJSObject.localStorage.removeItem(innerKey);
-    }
-  );
-}
