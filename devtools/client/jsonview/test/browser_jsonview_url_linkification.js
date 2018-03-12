@@ -7,14 +7,14 @@
 
 const {ELLIPSIS} = require("devtools/shared/l10n");
 
-add_task(async function () {
+add_task(async function() {
   info("Test short URL linkification JSON started");
 
   let url = "http://example.com/";
   let tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
 
   // eslint-disable-next-line no-shadow
-  await ContentTask.spawn(tab.linkedBrowser, {url}, function ({url}) {
+  await ContentTask.spawn(tab.linkedBrowser, {url}, function({url}) {
     let {document} = content;
 
     let link = document.querySelector(".jsonPanelBox .treeTable .treeValueCell a");
@@ -28,14 +28,14 @@ add_task(async function () {
   });
 });
 
-add_task(async function () {
+add_task(async function() {
   info("Test long URL linkification JSON started");
 
   let url = "http://example.com/" + "a".repeat(100);
   let tab = await addJsonViewTab("data:application/json," + JSON.stringify([url]));
 
   // eslint-disable-next-line no-shadow
-  await ContentTask.spawn(tab.linkedBrowser, {url, ELLIPSIS}, function ({url, ELLIPSIS}) {
+  await ContentTask.spawn(tab.linkedBrowser, {url, ELLIPSIS}, function({url, ELLIPSIS}) {
     let croppedUrl = url.slice(0, 24) + ELLIPSIS + url.slice(-24);
     let {document} = content;
 

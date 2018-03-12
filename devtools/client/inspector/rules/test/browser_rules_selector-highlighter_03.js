@@ -26,10 +26,10 @@ add_task(function* () {
   // Mock the highlighter front.
   let HighlighterFront = {
     isShown: false,
-    show: function () {
+    show: function() {
       this.isShown = true;
     },
-    hide: function () {
+    hide: function() {
       this.isShown = false;
     }
   };

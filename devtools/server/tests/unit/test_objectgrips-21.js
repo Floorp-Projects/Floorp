@@ -8,7 +8,7 @@ var gDebuggee;
 var gThreadClient;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -219,8 +219,8 @@ function descriptor(descr) {
 
 async function test_unsafe_grips(principal, tests) {
   for (let data of tests) {
-    await new Promise(function (resolve) {
-      gThreadClient.addOneTimeListener("paused", async function (event, packet) {
+    await new Promise(function(resolve) {
+      gThreadClient.addOneTimeListener("paused", async function(event, packet) {
         let [objGrip, inheritsGrip] = packet.frame.arguments;
         for (let grip of [objGrip, inheritsGrip]) {
           let isUnsafe = grip === objGrip;

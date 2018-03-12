@@ -9,12 +9,12 @@ function run_test() {
   dbg.uncaughtExceptionHook = testExceptionHook;
 
   dbg.addDebuggee(g);
-  dbg.onDebuggerStatement = function (frame) {
+  dbg.onDebuggerStatement = function(frame) {
     Assert.ok(frame === dbg.getNewestFrame());
     // Execute from the nested event loop, dbg.getNewestFrame() won't
     // be working anymore.
 
-    executeSoon(function () {
+    executeSoon(function() {
       try {
         Assert.ok(frame === dbg.getNewestFrame());
       } finally {

@@ -23,7 +23,7 @@
         let xhr = new XMLHttpRequest();
         xhr.open("GET", address, true);
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
             callback();
           }
@@ -32,7 +32,7 @@
       }
 
       function performRequests() {
-        get("sjs_content-type-test-server.sjs?fmt=txt", function () {
+        get("sjs_content-type-test-server.sjs?fmt=txt", function() {
           // Done.
         });
       }

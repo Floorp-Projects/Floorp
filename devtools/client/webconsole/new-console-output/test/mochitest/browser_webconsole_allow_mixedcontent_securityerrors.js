@@ -21,7 +21,7 @@ const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/Security/" +
                        "Mixed_content" + DOCS_GA_PARAMS;
 
-add_task(async function () {
+add_task(async function() {
   await Promise.all([
     pushPref("security.mixed_content.block_active_content", false),
     pushPref("security.mixed_content.block_display_content", false),

@@ -18,7 +18,7 @@ const { DebuggerServer } = require("devtools/server/main");
  * @param fileName {String} URL of the actor module (for proper stack traces)
  * @param options {Object} Configuration object
  */
-exports.registerActor = function (sourceText, fileName, options) {
+exports.registerActor = function(sourceText, fileName, options) {
   // Register in the current process
   exports.registerActorInCurrentProcess(sourceText, fileName, options);
   // Register in any child processes
@@ -30,7 +30,7 @@ exports.registerActor = function (sourceText, fileName, options) {
   });
 };
 
-exports.registerActorInCurrentProcess = function (sourceText, fileName, options) {
+exports.registerActorInCurrentProcess = function(sourceText, fileName, options) {
   const principal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
   const sandbox = Cu.Sandbox(principal);
   sandbox.exports = {};
@@ -55,7 +55,7 @@ exports.registerActorInCurrentProcess = function (sourceText, fileName, options)
   }
 };
 
-exports.unregisterActor = function (options) {
+exports.unregisterActor = function(options) {
   // Unregister in the current process
   exports.unregisterActorInCurrentProcess(options);
   // Unregister in any child processes
@@ -66,7 +66,7 @@ exports.unregisterActor = function (options) {
   });
 };
 
-exports.unregisterActorInCurrentProcess = function (options) {
+exports.unregisterActorInCurrentProcess = function(options) {
   if (options.tab) {
     DebuggerServer.removeTabActor(options);
   }

@@ -18,20 +18,20 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(
       gClient, "test-black-box",
-      function (response, tabClient, threadClient) {
+      function(response, tabClient, threadClient) {
         gThreadClient = threadClient;
 
         Promise.resolve(setup_code())
           .then(black_box_code)
           .then(run_code)
           .then(test_correct_location)
-          .catch(function (error) {
+          .catch(function(error) {
             Assert.ok(false, "Should not get an error, got " + error);
           })
-          .then(function () {
+          .then(function() {
             finishClient(gClient);
           });
       });
@@ -72,14 +72,14 @@ function setup_code() {
 function black_box_code() {
   const d = defer();
 
-  gThreadClient.getSources(function ({ sources, error }) {
+  gThreadClient.getSources(function({ sources, error }) {
     Assert.ok(!error, "Shouldn't get an error getting sources");
     const source = sources.filter((s) => {
       return s.url.includes("b.js");
     })[0];
     Assert.ok(!!source, "We should have our source in the sources list");
 
-    gThreadClient.source(source).blackBox(function ({ error }) {
+    gThreadClient.source(source).blackBox(function({ error }) {
       Assert.ok(!error, "Should not get an error black boxing");
       d.resolve(true);
     });
@@ -91,7 +91,7 @@ function black_box_code() {
 function run_code() {
   const d = defer();
 
-  gClient.addOneTimeListener("paused", function (event, packet) {
+  gClient.addOneTimeListener("paused", function(event, packet) {
     d.resolve(packet);
     gThreadClient.resume();
   });

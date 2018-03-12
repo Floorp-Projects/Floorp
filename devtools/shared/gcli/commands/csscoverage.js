@@ -83,12 +83,12 @@ exports.items = [
     hidden: true,
     description: l10n.lookup("csscoverageToggleDesc2"),
     state: {
-      isChecked: function (target) {
+      isChecked: function(target) {
         return csscoverage.getUsage(target).then(usage => {
           return usage.isRunning();
         });
       },
-      onChange: function (target, handler) {
+      onChange: function(target, handler) {
         csscoverage.getUsage(target).then(usage => {
           this.handler = ev => {
             handler("state-change", ev);
@@ -96,7 +96,7 @@ exports.items = [
           usage.on("state-change", this.handler);
         });
       },
-      offChange: function (target, handler) {
+      offChange: function(target, handler) {
         csscoverage.getUsage(target).then(usage => {
           usage.off("state-change", this.handler);
           this.handler = undefined;

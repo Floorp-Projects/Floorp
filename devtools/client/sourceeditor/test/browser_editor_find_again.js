@@ -27,7 +27,7 @@ const REPLACE_KEY = OS == "Darwin" ? L10N.getStr("replaceAllMac.key")
 // Using a timeout could also work, but that is more precise, ensuring also
 // the execution of the listeners added to the <input>'s focus.
 const dispatchAndWaitForFocus = (target) => new Promise((resolve) => {
-  target.addEventListener("focus", function () {
+  target.addEventListener("focus", function() {
     resolve(target);
   }, {once: true});
 

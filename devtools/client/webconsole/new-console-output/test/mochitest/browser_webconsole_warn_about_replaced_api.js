@@ -10,7 +10,7 @@ const TEST_URI_REPLACED =
 const TEST_URI_NOT_REPLACED =
   "data:text/html;charset=utf8,<script>console.log('foo')</script>";
 
-add_task(async function () {
+add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["devtools.webconsole.persistlog", true]
   ]});

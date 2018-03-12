@@ -8,7 +8,7 @@
  * when loaded directly from an HTML page.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CYRILLIC_URL);
   info("Starting test... ");
 

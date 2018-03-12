@@ -271,7 +271,7 @@ async function waitForAllNetworkUpdateEvents() {
 function initNetMonitor(url, enableCache) {
   info("Initializing a network monitor pane.");
 
-  return (async function () {
+  return (async function() {
     let tab = await addTab(url);
     info("Net tab added successfully: " + url);
 
@@ -316,7 +316,7 @@ function initNetMonitor(url, enableCache) {
 function restartNetMonitor(monitor, newUrl) {
   info("Restarting the specified network monitor.");
 
-  return (async function () {
+  return (async function() {
     let tab = monitor.toolbox.target.tab;
     let url = newUrl || tab.linkedBrowser.currentURI.spec;
 
@@ -334,7 +334,7 @@ function restartNetMonitor(monitor, newUrl) {
 function teardown(monitor) {
   info("Destroying the specified network monitor.");
 
-  return (async function () {
+  return (async function() {
     let tab = monitor.toolbox.target.tab;
 
     await waitForAllNetworkUpdateEvents();

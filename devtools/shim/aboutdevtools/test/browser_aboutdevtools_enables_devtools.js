@@ -6,7 +6,7 @@
 
 /* eslint-env browser */
 
-add_task(async function () {
+add_task(async function() {
   pushPref("devtools.enabled", false);
 
   let {tab, doc, win} = await openAboutDevTools();

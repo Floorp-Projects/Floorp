@@ -8,7 +8,7 @@
 
 const { OS } = require("resource://gre/modules/osfile.jsm");
 
-const run_test = makeMemoryActorTest(async function (client, memoryFront) {
+const run_test = makeMemoryActorTest(async function(client, memoryFront) {
   const snapshotFilePath = await memoryFront.saveHeapSnapshot({
     forceCopy: true
   });

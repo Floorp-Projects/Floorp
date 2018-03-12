@@ -22,7 +22,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<script>
   console.log("foo", window.symbol);
 </script>`;
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   let messages = await waitFor(() => findMessages(hud, "foo"));

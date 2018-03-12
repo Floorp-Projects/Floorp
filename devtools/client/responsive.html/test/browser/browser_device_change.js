@@ -28,7 +28,7 @@ const testDevice = {
 // Add the new device to the list
 addDeviceForTest(testDevice);
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { store } = ui.toolWindow;
 
   reloadOnUAChange(true);
@@ -78,7 +78,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   reloadOnUAChange(false);
 });
 
-add_task(async function () {
+add_task(async function() {
   const tab = await addTab(TEST_URL);
   const { ui } = await openRDM(tab);
 

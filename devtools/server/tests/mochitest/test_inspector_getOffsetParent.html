@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345119
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -24,7 +24,7 @@ var gBodyNode;
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function (err, client, tab, doc) {
+  attachURL(url, function(err, client, tab, doc) {
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
 
@@ -40,7 +40,7 @@ addTest(function setup() {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Try to get the offset parent for a dead node (null)");
   gWalker.getOffsetParent(null).then(offsetParent => {
     ok(!offsetParent, "No offset parent found");
@@ -48,7 +48,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Try to get the offset parent for a node that is absolutely positioned inside a " +
     "relative node");
   gWalker.querySelector(gWalker.rootNode, "#absolute_child").then(node => {
@@ -62,7 +62,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Try to get the offset parent for a node that is absolutely positioned outside a" +
     " relative node");
   gWalker.querySelector(gWalker.rootNode, "#no_parent").then(node => {
@@ -74,7 +74,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Try to get the offset parent for a relatively positioned node");
   gWalker.querySelector(gWalker.rootNode, "#relative_parent").then(node => {
     return gWalker.getOffsetParent(node);
@@ -85,7 +85,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Try to get the offset parent for a statically positioned node");
   gWalker.querySelector(gWalker.rootNode, "#static").then(node => {
     return gWalker.getOffsetParent(node);
@@ -96,7 +96,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Try to get the offset parent for a fixed positioned node");
   gWalker.querySelector(gWalker.rootNode, "#fixed").then(node => {
     return gWalker.getOffsetParent(node);
@@ -107,7 +107,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Try to get the offset parent for the body");
   gWalker.querySelector(gWalker.rootNode, "body").then(node => {
     return gWalker.getOffsetParent(node);
@@ -117,7 +117,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   gWalker = null;
   gBodyNode = null;
   runNextTest();

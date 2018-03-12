@@ -7,7 +7,7 @@
  * Test that clicking on the security indicator opens the security details tab.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -38,7 +38,7 @@ add_task(async function () {
 
   async function performRequestAndWait(url) {
     let wait = waitForNetworkEvents(monitor, 1);
-    await ContentTask.spawn(tab.linkedBrowser, { url }, async function (args) {
+    await ContentTask.spawn(tab.linkedBrowser, { url }, async function(args) {
       content.wrappedJSObject.performRequests(1, args.url);
     });
     return wait;

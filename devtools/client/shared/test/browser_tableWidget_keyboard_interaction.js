@@ -17,8 +17,8 @@ function test() {
   waitForExplicitFinish();
   let win = Services.ww.openWindow(null, TEST_URI, "_blank", TEST_OPT, null);
 
-  win.addEventListener("load", function () {
-    waitForFocus(function () {
+  win.addEventListener("load", function() {
+    waitForFocus(function() {
       doc = win.document;
       table = new TableWidget(doc.querySelector("box"), {
         initialColumns: {

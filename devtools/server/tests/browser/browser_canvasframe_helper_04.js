@@ -12,10 +12,10 @@ const TEST_URL_1 =
 const TEST_URL_2 =
   "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test 2";
 
-add_task(async function () {
+add_task(async function() {
   let browser = await addTab(TEST_URL_1);
   await injectEventUtilsInContentTask(browser);
-  await ContentTask.spawn(browser, TEST_URL_2, async function (url2) {
+  await ContentTask.spawn(browser, TEST_URL_2, async function(url2) {
     const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
     const {

@@ -27,7 +27,7 @@ const PAGE_URL = `data:text/html,
 
 </html>`;
 
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.source-map.client-service.enabled", true);
   await pushPref("devtools.webconsole.filter.css", true);
 

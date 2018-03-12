@@ -9,7 +9,7 @@
 
 const HTML_LONG_URL = CONTENT_TYPE_SJS + "?fmt=html-long";
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
@@ -27,7 +27,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, HTML_LONG_URL, async function (url) {
+  await ContentTask.spawn(tab.linkedBrowser, HTML_LONG_URL, async function(url) {
     content.wrappedJSObject.performRequests(1, url);
   });
   await wait;

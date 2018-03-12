@@ -9,7 +9,7 @@
 
 const TEST_URI = "data:text/html,Testing jsterm focus";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
   let jsterm = hud.jsterm;
   let input = jsterm.inputNode;

@@ -14,7 +14,7 @@
  * @param {object} panel - The current panel.
  * @return {object} The recording model.
  */
-exports.getSelectedRecording = function (panel) {
+exports.getSelectedRecording = function(panel) {
   const view = panel.panelWin.RecordingsView;
   return view.selected;
 };
@@ -25,7 +25,7 @@ exports.getSelectedRecording = function (panel) {
  * @param {object} panel - The current panel.
  * @return {number} index
  */
-exports.setSelectedRecording = function (panel, index) {
+exports.setSelectedRecording = function(panel, index) {
   const view = panel.panelWin.RecordingsView;
   view.setSelectedByIndex(index);
   return index;
@@ -37,18 +37,18 @@ exports.setSelectedRecording = function (panel, index) {
  * @param {object} panel - The current panel.
  * @return {number} index
  */
-exports.getSelectedRecordingIndex = function (panel) {
+exports.getSelectedRecordingIndex = function(panel) {
   const view = panel.panelWin.RecordingsView;
   return view.getSelectedIndex();
 };
 
-exports.getDurationLabelText = function (panel, elementIndex) {
+exports.getDurationLabelText = function(panel, elementIndex) {
   const { $$ } = panel.panelWin;
   const elements = $$(".recording-list-item-duration", panel.panelWin.document);
   return elements[elementIndex].innerHTML;
 };
 
-exports.getRecordingsCount = function (panel) {
+exports.getRecordingsCount = function(panel) {
   const { $$ } = panel.panelWin;
   return $$(".recording-list-item", panel.panelWin.document).length;
 };

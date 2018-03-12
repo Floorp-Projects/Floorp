@@ -11,11 +11,11 @@ const { TabSources } = require("devtools/server/actors/utils/TabSources");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 
 var gTestGlobals = [];
-DebuggerServer.addTestGlobal = function (global) {
+DebuggerServer.addTestGlobal = function(global) {
   gTestGlobals.push(global);
 };
 
-DebuggerServer.getTestGlobal = function (name) {
+DebuggerServer.getTestGlobal = function(name) {
   for (let g of gTestGlobals) {
     if (g.__name == name) {
       return g;
@@ -57,7 +57,7 @@ function TestTabList(connection) {
 
 TestTabList.prototype = {
   constructor: TestTabList,
-  getList: function () {
+  getList: function() {
     return Promise.resolve([...this._tabActors]);
   }
 };
@@ -108,7 +108,7 @@ TestTabActor.prototype = {
     return this._sources;
   },
 
-  form: function () {
+  form: function() {
     let response = { actor: this.actorID, title: this._global.__name };
 
     // Walk over tab actors added by extensions and add them to a new ActorPool.
@@ -124,7 +124,7 @@ TestTabActor.prototype = {
     return response;
   },
 
-  onAttach: function (request) {
+  onAttach: function(request) {
     this._attached = true;
 
     let response = { type: "tabAttached", threadActor: this.threadActor.actorID };
@@ -133,21 +133,21 @@ TestTabActor.prototype = {
     return response;
   },
 
-  onDetach: function (request) {
+  onDetach: function(request) {
     if (!this._attached) {
       return { "error": "wrongState" };
     }
     return { type: "detached" };
   },
 
-  onReload: function (request) {
+  onReload: function(request) {
     this.sources.reset({ sourceMaps: true });
     this.threadActor.clearDebuggees();
     this.threadActor.dbg.addDebuggees();
     return {};
   },
 
-  removeActorByName: function (name) {
+  removeActorByName: function(name) {
     const actor = this._extraActors[name];
     if (this._tabActorPool) {
       this._tabActorPool.removeActor(actor);
@@ -166,10 +166,10 @@ TestTabActor.prototype.requestTypes = {
   "reload": TestTabActor.prototype.onReload
 };
 
-exports.register = function (handle) {
+exports.register = function(handle) {
   handle.setRootActor(createRootActor);
 };
 
-exports.unregister = function (handle) {
+exports.unregister = function(handle) {
   handle.setRootActor(null);
 };

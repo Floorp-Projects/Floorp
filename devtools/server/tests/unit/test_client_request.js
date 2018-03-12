@@ -13,11 +13,11 @@ function TestActor(conn) {
 TestActor.prototype = {
   actorPrefix: "test",
 
-  hello: function () {
+  hello: function() {
     return {hello: "world"};
   },
 
-  error: function () {
+  error: function() {
     return {error: "code", message: "human message"};
   }
 };
@@ -150,7 +150,7 @@ function test_close_client_while_sending_requests() {
   });
 
   let expectReply = defer();
-  gClient.expectReply("root", function (response) {
+  gClient.expectReply("root", function(response) {
     Assert.equal(response.error, "connectionClosed");
     Assert.equal(response.message,
                  "server side packet can't be received as the connection just closed.");

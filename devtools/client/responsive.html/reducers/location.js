@@ -16,7 +16,7 @@ let reducers = {
 
 };
 
-module.exports = function (location = INITIAL_LOCATION, action) {
+module.exports = function(location = INITIAL_LOCATION, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return location;

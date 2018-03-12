@@ -10,7 +10,7 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 const { OS } = require("resource://gre/modules/osfile.jsm");
 
 function waitUntilScreenshot() {
-  return new Promise(async function (resolve) {
+  return new Promise(async function(resolve) {
     let { Downloads } = require("resource://gre/modules/Downloads.jsm");
     let list = await Downloads.getList(Downloads.ALL);
 
@@ -27,7 +27,7 @@ function waitUntilScreenshot() {
   });
 }
 
-addRDMTask(TEST_URL, async function ({ ui: {toolWindow} }) {
+addRDMTask(TEST_URL, async function({ ui: {toolWindow} }) {
   let { store, document } = toolWindow;
 
   // Wait until the viewport has been added

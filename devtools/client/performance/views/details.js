@@ -130,7 +130,7 @@ var DetailsView = {
    * @param {string} viewName
    * @return {boolean}
    */
-  _isViewSupported: function (viewName) {
+  _isViewSupported: function(viewName) {
     let { features, prefs } = this.components[viewName];
     let recording = PerformanceController.getCurrentRecording();
 
@@ -176,7 +176,7 @@ var DetailsView = {
    * Selects a default view based off of protocol support
    * and preferences enabled.
    */
-  selectDefaultView: function () {
+  selectDefaultView: function() {
     // We want the waterfall to be default view in almost all cases, except when
     // timeline actor isn't supported, or we have markers disabled (which should only
     // occur temporarily via bug 1156499
@@ -194,7 +194,7 @@ var DetailsView = {
    * @param object viewObject
    * @return boolean
    */
-  isViewSelected: function (viewObject) {
+  isViewSelected: function(viewObject) {
     // If not initialized, and we have no recordings,
     // no views are selected (even though there's a selected panel)
     if (!this._initialized) {
@@ -240,7 +240,7 @@ var DetailsView = {
   /**
    * Called when recording stops or is selected.
    */
-  _onRecordingStoppedOrSelected: function (_, state, recording) {
+  _onRecordingStoppedOrSelected: function(_, state, recording) {
     if (typeof state === "string" && state !== "recording-stopped") {
       return;
     }
@@ -250,7 +250,7 @@ var DetailsView = {
   /**
    * Called when a view button is clicked.
    */
-  _onViewToggle: function (e) {
+  _onViewToggle: function(e) {
     this.selectView(e.target.getAttribute("data-view"));
   },
 

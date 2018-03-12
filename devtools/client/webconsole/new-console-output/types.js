@@ -11,7 +11,7 @@ const {
   MESSAGE_LEVEL
 } = require("devtools/client/webconsole/new-console-output/constants");
 
-exports.ConsoleCommand = function (props) {
+exports.ConsoleCommand = function(props) {
   return Object.assign({
     id: null,
     allowRepeating: false,
@@ -25,7 +25,7 @@ exports.ConsoleCommand = function (props) {
   }, props);
 };
 
-exports.ConsoleMessage = function (props) {
+exports.ConsoleMessage = function(props) {
   return Object.assign({
     id: null,
     allowRepeating: true,
@@ -49,7 +49,7 @@ exports.ConsoleMessage = function (props) {
   }, props);
 };
 
-exports.NetworkEventMessage = function (props) {
+exports.NetworkEventMessage = function(props) {
   return Object.assign({
     id: null,
     actor: null,

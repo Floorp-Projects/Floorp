@@ -29,19 +29,19 @@ var eventsSpec = generateActorSpec({
 });
 
 var EventsFormActor = ActorClassWithSpec(eventsSpec, {
-  initialize: function () {
+  initialize: function() {
     Actor.prototype.initialize.apply(this, arguments);
   },
 
-  attach: function () {
+  attach: function() {
     EventEmitter.on(NodeActor, "form", this.onNodeActorForm);
   },
 
-  detach: function () {
+  detach: function() {
     EventEmitter.off(NodeActor, "form", this.onNodeActorForm);
   },
 
-  onNodeActorForm: function (event) {
+  onNodeActorForm: function(event) {
     let nodeActor = event.target;
     if (nodeActor.rawNode.id == "container") {
       let form = event.data;
@@ -51,7 +51,7 @@ var EventsFormActor = ActorClassWithSpec(eventsSpec, {
 });
 
 var EventsFormFront = FrontClassWithSpec(eventsSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     Front.prototype.initialize.apply(this, arguments);
 
     this.actorID = form[EventsFormActor.prototype.typeName];

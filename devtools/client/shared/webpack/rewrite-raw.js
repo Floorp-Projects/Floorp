@@ -6,7 +6,7 @@
 
 "use strict";
 
-module.exports = function (content) {
+module.exports = function(content) {
   this.cacheable && this.cacheable();
   return content.replace(/raw\!/g, "");
 };

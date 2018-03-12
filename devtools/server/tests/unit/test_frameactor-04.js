@@ -15,9 +15,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_pause_frame();
                            });
@@ -53,7 +53,7 @@ function test_frame_slice() {
   }
 
   let test = gSliceTests.shift();
-  gThreadClient.getFrames(test.start, test.count, function (response) {
+  gThreadClient.getFrames(test.start, test.count, function(response) {
     let testFrames = gFrames.slice(test.start,
                                    test.count ? test.start + test.count : undefined);
     Assert.equal(testFrames.length, response.frames.length);
@@ -74,11 +74,11 @@ function test_frame_slice() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     test_frame_slice();
   });
 
-  gDebuggee.eval("(" + function () {
+  gDebuggee.eval("(" + function() {
     function depth3() {
       debugger;
     }

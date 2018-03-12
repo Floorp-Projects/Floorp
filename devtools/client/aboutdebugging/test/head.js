@@ -215,7 +215,7 @@ function* uninstallAddon({document, id, name}) {
   yield new Promise(done => {
     AddonManager.getAddonByID(id, addon => {
       let listener = {
-        onUninstalled: function (uninstalledAddon) {
+        onUninstalled: function(uninstalledAddon) {
           if (uninstalledAddon != addon) {
             return;
           }
@@ -334,7 +334,7 @@ function* unregisterServiceWorker(tab, serviceWorkersElement) {
  * @param {window} win
  */
 function waitForDelayedStartupFinished(win) {
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
     Services.obs.addObserver(function observer(subject, topic) {
       if (win == subject) {
         Services.obs.removeObserver(observer, topic);
@@ -426,7 +426,7 @@ function* enableServiceWorkerDebugging() {
 function promiseAddonEvent(event) {
   return new Promise(resolve => {
     let listener = {
-      [event]: function (...args) {
+      [event]: function(...args) {
         AddonManager.removeAddonListener(listener);
         resolve(args);
       }

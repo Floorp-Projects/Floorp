@@ -15,9 +15,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_minified();
                            });
@@ -37,7 +37,7 @@ function test_minified() {
                  "The new source should not be the minified file");
   });
 
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     Assert.equal(event, "paused");
     Assert.equal(packet.why.type, "debuggerStatement");
 
@@ -46,7 +46,7 @@ function test_minified() {
     };
 
     getSource(gThreadClient, "http://example.com/foo.js").then(source => {
-      source.setBreakpoint(location, function (response, bpClient) {
+      source.setBreakpoint(location, function(response, bpClient) {
         Assert.ok(!response.error);
         testHitBreakpoint();
       });
@@ -76,7 +76,7 @@ function test_minified() {
 }
 
 function testHitBreakpoint(timesHit = 0) {
-  gClient.addOneTimeListener("paused", function (event, packet) {
+  gClient.addOneTimeListener("paused", function(event, packet) {
     ++timesHit;
 
     Assert.equal(event, "paused");

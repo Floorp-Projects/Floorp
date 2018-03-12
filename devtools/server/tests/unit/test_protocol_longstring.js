@@ -58,7 +58,7 @@ const rootSpec = protocol.generateActorSpec({
 });
 
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  initialize: function (conn) {
+  initialize: function(conn) {
     rootActor = this;
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
@@ -68,25 +68,25 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   sayHello: simpleHello,
 
-  shortString: function () {
+  shortString: function() {
     return new LongStringActor(this.conn, SHORT_STR);
   },
 
-  longString: function () {
+  longString: function() {
     return new LongStringActor(this.conn, LONG_STR);
   },
 
-  emitShortString: function () {
+  emitShortString: function() {
     EventEmitter.emit(this, "string-event", new LongStringActor(this.conn, SHORT_STR));
   },
 
-  emitLongString: function () {
+  emitLongString: function() {
     EventEmitter.emit(this, "string-event", new LongStringActor(this.conn, LONG_STR));
   },
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  initialize: function (client) {
+  initialize: function(client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
@@ -106,7 +106,7 @@ function run_test() {
 
   let strfront = null;
 
-  let expectRootChildren = function (size) {
+  let expectRootChildren = function(size) {
     Assert.equal(rootActor.__poolMap.size, size + 1);
     Assert.equal(rootClient.__poolMap.size, size + 1);
   };

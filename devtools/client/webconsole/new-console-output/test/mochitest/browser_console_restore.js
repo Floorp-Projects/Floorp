@@ -10,7 +10,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   is(HUDService.getBrowserConsoleSessionState(), false, "Session state false by default");
   HUDService.storeBrowserConsoleSessionState();
   is(HUDService.getBrowserConsoleSessionState(), false,

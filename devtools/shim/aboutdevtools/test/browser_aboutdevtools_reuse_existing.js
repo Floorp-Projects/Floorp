@@ -9,7 +9,7 @@
 /**
  * Test that only one tab of about:devtools is used for a given window.
  */
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.enabled", false);
 
   info("Add an about:blank tab");

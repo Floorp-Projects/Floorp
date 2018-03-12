@@ -7,7 +7,7 @@
  * Tests if JSON responses with unusal/custom MIME types are handled correctly.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(JSON_CUSTOM_MIME_URL);
   info("Starting test... ");
 
@@ -22,7 +22,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequests();
   });
   await wait;

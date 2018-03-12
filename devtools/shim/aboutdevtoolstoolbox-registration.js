@@ -22,13 +22,13 @@ AboutDevtoolsToolbox.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([nsIAboutModule]),
 
-  newChannel: function (uri, loadInfo) {
+  newChannel: function(uri, loadInfo) {
     let chan = Services.io.newChannelFromURIWithLoadInfo(this.uri, loadInfo);
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
     return chan;
   },
 
-  getURIFlags: function (uri) {
+  getURIFlags: function(uri) {
     return nsIAboutModule.ALLOW_SCRIPT |
            nsIAboutModule.ENABLE_INDEXED_DB |
            nsIAboutModule.HIDE_FROM_ABOUTABOUT;

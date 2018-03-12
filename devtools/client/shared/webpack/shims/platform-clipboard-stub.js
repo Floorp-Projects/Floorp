@@ -9,7 +9,7 @@
 "use strict";
 
 function copyString(string) {
-  let doCopy = function (e) {
+  let doCopy = function(e) {
     e.clipboardData.setData("text/plain", string);
     e.preventDefault();
   };

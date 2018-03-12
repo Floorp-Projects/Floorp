@@ -29,7 +29,7 @@ const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.conca
   { url: "sjs_content-type-test-server.sjs?fmt=ws" },
 ]);
 
-add_task(async function () {
+add_task(async function() {
   Services.prefs.setCharPref("devtools.netmonitor.filters",
                              '["bogus", "js", "alsobogus"]');
 

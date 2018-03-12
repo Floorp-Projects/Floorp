@@ -52,7 +52,7 @@ function scriptErrorFlagsToKind(flags) {
 // into the ether.
 var errorCount = 0;
 var listener = {
-  observe: function (message) {
+  observe: function(message) {
     errorCount++;
     let string = "";
     try {
@@ -129,7 +129,7 @@ function writeTestTempFile(fileName, content) {
 
 /** * Transport Factories ***/
 
-var socket_transport = async function () {
+var socket_transport = async function() {
   if (!DebuggerServer.listeningSockets) {
     let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
     let authenticator = new AuthenticatorType.Server();

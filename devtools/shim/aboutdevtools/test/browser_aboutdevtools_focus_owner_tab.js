@@ -10,7 +10,7 @@
  * When closing about:devtools, test that the tab where the user triggered about:devtools
  * is selected again.
  */
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.enabled", false);
 
   info("Add an about:blank tab");
@@ -46,7 +46,7 @@ add_task(async function () {
  * When closing about:devtools, test that the current tab is not updated if
  * about:devtools was not the selectedTab.
  */
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.enabled", false);
 
   info("Add an about:blank tab");

@@ -61,7 +61,7 @@ exports.items = [
     description: l10n.lookup("securityCSPDesc"),
     manual: l10n.lookup("securityCSPManual"),
     returnType: "securityCSPInfo",
-    exec: function (args, context) {
+    exec: function(args, context) {
       let cspJSON = context.environment.document.nodePrincipal.cspJSON;
       let cspOBJ = JSON.parse(cspJSON);
 
@@ -145,7 +145,7 @@ exports.items = [
     item: "converter",
     from: "securityCSPInfo",
     to: "view",
-    exec: function (cspInfo, context) {
+    exec: function(cspInfo, context) {
       const url = context.environment.target.url;
 
       if (cspInfo.length == 0) {
@@ -200,7 +200,7 @@ exports.items = [
     description: l10n.lookup("securityReferrerPolicyDesc"),
     manual: l10n.lookup("securityReferrerPolicyManual"),
     returnType: "securityReferrerPolicyInfo",
-    exec: function (args, context) {
+    exec: function(args, context) {
       let doc = context.environment.document;
 
       let { referrerPolicy } = doc;
@@ -306,7 +306,7 @@ exports.items = [
     item: "converter",
     from: "securityReferrerPolicyInfo",
     to: "view",
-    exec: function (referrerPolicyInfo, context) {
+    exec: function(referrerPolicyInfo, context) {
       return context.createView({
         html:
           "<div class='gcli-referrer-policy'>" +

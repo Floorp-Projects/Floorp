@@ -64,7 +64,7 @@ add_task(function* () {
   yield findVariableViewProperties([{name: "ss2", value: "changed=ss2"}]);
 
   // Clearing items.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.clear();
   });
 

@@ -82,7 +82,7 @@ function editSCSS(editor) {
   return new Promise(resolve => {
     editor.sourceEditor.setText(CSS_TEXT);
 
-    editor.saveToFile(null, function (file) {
+    editor.saveToFile(null, function(file) {
       ok(file, "Scss file should be saved");
       resolve();
     });
@@ -149,7 +149,7 @@ function write(data, file) {
     let istream = converter.convertToInputStream(data);
     let ostream = FileUtils.openSafeFileOutputStream(file);
 
-    NetUtil.asyncCopy(istream, ostream, function (status) {
+    NetUtil.asyncCopy(istream, ostream, function(status) {
       if (!Components.isSuccessCode(status)) {
         info("Coudln't write to " + file.path);
         return;

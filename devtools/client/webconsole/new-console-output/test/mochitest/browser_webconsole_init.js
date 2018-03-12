@@ -23,7 +23,7 @@ add_task(function* () {
     ]
   });
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.doLogs(20);
   });
 

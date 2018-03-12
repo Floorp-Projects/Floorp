@@ -107,7 +107,7 @@ function run_test() {
   equal("xxxxx", sprintf("%5.5s", "xxxxxx"));
   equal("    x", sprintf("%5.1s", "xxxxxx"));
 
-  equal("foobar", sprintf("%s", function () {
+  equal("foobar", sprintf("%s", function() {
     return "foobar";
   }));
 }

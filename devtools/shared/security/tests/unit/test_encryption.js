@@ -16,12 +16,12 @@ function connectClient(client) {
   return client.connect(() => client.listTabs());
 }
 
-add_task(async function () {
+add_task(async function() {
   initTestDebuggerServer();
 });
 
 // Client w/ encryption connects successfully to server w/ encryption
-add_task(async function () {
+add_task(async function() {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
@@ -68,7 +68,7 @@ add_task(async function () {
 });
 
 // Client w/o encryption fails to connect to server w/ encryption
-add_task(async function () {
+add_task(async function() {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
@@ -101,6 +101,6 @@ add_task(async function () {
   do_throw("Connection unexpectedly succeeded");
 });
 
-add_task(async function () {
+add_task(async function() {
   DebuggerServer.destroy();
 });

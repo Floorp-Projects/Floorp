@@ -34,7 +34,7 @@ add_task(function* () {
 
 function typeInEditor(editor, panelWindow) {
   return new Promise(resolve => {
-    waitForFocus(function () {
+    waitForFocus(function() {
       for (let c of TESTCASE_CSS_SOURCE) {
         EventUtils.synthesizeKey(c, {}, panelWindow);
       }

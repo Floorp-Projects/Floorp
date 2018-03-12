@@ -24,7 +24,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<script>
 </script>`;
 const copyObjectMenuItemId = "#console-menu-copy-object";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   let [msgWithText, msgWithObj, msgNested] =

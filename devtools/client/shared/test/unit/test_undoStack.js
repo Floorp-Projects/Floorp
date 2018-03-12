@@ -25,9 +25,9 @@ function run_test() {
   let stack = new UndoStack(MAX_SIZE);
 
   function add(ch) {
-    stack.do(function () {
+    stack.do(function() {
       str += ch;
-    }, function () {
+    }, function() {
       str = str.slice(0, -1);
     });
   }

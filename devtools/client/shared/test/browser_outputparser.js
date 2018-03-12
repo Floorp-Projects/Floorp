@@ -449,7 +449,7 @@ function testParseVariable(doc, parser) {
   ];
 
   for (let test of TESTS) {
-    let getValue = function (varName) {
+    let getValue = function(varName) {
       return test.variables[varName];
     };
 

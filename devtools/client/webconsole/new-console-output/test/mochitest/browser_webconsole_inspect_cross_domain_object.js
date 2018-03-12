@@ -14,7 +14,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/" +
                  "test-inspect-cross-domain-objects-top.html";
 
-add_task(async function () {
+add_task(async function() {
   requestLongerTimeout(2);
 
   let hud = await openNewTabAndConsole("data:text/html;charset=utf8,<p>hello");

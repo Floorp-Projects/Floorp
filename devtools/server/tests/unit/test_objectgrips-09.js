@@ -14,7 +14,7 @@ var gThreadClient;
 var gCallback;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -29,9 +29,9 @@ function run_test_with_server(server, callback) {
   }.toString());
 
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-grips",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_object_grip();
                            });
@@ -39,11 +39,11 @@ function run_test_with_server(server, callback) {
 }
 
 function test_object_grip() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let args = packet.frame.arguments;
 
     gThreadClient.getPrototypesAndProperties(
-      [args[0].actor, args[1].actor], function (response) {
+      [args[0].actor, args[1].actor], function(response) {
         let obj1 = response.actors[args[0].actor];
         let obj2 = response.actors[args[1].actor];
         Assert.equal(obj1.ownProperties.x.configurable, true);
@@ -64,7 +64,7 @@ function test_object_grip() {
         Assert.ok(obj1.prototype != undefined);
         Assert.ok(obj2.prototype != undefined);
 
-        gThreadClient.resume(function () {
+        gThreadClient.resume(function() {
           gClient.close().then(gCallback);
         });
       });

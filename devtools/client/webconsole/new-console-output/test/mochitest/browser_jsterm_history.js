@@ -14,7 +14,7 @@ const HISTORY_BACK = -1;
 const HISTORY_FORWARD = 1;
 const COMMANDS = ["document", "window", "window.location"];
 
-add_task(async function () {
+add_task(async function() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const { inputNode } = jsterm;
   jsterm.clearOutput();

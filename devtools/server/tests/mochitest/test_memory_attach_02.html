@@ -15,10 +15,10 @@ Bug 960671 - Test attaching and detaching while in the wrong state.
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  (async function () {
+  (async function() {
     let { memory, client } = await startServerAndGetSelectedTabMemory();
 
     let e = null;

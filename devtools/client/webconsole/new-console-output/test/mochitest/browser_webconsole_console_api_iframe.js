@@ -10,7 +10,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-console-api-iframe.html";
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const loggedString = "iframe added";
   // Wait for the initial message to be displayed.

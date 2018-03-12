@@ -25,7 +25,7 @@ const INSECURE_IFRAME_MSG =
 const INSECURE_PASSWORDS_URI =
   "https://developer.mozilla.org/docs/Web/Security/Insecure_passwords" + DOCS_GA_PARAMS;
 
-add_task(async function () {
+add_task(async function() {
   await testUriWarningMessage(INSECURE_IFRAME_URI, INSECURE_IFRAME_MSG);
   await testUriWarningMessage(INSECURE_PASSWORD_URI, INSECURE_PASSWORD_MSG);
   await testUriWarningMessage(INSECURE_FORM_ACTION_URI, INSECURE_FORM_ACTION_MSG);

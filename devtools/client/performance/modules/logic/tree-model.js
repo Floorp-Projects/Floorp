@@ -352,7 +352,7 @@ ThreadNode.prototype = {
    *
    * @return object
    */
-  getInfo: function (options) {
+  getInfo: function(options) {
     return FrameUtils.getFrameInfo(this, options);
   },
 
@@ -365,7 +365,7 @@ ThreadNode.prototype = {
    * @return {null}
    */
 
-  hasOptimizations: function () {
+  hasOptimizations: function() {
     return null;
   }
 };
@@ -436,7 +436,7 @@ FrameNode.prototype = {
    * @param object stringTable
    *               The string table used to inflate the optimizationSite.
    */
-  _addOptimizations: function (site, implementation, time, stringTable) {
+  _addOptimizations: function(site, implementation, time, stringTable) {
     // Simply accumulate optimization sites for now. Processing is done lazily
     // by JITOptimizations, if optimization information is actually displayed.
     if (site) {
@@ -455,13 +455,13 @@ FrameNode.prototype = {
     this._tierData.push({ implementation, time });
   },
 
-  _clone: function (samples, size) {
+  _clone: function(samples, size) {
     let newNode = new FrameNode(this.key, this, this.isMetaCategory);
     newNode._merge(this, samples, size);
     return newNode;
   },
 
-  _merge: function (otherNode, samples, size) {
+  _merge: function(otherNode, samples, size) {
     if (this === otherNode) {
       return;
     }
@@ -516,7 +516,7 @@ FrameNode.prototype = {
    *         The computed { name, file, url, line } properties for this
    *         function call, as well as additional params if options specified.
    */
-  getInfo: function (options) {
+  getInfo: function(options) {
     return FrameUtils.getFrameInfo(this, options);
   },
 
@@ -525,7 +525,7 @@ FrameNode.prototype = {
    *
    * @return {Boolean}
    */
-  hasOptimizations: function () {
+  hasOptimizations: function() {
     return !this.isMetaCategory && !!this._optimizations;
   },
 
@@ -535,7 +535,7 @@ FrameNode.prototype = {
    *
    * @return {JITOptimizations|null}
    */
-  getOptimizations: function () {
+  getOptimizations: function() {
     if (!this._optimizations) {
       return null;
     }
@@ -547,7 +547,7 @@ FrameNode.prototype = {
    *
    * @return {Array<object>}
    */
-  getTierData: function () {
+  getTierData: function() {
     return this._tierData;
   }
 };

@@ -21,7 +21,7 @@ const REQUESTS = [
 ];
 
 function testAutocompleteContents(expected, document) {
-  expected.forEach(function (item, i) {
+  expected.forEach(function(item, i) {
     is(
       document
         .querySelector(
@@ -34,7 +34,7 @@ function testAutocompleteContents(expected, document) {
   });
 }
 
-add_task(async function () {
+add_task(async function() {
   let { monitor } = await initNetMonitor(FILTERING_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");

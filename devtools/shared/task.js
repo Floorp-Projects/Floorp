@@ -156,7 +156,7 @@ var Task = {
    * @return A promise object where you can register completion callbacks to be
    *         called when the task terminates.
    */
-  spawn: function (task) {
+  spawn: function(task) {
     return createAsyncFunction(task)();
   },
 
@@ -198,7 +198,7 @@ var Task = {
    *
    * @return A function that starts the task function and returns its promise.
    */
-  async: function (task) {
+  async: function(task) {
     if (typeof (task) != "function") {
       throw new TypeError("task argument must be a function");
     }
@@ -213,13 +213,13 @@ var Task = {
    *
    * Example: throw new Task.Result("Value");
    */
-  Result: function (value) {
+  Result: function(value) {
     this.value = value;
   }
 };
 
 function createAsyncFunction(task) {
-  let asyncFunction = function () {
+  let asyncFunction = function() {
     let result = task;
     if (task && typeof (task) == "function") {
       if (task.isAsyncFunction) {
@@ -301,7 +301,7 @@ TaskImpl.prototype = {
    * @param sendValue
    *        Resolution result or rejection exception, if any.
    */
-  _run: function (sendResolved, sendValue) {
+  _run: function(sendResolved, sendValue) {
     try {
       gCurrentTask = this;
 
@@ -371,7 +371,7 @@ TaskImpl.prototype = {
    * @param value
    *        The yielded value to handle.
    */
-  _handleResultValue: function (value) {
+  _handleResultValue: function(value) {
     // If our task yielded an iterator resulting from calling another
     // generator function, automatically spawn a task from it, effectively
     // turning it into a promise that is fulfilled on task completion.
@@ -398,7 +398,7 @@ TaskImpl.prototype = {
    * @param exception
    *        The uncaught exception to handle.
    */
-  _handleException: function (exception) {
+  _handleException: function(exception) {
     gCurrentTask = this;
 
     if (exception && typeof exception == "object" && "stack" in exception) {
@@ -486,7 +486,7 @@ Task.Debugging = {
    * @param {string} topStack The stack provided by the error.
    * @param {string=} prefix Optionally, a prefix for each line.
    */
-  generateReadableStack: function (topStack, prefix = "") {
+  generateReadableStack: function(topStack, prefix = "") {
     if (!gCurrentTask) {
       return topStack;
     }

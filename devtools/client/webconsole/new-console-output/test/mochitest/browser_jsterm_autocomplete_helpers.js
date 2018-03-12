@@ -12,7 +12,7 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<p>test JSTerm Helpers autocomplete";
 
-add_task(async function () {
+add_task(async function() {
   const {jsterm} = await openNewTabAndConsole(TEST_URI);
   await testInspectAutoCompletion(jsterm, "i", true);
   await testInspectAutoCompletion(jsterm, "window.", false);

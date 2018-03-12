@@ -4,7 +4,7 @@
 
 "use strict";
 
-module.exports = function (content) {
+module.exports = function(content) {
   this.cacheable && this.cacheable();
 
   // taking care of "named" depedencies.

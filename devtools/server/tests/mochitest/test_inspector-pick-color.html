@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1262439
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
   SimpleTest.waitForExplicitFinish();
@@ -23,13 +23,13 @@ window.onload = function () {
   let win = null;
   let inspector = null;
 
-  addAsyncTest(async function () {
+  addAsyncTest(async function() {
     info("Setting up inspector actor");
 
     let url = document.getElementById("inspectorContent").href;
 
     await new Promise(resolve => {
-      attachURL(url, function (err, client, tab, doc) {
+      attachURL(url, function(err, client, tab, doc) {
         win = doc.defaultView;
         inspector = InspectorFront(client, tab);
         resolve();
@@ -39,7 +39,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(async function () {
+  addAsyncTest(async function() {
     info("Start picking a color from the page");
     await inspector.pickColorFromPage();
 
@@ -53,7 +53,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(async function () {
+  addAsyncTest(async function() {
     info("Start picking a color from the page");
     await inspector.pickColorFromPage();
 
@@ -71,7 +71,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(async function () {
+  addAsyncTest(async function() {
     info("Start picking a color from the page");
     await inspector.pickColorFromPage();
 

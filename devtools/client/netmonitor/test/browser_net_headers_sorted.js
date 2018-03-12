@@ -8,7 +8,7 @@
  * The test also verifies that headers with the same name and headers
  * with an empty value are also displayed.
  */
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 

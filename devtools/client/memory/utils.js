@@ -36,7 +36,7 @@ const {
  * @param {Snapshot} snapshot
  * @return {String}
  */
-exports.getSnapshotTitle = function (snapshot) {
+exports.getSnapshotTitle = function(snapshot) {
   if (!snapshot.creationTime) {
     return L10N.getStr("snapshot-title.loading");
   }
@@ -72,7 +72,7 @@ function getCustomDisplaysHelper(pref) {
  *
  * @return {Object}
  */
-exports.getCustomCensusDisplays = function () {
+exports.getCustomCensusDisplays = function() {
   return getCustomDisplaysHelper(CUSTOM_CENSUS_DISPLAY_PREF);
 };
 
@@ -82,7 +82,7 @@ exports.getCustomCensusDisplays = function () {
  *
  * @return {Object}
  */
-exports.getCustomLabelDisplays = function () {
+exports.getCustomLabelDisplays = function() {
   return getCustomDisplaysHelper(CUSTOM_LABEL_DISPLAY_PREF);
 };
 
@@ -92,7 +92,7 @@ exports.getCustomLabelDisplays = function () {
  *
  * @return {Object}
  */
-exports.getCustomTreeMapDisplays = function () {
+exports.getCustomTreeMapDisplays = function() {
   return getCustomDisplaysHelper(CUSTOM_TREE_MAP_DISPLAY_PREF);
 };
 
@@ -103,7 +103,7 @@ exports.getCustomTreeMapDisplays = function () {
  * @param {snapshotState | diffingState} state
  * @return {String}
  */
-exports.getStatusText = function (state) {
+exports.getStatusText = function(state) {
   assert(state, "Must have a state");
 
   switch (state) {
@@ -178,7 +178,7 @@ exports.getStatusText = function (state) {
  * @param {snapshotState | diffingState} state
  * @return {String}
  */
-exports.getStatusTextFull = function (state) {
+exports.getStatusTextFull = function(state) {
   assert(!!state, "Must have a state");
 
   switch (state) {
@@ -279,7 +279,7 @@ exports.getSnapshot = function getSnapshot(state, id) {
  *
  * @returns {SnapshotId|null}
  */
-exports.findSelectedSnapshot = function (state) {
+exports.findSelectedSnapshot = function(state) {
   const found = state.snapshots.find(s => s.selected);
   return found ? found.id : null;
 };
@@ -325,7 +325,7 @@ exports.createSnapshot = function createSnapshot(state) {
  *
  * @returns {Boolean}
  */
-exports.censusIsUpToDate = function (filter, display, census) {
+exports.censusIsUpToDate = function(filter, display, census) {
   return census
       // Filter could be null == undefined so use loose equality.
       && filter == census.filter
@@ -339,7 +339,7 @@ exports.censusIsUpToDate = function (filter, display, census) {
  * @param {Boolean} Assert that the snapshot must be in a ready state.
  * @returns {Boolean}
  */
-exports.canTakeCensus = function (snapshot) {
+exports.canTakeCensus = function(snapshot) {
   return snapshot.state === states.READ &&
     ((!snapshot.census || snapshot.census.state === censusState.SAVED) ||
      (!snapshot.treeMap || snapshot.treeMap.state === treeMapState.SAVED));
@@ -352,7 +352,7 @@ exports.canTakeCensus = function (snapshot) {
  * @param {SnapshotModel} snapshot
  * @returns {Boolean}
  */
-exports.dominatorTreeIsComputed = function (snapshot) {
+exports.dominatorTreeIsComputed = function(snapshot) {
   return snapshot.dominatorTree &&
     (snapshot.dominatorTree.state === dominatorTreeState.COMPUTED ||
      snapshot.dominatorTree.state === dominatorTreeState.LOADED ||
@@ -366,7 +366,7 @@ exports.dominatorTreeIsComputed = function (snapshot) {
  * @param {SnapshotModel} snapshot
  * @returns {Object|null} Either the census, or null if one hasn't completed
  */
-exports.getSavedCensus = function (snapshot) {
+exports.getSavedCensus = function(snapshot) {
   if (snapshot.treeMap && snapshot.treeMap.state === treeMapState.SAVED) {
     return snapshot.treeMap;
   }
@@ -383,7 +383,7 @@ exports.getSavedCensus = function (snapshot) {
  * @param {CensusModel} census
  * @return {Object}
  */
-exports.getSnapshotTotals = function (census) {
+exports.getSnapshotTotals = function(census) {
   let bytes = 0;
   let count = 0;
 
@@ -413,7 +413,7 @@ exports.getSnapshotTotals = function (census) {
  * @return {Promise<?nsIFile>}
  *        The file selected by the user, or null, if cancelled.
  */
-exports.openFilePicker = function ({ title, filters, defaultName, mode }) {
+exports.openFilePicker = function({ title, filters, defaultName, mode }) {
   let fpMode;
   if (mode === "save") {
     fpMode = Ci.nsIFilePicker.modeSave;
@@ -451,7 +451,7 @@ exports.openFilePicker = function ({ title, filters, defaultName, mode }) {
  * @param {Number} number
  * @param {Boolean} showSign (defaults to false)
  */
-exports.formatNumber = function (number, showSign = false) {
+exports.formatNumber = function(number, showSign = false) {
   const rounded = Math.round(number);
   if (rounded === 0 || rounded === -0) {
     return "0";
@@ -475,7 +475,7 @@ exports.formatNumber = function (number, showSign = false) {
  * @param {Number} percent
  * @param {Boolean} showSign (defaults to false)
  */
-exports.formatPercent = function (percent, showSign = false) {
+exports.formatPercent = function(percent, showSign = false) {
   return exports.L10N.getFormatStr("tree-item.percent2",
                            exports.formatNumber(percent, showSign));
 };
@@ -492,7 +492,7 @@ exports.formatPercent = function (percent, showSign = false) {
  *         hue values ranged between [0 - 1]
  * @return {type}
  */
-exports.hslToStyle = function (h, s, l) {
+exports.hslToStyle = function(h, s, l) {
   h = parseInt(h * 360, 10);
   s = parseInt(s * 100, 10);
   l = parseInt(l * 100, 10);
@@ -509,7 +509,7 @@ exports.hslToStyle = function (h, s, l) {
  *        A value of 0 returns a, and 1 returns b
  * @return {Number}
  */
-exports.lerp = function (a, b, t) {
+exports.lerp = function(a, b, t) {
   return a * (1 - t) + b * t;
 };
 
@@ -520,7 +520,7 @@ exports.lerp = function (a, b, t) {
  *         Number of bytes
  * @return {String}
  */
-exports.formatAbbreviatedBytes = function (n) {
+exports.formatAbbreviatedBytes = function(n) {
   if (n < BYTES) {
     return n + "B";
   } else if (n < KILOBYTES) {

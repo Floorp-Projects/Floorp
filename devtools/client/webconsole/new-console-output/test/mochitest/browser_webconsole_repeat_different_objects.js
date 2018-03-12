@@ -12,7 +12,7 @@
 
 const TEST_URI = "data:text/html,Test repeated objects";
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const onMessages = waitForMessages({

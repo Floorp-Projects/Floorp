@@ -166,7 +166,7 @@ var PerformanceView = {
   /**
    * DE-XUL: Render the recording controls and buttons using React.
    */
-  _renderRecordingControls: function () {
+  _renderRecordingControls: function() {
     ReactDOM.render(RecordingControls(this._recordingControlsState),
                     this._recordingControlsMount);
     for (let button of this._recordingButtonsMounts) {
@@ -197,7 +197,7 @@ var PerformanceView = {
    * Sets the state of the profiler view. Possible options are "unavailable",
    * "empty", "recording", "console-recording", "recorded".
    */
-  setState: function (state) {
+  setState: function(state) {
     // Make sure that the focus isn't captured on a hidden iframe. This fixes a
     // XUL bug where shortcuts stop working.
     const iframes = window.document.querySelectorAll("iframe");
@@ -239,14 +239,14 @@ var PerformanceView = {
   /**
    * Returns the state of the PerformanceView.
    */
-  getState: function () {
+  getState: function() {
     return this._state;
   },
 
   /**
    * Updates the displayed buffer status.
    */
-  updateBufferStatus: function () {
+  updateBufferStatus: function() {
     // If we've never seen a "buffer-status" event from the front, ignore
     // and keep the buffer elements hidden.
     if (!this._bufferStatusSupported) {
@@ -284,7 +284,7 @@ var PerformanceView = {
    *
    * @param {boolean} lock
    */
-  _lockRecordButtons: function (lock) {
+  _lockRecordButtons: function(lock) {
     this._recordingControlsState.isLocked = lock;
     this._renderRecordingControls();
   },
@@ -295,7 +295,7 @@ var PerformanceView = {
    *
    * @param {boolean} activate
    */
-  _toggleRecordButtons: function (activate) {
+  _toggleRecordButtons: function(activate) {
     this._recordingControlsState.isRecording = activate;
     this._renderRecordingControls();
   },
@@ -303,7 +303,7 @@ var PerformanceView = {
   /**
    * When a recording has started.
    */
-  _onRecordingStateChange: function () {
+  _onRecordingStateChange: function() {
     let currentRecording = PerformanceController.getCurrentRecording();
     let recordings = PerformanceController.getRecordings();
 
@@ -324,7 +324,7 @@ var PerformanceView = {
   /**
    * When starting a recording has failed.
    */
-  _onNewRecordingFailed: function (e) {
+  _onNewRecordingFailed: function(e) {
     this._lockRecordButtons(false);
     this._toggleRecordButtons(false);
   },
@@ -332,14 +332,14 @@ var PerformanceView = {
   /**
    * Handler for clicking the clear button.
    */
-  _onClearButtonClick: function (e) {
+  _onClearButtonClick: function(e) {
     this.emit(EVENTS.UI_CLEAR_RECORDINGS);
   },
 
   /**
    * Handler for clicking the record button.
    */
-  _onRecordButtonClick: function (e) {
+  _onRecordButtonClick: function(e) {
     if (this._recordingControlsState.isRecording) {
       this.emit(EVENTS.UI_STOP_RECORDING);
     } else {
@@ -352,7 +352,7 @@ var PerformanceView = {
   /**
    * Handler for clicking the import button.
    */
-  _onImportButtonClick: function (e) {
+  _onImportButtonClick: function(e) {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, L10N.getStr("recordingsList.importDialogTitle"),
             Ci.nsIFilePicker.modeOpen);
@@ -369,7 +369,7 @@ var PerformanceView = {
   /**
    * Fired when a recording is selected. Used to toggle the profiler view state.
    */
-  _onRecordingSelected: function (_, recording) {
+  _onRecordingSelected: function(_, recording) {
     if (!recording) {
       this.setState("empty");
     } else if (recording.isRecording() && recording.isConsole()) {
@@ -385,7 +385,7 @@ var PerformanceView = {
    * Fired when the controller has updated information on the buffer's status.
    * Update the buffer status display if shown.
    */
-  _onProfilerStatusUpdated: function (_, profilerStatus) {
+  _onProfilerStatusUpdated: function(_, profilerStatus) {
     // We only care about buffer status here, so check to see
     // if it has position.
     if (!profilerStatus || profilerStatus.position === void 0) {

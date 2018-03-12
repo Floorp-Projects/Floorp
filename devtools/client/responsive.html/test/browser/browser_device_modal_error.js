@@ -10,13 +10,13 @@ const Types = require("devtools/client/responsive.html/types");
 const { getStr } = require("devtools/client/responsive.html/utils/l10n");
 
 // Set a wrong URL for the device list file
-add_task(async function () {
+add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["devtools.devices.url", TEST_URI_ROOT + "wrong_devices_file.json"]],
   });
 });
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { store, document } = ui.toolWindow;
   let select = document.querySelector(".viewport-device-selector");
 

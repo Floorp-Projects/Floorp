@@ -10,7 +10,7 @@
 
 const {TimelineFront} = require("devtools/shared/fronts/timeline");
 
-add_task(async function () {
+add_task(async function() {
   await addTab(MAIN_DOMAIN + "timeline-iframe-parent.html");
 
   initDebuggerServer();

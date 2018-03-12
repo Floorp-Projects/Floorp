@@ -71,7 +71,7 @@ ProgressGraphHelper.prototype = {
   /**
    * Destory this object.
    */
-  destroy: function () {
+  destroy: function() {
     this.targetEl.remove();
     this.animation.cancel();
 
@@ -89,7 +89,7 @@ ProgressGraphHelper.prototype = {
    * Return animation duration.
    * @return {Number} duration
    */
-  getDuration: function () {
+  getDuration: function() {
     return this.animation.effect.timing.duration;
   },
 
@@ -97,7 +97,7 @@ ProgressGraphHelper.prototype = {
    * Return animation's keyframe.
    * @return {Object} keyframe
    */
-  getKeyframes: function () {
+  getKeyframes: function() {
     return this.keyframes;
   },
 
@@ -106,7 +106,7 @@ ProgressGraphHelper.prototype = {
    * @return {String} if property is 'opacity' or 'transform', return that value.
    *                  Otherwise, return given animation type in constructor.
    */
-  getGraphType: function () {
+  getGraphType: function() {
     return (this.propertyJSName === "opacity" || this.propertyJSName === "transform")
            ? this.propertyJSName : this.animationType;
   },
@@ -118,7 +118,7 @@ ProgressGraphHelper.prototype = {
    * - y: y value of graph (float between 0 - 1)
    * - style: the computed style value of the property at the time
    */
-  getSegment: function (time) {
+  getSegment: function(time) {
     this.animation.currentTime = time;
     const style = this.win.getComputedStyle(this.targetEl)[this.propertyJSName];
     const value = this.valueHelperFunction(style);
@@ -130,7 +130,7 @@ ProgressGraphHelper.prototype = {
    * @return {function} ValueHelperFunction returns float value of Y axis
    *                    from given progress and style (e.g. rgb(0, 0, 0))
    */
-  getValueHelperFunction: function () {
+  getValueHelperFunction: function() {
     switch (this.animationType) {
       case "none": {
         return () => 1;
@@ -158,7 +158,7 @@ ProgressGraphHelper.prototype = {
    * @return {function} ValueHelperFunction returns float value of Y axis
    *                    from given float (e.g. 1.0, 0.5 and so on)
    */
-  getFloatValueHelperFunction: function () {
+  getFloatValueHelperFunction: function() {
     let maxValue = 0;
     let minValue = Infinity;
     this.keyframes.forEach(keyframe => {
@@ -176,7 +176,7 @@ ProgressGraphHelper.prototype = {
    * @return {function} ValueHelperFunction returns float value of Y axis
    *                    from given style (e.g. 100px)
    */
-  getCoordinateValueHelperFunction: function () {
+  getCoordinateValueHelperFunction: function() {
     let maxValue = 0;
     let minValue = Infinity;
     for (let i = 0, n = this.keyframes.length; i < n; i++) {
@@ -200,7 +200,7 @@ ProgressGraphHelper.prototype = {
    * @return {function} ValueHelperFunction returns float value of Y axis
    *                    from given color (e.g. rgb(0, 0, 0))
    */
-  getColorValueHelperFunction: function () {
+  getColorValueHelperFunction: function() {
     const maxObject = { distance: 0 };
     for (let i = 0; i < this.keyframes.length - 1; i++) {
       const value1 = getRGBA(this.keyframes[i].value);
@@ -229,7 +229,7 @@ ProgressGraphHelper.prototype = {
    * @return {function} ValueHelperFunction returns float value of Y axis
    *                    from given style (e.g. center)
    */
-  getDiscreteValueHelperFunction: function () {
+  getDiscreteValueHelperFunction: function() {
     const discreteValues = [];
     this.keyframes.forEach(keyframe => {
       // Set style once since the computed value may differ from specified keyframe value.
@@ -255,7 +255,7 @@ ProgressGraphHelper.prototype = {
    * @return {Array} path segments -
    *                 [{x: {Number} time, y: {Number} progress}, ...]
    */
-  createPathSegments: function (duration, minSegmentDuration, minProgressThreshold) {
+  createPathSegments: function(duration, minSegmentDuration, minProgressThreshold) {
     if (!this.valueHelperFunction) {
       return createKeyframesPathSegments(duration, this.devtoolsKeyframes);
     }
@@ -300,7 +300,7 @@ ProgressGraphHelper.prototype = {
    * @param {String} cls - Class name.
    * @return {Element} path element.
    */
-  appendShapePath: function (parentEl, pathSegments, cls) {
+  appendShapePath: function(parentEl, pathSegments, cls) {
     return appendShapePath(parentEl, pathSegments, cls);
   },
 
@@ -311,7 +311,7 @@ ProgressGraphHelper.prototype = {
    * @param {String} cls - Class name.
    * @return {Element} path element.
    */
-  appendLinePath: function (parentEl, pathSegments, cls) {
+  appendLinePath: function(parentEl, pathSegments, cls) {
     const isClosePathNeeded = false;
     return appendPathElement(parentEl, pathSegments, cls, isClosePathNeeded);
   },
@@ -366,7 +366,7 @@ SummaryGraphHelper.prototype = {
   /**
    * Destory this object.
    */
-  destroy: function () {
+  destroy: function() {
     this.animation.cancel();
     this.targetEl.remove();
     this.targetEl = null;
@@ -381,7 +381,7 @@ SummaryGraphHelper.prototype = {
    * computed timing progress.
    * @param {Object} keyframes - Should have offset and easing, or null.
    */
-  setKeyframes: function (keyframes) {
+  setKeyframes: function(keyframes) {
     let frames = null;
     // We need to change the duration resolution in case of interval of keyframes offset
     // was narrow.
@@ -426,7 +426,7 @@ SummaryGraphHelper.prototype = {
    * @param {bool} isOriginalBehavior - true: original behavior
    *                                    false: according to spec.
    */
-  setOriginalBehavior: function (isOriginalBehavior) {
+  setOriginalBehavior: function(isOriginalBehavior) {
     this.isOriginalBehavior = isOriginalBehavior;
   },
 
@@ -434,7 +434,7 @@ SummaryGraphHelper.prototype = {
    * Set animation fill mode.
    * @param {String} fill - "both", "forwards", "backwards" or "both"
    */
-  setFillMode: function (fill) {
+  setFillMode: function(fill) {
     this.animation.effect.timing.fill = fill;
   },
 
@@ -442,7 +442,7 @@ SummaryGraphHelper.prototype = {
    * Set true if need to close path in appendShapePath.
    * @param {bool} isClosePathNeeded - true: close, false: open.
    */
-  setClosePathNeeded: function (isClosePathNeeded) {
+  setClosePathNeeded: function(isClosePathNeeded) {
     this.isClosePathNeeded = isClosePathNeeded;
   },
 
@@ -450,7 +450,7 @@ SummaryGraphHelper.prototype = {
    * SummaryGraphHelper searches and creates the summary graph untill the progress
    * distance is less than this minProgressThreshold.
    */
-  setMinProgressThreshold: function (minProgressThreshold) {
+  setMinProgressThreshold: function(minProgressThreshold) {
     this.minProgressThreshold = minProgressThreshold;
   },
 
@@ -460,7 +460,7 @@ SummaryGraphHelper.prototype = {
    * - x: x value of graph (float)
    * - y: y value of graph (float between 0 - 1)
    */
-  getSegment: function (time) {
+  getSegment: function(time) {
     if (this.isOriginalBehavior) {
       // If the given time is less than 0, returned progress is 0.
       if (time < 0) {
@@ -482,7 +482,7 @@ SummaryGraphHelper.prototype = {
    * @return {Array} path segments -
    *                 [{x: {Number} time, y: {Number} progress}, ...]
    */
-  createPathSegments: function (startTime, endTime) {
+  createPathSegments: function(startTime, endTime) {
     return createPathSegments(startTime, endTime, this.minSegmentDuration,
                               this.minProgressThreshold, this, this.durationResolution);
   },
@@ -495,7 +495,7 @@ SummaryGraphHelper.prototype = {
    * @param {String} cls - Class name.
    * @return {Element} path element.
    */
-  appendShapePath: function (parentEl, pathSegments, cls) {
+  appendShapePath: function(parentEl, pathSegments, cls) {
     return appendShapePath(parentEl, pathSegments, cls, this.isClosePathNeeded);
   },
 
@@ -503,7 +503,7 @@ SummaryGraphHelper.prototype = {
    * Return current computed timing progress of the animation.
    * @return {float} computed timing progress as float value of Y axis.
    */
-  getProgressValue: function () {
+  getProgressValue: function() {
     return Math.max(this.animation.effect.getComputedTiming().progress, 0);
   },
 
@@ -511,7 +511,7 @@ SummaryGraphHelper.prototype = {
    * Return current computed 'opacity' value of the element which is animating.
    * @return {float} computed timing progress as float value of Y axis.
    */
-  getOpacityValue: function () {
+  getOpacityValue: function() {
     return this.win.getComputedStyle(this.targetEl).opacity;
   }
 };

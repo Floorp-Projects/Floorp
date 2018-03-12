@@ -85,7 +85,7 @@ message.wait(window, "post-init").then(() => {
   bootstrap.dispatch(loadReloadConditions());
 });
 
-window.addEventListener("unload", function () {
+window.addEventListener("unload", function() {
   bootstrap.destroy();
 }, {once: true});
 

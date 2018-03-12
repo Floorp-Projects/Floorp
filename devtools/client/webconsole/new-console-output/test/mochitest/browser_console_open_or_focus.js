@@ -13,7 +13,7 @@
 const TEST_MESSAGE = "testmessage";
 const { Tools } = require("devtools/client/definitions");
 
-add_task(async function () {
+add_task(async function() {
   let currWindow, hud, mainWindow;
 
   mainWindow = Services.wm.getMostRecentWindow(null);

@@ -39,7 +39,7 @@ function write16le(bos) {
 }
 
 function getHandler(writer) {
-  return function (request, response) {
+  return function(request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
 
     let bos = new BinaryOutputStream(response.bodyOutputStream);
@@ -61,7 +61,7 @@ registerCleanupFunction(() => {
   return new Promise(resolve => server.stop(resolve));
 });
 
-add_task(async function () {
+add_task(async function() {
   await test_one(serverURL + "/u8", "UTF-8");
   await test_one(serverURL + "/u16be", "UTF-16BE");
   await test_one(serverURL + "/u16le", "UTF-16LE");

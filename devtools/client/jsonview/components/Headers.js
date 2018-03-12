@@ -6,7 +6,7 @@
 
 "use strict";
 
-define(function (require, exports, module) {
+define(function(require, exports, module) {
   const { createFactory, Component } = require("devtools/client/shared/vendor/react");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
@@ -81,7 +81,7 @@ define(function (require, exports, module) {
     render() {
       let headers = this.props.headers;
 
-      headers.sort(function (a, b) {
+      headers.sort(function(a, b) {
         return a.name > b.name ? 1 : -1;
       });
 

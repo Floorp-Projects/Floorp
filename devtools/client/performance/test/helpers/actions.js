@@ -10,7 +10,7 @@ const { waitUntil } = require("devtools/client/performance/test/helpers/wait-uti
  * Starts a manual recording in the given performance tool panel and
  * waits for it to finish starting.
  */
-exports.startRecording = function (panel, options = {}) {
+exports.startRecording = function(panel, options = {}) {
   let controller = panel.panelWin.PerformanceController;
 
   return Promise.all([
@@ -23,7 +23,7 @@ exports.startRecording = function (panel, options = {}) {
  * Stops the latest recording in the given performance tool panel and
  * waits for it to finish stopping.
  */
-exports.stopRecording = function (panel, options = {}) {
+exports.stopRecording = function(panel, options = {}) {
   let controller = panel.panelWin.PerformanceController;
 
   return Promise.all([
@@ -35,7 +35,7 @@ exports.stopRecording = function (panel, options = {}) {
 /**
  * Waits for all the necessary events to be emitted after a recording starts.
  */
-exports.waitForRecordingStartedEvents = function (panel, options = {}) {
+exports.waitForRecordingStartedEvents = function(panel, options = {}) {
   options.expectedViewState = options.expectedViewState || /^(console-)?recording$/;
 
   let EVENTS = panel.panelWin.EVENTS;
@@ -68,7 +68,7 @@ exports.waitForRecordingStartedEvents = function (panel, options = {}) {
 /**
  * Waits for all the necessary events to be emitted after a recording finishes.
  */
-exports.waitForRecordingStoppedEvents = function (panel, options = {}) {
+exports.waitForRecordingStoppedEvents = function(panel, options = {}) {
   options.expectedViewClass = options.expectedViewClass || "WaterfallView";
   options.expectedViewEvent = options.expectedViewEvent || "UI_WATERFALL_RENDERED";
   options.expectedViewState = options.expectedViewState || "recorded";

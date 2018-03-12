@@ -18,7 +18,7 @@ let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}
 let { DebuggerClient } = require("devtools/shared/client/debugger-client");
 let { DebuggerServer } = require("devtools/server/main");
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({
@@ -54,10 +54,10 @@ function runTests() {
     TestActor.prototype = {
       actorPrefix: "test",
 
-      destroy: function () {
+      destroy: function() {
         sendAsyncMessage("test-actor-destroyed", null);
       },
-      hello: function () {
+      hello: function() {
         return {msg: "world"};
       }
     };
@@ -86,7 +86,7 @@ function runTests() {
       client.request({
         to: actor.testActor,
         type: "hello",
-      }, function (response) {
+      }, function(response) {
         // Then close the client. That should end up cleaning our test actor
         client.close();
 

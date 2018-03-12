@@ -21,8 +21,8 @@ function run_test() {
   let client = new DebuggerClient(DebuggerServer.connectPipe());
 
   // Start tracking event loop lags.
-  client.connect().then(function () {
-    client.listTabs().then(function (resp) {
+  client.connect().then(function() {
+    client.listTabs().then(function(resp) {
       front = new EventLoopLagFront(client, resp);
       front.start().then(success => {
         Assert.ok(success);

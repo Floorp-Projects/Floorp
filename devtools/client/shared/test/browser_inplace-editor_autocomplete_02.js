@@ -30,7 +30,7 @@ const testData = [
   ["VK_LEFT", "inline", -1, 0],
 ];
 
-const mockGetCSSValuesForPropertyName = function (propertyName) {
+const mockGetCSSValuesForPropertyName = function(propertyName) {
   let values = {
     "display": [
       "block",

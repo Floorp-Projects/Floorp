@@ -57,7 +57,7 @@ Timeline.prototype = {
   /**
    * Destroys this actor, stopping recording first.
    */
-  destroy: function () {
+  destroy: function() {
     this.stop();
 
     this.tabActor.off("window-ready", this._onWindowReady);
@@ -104,7 +104,7 @@ Timeline.prototype = {
    * At regular intervals, pop the markers from the docshell, and forward
    * markers, memory, tick and frames events, if any.
    */
-  _pullTimelineData: function () {
+  _pullTimelineData: function() {
     let docShells = this.docShells;
     if (!this._isRecording || !docShells.length) {
       return;
@@ -178,7 +178,7 @@ Timeline.prototype = {
   /**
    * Are we recording profile markers currently?
    */
-  isRecording: function () {
+  isRecording: function() {
     return this._isRecording;
   },
 
@@ -313,7 +313,7 @@ Timeline.prototype = {
    * When a new window becomes available in the tabActor, start recording its
    * markers if we were recording.
    */
-  _onWindowReady: function ({ window }) {
+  _onWindowReady: function({ window }) {
     if (this._isRecording) {
       let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIWebNavigation)
@@ -331,7 +331,7 @@ Timeline.prototype = {
    * indicating why there was a GC, and may contain a `nonincrementalReason` when
    * SpiderMonkey could not incrementally collect garbage.
    */
-  _onGarbageCollection: function ({
+  _onGarbageCollection: function({
     collections, gcCycleNumber, reason, nonincrementalReason
   }) {
     let docShells = this.docShells;

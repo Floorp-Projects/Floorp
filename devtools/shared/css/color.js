@@ -103,7 +103,7 @@ CssColor.prototype = {
   // Whether the value should be parsed using css-color-4 rules.
   cssColor4: false,
 
-  _setColorUnitUppercase: function (color) {
+  _setColorUnitUppercase: function(color) {
     // Specifically exclude the case where the color is
     // case-insensitive.  This makes it so that "#000" isn't
     // considered "upper case" for the purposes of color cycling.
@@ -131,7 +131,7 @@ CssColor.prototype = {
    *
    * @param {String} color The color to use
    */
-  setAuthoredUnitFromColor: function (color) {
+  setAuthoredUnitFromColor: function(color) {
     if (Services.prefs.getCharPref(COLOR_UNIT_PREF) ===
         CssColor.COLORUNIT.authored) {
       this._colorUnit = classifyColor(color);
@@ -316,7 +316,7 @@ CssColor.prototype = {
    *         - If the color is a regular color e.g. #F06 so we return false
    *           to indicate that the color is neither invalid or special.
    */
-  _getInvalidOrSpecialValue: function () {
+  _getInvalidOrSpecialValue: function() {
     if (this.specialValue) {
       return this.specialValue;
     }
@@ -332,7 +332,7 @@ CssColor.prototype = {
    * @param  {String} color
    *         Any valid color string
    */
-  newColor: function (color) {
+  newColor: function(color) {
     // Store a lower-cased version of the color to help with format
     // testing.  The original text is kept as well so it can be
     // returned when needed.
@@ -342,7 +342,7 @@ CssColor.prototype = {
     return this;
   },
 
-  nextColorUnit: function () {
+  nextColorUnit: function() {
     // Reorder the formats array to have the current format at the
     // front so we can cycle through.
     let formats = ["hex", "hsl", "rgb", "name"];
@@ -364,7 +364,7 @@ CssColor.prototype = {
   /**
    * Return a string representing a color of type defined in COLOR_UNIT_PREF.
    */
-  toString: function () {
+  toString: function() {
     let color;
 
     switch (this.colorUnit) {
@@ -399,7 +399,7 @@ CssColor.prototype = {
    * Returns a RGBA 4-Tuple representation of a color or transparent as
    * appropriate.
    */
-  getRGBATuple: function () {
+  getRGBATuple: function() {
     let tuple = colorToRGBA(this.authored, this.cssColor4);
 
     tuple.a = parseFloat(tuple.a.toFixed(1));
@@ -411,7 +411,7 @@ CssColor.prototype = {
    * Returns a HSLA 4-Tuple representation of a color or transparent as
    * appropriate.
    */
-  _getHSLATuple: function () {
+  _getHSLATuple: function() {
     let {r, g, b, a} = colorToRGBA(this.authored, this.cssColor4);
 
     let [h, s, l] = rgbToHsl([r, g, b]);
@@ -424,7 +424,7 @@ CssColor.prototype = {
     };
   },
 
-  _hsl: function (maybeAlpha) {
+  _hsl: function(maybeAlpha) {
     if (this.lowerCased.startsWith("hsl(") && maybeAlpha === undefined) {
       // We can use it as-is.
       return this.authored;
@@ -441,7 +441,7 @@ CssColor.prototype = {
   /**
    * This method allows comparison of CssColor objects using ===.
    */
-  valueOf: function () {
+  valueOf: function() {
     return this.rgba;
   },
 
@@ -450,7 +450,7 @@ CssColor.prototype = {
    *
    * @return {Boolean} True if the color is transparent and valid.
    */
-  isTransparent: function () {
+  isTransparent: function() {
     return this.getRGBATuple().a === 0;
   },
 };

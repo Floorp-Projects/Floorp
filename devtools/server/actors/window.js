@@ -41,7 +41,7 @@ WindowActor.prototype = Object.create(TabActor.prototype);
 // functionality that is triggered by it.
 WindowActor.prototype.isRootActor = true;
 
-WindowActor.prototype.observe = function (subject, topic, data) {
+WindowActor.prototype.observe = function(subject, topic, data) {
   TabActor.prototype.observe.call(this, subject, topic, data);
   if (!this.attached) {
     return;
@@ -51,7 +51,7 @@ WindowActor.prototype.observe = function (subject, topic, data) {
   }
 };
 
-WindowActor.prototype._attach = function () {
+WindowActor.prototype._attach = function() {
   if (this.attached) {
     return false;
   }
@@ -66,7 +66,7 @@ WindowActor.prototype._attach = function () {
   return true;
 };
 
-WindowActor.prototype._detach = function () {
+WindowActor.prototype._detach = function() {
   if (!this.attached) {
     return false;
   }

@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1431900
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -22,7 +22,7 @@ var gWalker;
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function (err, client, tab, doc) {
+  attachURL(url, function(err, client, tab, doc) {
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
 
@@ -66,7 +66,7 @@ addAsyncTest(async function testBlockDisplayType() {
   runNextTest();
 });
 
-addTest(function () {
+addTest(function() {
   gWalker = null;
   runNextTest();
 });

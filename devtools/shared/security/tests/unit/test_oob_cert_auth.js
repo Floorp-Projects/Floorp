@@ -21,12 +21,12 @@ function connectClient(client) {
   });
 }
 
-add_task(async function () {
+add_task(async function() {
   initTestDebuggerServer();
 });
 
 // Client w/ OOB_CERT auth connects successfully to server w/ OOB_CERT auth
-add_task(async function () {
+add_task(async function() {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   // Grab our cert, instead of relying on a discovery advertisement
@@ -90,7 +90,7 @@ add_task(async function () {
 });
 
 // Client w/o OOB_CERT auth fails to connect to server w/ OOB_CERT auth
-add_task(async function () {
+add_task(async function() {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   let oobData = defer();
@@ -151,7 +151,7 @@ add_task(async function () {
 });
 
 // Client w/ invalid K value fails to connect
-add_task(async function () {
+add_task(async function() {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   // Grab our cert, instead of relying on a discovery advertisement
@@ -206,7 +206,7 @@ add_task(async function () {
 });
 
 // Client w/ invalid cert hash fails to connect
-add_task(async function () {
+add_task(async function() {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   // Grab our cert, instead of relying on a discovery advertisement
@@ -260,6 +260,6 @@ add_task(async function () {
   do_throw("Connection unexpectedly succeeded");
 });
 
-add_task(async function () {
+add_task(async function() {
   DebuggerServer.destroy();
 });

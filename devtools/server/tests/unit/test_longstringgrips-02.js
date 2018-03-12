@@ -15,9 +15,9 @@ function run_test() {
   }.toString());
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(
-      gClient, "test-grips", function (response, tabClient, threadClient) {
+      gClient, "test-grips", function(response, tabClient, threadClient) {
         gThreadClient = threadClient;
         test_longstring_grip();
       });
@@ -28,7 +28,7 @@ function run_test() {
 function test_longstring_grip() {
   DebuggerServer.LONG_STRING_LENGTH = 200;
 
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     try {
       let fakeLongStringGrip = {
         type: "longString",
@@ -37,18 +37,18 @@ function test_longstring_grip() {
         initial: ""
       };
       let longStringClient = gThreadClient.pauseLongString(fakeLongStringGrip);
-      longStringClient.substring(22, 28, function (response) {
+      longStringClient.substring(22, 28, function(response) {
         try {
           Assert.ok(!!response.error,
                     "We should not get a response, but an error.");
         } finally {
-          gThreadClient.resume(function () {
+          gThreadClient.resume(function() {
             finishClient(gClient);
           });
         }
       });
     } catch (error) {
-      gThreadClient.resume(function () {
+      gThreadClient.resume(function() {
         finishClient(gClient);
         do_throw(error);
       });

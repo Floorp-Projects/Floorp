@@ -6,7 +6,7 @@
 /**
  * Tests for exporting POST data into HAR format.
  */
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(
     HAR_EXAMPLE_URL + "html_har_post-data-test-page.html");
 
@@ -23,7 +23,7 @@ add_task(async function () {
 
   // Execute one POST request on the page and wait till its done.
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.executeTest();
   });
   await wait;

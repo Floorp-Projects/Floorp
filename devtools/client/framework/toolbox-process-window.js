@@ -53,7 +53,7 @@ function hideStatusMessage() {
   toggleStatusMessage(false);
 }
 
-var connect = async function () {
+var connect = async function() {
   // Initiate the connection
   let env = Cc["@mozilla.org/process/environment;1"]
     .getService(Ci.nsIEnvironment);
@@ -106,7 +106,7 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.preference.new-panel-enabled", false);
   Services.prefs.setBoolPref("layout.css.emulate-moz-box-with-flex", false);
 }
-window.addEventListener("load", async function () {
+window.addEventListener("load", async function() {
   let cmdClose = document.getElementById("toolbox-cmd-close");
   cmdClose.addEventListener("command", onCloseCommand);
   setPrefDefaults();

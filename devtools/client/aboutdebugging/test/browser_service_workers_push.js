@@ -26,9 +26,9 @@ add_task(function* () {
 
   info("Make the test page notify us when the service worker sends a message.");
 
-  yield ContentTask.spawn(swTab.linkedBrowser, {}, function () {
+  yield ContentTask.spawn(swTab.linkedBrowser, {}, function() {
     let win = content.wrappedJSObject;
-    win.navigator.serviceWorker.addEventListener("message", function (event) {
+    win.navigator.serviceWorker.addEventListener("message", function(event) {
       sendAsyncMessage(event.data);
     });
   });

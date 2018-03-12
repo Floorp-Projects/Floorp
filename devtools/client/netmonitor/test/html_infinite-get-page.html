@@ -21,7 +21,7 @@
         let xhr = new XMLHttpRequest();
         xhr.open("GET", address, true);
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
             callback();
           }
@@ -37,7 +37,7 @@
       }
 
       (function performRequests() {
-        get("request_" + (count++), function () {
+        get("request_" + (count++), function() {
           if (doRequests) {
             setTimeout(performRequests, 50);
           }

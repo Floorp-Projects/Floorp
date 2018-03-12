@@ -35,11 +35,11 @@ const testData = [
   ["VK_LEFT", "var(--abc", -1, 0],
 ];
 
-const mockGetCSSValuesForPropertyName = function (propertyName) {
+const mockGetCSSValuesForPropertyName = function(propertyName) {
   return [];
 };
 
-const mockGetCSSVariableNames = function () {
+const mockGetCSSVariableNames = function() {
   return [
     "--abc",
     "--def",

@@ -231,7 +231,7 @@ CssAngle.prototype = {
    *         - If the angle is a regular angle e.g. 90deg so we return false
    *           to indicate that the angle is neither invalid nor special.
    */
-  _getInvalidOrSpecialValue: function () {
+  _getInvalidOrSpecialValue: function() {
     if (this.specialValue) {
       return this.specialValue;
     }
@@ -247,7 +247,7 @@ CssAngle.prototype = {
    * @param  {String} angle
    *         Any valid angle value + unit string
    */
-  newAngle: function (angle) {
+  newAngle: function(angle) {
     // Store a lower-cased version of the angle to help with format
     // testing.  The original text is kept as well so it can be
     // returned when needed.
@@ -264,7 +264,7 @@ CssAngle.prototype = {
     return this;
   },
 
-  nextAngleUnit: function () {
+  nextAngleUnit: function() {
     // Get a reordered array from the formats object
     // to have the current format at the front so we can cycle through.
     let formats = Object.keys(this.ANGLEUNIT);
@@ -284,7 +284,7 @@ CssAngle.prototype = {
   /**
    * Return a string representing a angle
    */
-  toString: function () {
+  toString: function() {
     let angle;
 
     switch (this.angleUnit) {
@@ -314,7 +314,7 @@ CssAngle.prototype = {
   /**
    * This method allows comparison of CssAngle objects using ===.
    */
-  valueOf: function () {
+  valueOf: function() {
     return this.deg;
   },
 };

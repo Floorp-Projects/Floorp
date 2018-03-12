@@ -8,7 +8,7 @@
 const e10s = require("devtools/client/responsive.html/utils/e10s");
 
 const TEST_URL = "http://example.com/";
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URL);
 
   let { ui } = await openRDM(tab);

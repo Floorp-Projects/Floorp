@@ -19,10 +19,10 @@ function createRootActor(connection) {
   return root;
 }
 
-exports.register = function (handle) {
+exports.register = function(handle) {
   handle.setRootActor(createRootActor);
 };
 
-exports.unregister = function (handle) {
+exports.unregister = function(handle) {
   handle.setRootActor(null);
 };

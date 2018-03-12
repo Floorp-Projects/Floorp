@@ -20,7 +20,7 @@ let reducers = {
 
 };
 
-module.exports = function (fontOptions = INITIAL_FONT_OPTIONS, action) {
+module.exports = function(fontOptions = INITIAL_FONT_OPTIONS, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return fontOptions;

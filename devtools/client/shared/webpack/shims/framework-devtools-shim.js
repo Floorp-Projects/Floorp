@@ -10,7 +10,7 @@
  */
 const DevTools = {
   chromeWindowType: "navigator:browser",
-  getToolbox: function () {
+  getToolbox: function() {
     return {};
   }
 };

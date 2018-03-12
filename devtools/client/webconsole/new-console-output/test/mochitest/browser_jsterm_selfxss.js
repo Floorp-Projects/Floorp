@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyServiceGetter(
 const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 const stringToCopy = "foobazbarBug642615";
 
-add_task(async function () {
+add_task(async function() {
   let {jsterm} = await openNewTabAndConsole(TEST_URI);
   jsterm.clearOutput();
   ok(!jsterm.completeNode.value, "no completeNode.value");

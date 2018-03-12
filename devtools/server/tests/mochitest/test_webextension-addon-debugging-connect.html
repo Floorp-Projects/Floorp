@@ -21,7 +21,7 @@ async function test_connect_addon(oopMode) {
   // Install and start a test webextension.
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
-    background: function () {
+    background: function() {
       browser.test.log("background script executed");
       browser.test.sendMessage("background page ready");
     },

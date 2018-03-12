@@ -12,13 +12,13 @@ Bug 1265798 - Replace inIDOMUtils.cssPropertyIsShorthand
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   const { initCssProperties, getCssProperties } =
     require("devtools/shared/fronts/css-properties");
 
   function promiseAttachUrl(url) {
     return new Promise((resolve, reject) => {
-      attachURL(url, function (err, client, tab, doc) {
+      attachURL(url, function(err, client, tab, doc) {
         if (err) {
           return reject(err);
         }
@@ -31,7 +31,7 @@ window.onload = function () {
     return JSON.stringify(array.sort());
   }
 
-  const runCssPropertiesTests = async function (url, useActor) {
+  const runCssPropertiesTests = async function(url, useActor) {
     info(`Opening two tabs ${useActor ? "with" : "without"} CssPropertiesActor support.`);
 
     let attachmentA = await promiseAttachUrl(url);

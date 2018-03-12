@@ -63,11 +63,11 @@ DocumentWalker.prototype = {
     this.walker.currentNode = val;
   },
 
-  parentNode: function () {
+  parentNode: function() {
     return this.walker.parentNode();
   },
 
-  nextNode: function () {
+  nextNode: function() {
     let node = this.walker.currentNode;
     if (!node) {
       return null;
@@ -81,7 +81,7 @@ DocumentWalker.prototype = {
     return nextNode;
   },
 
-  firstChild: function () {
+  firstChild: function() {
     let node = this.walker.currentNode;
     if (!node) {
       return null;
@@ -95,7 +95,7 @@ DocumentWalker.prototype = {
     return firstChild;
   },
 
-  lastChild: function () {
+  lastChild: function() {
     let node = this.walker.currentNode;
     if (!node) {
       return null;
@@ -109,7 +109,7 @@ DocumentWalker.prototype = {
     return lastChild;
   },
 
-  previousSibling: function () {
+  previousSibling: function() {
     let node = this.walker.previousSibling();
     while (node && this.isSkippedNode(node)) {
       node = this.walker.previousSibling();
@@ -117,7 +117,7 @@ DocumentWalker.prototype = {
     return node;
   },
 
-  nextSibling: function () {
+  nextSibling: function() {
     let node = this.walker.nextSibling();
     while (node && this.isSkippedNode(node)) {
       node = this.walker.nextSibling();
@@ -125,7 +125,7 @@ DocumentWalker.prototype = {
     return node;
   },
 
-  getStartingNode: function (node, skipTo) {
+  getStartingNode: function(node, skipTo) {
     // Keep a reference on the starting node in case we can't find a node compatible with
     // the filter.
     let startingNode = node;
@@ -145,7 +145,7 @@ DocumentWalker.prototype = {
    * Loop on all of the provided node siblings until finding one that is compliant with
    * the filter function.
    */
-  getClosestAcceptedSibling: function (node) {
+  getClosestAcceptedSibling: function(node) {
     if (this.filter(node) === nodeFilterConstants.FILTER_ACCEPT) {
       // node is already valid, return immediately.
       return node;
@@ -172,7 +172,7 @@ DocumentWalker.prototype = {
     return null;
   },
 
-  isSkippedNode: function (node) {
+  isSkippedNode: function(node) {
     return this.filter(node) === nodeFilterConstants.FILTER_SKIP;
   },
 };

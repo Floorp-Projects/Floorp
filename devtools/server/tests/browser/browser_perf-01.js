@@ -6,7 +6,7 @@
 /**
  * Run through a series of basic recording actions for the perf actor.
  */
-add_task(async function () {
+add_task(async function() {
   const {front, client} = await initPerfFront();
 
   // Assert the initial state.

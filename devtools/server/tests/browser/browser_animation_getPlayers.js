@@ -6,7 +6,7 @@
 
 // Check the output of getAnimationPlayersForNode
 
-add_task(async function () {
+add_task(async function() {
   let {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 

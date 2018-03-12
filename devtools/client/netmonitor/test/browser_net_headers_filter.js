@@ -6,7 +6,7 @@
 /**
  * Tests if Request-Headers and Response-Headers are correctly filtered in Headers tab.
  */
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 

@@ -35,25 +35,25 @@
         const urlencoded = "application/x-www-form-urlencoded";
 
         /* eslint-disable max-nested-callbacks */
-        setTimeout(function () {
+        setTimeout(function() {
           post("baz", "?a", urlencoded, '{ "foo": "bar" }');
 
-          setTimeout(function () {
+          setTimeout(function() {
             post("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
 
-            setTimeout(function () {
+            setTimeout(function() {
               post("baz", "?a=b", urlencoded, "?foo=bar");
 
-              setTimeout(function () {
+              setTimeout(function() {
                 post("baz", "?a", undefined, '{ "foo": "bar" }');
 
-                setTimeout(function () {
+                setTimeout(function() {
                   post("baz", "?a=b", undefined, '{ "foo": "bar" }');
 
-                  setTimeout(function () {
+                  setTimeout(function() {
                     post("baz", "?a=b", undefined, "?foo=bar");
 
-                    setTimeout(function () {
+                    setTimeout(function() {
                       get("baz", "");
 
                       // Done.

@@ -136,7 +136,7 @@ const EXPECTED_REQUESTS = [
   },
 ];
 
-add_task(async function () {
+add_task(async function() {
   let { monitor } = await initNetMonitor(FILTERING_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");

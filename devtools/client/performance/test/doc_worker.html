@@ -16,7 +16,7 @@
       function performWork() {
         const worker = new Worker("js_simpleWorker.js");
 
-        worker.addEventListener("message", function (e) {
+        worker.addEventListener("message", function(e) {
           console.log(e.data);
           console.timeStamp("Done");
         });

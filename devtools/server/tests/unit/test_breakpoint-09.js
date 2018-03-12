@@ -14,7 +14,7 @@ var gThreadClient;
 var gCallback;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -25,9 +25,9 @@ function run_test_with_server(server, callback) {
   initTestDebuggerServer(server);
   gDebuggee = addTestGlobal("test-stack", server);
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_remove_breakpoint();
                            });
@@ -36,12 +36,12 @@ function run_test_with_server(server, callback) {
 
 function test_remove_breakpoint() {
   let done = false;
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let source = gThreadClient.source(packet.frame.where.source);
     let location = { line: gDebuggee.line0 + 2 };
 
-    source.setBreakpoint(location, function (response, bpClient) {
-      gThreadClient.addOneTimeListener("paused", function (event, packet) {
+    source.setBreakpoint(location, function(response, bpClient) {
+      gThreadClient.addOneTimeListener("paused", function(event, packet) {
         // Check the return value.
         Assert.equal(packet.type, "paused");
         Assert.equal(packet.frame.where.source.actor, source.actor);
@@ -52,12 +52,12 @@ function test_remove_breakpoint() {
         Assert.equal(gDebuggee.a, undefined);
 
         // Remove the breakpoint.
-        bpClient.remove(function (response) {
+        bpClient.remove(function(response) {
           done = true;
           gThreadClient.addOneTimeListener("paused",
-                                           function (event, packet) {
+                                           function(event, packet) {
             // The breakpoint should not be hit again.
-                                             gThreadClient.resume(function () {
+                                             gThreadClient.resume(function() {
                                                Assert.ok(false);
                                              });
                                            });

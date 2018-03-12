@@ -49,7 +49,7 @@ add_task(function* () {
   checkCell("ls2", "value", "ls2-changed");
 
   // Clearing items.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.clear();
   });
 

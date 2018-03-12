@@ -69,7 +69,7 @@ EventLoopStack.prototype = {
    *
    * @returns EventLoop
    */
-  push: function () {
+  push: function() {
     return new EventLoop({
       thread: this._thread,
       connection: this._connection,
@@ -109,7 +109,7 @@ EventLoop.prototype = {
   /**
    * Enter this nested event loop.
    */
-  enter: function () {
+  enter: function() {
     let nestData = this._hooks.preNest
       ? this._hooks.preNest()
       : null;
@@ -138,7 +138,7 @@ EventLoop.prototype = {
    *          the stack, false if there is another nested event loop above this
    *          one that hasn't resolved yet.
    */
-  resolve: function () {
+  resolve: function() {
     if (!this.entered) {
       throw new Error("Can't resolve an event loop before it has been entered!");
     }

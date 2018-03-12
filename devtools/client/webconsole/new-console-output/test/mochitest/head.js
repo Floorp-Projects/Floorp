@@ -34,7 +34,7 @@ const STATUS_CODES_GA_PARAMS = `?${new URLSearchParams({
 const wcActions = require("devtools/client/webconsole/new-console-output/actions/index");
 
 Services.prefs.setBoolPref("devtools.browserconsole.new-frontend-enabled", true);
-registerCleanupFunction(async function () {
+registerCleanupFunction(async function() {
   Services.prefs.clearUserPref("devtools.browserconsole.new-frontend-enabled");
   Services.prefs.clearUserPref("devtools.webconsole.ui.filterbar");
 
@@ -489,7 +489,7 @@ function simulateLinkClick(element, clickEventProps) {
   let oldOpenUILinkIn = window.openUILinkIn;
 
   const onOpenLink = new Promise((resolve) => {
-    window.openUILinkIn = function (link, where) {
+    window.openUILinkIn = function(link, where) {
       window.openUILinkIn = oldOpenUILinkIn;
       resolve({link: link, where});
     };
@@ -505,7 +505,7 @@ function simulateLinkClick(element, clickEventProps) {
 
   // Declare a timeout Promise that we can use to make sure openUILinkIn was not called.
   let timeoutId;
-  const onTimeout = new Promise(function (resolve) {
+  const onTimeout = new Promise(function(resolve) {
     timeoutId = setTimeout(() => {
       window.openUILinkIn = oldOpenUILinkIn;
       timeoutId = null;

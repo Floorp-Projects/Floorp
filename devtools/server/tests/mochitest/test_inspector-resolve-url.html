@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=921102
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -21,9 +21,9 @@ window.onload = function () {
 let gInspector;
 let gDoc;
 
-addTest(function () {
+addTest(function() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function (err, client, tab, doc) {
+  attachURL(url, function(err, client, tab, doc) {
     gDoc = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     gInspector = InspectorFront(client, tab);
@@ -31,7 +31,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Resolve a relative URL without providing a context node");
   gInspector.resolveRelativeURL("test.png?id=4#wow").then(url => {
     is(url, "chrome://mochitests/content/chrome/devtools/server/tests/" +
@@ -40,7 +40,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Resolve an absolute URL without providing a context node");
   gInspector.resolveRelativeURL("chrome://mochitests/content/chrome/" +
     "devtools/server/").then(url => {
@@ -49,7 +49,7 @@ addTest(function () {
     });
 });
 
-addTest(function () {
+addTest(function() {
   info("Resolve a relative URL providing a context node");
   let node = gDoc.querySelector(".big-horizontal");
   gInspector.resolveRelativeURL("test.png?id=4#wow", node).then(url => {
@@ -59,7 +59,7 @@ addTest(function () {
   });
 });
 
-addTest(function () {
+addTest(function() {
   info("Resolve an absolute URL providing a context node");
   let node = gDoc.querySelector(".big-horizontal");
   gInspector.resolveRelativeURL("chrome://mochitests/content/chrome/" +
@@ -69,7 +69,7 @@ addTest(function () {
     });
 });
 
-addTest(function () {
+addTest(function() {
   gInspector = null;
   gDoc = null;
   runNextTest();

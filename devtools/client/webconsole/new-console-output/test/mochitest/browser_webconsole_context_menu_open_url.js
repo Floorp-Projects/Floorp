@@ -13,7 +13,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-console.html";
 
-add_task(async function () {
+add_task(async function() {
   // Enable net messages in the console for this test.
   await pushPref("devtools.webconsole.filter.net", true);
 
@@ -70,7 +70,7 @@ add_task(async function () {
  */
 function listenToTabLoad() {
   return new Promise((resolve) => {
-    gBrowser.tabContainer.addEventListener("TabOpen", function (evt) {
+    gBrowser.tabContainer.addEventListener("TabOpen", function(evt) {
       let newTab = evt.target;
       BrowserTestUtils.browserLoaded(newTab.linkedBrowser).then(() => resolve(newTab));
     }, {capture: true, once: true});

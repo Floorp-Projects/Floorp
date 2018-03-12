@@ -7,7 +7,7 @@ const L10n = require("devtools/client/webconsole/new-console-output/test/fixture
 
 const Utils = {
   L10n,
-  supportsString: function (s) {
+  supportsString: function(s) {
     return s;
   }
 };

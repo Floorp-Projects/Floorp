@@ -17,7 +17,7 @@ const SHA1_URL = "https://sha1ee.example.com" + TEST_URI_PATH;
 const SHA256_URL = "https://sha256ee.example.com" + TEST_URI_PATH;
 const TRIGGER_MSG = "If you haven't seen ssl warnings yet, you won't";
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Test SHA1 warnings");

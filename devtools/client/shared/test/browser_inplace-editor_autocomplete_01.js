@@ -31,7 +31,7 @@ const testData = [
   ["VK_LEFT", "background", -1, 0],
 ];
 
-const mockGetCSSPropertyList = function () {
+const mockGetCSSPropertyList = function() {
   return [
     "background",
     "border",

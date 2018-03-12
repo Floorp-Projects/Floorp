@@ -15,9 +15,9 @@ function run_test() {
   gDebuggee = addTestGlobal("test-closures");
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-closures",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_object_grip();
                            });
@@ -26,7 +26,7 @@ function run_test() {
 }
 
 function test_object_grip() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let person = packet.frame.environment.bindings.variables.person;
 
     Assert.equal(person.value.class, "Object");

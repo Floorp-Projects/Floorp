@@ -8,7 +8,7 @@ var gDebuggee;
 var gThreadClient;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -45,8 +45,8 @@ async function test_wrapped_primitive_grips() {
     name: "bar"
   }];
   for (let data of tests) {
-    await new Promise(function (resolve) {
-      gThreadClient.addOneTimeListener("paused", async function (event, packet) {
+    await new Promise(function(resolve) {
+      gThreadClient.addOneTimeListener("paused", async function(event, packet) {
         let [grip] = packet.frame.arguments;
         check_wrapped_primitive_grip(grip, data);
 

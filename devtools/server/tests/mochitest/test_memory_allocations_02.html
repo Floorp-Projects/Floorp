@@ -15,10 +15,10 @@ Bug 1132764 - Test controlling the maximum allocations log length over the RDP.
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  (async function () {
+  (async function() {
     let { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 

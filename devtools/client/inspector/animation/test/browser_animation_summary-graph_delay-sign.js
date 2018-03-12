@@ -49,7 +49,7 @@ const TEST_CASES = [
   },
 ];
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
 
   const { panel } = await openAnimationInspector();

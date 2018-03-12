@@ -42,7 +42,7 @@ const TESTDATA = {
   ]
 };
 
-add_task(async function () {
+add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies-same-name.html");
 
   initDebuggerServer();
@@ -70,7 +70,7 @@ function testCookies(cookiesActor) {
   return testCookiesObjects(0, cookiesActor.hosts, cookiesActor);
 }
 
-var testCookiesObjects = async function (index, hosts, cookiesActor) {
+var testCookiesObjects = async function(index, hosts, cookiesActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = data => {
     is(data.total, TESTDATA[host].length,

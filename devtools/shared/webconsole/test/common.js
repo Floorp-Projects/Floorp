@@ -49,7 +49,7 @@ function attachConsoleToWorker(listeners, callback) {
   _attachConsole(listeners, callback, true, true);
 }
 
-var _attachConsole = async function (
+var _attachConsole = async function(
   listeners, callback, attachToTab, attachToWorker
 ) {
   function _onAttachConsole(state, response, webConsoleClient) {
@@ -137,7 +137,7 @@ function closeDebugger(state, callback) {
 function checkConsoleAPICalls(consoleCalls, expectedConsoleCalls) {
   is(consoleCalls.length, expectedConsoleCalls.length,
     "received correct number of console calls");
-  expectedConsoleCalls.forEach(function (message, index) {
+  expectedConsoleCalls.forEach(function(message, index) {
     info("checking received console call #" + index);
     checkConsoleAPICall(consoleCalls[index], expectedConsoleCalls[index]);
   });

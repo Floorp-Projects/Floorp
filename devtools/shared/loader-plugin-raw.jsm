@@ -12,7 +12,7 @@ const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {})
  * This function handles "raw!" and "theme-loader!" requires.
  * See also: https://github.com/webpack/raw-loader.
  */
-this.requireRawId = function (id, require) {
+this.requireRawId = function(id, require) {
   let index = id.indexOf("!");
   let rawId = id.slice(index + 1);
   let uri = require.resolve(rawId);

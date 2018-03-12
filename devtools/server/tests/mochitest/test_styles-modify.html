@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 
 const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -29,7 +29,7 @@ addAsyncTest(async function setup() {
   let inspector;
 
   await new Promise(resolve => {
-    attachURL(url, function (err, client, tab, doc) {
+    attachURL(url, function(err, client, tab, doc) {
       gInspectee = doc;
       let {InspectorFront} = require("devtools/shared/fronts/inspector");
       inspector = InspectorFront(client, tab);

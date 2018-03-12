@@ -9,7 +9,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for splitting</p>";
 
-add_task(async function () {
+add_task(async function() {
   info("Opening a tab while there is no user setting on split console pref");
   let toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
   ok(!toolbox.splitConsole, "Split console is hidden by default");

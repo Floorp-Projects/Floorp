@@ -17,9 +17,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-grips",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_thread_lifetime();
                            });
@@ -28,25 +28,25 @@ function run_test() {
 }
 
 function test_thread_lifetime() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let pauseGrip = packet.frame.arguments[0];
 
-    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (response) {
+    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(response) {
       // Successful promotion won't return an error.
       Assert.equal(response.error, undefined);
 
       let threadGrip1 = response.from;
 
-      gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (response) {
+      gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(response) {
         Assert.equal(threadGrip1, response.from);
-        gThreadClient.resume(function () {
+        gThreadClient.resume(function() {
           finishClient(gClient);
         });
       });
     });
   });
 
-  gDebuggee.eval("(" + function () {
+  gDebuggee.eval("(" + function() {
     function stopMe(arg1) {
       debugger;
     }

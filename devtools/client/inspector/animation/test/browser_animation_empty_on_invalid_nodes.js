@@ -6,7 +6,7 @@ requestLongerTimeout(2);
 
 // Test that the panel shows no animation data for invalid or not animated nodes
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
   const { inspector, panel } = await openAnimationInspector();

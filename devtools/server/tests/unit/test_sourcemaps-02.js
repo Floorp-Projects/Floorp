@@ -17,9 +17,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_simple_source_map();
                            });
@@ -34,8 +34,8 @@ function test_simple_source_map() {
                                  "http://example.com/www/js/b.js",
                                  "http://example.com/www/js/c.js"]);
 
-  gClient.addOneTimeListener("paused", function (event, packet) {
-    gThreadClient.getSources(function (response) {
+  gClient.addOneTimeListener("paused", function(event, packet) {
+    gThreadClient.getSources(function(response) {
       Assert.ok(!response.error, "Should not get an error");
 
       for (let s of response.sources) {

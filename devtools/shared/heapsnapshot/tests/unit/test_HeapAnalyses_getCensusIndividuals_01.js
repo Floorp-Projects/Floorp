@@ -21,7 +21,7 @@ const LABEL_BREAKDOWN = {
 
 const MAX_INDIVIDUALS = 10;
 
-add_task(async function () {
+add_task(async function() {
   const client = new HeapAnalysesClient();
 
   const snapshotFilePath = saveNewHeapSnapshot();

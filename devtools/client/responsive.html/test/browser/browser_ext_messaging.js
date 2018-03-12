@@ -13,7 +13,7 @@ const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTe
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 PromiseTestUtils.whitelistRejectionsGlobally(/Receiving end does not exist/);
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URL);
   await openRDM(tab);
 
@@ -83,7 +83,7 @@ add_task(async function () {
     },
 
     files: {
-      "content-script.js": async function () {
+      "content-script.js": async function() {
         browser.test.log("Content script init");
 
         browser.test.log("Listen to background");

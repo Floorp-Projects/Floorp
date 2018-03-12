@@ -5,7 +5,7 @@
 
 const { actions, ALLOCATION_RECORDING_OPTIONS } = require("../constants");
 
-exports.toggleRecordingAllocationStacks = function (front) {
+exports.toggleRecordingAllocationStacks = function(front) {
   return function* (dispatch, getState) {
     dispatch({ type: actions.TOGGLE_RECORD_ALLOCATION_STACKS_START });
 

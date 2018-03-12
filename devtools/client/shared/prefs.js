@@ -155,14 +155,14 @@ function accessorNameForPref(somePrefName, prefsBlueprint) {
  */
 function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
   return {
-    register: function () {
+    register: function() {
       this._branch = Services.prefs.getBranch(prefsRoot + ".");
       this._branch.addObserver("", this);
     },
-    unregister: function () {
+    unregister: function() {
       this._branch.removeObserver("", this);
     },
-    observe: function (subject, topic, prefName) {
+    observe: function(subject, topic, prefName) {
       // If this particular pref isn't handled by the blueprint object,
       // even though it's in the specified branch, ignore it.
       let accessorName = accessorNameForPref(prefName, prefsBlueprint);
@@ -192,13 +192,13 @@ function PrefObserver(branchName) {
 exports.PrefObserver = PrefObserver;
 
 PrefObserver.prototype = {
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic == "nsPref:changed") {
       this.emit(this.branchName + data);
     }
   },
 
-  destroy: function () {
+  destroy: function() {
     if (this.branch) {
       this.branch.removeObserver("", this);
     }

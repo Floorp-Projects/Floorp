@@ -45,7 +45,7 @@ ObjectClient.prototype = {
   getDefinitionSite: DebuggerClient.requester({
     type: "definitionSite"
   }, {
-    before: function (packet) {
+    before: function(packet) {
       if (this._grip.class != "Function") {
         throw new Error("getDefinitionSite is only valid for function grips.");
       }
@@ -64,7 +64,7 @@ ObjectClient.prototype = {
   getParameterNames: DebuggerClient.requester({
     type: "parameterNames"
   }, {
-    before: function (packet) {
+    before: function(packet) {
       if (this._grip.class !== "Function") {
         throw new Error("getParameterNames is only valid for function grips.");
       }
@@ -113,7 +113,7 @@ ObjectClient.prototype = {
     type: "enumProperties",
     options: arg(0)
   }, {
-    after: function (response) {
+    after: function(response) {
       if (response.iterator) {
         return { iterator: new PropertyIteratorClient(this._client, response.iterator) };
       }
@@ -130,13 +130,13 @@ ObjectClient.prototype = {
   enumEntries: DebuggerClient.requester({
     type: "enumEntries"
   }, {
-    before: function (packet) {
+    before: function(packet) {
       if (!["Map", "WeakMap", "Set", "WeakSet"].includes(this._grip.class)) {
         throw new Error("enumEntries is only valid for Map/Set-like grips.");
       }
       return packet;
     },
-    after: function (response) {
+    after: function(response) {
       if (response.iterator) {
         return {
           iterator: new PropertyIteratorClient(this._client, response.iterator)
@@ -154,13 +154,13 @@ ObjectClient.prototype = {
   enumSymbols: DebuggerClient.requester({
     type: "enumSymbols"
   }, {
-    before: function (packet) {
+    before: function(packet) {
       if (this._grip.type !== "object") {
         throw new Error("enumSymbols is only valid for objects grips.");
       }
       return packet;
     },
-    after: function (response) {
+    after: function(response) {
       if (response.iterator) {
         return {
           iterator: new SymbolIteratorClient(this._client, response.iterator)
@@ -207,7 +207,7 @@ ObjectClient.prototype = {
   getScope: DebuggerClient.requester({
     type: "scope"
   }, {
-    before: function (packet) {
+    before: function(packet) {
       if (this._grip.class !== "Function") {
         throw new Error("scope is only valid for function grips.");
       }
@@ -221,7 +221,7 @@ ObjectClient.prototype = {
   getDependentPromises: DebuggerClient.requester({
     type: "dependentPromises"
   }, {
-    before: function (packet) {
+    before: function(packet) {
       if (this._grip.class !== "Promise") {
         throw new Error("getDependentPromises is only valid for promise " +
           "grips.");
@@ -236,7 +236,7 @@ ObjectClient.prototype = {
   getPromiseAllocationStack: DebuggerClient.requester({
     type: "allocationStack"
   }, {
-    before: function (packet) {
+    before: function(packet) {
       if (this._grip.class !== "Promise") {
         throw new Error("getAllocationStack is only valid for promise grips.");
       }
@@ -250,7 +250,7 @@ ObjectClient.prototype = {
   getPromiseFulfillmentStack: DebuggerClient.requester({
     type: "fulfillmentStack"
   }, {
-    before: function (packet) {
+    before: function(packet) {
       if (this._grip.class !== "Promise") {
         throw new Error("getPromiseFulfillmentStack is only valid for " +
           "promise grips.");
@@ -265,7 +265,7 @@ ObjectClient.prototype = {
   getPromiseRejectionStack: DebuggerClient.requester({
     type: "rejectionStack"
   }, {
-    before: function (packet) {
+    before: function(packet) {
       if (this._grip.class !== "Promise") {
         throw new Error("getPromiseRejectionStack is only valid for " +
           "promise grips.");

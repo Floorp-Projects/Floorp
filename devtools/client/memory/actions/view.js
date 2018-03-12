@@ -13,8 +13,8 @@ const refresh = require("./refresh");
  *
  * @param {viewState} view
  */
-const changeView = exports.changeView = function (view) {
-  return function (dispatch, getState) {
+const changeView = exports.changeView = function(view) {
+  return function(dispatch, getState) {
     dispatch({
       type: actions.CHANGE_VIEW,
       newViewState: view,
@@ -28,8 +28,8 @@ const changeView = exports.changeView = function (view) {
  * Given that we are in the INDIVIDUALS view state, go back to the state we were
  * in before.
  */
-const popView = exports.popView = function () {
-  return function (dispatch, getState) {
+const popView = exports.popView = function() {
+  return function(dispatch, getState) {
     const { previous } = getState().view;
     assert(previous);
     dispatch({
@@ -46,7 +46,7 @@ const popView = exports.popView = function () {
  * @param {viewState} view
  * @param {HeapAnalysesClient} heapWorker
  */
-exports.changeViewAndRefresh = function (view, heapWorker) {
+exports.changeViewAndRefresh = function(view, heapWorker) {
   return function* (dispatch, getState) {
     dispatch(changeView(view));
     yield dispatch(refresh.refresh(heapWorker));
@@ -59,7 +59,7 @@ exports.changeViewAndRefresh = function (view, heapWorker) {
  *
  * @param {HeapAnalysesClient} heapWorker
  */
-exports.popViewAndRefresh = function (heapWorker) {
+exports.popViewAndRefresh = function(heapWorker) {
   return function* (dispatch, getState) {
     dispatch(popView());
     yield dispatch(refresh.refresh(heapWorker));

@@ -87,7 +87,7 @@ ChildProcessActor.prototype = {
     return this._sources;
   },
 
-  form: function () {
+  form: function() {
     if (!this._consoleActor) {
       this._consoleActor = new WebConsoleActor(this.conn, this);
       this._contextPool.addActor(this._consoleActor);
@@ -112,7 +112,7 @@ ChildProcessActor.prototype = {
     };
   },
 
-  onListWorkers: function () {
+  onListWorkers: function() {
     if (!this._workerList) {
       this._workerList = new WorkerActorList(this.conn, {});
     }
@@ -135,12 +135,12 @@ ChildProcessActor.prototype = {
     });
   },
 
-  _onWorkerListChanged: function () {
+  _onWorkerListChanged: function() {
     this.conn.send({ from: this.actorID, type: "workerListChanged" });
     this._workerList.onListChanged = null;
   },
 
-  destroy: function () {
+  destroy: function() {
     this.conn.removeActorPool(this._contextPool);
     this._contextPool = null;
 
@@ -150,13 +150,13 @@ ChildProcessActor.prototype = {
     }
   },
 
-  preNest: function () {
+  preNest: function() {
     // TODO: freeze windows
     // window mediator doesn't work in child.
     // it doesn't throw, but doesn't return any window
   },
 
-  postNest: function () {
+  postNest: function() {
   },
 };
 

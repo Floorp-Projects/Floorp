@@ -18,13 +18,13 @@ const lazySpec = generateActorSpec({
 });
 
 exports.LazyActor = ActorClassWithSpec(lazySpec, {
-  initialize: function (conn, id) {
+  initialize: function(conn, id) {
     Actor.prototype.initialize.call(this, conn);
 
     Services.obs.notifyObservers(null, "actor", "instantiated");
   },
 
-  hello: function (str) {
+  hello: function(str) {
     return "world";
   }
 });
@@ -32,7 +32,7 @@ exports.LazyActor = ActorClassWithSpec(lazySpec, {
 Services.obs.notifyObservers(null, "actor", "loaded");
 
 exports.LazyFront = FrontClassWithSpec(lazySpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.lazyActor;
 

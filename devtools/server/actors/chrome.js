@@ -83,7 +83,7 @@ ChromeActor.prototype.isRootActor = true;
  * @return {Array}
  */
 Object.defineProperty(ChromeActor.prototype, "docShells", {
-  get: function () {
+  get: function() {
     // Iterate over all top-level windows and all their docshells.
     let docShells = [];
     let e = Services.ww.getWindowEnumerator();
@@ -99,7 +99,7 @@ Object.defineProperty(ChromeActor.prototype, "docShells", {
   }
 });
 
-ChromeActor.prototype.observe = function (subject, topic, data) {
+ChromeActor.prototype.observe = function(subject, topic, data) {
   TabActor.prototype.observe.call(this, subject, topic, data);
   if (!this.attached) {
     return;
@@ -114,7 +114,7 @@ ChromeActor.prototype.observe = function (subject, topic, data) {
   }
 };
 
-ChromeActor.prototype._attach = function () {
+ChromeActor.prototype._attach = function() {
   if (this.attached) {
     return false;
   }
@@ -140,7 +140,7 @@ ChromeActor.prototype._attach = function () {
   return undefined;
 };
 
-ChromeActor.prototype._detach = function () {
+ChromeActor.prototype._detach = function() {
   if (!this.attached) {
     return false;
   }
@@ -170,7 +170,7 @@ ChromeActor.prototype._detach = function () {
 /**
  * Prepare to enter a nested event loop by disabling debuggee events.
  */
-ChromeActor.prototype.preNest = function () {
+ChromeActor.prototype.preNest = function() {
   // Disable events in all open windows.
   let e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {
@@ -185,7 +185,7 @@ ChromeActor.prototype.preNest = function () {
 /**
  * Prepare to exit a nested event loop by enabling debuggee events.
  */
-ChromeActor.prototype.postNest = function (nestData) {
+ChromeActor.prototype.postNest = function(nestData) {
   // Enable events in all open windows.
   let e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {

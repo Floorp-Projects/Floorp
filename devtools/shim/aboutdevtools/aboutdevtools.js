@@ -158,7 +158,7 @@ function createFeatureEl(feature) {
   return li;
 }
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   const inspectorShortcut = getToolboxShortcut();
   const welcomeMessage = document.getElementById("welcome-message");
 
@@ -217,7 +217,7 @@ window.addEventListener("load", function () {
   }
 }, { once: true });
 
-window.addEventListener("beforeunload", function () {
+window.addEventListener("beforeunload", function() {
   // Focus the tab that triggered the DevTools onboarding.
   if (document.visibilityState != "visible") {
     // Only try to focus the correct tab if the current tab is the about:devtools page.
@@ -236,7 +236,7 @@ window.addEventListener("beforeunload", function () {
   }
 }, {once: true});
 
-window.addEventListener("unload", function () {
+window.addEventListener("unload", function() {
   document.getElementById("install").removeEventListener("click", onInstallButtonClick);
   document.getElementById("close").removeEventListener("click", onCloseButtonClick);
   Services.prefs.removeObserver(DEVTOOLS_ENABLED_PREF, updatePage);

@@ -28,7 +28,7 @@ const flags = require("devtools/shared/flags");
  * @param {Toolbox} toolbox
  * @return {Object} the highlighterUtils public API
  */
-exports.getHighlighterUtils = function (toolbox) {
+exports.getHighlighterUtils = function(toolbox) {
   if (!toolbox || !toolbox.target) {
     throw new Error("Missing or invalid toolbox passed to getHighlighterUtils");
   }
@@ -49,7 +49,7 @@ exports.getHighlighterUtils = function (toolbox) {
   /**
    * Release this utils, nullifying the references to the toolbox
    */
-  exported.release = function () {
+  exported.release = function() {
     toolbox = target = null;
   };
 
@@ -59,7 +59,7 @@ exports.getHighlighterUtils = function (toolbox) {
    * which doesn't have the highlighter actor. This can be removed as soon as
    * the minimal supported version becomes 1.4 (29)
    */
-  let isRemoteHighlightable = exported.isRemoteHighlightable = function () {
+  let isRemoteHighlightable = exported.isRemoteHighlightable = function() {
     return target.client.traits.highlightable;
   };
 
@@ -94,7 +94,7 @@ exports.getHighlighterUtils = function (toolbox) {
    *                            activated.
    * @return A promise that resolves when done
    */
-  exported.togglePicker = function (doFocus) {
+  exported.togglePicker = function(doFocus) {
     if (isPicking) {
       return cancelPicker();
     }

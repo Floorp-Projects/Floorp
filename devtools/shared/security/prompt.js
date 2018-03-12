@@ -64,7 +64,7 @@ Client.defaultSendOOB = ({ authResult, oob }) => {
     onOpenWindow(xulWindow) {
       let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindow);
-      win.addEventListener("load", function () {
+      win.addEventListener("load", function() {
         if (win.document.documentElement.getAttribute("id") != "commonDialog") {
           return;
         }

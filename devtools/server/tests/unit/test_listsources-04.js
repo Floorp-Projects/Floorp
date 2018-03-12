@@ -11,7 +11,7 @@
 const {SourceNode} = require("source-map");
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     // Bug 1304144 - This test does not run in a worker because the
     // `rpc` method which talks to the main thread does not work.
     // run_test_with_server(WorkerDebuggerServer, do_test_finished);
@@ -21,7 +21,7 @@ function run_test() {
 }
 
 function run_test_with_server(server, cb) {
-  (async function () {
+  (async function() {
     initTestDebuggerServer(server);
     const debuggee = addTestGlobal("test-sources", server);
     const client = new DebuggerClient(server.connectPipe());
@@ -31,12 +31,12 @@ function run_test_with_server(server, cb) {
     await threadClient.reconfigure({ useSourceMaps: true });
     addSources(debuggee);
 
-    threadClient.getSources(async function (res) {
+    threadClient.getSources(async function(res) {
       Assert.equal(res.sources.length, 3, "3 sources exist");
 
       await threadClient.reconfigure({ useSourceMaps: false });
 
-      threadClient.getSources(function (res) {
+      threadClient.getSources(function(res) {
         Assert.equal(res.sources.length, 1, "1 source exist");
         client.close().then(cb);
       });

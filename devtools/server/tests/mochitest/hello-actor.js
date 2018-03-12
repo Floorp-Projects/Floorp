@@ -17,12 +17,12 @@ const helloSpec = protocol.generateActorSpec({
 });
 
 var HelloActor = protocol.ActorClassWithSpec(helloSpec, {
-  initialize: function () {
+  initialize: function() {
     protocol.Actor.prototype.initialize.apply(this, arguments);
     this.counter = 0;
   },
 
-  count: function () {
+  count: function() {
     return ++this.counter;
   }
 });

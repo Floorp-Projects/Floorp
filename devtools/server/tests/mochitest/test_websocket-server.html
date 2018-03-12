@@ -11,7 +11,7 @@
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   const CC = Components.Constructor;
   const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const WebSocketServer = require("devtools/server/websocket-server");
@@ -19,7 +19,7 @@ window.onload = function () {
   const ServerSocket = CC("@mozilla.org/network/server-socket;1",
     "nsIServerSocket", "init");
 
-  add_task(async function () {
+  add_task(async function() {
     // Create a TCP server on auto-assigned port
     let server = new ServerSocket(-1, true, -1);
     ok(server, `Launched WebSocket server on port ${server.port}`);

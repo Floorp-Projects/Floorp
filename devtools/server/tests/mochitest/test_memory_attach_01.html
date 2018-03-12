@@ -15,10 +15,10 @@ Bug 960671 - Test attaching and detaching from a memory actor.
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  (async function () {
+  (async function() {
     let { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
     ok(true, "Shouldn't have gotten an error attaching.");

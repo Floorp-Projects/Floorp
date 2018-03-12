@@ -179,7 +179,7 @@ BrowserAddonActor.prototype = {
       });
   },
 
-  preNest: function () {
+  preNest: function() {
     let e = Services.wm.getEnumerator(null);
     while (e.hasMoreElements()) {
       let win = e.getNext();
@@ -190,7 +190,7 @@ BrowserAddonActor.prototype = {
     }
   },
 
-  postNest: function () {
+  postNest: function() {
     let e = Services.wm.getEnumerator(null);
     while (e.hasMoreElements()) {
       let win = e.getNext();
@@ -205,7 +205,7 @@ BrowserAddonActor.prototype = {
    * Return true if the given global is associated with this addon and should be
    * added as a debuggee, false otherwise.
    */
-  _shouldAddNewGlobalAsDebuggee: function (givenGlobal) {
+  _shouldAddNewGlobalAsDebuggee: function(givenGlobal) {
     const global = unwrapDebuggerObjectGlobal(givenGlobal);
     try {
       // This will fail for non-Sandbox objects, hence the try-catch block.
@@ -249,7 +249,7 @@ BrowserAddonActor.prototype = {
    * sure every script and source with a URL is stored when debugging
    * add-ons.
    */
-  _allowSource: function (source) {
+  _allowSource: function(source) {
     // XPIProvider.jsm evals some code in every add-on's bootstrap.js. Hide it.
     if (source.url === "resource://gre/modules/addons/XPIProvider.jsm") {
       return false;
@@ -262,7 +262,7 @@ BrowserAddonActor.prototype = {
    * Yield the current set of globals associated with this addon that should be
    * added as debuggees.
    */
-  _findDebuggees: function (dbg) {
+  _findDebuggees: function(dbg) {
     return dbg.findAllGlobals().filter(this._shouldAddNewGlobalAsDebuggee);
   }
 };

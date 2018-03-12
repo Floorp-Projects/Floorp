@@ -26,7 +26,7 @@ const unicodeDevice = {
 const TEST_URL = "data:text/html;charset=utf-8,";
 const Types = require("devtools/client/responsive.html/types");
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
@@ -67,7 +67,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   ok(selectorOption, "Custom device option added to device selector");
 });
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
@@ -110,7 +110,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   await testUserAgent(ui, navigator.userAgent);
 });
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
@@ -144,7 +144,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   ok(selectorOption, "Custom unicode device option added to device selector");
 });
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 

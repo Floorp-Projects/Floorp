@@ -7,7 +7,7 @@
  * Tests if copying a request's url works.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
@@ -17,7 +17,7 @@ add_task(async function () {
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequests(1);
   });
   await wait;

@@ -14,10 +14,10 @@ function run_test() {
   initTestDebuggerServer();
   addTestGlobal("test-nesting");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(
       gClient, "test-nesting",
-      function (response, tabClient, threadClient) {
+      function(response, tabClient, threadClient) {
         // Reach over the protocol connection and get a reference to the thread
         // actor.
         gThreadActor =
@@ -40,17 +40,17 @@ function test_nesting() {
   // 4. Be after the unsafeSynchronize call
   let currentStep = 0;
 
-  executeSoon(function () {
+  executeSoon(function() {
     let eventLoop;
 
-    executeSoon(function () {
+    executeSoon(function() {
       // Should be at step 2
       Assert.equal(++currentStep, 2);
       // Before resolving, should have the unsafeSynchronize event loop and the
       // one just created.
       Assert.equal(thread._nestedEventLoops.size, 2);
 
-      executeSoon(function () {
+      executeSoon(function() {
         // Should be at step 3
         Assert.equal(++currentStep, 3);
         // Before exiting the manually created event loop, should have the

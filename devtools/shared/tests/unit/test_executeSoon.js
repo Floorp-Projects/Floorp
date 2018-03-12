@@ -21,7 +21,7 @@ registerCleanupFunction(() => {
                              asyncStackEnabled);
 });
 
-add_task(async function () {
+add_task(async function() {
   Services.prefs.setBoolPref("javascript.options.asyncstack", true);
 
   await waitForTick();

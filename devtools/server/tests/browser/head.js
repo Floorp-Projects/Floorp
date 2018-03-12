@@ -35,7 +35,7 @@ waitForExplicitFinish();
  *         directly, since this would be a CPOW in the e10s case,
  *         and Promises cannot be resolved with CPOWs (see bug 1233497).
  */
-var addTab = async function (url) {
+var addTab = async function(url) {
   info(`Adding a new tab with URL: ${url}`);
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -238,7 +238,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function () {
+    setTimeout(function() {
       waitUntil(predicate).then(() => resolve(true));
     }, interval);
   });
@@ -248,7 +248,7 @@ function waitForMarkerType(front, types, predicate,
                            unpackFun = (name, data) => data.markers,
                            eventName = "timeline-data") {
   types = [].concat(types);
-  predicate = predicate || function () {
+  predicate = predicate || function() {
     return true;
   };
   let filteredMarkers = [];

@@ -12,7 +12,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-console.html";
 
-add_task(async function () {
+add_task(async function() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
   jsterm.clearOutput();
 

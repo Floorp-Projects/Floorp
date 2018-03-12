@@ -50,7 +50,7 @@ add_task(function* () {
 
 function onPopupShow(contextMenu) {
   return new Promise(resolve => {
-    contextMenu.addEventListener("popupshown", function () {
+    contextMenu.addEventListener("popupshown", function() {
       resolve();
     }, {once: true});
   });
@@ -58,7 +58,7 @@ function onPopupShow(contextMenu) {
 
 function onPopupHide(contextMenu) {
   return new Promise(resolve => {
-    contextMenu.addEventListener("popuphidden", function () {
+    contextMenu.addEventListener("popuphidden", function() {
       resolve();
     }, {once: true});
   });

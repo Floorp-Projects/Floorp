@@ -14,7 +14,7 @@ var gThreadClient;
 var gCallback;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -25,10 +25,10 @@ function run_test_with_server(server, callback) {
   initTestDebuggerServer(server);
   gDebuggee = addTestGlobal("test-breakpoints", server);
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient,
                            "test-breakpoints",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_column_breakpoint();
                            });
@@ -37,7 +37,7 @@ function run_test_with_server(server, callback) {
 
 function test_column_breakpoint() {
   // Debugger statement
-  gClient.addOneTimeListener("paused", function (event, packet) {
+  gClient.addOneTimeListener("paused", function(event, packet) {
     let source = gThreadClient.source(packet.frame.where.source);
     let location = {
       line: gDebuggee.line0 + 1,
@@ -45,7 +45,7 @@ function test_column_breakpoint() {
     };
     let timesBreakpointHit = 0;
 
-    source.setBreakpoint(location, function (response, bpClient) {
+    source.setBreakpoint(location, function(response, bpClient) {
       gThreadClient.addListener("paused", function onPaused(event, packet) {
         Assert.equal(packet.type, "paused");
         Assert.equal(packet.why.type, "breakpoint");
@@ -60,7 +60,7 @@ function test_column_breakpoint() {
 
         if (++timesBreakpointHit === 3) {
           gThreadClient.removeListener("paused", onPaused);
-          bpClient.remove(function (response) {
+          bpClient.remove(function(response) {
             gThreadClient.resume(() => gClient.close().then(gCallback));
           });
         } else {

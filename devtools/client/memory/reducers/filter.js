@@ -5,7 +5,7 @@
 
 const { actions } = require("../constants");
 
-module.exports = function (filterString = null, action) {
+module.exports = function(filterString = null, action) {
   if (action.type === actions.SET_FILTER_STRING) {
     return action.filter || null;
   }

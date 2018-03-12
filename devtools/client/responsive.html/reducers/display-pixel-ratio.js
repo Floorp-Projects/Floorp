@@ -17,7 +17,7 @@ let reducers = {
 
 };
 
-module.exports = function (displayPixelRatio = INITIAL_DISPLAY_PIXEL_RATIO, action) {
+module.exports = function(displayPixelRatio = INITIAL_DISPLAY_PIXEL_RATIO, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return displayPixelRatio;

@@ -47,7 +47,7 @@ let reducers = {
 
 };
 
-module.exports = function (sidebar = INITIAL_SIDEBAR, action) {
+module.exports = function(sidebar = INITIAL_SIDEBAR, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return sidebar;

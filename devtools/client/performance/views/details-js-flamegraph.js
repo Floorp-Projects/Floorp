@@ -57,7 +57,7 @@ var JsFlameGraphView = extend(DetailsSubview, {
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
    */
-  render: function (interval = {}) {
+  render: function(interval = {}) {
     let recording = PerformanceController.getCurrentRecording();
     let duration = recording.getDuration();
     let profile = recording.getProfile();
@@ -90,7 +90,7 @@ var JsFlameGraphView = extend(DetailsSubview, {
   /**
    * Fired when a range is selected or cleared in the FlameGraph.
    */
-  _onRangeChangeInGraph: function () {
+  _onRangeChangeInGraph: function() {
     let interval = this.graph.getViewRange();
 
     // Squelch rerendering this view when we update the range here
@@ -104,7 +104,7 @@ var JsFlameGraphView = extend(DetailsSubview, {
   /**
    * Called whenever a pref is changed and this view needs to be rerendered.
    */
-  _onRerenderPrefChanged: function () {
+  _onRerenderPrefChanged: function() {
     let recording = PerformanceController.getCurrentRecording();
     let profile = recording.getProfile();
     let thread = profile.threads[0];
@@ -114,7 +114,7 @@ var JsFlameGraphView = extend(DetailsSubview, {
   /**
    * Called when `devtools.theme` changes.
    */
-  _onThemeChanged: function (_, theme) {
+  _onThemeChanged: function(_, theme) {
     this.graph.setTheme(theme);
     this.graph.refresh({ force: true });
   },

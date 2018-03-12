@@ -84,7 +84,7 @@ async function addJsonViewTab(url, {
 
   let data = {rootDir, appReadyState, docReadyState};
   // eslint-disable-next-line no-shadow
-  await Promise.race([error, ContentTask.spawn(browser, data, async function (data) {
+  await Promise.race([error, ContentTask.spawn(browser, data, async function(data) {
     // Check if there is a JSONView object.
     let {JSONView} = content.window.wrappedJSObject;
     if (!JSONView) {

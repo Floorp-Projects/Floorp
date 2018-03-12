@@ -37,7 +37,7 @@ function run_test() {
  */
 function newConnection(prefix) {
   let conn;
-  DebuggerServer.createRootActor = function (connection) {
+  DebuggerServer.createRootActor = function(connection) {
     conn = connection;
     return new RootActor(connection, {});
   };
@@ -164,7 +164,7 @@ function EchoActor(connection) {
   this.conn = connection;
 }
 EchoActor.prototype.actorPrefix = "EchoActor";
-EchoActor.prototype.onEcho = function (request) {
+EchoActor.prototype.onEcho = function(request) {
   /*
    * Request packets are frozen. Copy request, so that
    * DebuggerServerConnection.onPacket can attach a 'from' property.

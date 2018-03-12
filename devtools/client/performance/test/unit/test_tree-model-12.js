@@ -5,7 +5,7 @@
 // Test that uninverting the call tree works correctly when there are stacks
 // in the profile that prefixes of other stacks.
 
-add_task(function () {
+add_task(function() {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
   let thread = new ThreadNode(gThread, { startTime: 0, endTime: 50 });
   let root = getFrameNodePath(thread, "(root)");

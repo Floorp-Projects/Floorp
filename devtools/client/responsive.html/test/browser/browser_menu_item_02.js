@@ -12,12 +12,12 @@ const isMenuCheckedFor = ({document}) => {
   return menu.getAttribute("checked") === "true";
 };
 
-add_task(async function () {
+add_task(async function() {
   const window1 = await BrowserTestUtils.openNewBrowserWindow();
   let { gBrowser } = window1;
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URL },
-    async function (browser) {
+    async function(browser) {
       let tab = gBrowser.getTabForBrowser(browser);
 
       is(window1, Services.wm.getMostRecentWindow("navigator:browser"),

@@ -73,7 +73,7 @@ StyleEditorPanel.prototype = {
    * @param  {string} data
    *         The parameters to customize the error message
    */
-  _showError: function (event, data) {
+  _showError: function(event, data) {
     if (!this._toolbox) {
       // could get an async error after we've been destroyed
       return;
@@ -114,7 +114,7 @@ StyleEditorPanel.prototype = {
    *         Promise that will resolve when the editor is selected and ready
    *         to be used.
    */
-  selectStyleSheet: function (href, line, col) {
+  selectStyleSheet: function(href, line, col) {
     if (!this._debuggee || !this.UI) {
       return null;
     }
@@ -124,7 +124,7 @@ StyleEditorPanel.prototype = {
   /**
    * Destroy the style editor.
    */
-  destroy: function () {
+  destroy: function() {
     if (!this._destroyed) {
       this._destroyed = true;
 
@@ -145,7 +145,7 @@ StyleEditorPanel.prototype = {
 };
 
 XPCOMUtils.defineLazyGetter(StyleEditorPanel.prototype, "strings",
-  function () {
+  function() {
     return Services.strings.createBundle(
             "chrome://devtools/locale/styleeditor.properties");
   });

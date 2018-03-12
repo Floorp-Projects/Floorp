@@ -28,14 +28,14 @@ const {
 // Components
 const PropertiesView = createFactory(require("./PropertiesView"));
 
-loader.lazyGetter(this, "MDNLink", function () {
+loader.lazyGetter(this, "MDNLink", function() {
   return createFactory(require("./MdnLink"));
 });
 
-loader.lazyGetter(this, "Rep", function () {
+loader.lazyGetter(this, "Rep", function() {
   return require("devtools/client/shared/components/reps/reps").REPS.Rep;
 });
-loader.lazyGetter(this, "MODE", function () {
+loader.lazyGetter(this, "MODE", function() {
   return require("devtools/client/shared/components/reps/reps").MODE;
 });
 

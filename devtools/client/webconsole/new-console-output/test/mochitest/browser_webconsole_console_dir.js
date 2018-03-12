@@ -8,14 +8,14 @@
 // Check console.dir() calls.
 const TEST_URI = "data:text/html;charset=utf8,<h1>test console.dir</h1>";
 
-add_task(async function () {
+add_task(async function() {
   let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
   let hud = toolbox.getCurrentPanel().hud;
 
   logAllStoreChanges(hud);
 
   info("console.dir on an array");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.console.dir(
       [1, 2, {a: "a", b: "b"}],
     );
@@ -47,7 +47,7 @@ add_task(async function () {
     res["item-" + (i + 1).toString().padStart(3, "0")] = i + 1;
     return res;
   }, {});
-  await ContentTask.spawn(gBrowser.selectedBrowser, obj, function (data) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, obj, function(data) {
     content.wrappedJSObject.console.dir(data);
   });
   dirMessageNode = await waitFor(() => findConsoleDir(hud.ui.outputNode, 1));

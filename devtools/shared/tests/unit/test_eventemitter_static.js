@@ -24,7 +24,7 @@ const TESTS = {
     let events = [ { name: "event#1" }, "event#2" ];
     let target = { name: "target" };
 
-    on(target, "message", function (message) {
+    on(target, "message", function(message) {
       equal(this, target, "this is a target object");
       equal(message, events.shift(), "message is emitted event");
     });
@@ -219,7 +219,7 @@ const TESTS = {
     let target = { name: "target" };
     let called = false;
 
-    let pFoo = once(target, "foo", function (value) {
+    let pFoo = once(target, "foo", function(value) {
       ok(!called, "listener called only once");
       equal(value, "bar", "correct argument was passed");
       equal(this, target, "the contextual object is correct");
@@ -248,7 +248,7 @@ const TESTS = {
   testAddListenerWithHandlerMethod() {
     let target = { name: "target" };
     let actual = [];
-    let listener = function (...args) {
+    let listener = function(...args) {
       equal(this, target, "the contextual object is correct for function listener");
       deepEqual(args, [10, 20, 30], "arguments are properly passed");
     };
@@ -331,7 +331,7 @@ const TESTS = {
  * @param {Object} tests
  *  The tests descriptor object, contains the tests to run.
  */
-const runnable = (tests) => (async function () {
+const runnable = (tests) => (async function() {
   for (let name of Object.keys(tests)) {
     info(name);
     if (tests[name].length === 1) {

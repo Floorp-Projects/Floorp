@@ -12,7 +12,7 @@ const { custom } = protocol;
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
 const ActorActorFront = protocol.FrontClassWithSpec(actorActorSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   }
 });
@@ -47,14 +47,14 @@ function request(uri) {
 }
 
 const ActorRegistryFront = protocol.FrontClassWithSpec(actorRegistrySpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client,
                                              { actor: form.actorRegistryActor });
 
     this.manage(this);
   },
 
-  registerActor: custom(function (uri, options) {
+  registerActor: custom(function(uri, options) {
     return request(uri, options)
       .then(sourceText => {
         return this._registerActor(sourceText, uri, options);

@@ -10,7 +10,7 @@ var gThreadClient;
 var gCallback;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -32,7 +32,7 @@ async function run_test_with_server(server, callback) {
 }
 
 async function test_object_grip() {
-  gThreadClient.addOneTimeListener("paused", async function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", async function(event, packet) {
     let [grip] = packet.frame.arguments;
 
     let objClient = gThreadClient.pauseGrip(grip);

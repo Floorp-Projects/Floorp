@@ -12,7 +12,7 @@ const { once, observeOnce } = require("devtools/client/performance/test/helpers/
 /**
  * Blocks the main thread for the specified amount of time.
  */
-exports.busyWait = function (time) {
+exports.busyWait = function(time) {
   dump(`Busy waiting for: ${time} milliseconds.\n`);
   let start = Date.now();
   /* eslint-disable no-unused-vars */
@@ -26,7 +26,7 @@ exports.busyWait = function (time) {
 /**
  * Idly waits for the specified amount of time.
  */
-exports.idleWait = function (time) {
+exports.idleWait = function(time) {
   dump(`Idly waiting for: ${time} milliseconds.\n`);
   return DevToolsUtils.waitForTime(time);
 };
@@ -48,7 +48,7 @@ exports.waitUntil = function* (predicate, interval = 100, tries = 100) {
 /**
  * Waits for a `MozAfterPaint` event to be fired on the specified window.
  */
-exports.waitForMozAfterPaint = function (window) {
+exports.waitForMozAfterPaint = function(window) {
   return once(window, "MozAfterPaint");
 };
 
@@ -56,6 +56,6 @@ exports.waitForMozAfterPaint = function (window) {
  * Waits for the `browser-delayed-startup-finished` observer notification
  * to be fired on the specified window.
  */
-exports.waitForDelayedStartupFinished = function (window) {
+exports.waitForDelayedStartupFinished = function(window) {
   return observeOnce("browser-delayed-startup-finished", { expectedSubject: window });
 };

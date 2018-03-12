@@ -13,7 +13,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>bug 900448 - autocomplete " +
                  "popup closes on tab switch";
 const TEST_URI_NAVIGATE = "data:text/html;charset=utf-8,<p>testing autocomplete closes";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
   let popup = hud.jsterm.autocompletePopup;
   let popupShown = once(popup, "popup-opened");

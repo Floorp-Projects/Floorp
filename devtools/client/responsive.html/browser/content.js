@@ -10,7 +10,7 @@
 var global = this;
 
 // Guard against loading this frame script mutiple times
-(function () {
+(function() {
   if (global.responsiveFrameScriptLoaded) {
     return;
   }

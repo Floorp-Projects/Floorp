@@ -40,7 +40,7 @@
           data += "&" + i + "=" + message[i];
         }
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
             callback();
           }
@@ -55,7 +55,7 @@
         let xhr = new XMLHttpRequest();
         xhr.open("POST", address, true);
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
             callback();
           }
@@ -68,8 +68,8 @@
         const url1 = url + "?foo=bar&baz=42&type=urlencoded";
         const url2 = url + "?foo=bar&baz=42&type=multipart";
 
-        post(url1, { foo: "bar", baz: 123 }, function () {
-          form(url2, "form-name", function () {
+        post(url1, { foo: "bar", baz: 123 }, function() {
+          form(url2, "form-name", function() {
             // Done.
           });
         });

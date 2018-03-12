@@ -14,7 +14,7 @@ var gCallback;
 
 function run_test() {
   do_test_pending();
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
 }

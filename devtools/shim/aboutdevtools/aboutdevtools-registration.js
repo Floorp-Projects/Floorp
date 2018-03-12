@@ -21,7 +21,7 @@ AboutDevtools.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([nsIAboutModule]),
 
-  newChannel: function (uri, loadInfo) {
+  newChannel: function(uri, loadInfo) {
     let chan = Services.io.newChannelFromURIWithLoadInfo(
       this.uri,
       loadInfo
@@ -30,7 +30,7 @@ AboutDevtools.prototype = {
     return chan;
   },
 
-  getURIFlags: function (uri) {
+  getURIFlags: function(uri) {
     return nsIAboutModule.ALLOW_SCRIPT;
   }
 };

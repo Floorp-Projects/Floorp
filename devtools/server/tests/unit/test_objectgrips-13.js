@@ -18,9 +18,9 @@ function run_test() {
   }.toString(), gDebuggee);
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-grips",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              add_pause_listener();
                            });
@@ -29,7 +29,7 @@ function run_test() {
 }
 
 function add_pause_listener() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     const [funcGrip, objGrip] = packet.frame.arguments;
     const func = gThreadClient.pauseGrip(funcGrip);
     const obj = gThreadClient.pauseGrip(objGrip);

@@ -11,7 +11,7 @@ const {addonsSpec} = require("devtools/shared/specs/addons");
 
 const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
 
-  initialize: function (conn) {
+  initialize: function(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
   },
 
