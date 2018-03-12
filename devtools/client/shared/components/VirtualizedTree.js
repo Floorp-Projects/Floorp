@@ -198,10 +198,6 @@ class Tree extends Component {
       // Handle when item is activated with a keyboard (using Space or Enter)
       onActivate: PropTypes.func,
 
-      // Indicates if pressing ArrowRight key should only expand expandable node
-      // or if the selection should also move to the next node.
-      preventNavigationOnArrowRight: PropTypes.bool,
-
       // The depth to which we should automatically expand new items.
       autoExpandDepth: PropTypes.number,
 
@@ -232,7 +228,6 @@ class Tree extends Component {
   static get defaultProps() {
     return {
       autoExpandDepth: AUTO_EXPAND_DEPTH,
-      preventNavigationOnArrowRight: true,
     };
   }
 
@@ -507,10 +502,9 @@ class Tree extends Component {
         break;
 
       case "ArrowRight":
-        if (this.props.getChildren(this.props.focused).length &&
-            !this.props.isExpanded(this.props.focused)) {
+        if (!this.props.isExpanded(this.props.focused)) {
           this._onExpand(this.props.focused);
-        } else if (!this.props.preventNavigationOnArrowRight) {
+        } else {
           this._focusNextNode();
         }
         break;
