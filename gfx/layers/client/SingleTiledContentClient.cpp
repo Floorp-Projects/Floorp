@@ -97,7 +97,7 @@ ClientSingleTiledLayerBuffer::GetTextureClient()
   MOZ_ASSERT(mFormat != gfx::SurfaceFormat::UNKNOWN);
   return mCompositableClient.CreateTextureClientForDrawing(
     gfx::ImageFormatToSurfaceFormat(mFormat), mSize, BackendSelector::Content,
-    TextureFlags::DISALLOW_BIGIMAGE | TextureFlags::IMMEDIATE_UPLOAD);
+    TextureFlags::DISALLOW_BIGIMAGE | TextureFlags::IMMEDIATE_UPLOAD | TextureFlags::NON_BLOCKING_READ_LOCK);
 }
 
 void

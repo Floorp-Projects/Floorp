@@ -7,16 +7,25 @@
 #define nsIDocument_h___
 
 #include "mozilla/FlushType.h"           // for enum
+#include "nsAttrAndChildArray.h"
 #include "nsAutoPtr.h"                   // for member
 #include "nsCOMArray.h"                  // for member
 #include "nsCompatibility.h"             // for member
 #include "nsCOMPtr.h"                    // for member
 #include "nsGkAtoms.h"                   // for static class members
+#include "nsIApplicationCache.h"
+#include "nsIApplicationCacheContainer.h"
+#include "nsIContentViewer.h"
 #include "nsIDocumentObserver.h"         // for typedef (nsUpdateType)
+#include "nsIInterfaceRequestor.h"
+#include "nsILoadContext.h"
 #include "nsILoadGroup.h"                // for member (in nsCOMPtr)
 #include "nsINode.h"                     // for base class
 #include "nsIParser.h"
 #include "nsIPresShell.h"
+#include "nsIChannelEventSink.h"
+#include "nsIProgressEventSink.h"
+#include "nsISecurityEventSink.h"
 #include "nsIScriptGlobalObject.h"       // for member (in nsCOMPtr)
 #include "nsIServiceManager.h"
 #include "nsIURI.h"                      // for use in inline functions
@@ -25,6 +34,7 @@
 #include "nsPropertyTable.h"             // for member
 #include "nsStringFwd.h"
 #include "nsTHashtable.h"                // for member
+#include "nsURIHashKey.h"
 #include "mozilla/net/ReferrerPolicy.h"  // for member
 #include "nsWeakReference.h"
 #include "mozilla/UseCounter.h"
@@ -156,6 +166,7 @@ class FrameRequestCallback;
 struct FullscreenRequest;
 class ImageTracker;
 class HTMLBodyElement;
+class HTMLImageElement;
 struct LifecycleCallbackArgs;
 class Link;
 class Location;
@@ -213,7 +224,214 @@ enum DocumentFlavor {
 class nsContentList;
 class nsDocumentOnStack;
 
+class nsDocHeaderData
+{
+public:
+  nsDocHeaderData(nsAtom* aField, const nsAString& aData)
+    : mField(aField), mData(aData), mNext(nullptr)
+  {
+  }
+
+  ~nsDocHeaderData(void)
+  {
+    delete mNext;
+  }
+
+  RefPtr<nsAtom> mField;
+  nsString mData;
+  nsDocHeaderData* mNext;
+};
+
+class nsExternalResourceMap
+{
+  typedef bool (*nsSubDocEnumFunc)(nsIDocument *aDocument, void *aData);
+
+public:
+  /**
+   * A class that represents an external resource load that has begun but
+   * doesn't have a document yet.  Observers can be registered on this object,
+   * and will be notified after the document is created.  Observers registered
+   * after the document has been created will NOT be notified.  When observers
+   * are notified, the subject will be the newly-created document, the topic
+   * will be "external-resource-document-created", and the data will be null.
+   * If document creation fails for some reason, observers will still be
+   * notified, with a null document pointer.
+   */
+  class ExternalResourceLoad : public nsISupports
+  {
+  public:
+    virtual ~ExternalResourceLoad() {}
+
+    void AddObserver(nsIObserver* aObserver)
+    {
+      MOZ_ASSERT(aObserver, "Must have observer");
+      mObservers.AppendElement(aObserver);
+    }
+
+    const nsTArray<nsCOMPtr<nsIObserver>> & Observers()
+    {
+      return mObservers;
+    }
+  protected:
+    AutoTArray<nsCOMPtr<nsIObserver>, 8> mObservers;
+  };
+
+  nsExternalResourceMap();
+
+  /**
+   * Request an external resource document.  This does exactly what
+   * nsIDocument::RequestExternalResource is documented to do.
+   */
+  nsIDocument* RequestResource(nsIURI* aURI,
+                               nsINode* aRequestingNode,
+                               nsIDocument* aDisplayDocument,
+                               ExternalResourceLoad** aPendingLoad);
+
+  /**
+   * Enumerate the resource documents.  See
+   * nsIDocument::EnumerateExternalResources.
+   */
+  void EnumerateResources(nsSubDocEnumFunc aCallback, void* aData);
+
+  /**
+   * Traverse ourselves for cycle-collection
+   */
+  void Traverse(nsCycleCollectionTraversalCallback* aCallback) const;
+
+  /**
+   * Shut ourselves down (used for cycle-collection unlink), as well
+   * as for document destruction.
+   */
+  void Shutdown()
+  {
+    mPendingLoads.Clear();
+    mMap.Clear();
+    mHaveShutDown = true;
+  }
+
+  bool HaveShutDown() const
+  {
+    return mHaveShutDown;
+  }
+
+  // Needs to be public so we can traverse them sanely
+  struct ExternalResource
+  {
+    ~ExternalResource();
+    nsCOMPtr<nsIDocument> mDocument;
+    nsCOMPtr<nsIContentViewer> mViewer;
+    nsCOMPtr<nsILoadGroup> mLoadGroup;
+  };
+
+  // Hide all our viewers
+  void HideViewers();
+
+  // Show all our viewers
+  void ShowViewers();
+
+protected:
+  class PendingLoad : public ExternalResourceLoad,
+                      public nsIStreamListener
+  {
+    ~PendingLoad() {}
+
+  public:
+    explicit PendingLoad(nsIDocument* aDisplayDocument) :
+      mDisplayDocument(aDisplayDocument)
+    {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
+
+    /**
+     * Start aURI loading.  This will perform the necessary security checks and
+     * so forth.
+     */
+    nsresult StartLoad(nsIURI* aURI, nsINode* aRequestingNode);
+
+    /**
+     * Set up an nsIContentViewer based on aRequest.  This is guaranteed to
+     * put null in *aViewer and *aLoadGroup on all failures.
+     */
+    nsresult SetupViewer(nsIRequest* aRequest, nsIContentViewer** aViewer,
+                         nsILoadGroup** aLoadGroup);
+
+  private:
+    nsCOMPtr<nsIDocument> mDisplayDocument;
+    nsCOMPtr<nsIStreamListener> mTargetListener;
+    nsCOMPtr<nsIURI> mURI;
+  };
+  friend class PendingLoad;
+
+  class LoadgroupCallbacks final : public nsIInterfaceRequestor
+  {
+    ~LoadgroupCallbacks() {}
+  public:
+    explicit LoadgroupCallbacks(nsIInterfaceRequestor* aOtherCallbacks)
+      : mCallbacks(aOtherCallbacks)
+    {}
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIINTERFACEREQUESTOR
+  private:
+    // The only reason it's safe to hold a strong ref here without leaking is
+    // that the notificationCallbacks on a loadgroup aren't the docshell itself
+    // but a shim that holds a weak reference to the docshell.
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+
+    // Use shims for interfaces that docshell implements directly so that we
+    // don't hand out references to the docshell.  The shims should all allow
+    // getInterface back on us, but other than that each one should only
+    // implement one interface.
+
+    // XXXbz I wish we could just derive the _allcaps thing from _i
+#define DECL_SHIM(_i, _allcaps)                                              \
+    class _i##Shim final : public nsIInterfaceRequestor,                     \
+                           public _i                                         \
+    {                                                                        \
+      ~_i##Shim() {}                                                         \
+    public:                                                                  \
+      _i##Shim(nsIInterfaceRequestor* aIfreq, _i* aRealPtr)                  \
+        : mIfReq(aIfreq), mRealPtr(aRealPtr)                                 \
+      {                                                                      \
+        NS_ASSERTION(mIfReq, "Expected non-null here");                      \
+        NS_ASSERTION(mRealPtr, "Expected non-null here");                    \
+      }                                                                      \
+      NS_DECL_ISUPPORTS                                                      \
+      NS_FORWARD_NSIINTERFACEREQUESTOR(mIfReq->)                             \
+      NS_FORWARD_##_allcaps(mRealPtr->)                                      \
+    private:                                                                 \
+      nsCOMPtr<nsIInterfaceRequestor> mIfReq;                                \
+      nsCOMPtr<_i> mRealPtr;                                                 \
+    };
+
+    DECL_SHIM(nsILoadContext, NSILOADCONTEXT)
+    DECL_SHIM(nsIProgressEventSink, NSIPROGRESSEVENTSINK)
+    DECL_SHIM(nsIChannelEventSink, NSICHANNELEVENTSINK)
+    DECL_SHIM(nsISecurityEventSink, NSISECURITYEVENTSINK)
+    DECL_SHIM(nsIApplicationCacheContainer, NSIAPPLICATIONCACHECONTAINER)
+#undef DECL_SHIM
+  };
+
+  /**
+   * Add an ExternalResource for aURI.  aViewer and aLoadGroup might be null
+   * when this is called if the URI didn't result in an XML document.  This
+   * function makes sure to remove the pending load for aURI, if any, from our
+   * hashtable, and to notify its observers, if any.
+   */
+  nsresult AddExternalResource(nsIURI* aURI, nsIContentViewer* aViewer,
+                               nsILoadGroup* aLoadGroup,
+                               nsIDocument* aDisplayDocument);
+
+  nsClassHashtable<nsURIHashKey, ExternalResource> mMap;
+  nsRefPtrHashtable<nsURIHashKey, PendingLoad> mPendingLoads;
+  bool mHaveShutDown;
+};
+
 //----------------------------------------------------------------------
+
+// For classifying a flash document based on its principal.
+class PrincipalFlashClassifier;
 
 // Document interface.  This is implemented by all document objects in
 // Gecko.
@@ -228,6 +446,7 @@ protected:
   template <typename T> using NotNull = mozilla::NotNull<T>;
 
 public:
+  typedef nsExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicyEnum;
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::FullscreenRequest FullscreenRequest;
@@ -313,13 +532,43 @@ public:
   virtual void SetSuppressParserErrorConsoleMessages(bool aSuppress) {}
   virtual bool SuppressParserErrorConsoleMessages() { return false; }
 
+  // nsINode
+  bool IsNodeOfType(uint32_t aFlags) const final;
+  nsIContent* GetChildAt_Deprecated(uint32_t aIndex) const final
+  {
+    return mChildren.GetSafeChildAt(aIndex);
+  }
+
+  int32_t ComputeIndexOf(const nsINode* aPossibleChild) const final
+  {
+    return mChildren.IndexOfChild(aPossibleChild);
+  }
+
+  uint32_t GetChildCount() const final
+  {
+    return mChildren.ChildCount();
+  }
+
+  nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                             bool aNotify) override;
+  nsresult InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
+                                    bool aNotify) override;
+  void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) final;
+  void RemoveChildNode(nsIContent* aKid, bool aNotify) final;
+  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo,
+                 nsINode **aResult,
+                 bool aPreallocateChildren) const override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   /**
    * Signal that the document title may have changed
    * (see nsDocument::GetTitle).
    * @param aBoundTitleElement true if an HTML or SVG <title> element
    * has just been bound to the document.
    */
-  virtual void NotifyPossibleTitleChange(bool aBoundTitleElement) = 0;
+  void NotifyPossibleTitleChange(bool aBoundTitleElement);
 
   /**
    * Return the URI for the document. May return null.
@@ -356,24 +605,30 @@ public:
    * Set the URI for the document.  This also sets the document's original URI,
    * if it's null.
    */
-  virtual void SetDocumentURI(nsIURI* aURI) = 0;
+  void SetDocumentURI(nsIURI* aURI);
 
   /**
    * Set the URI for the document loaded via XHR, when accessed from
    * chrome privileged script.
    */
-  virtual void SetChromeXHRDocURI(nsIURI* aURI) = 0;
+  void SetChromeXHRDocURI(nsIURI* aURI)
+  {
+    mChromeXHRDocURI = aURI;
+  }
 
   /**
    * Set the base URI for the document loaded via XHR, when accessed from
    * chrome privileged script.
    */
-  virtual void SetChromeXHRDocBaseURI(nsIURI* aURI) = 0;
+  void SetChromeXHRDocBaseURI(nsIURI* aURI)
+  {
+    mChromeXHRDocBaseURI = aURI;
+  }
 
   /**
    * Set referrer policy and upgrade-insecure-requests flags
    */
-  virtual void ApplySettingsFromCSP(bool aSpeculative) = 0;
+  void ApplySettingsFromCSP(bool aSpeculative);
 
   already_AddRefed<nsIParser> CreatorParserOrNull()
   {
@@ -434,7 +689,7 @@ public:
    * Set the principal responsible for this document.  Chances are,
    * you do not want to be using this.
    */
-  virtual void SetPrincipal(nsIPrincipal *aPrincipal) = 0;
+  void SetPrincipal(nsIPrincipal* aPrincipal);
 
   /**
    * Get the list of ancestor principals for a document.  This is the same as
@@ -495,9 +750,10 @@ public:
     }
     return GetFallbackBaseURI();
   }
-  virtual already_AddRefed<nsIURI> GetBaseURI(bool aTryUseXHRDocBaseURI = false) const override;
 
-  virtual void SetBaseURI(nsIURI* aURI) = 0;
+  already_AddRefed<nsIURI> GetBaseURI(bool aTryUseXHRDocBaseURI = false) const final;
+
+  void SetBaseURI(nsIURI* aURI);
 
   /**
    * Return the URL data which style system needs for resolving url value.
@@ -511,7 +767,11 @@ public:
   /**
    * Get/Set the base target of a link in a document.
    */
-  virtual void GetBaseTarget(nsAString &aBaseTarget) = 0;
+  void GetBaseTarget(nsAString& aBaseTarget) const
+  {
+    aBaseTarget = mBaseTarget;
+  }
+
   void SetBaseTarget(const nsString& aBaseTarget) {
     mBaseTarget = aBaseTarget;
   }
@@ -563,14 +823,30 @@ public:
    * registered for each ID.
    * @return the content currently associated with the ID.
    */
-  virtual Element* AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
-                                       void* aData, bool aForImage) = 0;
+  Element* AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
+                               void* aData, bool aForImage);
   /**
    * Remove the (aObserver, aData, aForImage) triple for a specific ID, if
    * registered.
    */
-  virtual void RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
-                                      void* aData, bool aForImage) = 0;
+  void RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
+                              void* aData, bool aForImage);
+
+  /**
+   * Check that aId is not empty and log a message to the console
+   * service if it is.
+   * @returns true if aId looks correct, false otherwise.
+   */
+  inline bool CheckGetElementByIdArg(const nsAString& aId)
+  {
+    if (aId.IsEmpty()) {
+      ReportEmptyGetElementByIdArg();
+      return false;
+    }
+    return true;
+  }
+
+  void ReportEmptyGetElementByIdArg();
 
   /**
    * Get the Content-Type of this document.
@@ -893,8 +1169,8 @@ public:
    * Access HTTP header data (this may also get set from other
    * sources, like HTML META tags).
    */
-  virtual void GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const = 0;
-  virtual void SetHeaderData(nsAtom* aheaderField, const nsAString& aData) = 0;
+  void GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const;
+  void SetHeaderData(nsAtom* aheaderField, const nsAString& aData);
 
   /**
    * Create a new presentation shell that will use aContext for its
@@ -903,11 +1179,10 @@ public:
    * method is responsible for calling BeginObservingDocument() on the
    * presshell if the presshell should observe document mutations.
    */
-  virtual already_AddRefed<nsIPresShell> CreateShell(
-      nsPresContext* aContext,
-      nsViewManager* aViewManager,
-      mozilla::StyleSetHandle aStyleSet) = 0;
-  virtual void DeleteShell() = 0;
+  already_AddRefed<nsIPresShell> CreateShell(nsPresContext* aContext,
+                                             nsViewManager* aViewManager,
+                                             mozilla::StyleSetHandle aStyleSet);
+  void DeleteShell();
 
   nsIPresShell* GetShell() const
   {
@@ -984,23 +1259,22 @@ public:
   /**
    * Are plugins allowed in this document ?
    */
-  virtual bool GetAllowPlugins () = 0;
+  bool GetAllowPlugins();
 
   /**
    * Set the sub document for aContent to aSubDoc.
    */
-  virtual nsresult SetSubDocumentFor(Element* aContent,
-                                     nsIDocument* aSubDoc) = 0;
+  nsresult SetSubDocumentFor(Element* aContent, nsIDocument* aSubDoc);
 
   /**
    * Get the sub document for aContent
    */
-  virtual nsIDocument *GetSubDocumentFor(nsIContent *aContent) const = 0;
+  nsIDocument* GetSubDocumentFor(nsIContent* aContent) const;
 
   /**
    * Find the content node for which aDocument is a sub document.
    */
-  virtual Element* FindContentForSubDocument(nsIDocument* aDocument) const = 0;
+  Element* FindContentForSubDocument(nsIDocument* aDocument) const;
 
   /**
    * Return the doctype for this document.
@@ -1102,7 +1376,7 @@ public:
     return mPageUnloadingEventTimeStamp;
   }
 
-  virtual void NotifyLayerManagerRecreated() = 0;
+  void NotifyLayerManagerRecreated();
 
   /**
    * Add an SVG element to the list of elements that need
@@ -1131,7 +1405,18 @@ public:
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
 protected:
-  virtual Element *GetRootElementInternal() const = 0;
+  void DispatchContentLoadedEvents();
+
+  void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
+                              const nsAString& aType,
+                              bool aPersisted);
+
+  // Call this before the document does something that will unbind all content.
+  // That will stop us from doing a lot of work as each element is removed.
+  void DestroyElementMaps();
+
+  Element* GetRootElementInternal() const;
+  void DoNotifyPossibleTitleChange();
 
   void SetPageUnloadingEventTimeStamp()
   {
@@ -1455,7 +1740,10 @@ public:
    * document.  Note that this may be null in some cases (eg if
    * StartDocumentLoad or Reset were never called)
    */
-  virtual nsIChannel* GetChannel() const = 0;
+  nsIChannel* GetChannel() const
+  {
+    return mChannel;
+  }
 
   /**
    * Get this document's attribute stylesheet.  May return null if
@@ -1491,7 +1779,7 @@ public:
     return mScriptGlobalObject ? mScriptGlobalObject.get() :
                                  GetScriptHandlingObjectInternal();
   }
-  virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) = 0;
+  void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject);
 
   /**
    * Get the object that is used as the scope for all of the content
@@ -1500,8 +1788,8 @@ public:
    * document is truly gone. Use this object when you're trying to find a
    * content wrapper in XPConnect.
    */
-  virtual nsIGlobalObject* GetScopeObject() const = 0;
-  virtual void SetScopeObject(nsIGlobalObject* aGlobal) = 0;
+  nsIGlobalObject* GetScopeObject() const;
+  void SetScopeObject(nsIGlobalObject* aGlobal);
 
   /**
    * Return the window containing the document (the outer window).
@@ -1550,20 +1838,23 @@ public:
   /**
    * Get the script loader for this document
    */
-  virtual mozilla::dom::ScriptLoader* ScriptLoader() = 0;
+  mozilla::dom::ScriptLoader* ScriptLoader()
+  {
+    return mScriptLoader;
+  }
 
   /**
    * Add/Remove an element to the document's id and name hashes
    */
-  virtual void AddToIdTable(Element* aElement, nsAtom* aId) = 0;
-  virtual void RemoveFromIdTable(Element* aElement, nsAtom* aId) = 0;
-  virtual void AddToNameTable(Element* aElement, nsAtom* aName) = 0;
-  virtual void RemoveFromNameTable(Element* aElement, nsAtom* aName) = 0;
+  void AddToIdTable(Element* aElement, nsAtom* aId);
+  void RemoveFromIdTable(Element* aElement, nsAtom* aId);
+  void AddToNameTable(Element* aElement, nsAtom* aName);
+  void RemoveFromNameTable(Element* aElement, nsAtom* aName);
 
   /**
    * Returns all elements in the fullscreen stack in the insertion order.
    */
-  virtual nsTArray<Element*> GetFullscreenStack() const = 0;
+  nsTArray<Element*> GetFullscreenStack() const;
 
   /**
    * Asynchronously requests that the document make aElement the fullscreen
@@ -1576,8 +1867,29 @@ public:
    * the <iframe> or <browser> that contains this document is also mode
    * fullscreen. This happens recursively in all ancestor documents.
    */
-  virtual void AsyncRequestFullScreen(
-    mozilla::UniquePtr<FullscreenRequest>&& aRequest) = 0;
+  void AsyncRequestFullScreen(mozilla::UniquePtr<FullscreenRequest>&&);
+
+  // Do the "fullscreen element ready check" from the fullscreen spec.
+  // It returns true if the given element is allowed to go into fullscreen.
+  bool FullscreenElementReadyCheck(Element* aElement, bool aWasCallerChrome);
+
+  // This is called asynchronously by nsIDocument::AsyncRequestFullScreen()
+  // to move this document into full-screen mode if allowed.
+  void RequestFullScreen(mozilla::UniquePtr<FullscreenRequest>&& aRequest);
+
+  // Removes all elements from the full-screen stack, removing full-scren
+  // styles from the top element in the stack.
+  void CleanupFullscreenState();
+
+  // Pushes aElement onto the full-screen stack, and removes full-screen styles
+  // from the former full-screen stack top, and its ancestors, and applies the
+  // styles to aElement. aElement becomes the new "full-screen element".
+  bool FullScreenStackPush(Element* aElement);
+
+  // Remove the top element from the full-screen stack. Removes the full-screen
+  // styles from the former top element, and applies them to the new top
+  // element, if there is one.
+  void FullScreenStackPop();
 
   /**
    * Called when a frame in a child process has entered fullscreen or when a
@@ -1585,8 +1897,7 @@ public:
    * aFrameElement is the frame element which contains the child-process
    * fullscreen document.
    */
-  virtual nsresult
-    RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement) = 0;
+  nsresult RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement);
 
   /**
    * Called when a frame in a remote child document has rolled back fullscreen
@@ -1597,33 +1908,33 @@ public:
    * fullscreen document has a parent and that parent isn't fullscreen. We
    * preserve this property across process boundaries.
    */
-   virtual nsresult RemoteFrameFullscreenReverted() = 0;
+   nsresult RemoteFrameFullscreenReverted();
 
   /**
    * Restores the previous full-screen element to full-screen status. If there
    * is no former full-screen element, this exits full-screen, moving the
    * top-level browser window out of full-screen mode.
    */
-  virtual void RestorePreviousFullScreenState() = 0;
+  void RestorePreviousFullScreenState();
 
   /**
    * Returns true if this document is a fullscreen leaf document, i.e. it
    * is in fullscreen mode and has no fullscreen children.
    */
-  virtual bool IsFullscreenLeaf() = 0;
+  bool IsFullscreenLeaf();
 
   /**
    * Returns the document which is at the root of this document's branch
    * in the in-process document tree. Returns nullptr if the document isn't
    * fullscreen.
    */
-  virtual nsIDocument* GetFullscreenRoot() = 0;
+  nsIDocument* GetFullscreenRoot();
 
   /**
    * Sets the fullscreen root to aRoot. This stores a weak reference to aRoot
    * in this document.
    */
-  virtual void SetFullscreenRoot(nsIDocument* aRoot) = 0;
+  void SetFullscreenRoot(nsIDocument* aRoot);
 
   /**
    * Synchronously cleans up the fullscreen state on the given document.
@@ -1663,19 +1974,33 @@ public:
    */
   void DispatchFullscreenError(const char* aMessage);
 
-  virtual void RequestPointerLock(Element* aElement,
-                                  mozilla::dom::CallerType aCallerType) = 0;
+  void RequestPointerLock(Element* aElement, mozilla::dom::CallerType);
+  bool SetPointerLock(Element* aElement, int aCursorStyle);
 
   static void UnlockPointer(nsIDocument* aDoc = nullptr);
 
   // ScreenOrientation related APIs
 
-  virtual void SetCurrentOrientation(mozilla::dom::OrientationType aType,
-                                     uint16_t aAngle) = 0;
-  virtual uint16_t CurrentOrientationAngle() const = 0;
-  virtual mozilla::dom::OrientationType CurrentOrientationType() const = 0;
-  virtual void SetOrientationPendingPromise(mozilla::dom::Promise* aPromise) = 0;
-  virtual mozilla::dom::Promise* GetOrientationPendingPromise() const = 0;
+  void SetCurrentOrientation(mozilla::dom::OrientationType aType,
+                             uint16_t aAngle)
+  {
+    mCurrentOrientationType = aType;
+    mCurrentOrientationAngle = aAngle;
+  }
+
+  uint16_t CurrentOrientationAngle() const
+  {
+    return mCurrentOrientationAngle;
+  }
+  mozilla::dom::OrientationType CurrentOrientationType() const
+  {
+    return mCurrentOrientationType;
+  }
+  void SetOrientationPendingPromise(mozilla::dom::Promise* aPromise);
+  mozilla::dom::Promise* GetOrientationPendingPromise() const
+  {
+    return mOrientationPendingPromise;
+  }
 
   //----------------------------------------------------------------------
 
@@ -1706,7 +2031,7 @@ public:
   virtual void EndLoad() = 0;
 
   enum ReadyState { READYSTATE_UNINITIALIZED = 0, READYSTATE_LOADING = 1, READYSTATE_INTERACTIVE = 3, READYSTATE_COMPLETE = 4};
-  virtual void SetReadyStateInternal(ReadyState rs) = 0;
+  void SetReadyStateInternal(ReadyState rs);
   ReadyState GetReadyStateEnum()
   {
     return mReadyState;
@@ -1751,7 +2076,7 @@ public:
    * itself this does nothing. This should only be called with
    * aType >= FlushType::Style.
    */
-  virtual void FlushExternalResources(mozilla::FlushType aType) = 0;
+  void FlushExternalResources(mozilla::FlushType aType);
 
   nsBindingManager* BindingManager() const
   {
@@ -1851,7 +2176,7 @@ public:
     return IsXULDocument() || AllowXULXBL();
   }
 
-  virtual bool IsScriptEnabled() = 0;
+  bool IsScriptEnabled();
 
   bool IsTopLevelContentDocument() const { return mIsTopLevelContentDocument; }
   void SetIsTopLevelContentDocument(bool aIsTopLevelContentDocument)
@@ -1942,7 +2267,7 @@ public:
    * Sanitize the document by resetting all input elements and forms that have
    * autocomplete=off to their default values.
    */
-  virtual void Sanitize() = 0;
+  void Sanitize();
 
   /**
    * Enumerate all subdocuments.
@@ -1950,17 +2275,16 @@ public:
    * false to stop.  This will never get passed a null aDocument.
    */
   typedef bool (*nsSubDocEnumFunc)(nsIDocument *aDocument, void *aData);
-  virtual void EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
-                                     void *aData) = 0;
+  void EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData);
 
   /**
    * Collect all the descendant documents for which |aCalback| returns true.
    * The callback function must not mutate any state for the given document.
    */
   typedef bool (*nsDocTestFunc)(const nsIDocument* aDocument);
-  virtual void CollectDescendantDocuments(
+  void CollectDescendantDocuments(
     nsTArray<nsCOMPtr<nsIDocument>>& aDescendants,
-    nsDocTestFunc aCallback) const = 0;
+    nsDocTestFunc aCallback) const;
 
   /**
    * Check whether it is safe to cache the presentation of this document
@@ -1979,7 +2303,7 @@ public:
    * will be ignored when checking for active requests.  If there is no
    * request associated with the new document, this parameter may be null.
    */
-  virtual bool CanSavePresentation(nsIRequest *aNewRequest) = 0;
+  virtual bool CanSavePresentation(nsIRequest* aNewRequest);
 
   /**
    * Notify the document that its associated ContentViewer is being destroyed.
@@ -2001,7 +2325,7 @@ public:
    * for nodes in this document.  This may return null; if that happens state
    * saving and restoration is not possible.
    */
-  virtual already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const = 0;
+  already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const;
 
   /**
    * Methods that can be used to prevent onload firing while an event that
@@ -2024,7 +2348,7 @@ public:
     ++mBlockDOMContentLoaded;
   }
 
-  virtual void UnblockDOMContentLoaded() = 0;
+  void UnblockDOMContentLoaded();
 
   /**
    * Notification that the page has been shown, for documents which are loaded
@@ -2039,7 +2363,7 @@ public:
    * document won't be altered.
    */
   virtual void OnPageShow(bool aPersisted,
-                          mozilla::dom::EventTarget* aDispatchStartTarget) = 0;
+                          mozilla::dom::EventTarget* aDispatchStartTarget);
 
   /**
    * Notification that the page has been hidden, for documents which are loaded
@@ -2053,8 +2377,8 @@ public:
    * Note: if aDispatchStartTarget isn't null, the showing state of the
    * document won't be altered.
    */
-  virtual void OnPageHide(bool aPersisted,
-                          mozilla::dom::EventTarget* aDispatchStartTarget) = 0;
+  void OnPageHide(bool aPersisted,
+                  mozilla::dom::EventTarget* aDispatchStartTarget);
 
   /*
    * We record the set of links in the document that are relevant to
@@ -2063,29 +2387,50 @@ public:
   /**
    * Notification that an element is a link that is relevant to style.
    */
-  virtual void AddStyleRelevantLink(mozilla::dom::Link* aLink) = 0;
+  void AddStyleRelevantLink(mozilla::dom::Link* aLink)
+  {
+    NS_ASSERTION(aLink, "Passing in a null link.  Expect crashes RSN!");
+#ifdef DEBUG
+    nsPtrHashKey<mozilla::dom::Link>* entry = mStyledLinks.GetEntry(aLink);
+    NS_ASSERTION(!entry, "Document already knows about this Link!");
+    mStyledLinksCleared = false;
+#endif
+    mStyledLinks.PutEntry(aLink);
+  }
+
   /**
    * Notification that an element is a link and its URI might have been
    * changed or the element removed. If the element is still a link relevant
    * to style, then someone must ensure that AddStyleRelevantLink is
    * (eventually) called on it again.
    */
-  virtual void ForgetLink(mozilla::dom::Link* aLink) = 0;
+  void ForgetLink(mozilla::dom::Link* aLink)
+  {
+    NS_ASSERTION(aLink, "Passing in a null link.  Expect crashes RSN!");
+#ifdef DEBUG
+    nsPtrHashKey<mozilla::dom::Link>* entry = mStyledLinks.GetEntry(aLink);
+    NS_ASSERTION(entry || mStyledLinksCleared,
+                 "Document knows nothing about this Link!");
+#endif
+    mStyledLinks.RemoveEntry(aLink);
+  }
+
+  // Refreshes the hrefs of all the links in the document.
+  void RefreshLinkHrefs();
 
   /**
    * Resets and removes a box object from the document's box object cache
    *
    * @param aElement canonical nsIContent pointer of the box object's element
    */
-  virtual void ClearBoxObjectFor(nsIContent *aContent) = 0;
+  void ClearBoxObjectFor(nsIContent* aContent);
 
   /**
    * Get the box object for an element. This is not exposed through a
    * scriptable interface except for XUL documents.
    */
-  virtual already_AddRefed<mozilla::dom::BoxObject>
-    GetBoxObjectFor(mozilla::dom::Element* aElement,
-                    mozilla::ErrorResult& aRv) = 0;
+  already_AddRefed<mozilla::dom::BoxObject>
+    GetBoxObjectFor(mozilla::dom::Element* aElement, mozilla::ErrorResult& aRv);
 
   /**
    * Support for window.matchMedia()
@@ -2110,26 +2455,26 @@ public:
    * Check whether we've ever fired a DOMTitleChanged event for this
    * document.
    */
-  bool HaveFiredDOMTitleChange() const {
+  bool HaveFiredDOMTitleChange() const
+  {
     return mHaveFiredTitleChange;
   }
 
-  virtual Element*
-    GetAnonymousElementByAttribute(nsIContent* aElement,
-                                   nsAtom* aAttrName,
-                                   const nsAString& aAttrValue) const = 0;
+  Element* GetAnonymousElementByAttribute(nsIContent* aElement,
+                                          nsAtom* aAttrName,
+                                          const nsAString& aAttrValue) const;
 
-  virtual nsresult NodesFromRectHelper(float aX, float aY,
-                                       float aTopSize, float aRightSize,
-                                       float aBottomSize, float aLeftSize,
-                                       bool aIgnoreRootScrollFrame,
-                                       bool aFlushLayout,
-                                       nsIDOMNodeList** aReturn) = 0;
+  nsresult NodesFromRectHelper(float aX, float aY,
+                               float aTopSize, float aRightSize,
+                               float aBottomSize, float aLeftSize,
+                               bool aIgnoreRootScrollFrame,
+                               bool aFlushLayout,
+                               nsIDOMNodeList** aReturn);
 
   /**
    * See FlushSkinBindings on nsBindingManager
    */
-  virtual void FlushSkinBindings() = 0;
+  void FlushSkinBindings();
 
   /**
    * To batch DOMSubtreeModified, document needs to be informed when
@@ -2212,12 +2557,12 @@ public:
   void SetCachedEncoder(already_AddRefed<nsIDocumentEncoder> aEncoder);
 
   // In case of failure, the document really can't initialize the frame loader.
-  virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) = 0;
+  nsresult InitializeFrameLoader(nsFrameLoader* aLoader);
   // In case of failure, the caller must handle the error, for example by
   // finalizing frame loader asynchronously.
-  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer) = 0;
+  nsresult FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer);
   // Removes the frame loader of aShell from the initialization list.
-  virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) = 0;
+  void TryCancelFrameLoaderInitialization(nsIDocShell* aShell);
 
   /**
    * Check whether this document is a root document that is not an
@@ -2282,33 +2627,6 @@ public:
   }
 
   /**
-   * A class that represents an external resource load that has begun but
-   * doesn't have a document yet.  Observers can be registered on this object,
-   * and will be notified after the document is created.  Observers registered
-   * after the document has been created will NOT be notified.  When observers
-   * are notified, the subject will be the newly-created document, the topic
-   * will be "external-resource-document-created", and the data will be null.
-   * If document creation fails for some reason, observers will still be
-   * notified, with a null document pointer.
-   */
-  class ExternalResourceLoad : public nsISupports
-  {
-  public:
-    virtual ~ExternalResourceLoad() {}
-
-    void AddObserver(nsIObserver* aObserver) {
-      MOZ_ASSERT(aObserver, "Must have observer");
-      mObservers.AppendElement(aObserver);
-    }
-
-    const nsTArray< nsCOMPtr<nsIObserver> > & Observers() {
-      return mObservers;
-    }
-  protected:
-    AutoTArray< nsCOMPtr<nsIObserver>, 8 > mObservers;
-  };
-
-  /**
    * Request an external resource document for aURI.  This will return the
    * resource document if available.  If one is not available yet, it will
    * start loading as needed, and the pending load object will be returned in
@@ -2321,18 +2639,21 @@ public:
    * @param aRequestingNode the node making the request
    * @param aPendingLoad the pending load for this request, if any
    */
-  virtual nsIDocument*
-    RequestExternalResource(nsIURI* aURI,
-                            nsINode* aRequestingNode,
-                            ExternalResourceLoad** aPendingLoad) = 0;
+  nsIDocument* RequestExternalResource(nsIURI* aURI,
+                                       nsINode* aRequestingNode,
+                                       ExternalResourceLoad** aPendingLoad);
 
   /**
    * Enumerate the external resource documents associated with this document.
    * The enumerator callback should return true to continue enumerating, or
    * false to stop.  This callback will never get passed a null aDocument.
    */
-  virtual void EnumerateExternalResources(nsSubDocEnumFunc aCallback,
-                                          void* aData) = 0;
+  void EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData);
+
+  nsExternalResourceMap& ExternalResourceMap()
+  {
+    return mExternalResourceMap;
+  }
 
   /**
    * Return whether the document is currently showing (in the sense of
@@ -2404,37 +2725,48 @@ public:
   // Getter for this document's SMIL Animation Controller. Performs lazy
   // initialization, if this document supports animation and if
   // mAnimationController isn't yet initialized.
-  virtual nsSMILAnimationController* GetAnimationController() = 0;
+  //
+  // If HasAnimationController is true, this is guaranteed to return non-null.
+  nsSMILAnimationController* GetAnimationController();
 
   // Gets the tracker for animations that are waiting to start.
   // Returns nullptr if there is no pending animation tracker for this document
   // which will be the case if there have never been any CSS animations or
   // transitions on elements in the document.
-  virtual mozilla::PendingAnimationTracker* GetPendingAnimationTracker() = 0;
+  mozilla::PendingAnimationTracker* GetPendingAnimationTracker()
+  {
+    return mPendingAnimationTracker;
+  }
 
   // Gets the tracker for animations that are waiting to start and
   // creates it if it doesn't already exist. As a result, the return value
   // will never be nullptr.
-  virtual mozilla::PendingAnimationTracker*
-  GetOrCreatePendingAnimationTracker() = 0;
+  mozilla::PendingAnimationTracker* GetOrCreatePendingAnimationTracker();
 
   /**
    * Prevents user initiated events from being dispatched to the document and
    * subdocuments.
    */
-  virtual void SuppressEventHandling(uint32_t aIncrease = 1) = 0;
+  void SuppressEventHandling(uint32_t aIncrease = 1);
 
   /**
    * Unsuppress event handling.
    * @param aFireEvents If true, delayed events (focus/blur) will be fired
    *                    asynchronously.
    */
-  virtual void UnsuppressEventHandlingAndFireEvents(bool aFireEvents) = 0;
+  void UnsuppressEventHandlingAndFireEvents(bool aFireEvents);
 
   uint32_t EventHandlingSuppressed() const { return mEventsSuppressed; }
 
   bool IsEventHandlingEnabled() {
     return !EventHandlingSuppressed() && mScriptGlobalObject;
+  }
+
+  void DecreaseEventSuppression()
+  {
+    MOZ_ASSERT(mEventsSuppressed);
+    --mEventsSuppressed;
+    UpdateFrameRequestCallbackSchedulingState();
   }
 
   /**
@@ -2467,7 +2799,7 @@ public:
    * Returns the template content owner document that owns the content of
    * HTMLTemplateElement.
    */
-  virtual nsIDocument* GetTemplateContentsOwner() = 0;
+  nsIDocument* GetTemplateContentsOwner();
 
   /**
    * Returns true if this document is a static clone of a normal document.
@@ -2522,14 +2854,17 @@ public:
    * ResolvePreLoadImage.
    */
 
-  virtual void PreloadPictureOpened() = 0;
+  void PreloadPictureOpened()
+  {
+    mPreloadPictureDepth++;
+  }
 
-  virtual void PreloadPictureClosed() = 0;
+  void PreloadPictureClosed();
 
-  virtual void PreloadPictureImageSource(const nsAString& aSrcsetAttr,
-                                         const nsAString& aSizesAttr,
-                                         const nsAString& aTypeAttr,
-                                         const nsAString& aMediaAttr) = 0;
+  void PreloadPictureImageSource(const nsAString& aSrcsetAttr,
+                                 const nsAString& aSizesAttr,
+                                 const nsAString& aTypeAttr,
+                                 const nsAString& aMediaAttr);
 
   /**
    * Called by the parser to resolve an image for preloading. The parser will
@@ -2540,12 +2875,12 @@ public:
    * If this image is for <picture> or <img srcset>, aIsImgSet will be set to
    * true, false otherwise.
    */
-  virtual already_AddRefed<nsIURI>
-    ResolvePreloadImage(nsIURI *aBaseURI,
-                        const nsAString& aSrcAttr,
-                        const nsAString& aSrcsetAttr,
-                        const nsAString& aSizesAttr,
-                        bool *aIsImgSet) = 0;
+  already_AddRefed<nsIURI>
+  ResolvePreloadImage(nsIURI *aBaseURI,
+                      const nsAString& aSrcAttr,
+                      const nsAString& aSrcsetAttr,
+                      const nsAString& aSizesAttr,
+                      bool *aIsImgSet);
   /**
    * Called by nsParser to preload images. Can be removed and code moved
    * to nsPreloadURIs::PreloadURIs() in file nsParser.cpp whenever the
@@ -2554,16 +2889,16 @@ public:
    * aIsImgSet is the value got from calling ResolvePreloadImage, it is true
    * when this image is for loading <picture> or <img srcset> images.
    */
-  virtual void MaybePreLoadImage(nsIURI* uri,
-                                 const nsAString& aCrossOriginAttr,
-                                 ReferrerPolicyEnum aReferrerPolicy,
-                                 bool aIsImgSet) = 0;
+  void MaybePreLoadImage(nsIURI* uri,
+                         const nsAString& aCrossOriginAttr,
+                         ReferrerPolicyEnum aReferrerPolicy,
+                         bool aIsImgSet);
 
   /**
    * Called by images to forget an image preload when they start doing
    * the real load.
    */
-  virtual void ForgetImagePreload(nsIURI* aURI) = 0;
+  void ForgetImagePreload(nsIURI* aURI);
 
   /**
    * Called by nsParser to preload style sheets.  Can also be merged into the
@@ -2599,7 +2934,7 @@ public:
   /**
    * Called by Parser for link rel=preconnect
    */
-  virtual void MaybePreconnect(nsIURI* uri, mozilla::CORSMode aCORSMode) = 0;
+  void MaybePreconnect(nsIURI* uri, mozilla::CORSMode aCORSMode);
 
   enum DocumentTheme {
     Doc_Theme_Uninitialized, // not determined yet
@@ -2634,15 +2969,22 @@ public:
     return mDocumentState;
   }
 
-  virtual nsISupports* GetCurrentContentSink() = 0;
+  nsISupports* GetCurrentContentSink();
 
-  virtual void SetAutoFocusElement(Element* aAutoFocusElement) = 0;
-  virtual void TriggerAutoFocus() = 0;
+  void SetAutoFocusElement(Element* aAutoFocusElement);
+  void TriggerAutoFocus();
 
-  virtual void SetScrollToRef(nsIURI *aDocumentURI) = 0;
-  virtual void ScrollToRef() = 0;
-  virtual void ResetScrolledToRefAlready() = 0;
-  virtual void SetChangeScrollPosWhenScrollingToRef(bool aValue) = 0;
+  void SetScrollToRef(nsIURI* aDocumentURI);
+  void ScrollToRef();
+  void ResetScrolledToRefAlready()
+  {
+    mScrolledToRefAlready = false;
+  }
+
+  void SetChangeScrollPosWhenScrollingToRef(bool aValue)
+  {
+    mChangeScrollPosWhenScrollingToRef = aValue;
+  }
 
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
@@ -2656,13 +2998,15 @@ public:
    * @param aId the ID associated the element we want to lookup
    * @return the element associated with |aId|
    */
-  virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
+  Element* LookupImageElement(const nsAString& aElementId);
 
-  virtual mozilla::dom::DocumentTimeline* Timeline() = 0;
-  virtual mozilla::LinkedList<mozilla::dom::DocumentTimeline>& Timelines() = 0;
+  mozilla::dom::DocumentTimeline* Timeline();
+  mozilla::LinkedList<mozilla::dom::DocumentTimeline>& Timelines()
+  {
+    return mTimelines;
+  }
 
-  virtual void GetAnimations(
-      nsTArray<RefPtr<mozilla::dom::Animation>>& aAnimations) = 0;
+  void GetAnimations(nsTArray<RefPtr<mozilla::dom::Animation>>& aAnimations);
 
   mozilla::dom::SVGSVGElement* GetSVGRootElement() const;
 
@@ -2689,21 +3033,56 @@ public:
 
   mozilla::dom::ImageTracker* ImageTracker();
 
-  virtual nsresult AddPlugin(nsIObjectLoadingContent* aPlugin) = 0;
-  virtual void RemovePlugin(nsIObjectLoadingContent* aPlugin) = 0;
-  virtual void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) = 0;
+  // AddPlugin adds a plugin-related element to mPlugins when the element is
+  // added to the tree.
+  void AddPlugin(nsIObjectLoadingContent* aPlugin)
+  {
+    MOZ_ASSERT(aPlugin);
+    mPlugins.PutEntry(aPlugin);
+  }
 
-  virtual nsresult AddResponsiveContent(nsIContent* aContent) = 0;
-  virtual void RemoveResponsiveContent(nsIContent* aContent) = 0;
-  virtual void NotifyMediaFeatureValuesChanged() = 0;
+  // RemovePlugin removes a plugin-related element to mPlugins when the
+  // element is removed from the tree.
+  void RemovePlugin(nsIObjectLoadingContent* aPlugin)
+  {
+    MOZ_ASSERT(aPlugin);
+    mPlugins.RemoveEntry(aPlugin);
+  }
 
-  virtual nsresult GetStateObject(nsIVariant** aResult) = 0;
+  // GetPlugins returns the plugin-related elements from
+  // the frame and any subframes.
+  void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins);
 
-  virtual nsDOMNavigationTiming* GetNavigationTiming() const = 0;
+  // Adds an element to mResponsiveContent when the element is
+  // added to the tree.
+  void AddResponsiveContent(mozilla::dom::HTMLImageElement* aContent)
+  {
+    MOZ_ASSERT(aContent);
+    mResponsiveContent.PutEntry(aContent);
+  }
 
-  virtual nsresult SetNavigationTiming(nsDOMNavigationTiming* aTiming) = 0;
+  // Removes an element from mResponsiveContent when the element is
+  // removed from the tree.
+  void RemoveResponsiveContent(mozilla::dom::HTMLImageElement* aContent)
+  {
+    MOZ_ASSERT(aContent);
+    mResponsiveContent.RemoveEntry(aContent);
+  }
 
-  virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
+  // Notifies any responsive content added by AddResponsiveContent upon media
+  // features values changing.
+  void NotifyMediaFeatureValuesChanged();
+
+  nsresult GetStateObject(nsIVariant** aResult);
+
+  nsDOMNavigationTiming* GetNavigationTiming() const
+  {
+    return mTiming;
+  }
+
+  void SetNavigationTiming(nsDOMNavigationTiming* aTiming);
+
+  Element* FindImageMap(const nsAString& aNormalizedMapName);
 
   // Add aLink to the set of links that need their status resolved.
   void RegisterPendingLinkUpdate(mozilla::dom::Link* aLink);
@@ -2748,7 +3127,8 @@ public:
                      const char16_t **aParams = nullptr,
                      uint32_t aParamsLength = 0) const;
 
-  virtual void PostVisibilityUpdateEvent() = 0;
+  // Posts an event to call UpdateVisibilityState
+  void PostVisibilityUpdateEvent();
 
   bool IsSyntheticDocument() const { return mIsSyntheticDocument; }
 
@@ -2815,8 +3195,7 @@ public:
   static already_AddRefed<nsIDocument>
     Constructor(const GlobalObject& aGlobal,
                 mozilla::ErrorResult& rv);
-  virtual mozilla::dom::DOMImplementation*
-    GetImplementation(mozilla::ErrorResult& rv) = 0;
+  mozilla::dom::DOMImplementation* GetImplementation(mozilla::ErrorResult& rv);
   MOZ_MUST_USE nsresult GetURL(nsString& retval) const;
   MOZ_MUST_USE nsresult GetDocumentURI(nsString& retval) const;
   // Return the URI for the document.
@@ -2844,15 +3223,15 @@ public:
 
   nsIDocument* GetTopLevelContentDocument();
 
-  virtual already_AddRefed<Element>
-    CreateElement(const nsAString& aTagName,
+  already_AddRefed<Element>
+  CreateElement(const nsAString& aTagName,
+                const mozilla::dom::ElementCreationOptionsOrString& aOptions,
+                mozilla::ErrorResult& rv);
+  already_AddRefed<Element>
+  CreateElementNS(const nsAString& aNamespaceURI,
+                  const nsAString& aQualifiedName,
                   const mozilla::dom::ElementCreationOptionsOrString& aOptions,
-                  mozilla::ErrorResult& rv) = 0;
-  virtual already_AddRefed<Element>
-    CreateElementNS(const nsAString& aNamespaceURI,
-                    const nsAString& aQualifiedName,
-                    const mozilla::dom::ElementCreationOptionsOrString& aOptions,
-                    mozilla::ErrorResult& rv) = 0;
+                  mozilla::ErrorResult& rv);
   already_AddRefed<mozilla::dom::DocumentFragment>
     CreateDocumentFragment() const;
   already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData) const;
@@ -2897,8 +3276,8 @@ public:
   already_AddRefed<mozilla::dom::AboutCapabilities> GetAboutCapabilities(
     ErrorResult& aRv);
 
-  virtual void GetTitle(nsAString& aTitle) = 0;
-  virtual void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv) = 0;
+  void GetTitle(nsAString& aTitle);
+  void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv);
   void GetDir(nsAString& aDirection) const;
   void SetDir(const nsAString& aDirection);
   already_AddRefed<nsContentList> GetElementsByName(const nsAString& aName)
@@ -2924,12 +3303,11 @@ public:
   }
   Element* GetCurrentScript();
   void ReleaseCapture() const;
-  virtual void MozSetImageElement(const nsAString& aImageElementId,
-                                  Element* aElement) = 0;
+  void MozSetImageElement(const nsAString& aImageElementId, Element* aElement);
   nsIURI* GetDocumentURIObject() const;
   // Not const because all the full-screen goop is not const
-  virtual bool FullscreenEnabled(mozilla::dom::CallerType aCallerType) = 0;
-  virtual Element* FullScreenStackTop() = 0;
+  bool FullscreenEnabled(mozilla::dom::CallerType aCallerType);
+  Element* FullScreenStackTop();
   bool Fullscreen()
   {
     return !!GetFullscreenElement();
@@ -3115,19 +3493,30 @@ public:
 
   mozilla::dom::DocGroup* GetDocGroup() const;
 
-  virtual void AddIntersectionObserver(
-    mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
-  virtual void RemoveIntersectionObserver(
-    mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
+  void AddIntersectionObserver(mozilla::dom::DOMIntersectionObserver* aObserver)
+  {
+    MOZ_ASSERT(!mIntersectionObservers.Contains(aObserver),
+               "Intersection observer already in the list");
+    mIntersectionObservers.PutEntry(aObserver);
+  }
 
-  virtual void UpdateIntersectionObservations() = 0;
-  virtual void ScheduleIntersectionObserverNotification() = 0;
-  virtual void NotifyIntersectionObservers() = 0;
-  virtual bool HasIntersectionObservers() const = 0;
+  void RemoveIntersectionObserver(mozilla::dom::DOMIntersectionObserver* aObserver)
+  {
+    mIntersectionObservers.RemoveEntry(aObserver);
+  }
+
+  bool HasIntersectionObservers() const
+  {
+    return !mIntersectionObservers.IsEmpty();
+  }
+
+  void UpdateIntersectionObservations();
+  void ScheduleIntersectionObserverNotification();
+  void NotifyIntersectionObservers();
 
   // Dispatch a runnable related to the document.
-  virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
-                            already_AddRefed<nsIRunnable>&& aRunnable) override;
+  nsresult Dispatch(mozilla::TaskCategory aCategory,
+                    already_AddRefed<nsIRunnable>&& aRunnable) final;
 
   virtual nsISerialEventTarget*
   EventTargetFor(mozilla::TaskCategory aCategory) const override;
@@ -3143,8 +3532,8 @@ public:
 
   // For more information on Flash classification, see
   // toolkit/components/url-classifier/flash-block-lists.rst
-  virtual mozilla::dom::FlashClassification DocumentFlashClassification() = 0;
-  virtual bool IsThirdParty() = 0;
+  mozilla::dom::FlashClassification DocumentFlashClassification();
+  bool IsThirdParty();
 
   bool IsScopedStyleEnabled();
 
@@ -3201,8 +3590,15 @@ public:
     --mIgnoreOpensDuringUnloadCounter;
   }
 
-  virtual bool AllowPaymentRequest() const = 0;
-  virtual void SetAllowPaymentRequest(bool aAllowPaymentRequest) = 0;
+  bool AllowPaymentRequest() const
+  {
+    return mAllowPaymentRequest;
+  }
+
+  void SetAllowPaymentRequest(bool aAllowPaymentRequest)
+  {
+    mAllowPaymentRequest = aAllowPaymentRequest;
+  }
 
   bool IsShadowDOMEnabled() const
   {
@@ -3222,6 +3618,47 @@ public:
   nsIContent* GetContentInThisDocument(nsIFrame* aFrame) const;
 
 protected:
+
+  bool ContainsEMEContent();
+  bool ContainsMSEContent();
+
+  void MaybeInitializeFinalizeFrameLoaders();
+
+  /**
+   * Returns the title element of the document as defined by the HTML
+   * specification, or null if there isn't one.  For documents whose root
+   * element is an <svg:svg>, this is the first <svg:title> element that's a
+   * child of the root.  For other documents, it's the first HTML title element
+   * in the document.
+   */
+  Element* GetTitleElement();
+
+  // Retrieves the classification of the Flash plugins in the document based on
+  // the classification lists.
+  mozilla::dom::FlashClassification PrincipalFlashClassification();
+
+  // Attempts to determine the Flash classification of this page based on the
+  // the classification lists and the classification of parent documents.
+  mozilla::dom::FlashClassification ComputeFlashClassification();
+
+  void RecordNavigationTiming(ReadyState aReadyState);
+
+  // This method may fire a DOM event; if it does so it will happen
+  // synchronously.
+  void UpdateVisibilityState();
+
+  // Recomputes the visibility state but doesn't set the new value.
+  mozilla::dom::VisibilityState ComputeVisibilityState() const;
+
+  // Since we wouldn't automatically play media from non-visited page, we need
+  // to notify window when the page was first visited.
+  void MaybeActiveMediaComponents();
+
+  // Apply the fullscreen state to the document, and trigger related
+  // events. It returns false if the fullscreen element ready check
+  // fails and nothing gets changed.
+  bool ApplyFullscreen(const FullscreenRequest& aRequest);
+
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
     return mUseCounters[aUseCounter];
@@ -3290,21 +3727,21 @@ protected:
   nsPropertyTable* GetExtraPropertyTable(uint16_t aCategory);
 
   // Never ever call this. Only call GetWindow!
-  virtual nsPIDOMWindowOuter* GetWindowInternal() const = 0;
+  nsPIDOMWindowOuter* GetWindowInternal() const;
 
   // Never ever call this. Only call GetScriptHandlingObject!
-  virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const = 0;
+  nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const;
 
   // Never ever call this. Only call AllowXULXBL!
-  virtual bool InternalAllowXULXBL() = 0;
+  bool InternalAllowXULXBL();
 
   /**
    * These methods should be called before and after dispatching
    * a mutation event.
    * To make this easy and painless, use the mozAutoSubtreeModified helper class.
    */
-  virtual void WillDispatchMutationEvent(nsINode* aTarget) = 0;
-  virtual void MutationEventDispatched(nsINode* aTarget) = 0;
+  void WillDispatchMutationEvent(nsINode* aTarget);
+  void MutationEventDispatched(nsINode* aTarget);
   friend class mozAutoSubtreeModified;
 
   virtual Element* GetNameSpaceElement() override
@@ -3403,6 +3840,15 @@ protected:
   // These are non-owning pointers, the elements are responsible for removing
   // themselves when they go away.
   nsAutoPtr<nsTHashtable<nsPtrHashKey<nsISupports> > > mActivityObservers;
+
+  // A hashtable of styled links keyed by address pointer.
+  nsTHashtable<nsPtrHashKey<mozilla::dom::Link>> mStyledLinks;
+#ifdef DEBUG
+  // Indicates whether mStyledLinks was cleared or not.  This is used to track
+  // state so we can provide useful assertions to consumers of ForgetLink and
+  // AddStyleRelevantLink.
+  bool mStyledLinksCleared;
+#endif
 
   // The array of all links that need their status resolved.  Links must add themselves
   // to this set by calling RegisterPendingLinkUpdate when added to a document.
@@ -3637,9 +4083,33 @@ protected:
   // 'style-sheet-applicable-state-changed' notification.
   bool mSSApplicableStateNotificationPending: 1;
 
+  // True if this document has ever had an HTML or SVG <title> element
+  // bound to it
+  bool mMayHaveTitleElement: 1;
+
+  bool mDOMLoadingSet: 1;
+  bool mDOMInteractiveSet: 1;
+  bool mDOMCompleteSet: 1;
+  bool mAutoFocusFired: 1;
+
+  bool mScrolledToRefAlready : 1;
+  bool mChangeScrollPosWhenScrollingToRef : 1;
+
+  bool mHasWarnedAboutBoxObjects: 1;
+
+  bool mDelayFrameLoaderInitialization: 1;
+
+  bool mSynchronousDOMContentLoaded: 1;
+
+  // Set to true when the document is possibly controlled by the ServiceWorker.
+  // Used to prevent multiple requests to ServiceWorkerManager.
+  bool mMaybeServiceWorkerControlled: 1;
+
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
   unsigned int mIsScopedStyleEnabled : 2;
+
+  uint8_t mPendingFullscreenRequests;
 
   // Compatibility mode
   nsCompatibility mCompatMode;
@@ -3725,7 +4195,24 @@ protected:
   nsIPresShell* mPresShell;
 
   nsCOMArray<nsINode> mSubtreeModifiedTargets;
-  uint32_t            mSubtreeModifiedDepth;
+  uint32_t mSubtreeModifiedDepth;
+
+  // All images in process of being preloaded.  This is a hashtable so
+  // we can remove them as the real image loads start; that way we
+  // make sure to not keep the image load going when no one cares
+  // about it anymore.
+  nsRefPtrHashtable<nsURIHashKey, imgIRequest> mPreloadingImages;
+
+  // A list of preconnects initiated by the preloader. This prevents
+  // the same uri from being used more than once, and allows the dom
+  // builder to not repeat the work of the preloader.
+  nsDataHashtable<nsURIHashKey, bool> mPreloadedPreconnects;
+
+  // Current depth of picture elements from parser
+  uint32_t mPreloadPictureDepth;
+
+  // Set if we've found a URL for the current picture
+  nsString mPreloadPictureFoundSource;
 
   // If we're an external resource document, this will be non-null and will
   // point to our "display document": the one that all resource lookups should
@@ -3838,6 +4325,102 @@ protected:
 
   // Our update nesting level
   uint32_t mUpdateNestLevel;
+
+  enum ViewportType {
+    DisplayWidthHeight,
+    Specified,
+    Unknown
+  };
+
+  ViewportType mViewportType;
+
+  PLDHashTable* mSubDocuments;
+
+  nsDocHeaderData* mHeaderData;
+
+  RefPtr<PrincipalFlashClassifier> mPrincipalFlashClassifier;
+  mozilla::dom::FlashClassification mFlashClassification;
+  // Do not use this value directly. Call the |IsThirdParty()| method, which
+  // caches its result here.
+  mozilla::Maybe<bool> mIsThirdParty;
+
+  nsRevocableEventPtr<nsRunnableMethod<nsIDocument, void, false>>
+    mPendingTitleChangeEvent;
+
+  RefPtr<nsDOMNavigationTiming> mTiming;
+
+  // Recorded time of change to 'loading' state.
+  mozilla::TimeStamp mLoadingTimeStamp;
+
+  nsWeakPtr mAutoFocusElement;
+
+  nsCString mScrollToRef;
+
+  // Weak reference to the scope object (aka the script global object)
+  // that, unlike mScriptGlobalObject, is never unset once set. This
+  // is a weak reference to avoid leaks due to circular references.
+  nsWeakPtr mScopeObject;
+
+  // Array of intersection observers
+  nsTHashtable<nsPtrHashKey<mozilla::dom::DOMIntersectionObserver>>
+    mIntersectionObservers;
+
+  // Stack of full-screen elements. When we request full-screen we push the
+  // full-screen element onto this stack, and when we cancel full-screen we
+  // pop one off this stack, restoring the previous full-screen state
+  nsTArray<nsWeakPtr> mFullScreenStack;
+
+  // The root of the doc tree in which this document is in. This is only
+  // non-null when this document is in fullscreen mode.
+  nsWeakPtr mFullscreenRoot;
+
+  RefPtr<mozilla::dom::DOMImplementation> mDOMImplementation;
+
+  RefPtr<nsContentList> mImageMaps;
+
+  // A set of responsive images keyed by address pointer.
+  nsTHashtable<nsPtrHashKey<mozilla::dom::HTMLImageElement>> mResponsiveContent;
+
+  // Tracking for plugins in the document.
+  nsTHashtable<nsPtrHashKey<nsIObjectLoadingContent>> mPlugins;
+
+  // Array of owning references to all children
+  nsAttrAndChildArray mChildren;
+
+  RefPtr<mozilla::dom::DocumentTimeline> mDocumentTimeline;
+  mozilla::LinkedList<mozilla::dom::DocumentTimeline> mTimelines;
+
+  RefPtr<mozilla::dom::ScriptLoader> mScriptLoader;
+
+  nsRefPtrHashtable<nsPtrHashKey<nsIContent>, mozilla::dom::BoxObject>*
+    mBoxObjectTable;
+
+  // Tracker for animations that are waiting to start.
+  // nullptr until GetOrCreatePendingAnimationTracker is called.
+  RefPtr<mozilla::PendingAnimationTracker> mPendingAnimationTracker;
+
+  // A document "without a browsing context" that owns the content of
+  // HTMLTemplateElement.
+  nsCOMPtr<nsIDocument> mTemplateContentsOwner;
+
+  nsExternalResourceMap mExternalResourceMap;
+
+  // ScreenOrientation "pending promise" as described by
+  // http://www.w3.org/TR/screen-orientation/
+  RefPtr<mozilla::dom::Promise> mOrientationPendingPromise;
+
+  uint16_t mCurrentOrientationAngle;
+  mozilla::dom::OrientationType mCurrentOrientationType;
+
+  nsTArray<RefPtr<nsFrameLoader>> mInitializableFrameLoaders;
+  nsTArray<nsCOMPtr<nsIRunnable>> mFrameLoaderFinalizers;
+  RefPtr<nsRunnableMethod<nsIDocument>> mFrameLoaderRunner;
+
+  // The layout history state that should be used by nodes in this
+  // document.  We only actually store a pointer to it when:
+  // 1)  We have no script global object.
+  // 2)  We haven't had Destroy() called on us yet.
+  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];

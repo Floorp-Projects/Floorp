@@ -520,7 +520,7 @@ var BrowserApp = {
     GlobalEventDispatcher.sendRequest({ type: "Gecko:Ready" });
 
     this.deck.addEventListener("DOMContentLoaded", function() {
-      InitLater(() => ChromeUtils.import("resource://gre/modules/NotificationDB.jsm"));
+      ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
 
       InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished"));
       InitLater(() => GlobalEventDispatcher.sendRequest({ type: "Gecko:DelayedStartup" }));

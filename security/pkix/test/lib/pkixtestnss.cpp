@@ -80,15 +80,15 @@ InitReusedKeyPair()
 class NSSTestKeyPair final : public TestKeyPair
 {
 public:
-  NSSTestKeyPair(const TestPublicKeyAlgorithm& publicKeyAlg,
+  NSSTestKeyPair(const TestPublicKeyAlgorithm& aPublicKeyAlg,
                  const ByteString& spk,
-                 const ByteString& encryptedPrivateKey,
-                 const ByteString& encryptionAlgorithm,
-                 const ByteString& encryptionParams)
-    : TestKeyPair(publicKeyAlg, spk)
-    , encryptedPrivateKey(encryptedPrivateKey)
-    , encryptionAlgorithm(encryptionAlgorithm)
-    , encryptionParams(encryptionParams)
+                 const ByteString& aEncryptedPrivateKey,
+                 const ByteString& aEncryptionAlgorithm,
+                 const ByteString& aEncryptionParams)
+    : TestKeyPair(aPublicKeyAlg, spk)
+    , encryptedPrivateKey(aEncryptedPrivateKey)
+    , encryptionAlgorithm(aEncryptionAlgorithm)
+    , encryptionParams(aEncryptionParams)
   {
   }
 

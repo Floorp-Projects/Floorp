@@ -34,11 +34,3 @@ include('warnings.mozbuild')
 Library('mozillapkix')
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
-
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    # This is intended as a temporary hack to support building with VS2015.
-    # declaration of '*' hides class member
-    CXXFLAGS += ['-wd4458']

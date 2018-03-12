@@ -1002,21 +1002,21 @@ var ViewMenu = {
    *          null if the caller should just append to the popup.
    */
   _clean: function VM__clean(popup, startID, endID) {
-    if (endID)
-      NS_ASSERT(startID, "meaningless to have valid endID and null startID");
+    if (endID && !startID)
+      throw new Error("meaningless to have valid endID and null startID");
     if (startID) {
       var startElement = document.getElementById(startID);
-      NS_ASSERT(startElement.parentNode ==
-                popup, "startElement is not in popup");
-      NS_ASSERT(startElement,
-                "startID does not correspond to an existing element");
+      if (startElement.parentNode != popup)
+        throw new Error("startElement is not in popup");
+      if (!startElement)
+        throw new Error("startID does not correspond to an existing element");
       var endElement = null;
       if (endID) {
         endElement = document.getElementById(endID);
-        NS_ASSERT(endElement.parentNode == popup,
-                  "endElement is not in popup");
-        NS_ASSERT(endElement,
-                  "endID does not correspond to an existing element");
+        if (endElement.parentNode != popup)
+          throw new Error("endElement is not in popup");
+        if (!endElement)
+          throw new Error("endID does not correspond to an existing element");
       }
       while (startElement.nextSibling != endElement)
         popup.removeChild(startElement.nextSibling);

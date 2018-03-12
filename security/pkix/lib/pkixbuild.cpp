@@ -46,19 +46,19 @@ TrustDomain::IssuerChecker::~IssuerChecker() { }
 class PathBuildingStep final : public TrustDomain::IssuerChecker
 {
 public:
-  PathBuildingStep(TrustDomain& trustDomain, const BackCert& subject,
-                   Time time, KeyPurposeId requiredEKUIfPresent,
-                   const CertPolicyId& requiredPolicy,
-                   /*optional*/ const Input* stapledOCSPResponse,
-                   unsigned int subCACount, Result deferredSubjectError)
-    : trustDomain(trustDomain)
-    , subject(subject)
-    , time(time)
-    , requiredEKUIfPresent(requiredEKUIfPresent)
-    , requiredPolicy(requiredPolicy)
-    , stapledOCSPResponse(stapledOCSPResponse)
-    , subCACount(subCACount)
-    , deferredSubjectError(deferredSubjectError)
+  PathBuildingStep(TrustDomain& aTrustDomain, const BackCert& aSubject,
+                   Time aTime, KeyPurposeId aRequiredEKUIfPresent,
+                   const CertPolicyId& aRequiredPolicy,
+                   /*optional*/ const Input* aStapledOCSPResponse,
+                   unsigned int aSubCACount, Result aDeferredSubjectError)
+    : trustDomain(aTrustDomain)
+    , subject(aSubject)
+    , time(aTime)
+    , requiredEKUIfPresent(aRequiredEKUIfPresent)
+    , requiredPolicy(aRequiredPolicy)
+    , stapledOCSPResponse(aStapledOCSPResponse)
+    , subCACount(aSubCACount)
+    , deferredSubjectError(aDeferredSubjectError)
     , result(Result::FATAL_ERROR_LIBRARY_FAILURE)
     , resultWasSet(false)
   {

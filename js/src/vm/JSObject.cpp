@@ -18,13 +18,13 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsarray.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/Array.h"
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/String.h"
@@ -52,8 +52,7 @@
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsboolinlines.h"
-
+#include "builtin/Boolean-inl.h"
 #include "builtin/TypedObject-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/ArrayObject-inl.h"

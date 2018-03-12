@@ -146,7 +146,7 @@ PluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject
 
 
 bool
-PluginDocument::CanSavePresentation(nsIRequest *aNewRequest)
+PluginDocument::CanSavePresentation(nsIRequest* aNewRequest)
 {
   // Full-page plugins cannot be cached, currently, because we don't have
   // the stream listener data to feed to the plugin instance.
