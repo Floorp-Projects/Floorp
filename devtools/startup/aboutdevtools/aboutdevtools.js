@@ -28,10 +28,10 @@ const GA_PARAMETERS = [
   ["utm_medium", "onboarding"],
 ];
 
-const ABOUTDEVTOOLS_STRINGS = "chrome://devtools-shim/locale/aboutdevtools.properties";
+const ABOUTDEVTOOLS_STRINGS = "chrome://devtools-startup/locale/aboutdevtools.properties";
 const aboutDevtoolsBundle = Services.strings.createBundle(ABOUTDEVTOOLS_STRINGS);
 
-const KEY_SHORTCUTS_STRINGS = "chrome://devtools-shim/locale/key-shortcuts.properties";
+const KEY_SHORTCUTS_STRINGS = "chrome://devtools-startup/locale/key-shortcuts.properties";
 const keyShortcutsBundle = Services.strings.createBundle(KEY_SHORTCUTS_STRINGS);
 
 // URL constructor doesn't support about: scheme,
@@ -86,47 +86,47 @@ function updatePage() {
  */
 const features = [
   {
-    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-inspector.svg",
+    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-inspector.svg",
     title: "features.inspector.title",
     desc: "features.inspector.desc",
     link: "https://developer.mozilla.org/docs/Tools/Page_Inspector",
   }, {
-    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-console.svg",
+    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-console.svg",
     title: "features.console.title",
     desc: "features.console.desc",
     link: "https://developer.mozilla.org/docs/Tools/Web_Console",
   }, {
-    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-debugger.svg",
+    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-debugger.svg",
     title: "features.debugger.title",
     desc: "features.debugger.desc",
     link: "https://developer.mozilla.org/docs/Tools/Debugger",
   }, {
-    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-network.svg",
+    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-network.svg",
     title: "features.network.title",
     desc: "features.network.desc",
     link: "https://developer.mozilla.org/docs/Tools/Network_Monitor",
   }, {
-    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-storage.svg",
+    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-storage.svg",
     title: "features.storage.title",
     desc: "features.storage.desc",
     link: "https://developer.mozilla.org/docs/Tools/Storage_Inspector",
   }, {
-    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-responsive.svg",
+    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-responsive.svg",
     title: "features.responsive.title",
     desc: "features.responsive.desc",
     link: "https://developer.mozilla.org/docs/Tools/Responsive_Design_Mode",
   }, {
-    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-visualediting.svg",
+    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-visualediting.svg",
     title: "features.visualediting.title",
     desc: "features.visualediting.desc",
     link: "https://developer.mozilla.org/docs/Tools/Style_Editor",
   }, {
-    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-performance.svg",
+    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-performance.svg",
     title: "features.performance.title",
     desc: "features.performance.desc",
     link: "https://developer.mozilla.org/docs/Tools/Performance",
   }, {
-    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-memory.svg",
+    icon: "chrome://devtools-startup/content/aboutdevtools/images/feature-memory.svg",
     title: "features.memory.title",
     desc: "features.memory.desc",
     link: "https://developer.mozilla.org/docs/Tools/Memory",

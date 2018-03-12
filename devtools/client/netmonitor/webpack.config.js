@@ -92,7 +92,7 @@ let webpackConfig = {
       // Locales need to be explicitly mapped to the en-US subfolder
       "devtools/client/locales": path.join(__dirname, "../../client/locales/en-US"),
       "devtools/shared/locales": path.join(__dirname, "../../shared/locales/en-US"),
-      "devtools/shim/locales": path.join(__dirname, "../../shared/locales/en-US"),
+      "devtools/startup/locales": path.join(__dirname, "../../shared/locales/en-US"),
       "toolkit/locales": path.join(__dirname, "../../../toolkit/locales/en-US"),
 
       // Unless a path explicitly needs to be rewritten or shimmed, all devtools paths can

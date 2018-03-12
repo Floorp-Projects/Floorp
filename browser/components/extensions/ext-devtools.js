@@ -14,7 +14,7 @@
  */
 
 ChromeUtils.defineModuleGetter(this, "DevToolsShim",
-                               "chrome://devtools-shim/content/DevToolsShim.jsm");
+                               "chrome://devtools-startup/content/DevToolsShim.jsm");
 
 ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 

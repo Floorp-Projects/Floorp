@@ -45,12 +45,12 @@ ChromeUtils.defineModuleGetter(this, "CustomizableWidgets",
                                "resource:///modules/CustomizableWidgets.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "StartupBundle", function() {
-  const url = "chrome://devtools-shim/locale/startup.properties";
+  const url = "chrome://devtools-startup/locale/startup.properties";
   return Services.strings.createBundle(url);
 });
 
 XPCOMUtils.defineLazyGetter(this, "KeyShortcutsBundle", function() {
-  const url = "chrome://devtools-shim/locale/key-shortcuts.properties";
+  const url = "chrome://devtools-startup/locale/key-shortcuts.properties";
   return Services.strings.createBundle(url);
 });
 
