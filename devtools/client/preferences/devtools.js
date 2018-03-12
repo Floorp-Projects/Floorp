@@ -82,6 +82,8 @@ pref("devtools.gridinspector.showGridAreas", false);
 pref("devtools.gridinspector.showGridLineNumbers", false);
 pref("devtools.gridinspector.showInfiniteLines", false);
 
+// Whether or not the box model panel is opened in the computed view
+pref("devtools.computed.boxmodel.opened", true);
 // Whether or not the box model panel is opened in the layout view
 pref("devtools.layout.boxmodel.opened", true);
 // Whether or not the flexbox panel is opened in the layout view

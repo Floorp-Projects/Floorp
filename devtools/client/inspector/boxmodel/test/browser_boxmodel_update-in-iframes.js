@@ -9,20 +9,20 @@
 
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
-  let {inspector, boxmodel, testActor} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openBoxModelView();
 
-  yield testResizingInIframe(inspector, boxmodel, testActor);
-  yield testReflowsAfterIframeDeletion(inspector, boxmodel, testActor);
+  yield testResizingInIframe(inspector, view, testActor);
+  yield testReflowsAfterIframeDeletion(inspector, view, testActor);
 });
 
-function* testResizingInIframe(inspector, boxmodel, testActor) {
+function* testResizingInIframe(inspector, view, testActor) {
   info("Test that resizing an element in an iframe updates its box model");
 
   info("Selecting the nested test node");
   yield selectNodeInIframe2("div", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
+  let sizeElt = view.document.querySelector(".boxmodel-size > span");
   is(sizeElt.textContent, "400\u00D7200");
 
   info("Listening for box model view changes and modifying its size");
@@ -35,7 +35,7 @@ function* testResizingInIframe(inspector, boxmodel, testActor) {
   is(sizeElt.textContent, "200\u00D7200");
 }
 
-function* testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
+function* testReflowsAfterIframeDeletion(inspector, view, testActor) {
   info("Test reflows are still sent to the box model view after deleting an " +
        "iframe");
 
@@ -48,7 +48,7 @@ function* testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
   yield selectNodeInIframe1("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
+  let sizeElt = view.document.querySelector(".boxmodel-size > span");
   is(sizeElt.textContent, "100\u00D7100");
 
   info("Listening for box model view changes and modifying its size");
