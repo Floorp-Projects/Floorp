@@ -2281,7 +2281,7 @@ pref("network.auth.private-browsing-sso", false);
 // Control how throttling of http responses works - number of ms that each
 // suspend and resume period lasts (prefs named appropriately)
 pref("network.http.throttle.enable", true);
-pref("network.http.throttle.version", 1);
+pref("network.http.throttle.version", 2);
 
 // V1 prefs
 pref("network.http.throttle.suspend-for", 900);
