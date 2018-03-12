@@ -1501,7 +1501,6 @@ nsIDocument::nsIDocument()
     mDelayFrameLoaderInitialization(false),
     mSynchronousDOMContentLoaded(false),
     mMaybeServiceWorkerControlled(false),
-    mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mPendingFullscreenRequests(0),
     mXMLDeclarationBits(0),
     mCompatMode(eCompatibility_FullStandards),
@@ -13339,18 +13338,6 @@ nsIDocument::IsThirdParty()
   // Fall-through. Document is not a Third-Party Document.
   mIsThirdParty.emplace(false);
   return mIsThirdParty.value();
-}
-
-bool
-nsIDocument::IsScopedStyleEnabled()
-{
-  if (mIsScopedStyleEnabled == eScopedStyle_Unknown) {
-    mIsScopedStyleEnabled = nsContentUtils::IsChromeDoc(this) ||
-                            nsContentUtils::IsScopedStylePrefEnabled()
-                              ? eScopedStyle_Enabled
-                              : eScopedStyle_Disabled;
-  }
-  return mIsScopedStyleEnabled == eScopedStyle_Enabled;
 }
 
 void

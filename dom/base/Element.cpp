@@ -1712,11 +1712,6 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (ShadowRoot* shadowRootParent = ShadowRoot::FromNode(parent)) {
       parent = shadowRootParent->GetHost();
     }
-
-    bool inStyleScope = parent->IsElementInStyleScope();
-
-    SetIsElementInStyleScope(inStyleScope);
-    SetIsElementInStyleScopeFlagOnShadowTree(inStyleScope);
   }
 
   // This has to be here, rather than in nsGenericHTMLElement::BindToTree,
