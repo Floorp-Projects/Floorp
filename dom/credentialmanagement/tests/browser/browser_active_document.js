@@ -85,6 +85,9 @@ add_task(async function test_background_window() {
   let tab_bg = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
+  // Wait until the new window is really focused.
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve, win));
+
   // Requests from selected tabs not in the active window must fail.
   await promiseMakeCredential(tab_bg)
     .then(arrivingHereIsBad)
