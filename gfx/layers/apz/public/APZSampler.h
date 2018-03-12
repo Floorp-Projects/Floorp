@@ -25,6 +25,7 @@ namespace layers {
 class APZCTreeManager;
 class FocusTarget;
 class Layer;
+class LayerMetricsWrapper;
 class WebRenderScrollData;
 
 /**
@@ -69,6 +70,9 @@ public:
   void SetTestAsyncZoom(uint64_t aLayersId,
                         const FrameMetrics::ViewID& aScrollId,
                         const LayerToParentLayerScale& aZoom);
+
+  bool SampleAnimations(const LayerMetricsWrapper& aLayer,
+                        const TimeStamp& aSampleTime);
 
 protected:
   virtual ~APZSampler();

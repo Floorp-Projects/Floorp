@@ -19,6 +19,7 @@
 #include "mozilla/gfx/Rect.h"           // for RoundedToInt, RectTyped
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/layers/AnimationHelper.h"
+#include "mozilla/layers/APZSampler.h"  // for APZSampler
 #include "mozilla/layers/APZUtils.h"    // for CompleteAsyncTransform
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent, etc
@@ -68,14 +69,15 @@ ContentMightReflowOnOrientationChange(const IntRect& rect)
   return rect.Width() != rect.Height();
 }
 
-  AsyncCompositionManager::AsyncCompositionManager(CompositorBridgeParent* aParent,
-                                                   HostLayerManager* aManager)
+AsyncCompositionManager::AsyncCompositionManager(CompositorBridgeParent* aParent,
+                                                 HostLayerManager* aManager)
   : mLayerManager(aManager)
   , mIsFirstPaint(true)
   , mLayersUpdated(false)
   , mReadyForCompose(true)
   , mCompositorBridge(aParent)
 {
+  MOZ_ASSERT(mCompositorBridge);
 }
 
 AsyncCompositionManager::~AsyncCompositionManager()
@@ -693,24 +695,6 @@ SampleAnimations(Layer* aLayer,
       });
 
   return animProcess;
-}
-
-static bool
-SampleAPZAnimations(const LayerMetricsWrapper& aLayer, TimeStamp aSampleTime)
-{
-  bool activeAnimations = false;
-
-  ForEachNodePostOrder<ForwardIterator>(aLayer,
-      [&activeAnimations, &aSampleTime](LayerMetricsWrapper aLayerMetrics)
-      {
-        if (AsyncPanZoomController* apzc = aLayerMetrics.GetApzc()) {
-          apzc->ReportCheckerboard(aSampleTime);
-          activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
-        }
-      }
-  );
-
-  return activeAnimations;
 }
 
 void
@@ -1439,7 +1423,10 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
 #endif
     }
 
-    bool apzAnimating = SampleAPZAnimations(LayerMetricsWrapper(root), nextFrame);
+    bool apzAnimating = false;
+    if (RefPtr<APZSampler> apz = mCompositorBridge->GetAPZSampler()) {
+      apzAnimating = apz->SampleAnimations(LayerMetricsWrapper(root), nextFrame);
+    }
     mAnimationMetricsTracker.UpdateApzAnimationInProgress(apzAnimating, aVsyncRate);
     wantNextFrame |= apzAnimating;
   }
