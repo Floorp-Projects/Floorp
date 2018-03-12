@@ -91,10 +91,7 @@ AudioNode::Initialize(const AudioNodeOptions& aOptions, ErrorResult& aRv)
   }
 
   if (aOptions.mChannelInterpretation.WasPassed()) {
-    SetChannelInterpretationValue(aOptions.mChannelInterpretation.Value(), aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+    SetChannelInterpretationValue(aOptions.mChannelInterpretation.Value());
   }
 }
 
