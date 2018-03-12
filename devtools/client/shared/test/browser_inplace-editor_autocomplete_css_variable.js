@@ -46,15 +46,15 @@ const mockGetCSSVariableNames = function () {
   ];
 };
 
-add_task(async function () {
-  await addTab("data:text/html;charset=utf-8," +
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," +
     "inplace editor CSS variable autocomplete");
-  let [host, win, doc] = await createHost();
+  let [host, win, doc] = yield createHost();
 
   let xulDocument = win.top.document;
   let popup = new AutocompletePopup(xulDocument, { autoSelect: true });
 
-  await new Promise(resolve => {
+  yield new Promise(resolve => {
     createInplaceEditorAndClick({
       start: runAutocompletionTest,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
@@ -71,14 +71,14 @@ add_task(async function () {
   gBrowser.removeCurrentTab();
 });
 
-let runAutocompletionTest = async function (editor) {
+let runAutocompletionTest = Task.async(function* (editor) {
   info("Starting to test for css variable completion");
   editor._getCSSValuesForPropertyName = mockGetCSSValuesForPropertyName;
   editor._getCSSVariableNames = mockGetCSSVariableNames;
 
   for (let data of testData) {
-    await testCompletion(data, editor);
+    yield testCompletion(data, editor);
   }
 
   EventUtils.synthesizeKey("VK_RETURN", {}, editor.input.defaultView);
-};
+});

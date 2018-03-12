@@ -12,8 +12,8 @@ const {PRESETS} = require("devtools/client/shared/widgets/CubicBezierPresets");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-01.html";
 
-add_task(async function () {
-  let [host,, doc] = await createHost("bottom", TEST_URI);
+add_task(function* () {
+  let [host,, doc] = yield createHost("bottom", TEST_URI);
 
   let container = doc.querySelector("#cubic-bezier-container");
   let w = new CubicBezierPresetWidget(container);

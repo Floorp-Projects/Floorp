@@ -5,12 +5,12 @@
  * Tests if a WebGL front can be created for a remote tab target.
  */
 
-async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+function* ifWebGLSupported() {
+  let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
 
   ok(target, "Should have a target available.");
   ok(front, "Should have a protocol front available.");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

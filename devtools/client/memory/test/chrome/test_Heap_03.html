@@ -15,12 +15,12 @@ but not in other dominator tree states.
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
+         window.onload = Task.async(function* () {
            try {
              const container = document.getElementById("container");
 
              for (let state of [dominatorTreeState.COMPUTING, dominatorTreeState.FETCHING]) {
-               await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                  view: { state: viewState.DOMINATOR_TREE, },
                  snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                    dominatorTree: immutableUpdate(TEST_HEAP_PROPS.snapshot.dominatorTree, {
@@ -36,7 +36,7 @@ but not in other dominator tree states.
              }
 
              for (let state of [dominatorTreeState.LOADED, dominatorTreeState.INCREMENTAL_FETCHING]) {
-               await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                  view: { state: viewState.DOMINATOR_TREE, },
                  snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                    dominatorTree: immutableUpdate(TEST_HEAP_PROPS.snapshot.dominatorTree, {
@@ -50,7 +50,7 @@ but not in other dominator tree states.
                   `Should not show a throbber for state = ${state}`);
              }
 
-             await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                view: { state: viewState.DOMINATOR_TREE, },
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  dominatorTree: {
@@ -67,7 +67,7 @@ but not in other dominator tree states.
            } finally {
              SimpleTest.finish();
            }
-         };
+         });
         </script>
     </pre>
 </body>

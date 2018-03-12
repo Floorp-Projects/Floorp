@@ -7,35 +7,35 @@
 
 const TEST_JSON_URL = URL_ROOT + "valid_json.json";
 
-add_task(async function () {
+add_task(function* () {
   info("Test valid JSON started");
 
-  let tab = await addJsonViewTab(TEST_JSON_URL);
+  let tab = yield addJsonViewTab(TEST_JSON_URL);
 
   ok(tab.linkedBrowser.contentPrincipal.isNullPrincipal, "Should have null principal");
 
-  is(await countRows(), 3, "There must be three rows");
+  is(yield countRows(), 3, "There must be three rows");
 
-  let objectCellCount = await getElementCount(
+  let objectCellCount = yield getElementCount(
     ".jsonPanelBox .treeTable .objectCell");
   is(objectCellCount, 1, "There must be one object cell");
 
-  let objectCellText = await getElementText(
+  let objectCellText = yield getElementText(
     ".jsonPanelBox .treeTable .objectCell");
   is(objectCellText, "", "The summary is hidden when object is expanded");
 
   // Clicking the value does not collapse it (so that it can be selected and copied).
-  await clickJsonNode(".jsonPanelBox .treeTable .treeValueCell");
-  is(await countRows(), 3, "There must still be three rows");
+  yield clickJsonNode(".jsonPanelBox .treeTable .treeValueCell");
+  is(yield countRows(), 3, "There must still be three rows");
 
   // Clicking the label collapses the auto-expanded node.
-  await clickJsonNode(".jsonPanelBox .treeTable .treeLabel");
-  is(await countRows(), 1, "There must be one row");
+  yield clickJsonNode(".jsonPanelBox .treeTable .treeLabel");
+  is(yield countRows(), 1, "There must be one row");
 
   // Collapsed nodes are preserved when switching panels.
-  await selectJsonViewContentTab("headers");
-  await selectJsonViewContentTab("json");
-  is(await countRows(), 1, "There must still be one row");
+  yield selectJsonViewContentTab("headers");
+  yield selectJsonViewContentTab("json");
+  is(yield countRows(), 1, "There must still be one row");
 });
 
 function countRows() {

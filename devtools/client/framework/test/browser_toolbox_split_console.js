@@ -16,26 +16,26 @@ const URL = "data:text/html;charset=utf8,test split console key delegation";
 
 // Force the old debugger UI since it's directly used (see Bug 1301705)
 Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
-registerCleanupFunction(function() {
+registerCleanupFunction(function* () {
   Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
 });
 
-add_task(async function () {
-  let tab = await addTab(URL);
+add_task(function* () {
+  let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);
-  gToolbox = await gDevTools.showToolbox(target, "jsdebugger");
+  gToolbox = yield gDevTools.showToolbox(target, "jsdebugger");
   panelWin = gToolbox.getPanel("jsdebugger").panelWin;
 
-  await gToolbox.openSplitConsole();
-  await testIsSplitConsoleFocused();
-  await testUseKeyWithSplitConsole();
-  await testUseKeyWithSplitConsoleWrongTool();
+  yield gToolbox.openSplitConsole();
+  yield testIsSplitConsoleFocused();
+  yield testUseKeyWithSplitConsole();
+  yield testUseKeyWithSplitConsoleWrongTool();
 
-  await cleanup();
+  yield cleanup();
 });
 
-async function testIsSplitConsoleFocused() {
-  await gToolbox.openSplitConsole();
+function* testIsSplitConsoleFocused() {
+  yield gToolbox.openSplitConsole();
   // The newly opened split console should have focus
   ok(gToolbox.isSplitConsoleFocused(), "Split console is focused");
   panelWin.focus();
@@ -43,7 +43,7 @@ async function testIsSplitConsoleFocused() {
 }
 
 // A key bound to the selected tool should trigger it's command
-function testUseKeyWithSplitConsole() {
+function* testUseKeyWithSplitConsole() {
   let commandCalled = false;
 
   info("useKeyWithSplitConsole on debugger while debugger is focused");
@@ -60,7 +60,7 @@ function testUseKeyWithSplitConsole() {
 }
 
 // A key bound to a *different* tool should not trigger it's command
-function testUseKeyWithSplitConsoleWrongTool() {
+function* testUseKeyWithSplitConsoleWrongTool() {
   let commandCalled = false;
 
   info("useKeyWithSplitConsole on inspector while debugger is focused");
@@ -76,8 +76,8 @@ function testUseKeyWithSplitConsoleWrongTool() {
   ok(!commandCalled, "Shortcut key shouldn't trigger the command");
 }
 
-async function cleanup() {
-  await gToolbox.destroy();
+function* cleanup() {
+  yield gToolbox.destroy();
   gBrowser.removeCurrentTab();
   gToolbox = panelWin = null;
 }

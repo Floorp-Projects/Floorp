@@ -9,8 +9,8 @@
 
 let db;
 
-window.setup = async function () {
-  db = await new Promise((resolve, reject) => {
+window.setup = function* () {
+  db = yield new Promise((resolve, reject) => {
     let request = indexedDB.open("idb", 1);
 
     request.onsuccess = e => resolve(e.target.result);
@@ -25,12 +25,12 @@ window.setup = async function () {
   dump("opened indexedDB\n");
 };
 
-window.closeDb = function() {
+window.closeDb = function* () {
   db.close();
 };
 
-window.deleteDb = async function () {
-  await new Promise((resolve, reject) => {
+window.deleteDb = function* () {
+  yield new Promise((resolve, reject) => {
     let request = indexedDB.deleteDatabase("idb");
 
     request.onsuccess = resolve;
@@ -38,9 +38,9 @@ window.deleteDb = async function () {
   });
 };
 
-window.clear = async function () {
+window.clear = function* () {
   for (let dbName of ["idb1", "idb2"]) {
-    await new Promise(resolve => {
+    yield new Promise(resolve => {
       indexedDB.deleteDatabase(dbName).onsuccess = resolve;
     });
   }

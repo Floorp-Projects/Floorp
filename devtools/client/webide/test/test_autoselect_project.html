@@ -18,11 +18,11 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
+        Task.spawn(function* () {
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
-          let win = await openWebIDE();
+          let win = yield openWebIDE();
           let docRuntime = getRuntimeDocument(win);
           let docProject = getProjectDocument(win);
 
@@ -34,37 +34,37 @@
           let connectionsChanged = waitForConnectionChange("opened", 2);
           items[1].click();
 
-          await waitForUpdate(win, "runtime-targets");
+          yield waitForUpdate(win, "runtime-targets");
 
-          await connectionsChanged;
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 2, "Locally connected");
 
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
 
           // Select main process
-          await win.Cmds.showProjectPanel();
-          await waitForUpdate(win, "runtime-targets");
+          yield win.Cmds.showProjectPanel();
+          yield waitForUpdate(win, "runtime-targets");
           SimpleTest.executeSoon(() => {
             docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
           });
 
-          await waitForUpdate(win, "project");
+          yield waitForUpdate(win, "project");
 
           let lastProject = Services.prefs.getCharPref("devtools.webide.lastSelectedProject");
           is(lastProject, "mainProcess:", "Last project is main process");
 
           connectionsChanged = waitForConnectionChange("closed", 2);
 
-          await nextTick();
-          await closeWebIDE(win);
+          yield nextTick();
+          yield closeWebIDE(win);
 
-          await connectionsChanged;
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
 
           connectionsChanged = waitForConnectionChange("opened", 2);
 
           // Re-open, should reselect main process after connection
-          win = await openWebIDE();
+          win = yield openWebIDE();
 
           docRuntime = getRuntimeDocument(win);
 
@@ -75,15 +75,15 @@
           // Connect to local runtime
           items[1].click();
 
-          await waitForUpdate(win, "runtime-targets");
+          yield waitForUpdate(win, "runtime-targets");
 
-          await connectionsChanged;
+          yield connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 2, "Locally connected");
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
           is(win.AppManager.selectedProject.type, "mainProcess", "Main process reselected");
 
           // Wait for the toolbox to be fully loaded
-          await win.UI.toolboxPromise;
+          yield win.UI.toolboxPromise;
 
           // If we happen to pass a project object targeting the same context,
           // here, the main process, the `selectedProject` attribute shouldn't be updated
@@ -94,14 +94,14 @@
           };
           is(win.AppManager.selectedProject, oldProject, "AppManager.selectedProject shouldn't be updated if we selected the same project");
 
-          await win.Cmds.disconnectRuntime();
+          yield win.Cmds.disconnectRuntime();
 
-          await closeWebIDE(win);
+          yield closeWebIDE(win);
 
           DebuggerServer.destroy();
 
           SimpleTest.finish();
-        })();
+        });
       }
     </script>
   </body>

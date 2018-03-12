@@ -11,21 +11,21 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording, waitForOverviewRenderedWithMarkers } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { WaterfallView } = panel.panelWin;
 
-  await startRecording(panel);
+  yield startRecording(panel);
   ok(true, "Recording has started.");
 
   // Ensure overview is rendering and some markers were received.
-  await waitForOverviewRenderedWithMarkers(panel);
+  yield waitForOverviewRenderedWithMarkers(panel);
 
-  await stopRecording(panel);
+  yield stopRecording(panel);
   ok(true, "Recording has ended.");
 
   // Test the waterfall background.
@@ -37,5 +37,5 @@ add_task(async function () {
   is(WaterfallView.canvas.height, 1,
     "The canvas height is correct.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

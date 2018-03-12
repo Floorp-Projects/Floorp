@@ -25,6 +25,7 @@ loader.lazyRequireGetter(this, "WebExtensionInspectedWindowFront",
 const {defaultTools: DefaultTools, defaultThemes: DefaultThemes} =
   require("devtools/client/definitions");
 const EventEmitter = require("devtools/shared/old-event-emitter");
+const {Task} = require("devtools/shared/task");
 const {getTheme, setTheme, addThemeObserver, removeThemeObserver} =
   require("devtools/client/shared/theme");
 
@@ -452,15 +453,15 @@ DevTools.prototype = {
    * @return {Toolbox} toolbox
    *        The toolbox that was opened
    */
-  async showToolbox(target, toolId, hostType, hostOptions, startTime) {
+  showToolbox: Task.async(function* (target, toolId, hostType, hostOptions, startTime) {
     let toolbox = this._toolboxes.get(target);
     if (toolbox) {
       if (hostType != null && toolbox.hostType != hostType) {
-        await toolbox.switchHost(hostType);
+        yield toolbox.switchHost(hostType);
       }
 
       if (toolId != null && toolbox.currentToolId != toolId) {
-        await toolbox.selectTool(toolId);
+        yield toolbox.selectTool(toolId);
       }
 
       toolbox.raise();
@@ -470,11 +471,11 @@ DevTools.prototype = {
       // actually trying to create a new one.
       let promise = this._creatingToolboxes.get(target);
       if (promise) {
-        return promise;
+        return yield promise;
       }
       let toolboxPromise = this.createToolbox(target, toolId, hostType, hostOptions);
       this._creatingToolboxes.set(target, toolboxPromise);
-      toolbox = await toolboxPromise;
+      toolbox = yield toolboxPromise;
       this._creatingToolboxes.delete(target);
 
       if (startTime) {
@@ -483,7 +484,7 @@ DevTools.prototype = {
       this._firstShowToolbox = false;
     }
     return toolbox;
-  },
+  }),
 
   /**
    * Log telemetry related to toolbox opening.
@@ -507,10 +508,10 @@ DevTools.prototype = {
     histogram.add(toolId, delay);
   },
 
-  async createToolbox(target, toolId, hostType, hostOptions) {
+  createToolbox: Task.async(function* (target, toolId, hostType, hostOptions) {
     let manager = new ToolboxHostManager(target, hostType, hostOptions);
 
-    let toolbox = await manager.create(toolId);
+    let toolbox = yield manager.create(toolId);
 
     this._toolboxes.set(target, toolbox);
 
@@ -525,11 +526,11 @@ DevTools.prototype = {
       this.emit("toolbox-destroyed", target);
     });
 
-    await toolbox.open();
+    yield toolbox.open();
     this.emit("toolbox-ready", toolbox);
 
     return toolbox;
-  },
+  }),
 
   /**
    * Return the toolbox for a given target.
@@ -552,17 +553,17 @@ DevTools.prototype = {
    *         associated to the target. true, if the toolbox was successfully
    *         closed.
    */
-  async closeToolbox(target) {
-    let toolbox = await this._creatingToolboxes.get(target);
+  closeToolbox: Task.async(function* (target) {
+    let toolbox = yield this._creatingToolboxes.get(target);
     if (!toolbox) {
       toolbox = this._toolboxes.get(target);
     }
     if (!toolbox) {
       return false;
     }
-    await toolbox.destroy();
+    yield toolbox.destroy();
     return true;
-  },
+  }),
 
   /**
    * Wrapper on TargetFactory.forTab, constructs a Target for the provided tab.

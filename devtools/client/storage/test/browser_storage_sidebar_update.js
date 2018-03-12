@@ -8,16 +8,16 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(function* () {
   const ITEM_NAME = "ls1";
   const UPDATE_COUNT = 3;
 
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-complex-values.html");
+  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-complex-values.html");
 
   let updated = gUI.once("sidebar-updated");
-  await selectTreeItem(["localStorage", "http://test1.example.org"]);
-  await selectTableItem(ITEM_NAME);
-  await updated;
+  yield selectTreeItem(["localStorage", "http://test1.example.org"]);
+  yield selectTableItem(ITEM_NAME);
+  yield updated;
 
   is(gUI.sidebar.hidden, false, "sidebar is visible");
 
@@ -28,7 +28,7 @@ add_task(async function () {
     updates.push(gUI.once("sidebar-updated"));
     gUI.updateObjectSidebar();
   }
-  await promise.all(updates);
+  yield promise.all(updates);
 
   info("Updates performed, going to verify result");
   let parsedScope = gUI.view.getScopeAtIndex(1);
@@ -37,5 +37,5 @@ add_task(async function () {
   is(elements.length, 1,
     `There is only one displayed variable named '${ITEM_NAME}'`);
 
-  await finishTests();
+  yield finishTests();
 });

@@ -12,16 +12,16 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { dragStartCanvasGraph, dragStopCanvasGraph, clickCanvasGraph } = require("devtools/client/performance/test/helpers/input-utils");
 
-add_task(async function () {
-  let { panel } = await initPerformanceInNewTab({
+add_task(function* () {
+  let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   let duration = PerformanceController.getCurrentRecording().getDuration();
   let graph = OverviewView.graphs.get("timeline");
@@ -31,13 +31,13 @@ add_task(async function () {
   let rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED,
                            { spreadArgs: true });
   dragStartCanvasGraph(graph, { x: 0 });
-  let [, { startTime, endTime }] = await rangeSelected;
+  let [, { startTime, endTime }] = yield rangeSelected;
   is(endTime, duration, "The selected range is the entire graph, for now.");
 
   rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED,
                        { spreadArgs: true });
   dragStopCanvasGraph(graph, { x: graph.width / 2 });
-  [, { startTime, endTime }] = await rangeSelected;
+  [, { startTime, endTime }] = yield rangeSelected;
   is(endTime, duration / 2, "The selected range is half of the graph.");
 
   is(graph.hasSelection(), true,
@@ -58,7 +58,7 @@ add_task(async function () {
   rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED,
                        { spreadArgs: true });
   clickCanvasGraph(graph, { x: 3 * graph.width / 4 });
-  [, { startTime, endTime }] = await rangeSelected;
+  [, { startTime, endTime }] = yield rangeSelected;
 
   is(graph.hasSelection(), false,
     "A selection no longer on the graph.");
@@ -67,5 +67,5 @@ add_task(async function () {
   is(endTime, duration,
     "The UI_OVERVIEW_RANGE_SELECTED event fired with duration as `endTime`.");
 
-  await teardownToolboxAndRemoveTab(panel);
+  yield teardownToolboxAndRemoveTab(panel);
 });

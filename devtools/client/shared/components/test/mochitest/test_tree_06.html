@@ -16,7 +16,7 @@ Test keyboard navigation with the Tree component.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = async function () {
+window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
@@ -42,7 +42,7 @@ window.onload = async function () {
     info("Up to the previous sibling.");
     renderTree({ focused: "L" });
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -64,7 +64,7 @@ window.onload = async function () {
 
     info("Up to the parent.");
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -87,7 +87,7 @@ window.onload = async function () {
     info("Try and navigate up, past the first item.");
     renderTree({ focused: "A" });
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:true",
@@ -112,7 +112,7 @@ window.onload = async function () {
     info("Down to next sibling.");
     renderTree({ focused: "K" });
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -134,7 +134,7 @@ window.onload = async function () {
 
     info("Down to parent's next sibling.");
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -157,7 +157,7 @@ window.onload = async function () {
     info("Try and go down past the last item.");
     renderTree({ focused: "O" });
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -182,7 +182,7 @@ window.onload = async function () {
     info("Left to go to parent.");
     renderTree({ focused: "L" });
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -204,7 +204,7 @@ window.onload = async function () {
 
     info("Left to collapse children.");
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -226,7 +226,7 @@ window.onload = async function () {
 
     info("Right to expand children.");
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -248,7 +248,7 @@ window.onload = async function () {
 
     info("Right to go to next item.");
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
-    await forceRender(tree);
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -277,7 +277,7 @@ window.onload = async function () {
     ];
     for (let key of keysWithModifier) {
       Simulate.keyDown(document.querySelector(".tree"), key);
-      await forceRender(tree);
+      yield forceRender(tree);
 
       isRenderedTree(document.body.textContent, [
         "A:false",
@@ -302,7 +302,7 @@ window.onload = async function () {
   } finally {
     SimpleTest.finish();
   }
-};
+});
 </script>
 </pre>
 </body>

@@ -8,25 +8,25 @@
 
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(async function () {
-  await addTab("about:blank");
-  await performTest();
+add_task(function* () {
+  yield addTab("about:blank");
+  yield performTest();
   gBrowser.removeCurrentTab();
 });
 
-async function performTest() {
-  let [host,, doc] = await createHost();
+function* performTest() {
+  let [host,, doc] = yield createHost();
   let graph = new LineGraphWidget(doc.body, "fps");
-  await graph.once("ready");
+  yield graph.once("ready");
 
-  await testSelection(graph);
-  await testCursor(graph);
+  yield testSelection(graph);
+  yield testCursor(graph);
 
-  await graph.destroy();
+  yield graph.destroy();
   host.destroy();
 }
 
-async function testSelection(graph) {
+function* testSelection(graph) {
   ok(graph.getSelection().start === null,
     "The graph's selection should initially have a null start value.");
   ok(graph.getSelection().end === null,
@@ -37,7 +37,7 @@ async function testSelection(graph) {
   let selected = graph.once("selecting");
   graph.setSelection({ start: 100, end: 200 });
 
-  await selected;
+  yield selected;
   ok(true, "A 'selecting' event has been fired.");
 
   ok(graph.hasSelection(),
@@ -61,7 +61,7 @@ async function testSelection(graph) {
   let deselected = graph.once("deselecting");
   graph.dropSelection();
 
-  await deselected;
+  yield deselected;
   ok(true, "A 'deselecting' event has been fired.");
 
   ok(!graph.hasSelection(),
@@ -72,7 +72,7 @@ async function testSelection(graph) {
     "The graph's selection now has a null end value.");
 }
 
-function testCursor(graph) {
+function* testCursor(graph) {
   ok(graph.getCursor().x === null,
     "The graph's cursor should initially have a null X value.");
   ok(graph.getCursor().y === null,

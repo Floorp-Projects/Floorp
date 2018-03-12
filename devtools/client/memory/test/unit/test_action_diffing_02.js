@@ -10,10 +10,10 @@ const { toggleDiffing } = require("devtools/client/memory/actions/diffing");
 const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-add_task(async function () {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  await front.attach();
+  yield front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
@@ -24,7 +24,7 @@ add_task(async function () {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  await waitUntilCensusState(store, s => s.census,
+  yield waitUntilCensusState(store, s => s.census,
     [censusState.SAVED, censusState.SAVED, censusState.SAVED]);
 
   ok(getState().snapshots.some(s => s.selected),
@@ -39,5 +39,5 @@ add_task(async function () {
   }
 
   heapWorker.destroy();
-  await front.detach();
+  yield front.detach();
 });

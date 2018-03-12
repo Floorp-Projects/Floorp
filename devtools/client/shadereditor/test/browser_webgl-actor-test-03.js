@@ -6,21 +6,21 @@
  * after a target navigation.
  */
 
-async function ifWebGLSupported() {
-  let { target, front } = await initBackend(SIMPLE_CANVAS_URL);
+function* ifWebGLSupported() {
+  let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
 
   let navigated = once(target, "navigate");
   let linked = once(front, "program-linked");
 
-  await front.setup({ reload: true });
+  yield front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  await navigated;
+  yield navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  await linked;
+  yield linked;
   ok(true, "A 'program-linked' notification was sent after reloading.");
 
-  await removeTab(target.tab);
+  yield removeTab(target.tab);
   finish();
 }

@@ -18,6 +18,7 @@ const utils = require("devtools/client/webide/modules/utils");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 const {showDoorhanger} = require("devtools/client/shared/doorhanger");
+const {Task} = require("devtools/shared/task");
 
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
@@ -140,16 +141,16 @@ var UI = {
         this.updateConnectionTelemetry();
         break;
       case "project":
-        this._updatePromise = (async function () {
+        this._updatePromise = Task.spawn(function* () {
           UI.updateTitle();
-          await UI.destroyToolbox();
+          yield UI.destroyToolbox();
           UI.updateCommands();
           UI.openProject();
-          await UI.autoStartProject();
+          yield UI.autoStartProject();
           UI.autoOpenToolbox();
           UI.saveLastSelectedProject();
           UI.updateRemoveProjectButton();
-        })();
+        });
         return;
       case "project-started":
         this.updateCommands();
@@ -560,7 +561,7 @@ var UI = {
     this.selectDeckPanel("details");
   },
 
-  async autoStartProject() {
+  autoStartProject: Task.async(function* () {
     let project = AppManager.selectedProject;
 
     if (!project) {
@@ -575,11 +576,11 @@ var UI = {
     // Do not force opening apps that are already running, as they may have
     // some activity being opened and don't want to dismiss them.
     if (project.type == "runtimeApp" && !AppManager.isProjectRunning()) {
-      await UI.busyUntil(AppManager.launchRuntimeApp(), "running app");
+      yield UI.busyUntil(AppManager.launchRuntimeApp(), "running app");
     }
-  },
+  }),
 
-  async autoOpenToolbox() {
+  autoOpenToolbox: Task.async(function* () {
     let project = AppManager.selectedProject;
 
     if (!project) {
@@ -591,14 +592,14 @@ var UI = {
       return; // For something that is not an editable app, we're done.
     }
 
-    await UI.createToolbox();
-  },
+    yield UI.createToolbox();
+  }),
 
-  async importAndSelectApp(source) {
+  importAndSelectApp: Task.async(function* (source) {
     let isPackaged = !!source.path;
     let project;
     try {
-      project = await AppProjects[isPackaged ? "addPackaged" : "addHosted"](source);
+      project = yield AppProjects[isPackaged ? "addPackaged" : "addHosted"](source);
     } catch (e) {
       if (e === "Already added") {
         // Select project that's already been added,
@@ -613,7 +614,7 @@ var UI = {
     AppManager.selectedProject = project;
 
     this._telemetry.actionOccurred("webideImportProject");
-  },
+  }),
 
   // Remember the last selected project on the runtime
   saveLastSelectedProject: function () {
@@ -733,10 +734,10 @@ var UI = {
     deck.selectedPanel = null;
   },
 
-  async checkRuntimeVersion() {
+  checkRuntimeVersion: Task.async(function* () {
     if (AppManager.connected) {
       let { client } = AppManager.connection;
-      let report = await client.checkRuntimeVersion(AppManager.listTabsForm);
+      let report = yield client.checkRuntimeVersion(AppManager.listTabsForm);
       if (report.incompatible == "too-recent") {
         this.reportError("error_runtimeVersionTooRecent", report.runtimeID,
           report.localID);
@@ -746,7 +747,7 @@ var UI = {
           report.minVersion);
       }
     }
-  },
+  }),
 
   /** ******** TOOLBOX **********/
 
@@ -852,10 +853,10 @@ var Cmds = {
   },
 
   disconnectRuntime: function () {
-    let disconnecting = (async function () {
-      await UI.destroyToolbox();
-      await AppManager.disconnectRuntime();
-    })();
+    let disconnecting = Task.spawn(function* () {
+      yield UI.destroyToolbox();
+      yield AppManager.disconnectRuntime();
+    });
     return UI.busyUntil(disconnecting, "disconnecting from runtime");
   },
 
@@ -877,7 +878,7 @@ var Cmds = {
     UI.selectDeckPanel("devicepreferences");
   },
 
-  async play() {
+  play: Task.async(function* () {
     let busy;
     switch (AppManager.selectedProject.type) {
       case "packaged":
@@ -900,7 +901,7 @@ var Cmds = {
     }
     UI.onAction("play");
     return busy;
-  },
+  }),
 
   stop: function () {
     return UI.busyUntil(AppManager.stopRunningApp(), "stopping app");

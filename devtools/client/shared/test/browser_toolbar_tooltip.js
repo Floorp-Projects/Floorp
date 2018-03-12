@@ -17,8 +17,8 @@ registerCleanupFunction(() => {
 
 let toolbar = gDevToolsBrowser.getDeveloperToolbar(window);
 
-add_task(async function showToolbar() {
-  await addTab(TEST_URI);
+add_task(function* showToolbar() {
+  yield addTab(TEST_URI);
 
   info("Starting browser_toolbar_tooltip.js");
 
@@ -26,14 +26,14 @@ add_task(async function showToolbar() {
 
   let showPromise = observeOnce(toolbar.NOTIFICATIONS.SHOW);
   document.getElementById("menu_devToolbar").doCommand();
-  await showPromise;
+  yield showPromise;
 });
 
-add_task(async function testDimensions() {
+add_task(function* testDimensions() {
   let tooltipPanel = toolbar.tooltipPanel;
 
   toolbar.focusManager.helpRequest();
-  await toolbar.inputter.setInput("help help");
+  yield toolbar.inputter.setInput("help help");
 
   toolbar.inputter.setCursor({ start: "help help".length });
   is(tooltipPanel._dimensions.start, "help ".length,
@@ -56,35 +56,35 @@ add_task(async function testDimensions() {
   ok(getLeftMargin() > 9, "tooltip offset, when cursor at start");
 });
 
-add_task(async function testThemes() {
+add_task(function* testThemes() {
   let tooltipPanel = toolbar.tooltipPanel;
   ok(tooltipPanel.document, "Tooltip panel is initialized");
 
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "dark");
 
-  await toolbar.inputter.setInput("");
-  await toolbar.inputter.setInput("help help");
+  yield toolbar.inputter.setInput("");
+  yield toolbar.inputter.setInput("help help");
   is(tooltipPanel.document.documentElement.getAttribute("devtoolstheme"),
      "dark", "Tooltip panel has correct theme");
 
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "light");
 
-  await toolbar.inputter.setInput("");
-  await toolbar.inputter.setInput("help help");
+  yield toolbar.inputter.setInput("");
+  yield toolbar.inputter.setInput("help help");
   is(tooltipPanel.document.documentElement.getAttribute("devtoolstheme"),
      "light", "Tooltip panel has correct theme");
 });
 
-add_task(async function hideToolbar() {
+add_task(function* hideToolbar() {
   info("Ending browser_toolbar_tooltip.js");
-  await toolbar.inputter.setInput("");
+  yield toolbar.inputter.setInput("");
 
   ok(toolbar.visible, "DeveloperToolbar is visible in hideToolbar");
 
   info("Hide toolbar");
   let hidePromise = observeOnce(toolbar.NOTIFICATIONS.HIDE);
   document.getElementById("menu_devToolbar").doCommand();
-  await hidePromise;
+  yield hidePromise;
 
   ok(!toolbar.visible, "DeveloperToolbar is not visible in hideToolbar");
 

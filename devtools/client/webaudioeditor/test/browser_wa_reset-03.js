@@ -6,8 +6,8 @@
  * the inspector and selected node.
  */
 
-add_task(async function () {
-  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(function* () {
+  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, InspectorView } = panelWin;
 
@@ -16,10 +16,10 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = await events;
+  let [actors] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
-  await clickGraphNode(panelWin, nodeIds[1], true);
+  yield clickGraphNode(panelWin, nodeIds[1], true);
   ok(InspectorView.isVisible(), "InspectorView visible after selecting a node.");
   is(InspectorView.getCurrentAudioNode().id, nodeIds[1], "InspectorView has correct node set.");
 
@@ -32,17 +32,17 @@ add_task(async function () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  [actors] = await events;
+  [actors] = yield events;
   nodeIds = actors.map(actor => actor.actorID);
 
   ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
   is(InspectorView.getCurrentAudioNode(), null,
     "InspectorView has no current node set on reset.");
 
-  await clickGraphNode(panelWin, nodeIds[2], true);
+  yield clickGraphNode(panelWin, nodeIds[2], true);
   ok(InspectorView.isVisible(),
     "InspectorView visible after selecting a node after a reset.");
   is(InspectorView.getCurrentAudioNode().id, nodeIds[2], "InspectorView has correct node set upon clicking graph node after a reset.");
 
-  await teardown(target);
+  yield teardown(target);
 });

@@ -6,16 +6,16 @@
  * on a function call item.
  */
 
-async function ifTestingSupported() {
-  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
+function* ifTestingSupported() {
+  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
   let { window, $, $all, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
 
-  await reload(target);
+  yield reload(target);
 
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([recordingFinished, callListPopulated]);
+  yield promise.all([recordingFinished, callListPopulated]);
 
   let callItem = CallsListView.getItemAtIndex(2);
   let view = $(".call-item-view", callItem.target);
@@ -30,7 +30,7 @@ async function ifTestingSupported() {
 
   let callStackDisplayed = once(window, EVENTS.CALL_STACK_DISPLAYED);
   EventUtils.sendMouseEvent({ type: "dblclick" }, contents, window);
-  await callStackDisplayed;
+  yield callStackDisplayed;
 
   is(view.hasAttribute("call-stack-populated"), true,
     "The call item's view should have the stack populated now.");
@@ -60,6 +60,6 @@ async function ifTestingSupported() {
   ok($all(".call-item-stack-fn", callItem.target).length >= 4,
      "There should still be at least 4 functions on the stack for the draw call.");
 
-  await teardown(panel);
+  yield teardown(panel);
   finish();
 }

@@ -19,24 +19,24 @@ const expectedText = `
   }
   `;
 
-async function closeAndReopenToolbox() {
+function* closeAndReopenToolbox() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  await gDevTools.closeToolbox(target);
-  let { ui: newui } = await openStyleEditor();
+  yield gDevTools.closeToolbox(target);
+  let { ui: newui } = yield openStyleEditor();
   return newui;
 }
 
-add_task(async function () {
-  await addTab(TESTCASE_URI);
-  let { inspector, view } = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab(TESTCASE_URI);
+  let { inspector, view } = yield openRuleView();
+  yield selectNode("#testid", inspector);
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   // Disable the "font-size" property.
   let propEditor = ruleEditor.rule.textProps[0].editor;
   let onModification = view.once("ruleview-changed");
   propEditor.enable.click();
-  await onModification;
+  yield onModification;
 
   // Disable the "color" property.  Note that this property is in a
   // rule that also contains a non-inherited property -- so this test
@@ -46,25 +46,25 @@ add_task(async function () {
   propEditor = ruleEditor.rule.textProps[1].editor;
   onModification = view.once("ruleview-changed");
   propEditor.enable.click();
-  await onModification;
+  yield onModification;
 
-  let { ui } = await openStyleEditor();
+  let { ui } = yield openStyleEditor();
 
-  let editor = await ui.editors[0].getSourceEditor();
+  let editor = yield ui.editors[0].getSourceEditor();
   let text = editor.sourceEditor.getText();
   is(text, expectedText, "style inspector changes are synced");
 
   // Close and reopen the toolbox, to see that the edited text remains
   // available.
-  ui = await closeAndReopenToolbox();
-  editor = await ui.editors[0].getSourceEditor();
+  ui = yield closeAndReopenToolbox();
+  editor = yield ui.editors[0].getSourceEditor();
   text = editor.sourceEditor.getText();
   is(text, expectedText, "changes remain after close and reopen");
 
   // For the time being, the actor does not update the style's owning
   // node's textContent.  See bug 1205380.
-  let textContent = await ContentTask.spawn(gBrowser.selectedBrowser, null,
-    async function () {
+  let textContent = yield ContentTask.spawn(gBrowser.selectedBrowser, null,
+    function* () {
       return content.document.querySelector("style").textContent;
     });
 
