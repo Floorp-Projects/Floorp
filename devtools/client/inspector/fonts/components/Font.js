@@ -10,6 +10,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FontPreview = createFactory(require("./FontPreview"));
 
+loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
+loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
+loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
+
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
@@ -30,6 +34,7 @@ class Font extends PureComponent {
     };
 
     this.onFontFaceRuleToggle = this.onFontFaceRuleToggle.bind(this);
+    this.onLinkContextMenu = this.onLinkContextMenu.bind(this);
   }
 
   componentWillReceiveProps(newProps) {
@@ -39,6 +44,21 @@ class Font extends PureComponent {
 
     this.setState({
       isFontFaceRuleExpanded: false,
+    });
+  }
+
+  copyURL() {
+    clipboardHelper.copyString(this.props.font.URI);
+  }
+
+  onLinkContextMenu(event) {
+    let menu = new Menu();
+    menu.append(new MenuItem({
+      label: getStr("fontinspector.copyURL"),
+      click: () => this.copyURL(),
+    }));
+    menu.popup(event.screenX, event.screenY, {
+      doc: event.target.ownerGlobal.parent.document
     });
   }
 
@@ -99,7 +119,8 @@ class Font extends PureComponent {
       dom.a(
         {
           className: "font-url",
-          href: url
+          href: url,
+          onContextMenu: this.onLinkContextMenu
         },
         format
       )
