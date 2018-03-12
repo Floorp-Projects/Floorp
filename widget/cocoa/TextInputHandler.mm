@@ -400,84 +400,6 @@ TISInputSourceWrapper::TranslateToChar(UInt32 aKeyCode, UInt32 aModifiers,
 }
 
 bool
-TISInputSourceWrapper::IsDeadKey(NSEvent* aNativeKeyEvent)
-{
-  if ([[aNativeKeyEvent characters] length]) {
-    return false;
-  }
-
-  // Assmue that if control key or command key is pressed, it's not a dead key.
-  NSUInteger cocoaState = [aNativeKeyEvent modifierFlags];
-  if (cocoaState & (NSControlKeyMask | NSCommandKeyMask)) {
-    return false;
-  }
-
-  UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
-  switch (nativeKeyCode) {
-    case kVK_ANSI_A:
-    case kVK_ANSI_B:
-    case kVK_ANSI_C:
-    case kVK_ANSI_D:
-    case kVK_ANSI_E:
-    case kVK_ANSI_F:
-    case kVK_ANSI_G:
-    case kVK_ANSI_H:
-    case kVK_ANSI_I:
-    case kVK_ANSI_J:
-    case kVK_ANSI_K:
-    case kVK_ANSI_L:
-    case kVK_ANSI_M:
-    case kVK_ANSI_N:
-    case kVK_ANSI_O:
-    case kVK_ANSI_P:
-    case kVK_ANSI_Q:
-    case kVK_ANSI_R:
-    case kVK_ANSI_S:
-    case kVK_ANSI_T:
-    case kVK_ANSI_U:
-    case kVK_ANSI_V:
-    case kVK_ANSI_W:
-    case kVK_ANSI_X:
-    case kVK_ANSI_Y:
-    case kVK_ANSI_Z:
-    case kVK_ANSI_1:
-    case kVK_ANSI_2:
-    case kVK_ANSI_3:
-    case kVK_ANSI_4:
-    case kVK_ANSI_5:
-    case kVK_ANSI_6:
-    case kVK_ANSI_7:
-    case kVK_ANSI_8:
-    case kVK_ANSI_9:
-    case kVK_ANSI_0:
-    case kVK_ANSI_Equal:
-    case kVK_ANSI_Minus:
-    case kVK_ANSI_RightBracket:
-    case kVK_ANSI_LeftBracket:
-    case kVK_ANSI_Quote:
-    case kVK_ANSI_Semicolon:
-    case kVK_ANSI_Backslash:
-    case kVK_ANSI_Comma:
-    case kVK_ANSI_Slash:
-    case kVK_ANSI_Period:
-    case kVK_ANSI_Grave:
-    case kVK_JIS_Yen:
-    case kVK_JIS_Underscore:
-      break;
-    default:
-      // Let's assume that dead key can be only a printable key in standard
-      // position.
-      return false;
-  }
-
-  // If TranslateToChar() returns non-zero value, that means that
-  // the key may input a character with different dead key state.
-  UInt32 kbType = GetKbdType();
-  UInt32 carbonState = nsCocoaUtils::ConvertToCarbonModifier(cocoaState);
-  return IsDeadKey(nativeKeyCode, carbonState, kbType);
-}
-
-bool
 TISInputSourceWrapper::IsDeadKey(UInt32 aKeyCode,
                                  UInt32 aModifiers,
                                  UInt32 aKbType)
@@ -984,25 +906,17 @@ TISInputSourceWrapper::ComputeInsertStringForCharCode(
 void
 TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
                                     WidgetKeyboardEvent& aKeyEvent,
-                                    bool aIsProcessedByIME,
                                     const nsAString *aInsertString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  MOZ_ASSERT(!aIsProcessedByIME || aKeyEvent.mMessage != eKeyPress,
-    "eKeyPress event should not be marked as proccessed by IME");
-
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::InitKeyEvent, aNativeKeyEvent=%p, "
-     "aKeyEvent.mMessage=%s, aProcessedByIME=%s, aInsertString=%p, "
-     "IsOpenedIMEMode()=%s",
-     this, aNativeKeyEvent, GetGeckoKeyEventType(aKeyEvent),
-     TrueOrFalse(aIsProcessedByIME), aInsertString,
+     "aKeyEvent.mMessage=%s, aInsertString=%p, IsOpenedIMEMode()=%s",
+     this, aNativeKeyEvent, GetGeckoKeyEventType(aKeyEvent), aInsertString,
      TrueOrFalse(IsOpenedIMEMode())));
 
-  if (NS_WARN_IF(!aNativeKeyEvent)) {
-    return;
-  }
+  NS_ENSURE_TRUE(aNativeKeyEvent, );
 
   nsCocoaUtils::InitInputEvent(aKeyEvent, aNativeKeyEvent);
 
@@ -1031,18 +945,8 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   UInt32 kbType = GetKbdType();
   UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
 
-  // macOS handles dead key as IME.  If the key is first key press of dead
-  // key, we should use KEY_NAME_INDEX_Dead for first (dead) key event.
-  // So, if aIsProcessedByIME is true, it may be dead key.  Let's check
-  // if current key event is a dead key's keydown event.
-  bool isProcessedByIME =
-    aIsProcessedByIME &&
-    !TISInputSourceWrapper::CurrentInputSource().IsDeadKey(aNativeKeyEvent);
-
   aKeyEvent.mKeyCode =
-    isProcessedByIME ?
-      NS_VK_PROCESSKEY :
-      ComputeGeckoKeyCode(nativeKeyCode, kbType, aKeyEvent.IsMeta());
+    ComputeGeckoKeyCode(nativeKeyCode, kbType, aKeyEvent.IsMeta());
 
   switch (nativeKeyCode) {
     case kVK_Command:
@@ -1095,9 +999,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
      this, OnOrOff(aKeyEvent.IsShift()), OnOrOff(aKeyEvent.IsControl()),
      OnOrOff(aKeyEvent.IsAlt()), OnOrOff(aKeyEvent.IsMeta())));
 
-  if (isProcessedByIME) {
-    aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_Process;
-  } else if (IsPrintableKeyEvent(aNativeKeyEvent)) {
+  if (IsPrintableKeyEvent(aNativeKeyEvent)) {
     aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
     // If insertText calls this method, let's use the string.
     if (aInsertString && !aInsertString->IsEmpty() &&
@@ -1726,7 +1628,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent,
       }
 
       WidgetKeyboardEvent imeEvent(true, eKeyDown, widget);
-      currentKeyEvent->InitKeyEvent(this, imeEvent, false);
+      currentKeyEvent->InitKeyEvent(this, imeEvent);
       imeEvent.mPluginTextEventString.Assign(committed);
       nsEventStatus status = nsEventStatus_eIgnore;
       mDispatcher->DispatchKeyboardEvent(eKeyDown, imeEvent, status,
@@ -1735,16 +1637,48 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent,
     return true;
   }
 
-  RefPtr<TextInputHandler> kungFuDeathGrip(this);
+  NSResponder* firstResponder = [[mView window] firstResponder];
 
-  // When we're already in a composition, we need always to mark the eKeyDown
-  // event as "processed by IME".  So, let's dispatch eKeyDown event here in
-  // such case.
-  if (IsIMEComposing() && !MaybeDispatchCurrentKeydownEvent(true)) {
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p IMEInputHandler::HandleKeyDownEvent, eKeyDown caused focus move or "
-       "something and canceling the composition", this));
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::HandleKeyDownEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure "
+         "at dispatching keydown for ordinal cases", this));
     return false;
+  }
+
+  WidgetKeyboardEvent keydownEvent(true, eKeyDown, widget);
+  currentKeyEvent->InitKeyEvent(this, keydownEvent);
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mDispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent, status,
+                                     currentKeyEvent);
+  currentKeyEvent->mKeyDownHandled =
+    (status == nsEventStatus_eConsumeNoDefault);
+
+  if (Destroyed()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p TextInputHandler::HandleKeyDownEvent, "
+       "widget was destroyed by keydown event", this));
+    return currentKeyEvent->IsDefaultPrevented();
+  }
+
+  // The key down event may have shifted the focus, in which
+  // case we should not fire the key press.
+  // XXX This is a special code only on Cocoa widget, why is this needed?
+  if (firstResponder != [[mView window] firstResponder]) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p TextInputHandler::HandleKeyDownEvent, "
+       "view lost focus by keydown event", this));
+    return currentKeyEvent->IsDefaultPrevented();
+  }
+
+  if (currentKeyEvent->IsDefaultPrevented()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p TextInputHandler::HandleKeyDownEvent, "
+       "keydown event's default is prevented", this));
+    return true;
   }
 
   // Let Cocoa interpret the key events, caching IsIMEComposing first.
@@ -1776,33 +1710,9 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent,
      "IsIMEComposing()=%s",
      this, TrueOrFalse(wasComposing), TrueOrFalse(IsIMEComposing())));
 
-  if (currentKeyEvent->CanDispatchKeyDownEvent()) {
-    // Dispatch eKeyDown event if nobody has dispatched it yet.
-    // NOTE: Although reaching here means that the native keydown event may
-    //       not be handled by IME.  However, we cannot know if it is.
-    //       For example, Japanese IME of Apple shows candidate window for
-    //       typing window.  They, you can switch the sort order with Tab key.
-    //       However, when you choose "Symbol" of the sort order, there may
-    //       be no candiate words.  In this case, IME handles the Tab key
-    //       actually, but we cannot know it because composition string is
-    //       not updated.  So, let's mark eKeyDown event as "processed by IME"
-    //       when there is composition string.  This is same as Chrome.
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p TextInputHandler::HandleKeyDownEvent, trying to dispatch eKeyDown "
-       "event since it's not yet dispatched",
-       this));
-    if (!MaybeDispatchCurrentKeydownEvent(IsIMEComposing())) {
-      return true; // treat the eKeydDown event as consumed.
-    }
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p TextInputHandler::HandleKeyDownEvent, eKeyDown event has been "
-       "dispatched",
-       this));
-  }
-
   if (currentKeyEvent->CanDispatchKeyPressEvent() &&
       !wasComposing && !IsIMEComposing()) {
-    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    rv = mDispatcher->BeginNativeInputTransaction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
         MOZ_LOG(gLog, LogLevel::Error,
           ("%p IMEInputHandler::HandleKeyDownEvent, "
@@ -1812,7 +1722,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent,
     }
 
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
-    currentKeyEvent->InitKeyEvent(this, keypressEvent, false);
+    currentKeyEvent->InitKeyEvent(this, keypressEvent);
 
     // If we called interpretKeyEvents and this isn't normal character input
     // then IME probably ate the event for some reason. We do not want to
@@ -1827,11 +1737,6 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent,
     //    our default action for this key.
     if (!(interpretKeyEventsCalled &&
           IsNormalCharInputtingEvent(keypressEvent))) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p TextInputHandler::HandleKeyDownEvent, trying to dispatch "
-         "eKeyPress event since it's not yet dispatched",
-         this));
-      nsEventStatus status = nsEventStatus_eIgnore;
       currentKeyEvent->mKeyPressDispatched =
         mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
                                                  currentKeyEvent);
@@ -1839,8 +1744,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent,
         (status == nsEventStatus_eConsumeNoDefault);
       currentKeyEvent->mKeyPressDispatched = true;
       MOZ_LOG(gLog, LogLevel::Info,
-        ("%p TextInputHandler::HandleKeyDownEvent, eKeyPress event has been "
-         "dispatched",
+        ("%p TextInputHandler::HandleKeyDownEvent, keypress event dispatched",
          this));
     }
   }
@@ -1894,10 +1798,8 @@ TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
     return;
   }
 
-  // Neither Chrome for macOS nor Safari marks "keyup" event as "processed by
-  // IME" even during composition.  So, let's follow this behavior.
   WidgetKeyboardEvent keyupEvent(true, eKeyUp, mWidget);
-  InitKeyEvent(aNativeEvent, keyupEvent, false);
+  InitKeyEvent(aNativeEvent, keyupEvent);
 
   KeyEventState currentKeyEvent(aNativeEvent);
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -2241,7 +2143,7 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
      GetKeyNameForNativeKeyCode([aNativeEvent keyCode]), [aNativeEvent keyCode],
      TrueOrFalse(aDispatchKeyDown), TrueOrFalse(IsIMEComposing())));
 
-  if ([aNativeEvent type] != NSFlagsChanged) {
+  if ([aNativeEvent type] != NSFlagsChanged || IsIMEComposing()) {
     return;
   }
 
@@ -2255,11 +2157,9 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
 
   EventMessage message = aDispatchKeyDown ? eKeyDown : eKeyUp;
 
-  // Fire a key event for the modifier key.  Note that even if modifier key
-  // is pressed during composition, we shouldn't mark the keyboard event as
-  // "processed by IME" since neither Chrome for macOS nor Safari does it.
+  // Fire a key event.
   WidgetKeyboardEvent keyEvent(true, message, mWidget);
-  InitKeyEvent(aNativeEvent, keyEvent, false);
+  InitKeyEvent(aNativeEvent, keyEvent);
 
   // Attach a plugin event, in case keyEvent gets dispatched to a plugin.  Only
   // one field is needed -- the type.  The other fields can be constructed as
@@ -2295,16 +2195,13 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     ("%p TextInputHandler::InsertText, aAttrString=\"%s\", "
      "aReplacementRange=%p { location=%lu, length=%lu }, "
      "IsIMEComposing()=%s, "
-     "keyevent=%p, keydownDispatched=%s, "
-     "keydownHandled=%s, keypressDispatched=%s, "
+     "keyevent=%p, keydownHandled=%s, keypressDispatched=%s, "
      "causedOtherKeyEvents=%s, compositionDispatched=%s",
      this, GetCharacters([aAttrString string]), aReplacementRange,
      static_cast<unsigned long>(aReplacementRange ? aReplacementRange->location : 0),
      static_cast<unsigned long>(aReplacementRange ? aReplacementRange->length : 0),
      TrueOrFalse(IsIMEComposing()),
      currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr,
-     currentKeyEvent ?
-       TrueOrFalse(currentKeyEvent->mKeyDownDispatched) : "N/A",
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyDownHandled) : "N/A",
      currentKeyEvent ?
@@ -2356,21 +2253,8 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     if (!currentKeyEvent) {
       return;
     }
-
-    // When current keydown event causes this empty text input, let's
-    // dispatch eKeyDown event before any other events.  Note that if we're
-    // in a composition, we've already dispatched eKeyDown event from
-    // TextInputHandler::HandleKeyDownEvent().
-    // XXX Should we mark this eKeyDown event as "processed by IME"?
-    RefPtr<TextInputHandler> kungFuDeathGrip(this);
-    if (!IsIMEComposing() && !MaybeDispatchCurrentKeydownEvent(false)) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p IMEInputHandler::InsertText, eKeyDown caused focus move or "
-         "something and canceling the composition", this));
-      return;
-    }
-
     // Delete the selected range.
+    RefPtr<TextInputHandler> kungFuDeathGrip(this);
     WidgetContentCommandEvent deleteCommandEvent(true, eContentCommandDelete,
                                                  mWidget);
     DispatchEvent(deleteCommandEvent);
@@ -2419,23 +2303,13 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     return;
   }
 
-  // This is the normal path to input a character when you press a key.
-  // Let's dispatch eKeyDown event now.
-  RefPtr<TextInputHandler> kungFuDeathGrip(this);
-  if (!MaybeDispatchCurrentKeydownEvent(false)) {
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p IMEInputHandler::InsertText, eKeyDown caused focus move or "
-       "something and canceling the composition", this));
-    return;
-  }
-
   // XXX Shouldn't we hold mDispatcher instead of mWidget?
   RefPtr<nsChildView> widget(mWidget);
   nsresult rv = mDispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(gLog, LogLevel::Error,
-      ("%p IMEInputHandler::InsertText, "
-       "FAILED, due to BeginNativeInputTransaction() failure", this));
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::HandleKeyUpEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure", this));
     return;
   }
 
@@ -2451,7 +2325,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
   // the input string.
 
   if (currentKeyEvent) {
-    currentKeyEvent->InitKeyEvent(this, keypressEvent, false);
+    currentKeyEvent->InitKeyEvent(this, keypressEvent);
   } else {
     nsCocoaUtils::InitInputEvent(keypressEvent, static_cast<NSEvent*>(nullptr));
     keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
@@ -2514,18 +2388,6 @@ TextInputHandler::HandleCommand(Command aCommand)
 
   // The command shouldn't be handled, let's ignore it.
   if (currentKeyEvent && !currentKeyEvent->CanHandleCommand()) {
-    return false;
-  }
-
-  // When current keydown event causes this command, let's dispatch
-  // eKeyDown event before any other events.  Note that if we're in a
-  // composition, we've already dispatched eKeyDown event from
-  // TextInputHandler::HandleKeyDownEvent().
-  RefPtr<TextInputHandler> kungFuDeathGrip(this);
-  if (!IsIMEComposing() && !MaybeDispatchCurrentKeydownEvent(false)) {
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p IMEInputHandler::SetMarkedText, eKeyDown caused focus move or "
-       "something and canceling the composition", this));
     return false;
   }
 
@@ -2625,7 +2487,7 @@ TextInputHandler::HandleCommand(Command aCommand)
   if (!dispatchFakeKeyPress) {
     // If we're acutally handling a key press, we should dispatch
     // the keypress event as-is.
-    currentKeyEvent->InitKeyEvent(this, keypressEvent, false);
+    currentKeyEvent->InitKeyEvent(this, keypressEvent);
   } else {
     // Otherwise, we should dispatch "fake" keypress event.
     // However, for making it possible to compute edit commands, we need to
@@ -2891,15 +2753,11 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::DoCommandBySelector, aSelector=\"%s\", "
-     "Destroyed()=%s, keydownDispatched=%s, keydownHandled=%s, "
-     "keypressDispatched=%s, keypressHandled=%s, causedOtherKeyEvents=%s",
+     "Destroyed()=%s, keydownHandled=%s, keypressHandled=%s, "
+     "causedOtherKeyEvents=%s",
      this, aSelector ? aSelector : "", TrueOrFalse(Destroyed()),
      currentKeyEvent ?
-       TrueOrFalse(currentKeyEvent->mKeyDownDispatched) : "N/A",
-     currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyDownHandled) : "N/A",
-     currentKeyEvent ?
-       TrueOrFalse(currentKeyEvent->mKeyPressDispatched) : "N/A",
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyPressHandled) : "N/A",
      currentKeyEvent ?
@@ -2909,18 +2767,6 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
   // be handled in the super class of the caller.
   if (!currentKeyEvent) {
     return Destroyed();
-  }
-
-  // When current keydown event causes this command, let's dispatch
-  // eKeyDown event before any other events.  Note that if we're in a
-  // composition, we've already dispatched eKeyDown event from
-  // TextInputHandler::HandleKeyDownEvent().
-  RefPtr<TextInputHandler> kungFuDeathGrip(this);
-  if (!IsIMEComposing() && !MaybeDispatchCurrentKeydownEvent(false)) {
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p IMEInputHandler::SetMarkedText, eKeyDown caused focus move or "
-       "something and canceling the composition", this));
-    return true;
   }
 
   // If the key operation causes this command, should dispatch a keypress
@@ -2940,7 +2786,7 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
     }
 
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
-    currentKeyEvent->InitKeyEvent(this, keypressEvent, false);
+    currentKeyEvent->InitKeyEvent(this, keypressEvent);
 
     nsEventStatus status = nsEventStatus_eIgnore;
     currentKeyEvent->mKeyPressDispatched =
@@ -3553,11 +3399,6 @@ IMEInputHandler::DispatchCompositionStartEvent()
 
   NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
   mIsIMEComposing = true;
-  KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
-  mIsDeadKeyComposing =
-     currentKeyEvent && currentKeyEvent->mKeyEvent &&
-     TISInputSourceWrapper::CurrentInputSource().
-                              IsDeadKey(currentKeyEvent->mKeyEvent);
 
   nsEventStatus status;
   rv = mDispatcher->StartComposition(status);
@@ -3708,7 +3549,7 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
     }
   }
 
-  mIsIMEComposing = mIsDeadKeyComposing = false;
+  mIsIMEComposing = false;
   mIMECompositionStart = UINT32_MAX;
   if (mIMECompositionString) {
     [mIMECompositionString release];
@@ -3719,89 +3560,6 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
        "destroyed by compositioncommit event", this));
-    return false;
-  }
-
-  return true;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
-}
-
-bool
-IMEInputHandler::MaybeDispatchCurrentKeydownEvent(bool aIsProcessedByIME)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (Destroyed()) {
-    return false;
-  }
-  MOZ_ASSERT(mWidget);
-
-  KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
-  if (!currentKeyEvent ||
-      !currentKeyEvent->CanDispatchKeyDownEvent()) {
-    return true;
-  }
-
-  NSEvent* nativeEvent = currentKeyEvent->mKeyEvent;
-  if (NS_WARN_IF(!nativeEvent) ||
-      [nativeEvent type] != NSKeyDown) {
-    return true;
-  }
-
-  MOZ_LOG(gLog, LogLevel::Info,
-    ("%p IMEInputHandler::MaybeDispatchKeydownEvent, aIsProcessedByIME=%s "
-     "currentKeyEvent={ mKeyEvent(%p)={ type=%s, keyCode=%s (0x%X) } }, "
-     "aIsProcesedBy=%s, IsDeadKeyComposing()=%s",
-     this, TrueOrFalse(aIsProcessedByIME), nativeEvent,
-     GetNativeKeyEventType(nativeEvent),
-     GetKeyNameForNativeKeyCode([nativeEvent keyCode]), [nativeEvent keyCode],
-     TrueOrFalse(IsIMEComposing()), TrueOrFalse(IsDeadKeyComposing())));
-
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
-  RefPtr<TextEventDispatcher> dispatcher(mDispatcher);
-  nsresult rv = dispatcher->BeginNativeInputTransaction();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-      MOZ_LOG(gLog, LogLevel::Error,
-        ("%p IMEInputHandler::DispatchKeyEventForFlagsChanged, "
-         "FAILED, due to BeginNativeInputTransaction() failure", this));
-    return false;
-  }
-
-  NSResponder* firstResponder = [[mView window] firstResponder];
-
-  // Mark currentKeyEvent as "dispatched eKeyDown event" and actually do it.
-  currentKeyEvent->mKeyDownDispatched = true;
-
-  RefPtr<nsChildView> widget(mWidget);
-
-  WidgetKeyboardEvent keydownEvent(true, eKeyDown, widget);
-  // Don't mark the eKeyDown event as "processed by IME" if the composition
-  // is started with dead key.
-  currentKeyEvent->InitKeyEvent(this, keydownEvent,
-                                aIsProcessedByIME && !IsDeadKeyComposing());
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  dispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent, status,
-                                    currentKeyEvent);
-  currentKeyEvent->mKeyDownHandled =
-    (status == nsEventStatus_eConsumeNoDefault);
-
-  if (Destroyed()) {
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p IMEInputHandler::MaybeDispatchKeydownEvent, "
-       "widget was destroyed by keydown event", this));
-    return false;
-  }
-
-  // The key down event may have shifted the focus, in which case, we should
-  // not continue to handle current key sequence and let's commit current
-  // composition.
-  if (firstResponder != [[mView window] firstResponder]) {
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p IMEInputHandler::MaybeDispatchKeydownEvent, "
-       "view lost focus by keydown event", this));
-    CommitIMEComposition();
     return false;
   }
 
@@ -3838,22 +3596,6 @@ IMEInputHandler::InsertTextAsCommittingComposition(
     return;
   }
 
-  // When current keydown event causes this text input, let's dispatch
-  // eKeyDown event before any other events.  Note that if we're in a
-  // composition, we've already dispatched eKeyDown event from
-  // TextInputHandler::HandleKeyDownEvent().
-  // XXX Should we mark the eKeyDown event as "processed by IME"?
-  //     However, if the key causes two or more Unicode characters as
-  //     UTF-16 string, this is used.  So, perhaps, we need to improve
-  //     HandleKeyDownEvent() before do that.
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
-  if (!IsIMEComposing() && !MaybeDispatchCurrentKeydownEvent(false)) {
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p IMEInputHandler::InsertTextAsCommittingComposition, eKeyDown "
-       "caused focus move or something and canceling the composition", this));
-    return;
-  }
-
   // First, commit current composition with the latest composition string if the
   // replacement range is different from marked range.
   if (IsIMEComposing() && aReplacementRange &&
@@ -3867,6 +3609,8 @@ IMEInputHandler::InsertTextAsCommittingComposition(
       return;
     }
   }
+
+  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsString str;
   nsCocoaUtils::GetStringForNSString([aAttrString string], str);
@@ -3914,8 +3658,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
      "aReplacementRange=%p { location=%lu, length=%lu }, "
      "Destroyed()=%s, IsIMEComposing()=%s, "
      "mMarkedRange={ location=%lu, length=%lu }, keyevent=%p, "
-     "keydownDispatched=%s, keydownHandled=%s, "
-     "keypressDispatched=%s, causedOtherKeyEvents=%s, "
+     "keydownHandled=%s, keypressDispatched=%s, causedOtherKeyEvents=%s, "
      "compositionDispatched=%s",
      this, GetCharacters([aAttrString string]),
      static_cast<unsigned long>(aSelectedRange.location),
@@ -3927,8 +3670,6 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
      static_cast<unsigned long>(mMarkedRange.length),
      currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr,
      currentKeyEvent ?
-       TrueOrFalse(currentKeyEvent->mKeyDownDispatched) : "N/A",
-     currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyDownHandled) : "N/A",
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyPressDispatched) : "N/A",
@@ -3937,31 +3678,18 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mCompositionDispatched) : "N/A"));
 
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
-
   // If SetMarkedText() is called during handling a key press, that means that
   // the key event caused this composition.  So, keypress event shouldn't
   // be dispatched later, let's mark the key event causing composition event.
   if (currentKeyEvent) {
     currentKeyEvent->mCompositionDispatched = true;
-
-    // When current keydown event causes this text input, let's dispatch
-    // eKeyDown event before any other events.  Note that if we're in a
-    // composition, we've already dispatched eKeyDown event from
-    // TextInputHandler::HandleKeyDownEvent().  On the other hand, if we're
-    // not in composition, the key event starts new composition.  So, we
-    // need to mark the eKeyDown event as "processed by IME".
-    if (!IsIMEComposing() && !MaybeDispatchCurrentKeydownEvent(true)) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p IMEInputHandler::SetMarkedText, eKeyDown caused focus move or "
-         "something and canceling the composition", this));
-      return;
-    }
   }
 
   if (Destroyed()) {
     return;
   }
+
+  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   // First, commit current composition with the latest composition string if the
   // replacement range is different from marked range.
@@ -4419,7 +4147,6 @@ IMEInputHandler::IMEInputHandler(nsChildView* aWidget,
   , mIMECompositionString(nullptr)
   , mIMECompositionStart(UINT32_MAX)
   , mIsIMEComposing(false)
-  , mIsDeadKeyComposing(false)
   , mIsIMEEnabled(true)
   , mIsASCIICapableOnly(false)
   , mIgnoreIMECommit(false)
@@ -4578,15 +4305,13 @@ IMEInputHandler::CommitIMEComposition()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (!IsIMEComposing())
+    return;
+
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::CommitIMEComposition, mIMECompositionString=%s",
      this, GetCharacters(mIMECompositionString)));
 
-  // If this is called before dispatching eCompositionStart, IsIMEComposing()
-  // returns false.  Even in such case, we need to commit composition *in*
-  // IME if this is called by preceding eKeyDown event of eCompositionStart.
-  // So, we need to call KillIMEComposition() even when IsIMEComposing()
-  // returns false.
   KillIMEComposition();
 
   if (!IsIMEComposing())
@@ -4860,7 +4585,6 @@ TextInputHandlerBase::DispatchEvent(WidgetGUIEvent& aEvent)
 void
 TextInputHandlerBase::InitKeyEvent(NSEvent *aNativeKeyEvent,
                                    WidgetKeyboardEvent& aKeyEvent,
-                                   bool aIsProcessedByIME,
                                    const nsAString* aInsertString)
 {
   NS_ASSERTION(aNativeKeyEvent, "aNativeKeyEvent must not be NULL");
@@ -4868,12 +4592,11 @@ TextInputHandlerBase::InitKeyEvent(NSEvent *aNativeKeyEvent,
   if (mKeyboardOverride.mOverrideEnabled) {
     TISInputSourceWrapper tis;
     tis.InitByLayoutID(mKeyboardOverride.mKeyboardLayout, true);
-    tis.InitKeyEvent(aNativeKeyEvent, aKeyEvent, aIsProcessedByIME,
-                     aInsertString);
+    tis.InitKeyEvent(aNativeKeyEvent, aKeyEvent, aInsertString);
     return;
   }
   TISInputSourceWrapper::CurrentInputSource().
-    InitKeyEvent(aNativeKeyEvent, aKeyEvent, aIsProcessedByIME, aInsertString);
+    InitKeyEvent(aNativeKeyEvent, aKeyEvent, aInsertString);
 }
 
 nsresult
@@ -5166,8 +4889,7 @@ TextInputHandlerBase::EnsureSecureEventInputDisabled()
 void
 TextInputHandlerBase::KeyEventState::InitKeyEvent(
                                        TextInputHandlerBase* aHandler,
-                                       WidgetKeyboardEvent& aKeyEvent,
-                                       bool aIsProcessedByIME)
+                                       WidgetKeyboardEvent& aKeyEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -5197,8 +4919,7 @@ TextInputHandlerBase::KeyEventState::InitKeyEvent(
   }
 
   aKeyEvent.mUniqueId = mUniqueId;
-  aHandler->InitKeyEvent(nativeEvent, aKeyEvent, aIsProcessedByIME,
-                         mInsertString);
+  aHandler->InitKeyEvent(nativeEvent, aKeyEvent, mInsertString);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

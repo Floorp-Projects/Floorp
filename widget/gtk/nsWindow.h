@@ -278,20 +278,10 @@ public:
                                          guint aTime);
     static void        UpdateDragStatus (GdkDragContext *aDragContext,
                                          nsIDragService *aDragService);
-    /**
-     * DispatchKeyDownOrKeyUpEvent() dispatches eKeyDown or eKeyUp event.
-     *
-     * @param aEvent            A native GDK_KEY_PRESS or GDK_KEY_RELEASE
-     *                          event.
-     * @param aProcessedByIME   true if the event is handled by IME.
-     * @param aIsCancelled      [Out] true if the default is prevented.
-     * @return                  true if eKeyDown event is actually dispatched.
-     *                          Otherwise, false.
-     */
-    bool DispatchKeyDownOrKeyUpEvent(GdkEventKey* aEvent,
-                                     bool aProcessedByIME,
-                                     bool* aIsCancelled);
-
+    // If this dispatched the keydown event actually, this returns TRUE,
+    // otherwise, FALSE.
+    bool               DispatchKeyDownEvent(GdkEventKey *aEvent,
+                                            bool *aIsCancelled);
     WidgetEventTime    GetWidgetEventTime(guint32 aEventTime);
     mozilla::TimeStamp GetEventTimeStamp(guint32 aEventTime);
     mozilla::CurrentX11TimeGetter* GetCurrentTimeGetter();
