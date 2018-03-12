@@ -19,7 +19,7 @@
 # endif
 #endif
 
-typedef int8_t realGLboolean;
+typedef uint8_t realGLboolean;
 
 #if !defined(__gltypes_h_) && !defined(__gl_h_)
 #define __gltypes_h_
@@ -44,8 +44,13 @@ typedef void GLvoid;
 
 typedef char GLchar;
 #ifndef __gl2_h_
-typedef intptr_t GLsizeiptr;
-typedef intptr_t GLintptr;
+#ifdef _WIN64
+typedef signed long long int GLintptr;
+typedef signed long long int GLsizeiptr;
+#else
+typedef signed long int GLintptr;
+typedef signed long int GLsizeiptr;
+#endif
 #endif
 
 #endif /* #if !defined(__gltypes_h_) && !defined(__gl_h_) */
