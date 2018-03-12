@@ -12,29 +12,28 @@
 <script>
 "use strict";
 
-function background() {
-  browser.webRequest.onBeforeRequest.addListener(details => {
-    browser.test.sendMessage("onBeforeRequest", details);
-  }, {urls: ["<all_urls>"]}, ["blocking"]);
-
-  let tab;
-  browser.tabs.onCreated.addListener(newTab => {
-    tab = newTab;
-  });
-
-  browser.test.onMessage.addListener(msg => {
-    if (msg === "close-tab") {
-      browser.tabs.remove(tab.id);
-      browser.test.sendMessage("tab-closed");
-    }
-  });
-}
-
 let extensionData = {
   manifest: {
     permissions: ["webRequest", "webRequestBlocking", "<all_urls>", "tabs"],
   },
-  background,
+  background() {
+    browser.webRequest.onBeforeRequest.addListener(details => {
+      browser.test.sendMessage("onBeforeRequest", details);
+    }, {urls: ["<all_urls>"]}, ["blocking"]);
+
+    let tab;
+    browser.tabs.onCreated.addListener(newTab => {
+      browser.test.sendMessage("tab-created");
+      tab = newTab;
+    });
+
+    browser.test.onMessage.addListener(msg => {
+      if (msg === "close-tab") {
+        browser.tabs.remove(tab.id);
+        browser.test.sendMessage("tab-closed");
+      }
+    });
+  },
 };
 
 let expected = {
@@ -189,9 +188,10 @@ add_task(async function test_webRequest_main_frame() {
     checkDetails(await extension.awaitMessage("onBeforeRequest"));
   }
 
-  let closed = extension.awaitMessage("tab-closed");
+  await extension.awaitMessage("tab-created");
   extension.sendMessage("close-tab");
-  await closed;
+  await extension.awaitMessage("tab-closed");
+
   await extension.unload();
 });
 </script>
