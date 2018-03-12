@@ -17,7 +17,7 @@
 
 template<typename T> class nsCOMArray;
 class nsIMemoryReporter;
-struct XPTInterfaceDirectoryEntry;
+struct XPTInterfaceDescriptor;
 class xptiInterfaceEntry;
 class xptiInterfaceInfo;
 class xptiTypelibGuts;
@@ -55,7 +55,7 @@ private:
     void InitMemoryReporter();
 
     // idx is the index of this interface in the XPTHeader
-    void VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry* iface,
+    void VerifyAndAddEntryIfNew(const XPTInterfaceDescriptor* iface,
                                 uint16_t idx,
                                 xptiTypelibGuts* typelib);
 
