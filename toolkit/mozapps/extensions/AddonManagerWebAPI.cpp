@@ -77,7 +77,7 @@ AddonManagerWebAPI::IsValidSite(nsIURI* uri)
   bool isSecure;
   nsresult rv = uri->SchemeIs("https", &isSecure);
   if (NS_FAILED(rv) || !isSecure) {
-    if (!(xpc::IsInAutomation() && Preferences::GetBool("extensions.webapi.testing", false))) {
+    if (!(xpc::IsInAutomation() && Preferences::GetBool("extensions.webapi.testing.http", false))) {
       return false;
     }
   }
