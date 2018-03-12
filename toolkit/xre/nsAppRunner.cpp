@@ -16,6 +16,7 @@
 #include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Printf.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -101,10 +102,8 @@
 #include <math.h>
 #include "cairo/cairo-features.h"
 #include "mozilla/WindowsDllBlocklist.h"
-#include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/MainThreadRuntime.h"
 #include "mozilla/widget/AudioSession.h"
-#include "mozilla/WindowsVersion.h"
 
 #ifndef PROCESS_DEP_ENABLE
 #define PROCESS_DEP_ENABLE 0x1
@@ -237,6 +236,7 @@ extern void InstallSignalHandlers(const char *ProgramName);
 
 #define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
 #define FILE_INVALIDATE_CACHES NS_LITERAL_CSTRING(".purgecaches")
+#define FILE_STARTUP_INCOMPLETE NS_LITERAL_STRING(".startup-incomplete")
 
 int    gArgc;
 char **gArgv;
@@ -301,6 +301,7 @@ int (*RunGTest)(int*, char**) = 0;
 } // namespace mozilla
 
 using namespace mozilla;
+using namespace mozilla::startup;
 using mozilla::Unused;
 using mozilla::scache::StartupCache;
 using mozilla::dom::ContentParent;
@@ -3125,6 +3126,8 @@ public:
   int XRE_mainStartup(bool* aExitFlag);
   nsresult XRE_mainRun();
 
+  Result<bool, nsresult> CheckLastStartupWasCrash();
+
   nsCOMPtr<nsINativeAppSupport> mNativeApp;
   nsCOMPtr<nsIToolkitProfileService> mProfileSvc;
   nsCOMPtr<nsIFile> mProfD;
@@ -3790,6 +3793,51 @@ static void SetShutdownChecks() {
 
 }
 
+namespace mozilla {
+namespace startup {
+  Result<nsCOMPtr<nsIFile>, nsresult>
+  GetIncompleteStartupFile(nsIFile* aProfLD)
+  {
+    nsCOMPtr<nsIFile> crashFile;
+    MOZ_TRY(aProfLD->Clone(getter_AddRefs(crashFile)));
+    MOZ_TRY(crashFile->Append(FILE_STARTUP_INCOMPLETE));
+    return Move(crashFile);
+  }
+}
+}
+
+// Check whether the last startup attempt resulted in a crash within the
+// last 6 hours.
+// Note that this duplicates the logic in nsAppStartup::TrackStartupCrashBegin,
+// which runs too late for our purposes.
+Result<bool, nsresult>
+XREMain::CheckLastStartupWasCrash()
+{
+  constexpr int32_t MAX_TIME_SINCE_STARTUP = 6 * 60 * 60 * 1000;
+
+  nsCOMPtr<nsIFile> crashFile;
+  MOZ_TRY_VAR(crashFile, GetIncompleteStartupFile(mProfLD));
+
+  // Attempt to create the incomplete startup canary file. If the file already
+  // exists, this fails, and we know the last startup was a success. If it
+  // doesn't already exist, it is created, and will be removed at the end of
+  // the startup crash detection window.
+  AutoFDClose fd;
+  Unused << crashFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_EXCL,
+                                        0666, &fd.rwget());
+  if (fd) {
+    return false;
+  }
+
+  PRTime lastModifiedTime;
+  MOZ_TRY(crashFile->GetLastModifiedTime(&lastModifiedTime));
+
+  // If the file exists, and was created within the appropriate time window,
+  // the last startup was recent and resulted in a crash.
+  PRTime now = PR_Now() / PR_USEC_PER_MSEC;
+  return now - lastModifiedTime <= MAX_TIME_SINCE_STARTUP;
+}
+
 /*
  * XRE_mainStartup - Initializes the profile and various other services.
  * Main() will exit early if either return value != 0 or if aExitFlag is
@@ -4206,13 +4254,10 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   // If we see .purgecaches, that means someone did a make.
   // Re-register components to catch potential changes.
   nsCOMPtr<nsIFile> flagFile;
-
   rv = NS_ERROR_FILE_NOT_FOUND;
-  nsCOMPtr<nsIFile> fFlagFile;
   if (mAppData->directory) {
-    rv = mAppData->directory->Clone(getter_AddRefs(fFlagFile));
+    rv = mAppData->directory->Clone(getter_AddRefs(flagFile));
   }
-  flagFile = do_QueryInterface(fFlagFile);
   if (flagFile) {
     flagFile->AppendNative(FILE_INVALIDATE_CACHES);
   }
@@ -4222,10 +4267,11 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
                                       mDirProvider.GetGREDir(),
                                       mAppData->directory, flagFile,
                                       &cachesOK);
-  if (CheckArg("purgecaches")) {
-    cachesOK = false;
-  }
-  if (PR_GetEnv("MOZ_PURGE_CACHES")) {
+
+  bool lastStartupWasCrash = CheckLastStartupWasCrash().unwrapOr(false);
+
+  if (CheckArg("purgecaches") || PR_GetEnv("MOZ_PURGE_CACHES") ||
+      lastStartupWasCrash) {
     cachesOK = false;
   }
 
@@ -4322,16 +4368,6 @@ XREMain::XRE_mainRun()
   auto dllServicesDisable = MakeScopeExit([&dllServices]() {
     dllServices->Disable();
   });
-
-#if defined(NIGHTLY_BUILD)
-  if (!IsWin8OrLater()) {
-    // On Windows 7, ensure that the COM MTA remains alive for the life of the
-    // process. We have seen multiple crashes on that OS when the MTA is
-    // repeatedly set up and torn down, so maintaining at least one consistent
-    // reference should prevent those.
-    mscom::EnsureMTA();
-  }
-#endif // defined(NIGHTLY_BUILD)
 #endif // defined(XP_WIN)
 
 #ifdef NS_FUNCTION_TIMER
@@ -4806,6 +4842,16 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
   int result = XRE_mainInit(&exit);
   if (result != 0 || exit)
     return result;
+
+  // If we exit gracefully, remove the startup crash canary file.
+  auto cleanup = MakeScopeExit([&] () -> nsresult {
+    if (mProfLD) {
+      nsCOMPtr<nsIFile> crashFile;
+      MOZ_TRY_VAR(crashFile, GetIncompleteStartupFile(mProfLD));
+      crashFile->Remove(false);
+    }
+    return NS_OK;
+  });
 
   // startup
   result = XRE_mainStartup(&exit);

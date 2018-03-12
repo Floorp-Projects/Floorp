@@ -64,9 +64,9 @@ function AutocompletePopup(toolboxDoc, options = {}) {
   this._list = this._document.createElementNS(HTML_NS, "ul");
   this._list.setAttribute("flex", "1");
 
-  // The list clone will be inserted in the same document as the anchor, and will receive
-  // a copy of the main list innerHTML to allow screen readers to access the list.
-  this._listClone = this._document.createElementNS(HTML_NS, "ul");
+  // The list clone will be inserted in the same document as the anchor, and will be a
+  // copy of the main list to allow screen readers to access the list.
+  this._listClone = this._list.cloneNode();
   this._listClone.className = "devtools-autocomplete-list-aria-clone";
 
   if (options.listId) {
@@ -388,8 +388,12 @@ AutocompletePopup.prototype = {
     }
 
     // Update the clone content to match the current list content.
-    // eslint-disable-next-line no-unsanitized/property
-    this._listClone.innerHTML = this._list.innerHTML;
+    const clone = this._list.cloneNode(true);
+    clone.className = "devtools-autocomplete-list-aria-clone";
+    this._listClone.replaceWith(clone);
+
+    // We also need to update the reference.
+    this._listClone = clone;
 
     this._activeElement.setAttribute("aria-activedescendant", id);
   },

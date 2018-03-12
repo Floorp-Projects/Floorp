@@ -276,6 +276,7 @@ size_t Silf::readClassMap(const byte *p, size_t data_len, uint32 version, Error 
         return ERROROFFSET;
 
     // Check the linear offsets are sane, these must be monotonically increasing.
+    assert(m_nClass >= m_nLinear);
     for (const uint32 *o = m_classOffsets, * const o_end = o + m_nLinear; o != o_end; ++o)
         if (e.test(o[0] > o[1], E_BADCLASSOFFSET))
             return ERROROFFSET;

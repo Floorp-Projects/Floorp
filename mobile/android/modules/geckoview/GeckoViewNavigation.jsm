@@ -9,10 +9,11 @@ var EXPORTED_SYMBOLS = ["GeckoViewNavigation"];
 ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-  "resource://gre/modules/Messaging.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
     ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
@@ -152,16 +153,40 @@ class GeckoViewNavigation extends GeckoViewModule {
     return browser;
   }
 
+  handleOpenUri(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal,
+                aNextTabParentId) {
+    let browser = this.browser;
+    if (LoadURIDelegate.load(this.eventDispatcher, aUri, aWhere, aFlags,
+                             aTriggeringPrincipal)) {
+      return browser;
+    }
+
+    if (aWhere === Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
+        aWhere === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB ||
+        aWhere === Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB) {
+      browser = this.handleNewSession(aUri, aOpener, aWhere, aFlags,
+                                      aTriggeringPrincipal);
+    }
+    if (!browser) {
+      // Should we throw?
+      return null;
+    }
+    browser.loadURI(aUri.spec, null, null, null, null, aTriggeringPrincipal);
+    return browser;
+  }
+
   // nsIBrowserDOMWindow.
   openURI(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
-    return this.createContentWindow(aUri, aOpener, aWhere, aFlags,
-                                    aTriggeringPrincipal);
+    const browser = this.handleOpenUri(aUri, aOpener, aWhere, aFlags,
+                                       aTriggeringPrincipal, null);
+    return browser && browser.contentWindow;
   }
 
   // nsIBrowserDOMWindow.
   openURIInFrame(aUri, aParams, aWhere, aFlags, aNextTabParentId, aName) {
-    return this.createContentWindowInFrame(aUri, aParams, aWhere, aFlags,
-                                           aNextTabParentId, aName);
+    const browser = this.handleOpenUri(aUri, null, aWhere, aFlags, null,
+                                       aNextTabParentId);
+    return browser;
   }
 
   // nsIBrowserDOMWindow.

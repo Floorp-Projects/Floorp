@@ -16,7 +16,7 @@ use gpu_types::{BrushFlags, BrushInstance, ClipChainRectIndex};
 use gpu_types::{ClipMaskInstance, ClipScrollNodeIndex};
 use gpu_types::{CompositePrimitiveInstance, PrimitiveInstance, SimplePrimitiveInstance};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
-use picture::{ContentOrigin, PictureCompositeMode, PictureKind, PicturePrimitive, PictureSurface};
+use picture::{ContentOrigin, PictureCompositeMode, PictureKind, PicturePrimitive};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{CachedGradient, ImageSource, PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
 use prim_store::{BrushPrimitive, BrushKind, DeferredResolve, EdgeAaSegmentMask, PrimitiveRun};
@@ -55,7 +55,6 @@ pub enum BrushImageSourceKind {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum BrushBatchKind {
-    Picture,
     Solid,
     Line,
     Image(ImageBufferKind),
@@ -522,10 +521,7 @@ impl AlphaBatchBuilder {
             let pic = &ctx.prim_store.cpu_pictures[pic_metadata.cpu_prim_index.0];
             let batch = self.batch_list.get_suitable_batch(key, &pic_metadata.screen_rect.as_ref().expect("bug").clipped);
 
-            let render_task_id = match pic.surface {
-                Some(PictureSurface::RenderTask(render_task_id)) => render_task_id,
-                Some(PictureSurface::TextureCache(..)) | None => panic!("BUG: unexpected surface in splitting"),
-            };
+            let render_task_id = pic.surface.expect("BUG: unexpected surface in splitting");
             let source_task_address = render_tasks.get_task_address(render_task_id);
             let gpu_address = gpu_handle.as_int(gpu_cache);
 
@@ -574,7 +570,7 @@ impl AlphaBatchBuilder {
             // TODO(gw): Support culling on shadow image types.
             let is_image = match pic.kind {
                 PictureKind::Image { .. } => true,
-                PictureKind::BoxShadow { .. } | PictureKind::TextShadow { .. } => false,
+                PictureKind::TextShadow { .. } => false,
             };
 
             if !is_image || metadata.screen_rect.is_some() {
@@ -801,7 +797,7 @@ impl AlphaBatchBuilder {
                     &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
                 let is_shadow = match pic.kind {
                     PictureKind::TextShadow { .. } => true,
-                    PictureKind::BoxShadow { .. } | PictureKind::Image { .. } => false,
+                    PictureKind::Image { .. } => false,
                 };
 
                 // TODO(gw): It probably makes sense to base this decision on the content
@@ -894,38 +890,7 @@ impl AlphaBatchBuilder {
                     &ctx.prim_store.cpu_pictures[prim_metadata.cpu_prim_index.0];
 
                 match picture.surface {
-                    Some(PictureSurface::TextureCache(ref cache_item)) => {
-                        match picture.kind {
-                            PictureKind::TextShadow { .. } |
-                            PictureKind::Image { .. } => {
-                                panic!("BUG: only supported as render tasks for now");
-                            }
-                            PictureKind::BoxShadow { image_kind, .. } => {
-                                let textures = BatchTextures::color(cache_item.texture_id);
-                                let kind = BrushBatchKind::Picture;
-
-                                self.add_brush_to_batch(
-                                    &picture.brush,
-                                    prim_metadata,
-                                    kind,
-                                    specified_blend_mode,
-                                    non_segmented_blend_mode,
-                                    textures,
-                                    clip_chain_rect_index,
-                                    clip_task_address,
-                                    &task_relative_bounding_rect,
-                                    prim_cache_address,
-                                    scroll_id,
-                                    task_address,
-                                    transform_kind,
-                                    z,
-                                    render_tasks,
-                                    [cache_item.uv_rect_handle.as_int(gpu_cache), image_kind as i32, 0],
-                                );
-                            }
-                        }
-                    }
-                    Some(PictureSurface::RenderTask(cache_task_id)) => {
+                    Some(cache_task_id) => {
                         let cache_task_address = render_tasks.get_task_address(cache_task_id);
                         let textures = BatchTextures::render_target_cache();
 
@@ -958,9 +923,6 @@ impl AlphaBatchBuilder {
                                     ],
                                 };
                                 batch.push(PrimitiveInstance::from(instance));
-                            }
-                            PictureKind::BoxShadow { .. } => {
-                                panic!("BUG: should be handled as a texture cache surface");
                             }
                             PictureKind::Image {
                                 composite_mode,
@@ -1447,9 +1409,6 @@ impl BrushPrimitive {
                     ],
                 ))
             }
-            BrushKind::Mask { .. } => {
-                unreachable!("bug: mask brushes not expected in normal alpha pass");
-            }
         }
     }
 }
@@ -1487,7 +1446,6 @@ impl AlphaBatchHelpers for PrimitiveStore {
                         }
                     }
                     BrushKind::Solid { .. } |
-                    BrushKind::Mask { .. } |
                     BrushKind::Line { .. } |
                     BrushKind::YuvImage { .. } |
                     BrushKind::RadialGradient { .. } |
@@ -1599,6 +1557,7 @@ pub struct ClipBatcher {
     pub images: FastHashMap<SourceTexture, Vec<ClipMaskInstance>>,
     pub border_clears: Vec<ClipMaskInstance>,
     pub borders: Vec<ClipMaskInstance>,
+    pub box_shadows: FastHashMap<SourceTexture, Vec<ClipMaskInstance>>,
 }
 
 impl ClipBatcher {
@@ -1608,7 +1567,24 @@ impl ClipBatcher {
             images: FastHashMap::default(),
             border_clears: Vec::new(),
             borders: Vec::new(),
+            box_shadows: FastHashMap::default(),
         }
+    }
+
+    pub fn add_clip_region(
+        &mut self,
+        task_address: RenderTaskAddress,
+        clip_data_address: GpuCacheAddress,
+    ) {
+        let instance = ClipMaskInstance {
+            render_task_address: task_address,
+            scroll_node_data_index: ClipScrollNodeIndex(0),
+            segment: 0,
+            clip_data_address,
+            resource_address: GpuCacheAddress::invalid(),
+        };
+
+        self.rectangles.push(instance);
     }
 
     pub fn add(
@@ -1658,6 +1634,18 @@ impl ClipBatcher {
                             debug!("Key:{:?} Rect::{:?}", mask.image, mask.rect);
                             continue;
                         }
+                    }
+                    ClipSource::BoxShadow(ref info) => {
+                        debug_assert_ne!(info.cache_item.texture_id, SourceTexture::Invalid);
+
+                        self.box_shadows
+                            .entry(info.cache_item.texture_id)
+                            .or_insert(Vec::new())
+                            .push(ClipMaskInstance {
+                                clip_data_address: gpu_address,
+                                resource_address: gpu_cache.get_address(&info.cache_item.uv_rect_handle),
+                                ..instance
+                            });
                     }
                     ClipSource::Rectangle(..) => {
                         if work_item.coordinate_system_id != coordinate_system_id {

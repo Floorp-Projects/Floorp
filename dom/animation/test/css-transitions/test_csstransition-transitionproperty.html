@@ -2,13 +2,25 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<body>
 <div id="log"></div>
 <script>
 'use strict';
-setup({explicit_done: true});
-SpecialPowers.pushPrefEnv(
-  { "set": [["dom.animations-api.core.enabled", true]]},
-  function() {
-    window.open("file_csstransition-transitionproperty.html");
-  });
+
+test(function(t) {
+  var div = addDiv(t);
+
+  // Add a transition
+  div.style.left = '0px';
+  getComputedStyle(div).transitionProperty;
+  div.style.transition = 'all 100s';
+  div.style.left = '100px';
+
+  assert_equals(div.getAnimations()[0].transitionProperty, 'left',
+                'The transitionProperty for the corresponds to the specific ' +
+                'property being transitioned');
+}, 'CSSTransition.transitionProperty');
+
 </script>
+</body>

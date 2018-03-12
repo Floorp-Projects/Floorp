@@ -58,6 +58,7 @@ For developers
    Contributing.md
    Debugging.md
    Testing.md
+   Taskcluster.md
    CodeStyle.md
    Patching.md
    SeleniumAtoms.md

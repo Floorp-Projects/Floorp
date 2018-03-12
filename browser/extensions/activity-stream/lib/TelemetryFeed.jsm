@@ -360,7 +360,7 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   sendUTEvent(event_object, eventFunction) {
-    if (this.eventTelemetryEnabled) {
+    if (this.telemetryEnabled && this.eventTelemetryEnabled) {
       eventFunction(event_object);
     }
   }

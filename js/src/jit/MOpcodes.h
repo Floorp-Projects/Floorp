@@ -198,7 +198,6 @@ namespace jit {
     _(GuardReceiverPolymorphic)                                             \
     _(GuardObjectGroup)                                                     \
     _(GuardObjectIdentity)                                                  \
-    _(GuardClass)                                                           \
     _(GuardUnboxedExpando)                                                  \
     _(LoadUnboxedExpando)                                                   \
     _(ArrayLength)                                                          \

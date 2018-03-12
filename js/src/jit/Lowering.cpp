@@ -3500,9 +3500,19 @@ LIRGenerator::visitStoreUnboxedString(MStoreUnboxedString* ins)
 void
 LIRGenerator::visitConvertUnboxedObjectToNative(MConvertUnboxedObjectToNative* ins)
 {
-    LInstruction* check = new(alloc()) LConvertUnboxedObjectToNative(useRegister(ins->object()));
-    add(check, ins);
-    assignSafepoint(check, ins);
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+    if (JitOptions.spectreObjectMitigationsMisc) {
+        auto* lir = new(alloc()) LConvertUnboxedObjectToNative(useRegisterAtStart(ins->object()),
+                                                               temp());
+        defineReuseInput(lir, ins, 0);
+        assignSafepoint(lir, ins);
+    } else {
+        auto* lir = new(alloc()) LConvertUnboxedObjectToNative(useRegister(ins->object()),
+                                                               LDefinition::BogusTemp());
+        add(lir, ins);
+        assignSafepoint(lir, ins);
+    }
 }
 
 void
@@ -3933,13 +3943,14 @@ LIRGenerator::visitGetPropertyPolymorphic(MGetPropertyPolymorphic* ins)
 
     if (ins->type() == MIRType::Value) {
         LGetPropertyPolymorphicV* lir =
-            new(alloc()) LGetPropertyPolymorphicV(useRegister(ins->object()));
+            new(alloc()) LGetPropertyPolymorphicV(useRegister(ins->object()), temp());
         assignSnapshot(lir, Bailout_ShapeGuard);
         defineBox(lir, ins);
     } else {
-        LDefinition maybeTemp = (ins->type() == MIRType::Double) ? temp() : LDefinition::BogusTemp();
+        LDefinition maybeTemp2 =
+            (ins->type() == MIRType::Double) ? temp() : LDefinition::BogusTemp();
         LGetPropertyPolymorphicT* lir =
-            new(alloc()) LGetPropertyPolymorphicT(useRegister(ins->object()), maybeTemp);
+            new(alloc()) LGetPropertyPolymorphicT(useRegister(ins->object()), temp(), maybeTemp2);
         assignSnapshot(lir, Bailout_ShapeGuard);
         define(lir, ins);
     }
@@ -3954,14 +3965,14 @@ LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic* ins)
         LSetPropertyPolymorphicV* lir =
             new(alloc()) LSetPropertyPolymorphicV(useRegister(ins->object()),
                                                   useBox(ins->value()),
-                                                  temp());
+                                                  temp(), temp());
         assignSnapshot(lir, Bailout_ShapeGuard);
         add(lir, ins);
     } else {
         LAllocation value = useRegisterOrConstant(ins->value());
         LSetPropertyPolymorphicT* lir =
             new(alloc()) LSetPropertyPolymorphicT(useRegister(ins->object()), value,
-                                                  ins->value()->type(), temp());
+                                                  ins->value()->type(), temp(), temp());
         assignSnapshot(lir, Bailout_ShapeGuard);
         add(lir, ins);
     }
@@ -4003,10 +4014,17 @@ LIRGenerator::visitGuardShape(MGuardShape* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
-    LGuardShape* guard = new(alloc()) LGuardShape(useRegisterAtStart(ins->object()));
-    assignSnapshot(guard, ins->bailoutKind());
-    add(guard, ins);
-    redefine(ins, ins->object());
+    if (JitOptions.spectreObjectMitigationsMisc) {
+        auto* lir = new(alloc()) LGuardShape(useRegisterAtStart(ins->object()), temp());
+        assignSnapshot(lir, ins->bailoutKind());
+        defineReuseInput(lir, ins, 0);
+    } else {
+        auto* lir = new(alloc()) LGuardShape(useRegister(ins->object()),
+                                             LDefinition::BogusTemp());
+        assignSnapshot(lir, ins->bailoutKind());
+        add(lir, ins);
+        redefine(ins, ins->object());
+    }
 }
 
 void
@@ -4014,18 +4032,17 @@ LIRGenerator::visitGuardObjectGroup(MGuardObjectGroup* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
-    LGuardObjectGroup* guard = new(alloc()) LGuardObjectGroup(useRegisterAtStart(ins->object()));
-    assignSnapshot(guard, ins->bailoutKind());
-    add(guard, ins);
-    redefine(ins, ins->object());
-}
-
-void
-LIRGenerator::visitGuardClass(MGuardClass* ins)
-{
-    LGuardClass* guard = new(alloc()) LGuardClass(useRegister(ins->object()), temp());
-    assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard);
-    add(guard, ins);
+    if (JitOptions.spectreObjectMitigationsMisc) {
+        auto* lir = new(alloc()) LGuardObjectGroup(useRegisterAtStart(ins->object()), temp());
+        assignSnapshot(lir, ins->bailoutKind());
+        defineReuseInput(lir, ins, 0);
+    } else {
+        auto* lir = new(alloc()) LGuardObjectGroup(useRegister(ins->object()),
+                                                   LDefinition::BogusTemp());
+        assignSnapshot(lir, ins->bailoutKind());
+        add(lir, ins);
+        redefine(ins, ins->object());
+    }
 }
 
 void
@@ -4069,11 +4086,18 @@ LIRGenerator::visitGuardReceiverPolymorphic(MGuardReceiverPolymorphic* ins)
     MOZ_ASSERT(ins->object()->type() == MIRType::Object);
     MOZ_ASSERT(ins->type() == MIRType::Object);
 
-    LGuardReceiverPolymorphic* guard =
-        new(alloc()) LGuardReceiverPolymorphic(useRegister(ins->object()), temp());
-    assignSnapshot(guard, Bailout_ShapeGuard);
-    add(guard, ins);
-    redefine(ins, ins->object());
+    if (JitOptions.spectreObjectMitigationsMisc) {
+        auto* lir = new(alloc()) LGuardReceiverPolymorphic(useRegisterAtStart(ins->object()),
+                                                           temp(), temp());
+        assignSnapshot(lir, Bailout_ShapeGuard);
+        defineReuseInput(lir, ins, 0);
+    } else {
+        auto* lir = new(alloc()) LGuardReceiverPolymorphic(useRegister(ins->object()),
+                                                           temp(), temp());
+        assignSnapshot(lir, Bailout_ShapeGuard);
+        add(lir, ins);
+        redefine(ins, ins->object());
+    }
 }
 
 void

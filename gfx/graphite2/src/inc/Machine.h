@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -27,11 +27,12 @@ of the License or (at your option) any later version.
 // This general interpreter interface.
 // Author: Tim Eves
 
-// Build one of direct_machine.cpp or call_machine.cpp to implement this 
+// Build one of direct_machine.cpp or call_machine.cpp to implement this
 // interface.
 
 #pragma once
 #include <cstring>
+#include <limits>
 #include <graphite2/Types.h>
 #include "inc/Main.h"
 
@@ -56,6 +57,13 @@ of the License or (at your option) any later version.
 #define     REGPARM(n)
 #endif
 
+#if defined(__MINGW32__)
+// MinGW's <limits> at some point includes winnt.h which #define's a
+// DELETE macro, which conflicts with enum opcode below, so we undefine
+// it here.
+#undef DELETE
+#endif
+
 namespace graphite2 {
 
 // Forward declarations
@@ -64,7 +72,7 @@ class Slot;
 class SlotMap;
 
 
-namespace vm 
+namespace vm
 {
 
 
@@ -112,12 +120,12 @@ enum opcode {
     PUT_GLYPH,                      PUSH_GLYPH_ATTR,    PUSH_ATT_TO_GLYPH_ATTR,
     BITOR,                          BITAND,             BITNOT,
     BITSET,                         SET_FEAT,
-    MAX_OPCODE,                     
+    MAX_OPCODE,
     // private opcodes for internal use only, comes after all other on disk opcodes
     TEMP_COPY = MAX_OPCODE
 };
 
-struct opcode_t 
+struct opcode_t
 {
     instr           impl[2];
     uint8           param_sz;
@@ -186,6 +194,8 @@ inline Machine::status_t Machine::status() const throw()
 
 inline void Machine::check_final_stack(const stack_t * const sp)
 {
+    if (_status != finished) return;
+
     stack_t const * const base  = _stack + STACK_GUARD,
                   * const limit = base + STACK_MAX;
     if      (sp <  base)    _status = stack_underflow;       // This should be impossible now.
@@ -195,6 +205,3 @@ inline void Machine::check_final_stack(const stack_t * const sp)
 
 } // namespace vm
 } // namespace graphite2
-
-
-

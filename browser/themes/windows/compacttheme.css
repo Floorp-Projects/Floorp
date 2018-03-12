@@ -127,12 +127,12 @@
   /* Use proper menu text styling in Win7 classic mode (copied from browser.css) */
   @media (-moz-windows-compositor: 0),
          (-moz-windows-default-theme: 0) {
-    :root[tabsintitlebar]:not([inFullscreen]) {
-      --titlebar-text-color: CaptionText;
+    :root[tabsintitlebar]:not([inFullscreen]) .titlebar-color {
+      color: CaptionText;
     }
 
-    :root[tabsintitlebar]:not([inFullscreen]):-moz-window-inactive {
-      --titlebar-text-color: InactiveCaptionText;
+    :root[tabsintitlebar]:not([inFullscreen]) .titlebar-color:-moz-window-inactive {
+      color: InactiveCaptionText;
     }
 
     #main-window[tabsintitlebar] #main-menubar > menu {

@@ -161,8 +161,9 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     public void preload(final String... types) {
         for (final String type : types) {
             final ChildConnection connection = getConnection(type);
-            connection.bind();
-            connection.getPid();
+            if (connection.bind() != null) {
+                connection.getPid();
+            }
         }
     }
 

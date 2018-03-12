@@ -85,7 +85,6 @@ const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 const PREF_DISTRO_ADDONS_PERMS        = "extensions.distroAddons.promptForPermissions";
-const PREF_INTERPOSITION_ENABLED      = "extensions.interposition.enabled";
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 const PREF_ALLOW_LEGACY               = "extensions.legacy.enabled";
@@ -4232,11 +4231,6 @@ var XPIProvider = {
     let principal = Cc["@mozilla.org/systemprincipal;1"].
                     createInstance(Ci.nsIPrincipal);
     if (!aMultiprocessCompatible) {
-      if (Services.prefs.getBoolPref(PREF_INTERPOSITION_ENABLED, false)) {
-        let interposition = Cc["@mozilla.org/addons/multiprocess-shims;1"].
-          getService(Ci.nsIAddonInterposition);
-        Cu.setAddonInterposition(aId, interposition);
-      }
       Cu.allowCPOWsInAddon(aId, true);
     }
 
@@ -4300,9 +4294,6 @@ var XPIProvider = {
    *         The add-on's ID
    */
   unloadBootstrapScope(aId) {
-    // In case the add-on was not multiprocess-compatible, deregister
-    // any interpositions for it.
-    Cu.setAddonInterposition(aId, null);
     Cu.allowCPOWsInAddon(aId, false);
 
     this.activeAddons.delete(aId);
@@ -4938,6 +4929,10 @@ AddonInternal.prototype = {
     return this.signedState > AddonManager.SIGNEDSTATE_MISSING;
   },
 
+  get unpack() {
+    return this.type === "dictionary";
+  },
+
   get isCompatible() {
     return this.isCompatibleWith();
   },
@@ -5010,8 +5005,7 @@ AddonInternal.prototype = {
     // Only extensions and dictionaries can be compatible by default; themes
     // and language packs always use strict compatibility checking.
     if (this.type in COMPATIBLE_BY_DEFAULT_TYPES &&
-        !AddonManager.strictCompatibility && !this.strictCompatibility &&
-        !this.hasBinaryComponents) {
+        !AddonManager.strictCompatibility && !this.strictCompatibility) {
 
       // The repository can specify compatibility overrides.
       // Note: For now, only blacklisting is supported by overrides.
@@ -5761,7 +5755,7 @@ function defineAddonWrapperProperty(name, getter) {
 
 ["id", "syncGUID", "version", "isCompatible", "isPlatformCompatible",
  "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
- "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
+ "softDisabled", "skinnable", "size", "foreignInstall",
  "strictCompatibility", "updateURL", "dependencies",
  "getDataDirectory", "multiprocessCompatible", "signedState", "mpcOptedOut",
  "isCorrectlySigned"].forEach(function(aProp) {
@@ -6547,11 +6541,6 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
   isValidAddon(aAddon) {
     if (aAddon.appDisabled) {
       logger.warn(`System add-on ${aAddon.id} isn't compatible with the application.`);
-      return false;
-    }
-
-    if (aAddon.unpack) {
-      logger.warn(`System add-on ${aAddon.id} isn't a packed add-on.`);
       return false;
     }
 

@@ -53,6 +53,12 @@ const SAVE_INTERVAL_PRIVATE_TABS = 500;
 
 function SessionStore() { }
 
+function sendEvent(browser, event) {
+  let evt = new Event(event, {"bubbles": true, "cancelable": false});
+  browser.dispatchEvent(evt);
+}
+
+
 SessionStore.prototype = {
   classID: Components.ID("{8c1f07d6-cba3-4226-a315-8bd43d67d032}"),
 
@@ -71,6 +77,7 @@ SessionStore.prototype = {
   _pendingWrite: 0,
   _pendingWritePrivateOnly: 0,
   _scrollSavePending: null,
+  _formdataSavePending: null,
   _writeInProgress: false,
 
   // We only want to start doing backups if we've successfully
@@ -520,8 +527,20 @@ SessionStore.prototype = {
       case "input":
       case "DOMAutoComplete": {
         let browser = aEvent.currentTarget;
-        log("TabInput for tab " + window.BrowserApp.getTabForBrowser(browser).id);
-        this.onTabInput(window, browser);
+        // Duplicated logging check to avoid calling getTabForBrowser on each input event.
+        if (loggingEnabled) {
+          log("TabInput for tab " + window.BrowserApp.getTabForBrowser(browser).id);
+        }
+        // Schedule saving instead of doing it immediately - immediate save will block activity, and in
+        // cases like checking or unchecking 100 checkboxes, this can cause long delays. (bug 1443765)
+        // XXX This may be better handled with idle detection similar to desktop (bug 1444222)
+        if (!this._formdataSavePending) {
+          this._formdataSavePending =
+            window.setTimeout(() => {
+              this._formdataSavePending = null;
+              this.onTabInput(window, browser);
+            }, 2000);
+        }
         break;
       }
       case "resize":
@@ -673,6 +692,13 @@ SessionStore.prototype = {
   },
 
   onTabClose: function ss_onTabClose(aWindow, aBrowser, aTabIndex) {
+    // collect any pending data before saving
+    if (this._formdataSavePending) {
+      this.onTabInput(aWindow, aBrowser);
+    }
+    if (this._scrollSavePending) {
+      this.onTabScroll(aWindow, aBrowser);
+    }
     let data = aBrowser.__SS_data;
     let tab = aWindow.BrowserApp.getTabForId(data.tabId);
 
@@ -699,8 +725,7 @@ SessionStore.prototype = {
       }
 
       log("onTabClose() ran for tab " + tab.id);
-      let evt = new Event("SSTabCloseProcessed", {"bubbles": true, "cancelable": false});
-      aBrowser.dispatchEvent(evt);
+      sendEvent(aBrowser, "SSTabCloseProcessed");
     }
   },
 
@@ -779,8 +804,7 @@ SessionStore.prototype = {
     }
 
     log("onTabLoad() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
-    let evt = new Event("SSTabDataUpdated", {"bubbles": true, "cancelable": false});
-    aBrowser.dispatchEvent(evt);
+    sendEvent(aBrowser, "SSTabDataUpdated");
     this.saveStateDelayed();
 
     this._updateCrashReportURL(aWindow);
@@ -843,15 +867,24 @@ SessionStore.prototype = {
   },
 
   onTabInput: function ss_onTabInput(aWindow, aBrowser) {
+    // If we've been called directly, cancel any pending timeouts.
+    if (this._formdataSavePending) {
+      aWindow.clearTimeout(this._formdataSavePending);
+      this._formdataSavePending = null;
+      log("onTabInput() clearing pending timeout");
+    }
+
     // If this browser belongs to a zombie tab or the initial restore hasn't yet finished,
     // skip any session save activity.
     if (aBrowser.__SS_restore || !this._startupRestoreFinished || aBrowser.__SS_restoreReloadPending) {
+      sendEvent(aBrowser, "SSTabInputCaptured");
       return;
     }
 
     // Don't bother trying to save text data if we don't have history yet
     let data = aBrowser.__SS_data;
     if (!data || data.entries.length == 0) {
+      sendEvent(aBrowser, "SSTabInputCaptured");
       return;
     }
 
@@ -862,6 +895,7 @@ SessionStore.prototype = {
     // allowed to store data for, bail out. We explicitly discard data for any
     // children as well even if storing data for those frames would be allowed.
     if (!PrivacyLevel.check(content.document.documentURI)) {
+      sendEvent(aBrowser, "SSTabInputCaptured");
       return;
     }
 
@@ -893,6 +927,7 @@ SessionStore.prototype = {
       log("onTabInput() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
       this.saveStateDelayed();
     }
+    sendEvent(aBrowser, "SSTabInputCaptured");
   },
 
   onTabScroll: function ss_onTabScroll(aWindow, aBrowser) {
@@ -958,8 +993,7 @@ SessionStore.prototype = {
     // Save zoom and scroll data.
     data.scrolldata = scrolldata;
     log("onTabScroll() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
-    let evt = new Event("SSTabScrollCaptured", {"bubbles": true, "cancelable": false});
-    aBrowser.dispatchEvent(evt);
+    sendEvent(aBrowser, "SSTabScrollCaptured");
     this.saveStateDelayed();
   },
 

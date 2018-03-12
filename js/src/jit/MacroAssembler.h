@@ -1177,18 +1177,52 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchIfObjectEmulatesUndefined(Register objReg, Register scratch, Label* slowCheck,
                                                 Label* label);
 
-    inline void branchTestObjClass(Condition cond, Register obj, Register scratch,
-                                   const js::Class* clasp, Label* label);
-    inline void branchTestObjClass(Condition cond, Register obj, Register scratch,
-                                   const Address& clasp, Label* label);
-    inline void branchTestObjShape(Condition cond, Register obj, const Shape* shape, Label* label);
-    inline void branchTestObjShape(Condition cond, Register obj, Register shape, Label* label);
+    // For all methods below: spectreRegToZero is a register that will be zeroed
+    // on speculatively executed code paths (when the branch should be taken but
+    // branch prediction speculates it isn't). Usually this will be the object
+    // register but the caller may pass a different register.
+
+    inline void branchTestObjClass(Condition cond, Register obj, const js::Class* clasp,
+                                   Register scratch, Register spectreRegToZero, Label* label);
+    inline void branchTestObjClassNoSpectreMitigations(Condition cond, Register obj,
+                                                       const js::Class* clasp, Register scratch,
+                                                       Label* label);
+
+    inline void branchTestObjClass(Condition cond, Register obj, const Address& clasp,
+                                   Register scratch, Register spectreRegToZero, Label* label);
+    inline void branchTestObjClassNoSpectreMitigations(Condition cond, Register obj,
+                                                       const Address& clasp, Register scratch,
+                                                       Label* label);
+
+    inline void branchTestObjShape(Condition cond, Register obj, const Shape* shape,
+                                   Register scratch, Register spectreRegToZero, Label* label);
+    inline void branchTestObjShapeNoSpectreMitigations(Condition cond, Register obj,
+                                                       const Shape* shape, Label* label);
+
+    inline void branchTestObjShape(Condition cond, Register obj, Register shape, Register scratch,
+                                   Register spectreRegToZero, Label* label);
+    inline void branchTestObjShapeNoSpectreMitigations(Condition cond, Register obj,
+                                                       Register shape, Label* label);
+
     inline void branchTestObjGroup(Condition cond, Register obj, const ObjectGroup* group,
-                                   Label* label);
-    inline void branchTestObjGroup(Condition cond, Register obj, Register group, Label* label);
+                                   Register scratch, Register spectreRegToZero, Label* label);
+    inline void branchTestObjGroupNoSpectreMitigations(Condition cond, Register obj,
+                                                       const ObjectGroup* group, Label* label);
+
+    inline void branchTestObjGroup(Condition cond, Register obj, Register group, Register scratch,
+                                   Register spectreRegToZero, Label* label);
+    inline void branchTestObjGroupNoSpectreMitigations(Condition cond, Register obj,
+                                                       Register group, Label* label);
 
     void branchTestObjGroup(Condition cond, Register obj, const Address& group, Register scratch,
-                            Label* label);
+                            Register spectreRegToZero, Label* label);
+    void branchTestObjGroupNoSpectreMitigations(Condition cond, Register obj, const Address& group,
+                                                Register scratch, Label* label);
+
+    // TODO: audit/fix callers to be Spectre safe.
+    inline void branchTestObjShapeUnsafe(Condition cond, Register obj, Register shape, Label* label);
+    inline void branchTestObjGroupUnsafe(Condition cond, Register obj, const ObjectGroup* group,
+                                         Label* label);
 
     void branchTestObjCompartment(Condition cond, Register obj, const Address& compartment,
                                   Register scratch, Label* label);
@@ -1394,6 +1428,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Conditional move for Spectre mitigations.
     inline void spectreMovePtr(Condition cond, Register src, Register dest)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
+    // Zeroes dest if the condition is true.
+    inline void spectreZeroRegister(Condition cond, Register scratch, Register dest)
+        DEFINED_ON(arm, arm64, mips_shared, x86_shared);
 
     // Performs a bounds check and zeroes the index register if out-of-bounds
     // (to mitigate Spectre).
@@ -1957,6 +1995,32 @@ class MacroAssembler : public MacroAssemblerSpecific
                           Register offsetTemp, Register maskTemp)
         DEFINED_ON(mips_shared);
 
+    // ========================================================================
+    // Spectre Mitigations.
+    //
+    // Spectre attacks are side-channel attacks based on cache pollution or
+    // slow-execution of some instructions. We have multiple spectre mitigations
+    // possible:
+    //
+    //   - Stop speculative executions, with memory barriers. Memory barriers
+    //     force all branches depending on loads to be resolved, and thus
+    //     resolve all miss-speculated paths.
+    //
+    //   - Use conditional move instructions. Some CPUs have a branch predictor,
+    //     and not a flag predictor. In such cases, using a conditional move
+    //     instruction to zero some pointer/index is enough to add a
+    //     data-dependency which prevents any futher executions until the load is
+    //     resolved.
+
+    void spectreMaskIndex(Register index, Register length, Register output);
+    void spectreMaskIndex(Register index, const Address& length, Register output);
+
+    // The length must be a power of two. Performs a bounds check and Spectre index
+    // masking.
+    void boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure);
+
+    void speculationBarrier() PER_SHARED_ARCH;
+
     //}}} check_macroassembler_decl_style
   public:
 
@@ -2140,13 +2204,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         else
             store32(Imm32(key.constant()), dest);
     }
-
-    void spectreMaskIndex(Register index, Register length, Register output);
-    void spectreMaskIndex(Register index, const Address& length, Register output);
-
-    // The length must be a power of two. Performs a bounds check and Spectre index
-    // masking.
-    void boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure);
 
     template <typename T>
     void guardedCallPreBarrier(const T& address, MIRType type) {

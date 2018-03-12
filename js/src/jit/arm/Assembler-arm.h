@@ -1606,6 +1606,9 @@ class Assembler : public AssemblerShared
     BufferOffset as_dmb_trap();
     BufferOffset as_isb_trap();
 
+    // Speculation barrier
+    BufferOffset as_csdb();
+
     // Control flow stuff:
 
     // bx can *only* branch to a register never to an immediate.

@@ -6373,6 +6373,14 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
     invalid_values: [ "on" ]
   };
   gCSSProperties["font"].subproperties.push("font-optical-sizing");
+  if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
+    gCSSProperties["font-variation-settings"].other_values
+      .push("'vert' calc(2.5)");
+  }
+}
+
+if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
+  gCSSProperties["font-feature-settings"].other_values.push("'vert' calc(2)");
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.frames-timing.enabled")) {

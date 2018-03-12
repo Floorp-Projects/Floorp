@@ -5785,6 +5785,17 @@ MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest, Regist
     addDouble(scratchDouble, dest);
 }
 
+// ========================================================================
+// Spectre Mitigations.
+
+void
+MacroAssembler::speculationBarrier()
+{
+    // Spectre mitigation recommended by ARM for cases where csel/cmov cannot be
+    // used.
+    as_csdb();
+}
+
 //}}} check_macroassembler_style
 
 void

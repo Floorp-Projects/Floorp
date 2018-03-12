@@ -19,6 +19,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsStyleChangeList.h"
 #include "nsStyleUtil.h"
+#include "nsTransitionManager.h"
 #include "StickyScrollContainer.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/IntegerRange.h"

@@ -15,7 +15,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 
 #include "gc/Marking-inl.h"
 #include "vm/Interpreter-inl.h"

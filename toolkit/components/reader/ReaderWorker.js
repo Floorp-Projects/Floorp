@@ -47,7 +47,7 @@ var Agent = {
    * @return {object} Article object returned from Readability.
    */
   parseDocument(uri, serializedDoc, options) {
-    let doc = new JSDOMParser().parse(serializedDoc);
+    let doc = new JSDOMParser().parse(serializedDoc, uri.spec);
     return new Readability(uri, doc, options).parse();
   },
 };

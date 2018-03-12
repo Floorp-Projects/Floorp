@@ -2188,6 +2188,12 @@ MacroAssembler::spectreMovePtr(Condition cond, Register src, Register dest)
 }
 
 void
+MacroAssembler::spectreZeroRegister(Condition cond, Register, Register dest)
+{
+    ma_mov(Imm32(0), dest, cond);
+}
+
+void
 MacroAssembler::boundsCheck32ForLoad(Register index, Register length, Register scratch,
                                      Label* failure)
 {

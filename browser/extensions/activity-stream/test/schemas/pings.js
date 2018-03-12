@@ -78,6 +78,8 @@ export const UserEventAction = Joi.object().keys({
       "PIN",
       "UNPIN",
       "SAVE_TO_POCKET",
+      "SECTION_MENU_MOVE_UP",
+      "SECTION_MENU_MOVE_DOWN",
       "SECTION_MENU_REMOVE",
       "SECTION_MENU_COLLAPSE",
       "SECTION_MENU_EXPAND",
@@ -88,7 +90,11 @@ export const UserEventAction = Joi.object().keys({
       "ARCHIVE_FROM_POCKET"
     ]).required(),
     source: Joi.valid(["TOP_SITES", "TOP_STORIES", "HIGHLIGHTS"]),
-    action_position: Joi.number().integer()
+    action_position: Joi.number().integer(),
+    value: Joi.object().keys({
+      icon_type: Joi.valid(["tippytop", "rich_icon", "screenshot_with_icon", "screenshot", "no_image"]),
+      card_type: Joi.valid(["bookmark", "trending", "pinned", "pocket"])
+    })
   }).required(),
   meta: Joi.object().keys({
     to: Joi.valid(MAIN_MESSAGE_TYPE).required(),

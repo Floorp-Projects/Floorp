@@ -92,8 +92,14 @@ def make_task_worker(config, jobs):
             job, 'scopes', item_name=job['name'], project=config.params['project']
         )
 
-        # No need to filter out ja-JP-mac, we need to upload both
-        all_locales = list(sorted(parse_locales_file(job['locales-file']).keys()))
+        # No need to filter out ja-JP-mac, we need to upload both; but we do
+        # need to filter out the platforms they come with
+        all_locales = sorted([
+            locale
+            for locale in parse_locales_file(job['locales-file']).keys()
+            if locale not in ('linux', 'win32', 'osx')
+        ])
+
         job['worker']['locales'] = all_locales
         job['worker']['entries'] = craft_bouncer_entries(config, job)
 
@@ -175,6 +181,11 @@ def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms
         file_name = file_name_template.format(
             version=current_version, previous_version=strip_build_data(previous_version)
         )
+
+        # We currently have a sole win32 stub installer that is to be used
+        # in both windows platforms to toggle between full installers
+        if 'Installer.exe' in file_name and ftp_platform == 'win64':
+            ftp_platform = 'win32'
 
         path_template = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product]['path_template']
         file_relative_location = path_template.format(

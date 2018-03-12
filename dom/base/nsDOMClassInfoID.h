@@ -24,11 +24,6 @@ enum nsDOMClassInfoID
   eDOMClassInfo_ChromeMessageBroadcaster_id,
   eDOMClassInfo_ChromeMessageSender_id,
 
-  eDOMClassInfo_XULControlElement_id,
-  eDOMClassInfo_XULLabeledControlElement_id,
-  eDOMClassInfo_XULButtonElement_id,
-  eDOMClassInfo_XULCheckboxElement_id,
-
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

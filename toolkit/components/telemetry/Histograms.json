@@ -12769,7 +12769,7 @@
   "FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["jh+bugzilla@buttercookie.de"],
-    "expires_in_version": "61",
+    "expires_in_version": "66",
     "kind": "flag",
     "bug_numbers": [1284017],
     "description": "When restoring tabs on startup, reading from sessionstore.js failed, even though the file exists and is not containing an explicitly empty window.",
@@ -12778,7 +12778,7 @@
   "FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["jh+bugzilla@buttercookie.de"],
-    "expires_in_version": "61",
+    "expires_in_version": "66",
     "kind": "flag",
     "bug_numbers": [1190627],
     "description": "When restoring tabs on startup, reading from sessionstore.js failed, but sessionstore.bak was read successfully.",
@@ -12787,7 +12787,7 @@
   "FENNEC_SESSIONSTORE_ALL_FILES_DAMAGED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["jh+bugzilla@buttercookie.de"],
-    "expires_in_version": "61",
+    "expires_in_version": "66",
     "kind": "flag",
     "bug_numbers": [1337115],
     "description": "Both the main session file and its backup could not be read and and the first run pref is false.",

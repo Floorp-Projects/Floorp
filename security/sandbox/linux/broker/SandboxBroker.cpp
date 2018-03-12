@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #ifdef XP_LINUX
@@ -505,6 +506,45 @@ DoLink(const char* aPath, const char* aPath2,
   MOZ_CRASH("SandboxBroker: Unknown link operation");
 }
 
+static int
+DoConnect(const char* aPath, size_t aLen, int aType)
+{
+  // Deny SOCK_DGRAM for the same reason it's denied for socketpair.
+  if (aType != SOCK_STREAM && aType != SOCK_SEQPACKET) {
+    errno = EACCES;
+    return -1;
+  }
+  // Ensure that the address is a pathname.  (An empty string
+  // resulting from an abstract address probably shouldn't have made
+  // it past the policy check, but check explicitly just in case.)
+  if (aPath[0] == '\0') {
+    errno = ECONNREFUSED;
+    return -1;
+  }
+
+  // Try to copy the name into a normal-sized sockaddr_un, with
+  // null-termination:
+  struct sockaddr_un sun;
+  memset(&sun, 0, sizeof(sun));
+  sun.sun_family = AF_UNIX;
+  if (aLen + 1 > sizeof(sun.sun_path)) {
+    errno = ENAMETOOLONG;
+    return -1;
+  }
+  memcpy(&sun.sun_path, aPath, aLen);
+
+  // Finally, the actual socket connection.
+  const int fd = socket(AF_UNIX, aType | SOCK_CLOEXEC, 0);
+  if (fd < 0) {
+    return -1;
+  }
+  if (connect(fd, reinterpret_cast<struct sockaddr*>(&sun), sizeof(sun)) < 0) {
+    close(fd);
+    return -1;
+  }
+  return fd;
+}
+
 size_t
 SandboxBroker::ConvertToRealPath(char* aPath, size_t aBufSize, size_t aPathLen)
 {
@@ -747,21 +787,21 @@ SandboxBroker::ThreadMain(void)
       pathLen = ConvertToRealPath(pathBuf, sizeof(pathBuf), pathLen);
       perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
 
-      // We don't have read permissions on the requested dir.
-      if (!(perms & MAY_READ)) {
-          // Was it a tempdir that we can remap?
-          pathLen = RemapTempDirs(pathBuf, sizeof(pathBuf), pathLen);
-          perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
-          if (!(perms & MAY_READ)) {
-            // Did we arrive from a symlink in a path that is not writable?
-            // Then try to figure out the original path and see if that is
-            // readable. Work on the original path, this reverses
-            // ConvertToRealPath above.
-            int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
-            if (symlinkPerms > 0) {
-              perms = symlinkPerms;
-            }
+      // We don't have permissions on the requested dir.
+      if (!perms) {
+        // Was it a tempdir that we can remap?
+        pathLen = RemapTempDirs(pathBuf, sizeof(pathBuf), pathLen);
+        perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
+        if (!perms) {
+          // Did we arrive from a symlink in a path that is not writable?
+          // Then try to figure out the original path and see if that is
+          // readable. Work on the original path, this reverses
+          // ConvertToRealPath above.
+          int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
+          if (symlinkPerms > 0) {
+            perms = symlinkPerms;
           }
+        }
       }
 
       // Same for the second path.
@@ -945,6 +985,19 @@ SandboxBroker::ThreadMain(void)
             resp.mError = respSize;
             ios[1].iov_base = &respBuf;
             ios[1].iov_len = respSize;
+          } else {
+            resp.mError = -errno;
+          }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
+        }
+        break;
+
+      case SANDBOX_SOCKET_CONNECT:
+        if (permissive || (perms & MAY_CONNECT) != 0) {
+          openedFd = DoConnect(pathBuf, pathLen, req.mFlags);
+          if (openedFd >= 0) {
+            resp.mError = 0;
           } else {
             resp.mError = -errno;
           }

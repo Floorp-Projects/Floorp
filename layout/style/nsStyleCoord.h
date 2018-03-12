@@ -12,7 +12,9 @@
 #include <type_traits>
 
 #include "mozilla/EnumTypeTraits.h"
+#include "mozilla/gfx/Types.h"
 #include "nsCoord.h"
+#include "nsISupportsImpl.h"
 #include "nsStyleConsts.h"
 
 namespace mozilla {

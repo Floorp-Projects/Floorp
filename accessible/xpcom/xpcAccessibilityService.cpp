@@ -47,6 +47,11 @@ xpcAccessibilityService::AddRef(void)
   // We want refcount to be > 1 because one reference is added in the XPCOM
   // accessibility service getter.
   if (mRefCnt > 1) {
+    if (mShutdownTimer) {
+      mShutdownTimer->Cancel();
+      mShutdownTimer = nullptr;
+    }
+
     GetOrCreateAccService(nsAccessibilityService::eXPCOM);
   }
 

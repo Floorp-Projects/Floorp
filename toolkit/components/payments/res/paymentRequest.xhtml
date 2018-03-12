@@ -10,6 +10,7 @@
   <!ENTITY pickupAddressLabel         "Pickup Address">
   <!ENTITY shippingOptionsLabel       "Shipping Options">
   <!ENTITY paymentMethodsLabel        "Payment Method">
+  <!ENTITY payerLabel                 "Contact Information">
   <!ENTITY cancelPaymentButton.label   "Cancel">
   <!ENTITY approvePaymentButton.label  "Pay">
   <!ENTITY processingPaymentButton.label "Processing">
@@ -83,6 +84,11 @@
 
           <div><label>&paymentMethodsLabel;</label></div>
           <payment-method-picker selected-state-key="selectedPaymentCard"></payment-method-picker>
+
+          <div class="payer-related"><label>&payerLabel;</label></div>
+          <address-picker class="payer-related"
+                          selected-state-key="selectedPayerAddress"></address-picker>
+          <div id="error-text"></div>
         </section>
 
         <footer id="controls-container">

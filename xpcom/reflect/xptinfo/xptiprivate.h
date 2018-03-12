@@ -77,7 +77,7 @@ class xptiTypelibGuts
 public:
     static xptiTypelibGuts* Create(const XPTHeader* aHeader);
 
-    uint16_t            GetEntryCount() const {return mHeader->num_interfaces;}
+    uint16_t GetEntryCount() const {return mHeader->mNumInterfaces;}
 
     void                SetEntryAt(uint16_t i, xptiInterfaceEntry* ptr)
     {

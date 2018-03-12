@@ -1,5 +1,12 @@
 # Graphite engine
 
+## Project CI status 
+Linux -- Intel 64bit:[![Build Status](http://build.palaso.org/app/rest/builds/buildType:bt124/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=bt124&guest=1)
+Intel 32bit:[![Build Status](http://build.palaso.org/app/rest/builds/buildType:bt123/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=bt123&guest=1)
+ARM 32bit:[![Build Status](http://build.palaso.org/app/rest/builds/buildType:Graphite_Linux32bitArm/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=Graphite_Linux32bitArm&guest=1)
+
+Windows -- Intel 64bit:[![Build Status](http://build.palaso.org/app/rest/builds/buildType:Graphite_Windows64bitProduction/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=Graphite_Windows64bitProduction&guest=1)
+
 ## What is Graphite?
 
 Graphite is a system that can be used to create “smart fonts” capable of displaying writing systems with various complex behaviors. A smart font contains not only letter shapes but also additional instructions indicating how to combine and position the letters in complex ways.

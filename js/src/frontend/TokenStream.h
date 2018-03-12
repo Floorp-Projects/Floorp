@@ -178,11 +178,11 @@
 #include "frontend/TokenKind.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
+#include "util/Unicode.h"
 #include "vm/ErrorReporting.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpShared.h"
-#include "vm/String.h"
-#include "vm/Unicode.h"
+#include "vm/StringType.h"
 
 struct KeywordInfo;
 

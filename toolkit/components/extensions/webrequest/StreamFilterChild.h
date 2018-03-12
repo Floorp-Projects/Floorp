@@ -99,6 +99,7 @@ protected:
   virtual IPCResult RecvStartRequest() override;
   virtual IPCResult RecvData(Data&& data) override;
   virtual IPCResult RecvStopRequest(const nsresult& aStatus) override;
+  virtual IPCResult RecvError(const nsCString& aError) override;
 
   virtual IPCResult RecvClosed() override;
   virtual IPCResult RecvSuspended() override;

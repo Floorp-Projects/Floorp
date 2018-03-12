@@ -27,8 +27,6 @@ ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyGetter(this, "CertUtils",
                             () => ChromeUtils.import("resource://gre/modules/CertUtils.jsm", {}));
-ChromeUtils.defineModuleGetter(this, "ChromeManifestParser",
-                               "resource://gre/modules/ChromeManifestParser.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionData",
                                "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
@@ -116,7 +114,6 @@ function getFile(path, base = null) {
 const PREF_EM_UPDATE_BACKGROUND_URL   = "extensions.update.background.url";
 const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
-const PREF_XPI_UNPACK                 = "extensions.alwaysUnpack";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 const FILE_RDF_MANIFEST               = "install.rdf";
 const FILE_WEB_MANIFEST               = "manifest.json";
@@ -340,10 +337,8 @@ async function loadManifestFromWebManifest(aUri) {
   addon.version = manifest.version;
   addon.type = extension.type === "extension" ?
                "webextension" : `webextension-${extension.type}`;
-  addon.unpack = false;
   addon.strictCompatibility = true;
   addon.bootstrap = true;
-  addon.hasBinaryComponents = false;
   addon.multiprocessCompatible = true;
   addon.internalName = null;
   addon.updateURL = bss.update_url;
@@ -542,7 +537,6 @@ async function loadManifestFromRDF(aUri, aStream) {
   for (let prop of PROP_METADATA) {
     addon[prop] = getRDFProperty(ds, root, prop);
   }
-  addon.unpack = getRDFProperty(ds, root, "unpack") == "true";
 
   if (!addon.type) {
     addon.type = addon.internalName ? "theme" : "extension";
@@ -803,11 +797,6 @@ var loadManifestFromDir = async function(aDir, aInstallLocation) {
     if (icon64File.exists()) {
       addon.icons[64] = "icon64.png";
     }
-
-    let file = getFile("chrome.manifest", aDir);
-    let chromeManifest = ChromeManifestParser.parseSync(Services.io.newFileURI(file));
-    addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
-                                                             "binary-component");
     return addon;
   }
 
@@ -874,16 +863,6 @@ var loadManifestFromZipReader = async function(aZipReader, aInstallLocation) {
 
     if (aZipReader.hasEntry("icon64.png")) {
       addon.icons[64] = "icon64.png";
-    }
-
-    // Binary components can only be loaded from unpacked addons.
-    if (addon.unpack) {
-      let uri = buildJarURI(aZipReader.file, "chrome.manifest");
-      let chromeManifest = ChromeManifestParser.parseSync(uri);
-      addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
-                                                               "binary-component");
-    } else {
-      addon.hasBinaryComponents = false;
     }
 
     return addon;
@@ -1747,8 +1726,6 @@ class AddonInstall {
     let stagedAddon = this.installLocation.getStagingDir();
 
     (async () => {
-      let installedUnpacked = 0;
-
       await this.installLocation.requestStagingDir();
 
       // remove any previously staged files
@@ -1756,7 +1733,7 @@ class AddonInstall {
 
       stagedAddon.append(`${this.addon.id}.xpi`);
 
-      installedUnpacked = await this.stageInstall(requiresRestart, stagedAddon, isUpgrade);
+      await this.stageInstall(requiresRestart, stagedAddon, isUpgrade);
 
       if (requiresRestart) {
         this.state = AddonManager.STATE_INSTALLED;
@@ -1860,7 +1837,6 @@ class AddonInstall {
             XPIProvider.unloadBootstrapScope(this.addon.id);
           }
         }
-        XPIProvider.setTelemetry(this.addon.id, "unpacked", installedUnpacked);
         recordAddonTelemetry(this.addon);
 
         // Notify providers that a new theme has been enabled.
@@ -1893,16 +1869,13 @@ class AddonInstall {
     let stagedJSON = stagedAddon.clone();
     stagedJSON.leafName = this.addon.id + ".json";
 
-    let installedUnpacked = 0;
-
     // First stage the file regardless of whether restarting is necessary
-    if (this.addon.unpack || Services.prefs.getBoolPref(PREF_XPI_UNPACK, false)) {
+    if (this.addon.unpack) {
       logger.debug("Addon " + this.addon.id + " will be installed as " +
                    "an unpacked directory");
       stagedAddon.leafName = this.addon.id;
       await OS.File.makeDir(stagedAddon.path);
       await ZipUtils.extractFilesAsync(this.file, stagedAddon);
-      installedUnpacked = 1;
     } else {
       logger.debug(`Addon ${this.addon.id} will be installed as a packed xpi`);
       stagedAddon.leafName = this.addon.id + ".xpi";
@@ -1923,8 +1896,6 @@ class AddonInstall {
         this.existingAddon.pendingUpgrade = this.addon;
       }
     }
-
-    return installedUnpacked;
   }
 
   /**
@@ -2738,8 +2709,7 @@ UpdateChecker.prototype = {
       ignoreStrictCompat = true;
     } else if (this.addon.type in COMPATIBLE_BY_DEFAULT_TYPES &&
                !AddonManager.strictCompatibility &&
-               !this.addon.strictCompatibility &&
-               !this.addon.hasBinaryComponents) {
+               !this.addon.strictCompatibility) {
       ignoreMaxVersion = true;
     }
 

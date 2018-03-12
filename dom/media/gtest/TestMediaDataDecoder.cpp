@@ -12,6 +12,7 @@
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"
 #include "mozilla/AbstractThread.h"
+#include "nsMimeTypes.h"
 
 using namespace mozilla;
 
@@ -45,7 +46,7 @@ private:
 TEST(MediaDataDecoder, H264)
 {
   if (!DecoderTraits::IsMP4SupportedType(
-         MediaContainerType(MEDIAMIMETYPE("video/mp4")),
+         MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)),
          /* DecoderDoctorDiagnostics* */ nullptr)) {
     EXPECT_TRUE(true);
   } else {
@@ -60,7 +61,7 @@ TEST(MediaDataDecoder, H264)
 
 TEST(MediaDataDecoder, VP9)
 {
-  if (!WebMDecoder::IsSupportedType(MediaContainerType(MEDIAMIMETYPE("video/webm")))) {
+  if (!WebMDecoder::IsSupportedType(MediaContainerType(MEDIAMIMETYPE(VIDEO_WEBM)))) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MockMediaResource> resource = new MockMediaResource("vp9cake.webm");

@@ -6591,17 +6591,20 @@ class LStoreUnboxedPointer : public LInstructionHelper<0, 3, 0>
 
 // If necessary, convert an unboxed object in a particular group to its native
 // representation.
-class LConvertUnboxedObjectToNative : public LInstructionHelper<0, 1, 0>
+class LConvertUnboxedObjectToNative : public LInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(ConvertUnboxedObjectToNative)
 
-    explicit LConvertUnboxedObjectToNative(const LAllocation& object)
+    LConvertUnboxedObjectToNative(const LAllocation& object, const LDefinition& temp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, object);
+        setTemp(0, temp);
     }
-
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
     MConvertUnboxedObjectToNative* mir() {
         return mir_->toConvertUnboxedObjectToNative();
     }
@@ -7490,18 +7493,22 @@ class LGetPropertyCacheT : public LInstructionHelper<1, 2 * BOX_PIECES, 1>
 
 // Emit code to load a boxed value from an object's slots if its shape matches
 // one of the shapes observed by the baseline IC, else bails out.
-class LGetPropertyPolymorphicV : public LInstructionHelper<BOX_PIECES, 1, 0>
+class LGetPropertyPolymorphicV : public LInstructionHelper<BOX_PIECES, 1, 1>
 {
   public:
     LIR_HEADER(GetPropertyPolymorphicV)
 
-    explicit LGetPropertyPolymorphicV(const LAllocation& obj)
+    LGetPropertyPolymorphicV(const LAllocation& obj, const LDefinition& temp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, obj);
+        setTemp(0, temp);
     }
     const LAllocation* obj() {
         return getOperand(0);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
     const MGetPropertyPolymorphic* mir() const {
         return mir_->toGetPropertyPolymorphic();
@@ -7513,22 +7520,27 @@ class LGetPropertyPolymorphicV : public LInstructionHelper<BOX_PIECES, 1, 0>
 
 // Emit code to load a typed value from an object's slots if its shape matches
 // one of the shapes observed by the baseline IC, else bails out.
-class LGetPropertyPolymorphicT : public LInstructionHelper<1, 1, 1>
+class LGetPropertyPolymorphicT : public LInstructionHelper<1, 1, 2>
 {
   public:
     LIR_HEADER(GetPropertyPolymorphicT)
 
-    LGetPropertyPolymorphicT(const LAllocation& obj, const LDefinition& temp)
+    LGetPropertyPolymorphicT(const LAllocation& obj, const LDefinition& temp1,
+                             const LDefinition& temp2)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, obj);
-        setTemp(0, temp);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
     }
     const LAllocation* obj() {
         return getOperand(0);
     }
-    const LDefinition* temp() {
+    const LDefinition* temp1() {
         return getTemp(0);
+    }
+    const LDefinition* temp2() {
+        return getTemp(1);
     }
     const MGetPropertyPolymorphic* mir() const {
         return mir_->toGetPropertyPolymorphic();
@@ -7540,18 +7552,19 @@ class LGetPropertyPolymorphicT : public LInstructionHelper<1, 1, 1>
 
 // Emit code to store a boxed value to an object's slots if its shape matches
 // one of the shapes observed by the baseline IC, else bails out.
-class LSetPropertyPolymorphicV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
+class LSetPropertyPolymorphicV : public LInstructionHelper<0, 1 + BOX_PIECES, 2>
 {
   public:
     LIR_HEADER(SetPropertyPolymorphicV)
 
     LSetPropertyPolymorphicV(const LAllocation& obj, const LBoxAllocation& value,
-                             const LDefinition& temp)
+                             const LDefinition& temp1, const LDefinition& temp2)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, obj);
         setBoxOperand(Value, value);
-        setTemp(0, temp);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
     }
 
     static const size_t Value = 1;
@@ -7559,8 +7572,11 @@ class LSetPropertyPolymorphicV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
     const LAllocation* obj() {
         return getOperand(0);
     }
-    const LDefinition* temp() {
+    const LDefinition* temp1() {
         return getTemp(0);
+    }
+    const LDefinition* temp2() {
+        return getTemp(1);
     }
     const MSetPropertyPolymorphic* mir() const {
         return mir_->toSetPropertyPolymorphic();
@@ -7569,7 +7585,7 @@ class LSetPropertyPolymorphicV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
 
 // Emit code to store a typed value to an object's slots if its shape matches
 // one of the shapes observed by the baseline IC, else bails out.
-class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1>
+class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 2>
 {
     MIRType valueType_;
 
@@ -7577,13 +7593,14 @@ class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1>
     LIR_HEADER(SetPropertyPolymorphicT)
 
     LSetPropertyPolymorphicT(const LAllocation& obj, const LAllocation& value, MIRType valueType,
-                             const LDefinition& temp)
+                             const LDefinition& temp1, const LDefinition& temp2)
       : LInstructionHelper(classOpcode),
         valueType_(valueType)
     {
         setOperand(0, obj);
         setOperand(1, value);
-        setTemp(0, temp);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
     }
 
     const LAllocation* obj() {
@@ -7592,8 +7609,11 @@ class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1>
     const LAllocation* value() {
         return getOperand(1);
     }
-    const LDefinition* temp() {
+    const LDefinition* temp1() {
         return getTemp(0);
+    }
+    const LDefinition* temp2() {
+        return getTemp(1);
     }
     MIRType valueType() const {
         return valueType_;
@@ -8386,22 +8406,27 @@ class LRest : public LCallInstructionHelper<1, 1, 3>
     }
 };
 
-class LGuardReceiverPolymorphic : public LInstructionHelper<0, 1, 1>
+class LGuardReceiverPolymorphic : public LInstructionHelper<1, 1, 2>
 {
   public:
     LIR_HEADER(GuardReceiverPolymorphic)
 
-    LGuardReceiverPolymorphic(const LAllocation& in, const LDefinition& temp)
+    LGuardReceiverPolymorphic(const LAllocation& in, const LDefinition& temp1,
+                              const LDefinition& temp2)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, in);
-        setTemp(0, temp);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
     }
     const LAllocation* object() {
         return getOperand(0);
     }
-    const LDefinition* temp() {
+    const LDefinition* temp1() {
         return getTemp(0);
+    }
+    const LDefinition* temp2() {
+        return getTemp(1);
     }
     const MGuardReceiverPolymorphic* mir() const {
         return mir_->toGuardReceiverPolymorphic();
@@ -8716,53 +8741,41 @@ class LGuardObjectIdentity : public LInstructionHelper<0, 2, 0>
     }
 };
 
-class LGuardShape : public LInstructionHelper<0, 1, 0>
+class LGuardShape : public LInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(GuardShape)
 
-    explicit LGuardShape(const LAllocation& in)
+    LGuardShape(const LAllocation& in, const LDefinition& temp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, in);
+        setTemp(0, temp);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
     const MGuardShape* mir() const {
         return mir_->toGuardShape();
     }
 };
 
-class LGuardObjectGroup : public LInstructionHelper<0, 1, 0>
+class LGuardObjectGroup : public LInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(GuardObjectGroup)
 
-    explicit LGuardObjectGroup(const LAllocation& in)
-      : LInstructionHelper(classOpcode)
-    {
-        setOperand(0, in);
-    }
-    const MGuardObjectGroup* mir() const {
-        return mir_->toGuardObjectGroup();
-    }
-};
-
-// Guard against an object's class.
-class LGuardClass : public LInstructionHelper<0, 1, 1>
-{
-  public:
-    LIR_HEADER(GuardClass)
-
-    LGuardClass(const LAllocation& in, const LDefinition& temp)
+    LGuardObjectGroup(const LAllocation& in, const LDefinition& temp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, in);
         setTemp(0, temp);
     }
-    const MGuardClass* mir() const {
-        return mir_->toGuardClass();
-    }
-    const LDefinition* tempInt() {
+    const LDefinition* temp() {
         return getTemp(0);
+    }
+    const MGuardObjectGroup* mir() const {
+        return mir_->toGuardObjectGroup();
     }
 };
 
@@ -9861,6 +9874,14 @@ class LWasmStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
     }
 };
 
+inline bool
+IsWasmCall(LNode::Opcode op)
+{
+    return (op == LNode::LOp_WasmCall ||
+            op == LNode::LOp_WasmCallVoid ||
+            op == LNode::LOp_WasmCallI64);
+}
+
 template <size_t Defs>
 class LWasmCallBase : public LVariadicInstruction<Defs, 0>
 {
@@ -9873,6 +9894,7 @@ class LWasmCallBase : public LVariadicInstruction<Defs, 0>
       : Base(opcode, numOperands),
         needsBoundsCheck_(needsBoundsCheck)
     {
+        MOZ_ASSERT(IsWasmCall(opcode));
         this->setIsCall();
     }
 
@@ -9930,14 +9952,9 @@ class LWasmCallI64 : public LWasmCallBase<INT64_PIECES>
 inline bool
 LNode::isCallPreserved(AnyRegister reg) const
 {
-    switch (op()) {
-      case LOp_WasmCall:
-      case LOp_WasmCallVoid:
-      case LOp_WasmCallI64:
+    if (IsWasmCall(op()))
         return LWasmCallBase<0>::isCallPreserved(reg);
-      default:
-        return false;
-    }
+    return false;
 }
 
 class LAssertRangeI : public LInstructionHelper<0, 1, 0>

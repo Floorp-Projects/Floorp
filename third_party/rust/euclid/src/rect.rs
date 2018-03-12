@@ -521,6 +521,15 @@ impl<T: NumCast + Copy, Unit> TypedRect<T, Unit> {
         self.cast().unwrap()
     }
 
+    /// Cast into an `u32` rectangle, truncating decimals if any.
+    ///
+    /// When casting from floating point rectangles, it is worth considering whether
+    /// to `round()`, `round_in()` or `round_out()` before the cast in order to
+    /// obtain the desired conversion behavior.
+    pub fn to_u32(&self) -> TypedRect<u32, Unit> {
+        self.cast().unwrap()
+    }
+
     /// Cast into an `i32` rectangle, truncating decimals if any.
     ///
     /// When casting from floating point rectangles, it is worth considering whether

@@ -1367,6 +1367,10 @@ toolbarpaletteitem[place="palette"][hidden] {
   box-shadow: 0 0 2px 2px rgba(255,0,0,0.4);
 }
 
+.popup-notification-description[popupid=webauthn-prompt-register-direct] {
+  white-space: pre-line;
+}
+
 .dragfeedback-tab {
   -moz-appearance: none;
   opacity: 0.65;

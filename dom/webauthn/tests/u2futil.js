@@ -202,7 +202,7 @@ function webAuthnDecodeAuthDataArray(aAuthData) {
   console.log(":: Authenticator Data ::");
   console.log("AAGUID: " + hexEncode(attData.aaguid));
 
-  cborPubKey = aAuthData.slice(55 + attData.credIdLen);
+  let cborPubKey = aAuthData.slice(55 + attData.credIdLen);
   var pubkeyObj = CBOR.decode(cborPubKey.buffer);
   if (!(cose_kty in pubkeyObj && cose_alg in pubkeyObj && cose_crv in pubkeyObj
         && cose_crv_x in pubkeyObj && cose_crv_y in pubkeyObj)) {

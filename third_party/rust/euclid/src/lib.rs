@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "unstable", feature(cfg_target_feature, test, fn_must_use))]
+#![cfg_attr(feature = "unstable", feature(fn_must_use))]
 
 //! A collection of strongly typed math tools for computer graphics with an inclination
 //! towards 2d graphics and layout.
@@ -62,8 +62,6 @@ extern crate serde;
 extern crate num_traits;
 #[cfg(test)]
 extern crate rand;
-#[cfg(feature = "unstable")]
-extern crate test;
 
 pub use length::Length;
 pub use scale::TypedScale;

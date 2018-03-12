@@ -93,6 +93,7 @@ protected:
   virtual IPCResult RecvResume() override;
   virtual IPCResult RecvClose() override;
   virtual IPCResult RecvDisconnect() override;
+  virtual IPCResult RecvDestroy() override;
 
   virtual void DeallocPStreamFilterParent() override;
 
@@ -175,6 +176,7 @@ private:
 
   bool mReceivedStop;
   bool mSentStop;
+  bool mDisconnected = false;
 
   nsCOMPtr<nsISupports> mContext;
   uint64_t mOffset;

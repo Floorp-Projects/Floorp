@@ -628,28 +628,56 @@ IonCacheIRCompiler::compile()
 bool
 IonCacheIRCompiler::emitGuardShape()
 {
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ObjOperandId objId = reader.objOperandId();
+    Register obj = allocator.useRegister(masm, objId);
     Shape* shape = shapeStubField(reader.stubOffset());
+
+    bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
+
+    Maybe<AutoScratchRegister> maybeScratch;
+    if (needSpectreMitigations)
+        maybeScratch.emplace(allocator, masm);
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
 
-    masm.branchTestObjShape(Assembler::NotEqual, obj, shape, failure->label());
+    if (needSpectreMitigations) {
+        masm.branchTestObjShape(Assembler::NotEqual, obj, shape, *maybeScratch, obj,
+                                failure->label());
+    } else {
+        masm.branchTestObjShapeNoSpectreMitigations(Assembler::NotEqual, obj, shape,
+                                                    failure->label());
+    }
+
     return true;
 }
 
 bool
 IonCacheIRCompiler::emitGuardGroup()
 {
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ObjOperandId objId = reader.objOperandId();
+    Register obj = allocator.useRegister(masm, objId);
     ObjectGroup* group = groupStubField(reader.stubOffset());
+
+    bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
+
+    Maybe<AutoScratchRegister> maybeScratch;
+    if (needSpectreMitigations)
+        maybeScratch.emplace(allocator, masm);
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
 
-    masm.branchTestObjGroup(Assembler::NotEqual, obj, group, failure->label());
+    if (needSpectreMitigations) {
+        masm.branchTestObjGroup(Assembler::NotEqual, obj, group, *maybeScratch, obj,
+                                failure->label());
+    } else {
+        masm.branchTestObjGroupNoSpectreMitigations(Assembler::NotEqual, obj, group,
+                                                    failure->label());
+    }
+
     return true;
 }
 
@@ -707,7 +735,8 @@ IonCacheIRCompiler::emitGuardCompartment()
 bool
 IonCacheIRCompiler::emitGuardAnyClass()
 {
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ObjOperandId objId = reader.objOperandId();
+    Register obj = allocator.useRegister(masm, objId);
     AutoScratchRegister scratch(allocator, masm);
 
     const Class* clasp = classStubField(reader.stubOffset());
@@ -716,7 +745,13 @@ IonCacheIRCompiler::emitGuardAnyClass()
     if (!addFailurePath(&failure))
         return false;
 
-    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, clasp, failure->label());
+    if (objectGuardNeedsSpectreMitigations(objId)) {
+        masm.branchTestObjClass(Assembler::NotEqual, obj, clasp, scratch, obj, failure->label());
+    } else {
+        masm.branchTestObjClassNoSpectreMitigations(Assembler::NotEqual, obj, clasp, scratch,
+                                                    failure->label());
+    }
+
     return true;
 }
 
@@ -817,9 +852,11 @@ IonCacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto()
     MOZ_ASSERT(hasExpando == !!shapeWrapper);
 
     AutoScratchRegister scratch(allocator, masm);
-    Maybe<AutoScratchRegister> scratch2;
-    if (hasExpando)
+    Maybe<AutoScratchRegister> scratch2, scratch3;
+    if (hasExpando) {
         scratch2.emplace(allocator, masm);
+        scratch3.emplace(allocator, masm);
+    }
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
@@ -841,7 +878,8 @@ IonCacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto()
 
         masm.movePtr(ImmGCPtr(shapeWrapper), scratch2.ref());
         LoadShapeWrapperContents(masm, scratch2.ref(), scratch2.ref(), failure->label());
-        masm.branchTestObjShape(Assembler::NotEqual, scratch, scratch2.ref(), failure->label());
+        masm.branchTestObjShape(Assembler::NotEqual, scratch, *scratch2, *scratch3, scratch,
+                                failure->label());
 
         // The reserved slots on the expando should all be in fixed slots.
         Address protoAddress(scratch, NativeObject::getFixedSlotOffset(GetXrayJitInfo()->expandoProtoSlot));
@@ -2363,7 +2401,10 @@ IonCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape()
 
     masm.debugAssertIsObject(val);
     masm.unboxObject(val, objScratch);
-    masm.branchTestObjShape(Assembler::NotEqual, objScratch, shape, failure->label());
+    // The expando object is not used in this case, so we don't need Spectre
+    // mitigations.
+    masm.branchTestObjShapeNoSpectreMitigations(Assembler::NotEqual, objScratch, shape,
+                                                failure->label());
 
     masm.bind(&done);
     return true;

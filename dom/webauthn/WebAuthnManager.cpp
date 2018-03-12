@@ -408,36 +408,19 @@ WebAuthnManager::MakeCredential(const PublicKeyCredentialCreationOptions& aOptio
   bool requestDirectAttestation =
     attestation == AttestationConveyancePreference::Direct;
 
-  // XXX Bug 1430150. Need something that allows direct attestation
-  // for tests until we implement a permission dialog we can click.
-  if (requestDirectAttestation) {
-    nsresult rv;
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIPrefBranch> branch;
-      rv = prefService->GetBranch("security.webauth.", getter_AddRefs(branch));
-
-      if (NS_SUCCEEDED(rv)) {
-        rv = branch->GetBoolPref("webauthn_testing_allow_direct_attestation",
-                                 &requestDirectAttestation);
-      }
-    }
-
-    requestDirectAttestation &= NS_SUCCEEDED(rv);
-  }
-
   // Create and forward authenticator selection criteria.
   WebAuthnAuthenticatorSelection authSelection(selection.mRequireResidentKey,
                                                requireUserVerification,
                                                requirePlatformAttachment);
 
-  WebAuthnMakeCredentialInfo info(rpIdHash,
+  WebAuthnMakeCredentialInfo info(origin,
+                                  rpIdHash,
                                   clientDataHash,
                                   adjustedTimeout,
                                   excludeList,
                                   extensions,
-                                  authSelection);
+                                  authSelection,
+                                  requestDirectAttestation);
 
   ListenForVisibilityEvents();
 
@@ -455,6 +438,7 @@ WebAuthnManager::MakeCredential(const PublicKeyCredentialCreationOptions& aOptio
                                           signal));
 
   mChild->SendRequestRegister(mTransaction.ref().mId, info);
+
   return promise.forget();
 }
 
@@ -638,7 +622,8 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
     extensions.AppendElement(WebAuthnExtensionAppId(appIdHash));
   }
 
-  WebAuthnGetAssertionInfo info(rpIdHash,
+  WebAuthnGetAssertionInfo info(origin,
+                                rpIdHash,
                                 clientDataHash,
                                 adjustedTimeout,
                                 allowList,
@@ -785,10 +770,10 @@ WebAuthnManager::FinishMakeCredential(const uint64_t& aTransactionId,
     return;
   }
 
-  // Direct attestation might have been requested by the RP. mDirectAttestation
-  // will be true only if the user consented via the permission UI.
+  // Direct attestation might have been requested by the RP. This will
+  // be true only if the user consented via the permission UI.
   CryptoBuffer attObj;
-  if (mTransaction.ref().mDirectAttestation) {
+  if (aResult.DirectAttestationPermitted()) {
     rv = CBOREncodeFidoU2FAttestationObj(authDataBuf, attestationCertBuf,
                                          signatureBuf, attObj);
   } else {

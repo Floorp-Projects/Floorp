@@ -116,6 +116,8 @@ WinLaunchChild(const wchar_t *exePath, int argc,
 
 namespace mozilla {
 namespace startup {
+Result<nsCOMPtr<nsIFile>, nsresult> GetIncompleteStartupFile(nsIFile* aProfLD);
+
 extern GeckoProcessType sChildProcessType;
 } // namespace startup
 

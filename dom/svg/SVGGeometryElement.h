@@ -174,7 +174,7 @@ public:
    * this element. May return nullptr if there is no [valid] path. The path
    * that is created may be cached and returned on subsequent calls.
    */
-  virtual already_AddRefed<Path> GetOrBuildPath(const DrawTarget& aDrawTarget,
+  virtual already_AddRefed<Path> GetOrBuildPath(const DrawTarget* aDrawTarget,
                                                 FillRule fillRule);
 
   /**

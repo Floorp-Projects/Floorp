@@ -370,6 +370,21 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   }
 #endif
 
+  // Allow Primus to contact the Bumblebee daemon to manage GPU
+  // switching on NVIDIA Optimus systems.
+  const char* bumblebeeSocket = PR_GetEnv("BUMBLEBEE_SOCKET");
+  if (bumblebeeSocket == nullptr) {
+    bumblebeeSocket = "/var/run/bumblebee.socket";
+  }
+  policy->AddPath(SandboxBroker::MAY_CONNECT, bumblebeeSocket);
+
+  // Allow local X11 connections, for Primus and VirtualGL to contact
+  // the secondary X server.
+  policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
+  if (const auto xauth = PR_GetEnv("XAUTHORITY")) {
+    policy->AddPath(rdonly, xauth);
+  }
+
   mCommonContentPolicy.reset(policy);
 #endif
 }
@@ -507,10 +522,9 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
 #endif // MOZ_WIDGET_GTK
 
   if (allowPulse) {
-    // See bug 1384986 comment #1.
-    if (const auto xauth = PR_GetEnv("XAUTHORITY")) {
-      policy->AddPath(rdonly, xauth);
-    }
+    // PulseAudio also needs access to read the $XAUTHORITY file (see
+    // bug 1384986 comment #1), but that's already allowed for hybrid
+    // GPU drivers (see above).
     policy->AddPath(rdonly, "/var/lib/dbus/machine-id");
   }
 

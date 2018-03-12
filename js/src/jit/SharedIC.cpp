@@ -25,6 +25,7 @@
 #endif
 #include "jit/VMFunctions.h"
 #include "vm/Interpreter.h"
+#include "vm/StringType.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
@@ -2538,11 +2539,13 @@ ICTypeMonitor_ObjectGroup::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
     MaybeWorkAroundAmdBug(masm);
 
-    // Guard on the object's ObjectGroup.
+    // Guard on the object's ObjectGroup. No Spectre mitigations are needed
+    // here: we're just recording type information for Ion compilation and
+    // it's safe to speculatively return.
     Register obj = masm.extractObject(R0, ExtractTemp0);
     Address expectedGroup(ICStubReg, ICTypeMonitor_ObjectGroup::offsetOfGroup());
-    masm.branchTestObjGroup(Assembler::NotEqual, obj, expectedGroup, R1.scratchReg(),
-                            &failure);
+    masm.branchTestObjGroupNoSpectreMitigations(Assembler::NotEqual, obj, expectedGroup,
+                                                R1.scratchReg(), &failure);
     MaybeWorkAroundAmdBug(masm);
 
     EmitReturnFromIC(masm);

@@ -244,6 +244,15 @@ impl<T: NumCast + Copy, Unit> TypedSize2D<T, Unit> {
         self.cast().unwrap()
     }
 
+    /// Cast into an `u32` size, truncating decimals if any.
+    ///
+    /// When casting from floating point sizes, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
+    pub fn to_u32(&self) -> TypedSize2D<u32, Unit> {
+        self.cast().unwrap()
+    }
+
     /// Cast into an `i32` size, truncating decimals if any.
     ///
     /// When casting from floating point sizes, it is worth considering whether

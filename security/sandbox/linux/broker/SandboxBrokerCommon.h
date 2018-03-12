@@ -37,6 +37,7 @@ public:
     SANDBOX_FILE_RMDIR,
     SANDBOX_FILE_UNLINK,
     SANDBOX_FILE_READLINK,
+    SANDBOX_SOCKET_CONNECT,
   };
   // String versions of the above
   static const char* OperationDescription[];
@@ -44,6 +45,7 @@ public:
   struct Request {
     Operation mOp;
     // For open, flags; for access, "mode"; for stat, O_NOFOLLOW for lstat.
+    // For connect, the socket type.
     int mFlags;
     // Size of return value buffer, if any
     size_t mBufSize;

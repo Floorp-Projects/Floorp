@@ -14,7 +14,6 @@ from mozbuild.frontend.context import (
     Path,
 )
 from mozbuild.frontend.data import (
-    AndroidResDirs,
     ChromeManifestEntry,
     ComputedFlags,
     ConfigFileSubstitution,

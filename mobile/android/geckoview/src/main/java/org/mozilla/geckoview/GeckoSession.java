@@ -46,7 +46,17 @@ public class GeckoSession extends LayerSession
     private static final String LOGTAG = "GeckoSession";
     private static final boolean DEBUG = false;
 
-    /* package */ enum State implements NativeQueue.State {
+    // Type of changes given to onWindowChanged.
+    // Window has been cleared due to the session being closed.
+    private static final int WINDOW_CLOSE = 0;
+    // Window has been set due to the session being opened.
+    private static final int WINDOW_OPEN = 1; // Window has been opened.
+    // Window has been cleared due to the session being transferred to another session.
+    private static final int WINDOW_TRANSFER_OUT = 2; // Window has been transfer.
+    // Window has been set due to another session being transferred to this one.
+    private static final int WINDOW_TRANSFER_IN = 3;
+
+    private enum State implements NativeQueue.State {
         INITIAL(0),
         READY(1);
 
@@ -123,10 +133,21 @@ public class GeckoSession extends LayerSession
             "GeckoViewNavigation", this,
             new String[]{
                 "GeckoView:LocationChange",
-                "GeckoView:OnLoadUri",
+                "GeckoView:OnLoadRequest",
                 "GeckoView:OnNewSession"
             }
         ) {
+            // This needs to match nsIBrowserDOMWindow.idl
+            private int convertGeckoTarget(int geckoTarget) {
+                switch (geckoTarget) {
+                    case 0: // OPEN_DEFAULTWINDOW
+                    case 1: // OPEN_CURRENTWINDOW
+                        return NavigationDelegate.TARGET_WINDOW_CURRENT;
+                    default: // OPEN_NEWWINDOW, OPEN_NEWTAB, OPEN_SWITCHTAB
+                        return NavigationDelegate.TARGET_WINDOW_NEW;
+                }
+            }
+
             @Override
             public void handleMessage(final NavigationDelegate delegate,
                                       final String event,
@@ -139,13 +160,11 @@ public class GeckoSession extends LayerSession
                                          message.getBoolean("canGoBack"));
                     delegate.onCanGoForward(GeckoSession.this,
                                             message.getBoolean("canGoForward"));
-                } else if ("GeckoView:OnLoadUri".equals(event)) {
+                } else if ("GeckoView:OnLoadRequest".equals(event)) {
                     final String uri = message.getString("uri");
-                    final NavigationDelegate.TargetWindow where =
-                        NavigationDelegate.TargetWindow.forGeckoValue(
-                            message.getInt("where"));
+                    final int where = convertGeckoTarget(message.getInt("where"));
                     final boolean result =
-                        delegate.onLoadUri(GeckoSession.this, uri, where);
+                        delegate.onLoadRequest(GeckoSession.this, uri, where);
                     callback.sendSuccess(result);
                 } else if ("GeckoView:OnNewSession".equals(event)) {
                     final String uri = message.getString("uri");
@@ -162,7 +181,7 @@ public class GeckoSession extends LayerSession
                                     throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
                                 }
 
-                                session.openWindow(null);
+                                session.open(null);
                                 callback.sendSuccess(session.getId());
                             }
                         });
@@ -300,6 +319,13 @@ public class GeckoSession extends LayerSession
             }
         };
 
+    /* package */ int handlersCount;
+
+    private final GeckoSessionHandler<?>[] mSessionHandlers = new GeckoSessionHandler<?>[] {
+        mContentHandler, mNavigationHandler, mProgressHandler, mScrollHandler,
+        mTrackingProtectionHandler, mPermissionHandler
+    };
+
     private static class PermissionCallback implements
         PermissionDelegate.Callback, PermissionDelegate.MediaCallback {
 
@@ -386,23 +412,15 @@ public class GeckoSession extends LayerSession
             return mBinder;
         }
 
+        // Create a new Gecko window and assign an initial set of Java session objects to it.
         @WrapForJNI(dispatchTo = "proxy")
-        public static native void open(Window instance, Compositor compositor,
-                                       EventDispatcher dispatcher,
-                                       GeckoBundle settings, String chromeUri,
-                                       int screenId, boolean privateMode, String id);
+        public static native void open(Window instance, NativeQueue queue,
+                                       Compositor compositor, EventDispatcher dispatcher,
+                                       GeckoBundle settings, String id, String chromeUri,
+                                       int screenId, boolean privateMode);
 
         @Override // JNIObject
-        protected void disposeNative() {
-            // Detach ourselves from the binder as well, to prevent this window from being
-            // read from any parcels.
-            asBinder().attachInterface(null, Window.class.getName());
-
-            // Reset our queue, so we don't end up with queued calls on a disposed object.
-            synchronized (this) {
-                mNativeQueue.reset(State.INITIAL);
-            }
-
+        public void disposeNative() {
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
                 nativeDisposeNative();
             } else {
@@ -414,33 +432,88 @@ public class GeckoSession extends LayerSession
         @WrapForJNI(dispatchTo = "proxy", stubName = "DisposeNative")
         private native void nativeDisposeNative();
 
-        @WrapForJNI(dispatchTo = "proxy")
-        public native void close();
-
-        @WrapForJNI(dispatchTo = "proxy")
-        public native void transfer(Compositor compositor, EventDispatcher dispatcher,
-                                    GeckoBundle settings);
-
-        @WrapForJNI(calledFrom = "gecko")
-        private synchronized void onTransfer(final EventDispatcher dispatcher) {
-            final NativeQueue nativeQueue = dispatcher.getNativeQueue();
-            if (mNativeQueue != nativeQueue) {
-                // Set new queue to the same state as the old queue,
-                // then return the old queue to its initial state if applicable,
-                // because the old queue is no longer the active queue.
-                nativeQueue.setState(mNativeQueue.getState());
+        // Force the underlying Gecko window to close and release assigned Java objects.
+        public void close() {
+            // Reset our queue, so we don't end up with queued calls on a disposed object.
+            synchronized (this) {
+                if (mNativeQueue == null) {
+                    // Already closed elsewhere.
+                    return;
+                }
                 mNativeQueue.reset(State.INITIAL);
-                mNativeQueue = nativeQueue;
+                mNativeQueue = null;
+            }
+
+            // Detach ourselves from the binder as well, to prevent this window from being
+            // read from any parcels.
+            asBinder().attachInterface(null, Window.class.getName());
+
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                nativeClose();
+            } else {
+                GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                        this, "nativeClose");
             }
         }
+
+        @WrapForJNI(dispatchTo = "proxy", stubName = "Close")
+        private native void nativeClose();
+
+        // Assign a new set of Java session objects to the underlying Gecko window.
+        // This replaces previously assigned objects from open() or transfer() calls.
+        public synchronized void transfer(final NativeQueue queue,
+                                          final Compositor compositor,
+                                          final EventDispatcher dispatcher,
+                                          final GeckoBundle settings) {
+            if (mNativeQueue == null) {
+                // Already closed.
+                return;
+            }
+
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                nativeTransfer(queue, compositor, dispatcher, settings);
+            } else {
+                GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                        this, "nativeTransfer",
+                        NativeQueue.class, queue,
+                        Compositor.class, compositor,
+                        EventDispatcher.class, dispatcher,
+                        GeckoBundle.class, settings);
+            }
+
+            if (mNativeQueue != queue) {
+                // Reset the old queue to prevent old events from affecting this window.
+                // Gecko will call onReady later with the new queue if needed.
+                mNativeQueue.reset(State.INITIAL);
+                mNativeQueue = queue;
+            }
+        }
+
+        @WrapForJNI(dispatchTo = "proxy", stubName = "Transfer")
+        private native void nativeTransfer(NativeQueue queue, Compositor compositor,
+                                           EventDispatcher dispatcher, GeckoBundle settings);
 
         @WrapForJNI(dispatchTo = "proxy")
         public native void attachEditable(IGeckoEditableParent parent,
                                           GeckoEditableChild child);
 
         @WrapForJNI(calledFrom = "gecko")
-        private synchronized void onReady() {
-            if (mNativeQueue.checkAndSetState(State.INITIAL, State.READY)) {
+        private synchronized void onReady(final @Nullable NativeQueue queue) {
+            // onReady is called the first time the Gecko window is ready, with a null queue
+            // argument. In this case, we simply set the current queue to ready state.
+            //
+            // After the initial call, onReady is called again every time Window.transfer()
+            // is called, with a non-null queue argument. In this case, we only set the
+            // current queue to ready state _if_ the current queue matches the given queue,
+            // because if the queues don't match, we know there is another onReady call coming.
+
+            if ((queue == null && mNativeQueue == null) ||
+                (queue != null && mNativeQueue != queue)) {
+                return;
+            }
+
+            if (mNativeQueue.checkAndSetState(State.INITIAL, State.READY) &&
+                    queue == null) {
                 Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
                       " - chrome startup finished");
             }
@@ -477,6 +550,10 @@ public class GeckoSession extends LayerSession
     public GeckoSession(final GeckoSessionSettings settings) {
         mSettings = new GeckoSessionSettings(settings, this);
         mListener.registerListeners();
+
+        if (BuildConfig.DEBUG && handlersCount != mSessionHandlers.length) {
+            throw new AssertionError("Add new handler to handlers list");
+        }
     }
 
     private void transferFrom(final Window window, final GeckoSessionSettings settings,
@@ -485,29 +562,34 @@ public class GeckoSession extends LayerSession
             throw new IllegalStateException("Session is open");
         }
 
+        if (window != null) {
+            onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ true);
+        }
+
         mWindow = window;
         mSettings = new GeckoSessionSettings(settings, this);
         mId = id;
 
         if (mWindow != null) {
-            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-                mWindow.transfer(mCompositor, mEventDispatcher, mSettings.asBundle());
-            } else {
-                GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                        mWindow, "transfer",
-                        Compositor.class, mCompositor,
-                        EventDispatcher.class, mEventDispatcher,
-                        GeckoBundle.class, mSettings.asBundle());
-            }
-        }
+            mWindow.transfer(mNativeQueue, mCompositor,
+                             mEventDispatcher, mSettings.asBundle());
 
-        onWindowChanged();
+            onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ false);
+        }
     }
 
     /* package */ void transferFrom(final GeckoSession session) {
+        final boolean changing = (session.mWindow != null);
+        if (changing) {
+            session.onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ true);
+        }
+
         transferFrom(session.mWindow, session.mSettings, session.mId);
         session.mWindow = null;
-        session.onWindowChanged();
+
+        if (changing) {
+            session.onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ false);
+        }
     }
 
     @Override // Parcelable
@@ -593,7 +675,20 @@ public class GeckoSession extends LayerSession
         return mNativeQueue.isReady();
     }
 
-    public void openWindow(final @Nullable Context appContext) {
+    /**
+     * Opens the session.
+     *
+     * The session is in a 'closed' state when first created. Opening it creates
+     * the underlying Gecko objects necessary to load a page, etc. Most GeckoSession
+     * methods only take affect on an open session, and are queued until the session
+     * is opened here. Opening a session is an asynchronous operation. You can check
+     * the current state via isOpen().
+     *
+     * Call this when you are ready to use a GeckoSession instance.
+     *
+     * @param appContext An application context
+     */
+    public void open(final @Nullable Context appContext) {
         ThreadUtils.assertOnUiThread();
 
         if (isOpen()) {
@@ -616,25 +711,36 @@ public class GeckoSession extends LayerSession
 
         mWindow = new Window(mNativeQueue);
 
+        onWindowChanged(WINDOW_OPEN, /* inProgress */ true);
+
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            Window.open(mWindow, mCompositor, mEventDispatcher,
-                        mSettings.asBundle(), chromeUri, screenId, isPrivate, mId);
+            Window.open(mWindow, mNativeQueue, mCompositor, mEventDispatcher,
+                        mSettings.asBundle(), mId, chromeUri, screenId, isPrivate);
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
                 Window.class, "open",
                 Window.class, mWindow,
+                NativeQueue.class, mNativeQueue,
                 Compositor.class, mCompositor,
                 EventDispatcher.class, mEventDispatcher,
                 GeckoBundle.class, mSettings.asBundle(),
+                String.class, mId,
                 String.class, chromeUri,
-                screenId, isPrivate, mId);
+                screenId, isPrivate);
         }
 
-        onWindowChanged();
+        onWindowChanged(WINDOW_OPEN, /* inProgress */ false);
     }
 
-    public void closeWindow() {
+    /**
+     * Closes the session.
+     *
+     * This frees the underlying Gecko objects and unloads the current page. The session may be
+     * reopened later, but page state is not restored. Call this when you are finished using
+     * a GeckoSession instance.
+     */
+    public void close() {
         ThreadUtils.assertOnUiThread();
 
         if (!isOpen()) {
@@ -642,21 +748,27 @@ public class GeckoSession extends LayerSession
             return;
         }
 
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            mWindow.close();
-        } else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    mWindow, "close");
-        }
+        onWindowChanged(WINDOW_CLOSE, /* inProgress */ true);
 
+        mWindow.close();
         mWindow.disposeNative();
         mWindow = null;
-        onWindowChanged();
+
+        onWindowChanged(WINDOW_CLOSE, /* inProgress */ false);
     }
 
-    private void onWindowChanged() {
-        if (mWindow != null) {
+    private void onWindowChanged(int change, boolean inProgress) {
+        if ((change == WINDOW_OPEN || change == WINDOW_TRANSFER_IN) && !inProgress) {
             mTextInput.onWindowChanged(mWindow);
+        }
+
+        if (change == WINDOW_CLOSE) {
+            // Detach when window is closing, and reattach immediately after window is closed.
+            // We reattach immediate after closing because we want any actions performed while the
+            // session is closed to be properly queued, until the session is open again.
+            for (final GeckoSessionHandler<?> handler : mSessionHandlers) {
+                handler.setSessionIsReady(getEventDispatcher(), !inProgress);
+            }
         }
     }
 
@@ -1399,49 +1511,21 @@ public class GeckoSession extends LayerSession
         */
         void onCanGoForward(GeckoSession session, boolean canGoForward);
 
-        enum TargetWindow {
-            DEFAULT(0),
-            CURRENT(1),
-            NEW(2);
-
-            private static final TargetWindow[] sValues = TargetWindow.values();
-            private int mValue;
-
-            private TargetWindow(int value) {
-                mValue = value;
-            }
-
-            public static TargetWindow forValue(int value) {
-                return sValues[value];
-            }
-
-            public static TargetWindow forGeckoValue(int value) {
-                // DEFAULT(0),
-                // CURRENT(1),
-                // NEW(2),
-                // NEWTAB(3),
-                // SWITCHTAB(4);
-                final TargetWindow[] sMap = {
-                    DEFAULT,
-                    CURRENT,
-                    NEW,
-                    NEW,
-                    NEW
-                };
-                return sMap[value];
-            }
-        }
+        public static final int TARGET_WINDOW_NONE = 0;
+        public static final int TARGET_WINDOW_CURRENT = 1;
+        public static final int TARGET_WINDOW_NEW = 2;
 
         /**
-        * A request to open an URI.
-        * @param session The GeckoSession that initiated the callback.
-        * @param uri The URI to be loaded.
-        * @param where The target window.
-        *
-        * @return Whether or not the load was handled. Returning false will allow Gecko
-        *         to continue the load as normal.
-        */
-        boolean onLoadUri(GeckoSession session, String uri, TargetWindow where);
+         * A request to open an URI.
+         * @param session The GeckoSession that initiated the callback.
+         * @param uri The URI to be loaded.
+         * @param target The target where the window has requested to open. One of
+         *               TARGET_WINDOW_*.
+         *
+         * @return Whether or not the load was handled. Returning false will allow Gecko
+         *         to continue the load as normal.
+         */
+        boolean onLoadRequest(GeckoSession session, String uri, int target);
 
         /**
         * A request has been made to open a new session. The URI is provided only for

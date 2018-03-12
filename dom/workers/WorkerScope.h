@@ -34,7 +34,6 @@ enum class ImageBitmapFormat : uint8_t;
 class Performance;
 class Promise;
 class RequestOrUSVString;
-class ServiceWorkerRegistration;
 class WorkerLocation;
 class WorkerNavigator;
 class WorkerPrivate;
@@ -235,6 +234,9 @@ public:
 
   Maybe<ServiceWorkerDescriptor>
   GetController() const override;
+
+  RefPtr<mozilla::dom::ServiceWorkerRegistration>
+  GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
 };
 
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope

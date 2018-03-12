@@ -63,7 +63,7 @@ impl<T: fmt::Display, U> fmt::Display for TypedPoint2D<T, U> {
     }
 }
 
-impl<T: Copy, U> TypedPoint2D<T, U> {
+impl<T, U> TypedPoint2D<T, U> {
     /// Constructor taking scalar values directly.
     #[inline]
     pub fn new(x: T, y: T) -> Self {
@@ -73,7 +73,9 @@ impl<T: Copy, U> TypedPoint2D<T, U> {
             _unit: PhantomData,
         }
     }
+}
 
+impl<T: Copy, U> TypedPoint2D<T, U> {
     /// Constructor taking properly typed Lengths instead of scalar values.
     #[inline]
     pub fn from_lengths(x: Length<T, U>, y: Length<T, U>) -> Self {
@@ -312,6 +314,16 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_usize(&self) -> TypedPoint2D<usize, U> {
+        self.cast().unwrap()
+    }
+
+    /// Cast into an `u32` point, truncating decimals if any.
+    ///
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
+    #[inline]
+    pub fn to_u32(&self) -> TypedPoint2D<u32, U> {
         self.cast().unwrap()
     }
 
@@ -670,6 +682,16 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_usize(&self) -> TypedPoint3D<usize, U> {
+        self.cast().unwrap()
+    }
+
+    /// Cast into an `u32` point, truncating decimals if any.
+    ///
+    /// When casting from floating point points, it is worth considering whether
+    /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
+    /// the desired conversion behavior.
+    #[inline]
+    pub fn to_u32(&self) -> TypedPoint3D<u32, U> {
         self.cast().unwrap()
     }
 

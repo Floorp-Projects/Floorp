@@ -17,34 +17,55 @@ namespace console {
   // interface as well!
 
   // Logging
+  [UseCounter]
   void assert(optional boolean condition = false, any... data);
+  [UseCounter]
   void clear();
+  [UseCounter]
   void count(optional DOMString label = "default");
+  [UseCounter]
   void debug(any... data);
+  [UseCounter]
   void error(any... data);
+  [UseCounter]
   void info(any... data);
+  [UseCounter]
   void log(any... data);
+  [UseCounter]
   void table(any... data); // FIXME: The spec is still unclear about this.
+  [UseCounter]
   void trace(any... data);
+  [UseCounter]
   void warn(any... data);
+  [UseCounter]
   void dir(any... data); // FIXME: This doesn't follow the spec yet.
+  [UseCounter]
   void dirxml(any... data);
 
   // Grouping
+  [UseCounter]
   void group(any... data);
+  [UseCounter]
   void groupCollapsed(any... data);
+  [UseCounter]
   void groupEnd();
 
   // Timing
+  [UseCounter]
   void time(optional DOMString label = "default");
+  [UseCounter]
   void timeEnd(optional DOMString label = "default");
 
   // Mozilla only or Webcompat methods
 
+  [UseCounter]
   void _exception(any... data);
+  [UseCounter]
   void timeStamp(optional any data);
 
+  [UseCounter]
   void profile(any... data);
+  [UseCounter]
   void profileEnd(any... data);
 
   [ChromeOnly]

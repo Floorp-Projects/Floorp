@@ -21,7 +21,7 @@ use std::fmt;
 use num_traits::NumCast;
 
 define_matrix! {
-    /// A 2d transform stored as a 2 by 3 matrix in row-major order in memory.
+    /// A 2d transform stored as a 3 by 2 matrix in row-major order in memory.
     ///
     /// Transforms can be parametrized over the source and destination units, to describe a
     /// transformation from a space to another.

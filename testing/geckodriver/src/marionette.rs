@@ -17,8 +17,8 @@ use std::path::PathBuf;
 use std::io::Result as IoResult;
 use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
-use std::thread::sleep;
-use std::time::Duration;
+use std::thread;
+use std::time;
 use uuid::Uuid;
 use webdriver::capabilities::CapabilitiesMatching;
 use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
@@ -55,10 +55,6 @@ use logging;
 use prefs;
 
 const DEFAULT_HOST: &'static str = "localhost";
-
-// Firefox' integrated background monitor which observes long running threads during
-// shutdown kills those after 65s. Wait some additional seconds for a safe shutdown
-const TIMEOUT_BROWSER_SHUTDOWN: u64 = 70 * 1000;
 
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
     return vec![(Method::Get, "/session/{sessionId}/moz/context", GeckoExtensionRoute::GetContext),
@@ -571,7 +567,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
                                 // Shutdown the browser if no session can
                                 // be established due to errors.
                                 if let NewSession(_) = msg.command {
-                                    err.delete_session=true;
+                                    err.delete_session = true;
                                 }
                                 err})
                     },
@@ -587,32 +583,12 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
     }
 
     fn delete_session(&mut self, session: &Option<Session>) {
-        // If there is still an active session send a delete session command
-        // and wait for the browser to quit
         if let Some(ref s) = *session {
             let delete_session = WebDriverMessage {
                 session_id: Some(s.id.clone()),
-                command: WebDriverCommand::DeleteSession
+                command: WebDriverCommand::DeleteSession,
             };
             let _ = self.handle_command(session, delete_session);
-
-            if let Some(ref mut runner) = self.browser {
-                let timeout = TIMEOUT_BROWSER_SHUTDOWN;
-                let poll_interval = 100;
-                let poll_attempts = timeout / poll_interval;
-                let mut poll_attempt = 0;
-
-                while runner.is_running() {
-                    if poll_attempt <= poll_attempts {
-                        debug!("Waiting for the browser process to shutdown");
-                        poll_attempt += 1;
-                        sleep(Duration::from_millis(poll_interval));
-                    } else {
-                        warn!("Browser process did not shutdown");
-                        break;
-                    }
-                }
-            }
         }
 
         if let Ok(ref mut connection) = self.connection.lock() {
@@ -621,13 +597,11 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
             }
         }
 
-        // If the browser is still open then kill the process
         if let Some(ref mut runner) = self.browser {
-            if runner.is_running() {
-                info!("Forcing a shutdown of the browser process");
-                if runner.stop().is_err() {
-                    error!("Failed to kill browser process");
-                };
+            // TODO(https://bugzil.la/1443922):
+            // Use toolkit.asyncshutdown.crash_timout pref
+            if runner.wait(time::Duration::from_secs(70)).is_err() {
+                error!("Failed to stop browser process");
             }
         }
 
@@ -985,10 +959,10 @@ impl MarionetteSession {
             let expiry = try!(
                 Nullable::from_json(x.find("expiry").unwrap_or(&Json::Null),
                                     |x| {
-                                        Ok(Date::new((try_opt!(
+                                        Ok(Date::new(try_opt!(
                                             x.as_u64(),
                                             ErrorStatus::UnknownError,
-                                            "Cookie expiry must be a positive integer"))))
+                                            "Cookie expiry must be a positive integer")))
                                     }));
             let secure = try_opt!(
                 x.find("secure").map_or(Some(false), |x| x.as_boolean()),
@@ -1341,54 +1315,59 @@ impl MarionetteConnection {
         MarionetteConnection {
             port: port,
             stream: None,
-            session: MarionetteSession::new(session_id)
+            session: MarionetteSession::new(session_id),
         }
     }
 
     pub fn connect(&mut self, browser: &mut Option<FirefoxProcess>) -> WebDriverResult<()> {
-        let timeout = 60 * 1000;  // ms
-        let poll_interval = 100;  // ms
+        let timeout = 60 * 1000; // ms
+        let poll_interval = 100; // ms
         let poll_attempts = timeout / poll_interval;
         let mut poll_attempt = 0;
 
         loop {
-            // If the process is gone, immediately abort the connection attempts
+            // immediately abort connection attempts if process disappears
             if let &mut Some(ref mut runner) = browser {
-                let status = runner.status();
-                if status.is_err() || status.as_ref().map(|x| *x).unwrap_or(None) != None {
+                let exit_status = match runner.try_wait() {
+                    Ok(Some(status)) => Some(
+                        status
+                            .code()
+                            .map(|c| c.to_string())
+                            .unwrap_or("signal".into()),
+                    ),
+                    Ok(None) => None,
+                    Err(_) => Some("{unknown}".into()),
+                };
+                if let Some(s) = exit_status {
                     return Err(WebDriverError::new(
                         ErrorStatus::UnknownError,
-                        format!("Process unexpectedly closed with status: {}", status
-                            .ok()
-                            .and_then(|x| x)
-                            .and_then(|x| x.code())
-                            .map(|x| x.to_string())
-                            .unwrap_or("{unknown}".into()))));
+                        format!("Process unexpectedly closed with status {}", s),
+                    ));
                 }
             }
 
             match TcpStream::connect(&(DEFAULT_HOST, self.port)) {
                 Ok(stream) => {
                     self.stream = Some(stream);
-                    break
-                },
+                    break;
+                }
                 Err(e) => {
                     trace!("  connection attempt {}/{}", poll_attempt, poll_attempts);
                     if poll_attempt <= poll_attempts {
                         poll_attempt += 1;
-                        sleep(Duration::from_millis(poll_interval));
+                        thread::sleep(time::Duration::from_millis(poll_interval));
                     } else {
                         return Err(WebDriverError::new(
-                            ErrorStatus::UnknownError, e.description().to_owned()));
+                            ErrorStatus::UnknownError,
+                            e.description().to_owned(),
+                        ));
                     }
                 }
             }
-        };
+        }
 
         debug!("Connected to Marionette on {}:{}", DEFAULT_HOST, self.port);
-
-        try!(self.handshake());
-        Ok(())
+        self.handshake()
     }
 
     fn handshake(&mut self) -> WebDriverResult<()> {

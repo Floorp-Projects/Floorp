@@ -177,6 +177,12 @@ ToJSString(JSContext* cx, const nsACString& aStr)
   return JS_NewUCStringCopyN(cx, wide.Data(), wide.Length());
 }
 
+JSString*
+ToJSString(JSContext* cx, const nsAString& aStr)
+{
+  return JS_NewUCStringCopyN(cx, aStr.Data(), aStr.Length());
+}
+
 } // namespace Common
 } // namespace Telemetry
 } // namespace mozilla

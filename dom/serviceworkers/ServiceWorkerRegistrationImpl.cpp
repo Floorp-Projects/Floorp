@@ -84,6 +84,18 @@ ServiceWorkerRegistrationMainThread::StopListeningForEvents()
 }
 
 void
+ServiceWorkerRegistrationMainThread::RegistrationRemovedInternal()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  StopListeningForEvents();
+
+  // Since the registration is effectively dead in the SWM we can break
+  // the ref-cycle and let the binding object clean up.
+  mOuter = nullptr;
+}
+
+void
 ServiceWorkerRegistrationMainThread::UpdateFound()
 {
   mOuter->DispatchTrustedEvent(NS_LITERAL_STRING("updatefound"));
@@ -98,12 +110,15 @@ ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistration
 void
 ServiceWorkerRegistrationMainThread::RegistrationRemoved()
 {
-  // If the registration is being removed completely, remove it from the
-  // window registration hash table so that a new registration would get a new
-  // wrapper JS object.
-  if (nsCOMPtr<nsPIDOMWindowInner> window = mOuter->GetOwner()) {
-    window->InvalidateServiceWorkerRegistration(mScope);
-  }
+  // Queue a runnable to clean up the registration.  This is necessary
+  // because there may be runnables in the event queue already to
+  // update the registration state.  We want to let those run
+  // if possible before clearing our mOuter reference.
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
+    "ServiceWorkerRegistrationMainThread::RegistrationRemoved",
+    this,
+    &ServiceWorkerRegistrationMainThread::RegistrationRemovedInternal);
+  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
 bool
@@ -124,8 +139,7 @@ ServiceWorkerRegistrationMainThread::SetServiceWorkerRegistration(ServiceWorkerR
 void
 ServiceWorkerRegistrationMainThread::ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg)
 {
-  MOZ_DIAGNOSTIC_ASSERT(mOuter);
-  MOZ_DIAGNOSTIC_ASSERT(mOuter == aReg);
+  MOZ_ASSERT_IF(mOuter, mOuter == aReg);
   StopListeningForEvents();
   mOuter = nullptr;
 }
@@ -603,6 +617,11 @@ already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!mOuter) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   nsCOMPtr<nsIGlobalObject> go = mOuter->GetParentObject();
   if (!go) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -628,6 +647,11 @@ already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::Unregister(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!mOuter) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   nsCOMPtr<nsIGlobalObject> go = mOuter->GetParentObject();
   if (!go) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -695,6 +719,11 @@ ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
                                                       ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!mOuter) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   nsCOMPtr<nsPIDOMWindowInner> window = mOuter->GetOwner();
   if (NS_WARN_IF(!window)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -727,6 +756,10 @@ already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!mOuter) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
   nsCOMPtr<nsPIDOMWindowInner> window = mOuter->GetOwner();
   if (NS_WARN_IF(!window)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -740,6 +773,11 @@ ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
                                                     ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mOuter) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
 
   nsCOMPtr<nsIGlobalObject> globalObject = mOuter->GetParentObject();
 
@@ -805,7 +843,9 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    MOZ_ASSERT(mListeningForEvents);
+    if (!mListeningForEvents) {
+      return;
+    }
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
@@ -832,10 +872,7 @@ public:
   }
 
   void
-  RegistrationRemoved() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
+  RegistrationRemoved() override;
 
   void
   GetScope(nsAString& aScope) const override
@@ -891,6 +928,12 @@ ServiceWorkerRegistrationWorkerThread::~ServiceWorkerRegistrationWorkerThread()
 }
 
 void
+ServiceWorkerRegistrationWorkerThread::RegistrationRemoved()
+{
+  mOuter = nullptr;
+}
+
+void
 ServiceWorkerRegistrationWorkerThread::SetServiceWorkerRegistration(ServiceWorkerRegistration* aReg)
 {
   MOZ_DIAGNOSTIC_ASSERT(aReg);
@@ -902,8 +945,7 @@ ServiceWorkerRegistrationWorkerThread::SetServiceWorkerRegistration(ServiceWorke
 void
 ServiceWorkerRegistrationWorkerThread::ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg)
 {
-  MOZ_DIAGNOSTIC_ASSERT(mOuter);
-  MOZ_DIAGNOSTIC_ASSERT(mOuter == aReg);
+  MOZ_ASSERT_IF(mOuter, mOuter == aReg);
   ReleaseListener();
   mOuter = nullptr;
 }
@@ -1025,6 +1067,14 @@ bool
 ServiceWorkerRegistrationWorkerThread::Notify(WorkerStatus aStatus)
 {
   ReleaseListener();
+
+  // Break the ref-cycle immediately when the worker thread starts to
+  // teardown.  We must make sure its GC'd before the worker RuntimeService
+  // is destroyed.  The WorkerListener may not be able to post a runnable
+  // clearing this value after shutdown begins and thus delaying cleanup
+  // too late.
+  mOuter = nullptr;
+
   return true;
 }
 
@@ -1066,6 +1116,50 @@ WorkerListener::UpdateFound()
       new FireUpdateFoundRunnable(mWorkerPrivate, this);
     Unused << NS_WARN_IF(!r->Dispatch());
   }
+}
+
+class RegistrationRemovedWorkerRunnable final : public WorkerRunnable
+{
+  RefPtr<WorkerListener> mListener;
+public:
+  RegistrationRemovedWorkerRunnable(WorkerPrivate* aWorkerPrivate,
+                                    WorkerListener* aListener)
+    : WorkerRunnable(aWorkerPrivate)
+    , mListener(aListener)
+  {
+    // Need this assertion for now since runnables which modify busy count can
+    // only be dispatched from parent thread to worker thread and we don't deal
+    // with nested workers. SW threads can't be nested.
+    MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
+    ServiceWorkerRegistrationWorkerThread* reg = mListener->GetRegistration();
+    if (reg) {
+      reg->RegistrationRemoved();
+    }
+    return true;
+  }
+};
+
+void
+WorkerListener::RegistrationRemoved()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mWorkerPrivate) {
+    return;
+  }
+
+  RefPtr<WorkerRunnable> r =
+    new RegistrationRemovedWorkerRunnable(mWorkerPrivate, this);
+  Unused << r->Dispatch();
+
+  StopListeningForEvents();
 }
 
 // Notification API extension.

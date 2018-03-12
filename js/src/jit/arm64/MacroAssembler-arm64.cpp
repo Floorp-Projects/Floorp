@@ -1862,6 +1862,16 @@ MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& 
     atomicEffectOp(arrayType, sync, op, value, mem, temp);
 }
 
+// ========================================================================
+// Spectre Mitigations.
+
+void
+MacroAssembler::speculationBarrier()
+{
+    // Conditional speculation barrier.
+    csdb();
+}
+
 //}}} check_macroassembler_style
 
 } // namespace jit

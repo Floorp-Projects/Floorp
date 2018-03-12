@@ -8,6 +8,7 @@
 #include "js/UbiNodePostOrder.h"
 #include "js/UbiNodeShortestPaths.h"
 #include "jsapi-tests/tests.h"
+#include "util/Text.h"
 #include "vm/SavedFrame.h"
 
 using JS::RootedObject;

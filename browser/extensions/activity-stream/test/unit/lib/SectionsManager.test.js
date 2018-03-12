@@ -286,6 +286,19 @@ describe("SectionsFeed", () => {
     SectionsManager.initialized = false;
     feed = new SectionsFeed();
     feed.store = {dispatch: sinon.spy()};
+    feed.store = {
+      dispatch: sinon.spy(),
+      getState() { return this.state; },
+      state: {
+        Prefs: {
+          values: {
+            sectionOrder: "topsites,topstories,highlights",
+            showTopSites: true
+          }
+        },
+        Sections: [{initialized: false}]
+      }
+    };
   });
   afterEach(() => {
     feed.uninit();
@@ -352,6 +365,15 @@ describe("SectionsFeed", () => {
       assert.deepEqual(action.data, Object.assign({id: FAKE_ID}, FAKE_OPTIONS));
       assert.equal(action.meta.from, MAIN_MESSAGE_TYPE);
       assert.equal(action.meta.to, CONTENT_MESSAGE_TYPE);
+    });
+    it("should prepend id to sectionOrder pref if not already included", () => {
+      feed.store.state.Sections = [{id: "topstories", enabled: true}, {id: "highlights", enabled: true}];
+      feed.onAddSection(null, FAKE_ID, FAKE_OPTIONS);
+      assert.calledWith(feed.store.dispatch, {
+        data: {name: "sectionOrder", value: `${FAKE_ID},topsites,topstories,highlights`},
+        meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+        type: "SET_PREF"
+      });
     });
   });
   describe("#onRemoveSection", () => {
@@ -492,6 +514,71 @@ describe("SectionsFeed", () => {
 
       assert.calledOnce(stub);
       assert.calledWith(stub, "Foo", "bar.com");
+    });
+    it("should call the feed's moveSection on SECTION_MOVE", () => {
+      sinon.stub(feed, "moveSection");
+      const id = "topsites";
+      const direction = +1;
+      feed.onAction({type: "SECTION_MOVE", data: {id, direction}});
+
+      assert.calledOnce(feed.moveSection);
+      assert.calledWith(feed.moveSection, id, direction);
+    });
+  });
+  describe("#moveSection", () => {
+    it("should Move Down correctly", () => {
+      feed.store.state.Sections = [{id: "topstories", enabled: true}, {id: "highlights", enabled: true}];
+      feed.moveSection("topsites", +1);
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        data: {name: "sectionOrder", value: "topstories,topsites,highlights"},
+        meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+        type: "SET_PREF"
+      });
+      feed.store.dispatch.reset();
+      feed.moveSection("topstories", +1);
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        data: {name: "sectionOrder", value: "topsites,highlights,topstories"},
+        meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+        type: "SET_PREF"
+      });
+    });
+    it("should Move Up correctly", () => {
+      feed.store.state.Sections = [{id: "topstories", enabled: true}, {id: "highlights", enabled: true}];
+      feed.moveSection("topstories", -1);
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        data: {name: "sectionOrder", value: "topstories,topsites,highlights"},
+        meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+        type: "SET_PREF"
+      });
+      feed.store.dispatch.reset();
+      feed.moveSection("highlights", -1);
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        data: {name: "sectionOrder", value: "topsites,highlights,topstories"},
+        meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+        type: "SET_PREF"
+      });
+    });
+    it("should skip over sections that aren't enabled", () => {
+      feed.store.state.Sections = [{id: "topstories", enabled: false}, {id: "highlights", enabled: true}];
+      feed.moveSection("highlights", -1);
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        data: {name: "sectionOrder", value: "highlights,topsites,topstories"},
+        meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+        type: "SET_PREF"
+      });
+      feed.store.dispatch.reset();
+      feed.moveSection("topsites", +1);
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        data: {name: "sectionOrder", value: "topstories,highlights,topsites"},
+        meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+        type: "SET_PREF"
+      });
     });
   });
 });

@@ -478,6 +478,7 @@ describe("TelemetryFeed", () => {
   });
   describe("#sendUTEvent", () => {
     it("should call the UT event function passed in", async () => {
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
       FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
       const event = {};
       instance = new TelemetryFeed();

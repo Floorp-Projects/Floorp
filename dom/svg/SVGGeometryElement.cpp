@@ -98,11 +98,11 @@ SVGGeometryElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 }
 
 already_AddRefed<Path>
-SVGGeometryElement::GetOrBuildPath(const DrawTarget& aDrawTarget,
+SVGGeometryElement::GetOrBuildPath(const DrawTarget* aDrawTarget,
                                    FillRule aFillRule)
 {
   // We only cache the path if it matches the backend used for screen painting:
-  bool cacheable  = aDrawTarget.GetBackendType() ==
+  bool cacheable  = aDrawTarget->GetBackendType() ==
                     gfxPlatform::GetPlatform()->GetDefaultContentBackend();
 
   // Checking for and returning mCachedPath before checking the pref means
@@ -110,11 +110,11 @@ SVGGeometryElement::GetOrBuildPath(const DrawTarget& aDrawTarget,
   // chrome). The benefit is that we avoid causing a CPU memory cache miss by
   // looking at the global variable that the pref's stored in.
   if (cacheable && mCachedPath && mCachedPath->GetFillRule() == aFillRule &&
-      aDrawTarget.GetBackendType() == mCachedPath->GetBackendType()) {
+      aDrawTarget->GetBackendType() == mCachedPath->GetBackendType()) {
     RefPtr<Path> path(mCachedPath);
     return path.forget();
   }
-  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder(aFillRule);
+  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(aFillRule);
   RefPtr<Path> path = BuildPath(builder);
   if (cacheable && NS_SVGPathCachingEnabled()) {
     mCachedPath = path;
@@ -167,20 +167,9 @@ SVGGeometryElement::GetPointAtLength(float distance, ErrorResult& rv)
     return nullptr;
   }
 
-  float totalLength = path->ComputeLength();
-  if (mPathLength.IsExplicitlySet()) {
-    float pathLength = mPathLength.GetAnimValue();
-    if (pathLength <= 0) {
-      rv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-    distance *= totalLength / pathLength;
-  }
-  distance = std::max(0.f,         distance);
-  distance = std::min(totalLength, distance);
-
   nsCOMPtr<nsISVGPoint> point =
-    new DOMSVGPoint(path->ComputePointAtLength(distance));
+    new DOMSVGPoint(path->ComputePointAtLength(
+      clamped(distance, 0.f, path->ComputeLength())));
   return point.forget();
 }
 

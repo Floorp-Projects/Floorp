@@ -75,7 +75,7 @@ public:
 
   static nsDynamicAtom* As(nsAtom* aAtom)
   {
-    MOZ_ASSERT(aAtom->IsDynamicAtom());
+    MOZ_ASSERT(aAtom->IsDynamic());
     return static_cast<nsDynamicAtom*>(aAtom);
   }
 
@@ -129,7 +129,7 @@ nsAtom::nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash)
 {
   MOZ_ASSERT(aKind == AtomKind::DynamicAtom || aKind == AtomKind::HTML5Atom);
 
-  MOZ_ASSERT_IF(!IsHTML5Atom(), mHash == HashString(mString, mLength));
+  MOZ_ASSERT_IF(!IsHTML5(), mHash == HashString(mString, mLength));
 
   MOZ_ASSERT(mString[mLength] == char16_t(0), "null terminated");
   MOZ_ASSERT(Equals(aString), "correct data");
@@ -150,8 +150,8 @@ nsAtom::nsAtom(const char16_t* aString, uint32_t aLength, uint32_t aHash)
 
 nsAtom::~nsAtom()
 {
-  if (!IsStaticAtom()) {
-    MOZ_ASSERT(IsDynamicAtom() || IsHTML5Atom());
+  if (!IsStatic()) {
+    MOZ_ASSERT(IsDynamic() || IsHTML5());
     GetStringBuffer()->Release();
   }
 }
@@ -160,7 +160,7 @@ void
 nsAtom::ToString(nsAString& aString) const
 {
   // See the comment on |mString|'s declaration.
-  if (IsStaticAtom()) {
+  if (IsStatic()) {
     // AssignLiteral() lets us assign without copying. This isn't a string
     // literal, but it's a static atom and thus has an unbounded lifetime,
     // which is what's important.
@@ -173,7 +173,7 @@ nsAtom::ToString(nsAString& aString) const
 void
 nsAtom::ToUTF8String(nsACString& aBuf) const
 {
-  MOZ_ASSERT(!IsHTML5Atom(), "Called ToUTF8String() on an HTML5 atom");
+  MOZ_ASSERT(!IsHTML5(), "Called ToUTF8String() on an HTML5 atom");
   CopyUTF16toUTF8(nsDependentString(mString, mLength), aBuf);
 }
 
@@ -181,10 +181,10 @@ void
 nsAtom::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, AtomsSizes& aSizes)
   const
 {
-  MOZ_ASSERT(!IsHTML5Atom(),
+  MOZ_ASSERT(!IsHTML5(),
              "Called AddSizeOfIncludingThis() on an HTML5 atom");
   size_t thisSize = aMallocSizeOf(this);
-  if (IsStaticAtom()) {
+  if (IsStatic()) {
     // String buffers pointed to by static atoms are in static memory, and so
     // are not measured here.
     aSizes.mStaticAtomObjects += thisSize;
@@ -360,7 +360,7 @@ nsAtomTable::AtomTableClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
   auto entry = static_cast<AtomTableEntry*>(aEntry);
   nsAtom* atom = entry->mAtom;
-  if (atom->IsStaticAtom()) {
+  if (atom->IsStatic()) {
     // This case -- when the entry being cleared holds a static atom -- only
     // occurs when gAtomTable is destroyed, whereupon all static atoms within it
     // must be explicitly deleted.
@@ -504,13 +504,13 @@ nsAtomSubTable::GCLocked(GCKind aKind)
   uint32_t nonZeroRefcountAtomsCount = 0;
   for (auto i = mTable.Iter(); !i.Done(); i.Next()) {
     auto entry = static_cast<AtomTableEntry*>(i.Get());
-    if (entry->mAtom->IsStaticAtom()) {
+    if (entry->mAtom->IsStatic()) {
       continue;
     }
 
     nsAtom* atom = entry->mAtom;
-    MOZ_ASSERT(!atom->IsHTML5Atom());
-    if (atom->IsDynamicAtom() && nsDynamicAtom::As(atom)->mRefCnt == 0) {
+    MOZ_ASSERT(!atom->IsHTML5());
+    if (atom->IsDynamic() && nsDynamicAtom::As(atom)->mRefCnt == 0) {
       i.Remove();
       delete atom;
       ++removedCount;
@@ -588,17 +588,17 @@ nsDynamicAtom::Release()
 MozExternalRefCountType
 nsAtom::AddRef()
 {
-  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to AddRef an HTML5 atom");
+  MOZ_ASSERT(!IsHTML5(), "Attempt to AddRef an HTML5 atom");
 
-  return IsStaticAtom() ? 2 : nsDynamicAtom::As(this)->AddRef();
+  return IsStatic() ? 2 : nsDynamicAtom::As(this)->AddRef();
 }
 
 MozExternalRefCountType
 nsAtom::Release()
 {
-  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to Release an HTML5 atom");
+  MOZ_ASSERT(!IsHTML5(), "Attempt to Release an HTML5 atom");
 
-  return IsStaticAtom() ? 1 : nsDynamicAtom::As(this)->Release();
+  return IsStatic() ? 1 : nsDynamicAtom::As(this)->Release();
 }
 
 //----------------------------------------------------------------------
@@ -680,7 +680,7 @@ nsAtomTable::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
 
   for (uint32_t i = 0; i < aCount; ++i) {
     const char16_t* string = aSetup[i].mString;
-    nsStaticAtom** atomp = aSetup[i].mAtom;
+    nsStaticAtom** atomp = aSetup[i].mAtomp;
 
     MOZ_ASSERT(nsCRT::IsAscii(string));
 
@@ -697,7 +697,7 @@ nsAtomTable::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
       // Disallow creating a dynamic atom, and then later, while the dynamic
       // atom is still alive, registering that same atom as a static atom.  It
       // causes subtle bugs, and we're programming in C++ here, not Smalltalk.
-      if (!he->mAtom->IsStaticAtom()) {
+      if (!he->mAtom->IsStatic()) {
         nsAutoCString name;
         he->mAtom->ToUTF8String(name);
         MOZ_CRASH_UNSAFE_PRINTF(
@@ -866,7 +866,7 @@ nsAtomTable::GetStaticAtom(const nsAString& aUTF16String)
   nsAtomSubTable& table = SelectSubTable(key);
   MutexAutoLock lock(table.mLock);
   AtomTableEntry* he = table.Search(key);
-  return he && he->mAtom->IsStaticAtom()
+  return he && he->mAtom->IsStatic()
        ? static_cast<nsStaticAtom*>(he->mAtom)
        : nullptr;
 }

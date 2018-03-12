@@ -56,7 +56,12 @@ CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
 {
   nsIDocument* doc = mParentElement->GetComposedDoc();
   if (doc) {
-    doc->FlushPendingNotifications(FlushType::Style);
+    // We don't need to explicitly flush throttled animations here, since
+    // updating the animation style of (pseudo-)elements will never affect the
+    // set of running animations and it's only the set of running animations
+    // that is important here.
+    doc->FlushPendingNotifications(
+      ChangesToFlush(FlushType::Style, false /* flush animations */));
   }
 
   Element::GetAnimationsUnsorted(mParentElement, mPseudoType, aRetVal);

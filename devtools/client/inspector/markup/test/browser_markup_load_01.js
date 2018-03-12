@@ -49,7 +49,6 @@ add_task(function* () {
 
   info("Inspect element via context menu");
   let markupLoaded = inspector.once("markuploaded");
-  let multipleChildrenUpdates = waitForMultipleChildrenUpdates(inspector);
   yield chooseWithInspectElementContextMenu("img", tab);
 
   info("Wait for load");
@@ -58,7 +57,7 @@ add_task(function* () {
   info("Wait for markup-loaded after element inspection");
   yield markupLoaded;
   info("Wait for multiple children updates after element inspection");
-  yield multipleChildrenUpdates;
+  yield waitForMultipleChildrenUpdates(inspector);
 
   ok(inspector.markup, "There is a markup view");
   is(inspector.markup._elt.children.length, 1, "The markup view is rendering");
