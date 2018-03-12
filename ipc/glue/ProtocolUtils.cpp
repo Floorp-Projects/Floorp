@@ -597,7 +597,9 @@ IToplevelProtocol::~IToplevelProtocol()
 base::ProcessId
 IToplevelProtocol::OtherPid() const
 {
-  return OtherPidMaybeInvalid();
+  base::ProcessId pid = OtherPidMaybeInvalid();
+  MOZ_RELEASE_ASSERT(pid != kInvalidProcessId);
+  return pid;
 }
 
 base::ProcessId
