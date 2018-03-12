@@ -85,12 +85,6 @@ using mozilla::PodEqual;
 using mozilla::Some;
 using mozilla::Unused;
 
-typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
-typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytes;
-typedef UniquePtr<Bytes> UniqueBytes;
-typedef UniquePtr<const Bytes> UniqueConstBytes;
-typedef Vector<char, 0, SystemAllocPolicy> UTF8Bytes;
-
 typedef int8_t I8x16[16];
 typedef int16_t I16x8[8];
 typedef int32_t I32x4[4];
@@ -103,6 +97,13 @@ class Memory;
 class Module;
 class Instance;
 class Table;
+
+typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
+typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytes;
+typedef UniquePtr<Bytes> UniqueBytes;
+typedef UniquePtr<const Bytes> UniqueConstBytes;
+typedef Vector<char, 0, SystemAllocPolicy> UTF8Bytes;
+typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
 
 // To call Vector::podResizeToFit, a type must specialize mozilla::IsPod
 // which is pretty verbose to do within js::wasm, so factor that process out
@@ -928,6 +929,10 @@ enum class Trap
     // the same over-recursed error as JS.
     StackOverflow,
 
+    // The wasm execution has potentially run too long and the engine must call
+    // CheckForInterrupt(). This trap is resumable.
+    CheckInterrupt,
+
     // Signal an error that was reported in C++ code.
     ThrowReported,
 
@@ -1374,7 +1379,7 @@ enum class SymbolicAddress
     ATan2D,
     HandleDebugTrap,
     HandleThrow,
-    ReportTrap,
+    HandleTrap,
     OldReportTrap,
     ReportOutOfBounds,
     ReportUnalignedAccess,
@@ -1527,9 +1532,19 @@ struct TlsData
     // The containing JSContext.
     JSContext* cx;
 
-    // The native stack limit which is checked by prologues. Shortcut for
-    // cx->stackLimitForJitCode(JS::StackForUntrustedScript).
-    uintptr_t stackLimit;
+    // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
+    // but can be racily set to trigger immediate trap as an opportunity to
+    // CheckForInterrupt without an additional branch.
+    Atomic<uintptr_t, mozilla::Relaxed> stackLimit;
+
+    // Set to 1 when wasm should call CheckForInterrupt.
+    Atomic<uint32_t, mozilla::Relaxed> interrupt;
+
+    // Methods to set, test and clear the above two fields. Both interrupt
+    // fields are Relaxed and so no consistency/ordering can be assumed.
+    void setInterrupt();
+    bool isInterrupted() const;
+    void resetInterrupt(JSContext* cx);
 
     // Pointer that should be freed (due to padding before the TlsData).
     void* allocatedBase;

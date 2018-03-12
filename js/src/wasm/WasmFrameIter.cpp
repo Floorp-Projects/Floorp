@@ -50,9 +50,9 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
 
     if (activation->isWasmTrapping()) {
         code_ = &fp_->tls->instance->code();
-        MOZ_ASSERT(code_ == LookupCode(activation->wasmTrapPC()));
+        MOZ_ASSERT(code_ == LookupCode(activation->wasmTrapUnwoundPC()));
 
-        codeRange_ = code_->lookupFuncRange(activation->wasmTrapPC());
+        codeRange_ = code_->lookupFuncRange(activation->wasmTrapUnwoundPC());
         MOZ_ASSERT(codeRange_);
 
         lineOrBytecode_ = activation->wasmTrapBytecodeOffset();
@@ -1125,7 +1125,7 @@ ThunkedNativeToDescription(SymbolicAddress func)
     switch (func) {
       case SymbolicAddress::HandleDebugTrap:
       case SymbolicAddress::HandleThrow:
-      case SymbolicAddress::ReportTrap:
+      case SymbolicAddress::HandleTrap:
       case SymbolicAddress::OldReportTrap:
       case SymbolicAddress::ReportOutOfBounds:
       case SymbolicAddress::ReportUnalignedAccess:

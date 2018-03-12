@@ -1528,7 +1528,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     CodeOffset wasmTrapInstruction() PER_SHARED_ARCH;
 
     void wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset);
-
+    void wasmInterruptCheck(Register tls, wasm::BytecodeOffset bytecodeOffset);
     void wasmReserveStackChecked(uint32_t amount, wasm::BytecodeOffset trapOffset);
 
     // Emit a bounds check against the wasm heap limit, jumping to 'label' if

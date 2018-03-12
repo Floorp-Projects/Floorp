@@ -12725,6 +12725,14 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck* lir)
 }
 
 void
+CodeGenerator::visitWasmInterruptCheck(LWasmInterruptCheck* lir)
+{
+    MOZ_ASSERT(gen->compilingWasm());
+
+    masm.wasmInterruptCheck(ToRegister(lir->tlsPtr()), lir->mir()->bytecodeOffset());
+}
+
+void
 CodeGenerator::visitWasmTrap(LWasmTrap* lir)
 {
     MOZ_ASSERT(gen->compilingWasm());
