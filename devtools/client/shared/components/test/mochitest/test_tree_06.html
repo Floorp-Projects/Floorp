@@ -16,17 +16,12 @@ Test keyboard navigation with the Tree component.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-
-"use strict";
-
 window.onload = async function () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
-    const { Simulate } =
-      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
-    const Tree =
-      createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+    const { Simulate } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Tree = createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
 
     function renderTree(props) {
       const treeProps = Object.assign({},
@@ -180,8 +175,7 @@ window.onload = async function () {
       "M:false",
       "-N:false",
       "--O:true",
-    ], "After the DOWN, O should still be focused " +
-       "and we shouldn't have overflowed past it.");
+    ], "After the DOWN, O should still be focused and we shouldn't have overflowed past it.");
 
     // LEFT --------------------------------------------------------------------
 
@@ -252,30 +246,7 @@ window.onload = async function () {
       "--O:false",
     ], "After the RIGHT, E's children should be expanded again.");
 
-    info("Right on already expanded node.");
-    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
-    await forceRender(tree);
-
-    isRenderedTree(document.body.textContent, [
-      "A:false",
-      "-B:false",
-      "--E:true",
-      "---K:false",
-      "---L:false",
-      "--F:false",
-      "--G:false",
-      "-C:false",
-      "--H:false",
-      "--I:false",
-      "-D:false",
-      "--J:false",
-      "M:false",
-      "-N:false",
-      "--O:false",
-    ], "After the RIGHT on already expanded node, E should remain focused.");
-
-    info("Right when preventNavigationOnArrowRight is unset to go to next item.");
-    renderTree({ focused: "E", preventNavigationOnArrowRight: false });
+    info("Right to go to next item.");
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
     await forceRender(tree);
 
@@ -304,8 +275,6 @@ window.onload = async function () {
       { key: "ArrowDown", metaKey: true },
       { key: "ArrowDown", shiftKey: true },
     ];
-    await forceRender(tree);
-
     for (let key of keysWithModifier) {
       Simulate.keyDown(document.querySelector(".tree"), key);
       await forceRender(tree);
@@ -328,7 +297,7 @@ window.onload = async function () {
         "--O:false",
       ], "After DOWN + (alt|ctrl|meta|shift), K should remain focused.");
     }
-  } catch (e) {
+  } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
     SimpleTest.finish();
