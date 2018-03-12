@@ -285,7 +285,8 @@ public:
   }
 
   template<typename Subject>
-  static void LogConstruction(const Subject* aSubject)
+  static void
+  LogConstruction(const Subject* aSubject)
   {
     using Traits = DDLoggedTypeTraits<Subject>;
     if (!Traits::HasBase::value) {
@@ -478,10 +479,20 @@ template<typename T>
 class DecoderDoctorLifeLogger
 {
 public:
+#if defined(__clang__)
+  // This constructor is called before the `T` object is fully constructed, and
+  // pointers are not dereferenced anyway, so UBSan shouldn't check vptrs.
+  __attribute__((no_sanitize("vptr")))
+#endif
   DecoderDoctorLifeLogger()
   {
     DecoderDoctorLogger::LogConstruction(static_cast<const T*>(this));
   }
+#if defined(__clang__)
+  // This destructor is called after the `T` object is partially destructed, and
+  // pointers are not dereferenced anyway, so UBSan shouldn't check vptrs.
+  __attribute__((no_sanitize("vptr")))
+#endif
   ~DecoderDoctorLifeLogger()
   {
     DecoderDoctorLogger::LogDestruction(static_cast<const T*>(this));
