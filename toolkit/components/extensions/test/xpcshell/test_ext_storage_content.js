@@ -1,22 +1,17 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtension test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="application/javascript">
 "use strict";
+
+ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+
+PromiseTestUtils.whitelistRejectionsGlobally(/WebExtension context not found/);
+
+const server = createHttpServer({hosts: ["example.com"]});
+server.registerDirectory("/data/", do_get_file("data"));
 
 // Copied from toolkit/components/extensions/test/xpcshell/test_ext_storage.js.
 // The storage API in content scripts should behave identical to the storage API
 // in background pages.
 const STORAGE_SYNC_PREF = "webextensions.storage.sync.enabled";
+
 /**
  * Utility function to ensure that all supported APIs for getting are
  * tested.
@@ -229,7 +224,7 @@ async function contentScript(checkGet) {
 let extensionData = {
   manifest: {
     content_scripts: [{
-      "matches": ["http://mochi.test/*/file_sample.html"],
+      "matches": ["http://example.com/data/file_sample.html"],
       "js": ["content_script.js"],
       "run_at": "document_idle",
     }],
@@ -243,28 +238,23 @@ let extensionData = {
 };
 
 add_task(async function test_contentscript() {
-  let win = window.open("file_sample.html");
-  await waitForLoad(win);
+  await ExtensionTestUtils.startAddonManager();
+  Services.prefs.setBoolPref(STORAGE_SYNC_PREF, true);
 
-  await SpecialPowers.pushPrefEnv({
-    set: [[STORAGE_SYNC_PREF, true]],
-  });
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html");
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
   extension.sendMessage("test-local");
   await extension.awaitMessage("test-finished");
 
   extension.sendMessage("test-sync");
   await extension.awaitMessage("test-finished");
 
-  await SpecialPowers.popPrefEnv();
   await extension.unload();
-
-  win.close();
+  await contentPage.close();
 });
-
-</script>
-
-</body>
-</html>
