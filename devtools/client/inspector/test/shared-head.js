@@ -53,7 +53,7 @@ var openInspectorSidebarTab = Task.async(function* (id) {
   info("Selecting the " + id + " sidebar");
 
   let onSidebarSelect = inspector.sidebar.once("select");
-  if (id === "computedview" || id === "layoutview") {
+  if (id === "layoutview") {
     // The layout and computed views should wait until the box-model widget is ready.
     let onBoxModelViewReady = inspector.once("boxmodel-view-updated");
     // The layout view also needs to wait for the grid panel to be fully updated.
@@ -167,6 +167,17 @@ function selectRuleView(inspector) {
 function selectComputedView(inspector) {
   inspector.sidebar.select("computedview");
   return inspector.getPanel("computedview").computedView;
+}
+
+/**
+ * Select the layout view sidebar tab on an already opened inspector panel.
+ *
+ * @param  {InspectorPanel} inspector
+ * @return {BoxModel} the box model
+ */
+function selectLayoutView(inspector) {
+  inspector.sidebar.select("layoutview");
+  return inspector.getPanel("boxmodel");
 }
 
 /**
