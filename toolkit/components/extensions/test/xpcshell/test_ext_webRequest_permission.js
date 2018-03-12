@@ -79,6 +79,7 @@ add_task(async function test_permissions() {
 
   Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
   Services.prefs.setBoolPref("extensions.webapi.testing", true);
+  Services.prefs.setBoolPref("extensions.webapi.testing.http", true);
 
   results = await contentPage.sendMessage("Test:Check", {});
   equal(results.page, "original", "webRequest redirect fails on a privileged page");
