@@ -91,8 +91,9 @@ void main(void) {
 
     if (pic_task.pic_kind_and_raster_mode > 0.0) {
         vec2 local_pos = local_segment_rect.p0 + aPosition.xy * local_segment_rect.size;
+        vec2 clamped_local_pos = clamp_rect(local_pos, brush_prim.local_clip_rect);
 
-        vec2 device_pos = uDevicePixelRatio * local_pos;
+        vec2 device_pos = uDevicePixelRatio * clamped_local_pos;
 
         vec2 final_pos = device_pos +
                          pic_task.common_data.task_rect.p0 -

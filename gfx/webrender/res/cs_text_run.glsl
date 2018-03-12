@@ -27,13 +27,22 @@ void main(void) {
 
     GlyphResource res = fetch_glyph_resource(resource_address);
 
-    // Glyph size is already in device-pixels.
-    // The render task origin is in device-pixels. Offset that by
-    // the glyph offset, relative to its primitive bounding rect.
-    vec2 glyph_size = res.uv_rect.zw - res.uv_rect.xy;
-    vec2 glyph_pos = res.offset + glyph_size * aPosition.xy;
-    vec2 local_pos = prim.task.common_data.task_rect.p0 + glyph_pos * res.scale +
-                     uDevicePixelRatio * (glyph.offset - prim.task.content_origin);
+    // Scale from glyph space to local space.
+    float scale = res.scale / uDevicePixelRatio;
+
+    // Compute the glyph rect in local space.
+    RectWithSize glyph_rect = RectWithSize(scale * res.offset + text.offset + glyph.offset,
+                                           scale * (res.uv_rect.zw - res.uv_rect.xy));
+
+    // Select the corner of the glyph rect that we are processing.
+    vec2 local_pos = (glyph_rect.p0 + glyph_rect.size * aPosition.xy);
+
+    // Clamp the local position to the text run's local clipping rectangle.
+    local_pos = clamp_rect(local_pos, prim.local_clip_rect);
+
+    // Move the point into device pixel space.
+    local_pos = (local_pos - prim.task.content_origin) * uDevicePixelRatio;
+    local_pos += prim.task.common_data.task_rect.p0;
     gl_Position = uTransform * vec4(local_pos, 0.0, 1.0);
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
