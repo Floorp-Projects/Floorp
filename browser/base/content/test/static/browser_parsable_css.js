@@ -114,6 +114,8 @@ let propNameWhitelist = [
   // These custom properties are retrieved directly from CSSOM
   // in videocontrols.xml to get pre-defined style instead of computed
   // dimensions, which is why they are not referenced by CSS.
+  {propName: "--clickToPlay-width",
+   isFromDevTools: false},
   {propName: "--muteButton-width",
    isFromDevTools: false},
   {propName: "--closedCaptionButton-width",
