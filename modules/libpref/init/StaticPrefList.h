@@ -232,7 +232,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "layout.css.prefixes.device-pixel-ratio-webkit",
    layout_css_prefixes_device_pixel_ratio_webkit,
-  bool, false
+  bool, true
 )
 
 // Is -moz-prefixed gradient functions enabled?
