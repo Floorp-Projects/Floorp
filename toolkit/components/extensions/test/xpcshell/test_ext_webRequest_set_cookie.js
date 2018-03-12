@@ -228,7 +228,7 @@ add_task(async function test_modifying_cookies_from_onHeadersReceived() {
   let contentPage = null;
   extension.onMessage("load-url", async url => {
     ok(!contentPage, "Should have no content page to unload");
-    contentPage = await ExtensionTestUtils.loadContentPage(url, {remote: true});
+    contentPage = await ExtensionTestUtils.loadContentPage(url);
     extension.sendMessage("url-loaded");
   });
   extension.onMessage("unload-url", async () => {

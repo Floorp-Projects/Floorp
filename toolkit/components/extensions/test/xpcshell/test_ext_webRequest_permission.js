@@ -70,7 +70,7 @@ add_task(async function test_permissions() {
     MessageChannel.addListener(this, "Test:Check", messageListener);
   };
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/dummy`, {remote: true});
+  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/dummy`);
   await contentPage.loadFrameScript(frameScript);
 
   let results = await contentPage.sendMessage("Test:Check", {});
