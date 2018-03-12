@@ -21,54 +21,54 @@ add_task(function* () {
   yield pushPref("devtools.toolbox.footer.height", 500);
 
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = yield openLayoutView();
+  let {inspector, view} = yield openBoxModelView();
 
   yield selectNode("#div1", inspector);
-  yield testClickingOutsideEditor(boxmodel);
-  yield testClickingBelowContainer(boxmodel);
+  yield testClickingOutsideEditor(view);
+  yield testClickingBelowContainer(view);
 });
 
-function* testClickingOutsideEditor(boxmodel) {
+function* testClickingOutsideEditor(view) {
   info("Test that clicking outside the editor blurs it");
-  let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
+  let span = view.document.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
 
   info("Click next to the opened editor input.");
   let onBlur = once(editor, "blur");
   let rect = editor.getBoundingClientRect();
   EventUtils.synthesizeMouse(editor, rect.width + 10, rect.height / 2, {},
-    boxmodel.document.defaultView);
+    view.document.defaultView);
   yield onBlur;
 
-  is(boxmodel.document.querySelector(".styleinspector-propertyeditor"), null,
+  is(view.document.querySelector(".styleinspector-propertyeditor"), null,
     "Inplace editor has been removed.");
 }
 
-function* testClickingBelowContainer(boxmodel) {
+function* testClickingBelowContainer(view) {
   info("Test that clicking below the box-model container blurs it");
-  let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
+  let span = view.document.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
   info("Test that clicking below the boxmodel-container blurs the opened editor");
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
 
   let onBlur = once(editor, "blur");
-  let container = boxmodel.document.querySelector(".boxmodel-container");
+  let container = view.document.querySelector(".boxmodel-container");
   // Using getBoxQuads here because getBoundingClientRect (and therefore synthesizeMouse)
   // use an erroneous height of ~50px for the boxmodel-container.
-  let bounds = container.getBoxQuads({relativeTo: boxmodel.document})[0].bounds;
+  let bounds = container.getBoxQuads({relativeTo: view.doc})[0].bounds;
   EventUtils.synthesizeMouseAtPoint(
     bounds.left + 10,
     bounds.top + bounds.height + 10,
-    {}, boxmodel.document.defaultView);
+    {}, view.document.defaultView);
   yield onBlur;
 
-  is(boxmodel.document.querySelector(".styleinspector-propertyeditor"), null,
+  is(view.document.querySelector(".styleinspector-propertyeditor"), null,
     "Inplace editor has been removed.");
 }

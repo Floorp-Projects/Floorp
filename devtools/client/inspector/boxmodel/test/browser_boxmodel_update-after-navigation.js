@@ -12,32 +12,32 @@ const IFRAME2 = URL_ROOT + "doc_boxmodel_iframe2.html";
 
 add_task(function* () {
   yield addTab(IFRAME1);
-  let {inspector, boxmodel, testActor} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openBoxModelView();
 
-  yield testFirstPage(inspector, boxmodel, testActor);
+  yield testFirstPage(inspector, view, testActor);
 
   info("Navigate to the second page");
   let onMarkupLoaded = waitForMarkupLoaded(inspector);
   yield testActor.eval(`location.href="${IFRAME2}"`);
   yield onMarkupLoaded;
 
-  yield testSecondPage(inspector, boxmodel, testActor);
+  yield testSecondPage(inspector, view, testActor);
 
   info("Go back to the first page");
   onMarkupLoaded = waitForMarkupLoaded(inspector);
   yield testActor.eval("history.back();");
   yield onMarkupLoaded;
 
-  yield testBackToFirstPage(inspector, boxmodel, testActor);
+  yield testBackToFirstPage(inspector, view, testActor);
 });
 
-function* testFirstPage(inspector, boxmodel, testActor) {
+function* testFirstPage(inspector, view, testActor) {
   info("Test that the box model view works on the first page");
 
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let paddingElt = boxmodel.document.querySelector(
+  let paddingElt = view.document.querySelector(
     ".boxmodel-padding.boxmodel-top > span");
   is(paddingElt.textContent, "50");
 
@@ -51,13 +51,13 @@ function* testFirstPage(inspector, boxmodel, testActor) {
   is(paddingElt.textContent, "20");
 }
 
-function* testSecondPage(inspector, boxmodel, testActor) {
+function* testSecondPage(inspector, view, testActor) {
   info("Test that the box model view works on the second page");
 
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
+  let sizeElt = view.document.querySelector(".boxmodel-size > span");
   is(sizeElt.textContent, "100" + "\u00D7" + "100");
 
   info("Listening for box model view changes and modifying the size");
@@ -70,14 +70,14 @@ function* testSecondPage(inspector, boxmodel, testActor) {
   is(sizeElt.textContent, "200" + "\u00D7" + "100");
 }
 
-function* testBackToFirstPage(inspector, boxmodel, testActor) {
+function* testBackToFirstPage(inspector, view, testActor) {
   info("Test that the box model view works on the first page after going back");
 
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value, which is the" +
     "modified value from step one because of the bfcache");
-  let paddingElt = boxmodel.document.querySelector(
+  let paddingElt = view.document.querySelector(
     ".boxmodel-padding.boxmodel-top > span");
   is(paddingElt.textContent, "20");
 
