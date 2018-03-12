@@ -15,7 +15,7 @@ window.addEventListener("load", function() {
   // Timeout for the subscribe XHR.
   const REQUEST_TIMEOUT = 5000;
 
-  const ABOUTDEVTOOLS_STRINGS = "chrome://devtools-shim/locale/aboutdevtools.properties";
+  const ABOUTDEVTOOLS_STRINGS = "chrome://devtools-startup/locale/aboutdevtools.properties";
   const aboutDevtoolsBundle = Services.strings.createBundle(ABOUTDEVTOOLS_STRINGS);
 
   let emailInput = document.getElementById("email");

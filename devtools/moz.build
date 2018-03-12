@@ -13,11 +13,11 @@ if CONFIG['MOZ_DEVTOOLS'] == 'all':
     ]
 
 # `addon` is a special build mode to strip everything except binary components
-# and shim modules that are going to stay in Firefox once DevTools ship as an
+# and startup modules that are going to stay in Firefox once DevTools ship as an
 # add-on.
 # `platform` contains all native components
 DIRS += [
-    'shim',
+    'startup',
     'platform',
 ]
 

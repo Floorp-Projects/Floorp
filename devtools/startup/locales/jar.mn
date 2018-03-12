@@ -4,5 +4,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @AB_CD@.jar:
-%   locale devtools-shim @AB_CD@ %locale/@AB_CD@/devtools/shim/
-    locale/@AB_CD@/devtools/shim/ (%*)
+%   locale devtools-startup @AB_CD@ %locale/@AB_CD@/devtools/startup/
+    locale/@AB_CD@/devtools/startup/ (%*)

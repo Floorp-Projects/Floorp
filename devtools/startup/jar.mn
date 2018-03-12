@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-devtools-shim.jar:
-%   content devtools-shim %content/
+devtools-startup.jar:
+%   content devtools-startup %content/
     content/aboutdevtools/aboutdevtools.xhtml  (aboutdevtools/aboutdevtools.xhtml)
     content/aboutdevtools/aboutdevtools.css (aboutdevtools/aboutdevtools.css)
     content/aboutdevtools/aboutdevtools.js (aboutdevtools/aboutdevtools.js)
