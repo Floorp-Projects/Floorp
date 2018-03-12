@@ -52,7 +52,7 @@ function check_both_report_menu_disabled(url) {
         document.getElementById("menu_HelpPopup_reportPhishingErrortoolmenu");
       is(errorMenu.getAttribute("disabled"), "true",
          "The `This isn’t a deceptive site` item should be disabled");
-  	});
+    });
   });
 }
 
