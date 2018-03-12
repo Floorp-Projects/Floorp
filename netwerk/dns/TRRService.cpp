@@ -73,6 +73,19 @@ TRRService::Init()
     prefBranch->AddObserver(TRR_PREF_PREFIX, this, true);
     prefBranch->AddObserver(kDisableIpv6Pref, this, true);
   }
+  nsCOMPtr<nsICaptivePortalService> captivePortalService =
+    do_GetService(NS_CAPTIVEPORTAL_CID);
+  if (captivePortalService) {
+    int32_t captiveState;
+    MOZ_ALWAYS_SUCCEEDS(captivePortalService->GetState(&captiveState));
+
+    if ((captiveState == nsICaptivePortalService::UNLOCKED_PORTAL) ||
+        (captiveState == nsICaptivePortalService::NOT_CAPTIVE)) {
+      mCaptiveIsPassed = true;
+    }
+    LOG(("TRRService::Init mCaptiveState=%d mCaptiveIsPassed=%d\n",
+         captiveState, (int)mCaptiveIsPassed));
+  }
 
   ReadPrefs(NULL);
 
@@ -85,7 +98,8 @@ TRRService::Init()
 bool
 TRRService::Enabled()
 {
-  if (mConfirmationState == CONFIRM_INIT && !mWaitForCaptive) {
+  if (mConfirmationState == CONFIRM_INIT &&
+      (!mWaitForCaptive || mCaptiveIsPassed)) {
     LOG(("TRRService::Enabled => CONFIRM_TRYING\n"));
     mConfirmationState = CONFIRM_TRYING;
   }
