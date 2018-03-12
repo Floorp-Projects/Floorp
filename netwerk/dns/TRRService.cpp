@@ -16,6 +16,7 @@
 static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kClearPrivateData[] = "clear-private-data";
 static const char kPurge[] = "browser:purge-session-history";
+static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
 
 #define TRR_PREF_PREFIX           "network.trr."
 #define TRR_PREF(x)               TRR_PREF_PREFIX x
@@ -70,6 +71,7 @@ TRRService::Init()
   GetPrefBranch(getter_AddRefs(prefBranch));
   if (prefBranch) {
     prefBranch->AddObserver(TRR_PREF_PREFIX, this, true);
+    prefBranch->AddObserver(kDisableIpv6Pref, this, true);
   }
 
   ReadPrefs(NULL);
@@ -94,7 +96,9 @@ TRRService::Enabled()
   }
 
   if (mConfirmationState != CONFIRM_OK) {
-    LOG(("TRRService::Enabled mConfirmationState=%d\n", (int)mConfirmationState));
+    LOG(("TRRService::Enabled mConfirmationState=%d mCaptiveIsPassed=%d\n",
+         (int)mConfirmationState,
+         (int)mCaptiveIsPassed));
   }
 
   return (mConfirmationState == CONFIRM_OK);
@@ -199,6 +203,12 @@ TRRService::ReadPrefs(const char *name)
     bool tmp;
     if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("early-AAAA"), &tmp))) {
       mEarlyAAAA = tmp;
+    }
+  }
+  if (!name || !strcmp(name, kDisableIpv6Pref)) {
+    bool tmp;
+    if (NS_SUCCEEDED(Preferences::GetBool(kDisableIpv6Pref, &tmp))) {
+      mDisableIPv6 = tmp;
     }
   }
 
