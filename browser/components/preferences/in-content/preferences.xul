@@ -210,7 +210,7 @@
           </hbox>
           <textbox
             type="search" id="searchInput"
-            data-l10n-id="search-input"
+            data-l10n-id="search-input-box"
             data-l10n-attrs="style"
             hidden="true" clickSelectsAll="true"/>
         </hbox>
