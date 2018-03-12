@@ -569,9 +569,6 @@ task_description_schema = Schema({
         Required('locales'): [basestring],
         Required('entries'): object,
     }, {
-        Required('implementation'): 'push-apk-breakpoint',
-        Required('payload'): object,
-    }, {
         Required('implementation'): 'invalid',
         # an invalid task is one which should never actually be created; this is used in
         # release automation on branches where the task just doesn't make sense
