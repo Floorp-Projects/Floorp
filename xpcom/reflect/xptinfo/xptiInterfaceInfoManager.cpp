@@ -85,7 +85,7 @@ XPTInterfaceInfoManager::XPTInterfaceInfoManager()
 
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
     for (uint16_t k = 0; k < XPTHeader::kNumInterfaces; k++) {
-        VerifyAndAddEntryIfNew(XPTHeader::kInterfaceDirectory + k, k, typelib);
+        VerifyAndAddEntryIfNew(XPTHeader::kInterfaces + k, k, typelib);
     }
 }
 
@@ -104,18 +104,21 @@ XPTInterfaceInfoManager::InitMemoryReporter()
 }
 
 void
-XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry* iface,
+XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDescriptor* iface,
                                                 uint16_t idx,
                                                 xptiTypelibGuts* typelib)
 {
-    if (!iface->InterfaceDescriptor())
+    static const nsID zeroIID =
+        { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } };
+
+    if (iface->mIID.Equals(zeroIID)) {
         return;
+    }
 
     // The number of maximum methods is not arbitrary. It is the same value as
     // in xpcom/reflect/xptcall/genstubs.pl; do not change this value
     // without changing that one or you WILL see problems.
-    if (iface->InterfaceDescriptor()->mNumMethods > 250 &&
-            !iface->InterfaceDescriptor()->IsBuiltinClass()) {
+    if (iface->mNumMethods > 250 && !iface->IsBuiltinClass()) {
         NS_ASSERTION(0, "Too many methods to handle for the stub, cannot load");
         fprintf(stderr, "ignoring too large interface: %s\n", iface->Name());
         return;

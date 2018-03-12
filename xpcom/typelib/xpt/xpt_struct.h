@@ -16,7 +16,6 @@
 #include <stdint.h>
 #include "mozilla/Assertions.h"
 
-struct XPTInterfaceDirectoryEntry;
 struct XPTInterfaceDescriptor;
 struct XPTConstDescriptor;
 struct XPTMethodDescriptor;
@@ -26,7 +25,6 @@ struct XPTTypeDescriptorPrefix;
 
 struct XPTHeader {
   static const uint16_t kNumInterfaces;
-  static const XPTInterfaceDirectoryEntry kInterfaceDirectory[];
   static const XPTInterfaceDescriptor kInterfaces[];
   static const XPTTypeDescriptor kTypes[];
   static const XPTParamDescriptor kParams[];
@@ -36,22 +34,6 @@ struct XPTHeader {
   // All of the strings for this header, including their null
   // terminators, concatenated into a single string.
   static const char kStrings[];
-};
-
-/*
- * An array of directory entries is used to quickly locate an interface
- * description using its IID. No interface should appear more than once in the
- * array.
- */
-struct XPTInterfaceDirectoryEntry {
-  inline const XPTInterfaceDescriptor* InterfaceDescriptor() const;
-  inline const char* Name() const;
-
-  nsID mIID;
-  uint32_t mName; // Index into XPTHeader::mStrings.
-  // mInterfaceDescriptor is a 1-based index into XPTHeader::mInterfaces. The
-  // value 0 is used to indicate unresolved interfaces.
-  uint32_t mInterfaceDescriptor;
 };
 
 /*
@@ -69,12 +51,15 @@ struct XPTInterfaceDescriptor {
   bool IsBuiltinClass() const { return !!(mFlags & kBuiltinClassMask); }
   bool IsMainProcessScriptableOnly() const { return !!(mFlags & kMainProcessScriptableOnlyMask); }
 
+  inline const char* Name() const;
   inline const XPTMethodDescriptor& Method(size_t aIndex) const;
   inline const XPTConstDescriptor& Const(size_t aIndex) const;
 
   /*
    * This field ordering minimizes the size of this struct.
    */
+  nsID mIID;
+  uint32_t mName; // Index into XPTHeader::mStrings.
   uint16_t mMethodDescriptors; // Index into XPTHeader::mMethods.
   uint16_t mConstDescriptors; // Index into XPTHeader::mConsts.
   uint16_t mParentInterface;
@@ -232,16 +217,8 @@ struct XPTMethodDescriptor {
 };
 
 const char*
-XPTInterfaceDirectoryEntry::Name() const {
+XPTInterfaceDescriptor::Name() const {
   return &XPTHeader::kStrings[mName];
-}
-
-const XPTInterfaceDescriptor*
-XPTInterfaceDirectoryEntry::InterfaceDescriptor() const {
-  if (mInterfaceDescriptor == 0) {
-    return nullptr;
-  }
-  return &XPTHeader::kInterfaces[mInterfaceDescriptor - 1];
 }
 
 const XPTMethodDescriptor&
