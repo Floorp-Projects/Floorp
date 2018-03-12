@@ -1717,9 +1717,6 @@ GLContext::InitExtensions()
             // doesn't expose the OES_rgb8_rgba8 extension, but it seems to
             // support it (tautologically, as it only runs on desktop GL).
             MarkExtensionSupported(OES_rgb8_rgba8);
-            // there seems to be a similar issue for EXT_texture_format_BGRA8888
-            // on the Android 4.3 emulator
-            MarkExtensionSupported(EXT_texture_format_BGRA8888);
         }
 
         if (Vendor() == GLVendor::VMware &&
