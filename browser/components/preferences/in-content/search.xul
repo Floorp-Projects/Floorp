@@ -1,29 +1,27 @@
     <script type="application/javascript"
             src="chrome://browser/content/preferences/in-content/search.js"/>
 
-    <stringbundle id="engineManagerBundle" src="chrome://browser/locale/engineManager.properties"/>
-
     <hbox id="searchCategory"
           class="subcategory"
           hidden="true"
           data-category="paneSearch">
-      <label class="header-name" flex="1">&paneSearch.title;</label>
+      <label class="header-name" flex="1" data-l10n-id="pane-search-title" />
     </hbox>
 
     <groupbox id="searchbarGroup" data-category="paneSearch">
-      <caption><label id="searchbarLabel">&searchBar.label;</label></caption>
+      <caption><label id="searchbarLabel" data-l10n-id="search-bar-header" /></caption>
       <radiogroup id="searchBarVisibleGroup" aria-labelledby="searchbarLabel" preference="browser.search.widget.inNavBar">
-        <radio id="searchBarHiddenRadio" value="false" label="&searchBar.hidden.label;"/>
+        <radio id="searchBarHiddenRadio" value="false" data-l10n-id="search-bar-hidden"/>
         <image class="searchBarImage searchBarHiddenImage" role="presentation"/>
-        <radio id="searchBarShownRadio" value="true" label="&searchBar.shown.label;"/>
+        <radio id="searchBarShownRadio" value="true" data-l10n-id="search-bar-shown"/>
         <image class="searchBarImage searchBarShownImage" role="presentation"/>
       </radiogroup>
     </groupbox>
 
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" data-category="paneSearch">
-      <caption><label>&defaultSearchEngine.label;</label></caption>
-      <description>&chooseYourDefaultSearchEngine2.label;</description>
+      <caption><label data-l10n-id="search-engine-default-header" /></caption>
+      <description data-l10n-id="search-engine-default-desc" />
 
       <hbox id="browserDefaultSearchExtensionContent" align="center" hidden="true">
         <description control="disableDefaultSearchExtension" flex="1"/>
@@ -39,50 +37,46 @@
       </hbox>
 
       <checkbox id="suggestionsInSearchFieldsCheckbox"
-                label="&provideSearchSuggestions.label;"
-                accesskey="&provideSearchSuggestions.accesskey;"
+                data-l10n-id="search-suggestions-option"
                 preference="browser.search.suggest.enabled"/>
       <vbox class="indent">
-        <checkbox id="urlBarSuggestion" label="&showURLBarSuggestions2.label;"
-                  accesskey="&showURLBarSuggestions2.accesskey;"/>
+        <checkbox id="urlBarSuggestion" data-l10n-id="search-show-suggestions-url-bar-option" />
         <checkbox id="showSearchSuggestionsFirstCheckbox"
-                  label="&showSearchSuggestionsAboveHistory.label;"/>
+                  data-l10n-id="search-show-suggestions-above-history-option"/>
         <hbox id="urlBarSuggestionPermanentPBLabel"
               align="center" class="indent">
-          <label flex="1">&urlBarSuggestionsPermanentPB.label;</label>
+          <label flex="1" data-l10n-id="search-suggestions-cant-show" />
         </hbox>
       </vbox>
     </groupbox>
 
     <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch">
-      <caption><label>&oneClickSearchEngines.label;</label></caption>
-      <description>&chooseWhichOneToDisplay2.label;</description>
+      <caption><label data-l10n-id="search-one-click-header" /></caption>
+      <description data-l10n-id="search-one-click-desc" />
 
       <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"
             seltype="single" allowunderflowscroll="true">
         <treechildren id="engineChildren" flex="1"/>
         <treecols>
           <treecol id="engineShown" type="checkbox" editable="true" sortable="false"/>
-          <treecol id="engineName" flex="4" label="&engineNameColumn.label;" sortable="false"/>
-          <treecol id="engineKeyword" flex="1" label="&engineKeywordColumn.label;" editable="true"
+          <treecol id="engineName" flex="4" data-l10n-id="search-choose-engine-column" sortable="false"/>
+          <treecol id="engineKeyword" flex="1" data-l10n-id="search-choose-keyword-column" editable="true"
                    sortable="false"/>
         </treecols>
       </tree>
 
       <hbox>
         <button id="restoreDefaultSearchEngines"
-                label="&restoreDefaultSearchEngines.label;"
-                accesskey="&restoreDefaultSearchEngines.accesskey;"
+                data-l10n-id="search-restore-default"
                 />
         <spacer flex="1"/>
         <button id="removeEngineButton"
                 class="searchEngineAction"
-                label="&removeEngine.label;"
-                accesskey="&removeEngine.accesskey;"
+                data-l10n-id="search-remove-engine"
                 disabled="true"
                 />
       </hbox>
       <hbox id="addEnginesBox" pack="start">
-        <label id="addEngines" class="text-link">&findMoreSearchEngines.label;</label>
+        <label id="addEngines" class="text-link" data-l10n-id="search-find-more-link"></label>
       </hbox>
     </groupbox>

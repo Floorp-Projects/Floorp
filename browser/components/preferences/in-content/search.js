@@ -356,12 +356,16 @@ var gSearchPane = {
 
       // Notify the user if they have chosen an existing engine/bookmark keyword
       if (eduplicate || bduplicate) {
-        let strings = document.getElementById("engineManagerBundle");
-        let dtitle = strings.getString("duplicateTitle");
-        let bmsg = strings.getString("duplicateBookmarkMsg");
-        let emsg = strings.getFormattedString("duplicateEngineMsg", [dupName]);
+        let msgids = [["search-keyword-warning-title"]];
+        if (eduplicate) {
+          msgids.push(["search-keyword-warning-engine", { name: dupName }]);
+        } else {
+          msgids.push(["search-keyword-warning-bookmark"]);
+        }
 
-        Services.prompt.alert(window, dtitle, eduplicate ? emsg : bmsg);
+        let [dtitle, msg] = await document.l10n.formatValues(msgids);
+
+        Services.prompt.alert(window, dtitle, msg);
         return false;
       }
     }
