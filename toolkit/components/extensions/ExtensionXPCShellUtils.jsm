@@ -86,7 +86,7 @@ function promiseBrowserLoaded(browser, url, redirectUrl) {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIWebProgressListener]),
 
       onStateChange(webProgress, request, stateFlags, statusCode) {
-        let requestUrl = request.URI ? request.URI.spec : webProgress.DOMWindow.location.href;
+        let requestUrl = request.originalURI ? request.originalURI.spec : webProgress.DOMWindow.location.href;
         if (webProgress.isTopLevel &&
             (requestUrl === url || requestUrl === redirectUrl) &&
             (stateFlags & Ci.nsIWebProgressListener.STATE_STOP)) {
