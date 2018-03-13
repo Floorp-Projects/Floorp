@@ -3843,14 +3843,14 @@ private:
 NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
 
 HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    mMainThreadEventTarget(OwnerDoc()->EventTargetFor(TaskCategory::Other)),
-    mAbstractMainThread(OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other)),
-    mShutdownObserver(new ShutdownObserver),
-    mPlayed(new TimeRanges(ToSupports(OwnerDoc()))),
-    mPaused(true, *this),
-    mErrorSink(new ErrorSink(this)),
-    mAudioChannelWrapper(new AudioChannelAgentCallback(this))
+  : nsGenericHTMLElement(aNodeInfo)
+  , mMainThreadEventTarget(OwnerDoc()->EventTargetFor(TaskCategory::Other))
+  , mAbstractMainThread(OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other))
+  , mShutdownObserver(new ShutdownObserver)
+  , mPlayed(new TimeRanges(ToSupports(OwnerDoc())))
+  , mPaused(true, *this)
+  , mErrorSink(new ErrorSink(this))
+  , mAudioChannelWrapper(new AudioChannelAgentCallback(this))
 {
   MOZ_ASSERT(mMainThreadEventTarget);
   MOZ_ASSERT(mAbstractMainThread);
