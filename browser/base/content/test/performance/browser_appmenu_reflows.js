@@ -1,9 +1,6 @@
 "use strict";
 /* global PanelUI */
 
-ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
-let gCUITestUtils = new CustomizableUITestUtils(window);
-
 /**
  * WHOA THERE: We should never be adding new things to
  * EXPECTED_APPMENU_OPEN_REFLOWS. This is a whitelist that should slowly go
@@ -51,8 +48,12 @@ add_task(async function() {
   await ensureNoPreloadedBrowser();
 
   // First, open the appmenu.
-  await withReflowObserver(() => gCUITestUtils.openMainMenu(),
-                           EXPECTED_APPMENU_OPEN_REFLOWS);
+  await withReflowObserver(async function() {
+    let popupShown =
+      BrowserTestUtils.waitForEvent(PanelUI.panel, "popupshown");
+    await PanelUI.show();
+    await popupShown;
+  }, EXPECTED_APPMENU_OPEN_REFLOWS);
 
   // Now open a series of subviews, and then close the appmenu. We
   // should not reflow during any of this.
@@ -97,6 +98,8 @@ add_task(async function() {
 
     await openSubViewsRecursively(PanelUI.mainView);
 
-    await gCUITestUtils.hideMainMenu();
+    let hidden = BrowserTestUtils.waitForEvent(PanelUI.panel, "popuphidden");
+    PanelUI.hide();
+    await hidden;
   }, []);
 });
