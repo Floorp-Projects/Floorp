@@ -8,13 +8,16 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const CurrentTimeLabel = createFactory(require("./CurrentTimeLabel"));
 const PauseResumeButton = createFactory(require("./PauseResumeButton"));
 const RewindButton = createFactory(require("./RewindButton"));
 
 class AnimationToolbar extends PureComponent {
   static get propTypes() {
     return {
+      addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      removeAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       rewindAnimationsCurrentTime: PropTypes.func.isRequired,
       setAnimationsPlayState: PropTypes.func.isRequired,
     };
@@ -22,7 +25,9 @@ class AnimationToolbar extends PureComponent {
 
   render() {
     const {
+      addAnimationsCurrentTimeListener,
       animations,
+      removeAnimationsCurrentTimeListener,
       rewindAnimationsCurrentTime,
       setAnimationsPlayState,
     } = this.props;
@@ -40,6 +45,12 @@ class AnimationToolbar extends PureComponent {
         {
           animations,
           setAnimationsPlayState,
+        }
+      ),
+      CurrentTimeLabel(
+        {
+          addAnimationsCurrentTimeListener,
+          removeAnimationsCurrentTimeListener,
         }
       )
     );

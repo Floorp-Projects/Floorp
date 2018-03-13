@@ -12,8 +12,6 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const AnimationList = createFactory(require("./AnimationList"));
 const AnimationListHeader = createFactory(require("./AnimationListHeader"));
 
-const TimeScale = require("../utils/timescale");
-
 class AnimationListContainer extends PureComponent {
   static get propTypes() {
     return {
@@ -26,6 +24,7 @@ class AnimationListContainer extends PureComponent {
       selectAnimation: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
+      timeScale: PropTypes.object.isRequired,
     };
   }
 
@@ -40,8 +39,8 @@ class AnimationListContainer extends PureComponent {
       selectAnimation,
       setSelectedNode,
       simulateAnimation,
+      timeScale,
     } = this.props;
-    const timeScale = new TimeScale(animations);
 
     return dom.div(
       {

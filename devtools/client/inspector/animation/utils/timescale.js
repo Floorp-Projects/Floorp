@@ -24,6 +24,8 @@ class TimeScale {
   constructor(animations) {
     this.minStartTime = Infinity;
     this.maxEndTime = 0;
+    this.documentCurrentTime = 0;
+
     for (const animation of animations) {
       this.addAnimation(animation.state);
     }
@@ -38,6 +40,7 @@ class TimeScale {
   addAnimation(state) {
     let {
       delay,
+      documentCurrentTime,
       duration,
       endDelay = 0,
       iterationCount,
@@ -67,6 +70,8 @@ class TimeScale {
     const length = toRate(delay) + rateRelativeDuration + toRate(minZero(endDelay));
     const endTime = previousStartTime + length;
     this.maxEndTime = Math.max(this.maxEndTime, endTime);
+
+    this.documentCurrentTime = Math.max(this.documentCurrentTime, documentCurrentTime);
   }
 
   /**

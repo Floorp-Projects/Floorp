@@ -9,6 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { getStr } = require("../utils/l10n");
+const { hasPlayingAnimation } = require("../utils/utils");
 
 class PauseResumeButton extends PureComponent {
   static get propTypes() {
@@ -43,7 +44,7 @@ class PauseResumeButton extends PureComponent {
 
   updateState() {
     const { animations } = this.props;
-    const isPlaying = animations.some(({state}) => state.playState === "running");
+    const isPlaying = hasPlayingAnimation(animations);
     this.setState({ isPlaying });
   }
 
