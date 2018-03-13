@@ -127,6 +127,7 @@ public class WebViewProvider {
     public static void applyAppSettings(Context context, WebSettings settings) {
         // We could consider calling setLoadsImagesAutomatically() here too (This will block images not loaded over the network too)
         settings.setBlockNetworkImage(Settings.getInstance(context).shouldBlockImages());
+        settings.setJavaScriptEnabled(!Settings.getInstance(context).shouldBlockJavaScript());
     }
 
     /**

@@ -44,6 +44,11 @@ class Settings private constructor(context: Context) {
                     false); */
             false
 
+    fun shouldBlockJavaScript(): Boolean =
+            preferences.getBoolean(
+                getPreferenceKey(R.string.pref_key_performance_block_javascript),
+                false)
+
     fun shouldShowFirstrun(): Boolean =
             !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false)
 

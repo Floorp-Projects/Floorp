@@ -74,6 +74,13 @@
             android:summary="@string/preference_performance_block_webfonts_summary"
             android:defaultValue="false" />
 
+        <SwitchPreference
+            android:layout="@layout/focus_preference"
+            android:title="@string/preference_performance_block_javascript"
+            android:key="@string/pref_key_performance_block_javascript"
+            android:summary="@string/preference_performance_block_javascript_summary"
+            android:defaultValue="false" />
+
         <!-- // Not shipping in v1 (#188)
         <SwitchPreference
             android:title="@string/preference_performance_block_images"
