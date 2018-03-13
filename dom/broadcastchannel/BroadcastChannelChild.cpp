@@ -15,7 +15,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
-#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 
