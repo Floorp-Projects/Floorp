@@ -229,6 +229,8 @@ void
 Layer::SetAsyncPanZoomController(uint32_t aIndex, AsyncPanZoomController *controller)
 {
   MOZ_ASSERT(aIndex < GetScrollMetadataCount());
+  // We should never be setting an APZC on a non-scrollable layer
+  MOZ_ASSERT(!controller || GetFrameMetrics(aIndex).IsScrollable());
   mApzcs[aIndex] = controller;
 }
 

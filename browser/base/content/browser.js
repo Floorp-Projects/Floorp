@@ -141,25 +141,6 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
-Object.defineProperty(this, "gBrowser", {
-  configurable: true,
-  enumerable: true,
-  get() {
-    delete window.gBrowser;
-
-    // The tabbed browser only exists in proper browser windows, but on Mac we
-    // load browser.js in other windows and might try to access gBrowser.
-    if (!window._gBrowser) {
-      return window.gBrowser = null;
-    }
-
-    window.gBrowser = window._gBrowser;
-    delete window._gBrowser;
-    gBrowser.init();
-    return gBrowser;
-  },
-});
-
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
 });
@@ -243,6 +224,7 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function() {
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
+var gBrowser;
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gContextMenu = null; // nsContextMenu instance
@@ -1208,6 +1190,10 @@ var gBrowserInit = {
   delayedStartupFinished: false,
 
   onDOMContentLoaded() {
+    gBrowser = window._gBrowser;
+    delete window._gBrowser;
+    gBrowser.init();
+
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(nsIWebNavigation)
           .QueryInterface(Ci.nsIDocShellTreeItem).treeOwner
@@ -5155,14 +5141,14 @@ var TabsProgressListener = {
     }
   },
 
-  onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI,
-                             aFlags) {
+  onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI, aFlags) {
     // Filter out location changes caused by anchor navigation
     // or history.push/pop/replaceState.
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
-      // Reader mode actually cares about these:
-      let mm = gBrowser.selectedBrowser.messageManager;
-      mm.sendAsyncMessage("Reader:PushState", {isArticle: gBrowser.selectedBrowser.isArticle});
+      // Reader mode cares about history.pushState and friends.
+      aBrowser.messageManager.sendAsyncMessage("Reader:PushState", {
+        isArticle: aBrowser.isArticle,
+      });
       return;
     }
 
