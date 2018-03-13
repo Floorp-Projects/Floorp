@@ -174,7 +174,9 @@ class SummaryGraphPath extends PureComponent {
     } = this.props;
 
     const totalDuration = this.getTotalDuration(animation, timeScale);
-    const startTime = timeScale.minStartTime;
+    const { playbackRate, previousStartTime = 0 } = animation.state;
+    const startTime = timeScale.minStartTime * playbackRate;
+    const offset = previousStartTime * playbackRate;
     const opacity = Math.max(1 / keyframesList.length, MIN_KEYFRAMES_EASING_OPACITY);
 
     return dom.svg(
@@ -190,6 +192,7 @@ class SummaryGraphPath extends PureComponent {
             animation,
             durationPerPixel,
             keyframes,
+            offset,
             opacity,
             simulateAnimation,
             totalDuration,
@@ -201,6 +204,7 @@ class SummaryGraphPath extends PureComponent {
           {
             animation,
             durationPerPixel,
+            offset,
             simulateAnimation,
             totalDuration,
           }
@@ -214,6 +218,7 @@ class SummaryGraphPath extends PureComponent {
               animation,
               durationPerPixel,
               keyframes,
+              offset,
               simulateAnimation,
               totalDuration,
             }
@@ -228,6 +233,7 @@ class SummaryGraphPath extends PureComponent {
               animation,
               durationPerPixel,
               keyframes,
+              offset,
               simulateAnimation,
               totalDuration,
             }

@@ -17,6 +17,7 @@ class NegativePath extends PureComponent {
       className: PropTypes.string.isRequired,
       durationPerPixel: PropTypes.number.isRequired,
       keyframes: PropTypes.object.isRequired,
+      offset: PropTypes.number.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       totalDuration: PropTypes.number.isRequired,
     };
@@ -25,9 +26,9 @@ class NegativePath extends PureComponent {
   render() {
     const {
       animation,
-      className,
       durationPerPixel,
       keyframes,
+      offset,
       simulateAnimation,
       totalDuration,
     } = this.props;
@@ -75,11 +76,10 @@ class NegativePath extends PureComponent {
     const helper = new SummaryGraphHelper(state, keyframes,
                                           totalDuration, durationPerPixel,
                                           getValueFunc, toPathStringFunc);
-    const offset = state.previousStartTime ? state.previousStartTime : 0;
 
     return dom.g(
       {
-        className,
+        className: this.getClassName(),
         transform: `translate(${ offset })`
       },
       this.renderGraph(state, helper)

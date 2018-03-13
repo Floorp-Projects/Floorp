@@ -45,7 +45,7 @@ class TimeScale {
       endDelay = 0,
       iterationCount,
       playbackRate,
-      previousStartTime,
+      previousStartTime = 0,
     } = state;
 
     const toRate = v => v / playbackRate;
@@ -56,8 +56,6 @@ class TimeScale {
     // be displaying the delay outside the time window if we didn't take it into
     // account here.
     const relevantDelay = delay < 0 ? toRate(delay) : 0;
-    previousStartTime = previousStartTime || 0;
-
     const startTime = toRate(minZero(delay)) +
                       rateRelativeDuration +
                       endDelay;
