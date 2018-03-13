@@ -3151,6 +3151,8 @@ TelemetryPrefValue()
 /* static */ void
 Preferences::SetupTelemetryPref()
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   Maybe<bool> telemetryPrefValue = TelemetryPrefValue();
   if (telemetryPrefValue.isSome()) {
     Preferences::SetBoolInAnyProcess(
@@ -3199,9 +3201,25 @@ TelemetryPrefValue()
 /* static */ void
 Preferences::SetupTelemetryPref()
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   Preferences::SetBoolInAnyProcess(
     kTelemetryPref, TelemetryPrefValue(), PrefValueKind::Default);
   Preferences::LockInAnyProcess(kTelemetryPref);
+}
+
+static void
+CheckTelemetryPref()
+{
+  MOZ_ASSERT(!XRE_IsParentProcess());
+
+  // Make sure the children got passed the right telemetry pref details.
+  DebugOnly<bool> value;
+  MOZ_ASSERT(NS_SUCCEEDED(Preferences::GetBool(kTelemetryPref, &value)) &&
+             value == TelemetryPrefValue());
+  // njn: uncomment after bug 1436911 lands; it ensures that the locked status
+  //      is passed correctly
+  // MOZ_ASSERT(Preferences::IsLocked(kTelemetryPref));
 }
 
 #endif // MOZ_WIDGET_ANDROID
@@ -3241,6 +3259,10 @@ Preferences::GetInstanceForService()
     }
     delete gChangedDomPrefs;
     gChangedDomPrefs = nullptr;
+
+#ifndef MOZ_WIDGET_ANDROID
+    CheckTelemetryPref();
+#endif
 
   } else {
     // Check if there is a deployment configuration file. If so, set up the
@@ -4245,7 +4267,9 @@ Preferences::InitInitialObjects()
     }
   }
 
-  SetupTelemetryPref();
+  if (XRE_IsParentProcess()) {
+    SetupTelemetryPref();
+  }
 
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
                                 nullptr,
