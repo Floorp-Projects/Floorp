@@ -77,8 +77,12 @@ interface nsIToolkitProfile : nsISupports
     /**
      * Removes the profile from the registry of profiles.
      * The profile directory is removed in the stream transport thread.
+     *
+     * @param removeFiles
+     *        Indicates whether or not the profile directory should be
+     *        removed in addition.
      */
-    void removeInBackground();
+    void removeInBackground(in boolean removeFiles);
 
     /**
      * Lock this profile using platform-specific locking methods.
