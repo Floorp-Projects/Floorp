@@ -77,6 +77,7 @@ class App extends PureComponent {
       {
         id: "animation-container",
         className: detailVisibility ? "animation-detail-visible" : "",
+        tabIndex: -1,
       },
       animations.length ?
       [

@@ -7,6 +7,9 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+
+const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 const { getStr } = require("../utils/l10n");
 const { hasPlayingAnimation } = require("../utils/utils");
@@ -22,6 +25,8 @@ class PauseResumeButton extends PureComponent {
   constructor(props) {
     super(props);
 
+    this.onKeyDown = this.onKeyDown.bind(this);
+
     this.state = {
       isPlaying: false,
     };
@@ -31,15 +36,36 @@ class PauseResumeButton extends PureComponent {
     this.updateState(this.props);
   }
 
+  componentDidMount() {
+    const targetEl = this.getKeyEventTarget();
+    targetEl.addEventListener("keydown", this.onKeyDown);
+  }
+
   componentWillReceiveProps(nextProps) {
     this.updateState(nextProps);
   }
 
-  onClick() {
+  componentWillUnount() {
+    const targetEl = this.getKeyEventTarget();
+    targetEl.removeEventListener("keydown", this.onKeyDown);
+  }
+
+  getKeyEventTarget() {
+    return ReactDOM.findDOMNode(this).closest("#animation-container");
+  }
+
+  onToggleAnimationsPlayState() {
     const { setAnimationsPlayState } = this.props;
     const { isPlaying } = this.state;
 
     setAnimationsPlayState(!isPlaying);
+  }
+
+  onKeyDown(e) {
+    if (e.keyCode === KeyCodes.DOM_VK_SPACE) {
+      this.onToggleAnimationsPlayState();
+      e.preventDefault();
+    }
   }
 
   updateState() {
@@ -55,7 +81,7 @@ class PauseResumeButton extends PureComponent {
       {
         className: "pause-resume-button devtools-button" +
                    (isPlaying ? "" : " paused"),
-        onClick: this.onClick.bind(this),
+        onClick: this.onToggleAnimationsPlayState.bind(this),
         title: isPlaying ?
                  getStr("timeline.resumedButtonTooltip") :
                  getStr("timeline.pausedButtonTooltip"),
