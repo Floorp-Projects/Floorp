@@ -333,3 +333,10 @@ devtools.jar:
     content/netmonitor/src/assets/icons/play.svg (netmonitor/src/assets/icons/play.svg)
     content/netmonitor/index.html (netmonitor/index.html)
     content/netmonitor/initializer.js (netmonitor/initializer.js)
+
+    # Devtools-components
+    skin/images/devtools-components/arrow.svg (themes/images/devtools-components/arrow.svg)
+
+    # Devtools-reps
+    skin/images/devtools-reps/jump-definition.svg (themes/images/devtools-reps/jump-definition.svg)
+    skin/images/devtools-reps/open-inspector.svg (themes/images/devtools-reps/open-inspector.svg)
