@@ -16,6 +16,8 @@
 #include "nsIDragService.h"
 #include "nsCycleCollectionParticipant.h"
 
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -239,6 +241,20 @@ public:
   }
 
   already_AddRefed<nsINode> GetMozSourceNode();
+
+  /*
+   * Integer version of dropEffect, set to one of the constants in nsIDragService.
+   */
+  uint32_t DropEffectInt() const
+  {
+    return mDropEffect;
+  }
+  void SetDropEffectInt(uint32_t aDropEffectInt)
+  {
+    MOZ_RELEASE_ASSERT(aDropEffectInt < ArrayLength(sEffects),
+                       "Bogus drop effect value");
+    mDropEffect = aDropEffectInt;
+  }
 
   void GetMozTriggeringPrincipalURISpec(nsAString& aPrincipalURISpec);
 
