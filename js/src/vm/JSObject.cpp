@@ -1397,7 +1397,7 @@ JS_InitializePropertiesFromCompatibleNativeObject(JSContext* cx,
 }
 
 template<XDRMode mode>
-bool
+XDRResult
 js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
 {
     /* NB: Keep this in sync with DeepCloneObjectLiteral. */
@@ -1415,8 +1415,7 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
             isArray = obj->is<ArrayObject>() ? 1 : 0;
         }
 
-        if (!xdr->codeUint32(&isArray))
-            return false;
+        MOZ_TRY(xdr->codeUint32(&isArray));
     }
 
     RootedValue tmpValue(cx), tmpIdValue(cx);
@@ -1427,29 +1426,26 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
         if (mode == XDR_ENCODE) {
             RootedArrayObject arr(cx, &obj->as<ArrayObject>());
             if (!GetScriptArrayObjectElements(arr, &values))
-                return false;
+                return xdr->fail(JS::TranscodeResult_Throw);
         }
 
         uint32_t initialized;
         if (mode == XDR_ENCODE)
             initialized = values.length();
-        if (!xdr->codeUint32(&initialized))
-            return false;
+        MOZ_TRY(xdr->codeUint32(&initialized));
         if (mode == XDR_DECODE && !values.appendN(MagicValue(JS_ELEMENTS_HOLE), initialized))
-            return false;
+            return xdr->fail(JS::TranscodeResult_Throw);
 
         // Recursively copy dense elements.
-        for (unsigned i = 0; i < initialized; i++) {
-            if (!xdr->codeConstValue(values[i]))
-                return false;
-        }
+        for (unsigned i = 0; i < initialized; i++)
+            MOZ_TRY(xdr->codeConstValue(values[i]));
 
         uint32_t copyOnWrite;
-        if (mode == XDR_ENCODE)
+        if (mode == XDR_ENCODE) {
             copyOnWrite = obj->is<ArrayObject>() &&
                           obj->as<ArrayObject>().denseElementsAreCopyOnWrite();
-        if (!xdr->codeUint32(&copyOnWrite))
-            return false;
+        }
+        MOZ_TRY(xdr->codeUint32(&copyOnWrite));
 
         if (mode == XDR_DECODE) {
             ObjectGroup::NewArrayKind arrayKind = copyOnWrite
@@ -1458,23 +1454,22 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
             obj.set(ObjectGroup::newArrayObject(cx, values.begin(), values.length(),
                                                 TenuredObject, arrayKind));
             if (!obj)
-                return false;
+                return xdr->fail(JS::TranscodeResult_Throw);
         }
 
-        return true;
+        return Ok();
     }
 
     // Code the properties in the object.
     Rooted<IdValueVector> properties(cx, IdValueVector(cx));
     if (mode == XDR_ENCODE && !GetScriptPlainObjectProperties(obj, &properties))
-        return false;
+        return xdr->fail(JS::TranscodeResult_Throw);
 
     uint32_t nproperties = properties.length();
-    if (!xdr->codeUint32(&nproperties))
-        return false;
+    MOZ_TRY(xdr->codeUint32(&nproperties));
 
     if (mode == XDR_DECODE && !properties.appendN(IdValuePair(), nproperties))
-        return false;
+        return xdr->fail(JS::TranscodeResult_Throw);
 
     for (size_t i = 0; i < nproperties; i++) {
         if (mode == XDR_ENCODE) {
@@ -1482,12 +1477,12 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
             tmpValue = properties[i].get().value;
         }
 
-        if (!xdr->codeConstValue(&tmpIdValue) || !xdr->codeConstValue(&tmpValue))
-            return false;
+        MOZ_TRY(xdr->codeConstValue(&tmpIdValue));
+        MOZ_TRY(xdr->codeConstValue(&tmpValue));
 
         if (mode == XDR_DECODE) {
             if (!ValueToId<CanGC>(cx, tmpIdValue, &tmpId))
-                return false;
+                return xdr->fail(JS::TranscodeResult_Throw);
             properties[i].get().id = tmpId;
             properties[i].get().value = tmpValue;
         }
@@ -1497,23 +1492,22 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
     uint32_t isSingleton;
     if (mode == XDR_ENCODE)
         isSingleton = obj->isSingleton() ? 1 : 0;
-    if (!xdr->codeUint32(&isSingleton))
-        return false;
+    MOZ_TRY(xdr->codeUint32(&isSingleton));
 
     if (mode == XDR_DECODE) {
         NewObjectKind newKind = isSingleton ? SingletonObject : TenuredObject;
         obj.set(ObjectGroup::newPlainObject(cx, properties.begin(), properties.length(), newKind));
         if (!obj)
-            return false;
+            return xdr->fail(JS::TranscodeResult_Throw);
     }
 
-    return true;
+    return Ok();
 }
 
-template bool
+template XDRResult
 js::XDRObjectLiteral(XDRState<XDR_ENCODE>* xdr, MutableHandleObject obj);
 
-template bool
+template XDRResult
 js::XDRObjectLiteral(XDRState<XDR_DECODE>* xdr, MutableHandleObject obj);
 
 /* static */ bool

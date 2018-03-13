@@ -515,9 +515,9 @@ ScriptDecodeTask::parse(JSContext* cx)
 
     XDROffThreadDecoder decoder(cx, alloc, &options, /* sourceObjectOut = */ &sourceObject.get(),
                                 range);
-    decoder.codeScript(&resultScript);
-    MOZ_ASSERT(bool(resultScript) == (decoder.resultCode() == JS::TranscodeResult_Ok));
-    if (decoder.resultCode() == JS::TranscodeResult_Ok) {
+    XDRResult res = decoder.codeScript(&resultScript);
+    MOZ_ASSERT(bool(resultScript) == res.isOk());
+    if (res.isOk()) {
         scripts.infallibleAppend(resultScript);
         if (sourceObject)
             sourceObjects.infallibleAppend(sourceObject);
@@ -548,10 +548,10 @@ MultiScriptsDecodeTask::parse(JSContext* cx)
         Rooted<ScriptSourceObject*> sourceObject(cx);
 
         XDROffThreadDecoder decoder(cx, alloc, &opts, &sourceObject.get(), source.range);
-        decoder.codeScript(&resultScript);
-        MOZ_ASSERT(bool(resultScript) == (decoder.resultCode() == JS::TranscodeResult_Ok));
+        XDRResult res = decoder.codeScript(&resultScript);
+        MOZ_ASSERT(bool(resultScript) == res.isOk());
 
-        if (decoder.resultCode() != JS::TranscodeResult_Ok)
+        if (res.isErr())
             break;
         MOZ_ASSERT(resultScript);
         scripts.infallibleAppend(resultScript);

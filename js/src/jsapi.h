@@ -6049,13 +6049,13 @@ struct TranscodeSource
 
 typedef mozilla::Vector<JS::TranscodeSource> TranscodeSources;
 
-enum TranscodeResult
+enum TranscodeResult: uint8_t
 {
     // Successful encoding / decoding.
     TranscodeResult_Ok = 0,
 
     // A warning message, is set to the message out-param.
-    TranscodeResult_Failure = 0x100,
+    TranscodeResult_Failure = 0x10,
     TranscodeResult_Failure_BadBuildId =          TranscodeResult_Failure | 0x1,
     TranscodeResult_Failure_RunOnceNotSupported = TranscodeResult_Failure | 0x2,
     TranscodeResult_Failure_AsmJSNotSupported =   TranscodeResult_Failure | 0x3,
@@ -6064,7 +6064,7 @@ enum TranscodeResult
     TranscodeResult_Failure_NotInterpretedFun =   TranscodeResult_Failure | 0x6,
 
     // There is a pending exception on the context.
-    TranscodeResult_Throw = 0x200
+    TranscodeResult_Throw = 0x20
 };
 
 extern JS_PUBLIC_API(TranscodeResult)
