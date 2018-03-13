@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
 #include "nsIDOMEvent.h"
@@ -859,20 +860,13 @@ VectorImage::GetImageContainerSize(LayerManager* aManager,
 NS_IMETHODIMP_(bool)
 VectorImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
 {
-  if (mError || !mIsFullyLoaded || mHaveAnimations ||
-      aManager->GetBackendType() != LayersBackend::LAYERS_WR) {
-    return false;
-  }
-
-  return true;
+  return false;
 }
 
 //******************************************************************************
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 VectorImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
-  MOZ_ASSERT(aManager->GetBackendType() != LayersBackend::LAYERS_WR,
-             "WebRender should always use GetImageContainerAvailableAtSize!");
   return nullptr;
 }
 
@@ -882,9 +876,14 @@ VectorImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
                                              const IntSize& aSize,
                                              uint32_t aFlags)
 {
-  // Since we only support image containers with WebRender, and it can handle
-  // textures larger than the hw max texture size, we don't need to check aSize.
-  return !aSize.IsEmpty() && IsImageContainerAvailable(aManager, aFlags);
+  if (mError || !mIsFullyLoaded || aSize.IsEmpty() ||
+      mHaveAnimations || !gfxVars::GetUseWebRenderOrDefault()) {
+    return false;
+  }
+
+  int32_t maxTextureSize = aManager->GetMaxTextureSize();
+  return aSize.width <= maxTextureSize &&
+         aSize.height <= maxTextureSize;
 }
 
 //******************************************************************************
