@@ -1101,8 +1101,9 @@ Event::TimeStamp()
     // In the situation where you have set a very old, not-very-supported
     // non-default preference, we will always reduce the precision,
     // regardless of system principal or not.
+    // The timestamp is absolute, so we supply a zero context mix-in.
     double ret = static_cast<double>(mEvent->mTime);
-    return nsRFPService::ReduceTimePrecisionAsMSecs(ret);
+    return nsRFPService::ReduceTimePrecisionAsMSecs(ret, 0);
   }
 
   if (mEvent->mTimeStamp.IsNull()) {
@@ -1129,7 +1130,8 @@ Event::TimeStamp()
     if (nsContentUtils::IsSystemPrincipal(mOwner->PrincipalOrNull()))
       return ret;
 
-    return nsRFPService::ReduceTimePrecisionAsMSecs(ret);
+    return nsRFPService::ReduceTimePrecisionAsMSecs(ret,
+      perf->GetRandomTimelineSeed());
   }
 
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -1139,7 +1141,8 @@ Event::TimeStamp()
   if (workerPrivate->UsesSystemPrincipal())
     return ret;
 
-  return nsRFPService::ReduceTimePrecisionAsMSecs(ret);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(ret,
+    workerPrivate->GetRandomTimelineSeed());
 }
 
 NS_IMETHODIMP
