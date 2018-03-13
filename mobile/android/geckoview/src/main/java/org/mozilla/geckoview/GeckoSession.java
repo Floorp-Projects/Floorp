@@ -108,10 +108,14 @@ public class GeckoSession extends LayerSession
                                       final EventCallback callback) {
 
                 if ("GeckoView:ContextMenu".equals(event)) {
+                    final int type = getContentElementType(
+                        message.getString("elementType"));
+
                     delegate.onContextMenu(GeckoSession.this,
                                            message.getInt("screenX"),
                                            message.getInt("screenY"),
                                            message.getString("uri"),
+                                           type,
                                            message.getString("elementSrc"));
                 } else if ("GeckoView:DOMTitleChanged".equals(event)) {
                     delegate.onTitleChange(GeckoSession.this,
@@ -1418,7 +1422,23 @@ public class GeckoSession extends LayerSession
         void onSecurityChange(GeckoSession session, SecurityInformation securityInfo);
     }
 
+    private static int getContentElementType(final String name) {
+        if ("HTMLImageElement".equals(name)) {
+            return ContentDelegate.ELEMENT_TYPE_IMAGE;
+        } else if ("HTMLVideoElement".equals(name)) {
+            return ContentDelegate.ELEMENT_TYPE_VIDEO;
+        } else if ("HTMLAudioElement".equals(name)) {
+            return ContentDelegate.ELEMENT_TYPE_AUDIO;
+        }
+        return ContentDelegate.ELEMENT_TYPE_NONE;
+    }
+
     public interface ContentDelegate {
+        static final int ELEMENT_TYPE_NONE = 0;
+        static final int ELEMENT_TYPE_IMAGE = 1;
+        static final int ELEMENT_TYPE_VIDEO = 2;
+        static final int ELEMENT_TYPE_AUDIO = 3;
+
         /**
         * A page title was discovered in the content or updated after the content
         * loaded.
@@ -1461,11 +1481,13 @@ public class GeckoSession extends LayerSession
          * @param screenY The screen coordinates of the press.
          * @param uri The URI of the pressed link, set for links and
          *            image-links.
+         * @param elementType The type of the pressed element.
+         *                    One of the {@link ContentDelegate#ELEMENT_TYPE_LINK} flags.
          * @param elementSrc The source URI of the pressed element, set for
          *                   (nested) images and media elements.
          */
         void onContextMenu(GeckoSession session, int screenX, int screenY,
-                           String uri, String elementSrc);
+                           String uri, int elementTypes, String elementSrc);
     }
 
     /**
