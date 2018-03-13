@@ -276,20 +276,6 @@ DataTransfer::SetEffectAllowed(const nsAString& aEffectAllowed)
 }
 
 NS_IMETHODIMP
-DataTransfer::GetDropEffectInt(uint32_t* aDropEffect)
-{
-  *aDropEffect = mDropEffect;
-  return  NS_OK;
-}
-
-NS_IMETHODIMP
-DataTransfer::SetDropEffectInt(uint32_t aDropEffect)
-{
-  mDropEffect = aDropEffect;
-  return  NS_OK;
-}
-
-NS_IMETHODIMP
 DataTransfer::GetEffectAllowedInt(uint32_t* aEffectAllowed)
 {
   *aEffectAllowed = mEffectAllowed;

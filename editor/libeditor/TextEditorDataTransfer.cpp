@@ -260,8 +260,7 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       // We are NOT over the selection
       if (srcdomdoc == destdomdoc) {
         // Within the same doc: delete if user doesn't want to copy
-        uint32_t dropEffect;
-        dataTransfer->GetDropEffectInt(&dropEffect);
+        uint32_t dropEffect = dataTransfer->DropEffectInt();
         deleteSelection = !(dropEffect & nsIDragService::DRAGDROP_ACTION_COPY);
       } else {
         // Different source doc: Don't delete
