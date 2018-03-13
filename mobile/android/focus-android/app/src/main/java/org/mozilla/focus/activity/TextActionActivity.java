@@ -13,8 +13,9 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
-import org.mozilla.focus.utils.SafeIntent;
 import org.mozilla.focus.utils.UrlUtils;
+
+import mozilla.components.utils.SafeIntent;
 
 /**
  * Activity for receiving and processing an ACTION_PROCESS_TEXT intent.

@@ -13,7 +13,8 @@ import android.widget.TextView;
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.ThreadUtils;
+
+import mozilla.components.utils.ThreadUtils;
 
 /* package */ class BlockingItemViewHolder extends BrowserMenuViewHolder implements CompoundButton.OnCheckedChangeListener {
     /* package */ static final int LAYOUT_ID = R.layout.menu_blocking_switch;
@@ -54,7 +55,7 @@ import org.mozilla.focus.utils.ThreadUtils;
     }
 
     private void updateTrackingCount(final TextView view, final int count) {
-        ThreadUtils.postToMainThread(new Runnable() {
+        ThreadUtils.INSTANCE.postToMainThread(new Runnable() {
             @Override
             public void run() {
                 view.setText(String.valueOf(count));
@@ -63,7 +64,7 @@ import org.mozilla.focus.utils.ThreadUtils;
     }
 
     private void disableTrackingCount(final TextView view) {
-        ThreadUtils.postToMainThread(new Runnable() {
+        ThreadUtils.INSTANCE.postToMainThread(new Runnable() {
             @Override
             public void run() {
                 view.setText(R.string.content_blocking_disabled);
@@ -79,7 +80,7 @@ import org.mozilla.focus.utils.ThreadUtils;
 
         // Delay closing the menu and reloading the website a bit so that the user can actually see
         // the switch change its state.
-        ThreadUtils.postToMainThreadDelayed(new Runnable() {
+        ThreadUtils.INSTANCE.postToMainThreadDelayed(new Runnable() {
             @Override
             public void run() {
                 getMenu().dismiss();

@@ -17,6 +17,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import kotlinx.android.synthetic.main.fragment_urlinput.*
+import mozilla.components.utils.ThreadUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InfoActivity
 import org.mozilla.focus.autocomplete.UrlAutoCompleteFilter
@@ -30,7 +31,6 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.utils.ThreadUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 import org.mozilla.focus.utils.StatusBarUtils

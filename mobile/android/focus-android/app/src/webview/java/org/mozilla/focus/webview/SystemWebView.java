@@ -34,7 +34,6 @@ import org.mozilla.focus.session.Session;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.FileUtils;
-import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.web.Download;
@@ -43,6 +42,8 @@ import org.mozilla.focus.web.WebViewProvider;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import mozilla.components.utils.ThreadUtils;
 
 public class SystemWebView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "WebkitView";
@@ -225,7 +226,7 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     }
 
     public static void deleteContentFromKnownLocations(final Context context) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
+        ThreadUtils.INSTANCE.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 // We call all methods on WebView to delete data. But some traces still remain

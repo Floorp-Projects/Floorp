@@ -14,12 +14,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.customtabs.CustomTabConfig;
-import org.mozilla.focus.utils.SafeIntent;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.List;
 import java.util.UUID;
+
+import mozilla.components.utils.SafeIntent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -18,8 +18,9 @@ import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.DownloadUtils;
 import org.mozilla.focus.web.Download;
+
+import mozilla.components.utils.DownloadUtils;
 
 /**
  * Fragment displaying a download dialog
@@ -31,7 +32,10 @@ public class DownloadDialogFragment extends DialogFragment {
         DownloadDialogFragment frag = new DownloadDialogFragment();
         final Bundle args = new Bundle();
 
-        String fileName = DownloadUtils.guessFileName(download);
+        final String fileName = DownloadUtils.guessFileName(
+                download.getContentDisposition(),
+                download.getUrl(),
+                download.getMimeType());
 
         args.putString("fileName", fileName);
         args.putParcelable("download", download);

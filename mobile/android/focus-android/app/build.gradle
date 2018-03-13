@@ -286,6 +286,7 @@ dependencies {
 
     compile 'org.mozilla.telemetry:telemetry:1.1.1'
     compile 'org.mozilla.components:ktx:0.1'
+    compile 'org.mozilla.components:utils:0.2'
     compile 'org.mozilla.photon:colors:0.1'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
@@ -321,7 +322,6 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
 }
-
 // -------------------------------------------------------------------------------------------------
 //  Dynamically set versionCode (See tools/build/versionCode.gradle
 // -------------------------------------------------------------------------------------------------

@@ -25,13 +25,14 @@ import org.mozilla.focus.session.Session;
 import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.session.ui.SessionsSheetFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.SafeIntent;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
 import java.util.List;
+
+import mozilla.components.utils.SafeIntent;
 
 public class MainActivity extends LocaleAwareAppCompatActivity {
     public static final String ACTION_ERASE = "erase";

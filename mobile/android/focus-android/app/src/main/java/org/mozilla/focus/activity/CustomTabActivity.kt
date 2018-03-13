@@ -5,10 +5,10 @@
 package org.mozilla.focus.activity
 
 import android.os.Bundle
+import mozilla.components.utils.SafeIntent
 import org.mozilla.focus.customtabs.CustomTabConfig
 import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
-import org.mozilla.focus.utils.SafeIntent
 
 /**
  * The main entry point for "custom tabs" opened by third-party apps.
@@ -23,6 +23,7 @@ class CustomTabActivity : MainActivity() {
 
         val intent = SafeIntent(intent)
         customTabId = intent.getStringExtra(CustomTabConfig.EXTRA_CUSTOM_TAB_ID)
+                ?: throw IllegalAccessError("No custom tab id in intent")
     }
 
     override fun onPause() {

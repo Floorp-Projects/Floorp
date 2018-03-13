@@ -7,8 +7,8 @@ package org.mozilla.focus.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import mozilla.components.utils.SafeIntent
 import org.mozilla.focus.customtabs.CustomTabConfig
-import org.mozilla.focus.utils.SafeIntent
 import java.util.UUID
 
 /**

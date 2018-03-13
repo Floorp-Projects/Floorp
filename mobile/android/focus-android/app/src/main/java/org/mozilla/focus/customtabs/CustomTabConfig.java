@@ -16,13 +16,14 @@ import android.support.customtabs.CustomTabsIntent;
 import android.util.Log;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.utils.SafeBundle;
-import org.mozilla.focus.utils.SafeIntent;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import mozilla.components.utils.SafeBundle;
+import mozilla.components.utils.SafeIntent;
 
 public class CustomTabConfig {
     private static final String LOGTAG = "CustomTabConfig";
