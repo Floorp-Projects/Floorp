@@ -56,7 +56,7 @@ TEST_SUITES = {
     },
     'marionette': {
         'aliases': ('mn',),
-        'mach_command': 'marionette',
+        'mach_command': 'marionette-test',
         'kwargs': {'tests': None},
     },
     'mochitest-a11y': {
