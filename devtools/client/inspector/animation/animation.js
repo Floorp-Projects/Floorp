@@ -11,6 +11,7 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const App = createFactory(require("./components/App"));
+const CurrentTimeTimer = require("./current-time-timer");
 
 const {
   updateAnimations,
@@ -21,7 +22,8 @@ const {
 } = require("./actions/animations");
 const {
   isAllAnimationEqual,
-  hasPlayingAnimation,
+  hasAnimationIterationCountInfinite,
+  hasRunningAnimation,
 } = require("./utils/utils");
 
 class AnimationInspector {
@@ -49,6 +51,7 @@ class AnimationInspector {
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
     this.onAnimationsCurrentTimeUpdated = this.onAnimationsCurrentTimeUpdated.bind(this);
+    this.onCurrentTimeTimerUpdated = this.onCurrentTimeTimerUpdated.bind(this);
     this.onElementPickerStarted = this.onElementPickerStarted.bind(this);
     this.onElementPickerStopped = this.onElementPickerStopped.bind(this);
     this.onSidebarResized = this.onSidebarResized.bind(this);
@@ -261,6 +264,20 @@ class AnimationInspector {
     }
   }
 
+  /**
+   * This method is called when the current time proceed by CurrentTimeTimer.
+   *
+   * @param {Number} currentTime
+   * @param {Bool} shouldStop
+   */
+  onCurrentTimeTimerUpdated(currentTime, shouldStop) {
+    if (shouldStop) {
+      this.setAnimationsCurrentTime(currentTime, true);
+    } else {
+      this.onAnimationsCurrentTimeUpdated(currentTime);
+    }
+  }
+
   onElementPickerStarted() {
     this.inspector.store.dispatch(updateElementPickerEnabled(true));
   }
@@ -407,7 +424,13 @@ class AnimationInspector {
   }
 
   startAnimationsCurrentTimeTimer() {
-    const currentTimeTimer = new CurrentTimeTimer(this);
+    const timeScale = this.state.timeScale;
+    const shouldStopAfterEndTime =
+      !hasAnimationIterationCountInfinite(this.state.animations);
+
+    const currentTimeTimer =
+      new CurrentTimeTimer(timeScale, shouldStopAfterEndTime,
+                           this.win, this.onCurrentTimeTimerUpdated);
     currentTimeTimer.start();
     this.currentTimeTimer = currentTimeTimer;
   }
@@ -451,44 +474,9 @@ class AnimationInspector {
 
     this.inspector.store.dispatch(updateAnimations(animations));
 
-    if (hasPlayingAnimation(animations)) {
+    if (hasRunningAnimation(animations)) {
       this.startAnimationsCurrentTimeTimer();
     }
-  }
-}
-
-class CurrentTimeTimer {
-  constructor(animationInspector) {
-    const timeScale = animationInspector.state.timeScale;
-    this.baseCurrentTime = timeScale.documentCurrentTime - timeScale.minStartTime;
-    this.startTime = animationInspector.win.performance.now();
-    this.animationInspector = animationInspector;
-
-    this.next = this.next.bind(this);
-  }
-
-  destroy() {
-    this.stop();
-    this.animationInspector = null;
-  }
-
-  next() {
-    if (this.doStop) {
-      return;
-    }
-
-    const { onAnimationsCurrentTimeUpdated, win } = this.animationInspector;
-    const currentTime = this.baseCurrentTime + win.performance.now() - this.startTime;
-    onAnimationsCurrentTimeUpdated(currentTime);
-    win.requestAnimationFrame(this.next);
-  }
-
-  start() {
-    this.next();
-  }
-
-  stop() {
-    this.doStop = true;
   }
 }
 

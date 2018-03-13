@@ -70,12 +70,23 @@ function isAllAnimationEqual(animationsA, animationsB) {
 }
 
 /**
+ * Check whether or not the given list of animations has an iteration count of infinite.
+ *
+ * @param {Array} animations.
+ * @return {Boolean} true if there is an animation in the  list of animations
+ *                   whose animation iteration count is infinite.
+ */
+function hasAnimationIterationCountInfinite(animations) {
+  return animations.some(({state}) => !state.iterationCount);
+}
+
+/**
  * Check wether the animations are running at least one.
  *
  * @param {Array} animations.
- * @return {Boolean} true: playing
+ * @return {Boolean} true: running
  */
-function hasPlayingAnimation(animations) {
+function hasRunningAnimation(animations) {
   return animations.some(({state}) => state.playState === "running");
 }
 
@@ -98,6 +109,7 @@ function isTimingEffectEqual(stateA, stateB) {
 }
 
 exports.findOptimalTimeInterval = findOptimalTimeInterval;
-exports.hasPlayingAnimation = hasPlayingAnimation;
+exports.hasAnimationIterationCountInfinite = hasAnimationIterationCountInfinite;
+exports.hasRunningAnimation = hasRunningAnimation;
 exports.isAllAnimationEqual = isAllAnimationEqual;
 exports.isTimingEffectEqual = isTimingEffectEqual;

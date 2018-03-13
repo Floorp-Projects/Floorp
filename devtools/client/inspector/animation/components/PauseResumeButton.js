@@ -12,7 +12,7 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 const { getStr } = require("../utils/l10n");
-const { hasPlayingAnimation } = require("../utils/utils");
+const { hasRunningAnimation } = require("../utils/utils");
 
 class PauseResumeButton extends PureComponent {
   static get propTypes() {
@@ -28,7 +28,7 @@ class PauseResumeButton extends PureComponent {
     this.onKeyDown = this.onKeyDown.bind(this);
 
     this.state = {
-      isPlaying: false,
+      isRunning: false,
     };
   }
 
@@ -56,9 +56,9 @@ class PauseResumeButton extends PureComponent {
 
   onToggleAnimationsPlayState() {
     const { setAnimationsPlayState } = this.props;
-    const { isPlaying } = this.state;
+    const { isRunning } = this.state;
 
-    setAnimationsPlayState(!isPlaying);
+    setAnimationsPlayState(!isRunning);
   }
 
   onKeyDown(e) {
@@ -70,19 +70,19 @@ class PauseResumeButton extends PureComponent {
 
   updateState() {
     const { animations } = this.props;
-    const isPlaying = hasPlayingAnimation(animations);
-    this.setState({ isPlaying });
+    const isRunning = hasRunningAnimation(animations);
+    this.setState({ isRunning });
   }
 
   render() {
-    const { isPlaying } = this.state;
+    const { isRunning } = this.state;
 
     return dom.button(
       {
         className: "pause-resume-button devtools-button" +
-                   (isPlaying ? "" : " paused"),
+                   (isRunning ? "" : " paused"),
         onClick: this.onToggleAnimationsPlayState.bind(this),
-        title: isPlaying ?
+        title: isRunning ?
                  getStr("timeline.resumedButtonTooltip") :
                  getStr("timeline.pausedButtonTooltip"),
       }
