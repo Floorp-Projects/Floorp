@@ -87,7 +87,6 @@ public class MediaControlService extends Service {
 
     @Override
     public void onDestroy() {
-        mHeadSetStateReceiver.unregisterReceiver(getApplicationContext());
         shutdown();
     }
 
@@ -100,12 +99,6 @@ public class MediaControlService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        mSession.release();
-        return super.onUnbind(intent);
     }
 
     @Override
@@ -145,6 +138,8 @@ public class MediaControlService extends Service {
         Log.d(LOGTAG, "shutdown");
         setState(State.STOPPED);
         PrefsHelper.removeObserver(mPrefsObserver);
+        mHeadSetStateReceiver.unregisterReceiver(getApplicationContext());
+        mSession.release();
 
         mInitialize = false;
         stopSelf();
@@ -311,6 +306,7 @@ public class MediaControlService extends Service {
                 AudioFocusAgent.getInstance().clearActiveMediaTab();
             }
         });
+        mSession.setActive(true);
         return true;
     }
 
