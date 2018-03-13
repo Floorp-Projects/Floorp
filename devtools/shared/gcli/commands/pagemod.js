@@ -63,10 +63,10 @@ exports.items = [
       },
     ],
     // Make a given string safe to use in a regular expression.
-    escapeRegex: function (string) {
+    escapeRegex: function(string) {
       return string.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
     },
-    exec: function (args, context) {
+    exec: function(args, context) {
       let searchTextNodes = !args.attrOnly;
       let searchAttributes = !args.contentOnly;
       let regexOptions = args.ignoreCase ? "ig" : "g";
@@ -152,7 +152,7 @@ exports.items = [
         description: l10n.lookup("pagemodRemoveElementIfEmptyOnlyDesc"),
       },
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       let root = args.root || context.environment.document;
       let elements = Array.prototype.slice.call(root.querySelectorAll(args.search));
 
@@ -206,7 +206,7 @@ exports.items = [
         description: l10n.lookup("pagemodRemoveAttributeIgnoreCaseDesc"),
       },
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       let root = args.root || context.environment.document;
       let regexOptions = args.ignoreCase ? "ig" : "g";
       let attributeRegex = new RegExp(args.searchAttributes, regexOptions);
@@ -254,7 +254,7 @@ exports.items = [
         defaultValue: "window"
       }
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       let html = context.environment.document.documentElement.outerHTML;
       if (args.destination === "stdout") {
         return html;

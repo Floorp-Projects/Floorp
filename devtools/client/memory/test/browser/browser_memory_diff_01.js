@@ -12,7 +12,7 @@ const {
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
-this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   const store = panel.panelWin.gStore;
   const { getState } = store;
   const doc = panel.panelWin.document;
@@ -22,20 +22,20 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   // Take two snapshots.
   const takeSnapshotButton = doc.getElementById("take-snapshot");
   EventUtils.synthesizeMouseAtCenter(takeSnapshotButton, {}, panel.panelWin);
-  yield waitForTime(1000);
+  await waitForTime(1000);
   EventUtils.synthesizeMouseAtCenter(takeSnapshotButton, {}, panel.panelWin);
 
   // Enable diffing mode.
   const diffButton = doc.getElementById("diff-snapshots");
   EventUtils.synthesizeMouseAtCenter(diffButton, {}, panel.panelWin);
-  yield waitUntilState(store,
+  await waitUntilState(store,
                        state =>
                          !!state.diffing &&
                          state.diffing.state === diffingState.SELECTING);
   ok(true, "Clicking the diffing button put us into the diffing state.");
   is(getDisplayedSnapshotStatus(doc), "Select the baseline snapshot");
 
-  yield waitUntilState(store, state =>
+  await waitUntilState(store, state =>
     state.snapshots.length === 2 &&
     state.snapshots[0].treeMap && state.snapshots[1].treeMap &&
     state.snapshots[0].treeMap.state === treeMapState.SAVED &&
@@ -46,7 +46,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   // Select the first snapshot.
   EventUtils.synthesizeMouseAtCenter(listItems[0], {}, panel.panelWin);
-  yield waitUntilState(store,
+  await waitUntilState(store,
                        state =>
                          state.diffing.state === diffingState.SELECTING &&
                          state.diffing.firstSnapshotId);
@@ -55,7 +55,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   // Select the second snapshot.
   EventUtils.synthesizeMouseAtCenter(listItems[1], {}, panel.panelWin);
-  yield waitUntilState(store,
+  await waitUntilState(store,
                        state =>
                          state.diffing.state === diffingState.TAKING_DIFF);
   ok(true, "Selecting two snapshots for diffing triggers computing the diff");
@@ -63,7 +63,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   // .startsWith because the ellipsis is lost in translation.
   ok(getDisplayedSnapshotStatus(doc).startsWith("Computing difference"));
 
-  yield waitUntilState(store,
+  await waitUntilState(store,
                        state => state.diffing.state === diffingState.TOOK_DIFF);
   ok(true, "And that diff is computed successfully");
   is(getDisplayedSnapshotStatus(doc), null, "No status text anymore");

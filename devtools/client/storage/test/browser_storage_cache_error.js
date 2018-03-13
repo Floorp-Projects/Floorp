@@ -6,14 +6,14 @@
 
 // Test handling errors in CacheStorage
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cache-error.html");
+add_task(async function() {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cache-error.html");
 
   const cacheItemId = ["Cache", "javascript:parent.frameContent"];
 
-  yield selectTreeItem(cacheItemId);
+  await selectTreeItem(cacheItemId);
   ok(gUI.tree.isSelected(cacheItemId),
     `The item ${cacheItemId.join(" > ")} is present in the tree`);
 
-  yield finishTests();
+  await finishTests();
 });

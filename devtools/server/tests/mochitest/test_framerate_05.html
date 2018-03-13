@@ -14,7 +14,7 @@ Bug 1034648 - Tests whether a framerate recording can be cancelled.
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const {DebuggerClient} = require("devtools/shared/client/debugger-client");
   const {DebuggerServer} = require("devtools/server/main");
@@ -22,7 +22,7 @@ window.onload = function () {
 
   // Always log packets when running tests.
   Services.prefs.setBoolPref("devtools.debugger.log", true);
-  SimpleTest.registerCleanupFunction(function () {
+  SimpleTest.registerCleanupFunction(function() {
     Services.prefs.clearUserPref("devtools.debugger.log");
   });
 

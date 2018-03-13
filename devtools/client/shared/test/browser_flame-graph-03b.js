@@ -27,14 +27,14 @@ const TEST_DPI_DENSITIY = 2;
 
 var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function() {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
 });
 
-function* performTest() {
-  let [host,, doc] = yield createHost();
+async function performTest() {
+  let [host,, doc] = await createHost();
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
@@ -42,11 +42,11 @@ function* performTest() {
   graph.fixedWidth = TEST_WIDTH;
   graph.fixedHeight = TEST_HEIGHT;
 
-  yield graph.ready();
+  await graph.ready();
 
   testGraph(graph);
 
-  yield graph.destroy();
+  await graph.destroy();
   host.destroy();
 }
 

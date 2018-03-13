@@ -7,7 +7,7 @@
 // Check that the duration, iterationCount and delay are retrieved correctly for
 // multiple animations.
 
-add_task(async function () {
+add_task(async function() {
   let {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 

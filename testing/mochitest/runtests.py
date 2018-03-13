@@ -3059,6 +3059,9 @@ def run_test_harness(parser, options):
 
     runner = MochitestDesktop(options.flavor, logger_options, quiet=options.quiet)
 
+    if hasattr(options, 'log'):
+        delattr(options, 'log')
+
     options.runByManifest = False
     if options.flavor in ('plain', 'browser', 'chrome'):
         options.runByManifest = True

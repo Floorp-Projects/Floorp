@@ -8,9 +8,9 @@
 // https rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
-add_task(function* () {
-  let { panel, ui } = yield openStyleEditorForURL(TESTCASE_URI);
-  let editor = yield ui.editors[0].getSourceEditor();
+add_task(async function() {
+  let { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
+  let editor = await ui.editors[0].getSourceEditor();
 
   let summary = editor.summary;
   let enabledToggle = summary.querySelector(".stylesheet-enabled");
@@ -23,14 +23,14 @@ add_task(function* () {
      "first stylesheet is initially enabled, UI does not have DISABLED class");
 
   info("Disabling the first stylesheet.");
-  yield toggleEnabled(editor, enabledToggle, panel.panelWindow);
+  await toggleEnabled(editor, enabledToggle, panel.panelWindow);
 
   is(editor.styleSheet.disabled, true, "first stylesheet is now disabled");
   is(summary.classList.contains("disabled"), true,
      "first stylesheet is now disabled, UI has DISABLED class");
 
   info("Enabling the first stylesheet again.");
-  yield toggleEnabled(editor, enabledToggle, panel.panelWindow);
+  await toggleEnabled(editor, enabledToggle, panel.panelWindow);
 
   is(editor.styleSheet.disabled, false,
      "first stylesheet is now enabled again");
@@ -38,19 +38,19 @@ add_task(function* () {
      "first stylesheet is now enabled again, UI does not have DISABLED class");
 });
 
-function* toggleEnabled(editor, enabledToggle, panelWindow) {
+async function toggleEnabled(editor, enabledToggle, panelWindow) {
   let changed = editor.once("property-change");
 
   info("Waiting for focus.");
-  yield SimpleTest.promiseFocus(panelWindow);
+  await SimpleTest.promiseFocus(panelWindow);
 
   info("Clicking on the toggle.");
   EventUtils.synthesizeMouseAtCenter(enabledToggle, {}, panelWindow);
 
   info("Waiting for stylesheet to be disabled.");
-  let property = yield changed;
+  let property = await changed;
   while (property !== "disabled") {
     info("Ignoring property-change for '" + property + "'.");
-    property = yield editor.once("property-change");
+    property = await editor.once("property-change");
   }
 }

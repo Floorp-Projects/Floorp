@@ -55,7 +55,7 @@ TextProperty.prototype = {
    * Update the editor associated with this text property,
    * if any.
    */
-  updateEditor: function () {
+  updateEditor: function() {
     if (this.editor) {
       this.editor.update();
     }
@@ -64,7 +64,7 @@ TextProperty.prototype = {
   /**
    * Update the list of computed properties for this text property.
    */
-  updateComputed: function () {
+  updateComputed: function() {
     if (!this.name) {
       return;
     }
@@ -101,7 +101,7 @@ TextProperty.prototype = {
    * @param {TextProperty} prop
    *        The other TextProperty instance.
    */
-  set: function (prop) {
+  set: function(prop) {
     let changed = false;
     for (let item of ["name", "value", "priority", "enabled"]) {
       if (this[item] !== prop[item]) {
@@ -115,7 +115,7 @@ TextProperty.prototype = {
     }
   },
 
-  setValue: function (value, priority, force = false) {
+  setValue: function(value, priority, force = false) {
     let store = this.rule.elementStyle.store;
 
     if (this.editor && value !== this.editor.committed.value || force) {
@@ -130,14 +130,14 @@ TextProperty.prototype = {
    * Called when the property's value has been updated externally, and
    * the property and editor should update.
    */
-  noticeNewValue: function (value) {
+  noticeNewValue: function(value) {
     if (value !== this.value) {
       this.value = value;
       this.updateEditor();
     }
   },
 
-  setName: function (name) {
+  setName: function(name) {
     let store = this.rule.elementStyle.store;
 
     if (name !== this.name) {
@@ -149,19 +149,19 @@ TextProperty.prototype = {
     this.updateEditor();
   },
 
-  setEnabled: function (value) {
+  setEnabled: function(value) {
     this.rule.setPropertyEnabled(this, value);
     this.updateEditor();
   },
 
-  remove: function () {
+  remove: function() {
     this.rule.removeProperty(this);
   },
 
   /**
    * Return a string representation of the rule property.
    */
-  stringifyProperty: function () {
+  stringifyProperty: function() {
     // Get the displayed property value
     let declaration = this.name + ": " + this.editor.valueSpan.textContent +
       ";";
@@ -179,7 +179,7 @@ TextProperty.prototype = {
    *
    * @return {Boolean} true if the property name is known, false otherwise.
    */
-  isKnownProperty: function () {
+  isKnownProperty: function() {
     return this.cssProperties.isKnown(this.name);
   },
 
@@ -189,7 +189,7 @@ TextProperty.prototype = {
    *
    * @return {Boolean} true if the property value is valid, false otherwise.
    */
-  isValid: function () {
+  isValid: function() {
     // Starting with FF49, StyleRuleActors provide a list of parsed
     // declarations, with data about their validity, but if we don't have this,
     // compute validity locally (which might not be correct, but better than

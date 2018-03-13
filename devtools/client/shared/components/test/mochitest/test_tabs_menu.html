@@ -22,7 +22,7 @@ Test all-tabs menu.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = Task.async(function* () {
+window.onload = async function () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { Component, createFactory } = browserRequire("devtools/client/shared/vendor/react");
@@ -55,11 +55,11 @@ window.onload = Task.async(function* () {
     let TabPanel = createFactory(TabPanelClass);
 
     // Create a few panels.
-    yield addTabWithPanel(1);
-    yield addTabWithPanel(2);
-    yield addTabWithPanel(3);
-    yield addTabWithPanel(4);
-    yield addTabWithPanel(5);
+    await addTabWithPanel(1);
+    await addTabWithPanel(2);
+    await addTabWithPanel(3);
+    await addTabWithPanel(4);
+    await addTabWithPanel(5);
 
     // Make sure the all-tabs menu is there.
     const allTabsMenu = tabBarBox.querySelector(".all-tabs-menu");
@@ -76,7 +76,7 @@ window.onload = Task.async(function* () {
   } finally {
     SimpleTest.finish();
   }
-});
+};
 </script>
 </pre>
 </body>

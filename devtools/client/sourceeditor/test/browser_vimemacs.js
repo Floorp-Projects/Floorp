@@ -11,7 +11,7 @@ function test() {
   requestLongerTimeout(4);
   waitForExplicitFinish();
 
-  addTab(URI).then(function (tab) {
+  addTab(URI).then(function(tab) {
     runCodeMirrorTest(tab.linkedBrowser);
   });
 }

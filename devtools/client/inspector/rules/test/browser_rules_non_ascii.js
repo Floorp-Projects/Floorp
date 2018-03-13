@@ -14,7 +14,7 @@ const HTML = `<style type="text/css">\n${SHEET_TEXT}
               </style><div id="q">Styled Node</div>`;
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
-add_task(async function () {
+add_task(async function() {
   await addTab(TEST_URI);
 
   let {inspector, view} = await openRuleView();

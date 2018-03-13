@@ -16,11 +16,11 @@ Test sidebar toggle button
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = Task.async(function* () {
+window.onload = async function () {
   let SidebarToggle = browserRequire("devtools/client/shared/components/SidebarToggle.js");
 
   try {
-    yield test();
+    await test();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -49,7 +49,7 @@ window.onload = Task.async(function* () {
     ok(output2.props.className.includes("pane-collapsed"),
       "Proper class name is set");
   }
-});
+};
 </script>
 </pre>
 </body>

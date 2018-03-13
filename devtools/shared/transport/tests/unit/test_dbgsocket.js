@@ -52,8 +52,8 @@ async function test_socket_conn() {
 
   let closedDeferred = defer();
   transport.hooks = {
-    onPacket: function (packet) {
-      this.onPacket = function ({unicode}) {
+    onPacket: function(packet) {
+      this.onPacket = function({unicode}) {
         Assert.equal(unicode, unicodeString);
         transport.close();
       };
@@ -65,7 +65,7 @@ async function test_socket_conn() {
                       unicode: unicodeString});
       Assert.equal(packet.from, "root");
     },
-    onClosed: function (status) {
+    onClosed: function(status) {
       closedDeferred.resolve();
     },
   };
@@ -107,11 +107,11 @@ async function test_socket_shutdown() {
 function test_pipe_conn() {
   let transport = DebuggerServer.connectPipe();
   transport.hooks = {
-    onPacket: function (packet) {
+    onPacket: function(packet) {
       Assert.equal(packet.from, "root");
       transport.close();
     },
-    onClosed: function (status) {
+    onClosed: function(status) {
       run_next_test();
     }
   };

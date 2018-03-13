@@ -69,14 +69,14 @@ function ObjectActor(obj, {
 ObjectActor.prototype = {
   actorPrefix: "obj",
 
-  rawValue: function () {
+  rawValue: function() {
     return this.obj.unsafeDereference();
   },
 
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
-  grip: function () {
+  grip: function() {
     let g = {
       "type": "object",
       "actor": this.actorID,
@@ -168,7 +168,7 @@ ObjectActor.prototype = {
   /**
    * Returns an object exposing the internal Promise state.
    */
-  _createPromiseState: function () {
+  _createPromiseState: function() {
     const { state, value, reason } = getPromiseState(this.obj);
     let promiseState = { state };
 
@@ -191,7 +191,7 @@ ObjectActor.prototype = {
   /**
    * Releases this actor from the pool.
    */
-  release: function () {
+  release: function() {
     if (this.registeredPool.objectActors) {
       this.registeredPool.objectActors.delete(this.obj);
     }
@@ -204,7 +204,7 @@ ObjectActor.prototype = {
    * Handle a protocol request to provide the definition site of this function
    * object.
    */
-  onDefinitionSite: function () {
+  onDefinitionSite: function() {
     if (this.obj.class != "Function") {
       return {
         from: this.actorID,
@@ -238,7 +238,7 @@ ObjectActor.prototype = {
    * Handle a protocol request to provide the names of the properties defined on
    * the object and not its prototype.
    */
-  onOwnPropertyNames: function () {
+  onOwnPropertyNames: function() {
     let props = [];
     if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
       try {
@@ -258,7 +258,7 @@ ObjectActor.prototype = {
    * @param request object
    *        The protocol request object.
    */
-  onEnumProperties: function (request) {
+  onEnumProperties: function(request) {
     let actor = new PropertyIteratorActor(this, request.options);
     this.registeredPool.addActor(actor);
     this.iterators.add(actor);
@@ -268,7 +268,7 @@ ObjectActor.prototype = {
   /**
    * Creates an actor to iterate over entries of a Map/Set-like object.
    */
-  onEnumEntries: function () {
+  onEnumEntries: function() {
     let actor = new PropertyIteratorActor(this, { enumEntries: true });
     this.registeredPool.addActor(actor);
     this.iterators.add(actor);
@@ -278,7 +278,7 @@ ObjectActor.prototype = {
   /**
    * Creates an actor to iterate over an object symbols properties.
    */
-  onEnumSymbols: function () {
+  onEnumSymbols: function() {
     let actor = new SymbolIteratorActor(this);
     this.registeredPool.addActor(actor);
     this.iterators.add(actor);
@@ -302,7 +302,7 @@ ObjectActor.prototype = {
    *          - {Object} safeGetterValues: an object that maps this.obj's property names
    *                     with safe getters descriptors.
    */
-  onPrototypeAndProperties: function () {
+  onPrototypeAndProperties: function() {
     let proto = null;
     let names = [];
     let symbols = [];
@@ -351,7 +351,7 @@ ObjectActor.prototype = {
    *         An object that maps property names to safe getter descriptors as
    *         defined by the remote debugging protocol.
    */
-  _findSafeGetterValues: function (ownProperties, limit = 0) {
+  _findSafeGetterValues: function(ownProperties, limit = 0) {
     let safeGetterValues = Object.create(null);
     let obj = this.obj;
     let level = 0, i = 0;
@@ -443,7 +443,7 @@ ObjectActor.prototype = {
    *         A Set of names of safe getters. This result is cached for each
    *         Debugger.Object.
    */
-  _findSafeGetters: function (object) {
+  _findSafeGetters: function(object) {
     if (object._safeGetters) {
       return object._safeGetters;
     }
@@ -487,7 +487,7 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the prototype of the object.
    */
-  onPrototype: function () {
+  onPrototype: function() {
     let proto = null;
     if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
       proto = this.obj.proto;
@@ -503,7 +503,7 @@ ObjectActor.prototype = {
    * @param request object
    *        The protocol request object.
    */
-  onProperty: function (request) {
+  onProperty: function(request) {
     if (!request.name) {
       return { error: "missingParameter",
                message: "no property name was specified" };
@@ -516,7 +516,7 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the display string for the object.
    */
-  onDisplayString: function () {
+  onDisplayString: function() {
     const string = stringify(this.obj);
     return { from: this.actorID,
              displayString: this.hooks.createValueGrip(string) };
@@ -536,7 +536,7 @@ ObjectActor.prototype = {
    *         The property descriptor, or undefined if this is not an enumerable
    *         property and onlyEnumerable=true.
    */
-  _propertyDescriptor: function (name, onlyEnumerable) {
+  _propertyDescriptor: function(name, onlyEnumerable) {
     if (!DevToolsUtils.isSafeDebuggerObject(this.obj)) {
       return undefined;
     }
@@ -585,7 +585,7 @@ ObjectActor.prototype = {
    * @param request object
    *        The protocol request object.
    */
-  onDecompile: function (request) {
+  onDecompile: function(request) {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
                message: "decompile request is only valid for object grips " +
@@ -599,7 +599,7 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the parameters of a function.
    */
-  onParameterNames: function () {
+  onParameterNames: function() {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
                message: "'parameterNames' request is only valid for object " +
@@ -612,7 +612,7 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to release a thread-lifetime grip.
    */
-  onRelease: function () {
+  onRelease: function() {
     this.release();
     return {};
   },
@@ -620,7 +620,7 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the lexical scope of a function.
    */
-  onScope: function () {
+  onScope: function() {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
                message: "scope request is only valid for object grips with a" +
@@ -645,7 +645,7 @@ ObjectActor.prototype = {
    *         Returns an object containing an array of object grips of the
    *         dependent promises
    */
-  onDependentPromises: function () {
+  onDependentPromises: function() {
     if (this.obj.class != "Promise") {
       return { error: "objectNotPromise",
                message: "'dependentPromises' request is only valid for " +
@@ -661,7 +661,7 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to get the allocation stack of a promise.
    */
-  onAllocationStack: function () {
+  onAllocationStack: function() {
     if (this.obj.class != "Promise") {
       return { error: "objectNotPromise",
                message: "'allocationStack' request is only valid for " +
@@ -690,7 +690,7 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to get the fulfillment stack of a promise.
    */
-  onFulfillmentStack: function () {
+  onFulfillmentStack: function() {
     if (this.obj.class != "Promise") {
       return { error: "objectNotPromise",
                message: "'fulfillmentStack' request is only valid for " +
@@ -719,7 +719,7 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to get the rejection stack of a promise.
    */
-  onRejectionStack: function () {
+  onRejectionStack: function() {
     if (this.obj.class != "Promise") {
       return { error: "objectNotPromise",
                message: "'rejectionStack' request is only valid for " +
@@ -754,7 +754,7 @@ ObjectActor.prototype = {
    *         Returns an object containing the source location of the SavedFrame
    *         stack.
    */
-  _getSourceOriginalLocation: function (stack) {
+  _getSourceOriginalLocation: function(stack) {
     let source;
 
     // Catch any errors if the source actor cannot be found
@@ -1266,23 +1266,23 @@ SymbolIteratorActor.prototype.requestTypes = {
  * information for the debugger object, or true otherwise.
  */
 DebuggerServer.ObjectActorPreviewers = {
-  String: [function (objectActor, grip, rawObj) {
+  String: [function(objectActor, grip, rawObj) {
     return wrappedPrimitivePreviewer("String", String, objectActor, grip, rawObj);
   }],
 
-  Boolean: [function (objectActor, grip, rawObj) {
+  Boolean: [function(objectActor, grip, rawObj) {
     return wrappedPrimitivePreviewer("Boolean", Boolean, objectActor, grip, rawObj);
   }],
 
-  Number: [function (objectActor, grip, rawObj) {
+  Number: [function(objectActor, grip, rawObj) {
     return wrappedPrimitivePreviewer("Number", Number, objectActor, grip, rawObj);
   }],
 
-  Symbol: [function (objectActor, grip, rawObj) {
+  Symbol: [function(objectActor, grip, rawObj) {
     return wrappedPrimitivePreviewer("Symbol", Symbol, objectActor, grip, rawObj);
   }],
 
-  Function: [function ({obj, hooks}, grip) {
+  Function: [function({obj, hooks}, grip) {
     if (obj.name) {
       grip.name = obj.name;
     }
@@ -1324,7 +1324,7 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  RegExp: [function ({obj, hooks}, grip) {
+  RegExp: [function({obj, hooks}, grip) {
     let str = DevToolsUtils.callPropertyOnObject(obj, "toString");
     if (typeof str != "string") {
       return false;
@@ -1334,7 +1334,7 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  Date: [function ({obj, hooks}, grip) {
+  Date: [function({obj, hooks}, grip) {
     let time = DevToolsUtils.callPropertyOnObject(obj, "getTime");
     if (typeof time != "number") {
       return false;
@@ -1346,7 +1346,7 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  Array: [function ({obj, hooks}, grip) {
+  Array: [function({obj, hooks}, grip) {
     let length = getArrayLength(obj);
 
     grip.preview = {
@@ -1385,7 +1385,7 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  Set: [function (objectActor, grip) {
+  Set: [function(objectActor, grip) {
     let size = DevToolsUtils.getProperty(objectActor.obj, "size");
     if (typeof size != "number") {
       return false;
@@ -1412,7 +1412,7 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  WeakSet: [function (objectActor, grip) {
+  WeakSet: [function(objectActor, grip) {
     let enumEntries = enumWeakSetEntries(objectActor);
 
     grip.preview = {
@@ -1436,7 +1436,7 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  Map: [function (objectActor, grip) {
+  Map: [function(objectActor, grip) {
     let size = DevToolsUtils.getProperty(objectActor.obj, "size");
     if (typeof size != "number") {
       return false;
@@ -1462,7 +1462,7 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  WeakMap: [function (objectActor, grip) {
+  WeakMap: [function(objectActor, grip) {
     let enumEntries = enumWeakMapEntries(objectActor);
 
     grip.preview = {
@@ -1485,7 +1485,7 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  DOMStringMap: [function ({obj, hooks}, grip, rawObj) {
+  DOMStringMap: [function({obj, hooks}, grip, rawObj) {
     if (!rawObj) {
       return false;
     }
@@ -1512,7 +1512,7 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  Proxy: [function ({obj, hooks}, grip, rawObj) {
+  Proxy: [function({obj, hooks}, grip, rawObj) {
     // The `isProxy` getter of the debuggee object only detects proxies without
     // security wrappers. If false, the target and handler are not available.
     let hasTargetAndHandler = obj.isProxy;
@@ -2278,11 +2278,11 @@ function LongStringActor(string) {
 LongStringActor.prototype = {
   actorPrefix: "longString",
 
-  rawValue: function () {
+  rawValue: function() {
     return this.string;
   },
 
-  destroy: function () {
+  destroy: function() {
     // Because longStringActors is not a weak map, we won't automatically leave
     // it so we need to manually leave on destroy so that we don't leak
     // memory.
@@ -2292,7 +2292,7 @@ LongStringActor.prototype = {
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
-  grip: function () {
+  grip: function() {
     return {
       "type": "longString",
       "initial": this.string.substring(
@@ -2308,7 +2308,7 @@ LongStringActor.prototype = {
    * @param request object
    *        The protocol request object.
    */
-  onSubstring: function (request) {
+  onSubstring: function(request) {
     return {
       "from": this.actorID,
       "substring": this.string.substring(request.start, request.end)
@@ -2318,7 +2318,7 @@ LongStringActor.prototype = {
   /**
    * Handle a request to release this LongStringActor instance.
    */
-  onRelease: function () {
+  onRelease: function() {
     // TODO: also check if registeredPool === threadActor.threadLifetimePool
     // when the web console moves away from manually releasing pause-scoped
     // actors.
@@ -2327,7 +2327,7 @@ LongStringActor.prototype = {
     return {};
   },
 
-  _releaseActor: function () {
+  _releaseActor: function() {
     if (this.registeredPool && this.registeredPool.longStringActors) {
       delete this.registeredPool.longStringActors[this.string];
     }
@@ -2352,11 +2352,11 @@ function SymbolActor(symbol) {
 SymbolActor.prototype = {
   actorPrefix: "symbol",
 
-  rawValue: function () {
+  rawValue: function() {
     return this.symbol;
   },
 
-  destroy: function () {
+  destroy: function() {
     // Because symbolActors is not a weak map, we won't automatically leave
     // it so we need to manually leave on destroy so that we don't leak
     // memory.
@@ -2366,7 +2366,7 @@ SymbolActor.prototype = {
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
-  grip: function () {
+  grip: function() {
     let form = {
       type: "symbol",
       actor: this.actorID,
@@ -2382,7 +2382,7 @@ SymbolActor.prototype = {
   /**
    * Handle a request to release this SymbolActor instance.
    */
-  onRelease: function () {
+  onRelease: function() {
     // TODO: also check if registeredPool === threadActor.threadLifetimePool
     // when the web console moves away from manually releasing pause-scoped
     // actors.
@@ -2391,7 +2391,7 @@ SymbolActor.prototype = {
     return {};
   },
 
-  _releaseActor: function () {
+  _releaseActor: function() {
     if (this.registeredPool && this.registeredPool.symbolActors) {
       delete this.registeredPool.symbolActors[this.symbol];
     }
@@ -2416,11 +2416,11 @@ function ArrayBufferActor(buffer) {
 ArrayBufferActor.prototype = {
   actorPrefix: "arrayBuffer",
 
-  rawValue: function () {
+  rawValue: function() {
     return this.buffer;
   },
 
-  destroy: function () {
+  destroy: function() {
   },
 
   grip() {

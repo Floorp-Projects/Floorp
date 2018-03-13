@@ -40,22 +40,22 @@
           });
         }
 
-        Task.spawn(function*() {
+        (async function () {
 
           ok(!Devices.helperAddonInstalled, "Helper not installed");
 
-          let win = yield openWebIDE(true);
+          let win = await openWebIDE(true);
           let docRuntime = getRuntimeDocument(win);
 
           ok(Devices.helperAddonInstalled, "Helper has been auto-installed");
 
-          yield nextTick();
+          await nextTick();
 
           let w = addonDoc.querySelector(".warning");
           let display = addonDoc.defaultView.getComputedStyle(w).display
           is(display, "none", "Warning about missing ADB hidden");
 
-          yield uninstallADBFromUI(addonDoc, "adb");
+          await uninstallADBFromUI(addonDoc, "adb");
 
           items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 0, "No usb runtime listed");
@@ -63,11 +63,11 @@
           display = addonDoc.defaultView.getComputedStyle(w).display
           is(display, "block", "Warning about missing ADB present");
 
-          yield closeWebIDE(win);
+          await closeWebIDE(win);
 
           SimpleTest.finish();
 
-        });
+        })();
       }
     </script>
   </body>

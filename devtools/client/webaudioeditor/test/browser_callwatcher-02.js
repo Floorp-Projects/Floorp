@@ -9,8 +9,8 @@
 
 const BUG_1112378_URL = EXAMPLE_URL + "doc_bug_1112378.html";
 
-add_task(function* () {
-  let { target, panel } = yield initWebAudioEditor(BUG_1112378_URL);
+add_task(async function () {
+  let { target, panel } = await initWebAudioEditor(BUG_1112378_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
@@ -18,9 +18,9 @@ add_task(function* () {
 
   let rendered = waitForGraphRendered(panelWin, 2, 0);
   reload(target);
-  yield rendered;
+  await rendered;
 
-  let error = yield evalInDebuggee("throwError()");
+  let error = await evalInDebuggee("throwError()");
   is(error.lineNumber, 21, "error has correct lineNumber");
   is(error.columnNumber, 11, "error has correct columnNumber");
   is(error.name, "TypeError", "error has correct name");
@@ -29,7 +29,7 @@ add_task(function* () {
   is(error.instanceof, true, "error is correctly an instanceof TypeError");
   is(error.fileName, "http://example.com/browser/devtools/client/webaudioeditor/test/doc_bug_1112378.html", "error has correct fileName");
 
-  error = yield evalInDebuggee("throwDOMException()");
+  error = await evalInDebuggee("throwDOMException()");
   is(error.lineNumber, 37, "exception has correct lineNumber");
   is(error.columnNumber, 0, "exception has correct columnNumber");
   is(error.code, 9, "exception has correct code");
@@ -40,5 +40,5 @@ add_task(function* () {
   is(error.instanceof, true, "exception is correctly an instance of DOMException");
   is(error.filename, "http://example.com/browser/devtools/client/webaudioeditor/test/doc_bug_1112378.html", "exception has correct filename");
 
-  yield teardown(target);
+  await teardown(target);
 });

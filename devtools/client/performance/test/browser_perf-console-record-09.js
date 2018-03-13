@@ -14,17 +14,17 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { waitForRecordingStartedEvents } = require("devtools/client/performance/test/helpers/actions");
 const { idleWait } = require("devtools/client/performance/test/helpers/wait-utils");
 
-add_task(function* () {
-  let { target, console } = yield initConsoleInNewTab({
+add_task(async function() {
+  let { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = yield initPerformanceInTab({ tab: target.tab });
+  let { panel } = await initPerformanceInTab({ tab: target.tab });
   let { PerformanceController } = panel.panelWin;
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   info("Starting console.profile()...");
   let started = waitForRecordingStartedEvents(panel, {
@@ -36,10 +36,10 @@ add_task(function* () {
     // in-progress recording is selected, which won't happen
     skipWaitingForViewState: true,
   });
-  yield console.profile();
-  yield started;
+  await console.profile();
+  await started;
 
-  yield PerformanceController.clearRecordings();
+  await PerformanceController.clearRecordings();
   let recordings = PerformanceController.getRecordings();
   is(recordings.length, 1, "One recording found in the performance panel.");
   is(recordings[0].isConsole(), true, "Recording came from console.profile.");
@@ -48,17 +48,17 @@ add_task(function* () {
     "There current recording should be the first one.");
 
   info("Attempting to end console.profileEnd()...");
-  yield console.profileEnd();
-  yield idleWait(1000);
+  await console.profileEnd();
+  await idleWait(1000);
 
   ok(true,
     "Stopping an in-progress console profile after clearing recordings does not throw.");
 
-  yield PerformanceController.clearRecordings();
+  await PerformanceController.clearRecordings();
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 0, "No recordings found");
   is(PerformanceController.getCurrentRecording(), null,
     "There should be no current recording.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

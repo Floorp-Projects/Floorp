@@ -60,9 +60,6 @@
 
   document.l10n.ready = documentReady(() => {
     document.l10n.registerObservers();
-    window.addEventListener("unload", () => {
-      document.l10n.unregisterObservers();
-    });
     document.l10n.connectRoot(document.documentElement);
     return document.l10n.translateRoots();
   });

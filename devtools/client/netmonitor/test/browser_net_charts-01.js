@@ -7,7 +7,7 @@
  * Makes sure Pie Charts have the right internal structure.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { monitor, tab } = await initNetMonitor(SIMPLE_URL);
 
   info("Starting test... ");

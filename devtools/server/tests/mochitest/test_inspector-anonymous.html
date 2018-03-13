@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777674
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   const {InspectorFront} =
     require("devtools/shared/fronts/inspector");
   const {DocumentWalker: _documentWalker} =
@@ -37,7 +37,7 @@ window.onload = function () {
     info("Setting up inspector and walker actors.");
 
     let url = document.getElementById("inspectorContent").href;
-    attachURL(url, function (err, client, tab, doc) {
+    attachURL(url, function(err, client, tab, doc) {
       gInspectee = doc;
       let inspector = InspectorFront(client, tab);
       promiseDone(inspector.getWalker().then(walker => {

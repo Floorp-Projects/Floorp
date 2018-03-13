@@ -226,7 +226,7 @@ class JITOptimizations extends Component {
         expanded.delete(node);
         return { expanded };
       }),
-      onFocus: function () {},
+      onFocus: function() {},
       getKey,
       getRoots: () => sites || [],
       itemHeight: TREE_ROW_HEIGHT,

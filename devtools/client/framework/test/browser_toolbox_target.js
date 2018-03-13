@@ -7,7 +7,7 @@
 // iframe while defining which document to debug by setting a `target`
 // attribute refering to the document to debug.
 
-add_task(function *() {
+add_task(async function () {
   // iframe loads the document to debug
   let iframe = document.createElement("browser");
   iframe.setAttribute("type", "content");
@@ -15,7 +15,7 @@ add_task(function *() {
 
   let onLoad = once(iframe, "load", true);
   iframe.setAttribute("src", "data:text/html,document to debug");
-  yield onLoad;
+  await onLoad;
   is(iframe.contentWindow.document.body.innerHTML, "document to debug");
 
   // toolbox loads the toolbox document
@@ -29,12 +29,12 @@ add_task(function *() {
 
   onLoad = once(toolboxIframe, "load", true);
   toolboxIframe.setAttribute("src", "about:devtools-toolbox?target");
-  yield onLoad;
+  await onLoad;
 
   // Also wait for toolbox-ready, as toolbox document load isn't enough, there
   // is plenty of asynchronous steps during toolbox load
   info("Waiting for toolbox-ready");
-  let toolbox = yield onToolboxReady;
+  let toolbox = await onToolboxReady;
 
   let onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   let onTabActorDetached = once(toolbox.target.client, "tabDetached");
@@ -45,7 +45,7 @@ add_task(function *() {
   // And wait for toolbox-destroyed as toolbox unload is also full of
   // asynchronous operation that outlast unload event
   info("Waiting for toolbox-destroyed");
-  yield onToolboxDestroyed;
+  await onToolboxDestroyed;
   info("Toolbox destroyed");
 
   // Also wait for tabDetached. Toolbox destroys the Target which calls
@@ -54,7 +54,7 @@ add_task(function *() {
   // cleanup. If we do not wait for it and starts removing debugged document,
   // the actor is still considered as being attached and continues processing
   // events.
-  yield onTabActorDetached;
+  await onTabActorDetached;
 
   iframe.remove();
 });

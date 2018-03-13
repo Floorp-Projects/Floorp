@@ -9,7 +9,7 @@
 
 const { Curl, CurlUtils } = require("devtools/client/shared/curl");
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CURL_UTILS_URL);
   info("Starting test... ");
 
@@ -26,7 +26,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 5);
-  await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function (url) {
+  await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function(url) {
     content.wrappedJSObject.performRequests(url);
   });
   await wait;

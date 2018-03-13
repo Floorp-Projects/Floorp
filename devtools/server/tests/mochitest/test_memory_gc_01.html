@@ -15,10 +15,10 @@ Bug 1067491 - Test forcing a gc.
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  (async function () {
+  (async function() {
     let { memory, client } = await startServerAndGetSelectedTabMemory();
 
     let beforeGC, afterGC;

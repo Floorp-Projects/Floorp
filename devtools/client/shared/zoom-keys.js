@@ -22,7 +22,7 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
  * @param {DOMWindow} The window on which we should listent to key strokes and
  *                    modify the zoom factor.
  */
-exports.register = function (window) {
+exports.register = function(window) {
   let shortcuts = new KeyShortcuts({
     window
   });
@@ -31,22 +31,22 @@ exports.register = function (window) {
     .QueryInterface(Ci.nsIDocShell);
   let contViewer = docShell.contentViewer;
   let zoomValue = parseFloat(Services.prefs.getCharPref(ZOOM_PREF));
-  let zoomIn = function (event) {
+  let zoomIn = function(event) {
     setZoom(zoomValue + 0.1);
     event.preventDefault();
   };
 
-  let zoomOut = function (event) {
+  let zoomOut = function(event) {
     setZoom(zoomValue - 0.1);
     event.preventDefault();
   };
 
-  let zoomReset = function (event) {
+  let zoomReset = function(event) {
     setZoom(1);
     event.preventDefault();
   };
 
-  let setZoom = function (newValue) {
+  let setZoom = function(newValue) {
     // cap zoom value
     zoomValue = Math.max(newValue, MIN_ZOOM);
     zoomValue = Math.min(zoomValue, MAX_ZOOM);

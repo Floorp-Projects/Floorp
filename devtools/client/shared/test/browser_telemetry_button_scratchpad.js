@@ -11,26 +11,26 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-add_task(function* () {
-  yield addTab(TEST_URI);
+add_task(async function() {
+  await addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
-  yield pushPref("devtools.command-button-scratchpad.enabled", true);
+  await pushPref("devtools.command-button-scratchpad.enabled", true);
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = yield gDevTools.showToolbox(target, "inspector");
+  let toolbox = await gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
   let onAllWindowsOpened = trackScratchpadWindows();
 
   info("testing the scratchpad button");
-  yield testButton(toolbox, Telemetry);
-  yield onAllWindowsOpened;
+  await testButton(toolbox, Telemetry);
+  await onAllWindowsOpened;
 
   checkResults("_SCRATCHPAD_", Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);
-  yield gDevTools.closeToolbox(target);
+  await gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });
 
@@ -43,10 +43,10 @@ function trackScratchpadWindows() {
     Services.ww.registerNotification(function observer(subject, topic) {
       if (topic == "domwindowopened") {
         let win = subject.QueryInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function () {
+        win.addEventListener("load", function() {
           if (win.Scratchpad) {
             win.Scratchpad.addObserver({
-              onReady: function () {
+              onReady: function() {
                 win.Scratchpad.removeObserver(this);
                 numScratchpads++;
                 win.close();
@@ -68,12 +68,12 @@ function trackScratchpadWindows() {
   });
 }
 
-function* testButton(toolbox, Telemetry) {
+async function testButton(toolbox, Telemetry) {
   info("Testing command-button-scratchpad");
   let button = toolbox.doc.querySelector("#command-button-scratchpad");
   ok(button, "Captain, we have the button");
 
-  yield delayedClicks(button, 4);
+  await delayedClicks(button, 4);
 }
 
 function delayedClicks(node, clicks) {
@@ -110,7 +110,7 @@ function checkResults(histIdFocus, Telemetry) {
     if (histId.endsWith("OPENED_COUNT")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element === true;
       });
 
@@ -118,7 +118,7 @@ function checkResults(histIdFocus, Telemetry) {
     } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element > 0;
       });
 

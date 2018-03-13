@@ -7,7 +7,7 @@
  * Test if request and response body logging stays on after opening the console.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   let { tab, monitor } = await initNetMonitor(JSON_LONG_URL);
@@ -24,7 +24,7 @@ add_task(async function () {
 
   // Perform first batch of requests.
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequests();
   });
   await wait;
@@ -48,7 +48,7 @@ add_task(async function () {
 
   // Perform another batch of requests.
   wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequests();
   });
   await wait;

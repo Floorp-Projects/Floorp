@@ -7,7 +7,7 @@
 
 const TEST_URL = "http://example.org/";
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let store = ui.toolWindow.store;
 
   // Wait until the viewport has been added
@@ -23,7 +23,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
 
   // Browser's location should match original tab
   await waitForFrameLoad(ui, TEST_URL);
-  let location = await spawnViewportTask(ui, {}, function () {
+  let location = await spawnViewportTask(ui, {}, function() {
     return content.location.href; // eslint-disable-line
   });
   is(location, TEST_URL, "Viewport location matches");

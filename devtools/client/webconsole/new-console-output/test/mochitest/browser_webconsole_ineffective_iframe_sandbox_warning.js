@@ -28,7 +28,7 @@ const INEFFECTIVE_IFRAME_SANDBOXING_MSG = "An iframe which has both " +
   "its sandboxing.";
 const SENTINEL_MSG = "testing ineffective sandboxing message";
 
-add_task(async function () {
+add_task(async function() {
   await testWarningMessageVisibility(TEST_URI_WARNING, true);
 
   for (const testUri of TEST_URI_NOWARNING) {
@@ -42,7 +42,7 @@ async function testWarningMessageVisibility(uri, visible) {
   const sentinel = SENTINEL_MSG + Date.now();
   const onSentinelMessage = waitForMessage(hud, sentinel);
 
-  ContentTask.spawn(gBrowser.selectedBrowser, sentinel, function (msg) {
+  ContentTask.spawn(gBrowser.selectedBrowser, sentinel, function(msg) {
     content.console.log(msg);
   });
   await onSentinelMessage;

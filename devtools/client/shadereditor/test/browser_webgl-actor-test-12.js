@@ -6,22 +6,22 @@
  * regardless of the order in which they were compiled and attached.
  */
 
-function* ifWebGLSupported() {
-  let { target, front } = yield initBackend(SHADER_ORDER_URL);
+async function ifWebGLSupported() {
+  let { target, front } = await initBackend(SHADER_ORDER_URL);
   front.setup({ reload: true });
 
-  let programActor = yield once(front, "program-linked");
-  let vertexShader = yield programActor.getVertexShader();
-  let fragmentShader = yield programActor.getFragmentShader();
+  let programActor = await once(front, "program-linked");
+  let vertexShader = await programActor.getVertexShader();
+  let fragmentShader = await programActor.getFragmentShader();
 
-  let vertSource = yield vertexShader.getText();
-  let fragSource = yield fragmentShader.getText();
+  let vertSource = await vertexShader.getText();
+  let fragSource = await fragmentShader.getText();
 
   ok(vertSource.includes("I'm a vertex shader!"),
     "The correct vertex shader text was retrieved.");
   ok(fragSource.includes("I'm a fragment shader!"),
     "The correct fragment shader text was retrieved.");
 
-  yield removeTab(target.tab);
+  await removeTab(target.tab);
   finish();
 }

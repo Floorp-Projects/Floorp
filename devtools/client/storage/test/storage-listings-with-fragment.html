@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <!--
 This test differs from browser_storage_listings.html only because the URLs we load
@@ -31,7 +31,7 @@ localStorage.setItem("ls2", "foobar-2");
 sessionStorage.setItem("ss1", "foobar-3");
 dump("added cookies and storage from main page\n");
 
-let idbGenerator = async function() {
+let idbGenerator = async function () {
   let request = indexedDB.open("idb1", 1);
   request.onerror = function() {
     throw new Error("error opening db connection");
@@ -105,26 +105,26 @@ async function fetchPut(cache, url) {
   await cache.put(url, response);
 }
 
-let cacheGenerator = async function() {
+let cacheGenerator = async function () {
   let cache = await caches.open("plop");
   await fetchPut(cache, "404_cached_file.js");
   await fetchPut(cache, "browser_storage_basic.js");
 };
 
-window.setup = function*() {
-  yield idbGenerator();
+window.setup = async function () {
+  await idbGenerator();
 
   if (window.caches) {
-    yield cacheGenerator();
+    await cacheGenerator();
   }
 };
 
-window.clear = function*() {
-  yield deleteDB("idb1");
-  yield deleteDB("idb2");
+window.clear = async function () {
+  await deleteDB("idb1");
+  await deleteDB("idb2");
 
   if (window.caches) {
-    yield caches.delete("plop");
+    await caches.delete("plop");
   }
 
   dump("removed indexedDB and cache data from " + document.location + "\n");

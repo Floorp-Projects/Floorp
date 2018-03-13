@@ -8,7 +8,7 @@
 const TEST_URL = `${URL_ROOT}touch.html`;
 const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   reloadOnTouchChange(true);
 
   await injectEventUtilsInContentTask(ui.getViewportBrowser());
@@ -25,7 +25,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
 });
 
 async function testWithNoTouch(ui) {
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
+  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
     let div = content.document.querySelector("div");
     let x = 0, y = 0;
 
@@ -65,7 +65,7 @@ async function testWithNoTouch(ui) {
 }
 
 async function testWithTouch(ui) {
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
+  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
     let div = content.document.querySelector("div");
     let x = 0, y = 0;
 
@@ -104,7 +104,7 @@ async function testWithTouch(ui) {
 async function testWithMetaViewportEnabled(ui) {
   await SpecialPowers.pushPrefEnv({set: [[PREF_DOM_META_VIEWPORT_ENABLED, true]]});
 
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
+  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
     let { synthesizeClick } = EventUtils;
 
     let meta = content.document.querySelector("meta[name=viewport]");
@@ -147,7 +147,7 @@ async function testWithMetaViewportEnabled(ui) {
 async function testWithMetaViewportDisabled(ui) {
   await SpecialPowers.pushPrefEnv({set: [[PREF_DOM_META_VIEWPORT_ENABLED, false]]});
 
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
+  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
     let { synthesizeClick } = EventUtils;
 
     let meta = content.document.querySelector("meta[name=viewport]");

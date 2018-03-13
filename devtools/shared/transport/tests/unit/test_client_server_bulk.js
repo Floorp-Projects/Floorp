@@ -10,7 +10,7 @@ function run_test() {
   initTestDebuggerServer();
   add_test_bulk_actor();
 
-  add_task(async function () {
+  add_task(async function() {
     await test_bulk_request_cs(socket_transport, "jsonReply", "json");
     await test_bulk_request_cs(local_transport, "jsonReply", "json");
     await test_bulk_request_cs(socket_transport, "bulkEcho", "bulk");
@@ -33,7 +33,7 @@ TestBulkActor.prototype = {
 
   actorPrefix: "testBulk",
 
-  bulkEcho: function ({actor, type, length, copyTo}) {
+  bulkEcho: function({actor, type, length, copyTo}) {
     Assert.equal(length, really_long().length);
     this.conn.startBulkSend({
       actor: actor,
@@ -51,7 +51,7 @@ TestBulkActor.prototype = {
     });
   },
 
-  bulkReply: function ({to, type}) {
+  bulkReply: function({to, type}) {
     this.conn.startBulkSend({
       actor: to,
       type: type,
@@ -68,7 +68,7 @@ TestBulkActor.prototype = {
     });
   },
 
-  jsonReply: function ({length, copyTo}) {
+  jsonReply: function({length, copyTo}) {
     Assert.equal(length, really_long().length);
 
     let outputFile = getTestTempFile("bulk-output", true);
@@ -100,7 +100,7 @@ function add_test_bulk_actor() {
 
 var replyHandlers = {
 
-  json: function (request) {
+  json: function(request) {
     // Receive JSON reply from server
     let replyDeferred = defer();
     request.on("json-reply", (reply) => {
@@ -110,7 +110,7 @@ var replyHandlers = {
     return replyDeferred.promise;
   },
 
-  bulk: function (request) {
+  bulk: function(request) {
     // Receive bulk data reply from server
     let replyDeferred = defer();
     request.on("bulk-reply", ({length, copyTo}) => {
@@ -133,7 +133,7 @@ var replyHandlers = {
 
 /** * Tests ***/
 
-var test_bulk_request_cs = async function (transportFactory, actorType, replyType) {
+var test_bulk_request_cs = async function(transportFactory, actorType, replyType) {
   // Ensure test files are not present from a failed run
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());
@@ -192,7 +192,7 @@ var test_bulk_request_cs = async function (transportFactory, actorType, replyTyp
   ]);
 };
 
-var test_json_request_cs = async function (transportFactory, actorType, replyType) {
+var test_json_request_cs = async function(transportFactory, actorType, replyType) {
   // Ensure test files are not present from a failed run
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());

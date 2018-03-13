@@ -15,9 +15,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_pause_frame();
                            });
@@ -26,7 +26,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let bindings = packet.frame.environment.bindings;
     let args = bindings.arguments;
     let vars = bindings.variables;
@@ -48,7 +48,7 @@ function test_pause_frame() {
     Assert.ok(!!vars.c.value.actor);
 
     let objClient = gThreadClient.pauseGrip(vars.c.value);
-    objClient.getPrototypeAndProperties(function (response) {
+    objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.a.configurable, true);
       Assert.equal(response.ownProperties.a.enumerable, true);
       Assert.equal(response.ownProperties.a.writable, true);
@@ -60,7 +60,7 @@ function test_pause_frame() {
       Assert.equal(response.ownProperties.b.value.type, "undefined");
       Assert.equal(false, "class" in response.ownProperties.b.value);
 
-      gThreadClient.resume(function () {
+      gThreadClient.resume(function() {
         finishClient(gClient);
       });
     });

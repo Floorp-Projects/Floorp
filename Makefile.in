@@ -31,7 +31,12 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    .mozconfig.mk
 
 ifndef MOZ_PROFILE_USE
+# Automation builds should always have a new buildid, but for the sake of not
+# re-linking libxul on every incremental build we do not enforce this for
+# developer builds.
+ifneq (,$(MOZ_AUTOMATION)$(MOZ_BUILD_DATE))
 buildid.h source-repo.h: FORCE
+endif
 endif
 
 ifdef JS_STANDALONE

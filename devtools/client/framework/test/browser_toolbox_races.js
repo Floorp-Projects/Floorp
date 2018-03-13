@@ -13,12 +13,12 @@ requestLongerTimeout(2);
 const URL = "data:text/html;charset=utf-8,Toggling devtools quickly";
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 
-add_task(function* () {
+add_task(async function () {
   // Make sure this test starts with the selectedTool pref cleared. Previous
   // tests select various tools, and that sets this pref.
   Services.prefs.clearUserPref("devtools.toolbox.selectedTool");
 
-  let tab = yield addTab(URL);
+  let tab = await addTab(URL);
 
   let created = 0, ready = 0, destroy = 0, destroyed = 0;
   let onCreated = () => {
@@ -51,7 +51,7 @@ add_task(function* () {
     toggle();
 
     // Release the event loop to let a chance to actually create or destroy the toolbox!
-    yield wait(50);
+    await wait(50);
   }
   info("Toggled the toolbox 3 times");
 
@@ -60,11 +60,11 @@ add_task(function* () {
   // avoid races and be sure we end up we no toolbox and waited for all the
   // requests to be done.
   while (ready != 3) {
-    yield wait(100);
+    await wait(100);
   }
   toggle();
   while (destroyed != 3) {
-    yield wait(100);
+    await wait(100);
   }
 
   is(created, 3, "right number of created events");

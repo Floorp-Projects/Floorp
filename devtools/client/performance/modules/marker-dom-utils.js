@@ -24,7 +24,7 @@ exports.MarkerDOMUtils = {
    * @param object marker
    * @return array<nsIDOMNode>
    */
-  buildFields: function (doc, marker) {
+  buildFields: function(doc, marker) {
     let fields = MarkerBlueprintUtils.getMarkerFields(marker);
     return fields.map(({ label, value }) => this.buildNameValueLabel(doc, label, value));
   },
@@ -36,7 +36,7 @@ exports.MarkerDOMUtils = {
    * @param object marker
    * @return nsIDOMNode
    */
-  buildTitle: function (doc, marker) {
+  buildTitle: function(doc, marker) {
     let blueprint = MarkerBlueprintUtils.getBlueprintFor(marker);
 
     let hbox = doc.createElement("hbox");
@@ -63,7 +63,7 @@ exports.MarkerDOMUtils = {
    * @param object marker
    * @return nsIDOMNode
    */
-  buildDuration: function (doc, marker) {
+  buildDuration: function(doc, marker) {
     let label = L10N.getStr("marker.field.duration");
     let start = L10N.getFormatStrWithNumbers("timeline.tick", marker.start);
     let end = L10N.getFormatStrWithNumbers("timeline.tick", marker.end);
@@ -86,7 +86,7 @@ exports.MarkerDOMUtils = {
    * @param string value
    * @return nsIDOMNode
    */
-  buildNameValueLabel: function (doc, field, value) {
+  buildNameValueLabel: function(doc, field, value) {
     let hbox = doc.createElement("hbox");
     hbox.className = "marker-details-labelcontainer";
 
@@ -114,7 +114,7 @@ exports.MarkerDOMUtils = {
    *          - number frameIndex: the index of the topmost stack frame
    *          - array frames: array of stack frames
    */
-  buildStackTrace: function (doc, { type, frameIndex, frames }) {
+  buildStackTrace: function(doc, { type, frameIndex, frames }) {
     let container = doc.createElement("vbox");
     container.className = "marker-details-stack";
     container.setAttribute("type", type);
@@ -217,7 +217,7 @@ exports.MarkerDOMUtils = {
    * @param object options
    * @return array<nsIDOMNode>
    */
-  buildCustom: function (doc, marker, options) {
+  buildCustom: function(doc, marker, options) {
     let elements = [];
 
     if (options.allocations && shouldShowAllocationsTrigger(marker)) {

@@ -25,16 +25,16 @@ const {
  *   the expected message, which warns the user that the current page is not a real
  *   webextension context);
  */
-add_task(function* testWebExtensionsToolboxNoBackgroundPage() {
+add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
   let {
     tab, document, debugBtn,
-  } = yield setupTestAboutDebuggingWebExtension(ADDON_NOBG_NAME, ADDON_NOBG_PATH);
+  } = await setupTestAboutDebuggingWebExtension(ADDON_NOBG_NAME, ADDON_NOBG_PATH);
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
   let env = Cc["@mozilla.org/process/environment;1"]
         .getService(Ci.nsIEnvironment);
-  let testScript = function () {
+  let testScript = function() {
     /* eslint-disable no-undef */
     toolbox.selectTool("inspector")
       .then(inspector => {
@@ -80,10 +80,10 @@ add_task(function* testWebExtensionsToolboxNoBackgroundPage() {
 
   let onToolboxClose = BrowserToolboxProcess.once("close");
   debugBtn.click();
-  yield onToolboxClose;
+  await onToolboxClose;
 
   ok(true, "Addon toolbox closed");
 
-  yield uninstallAddon({document, id: ADDON_NOBG_ID, name: ADDON_NOBG_NAME});
-  yield closeAboutDebugging(tab);
+  await uninstallAddon({document, id: ADDON_NOBG_ID, name: ADDON_NOBG_NAME});
+  await closeAboutDebugging(tab);
 });

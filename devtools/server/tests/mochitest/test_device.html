@@ -14,7 +14,7 @@ Bug 895360 - [app manager] Device meta data actor
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const {DebuggerClient} = require("devtools/shared/client/debugger-client");
   const {DebuggerServer} = require("devtools/server/main");
@@ -73,7 +73,7 @@ window.onload = function () {
         });
       }
 
-      d.getDescription().then(function (v) {
+      d.getDescription().then(function(v) {
         desc = v;
       }).then(checkValues);
     });

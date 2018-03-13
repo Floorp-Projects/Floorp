@@ -9,7 +9,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Test for jsterm multine input";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   let input = hud.jsterm.inputNode;

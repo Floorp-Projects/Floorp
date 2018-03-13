@@ -19,7 +19,7 @@ let {DebuggerClient} = require("devtools/shared/client/debugger-client");
 let {DebuggerServer} = require("devtools/server/main");
 let Services = require("Services");
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({
@@ -91,7 +91,7 @@ function runTests() {
           to: actor.consoleActor,
           type: "evaluateJS",
           text: "var a = 42; a"
-        }, function ({result}) {
+        }, function({result}) {
           ok(result, 42, "console.eval worked");
 
           getProcessAgain(actor, content.id);
@@ -113,7 +113,7 @@ function runTests() {
 
   function processScript() {
     ChromeUtils.import("resource://gre/modules/Services.jsm");
-    let listener = function () {
+    let listener = function() {
       Services.obs.removeObserver(listener, "sdk:loader:destroy");
       sendAsyncMessage("test:getProcess-destroy", null);
     };
@@ -122,7 +122,7 @@ function runTests() {
 
   function closeClient() {
     let onLoaderDestroyed = new Promise(done => {
-      let processListener = function () {
+      let processListener = function() {
         Services.ppmm.removeMessageListener("test:getProcess-destroy", processListener);
         done();
       };
@@ -132,7 +132,7 @@ function runTests() {
     Services.ppmm.loadProcessScript(script, true);
     client.close();
 
-    onLoaderDestroyed.then(function () {
+    onLoaderDestroyed.then(function() {
       Services.ppmm.removeDelayedProcessScript(script);
       info("Loader destroyed in the content process");
 

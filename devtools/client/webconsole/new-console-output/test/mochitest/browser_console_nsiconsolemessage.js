@@ -15,7 +15,7 @@ const TEST_URI =
 <p>hello world<p>
 nsIConsoleMessages ftw!`;
 
-add_task(async function () {
+add_task(async function() {
   // We don't use `openNewTabAndConsole()` here because we need to log a message
   // before opening the web console.
   await addTab(TEST_URI);
@@ -35,7 +35,7 @@ add_task(async function () {
   // not displayed.
   let text = "foobarz";
   let onFooBarzMessage = waitForMessage(hud, text);
-  ContentTask.spawn(gBrowser.selectedBrowser, text, function (msg) {
+  ContentTask.spawn(gBrowser.selectedBrowser, text, function(msg) {
     content.console.log(msg);
   });
   await onFooBarzMessage;

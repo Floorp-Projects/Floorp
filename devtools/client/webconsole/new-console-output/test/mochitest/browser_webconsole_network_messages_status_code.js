@@ -26,7 +26,7 @@ add_task(async function task() {
   const onNetworkMessageUpdate = ui.jsterm.hud.once("network-message-updated");
 
   // Fire an XHR POST request.
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.testXhrPost();
   });
 

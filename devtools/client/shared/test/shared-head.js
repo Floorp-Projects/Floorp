@@ -29,7 +29,6 @@ const flags = require("devtools/shared/flags");
 let promise = require("promise");
 let defer = require("devtools/shared/defer");
 const Services = require("Services");
-const {Task} = require("devtools/shared/task");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
@@ -47,7 +46,7 @@ waitForExplicitFinish();
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   if (DevToolsUtils.assertionFailureCount !==
       EXPECTED_DTU_ASSERT_FAILURE_COUNT) {
     ok(false,
@@ -66,7 +65,7 @@ registerCleanupFunction(function () {
 const ConsoleObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  observe: function (subject) {
+  observe: function(subject) {
     let message = subject.wrappedJSObject.arguments[0];
 
     if (message && /Failed propType/.test(message.toString())) {
@@ -120,9 +119,9 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.toolbox.splitconsoleHeight");
 });
 
-registerCleanupFunction(function* cleanup() {
+registerCleanupFunction(async function cleanup() {
   while (gBrowser.tabs.length > 1) {
-    yield closeTabAndToolbox(gBrowser.selectedTab);
+    await closeTabAndToolbox(gBrowser.selectedTab);
   }
 });
 
@@ -136,7 +135,7 @@ registerCleanupFunction(function* cleanup() {
  *   - {String} preferredRemoteType
  * @return a promise that resolves to the tab object when the url is loaded
  */
-var addTab = Task.async(function* (url, options = { background: false, window: window }) {
+var addTab = async function(url, options = { background: false, window: window }) {
   info("Adding a new tab with URL: " + url);
 
   let { background } = options;
@@ -148,35 +147,35 @@ var addTab = Task.async(function* (url, options = { background: false, window: w
   if (!background) {
     gBrowser.selectedTab = tab;
   }
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("Tab added and finished loading");
 
   return tab;
-});
+};
 
 /**
  * Remove the given tab.
  * @param {Object} tab The tab to be removed.
  * @return Promise<undefined> resolved when the tab is successfully removed.
  */
-var removeTab = Task.async(function* (tab) {
+var removeTab = async function(tab) {
   info("Removing tab.");
 
   let { gBrowser } = tab.ownerDocument.defaultView;
   let onClose = once(gBrowser.tabContainer, "TabClose");
   gBrowser.removeTab(tab);
-  yield onClose;
+  await onClose;
 
   info("Tab removed and finished closing");
-});
+};
 
 /**
  * Refresh the provided tab.
  * @param {Object} tab The tab to be refreshed. Defaults to the currently selected tab.
  * @return Promise<undefined> resolved when the tab is successfully refreshed.
  */
-var refreshTab = async function (tab = gBrowser.selectedTab) {
+var refreshTab = async function(tab = gBrowser.selectedTab) {
   info("Refreshing tab.");
   const finished = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.reloadTab(tab);
@@ -378,12 +377,12 @@ function wait(ms) {
  * @param {String} hostType Optional. The type of toolbox host to be used.
  * @return {Promise} Resolves with the toolbox, when it has been opened.
  */
-var openToolboxForTab = Task.async(function* (tab, toolId, hostType) {
+var openToolboxForTab = async function(tab, toolId, hostType) {
   info("Opening the toolbox");
 
   let toolbox;
   let target = TargetFactory.forTab(tab);
-  yield target.makeRemote();
+  await target.makeRemote();
 
   // Check if the toolbox is already loaded.
   toolbox = gDevTools.getToolbox(target);
@@ -395,15 +394,15 @@ var openToolboxForTab = Task.async(function* (tab, toolId, hostType) {
   }
 
   // If not, load it now.
-  toolbox = yield gDevTools.showToolbox(target, toolId, hostType);
+  toolbox = await gDevTools.showToolbox(target, toolId, hostType);
 
   // Make sure that the toolbox frame is focused.
-  yield new Promise(resolve => waitForFocus(resolve, toolbox.win));
+  await new Promise(resolve => waitForFocus(resolve, toolbox.win));
 
   info("Toolbox opened and focused");
 
   return toolbox;
-});
+};
 
 /**
  * Add a new tab and open the toolbox in it.
@@ -413,10 +412,10 @@ var openToolboxForTab = Task.async(function* (tab, toolId, hostType) {
  * @return {Promise} Resolves when the tab has been added, loaded and the
  * toolbox has been opened. Resolves to the toolbox.
  */
-var openNewTabAndToolbox = Task.async(function* (url, toolId, hostType) {
-  let tab = yield addTab(url);
+var openNewTabAndToolbox = async function(url, toolId, hostType) {
+  let tab = await addTab(url);
   return openToolboxForTab(tab, toolId, hostType);
-});
+};
 
 /**
  * Close a tab and if necessary, the toolbox that belongs to it
@@ -424,14 +423,14 @@ var openNewTabAndToolbox = Task.async(function* (url, toolId, hostType) {
  * @return {Promise} Resolves when the toolbox and tab have been destroyed and
  * closed.
  */
-var closeTabAndToolbox = Task.async(function* (tab = gBrowser.selectedTab) {
+var closeTabAndToolbox = async function(tab = gBrowser.selectedTab) {
   let target = TargetFactory.forTab(tab);
   if (target) {
-    yield gDevTools.closeToolbox(target);
+    await gDevTools.closeToolbox(target);
   }
 
-  yield removeTab(tab);
-});
+  await removeTab(tab);
+};
 
 /**
  * Close a toolbox and the current tab.
@@ -439,10 +438,10 @@ var closeTabAndToolbox = Task.async(function* (tab = gBrowser.selectedTab) {
  * @return {Promise} Resolves when the toolbox and tab have been destroyed and
  * closed.
  */
-var closeToolboxAndTab = Task.async(function* (toolbox) {
-  yield toolbox.destroy();
-  yield removeTab(gBrowser.selectedTab);
-});
+var closeToolboxAndTab = async function(toolbox) {
+  await toolbox.destroy();
+  await removeTab(gBrowser.selectedTab);
+};
 
 /**
  * Waits until a predicate returns true.
@@ -457,7 +456,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function () {
+    setTimeout(function() {
       waitUntil(predicate, interval).then(() => resolve(true));
     }, interval);
   });
@@ -579,10 +578,10 @@ function lookupPath(obj, path) {
   return segments.reduce((prev, current) => prev[current], obj);
 }
 
-var closeToolbox = Task.async(function* () {
+var closeToolbox = async function() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
-});
+  await gDevTools.closeToolbox(target);
+};
 
 /**
  * Load the Telemetry utils, then stub Telemetry.prototype.log and
@@ -597,7 +596,7 @@ function loadTelemetryAndRecordLogs() {
   let Telemetry = require("devtools/client/shared/telemetry");
   Telemetry.prototype.telemetryInfo = {};
   Telemetry.prototype._oldlog = Telemetry.prototype.log;
-  Telemetry.prototype.log = function (histogramId, value) {
+  Telemetry.prototype.log = function(histogramId, value) {
     if (!this.telemetryInfo) {
       // Telemetry instance still in use after stopRecordingTelemetryLogs
       return;
@@ -612,7 +611,7 @@ function loadTelemetryAndRecordLogs() {
   Telemetry.prototype._oldlogScalar = Telemetry.prototype.logScalar;
   Telemetry.prototype.logScalar = Telemetry.prototype.log;
   Telemetry.prototype._oldlogKeyed = Telemetry.prototype.logKeyed;
-  Telemetry.prototype.logKeyed = function (histogramId, key, value) {
+  Telemetry.prototype.logKeyed = function(histogramId, key, value) {
     this.log(`${histogramId}|${key}`, value);
   };
 
@@ -684,12 +683,12 @@ function createTestHTTPServer() {
   const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
   let server = new HttpServer();
 
-  registerCleanupFunction(function* cleanup() {
+  registerCleanupFunction(async function cleanup() {
     let destroyed = defer();
     server.stop(() => {
       destroyed.resolve();
     });
-    yield destroyed.promise;
+    await destroyed.promise;
   });
 
   server.start(-1);
@@ -707,7 +706,7 @@ function createTestHTTPServer() {
  *        Reference to the browser in which we load content task
  */
 async function injectEventUtilsInContentTask(browser) {
-  await ContentTask.spawn(browser, {}, function* () {
+  await ContentTask.spawn(browser, {}, async function() {
     if ("EventUtils" in this) {
       return;
     }
@@ -725,7 +724,7 @@ async function injectEventUtilsInContentTask(browser) {
     EventUtils.KeyboardEvent = content.KeyboardEvent;
 
     EventUtils.synthesizeClick = element => new Promise(resolve => {
-      element.addEventListener("click", function () {
+      element.addEventListener("click", function() {
         resolve();
       }, {once: true});
 

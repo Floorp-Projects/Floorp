@@ -9,7 +9,7 @@ const TEST_URL = "http://example.com/";
 
 function getServerConnections(browser) {
   ok(browser.isRemoteBrowser, "Content browser is remote");
-  return ContentTask.spawn(browser, {}, async function () {
+  return ContentTask.spawn(browser, {}, async function() {
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const { DebuggerServer } = require("devtools/server/main");
     if (!DebuggerServer._connections) {
@@ -19,17 +19,17 @@ function getServerConnections(browser) {
   });
 }
 
-let checkServerConnectionCount = async function (browser, expected, msg) {
+let checkServerConnectionCount = async function(browser, expected, msg) {
   let conns = await getServerConnections(browser);
   is(conns.length || 0, expected, "Server connection count: " + msg);
 };
 
-let checkToolbox = async function (tab, location) {
+let checkToolbox = async function(tab, location) {
   let target = TargetFactory.forTab(tab);
   ok(!!gDevTools.getToolbox(target), `Toolbox exists ${location}`);
 };
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URL);
 
   let tabsInDifferentProcesses = E10S_MULTI_ENABLED &&

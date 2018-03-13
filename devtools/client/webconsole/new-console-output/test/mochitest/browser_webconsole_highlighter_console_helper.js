@@ -22,7 +22,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
   </div>
 </body>`.replace("\n", "");
 
-add_task(async function () {
+add_task(async function() {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
   const inspector = toolbox.getPanel("inspector");
 

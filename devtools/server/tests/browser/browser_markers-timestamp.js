@@ -11,7 +11,7 @@ const { pmmConsoleMethod, pmmLoadFrameScripts, pmmClearFrameScripts }
   = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const MARKER_NAME = "TimeStamp";
 
-add_task(async function () {
+add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();

@@ -7,7 +7,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for splitting</p>";
 
-add_task(async function () {
+add_task(async function() {
   info("Test that the split console input is focused and restores the focus properly.");
 
   let toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");

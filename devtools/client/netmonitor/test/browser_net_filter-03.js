@@ -20,7 +20,7 @@ const REQUESTS_WITH_MEDIA = BASIC_REQUESTS.concat([
   { url: "sjs_content-type-test-server.sjs?fmt=video" },
 ]);
 
-add_task(async function () {
+add_task(async function() {
   let { monitor } = await initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 

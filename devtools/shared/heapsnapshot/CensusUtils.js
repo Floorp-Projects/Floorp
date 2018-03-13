@@ -27,7 +27,7 @@ exports.Visitor = Visitor;
  *        The edge leading to this sub-report. The edge is null if (but not iff!
  *        eg, null allocation stack edges) we are entering the root report.
  */
-Visitor.prototype.enter = function (breakdown, report, edge) { };
+Visitor.prototype.enter = function(breakdown, report, edge) { };
 
 /**
  * The `exit` method is called when traversal of a sub-report has finished.
@@ -42,7 +42,7 @@ Visitor.prototype.enter = function (breakdown, report, edge) { };
  *        The edge leading to this sub-report. The edge is null if (but not iff!
  *        eg, null allocation stack edges) we are entering the root report.
  */
-Visitor.prototype.exit = function (breakdown, report, edge) { };
+Visitor.prototype.exit = function(breakdown, report, edge) { };
 
 /**
  * The `count` method is called when leaf nodes (reports whose breakdown is
@@ -58,21 +58,21 @@ Visitor.prototype.exit = function (breakdown, report, edge) { };
  *        The edge leading to this count report. The edge is null if we are
  *        entering the root report.
  */
-Visitor.prototype.count = function (breakdown, report, edge) { };
+Visitor.prototype.count = function(breakdown, report, edge) { };
 
 /** * getReportEdges *********************************************************/
 
 const EDGES = Object.create(null);
 
-EDGES.count = function (breakdown, report) {
+EDGES.count = function(breakdown, report) {
   return [];
 };
 
-EDGES.bucket = function (breakdown, report) {
+EDGES.bucket = function(breakdown, report) {
   return [];
 };
 
-EDGES.internalType = function (breakdown, report) {
+EDGES.internalType = function(breakdown, report) {
   return Object.keys(report).map(key => ({
     edge: key,
     referent: report[key],
@@ -80,7 +80,7 @@ EDGES.internalType = function (breakdown, report) {
   }));
 };
 
-EDGES.objectClass = function (breakdown, report) {
+EDGES.objectClass = function(breakdown, report) {
   return Object.keys(report).map(key => ({
     edge: key,
     referent: report[key],
@@ -88,7 +88,7 @@ EDGES.objectClass = function (breakdown, report) {
   }));
 };
 
-EDGES.coarseType = function (breakdown, report) {
+EDGES.coarseType = function(breakdown, report) {
   return [
     { edge: "objects", referent: report.objects, breakdown: breakdown.objects },
     { edge: "scripts", referent: report.scripts, breakdown: breakdown.scripts },
@@ -97,7 +97,7 @@ EDGES.coarseType = function (breakdown, report) {
   ];
 };
 
-EDGES.allocationStack = function (breakdown, report) {
+EDGES.allocationStack = function(breakdown, report) {
   const edges = [];
   report.forEach((value, key) => {
     edges.push({
@@ -109,7 +109,7 @@ EDGES.allocationStack = function (breakdown, report) {
   return edges;
 };
 
-EDGES.filename = function (breakdown, report) {
+EDGES.filename = function(breakdown, report) {
   return Object.keys(report).map(key => ({
     edge: key,
     referent: report[key],
@@ -214,7 +214,7 @@ DiffVisitor.prototype = Object.create(Visitor.prototype);
 /**
  * Given a report and an outgoing edge, get the edge's referent.
  */
-DiffVisitor.prototype._get = function (report, edge) {
+DiffVisitor.prototype._get = function(report, edge) {
   if (!report) {
     return undefined;
   }
@@ -225,7 +225,7 @@ DiffVisitor.prototype._get = function (report, edge) {
  * Given a report, an outgoing edge, and a value, set the edge's referent to
  * the given value.
  */
-DiffVisitor.prototype._set = function (report, edge, val) {
+DiffVisitor.prototype._set = function(report, edge, val) {
   if (isMap(report)) {
     report.set(edge, val);
   } else {
@@ -236,7 +236,7 @@ DiffVisitor.prototype._set = function (report, edge, val) {
 /**
  * @overrides Visitor.prototype.enter
  */
-DiffVisitor.prototype.enter = function (breakdown, report, edge) {
+DiffVisitor.prototype.enter = function(breakdown, report, edge) {
   const newResults = breakdown.by === "allocationStack" ? new Map() : {};
   let newOther;
 
@@ -263,7 +263,7 @@ DiffVisitor.prototype.enter = function (breakdown, report, edge) {
 /**
  * @overrides Visitor.prototype.exit
  */
-DiffVisitor.prototype.exit = function (breakdown, report, edge) {
+DiffVisitor.prototype.exit = function(breakdown, report, edge) {
   // Find all the edges in the other census report that were not traversed and
   // add them to the results directly.
   const other = this._otherCensusStack[this._otherCensusStack.length - 1];
@@ -286,7 +286,7 @@ DiffVisitor.prototype.exit = function (breakdown, report, edge) {
 /**
  * @overrides Visitor.prototype.count
  */
-DiffVisitor.prototype.count = function (breakdown, report, edge) {
+DiffVisitor.prototype.count = function(breakdown, report, edge) {
   const other = this._otherCensusStack[this._otherCensusStack.length - 1];
   const results = this._resultsStack[this._resultsStack.length - 1];
 
@@ -324,7 +324,7 @@ const basisTotalCount = exports.basisTotalCount = Symbol("basisTotalCount");
  * @returns {Object}
  *          The delta census report.
  */
-DiffVisitor.prototype.results = function () {
+DiffVisitor.prototype.results = function() {
   if (!this._results) {
     throw new Error("Attempt to get results before computing diff!");
   }
@@ -375,7 +375,7 @@ exports.diff = diff;
  *
  * @return {Object<number, TreeNode>}
  */
-const createParentMap = function (node, getId = n => n.id, aggregator = {}) {
+const createParentMap = function(node, getId = n => n.id, aggregator = {}) {
   if (node.children) {
     for (let i = 0, length = node.children.length; i < length; i++) {
       const child = node.children[i];
@@ -396,7 +396,7 @@ const BUCKET = Object.freeze({ by: "bucket" });
  * @param {Object} breakdown
  * @returns {Object}
  */
-exports.countToBucketBreakdown = function (breakdown) {
+exports.countToBucketBreakdown = function(breakdown) {
   if (typeof breakdown !== "object" || !breakdown) {
     return breakdown;
   }
@@ -433,7 +433,7 @@ GetLeavesVisitor.prototype = Object.create(Visitor.prototype);
 /**
  * @overrides Visitor.prototype.enter
  */
-GetLeavesVisitor.prototype.enter = function (breakdown, report, edge) {
+GetLeavesVisitor.prototype.enter = function(breakdown, report, edge) {
   this._index++;
   if (this._targetIndices.has(this._index)) {
     this._leaves.push(report);
@@ -443,7 +443,7 @@ GetLeavesVisitor.prototype.enter = function (breakdown, report, edge) {
 /**
  * Get the accumulated report leaves after traversal.
  */
-GetLeavesVisitor.prototype.leaves = function () {
+GetLeavesVisitor.prototype.leaves = function() {
   if (this._index === -1) {
     throw new Error("Attempt to call `leaves` before traversing report!");
   }
@@ -460,7 +460,7 @@ GetLeavesVisitor.prototype.leaves = function () {
  *
  * @returns {Array<Object>}
  */
-exports.getReportLeaves = function (indices, breakdown, report) {
+exports.getReportLeaves = function(indices, breakdown, report) {
   const visitor = new GetLeavesVisitor(indices);
   walk(breakdown, report, visitor);
   return visitor.leaves();
@@ -476,7 +476,7 @@ exports.getReportLeaves = function (indices, breakdown, report) {
  *
  * @returns {Array<NodeId>}
  */
-exports.getCensusIndividuals = function (indices, countBreakdown, snapshot) {
+exports.getCensusIndividuals = function(indices, countBreakdown, snapshot) {
   const bucketBreakdown = exports.countToBucketBreakdown(countBreakdown);
   const bucketReport = snapshot.takeCensus({ breakdown: bucketBreakdown });
   const buckets = exports.getReportLeaves(indices,

@@ -912,7 +912,7 @@ notification[value="translation"] {
 
 /* Status panel */
 
-.statuspanel-label {
+#statuspanel-label {
   margin: 0;
   padding: 2px 4px;
   background-color: -moz-dialog;
@@ -923,14 +923,14 @@ notification[value="translation"] {
 }
 
 @media (-moz-windows-default-theme) {
-  .statuspanel-label {
+  #statuspanel-label {
     background-color: #f9f9fa;
     color: #444;
   }
 }
 
-.statuspanel-label:-moz-locale-dir(ltr):not([mirror]),
-.statuspanel-label:-moz-locale-dir(rtl)[mirror] {
+#statuspanel:not([mirror]) > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(ltr),
+#statuspanel[mirror] > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(rtl) {
   border-right-style: solid;
   /* disabled for triggering grayscale AA (bug 659213)
   border-top-right-radius: .3em;
@@ -938,8 +938,8 @@ notification[value="translation"] {
   margin-right: 1em;
 }
 
-.statuspanel-label:-moz-locale-dir(rtl):not([mirror]),
-.statuspanel-label:-moz-locale-dir(ltr)[mirror] {
+#statuspanel:not([mirror]) > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(rtl),
+#statuspanel[mirror] > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(ltr) {
   border-left-style: solid;
   /* disabled for triggering grayscale AA (bug 659213)
   border-top-left-radius: .3em;

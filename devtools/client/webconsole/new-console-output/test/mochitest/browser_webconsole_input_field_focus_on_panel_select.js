@@ -12,9 +12,9 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<p>hello";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
-  let hud = yield openConsole();
+add_task(async function() {
+  await loadTab(TEST_URI);
+  let hud = await openConsole();
   hud.jsterm.clearOutput();
 
   is(hud.jsterm.inputNode.hasAttribute("focused"), true,
@@ -28,8 +28,8 @@ add_task(function* () {
   is(hud.jsterm.inputNode.hasAttribute("focused"), false,
      "inputNode shouldn't be focused");
 
-  yield openInspector();
-  hud = yield openConsole();
+  await openInspector();
+  hud = await openConsole();
 
   is(hud.jsterm.inputNode.hasAttribute("focused"), true,
      "inputNode should be focused");

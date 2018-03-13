@@ -45,7 +45,7 @@ TraceClient.prototype = {
   detach: DebuggerClient.requester({
     type: "detach"
   }, {
-    after: function (response) {
+    after: function(response) {
       this._client.unregisterClient(this);
       return response;
     },
@@ -68,7 +68,7 @@ TraceClient.prototype = {
     name: arg(1),
     trace: arg(0)
   }, {
-    after: function (response) {
+    after: function(response) {
       if (response.error) {
         return response;
       }
@@ -97,7 +97,7 @@ TraceClient.prototype = {
     type: "stopTrace",
     name: arg(0)
   }, {
-    after: function (response) {
+    after: function(response) {
       if (response.error) {
         return response;
       }

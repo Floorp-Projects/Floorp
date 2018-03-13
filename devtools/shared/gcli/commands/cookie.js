@@ -82,7 +82,7 @@ exports.items = [
     description: l10n.lookup("cookieListDesc"),
     manual: l10n.lookup("cookieListManual"),
     returnType: "cookies",
-    exec: function (args, context) {
+    exec: function(args, context) {
       if (context.environment.target.isRemote) {
         throw new Error("The cookie gcli commands only work in a local tab, " +
                         "see bug 1221488");
@@ -126,7 +126,7 @@ exports.items = [
         description: l10n.lookup("cookieRemoveKeyDesc"),
       }
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       if (context.environment.target.isRemote) {
         throw new Error("The cookie gcli commands only work in a local tab, " +
                         "see bug 1221488");
@@ -152,7 +152,7 @@ exports.items = [
     item: "converter",
     from: "cookies",
     to: "view",
-    exec: function (cookies, context) {
+    exec: function(cookies, context) {
       if (cookies.length == 0) {
         let host = new URL(context.environment.target.url).host;
         host = sanitizeHost(host);
@@ -269,7 +269,7 @@ exports.items = [
         ]
       }
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       if (context.environment.target.isRemote) {
         throw new Error("The cookie gcli commands only work in a local tab, " +
                         "see bug 1221488");

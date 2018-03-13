@@ -15,9 +15,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-black-box",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              testBlackBox();
                            });
@@ -28,7 +28,7 @@ function run_test() {
 const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
-const testBlackBox = async function () {
+const testBlackBox = async function() {
   let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
   let source = gThreadClient.source(packet.frame.where.source);
 
@@ -122,7 +122,7 @@ function evalCode() {
   /* eslint-enable */
 }
 
-const runTest = async function (onSteppedLocation, onDebuggerStatementFrames) {
+const runTest = async function(onSteppedLocation, onDebuggerStatementFrames) {
   let packet = await executeOnNextTickAndWaitForPause(gDebuggee.runTest,
                                                       gClient);
   Assert.equal(packet.why.type, "breakpoint");
@@ -141,7 +141,7 @@ const runTest = async function (onSteppedLocation, onDebuggerStatementFrames) {
   return resume(gThreadClient);
 };
 
-const getCurrentLocation = async function () {
+const getCurrentLocation = async function() {
   const response = await getFrames(gThreadClient, 0, 1);
   return response.frames[0].where;
 };

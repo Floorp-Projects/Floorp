@@ -1020,7 +1020,7 @@ var DebuggerServer = {
       // provides hook to actor modules that need to exchange messages
       // between e10s parent and child processes
       let parentModules = [];
-      let onSetupInParent = function (msg) {
+      let onSetupInParent = function(msg) {
         // We may have multiple connectToChild instance running for the same tab
         // and need to filter the messages.
         if (msg.json.prefix != connPrefix) {
@@ -1051,7 +1051,7 @@ var DebuggerServer = {
         }
       };
 
-      let onActorCreated = DevToolsUtils.makeInfallible(function (msg) {
+      let onActorCreated = DevToolsUtils.makeInfallible(function(msg) {
         if (msg.json.prefix != prefix) {
           return;
         }
@@ -1098,7 +1098,7 @@ var DebuggerServer = {
         }
       };
 
-      let destroy = DevToolsUtils.makeInfallible(function () {
+      let destroy = DevToolsUtils.makeInfallible(function() {
         EventEmitter.off(connection, "closed", destroy);
         Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
 
@@ -1154,7 +1154,7 @@ var DebuggerServer = {
       trackMessageManager();
 
       // Listen for app process exit
-      let onMessageManagerClose = function (subject, topic, data) {
+      let onMessageManagerClose = function(subject, topic, data) {
         if (subject == mm) {
           destroy();
         }
@@ -1629,7 +1629,7 @@ DebuggerServerConnection.prototype = {
     };
   },
 
-  _queueResponse: function (from, type, responseOrPromise) {
+  _queueResponse: function(from, type, responseOrPromise) {
     let pendingResponse = this._actorResponses.get(from) || Promise.resolve(null);
     let responsePromise = pendingResponse.then(() => {
       return responseOrPromise;

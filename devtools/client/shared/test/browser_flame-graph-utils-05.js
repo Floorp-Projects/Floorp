@@ -7,13 +7,13 @@
 
 const {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function() {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
 });
 
-function* performTest() {
+function performTest() {
   let out1 = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA);
   let out2 = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA);
   is(out1, out2, "The outputted data is identical.");

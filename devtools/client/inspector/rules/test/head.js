@@ -40,7 +40,7 @@ registerCleanupFunction(() => {
  * script, so they can run on remote targets too.
  */
 var _addTab = addTab;
-addTab = function (url) {
+addTab = function(url) {
   return _addTab(url).then(tab => {
     info("Loading the helper frame script " + FRAME_SCRIPT_URL);
     let browser = tab.linkedBrowser;
@@ -477,7 +477,7 @@ function* sendKeysAndWaitForFocus(view, element, keys) {
  * @return {Promise}
  */
 function waitForStyleModification(inspector) {
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
     function checkForStyleModification(name, mutations) {
       for (let mutation of mutations) {
         if (mutation.type === "attributes" && mutation.attributeName === "style") {

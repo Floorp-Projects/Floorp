@@ -27,7 +27,7 @@ import ch.boye.httpclientandroidlib.entity.EntityTemplate;
  * Responsible for creating and posting a <code>SyncStorageRequest</code> request object.
  */
 public class RecordUploadRunnable implements Runnable {
-    public final String LOG_TAG = "RecordUploadRunnable";
+    public static final String LOG_TAG = "RecordUploadRunnable";
 
     public final static byte[] RECORDS_START = { 91 };      // [ in UTF-8
     public final static byte[] RECORD_SEPARATOR = { 44 };   // , in UTF-8

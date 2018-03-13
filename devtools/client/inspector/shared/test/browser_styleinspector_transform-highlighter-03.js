@@ -34,18 +34,18 @@ add_task(function* () {
     isShown: false,
     nodeFront: null,
     nbOfTimesShown: 0,
-    show: function (nodeFront) {
+    show: function(nodeFront) {
       this.nodeFront = nodeFront;
       this.isShown = true;
       this.nbOfTimesShown++;
       return promise.resolve(true);
     },
-    hide: function () {
+    hide: function() {
       this.nodeFront = null;
       this.isShown = false;
       return promise.resolve();
     },
-    finalize: function () {}
+    finalize: function() {}
   };
 
   // Inject the mock highlighter in the rule-view

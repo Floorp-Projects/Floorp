@@ -17,9 +17,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_pause_frame();
                            });
@@ -28,15 +28,15 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
-    gThreadClient.getFrames(0, null, function (frameResponse) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+    gThreadClient.getFrames(0, null, function(frameResponse) {
       Assert.equal(frameResponse.frames.length, 5);
       // Now wait for the next pause, after which the three
       // youngest actors should be popped..
       let expectPopped = frameResponse.frames.slice(0, 3).map(frame => frame.actor);
       expectPopped.sort();
 
-      gThreadClient.addOneTimeListener("paused", function (event, pausePacket) {
+      gThreadClient.addOneTimeListener("paused", function(event, pausePacket) {
         let popped = pausePacket.poppedFrames.sort();
         Assert.equal(popped.length, 3);
         for (let i = 0; i < 3; i++) {
@@ -49,7 +49,7 @@ function test_pause_frame() {
     });
   });
 
-  gDebuggee.eval("(" + function () {
+  gDebuggee.eval("(" + function() {
     function depth3() {
       debugger;
     }

@@ -20,7 +20,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
    * @param conn DebuggerServerConnection.
    * @param parentActor TabActor|RootActor
    */
-  initialize: function (conn, parentActor) {
+  initialize: function(conn, parentActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.conn = conn;
@@ -37,7 +37,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
     this._onWindowReady = this._onWindowReady.bind(this);
   },
 
-  destroy: function () {
+  destroy: function() {
     if (this.state === "attached") {
       this.detach();
     }
@@ -55,7 +55,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
   /**
    * Attach to the PromisesActor.
    */
-  attach: expectState("detached", function () {
+  attach: expectState("detached", function() {
     this.dbg.addDebuggees();
 
     this._navigationLifetimePool = this._createActorPool();
@@ -80,7 +80,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
   /**
    * Detach from the PromisesActor upon Debugger closing.
    */
-  detach: expectState("attached", function () {
+  detach: expectState("attached", function() {
     this.dbg.removeAllDebuggees();
     this.dbg.enabled = false;
     this._dbg = null;
@@ -97,7 +97,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
     this.state = "detached";
   }),
 
-  _createActorPool: function () {
+  _createActorPool: function() {
     let pool = new ActorPool(this.conn);
     pool.objectActors = new WeakMap();
     return pool;
@@ -111,7 +111,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
    * @return object
    *        An ObjectActor object that wraps the given Promise object
    */
-  _createObjectActorForPromise: function (promise) {
+  _createObjectActorForPromise: function(promise) {
     if (this._navigationLifetimePool.objectActors.has(promise)) {
       return this._navigationLifetimePool.objectActors.get(promise);
     }
@@ -143,14 +143,14 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
    * @return object
    *        The grip for the given Promise object
    */
-  objectGrip: function (value) {
+  objectGrip: function(value) {
     return this._createObjectActorForPromise(value).grip();
   },
 
   /**
    * Get a list of ObjectActors for all live Promise Objects.
    */
-  listPromises: function () {
+  listPromises: function() {
     let promises = this.dbg.findObjects({ class: "Promise" });
 
     this.dbg.onNewPromise = this._makePromiseEventHandler(this._newPromises,
@@ -171,7 +171,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
    * @param string eventName
    *        The event name
    */
-  _makePromiseEventHandler: function (array, eventName) {
+  _makePromiseEventHandler: function(array, eventName) {
     return promise => {
       let actor = this._createObjectActorForPromise(promise);
       let needsScheduling = array.length == 0;
@@ -186,7 +186,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
     };
   },
 
-  _onWindowReady: expectState("attached", function ({ isTopLevel }) {
+  _onWindowReady: expectState("attached", function({ isTopLevel }) {
     if (!isTopLevel) {
       return;
     }

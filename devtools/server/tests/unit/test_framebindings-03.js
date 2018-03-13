@@ -16,9 +16,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_pause_frame();
                            });
@@ -27,7 +27,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let env = packet.frame.environment;
     Assert.notEqual(env, undefined);
 
@@ -45,13 +45,13 @@ function test_pause_frame() {
     Assert.ok(!!vars.arguments.value.actor);
 
     let objClient = gThreadClient.pauseGrip(env.object);
-    objClient.getPrototypeAndProperties(function (response) {
+    objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.PI.value, Math.PI);
       Assert.equal(response.ownProperties.cos.value.type, "object");
       Assert.equal(response.ownProperties.cos.value.class, "Function");
       Assert.ok(!!response.ownProperties.cos.value.actor);
 
-      gThreadClient.resume(function () {
+      gThreadClient.resume(function() {
         finishClient(gClient);
       });
     });

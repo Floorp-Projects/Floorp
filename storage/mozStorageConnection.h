@@ -376,6 +376,11 @@ private:
   bool mConnectionClosed;
 
   /**
+   * Stores the default behavior for all transactions run on this connection.
+   */
+  mozilla::Atomic<int32_t> mDefaultTransactionType;
+
+  /**
    * Tracks if we have a transaction in progress or not.  Access protected by
    * sharedDBMutex.
    */

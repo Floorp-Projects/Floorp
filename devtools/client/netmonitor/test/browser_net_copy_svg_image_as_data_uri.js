@@ -9,14 +9,14 @@
 
 const SVG_URL = EXAMPLE_URL + "dropmarker.svg";
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CURL_URL);
   info("Starting test... ");
 
   let { document } = monitor.panelWin;
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, SVG_URL, async function (url) {
+  await ContentTask.spawn(tab.linkedBrowser, SVG_URL, async function(url) {
     content.wrappedJSObject.performRequest(url);
   });
   await wait;

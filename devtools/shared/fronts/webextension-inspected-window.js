@@ -15,7 +15,7 @@ const protocol = require("devtools/shared/protocol");
 const WebExtensionInspectedWindowFront = protocol.FrontClassWithSpec(
   webExtensionInspectedWindowSpec,
   {
-    initialize: function (client, { webExtensionInspectedWindowActor }) {
+    initialize: function(client, { webExtensionInspectedWindowActor }) {
       protocol.Front.prototype.initialize.call(this, client, {
         actor: webExtensionInspectedWindowActor
       });

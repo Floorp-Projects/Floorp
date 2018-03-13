@@ -43,7 +43,7 @@ function run_test() {
   equal(remap1.sources[1], "/the/root/two.js");
 
   let expectedEntries = testMap1Entries.slice(0);
-  remap1.eachMapping(function (entry) {
+  remap1.eachMapping(function(entry) {
     let expected = expectedEntries.shift();
     equal(entry.generatedLine, expected.offset);
     equal(entry.generatedColumn, 0);

@@ -376,8 +376,8 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
   unregister() {
     let { principal, scope } = this._registration;
     let unregisterCallback = {
-      unregisterSucceeded: function () {},
-      unregisterFailed: function () {
+      unregisterSucceeded: function() {},
+      unregisterFailed: function() {
         console.error("Failed to unregister the service worker for " + scope);
       },
       QueryInterface: XPCOMUtils.generateQI(

@@ -7,10 +7,10 @@
 // Test that the CanvasFrameAnonymousContentHelper does not insert content in
 // XUL windows.
 
-add_task(async function () {
+add_task(async function() {
   let browser = await addTab("about:preferences");
 
-  await ContentTask.spawn(browser, null, async function () {
+  await ContentTask.spawn(browser, null, async function() {
     const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
     const {

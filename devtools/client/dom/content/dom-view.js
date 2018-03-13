@@ -36,7 +36,7 @@ function DomView(localStore) {
 }
 
 DomView.prototype = {
-  initialize: function (rootGrip) {
+  initialize: function(rootGrip) {
     let content = document.querySelector("#content");
     let mainFrame = MainFrame({
       object: rootGrip,
@@ -50,7 +50,7 @@ DomView.prototype = {
     this.mainFrame = ReactDOM.render(provider, content);
   },
 
-  onMessage: function (event) {
+  onMessage: function(event) {
     let data = event.data;
     let method = data.type;
 

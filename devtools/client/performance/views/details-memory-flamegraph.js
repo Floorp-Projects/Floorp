@@ -23,32 +23,32 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
   /**
    * Sets up the view with event binding.
    */
-  initialize: Task.async(function* () {
+  async initialize() {
     DetailsSubview.initialize.call(this);
 
     this.graph = new FlameGraph($("#memory-flamegraph-view"));
     this.graph.timelineTickUnits = L10N.getStr("graphs.ms");
     this.graph.setTheme(PerformanceController.getTheme());
-    yield this.graph.ready();
+    await this.graph.ready();
 
     this._onRangeChangeInGraph = this._onRangeChangeInGraph.bind(this);
     this._onThemeChanged = this._onThemeChanged.bind(this);
 
     PerformanceController.on(EVENTS.THEME_CHANGED, this._onThemeChanged);
     this.graph.on("selecting", this._onRangeChangeInGraph);
-  }),
+  },
 
   /**
    * Unbinds events.
    */
-  destroy: Task.async(function* () {
+  async destroy() {
     DetailsSubview.destroy.call(this);
 
     PerformanceController.off(EVENTS.THEME_CHANGED, this._onThemeChanged);
     this.graph.off("selecting", this._onRangeChangeInGraph);
 
-    yield this.graph.destroy();
-  }),
+    await this.graph.destroy();
+  },
 
   /**
    * Method for handling all the set up for rendering a new flamegraph.
@@ -56,7 +56,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
    */
-  render: function (interval = {}) {
+  render: function(interval = {}) {
     let recording = PerformanceController.getCurrentRecording();
     let duration = recording.getDuration();
     let allocations = recording.getAllocations();
@@ -87,7 +87,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
   /**
    * Fired when a range is selected or cleared in the FlameGraph.
    */
-  _onRangeChangeInGraph: function () {
+  _onRangeChangeInGraph: function() {
     let interval = this.graph.getViewRange();
 
     // Squelch rerendering this view when we update the range here
@@ -101,7 +101,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
   /**
    * Called whenever a pref is changed and this view needs to be rerendered.
    */
-  _onRerenderPrefChanged: function () {
+  _onRerenderPrefChanged: function() {
     let recording = PerformanceController.getCurrentRecording();
     let allocations = recording.getAllocations();
     let thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
@@ -111,7 +111,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
   /**
    * Called when `devtools.theme` changes.
    */
-  _onThemeChanged: function (_, theme) {
+  _onThemeChanged: function(_, theme) {
     this.graph.setTheme(theme);
     this.graph.refresh({ force: true });
   },

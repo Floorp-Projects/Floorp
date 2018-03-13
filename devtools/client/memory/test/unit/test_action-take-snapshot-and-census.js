@@ -11,10 +11,10 @@
 let { snapshotState: states, treeMapState } = require("devtools/client/memory/constants");
 let actions = require("devtools/client/memory/actions/snapshot");
 
-add_task(function* () {
+add_task(async function() {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
 
   let snapshotI = 0;
@@ -44,7 +44,7 @@ add_task(function* () {
   let unsubscribe = store.subscribe(expectStates);
   store.dispatch(actions.takeSnapshotAndCensus(front, heapWorker));
 
-  yield waitUntilState(store, () => {
+  await waitUntilState(store, () => {
     return snapshotI === snapshotStates.length &&
            censusI === censusStates.length;
   });

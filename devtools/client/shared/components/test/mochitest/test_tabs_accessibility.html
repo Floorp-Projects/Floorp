@@ -16,7 +16,7 @@ Test tabs accessibility.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = Task.async(function* () {
+window.onload = async function () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
@@ -32,8 +32,8 @@ window.onload = Task.async(function* () {
     tabpanels.id = "tabpanels";
     document.body.appendChild(tabpanels);
 
-    yield addTabWithPanel(0);
-    yield addTabWithPanel(1);
+    await addTabWithPanel(0);
+    await addTabWithPanel(1);
 
     const tabAnchors = tabbarEl.querySelectorAll("li.tabs-menu-item a");
 
@@ -46,7 +46,7 @@ window.onload = Task.async(function* () {
     is(tabAnchors[1].getAttribute("aria-selected"), "false", "Anchor aria-selected is set correctly by default");
     is(tabAnchors[1].getAttribute("aria-controls"), "sidebar-1-panel", "Anchor aria-controls is set correctly");
 
-    yield setState(tabbarReact, Object.assign({}, tabbarReact.state, {
+    await setState(tabbarReact, Object.assign({}, tabbarReact.state, {
       activeTab: 1
     }));
 
@@ -72,7 +72,7 @@ window.onload = Task.async(function* () {
   } finally {
     SimpleTest.finish();
   }
-});
+};
 </script>
 </pre>
 </body>

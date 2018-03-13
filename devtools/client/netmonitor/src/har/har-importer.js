@@ -13,7 +13,7 @@ var guid = 0;
  * https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HAR/Overview.html
  * http://www.softwareishard.com/blog/har-12-spec/
  */
-var HarImporter = function (actions) {
+var HarImporter = function(actions) {
   this.actions = actions;
 };
 
@@ -21,12 +21,12 @@ HarImporter.prototype = {
   /**
    * This is the main method used to import HAR data.
    */
-  import: function (har) {
+  import: function(har) {
     let json = JSON.parse(har);
     this.doImport(json);
   },
 
-  doImport: function (har) {
+  doImport: function(har) {
     this.actions.clearRequests();
 
     // Helper map for pages.

@@ -14,13 +14,13 @@ const { actorActorSpec, actorRegistrySpec } = require("devtools/shared/specs/act
  * registered and allows you to unregister it.
  */
 const ActorActor = protocol.ActorClassWithSpec(actorActorSpec, {
-  initialize: function (conn, options) {
+  initialize: function(conn, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.options = options;
   },
 
-  unregister: function () {
+  unregister: function() {
     unregisterActor(this.options);
   }
 });
@@ -30,11 +30,11 @@ const ActorActor = protocol.ActorClassWithSpec(actorActorSpec, {
  * server. This is particularly useful for addons.
  */
 const ActorRegistryActor = protocol.ActorClassWithSpec(actorRegistrySpec, {
-  initialize: function (conn) {
+  initialize: function(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
   },
 
-  registerActor: function (sourceText, fileName, options) {
+  registerActor: function(sourceText, fileName, options) {
     return registerActor(sourceText, fileName, options).then(() => {
       let { constructor, type } = options;
 

@@ -158,16 +158,16 @@ class SwatchBasedEditorTooltip {
    */
   addSwatch(swatchEl, callbacks = {}) {
     if (!callbacks.onShow) {
-      callbacks.onShow = function () {};
+      callbacks.onShow = function() {};
     }
     if (!callbacks.onPreview) {
-      callbacks.onPreview = function () {};
+      callbacks.onPreview = function() {};
     }
     if (!callbacks.onRevert) {
-      callbacks.onRevert = function () {};
+      callbacks.onRevert = function() {};
     }
     if (!callbacks.onCommit) {
-      callbacks.onCommit = function () {};
+      callbacks.onCommit = function() {};
     }
 
     this.swatches.set(swatchEl, {

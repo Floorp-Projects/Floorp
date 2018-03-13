@@ -25,8 +25,8 @@ function PauseScopedActor() {
  * @param method Function
  *        The function we are decorating.
  */
-PauseScopedActor.withPaused = function (method) {
-  return function () {
+PauseScopedActor.withPaused = function(method) {
+  return function() {
     if (this.isPaused()) {
       return method.apply(this, arguments);
     }
@@ -39,7 +39,7 @@ PauseScopedActor.prototype = {
   /**
    * Returns true if we are in the paused state.
    */
-  isPaused: function () {
+  isPaused: function() {
     // When there is not a ThreadActor available (like in the webconsole) we
     // have to be optimistic and assume that we are paused so that we can
     // respond to requests.
@@ -49,7 +49,7 @@ PauseScopedActor.prototype = {
   /**
    * Returns the wrongState response packet for this actor.
    */
-  _wrongState: function () {
+  _wrongState: function() {
     return {
       error: "wrongState",
       message: this.constructor.name +
@@ -99,7 +99,7 @@ Object.assign(PauseScopedObjectActor.prototype, {
    * @param request object
    *        The protocol request object.
    */
-  onThreadGrip: PauseScopedActor.withPaused(function (request) {
+  onThreadGrip: PauseScopedActor.withPaused(function(request) {
     this.hooks.promote();
     return {};
   }),
@@ -110,7 +110,7 @@ Object.assign(PauseScopedObjectActor.prototype, {
    * @param request object
    *        The protocol request object.
    */
-  onRelease: PauseScopedActor.withPaused(function (request) {
+  onRelease: PauseScopedActor.withPaused(function(request) {
     if (this.hooks.isThreadLifetimePool()) {
       return { error: "notReleasable",
                message: "Only thread-lifetime actors can be released." };

@@ -16,7 +16,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 // Force the old debugger UI since it's directly used (see Bug 1301705)
 pushPref("devtools.debugger.new-debugger-frontend", false);
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Open the Debugger panel.");
@@ -28,7 +28,7 @@ add_task(async function () {
 
   info("Log a function");
   const onLoggedFunction = waitForMessage(hud, "function foo");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.foo();
   });
   const {node} = await onLoggedFunction;

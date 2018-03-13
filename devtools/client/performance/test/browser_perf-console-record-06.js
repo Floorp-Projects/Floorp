@@ -13,21 +13,21 @@ const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require
 const { times } = require("devtools/client/performance/test/helpers/event-utils");
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(function* () {
-  let { target, console } = yield initConsoleInNewTab({
+add_task(async function() {
+  let { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  let { panel } = yield initPerformanceInTab({ tab: target.tab });
+  let { panel } = await initPerformanceInTab({ tab: target.tab });
   let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
-  yield console.profile("rust");
-  yield started;
+  await console.profile("rust");
+  await started;
 
   let recordings = PerformanceController.getRecordings();
   is(recordings.length, 1, "A recording found in the performance panel.");
@@ -35,7 +35,7 @@ add_task(function* () {
     "The first console recording should be selected.");
 
   // Ensure overview is still rendering.
-  yield times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
+  await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
     expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
   });
 
@@ -48,8 +48,8 @@ add_task(function* () {
     // in-progress recording is selected, which won't happen
     skipWaitingForViewState: true,
   });
-  yield console.profile("golang");
-  yield started;
+  await console.profile("golang");
+  await started;
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
@@ -57,7 +57,7 @@ add_task(function* () {
     "The first console recording should still be selected.");
 
   // Ensure overview is still rendering.
-  yield times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
+  await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
     expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
   });
 
@@ -65,8 +65,8 @@ add_task(function* () {
     // only emitted for manual recordings
     skipWaitingForBackendReady: true
   });
-  yield console.profileEnd("rust");
-  yield stopped;
+  await console.profileEnd("rust");
+  await stopped;
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
@@ -82,8 +82,8 @@ add_task(function* () {
     skipWaitingForOverview: true,
     skipWaitingForSubview: true,
   });
-  yield console.profileEnd("golang");
-  yield stopped;
+  await console.profileEnd("golang");
+  await stopped;
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "Two recordings found in the performance panel.");
@@ -92,5 +92,5 @@ add_task(function* () {
   is(recordings[1].isRecording(), false,
     "The second console recording should no longer be recording.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

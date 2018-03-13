@@ -142,7 +142,7 @@ options.  A few questions to consider:
  * Is this one of a few related tasks, or will you need to generate a large
    set of tasks using some programmatic means (for example, chunking)?
 
- * How is the task actually excuted?  Mozharness?  Mach?
+ * How is the task actually executed?  Mozharness?  Mach?
 
  * What kind of environment does the task require?
 

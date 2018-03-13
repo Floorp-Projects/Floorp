@@ -21,7 +21,7 @@ object.
 ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   let iframe = document.createElement("iframe");
@@ -33,7 +33,7 @@ window.onload = function () {
     let dbg = new Debugger();
     let page1DO = dbg.addDebuggee(iframe.contentWindow);
     iframe.src = "data:text/html,<script>var me = 'page 2';<\/script>";
-    iframe.onload = function () {
+    iframe.onload = function() {
       let page2DO = dbg.addDebuggee(iframe.contentWindow);
       ok(page1DO !== page2DO, "the two pages' globals get distinct D.O's");
       ok(page1DO.unsafeDereference() === page2DO.unsafeDereference(),

@@ -11,8 +11,8 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-console-table.html";
 
-add_task(function* () {
-  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+add_task(async function() {
+  let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
   let hud = toolbox.getCurrentPanel().hud;
 
   function Person(firstName, lastName) {
@@ -131,14 +131,14 @@ add_task(function* () {
     }
   }];
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, testCases, function (tests) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, testCases, function(tests) {
     tests.forEach((test) => {
       content.wrappedJSObject.doConsoleTable(test.input, test.headers);
     });
   });
   let nodes = [];
   for (let testCase of testCases) {
-    let node = yield waitFor(
+    let node = await waitFor(
       () => findConsoleTable(hud.ui.outputNode, testCases.indexOf(testCase))
     );
     nodes.push(node);

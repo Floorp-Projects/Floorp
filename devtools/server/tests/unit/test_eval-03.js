@@ -16,9 +16,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then().then(function () {
+  gClient.connect().then().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_syntax_error_eval();
                            });
@@ -27,18 +27,18 @@ function run_test() {
 }
 
 function test_syntax_error_eval() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
-    gThreadClient.eval(null, "%$@!@#", function (response) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+    gThreadClient.eval(null, "%$@!@#", function(response) {
       Assert.equal(response.type, "resumed");
       // Expect a pause notification immediately.
-      gThreadClient.addOneTimeListener("paused", function (event, packet) {
+      gThreadClient.addOneTimeListener("paused", function(event, packet) {
         // Check the return value...
         Assert.equal(packet.type, "paused");
         Assert.equal(packet.why.type, "clientEvaluated");
         Assert.equal(packet.why.frameFinished.throw.type, "object");
         Assert.equal(packet.why.frameFinished.throw.class, "Error");
 
-        gThreadClient.resume(function () {
+        gThreadClient.resume(function() {
           finishClient(gClient);
         });
       });

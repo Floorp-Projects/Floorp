@@ -27,7 +27,7 @@ const CSP_REPORT_MSG =
   "resource at http://some.example.com/cspro.js " +
   "(\u201cscript-src\u201d). A CSP report is being sent.";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   let onCspViolationMessage = waitForMessage(hud, CSP_VIOLATION_MSG, ".message.error");

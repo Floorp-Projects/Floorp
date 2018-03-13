@@ -7,14 +7,14 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<p>test Scratchpad panel linking</p>";
 
-add_task(function* () {
-  yield pushPref("devtools.scratchpad.enabled", true);
-  yield openNewTabAndToolbox(TEST_URI);
+add_task(async function() {
+  await pushPref("devtools.scratchpad.enabled", true);
+  await openNewTabAndToolbox(TEST_URI);
 
   info("Opening toolbox with Scratchpad panel");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = yield gDevTools.showToolbox(target, "scratchpad", "window");
+  let toolbox = await gDevTools.showToolbox(target, "scratchpad", "window");
 
   let scratchpadPanel = toolbox.getPanel("scratchpad");
   let { scratchpad } = scratchpadPanel;
@@ -23,7 +23,7 @@ add_task(function* () {
 
   info("Switching to webconsole panel");
 
-  let webconsolePanel = yield toolbox.selectTool("webconsole");
+  let webconsolePanel = await toolbox.selectTool("webconsole");
   let { hud } = webconsolePanel;
   is(toolbox.getCurrentPanel(), webconsolePanel,
     "Webconsole is currently selected panel");
@@ -33,7 +33,7 @@ add_task(function* () {
   let messageText = "foobar-from-scratchpad";
   scratchpad.setText(`console.log('${messageText}')`);
   scratchpad.run();
-  let message = yield waitFor(() => findMessage(hud, messageText));
+  let message = await waitFor(() => findMessage(hud, messageText));
 
   info("Clicking link to switch to and focus Scratchpad");
 
@@ -45,7 +45,7 @@ add_task(function* () {
   });
 
   EventUtils.synthesizeMouse(anchor, 2, 2, {}, hud.iframeWindow);
-  yield onScratchpadSelected;
+  await onScratchpadSelected;
 
   is(toolbox.getCurrentPanel(), scratchpadPanel,
     "Clicking link switches to Scratchpad panel");

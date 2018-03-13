@@ -14,14 +14,14 @@ Test that the Toolbar component shows the view switcher only at the appropriate 
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = Task.async(function* () {
+         window.onload = async function () {
            try {
              const container = document.getElementById("container");
 
              // Census and dominator tree views.
 
              for (let view of [viewState.CENSUS, viewState.DOMINATOR_TREE]) {
-               yield renderComponent(Toolbar(immutableUpdate(TEST_TOOLBAR_PROPS, {
+               await renderComponent(Toolbar(immutableUpdate(TEST_TOOLBAR_PROPS, {
                  view: { state: view },
                })), container);
 
@@ -29,7 +29,7 @@ Test that the Toolbar component shows the view switcher only at the appropriate 
                   `The view selector is shown in view = ${view}`);
              }
 
-             yield renderComponent(Toolbar(immutableUpdate(TEST_TOOLBAR_PROPS, {
+             await renderComponent(Toolbar(immutableUpdate(TEST_TOOLBAR_PROPS, {
                view: { state: viewState.DIFFING, },
              })), container);
 
@@ -40,7 +40,7 @@ Test that the Toolbar component shows the view switcher only at the appropriate 
            } finally {
              SimpleTest.finish();
            }
-         });
+         };
         </script>
     </pre>
 </body>

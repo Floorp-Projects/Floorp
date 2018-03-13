@@ -247,13 +247,6 @@ class Localization {
   }
 
   /**
-   * Unregister observers on events that will trigger cache invalidation
-   */
-  unregisterObservers() {
-    Services.obs.removeObserver(this, "intl:app-locales-changed");
-  }
-
-  /**
    * Default observer handler method.
    *
    * @param {String} subject

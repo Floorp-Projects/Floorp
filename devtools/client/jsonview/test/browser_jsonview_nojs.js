@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   info("Test JSON without JavaScript started.");
 
   let oldPref = SpecialPowers.getBoolPref("javascript.enabled");

@@ -15,11 +15,11 @@ const { framerateSpec } = require("devtools/shared/specs/framerate");
  * @see devtools/server/performance/framerate.js for documentation.
  */
 exports.FramerateActor = ActorClassWithSpec(framerateSpec, {
-  initialize: function (conn, tabActor) {
+  initialize: function(conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
     this.bridge = new Framerate(tabActor);
   },
-  destroy: function (conn) {
+  destroy: function(conn) {
     Actor.prototype.destroy.call(this, conn);
     this.bridge.destroy();
   },

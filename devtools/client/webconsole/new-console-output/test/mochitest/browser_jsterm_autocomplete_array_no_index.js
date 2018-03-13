@@ -15,7 +15,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 </head>
 <body>bug 585991 - Autocomplete popup on array</body>`;
 
-add_task(async function () {
+add_task(async function() {
   let { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   const {

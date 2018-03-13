@@ -27,24 +27,24 @@ const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
  * Client side of a node list as returned by querySelectorAll()
  */
 const NodeListFront = FrontClassWithSpec(nodeListSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     Front.prototype.initialize.call(this, client, form);
   },
 
-  destroy: function () {
+  destroy: function() {
     Front.prototype.destroy.call(this);
   },
 
-  marshallPool: function () {
+  marshallPool: function() {
     return this.parent();
   },
 
   // Update the object given a form representation off the wire.
-  form: function (json) {
+  form: function(json) {
     this.length = json.length;
   },
 
-  item: custom(function (index) {
+  item: custom(function(index) {
     return this._item(index).then(response => {
       return response.node;
     });
@@ -52,7 +52,7 @@ const NodeListFront = FrontClassWithSpec(nodeListSpec, {
     impl: "_item"
   }),
 
-  items: custom(function (start, end) {
+  items: custom(function(start, end) {
     return this._items(start, end).then(response => {
       return response.nodes;
     });
@@ -119,7 +119,7 @@ class AttributeModificationList {
  * to traverse children.
  */
 const NodeFront = FrontClassWithSpec(nodeSpec, {
-  initialize: function (conn, form, detail, ctx) {
+  initialize: function(conn, form, detail, ctx) {
     // The parent node
     this._parent = null;
     // The first child of this node.
@@ -136,12 +136,12 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    * ownership tree before this is called, unless the whole walker front
    * is being destroyed.
    */
-  destroy: function () {
+  destroy: function() {
     Front.prototype.destroy.call(this);
   },
 
   // Update the object given a form representation off the wire.
-  form: function (form, detail, ctx) {
+  form: function(form, detail, ctx) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -178,7 +178,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
   /**
    * Returns the parent NodeFront for this NodeFront.
    */
-  parentNode: function () {
+  parentNode: function() {
     return this._parent;
   },
 
@@ -188,7 +188,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    * themselves (character data and attribute changes), the walker itself
    * will keep the ownership tree up to date.
    */
-  updateMutation: function (change) {
+  updateMutation: function(change) {
     if (change.type === "attributes") {
       // We'll need to lazily reparse the attributes after this change.
       this._attrMap = undefined;
@@ -306,11 +306,11 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     return this._form.systemId;
   },
 
-  getAttribute: function (name) {
+  getAttribute: function(name) {
     let attr = this._getAttribute(name);
     return attr ? attr.value : null;
   },
-  hasAttribute: function (name) {
+  hasAttribute: function(name) {
     this._cacheAttributes();
     return (name in this._attrMap);
   },
@@ -327,7 +327,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
   get pseudoClassLocks() {
     return this._form.pseudoClassLocks || [];
   },
-  hasPseudoClassLock: function (pseudo) {
+  hasPseudoClassLock: function(pseudo) {
     return this.pseudoClassLocks.some(locked => locked === pseudo);
   },
 
@@ -352,7 +352,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     return true;
   },
 
-  getNodeValue: custom(function () {
+  getNodeValue: custom(function() {
     // backward-compatibility: if nodevalue is null and shortValue is defined, the actual
     // value of the node needs to be fetched on the server.
     if (this._form.nodeValue === null && this._form.shortValue) {
@@ -367,11 +367,11 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
 
   // Accessors for custom form properties.
 
-  getFormProperty: function (name) {
+  getFormProperty: function(name) {
     return this._form.props ? this._form.props[name] : null;
   },
 
-  hasFormProperty: function (name) {
+  hasFormProperty: function(name) {
     return this._form.props ? (name in this._form.props) : null;
   },
 
@@ -382,11 +382,11 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
   /**
    * Return a new AttributeModificationList for this node.
    */
-  startModifyingAttributes: function () {
+  startModifyingAttributes: function() {
     return new AttributeModificationList(this);
   },
 
-  _cacheAttributes: function () {
+  _cacheAttributes: function() {
     if (typeof this._attrMap != "undefined") {
       return;
     }
@@ -396,7 +396,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     }
   },
 
-  _getAttribute: function (name) {
+  _getAttribute: function(name) {
     this._cacheAttributes();
     return this._attrMap[name] || undefined;
   },
@@ -406,7 +406,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    * this tree are unordered and incomplete, so shouldn't be used
    * instead of a `children` request.
    */
-  reparent: function (parent) {
+  reparent: function(parent) {
     if (this._parent === parent) {
       return;
     }
@@ -437,7 +437,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
   /**
    * Return all the known children of this node.
    */
-  treeChildren: function () {
+  treeChildren: function() {
     let ret = [];
     for (let child = this._child; child != null; child = child._next) {
       ret.push(child);
@@ -452,7 +452,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    * This will, one day, be removed. External code should
    * not need to know if the target is remote or not.
    */
-  isLocalToBeDeprecated: function () {
+  isLocalToBeDeprecated: function() {
     return !!this.conn._transport._serverConnection;
   },
 
@@ -461,7 +461,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    * and is only intended as a stopgap during the transition to the remote
    * protocol.  If you depend on this you're likely to break soon.
    */
-  rawNode: function (rawNode) {
+  rawNode: function(rawNode) {
     if (!this.isLocalToBeDeprecated()) {
       console.warn("Tried to use rawNode on a remote connection.");
       return null;

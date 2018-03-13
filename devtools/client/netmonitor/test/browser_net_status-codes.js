@@ -7,7 +7,7 @@
  * Tests if requests display the correct status code and text in the UI.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   let { tab, monitor } = await initNetMonitor(STATUS_CODES_URL);
@@ -99,7 +99,7 @@ add_task(async function () {
   ];
 
   let wait = waitForNetworkEvents(monitor, 5);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequests();
   });
   await wait;

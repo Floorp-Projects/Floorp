@@ -16,7 +16,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await HUDService.toggleBrowserConsole();
   ok(hud, "browser console opened");
 

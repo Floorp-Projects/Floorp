@@ -136,7 +136,7 @@ function* testExpandedComputedViewProperty(computedView, nodeFront) {
 
 function getPropertyView(computedView, name) {
   let propertyView = null;
-  computedView.propertyViews.some(function (view) {
+  computedView.propertyViews.some(function(view) {
     if (view.name == name) {
       propertyView = view;
       return true;

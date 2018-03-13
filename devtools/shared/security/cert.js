@@ -33,7 +33,7 @@ exports.local = {
   getOrCreate() {
     let deferred = defer();
     localCertService.getOrCreateCert(localCertName, {
-      handleCert: function (cert, rv) {
+      handleCert: function(cert, rv) {
         if (rv) {
           deferred.reject(rv);
           return;
@@ -52,7 +52,7 @@ exports.local = {
   remove() {
     let deferred = defer();
     localCertService.removeCert(localCertName, {
-      handleCert: function (rv) {
+      handleCert: function(rv) {
         if (rv) {
           deferred.reject(rv);
           return;

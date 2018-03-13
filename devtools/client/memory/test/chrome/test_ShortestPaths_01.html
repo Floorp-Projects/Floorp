@@ -23,11 +23,11 @@ Test that the ShortestPaths component properly renders a graph of the merged sho
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = Task.async(function* () {
+         window.onload = async function () {
            try {
              const container = document.getElementById("container");
 
-             yield renderComponent(ShortestPaths(TEST_SHORTEST_PATHS_PROPS), container);
+             await renderComponent(ShortestPaths(TEST_SHORTEST_PATHS_PROPS), container);
 
              let found1 = false;
              let found2 = false;
@@ -105,7 +105,7 @@ Test that the ShortestPaths component properly renders a graph of the merged sho
            } finally {
              SimpleTest.finish();
            }
-         });
+         };
         </script>
     </pre>
 </body>

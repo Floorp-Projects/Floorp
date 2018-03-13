@@ -7,7 +7,7 @@
  * Test that Security details tab contains the expected data.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -17,7 +17,7 @@ add_task(async function () {
   info("Performing a secure request.");
   const REQUESTS_URL = "https://example.com" + CORS_SJS_PATH;
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, REQUESTS_URL, async function (url) {
+  await ContentTask.spawn(tab.linkedBrowser, REQUESTS_URL, async function(url) {
     content.wrappedJSObject.performRequests(1, url);
   });
   await wait;

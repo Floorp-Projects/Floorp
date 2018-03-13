@@ -63,13 +63,13 @@ var PropertiesView = {
    * Reconstructs the `Properties` tab in the inspector
    * with the `this._currentNode` as it's source.
    */
-  _buildPropertiesView: Task.async(function* () {
+  async _buildPropertiesView() {
     let propsView = this._propsView;
     let node = this._currentNode;
     propsView.empty();
 
     let audioParamsScope = propsView.addScope("AudioParams");
-    let props = yield node.getParams();
+    let props = await node.getParams();
 
     // Disable AudioParams VariableView expansion
     // when there are no props i.e. AudioDestinationNode
@@ -89,7 +89,7 @@ var PropertiesView = {
     audioParamsScope.expanded = true;
 
     window.emit(EVENTS.UI_PROPERTIES_TAB_RENDERED, node.id);
-  }),
+  },
 
   /**
    * Toggles the display of the "empty" properties view when
@@ -126,7 +126,7 @@ var PropertiesView = {
   /**
    * Executed when an audio prop is changed in the UI.
    */
-  _onEval: Task.async(function* (variable, value) {
+  async _onEval(variable, value) {
     let ownerScope = variable.ownerView;
     let node = this._currentNode;
     let propName = variable.name;
@@ -143,7 +143,7 @@ var PropertiesView = {
         } else {
           value = JSON.parse(value);
         }
-        error = yield node.actor.setParam(propName, value);
+        error = await node.actor.setParam(propName, value);
       }
       catch (e) {
         error = e;
@@ -159,5 +159,5 @@ var PropertiesView = {
     } else {
       window.emit(EVENTS.UI_SET_PARAM_ERROR, node.id, propName, value);
     }
-  })
+  }
 };

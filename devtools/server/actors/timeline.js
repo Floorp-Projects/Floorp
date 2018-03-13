@@ -29,7 +29,7 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
   /**
    * Initializes this actor with the provided connection and tab actor.
    */
-  initialize: function (conn, tabActor) {
+  initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
     this.bridge = new Timeline(tabActor);
@@ -50,7 +50,7 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
   /**
    * Destroys this actor, stopping recording first.
    */
-  destroy: function () {
+  destroy: function() {
     this.bridge.off("doc-loading", this._onTimelineDocLoading);
     this.bridge.off("markers", this._onTimelineMarkers);
     this.bridge.off("ticks", this._onTimelineTicks);
@@ -65,19 +65,19 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
   /**
    * Propagate events from the Timeline module over RDP if the event is defined here.
    */
-  _onTimelineDocLoading: function (...args) {
+  _onTimelineDocLoading: function(...args) {
     this.emit("doc-loading", ...args);
   },
-  _onTimelineMarkers: function (...args) {
+  _onTimelineMarkers: function(...args) {
     this.emit("markers", ...args);
   },
-  _onTimelineTicks: function (...args) {
+  _onTimelineTicks: function(...args) {
     this.emit("ticks", ...args);
   },
-  _onTimelineMemory: function (...args) {
+  _onTimelineMemory: function(...args) {
     this.emit("memory", ...args);
   },
-  _onTimelineFrames: function (...args) {
+  _onTimelineFrames: function(...args) {
     this.emit("frames", ...args);
   },
 

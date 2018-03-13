@@ -21,13 +21,13 @@ xray wrapper.
 ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   let iframe = document.createElement("iframe");
   iframe.src = "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/nonchrome_unsafeDereference.html";
 
-  iframe.onload = function () {
+  iframe.onload = function() {
     let dbg = new Debugger();
     let contentDO = dbg.addDebuggee(iframe.contentWindow);
     let xhrDesc = contentDO.getOwnPropertyDescriptor("xhr");

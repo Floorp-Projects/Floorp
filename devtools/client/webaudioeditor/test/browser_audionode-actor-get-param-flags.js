@@ -5,14 +5,14 @@
  * Test AudioNode#getParamFlags()
  */
 
-add_task(function* () {
-  let { target, front } = yield initBackend(SIMPLE_NODES_URL);
-  let [_, nodes] = yield Promise.all([
+add_task(async function () {
+  let { target, front } = await initBackend(SIMPLE_NODES_URL);
+  let [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
     getN(front, "create-node", 15)
   ]);
 
-  let allNodeParams = yield Promise.all(nodes.map(node => node.getParams()));
+  let allNodeParams = await Promise.all(nodes.map(node => node.getParams()));
   let nodeTypes = [
     "AudioDestinationNode",
     "AudioBufferSourceNode", "ScriptProcessorNode", "AnalyserNode", "GainNode",
@@ -28,7 +28,7 @@ add_task(function* () {
     let params = allNodeParams[i];
 
     for (let {param, value, flags} of params) {
-      let testFlags = yield nodes[i].getParamFlags(param);
+      let testFlags = await nodes[i].getParamFlags(param);
       ok(typeof testFlags === "object", type + " has flags from #getParamFlags(" + param + ")");
 
       if (param === "buffer") {
@@ -43,5 +43,5 @@ add_task(function* () {
     }
   }
 
-  yield removeTab(target.tab);
+  await removeTab(target.tab);
 });

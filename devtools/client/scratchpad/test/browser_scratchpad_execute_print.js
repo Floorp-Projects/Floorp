@@ -18,16 +18,16 @@ function runTests() {
   let sp = gScratchpadWindow.Scratchpad;
   let tests = [{
     method: "run",
-    prepare: function* () {
-      yield inContent(function* () {
+    prepare: async function () {
+      await inContent(function() {
         content.wrappedJSObject.foobarBug636725 = 1;
       });
       sp.editor.setText("++window.foobarBug636725");
     },
-    then: function* ([code, , result]) {
+    then: async function ([code, , result]) {
       is(code, sp.getText(), "code is correct");
 
-      let pageResult = yield inContent(function* () {
+      let pageResult = await inContent(function() {
         return content.wrappedJSObject.foobarBug636725;
       });
       is(result, pageResult,
@@ -40,9 +40,9 @@ function runTests() {
     }
   }, {
     method: "display",
-    prepare: function* () {},
-    then: function* () {
-      let pageResult = yield inContent(function* () {
+    prepare: function() {},
+    then: async function () {
+      let pageResult = await inContent(function() {
         return content.wrappedJSObject.foobarBug636725;
       });
       is(pageResult, 3, "display() updated window.foobarBug636725");
@@ -54,12 +54,12 @@ function runTests() {
     }
   }, {
     method: "run",
-    prepare: function* () {
+    prepare: function() {
       sp.editor.setText("window.foobarBug636725 = 'a';\n" +
         "window.foobarBug636725 = 'b';");
       sp.editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 29 });
     },
-    then: function* ([code, , result]) {
+    then: async function ([code, , result]) {
       is(code, "window.foobarBug636725 = 'a';", "code is correct");
       is(result, "a", "result is correct");
 
@@ -67,20 +67,20 @@ function runTests() {
                        "window.foobarBug636725 = 'b';",
          "run() does not change the textbox value");
 
-      let pageResult = yield inContent(function* () {
+      let pageResult = await inContent(function() {
         return content.wrappedJSObject.foobarBug636725;
       });
       is(pageResult, "a", "run() worked for the selected range");
     }
   }, {
     method: "display",
-    prepare: function* () {
+    prepare: function() {
       sp.editor.setText("window.foobarBug636725 = 'c';\n" +
                  "window.foobarBug636725 = 'b';");
       sp.editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 22 });
     },
-    then: function* () {
-      let pageResult = yield inContent(function* () {
+    then: async function () {
+      let pageResult = await inContent(function() {
         return content.wrappedJSObject.foobarBug636725;
       });
       is(pageResult, "a", "display() worked for the selected range");

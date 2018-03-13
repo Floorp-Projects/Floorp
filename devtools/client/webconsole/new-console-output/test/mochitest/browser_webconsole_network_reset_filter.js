@@ -14,7 +14,7 @@ const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
                   "new-console-output/test/mochitest/";
 const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.webconsole.filter.net", true);
 
   let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");

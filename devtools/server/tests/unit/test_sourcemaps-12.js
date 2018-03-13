@@ -18,9 +18,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              define_code();
                            });
@@ -54,7 +54,7 @@ function define_code() {
 }
 
 function run_code() {
-  gClient.addOneTimeListener("paused", function (event, packet) {
+  gClient.addOneTimeListener("paused", function(event, packet) {
     Assert.equal(packet.why.type, "debuggerStatement");
     step_in();
   });
@@ -62,7 +62,7 @@ function run_code() {
 }
 
 function step_in() {
-  gClient.addOneTimeListener("paused", function (event, packet) {
+  gClient.addOneTimeListener("paused", function(event, packet) {
     Assert.equal(packet.why.type, "resumeLimit");
     let { frame: { environment, where: { source, line } } } = packet;
     // Stepping should have moved us to the next source mapped line.

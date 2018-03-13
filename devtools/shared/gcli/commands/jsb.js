@@ -89,7 +89,7 @@ exports.items = [
         ]
       }
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       /* eslint-disable camelcase */
       let opts = {
         indent_size: args.indentSize,
@@ -107,7 +107,7 @@ exports.items = [
 
       let deferred = context.defer();
 
-      xhr.onreadystatechange = function () {
+      xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
           if (xhr.status == 200 || xhr.status == 0) {
             let result = beautify.js(xhr.responseText, opts);

@@ -33,8 +33,8 @@ import android.content.Context;
 import android.database.Cursor;
 
 public class TestPasswordsRepository extends AndroidSyncTestCase {
-  private final String NEW_PASSWORD1 = "password";
-  private final String NEW_PASSWORD2 = "drowssap";
+  private static final String NEW_PASSWORD1 = "password";
+  private static final String NEW_PASSWORD2 = "drowssap";
 
   @Override
   public void setUp() {

@@ -15,9 +15,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_simple_new_source();
                            });
@@ -26,7 +26,7 @@ function run_test() {
 }
 
 function test_simple_new_source() {
-  gThreadClient.addOneTimeListener("newSource", function (event, packet) {
+  gThreadClient.addOneTimeListener("newSource", function(event, packet) {
     Assert.equal(event, "newSource");
     Assert.equal(packet.type, "newSource");
     Assert.ok(!!packet.source);

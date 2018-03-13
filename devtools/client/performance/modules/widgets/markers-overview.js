@@ -65,7 +65,7 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
   /**
    * List of marker types that should not be shown in the graph.
    */
-  setFilter: function (filter) {
+  setFilter: function(filter) {
     this._paintBatches = new Map();
     this._filter = filter;
     this._groupMap = Object.create(null);
@@ -94,7 +94,7 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
   /**
    * Disables selection and empties this graph.
    */
-  clearView: function () {
+  clearView: function() {
     this.selectionEnabled = false;
     this.dropSelection();
     this.setData({ duration: 0, markers: [] });
@@ -104,7 +104,7 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
    * Renders the graph's data source.
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
-  buildGraphImage: function () {
+  buildGraphImage: function() {
     let { markers, duration } = this._data;
 
     let { canvas, ctx } = this._getNamedCanvas("markers-overview-data");
@@ -216,7 +216,7 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
    * and updates the internal styling to match. Requires a redraw
    * to see the effects.
    */
-  setTheme: function (theme) {
+  setTheme: function(theme) {
     this.theme = theme = theme || "light";
     this.backgroundColor = getColor("body-background", theme);
     this.selectionBackgroundColor = colorUtils.setAlpha(

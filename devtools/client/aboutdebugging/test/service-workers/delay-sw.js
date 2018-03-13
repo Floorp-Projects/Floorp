@@ -12,6 +12,6 @@ function wait(ms) {
 }
 
 // Wait for one second to switch from installing to installed.
-self.addEventListener("install", function (event) {
+self.addEventListener("install", function(event) {
   event.waitUntil(wait(1000));
 });

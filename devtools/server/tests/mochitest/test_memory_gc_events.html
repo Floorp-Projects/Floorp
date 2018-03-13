@@ -15,12 +15,12 @@ Bug 1137527 - Test receiving GC events from the memory actor.
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   let EventEmitter = require("devtools/shared/event-emitter");
 
-  (async function () {
+  (async function() {
     let { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 

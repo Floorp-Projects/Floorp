@@ -10,7 +10,7 @@ const protocol = require("devtools/shared/protocol");
  * The corresponding Front object for the FunctionCallActor.
  */
 const FunctionCallFront = protocol.FrontClassWithSpec(functionCallSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   },
 
@@ -18,7 +18,7 @@ const FunctionCallFront = protocol.FrontClassWithSpec(functionCallSpec, {
    * Adds some generic information directly to this instance,
    * to avoid extra roundtrips.
    */
-  form: function (form) {
+  form: function(form) {
     this.actorID = form.actor;
     this.type = form.type;
     this.name = form.name;
@@ -39,7 +39,7 @@ exports.FunctionCallFront = FunctionCallFront;
 var CallWatcherFront =
 exports.CallWatcherFront =
 protocol.FrontClassWithSpec(callWatcherSpec, {
-  initialize: function (client, { callWatcherActor }) {
+  initialize: function(client, { callWatcherActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: callWatcherActor });
     this.manage(this);
   }

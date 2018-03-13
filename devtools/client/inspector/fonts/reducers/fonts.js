@@ -21,7 +21,7 @@ let reducers = {
 
 };
 
-module.exports = function (fontData = INITIAL_FONT_DATA, action) {
+module.exports = function(fontData = INITIAL_FONT_DATA, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return fontData;

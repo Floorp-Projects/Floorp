@@ -8,7 +8,7 @@
  * (including Unicode)
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(API_CALLS_URL);
   info("Starting test... ");
 
@@ -30,12 +30,12 @@ add_task(async function () {
   ];
 
   let wait = waitForNetworkEvents(monitor, 5);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequests();
   });
   await wait;
 
-  REQUEST_URIS.forEach(function (uri, index) {
+  REQUEST_URIS.forEach(function(uri, index) {
     verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),

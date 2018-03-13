@@ -16,9 +16,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_different_frames_eval();
                            });
@@ -27,28 +27,28 @@ function run_test() {
 }
 
 function test_different_frames_eval() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
-    gThreadClient.getFrames(0, 2, function (response) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+    gThreadClient.getFrames(0, 2, function(response) {
       let frame0 = response.frames[0];
       let frame1 = response.frames[1];
 
       // Eval against the top frame...
-      gThreadClient.eval(frame0.actor, "arg", function (response) {
+      gThreadClient.eval(frame0.actor, "arg", function(response) {
         Assert.equal(response.type, "resumed");
-        gThreadClient.addOneTimeListener("paused", function (event, packet) {
+        gThreadClient.addOneTimeListener("paused", function(event, packet) {
           // 'arg' should have been evaluated in frame0
           Assert.equal(packet.type, "paused");
           Assert.equal(packet.why.type, "clientEvaluated");
           Assert.equal(packet.why.frameFinished.return, "arg0");
 
           // Now eval against the second frame.
-          gThreadClient.eval(frame1.actor, "arg", function (response) {
-            gThreadClient.addOneTimeListener("paused", function (event, packet) {
+          gThreadClient.eval(frame1.actor, "arg", function(response) {
+            gThreadClient.addOneTimeListener("paused", function(event, packet) {
               // 'arg' should have been evaluated in frame1
               Assert.equal(packet.type, "paused");
               Assert.equal(packet.why.frameFinished.return, "arg1");
 
-              gThreadClient.resume(function () {
+              gThreadClient.resume(function() {
                 finishClient(gClient);
               });
             });
@@ -58,7 +58,7 @@ function test_different_frames_eval() {
     });
   });
 
-  gDebuggee.eval("(" + function () {
+  gDebuggee.eval("(" + function() {
     function frame0(arg) {
       debugger;
     }

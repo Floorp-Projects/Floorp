@@ -32,7 +32,7 @@ const TestData = [
   }
 ];
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   for (let data of TestData) {

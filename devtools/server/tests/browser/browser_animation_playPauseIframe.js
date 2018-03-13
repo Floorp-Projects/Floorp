@@ -9,7 +9,7 @@
 
 const URL = MAIN_DOMAIN + "animation.html";
 
-add_task(async function () {
+add_task(async function() {
   info("Creating a test document with 2 iframes containing animated nodes");
 
   let {client, walker, animations} = await initAnimationsFrontForUrl(

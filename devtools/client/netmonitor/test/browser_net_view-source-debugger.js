@@ -11,7 +11,7 @@ PromiseTestUtils.whitelistRejectionsGlobally(/Component not initialized/);
 /**
  * Tests if on clicking the stack frame, UI switches to the Debugger panel.
  */
-add_task(async function () {
+add_task(async function() {
   // Set a higher panel height in order to get full CodeMirror content
   await pushPref("devtools.toolbox.footer.height", 400);
 
@@ -61,7 +61,8 @@ async function checkClickOnNode(toolbox, frameLinkNode) {
   // wait for the promise to resolve
   await onJsDebuggerSelected;
 
-  let dbg = toolbox.getPanel("jsdebugger");
+  let dbg = await toolbox.getPanelWhenReady("jsdebugger");
+  await waitUntil(() => dbg._selectors.getSelectedSource(dbg._getState()));
   is(
     dbg._selectors.getSelectedSource(dbg._getState()).get("url"),
     url,

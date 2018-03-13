@@ -25,7 +25,7 @@ const principal =
  * @return {Object} Wrapper object that implements IDBFactory methods, but for a devtools
  *         specific principal.
  */
-exports.createDevToolsIndexedDB = function (indexedDB) {
+exports.createDevToolsIndexedDB = function(indexedDB) {
   return Object.freeze({
     /**
      * Only the standard version of indexedDB.open is supported.

@@ -109,7 +109,8 @@ with Files('../app/src/*/res/menu/*activitystream*'):
 with Files('../app/src/*/res/menu/browsersearch_contextmenu.xml'):
     BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
 
-DIRS += ['locales']
+DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
+FINAL_TARGET_PP_FILES += ['package-name.txt.in']
 
 GENERATED_FILES += [
     'AndroidManifest.xml',
@@ -130,5 +131,65 @@ z = GENERATED_FILES['AndroidManifest.xml']
 z.script = 'generate_build_config.py:generate_android_manifest'
 z.inputs += ['AndroidManifest.xml.in']
 
-DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
-FINAL_TARGET_PP_FILES += ['package-name.txt.in']
+# Regular builds invoke `libs` targets that localize files with no AB_CD set
+# into the default resources (res/{values,raw}).
+#
+# Multi-locale builds invoke `chrome-%` targets that localize files into
+# locale-specific resources (res/{values,raw}-AB-rCD).  Single-locale repacks
+# invoke `libs AB_CD=$*` targets that localize files into the default resources
+# (res/{values,raw}).
+#
+# Therefore, every localized generated file needs to be written into both the
+# default resources (res/{values,raw}) and the locale-specific resources
+# (res/{values,raw}-AB-rCD), depending on Make target magic controlled in
+# mobile/android/base (for regular builds) and in mobile/android/locales (for
+# multi-locale builds and single-locale repacks).  Make target magic ensures
+# that res/{values,raw}-AB-rCD is not written for regular en-US builds.
+
+for f in ['res/raw/browsersearch.json',
+          'res/raw{AB_rCD}/browsersearch.json']:
+    LOCALIZED_GENERATED_FILES += [f]
+    browsersearch = LOCALIZED_GENERATED_FILES[f]
+    browsersearch.script = '/python/mozbuild/mozbuild/action/generate_browsersearch.py'
+    browsersearch.inputs = [
+        # The `locales/en-US/` in this path will be rewritten to the
+        # locale-specific path.
+        '/mobile/locales/en-US/chrome/region.properties',
+    ]
+    browsersearch.flags += [
+        '--verbose',
+        '--fallback',
+        # The `locales/en-US` in this path will not be rewritten.
+        TOPSRCDIR + '/mobile/locales/en-US/chrome/region.properties',
+    ]
+
+for f in ['res/raw/suggestedsites.json',
+          'res/raw{AB_rCD}/suggestedsites.json']:
+    LOCALIZED_GENERATED_FILES += [f]
+    suggestedsites = LOCALIZED_GENERATED_FILES[f]
+    suggestedsites.script = '/python/mozbuild/mozbuild/action/generate_suggestedsites.py'
+    suggestedsites.inputs = [
+        # The `locales/en-US/` in this path will be rewritten to the
+        # locale-specific path.
+        '/mobile/locales/en-US/chrome/region.properties',
+    ]
+    suggestedsites.flags += [
+        '--verbose',
+        '--android-package-name', CONFIG['ANDROID_PACKAGE_NAME'],
+        '--resources', TOPSRCDIR + '/mobile/android/app/src/photon/res',
+        '--fallback',
+        # The `locales/en-US` in this path will not be rewritten.
+        TOPSRCDIR + '/mobile/locales/en-US/chrome/region.properties',
+    ]
+
+for f in ['res/values/strings.xml',
+          'res/values{AB_rCD}/strings.xml']:
+    LOCALIZED_GENERATED_FILES += [f]
+    strings = LOCALIZED_GENERATED_FILES[f]
+    strings.script = '/python/mozbuild/mozbuild/action/generate_strings_xml.py'
+    strings.inputs = [
+        'strings.xml.in',
+        # The `locales/en-US/` will be rewritten to the locale-specific path.
+        'locales/en-US/android_strings.dtd',
+        'locales/en-US/sync_strings.dtd',
+    ]

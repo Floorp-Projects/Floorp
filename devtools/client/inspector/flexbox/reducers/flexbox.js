@@ -37,7 +37,7 @@ let reducers = {
 
 };
 
-module.exports = function (flexbox = INITIAL_FLEXBOX, action) {
+module.exports = function(flexbox = INITIAL_FLEXBOX, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return flexbox;

@@ -10,11 +10,11 @@ waitForExplicitFinish();
 
 const TEST_URL = TEST_BASE + "doc_xulpage.xul";
 
-add_task(function* () {
-  let tab = yield addTab(TEST_URL);
+add_task(async function() {
+  let tab = await addTab(TEST_URL);
   let target = TargetFactory.forTab(tab);
 
-  let toolbox = yield gDevTools.showToolbox(target, "styleeditor");
+  let toolbox = await gDevTools.showToolbox(target, "styleeditor");
   let panel = toolbox.getCurrentPanel();
 
   ok(panel,

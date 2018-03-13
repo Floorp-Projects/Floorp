@@ -12,28 +12,28 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function() {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   pmmLoadFrameScripts(gBrowser);
 
-  ok(!(yield pmmIsProfilerActive()),
+  ok(!(await pmmIsProfilerActive()),
     "The built-in profiler module should not have been automatically started.");
 
-  yield startRecording(panel);
+  await startRecording(panel);
 
-  ok((yield pmmIsProfilerActive()),
+  ok((await pmmIsProfilerActive()),
     "The built-in profiler module should now be active.");
 
-  yield stopRecording(panel);
+  await stopRecording(panel);
 
-  ok((yield pmmIsProfilerActive()),
+  ok((await pmmIsProfilerActive()),
     "The built-in profiler module should still be active.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 
   pmmClearFrameScripts();
 });

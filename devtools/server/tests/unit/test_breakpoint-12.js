@@ -18,7 +18,7 @@ var gCount;
 var gCallback;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -30,9 +30,9 @@ function run_test_with_server(server, callback) {
   initTestDebuggerServer(server);
   gDebuggee = addTestGlobal("test-stack", server);
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_child_skip_breakpoint();
                            });
@@ -40,11 +40,11 @@ function run_test_with_server(server, callback) {
 }
 
 function test_child_skip_breakpoint() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let source = gThreadClient.source(packet.frame.where.source);
     let location = { line: gDebuggee.line0 + 3};
 
-    source.setBreakpoint(location, function (response, bpClient) {
+    source.setBreakpoint(location, function(response, bpClient) {
       // Check that the breakpoint has properly skipped forward one line.
       Assert.equal(response.actualLocation.source.actor, source.actor);
       Assert.equal(response.actualLocation.line, location.line + 1);
@@ -71,7 +71,7 @@ function test_child_skip_breakpoint() {
 // Set many breakpoints at the same location.
 function set_breakpoints(source, location) {
   Assert.notEqual(gCount, NUM_BREAKPOINTS);
-  source.setBreakpoint(location, function (response, bpClient) {
+  source.setBreakpoint(location, function(response, bpClient) {
     // Check that the breakpoint has properly skipped forward one line.
     Assert.equal(response.actualLocation.source.actor, source.actor);
     Assert.equal(response.actualLocation.line, location.line + 1);
@@ -85,7 +85,7 @@ function set_breakpoints(source, location) {
 
     // After setting all the breakpoints, check that only one has effectively
     // remained.
-    gThreadClient.addOneTimeListener("paused", function (event, packet) {
+    gThreadClient.addOneTimeListener("paused", function(event, packet) {
       // Check the return value.
       Assert.equal(packet.type, "paused");
       Assert.equal(packet.frame.where.source.actor, source.actor);
@@ -96,13 +96,13 @@ function set_breakpoints(source, location) {
       Assert.equal(gDebuggee.a, 1);
       Assert.equal(gDebuggee.b, undefined);
 
-      gThreadClient.addOneTimeListener("paused", function (event, packet) {
+      gThreadClient.addOneTimeListener("paused", function(event, packet) {
         // We don't expect any more pauses after the breakpoint was hit once.
         Assert.ok(false);
       });
-      gThreadClient.resume(function () {
+      gThreadClient.resume(function() {
         // Give any remaining breakpoints a chance to trigger.
-        do_timeout(1000, function () {
+        do_timeout(1000, function() {
           gClient.close().then(gCallback);
         });
       });

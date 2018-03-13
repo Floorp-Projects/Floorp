@@ -16,7 +16,7 @@ addDebuggerToGlobal(this);
 
 // Add a method to Debugger.Object for fetching value properties
 // conveniently.
-Debugger.Object.prototype.getProperty = function (name) {
+Debugger.Object.prototype.getProperty = function(name) {
   let desc = this.getOwnPropertyDescriptor(name);
   if (!desc) {
     return undefined;

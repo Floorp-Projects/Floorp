@@ -16,7 +16,7 @@ const TEST_IFRAME_URI = "http://example.com/browser/devtools/client/webconsole/"
 const TEST_DUMMY_URI = "http://example.com/browser/devtools/client/webconsole/" +
   "new-console-output/test/mochitest/test-console.html";
 
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.webconsole.filter.net", true);
   const tab1 = await addTab(TEST_URI);
   const hud1 = await openConsole(tab1);

@@ -16,7 +16,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webconsole.persistlog");
 });
 
-add_task(async function () {
+add_task(async function() {
   info("Testing that messages disappear on a refresh if logs aren't persisted");
   let hud = await openNewTabAndConsole(TEST_URI);
 
@@ -34,7 +34,7 @@ add_task(async function () {
   await closeToolbox();
 });
 
-add_task(async function () {
+add_task(async function() {
   info("Testing that messages persist on a refresh if logs are persisted");
 
   let hud = await openNewTabAndConsole(TEST_URI);

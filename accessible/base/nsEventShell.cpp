@@ -6,6 +6,7 @@
 #include "nsEventShell.h"
 
 #include "nsAccUtils.h"
+#include "Logging.h"
 
 #include "mozilla/StaticPtr.h"
 

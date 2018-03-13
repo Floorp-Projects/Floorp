@@ -37,6 +37,7 @@ public:
   bool AllowRFC1918() { return mRfc1918; }
   bool UseGET() { return mUseGET; }
   bool EarlyAAAA() { return mEarlyAAAA; }
+  bool DisableIPv6() { return mDisableIPv6; }
   nsresult GetURI(nsCString &result);
   nsresult GetCredentials(nsCString &result);
   uint32_t GetRequestTimeout() { return mTRRTimeout; }
@@ -69,6 +70,7 @@ private:
   Atomic<bool, Relaxed> mCaptiveIsPassed; // set when captive portal check is passed
   Atomic<bool, Relaxed> mUseGET; // do DOH using GET requests (instead of POST)
   Atomic<bool, Relaxed> mEarlyAAAA; // allow use of AAAA results before A is in
+  Atomic<bool, Relaxed> mDisableIPv6; // don't even try
 
   // TRR Blacklist storage
   RefPtr<DataStorage> mTRRBLStorage;

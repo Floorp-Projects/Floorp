@@ -78,7 +78,7 @@ function loadItemsFromMozDir() {
   });
 }
 
-exports.mozDirLoader = function (name) {
+exports.mozDirLoader = function(name) {
   return loadItemsFromMozDir().then(items => {
     return { items };
   });
@@ -128,7 +128,7 @@ exports.items = [
     get hidden() {
       return !Services.prefs.prefHasUserValue(PREF_DIR);
     },
-    exec: function (args, context) {
+    exec: function(args, context) {
       gcli.load();
 
       let dirName = Services.prefs.getStringPref(PREF_DIR).trim();
@@ -158,7 +158,7 @@ exports.items = [
       // !Services.prefs.prefHasUserValue(PREF_DIR);
       return true;
     },
-    exec: function (args, context) {
+    exec: function(args, context) {
       Services.prefs.setStringPref(PREF_DIR, args.directory);
 
       gcli.load();

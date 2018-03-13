@@ -55,11 +55,11 @@ registerCleanupFunction(() => {
  *
  * @return {Promise} A promise that resolves after the tab is ready
  */
-function* openTab(url, options = {}) {
-  let tab = yield addTab(url, options);
+async function openTab(url, options = {}) {
+  let tab = await addTab(url, options);
 
   // Setup the async storages in main window and for all its iframes
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     /**
      * Get all windows including frames recursively.
      *
@@ -72,7 +72,7 @@ function* openTab(url, options = {}) {
     function getAllWindows(baseWindow) {
       let windows = new Set();
 
-      let _getAllWindows = function (win) {
+      let _getAllWindows = function(win) {
         windows.add(win.wrappedJSObject);
 
         for (let i = 0; i < win.length; i++) {
@@ -89,7 +89,7 @@ function* openTab(url, options = {}) {
       let readyState = win.document.readyState;
       info(`Found a window: ${readyState}`);
       if (readyState != "complete") {
-        yield new Promise(resolve => {
+        await new Promise(resolve => {
           let onLoad = () => {
             win.removeEventListener("load", onLoad);
             resolve();
@@ -98,7 +98,7 @@ function* openTab(url, options = {}) {
         });
       }
       if (win.setup) {
-        yield win.setup();
+        await win.setup();
       }
     }
   });
@@ -117,12 +117,12 @@ function* openTab(url, options = {}) {
  *
  * @return {Promise} A promise that resolves after storage inspector is ready
  */
-function* openTabAndSetupStorage(url, options = {}) {
+async function openTabAndSetupStorage(url, options = {}) {
   // open tab
-  yield openTab(url, options);
+  await openTab(url, options);
 
   // open storage inspector
-  return yield openStoragePanel();
+  return openStoragePanel();
 }
 
 /**
@@ -133,7 +133,7 @@ function* openTabAndSetupStorage(url, options = {}) {
  *
  * @return {Promise} a promise that resolves when the storage inspector is ready
  */
-var openStoragePanel = Task.async(function* (cb) {
+var openStoragePanel = async function(cb) {
   info("Opening the storage inspector");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
@@ -162,7 +162,7 @@ var openStoragePanel = Task.async(function* (cb) {
   }
 
   info("Opening the toolbox");
-  toolbox = yield gDevTools.showToolbox(target, "storage");
+  toolbox = await gDevTools.showToolbox(target, "storage");
   storage = toolbox.getPanel("storage");
   gPanelWindow = storage.panelWindow;
   gUI = storage.UI;
@@ -173,9 +173,9 @@ var openStoragePanel = Task.async(function* (cb) {
   gUI.animationsEnabled = false;
 
   info("Waiting for the stores to update");
-  yield gUI.once("store-objects-updated");
+  await gUI.once("store-objects-updated");
 
-  yield waitForToolboxFrameFocus(toolbox);
+  await waitForToolboxFrameFocus(toolbox);
 
   if (cb) {
     return cb(storage, toolbox);
@@ -185,7 +185,7 @@ var openStoragePanel = Task.async(function* (cb) {
     toolbox: toolbox,
     storage: storage
   };
-});
+};
 
 /**
  * Wait for the toolbox frame to receive focus after it loads
@@ -215,9 +215,9 @@ function forceCollections() {
 /**
  * Cleans up and finishes the test
  */
-function* finishTests() {
+async function finishTests() {
   while (gBrowser.tabs.length > 1) {
-    yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
       /**
        * Get all windows including frames recursively.
        *
@@ -230,7 +230,7 @@ function* finishTests() {
       function getAllWindows(baseWindow) {
         let windows = new Set();
 
-        let _getAllWindows = function (win) {
+        let _getAllWindows = function(win) {
           windows.add(win.wrappedJSObject);
 
           for (let i = 0; i < win.length; i++) {
@@ -253,12 +253,12 @@ function* finishTests() {
         }
 
         if (win.clear) {
-          yield win.clear();
+          await win.clear();
         }
       }
     });
 
-    yield closeTabAndToolbox(gBrowser.selectedTab);
+    await closeTabAndToolbox(gBrowser.selectedTab);
   }
 
   Services.cookies.removeAll();
@@ -267,7 +267,7 @@ function* finishTests() {
 }
 
 // Sends a click event on the passed DOM node in an async manner
-function* click(node) {
+function click(node) {
   node.scrollIntoView();
 
   return new Promise(resolve => {
@@ -420,12 +420,12 @@ function findVariableViewProperties(ruleArray, parsed) {
         rule.name = lastName;
 
         let matched = matchVariablesViewProperty(prop, rule);
-        return matched.then(onMatch.bind(null, prop, rule)).then(function () {
+        return matched.then(onMatch.bind(null, prop, rule)).then(function() {
           rule.name = name;
         });
       }, function onFailure() {
         resolve(null);
-      }).then(processExpandRules.bind(null, rules)).then(function () {
+      }).then(processExpandRules.bind(null, rules)).then(function() {
         resolve(null);
       });
     });
@@ -506,7 +506,7 @@ function matchVariablesViewProperty(prop, rule) {
  * @param {[String]} ids
  *        The array id of the item in the tree
  */
-function* selectTreeItem(ids) {
+async function selectTreeItem(ids) {
   if (gUI.tree.isSelected(ids)) {
     info(`"${ids}" is already selected, returning.`);
     return;
@@ -520,7 +520,7 @@ function* selectTreeItem(ids) {
   info(`Selecting "${ids}".`);
   let updated = gUI.once("store-objects-updated");
   gUI.tree.selectedItem = ids;
-  yield updated;
+  await updated;
 }
 
 /**
@@ -529,7 +529,7 @@ function* selectTreeItem(ids) {
  * @param {String} id
  *        The id of the row in the table widget
  */
-function* selectTableItem(id) {
+async function selectTableItem(id) {
   let table = gUI.table;
   let selector = ".table-widget-column#" + table.uniqueId +
                  " .table-widget-cell[value='" + id + "']";
@@ -543,8 +543,8 @@ function* selectTableItem(id) {
 
   let updated = gUI.once("sidebar-updated");
 
-  yield click(target);
-  yield updated;
+  await click(target);
+  await updated;
 }
 
 /**
@@ -715,13 +715,13 @@ function getCellValue(id, column) {
  * @yield {String}
  *        The uniqueId of the changed row.
  */
-function* editCell(id, column, newValue, validate = true) {
+async function editCell(id, column, newValue, validate = true) {
   let row = getRowCells(id, true);
   let editableFieldsEngine = gUI.table._editableFieldsEngine;
 
   editableFieldsEngine.edit(row[column]);
 
-  yield typeWithTerminator(newValue, "KEY_Enter", validate);
+  await typeWithTerminator(newValue, "KEY_Enter", validate);
 }
 
 /**
@@ -734,7 +734,7 @@ function* editCell(id, column, newValue, validate = true) {
  * @param {Boolean} selectText
  *        Select text? Default true.
  */
-function* startCellEdit(id, column, selectText = true) {
+function startCellEdit(id, column, selectText = true) {
   let row = getRowCells(id, true);
   let editableFieldsEngine = gUI.table._editableFieldsEngine;
   let cell = row[column];
@@ -824,7 +824,7 @@ function showAllColumns(state) {
  * @param  {Boolean} validate
  *         Validate result? Default true.
  */
-function* typeWithTerminator(str, terminator, validate = true) {
+async function typeWithTerminator(str, terminator, validate = true) {
   let editableFieldsEngine = gUI.table._editableFieldsEngine;
   let textbox = editableFieldsEngine.textbox;
   let colName = textbox.closest(".table-widget-column").id;
@@ -843,13 +843,13 @@ function* typeWithTerminator(str, terminator, validate = true) {
 
   if (validate) {
     info("Validating results... waiting for ROW_EDIT event.");
-    let uniqueId = yield gUI.table.once(TableWidget.EVENTS.ROW_EDIT);
+    let uniqueId = await gUI.table.once(TableWidget.EVENTS.ROW_EDIT);
 
     checkCell(uniqueId, colName, str);
     return uniqueId;
   }
 
-  return yield gUI.table.once(TableWidget.EVENTS.ROW_EDIT);
+  return gUI.table.once(TableWidget.EVENTS.ROW_EDIT);
 }
 
 function getCurrentEditorValue() {
@@ -884,11 +884,11 @@ function PressKeyXTimes(key, x, modifiers = {}) {
  *        "example.com" host in cookies and then verify there are "c1" and "c2"
  *        cookies (and no other ones).
  */
-function* checkState(state) {
+async function checkState(state) {
   for (let [store, names] of state) {
     let storeName = store.join(" > ");
     info(`Selecting tree item ${storeName}`);
-    yield selectTreeItem(store);
+    await selectTreeItem(store);
 
     let items = gUI.table.items;
 
@@ -927,7 +927,7 @@ function containsFocus(doc, container) {
   return false;
 }
 
-var focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
+var focusSearchBoxUsingShortcut = async function(panelWin, callback) {
   info("Focusing search box");
   let searchBox = panelWin.document.getElementById("storage-searchbox");
   let focused = once(searchBox, "focus");
@@ -937,12 +937,12 @@ var focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
     "chrome://devtools/locale/storage.properties");
   synthesizeKeyShortcut(strings.GetStringFromName("storage.filter.key"));
 
-  yield focused;
+  await focused;
 
   if (callback) {
     callback();
   }
-});
+};
 
 function getCookieId(name, domain, path) {
   return `${name}${SEPARATOR_GUID}${domain}${SEPARATOR_GUID}${path}`;
@@ -974,12 +974,12 @@ function sidebarToggleVisible() {
  *         An array containing the path to the store to which we wish to add an
  *         item.
  */
-function* performAdd(store) {
+async function performAdd(store) {
   let storeName = store.join(" > ");
   let toolbar = gPanelWindow.document.getElementById("storage-toolbar");
   let type = store[0];
 
-  yield selectTreeItem(store);
+  await selectTreeItem(store);
 
   let menuAdd = toolbar.querySelector(
     "#add-button");
@@ -995,8 +995,8 @@ function* performAdd(store) {
 
   menuAdd.click();
 
-  let rowId = yield eventEdit;
-  yield eventWait;
+  let rowId = await eventEdit;
+  await eventWait;
 
   let key = type === "cookies" ? "uniqueKey" : "name";
   let value = getCellValue(rowId, key);

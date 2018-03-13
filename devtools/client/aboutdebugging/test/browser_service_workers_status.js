@@ -11,31 +11,31 @@ const SW_TIMEOUT = 2000;
 
 requestLongerTimeout(2);
 
-add_task(function* () {
-  yield enableServiceWorkerDebugging();
-  yield pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
-  yield pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
+add_task(async function() {
+  await enableServiceWorkerDebugging();
+  await pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
+  await pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
 
-  let { tab, document } = yield openAboutDebugging("workers");
+  let { tab, document } = await openAboutDebugging("workers");
 
   // Listen for mutations in the service-workers list.
   let serviceWorkersElement = getServiceWorkerList(document);
 
-  let swTab = yield addTab(TAB_URL);
+  let swTab = await addTab(TAB_URL);
 
   info("Wait until the service worker appears in about:debugging");
-  let container = yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
+  let container = await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
   // We should ideally check that the service worker registration goes through the
   // "registering" and "running" steps, but it is difficult to workaround race conditions
   // for a test running on a wide variety of platforms. Due to intermittent failures, we
   // simply check that the registration transitions to "stopped".
   let status = container.querySelector(".target-status");
-  yield waitUntil(() => status.textContent == "Stopped", 100);
+  await waitUntil(() => status.textContent == "Stopped", 100);
   is(status.textContent, "Stopped", "Service worker is currently stopped");
 
   try {
-    yield unregisterServiceWorker(swTab, serviceWorkersElement);
+    await unregisterServiceWorker(swTab, serviceWorkersElement);
     ok(true, "Service worker unregistered");
   } catch (e) {
     ok(false, "Service worker not unregistered; " + e);
@@ -47,6 +47,6 @@ add_task(function* () {
   ok(!names.includes(SERVICE_WORKER),
     "The service worker url is no longer in the list: " + names);
 
-  yield removeTab(swTab);
-  yield closeAboutDebugging(tab);
+  await removeTab(swTab);
+  await closeAboutDebugging(tab);
 });

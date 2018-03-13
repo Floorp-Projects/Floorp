@@ -13,7 +13,7 @@ function sortObjectKeys(object) {
   if (object == null) {
     return null;
   }
-  return Object.keys(object).sort(function (left, right) {
+  return Object.keys(object).sort(function(left, right) {
     return left.toLowerCase().localeCompare(right.toLowerCase());
   }).reduce((acc, key) => {
     if (typeof object[key] === "object") {

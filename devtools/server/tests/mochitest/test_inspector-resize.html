@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1222409
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
@@ -29,7 +29,7 @@ window.onload = function () {
 
     // eslint-disable-next-line new-cap
     await new Promise(resolve => {
-      attachURL(url, function (err, client, tab, doc) {
+      attachURL(url, function(err, client, tab, doc) {
         win = doc.defaultView;
         inspector = InspectorFront(client, tab);
         resolve();
@@ -39,7 +39,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(async function () {
+  addAsyncTest(async function() {
     let walker = await inspector.getWalker();
 
     // We can't receive events from the walker if we haven't first executed a

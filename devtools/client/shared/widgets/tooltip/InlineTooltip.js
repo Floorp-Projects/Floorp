@@ -83,7 +83,7 @@ InlineTooltip.prototype = {
     return this.panel.firstChild;
   },
 
-  _getTopWindow: function () {
+  _getTopWindow: function() {
     return this.doc.defaultView;
   },
 

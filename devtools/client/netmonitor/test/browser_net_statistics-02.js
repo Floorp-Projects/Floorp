@@ -8,7 +8,7 @@
  * the performance analysis view.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { monitor } = await initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 

@@ -10,7 +10,7 @@ const TEST_URL =
   `data:text/html,<a href="${TAB_URL}">Click me</a>`
   .replace(/ /g, "%20");
 
-addRDMTask(TEST_URL, async function ({ ui }) {
+addRDMTask(TEST_URL, async function({ ui }) {
   let store = ui.toolWindow.store;
 
   // Wait until the viewport has been added

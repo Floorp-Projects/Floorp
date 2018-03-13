@@ -79,7 +79,7 @@ let inspector;
 
 function test() {
   waitForExplicitFinish();
-  addTab(TEST_URI).then(function () {
+  addTab(TEST_URI).then(function() {
     /* eslint-disable mozilla/no-cpows-in-tests */
     doc = gBrowser.contentDocumentAsCPOW;
     /* eslint-enable mozilla/no-cpows-in-tests */

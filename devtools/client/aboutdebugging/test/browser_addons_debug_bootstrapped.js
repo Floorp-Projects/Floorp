@@ -15,8 +15,8 @@ const ADDON_NAME = "test-devtools";
 
 const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
 
-add_task(function* () {
-  yield new Promise(resolve => {
+add_task(async function() {
+  await new Promise(resolve => {
     let options = {"set": [
       // Force enabling of addons debugging
       ["devtools.chrome.enabled", true],
@@ -29,9 +29,9 @@ add_task(function* () {
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
-  let { tab, document } = yield openAboutDebugging("addons");
-  yield waitForInitialAddonList(document);
-  yield installAddon({
+  let { tab, document } = await openAboutDebugging("addons");
+  await waitForInitialAddonList(document);
+  await installAddon({
     document,
     path: "addons/unpacked/install.rdf",
     name: ADDON_NAME,
@@ -58,7 +58,7 @@ add_task(function* () {
   // which lives in another process. So do not try to use any scope variable!
   let env = Cc["@mozilla.org/process/environment;1"]
               .getService(Ci.nsIEnvironment);
-  let testScript = function () {
+  let testScript = function() {
     /* eslint-disable no-undef */
     toolbox.selectTool("webconsole")
       .then(console => {
@@ -77,12 +77,12 @@ add_task(function* () {
 
   debugBtn.click();
 
-  yield onCustomMessage;
+  await onCustomMessage;
   ok(true, "Received the notification message from the bootstrap.js function");
 
-  yield onToolboxClose;
+  await onToolboxClose;
   ok(true, "Addon toolbox closed");
 
-  yield uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
-  yield closeAboutDebugging(tab);
+  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  await closeAboutDebugging(tab);
 });

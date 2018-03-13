@@ -19,35 +19,35 @@ function testSelectTool(toolbox) {
   toolbox.selectTool("options");
 }
 
-let testToggleJS = Task.async(function* (toolbox) {
+let testToggleJS = async function (toolbox) {
   ok(true, "Toolbox selected via selectTool method");
 
-  yield testJSEnabled();
-  yield testJSEnabledIframe();
+  await testJSEnabled();
+  await testJSEnabledIframe();
 
   // Disable JS.
-  yield toggleJS(toolbox);
+  await toggleJS(toolbox);
 
-  yield testJSDisabled();
-  yield testJSDisabledIframe();
+  await testJSDisabled();
+  await testJSDisabledIframe();
 
   // Re-enable JS.
-  yield toggleJS(toolbox);
+  await toggleJS(toolbox);
 
-  yield testJSEnabled();
-  yield testJSEnabledIframe();
+  await testJSEnabled();
+  await testJSEnabledIframe();
 
   finishUp(toolbox);
-});
+};
 
-function* testJSEnabled() {
+async function testJSEnabled() {
   info("Testing that JS is enabled");
 
   // We use waitForTick here because switching docShell.allowJavascript to true
   // takes a while to become live.
-  yield waitForTick();
+  await waitForTick();
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     let doc = content.document;
     let output = doc.getElementById("output");
     doc.querySelector("#logJSEnabled").click();
@@ -55,10 +55,10 @@ function* testJSEnabled() {
   });
 }
 
-function* testJSEnabledIframe() {
+async function testJSEnabledIframe() {
   info("Testing that JS is enabled in the iframe");
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     let doc = content.document;
     let iframe = doc.querySelector("iframe");
     let iframeDoc = iframe.contentDocument;
@@ -69,7 +69,7 @@ function* testJSEnabledIframe() {
   });
 }
 
-function* toggleJS(toolbox) {
+async function toggleJS(toolbox) {
   let panel = toolbox.getCurrentPanel();
   let cbx = panel.panelDoc.getElementById("devtools-disable-javascript");
 
@@ -81,13 +81,13 @@ function* toggleJS(toolbox) {
 
   let browserLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   cbx.click();
-  yield browserLoaded;
+  await browserLoaded;
 }
 
-function* testJSDisabled() {
+async function testJSDisabled() {
   info("Testing that JS is disabled");
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     let doc = content.document;
     let output = doc.getElementById("output");
     doc.querySelector("#logJSDisabled").click();
@@ -97,10 +97,10 @@ function* testJSDisabled() {
   });
 }
 
-function* testJSDisabledIframe() {
+async function testJSDisabledIframe() {
   info("Testing that JS is disabled in the iframe");
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     let doc = content.document;
     let iframe = doc.querySelector("iframe");
     let iframeDoc = iframe.contentDocument;

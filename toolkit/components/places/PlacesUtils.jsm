@@ -2151,11 +2151,11 @@ PlacesUtils.keywords = {
               `INSERT INTO moz_keywords (keyword, place_id, post_data)
                VALUES (:keyword, (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :post_data)
               `, { url: url.href, keyword, post_data: postData });
+
+            await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
+              db, url, PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source));
           });
         }
-
-        await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
-          db, url, PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source));
 
         cache.set(keyword, { keyword, url, postData: postData || null });
 
@@ -2195,11 +2195,13 @@ PlacesUtils.keywords = {
       let { url } = cache.get(keyword);
       cache.delete(keyword);
 
-      await db.execute(`DELETE FROM moz_keywords WHERE keyword = :keyword`,
-                       { keyword });
+      await db.executeTransaction(async function() {
+        await db.execute(`DELETE FROM moz_keywords WHERE keyword = :keyword`,
+                         { keyword });
 
-      await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
-        db, url, PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source));
+        await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
+          db, url, PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source));
+      });
 
       // Notify bookmarks about the removal.
       await notifyKeywordChange(url.href, "", source);

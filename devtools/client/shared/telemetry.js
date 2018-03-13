@@ -191,7 +191,7 @@ Telemetry.prototype = {
    *         Used to look up the relevant histogram ID and log true to that
    *         histogram.
    */
-  toolOpened: function (id) {
+  toolOpened: function(id) {
     let charts = this._histograms[id] || this._histograms.custom;
 
     if (charts.histogram) {
@@ -214,7 +214,7 @@ Telemetry.prototype = {
     this.toolOpened(id);
   },
 
-  toolClosed: function (id) {
+  toolClosed: function(id) {
     let charts = this._histograms[id];
 
     if (!charts || !charts.timerHistogram) {
@@ -230,7 +230,7 @@ Telemetry.prototype = {
    * @param String histogramId
    *        Histogram in which the data is to be stored.
    */
-  startTimer: function (histogramId) {
+  startTimer: function(histogramId) {
     this._timers.set(histogramId, new Date());
   },
 
@@ -242,7 +242,7 @@ Telemetry.prototype = {
    * @param String key [optional]
    *        Optional key for a keyed histogram.
    */
-  stopTimer: function (histogramId, key) {
+  stopTimer: function(histogramId, key) {
     let startTime = this._timers.get(histogramId);
     if (startTime) {
       let time = (new Date() - startTime) / 1000;
@@ -263,7 +263,7 @@ Telemetry.prototype = {
    * @param  value
    *         Value to store.
    */
-  log: function (histogramId, value) {
+  log: function(histogramId, value) {
     if (!histogramId) {
       return;
     }
@@ -285,7 +285,7 @@ Telemetry.prototype = {
    * @param  value
    *         Value to store.
    */
-  logScalar: function (scalarId, value) {
+  logScalar: function(scalarId, value) {
     if (!scalarId) {
       return;
     }
@@ -315,7 +315,7 @@ Telemetry.prototype = {
    * @param  value
    *         Value to store.
    */
-  logKeyedScalar: function (scalarId, key, value) {
+  logKeyedScalar: function(scalarId, key, value) {
     if (!scalarId) {
       return;
     }
@@ -345,7 +345,7 @@ Telemetry.prototype = {
    * @param  [value]
    *         Optional value to store.
    */
-  logKeyed: function (histogramId, key, value) {
+  logKeyed: function(histogramId, key, value) {
     if (histogramId) {
       try {
         let histogram = Services.telemetry.getKeyedHistogramById(histogramId);
@@ -369,7 +369,7 @@ Telemetry.prototype = {
    * @param  {String} perUserHistogram
    *         Histogram in which the data is to be stored.
    */
-  logOncePerBrowserVersion: function (perUserHistogram, value) {
+  logOncePerBrowserVersion: function(perUserHistogram, value) {
     let currentVersion = Services.appinfo.version;
     let latest = Services.prefs.getCharPref(TOOLS_OPENED_PREF);
     let latestObj = JSON.parse(latest);
@@ -385,7 +385,7 @@ Telemetry.prototype = {
     }
   },
 
-  destroy: function () {
+  destroy: function() {
     for (let histogramId of this._timers.keys()) {
       this.stopTimer(histogramId);
     }

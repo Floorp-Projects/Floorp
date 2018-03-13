@@ -41,7 +41,7 @@ function RegisteredActorFactory(options, prefix) {
     } else {
       // Lazy actor definition, where options contains all the information
       // required to load the actor lazily.
-      this._getConstructor = function () {
+      this._getConstructor = function() {
         // Load the module
         let mod;
         try {
@@ -77,7 +77,7 @@ function RegisteredActorFactory(options, prefix) {
     }
   }
 }
-RegisteredActorFactory.prototype.createObservedActorFactory = function (conn,
+RegisteredActorFactory.prototype.createObservedActorFactory = function(conn,
   parentActor) {
   return new ObservedActorFactory(this._getConstructor, this._prefix, conn, parentActor);
 };
@@ -108,7 +108,7 @@ function ObservedActorFactory(getConstructor, prefix, conn, parentActor) {
   this.actorID = null;
   this.registeredPool = null;
 }
-ObservedActorFactory.prototype.createActor = function () {
+ObservedActorFactory.prototype.createActor = function() {
   // Fetch the actor constructor
   let C = this._getConstructor();
   // Instantiate a new actor instance
@@ -284,11 +284,11 @@ ActorPool.prototype = {
   /**
    * Match the api expected by the protocol library.
    */
-  unmanage: function (actor) {
+  unmanage: function(actor) {
     return this.removeActor(actor);
   },
 
-  forEach: function (callback) {
+  forEach: function(callback) {
     for (let name in this._actors) {
       callback(this._actors[name]);
     }
@@ -317,7 +317,7 @@ function OriginalLocation(actor, line, column, name) {
   this._name = name;
 }
 
-OriginalLocation.fromGeneratedLocation = function (generatedLocation) {
+OriginalLocation.fromGeneratedLocation = function(generatedLocation) {
   return new OriginalLocation(
     generatedLocation.generatedSourceActor,
     generatedLocation.generatedLine,
@@ -360,7 +360,7 @@ OriginalLocation.prototype = {
     throw new Error("Shouldn't access generatedColumn from an Originallocation");
   },
 
-  equals: function (other) {
+  equals: function(other) {
     return this.originalSourceActor.url == other.originalSourceActor.url &&
            this.originalLine === other.originalLine &&
            (this.originalColumn === undefined ||
@@ -368,7 +368,7 @@ OriginalLocation.prototype = {
             this.originalColumn === other.originalColumn);
   },
 
-  toJSON: function () {
+  toJSON: function() {
     return {
       source: this.originalSourceActor.form(),
       line: this.originalLine,
@@ -397,7 +397,7 @@ function GeneratedLocation(actor, line, column, lastColumn) {
   this._lastColumn = (lastColumn !== undefined) ? lastColumn : column + 1;
 }
 
-GeneratedLocation.fromOriginalLocation = function (originalLocation) {
+GeneratedLocation.fromOriginalLocation = function(originalLocation) {
   return new GeneratedLocation(
     originalLocation.originalSourceActor,
     originalLocation.originalLine,
@@ -442,7 +442,7 @@ GeneratedLocation.prototype = {
     return this._lastColumn;
   },
 
-  equals: function (other) {
+  equals: function(other) {
     return this.generatedSourceActor.url == other.generatedSourceActor.url &&
            this.generatedLine === other.generatedLine &&
            (this.generatedColumn === undefined ||
@@ -450,7 +450,7 @@ GeneratedLocation.prototype = {
             this.generatedColumn === other.generatedColumn);
   },
 
-  toJSON: function () {
+  toJSON: function() {
     return {
       source: this.generatedSourceActor.form(),
       line: this.generatedLine,
@@ -481,7 +481,7 @@ exports.GeneratedLocation = GeneratedLocation;
  *          The decorated method.
  */
 function expectState(expectedState, methodFunc, activity) {
-  return function (...args) {
+  return function(...args) {
     if (this.state !== expectedState) {
       const msg = `Wrong state while ${activity}:` +
                   `Expected '${expectedState}', ` +
@@ -505,7 +505,7 @@ exports.expectState = expectState;
  * @see Framerate actor definition: devtools/server/actors/framerate.js
  */
 function actorBridge(methodName, definition = {}) {
-  return method(function () {
+  return method(function() {
     return this.bridge[methodName].apply(this.bridge, arguments);
   }, definition);
 }
@@ -516,7 +516,7 @@ exports.actorBridge = actorBridge;
  * created with `ActorClassWithSpec` rather than vanilla `ActorClass`.
  */
 function actorBridgeWithSpec(methodName) {
-  return method(function () {
+  return method(function() {
     return this.bridge[methodName].apply(this.bridge, arguments);
   });
 }

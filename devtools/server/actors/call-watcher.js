@@ -49,7 +49,7 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
    *        Determines whether or not FunctionCallActor stores a weak reference
    *        to the underlying objects.
    */
-  initialize: function (
+  initialize: function(
     conn,
     [window, global, caller, type, name, stack, timestamp, args, result],
     holdWeak
@@ -104,7 +104,7 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
    * Customize the marshalling of this actor to provide some generic information
    * directly on the Front instance.
    */
-  form: function () {
+  form: function() {
     return {
       actor: this.actorID,
       type: this.details.type,
@@ -122,7 +122,7 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
    * Gets more information about this function call, which is not necessarily
    * available on the Front instance.
    */
-  getDetails: function () {
+  getDetails: function() {
     let { type, name, stack, timestamp } = this.details;
 
     // Since not all calls on the stack have corresponding owner files (e.g.
@@ -155,7 +155,7 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
    * @return string
    *         The arguments as a string.
    */
-  _generateArgsPreview: function (args) {
+  _generateArgsPreview: function(args) {
     let { global, name, caller } = this.details;
 
     // Get method signature to determine if there are any enums
@@ -209,7 +209,7 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
    * @return string
    *         The arguments as a string.
    */
-  _generateStringPreview: function (data) {
+  _generateStringPreview: function(data) {
     // XXX: Bug 978960.
     if (data === undefined) {
       return "undefined";
@@ -231,7 +231,7 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
  * This actor observes function calls on certain objects or globals.
  */
 exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
-  initialize: function (conn, tabActor) {
+  initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
     this._onGlobalCreated = this._onGlobalCreated.bind(this);
@@ -240,7 +240,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
     this.tabActor.on("window-ready", this._onGlobalCreated);
     this.tabActor.on("window-destroyed", this._onGlobalDestroyed);
   },
-  destroy: function (conn) {
+  destroy: function(conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
     this.tabActor.off("window-ready", this._onGlobalCreated);
     this.tabActor.off("window-destroyed", this._onGlobalDestroyed);
@@ -259,7 +259,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
    * created, in order to instrument the specified objects and become
    * aware of everything the content does with them.
    */
-  setup: function ({
+  setup: function({
     tracedGlobals, tracedFunctions, startRecording, performReload, holdWeak, storeCalls
   }) {
     if (this._initialized) {
@@ -287,7 +287,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
    * to hibernation. This method is called automatically just before the
    * actor is destroyed.
    */
-  finalize: function () {
+  finalize: function() {
     if (!this._initialized) {
       return;
     }
@@ -301,28 +301,28 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
   /**
    * Returns whether the instrumented function calls are currently recorded.
    */
-  isRecording: function () {
+  isRecording: function() {
     return this._recording;
   },
 
   /**
    * Initialize the timestamp epoch used to offset function call timestamps.
    */
-  initTimestampEpoch: function () {
+  initTimestampEpoch: function() {
     this._timestampEpoch = this.tabActor.window.performance.now();
   },
 
   /**
    * Starts recording function calls.
    */
-  resumeRecording: function () {
+  resumeRecording: function() {
     this._recording = true;
   },
 
   /**
    * Stops recording function calls.
    */
-  pauseRecording: function () {
+  pauseRecording: function() {
     this._recording = false;
     return this._functionCalls;
   },
@@ -331,14 +331,14 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
    * Erases all the recorded function calls.
    * Calling `resumeRecording` or `pauseRecording` does not erase history.
    */
-  eraseRecording: function () {
+  eraseRecording: function() {
     this._functionCalls = [];
   },
 
   /**
    * Invoked whenever the current tab actor's document global is created.
    */
-  _onGlobalCreated: function ({window, id, isTopLevel}) {
+  _onGlobalCreated: function({window, id, isTopLevel}) {
     if (!this._initialized) {
       return;
     }
@@ -388,7 +388,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
       // the arguments array is inaccessible to it. Get Xrays back.
       let originalFunc = Cu.unwaiveXrays(target[name]);
 
-      Cu.exportFunction(function (...args) {
+      Cu.exportFunction(function(...args) {
         let result;
         try {
           result = Cu.waiveXrays(originalFunc.apply(this, args));
@@ -423,7 +423,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
       let originalSetter = Cu.unwaiveXrays(target.__lookupSetter__(name));
 
       Object.defineProperty(target, name, {
-        get: function (...args) {
+        get: function(...args) {
           if (!originalGetter) {
             return undefined;
           }
@@ -438,7 +438,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
           }
           return result;
         },
-        set: function (...args) {
+        set: function(...args) {
           if (!originalSetter) {
             return;
           }
@@ -516,7 +516,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
   /**
    * Invoked whenever the current tab actor's inner window is destroyed.
    */
-  _onGlobalDestroyed: function ({window, id, isTopLevel}) {
+  _onGlobalDestroyed: function({window, id, isTopLevel}) {
     if (this._tracedWindowId == id) {
       this.pauseRecording();
       this.eraseRecording();
@@ -527,7 +527,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
   /**
    * Invoked whenever an instrumented function is called.
    */
-  _onContentFunctionCall: function (...details) {
+  _onContentFunctionCall: function(...details) {
     // If the consuming tool has finalized call-watcher, ignore the
     // still-instrumented calls.
     if (this._finalized) {

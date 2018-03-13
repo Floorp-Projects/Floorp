@@ -6,7 +6,7 @@
 // Test that when animations displayed in the timeline are running on the
 // compositor, they get a special icon and information in the tooltip.
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
   const { inspector, panel } = await openAnimationInspector();

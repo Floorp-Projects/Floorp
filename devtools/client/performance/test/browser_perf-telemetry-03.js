@@ -12,8 +12,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function() {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -30,20 +30,20 @@ add_task(function* () {
   let logs = telemetry.getLogs();
   let VIEWS = "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS";
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   let calltreeRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   let flamegraphRendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
 
   // Go through some views to check later.
-  yield DetailsView.selectView("js-calltree");
-  yield calltreeRendered;
+  await DetailsView.selectView("js-calltree");
+  await calltreeRendered;
 
-  yield DetailsView.selectView("js-flamegraph");
-  yield flamegraphRendered;
+  await DetailsView.selectView("js-flamegraph");
+  await flamegraphRendered;
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 
   // Check views after destruction to ensure `js-flamegraph` gets called
   // with a time during destruction.

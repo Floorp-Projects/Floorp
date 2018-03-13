@@ -22,7 +22,7 @@ let reducers = {
   },
 };
 
-module.exports = function (screenshot = INITIAL_SCREENSHOT, action) {
+module.exports = function(screenshot = INITIAL_SCREENSHOT, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return screenshot;

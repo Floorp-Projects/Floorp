@@ -27,7 +27,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 // We should turn off auto-multiline editing during these tests
 const PREF_AUTO_MULTILINE = "devtools.webconsole.autoMultiline";
 
-add_task(async function () {
+add_task(async function() {
   Services.prefs.setBoolPref(PREF_AUTO_MULTILINE, false);
 
   let { jsterm } = await openNewTabAndConsole(TEST_URI);

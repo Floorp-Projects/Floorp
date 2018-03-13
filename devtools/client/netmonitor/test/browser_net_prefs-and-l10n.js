@@ -7,7 +7,7 @@
  * Tests if the preferences and localization objects work correctly.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   let { monitor } = await initNetMonitor(SIMPLE_URL);

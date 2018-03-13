@@ -19,7 +19,7 @@ let {DebuggerClient} = require("devtools/shared/client/debugger-client");
 let {DebuggerServer} = require("devtools/server/main");
 let Services = require("Services");
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({
@@ -89,7 +89,7 @@ function runTests() {
   });
 
   function cleanup() {
-    client.close().then(function () {
+    client.close().then(function() {
       DebuggerServer.destroy();
       iframe.remove();
       SimpleTest.finish();

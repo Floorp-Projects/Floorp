@@ -13,7 +13,7 @@ const TEST_URI =
   }
   </script>
 `;
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   let {ui} = hud;
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
@@ -37,7 +37,7 @@ add_task(async function () {
   let receievedMessages = waitForMessages({hud, messages: [{
     text: "stay"
   }]});
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log("stay");
   });
   await receievedMessages;
@@ -57,7 +57,7 @@ add_task(async function () {
   receievedMessages = waitForMessages({hud, messages: [{
     text: "scroll"
   }]});
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log("scroll");
   });
   await receievedMessages;

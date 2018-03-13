@@ -11,7 +11,7 @@ const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-m
 const { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
 const RecordingUtils = require("devtools/shared/performance/recording-utils");
 
-add_task(function () {
+add_task(function() {
   let threadNode = new ThreadNode(gProfile.threads[0], { startTime: 0, endTime: 50,
                                                          invertTree: true });
   let treeRoot = new CallView({ frame: threadNode, inverted: true });
@@ -63,7 +63,7 @@ add_task(function () {
     [ 40, 0, "    A"],
     [ 10, 10, "B"],
     [ 10, 0, "  A"],
-  ].forEach(function (def, i) {
+  ].forEach(function(def, i) {
     info(`Checking ${i}th tree item.`);
 
     let [total, self, name] = def;

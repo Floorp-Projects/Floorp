@@ -24,7 +24,7 @@ let reducers = {
 
 };
 
-module.exports = function (throttling = INITIAL_NETWORK_THROTTLING, action) {
+module.exports = function(throttling = INITIAL_NETWORK_THROTTLING, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return throttling;

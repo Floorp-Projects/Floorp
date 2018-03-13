@@ -43,7 +43,7 @@ var cachedCssProperties = new WeakMap();
  * properties the current server supports.
  */
 const CssPropertiesFront = FrontClassWithSpec(cssPropertiesSpec, {
-  initialize: function (client, { cssPropertiesActor }) {
+  initialize: function(client, { cssPropertiesActor }) {
     Front.prototype.initialize.call(this, client, {actor: cssPropertiesActor});
     this.manage(this);
   }
@@ -227,7 +227,7 @@ CssProperties.prototype = {
  * @param {Toolbox} The current toolbox.
  * @returns {Promise} Resolves to {cssProperties, cssPropertiesFront}.
  */
-const initCssProperties = async function (toolbox) {
+const initCssProperties = async function(toolbox) {
   const client = toolbox.target.client;
   if (cachedCssProperties.has(client)) {
     return cachedCssProperties.get(client);

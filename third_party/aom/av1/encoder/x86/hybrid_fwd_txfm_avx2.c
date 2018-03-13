@@ -171,6 +171,11 @@ static void right_shift_16x16(__m256i *in) {
   in[15] = _mm256_srai_epi16(in[15], 2);
 }
 
+// Work around bugs in Visual Studio 2017 15.6 profile-guided optimization.
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_IX86)
+#pragma optimize("g", off)
+#endif
+
 static void fdct16_avx2(__m256i *in) {
   // sequence: cospi_L_H = pairs(L, H) and L first
   const __m256i cospi_p16_m16 = pair256_set_epi16(cospi_16_64, -cospi_16_64);
@@ -359,6 +364,11 @@ static void fdct16_avx2(__m256i *in) {
   in[13] = butter_fly(&x0, &x1, &cospi_p06_p26);
   in[3] = butter_fly(&x0, &x1, &cospi_m26_p06);
 }
+
+// Work around bugs in Visual Studio 2017 15.6 profile-guided optimization.
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_IX86)
+#pragma optimize("", on)
+#endif
 
 void fadst16_avx2(__m256i *in) {
   const __m256i cospi_p01_p31 = pair256_set_epi16(cospi_1_64, cospi_31_64);

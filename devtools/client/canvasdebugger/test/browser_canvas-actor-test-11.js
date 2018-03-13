@@ -6,22 +6,22 @@
  * for a canvas context, and that the generated screenshots are correct.
  */
 
-function* ifTestingSupported() {
-  let { target, front } = yield initCanvasDebuggerBackend(SET_TIMEOUT_URL);
+async function ifTestingSupported() {
+  let { target, front } = await initCanvasDebuggerBackend(SET_TIMEOUT_URL);
 
   let navigated = once(target, "navigate");
 
-  yield front.setup({ reload: true });
+  await front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  yield navigated;
+  await navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = yield front.recordAnimationFrame();
+  let snapshotActor = await front.recordAnimationFrame();
   ok(snapshotActor,
     "A snapshot actor was sent after recording.");
 
-  let animationOverview = yield snapshotActor.getOverview();
+  let animationOverview = await snapshotActor.getOverview();
   ok(snapshotActor,
     "An animation overview could be retrieved after recording.");
 
@@ -70,9 +70,9 @@ function* ifTestingSupported() {
   is(functionCalls[7].callerPreview, "Object",
     "The last called function's caller preview is correct.");
 
-  let firstNonDrawCall = yield functionCalls[1].getDetails();
-  let secondNonDrawCall = yield functionCalls[3].getDetails();
-  let lastNonDrawCall = yield functionCalls[7].getDetails();
+  let firstNonDrawCall = await functionCalls[1].getDetails();
+  let secondNonDrawCall = await functionCalls[3].getDetails();
+  let lastNonDrawCall = await functionCalls[7].getDetails();
 
   is(firstNonDrawCall.name, "fillStyle",
     "The first non-draw function's name is correct.");
@@ -81,9 +81,9 @@ function* ifTestingSupported() {
   is(lastNonDrawCall.name, "setTimeout",
     "The last non-draw function's name is correct.");
 
-  let firstScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[1]);
-  let secondScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[3]);
-  let lastScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[7]);
+  let firstScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[1]);
+  let secondScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[3]);
+  let lastScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[7]);
 
   ok(firstScreenshot,
     "A screenshot was successfully retrieved for the first non-draw function.");
@@ -92,7 +92,7 @@ function* ifTestingSupported() {
   ok(lastScreenshot,
     "A screenshot was successfully retrieved for the last non-draw function.");
 
-  let firstActualScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[0]);
+  let firstActualScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[0]);
   ok(sameArray(firstScreenshot.pixels, firstActualScreenshot.pixels),
     "The screenshot for the first non-draw function is correct.");
   is(firstScreenshot.width, 128,
@@ -100,7 +100,7 @@ function* ifTestingSupported() {
   is(firstScreenshot.height, 128,
     "The screenshot for the first non-draw function has the correct height.");
 
-  let secondActualScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[2]);
+  let secondActualScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[2]);
   ok(sameArray(secondScreenshot.pixels, secondActualScreenshot.pixels),
     "The screenshot for the second non-draw function is correct.");
   is(secondScreenshot.width, 128,
@@ -108,7 +108,7 @@ function* ifTestingSupported() {
   is(secondScreenshot.height, 128,
     "The screenshot for the second non-draw function has the correct height.");
 
-  let lastActualScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[6]);
+  let lastActualScreenshot = await snapshotActor.generateScreenshotFor(functionCalls[6]);
   ok(sameArray(lastScreenshot.pixels, lastActualScreenshot.pixels),
     "The screenshot for the last non-draw function is correct.");
   is(lastScreenshot.width, 128,
@@ -121,7 +121,7 @@ function* ifTestingSupported() {
   ok(!sameArray(secondScreenshot.pixels, lastScreenshot.pixels),
     "The screenshots taken on consecutive draw calls are different (2).");
 
-  yield removeTab(target.tab);
+  await removeTab(target.tab);
   finish();
 }
 

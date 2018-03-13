@@ -23,7 +23,7 @@
         let xhr = new XMLHttpRequest();
         xhr.open("GET", address, true);
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
             callback();
           }
@@ -33,7 +33,7 @@
 
       function performRequests() {
         // Forward the query parameter for this page to sjs_json-test-server
-        get("sjs_json-test-server.sjs" + window.location.search, function () {
+        get("sjs_json-test-server.sjs" + window.location.search, function() {
           // Done.
         });
       }

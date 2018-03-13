@@ -11,7 +11,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-reopen-closed-tab.html";
 
-add_task(async function () {
+add_task(async function() {
   // If we persist log, the test might be successful even if only the first
   // error log is shown.
   pushPref("devtools.webconsole.persistlog", false);

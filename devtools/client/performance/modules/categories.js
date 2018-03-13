@@ -95,7 +95,7 @@ const [CATEGORY_MASK, CATEGORY_MASK_LIST] = (() => {
   }
 
   return [
-    function (name, index) {
+    function(name, index) {
       if (!(name in bitmasksForCategory)) {
         throw new Error(`Category abbreviation "${name}" does not exist.`);
       }
@@ -113,7 +113,7 @@ const [CATEGORY_MASK, CATEGORY_MASK_LIST] = (() => {
       }
     },
 
-    function (name) {
+    function(name) {
       if (!(name in bitmasksForCategory)) {
         throw new Error(`Category abbreviation "${name}" does not exist.`);
       }

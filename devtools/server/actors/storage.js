@@ -120,7 +120,7 @@ var StorageActors = {};
  * @param {array} observationTopics
  *        An array of topics which this actor listens to via Notification Observers.
  */
-StorageActors.defaults = function (typeName, observationTopics) {
+StorageActors.defaults = function(typeName, observationTopics) {
   return {
     typeName: typeName,
 
@@ -428,7 +428,7 @@ StorageActors.defaults = function (typeName, observationTopics) {
  *        All the methods which you want to be different from the ones in
  *        StorageActors.defaults method plus the required ones described there.
  */
-StorageActors.createActor = function (options = {}, overrides = {}) {
+StorageActors.createActor = function(options = {}, overrides = {}) {
   let actorObject = StorageActors.defaults(
     options.typeName,
     options.observationTopics || null
@@ -1074,7 +1074,7 @@ var cookieHelpers = {
  * E10S parent/child setup helpers
  */
 
-exports.setupParentProcessForCookies = function ({ mm, prefix }) {
+exports.setupParentProcessForCookies = function({ mm, prefix }) {
   cookieHelpers.onCookieChanged =
     callChildProcess.bind(null, "onCookieChanged");
 
@@ -1981,7 +1981,7 @@ var indexedDBHelpers = {
     return success.promise;
   },
 
-  splitNameAndStorage: function (name) {
+  splitNameAndStorage: function(name) {
     let lastOpenBracketIndex = name.lastIndexOf("(");
     let lastCloseBracketIndex = name.lastIndexOf(")");
     let delta = lastCloseBracketIndex - lastOpenBracketIndex - 1;
@@ -1997,7 +1997,7 @@ var indexedDBHelpers = {
    * Opens an indexed db connection for the given `principal` and
    * database `name`.
    */
-  openWithPrincipal: function (principal, name, storage) {
+  openWithPrincipal: function(principal, name, storage) {
     return indexedDBForStorage.openForPrincipal(principal, name,
                                                 { storage: storage });
   },
@@ -2468,7 +2468,7 @@ var indexedDBHelpers = {
  * E10S parent/child setup helpers
  */
 
-exports.setupParentProcessForIndexedDB = function ({ mm, prefix }) {
+exports.setupParentProcessForIndexedDB = function({ mm, prefix }) {
   // listen for director-script requests from the child process
   setMessageManager(mm);
 

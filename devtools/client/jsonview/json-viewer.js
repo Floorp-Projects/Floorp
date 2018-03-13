@@ -6,7 +6,7 @@
 
 "use strict";
 
-define(function (require, exports, module) {
+define(function(require, exports, module) {
   const { render } = require("devtools/client/shared/vendor/react-dom");
   const { createFactories } = require("devtools/client/shared/react-utils");
   const { MainTabbedArea } = createFactories(require("./components/MainTabbedArea"));
@@ -31,19 +31,19 @@ define(function (require, exports, module) {
    * available for the JSON viewer.
    */
   input.actions = {
-    onCopyJson: function () {
+    onCopyJson: function() {
       let text = input.prettified ? input.jsonPretty : input.jsonText;
       copyString(text.textContent);
     },
 
-    onSaveJson: function () {
+    onSaveJson: function() {
       if (input.prettified && !prettyURL) {
         prettyURL = URL.createObjectURL(new window.Blob([input.jsonPretty.textContent]));
       }
       dispatchEvent("save", input.prettified ? prettyURL : null);
     },
 
-    onCopyHeaders: function () {
+    onCopyHeaders: function() {
       let value = "";
       let isWinNT = document.documentElement.getAttribute("platform") === "win";
       let eol = isWinNT ? "\r\n" : "\n";
@@ -65,11 +65,11 @@ define(function (require, exports, module) {
       copyString(value);
     },
 
-    onSearch: function (value) {
+    onSearch: function(value) {
       theApp.setState({searchFilter: value});
     },
 
-    onPrettify: function (data) {
+    onPrettify: function(data) {
       if (input.json instanceof Error) {
         // Cannot prettify invalid JSON
         return;

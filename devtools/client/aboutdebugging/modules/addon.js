@@ -32,7 +32,7 @@ function closeToolbox() {
  * @param {String} addonID
  *        String id of the addon to debug.
  */
-exports.debugLocalAddon = async function (addonID) {
+exports.debugLocalAddon = async function(addonID) {
   // Close previous addon debugging toolbox.
   closeToolbox();
 
@@ -52,7 +52,7 @@ exports.debugLocalAddon = async function (addonID) {
  * @param {DebuggerClient} client
  *        Required for remote debugging.
  */
-exports.debugRemoteAddon = async function (addonForm, client) {
+exports.debugRemoteAddon = async function(addonForm, client) {
   // Close previous addon debugging toolbox.
   closeToolbox();
 
@@ -72,16 +72,16 @@ exports.debugRemoteAddon = async function (addonForm, client) {
   });
 };
 
-exports.uninstallAddon = async function (addonID) {
+exports.uninstallAddon = async function(addonID) {
   let addon = await AddonManager.getAddonByID(addonID);
   return addon && addon.uninstall();
 };
 
-exports.isTemporaryID = function (addonID) {
+exports.isTemporaryID = function(addonID) {
   return AddonManagerPrivate.isTemporaryInstallID(addonID);
 };
 
-exports.isLegacyTemporaryExtension = function (addonForm) {
+exports.isLegacyTemporaryExtension = function(addonForm) {
   if (!addonForm.type) {
     // If about:debugging is connected to an older then 59 remote Firefox, and type is
     // not available on the addon/webextension actors, return false to avoid showing
@@ -94,7 +94,7 @@ exports.isLegacyTemporaryExtension = function (addonForm) {
          !addonForm.isAPIExtension;
 };
 
-exports.parseFileUri = function (url) {
+exports.parseFileUri = function(url) {
   // Strip a leading slash from Windows drive letter URIs.
   // file:///home/foo ~> /home/foo
   // file:///C:/foo ~> C:/foo

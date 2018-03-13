@@ -20,7 +20,7 @@ const l10n = {
    * @return string
    *         The timestamp formatted for display.
    */
-  timestampString: function (milliseconds) {
+  timestampString: function(milliseconds) {
     let d = new Date(milliseconds ? milliseconds : null);
     let hours = d.getHours(), minutes = d.getMinutes();
     let seconds = d.getSeconds();
@@ -37,7 +37,7 @@ const l10n = {
    * @return string
    *         The localized string.
    */
-  getStr: function (name) {
+  getStr: function(name) {
     try {
       return helper.getStr(name);
     } catch (ex) {
@@ -57,7 +57,7 @@ const l10n = {
    * @return string
    *         The formatted local string.
    */
-  getFormatStr: function (name, array) {
+  getFormatStr: function(name, array) {
     try {
       return helper.getFormatStr(name, ...array);
     } catch (ex) {

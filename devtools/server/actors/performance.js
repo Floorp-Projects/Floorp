@@ -41,7 +41,7 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     },
   },
 
-  initialize: function (conn, tabActor) {
+  initialize: function(conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
 
     this._onRecordingStarted = this._onRecordingStarted.bind(this);
@@ -61,7 +61,7 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     this.bridge.on("console-profile-start", this._onConsoleProfileStart);
   },
 
-  destroy: function () {
+  destroy: function() {
     this.bridge.off("recording-started", this._onRecordingStarted);
     this.bridge.off("recording-stopping", this._onRecordingStopping);
     this.bridge.off("recording-stopped", this._onRecordingStopped);
@@ -73,12 +73,12 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     Actor.prototype.destroy.call(this);
   },
 
-  connect: function (config) {
+  connect: function(config) {
     this.bridge.connect({ systemClient: config.systemClient });
     return { traits: this.traits };
   },
 
-  canCurrentlyRecord: function () {
+  canCurrentlyRecord: function() {
     return this.bridge.canCurrentlyRecord();
   },
 
@@ -103,31 +103,31 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
   /**
    * Filter which events get piped to the front.
    */
-  _onRecordingStarted: function (...data) {
+  _onRecordingStarted: function(...data) {
     this._onRecorderEvent("recording-started", data);
   },
 
-  _onRecordingStopping: function (...data) {
+  _onRecordingStopping: function(...data) {
     this._onRecorderEvent("recording-stopping", data);
   },
 
-  _onRecordingStopped: function (...data) {
+  _onRecordingStopped: function(...data) {
     this._onRecorderEvent("recording-stopped", data);
   },
 
-  _onProfilerStatus: function (...data) {
+  _onProfilerStatus: function(...data) {
     this._onRecorderEvent("profiler-status", data);
   },
 
-  _onTimelineData: function (...data) {
+  _onTimelineData: function(...data) {
     this._onRecorderEvent("timeline-data", data);
   },
 
-  _onConsoleProfileStart: function (...data) {
+  _onConsoleProfileStart: function(...data) {
     this._onRecorderEvent("console-profile-start", data);
   },
 
-  _onRecorderEvent: function (eventName, data) {
+  _onRecorderEvent: function(eventName, data) {
     // If this is a recording state change, call
     // a method on the related PerformanceRecordingActor so it can
     // update its internal state.

@@ -22,7 +22,7 @@ exports.EventLoopLagActor = ActorClassWithSpec(eventLoopLagSpec, {
   /**
    * Start tracking the event loop lags.
    */
-  start: function () {
+  start: function() {
     if (!this._observerAdded) {
       Services.obs.addObserver(this, "event-loop-lag");
       this._observerAdded = true;
@@ -33,7 +33,7 @@ exports.EventLoopLagActor = ActorClassWithSpec(eventLoopLagSpec, {
   /**
    * Stop tracking the event loop lags.
    */
-  stop: function () {
+  stop: function() {
     if (this._observerAdded) {
       Services.obs.removeObserver(this, "event-loop-lag");
       this._observerAdded = false;
@@ -41,14 +41,14 @@ exports.EventLoopLagActor = ActorClassWithSpec(eventLoopLagSpec, {
     Services.appShell.stopEventLoopLagTracking();
   },
 
-  destroy: function () {
+  destroy: function() {
     this.stop();
     Actor.prototype.destroy.call(this);
   },
 
   // nsIObserver
 
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic == "event-loop-lag") {
       // Forward event loop lag event
       this.emit("event-loop-lag", data);

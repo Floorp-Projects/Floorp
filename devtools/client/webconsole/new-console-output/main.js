@@ -8,7 +8,7 @@
 
 const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
 
-this.NewConsoleOutput = function (parentNode, jsterm, toolbox, owner, serviceContainer) {
+this.NewConsoleOutput = function(parentNode, jsterm, toolbox, owner, serviceContainer) {
   // Initialize module loader and load all modules of the new inline
   // preview feature. The entire code-base doesn't need any extra
   // privileges and runs entirely in content scope.

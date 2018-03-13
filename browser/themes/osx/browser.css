@@ -993,7 +993,7 @@ html|*.addon-webext-perm-list {
 
 /* Status panel */
 
-.statuspanel-label {
+#statuspanel-label {
   margin: 0;
   padding: 2px 4px;
   background-color: #f9f9fa;
@@ -1003,15 +1003,15 @@ html|*.addon-webext-perm-list {
   text-shadow: none;
 }
 
-.statuspanel-label:-moz-locale-dir(ltr):not([mirror]),
-.statuspanel-label:-moz-locale-dir(rtl)[mirror] {
+#statuspanel:not([mirror]) > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(ltr),
+#statuspanel[mirror] > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(rtl) {
   border-right-style: solid;
   border-top-right-radius: .3em;
   margin-right: 1em;
 }
 
-.statuspanel-label:-moz-locale-dir(rtl):not([mirror]),
-.statuspanel-label:-moz-locale-dir(ltr)[mirror] {
+#statuspanel:not([mirror]) > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(rtl),
+#statuspanel[mirror] > #statuspanel-inner > #statuspanel-label:-moz-locale-dir(ltr) {
   border-left-style: solid;
   border-top-left-radius: .3em;
   margin-left: 1em;

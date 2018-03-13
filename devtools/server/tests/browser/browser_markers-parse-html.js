@@ -9,7 +9,7 @@
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 const MARKER_NAME = "Parse HTML";
 
-add_task(async function () {
+add_task(async function() {
   await addTab(MAIN_DOMAIN + "doc_innerHTML.html");
 
   initDebuggerServer();

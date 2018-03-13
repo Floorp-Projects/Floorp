@@ -13,7 +13,7 @@
       function makeXhr(method, url, requestBody, callback) {
         let xmlhttp = new XMLHttpRequest();
         xmlhttp.open(method, url, true);
-        xmlhttp.onreadystatechange = function () {
+        xmlhttp.onreadystatechange = function() {
           if (callback && xmlhttp.readyState == 4) {
             callback();
           }

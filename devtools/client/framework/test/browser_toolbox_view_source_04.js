@@ -9,9 +9,9 @@
 
 var URL = `${URL_ROOT}doc_viewsource.html`;
 
-function* viewSource() {
-  let toolbox = yield openNewTabAndToolbox(URL);
-  let win = yield openScratchpadWindow();
+async function viewSource() {
+  let toolbox = await openNewTabAndToolbox(URL);
+  let win = await openScratchpadWindow();
   let { Scratchpad: scratchpad } = win;
 
   // Brahm's Cello Sonata No.1, Op.38 now in the scratchpad
@@ -19,20 +19,20 @@ function* viewSource() {
   let scratchpadURL = scratchpad.uniqueName;
 
   // Now select another tool for focus
-  yield toolbox.selectTool("webconsole");
+  await toolbox.selectTool("webconsole");
 
-  yield toolbox.viewSourceInScratchpad(scratchpadURL, 2);
+  await toolbox.viewSourceInScratchpad(scratchpadURL, 2);
 
   is(scratchpad.editor.getCursor().line, 2,
     "The correct line is highlighted in scratchpad's editor.");
 
   win.close();
-  yield closeToolboxAndTab(toolbox);
+  await closeToolboxAndTab(toolbox);
   finish();
 }
 
 function test() {
-  Task.spawn(viewSource).then(finish, (aError) => {
+  viewSource().then(finish, (aError) => {
     ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
     finish();
   });

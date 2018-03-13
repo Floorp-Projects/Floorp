@@ -21,16 +21,16 @@ function ConsoleAPIListener(window, owner, consoleID) {
 }
 
 ConsoleAPIListener.prototype = {
-  init: function () {
+  init: function() {
     setConsoleEventHandler(this.observe);
   },
-  destroy: function () {
+  destroy: function() {
     setConsoleEventHandler(null);
   },
-  observe: function (message) {
+  observe: function(message) {
     this.owner.onConsoleAPICall(message.wrappedJSObject);
   },
-  getCachedMessages: function () {
+  getCachedMessages: function() {
     return retrieveConsoleEvents();
   }
 };

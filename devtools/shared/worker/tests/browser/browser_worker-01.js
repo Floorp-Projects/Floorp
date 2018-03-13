@@ -10,7 +10,7 @@ const WORKER_URL =
   "resource://devtools/client/shared/widgets/GraphsWorker.js";
 
 const count = 100000;
-const WORKER_DATA = (function () {
+const WORKER_DATA = (function() {
   let timestamps = [];
   for (let i = 0; i < count; i++) {
     timestamps.push(i);
@@ -20,7 +20,7 @@ const WORKER_DATA = (function () {
 const INTERVAL = 100;
 const DURATION = 1000;
 
-add_task(async function () {
+add_task(async function() {
   // Test both CJS and JSM versions
 
   await testWorker("JSM", () => ChromeUtils.import("resource://devtools/shared/worker/worker.js", {}));

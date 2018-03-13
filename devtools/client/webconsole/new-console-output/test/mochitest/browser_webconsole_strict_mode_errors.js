@@ -9,7 +9,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole("data:text/html;charset=utf8,empty page");
 
   loadScriptURI("'use strict';var arguments;");

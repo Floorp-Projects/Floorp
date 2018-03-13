@@ -30,7 +30,7 @@ AddonClient.prototype = {
   detach: DebuggerClient.requester({
     type: "detach"
   }, {
-    after: function (response) {
+    after: function(response) {
       if (this._client.activeAddon === this) {
         this._client.activeAddon = null;
       }

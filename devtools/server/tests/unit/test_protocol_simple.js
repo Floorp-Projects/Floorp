@@ -104,7 +104,7 @@ const rootSpec = protocol.generateActorSpec({
 });
 
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  initialize: function (conn) {
+  initialize: function(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
     this.manage(this);
@@ -113,35 +113,35 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   sayHello: simpleHello,
 
-  simpleReturn: function () {
+  simpleReturn: function() {
     return 1;
   },
 
-  promiseReturn: function () {
+  promiseReturn: function() {
     return Promise.resolve(1);
   },
 
-  simpleArgs: function (a, b) {
+  simpleArgs: function(a, b) {
     return { firstResponse: a + 1, secondResponse: b + 1 };
   },
 
-  nestedArgs: function (a, b, c) {
+  nestedArgs: function(a, b, c) {
     return { a: a, b: b, c: c };
   },
 
-  optionArgs: function (options) {
+  optionArgs: function(options) {
     return { option1: options.option1, option2: options.option2 };
   },
 
-  optionalArgs: function (a, b = 200) {
+  optionalArgs: function(a, b = 200) {
     return b;
   },
 
-  arrayArgs: function (a) {
+  arrayArgs: function(a) {
     return a;
   },
 
-  nestedArrayArgs: function (a) {
+  nestedArrayArgs: function(a) {
     return a;
   },
 
@@ -149,25 +149,25 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
    * Test that the 'type' part of the request packet works
    * correctly when the type isn't the same as the method name
    */
-  renamedEcho: function (a) {
+  renamedEcho: function(a) {
     if (this.conn.currentPacket.type != "echo") {
       return "goodbye";
     }
     return a;
   },
 
-  testOneWay: function (a) {
+  testOneWay: function(a) {
     // Emit to show that we got this message, because there won't be a response.
     EventEmitter.emit(this, "oneway", a);
   },
 
-  emitFalsyOptions: function () {
+  emitFalsyOptions: function() {
     EventEmitter.emit(this, "falsyOptions", { zero: 0, farce: false });
   }
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  initialize: function (client) {
+  initialize: function(client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
@@ -183,7 +183,7 @@ function run_test() {
 
   check_except(() => {
     let badActor = ActorClassWithSpec({}, {
-      missing: preEvent("missing-event", function () {
+      missing: preEvent("missing-event", function() {
       })
     });
     void badActor;

@@ -83,7 +83,7 @@ const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
     this._form = form;
   },
 
-  nameChange: preEvent("name-change", function (name, parent, walker) {
+  nameChange: preEvent("name-change", function(name, parent, walker) {
     this._form.name = name;
     // Name change event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
@@ -92,23 +92,23 @@ const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
     }
   }),
 
-  valueChange: preEvent("value-change", function (value) {
+  valueChange: preEvent("value-change", function(value) {
     this._form.value = value;
   }),
 
-  descriptionChange: preEvent("description-change", function (description) {
+  descriptionChange: preEvent("description-change", function(description) {
     this._form.description = description;
   }),
 
-  helpChange: preEvent("help-change", function (help) {
+  helpChange: preEvent("help-change", function(help) {
     this._form.help = help;
   }),
 
-  shortcutChange: preEvent("shortcut-change", function (keyboardShortcut) {
+  shortcutChange: preEvent("shortcut-change", function(keyboardShortcut) {
     this._form.keyboardShortcut = keyboardShortcut;
   }),
 
-  reorder: preEvent("reorder", function (childCount, walker) {
+  reorder: preEvent("reorder", function(childCount, walker) {
     this._form.childCount = childCount;
     // Reorder event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
@@ -117,7 +117,7 @@ const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
     }
   }),
 
-  textChange: preEvent("text-change", function (walker) {
+  textChange: preEvent("text-change", function(walker) {
     // Text event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
     if (walker) {
@@ -125,25 +125,25 @@ const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
     }
   }),
 
-  indexInParentChange: preEvent("index-in-parent-change", function (indexInParent) {
+  indexInParentChange: preEvent("index-in-parent-change", function(indexInParent) {
     this._form.indexInParent = indexInParent;
   }),
 
-  statesChange: preEvent("states-change", function (states) {
+  statesChange: preEvent("states-change", function(states) {
     this._form.states = states;
   }),
 
-  actionsChange: preEvent("actions-change", function (actions) {
+  actionsChange: preEvent("actions-change", function(actions) {
     this._form.actions = actions;
   }),
 
-  attributesChange: preEvent("attributes-change", function (attributes) {
+  attributesChange: preEvent("attributes-change", function(attributes) {
     this._form.attributes = attributes;
   })
 });
 
 const AccessibleWalkerFront = FrontClassWithSpec(accessibleWalkerSpec, {
-  accessibleDestroy: preEvent("accessible-destroy", function (accessible) {
+  accessibleDestroy: preEvent("accessible-destroy", function(accessible) {
     accessible.destroy();
   }),
 
@@ -151,7 +151,7 @@ const AccessibleWalkerFront = FrontClassWithSpec(accessibleWalkerSpec, {
     this.actorID = json.actor;
   },
 
-  pick: custom(function (doFocus) {
+  pick: custom(function(doFocus) {
     if (doFocus) {
       return this.pickAndFocus();
     }
@@ -169,7 +169,7 @@ const AccessibilityFront = FrontClassWithSpec(accessibilitySpec, {
     this.manage(this);
   },
 
-  bootstrap: custom(function () {
+  bootstrap: custom(function() {
     return this._bootstrap().then(state => {
       this.enabled = state.enabled;
       this.canBeEnabled = state.canBeEnabled;
@@ -179,19 +179,19 @@ const AccessibilityFront = FrontClassWithSpec(accessibilitySpec, {
     impl: "_bootstrap"
   }),
 
-  init: preEvent("init", function () {
+  init: preEvent("init", function() {
     this.enabled = true;
   }),
 
-  shutdown: preEvent("shutdown", function () {
+  shutdown: preEvent("shutdown", function() {
     this.enabled = false;
   }),
 
-  canBeEnabled: preEvent("can-be-enabled-change", function (canBeEnabled) {
+  canBeEnabled: preEvent("can-be-enabled-change", function(canBeEnabled) {
     this.canBeEnabled = canBeEnabled;
   }),
 
-  canBeDisabled: preEvent("can-be-disabled-change", function (canBeDisabled) {
+  canBeDisabled: preEvent("can-be-disabled-change", function(canBeDisabled) {
     this.canBeDisabled = canBeDisabled;
   })
 });

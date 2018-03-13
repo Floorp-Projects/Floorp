@@ -6,40 +6,40 @@
  * overlapping geometry.
  */
 
-function* ifWebGLSupported() {
-  let { target, debuggee, panel } = yield initShaderEditor(BLENDED_GEOMETRY_CANVAS_URL);
+async function ifWebGLSupported() {
+  let { target, debuggee, panel } = await initShaderEditor(BLENDED_GEOMETRY_CANVAS_URL);
   let { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
-  let [[firstProgramActor, secondProgramActor]] = yield promise.all([
+  let [[firstProgramActor, secondProgramActor]] = await promise.all([
     getPrograms(gFront, 2),
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
-  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 127, g: 127, b: 127, a: 255 }, true);
-  yield ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 0, g: 127, b: 127, a: 127 }, true);
+  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 127, g: 127, b: 127, a: 255 }, true);
+  await ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 0, g: 127, b: 127, a: 127 }, true);
   ok(true, "The canvas was correctly drawn.");
 
   ShadersListView._onProgramMouseOver({ target: getItemLabel(panel, 0) });
 
-  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 127, g: 0, b: 32, a: 255 }, true);
-  yield ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 0, g: 0, b: 32, a: 127 }, true);
+  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 127, g: 0, b: 32, a: 255 }, true);
+  await ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 0, g: 0, b: 32, a: 127 }, true);
   ok(true, "The first program was correctly highlighted.");
 
   ShadersListView._onProgramMouseOut({ target: getItemLabel(panel, 0) });
   ShadersListView._onProgramMouseOver({ target: getItemLabel(panel, 1) });
 
-  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 127, g: 127, b: 127, a: 255 }, true);
-  yield ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 255, g: 0, b: 64, a: 255 }, true);
+  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 127, g: 127, b: 127, a: 255 }, true);
+  await ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 255, g: 0, b: 64, a: 255 }, true);
   ok(true, "The second program was correctly highlighted.");
 
   ShadersListView._onProgramMouseOut({ target: getItemLabel(panel, 1) });
 
-  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 127, g: 127, b: 127, a: 255 }, true);
-  yield ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 0, g: 127, b: 127, a: 127 }, true);
+  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 127, g: 127, b: 127, a: 255 }, true);
+  await ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 0, g: 127, b: 127, a: 127 }, true);
   ok(true, "The two programs were correctly unhighlighted.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }
 

@@ -10,6 +10,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const PREF_SIGNATURES_REQUIRED = "xpinstall.signatures.required";
+const PREF_LANGPACK_SIGNATURES = "extensions.langpacks.signatures.required";
 const PREF_ALLOW_LEGACY = "extensions.legacy.enabled";
 
 var AddonSettings = {};
@@ -33,6 +34,9 @@ if (AppConstants.MOZ_REQUIRE_SIGNING && !Cu.isInAutomation) {
   XPCOMUtils.defineLazyPreferenceGetter(AddonSettings, "REQUIRE_SIGNING",
                                         PREF_SIGNATURES_REQUIRED, false);
 }
+
+XPCOMUtils.defineLazyPreferenceGetter(AddonSettings, "LANGPACKS_REQUIRE_SIGNING",
+                                      PREF_LANGPACK_SIGNATURES, false);
 
 if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS || Cu.isInAutomation) {
   XPCOMUtils.defineLazyPreferenceGetter(AddonSettings, "ALLOW_LEGACY_EXTENSIONS",

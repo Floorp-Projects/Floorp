@@ -12,10 +12,10 @@ const Actions = require("../actions/index");
 const { getSelectedRequest } = require("../selectors/index");
 
 // Components
-loader.lazyGetter(this, "CustomRequestPanel", function () {
+loader.lazyGetter(this, "CustomRequestPanel", function() {
   return createFactory(require("./CustomRequestPanel"));
 });
-loader.lazyGetter(this, "TabboxPanel", function () {
+loader.lazyGetter(this, "TabboxPanel", function() {
   return createFactory(require("./TabboxPanel"));
 });
 

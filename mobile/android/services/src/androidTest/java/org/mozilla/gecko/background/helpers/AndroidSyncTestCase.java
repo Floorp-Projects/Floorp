@@ -15,7 +15,7 @@ import android.test.ActivityInstrumentationTestCase2;
  * AndroidSyncTestCase provides helper methods for testing.
  */
 public class AndroidSyncTestCase extends ActivityInstrumentationTestCase2<Activity> {
-  protected static String LOG_TAG = "AndroidSyncTestCase";
+  protected static final String LOG_TAG = "AndroidSyncTestCase";
 
   public AndroidSyncTestCase() {
     super(Activity.class);

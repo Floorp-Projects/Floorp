@@ -10,11 +10,11 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-add_task(function* () {
-  yield addTab(TEST_URI);
+add_task(async function() {
+  await addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
-  yield openAndCloseToolbox(2, TOOL_DELAY, "performance");
+  await openAndCloseToolbox(2, TOOL_DELAY, "performance");
   checkTelemetryResults(Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);

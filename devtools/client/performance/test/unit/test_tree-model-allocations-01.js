@@ -6,7 +6,7 @@
  * allocation frame nodes.
  */
 
-add_task(function () {
+add_task(function() {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
   const { getProfileThreadFromAllocations } = require("devtools/shared/performance/recording-utils");
   let allocationData = getProfileThreadFromAllocations(TEST_DATA);
@@ -38,7 +38,7 @@ function compareFrameInfo(root, parent) {
     "selfSize", "selfSizePercentage", "selfCount", "selfCountPercentage",
     "totalSize", "totalSizePercentage", "totalCount", "totalCountPercentage"
   ];
-  return function (def) {
+  return function(def) {
     let children;
     if (Array.isArray(def[def.length - 1])) {
       children = def.pop();

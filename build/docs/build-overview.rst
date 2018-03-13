@@ -103,7 +103,7 @@ I/O.
 
 For more on how ``moz.build`` files work, see :ref:`mozbuild-files`.
 
-Phase 3: Invokation of the Build Backend
+Phase 3: Invocation of the Build Backend
 ========================================
 
 When most people think of the build system, they think of phase 3. This is

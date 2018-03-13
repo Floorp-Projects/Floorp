@@ -11,10 +11,10 @@
 var URL = `${URL_ROOT}doc_viewsource.html`;
 var CSS_URL = `${URL_ROOT}doc_theme.css`;
 
-function* viewSource() {
-  let toolbox = yield openNewTabAndToolbox(URL);
+async function viewSource() {
+  let toolbox = await openNewTabAndToolbox(URL);
 
-  let fileFound = yield toolbox.viewSourceInStyleEditor(CSS_URL, 2);
+  let fileFound = await toolbox.viewSourceInStyleEditor(CSS_URL, 2);
   ok(fileFound, "viewSourceInStyleEditor should resolve to true if source found.");
 
   let stylePanel = toolbox.getPanel("styleeditor");
@@ -28,12 +28,12 @@ function* viewSource() {
   is(UI.selectedEditor.sourceEditor.getCursor().line + 1, 2,
     "The correct line is highlighted in the style editor's source editor.");
 
-  yield closeToolboxAndTab(toolbox);
+  await closeToolboxAndTab(toolbox);
   finish();
 }
 
 function test() {
-  Task.spawn(viewSource).then(finish, (aError) => {
+  viewSource().then(finish, (aError) => {
     ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
     finish();
   });

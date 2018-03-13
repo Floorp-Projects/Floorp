@@ -68,7 +68,7 @@ class DeviceSelector extends PureComponent {
       }
     }
 
-    options.sort(function (a, b) {
+    options.sort(function(a, b) {
       return a.name.localeCompare(b.name);
     });
 

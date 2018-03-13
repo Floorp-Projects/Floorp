@@ -9,7 +9,7 @@ var gThreadClient;
 var gCallback;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -24,9 +24,9 @@ function run_test_with_server(server, callback) {
   }.toString());
 
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-grips",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_object_grip();
                            });
@@ -34,13 +34,13 @@ function run_test_with_server(server, callback) {
 }
 
 function test_object_grip() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Object");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getPrototypeAndProperties(function (response) {
+    objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.a.configurable, true);
       Assert.equal(response.ownProperties.a.enumerable, true);
       Assert.equal(response.ownProperties.a.writable, true);
@@ -61,7 +61,7 @@ function test_object_grip() {
       Assert.equal(response.ownProperties.d.writable, true);
       Assert.equal(response.ownProperties.d.value.type, "-0");
 
-      gThreadClient.resume(function () {
+      gThreadClient.resume(function() {
         gClient.close().then(gCallback);
       });
     });

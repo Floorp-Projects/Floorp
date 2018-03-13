@@ -17,7 +17,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 // will be the timeout callback instead of the timeout itself, so test cases
 // will need to execute it to fake a timeout
 LayoutChangesObserver.prototype._setTimeout = cb => cb;
-LayoutChangesObserver.prototype._clearTimeout = function () {};
+LayoutChangesObserver.prototype._clearTimeout = function() {};
 
 // Mock the tabActor since we only really want to test the LayoutChangesObserver
 // and don't want to depend on a window object, nor want to test protocol.js
@@ -32,12 +32,12 @@ class MockTabActor extends EventEmitter {
 
 function MockWindow() {}
 MockWindow.prototype = {
-  QueryInterface: function () {
+  QueryInterface: function() {
     let self = this;
     return {
-      getInterface: function () {
+      getInterface: function() {
         return {
-          QueryInterface: function () {
+          QueryInterface: function() {
             if (!self.docShell) {
               self.docShell = new MockDocShell();
             }
@@ -47,22 +47,22 @@ MockWindow.prototype = {
       }
     };
   },
-  setTimeout: function (cb) {
+  setTimeout: function(cb) {
     // Simply return the cb itself so that we can execute it in the test instead
     // of depending on a real timeout
     return cb;
   },
-  clearTimeout: function () {}
+  clearTimeout: function() {}
 };
 
 function MockDocShell() {
   this.observer = null;
 }
 MockDocShell.prototype = {
-  addWeakReflowObserver: function (observer) {
+  addWeakReflowObserver: function(observer) {
     this.observer = observer;
   },
-  removeWeakReflowObserver: function () {},
+  removeWeakReflowObserver: function() {},
   get chromeEventHandler() {
     return {
       addEventListener: (type, cb) => {
@@ -77,7 +77,7 @@ MockDocShell.prototype = {
       }
     };
   },
-  mockResize: function () {
+  mockResize: function() {
     if (this.resizeCb) {
       this.resizeCb();
     }

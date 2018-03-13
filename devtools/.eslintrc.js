@@ -240,9 +240,6 @@ module.exports = {
     // Don't require to sort variables within the same declaration block.
     // Anyway, one-var is disabled.
     "sort-vars": "off",
-    // Require space after keyword for anonymous functions, but disallow space
-    // after name of named functions.
-    "space-before-function-paren": ["error", {"anonymous": "always", "named": "never"}],
     // Disable the rule that checks if spaces inside {} and [] are there or not.
     // Our code is split on conventions, and it'd be nice to have "error" rules
     // instead, one for [] and one for {}. So, disabling until we write them.

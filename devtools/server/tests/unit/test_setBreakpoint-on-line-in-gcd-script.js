@@ -3,7 +3,7 @@
 var SOURCE_URL = getFileUrl("setBreakpoint-on-line-in-gcd-script.js");
 
 function run_test() {
-  return (async function () {
+  return (async function() {
     do_test_pending();
 
     let global = createTestGlobal("test");
@@ -31,8 +31,8 @@ function run_test() {
     Assert.ok(packet.isPending);
     Assert.equal(false, "actualLocation" in packet);
 
-    packet = await executeOnNextTickAndWaitForPause(function () {
-      reload(tabClient).then(function () {
+    packet = await executeOnNextTickAndWaitForPause(function() {
+      reload(tabClient).then(function() {
         loadSubScriptWithOptions(SOURCE_URL, {target: global, ignoreCache: true});
       });
     }, client);

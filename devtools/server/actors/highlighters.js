@@ -80,7 +80,7 @@ exports.register = register;
  * The HighlighterActor class
  */
 exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
-  initialize: function (inspector, autohide) {
+  initialize: function(inspector, autohide) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this._autohide = autohide;
@@ -110,7 +110,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     return this._inspector && this._inspector.conn;
   },
 
-  form: function () {
+  form: function() {
     return {
       actor: this.actorID,
       traits: {
@@ -119,7 +119,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     };
   },
 
-  _createHighlighter: function () {
+  _createHighlighter: function() {
     this._isPreviousWindowXUL = isXUL(this._tabActor.window);
 
     if (!this._isPreviousWindowXUL) {
@@ -132,7 +132,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     }
   },
 
-  _destroyHighlighter: function () {
+  _destroyHighlighter: function() {
     if (this._highlighter) {
       if (!this._isPreviousWindowXUL) {
         this._highlighter.off("ready", this._highlighterReady);
@@ -143,7 +143,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     }
   },
 
-  _onNavigate: function ({isTopLevel}) {
+  _onNavigate: function({isTopLevel}) {
     // Skip navigation events for non top-level windows, or if the document
     // doesn't exist anymore.
     if (!isTopLevel || !this._tabActor.window.document.documentElement) {
@@ -157,7 +157,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     }
   },
 
-  destroy: function () {
+  destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
 
     this.hideBoxModel();
@@ -183,7 +183,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
    * @param Options See the request part for existing options. Note that not
    * all options may be supported by all types of highlighters.
    */
-  showBoxModel: function (node, options = {}) {
+  showBoxModel: function(node, options = {}) {
     if (!node || !this._highlighter.show(node.rawNode, options)) {
       this._highlighter.hide();
     }
@@ -192,7 +192,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   /**
    * Hide the box model highlighting if it was shown before
    */
-  hideBoxModel: function () {
+  hideBoxModel: function() {
     if (this._highlighter) {
       this._highlighter.hide();
     }
@@ -210,7 +210,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
    *          The event to allow
    * @return {Boolean}
    */
-  _isEventAllowed: function ({view}) {
+  _isEventAllowed: function({view}) {
     let { window } = this._highlighterEnv;
 
     return window instanceof Ci.nsIDOMChromeWindow ||
@@ -231,7 +231,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   _hoveredNode: null,
   _currentNode: null,
 
-  pick: function () {
+  pick: function() {
     if (this._isPicking) {
       return null;
     }
@@ -368,14 +368,14 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   /**
    * This pick method also focuses the highlighter's target window.
    */
-  pickAndFocus: function () {
+  pickAndFocus: function() {
     // Go ahead and pass on the results to help future-proof this method.
     let pickResults = this.pick();
     this._highlighterEnv.window.focus();
     return pickResults;
   },
 
-  _findAndAttachElement: function (event) {
+  _findAndAttachElement: function(event) {
     // originalTarget allows access to the "real" element before any retargeting
     // is applied, such as in the case of XBL anonymous elements.  See also
     // https://developer.mozilla.org/docs/XBL/XBL_1.0_Reference/Anonymous_Content#Event_Flow_and_Targeting
@@ -383,7 +383,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     return this._walker.attachElement(node);
   },
 
-  _startPickerListeners: function () {
+  _startPickerListeners: function() {
     let target = this._highlighterEnv.pageListenerTarget;
     target.addEventListener("mousemove", this._onHovered, true);
     target.addEventListener("click", this._onPick, true);
@@ -394,7 +394,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     target.addEventListener("keyup", this._preventContentEvent, true);
   },
 
-  _stopPickerListeners: function () {
+  _stopPickerListeners: function() {
     let target = this._highlighterEnv.pageListenerTarget;
 
     if (!target) {
@@ -410,15 +410,15 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     target.removeEventListener("keyup", this._preventContentEvent, true);
   },
 
-  _highlighterReady: function () {
+  _highlighterReady: function() {
     this._inspector.walker.emit("highlighter-ready");
   },
 
-  _highlighterHidden: function () {
+  _highlighterHidden: function() {
     this._inspector.walker.emit("highlighter-hide");
   },
 
-  cancelPick: function () {
+  cancelPick: function() {
     if (this._isPicking) {
       this._highlighter.hide();
       this._stopPickerListeners();
@@ -438,7 +438,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
    * The typename must be one of HIGHLIGHTER_CLASSES and the class must
    * implement constructor(tabActor), show(node), hide(), destroy()
    */
-  initialize: function (parent, typeName) {
+  initialize: function(parent, typeName) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this._parent = parent;
@@ -472,13 +472,13 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
     return this._parent && this._parent.conn;
   },
 
-  destroy: function () {
+  destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
     this.finalize();
     this._parent = null;
   },
 
-  release: function () {},
+  release: function() {},
 
   /**
    * Show the highlighter.
@@ -497,7 +497,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
    * @return {Boolean} True, if the highlighter has been successfully shown
    * (FF41+)
    */
-  show: function (node, options) {
+  show: function(node, options) {
     if (!node || !this._highlighter) {
       return false;
     }
@@ -508,7 +508,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
   /**
    * Hide the highlighter if it was shown before
    */
-  hide: function () {
+  hide: function() {
     if (this._highlighter) {
       this._highlighter.hide();
     }
@@ -517,7 +517,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
   /**
    * Upon receiving an event from the highlighter, forward it to the client.
    */
-  _onHighlighterEvent: function (data) {
+  _onHighlighterEvent: function(data) {
     this.emit("highlighter-event", data);
   },
 
@@ -525,7 +525,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
    * Kill this actor. This method is called automatically just before the actor
    * is destroyed.
    */
-  finalize: function () {
+  finalize: function() {
     if (this._highlighter) {
       if (this._highlighter.off) {
         this._highlighter.off("highlighter-event", this._onHighlighterEvent.bind(this));
@@ -565,14 +565,14 @@ function HighlighterEnvironment() {
 exports.HighlighterEnvironment = HighlighterEnvironment;
 
 HighlighterEnvironment.prototype = {
-  initFromTabActor: function (tabActor) {
+  initFromTabActor: function(tabActor) {
     this._tabActor = tabActor;
     this._tabActor.on("window-ready", this.relayTabActorWindowReady);
     this._tabActor.on("navigate", this.relayTabActorNavigate);
     this._tabActor.on("will-navigate", this.relayTabActorWillNavigate);
   },
 
-  initFromWindow: function (win) {
+  initFromWindow: function(win) {
     this._win = win;
 
     // We need a progress listener to know when the window will navigate/has
@@ -585,7 +585,7 @@ HighlighterEnvironment.prototype = {
         Ci.nsISupports
       ]),
 
-      onStateChange: function (progress, request, flag) {
+      onStateChange: function(progress, request, flag) {
         let isStart = flag & Ci.nsIWebProgressListener.STATE_START;
         let isStop = flag & Ci.nsIWebProgressListener.STATE_STOP;
         let isWindow = flag & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
@@ -672,19 +672,19 @@ HighlighterEnvironment.prototype = {
     return this.docShell && this.docShell.chromeEventHandler;
   },
 
-  relayTabActorWindowReady: function (data) {
+  relayTabActorWindowReady: function(data) {
     this.emit("window-ready", data);
   },
 
-  relayTabActorNavigate: function (data) {
+  relayTabActorNavigate: function(data) {
     this.emit("navigate", data);
   },
 
-  relayTabActorWillNavigate: function (data) {
+  relayTabActorWillNavigate: function(data) {
     this.emit("will-navigate", data);
   },
 
-  destroy: function () {
+  destroy: function() {
     if (this._tabActor) {
       this._tabActor.off("window-ready", this.relayTabActorWindowReady);
       this._tabActor.off("navigate", this.relayTabActorNavigate);

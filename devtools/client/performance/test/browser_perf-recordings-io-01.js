@@ -6,8 +6,8 @@
  * Tests if the performance tool is able to save and load recordings.
  */
 
-var test = Task.async(function* () {
-  var { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
+var test = async function () {
+  var { target, panel, toolbox } = await initPerformance(SIMPLE_URL);
   var { $, EVENTS, PerformanceController, PerformanceView, DetailsView, DetailsSubview } = panel.panelWin;
 
   // Enable allocations to test the memory-calltree and memory-flamegraph.
@@ -19,16 +19,16 @@ var test = Task.async(function* () {
   // `waitForWidgetsRendered`.
   DetailsSubview.canUpdateWhileHidden = true;
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
+  await startRecording(panel);
+  await stopRecording(panel);
 
   // Cycle through all the views to initialize them, otherwise we can't use
   // `waitForWidgetsRendered`. The waterfall is shown by default, but all the
   // other views are created lazily, so won't emit any events.
-  yield DetailsView.selectView("js-calltree");
-  yield DetailsView.selectView("js-flamegraph");
-  yield DetailsView.selectView("memory-calltree");
-  yield DetailsView.selectView("memory-flamegraph");
+  await DetailsView.selectView("js-calltree");
+  await DetailsView.selectView("js-flamegraph");
+  await DetailsView.selectView("memory-calltree");
+  await DetailsView.selectView("memory-flamegraph");
 
   // Verify original recording.
 
@@ -41,9 +41,9 @@ var test = Task.async(function* () {
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
   let exported = once(PerformanceController, EVENTS.RECORDING_EXPORTED);
-  yield PerformanceController.exportRecording("", PerformanceController.getCurrentRecording(), file);
+  await PerformanceController.exportRecording("", PerformanceController.getCurrentRecording(), file);
 
-  yield exported;
+  await exported;
   ok(true, "The recording data appears to have been successfully saved.");
 
  //  Check if the imported file name has tmpprofile in it as the file
@@ -59,10 +59,10 @@ var test = Task.async(function* () {
   let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
   PerformanceView.emit(EVENTS.UI_IMPORT_RECORDING, file);
 
-  yield imported;
+  await imported;
   ok(true, "The recording data appears to have been successfully imported.");
 
-  yield rerendered;
+  await rerendered;
   ok(true, "The imported data was re-rendered.");
 
   // Verify imported recording.
@@ -88,7 +88,7 @@ var test = Task.async(function* () {
   is(importedData.configuration.withMemory, originalData.configuration.withMemory,
     "The imported data is identical to the original data (8).");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
-});
+};
 /* eslint-enable */

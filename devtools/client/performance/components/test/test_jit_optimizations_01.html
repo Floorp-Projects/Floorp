@@ -13,7 +13,7 @@ Test the rendering of the JIT Optimizations tree. Tests when jit data has observ
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
-window.onload = Task.async(function* () {
+window.onload = async function () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
@@ -32,7 +32,7 @@ window.onload = Task.async(function* () {
       optimizationSites: OPTS_DATA_GENERAL,
       autoExpandDepth: 1000,
     }), window.document.body);
-    yield forceRender(opts);
+    await forceRender(opts);
 
     checkOptimizationHeader("myfunc", "file.js", "1");
 
@@ -63,7 +63,7 @@ window.onload = Task.async(function* () {
   } finally {
     SimpleTest.finish();
   }
-});
+};
 </script>
 </pre>
 </body>

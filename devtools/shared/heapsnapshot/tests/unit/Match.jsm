@@ -7,7 +7,7 @@
 
 this.EXPORTED_SYMBOLS = ["Match"];
 
-this.Match = (function () {
+this.Match = (function() {
   function Pattern(template) {
       // act like a constructor even as a function
     if (!(this instanceof Pattern)) {
@@ -18,11 +18,11 @@ this.Match = (function () {
   }
 
   Pattern.prototype = {
-    match: function (act) {
+    match: function(act) {
       return match(act, this.template);
     },
 
-    matches: function (act) {
+    matches: function(act) {
       try {
         return this.match(act);
       } catch (e) {
@@ -33,7 +33,7 @@ this.Match = (function () {
       return false;
     },
 
-    assert: function (act, message) {
+    assert: function(act, message) {
       try {
         return this.match(act);
       } catch (e) {
@@ -51,14 +51,14 @@ this.Match = (function () {
   Pattern.ANY.template = Pattern.ANY;
 
   Pattern.NUMBER = new Pattern();
-  Pattern.NUMBER.match = function (act) {
+  Pattern.NUMBER.match = function(act) {
     if (typeof act !== "number") {
       throw new MatchError("Expected number, got: " + quote(act));
     }
   };
 
   Pattern.NATURAL = new Pattern();
-  Pattern.NATURAL.match = function (act) {
+  Pattern.NATURAL.match = function(act) {
     if (typeof act !== "number" || act !== Math.floor(act) || act < 0) {
       throw new MatchError("Expected natural number, got: " + quote(act));
     }
@@ -71,7 +71,7 @@ this.Match = (function () {
   }
 
   MatchError.prototype = {
-    toString: function () {
+    toString: function() {
       return "match error: " + this.message;
     }
   };

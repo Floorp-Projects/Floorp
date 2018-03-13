@@ -1134,6 +1134,9 @@ nsHostResolver::TrrLookup(nsHostRecord *aRec, TRR *pushedTRR)
     bool madeQuery = false;
     do {
         sendAgain = false;
+        if ((TRRTYPE_AAAA == rectype) && gTRRService && gTRRService->DisableIPv6()) {
+            break;
+        }
         LOG(("TRR Resolve %s type %d\n", rec->host.get(), (int)rectype));
         RefPtr<TRR> trr;
         MutexAutoLock trrlock(rec->mTrrLock);

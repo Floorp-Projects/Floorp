@@ -8,32 +8,32 @@
 
 const URL = EXAMPLE_URL + "doc_innerHTML.html";
 
-function* spawnTest() {
-  let { panel } = yield initPerformance(URL);
+async function spawnTest() {
+  let { panel } = await initPerformance(URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
 
-  yield startRecording(panel);
+  await startRecording(panel);
   ok(true, "Recording has started.");
 
-  yield waitUntil(() => {
+  await waitUntil(() => {
     let markers = PerformanceController.getCurrentRecording().getMarkers();
     return markers.some(m => m.name == "Parse HTML") &&
            markers.some(m => m.name == "Javascript");
   });
 
   let waterfallRendered = WaterfallView.once(EVENTS.UI_WATERFALL_RENDERED);
-  yield stopRecording(panel);
+  await stopRecording(panel);
 
   $("#filter-button").click();
   let filterJS = $("menuitem[marker-type=Javascript]");
 
-  yield waterfallRendered;
+  await waterfallRendered;
 
   ok($(".waterfall-marker-bar[type=Javascript]"), "Found at least one 'Javascript' marker");
   ok(!$(".waterfall-marker-bar[type='Parse HTML']"), "Found no Parse HTML markers as they are nested still");
 
   EventUtils.synthesizeMouseAtCenter(filterJS, {type: "mouseup"}, panel.panelWin);
-  yield Promise.all([
+  await Promise.all([
     WaterfallView.once(EVENTS.UI_WATERFALL_RENDERED),
     once(filterJS, "command")
   ]);
@@ -42,7 +42,7 @@ function* spawnTest() {
   ok($(".waterfall-marker-bar[type='Parse HTML']"),
     "Found at least one 'Parse HTML' marker still visible after hiding JS markers");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }
 /* eslint-enable */

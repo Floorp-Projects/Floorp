@@ -33,7 +33,7 @@ let reducers = {
 
 };
 
-module.exports = function (conditions = INITIAL_RELOAD_CONDITIONS, action) {
+module.exports = function(conditions = INITIAL_RELOAD_CONDITIONS, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return conditions;

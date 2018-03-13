@@ -12,8 +12,8 @@ const { UI_ENABLE_FRAMERATE_PREF } = require("devtools/client/performance/test/h
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function() {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -22,22 +22,22 @@ add_task(function* () {
 
   // Test starting without framerate, and stopping with it.
   Services.prefs.setBoolPref(UI_ENABLE_FRAMERATE_PREF, false);
-  yield startRecording(panel);
+  await startRecording(panel);
 
   Services.prefs.setBoolPref(UI_ENABLE_FRAMERATE_PREF, true);
-  yield stopRecording(panel);
+  await stopRecording(panel);
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withTicks, false,
     "The recording finished without tracking framerate.");
 
   // Test starting with framerate, and stopping without it.
-  yield startRecording(panel);
+  await startRecording(panel);
 
   Services.prefs.setBoolPref(UI_ENABLE_FRAMERATE_PREF, false);
-  yield stopRecording(panel);
+  await stopRecording(panel);
 
   is(PerformanceController.getCurrentRecording().getConfiguration().withTicks, true,
     "The recording finished with tracking framerate.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

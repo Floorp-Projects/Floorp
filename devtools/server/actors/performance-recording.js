@@ -20,7 +20,7 @@ loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
  */
 const PerformanceRecordingActor = ActorClassWithSpec(performanceRecordingSpec,
 Object.assign({
-  form: function (detail) {
+  form: function(detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -60,7 +60,7 @@ Object.assign({
    *        A hash of temporary metadata for a recording that is recording
    *        (as opposed to an imported recording).
    */
-  initialize: function (conn, options, meta) {
+  initialize: function(conn, options, meta) {
     Actor.prototype.initialize.call(this, conn);
     this._configuration = {
       withMarkers: options.withMarkers || false,
@@ -102,7 +102,7 @@ Object.assign({
     }
   },
 
-  destroy: function () {
+  destroy: function() {
     Actor.prototype.destroy.call(this);
   },
 
@@ -113,7 +113,7 @@ Object.assign({
    * @param {string} state
    * @param {object} extraData
    */
-  _setState: function (state, extraData) {
+  _setState: function(state, extraData) {
     switch (state) {
       case "recording-started": {
         this._recording = true;

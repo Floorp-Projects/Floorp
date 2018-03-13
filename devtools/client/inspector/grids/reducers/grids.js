@@ -42,7 +42,7 @@ let reducers = {
 
 };
 
-module.exports = function (grids = INITIAL_GRIDS, action) {
+module.exports = function(grids = INITIAL_GRIDS, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return grids;

@@ -25,7 +25,7 @@ registerCleanupFunction(() => {
 // Use the old webconsole since the new one doesn't yet support
 // XHR spy. See Bug 1304794.
 Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
-registerCleanupFunction(function* () {
+registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
 });
 
@@ -37,21 +37,21 @@ registerCleanupFunction(function* () {
 function addTestTab(url) {
   info("Adding a new JSON tab with URL: '" + url + "'");
 
-  return Task.spawn(function* () {
-    let tab = yield addTab(url);
+  return (async function () {
+    let tab = await addTab(url);
 
     // Load devtools/shared/test/frame-script-utils.js
     loadFrameScriptUtils(tab.linkedBrowser);
 
     // Open the Console panel
-    let hud = yield openConsole();
+    let hud = await openConsole();
 
     return {
       tab: tab,
       browser: tab.linkedBrowser,
       hud: hud
     };
-  });
+  })();
 }
 
 /**
@@ -73,9 +73,9 @@ function executeAndInspectXhr(hud, options) {
     requestHeaders: options.requestHeaders
   });
 
-  return Task.spawn(function* () {
+  return (async function () {
     // Wait till the appropriate Net log appears in the Console panel.
-    let rules = yield waitForMessages({
+    let rules = await waitForMessages({
       webconsole: hud,
       messages: [{
         text: options.url,
@@ -92,12 +92,12 @@ function executeAndInspectXhr(hud, options) {
     // Open XHR HTTP details body and wait till the UI fetches
     // all necessary data from the backend. All RPD requests
     // needs to be finished before we can continue testing.
-    yield synthesizeMouseClickSoon(hud, body);
-    yield waitForBackend(msg);
+    await synthesizeMouseClickSoon(hud, body);
+    await waitForBackend(msg);
     let netInfoBody = body.querySelector(".netInfoBody");
     ok(netInfoBody, "Net info body must exist");
     return netInfoBody;
-  });
+  })();
 }
 
 /**
@@ -128,14 +128,14 @@ function selectNetInfoTab(hud, netInfoBody, tabId) {
   // UI is populated with data from the backend.
   // There must be no pending RDP requests before we can
   // continue testing the UI.
-  return Task.spawn(function* () {
-    yield synthesizeMouseClickSoon(hud, tab);
+  return (async function () {
+    await synthesizeMouseClickSoon(hud, tab);
     let msg = getAncestorByClass(netInfoBody, "message");
-    yield waitForBackend(msg);
+    await waitForBackend(msg);
     let tabBody = netInfoBody.querySelector("." + tabId + "TabBox");
     ok(tabBody, "Tab body must exist");
     return tabBody;
-  });
+  })();
 }
 
 /**

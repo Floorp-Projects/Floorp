@@ -5,18 +5,18 @@
  * Tests whether the frontend displays a placeholder snapshot while recording.
  */
 
-function* ifTestingSupported() {
-  let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
+async function ifTestingSupported() {
+  let { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, EVENTS, L10N, $, SnapshotsListView } = panel.panelWin;
 
-  yield reload(target);
+  await reload(target);
 
   let recordingStarted = once(window, EVENTS.SNAPSHOT_RECORDING_STARTED);
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let recordingSelected = once(window, EVENTS.SNAPSHOT_RECORDING_SELECTED);
   SnapshotsListView._onRecordButtonClick();
 
-  yield recordingStarted;
+  await recordingStarted;
   ok(true, "Started recording a snapshot of the animation loop.");
 
   let item = SnapshotsListView.getItemAtIndex(0);
@@ -47,10 +47,10 @@ function* ifTestingSupported() {
   is($("#debugging-pane-contents").getAttribute("hidden"), "true",
     "The rest of the UI should still be hidden.");
 
-  yield recordingFinished;
+  await recordingFinished;
   ok(true, "Finished recording a snapshot of the animation loop.");
 
-  yield recordingSelected;
+  await recordingSelected;
   ok(true, "Finished selecting a snapshot of the animation loop.");
 
   is($("#reload-notice").getAttribute("hidden"), "true",
@@ -68,6 +68,6 @@ function* ifTestingSupported() {
   is($("#debugging-pane-contents").hasAttribute("hidden"), false,
     "The rest of the UI should now be visible.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

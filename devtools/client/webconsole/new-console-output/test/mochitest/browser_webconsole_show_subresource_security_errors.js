@@ -15,7 +15,7 @@ const TEST_DOC = "https://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-subresource-security-error.html";
 const SAMPLE_MSG = "specified a header that could not be parsed successfully.";
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
   await loadDocument(TEST_DOC);

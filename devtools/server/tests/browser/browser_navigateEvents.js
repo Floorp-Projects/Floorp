@@ -72,7 +72,7 @@ function assertEvent(event, data) {
 }
 
 function waitForOnBeforeUnloadDialog(browser, callback) {
-  browser.addEventListener("DOMWillOpenModalDialog", async function (event) {
+  browser.addEventListener("DOMWillOpenModalDialog", async function(event) {
     let stack = browser.parentNode;
     let dialogs = stack.getElementsByTagName("tabmodalprompt");
     await waitUntil(() => dialogs[0]);
@@ -81,7 +81,7 @@ function waitForOnBeforeUnloadDialog(browser, callback) {
   }, {capture: true, once: true});
 }
 
-var httpObserver = function (subject, topic, state) {
+var httpObserver = function(subject, topic, state) {
   let channel = subject.QueryInterface(Ci.nsIHttpChannel);
   let url = channel.URI.spec;
   // Only listen for our document request, as many other requests can happen
@@ -102,7 +102,7 @@ async function connectAndAttachTab() {
   // Connect to this tab
   let transport = DebuggerServer.connectPipe();
   let client = new DebuggerClient(transport);
-  client.addListener("tabNavigated", function (event, packet) {
+  client.addListener("tabNavigated", function(event, packet) {
     assertEvent("tabNavigated", packet);
   });
   let form = await connectDebuggerClient(client);
@@ -111,12 +111,12 @@ async function connectAndAttachTab() {
   return { client, actorID };
 }
 
-add_task(async function () {
+add_task(async function() {
   // Open a test tab
   let browser = await addTab(URL1);
 
   // Listen for alert() call being made in navigate-first during unload
-  waitForOnBeforeUnloadDialog(browser, function (btnLeave, btnStay) {
+  waitForOnBeforeUnloadDialog(browser, function(btnLeave, btnStay) {
     assertEvent("unload-dialog");
     // accept to quit this page to another
     btnLeave.click();
@@ -126,7 +126,7 @@ add_task(async function () {
   browser.messageManager.addMessageListener("devtools-test:event", onMessage);
 
   let { client, actorID } = await connectAndAttachTab();
-  await ContentTask.spawn(browser, [actorID], async function (actorId) {
+  await ContentTask.spawn(browser, [actorID], async function(actorId) {
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const { DebuggerServer } = require("devtools/server/main");
     const EventEmitter = require("devtools/shared/event-emitter");
@@ -134,26 +134,26 @@ add_task(async function () {
     // !Hack! Retrieve a server side object, the BrowserTabActor instance
     let tabActor = DebuggerServer.searchAllConnectionsForActor(actorId);
     // In order to listen to internal will-navigate/navigate events
-    EventEmitter.on(tabActor, "will-navigate", function (data) {
+    EventEmitter.on(tabActor, "will-navigate", function(data) {
       sendSyncMessage("devtools-test:event", {
         event: "will-navigate",
         data: { newURI: data.newURI }
       });
     });
-    EventEmitter.on(tabActor, "navigate", function (data) {
+    EventEmitter.on(tabActor, "navigate", function(data) {
       sendSyncMessage("devtools-test:event", {
         event: "navigate",
         data: { readyState: content.document.readyState }
       });
     });
     // Forward DOMContentLoaded and load events
-    addEventListener("DOMContentLoaded", function () {
+    addEventListener("DOMContentLoaded", function() {
       sendSyncMessage("devtools-test:event", {
         event: "DOMContentLoaded",
         data: { readyState: content.document.readyState }
       });
     }, { capture: true });
-    addEventListener("load", function () {
+    addEventListener("load", function() {
       sendSyncMessage("devtools-test:event", {
         event: "load",
         data: { readyState: content.document.readyState }

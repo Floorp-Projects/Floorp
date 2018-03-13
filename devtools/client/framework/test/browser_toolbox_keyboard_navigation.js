@@ -19,9 +19,9 @@ function containsFocus(aDoc, aElm) {
   return false;
 }
 
-add_task(function* () {
+add_task(async function () {
   info("Create a test tab and open the toolbox");
-  let toolbox = yield openNewTabAndToolbox(TEST_URL, "webconsole");
+  let toolbox = await openNewTabAndToolbox(TEST_URL, "webconsole");
   let doc = toolbox.doc;
 
   let toolbar = doc.querySelector(".devtools-tabbar");

@@ -26,7 +26,7 @@ const isMenuChecked = () => {
   return menu.getAttribute("checked") === "true";
 };
 
-add_task(async function () {
+add_task(async function() {
   await startup(window);
 
   ok(!isMenuChecked(),

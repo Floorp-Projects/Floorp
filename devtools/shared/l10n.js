@@ -37,7 +37,7 @@ const reqGlobal = require.context("raw!toolkit/locales/",
 
 // Map used to memoize Number formatters.
 const numberFormatters = new Map();
-const getNumberFormatter = function (decimals) {
+const getNumberFormatter = function(decimals) {
   let formatter = numberFormatters.get(decimals);
   if (!formatter) {
     // Create and memoize a formatter for the provided decimals
@@ -102,7 +102,7 @@ LocalizationHelper.prototype = {
    * @param string name
    * @return string
    */
-  getStr: function (name) {
+  getStr: function(name) {
     let properties = getProperties(this.stringBundleName);
     if (name in properties) {
       return properties[name];
@@ -118,7 +118,7 @@ LocalizationHelper.prototype = {
    * @param array args
    * @return string
    */
-  getFormatStr: function (name, ...args) {
+  getFormatStr: function(name, ...args) {
     return sprintf(this.getStr(name), ...args);
   },
 
@@ -131,7 +131,7 @@ LocalizationHelper.prototype = {
    * @param array args
    * @return string
    */
-  getFormatStrWithNumbers: function (name, ...args) {
+  getFormatStrWithNumbers: function(name, ...args) {
     let newArgs = args.map(x => {
       return typeof x == "number" ? this.numberWithDecimals(x, 2) : x;
     });
@@ -150,7 +150,7 @@ LocalizationHelper.prototype = {
    * @return string
    *         The localized number as a string.
    */
-  numberWithDecimals: function (number, decimals = 0) {
+  numberWithDecimals: function(number, decimals = 0) {
     // Do not show decimals for integers.
     if (number === (number|0)) {
       return getNumberFormatter(0).format(number);

@@ -13,7 +13,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-autocomplete-in-stackframe.html";
 
-add_task(async function () {
+add_task(async function() {
   // Force the old debugger UI since it's directly used (see Bug 1301705)
   await pushPref("devtools.debugger.new-debugger-frontend", false);
 
@@ -111,7 +111,7 @@ function pauseDebugger(debuggerPanel) {
       resolve(debuggerController.StackFrames));
 
     info("firstCall()");
-    ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+    ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
       content.wrappedJSObject.firstCall();
     });
   });

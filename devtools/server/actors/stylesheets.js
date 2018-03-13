@@ -71,7 +71,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     return this.mql ? this.mql.matches : null;
   },
 
-  initialize: function (mediaRule, parentActor) {
+  initialize: function(mediaRule, parentActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.rawRule = mediaRule;
@@ -94,7 +94,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     }
   },
 
-  destroy: function () {
+  destroy: function() {
     if (this.mql) {
       this.mql.removeListener(this._matchesChange);
     }
@@ -102,7 +102,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  form: function (detail) {
+  form: function(detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -120,7 +120,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     return form;
   },
 
-  _matchesChange: function () {
+  _matchesChange: function() {
     this.emit("matches-change", this.matches);
   }
 });
@@ -129,7 +129,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
  * A StyleSheetActor represents a stylesheet on the server.
  */
 var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
-  toString: function () {
+  toString: function() {
     return "[StyleSheetActor " + this.actorID + "]";
   },
 
@@ -199,7 +199,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     return this._styleSheetIndex;
   },
 
-  destroy: function () {
+  destroy: function() {
     if (this._transitionTimeout && this.window) {
       this.window.clearTimeout(this._transitionTimeout);
       removePseudoClassLock(
@@ -207,7 +207,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     }
   },
 
-  initialize: function (styleSheet, parentActor) {
+  initialize: function(styleSheet, parentActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.rawSheet = styleSheet;
@@ -238,7 +238,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * Test whether this sheet has been modified by CSSOM.
    * @return {Boolean} true if changed by CSSOM.
    */
-  hasRulesModifiedByCSSOM: function () {
+  hasRulesModifiedByCSSOM: function() {
     return InspectorUtils.hasRulesModifiedByCSSOM(this.rawSheet);
   },
 
@@ -248,7 +248,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Promise}
    *         Promise that resolves with a CSSRuleList
    */
-  getCSSRules: function () {
+  getCSSRules: function() {
     let rules;
     try {
       rules = this.rawSheet.cssRules;
@@ -291,7 +291,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         With properties of the underlying stylesheet, plus 'text',
    *        'styleSheetIndex' and 'parentActor' if it's @imported
    */
-  form: function (detail) {
+  form: function(detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -333,7 +333,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {object}
    *         'disabled' - the disabled state after toggling.
    */
-  toggleDisabled: function () {
+  toggleDisabled: function() {
     this.rawSheet.disabled = !this.rawSheet.disabled;
     this._notifyPropertyChanged("disabled");
 
@@ -347,14 +347,14 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @param  {string} property
    *         Name of the changed property
    */
-  _notifyPropertyChanged: function (property) {
+  _notifyPropertyChanged: function(property) {
     this.emit("property-change", property, this.form()[property]);
   },
 
   /**
    * Protocol method to get the text of this stylesheet.
    */
-  getText: function () {
+  getText: function() {
     return this._getText().then((text) => {
       return new LongStringActor(this.conn, text || "");
     });
@@ -367,7 +367,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Promise}
    *         Promise that resolves with a string text of the stylesheet.
    */
-  _getText: function () {
+  _getText: function() {
     if (typeof this.text === "string") {
       return Promise.resolve(this.text);
     }
@@ -496,7 +496,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /**
    * Protocol method to get the media rules for the stylesheet.
    */
-  getMediaRules: function () {
+  getMediaRules: function() {
     return this._getMediaRules();
   },
 
@@ -506,7 +506,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {promise}
    *         A promise that resolves with an array of MediaRuleActors.
    */
-  _getMediaRules: function () {
+  _getMediaRules: function() {
     return this.getCSSRules().then((rules) => {
       let mediaRules = [];
       for (let i = 0; i < rules.length; i++) {
@@ -528,7 +528,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * defined in <http://www.w3.org/TR/CSS2/syndata.html#charset>.
    * Note that some of the algorithm is implemented in DevToolsUtils.fetch.
    */
-  _getCSSCharset: function () {
+  _getCSSCharset: function() {
     let sheet = this.rawSheet;
     if (sheet) {
       // Do we have a @charset rule in the stylesheet?
@@ -574,7 +574,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         'transition' - whether to do CSS transition for change.
    *         'kind' - either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
    */
-  update: function (text, transition, kind = UPDATE_GENERAL) {
+  update: function(text, transition, kind = UPDATE_GENERAL) {
     InspectorUtils.parseStyleSheet(this.rawSheet, text);
 
     modifiedStyleSheets.set(this.rawSheet, text);
@@ -600,7 +600,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * Insert a catch-all transition sheet into the document. Set a timeout
    * to remove the transition after a certain time.
    */
-  _startTransition: function (kind) {
+  _startTransition: function(kind) {
     if (!this._transitionSheetLoaded) {
       this._transitionSheetLoaded = true;
       // We don't remove this sheet. It uses an internal selector that
@@ -623,7 +623,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * This cleans up class and rule added for transition effect and then
    * notifies that the style has been applied.
    */
-  _onTransitionEnd: function (kind) {
+  _onTransitionEnd: function(kind) {
     this._transitionTimeout = null;
     removePseudoClassLock(this.document.documentElement, TRANSITION_PSEUDO_CLASS);
     this.emit("style-applied", kind, this);
@@ -651,11 +651,11 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     return this.window.document;
   },
 
-  form: function () {
+  form: function() {
     return { actor: this.actorID };
   },
 
-  initialize: function (conn, tabActor) {
+  initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.parentActor = tabActor;
@@ -682,7 +682,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     this._nextStyleSheetIsNew = false;
   },
 
-  destroy: function () {
+  destroy: function() {
     for (let win of this.parentActor.windows) {
       // This flag only exists for devtools, so we are free to clear
       // it when we're done.
@@ -704,7 +704,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @param {Event} evt
    *        The triggering event.
    */
-  _onWindowReady: function (evt) {
+  _onWindowReady: function(evt) {
     this._addStyleSheets(evt.window);
   },
 
@@ -714,7 +714,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @param {StyleSheetActor} actor
    *        The new style sheet actor.
    */
-  _onNewStyleSheetActor: function (actor) {
+  _onNewStyleSheetActor: function(actor) {
     // Forward it to the client side.
     this.emit("stylesheet-added", actor, this._nextStyleSheetIsNew);
     this._nextStyleSheetIsNew = false;
@@ -743,7 +743,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @return boolean
    *         Whether the stylesheet should be listed.
    */
-  _shouldListSheet: function (sheet) {
+  _shouldListSheet: function(sheet) {
     // Special case about:PreferenceStyleSheet, as it is generated on the
     // fly and the URI is not registered with the about: handler.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
@@ -763,7 +763,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @param {Event} evt
    *        The triggering event.
    */
-  _onSheetAdded: function (evt) {
+  _onSheetAdded: function(evt) {
     let sheet = evt.stylesheet;
     if (this._shouldListSheet(sheet) && !this._haveAncestorWithSameURL(sheet)) {
       this.parentActor.createStyleSheetActor(sheet);
@@ -780,8 +780,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @return {Promise}
    *         Promise that resolves to an array of StyleSheetActors
    */
-  _addStyleSheets: function (win) {
-    return (async function () {
+  _addStyleSheets: function(win) {
+    return (async function() {
       let doc = win.document;
       // We have to set this flag in order to get the
       // StyleSheetApplicableStateChanged events.  See Document.webidl.
@@ -818,8 +818,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @return {Promise}
    *         A promise that resolves with an array of StyleSheetActors
    */
-  _getImported: function (doc, styleSheet) {
-    return (async function () {
+  _getImported: function(doc, styleSheet) {
+    return (async function() {
       let rules = await styleSheet.getCSSRules();
       let imported = [];
 
@@ -878,7 +878,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @return {object}
    *         Object with 'styelSheet' property for form on new actor.
    */
-  addStyleSheet: function (text) {
+  addStyleSheet: function(text) {
     // This is a bit convoluted.  The style sheet actor may be created
     // by a notification from platform.  In this case, we can't easily
     // pass the "new" flag through to createStyleSheetActor, so we set

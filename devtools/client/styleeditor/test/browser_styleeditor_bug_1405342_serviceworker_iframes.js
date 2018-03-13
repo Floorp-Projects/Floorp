@@ -5,7 +5,7 @@
 // Test that sheets inside cross origin iframes, served from a service worker
 // are correctly fetched via the service worker in the stylesheet editor.
 
-add_task(async function () {
+add_task(async function() {
   const TEST_URL = "https://test1.example.com/browser/devtools/client/styleeditor/test/bug_1405342_serviceworker_iframes.html";
   let { ui } = await openStyleEditorForURL(TEST_URL);
 

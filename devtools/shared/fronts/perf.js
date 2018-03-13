@@ -7,7 +7,7 @@ const { FrontClassWithSpec, Front } = require("devtools/shared/protocol");
 const { perfSpec } = require("devtools/shared/specs/perf");
 
 exports.PerfFront = FrontClassWithSpec(perfSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     Front.prototype.initialize.call(this, client, form);
     this.actorID = form.perfActor;
     this.manage(this);

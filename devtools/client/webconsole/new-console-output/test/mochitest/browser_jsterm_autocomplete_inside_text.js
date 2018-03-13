@@ -16,7 +16,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 </head>
 <body>bug 812618 - test completion inside text</body>`;
 
-add_task(async function () {
+add_task(async function() {
   let { jsterm } = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 
