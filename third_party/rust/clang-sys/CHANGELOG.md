@@ -1,3 +1,16 @@
+## [0.22.0] - 2018-03-11
+
+### Added
+- Added support for `clang` 6.0.x
+- Bumped `libc` version to `0.2.39`
+- Bumped `libloading` version to `0.5.0`
+
+## [0.21.2] - 2018-02-17
+
+### Changed
+- Added original errors to error messages
+- Added support for searching for libraries in `LD_LIBRARY_PATH` directories
+
 ## [0.21.1] - 2017-11-24
 
 ### Changed

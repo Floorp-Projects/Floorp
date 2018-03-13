@@ -545,7 +545,7 @@ where
     }
 
     let output = if let Some(path) = matches.value_of("output") {
-        let file = try!(File::create(path));
+        let file = File::create(path)?;
         Box::new(io::BufWriter::new(file)) as Box<io::Write>
     } else {
         Box::new(io::BufWriter::new(io::stdout())) as Box<io::Write>

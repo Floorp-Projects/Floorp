@@ -176,6 +176,17 @@ s! {
         pub ifm_xflags: ::c_int,
         pub ifm_data: if_data,
     }
+
+    pub struct sockaddr_dl {
+        pub sdl_len: ::c_uchar,
+        pub sdl_family: ::c_uchar,
+        pub sdl_index: ::c_ushort,
+        pub sdl_type: ::c_uchar,
+        pub sdl_nlen: ::c_uchar,
+        pub sdl_alen: ::c_uchar,
+        pub sdl_slen: ::c_uchar,
+        pub sdl_data: [::c_char; 24],
+    }
 }
 
 pub const UT_NAMESIZE: usize = 32;
@@ -200,7 +211,11 @@ pub const ECANCELED : ::c_int = 88;
 pub const EIDRM : ::c_int = 89;
 pub const ENOMSG : ::c_int = 90;
 pub const ENOTSUP : ::c_int = 91;
-pub const ELAST : ::c_int = 91;
+pub const EBADMSG : ::c_int = 92;
+pub const ENOTRECOVERABLE : ::c_int = 93;
+pub const EOWNERDEAD : ::c_int = 94;
+pub const EPROTO : ::c_int = 95;
+pub const ELAST : ::c_int = 95;
 
 pub const F_DUPFD_CLOEXEC : ::c_int = 10;
 
@@ -220,6 +235,24 @@ pub const SO_NETPROC: ::c_int = 0x1020;
 pub const SO_RTABLE: ::c_int = 0x1021;
 pub const SO_PEERCRED: ::c_int = 0x1022;
 pub const SO_SPLICE: ::c_int = 0x1023;
+
+// https://github.com/openbsd/src/blob/master/sys/net/if.h#L187
+pub const IFF_UP: ::c_int = 0x1; // interface is up
+pub const IFF_BROADCAST: ::c_int = 0x2; // broadcast address valid
+pub const IFF_DEBUG: ::c_int = 0x4; // turn on debugging
+pub const IFF_LOOPBACK: ::c_int = 0x8; // is a loopback net
+pub const IFF_POINTOPOINT: ::c_int = 0x10; // interface is point-to-point link
+pub const IFF_NOTRAILERS: ::c_int = 0x20; // avoid use of trailers
+pub const IFF_RUNNING: ::c_int = 0x40; // resources allocated
+pub const IFF_NOARP: ::c_int = 0x80; // no address resolution protocol
+pub const IFF_PROMISC: ::c_int = 0x100; // receive all packets
+pub const IFF_ALLMULTI: ::c_int = 0x200; // receive all multicast packets
+pub const IFF_OACTIVE: ::c_int = 0x400; // transmission in progress
+pub const IFF_SIMPLEX: ::c_int = 0x800; // can't hear own transmissions
+pub const IFF_LINK0: ::c_int = 0x1000; // per link layer defined bit
+pub const IFF_LINK1: ::c_int = 0x2000; // per link layer defined bit
+pub const IFF_LINK2: ::c_int = 0x4000; // per link layer defined bit
+pub const IFF_MULTICAST: ::c_int = 0x8000; // supports multicast
 
 // sys/netinet/in.h
 // Protocols (RFC 1700)
@@ -339,7 +372,17 @@ pub const EIPSEC : ::c_int = 82;
 pub const ENOMEDIUM : ::c_int = 85;
 pub const EMEDIUMTYPE : ::c_int = 86;
 
+pub const EAI_BADFLAGS: ::c_int = -1;
+pub const EAI_NONAME: ::c_int = -2;
+pub const EAI_AGAIN: ::c_int = -3;
+pub const EAI_FAIL: ::c_int = -4;
+pub const EAI_NODATA: ::c_int = -5;
+pub const EAI_FAMILY: ::c_int = -6;
+pub const EAI_SOCKTYPE: ::c_int = -7;
+pub const EAI_SERVICE: ::c_int = -8;
+pub const EAI_MEMORY: ::c_int = -10;
 pub const EAI_SYSTEM: ::c_int = -11;
+pub const EAI_OVERFLOW: ::c_int = -14;
 
 pub const RUSAGE_THREAD: ::c_int = 1;
 
@@ -651,6 +694,8 @@ pub const SOCK_CLOEXEC: ::c_int = 0x8000;
 pub const SOCK_NONBLOCK: ::c_int = 0x4000;
 pub const SOCK_DNS: ::c_int = 0x1000;
 
+pub const WCONTINUED: ::c_int = 8;
+
 f! {
     pub fn WIFCONTINUED(status: ::c_int) -> bool {
         status & 0o177777 == 0o177777
@@ -703,6 +748,3 @@ cfg_if! {
         // Unknown target_os
     }
 }
-
-mod other;
-pub use self::other::*;

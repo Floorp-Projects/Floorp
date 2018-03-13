@@ -151,11 +151,11 @@ impl DotAttributes for Function {
         if let Some(ref mangled) = self.mangled_name {
             let mangled: String =
                 mangled.chars().flat_map(|c| c.escape_default()).collect();
-            try!(writeln!(
+            writeln!(
                 out,
                 "<tr><td>mangled name</td><td>{}</td></tr>",
                 mangled
-            ));
+            )?;
         }
 
         Ok(())
@@ -422,11 +422,11 @@ impl FunctionSig {
         let ty_ret_type = if cursor.kind() == CXCursor_ObjCInstanceMethodDecl ||
             cursor.kind() == CXCursor_ObjCClassMethodDecl
         {
-            try!(ty.ret_type().or_else(|| cursor.ret_type()).ok_or(
+            ty.ret_type().or_else(|| cursor.ret_type()).ok_or(
                 ParseError::Continue,
-            ))
+            )?
         } else {
-            try!(ty.ret_type().ok_or(ParseError::Continue))
+            ty.ret_type().ok_or(ParseError::Continue)?
         };
         let ret = Item::from_ty_or_ref(ty_ret_type, cursor, None, ctx);
         let call_conv = ty.call_conv();
@@ -521,7 +521,7 @@ impl ClangSubItemParser for Function {
 
         // Grab the signature using Item::from_ty.
         let sig =
-            try!(Item::from_ty(&cursor.cur_type(), cursor, None, context));
+            Item::from_ty(&cursor.cur_type(), cursor, None, context)?;
 
         let mut name = cursor.spelling();
         assert!(!name.is_empty(), "Empty function name?");

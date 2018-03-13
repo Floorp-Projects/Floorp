@@ -1,3 +1,5 @@
+pub type c_char = i8;
+
 s! {
     pub struct lconv {
         pub decimal_point: *mut ::c_char,
@@ -72,4 +74,16 @@ extern {
                      base: ::locale_t) -> ::locale_t;
     pub fn uselocale(loc: ::locale_t) -> ::locale_t;
     pub fn querylocale(mask: ::c_int, loc: ::locale_t) -> *const ::c_char;
+}
+
+cfg_if! {
+    if #[cfg(target_arch = "x86")] {
+        mod x86;
+        pub use self::x86::*;
+    } else if #[cfg(target_arch = "x86_64")] {
+        mod x86_64;
+        pub use self::x86_64::*;
+    } else {
+        // Unknown target_arch
+    }
 }

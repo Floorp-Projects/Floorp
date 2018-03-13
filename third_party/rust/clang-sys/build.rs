@@ -214,6 +214,13 @@ fn find(library: Library, files: &[String], env: &str) -> Result<PathBuf, String
         }
     }
 
+    // Search the `LD_LIBRARY_PATH` directories.
+    if let Ok(path) = env::var("LD_LIBRARY_PATH") {
+        for directory in path.split(":").map(Path::new) {
+            search_directory!(directory);
+        }
+    }
+
     // Search the backup directories.
     let search = if cfg!(any(target_os="freebsd", target_os="linux")) {
         SEARCH_LINUX

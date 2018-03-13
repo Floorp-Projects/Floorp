@@ -903,8 +903,8 @@ impl Type {
     /// have a valid layout.
     pub fn fallible_layout(&self) -> Result<::ir::layout::Layout, LayoutError> {
         use ir::layout::Layout;
-        let size = try!(self.fallible_size());
-        let align = try!(self.fallible_align());
+        let size = self.fallible_size()?;
+        let align = self.fallible_align()?;
         Ok(Layout::new(size, align))
     }
 

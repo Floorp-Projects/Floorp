@@ -98,21 +98,30 @@ impl Enum {
                 };
                 if let Some(val) = value {
                     let name = cursor.spelling();
+                    let annotations = Annotations::new(&cursor);
                     let custom_behavior = ctx.parse_callbacks()
-                        .and_then(
-                            |t| t.enum_variant_behavior(type_name, &name, val),
-                        )
+                        .and_then(|callbacks| {
+                            callbacks.enum_variant_behavior(type_name, &name, val)
+                        })
                         .or_else(|| {
-                            Annotations::new(&cursor).and_then(
-                                |anno| if anno.hide() {
-                                    Some(EnumVariantCustomBehavior::Hide)
-                                } else if anno.constify_enum_variant() {
-                                    Some(EnumVariantCustomBehavior::Constify)
-                                } else {
-                                    None
-                                },
-                            )
+                            let annotations = annotations.as_ref()?;
+                            if annotations.hide() {
+                                Some(EnumVariantCustomBehavior::Hide)
+                            } else if annotations.constify_enum_variant() {
+                                Some(EnumVariantCustomBehavior::Constify)
+                            } else {
+                                None
+                            }
                         });
+
+                    let name = ctx.parse_callbacks()
+                        .and_then(|callbacks| {
+                            callbacks.enum_variant_name(type_name, &name, val)
+                        })
+                        .or_else(|| {
+                            annotations.as_ref()?.use_instead_of()?.last().cloned()
+                        })
+                        .unwrap_or(name);
 
                     let comment = cursor.raw_comment();
                     variants.push(EnumVariant::new(
