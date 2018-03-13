@@ -35,7 +35,9 @@ flake8:
         - testing/xpcshell
         - toolkit/components/telemetry
         - toolkit/crashreporter/tools/upload_symbols.py
-        - tools/
+        - tools/lint
+        - tools/mach_commands.py
+        - tools/tryselect
     # Excludes should be added to topsrcdir/.flake8 due to a bug in flake8 where
     # specifying --exclude causes custom configuration files to be ignored.
     exclude: []
