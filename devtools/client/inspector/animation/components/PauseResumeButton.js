@@ -54,17 +54,17 @@ class PauseResumeButton extends PureComponent {
     return ReactDOM.findDOMNode(this).closest("#animation-container");
   }
 
-  onToggleAnimationsPlayState() {
+  onToggleAnimationsPlayState(event) {
+    event.stopPropagation();
     const { setAnimationsPlayState } = this.props;
     const { isRunning } = this.state;
 
     setAnimationsPlayState(!isRunning);
   }
 
-  onKeyDown(e) {
-    if (e.keyCode === KeyCodes.DOM_VK_SPACE) {
-      this.onToggleAnimationsPlayState();
-      e.preventDefault();
+  onKeyDown(event) {
+    if (event.keyCode === KeyCodes.DOM_VK_SPACE) {
+      this.onToggleAnimationsPlayState(event);
     }
   }
 

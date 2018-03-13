@@ -58,7 +58,8 @@ class CurrentTimeScrubberController extends PureComponent {
     this.setState({ offset });
   }
 
-  onMouseDown(e) {
+  onMouseDown(event) {
+    event.stopPropagation();
     const thisEl = ReactDOM.findDOMNode(this);
     this.controllerArea = thisEl.getBoundingClientRect();
     this.listenerTarget = thisEl.closest(".animation-list-container");
@@ -67,26 +68,31 @@ class CurrentTimeScrubberController extends PureComponent {
     this.listenerTarget.addEventListener("mouseup", this.onMouseUp);
     this.listenerTarget.classList.add("active-scrubber");
 
-    this.updateAnimationsCurrentTime(e.pageX, true);
+    this.updateAnimationsCurrentTime(event.pageX, true);
   }
 
-  onMouseMove(e) {
+  onMouseMove(event) {
+    event.stopPropagation();
     this.isMouseMoved = true;
-    this.updateAnimationsCurrentTime(e.pageX);
+    this.updateAnimationsCurrentTime(event.pageX);
   }
 
-  onMouseOut(e) {
-    if (!this.listenerTarget.contains(e.relatedTarget)) {
+  onMouseOut(event) {
+    event.stopPropagation();
+
+    if (!this.listenerTarget.contains(event.relatedTarget)) {
       const endX = this.controllerArea.x + this.controllerArea.width;
-      const pageX = endX < e.pageX ? endX : e.pageX;
+      const pageX = endX < event.pageX ? endX : event.pageX;
       this.updateAnimationsCurrentTime(pageX, true);
       this.uninstallListeners();
     }
   }
 
-  onMouseUp(e) {
+  onMouseUp(event) {
+    event.stopPropagation();
+
     if (this.isMouseMoved) {
-      this.updateAnimationsCurrentTime(e.pageX, true);
+      this.updateAnimationsCurrentTime(event.pageX, true);
       this.isMouseMoved = null;
     }
 

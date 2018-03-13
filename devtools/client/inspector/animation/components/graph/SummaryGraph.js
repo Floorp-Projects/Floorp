@@ -33,7 +33,8 @@ class SummaryGraph extends PureComponent {
     this.onClick = this.onClick.bind(this);
   }
 
-  onClick() {
+  onClick(event) {
+    event.stopPropagation();
     this.props.selectAnimation(this.props.animation);
   }
 
