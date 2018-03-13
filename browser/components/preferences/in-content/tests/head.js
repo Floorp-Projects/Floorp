@@ -3,8 +3,6 @@
 
 ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
 
-XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager", "@mozilla.org/serviceworkers/manager;1", "nsIServiceWorkerManager");
-
 const kDefaultWait = 2000;
 
 function is_hidden(aElement) {
@@ -144,46 +142,6 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
   });
 }
 
-function promiseWindowDialogOpen(buttonAction, url) {
-  return BrowserTestUtils.promiseAlertDialogOpen(buttonAction, url);
-}
-
-function promiseAlertDialogOpen(buttonAction) {
-  return BrowserTestUtils.promiseAlertDialogOpen(buttonAction);
-}
-
-function promiseSiteDataManagerSitesUpdated() {
-  return TestUtils.topicObserved("sitedatamanager:sites-updated", () => true);
-}
-
-function openSiteDataSettingsDialog() {
-  let doc = gBrowser.selectedBrowser.contentDocument;
-  let settingsBtn = doc.getElementById("siteDataSettings");
-  let dialogOverlay = content.gSubDialog._preloadDialog._overlay;
-  let dialogLoadPromise = promiseLoadSubDialog("chrome://browser/content/preferences/siteDataSettings.xul");
-  let dialogInitPromise = TestUtils.topicObserved("sitedata-settings-init", () => true);
-  let fullyLoadPromise = Promise.all([dialogLoadPromise, dialogInitPromise]).then(() => {
-    is(dialogOverlay.style.visibility, "visible", "The Settings dialog should be visible");
-  });
-  settingsBtn.doCommand();
-  return fullyLoadPromise;
-}
-
-function assertSitesListed(doc, hosts) {
-  let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
-  let removeBtn = frameDoc.getElementById("removeSelected");
-  let removeAllBtn = frameDoc.getElementById("removeAll");
-  let sitesList = frameDoc.getElementById("sitesList");
-  let totalSitesNumber = sitesList.getElementsByTagName("richlistitem").length;
-  is(totalSitesNumber, hosts.length, "Should list the right sites number");
-  hosts.forEach(host => {
-    let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
-    ok(site, `Should list the site of ${host}`);
-  });
-  is(removeBtn.disabled, true, "Should disable the removeSelected button");
-  is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
-}
-
 async function evaluateSearchResults(keyword, searchReults) {
   searchReults = Array.isArray(searchReults) ? searchReults : [searchReults];
   searchReults.push("header-searchResults");
@@ -204,113 +162,5 @@ async function evaluateSearchResults(keyword, searchReults) {
       is_element_hidden(child, "Should not be in search results");
     }
   }
-}
-
-const mockSiteDataManager = {
-
-  _SiteDataManager: null,
-  _originalQMS: null,
-  _originalRemoveQuotaUsage: null,
-
-  getUsage(onUsageResult) {
-    let result = this.fakeSites.map(site => ({
-      origin: site.principal.origin,
-      usage: site.usage,
-      persisted: site.persisted,
-      lastAccessed: site.lastAccessed,
-    }));
-    onUsageResult({ result, resultCode: Cr.NS_OK });
-  },
-
-  _removeQuotaUsage(site) {
-    var target = site.principals[0].URI.host;
-    this.fakeSites = this.fakeSites.filter(fakeSite => {
-      return fakeSite.principal.URI.host != target;
-    });
-  },
-
-  register(SiteDataManager, fakeSites) {
-    this._SiteDataManager = SiteDataManager;
-    this._originalQMS = this._SiteDataManager._qms;
-    this._SiteDataManager._qms = this;
-    this._originalRemoveQuotaUsage = this._SiteDataManager._removeQuotaUsage;
-    this._SiteDataManager._removeQuotaUsage = this._removeQuotaUsage.bind(this);
-    // Add some fake data.
-    this.fakeSites = fakeSites;
-    for (let site of fakeSites) {
-      if (!site.principal) {
-        site.principal = Services.scriptSecurityManager
-          .createCodebasePrincipalFromOrigin(site.origin);
-      }
-
-      let uri = site.principal.URI;
-      try {
-        site.baseDomain = Services.eTLD.getBaseDomainFromHost(uri.host);
-      } catch (e) {
-        site.baseDomain = uri.host;
-      }
-
-      // Add some cookies if needed.
-      for (let i = 0; i < (site.cookies || 0); i++) {
-        Services.cookies.add(uri.host, uri.pathQueryRef, Cu.now(), i,
-          false, false, false, Date.now() + 1000 * 60 * 60);
-      }
-    }
-  },
-
-  async unregister() {
-    await this._SiteDataManager.removeAll();
-    this.fakeSites = null;
-    this._SiteDataManager._qms = this._originalQMS;
-    this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
-  }
-};
-
-function getQuotaUsage(origin) {
-  return new Promise(resolve => {
-    let uri = NetUtil.newURI(origin);
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-    Services.qms.getUsageForPrincipal(principal, request => resolve(request.result.usage));
-  });
-}
-
-function promiseCookiesCleared() {
-  return TestUtils.topicObserved("cookie-changed", (subj, data) => {
-    return data === "cleared";
-  });
-}
-
-async function loadServiceWorkerTestPage(url) {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await BrowserTestUtils.waitForCondition(() => {
-    return ContentTask.spawn(tab.linkedBrowser, {}, () =>
-      content.document.body.getAttribute("data-test-service-worker-registered") === "true");
-  }, `Fail to load service worker test ${url}`);
-  await BrowserTestUtils.removeTab(tab);
-}
-
-function promiseServiceWorkersCleared() {
-  return BrowserTestUtils.waitForCondition(() => {
-    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    if (serviceWorkers.length == 0) {
-      ok(true, "Cleared all service workers");
-      return true;
-    }
-    return false;
-  }, "Should clear all service workers");
-}
-
-function promiseServiceWorkerRegisteredFor(url) {
-  return BrowserTestUtils.waitForCondition(() => {
-    try {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(url);
-      let sw = serviceWorkerManager.getRegistrationByPrincipal(principal, principal.URI.spec);
-      if (sw) {
-        ok(true, `Found the service worker registered for ${url}`);
-        return true;
-      }
-    } catch (e) {}
-    return false;
-  }, `Should register service worker for ${url}`);
 }
 
