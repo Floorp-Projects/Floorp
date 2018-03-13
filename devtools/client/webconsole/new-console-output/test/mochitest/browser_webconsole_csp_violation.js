@@ -17,7 +17,7 @@ const CSP_VIOLATION_MSG = "Content Security Policy: The page\u2019s settings " +
                           "blocked the loading of a resource at " +
                           "http://some.example.com/test.png (\u201cimg-src\u201d).";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 

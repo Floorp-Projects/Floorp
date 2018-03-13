@@ -16,11 +16,11 @@ Test that children pointers show up at the correct times.
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = Task.async(function* () {
+         window.onload = async function () {
            try {
              const container = document.getElementById("container");
 
-             yield renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
+             await renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
                inverted: true,
                depth: 0,
              })), container);
@@ -28,7 +28,7 @@ Test that children pointers show up at the correct times.
              ok(!container.querySelector(".children-pointer"),
                 "Don't show children pointer for roots when we are inverted");
 
-             yield renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
+             await renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
                inverted: true,
                depth: 1,
              })), container);
@@ -36,7 +36,7 @@ Test that children pointers show up at the correct times.
              ok(container.querySelector(".children-pointer"),
                 "Do show children pointer for non-roots when we are inverted");
 
-             yield renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
+             await renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
                inverted: false,
                item: immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS.item, { children: undefined }),
              })), container);
@@ -44,7 +44,7 @@ Test that children pointers show up at the correct times.
              ok(!container.querySelector(".children-pointer"),
                 "Don't show children pointer when non-inverted and no children");
 
-             yield renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
+             await renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
                inverted: false,
                depth: 0,
                item: immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS.item, { children: [{}] }),
@@ -58,7 +58,7 @@ Test that children pointers show up at the correct times.
            } finally {
              SimpleTest.finish();
            }
-         });
+         };
         </script>
     </pre>
 </body>

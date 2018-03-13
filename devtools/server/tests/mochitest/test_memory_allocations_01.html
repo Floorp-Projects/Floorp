@@ -15,7 +15,7 @@ Bug 1067491 - Test recording allocations.
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   let { Task } = require("devtools/shared/task");
   SimpleTest.waitForExplicitFinish();
 
@@ -37,7 +37,7 @@ window.onload = function () {
           alloc1 = {}; alloc1.line = Error().lineNumber;
           alloc2 = []; alloc2.line = Error().lineNumber;
           // eslint-disable-next-line new-parens
-          alloc3 = new function () {}; alloc3.line = Error().lineNumber;
+          alloc3 = new function() {}; alloc3.line = Error().lineNumber;
         }());
       }());
     }());

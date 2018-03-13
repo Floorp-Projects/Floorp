@@ -50,7 +50,7 @@ function enableAnimationFeatures() {
  * @return a promise that resolves to the tab object when the url is loaded
  */
 var _addTab = addTab;
-addTab = function (url) {
+addTab = function(url) {
   return enableAnimationFeatures().then(() => _addTab(url)).then(tab => {
     let browser = tab.linkedBrowser;
     info("Loading the helper frame script " + FRAME_SCRIPT_URL);

@@ -4,7 +4,7 @@
 
 // Test the HeapAnalyses{Client,Worker} "computeDominatorTree" request.
 
-add_task(async function () {
+add_task(async function() {
   const client = new HeapAnalysesClient();
 
   const snapshotFilePath = saveNewHeapSnapshot();

@@ -8,7 +8,7 @@ const { actions, viewState } = require("../constants");
 
 const handlers = Object.create(null);
 
-handlers[actions.POP_VIEW] = function (view, _) {
+handlers[actions.POP_VIEW] = function(view, _) {
   assert(view.previous, "Had better have a previous view state when POP_VIEW");
   return Object.freeze({
     state: view.previous.state,
@@ -16,7 +16,7 @@ handlers[actions.POP_VIEW] = function (view, _) {
   });
 };
 
-handlers[actions.CHANGE_VIEW] = function (view, action) {
+handlers[actions.CHANGE_VIEW] = function(view, action) {
   const { newViewState, oldDiffing, oldSelected } = action;
   assert(newViewState);
 
@@ -43,7 +43,7 @@ const DEFAULT_VIEW = {
   previous: null,
 };
 
-module.exports = function (view = DEFAULT_VIEW, action) {
+module.exports = function(view = DEFAULT_VIEW, action) {
   const handler = handlers[action.type];
   return handler ? handler(view, action) : view;
 };

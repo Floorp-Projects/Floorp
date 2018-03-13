@@ -15,9 +15,9 @@ function run_test() {
   }.toString());
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-grips",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_named_function();
                            });
@@ -26,7 +26,7 @@ function run_test() {
 }
 
 function test_named_function() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Function");
@@ -34,7 +34,7 @@ function test_named_function() {
     Assert.equal(args[0].displayName, "stopMe");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getParameterNames(function (response) {
+    objClient.getParameterNames(function(response) {
       Assert.equal(response.parameterNames.length, 1);
       Assert.equal(response.parameterNames[0], "arg1");
 
@@ -46,7 +46,7 @@ function test_named_function() {
 }
 
 function test_inferred_name_function() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Function");
@@ -55,7 +55,7 @@ function test_inferred_name_function() {
     Assert.equal(args[0].displayName, "m");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getParameterNames(function (response) {
+    objClient.getParameterNames(function(response) {
       Assert.equal(response.parameterNames.length, 3);
       Assert.equal(response.parameterNames[0], "foo");
       Assert.equal(response.parameterNames[1], "bar");
@@ -69,7 +69,7 @@ function test_inferred_name_function() {
 }
 
 function test_anonymous_function() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Function");
@@ -78,13 +78,13 @@ function test_anonymous_function() {
     Assert.equal(args[0].displayName, undefined);
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getParameterNames(function (response) {
+    objClient.getParameterNames(function(response) {
       Assert.equal(response.parameterNames.length, 3);
       Assert.equal(response.parameterNames[0], "foo");
       Assert.equal(response.parameterNames[1], "bar");
       Assert.equal(response.parameterNames[2], "baz");
 
-      gThreadClient.resume(function () {
+      gThreadClient.resume(function() {
         finishClient(gClient);
       });
     });

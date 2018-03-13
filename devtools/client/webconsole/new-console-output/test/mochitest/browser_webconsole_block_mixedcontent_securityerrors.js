@@ -34,7 +34,7 @@ const displayContentText = "Loading mixed (insecure) display content " +
   "\u201chttp://example.com/tests/image/test/mochitest/blue.png\u201d on a " +
   "secure page";
 
-add_task(async function () {
+add_task(async function() {
   await pushPrefEnv();
 
   const hud = await openNewTabAndConsole(TEST_URI);

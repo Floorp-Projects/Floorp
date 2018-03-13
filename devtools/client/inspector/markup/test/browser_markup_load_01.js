@@ -14,7 +14,7 @@ const server = createTestHTTPServer();
 // Register a slow image handler so we can simulate a long time between
 // a reload and the load event firing.
 server.registerContentType("gif", "image/gif");
-server.registerPathHandler("/slow.gif", function (metadata, response) {
+server.registerPathHandler("/slow.gif", function(metadata, response) {
   info("Image has been requested");
   response.processAsync();
   setTimeout(() => {

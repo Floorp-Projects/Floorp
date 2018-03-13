@@ -7,7 +7,7 @@
  * Makes sure Pie Charts correctly handle empty source data.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   let { monitor, tab } = await initNetMonitor(SIMPLE_URL);

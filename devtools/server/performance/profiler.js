@@ -34,7 +34,7 @@ var DEFAULT_PROFILER_OPTIONS = {
 /**
  * Main interface for interacting with nsIProfiler
  */
-const ProfilerManager = (function () {
+const ProfilerManager = (function() {
   let consumers = new Set();
 
   return {
@@ -57,7 +57,7 @@ const ProfilerManager = (function () {
      * @param Profiler instance
      *        A profiler actor class.
      */
-    addInstance: function (instance) {
+    addInstance: function(instance) {
       consumers.add(instance);
 
       // Lazily register events
@@ -70,7 +70,7 @@ const ProfilerManager = (function () {
      * @param Profiler instance
      *        A profiler actor class.
      */
-    removeInstance: function (instance) {
+    removeInstance: function(instance) {
       consumers.delete(instance);
 
       if (this.length < 0) {
@@ -95,7 +95,7 @@ const ProfilerManager = (function () {
      *
      * @return {object}
      */
-    start: function (options = {}) {
+    start: function(options = {}) {
       let config = this._profilerStartOptions = {
         entries: options.entries || DEFAULT_PROFILER_OPTIONS.entries,
         interval: options.interval || DEFAULT_PROFILER_OPTIONS.interval,
@@ -133,7 +133,7 @@ const ProfilerManager = (function () {
     /**
      * Attempts to stop the nsIProfiler module.
      */
-    stop: function () {
+    stop: function() {
       // Actually stop the profiler only if the last client has stopped profiling.
       // Since this is used as a root actor, and the profiler module interacts
       // with the whole platform, we need to avoid a case in which the profiler
@@ -183,7 +183,7 @@ const ProfilerManager = (function () {
      *        Whether or not the returned profile object should be a string or not to
      *        save JSON parse/stringify cycle if emitting over RDP.
      */
-    getProfile: function (options) {
+    getProfile: function(options) {
       let startTime = options.startTime || 0;
       let profile = options.stringify ?
         Services.profiler.GetProfile(startTime) :
@@ -199,7 +199,7 @@ const ProfilerManager = (function () {
      *
      * @return {object}
      */
-    getFeatures: function () {
+    getFeatures: function() {
       return { features: Services.profiler.GetFeatures([]) };
     },
 
@@ -210,7 +210,7 @@ const ProfilerManager = (function () {
      *
      * @return {object}
      */
-    getBufferInfo: function () {
+    getBufferInfo: function() {
       let position = {}, totalSize = {}, generation = {};
       Services.profiler.GetBufferInfo(position, totalSize, generation);
       return {
@@ -226,7 +226,7 @@ const ProfilerManager = (function () {
      *
      * @param {object}
      */
-    getStartOptions: function () {
+    getStartOptions: function() {
       return this._profilerStartOptions || {};
     },
 
@@ -236,7 +236,7 @@ const ProfilerManager = (function () {
      *
      * @return {object}
      */
-    isActive: function () {
+    isActive: function() {
       let isActive = Services.profiler.IsActive();
       let elapsedTime = isActive ? Services.profiler.getElapsedTime() : undefined;
       let { position, totalSize, generation } = this.getBufferInfo();
@@ -275,7 +275,7 @@ const ProfilerManager = (function () {
      * @param string topic
      * @param object data
      */
-    observe: sanitizeHandler(function (subject, topic, data) {
+    observe: sanitizeHandler(function(subject, topic, data) {
       let details;
 
       // An optional label may be specified when calling `console.profile`.
@@ -323,7 +323,7 @@ const ProfilerManager = (function () {
      * The ProfilerManager listens to all events, and individual
      * consumers filter which events they are interested in.
      */
-    registerEventListeners: function () {
+    registerEventListeners: function() {
       if (!this._eventsRegistered) {
         PROFILER_SYSTEM_EVENTS.forEach(eventName =>
           Services.obs.addObserver(this, eventName));
@@ -334,7 +334,7 @@ const ProfilerManager = (function () {
     /**
      * Unregisters handlers for all system events.
      */
-    unregisterEventListeners: function () {
+    unregisterEventListeners: function() {
       if (this._eventsRegistered) {
         PROFILER_SYSTEM_EVENTS.forEach(eventName =>
           Services.obs.removeObserver(this, eventName));
@@ -349,7 +349,7 @@ const ProfilerManager = (function () {
      * @param {string} eventName
      * @param {object} data
      */
-    emitEvent: function (eventName, data) {
+    emitEvent: function(eventName, data) {
       let subscribers = Array.from(consumers).filter(c => {
         return c.subscribedEvents.has(eventName);
       });
@@ -365,19 +365,19 @@ const ProfilerManager = (function () {
      *
      * @param {number} interval
      */
-    setProfilerStatusInterval: function (interval) {
+    setProfilerStatusInterval: function(interval) {
       this._profilerStatusInterval = interval;
       if (this._poller) {
         this._poller._delayMs = interval;
       }
     },
 
-    subscribeToProfilerStatusEvents: function () {
+    subscribeToProfilerStatusEvents: function() {
       this._profilerStatusSubscribers++;
       this._updateProfilerStatusPolling();
     },
 
-    unsubscribeToProfilerStatusEvents: function () {
+    unsubscribeToProfilerStatusEvents: function() {
       this._profilerStatusSubscribers--;
       this._updateProfilerStatusPolling();
     },
@@ -386,7 +386,7 @@ const ProfilerManager = (function () {
      * Will enable or disable "profiler-status" events depending on
      * if there are subscribers and if the profiler is current recording.
      */
-    _updateProfilerStatusPolling: function () {
+    _updateProfilerStatusPolling: function() {
       if (this._profilerStatusSubscribers > 0 && Services.profiler.IsActive()) {
         if (!this._poller) {
           this._poller = new DeferredTask(this._emitProfilerStatus.bind(this),
@@ -399,7 +399,7 @@ const ProfilerManager = (function () {
       }
     },
 
-    _emitProfilerStatus: function () {
+    _emitProfilerStatus: function() {
       this.emitEvent("profiler-status", this.isActive());
       this._poller.arm();
     }
@@ -565,7 +565,7 @@ function cycleBreaker(key, value) {
  * @return {function}
  */
 function sanitizeHandler(handler, identifier) {
-  return DevToolsUtils.makeInfallible(function (subject, topic, data) {
+  return DevToolsUtils.makeInfallible(function(subject, topic, data) {
     subject = (subject && !Cu.isXrayWrapper(subject) && subject.wrappedJSObject)
               || subject;
     subject = JSON.parse(JSON.stringify(subject, cycleBreaker));

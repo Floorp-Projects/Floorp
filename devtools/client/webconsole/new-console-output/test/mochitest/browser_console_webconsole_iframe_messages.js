@@ -22,7 +22,7 @@ const expectedMessages = [
 
 const expectedDupedMessage = "iframe 1";
 
-add_task(async function () {
+add_task(async function() {
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
   if (!Services.appinfo.browserTabsRemoteAutostart) {

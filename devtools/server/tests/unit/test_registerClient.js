@@ -16,7 +16,7 @@ function TestActor(conn) {
 TestActor.prototype = {
   actorPrefix: "test",
 
-  start: function () {
+  start: function() {
     this.conn.sendActorEvent(this.actorID, "foo", {
       hello: "world"
     });
@@ -37,14 +37,14 @@ function TestClient(client, form) {
   this.detached = false;
 }
 TestClient.prototype = {
-  start: function () {
+  start: function() {
     this.client.request({
       to: this.actor,
       type: "start"
     });
   },
 
-  detach: function (onDone) {
+  detach: function(onDone) {
     this.detached = true;
     onDone();
   }
@@ -74,7 +74,7 @@ function init() {
 
 function test_client_events() {
   // Test DebuggerClient.registerClient and DebuggerServerConnection.sendActorEvent
-  gTestClient.on("foo", function (data) {
+  gTestClient.on("foo", function(data) {
     Assert.equal(data.hello, "world");
     run_next_test();
   });

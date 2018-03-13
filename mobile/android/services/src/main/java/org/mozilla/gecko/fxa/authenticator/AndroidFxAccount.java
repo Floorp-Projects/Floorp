@@ -157,7 +157,7 @@ public class AndroidFxAccount {
 
   protected final Context context;
   private final AccountManager accountManager;
-  private final long neverSynced = -1;
+  private static final long neverSynced = -1;
 
   // This is really, really meant to be final. Only changed when account name changes.
   // See Bug 1368147.

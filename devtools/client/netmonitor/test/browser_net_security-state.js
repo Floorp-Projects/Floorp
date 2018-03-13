@@ -8,7 +8,7 @@
  * state.
  */
 
-add_task(async function () {
+add_task(async function() {
   const EXPECTED_SECURITY_STATES = {
     "test1.example.com": "security-state-insecure",
     "example.com": "security-state-secure",
@@ -51,7 +51,7 @@ add_task(async function () {
    */
   async function performRequests() {
     function executeRequests(count, url) {
-      return ContentTask.spawn(tab.linkedBrowser, {count, url}, async function (args) {
+      return ContentTask.spawn(tab.linkedBrowser, {count, url}, async function(args) {
         content.wrappedJSObject.performRequests(args.count, args.url);
       });
     }

@@ -6,19 +6,19 @@
  * forms if the method's signature does not expect an enum. Bug 999687.
  */
 
-function* ifTestingSupported() {
-  let { target, front } = yield initCanvasDebuggerBackend(SIMPLE_BITMASKS_URL);
+async function ifTestingSupported() {
+  let { target, front } = await initCanvasDebuggerBackend(SIMPLE_BITMASKS_URL);
 
   let navigated = once(target, "navigate");
 
-  yield front.setup({ reload: true });
+  await front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
-  yield navigated;
+  await navigated;
   ok(true, "Target automatically navigated when the front was set up.");
 
-  let snapshotActor = yield front.recordAnimationFrame();
-  let animationOverview = yield snapshotActor.getOverview();
+  let snapshotActor = await front.recordAnimationFrame();
+  let animationOverview = await snapshotActor.getOverview();
   let functionCalls = animationOverview.calls;
 
   is(functionCalls[0].name, "clearRect",
@@ -31,6 +31,6 @@ function* ifTestingSupported() {
   is(functionCalls[2].argsPreview, "0, 0, 1, 1",
     "The fillRect called function's args preview is not casted to enums.");
 
-  yield removeTab(target.tab);
+  await removeTab(target.tab);
   finish();
 }

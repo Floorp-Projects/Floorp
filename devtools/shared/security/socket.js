@@ -73,7 +73,7 @@ var DebuggerSocket = {};
  * @return promise
  *         Resolved to a DebuggerTransport instance.
  */
-DebuggerSocket.connect = async function (settings) {
+DebuggerSocket.connect = async function(settings) {
   // Default to PROMPT |Authenticator| instance if not supplied
   if (!settings.authenticator) {
     settings.authenticator = new (Authenticators.get().Client)();
@@ -125,7 +125,7 @@ function _validateSettings(settings) {
  *         A possible DevTools transport (if connection succeeded and streams
  *         are actually alive and working)
  */
-var _getTransport = async function (settings) {
+var _getTransport = async function(settings) {
   let { host, port, encryption, webSocket } = settings;
 
   if (webSocket) {
@@ -187,7 +187,7 @@ var _getTransport = async function (settings) {
  * @return s nsISocketTransport
  *         Underlying socket transport, in case more details are needed.
  */
-var _attemptTransport = async function (settings) {
+var _attemptTransport = async function(settings) {
   let { authenticator } = settings;
   // _attemptConnect only opens the streams.  Any failures at that stage
   // aborts the connection process immedidately.
@@ -245,7 +245,7 @@ var _attemptTransport = async function (settings) {
  * @return output nsIAsyncOutputStream
  *         The socket's output stream.
  */
-var _attemptConnect = async function ({ host, port, encryption }) {
+var _attemptConnect = async function({ host, port, encryption }) {
   let s;
   if (encryption) {
     s = socketTransportService.createTransport(["ssl"], 1, host, port, null);
@@ -401,7 +401,7 @@ SocketListener.prototype = {
   /**
    * Validate that all options have been set to a supported configuration.
    */
-  _validateOptions: function () {
+  _validateOptions: function() {
     if (this.portOrPath === null) {
       throw new Error("Must set a port / path to listen on.");
     }
@@ -417,7 +417,7 @@ SocketListener.prototype = {
   /**
    * Listens on the given port or socket file for remote debugger connections.
    */
-  open: function () {
+  open: function() {
     this._validateOptions();
     DebuggerServer._addListener(this);
 
@@ -428,7 +428,7 @@ SocketListener.prototype = {
     }
 
     let self = this;
-    return (async function () {
+    return (async function() {
       let backlog = 4;
       self._socket = self._createSocketInstance();
       if (self.isPortBased) {
@@ -453,7 +453,7 @@ SocketListener.prototype = {
     });
   },
 
-  _advertise: function () {
+  _advertise: function() {
     if (!this.discoverable || !this.port) {
       return;
     }
@@ -468,7 +468,7 @@ SocketListener.prototype = {
     discovery.addService("devtools", advertisement);
   },
 
-  _createSocketInstance: function () {
+  _createSocketInstance: function() {
     if (this.encryption) {
       return Cc["@mozilla.org/network/tls-server-socket;1"]
              .createInstance(Ci.nsITLSServerSocket);
@@ -492,7 +492,7 @@ SocketListener.prototype = {
    * Closes the SocketListener.  Notifies the server to remove the listener from
    * the set of active SocketListeners.
    */
-  close: function () {
+  close: function() {
     if (this.discoverable && this.port) {
       discovery.removeService("devtools");
     }
@@ -543,11 +543,11 @@ SocketListener.prototype = {
   // nsIServerSocketListener implementation
 
   onSocketAccepted:
-  DevToolsUtils.makeInfallible(function (socket, socketTransport) {
+  DevToolsUtils.makeInfallible(function(socket, socketTransport) {
     new ServerSocketConnection(this, socketTransport);
   }, "SocketListener.onSocketAccepted"),
 
-  onStopListening: function (socket, status) {
+  onStopListening: function(socket, status) {
     dumpn("onStopListening, status: " + status);
   }
 
@@ -627,7 +627,7 @@ ServerSocketConnection.prototype = {
   _handle() {
     dumpn("Debugging connection starting authentication on " + this.address);
     let self = this;
-    (async function () {
+    (async function() {
       self._listenForTLSHandshake();
       await self._createTransport();
       await self._awaitTLSHandshake();
@@ -786,7 +786,7 @@ ServerSocketConnection.prototype = {
 
 };
 
-DebuggerSocket.createListener = function () {
+DebuggerSocket.createListener = function() {
   return new SocketListener();
 };
 

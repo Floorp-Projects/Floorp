@@ -38,7 +38,7 @@ const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
  * Server side of the node actor.
  */
 const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
-  initialize: function (walker, node) {
+  initialize: function(walker, node) {
     protocol.Actor.prototype.initialize.call(this, null);
     this.walker = walker;
     this.rawNode = node;
@@ -50,7 +50,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     this.wasDisplayed = this.isDisplayed;
   },
 
-  toString: function () {
+  toString: function() {
     return "[NodeActor " + this.actorID + " for " +
       this.rawNode.toString() + "]";
   },
@@ -63,12 +63,12 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return this.walker.conn;
   },
 
-  isDocumentElement: function () {
+  isDocumentElement: function() {
     return this.rawNode.ownerDocument &&
            this.rawNode.ownerDocument.documentElement === this.rawNode;
   },
 
-  destroy: function () {
+  destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
 
     if (this.mutationObserver) {
@@ -82,7 +82,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   // Returns the JSON representation of this object over the wire.
-  form: function (detail) {
+  form: function(detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -150,7 +150,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Watch the given document node for mutations using the DOM observer
    * API.
    */
-  watchDocument: function (callback) {
+  watchDocument: function(callback) {
     let node = this.rawNode;
     // Create the observer on the node's actor.  The node will make sure
     // the observer is cleaned up when the actor is released.
@@ -270,7 +270,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return false;
   },
 
-  writeAttrs: function () {
+  writeAttrs: function() {
     if (!this.rawNode.attributes) {
       return undefined;
     }
@@ -280,7 +280,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     });
   },
 
-  writePseudoClassLocks: function () {
+  writePseudoClassLocks: function() {
     if (this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
       return undefined;
     }
@@ -300,7 +300,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * @param  {Node} node
    *         Node for which we are to get listeners.
    */
-  getEventListeners: function (node) {
+  getEventListeners: function(node) {
     let parsers = this._eventParsers;
     let dbg = this.parent().tabActor.makeDebugger();
     let listenerArray = [];
@@ -363,7 +363,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *             native: false
    *           }
    */
-  processHandlerForEvent: function (node, listenerArray, dbg, listener) {
+  processHandlerForEvent: function(node, listenerArray, dbg, listener) {
     let { handler } = listener;
     let global = Cu.getGlobalForObject(handler);
     let globalDO = dbg.addDebuggee(global);
@@ -495,21 +495,21 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   /**
    * Returns a LongStringActor with the node's value.
    */
-  getNodeValue: function () {
+  getNodeValue: function() {
     return new LongStringActor(this.conn, this.rawNode.nodeValue || "");
   },
 
   /**
    * Set the node's value to a given string.
    */
-  setNodeValue: function (value) {
+  setNodeValue: function(value) {
     this.rawNode.nodeValue = value;
   },
 
   /**
    * Get a unique selector string for this node.
    */
-  getUniqueSelector: function () {
+  getUniqueSelector: function() {
     if (Cu.isDeadWrapper(this.rawNode)) {
       return "";
     }
@@ -521,7 +521,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *
    * @return {String} A CSS selector with a part for the node and each of its ancestors.
    */
-  getCssPath: function () {
+  getCssPath: function() {
     if (Cu.isDeadWrapper(this.rawNode)) {
       return "";
     }
@@ -533,7 +533,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *
    * @return {String} The XPath for finding this node on the page.
    */
-  getXPath: function () {
+  getXPath: function() {
     if (Cu.isDeadWrapper(this.rawNode)) {
       return "";
     }
@@ -543,7 +543,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   /**
    * Scroll the selected node into view.
    */
-  scrollIntoView: function () {
+  scrollIntoView: function() {
     this.rawNode.scrollIntoView(true);
   },
 
@@ -558,7 +558,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * is important as the resizing occurs server-side so that image-data being
    * transfered in the longstring back to the client will be that much smaller
    */
-  getImageData: function (maxDim) {
+  getImageData: function(maxDim) {
     return InspectorActorUtils.imageToImageData(this.rawNode, maxDim).then(imageData => {
       return {
         data: LongStringActor(this.conn, imageData.data),
@@ -570,7 +570,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   /**
    * Get all event listeners that are listening on this node.
    */
-  getEventListenerInfo: function () {
+  getEventListenerInfo: function() {
     let node = this.rawNode;
 
     if (this.rawNode.nodeName.toLowerCase() === "html") {
@@ -596,7 +596,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Returns when the modifications have been made.  Mutations will
    * be queued for any changes made.
    */
-  modifyAttributes: function (modifications) {
+  modifyAttributes: function(modifications) {
     let rawNode = this.rawNode;
     for (let change of modifications) {
       if (change.newValue == null) {
@@ -622,7 +622,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * and the width of the text as a string.
    * The image data is transmitted as a base64 encoded png data-uri.
    */
-  getFontFamilyDataURL: function (font, fillStyle = "black") {
+  getFontFamilyDataURL: function(font, fillStyle = "black") {
     let doc = this.rawNode.ownerDocument;
     let options = {
       previewText: FONT_FAMILY_PREVIEW_TEXT,
@@ -641,7 +641,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * rgba(r, g, b, a). Defaults to rgba(255, 255, 255, 1) if no
    * background color is found.
    */
-  getClosestBackgroundColor: function () {
+  getClosestBackgroundColor: function() {
     let current = this.rawNode;
     while (current) {
       let computedStyle = CssLogic.getComputedStyle(current);
@@ -664,13 +664,13 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
   typeName: "domnodelist",
 
-  initialize: function (walker, nodeList) {
+  initialize: function(walker, nodeList) {
     protocol.Actor.prototype.initialize.call(this);
     this.walker = walker;
     this.nodeList = nodeList || [];
   },
 
-  destroy: function () {
+  destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
   },
 
@@ -685,12 +685,12 @@ const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
   /**
    * Items returned by this actor should belong to the parent walker.
    */
-  marshallPool: function () {
+  marshallPool: function() {
     return this.walker;
   },
 
   // Returns the JSON representation of this object over the wire.
-  form: function () {
+  form: function() {
     return {
       actor: this.actorID,
       length: this.nodeList ? this.nodeList.length : 0
@@ -700,20 +700,20 @@ const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
   /**
    * Get a single node from the node list.
    */
-  item: function (index) {
+  item: function(index) {
     return this.walker.attachElement(this.nodeList[index]);
   },
 
   /**
    * Get a range of the items from the node list.
    */
-  items: function (start = 0, end = this.nodeList.length) {
+  items: function(start = 0, end = this.nodeList.length) {
     let items = Array.prototype.slice.call(this.nodeList, start, end)
       .map(item => this.walker._ref(item));
     return this.walker.attachElements(items);
   },
 
-  release: function () {}
+  release: function() {}
 });
 
 exports.NodeActor = NodeActor;

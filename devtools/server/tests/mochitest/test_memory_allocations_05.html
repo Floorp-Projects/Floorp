@@ -15,10 +15,10 @@ Bug 1068144 - Test getting the timestamps for allocations.
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  (async function () {
+  (async function() {
     let { memory, client } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 
@@ -52,14 +52,14 @@ window.onload = function () {
        "There should be a timestamp for every allocation.");
 
     let allocatorIndices = response.allocations
-      .map(function (a, idx) {
+      .map(function(a, idx) {
         let frame = response.frames[a];
         if (frame && frame.functionDisplayName === "allocator") {
           return idx;
         }
         return null;
       })
-      .filter(function (idx) {
+      .filter(function(idx) {
         return idx !== null;
       });
 

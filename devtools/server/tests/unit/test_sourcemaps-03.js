@@ -17,9 +17,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_simple_source_map();
                            });
@@ -28,7 +28,7 @@ function run_test() {
 }
 
 function testBreakpointMapping(name, callback) {
-  (async function () {
+  (async function() {
     let response = await waitForPause(gThreadClient);
     Assert.equal(response.why.type, "debuggerStatement");
 
@@ -70,7 +70,7 @@ function testBreakpointMapping(name, callback) {
     callback();
   })();
 
-  gDebuggee.eval("(" + function () {
+  gDebuggee.eval("(" + function() {
     debugger;
   } + "());");
 }
@@ -93,8 +93,8 @@ function test_simple_source_map() {
       finishClient(gClient);
     }
 
-    testBreakpointMapping("a", function () {
-      testBreakpointMapping("b", function () {
+    testBreakpointMapping("a", function() {
+      testBreakpointMapping("b", function() {
         testBreakpointMapping("c", finish);
       });
     });

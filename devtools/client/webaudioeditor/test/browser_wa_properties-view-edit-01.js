@@ -5,8 +5,8 @@
  * Tests that properties are updated when modifying the VariablesView.
  */
 
-add_task(function* () {
-  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
+add_task(async function () {
+  let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
   let gVars = PropertiesView._propsView;
@@ -18,12 +18,12 @@ add_task(function* () {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
   reload(target);
-  let [actors] = yield events;
+  let [actors] = await events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
   // Wait for the node to be set as well as the inspector to come fully into the view
-  yield Promise.all([
+  await Promise.all([
     waitForInspectorRender(panelWin, EVENTS),
     once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED)
   ]);
@@ -37,29 +37,29 @@ add_task(function* () {
   }, "default loaded string");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  yield waitForInspectorRender(panelWin, EVENTS),
+  await waitForInspectorRender(panelWin, EVENTS),
   checkVariableView(gVars, 0, {
     "gain": 0
   }, "default loaded number");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
-  yield waitForInspectorRender(panelWin, EVENTS),
-  yield setAndCheck(0, "type", "square", "square", "sets string as string");
+  await waitForInspectorRender(panelWin, EVENTS),
+  await setAndCheck(0, "type", "square", "square", "sets string as string");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  yield waitForInspectorRender(panelWin, EVENTS),
-  yield setAndCheck(0, "gain", "0.005", 0.005, "sets number as number");
-  yield setAndCheck(0, "gain", "0.1", 0.1, "sets float as float");
-  yield setAndCheck(0, "gain", ".2", 0.2, "sets float without leading zero as float");
+  await waitForInspectorRender(panelWin, EVENTS),
+  await setAndCheck(0, "gain", "0.005", 0.005, "sets number as number");
+  await setAndCheck(0, "gain", "0.1", 0.1, "sets float as float");
+  await setAndCheck(0, "gain", ".2", 0.2, "sets float without leading zero as float");
 
-  yield teardown(target);
+  await teardown(target);
 });
 
 function setAndCheckVariable(panelWin, gVars) {
-  return Task.async(function* (varNum, prop, value, expected, desc) {
-    yield modifyVariableView(panelWin, gVars, varNum, prop, value);
+  return async function (varNum, prop, value, expected, desc) {
+    await modifyVariableView(panelWin, gVars, varNum, prop, value);
     var props = {};
     props[prop] = expected;
     checkVariableView(gVars, varNum, props, desc);
-  });
+  };
 }

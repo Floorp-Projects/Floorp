@@ -14,16 +14,16 @@ const LINE_NOS = [5, 8];
 
 waitForExplicitFinish();
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref(MAP_PREF, true);
 
-  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
+  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 1, "correct number of editors");
 
   // Test editor with @media rules
   let mediaEditor = ui.editors[0];
-  yield openEditor(mediaEditor);
+  await openEditor(mediaEditor);
   testMediaEditor(mediaEditor);
 
   Services.prefs.clearUserPref(MAP_PREF);

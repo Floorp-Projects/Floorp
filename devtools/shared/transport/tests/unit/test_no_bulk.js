@@ -8,7 +8,7 @@ function run_test() {
   // Allow incoming connections.
   DebuggerServer.init();
 
-  add_task(async function () {
+  add_task(async function() {
     await test_bulk_send_error(socket_transport);
     await test_bulk_send_error(local_transport);
     DebuggerServer.destroy();
@@ -19,7 +19,7 @@ function run_test() {
 
 /** * Tests ***/
 
-var test_bulk_send_error = async function (transportFactory) {
+var test_bulk_send_error = async function(transportFactory) {
   let transport = await transportFactory();
 
   let client = new DebuggerClient(transport);

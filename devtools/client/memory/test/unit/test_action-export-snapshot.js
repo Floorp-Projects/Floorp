@@ -9,16 +9,16 @@ let { exportSnapshot } = require("devtools/client/memory/actions/io");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 let { actions, treeMapState } = require("devtools/client/memory/constants");
 
-add_task(function* () {
+add_task(async function() {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
-  let destPath = yield createTempFile();
+  let destPath = await createTempFile();
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
+  await waitUntilCensusState(store, snapshot => snapshot.treeMap,
                              [treeMapState.SAVED]);
 
   let exportEvents = Promise.all([
@@ -26,12 +26,12 @@ add_task(function* () {
     waitUntilAction(store, actions.EXPORT_SNAPSHOT_END)
   ]);
   dispatch(exportSnapshot(getState().snapshots[0], destPath));
-  yield exportEvents;
+  await exportEvents;
 
-  let stat = yield OS.File.stat(destPath);
+  let stat = await OS.File.stat(destPath);
   info(stat.size);
   ok(stat.size > 0, "destination file is more than 0 bytes");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

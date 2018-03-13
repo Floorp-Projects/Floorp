@@ -22,7 +22,7 @@ function run_test() {
   // I don't really know Irish, so I'll stick in some dummy text
   let words = "is 1;is 2;is 3-6;is 7-10;everything else";
 
-  let test = function (text, low, high) {
+  let test = function(text, low, high) {
     for (let num = low; num <= high; num++) {
       Assert.equal(text, get(num, words));
     }

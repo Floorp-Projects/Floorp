@@ -32,7 +32,7 @@ registerCleanupFunction(() => {
  *
  * @return {Promise} that resolves when the inspector is ready.
  */
-const openAnimationInspector = async function () {
+const openAnimationInspector = async function() {
   const { inspector, toolbox } = await openInspectorSidebarTab(TAB_NAME);
   await inspector.once("inspector-updated");
   const { animationinspector: animationInspector } = inspector;
@@ -46,7 +46,7 @@ const openAnimationInspector = async function () {
  *
  * @return {Promise} that resolves when the toolbox has closed.
  */
-const closeAnimationInspector = async function () {
+const closeAnimationInspector = async function() {
   const target = TargetFactory.forTab(gBrowser.selectedTab);
   return gDevTools.closeToolbox(target);
 };
@@ -57,7 +57,7 @@ const closeAnimationInspector = async function () {
  *   * parts of the Web Animations API (Bug 1264101), and
  *   * the frames() timing function (Bug 1379582).
  */
-const enableAnimationFeatures = function () {
+const enableAnimationFeatures = function() {
   return new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["dom.animations-api.core.enabled", true],
@@ -74,7 +74,7 @@ const enableAnimationFeatures = function () {
  * @return a promise that resolves to the tab object when the url is loaded
  */
 const _addTab = addTab;
-addTab = async function (url) {
+addTab = async function(url) {
   await enableAnimationFeatures();
   const tab = await _addTab(url);
   const browser = tab.linkedBrowser;
@@ -93,7 +93,7 @@ addTab = async function (url) {
  * @param {Number} index
  *        The index of the animation to click on.
  */
-const clickOnAnimation = async function (animationInspector, panel, index) {
+const clickOnAnimation = async function(animationInspector, panel, index) {
   info("Click on animation " + index + " in the timeline");
   const summaryGraphEl = panel.querySelectorAll(".animation-summary-graph")[index];
   // Scroll to show the timeBlock since the element may be out of displayed area.
@@ -112,7 +112,7 @@ const clickOnAnimation = async function (animationInspector, panel, index) {
  * @param {AnimationsPanel} panel
  *        The panel instance.
  */
-const clickOnDetailCloseButton = function (panel) {
+const clickOnDetailCloseButton = function(panel) {
   info("Click on close button for animation detail pane");
   const buttonEl = panel.querySelector(".animation-detail-close-button");
   const bounds = buttonEl.getBoundingClientRect();
@@ -307,7 +307,7 @@ const getDurationAndRate = function (animationInspector, panel, pixels) {
  * @return {Promise} Resolves when the inspector is updated with the new node
  *                   and animations of its subtree are properly displayed.
  */
-const selectNodeAndWaitForAnimations = async function (data, inspector, reason = "test") {
+const selectNodeAndWaitForAnimations = async function(data, inspector, reason = "test") {
   // We want to make sure the rest of the test waits for the animations to
   // be properly displayed (wait for all target DOM nodes to be previewed).
   const onUpdated = inspector.once("inspector-updated");
@@ -337,7 +337,7 @@ const sendSpaceKeyEvent = async function (animationInspector, panel) {
  *        The instance of InspectorPanel currently loaded in the toolbox
  * @return {Promise} Resolves when the sidebar size changed.
  */
-const setSidebarWidth = async function (width, inspector) {
+const setSidebarWidth = async function(width, inspector) {
   const onUpdated = inspector.toolbox.once("inspector-sidebar-resized");
   inspector.splitBox.setState({ width });
   await onUpdated;
@@ -348,7 +348,7 @@ const setSidebarWidth = async function (width, inspector) {
  *
  * @param {AnimationInspector} animationInspector
  */
-const waitForRendering = async function (animationInspector) {
+const waitForRendering = async function(animationInspector) {
   await Promise.all([
     waitForAllAnimationTargets(animationInspector),
     waitForAllSummaryGraph(animationInspector),
@@ -361,9 +361,10 @@ const waitForRendering = async function (animationInspector) {
  *
  * @param {AnimationInspector} inspector
  */
-const waitForAnimationDetail = async function (animationInspector) {
+
+const waitForAnimationDetail = async function(animationInspector) {
   if (animationInspector.state.selectedAnimation &&
-      animationInspector.state.detailVisibility) {
+      animationInspector.state.detailVisibility)
     await animationInspector.once("animation-keyframes-rendered");
   }
 };
@@ -374,7 +375,7 @@ const waitForAnimationDetail = async function (animationInspector) {
  *
  * @param {AnimationInspector} animationInspector
  */
-const waitForAllAnimationTargets = async function (animationInspector) {
+const waitForAllAnimationTargets = async function(animationInspector) {
   for (let i = 0; i < animationInspector.state.animations.length; i++) {
     await animationInspector.once("animation-target-rendered");
   }
@@ -385,7 +386,7 @@ const waitForAllAnimationTargets = async function (animationInspector) {
  *
  * @param {AnimationInspector} inspector
  */
-const waitForAllSummaryGraph = async function (animationInspector) {
+const waitForAllSummaryGraph = async function(animationInspector) {
   for (let i = 0; i < animationInspector.state.animations.length; i++) {
     await animationInspector.once("animation-summary-graph-rendered");
   }

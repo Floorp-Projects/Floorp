@@ -12,7 +12,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,test for bug 592442";
 
-add_task(async function () {
+add_task(async function() {
   let { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   try {

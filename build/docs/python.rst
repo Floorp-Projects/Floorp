@@ -107,7 +107,7 @@ the build system.
   When Python compiles a ``.py`` file to bytecode, it writes out a
   ``.pyc`` file so it doesn't have to perform this compilation again.
   It puts these ``.pyc`` files alongside the ``.pyc`` file. Python
-  provides very little control for determing where these ``.pyc`` files
+  provides very little control for determining where these ``.pyc`` files
   go, even in Python 3 (which offers customer importers).
 
   With ``.pth`` files pointing back to directories in the source tree

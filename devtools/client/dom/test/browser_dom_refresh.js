@@ -10,14 +10,14 @@ const TEST_PAGE_URL = URL_ROOT + "page_basic.html";
 /**
  * Basic test that checks the Refresh action in DOM panel.
  */
-add_task(function* () {
+add_task(async function() {
   info("Test DOM panel basic started");
 
-  let { panel } = yield addTestTab(TEST_PAGE_URL);
+  let { panel } = await addTestTab(TEST_PAGE_URL);
 
   // Create a new variable in the page scope and refresh the panel.
-  yield evaluateJSAsync(panel, "var _b = 10");
-  yield refreshPanel(panel);
+  await evaluateJSAsync(panel, "var _b = 10");
+  await refreshPanel(panel);
 
   // Verify that the variable is displayed now.
   let row = getRowByLabel(panel, "_b");

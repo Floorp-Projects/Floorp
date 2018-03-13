@@ -6,7 +6,7 @@
 const TEST_URI = "data:text/html,Test <code>help()</code> jsterm helper";
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const jsterm = hud.jsterm;
 

@@ -53,7 +53,7 @@ add_task(async function test() {
   await teardown(monitor);
 
   function performRequests() {
-    return ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+    return ContentTask.spawn(tab.linkedBrowser, {}, async function() {
       content.wrappedJSObject.performRequests();
     });
   }

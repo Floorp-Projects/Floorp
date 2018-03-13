@@ -24,7 +24,7 @@ import java.io.OutputStream;
  * stored in memory so be careful what content you send!
  */
 public class GzipNonChunkedCompressingEntity extends GzipCompressingEntity {
-    final int MAX_BUFFER_SIZE_BYTES = 10 * 1000 * 1000; // 10 MB.
+    static final int MAX_BUFFER_SIZE_BYTES = 10 * 1000 * 1000; // 10 MB.
 
     private byte[] gzippedContent;
 

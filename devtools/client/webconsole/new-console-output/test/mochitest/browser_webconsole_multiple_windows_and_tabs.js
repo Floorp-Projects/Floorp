@@ -12,7 +12,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 595350";
 
-add_task(async function () {
+add_task(async function() {
   requestLongerTimeout(3);
 
   const win1 = window;

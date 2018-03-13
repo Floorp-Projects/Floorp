@@ -41,7 +41,7 @@ const rootSpec = protocol.generateActorSpec({
 });
 
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  initialize: function (conn) {
+  initialize: function(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
     this.manage(this);
@@ -51,11 +51,11 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   sayHello: simpleHello,
 
-  simpleReturn: function () {
+  simpleReturn: function() {
     return this.sequence++;
   },
 
-  promiseReturn: function (toWait) {
+  promiseReturn: function(toWait) {
     // Guarantee that this resolves after simpleReturn returns.
     let deferred = defer();
     let sequence = this.sequence++;
@@ -74,11 +74,11 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return deferred.promise;
   },
 
-  simpleThrow: function () {
+  simpleThrow: function() {
     throw new Error(this.sequence++);
   },
 
-  promiseThrow: function () {
+  promiseThrow: function() {
     // Guarantee that this resolves after simpleReturn returns.
     let deferred = defer();
     let sequence = this.sequence++;
@@ -91,7 +91,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  initialize: function (client) {
+  initialize: function(client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
@@ -160,7 +160,7 @@ function run_test() {
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
-      return deferAfterRejection.promise.then(function () {
+      return deferAfterRejection.promise.then(function() {
         // Check right return order
         Assert.equal(sequence, 5);
         // Check request handling order
@@ -171,7 +171,7 @@ function run_test() {
     // Break up the backlog with a long request that waits
     // for another simpleReturn before completing
     calls.push(rootClient.promiseReturn(1).then(ret => {
-      return deferAfterRejection.promise.then(function () {
+      return deferAfterRejection.promise.then(function() {
         // Check right return order
         Assert.equal(sequence, 6);
         // Check request handling order
@@ -180,7 +180,7 @@ function run_test() {
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
-      return deferAfterRejection.promise.then(function () {
+      return deferAfterRejection.promise.then(function() {
         // Check right return order
         Assert.equal(sequence, 7);
         // Check request handling order

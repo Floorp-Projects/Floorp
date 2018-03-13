@@ -4,17 +4,17 @@
 
 const ITEMS_PER_PAGE = 50;
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-overflow.html");
+add_task(async function() {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-overflow.html");
 
   gUI.tree.expandAll();
-  yield selectTreeItem(["localStorage", "http://test1.example.org"]);
+  await selectTreeItem(["localStorage", "http://test1.example.org"]);
   checkCellLength(ITEMS_PER_PAGE);
 
-  yield scroll();
+  await scroll();
   checkCellLength(ITEMS_PER_PAGE * 2);
 
-  yield scroll();
+  await scroll();
   checkCellLength(ITEMS_PER_PAGE * 3);
 
   // Check that the columns are sorted in a human readable way (ascending).
@@ -26,7 +26,7 @@ add_task(function* () {
   // Check that the columns are sorted in a human readable way (descending).
   checkCellValues("DEC");
 
-  yield finishTests();
+  await finishTests();
 });
 
 function checkCellLength(len) {
@@ -40,13 +40,13 @@ function checkCellLength(len) {
 function checkCellValues(order) {
   let cells = [...gPanelWindow.document
                               .querySelectorAll("#name .table-widget-cell")];
-  cells.forEach(function (cell, index, arr) {
+  cells.forEach(function(cell, index, arr) {
     let i = order === "ASC" ? index + 1 : arr.length - index;
     is(cell.value, `item-${i}`, `Cell value is correct (${order}).`);
   });
 }
 
-function* scroll() {
+async function scroll() {
   let $ = id => gPanelWindow.document.querySelector(id);
   let table = $("#storage-table .table-widget-body");
   let cell = $("#name .table-widget-cell");
@@ -54,5 +54,5 @@ function* scroll() {
 
   let onStoresUpdate = gUI.once("store-objects-updated");
   table.scrollTop += cellHeight * 50;
-  yield onStoresUpdate;
+  await onStoresUpdate;
 }

@@ -16,6 +16,7 @@
 static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kClearPrivateData[] = "clear-private-data";
 static const char kPurge[] = "browser:purge-session-history";
+static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
 
 #define TRR_PREF_PREFIX           "network.trr."
 #define TRR_PREF(x)               TRR_PREF_PREFIX x
@@ -70,6 +71,20 @@ TRRService::Init()
   GetPrefBranch(getter_AddRefs(prefBranch));
   if (prefBranch) {
     prefBranch->AddObserver(TRR_PREF_PREFIX, this, true);
+    prefBranch->AddObserver(kDisableIpv6Pref, this, true);
+  }
+  nsCOMPtr<nsICaptivePortalService> captivePortalService =
+    do_GetService(NS_CAPTIVEPORTAL_CID);
+  if (captivePortalService) {
+    int32_t captiveState;
+    MOZ_ALWAYS_SUCCEEDS(captivePortalService->GetState(&captiveState));
+
+    if ((captiveState == nsICaptivePortalService::UNLOCKED_PORTAL) ||
+        (captiveState == nsICaptivePortalService::NOT_CAPTIVE)) {
+      mCaptiveIsPassed = true;
+    }
+    LOG(("TRRService::Init mCaptiveState=%d mCaptiveIsPassed=%d\n",
+         captiveState, (int)mCaptiveIsPassed));
   }
 
   ReadPrefs(NULL);
@@ -83,7 +98,8 @@ TRRService::Init()
 bool
 TRRService::Enabled()
 {
-  if (mConfirmationState == CONFIRM_INIT && !mWaitForCaptive) {
+  if (mConfirmationState == CONFIRM_INIT &&
+      (!mWaitForCaptive || mCaptiveIsPassed)) {
     LOG(("TRRService::Enabled => CONFIRM_TRYING\n"));
     mConfirmationState = CONFIRM_TRYING;
   }
@@ -94,7 +110,9 @@ TRRService::Enabled()
   }
 
   if (mConfirmationState != CONFIRM_OK) {
-    LOG(("TRRService::Enabled mConfirmationState=%d\n", (int)mConfirmationState));
+    LOG(("TRRService::Enabled mConfirmationState=%d mCaptiveIsPassed=%d\n",
+         (int)mConfirmationState,
+         (int)mCaptiveIsPassed));
   }
 
   return (mConfirmationState == CONFIRM_OK);
@@ -199,6 +217,12 @@ TRRService::ReadPrefs(const char *name)
     bool tmp;
     if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("early-AAAA"), &tmp))) {
       mEarlyAAAA = tmp;
+    }
+  }
+  if (!name || !strcmp(name, kDisableIpv6Pref)) {
+    bool tmp;
+    if (NS_SUCCEEDED(Preferences::GetBool(kDisableIpv6Pref, &tmp))) {
+      mDisableIPv6 = tmp;
     }
   }
 
@@ -411,8 +435,19 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
       return true;
     } else {
       // the blacklisted entry has expired
-      mTRRBLStorage->Remove(hashkey, privateBrowsing ?
-                            DataStorage_Private : DataStorage_Persistent);
+      RefPtr<DataStorage> storage = mTRRBLStorage;
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableFunction("proxyStorageRemove",
+                               [storage, hashkey, privateBrowsing]() {
+                                 storage->Remove(hashkey, privateBrowsing ?
+                                                 DataStorage_Private :
+                                                 DataStorage_Persistent);
+                               });
+      if (!NS_IsMainThread()) {
+        NS_DispatchToMainThread(runnable);
+      } else {
+        runnable->Run();
+      }
     }
   }
   return false;

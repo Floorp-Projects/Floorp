@@ -64,8 +64,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private static final String LOGTAG = "GeckoCombinedHistoryPnl";
 
     private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "clients", "tabs" };
-    private final int LOADER_ID_HISTORY = 0;
-    private final int LOADER_ID_REMOTE = 1;
+    private static final int LOADER_ID_HISTORY = 0;
+    private static final int LOADER_ID_REMOTE = 1;
 
     // String placeholders to mark formatting.
     private final static String FORMAT_S1 = "%1$s";

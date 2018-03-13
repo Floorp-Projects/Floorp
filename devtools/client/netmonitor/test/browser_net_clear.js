@@ -7,7 +7,7 @@
  * Tests if the clear button empties the request menu.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 

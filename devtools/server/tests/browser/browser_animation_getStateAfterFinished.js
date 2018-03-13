@@ -11,7 +11,7 @@
 // See devtools/server/actors/animation.js |getPlayerIndex| for more
 // information.
 
-add_task(async function () {
+add_task(async function() {
   let {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 

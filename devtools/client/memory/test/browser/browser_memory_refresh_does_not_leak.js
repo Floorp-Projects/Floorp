@@ -15,9 +15,9 @@ const { getLabelAndShallowSize } = require("devtools/shared/heapsnapshot/Dominat
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_empty.html";
 
-function* getWindowsInSnapshot(front) {
+async function getWindowsInSnapshot(front) {
   dumpn("Taking snapshot.");
-  const path = yield front.saveHeapSnapshot();
+  const path = await front.saveHeapSnapshot();
   dumpn("Took snapshot with path = " + path);
   const snapshot = ChromeUtils.readHeapSnapshot(path);
   dumpn("Read snapshot into memory, taking census.");
@@ -50,17 +50,17 @@ const DESCRIPTION = {
   }
 };
 
-this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   const front = panel.panelWin.gFront;
 
-  const startWindows = yield getWindowsInSnapshot(front);
+  const startWindows = await getWindowsInSnapshot(front);
   dumpn("Initial windows found = " + startWindows.map(w => "0x" +
                                      w.toString(16)).join(", "));
   is(startWindows.length, 1);
 
-  yield refreshTab();
+  await refreshTab();
 
-  const endWindows = yield getWindowsInSnapshot(front);
+  const endWindows = await getWindowsInSnapshot(front);
   is(endWindows.length, 1);
 
   if (endWindows.length === 1) {
@@ -71,7 +71,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   dumpn("(This may fail if a moving GC has relocated the initial Window objects.)");
 
   dumpn("Taking full runtime snapshot.");
-  const path = yield front.saveHeapSnapshot({ boundaries: { runtime: true } });
+  const path = await front.saveHeapSnapshot({ boundaries: { runtime: true } });
   dumpn("Full runtime's snapshot path = " + path);
 
   dumpn("Reading full runtime heap snapshot.");

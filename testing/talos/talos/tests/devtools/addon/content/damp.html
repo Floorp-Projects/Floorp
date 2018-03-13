@@ -3,6 +3,7 @@
 <meta charset="UTF-8"/>
 <title>DAMP - Devtools At Maximum Performance</title>
 
+<script src="damp-tests.js"></script>
 <script type="application/x-javascript">
 // Empty subtests interpreted as all subtests, since otherwise meaningless.
 var config = {subtests: [], repeat: 1};
@@ -10,73 +11,13 @@ var config = {subtests: [], repeat: 1};
 var defaultConfig = {
   repeat: 1,
   rest: 100,
-  subtests: {
-    "cold.inspector": true,
-
-    "simple.webconsole": true,
-    "simple.inspector": true,
-    "simple.debugger": true,
-    "simple.styleeditor": true,
-    "simple.performance": true,
-    "simple.netmonitor": true,
-    "simple.saveAndReadHeapSnapshot": true,
-
-    "complicated.webconsole": true,
-    "complicated.inspector": true,
-    "complicated.debugger": true,
-    "complicated.styleeditor": true,
-    "complicated.performance": true,
-    "complicated.netmonitor": true,
-    "complicated.saveAndReadHeapSnapshot": true,
-
-    "custom.webconsole": true,
-    "custom.inspector": true,
-    "custom.debugger": true,
-
-    "console.bulklog": true,
-    "console.streamlog": true,
-    "console.objectexpand": true,
-    "console.openwithcache": true,
-    "inspector.mutations": true,
-    "inspector.layout": true,
-
-    "panelsInBackground.reload": true,
-  }
-};
-
-var testsInfo = {
-  "cold.inspector": "Measure first open toolbox on inspector panel",
-
-  "simple.webconsole": "Measure open/close toolbox on webconsole panel against simple document",
-  "simple.inspector": "Measure open/close toolbox on inspector panel against simple document",
-  "simple.debugger": "Measure open/close toolbox on debugger panel against simple document",
-  "simple.styleeditor": "Measure open/close toolbox on style editor panel against simple document",
-  "simple.performance": "Measure open/close toolbox on performance panel against simple document",
-  "simple.netmonitor": "Measure open/close toolbox on network monitor panel against simple document",
-  "simple.saveAndReadHeapSnapshot": "Measure open/close toolbox on memory panel and save/read heap snapshot against simple document",
-
-  "complicated.webconsole": "Measure open/close toolbox on webconsole panel against complicated document",
-  "complicated.inspector": "Measure open/close toolbox on inspector panel against complicated document",
-  "complicated.debugger": "Measure open/close toolbox on debugger panel against complicated document",
-  "complicated.styleeditor": "Measure open/close toolbox on style editor panel against complicated document",
-  "complicated.performance": "Measure open/close toolbox on performance panel against complicated document",
-  "complicated.netmonitor": "Measure open/close toolbox on network monitor panel against complicated document",
-  "complicated.saveAndReadHeapSnapshot": "Measure open/close toolbox on memory panel and save/read heap snapshot against complicated document",
-
-  "console.bulklog": "Measure time for a bunch of sync console.log statements to appear",
-  "console.streamlog": "Measure rAF on page during a stream of console.log statements",
-  "console.objectexpand": "Measure time to expand a large object and close the console",
-  "console.openwithcache": "Measure time to render last logged messages in console for a page with 100 logged messages",
-  "inspector.mutations": "Measure the time to perform childList mutations when inspector is enabled",
-  "inspector.layout": "Measure the time to open/close toolbox on inspector with layout tab against big document with grid containers",
-
-  "panelsInBackground.reload": "Measure page reload time when all panels are in background",
+  subtests: window.DAMP_TESTS // from damp-tests.js
 };
 
 function updateConfig() {
   config = {subtests: []};
-  for (var test in defaultConfig.subtests) {
-    if ($("subtest-" + test).checked) { // eslint-disable-line no-undef
+  for (var test of defaultConfig.subtests) {
+    if ($("subtest-" + test.name).checked) { // eslint-disable-line no-undef
       config.subtests.push(test);
     }
   }
@@ -105,13 +46,14 @@ Utilities:
 <br/><br/>
 <b>Configure DAMP</b> (CTRL-F5 to reset to talos defaults) <button type="button" onclick="deselectAll()">Deselect all tests</button><br/>
 <script>
-  for (var test in defaultConfig.subtests) {
-
+  for (let test of defaultConfig.subtests) {
+    let checked = test.disabled ? "unchecked" : "checked";
     // eslint-disable-next-line no-unsanitized/method
-    document.write('<input type="checkbox" id="subtest-' + test + '" ' + (defaultConfig.subtests[test] ? "" : "un") + "checked>"
-                  + test + "</input>"
-                  + '<span style="color:grey">&nbsp;&nbsp;&nbsp;' + testsInfo[test] + "</span>"
-                  + "<br/>");
+    document.write(`<input type="checkbox" id="subtest-${test.name}" ${checked}>
+                      ${test.name}
+                    </input>
+                    <span style="color:grey">&nbsp;&nbsp;&nbsp;${test.description}</span>
+                    <br/>`);
   }
 </script>
   <br/>

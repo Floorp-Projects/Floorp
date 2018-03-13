@@ -44,7 +44,7 @@ function test_socket_conn_drops_after_too_long_header() {
   return test_helper(rawPacket + ":");
 }
 
-var test_helper = async function (payload) {
+var test_helper = async function(payload) {
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
   let authenticator = new AuthenticatorType.Server();
   authenticator.allowConnection = () => {
@@ -62,8 +62,8 @@ var test_helper = async function (payload) {
   });
   let closedDeferred = defer();
   transport.hooks = {
-    onPacket: function (packet) {
-      this.onPacket = function () {
+    onPacket: function(packet) {
+      this.onPacket = function() {
         do_throw(new Error("This connection should be dropped."));
         transport.close();
       };
@@ -72,7 +72,7 @@ var test_helper = async function (payload) {
       transport._outgoing.push(new RawPacket(transport, payload));
       transport._flushOutgoing();
     },
-    onClosed: function (status) {
+    onClosed: function(status) {
       Assert.ok(true);
       closedDeferred.resolve();
     },

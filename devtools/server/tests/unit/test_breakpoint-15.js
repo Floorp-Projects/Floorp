@@ -15,9 +15,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              testSameBreakpoint();
                            });
@@ -27,7 +27,7 @@ function run_test() {
 
 const SOURCE_URL = "http://example.com/source.js";
 
-const testSameBreakpoint = async function () {
+const testSameBreakpoint = async function() {
   let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
   let source = gThreadClient.source(packet.frame.where.source);
 

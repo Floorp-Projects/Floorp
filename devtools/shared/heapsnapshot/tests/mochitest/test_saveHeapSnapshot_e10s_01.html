@@ -13,7 +13,7 @@ Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child proc
 <body>
     <script type="application/javascript">
     "use strict";
-    window.onerror = function (msg, url, line, col, err) {
+    window.onerror = function(msg, url, line, col, err) {
       ok(false, "@" + url + ":" + line + ":" + col + ": " + msg + "\n" + err.stack);
     };
 
@@ -36,7 +36,7 @@ Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child proc
     }
 
     // Kick everything off on load.
-    window.onload = function () {
+    window.onload = function() {
       info("window.onload fired");
       SpecialPowers.addPermission("browser", true, document);
       SpecialPowers.pushPrefEnv({
@@ -45,13 +45,13 @@ Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child proc
              ["dom.mozBrowserFramesEnabled", true],
              ["browser.pagethumbnails.capturing_disabled", true]
          ]
-      }, function () {
+      }, function() {
         let iframe = document.createElement("iframe");
         SpecialPowers.wrap(iframe).mozbrowser = true;
         iframe.id = "iframe";
         iframe.src = childFrameURL;
 
-        iframe.addEventListener("mozbrowserloadend", function () {
+        iframe.addEventListener("mozbrowserloadend", function() {
           info("iframe done loading");
 
           let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);

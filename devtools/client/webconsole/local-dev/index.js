@@ -84,14 +84,14 @@ function onConnect(connection) {
     NewConsoleOutputWrapper,
   };
   consoleFrame = new NewWebConsoleFrame(owner);
-  consoleFrame.init().then(function () {
+  consoleFrame.init().then(function() {
     console.log("NewWebConsoleFrame initialized");
   });
 }
 
 // This is just a hack until the local dev environment includes jsterm
-window.evaluateJS = function (input) {
-  consoleFrame.webConsoleClient.evaluateJSAsync(`${input}`, function (r) {
+window.evaluateJS = function(input) {
+  consoleFrame.webConsoleClient.evaluateJSAsync(`${input}`, function(r) {
     consoleFrame.newConsoleOutput.dispatchMessageAdd(r);
   }, {});
 };

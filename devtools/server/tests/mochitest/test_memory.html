@@ -15,10 +15,10 @@ Bug 923275 - Add a memory monitor widget to the developer toolbar
 <script>
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  (async function () {
+  (async function() {
     let { memory, client } = await startServerAndGetSelectedTabMemory();
     let measurement = await memory.measure();
     ok(measurement.total > 0, "total memory is valid");

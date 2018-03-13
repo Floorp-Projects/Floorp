@@ -14,23 +14,23 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm", tempScope);
 var FileUtils = tempScope.FileUtils;
 var NetUtil = tempScope.NetUtil;
 
-add_task(function* () {
-  let htmlFile = yield copy(TESTCASE_URI_HTML, "simple.html");
-  yield copy(TESTCASE_URI_CSS, "simple.css");
+add_task(async function() {
+  let htmlFile = await copy(TESTCASE_URI_HTML, "simple.html");
+  await copy(TESTCASE_URI_CSS, "simple.css");
   let uri = Services.io.newFileURI(htmlFile);
   let filePath = uri.resolve("");
 
-  let { ui } = yield openStyleEditorForURL(filePath);
+  let { ui } = await openStyleEditorForURL(filePath);
 
   let editor = ui.editors[0];
-  yield editor.getSourceEditor();
+  await editor.getSourceEditor();
 
   info("Editing the style sheet.");
   let dirty = editor.sourceEditor.once("dirty-change");
   let beginCursor = {line: 0, ch: 0};
   editor.sourceEditor.replaceText("DIRTY TEXT", beginCursor, beginCursor);
 
-  yield dirty;
+  await dirty;
 
   is(editor.sourceEditor.isClean(), false, "Editor is dirty.");
   ok(editor.summary.classList.contains("unsaved"),
@@ -39,11 +39,11 @@ add_task(function* () {
   info("Saving the changes.");
   dirty = editor.sourceEditor.once("dirty-change");
 
-  editor.saveToFile(null, function (file) {
+  editor.saveToFile(null, function(file) {
     ok(file, "file should get saved directly when using a file:// URI");
   });
 
-  yield dirty;
+  await dirty;
 
   is(editor.sourceEditor.isClean(), true, "Editor is clean.");
   ok(!editor.summary.classList.contains("unsaved"),
@@ -87,7 +87,7 @@ function write(data, file, callback) {
   let istream = converter.convertToInputStream(data);
   let ostream = FileUtils.openSafeFileOutputStream(file);
 
-  NetUtil.asyncCopy(istream, ostream, function (status) {
+  NetUtil.asyncCopy(istream, ostream, function(status) {
     if (!Components.isSuccessCode(status)) {
       info("Couldn't write to " + file.path);
       return;

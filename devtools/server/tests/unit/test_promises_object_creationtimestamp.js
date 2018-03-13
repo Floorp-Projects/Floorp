@@ -14,11 +14,11 @@ var EventEmitter = require("devtools/shared/event-emitter");
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 
-add_task(async function () {
+add_task(async function() {
   let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
   Preferences.set("privacy.reduceTimerPrecision", false);
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 

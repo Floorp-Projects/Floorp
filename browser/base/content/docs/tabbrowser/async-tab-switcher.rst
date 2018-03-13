@@ -33,7 +33,7 @@ renderLayers, hasLayers, docShellIsActive
   For non-remote ``<xul:browser>``'s, ``hasLayers`` returns the value for ``docShellIsActive``.
 
 ``docShellIsActive``
-  For remote ``<xul:browser>``'s, setting ``docShellIsActive`` to ``true`` also sets ``renderLayers`` to true, and then sends a message to the content process to set its top-level docShell active state to ``true``. Similarly, setting ``docShellIsActive`` to ``false`` also sets ``renderLayers`` to false, and then sends a message ot the content process to set its top-level docShell active state to ``false``.
+  For remote ``<xul:browser>``'s, setting ``docShellIsActive`` to ``true`` also sets ``renderLayers`` to true, and then sends a message to the content process to set its top-level docShell active state to ``true``. Similarly, setting ``docShellIsActive`` to ``false`` also sets ``renderLayers`` to false, and then sends a message to the content process to set its top-level docShell active state to ``false``.
 
   For non-remote ``<xul:browser>``'s, ``docShellIsActive`` forwards to the ``isActive`` property on the ``<xul:browser>``'s top-level docShell.
 

@@ -19,7 +19,7 @@ const promise = require("promise");
  * The corresponding Front object for the FrameSnapshotActor.
  */
 const FrameSnapshotFront = protocol.FrontClassWithSpec(frameSnapshotSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this._animationFrameEndScreenshot = null;
     this._cachedScreenshots = new WeakMap();
@@ -29,7 +29,7 @@ const FrameSnapshotFront = protocol.FrontClassWithSpec(frameSnapshotSpec, {
    * This implementation caches the animation frame end screenshot to optimize
    * frontend requests to `generateScreenshotFor`.
    */
-  getOverview: protocol.custom(function () {
+  getOverview: protocol.custom(function() {
     return this._getOverview().then(data => {
       this._animationFrameEndScreenshot = data.screenshot;
       return data;
@@ -42,7 +42,7 @@ const FrameSnapshotFront = protocol.FrontClassWithSpec(frameSnapshotSpec, {
    * This implementation saves a roundtrip to the backend if the screenshot
    * was already generated and retrieved once.
    */
-  generateScreenshotFor: protocol.custom(function (functionCall) {
+  generateScreenshotFor: protocol.custom(function(functionCall) {
     if (CanvasFront.ANIMATION_GENERATORS.has(functionCall.name) ||
         CanvasFront.LOOP_GENERATORS.has(functionCall.name)) {
       return promise.resolve(this._animationFrameEndScreenshot);
@@ -65,7 +65,7 @@ exports.FrameSnapshotFront = FrameSnapshotFront;
  * The corresponding Front object for the CanvasActor.
  */
 const CanvasFront = protocol.FrontClassWithSpec(canvasSpec, {
-  initialize: function (client, { canvasActor }) {
+  initialize: function(client, { canvasActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: canvasActor });
     this.manage(this);
   }

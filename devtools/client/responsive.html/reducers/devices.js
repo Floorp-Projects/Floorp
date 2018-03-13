@@ -93,7 +93,7 @@ let reducers = {
 
 };
 
-module.exports = function (devices = INITIAL_DEVICES, action) {
+module.exports = function(devices = INITIAL_DEVICES, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return devices;

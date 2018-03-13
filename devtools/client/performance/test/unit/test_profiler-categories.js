@@ -6,7 +6,7 @@
  * Tests if the profiler categories are mapped correctly.
  */
 
-add_task(function () {
+add_task(function() {
   let { CATEGORIES, CATEGORY_MAPPINGS } = require("devtools/client/performance/modules/categories");
   let { L10N } = require("devtools/client/performance/modules/global");
   let count = CATEGORIES.length;

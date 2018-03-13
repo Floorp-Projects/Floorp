@@ -11,7 +11,7 @@ startupAddonsManager();
 function promiseAddonEvent(event) {
   return new Promise(resolve => {
     let listener = {
-      [event]: function (...args) {
+      [event]: function(...args) {
         AddonManager.removeAddonListener(listener);
         resolve(args);
       }

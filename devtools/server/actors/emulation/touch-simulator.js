@@ -9,7 +9,7 @@
 const { Ci, Cu } = require("chrome");
 const { Services } = require("resource://gre/modules/Services.jsm");
 
-var systemAppOrigin = (function () {
+var systemAppOrigin = (function() {
   let systemOrigin = "_";
   try {
     systemOrigin =

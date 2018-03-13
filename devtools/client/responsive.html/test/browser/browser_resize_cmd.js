@@ -6,7 +6,7 @@
 /* global ResponsiveUIManager */
 /* eslint key-spacing: 0 */
 
-add_task(async function () {
+add_task(async function() {
   let manager = ResponsiveUIManager;
   let done;
 

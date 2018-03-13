@@ -8,13 +8,13 @@
 // Check expanding/collapsing object inspector in the console.
 const TEST_URI = "data:text/html;charset=utf8,<h1>test Object Inspector</h1>";
 
-add_task(async function () {
+add_task(async function() {
   let toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
   let hud = toolbox.getCurrentPanel().hud;
 
   logAllStoreChanges(hud);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.console.log(
       "oi-test",
       [1, 2, {a: "a", b: "b"}],

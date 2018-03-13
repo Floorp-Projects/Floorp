@@ -32,7 +32,7 @@ async function run_test() {
   Assert.ok(!packet.isPending);
   Assert.equal(false, "actualLocation" in packet);
 
-  packet = await executeOnNextTickAndWaitForPause(function () {
+  packet = await executeOnNextTickAndWaitForPause(function() {
     Cu.evalInSandbox("f()", global);
   }, client);
 

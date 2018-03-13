@@ -15,7 +15,7 @@ function checkAccessibilityState(accessibility, expected) {
 
 // Simple checks for the AccessibilityActor and AccessibleWalkerActor
 
-add_task(async function () {
+add_task(async function() {
   let { walker: domWalker, client, accessibility} = await initAccessibilityFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>");
 

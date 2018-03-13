@@ -15,7 +15,7 @@ const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/HTTP/" +
 const NON_BUILTIN_ROOT_PREF =
   "security.cert_pinning.process_headers_from_non_builtin_roots";
 
-add_task(async function () {
+add_task(async function() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(NON_BUILTIN_ROOT_PREF);
   });

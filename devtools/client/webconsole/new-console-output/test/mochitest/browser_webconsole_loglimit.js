@@ -10,13 +10,13 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "Old messages are removed after passing devtools.hud.loglimit";
 
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.hud.loglimit", 140);
   let hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
   let onMessage = waitForMessage(hud, "test message [149]");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     for (let i = 0; i < 150; i++) {
       content.console.log(`test message [${i}]`);
     }
@@ -29,7 +29,7 @@ add_task(async function () {
   is(findMessages(hud, "").length, 140, "Number of displayed messages is correct");
 
   onMessage = waitForMessage(hud, "hello world");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
     content.console.log("hello world");
   });
   await onMessage;

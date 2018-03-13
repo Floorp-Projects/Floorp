@@ -7,7 +7,7 @@
 
 "use strict";
 
-module.exports = function (content) {
+module.exports = function(content) {
   this.cacheable && this.cacheable();
 
   let lines = content.split("\n");

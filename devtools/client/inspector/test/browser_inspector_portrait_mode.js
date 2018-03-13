@@ -72,7 +72,7 @@ function waitForClassMutation(target) {
   });
 }
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   // Restore the host type for other tests.
   Services.prefs.clearUserPref("devtools.toolbox.host");
 });

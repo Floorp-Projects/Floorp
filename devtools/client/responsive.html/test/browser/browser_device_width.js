@@ -5,7 +5,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URL = "data:text/html;charset=utf-8,";
 
-addRDMTask(TEST_URL, async function ({ ui, manager }) {
+addRDMTask(TEST_URL, async function({ ui, manager }) {
   ok(ui, "An instance of the RDM should be attached to the tab.");
   await setViewportSize(ui, manager, 110, 500);
 
@@ -22,7 +22,7 @@ addRDMTask(TEST_URL, async function ({ ui, manager }) {
   await setViewportSizeWithInputKeys(ui);
 
   info("Setting docShell.deviceSizeIsPageSize to false");
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
+  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
     let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation)
                           .QueryInterface(Ci.nsIDocShell);
@@ -93,7 +93,7 @@ async function checkScreenProps2(ui) {
 }
 
 function grabContentInfo(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
+  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
     return {
       screen: {
         width: content.screen.width,

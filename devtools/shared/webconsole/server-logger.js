@@ -15,7 +15,7 @@ loader.lazyGetter(this, "NetworkHelper", () => require("devtools/shared/webconso
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log: function () {
+  log: function() {
   }
 };
 
@@ -58,7 +58,7 @@ ServerLoggingListener.prototype = {
   /**
    * The destroy is called by the parent WebConsoleActor actor.
    */
-  destroy: function () {
+  destroy: function() {
     trace.log("ServerLoggingListener.destroy; ", this.owner.actorID,
       ", child process: ", DebuggerServer.isInChildProcess);
 
@@ -69,7 +69,7 @@ ServerLoggingListener.prototype = {
    * The main responsibility of this method is registering a listener for
    * "http-on-examine-response" events.
    */
-  attach: makeInfallible(function () {
+  attach: makeInfallible(function() {
     trace.log("ServerLoggingListener.attach; child process: ",
       DebuggerServer.isInChildProcess);
 
@@ -88,7 +88,7 @@ ServerLoggingListener.prototype = {
   /**
    * Remove the "http-on-examine-response" listener.
    */
-  detach: makeInfallible(function () {
+  detach: makeInfallible(function() {
     trace.log("ServerLoggingListener.detach; ", this.owner.actorID);
 
     if (DebuggerServer.isInChildProcess) {
@@ -101,7 +101,7 @@ ServerLoggingListener.prototype = {
 
   // Parent Child Relationship
 
-  attachParentProcess: function () {
+  attachParentProcess: function() {
     trace.log("ServerLoggingListener.attachParentProcess;");
 
     this.owner.conn.setupInParent({
@@ -124,7 +124,7 @@ ServerLoggingListener.prototype = {
     });
   },
 
-  detachParentProcess: makeInfallible(function () {
+  detachParentProcess: makeInfallible(function() {
     trace.log("ServerLoggingListener.detachParentProcess;");
 
     let mm = this.owner.conn.parentMessageManager;
@@ -137,7 +137,7 @@ ServerLoggingListener.prototype = {
     removeMessageListener("debug:server-logger", this.onParentMessage);
   }),
 
-  onParentMessage: makeInfallible(function (msg) {
+  onParentMessage: makeInfallible(function(msg) {
     if (!msg.data) {
       return;
     }
@@ -156,7 +156,7 @@ ServerLoggingListener.prototype = {
 
   // HTTP Observer
 
-  onExamineHeaders: function (event) {
+  onExamineHeaders: function(event) {
     let headers = event.data.headers;
 
     trace.log("ServerLoggingListener.onExamineHeaders;", headers);
@@ -182,7 +182,7 @@ ServerLoggingListener.prototype = {
     }
   },
 
-  onExamineResponse: makeInfallible(function (subject) {
+  onExamineResponse: makeInfallible(function(subject) {
     let httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
 
     trace.log("ServerLoggingListener.onExamineResponse; ", httpChannel.name,
@@ -219,7 +219,7 @@ ServerLoggingListener.prototype = {
    * @return boolean
    *         True if the network request should be logged, false otherwise.
    */
-  _matchRequest: function (channel) {
+  _matchRequest: function(channel) {
     trace.log("_matchRequest ", this.window, ", ", this.topFrame);
 
     // Log everything if the window is null (it's null in the browser context)
@@ -259,7 +259,7 @@ ServerLoggingListener.prototype = {
    * Learn more about the data structure:
    * https://craig.is/writing/chrome-logger/techspecs
    */
-  parse: function (header, value) {
+  parse: function(header, value) {
     let data;
 
     try {
@@ -316,7 +316,7 @@ ServerLoggingListener.prototype = {
     return parsedMessage;
   },
 
-  getColumnMap: function (data) {
+  getColumnMap: function(data) {
     let columnMap = new Map();
     let columnName;
 
@@ -328,7 +328,7 @@ ServerLoggingListener.prototype = {
     return columnMap;
   },
 
-  sendMessage: function (msg) {
+  sendMessage: function(msg) {
     trace.log("ServerLoggingListener.sendMessage; message", msg);
 
     let formatted = format(msg);

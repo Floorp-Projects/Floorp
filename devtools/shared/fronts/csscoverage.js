@@ -33,13 +33,13 @@ var chromeWindow;
  * Front for CSSUsageActor
  */
 const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
-  initialize: function (client, form) {
+  initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this.actorID = form.cssUsageActor;
     this.manage(this);
   },
 
-  _onStateChange: protocol.preEvent("state-change", function (ev) {
+  _onStateChange: protocol.preEvent("state-change", function(ev) {
     isRunning = ev.isRunning;
     ev.target = target;
 
@@ -75,7 +75,7 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
   /**
    * Server-side start is above. Client-side start adds a notification box
    */
-  start: custom(function (newChromeWindow, newTarget, noreload = false) {
+  start: custom(function(newChromeWindow, newTarget, noreload = false) {
     target = newTarget;
     chromeWindow = newChromeWindow;
 
@@ -87,7 +87,7 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
   /**
    * Server-side start is above. Client-side start adds a notification box
    */
-  toggle: custom(function (newChromeWindow, newTarget) {
+  toggle: custom(function(newChromeWindow, newTarget) {
     target = newTarget;
     chromeWindow = newChromeWindow;
 
@@ -99,7 +99,7 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
   /**
    * We count STARTING and STOPPING as 'running'
    */
-  isRunning: function () {
+  isRunning: function() {
     return isRunning;
   }
 });
@@ -113,7 +113,7 @@ const knownFronts = new WeakMap();
  * For notes on target.makeRemote(), see
  * https://bugzilla.mozilla.org/show_bug.cgi?id=1016330#c7
  */
-exports.getUsage = function (trgt) {
+exports.getUsage = function(trgt) {
   return trgt.makeRemote().then(() => {
     let front = knownFronts.get(trgt.client);
     if (front == null && trgt.form.cssUsageActor != null) {

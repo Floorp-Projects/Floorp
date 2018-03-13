@@ -528,7 +528,7 @@ if __name__ == "__main__":
         # by looking at an MSVC install, but we don't really have that here.
         # Force things on.
         extra_cflags2 = []
-        extra_cxxflags2 = ['-fms-compatibility-version=19.11.25547', '-Xclang', '-std=c++14']
+        extra_cxxflags2 = ['-fms-compatibility-version=19.13.26128', '-Xclang', '-std=c++14']
         extra_asmflags = []
         extra_ldflags = []
 

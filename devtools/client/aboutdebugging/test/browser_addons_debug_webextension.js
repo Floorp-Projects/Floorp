@@ -24,16 +24,16 @@ const {
  * - when the debug button is clicked on a webextension, the opened toolbox
  *   has a working webconsole with the background page as default target;
  */
-add_task(function* testWebExtensionsToolboxWebConsole() {
+add_task(async function testWebExtensionsToolboxWebConsole() {
   let {
     tab, document, debugBtn,
-  } = yield setupTestAboutDebuggingWebExtension(ADDON_NAME, ADDON_MANIFEST_PATH);
+  } = await setupTestAboutDebuggingWebExtension(ADDON_NAME, ADDON_MANIFEST_PATH);
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
   let env = Cc["@mozilla.org/process/environment;1"]
               .getService(Ci.nsIEnvironment);
-  let testScript = function () {
+  let testScript = function() {
     /* eslint-disable no-undef */
     function findMessages(hud, text, selector = ".message") {
       const messages = hud.ui.outputNode.querySelectorAll(selector);
@@ -73,9 +73,9 @@ add_task(function* testWebExtensionsToolboxWebConsole() {
 
   debugBtn.click();
 
-  yield onToolboxClose;
+  await onToolboxClose;
   ok(true, "Addon toolbox closed");
 
-  yield uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
-  yield closeAboutDebugging(tab);
+  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  await closeAboutDebugging(tab);
 });

@@ -7,7 +7,7 @@
  * Test that security details tab is visible only when it should.
  */
 
-add_task(async function () {
+add_task(async function() {
   const TEST_DATA = [
     {
       desc: "http request",
@@ -47,7 +47,7 @@ add_task(async function () {
                        waitForNetworkEvents(monitor, 1);
 
     info("Performing a request to " + testcase.uri);
-    await ContentTask.spawn(tab.linkedBrowser, testcase.uri, async function (url) {
+    await ContentTask.spawn(tab.linkedBrowser, testcase.uri, async function(url) {
       content.wrappedJSObject.performRequests(1, url);
     });
 

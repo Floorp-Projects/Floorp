@@ -10,7 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
 
-loader.lazyGetter(this, "HarImporter", function () {
+loader.lazyGetter(this, "HarImporter", function() {
   return require("../har/har-importer").HarImporter;
 });
 

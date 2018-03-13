@@ -97,7 +97,7 @@ exports.l10n = name => styleInspectorL10N.getStr(name);
  * @return {boolean} true if the given stylesheet is a content stylesheet,
  * false otherwise.
  */
-exports.isContentStylesheet = function (sheet) {
+exports.isContentStylesheet = function(sheet) {
   return sheet.parsingMode !== "agent";
 };
 
@@ -106,7 +106,7 @@ exports.isContentStylesheet = function (sheet) {
  *
  * @param {CSSStyleSheet} sheet the DOM object for the style sheet.
  */
-exports.shortSource = function (sheet) {
+exports.shortSource = function(sheet) {
   // Use a string like "inline" if there is no source href
   if (!sheet || !sheet.href) {
     return exports.l10n("rule.sourceInline");

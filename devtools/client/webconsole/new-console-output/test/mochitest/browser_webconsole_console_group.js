@@ -13,13 +13,13 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 const { INDENT_WIDTH } =
   require("devtools/client/webconsole/new-console-output/components/MessageIndent");
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const store = hud.ui.newConsoleOutput.getStore();
   logAllStoreChanges(hud);
 
   const onMessagesLogged = waitForMessage(hud, "log-6");
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.doLog();
   });
   await onMessagesLogged;

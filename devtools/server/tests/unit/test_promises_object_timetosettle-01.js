@@ -12,7 +12,7 @@ const { PromisesFront } = require("devtools/shared/fronts/promises");
 
 var EventEmitter = require("devtools/shared/event-emitter");
 
-add_task(async function () {
+add_task(async function() {
   let client = await startTestDebuggerServer("test-promises-timetosettle");
   let chromeActors = await getChromeActors(client);
 

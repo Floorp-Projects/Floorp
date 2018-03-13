@@ -23,16 +23,16 @@ const {
  * - the webextension developer toolbox has a working Inspector panel, with the
  *   background page as default target;
  */
-add_task(function* testWebExtensionsToolboxInspector() {
+add_task(async function testWebExtensionsToolboxInspector() {
   let {
     tab, document, debugBtn,
-  } = yield setupTestAboutDebuggingWebExtension(ADDON_NAME, ADDON_PATH);
+  } = await setupTestAboutDebuggingWebExtension(ADDON_NAME, ADDON_PATH);
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
   let env = Cc["@mozilla.org/process/environment;1"]
         .getService(Ci.nsIEnvironment);
-  let testScript = function () {
+  let testScript = function() {
     /* eslint-disable no-undef */
     toolbox.selectTool("inspector")
       .then(inspector => {
@@ -78,10 +78,10 @@ add_task(function* testWebExtensionsToolboxInspector() {
 
   let onToolboxClose = BrowserToolboxProcess.once("close");
   debugBtn.click();
-  yield onToolboxClose;
+  await onToolboxClose;
 
   ok(true, "Addon toolbox closed");
 
-  yield uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
-  yield closeAboutDebugging(tab);
+  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  await closeAboutDebugging(tab);
 });

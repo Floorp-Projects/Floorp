@@ -15,11 +15,11 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* () {
+add_task(async function() {
   let store = applyMiddleware(task)(createStore)(reducer);
 
   store.dispatch(generatorError());
-  yield waitUntilState(store, () => store.getState().length === 1);
+  await waitUntilState(store, () => store.getState().length === 1);
   equal(store.getState()[0].type, ERROR_TYPE,
         "generator errors dispatch ERROR_TYPE actions");
   equal(store.getState()[0].error, "task-middleware-error-generator",

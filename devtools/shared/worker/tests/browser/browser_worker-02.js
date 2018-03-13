@@ -9,7 +9,7 @@ const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const WORKER_URL =
   "resource://devtools/client/shared/widgets/GraphsWorker.js";
 
-add_task(async function () {
+add_task(async function() {
   try {
     new DevToolsWorker("resource://i/dont/exist.js");
     ok(false, "Creating a DevToolsWorker with an invalid URL throws");

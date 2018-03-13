@@ -18,17 +18,17 @@ const {
   selectSnapshotForDiffingAndRefresh
 } = require("devtools/client/memory/actions/diffing");
 
-add_task(function* () {
+add_task(async function() {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+  await front.attach();
   let store = Store();
   const { getState, dispatch } = store;
 
   ok(true, "create 2 snapshots with a saved census");
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
+  await waitUntilCensusState(store, snapshot => snapshot.treeMap,
                              [treeMapState.SAVED, treeMapState.SAVED]);
   ok(true, "snapshots created with a saved census");
 
@@ -40,7 +40,7 @@ add_task(function* () {
 
   ok(getState().diffing, "We should be in diffing view");
 
-  yield waitUntilAction(store, actions.TAKE_CENSUS_DIFF_END);
+  await waitUntilAction(store, actions.TAKE_CENSUS_DIFF_END);
   ok(true, "Received TAKE_CENSUS_DIFF_END action");
 
   ok(true, "Dispatch clearSnapshots action");
@@ -49,12 +49,12 @@ add_task(function* () {
     waitUntilAction(store, actions.DELETE_SNAPSHOTS_END)
   ]);
   dispatch(clearSnapshots(heapWorker));
-  yield deleteEvents;
+  await deleteEvents;
   ok(true, "received delete snapshots events");
 
   ok(getState().snapshots.length === 0, "Snapshots array should be empty");
   ok(!getState().diffing, "We should no longer be diffing");
 
   heapWorker.destroy();
-  yield front.detach();
+  await front.detach();
 });

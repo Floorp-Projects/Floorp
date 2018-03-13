@@ -21,11 +21,11 @@ exports.items = [
     tooltipText: l10n.lookupFormat("splitconsoleTooltip2", ["Esc"]),
     isRemoteSafe: true,
     state: {
-      isChecked: function (target) {
+      isChecked: function(target) {
         let toolbox = gDevTools.getToolbox(target);
         return !!(toolbox && toolbox.splitConsole);
       },
-      onChange: function (target, changeHandler) {
+      onChange: function(target, changeHandler) {
         // Register handlers for when a change event should be fired
         // (which resets the checked state of the button).
         let toolbox = gDevTools.getToolbox(target);
@@ -41,7 +41,7 @@ exports.items = [
         });
       }
     },
-    exec: function (args, context) {
+    exec: function(args, context) {
       let target = context.environment.target;
       let toolbox = gDevTools.getToolbox(target);
 
@@ -63,7 +63,7 @@ exports.items = [
     runAt: "client",
     name: "console clear",
     description: l10n.lookup("consoleclearDesc"),
-    exec: function (args, context) {
+    exec: function(args, context) {
       let toolbox = gDevTools.getToolbox(context.environment.target);
       if (toolbox == null) {
         return null;
@@ -84,7 +84,7 @@ exports.items = [
     runAt: "client",
     name: "console close",
     description: l10n.lookup("consolecloseDesc"),
-    exec: function (args, context) {
+    exec: function(args, context) {
       // Don't return a value to GCLI
       return gDevTools.closeToolbox(context.environment.target).then(() => {});
     }
@@ -94,7 +94,7 @@ exports.items = [
     runAt: "client",
     name: "console open",
     description: l10n.lookup("consoleopenDesc"),
-    exec: function (args, context) {
+    exec: function(args, context) {
       const target = context.environment.target;
       // Don't return a value to GCLI
       return gDevTools.showToolbox(target, "webconsole").then(() => {});

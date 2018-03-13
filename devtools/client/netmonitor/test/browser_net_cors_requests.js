@@ -7,7 +7,7 @@
  * Test that CORS preflight requests are displayed by network monitor
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CORS_URL);
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -23,7 +23,7 @@ add_task(async function () {
 
   info("Performing a CORS request");
   let requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
-  await ContentTask.spawn(tab.linkedBrowser, requestUrl, async function (url) {
+  await ContentTask.spawn(tab.linkedBrowser, requestUrl, async function(url) {
     content.wrappedJSObject.performRequests(url, "triggering/preflight", "post-data");
   });
 

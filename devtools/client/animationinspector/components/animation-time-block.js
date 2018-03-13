@@ -36,25 +36,25 @@ function AnimationTimeBlock() {
 exports.AnimationTimeBlock = AnimationTimeBlock;
 
 AnimationTimeBlock.prototype = {
-  init: function (containerEl) {
+  init: function(containerEl) {
     this.containerEl = containerEl;
     this.containerEl.addEventListener("click", this.onClick);
   },
 
-  destroy: function () {
+  destroy: function() {
     this.containerEl.removeEventListener("click", this.onClick);
     this.unrender();
     this.containerEl = null;
     this.animation = null;
   },
 
-  unrender: function () {
+  unrender: function() {
     while (this.containerEl.firstChild) {
       this.containerEl.firstChild.remove();
     }
   },
 
-  render: function (animation, tracks) {
+  render: function(animation, tracks) {
     this.unrender();
 
     this.animation = animation;
@@ -147,7 +147,7 @@ AnimationTimeBlock.prototype = {
    * the bounds of DOM.
    * @param {Object} animation
    */
-  update: function (animation) {
+  update: function(animation) {
     this.animation = animation;
     this.updateSummaryGraphViewBox(this.containerEl.querySelector(".summary"));
     const delayEl = this.containerEl.querySelector(".delay");
@@ -165,7 +165,7 @@ AnimationTimeBlock.prototype = {
    * TimeScale.
    * @param {Element} summaryEl - SVG element for summary graph.
    */
-  updateSummaryGraphViewBox: function (summaryEl) {
+  updateSummaryGraphViewBox: function(summaryEl) {
     const {x, delayW} = TimeScale.getAnimationDimensions(this.animation);
     const totalDisplayedDuration = this.getTotalDisplayedDuration();
     const strokeHeightForViewBox = 0.5 / this.containerEl.clientHeight;
@@ -182,7 +182,7 @@ AnimationTimeBlock.prototype = {
    * Update bounds of element which represents delay to fit to latest TimeScale.
    * @param {Element} delayEl - which represents delay.
    */
-  updateDelayBounds: function (delayEl) {
+  updateDelayBounds: function(delayEl) {
     const {delayX, delayW} = TimeScale.getAnimationDimensions(this.animation);
     delayEl.style.left = `${ delayX }%`;
     delayEl.style.width = `${ delayW }%`;
@@ -192,17 +192,17 @@ AnimationTimeBlock.prototype = {
    * Update bounds of element which represents endDelay to fit to latest TimeScale.
    * @param {Element} endDelayEl - which represents endDelay.
    */
-  updateEndDelayBounds: function (endDelayEl) {
+  updateEndDelayBounds: function(endDelayEl) {
     const {endDelayX, endDelayW} = TimeScale.getAnimationDimensions(this.animation);
     endDelayEl.style.left = `${ endDelayX }%`;
     endDelayEl.style.width = `${ endDelayW }%`;
   },
 
-  getTotalDisplayedDuration: function () {
+  getTotalDisplayedDuration: function() {
     return this.animation.state.playbackRate * TimeScale.getDuration();
   },
 
-  getTooltipText: function (state) {
+  getTooltipText: function(state) {
     let getTime = time => L10N.getFormatStr("player.timeLabel",
                                             L10N.numberWithDecimals(time / 1000, 2));
 
@@ -301,7 +301,7 @@ AnimationTimeBlock.prototype = {
     return text;
   },
 
-  onClick: function (e) {
+  onClick: function(e) {
     e.stopPropagation();
     this.emit("selected", this.animation);
   },

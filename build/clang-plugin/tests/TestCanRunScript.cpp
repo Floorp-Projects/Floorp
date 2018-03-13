@@ -1,4 +1,5 @@
 #include <mozilla/RefPtr.h>
+#include <mozilla/Maybe.h>
 
 #define MOZ_CAN_RUN_SCRIPT __attribute__((annotate("moz_can_run_script")))
 #define MOZ_CAN_RUN_SCRIPT_BOUNDARY __attribute__((annotate("moz_can_run_script_boundary")))
@@ -137,4 +138,65 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void test5() {
 // We should be able to call test5 from a non-can_run_script function.
 void test5_b() {
   test5();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ref(const RefCountedBase&) {
+
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ref_1() {
+  RefCountedBase* t = new RefCountedBase;
+  test_ref(*t); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ref_2() {
+  RefCountedBase* t = new RefCountedBase;
+  (*t).method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ref_3() {
+  RefCountedBase* t = new RefCountedBase;
+  auto& ref = *t;
+  test_ref(ref); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ref_4() {
+  RefCountedBase* t = new RefCountedBase;
+  auto& ref = *t;
+  ref.method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ref_5() {
+  RefPtr<RefCountedBase> t = new RefCountedBase;
+  test_ref(*t);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ref_6() {
+  RefPtr<RefCountedBase> t = new RefCountedBase;
+  (*t).method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ref_7() {
+  RefPtr<RefCountedBase> t = new RefCountedBase;
+  auto& ref = *t;
+  MOZ_KnownLive(ref).method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_ref_8() {
+  RefPtr<RefCountedBase> t = new RefCountedBase;
+  auto& ref = *t;
+  test_ref(MOZ_KnownLive(ref));
+}
+
+MOZ_CAN_RUN_SCRIPT void test_maybe() {
+  // FIXME(emilio): This should generate an error, but it's pre-existing!
+  mozilla::Maybe<RefCountedBase*> unsafe;
+  unsafe.emplace(new RefCountedBase);
+  (*unsafe)->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_maybe_2() {
+  mozilla::Maybe<RefPtr<RefCountedBase>> safe;
+  safe.emplace(new RefCountedBase);
+  (*safe)->method_test();
 }

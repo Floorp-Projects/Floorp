@@ -46,7 +46,7 @@ WorkerClient.prototype = {
   },
 
   detach: DebuggerClient.requester({ type: "detach" }, {
-    after: function (response) {
+    after: function(response) {
       if (this.thread) {
         this.client.unregisterClient(this.thread);
       }
@@ -55,7 +55,7 @@ WorkerClient.prototype = {
     },
   }),
 
-  attachThread: function (options = {}, onResponse = noop) {
+  attachThread: function(options = {}, onResponse = noop) {
     if (this.thread) {
       let response = [{
         type: "connected",
@@ -98,7 +98,7 @@ WorkerClient.prototype = {
     });
   },
 
-  _onClose: function () {
+  _onClose: function() {
     this.removeListener("close", this._onClose);
 
     if (this.thread) {
@@ -108,7 +108,7 @@ WorkerClient.prototype = {
     this._isClosed = true;
   },
 
-  reconfigure: function () {
+  reconfigure: function() {
     return Promise.resolve();
   },
 

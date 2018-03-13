@@ -102,7 +102,7 @@ RootClient.prototype = {
    *        If nothing is specified, returns the actor for the currently
    *        selected tab.
    */
-  getTab: function (filter) {
+  getTab: function(filter) {
     let packet = {
       to: this.actor,
       type: "getTab"
@@ -145,7 +145,7 @@ RootClient.prototype = {
    * @param number outerWindowID
    *        The outerWindowID of the top level window you are looking for.
    */
-  getWindow: function ({ outerWindowID }) {
+  getWindow: function({ outerWindowID }) {
     if (!outerWindowID) {
       throw new Error("Must specify outerWindowID");
     }

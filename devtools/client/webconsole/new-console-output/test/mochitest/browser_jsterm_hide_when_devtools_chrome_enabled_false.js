@@ -24,7 +24,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   let browserConsole, webConsole, objInspector;
 
   // We don't use `pushPref()` because we need to revert the same pref later
