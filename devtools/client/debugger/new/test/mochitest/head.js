@@ -951,7 +951,8 @@ const selectors = {
   tooltip: ".tooltip",
   outlineItem: i =>
     `.outline-list__element:nth-child(${i}) .function-signature`,
-  outlineItems: ".outline-list__element"
+  outlineItems: ".outline-list__element",
+  conditionalPanelInput: ".conditional-breakpoint-panel input"
 };
 
 function getSelector(elementName, ...args) {
