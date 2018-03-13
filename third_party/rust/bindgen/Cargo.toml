@@ -12,7 +12,7 @@
 
 [package]
 name = "bindgen"
-version = "0.33.1"
+version = "0.33.2"
 authors = ["Jyun-Yan You <jyyou.tw@gmail.com>", "Emilio Cobos Álvarez <emilio@crisal.io>", "Nick Fitzgerald <fitzgen@gmail.com>", "The Servo project developers"]
 build = "build.rs"
 include = ["Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
@@ -38,7 +38,7 @@ version = "0.2"
 version = "0.1.0"
 
 [dependencies.clang-sys]
-version = "0.21.0"
+version = "0.22.0"
 features = ["runtime", "clang_3_9"]
 
 [dependencies.clap]

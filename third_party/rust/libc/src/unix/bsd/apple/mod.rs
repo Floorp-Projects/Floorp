@@ -2,6 +2,7 @@
 //!
 //! This covers *-apple-* triples currently
 
+pub type c_char = i8;
 pub type clock_t = c_ulong;
 pub type time_t = c_long;
 pub type suseconds_t = i32;
@@ -23,6 +24,14 @@ pub type nl_item = ::c_int;
 pub type id_t = ::c_uint;
 pub type sem_t = ::c_int;
 pub type idtype_t = ::c_uint;
+pub type integer_t = ::c_int;
+pub type cpu_type_t = integer_t;
+pub type cpu_subtype_t = integer_t;
+pub type vm_prot_t = ::c_int;
+pub type posix_spawnattr_t = *mut ::c_void;
+pub type posix_spawn_file_actions_t = *mut ::c_void;
+pub type key_t = ::c_int;
+pub type shmatt_t = ::c_ushort;
 
 pub enum timezone {}
 
@@ -417,6 +426,117 @@ s! {
         pub cr_uid: ::uid_t,
         pub cr_ngroups: ::c_short,
         pub cr_groups: [::gid_t;16]
+    }
+
+    pub struct mach_header {
+        pub magic: u32,
+        pub cputype: cpu_type_t,
+        pub cpusubtype: cpu_subtype_t,
+        pub filetype: u32,
+        pub ncmds: u32,
+        pub sizeofcmds: u32,
+        pub flags: u32,
+    }
+
+    pub struct mach_header_64 {
+        pub magic: u32,
+        pub cputype: cpu_type_t,
+        pub cpusubtype: cpu_subtype_t,
+        pub filetype: u32,
+        pub ncmds: u32,
+        pub sizeofcmds: u32,
+        pub flags: u32,
+        pub reserved: u32,
+    }
+
+    pub struct segment_command {
+        pub cmd: u32,
+        pub cmdsize: u32,
+        pub segname: [::c_char; 16],
+        pub vmaddr: u32,
+        pub vmsize: u32,
+        pub fileoff: u32,
+        pub filesize: u32,
+        pub maxprot: vm_prot_t,
+        pub initprot: vm_prot_t,
+        pub nsects: u32,
+        pub flags: u32,
+    }
+
+    pub struct segment_command_64 {
+        pub cmd: u32,
+        pub cmdsize: u32,
+        pub segname: [::c_char; 16],
+        pub vmaddr: u64,
+        pub vmsize: u64,
+        pub fileoff: u64,
+        pub filesize: u64,
+        pub maxprot: vm_prot_t,
+        pub initprot: vm_prot_t,
+        pub nsects: u32,
+        pub flags: u32,
+    }
+
+    pub struct load_command {
+        pub cmd: u32,
+        pub cmdsize: u32,
+    }
+
+    pub struct sockaddr_dl {
+        pub sdl_len: ::c_uchar,
+        pub sdl_family: ::c_uchar,
+        pub sdl_index: ::c_ushort,
+        pub sdl_type: ::c_uchar,
+        pub sdl_nlen: ::c_uchar,
+        pub sdl_alen: ::c_uchar,
+        pub sdl_slen: ::c_uchar,
+        pub sdl_data: [::c_char; 12],
+    }
+
+    pub struct sockaddr_inarp {
+        pub sin_len: ::c_uchar,
+        pub sin_family: ::c_uchar,
+        pub sin_port: ::c_ushort,
+        pub sin_addr: ::in_addr,
+        pub sin_srcaddr: ::in_addr,
+        pub sin_tos: ::c_ushort,
+        pub sin_other: ::c_ushort,
+    }
+
+    pub struct sockaddr_ctl {
+        pub sc_len: ::c_uchar,
+        pub sc_family: ::c_uchar,
+        pub ss_sysaddr: ::uint16_t,
+        pub sc_id: ::uint32_t,
+        pub sc_unit: ::uint32_t,
+        pub sc_reserved: [::uint32_t; 5],
+    }
+
+    // sys/ipc.h:
+
+    pub struct ipc_perm {
+        pub uid: ::uid_t,
+        pub gid: ::gid_t,
+        pub cuid: ::uid_t,
+        pub cgid: ::gid_t,
+        pub mode: ::mode_t,
+        pub _seq: ::c_ushort,
+        pub _key: ::key_t,
+    }
+
+    // FIXME: this should have align 4 but it's got align 8 on 64-bit
+    pub struct shmid_ds {
+        pub shm_perm: ipc_perm,
+        pub shm_segsz: ::size_t,
+        pub shm_lpid: ::pid_t,
+        pub shm_cpid: ::pid_t,
+        pub shm_nattch: ::shmatt_t,
+        pub shm_atime: ::time_t,  // FIXME: 64-bit wrong align => wrong offset
+        pub shm_dtime: ::time_t,  // FIXME: 64-bit wrong align => wrong offset
+        pub shm_ctime: ::time_t,  // FIXME: 64-bit wrong align => wrong offset
+        // FIXME: 64-bit wrong align => wrong offset:
+        pub shm_internal: *mut ::c_void,
+
     }
 }
 
@@ -841,7 +961,17 @@ pub const EOWNERDEAD: ::c_int = 105;
 pub const EQFULL: ::c_int = 106;
 pub const ELAST: ::c_int = 106;
 
+pub const EAI_AGAIN: ::c_int = 2;
+pub const EAI_BADFLAGS: ::c_int = 3;
+pub const EAI_FAIL: ::c_int = 4;
+pub const EAI_FAMILY: ::c_int = 5;
+pub const EAI_MEMORY: ::c_int = 6;
+pub const EAI_NODATA: ::c_int = 7;
+pub const EAI_NONAME: ::c_int = 8;
+pub const EAI_SERVICE: ::c_int = 9;
+pub const EAI_SOCKTYPE: ::c_int = 10;
 pub const EAI_SYSTEM: ::c_int = 11;
+pub const EAI_OVERFLOW: ::c_int = 14;
 
 pub const F_DUPFD: ::c_int = 0;
 pub const F_DUPFD_CLOEXEC: ::c_int = 67;
@@ -1063,7 +1193,7 @@ pub const IPPROTO_HOPOPTS: ::c_int = 0;
 // IPPROTO_ICMP defined in src/unix/mod.rs
 /// group mgmt protocol
 pub const IPPROTO_IGMP: ::c_int = 2;
-/// gateway^2 (deprecated)
+/// gateway<sup>2</sup> (deprecated)
 pub const IPPROTO_GGP: ::c_int = 3;
 /// for compatibility
 pub const IPPROTO_IPIP: ::c_int = 4;
@@ -1443,7 +1573,24 @@ pub const MSG_RCVMORE: ::c_int = 0x4000;
 pub const SCM_TIMESTAMP: ::c_int = 0x02;
 pub const SCM_CREDS: ::c_int = 0x03;
 
-pub const IFF_LOOPBACK: ::c_int = 0x8;
+// https://github.com/aosm/xnu/blob/master/bsd/net/if.h#L140-L156
+pub const IFF_UP: ::c_int          = 0x1;  // interface is up
+pub const IFF_BROADCAST: ::c_int   = 0x2;  // broadcast address valid
+pub const IFF_DEBUG: ::c_int       = 0x4;  // turn on debugging
+pub const IFF_LOOPBACK: ::c_int    = 0x8;  // is a loopback net
+pub const IFF_POINTOPOINT: ::c_int = 0x10; // interface is point-to-point link
+pub const IFF_NOTRAILERS: ::c_int  = 0x20; // obsolete: avoid use of trailers
+pub const IFF_RUNNING: ::c_int     = 0x40; // resources allocated
+pub const IFF_NOARP: ::c_int       = 0x80; // no address resolution protocol
+pub const IFF_PROMISC: ::c_int     = 0x100;// receive all packets
+pub const IFF_ALLMULTI: ::c_int    = 0x200;// receive all multicast packets
+pub const IFF_OACTIVE: ::c_int     = 0x400;// transmission in progress
+pub const IFF_SIMPLEX: ::c_int     = 0x800;// can't hear own transmissions
+pub const IFF_LINK0: ::c_int       = 0x1000;// per link layer defined bit
+pub const IFF_LINK1: ::c_int   = 0x2000;// per link layer defined bit
+pub const IFF_LINK2: ::c_int   = 0x4000;// per link layer defined bit
+pub const IFF_ALTPHYS: ::c_int = IFF_LINK2;// use alternate physical connection
+pub const IFF_MULTICAST: ::c_int = 0x8000;// supports multicast
 
 pub const SHUT_RD: ::c_int = 0;
 pub const SHUT_WR: ::c_int = 1;
@@ -1955,7 +2102,90 @@ pub const XATTR_NODEFAULT: ::c_int = 0x0010;
 pub const XATTR_SHOWCOMPRESSION: ::c_int = 0x0020;
 
 pub const NET_RT_IFLIST2: ::c_int = 0x0006;
-pub const RTM_IFINFO2: ::c_int = 0x0012;
+
+// net/route.h
+pub const RTF_UP: ::c_int = 0x1;
+pub const RTF_GATEWAY: ::c_int = 0x2;
+pub const RTF_HOST: ::c_int = 0x4;
+pub const RTF_REJECT: ::c_int = 0x8;
+pub const RTF_DYNAMIC: ::c_int = 0x10;
+pub const RTF_MODIFIED: ::c_int = 0x20;
+pub const RTF_DONE: ::c_int = 0x40;
+pub const RTF_DELCLONE: ::c_int = 0x80;
+pub const RTF_CLONING: ::c_int = 0x100;
+pub const RTF_XRESOLVE: ::c_int = 0x200;
+pub const RTF_LLINFO: ::c_int = 0x400;
+pub const RTF_STATIC: ::c_int = 0x800;
+pub const RTF_BLACKHOLE: ::c_int = 0x1000;
+pub const RTF_NOIFREF: ::c_int = 0x2000;
+pub const RTF_PROTO2: ::c_int = 0x4000;
+pub const RTF_PROTO1: ::c_int = 0x8000;
+pub const RTF_PRCLONING: ::c_int = 0x10000;
+pub const RTF_WASCLONED: ::c_int = 0x20000;
+pub const RTF_PROTO3: ::c_int = 0x40000;
+pub const RTF_PINNED: ::c_int = 0x100000;
+pub const RTF_LOCAL: ::c_int = 0x200000;
+pub const RTF_BROADCAST: ::c_int = 0x400000;
+pub const RTF_MULTICAST: ::c_int = 0x800000;
+pub const RTF_IFSCOPE: ::c_int = 0x1000000;
+pub const RTF_CONDEMNED: ::c_int = 0x2000000;
+pub const RTF_IFREF: ::c_int = 0x4000000;
+pub const RTF_PROXY: ::c_int = 0x8000000;
+pub const RTF_ROUTER: ::c_int = 0x10000000;
+
+pub const RTM_VERSION: ::c_int = 5;
+
+// Message types
+pub const RTM_ADD: ::c_int = 0x1;
+pub const RTM_DELETE: ::c_int = 0x2;
+pub const RTM_CHANGE: ::c_int = 0x3;
+pub const RTM_GET: ::c_int = 0x4;
+pub const RTM_LOSING: ::c_int = 0x5;
+pub const RTM_REDIRECT: ::c_int = 0x6;
+pub const RTM_MISS: ::c_int = 0x7;
+pub const RTM_LOCK: ::c_int = 0x8;
+pub const RTM_OLDADD: ::c_int = 0x9;
+pub const RTM_OLDDEL: ::c_int = 0xa;
+pub const RTM_RESOLVE: ::c_int = 0xb;
+pub const RTM_NEWADDR: ::c_int = 0xc;
+pub const RTM_DELADDR: ::c_int = 0xd;
+pub const RTM_IFINFO: ::c_int = 0xe;
+pub const RTM_NEWMADDR: ::c_int = 0xf;
+pub const RTM_DELMADDR: ::c_int = 0x10;
+pub const RTM_IFINFO2: ::c_int = 0x12;
+pub const RTM_NEWMADDR2: ::c_int = 0x13;
+pub const RTM_GET2: ::c_int = 0x14;
+
+// Bitmask values for rtm_inits and rmx_locks.
+pub const RTV_MTU: ::c_int = 0x1;
+pub const RTV_HOPCOUNT: ::c_int = 0x2;
+pub const RTV_EXPIRE: ::c_int = 0x4;
+pub const RTV_RPIPE: ::c_int = 0x8;
+pub const RTV_SPIPE: ::c_int = 0x10;
+pub const RTV_SSTHRESH: ::c_int = 0x20;
+pub const RTV_RTT: ::c_int = 0x40;
+pub const RTV_RTTVAR: ::c_int = 0x80;
+
+// Bitmask values for rtm_addrs.
+pub const RTA_DST: ::c_int = 0x1;
+pub const RTA_GATEWAY: ::c_int = 0x2;
+pub const RTA_NETMASK: ::c_int = 0x4;
+pub const RTA_GENMASK: ::c_int = 0x8;
+pub const RTA_IFP: ::c_int = 0x10;
+pub const RTA_IFA: ::c_int = 0x20;
+pub const RTA_AUTHOR: ::c_int = 0x40;
+pub const RTA_BRD: ::c_int = 0x80;
+
+// Index offsets for sockaddr array for alternate internal encoding.
+pub const RTAX_DST: ::c_int = 0;
+pub const RTAX_GATEWAY: ::c_int = 1;
+pub const RTAX_NETMASK: ::c_int = 2;
+pub const RTAX_GENMASK: ::c_int = 3;
+pub const RTAX_IFP: ::c_int = 4;
+pub const RTAX_IFA: ::c_int = 5;
+pub const RTAX_AUTHOR: ::c_int = 6;
+pub const RTAX_BRD: ::c_int = 7;
+pub const RTAX_MAX: ::c_int = 8;
 
 pub const KERN_PROCARGS2: ::c_int = 49;
 
@@ -1966,6 +2196,62 @@ pub const MAXCOMLEN: usize = 16;
 pub const MAXTHREADNAMESIZE: usize = 64;
 
 pub const XUCRED_VERSION: ::c_uint = 0;
+
+pub const LC_SEGMENT: u32 = 0x1;
+pub const LC_SEGMENT_64: u32 = 0x19;
+
+pub const MH_MAGIC: u32 = 0xfeedface;
+pub const MH_MAGIC_64: u32 = 0xfeedfacf;
+
+// net/if_utun.h
+pub const UTUN_OPT_FLAGS: ::c_int = 1;
+pub const UTUN_OPT_IFNAME: ::c_int = 2;
+
+// net/bpf.h
+pub const DLT_NULL: ::c_uint = 0;         // no link-layer encapsulation
+pub const DLT_EN10MB: ::c_uint = 1;       // Ethernet (10Mb)
+pub const DLT_EN3MB: ::c_uint = 2;        // Experimental Ethernet (3Mb)
+pub const DLT_AX25: ::c_uint = 3;         // Amateur Radio AX.25
+pub const DLT_PRONET: ::c_uint = 4;       // Proteon ProNET Token Ring
+pub const DLT_CHAOS: ::c_uint = 5;        // Chaos
+pub const DLT_IEEE802: ::c_uint = 6;      // IEEE 802 Networks
+pub const DLT_ARCNET: ::c_uint = 7;       // ARCNET
+pub const DLT_SLIP: ::c_uint = 8;         // Serial Line IP
+pub const DLT_PPP: ::c_uint = 9;          // Point-to-point Protocol
+pub const DLT_FDDI: ::c_uint = 10;        // FDDI
+pub const DLT_ATM_RFC1483: ::c_uint = 11; // LLC/SNAP encapsulated atm
+pub const DLT_RAW: ::c_uint = 12;         // raw IP
+pub const DLT_LOOP: ::c_uint = 108;
+
+// https://github.com/apple/darwin-xnu/blob/master/bsd/net/bpf.h#L100
+// sizeof(int32_t)
+pub const BPF_ALIGNMENT: ::c_int = 4;
+
+pub const POSIX_SPAWN_RESETIDS: ::c_int = 0x01;
+pub const POSIX_SPAWN_SETPGROUP: ::c_int = 0x02;
+pub const POSIX_SPAWN_SETSIGDEF: ::c_int = 0x04;
+pub const POSIX_SPAWN_SETSIGMASK: ::c_int = 0x08;
+
+// sys/ipc.h:
+pub const IPC_CREAT: ::c_int = 0x200;
+pub const IPC_EXCL: ::c_int = 0x400;
+pub const IPC_NOWAIT: ::c_int = 0x800;
+pub const IPC_PRIVATE: key_t = 0;
+
+pub const IPC_RMID: ::c_int = 0;
+pub const IPC_SET: ::c_int = 1;
+pub const IPC_STAT: ::c_int = 2;
+
+pub const IPC_R: ::c_int = 0x100;
+pub const IPC_W: ::c_int = 0x80;
+pub const IPC_M: ::c_int = 0x1000;
+
+// sys/shm.h
+pub const SHM_RDONLY: ::c_int = 0x1000;
+pub const SHM_RND: ::c_int = 0x2000;
+pub const SHMLBA: ::c_int = 4096;
+pub const SHM_R: ::c_int = IPC_R;
+pub const SHM_W: ::c_int = IPC_W;
 
 f! {
     pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
@@ -2035,6 +2321,14 @@ extern {
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
     pub fn shm_open(name: *const ::c_char, oflag: ::c_int, ...) -> ::c_int;
+    pub fn shmat(shmid: ::c_int, shmaddr: *const ::c_void,
+                 shmflg: ::c_int) -> *mut ::c_void;
+    pub fn shmdt(shmaddr: *const ::c_void) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "shmctl$UNIX2003")]
+    pub fn shmctl(shmid: ::c_int, cmd: ::c_int,
+                  buf: *mut ::shmid_ds) -> ::c_int;
+    pub fn shmget(key: key_t, size: ::size_t, shmflg: ::c_int) -> ::c_int;
     pub fn sysctl(name: *mut ::c_int,
                   namelen: ::c_uint,
                   oldp: *mut ::c_void,
@@ -2123,7 +2417,8 @@ extern {
     pub fn querylocale(mask: ::c_int, loc: ::locale_t) -> *const ::c_char;
     pub fn getpriority(which: ::c_int, who: ::id_t) -> ::c_int;
     pub fn setpriority(which: ::c_int, who: ::id_t, prio: ::c_int) -> ::c_int;
-
+    pub fn getdomainname(name: *mut ::c_char, len: ::c_int) -> ::c_int;
+    pub fn setdomainname(name: *const ::c_char, len: ::c_int) -> ::c_int;
     pub fn getxattr(path: *const ::c_char, name: *const ::c_char,
                     value: *mut ::c_void, size: ::size_t, position: u32,
                     flags: ::c_int) -> ::ssize_t;
@@ -2158,6 +2453,64 @@ extern {
     pub fn brk(addr: *const ::c_void) -> *mut ::c_void;
     pub fn sbrk(increment: ::c_int) -> *mut ::c_void;
     pub fn settimeofday(tv: *const ::timeval, tz: *const ::timezone) -> ::c_int;
+    pub fn _dyld_image_count() -> u32;
+    pub fn _dyld_get_image_header(image_index: u32) -> *const mach_header;
+    pub fn _dyld_get_image_vmaddr_slide(image_index: u32) -> ::intptr_t;
+    pub fn _dyld_get_image_name(image_index: u32) -> *const ::c_char;
+
+    pub fn posix_spawn(pid: *mut ::pid_t,
+                       path: *const ::c_char,
+                       file_actions: *const ::posix_spawn_file_actions_t,
+                       attrp: *const ::posix_spawnattr_t,
+                       argv: *const *mut ::c_char,
+                       envp: *const *mut ::c_char) -> ::c_int;
+    pub fn posix_spawnp(pid: *mut ::pid_t,
+                       file: *const ::c_char,
+                        file_actions: *const ::posix_spawn_file_actions_t,
+                        attrp: *const ::posix_spawnattr_t,
+                        argv: *const *mut ::c_char,
+                        envp: *const *mut ::c_char) -> ::c_int;
+    pub fn posix_spawnattr_init(attr: *mut posix_spawnattr_t) -> ::c_int;
+    pub fn posix_spawnattr_destroy(attr: *mut posix_spawnattr_t) -> ::c_int;
+    pub fn posix_spawnattr_getsigdefault(attr: *const posix_spawnattr_t,
+                                         default: *mut ::sigset_t) -> ::c_int;
+    pub fn posix_spawnattr_setsigdefault(attr: *mut posix_spawnattr_t,
+                                         default: *const ::sigset_t) -> ::c_int;
+    pub fn posix_spawnattr_getsigmask(attr: *const posix_spawnattr_t,
+                                      default: *mut ::sigset_t) -> ::c_int;
+    pub fn posix_spawnattr_setsigmask(attr: *mut posix_spawnattr_t,
+                                      default: *const ::sigset_t) -> ::c_int;
+    pub fn posix_spawnattr_getflags(attr: *const posix_spawnattr_t,
+                                    flags: *mut ::c_short) -> ::c_int;
+    pub fn posix_spawnattr_setflags(attr: *mut posix_spawnattr_t,
+                                    flags: ::c_short) -> ::c_int;
+    pub fn posix_spawnattr_getpgroup(attr: *const posix_spawnattr_t,
+                                     flags: *mut ::pid_t) -> ::c_int;
+    pub fn posix_spawnattr_setpgroup(attr: *mut posix_spawnattr_t,
+                                     flags: ::pid_t) -> ::c_int;
+
+    pub fn posix_spawn_file_actions_init(
+        actions: *mut posix_spawn_file_actions_t,
+    ) -> ::c_int;
+    pub fn posix_spawn_file_actions_destroy(
+        actions: *mut posix_spawn_file_actions_t,
+    ) -> ::c_int;
+    pub fn posix_spawn_file_actions_addopen(
+        actions: *mut posix_spawn_file_actions_t,
+        fd: ::c_int,
+        path: *const ::c_char,
+        oflag: ::c_int,
+        mode: ::mode_t,
+    ) -> ::c_int;
+    pub fn posix_spawn_file_actions_addclose(
+        actions: *mut posix_spawn_file_actions_t,
+        fd: ::c_int,
+    ) -> ::c_int;
+    pub fn posix_spawn_file_actions_adddup2(
+        actions: *mut posix_spawn_file_actions_t,
+        fd: ::c_int,
+        newfd: ::c_int,
+    ) -> ::c_int;
 }
 
 cfg_if! {

@@ -1089,13 +1089,13 @@ impl DotAttributes for Item {
     where
         W: io::Write,
     {
-        try!(writeln!(
+        writeln!(
             out,
             "<tr><td>{:?}</td></tr>
                        <tr><td>name</td><td>{}</td></tr>",
             self.id,
             self.name(ctx).get()
-        ));
+        )?;
 
         if self.is_opaque(ctx, &()) {
             writeln!(out, "<tr><td>opaque</td><td>true</td></tr>")?;

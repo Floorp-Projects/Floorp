@@ -12,7 +12,7 @@
 
 [package]
 name = "libc"
-version = "0.2.33"
+version = "0.2.39"
 authors = ["The Rust Project Developers"]
 description = "A library for types and bindings to native C functions often found in libc or\nother common platform libraries.\n"
 homepage = "https://github.com/rust-lang/libc"
@@ -25,8 +25,8 @@ repository = "https://github.com/rust-lang/libc"
 default = ["use_std"]
 use_std = []
 [badges.appveyor]
-repository = "rust-lang/libc"
 project_name = "rust-lang-libs/libc"
+repository = "rust-lang/libc"
 
 [badges.travis-ci]
 repository = "rust-lang/libc"

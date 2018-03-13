@@ -46,6 +46,13 @@ s! {
         pub ifi_reserved1: u32,
         pub ifi_reserved2: u32,
     }
+
+    pub struct bpf_hdr {
+        pub bh_tstamp: ::timeval32,
+        pub bh_caplen: ::uint32_t,
+        pub bh_datalen: ::uint32_t,
+        pub bh_hdrlen: ::c_ushort,
+    }
 }
 
 pub const __PTHREAD_MUTEX_SIZE__: usize = 56;

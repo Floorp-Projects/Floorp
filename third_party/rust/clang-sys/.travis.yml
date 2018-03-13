@@ -9,19 +9,12 @@ addons:
 
 os:
   - linux
-  - osx
 
 rust: stable
 
 env:
   - LLVM_VERSION=3.5 CLANG_VERSION=clang_3_5
   - LLVM_VERSION=5.0 CLANG_VERSION=clang_5_0
-
-# FIXME: I have no idea why this build is failing.
-matrix:
-  allow_failures:
-    - os: osx
-      env: LLVM_VERSION=5.0 CLANG_VERSION=clang_5_0
 
 cache:
   directories:

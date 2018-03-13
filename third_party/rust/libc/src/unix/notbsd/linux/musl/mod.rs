@@ -75,12 +75,6 @@ s! {
         pub mem_unit: ::c_uint,
         pub __reserved: [::c_char; 256],
     }
-
-    pub struct ucred {
-        pub pid: ::pid_t,
-        pub uid: ::uid_t,
-        pub gid: ::gid_t,
-    }
 }
 
 pub const SFD_CLOEXEC: ::c_int = 0x080000;
@@ -90,6 +84,7 @@ pub const NCCS: usize = 32;
 pub const O_TRUNC: ::c_int = 512;
 pub const O_NOATIME: ::c_int = 0o1000000;
 pub const O_CLOEXEC: ::c_int = 0x80000;
+pub const O_TMPFILE: ::c_int = 0o20000000 | O_DIRECTORY;
 
 pub const EBFONT: ::c_int = 59;
 pub const ENOSTR: ::c_int = 60;

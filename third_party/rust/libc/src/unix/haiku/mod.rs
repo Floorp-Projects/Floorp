@@ -478,7 +478,17 @@ pub const SIGEV_NONE: ::c_int = 0;
 pub const SIGEV_SIGNAL: ::c_int = 1;
 pub const SIGEV_THREAD: ::c_int = 2;
 
+pub const EAI_AGAIN: ::c_int = 2;
+pub const EAI_BADFLAGS: ::c_int = 3;
+pub const EAI_FAIL: ::c_int = 4;
+pub const EAI_FAMILY: ::c_int = 5;
+pub const EAI_MEMORY: ::c_int = 6;
+pub const EAI_NODATA: ::c_int = 7;
+pub const EAI_NONAME: ::c_int = 8;
+pub const EAI_SERVICE: ::c_int = 9;
+pub const EAI_SOCKTYPE: ::c_int = 10;
 pub const EAI_SYSTEM: ::c_int = 11;
+pub const EAI_OVERFLOW: ::c_int = 14;
 
 pub const PROT_NONE: ::c_int = 0;
 pub const PROT_READ: ::c_int = 1;
@@ -606,7 +616,20 @@ pub const MADV_RANDOM: ::c_int = 3;
 pub const MADV_WILLNEED: ::c_int = 4;
 pub const MADV_DONTNEED: ::c_int = 5;
 
+// https://github.com/haiku/haiku/blob/master/headers/posix/net/if.h#L80
+pub const IFF_UP: ::c_int = 0x0001;
+pub const IFF_BROADCAST: ::c_int = 0x0002; // valid broadcast address
 pub const IFF_LOOPBACK: ::c_int = 0x0008;
+pub const IFF_POINTOPOINT: ::c_int = 0x0010; // point-to-point link
+pub const IFF_NOARP: ::c_int = 0x0040; // no address resolution
+pub const IFF_AUTOUP: ::c_int = 0x0080; // auto dial
+pub const IFF_PROMISC: ::c_int = 0x0100; // receive all packets
+pub const IFF_ALLMULTI: ::c_int = 0x0200; // receive all multicast packets
+pub const IFF_SIMPLEX: ::c_int = 0x0800; // doesn't receive own transmissions
+pub const IFF_LINK: ::c_int = 0x1000; // has link
+pub const IFF_AUTO_CONFIGURED: ::c_int = 0x2000;
+pub const IFF_CONFIGURING: ::c_int = 0x4000;
+pub const IFF_MULTICAST: ::c_int = 0x8000; // supports multicast
 
 pub const AF_UNSEC: ::c_int = 0;
 pub const AF_INET: ::c_int = 1;
@@ -1099,6 +1122,7 @@ extern {
                     addrlen: *mut ::socklen_t) -> ::ssize_t;
     pub fn mkstemps(template: *mut ::c_char, suffixlen: ::c_int) -> ::c_int;
     pub fn futimes(fd: ::c_int, times: *const ::timeval) -> ::c_int;
+    pub fn lutimes(file: *const ::c_char, times: *const ::timeval) -> ::c_int;
     pub fn nl_langinfo(item: ::nl_item) -> *mut ::c_char;
 
     pub fn bind(socket: ::c_int, address: *const ::sockaddr,
