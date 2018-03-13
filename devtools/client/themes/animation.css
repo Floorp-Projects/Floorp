@@ -15,6 +15,7 @@
   --keyframe-marker-shadow-color: #c4c4c4;
   --pause-image: url(chrome://devtools/skin/images/pause.svg);
   --resume-image: url(chrome://devtools/skin/images/play.svg);
+  --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
   --sidebar-width: 200px;
   --stroke-color-cssanimation: var(--theme-highlight-lightorange);
   --stroke-color-csstransition: var(--theme-highlight-bluegrey);
@@ -31,6 +32,7 @@
   --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
   --pause-image: url(chrome://devtools/skin/images/firebug/pause.svg);
   --resume-image: url(chrome://devtools/skin/images/firebug/play.svg);
+  --rewind-image: url(chrome://devtools/skin/images/firebug/rewind.svg);
 }
 
 /* Root element of animation inspector */
@@ -63,6 +65,10 @@
 
 .pause-resume-button.paused::before {
   background-image: var(--resume-image);
+}
+
+.rewind-button::before {
+  background-image: var(--rewind-image);
 }
 
 /* Animation List Container */
