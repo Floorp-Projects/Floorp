@@ -11,7 +11,7 @@ const D3_SCRIPT = '<script type="application/javascript" ' +
                   'src="chrome://devtools/content/shared/vendor/d3.js>';
 const TEST_URL = `data:text/html,<html><body>${D3_SCRIPT}</body></html>`;
 
-this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   const document = panel.panelWin.document;
   const window = panel.panelWin;
   const div = document.createElement("div");
