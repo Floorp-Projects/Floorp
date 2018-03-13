@@ -892,15 +892,6 @@ FrameIter::copyData() const
     return data;
 }
 
-AbstractFramePtr
-FrameIter::copyDataAsAbstractFramePtr() const
-{
-    AbstractFramePtr frame;
-    if (Data* data = copyData())
-        frame.ptr_ = uintptr_t(data);
-    return frame;
-}
-
 void*
 FrameIter::rawFramePtr() const
 {
