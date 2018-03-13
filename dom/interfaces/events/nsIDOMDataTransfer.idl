@@ -83,11 +83,6 @@ interface nsIDOMDataTransfer : nsISupports
   readonly attribute nsIDOMNode mozSourceNode;
 
   /*
-   * Integer version of dropEffect, set to one of the constants in nsIDragService.
-   */
-  [noscript] attribute unsigned long dropEffectInt;
-
-  /*
    * Integer version of effectAllowed, set to one or a combination of the
    * constants in nsIDragService.
    */

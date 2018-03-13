@@ -1339,7 +1339,7 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       dragSession->GetTriggeringPrincipalURISpec(principalURISpec);
       RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
       if (initialDataTransfer) {
-        initialDataTransfer->GetDropEffectInt(&dropEffect);
+        dropEffect = initialDataTransfer->DropEffectInt();
       }
     }
 
@@ -2102,9 +2102,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
                        false, getter_AddRefs(dataTransfer));
 
   // Copy over the drop effect, as Clone doesn't copy it for us.
-  uint32_t dropEffect;
-  aDataTransfer->GetDropEffectInt(&dropEffect);
-  dataTransfer->SetDropEffectInt(dropEffect);
+  dataTransfer->SetDropEffectInt(aDataTransfer->DropEffectInt());
 
   // XXXndeakin don't really want to create a new drag DOM event
   // here, but we need something to pass to the InvokeDragSession
@@ -3532,7 +3530,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
       // the initial dataTransfer is the one from the dragstart event that
       // was set on the dragSession when the drag began.
-      nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
+      RefPtr<DataTransfer> dataTransfer;
       RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
 
       WidgetDragEvent *dragEvent = aEvent->AsDragEvent();
@@ -3556,8 +3554,8 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // if the event has a dataTransfer set, use it.
         if (dragEvent->mDataTransfer) {
           // get the dataTransfer and the dropEffect that was set on it
-          dataTransfer = do_QueryInterface(dragEvent->mDataTransfer);
-          dataTransfer->GetDropEffectInt(&dropEffect);
+          dataTransfer = dragEvent->mDataTransfer;
+          dropEffect = dataTransfer->DropEffectInt();
         }
         else {
           // if dragEvent->mDataTransfer is null, it means that no attempt was
