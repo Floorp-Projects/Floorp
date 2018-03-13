@@ -87,13 +87,6 @@ js::Debugger::onPromiseSettled(JSContext* cx, Handle<PromiseObject*> promise)
         slowPathPromiseHook(cx, Debugger::OnPromiseSettled, promise);
 }
 
-inline bool
-js::Debugger::getFrame(JSContext* cx, const FrameIter& iter,
-                       MutableHandle<DebuggerFrame*> result)
-{
-    return getFrameWithIter(cx, iter.abstractFramePtr(), &iter, result);
-}
-
 inline js::Debugger*
 js::DebuggerEnvironment::owner() const
 {
