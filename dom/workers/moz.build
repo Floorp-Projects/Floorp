@@ -21,6 +21,7 @@ EXPORTS.mozilla.dom += [
     'WorkerLocation.h',
     'WorkerNavigator.h',
     'WorkerPrivate.h',
+    'WorkerRef.h',
     'WorkerRunnable.h',
     'WorkerScope.h',
 ]
@@ -59,6 +60,7 @@ UNIFIED_SOURCES += [
     'WorkerLocation.cpp',
     'WorkerNavigator.cpp',
     'WorkerPrivate.cpp',
+    'WorkerRef.cpp',
     'WorkerRunnable.cpp',
     'WorkerScope.cpp',
     'WorkerThread.cpp',
