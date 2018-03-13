@@ -140,7 +140,7 @@ LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr, const jsbytecode* p
         // the cache. (If we purged the entire cache because its SavedFrames had
         // been captured for a different compartment, then we would have
         // returned early above.)
-        MOZ_ASSERT(!frames->empty());
+        MOZ_ALWAYS_TRUE(!frames->empty());
     }
 
     // The youngest valid frame may have run some code, so its current pc may
