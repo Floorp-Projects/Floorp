@@ -2059,10 +2059,12 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // No drag session is currently active, so check if a handler added
   // any items to be dragged. If not, there isn't anything to drag.
   uint32_t count = 0;
-  if (aDataTransfer)
-    aDataTransfer->GetMozItemCount(&count);
-  if (!count)
+  if (aDataTransfer) {
+    count = aDataTransfer->MozItemCount();
+  }
+  if (!count) {
     return false;
+  }
 
   // Get the target being dragged, which may not be the same as the
   // target of the mouse event. If one wasn't set in the

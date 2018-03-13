@@ -69,11 +69,6 @@ interface nsIDOMDataTransfer : nsISupports
   void addElement(in nsIDOMElement element);
 
   /**
-   * The number of items being dragged.
-   */
-  readonly attribute unsigned long mozItemCount;
-
-  /**
    * Sets the drag cursor state. Primarily used to control the cursor during
    * tab drags, but could be expanded to other uses. XXX Currently implemented
    * on Win32 only.
