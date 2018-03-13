@@ -8,10 +8,10 @@
 
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
-  let {inspector, boxmodel, testActor} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openBoxModelView();
 
   info("Test that the box model view works on the first page");
-  yield assertBoxModelView(inspector, boxmodel, testActor);
+  yield assertBoxModelView(inspector, view, testActor);
 
   info("Reload the page");
   let onMarkupLoaded = waitForMarkupLoaded(inspector);
@@ -19,14 +19,14 @@ add_task(function* () {
   yield onMarkupLoaded;
 
   info("Test that the box model view works on the reloaded page");
-  yield assertBoxModelView(inspector, boxmodel, testActor);
+  yield assertBoxModelView(inspector, view, testActor);
 });
 
-function* assertBoxModelView(inspector, boxmodel, testActor) {
+function* assertBoxModelView(inspector, view, testActor) {
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let paddingElt = boxmodel.document.querySelector(
+  let paddingElt = view.document.querySelector(
     ".boxmodel-padding.boxmodel-top > span");
   is(paddingElt.textContent, "50");
 
