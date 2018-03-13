@@ -13,6 +13,8 @@
   --fill-color-scriptanimation: var(--theme-graphs-green);
   --graph-right-offset: 10px;
   --keyframe-marker-shadow-color: #c4c4c4;
+  --pause-image: url(chrome://devtools/skin/images/pause.svg);
+  --resume-image: url(chrome://devtools/skin/images/play.svg);
   --sidebar-width: 200px;
   --stroke-color-cssanimation: var(--theme-highlight-lightorange);
   --stroke-color-csstransition: var(--theme-highlight-bluegrey);
@@ -27,6 +29,8 @@
 
 :root.theme-firebug {
   --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
+  --pause-image: url(chrome://devtools/skin/images/firebug/pause.svg);
+  --resume-image: url(chrome://devtools/skin/images/firebug/play.svg);
 }
 
 /* Root element of animation inspector */
@@ -46,6 +50,19 @@
 
 #animation-container .animation-container-splitter {
   overflow: auto;
+}
+
+/* Animation Toolbar */
+.animation-toolbar {
+  display: flex;
+}
+
+.pause-resume-button::before {
+  background-image: var(--pause-image);
+}
+
+.pause-resume-button.paused::before {
+  background-image: var(--resume-image);
 }
 
 /* Animation List Container */

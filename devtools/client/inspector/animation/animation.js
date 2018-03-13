@@ -30,6 +30,7 @@ class AnimationInspector {
     this.getComputedStyle = this.getComputedStyle.bind(this);
     this.getNodeFromActor = this.getNodeFromActor.bind(this);
     this.selectAnimation = this.selectAnimation.bind(this);
+    this.setAnimationsPlayState = this.setAnimationsPlayState.bind(this);
     this.setDetailVisibility = this.setDetailVisibility.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
@@ -61,6 +62,7 @@ class AnimationInspector {
       getComputedStyle,
       getNodeFromActor,
       selectAnimation,
+      setAnimationsPlayState,
       setDetailVisibility,
       simulateAnimation,
       toggleElementPicker,
@@ -84,6 +86,7 @@ class AnimationInspector {
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
           selectAnimation,
+          setAnimationsPlayState,
           setDetailVisibility,
           setSelectedNode,
           simulateAnimation,
@@ -119,6 +122,10 @@ class AnimationInspector {
 
     this.inspector = null;
     this.win = null;
+  }
+
+  get state() {
+    return this.inspector.store.getState().animations;
   }
 
   /**
@@ -216,6 +223,16 @@ class AnimationInspector {
     this.inspector.store.dispatch(updateSelectedAnimation(animation));
   }
 
+  async setAnimationsPlayState(doPlay) {
+    if (doPlay) {
+      await this.animationsFront.playAll();
+    } else {
+      await this.animationsFront.pauseAll();
+    }
+
+    this.updateAnimations(this.state.animations);
+  }
+
   setDetailVisibility(isVisible) {
     this.inspector.store.dispatch(updateDetailVisibility(isVisible));
   }
@@ -275,19 +292,39 @@ class AnimationInspector {
     const done = this.inspector.updating("newanimationinspector");
 
     const selection = this.inspector.selection;
-    const animations =
+    const nextAnimations =
       selection.isConnected() && selection.isElementNode()
       ? await this.animationsFront.getAnimationPlayersForNode(selection.nodeFront)
       : [];
+    const currentAnimations = this.state.animations;
 
-    if (!this.animations || !isAllAnimationEqual(animations, this.animations)) {
-      this.inspector.store.dispatch(updateAnimations(animations));
-      this.animations = animations;
-      // If number of displayed animations is one, we select the animation automatically.
-      this.selectAnimation(animations.length === 1 ? animations[0] : null);
+    if (!currentAnimations || !isAllAnimationEqual(currentAnimations, nextAnimations)) {
+      this.updateState(nextAnimations);
     }
 
     done();
+  }
+
+  async updateAnimations(animations) {
+    const promises = animations.map(animation => {
+      return animation.refreshState();
+    });
+
+    await Promise.all(promises);
+
+    this.updateState([...animations]);
+  }
+
+  updateState(animations) {
+    this.inspector.store.dispatch(updateAnimations(animations));
+    // If number of displayed animations is one, we select the animation automatically.
+    // But if selected animation is in given animations, ignores.
+    const selectedAnimation = this.state.selectedAnimation;
+
+    if (!selectedAnimation ||
+        !animations.find(animation => animation.actorID === selectedAnimation.actorID)) {
+      this.selectAnimation(animations.length === 1 ? animations[0] : null);
+    }
   }
 }
 
