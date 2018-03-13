@@ -58,7 +58,7 @@ class SphinxManager(object):
         """Add a directory from where docs should be sourced."""
         if dest_dir in self._trees:
             raise Exception('%s has already been registered as a destination.'
-                            % dest_dir)
+                % dest_dir)
 
         self._trees[dest_dir] = source_dir
 
