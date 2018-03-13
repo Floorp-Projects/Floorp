@@ -6066,9 +6066,9 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   // from the drop action, which platform specific widget code sets before
   // the event is fired based on the keyboard state.
   if (aDragEvent->mMessage == eDragEnter || aDragEvent->mMessage == eDragOver) {
-    uint32_t action, effectAllowed;
+    uint32_t action;
     dragSession->GetDragAction(&action);
-    aDragEvent->mDataTransfer->GetEffectAllowedInt(&effectAllowed);
+    uint32_t effectAllowed = aDragEvent->mDataTransfer->EffectAllowedInt();
     aDragEvent->mDataTransfer->SetDropEffectInt(
                                  FilterDropEffect(action, effectAllowed));
   }

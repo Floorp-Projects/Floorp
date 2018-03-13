@@ -81,10 +81,4 @@ interface nsIDOMDataTransfer : nsISupports
    * drags, or if the caller cannot access this node, this will be null.
    */
   readonly attribute nsIDOMNode mozSourceNode;
-
-  /*
-   * Integer version of effectAllowed, set to one or a combination of the
-   * constants in nsIDragService.
-   */
-  [noscript] attribute unsigned long effectAllowedInt;
 };
