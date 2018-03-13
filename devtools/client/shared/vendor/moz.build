@@ -28,10 +28,8 @@ DevToolsModules(
     'WasmParser.js',
 )
 
-# react dev versions are used if either debug mode is enabled,
-# or enable-debug-js-modules is set in .mozconfig so include it for
-# both
-if CONFIG['DEBUG_JS_MODULES'] or CONFIG['MOZ_DEBUG']:
+# react dev versions are used if enable-debug-js-modules is set in .mozconfig.
+if CONFIG['DEBUG_JS_MODULES']:
     DevToolsModules(
         'react-dev.js',
         'react-dom-dev.js',

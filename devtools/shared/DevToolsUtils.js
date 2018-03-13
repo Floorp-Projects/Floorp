@@ -432,7 +432,6 @@ function reallyAssert(condition, message) {
  *
  * Assertions are enabled when any of the following are true:
  *   - This is a DEBUG_JS_MODULES build
- *   - This is a DEBUG build
  *   - flags.testing is set to true
  *
  * If assertions are enabled, then `condition` is checked and if false-y, the
@@ -441,7 +440,7 @@ function reallyAssert(condition, message) {
  * If assertions are not enabled, then this function is a no-op.
  */
 Object.defineProperty(exports, "assert", {
-  get: () => (AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES || flags.testing)
+  get: () => (AppConstants.DEBUG_JS_MODULES || flags.testing)
     ? reallyAssert
     : exports.noop,
 });
