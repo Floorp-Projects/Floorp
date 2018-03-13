@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react"));
+		module.exports = factory(require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/react-redux"), require("devtools/client/shared/vendor/redux"));
 	else if(typeof define === 'function' && define.amd)
-		define(["devtools/client/shared/vendor/react-dom-factories", "devtools/client/shared/vendor/lodash", "devtools/client/shared/vendor/react-prop-types", "devtools/client/shared/vendor/react"], factory);
+		define(["devtools/client/shared/vendor/react-dom-factories", "devtools/client/shared/vendor/lodash", "devtools/client/shared/vendor/react-prop-types", "devtools/client/shared/vendor/react", "devtools/client/shared/vendor/react-redux", "devtools/client/shared/vendor/redux"], factory);
 	else {
-		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react")) : factory(root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react"]);
+		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/react-redux"), require("devtools/client/shared/vendor/redux")) : factory(root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react"], root["devtools/client/shared/vendor/react-redux"], root["devtools/client/shared/vendor/redux"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_56__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_8__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_54__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_10__, __WEBPACK_EXTERNAL_MODULE_17__, __WEBPACK_EXTERNAL_MODULE_18__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 20);
+/******/ 	return __webpack_require__(__webpack_require__.s = 22);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -85,7 +85,7 @@ return /******/ (function(modules) { // webpackBootstrap
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const validProtocols = /^(http|https|ftp|data|javascript|resource|chrome):/i;
+const validProtocols = /^(http|https|ftp|data|resource|chrome):/i;
 const tokenSplitRegex = /(\s|\'|\"|\\)+/;
 const ELLIPSIS = "\u2026";
 const dom = __webpack_require__(1);
@@ -460,6 +460,22 @@ function isURL(token) {
   }
 }
 
+/**
+ * Returns a new array in which `char` are interleaved between the original items.
+ *
+ * @param {Array} items
+ * @param {String} char
+ * @returns Array
+ */
+function interleave(items, char) {
+  return items.reduce((res, item, index) => {
+    if (index !== items.length - 1) {
+      return res.concat(item, char);
+    }
+    return res.concat(item);
+  }, []);
+}
+
 const ellipsisElement = span({
   key: "more",
   className: "more-ellipsis",
@@ -467,6 +483,7 @@ const ellipsisElement = span({
 }, ELLIPSIS);
 
 module.exports = {
+  interleave,
   isGrip,
   isURL,
   cropString,
@@ -530,45 +547,46 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__(21);
+__webpack_require__(23);
 
 // Load all existing rep templates
-const Undefined = __webpack_require__(22);
-const Null = __webpack_require__(23);
+const Undefined = __webpack_require__(24);
+const Null = __webpack_require__(25);
 const StringRep = __webpack_require__(7);
-const Number = __webpack_require__(24);
+const Number = __webpack_require__(26);
 const ArrayRep = __webpack_require__(5);
-const Obj = __webpack_require__(25);
-const SymbolRep = __webpack_require__(26);
-const InfinityRep = __webpack_require__(27);
-const NaNRep = __webpack_require__(28);
-const Accessor = __webpack_require__(29);
+const Obj = __webpack_require__(27);
+const SymbolRep = __webpack_require__(28);
+const InfinityRep = __webpack_require__(29);
+const NaNRep = __webpack_require__(30);
+const Accessor = __webpack_require__(31);
 
 // DOM types (grips)
-const Attribute = __webpack_require__(30);
-const DateTime = __webpack_require__(31);
-const Document = __webpack_require__(32);
-const Event = __webpack_require__(33);
-const Func = __webpack_require__(34);
-const PromiseRep = __webpack_require__(38);
-const RegExp = __webpack_require__(39);
-const StyleSheet = __webpack_require__(40);
-const CommentNode = __webpack_require__(41);
-const ElementNode = __webpack_require__(42);
-const TextNode = __webpack_require__(43);
-const ErrorRep = __webpack_require__(44);
-const Window = __webpack_require__(45);
-const ObjectWithText = __webpack_require__(46);
-const ObjectWithURL = __webpack_require__(47);
+const Attribute = __webpack_require__(32);
+const DateTime = __webpack_require__(33);
+const Document = __webpack_require__(34);
+const DocumentType = __webpack_require__(35);
+const Event = __webpack_require__(36);
+const Func = __webpack_require__(12);
+const PromiseRep = __webpack_require__(37);
+const RegExp = __webpack_require__(38);
+const StyleSheet = __webpack_require__(39);
+const CommentNode = __webpack_require__(40);
+const ElementNode = __webpack_require__(41);
+const TextNode = __webpack_require__(42);
+const ErrorRep = __webpack_require__(43);
+const Window = __webpack_require__(44);
+const ObjectWithText = __webpack_require__(45);
+const ObjectWithURL = __webpack_require__(46);
 const GripArray = __webpack_require__(13);
 const GripMap = __webpack_require__(15);
 const GripMapEntry = __webpack_require__(16);
-const Grip = __webpack_require__(9);
+const Grip = __webpack_require__(8);
 
 // List of all registered template.
 // XXX there should be a way for extensions to register a new
 // or modify an existing rep.
-let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, Func, PromiseRep, ArrayRep, Document, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, GripMapEntry, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
+let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, Func, PromiseRep, ArrayRep, Document, DocumentType, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, GripMapEntry, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
 
 /**
  * Generic rep that is using for rendering native JS types or an object.
@@ -627,6 +645,7 @@ module.exports = {
     CommentNode,
     DateTime,
     Document,
+    DocumentType,
     ElementNode,
     ErrorRep,
     Event,
@@ -722,9 +741,7 @@ function ArrayRep(props) {
     className: "arrayLeftBracket"
   }, brackets.left), ...items, span({
     className: "arrayRightBracket"
-  }, brackets.right), span({
-    className: "arrayProperties",
-    role: "group" }));
+  }, brackets.right));
 }
 
 function arrayIterator(props, array, max) {
@@ -738,13 +755,17 @@ function arrayIterator(props, array, max) {
     let item;
 
     try {
-      item = ItemRep(Object.assign({}, props, config, {
+      item = ItemRep({
+        ...props,
+        ...config,
         object: array[i]
-      }));
+      });
     } catch (exc) {
-      item = ItemRep(Object.assign({}, props, config, {
+      item = ItemRep({
+        ...props,
+        ...config,
         object: exc
-      }));
+      });
     }
     items.push(item);
   }
@@ -776,10 +797,11 @@ function ItemRep(props) {
     delim,
     mode
   } = props;
-  return span({}, Rep(Object.assign({}, props, {
+  return span({}, Rep({
+    ...props,
     object: object,
     mode: mode
-  })), delim);
+  }), delim);
 }
 
 function getLength(object) {
@@ -822,8 +844,7 @@ const {
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
 
-const dom = __webpack_require__(1);
-const { span } = dom;
+const { span } = __webpack_require__(1);
 
 /**
  * Property for Obj (local JS objects), Grip (remote JS objects)
@@ -854,7 +875,7 @@ PropRep.propTypes = {
  * @return {Array} Array of React elements.
  */
 function PropRep(props) {
-  const Grip = __webpack_require__(9);
+  const Grip = __webpack_require__(8);
   const { Rep } = __webpack_require__(4);
 
   let {
@@ -873,17 +894,18 @@ function PropRep(props) {
     }
     key = span({ "className": "nodeName" }, name);
   } else {
-    key = Rep(Object.assign({}, props, {
+    key = Rep({
+      ...props,
       className: "nodeName",
       object: name,
       mode: mode || MODE.TINY,
       defaultRep: Grip
-    }));
+    });
   }
 
   return [key, span({
     "className": "objectEqual"
-  }, equal), Rep(Object.assign({}, props))];
+  }, equal), Rep({ ...props })];
 }
 
 // Exports from this module
@@ -930,8 +952,7 @@ StringRep.propTypes = {
   member: PropTypes.string,
   object: PropTypes.object.isRequired,
   openLink: PropTypes.func,
-  className: PropTypes.string,
-  omitLinkHref: PropTypes.bool
+  className: PropTypes.string
 };
 
 function StringRep(props) {
@@ -943,8 +964,7 @@ function StringRep(props) {
     useQuotes = true,
     escapeWhitespace = true,
     member,
-    openLink,
-    omitLinkHref = true
+    openLink
   } = props;
 
   let text = object;
@@ -972,7 +992,7 @@ function StringRep(props) {
 
   if (!isLong) {
     if (containsURL(text)) {
-      return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, omitLinkHref, openLink));
+      return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, openLink));
     }
 
     // Cropping of longString has been handled before formatting.
@@ -1057,11 +1077,10 @@ function maybeCropString(opts, text) {
  *
  * @param {String} text: The actual string to linkify.
  * @param {Integer | null} cropLimit
- * @param {Boolean} omitLinkHref: Do not create an href attribute if true.
  * @param {Function} openLink: Function handling the link opening.
  * @returns {Array<String|ReactElement>}
  */
-function getLinkifiedElements(text, cropLimit, omitLinkHref, openLink) {
+function getLinkifiedElements(text, cropLimit, openLink) {
   const halfLimit = Math.ceil((cropLimit - ELLIPSIS.length) / 2);
   const startCropIndex = cropLimit ? halfLimit : null;
   const endCropIndex = cropLimit ? text.length - halfLimit : null;
@@ -1088,7 +1107,6 @@ function getLinkifiedElements(text, cropLimit, omitLinkHref, openLink) {
         items.push(a({
           className: "url",
           title: token,
-          href: omitLinkHref === true ? null : token,
           draggable: false,
           onClick: openLink ? e => {
             e.preventDefault();
@@ -1178,12 +1196,6 @@ module.exports = {
 
 /***/ }),
 /* 8 */
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_8__;
-
-/***/ }),
-/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1198,6 +1210,7 @@ const PropTypes = __webpack_require__(2);
 
 // Dependencies
 const {
+  interleave,
   isGrip,
   wrapRender
 } = __webpack_require__(0);
@@ -1262,7 +1275,7 @@ function GripRep(props) {
 
   return span(config, getTitleElement(props, object), span({
     className: "objectLeftBrace"
-  }, " { "), ...propsArray, span({
+  }, " { "), ...interleave(propsArray, ", "), span({
     className: "objectRightBrace"
   }, " }"));
 }
@@ -1317,11 +1330,12 @@ function propIterator(props, object, max) {
     return type == "boolean" || type == "number" || type == "string" && value.length != 0;
   });
 
-  let properties = object.preview ? object.preview.ownProperties : {};
+  let properties = object.preview ? object.preview.ownProperties || {} : {};
+
   let propertiesLength = getPropertiesLength(object);
 
   if (object.preview && object.preview.safeGetterValues) {
-    properties = Object.assign({}, properties, object.preview.safeGetterValues);
+    properties = { ...properties, ...object.preview.safeGetterValues };
   }
 
   let indexes = getPropIndexes(properties, max, isInterestingProp);
@@ -1345,7 +1359,8 @@ function propIterator(props, object, max) {
     const length = max - indexes.length;
 
     const symbolsProps = ownSymbols.slice(0, length).map(symbolItem => {
-      return PropRep(Object.assign({}, props, {
+      return PropRep({
+        ...props,
         mode: MODE.TINY,
         name: symbolItem,
         object: symbolItem.descriptor.value,
@@ -1353,7 +1368,7 @@ function propIterator(props, object, max) {
         defaultRep: Grip,
         title: null,
         suppressQuotes
-      }));
+      });
     });
 
     propsArray.push(...symbolsProps);
@@ -1371,23 +1386,7 @@ function propIterator(props, object, max) {
     }, "…"));
   }
 
-  return unfoldProps(propsArray);
-}
-
-function unfoldProps(items) {
-  return items.reduce((res, item, index) => {
-    if (Array.isArray(item)) {
-      res = res.concat(item);
-    } else {
-      res.push(item);
-    }
-
-    // Interleave commas between elements
-    if (index !== items.length - 1) {
-      res.push(", ");
-    }
-    return res;
-  }, []);
+  return propsArray;
 }
 
 /**
@@ -1411,7 +1410,8 @@ function getProps(componentProps, properties, indexes, suppressQuotes) {
     let name = propertiesKeys[i];
     let value = getPropValue(properties[name]);
 
-    return PropRep(Object.assign({}, componentProps, {
+    return PropRep({
+      ...componentProps,
       mode: MODE.TINY,
       name,
       object: value,
@@ -1419,7 +1419,7 @@ function getProps(componentProps, properties, indexes, suppressQuotes) {
       defaultRep: Grip,
       title: null,
       suppressQuotes
-    }));
+    });
   });
 }
 
@@ -1505,152 +1505,7 @@ let Grip = {
 module.exports = Grip;
 
 /***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _svgInlineReact = __webpack_require__(11);
-
-var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const React = __webpack_require__(8);
-const PropTypes = __webpack_require__(2);
-
-
-const svg = {
-  "open-inspector": __webpack_require__(36),
-  "jump-definition": __webpack_require__(37)
-};
-
-Svg.propTypes = {
-  className: PropTypes.string
-};
-
-function Svg(name, props) {
-  if (!svg[name]) {
-    throw new Error("Unknown SVG: " + name);
-  }
-  let className = name;
-  if (props && props.className) {
-    className = `${name} ${props.className}`;
-  }
-  if (name === "subSettings") {
-    className = "";
-  }
-  props = Object.assign({}, props, { className, src: svg[name] });
-  return React.createElement(_svgInlineReact2.default, props);
-}
-
-module.exports = Svg;
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(8);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(2);
-
-var _util = __webpack_require__(35);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var process = process || { env: {} };
-
-var InlineSVG = function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    function InlineSVG() {
-        _classCallCheck(this, InlineSVG);
-
-        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
-    }
-
-    _createClass(InlineSVG, [{
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = void 0,
-                __html = void 0,
-                svgProps = void 0;
-
-            var _props = this.props,
-                element = _props.element,
-                raw = _props.raw,
-                src = _props.src,
-                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true) {
-                Element = 'svg';
-                svgProps = (0, _util.extractSVGProps)(src);
-                __html = (0, _util.getSVGFromSource)(src).innerHTML;
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-}(_react2.default.Component);
-
-exports.default = InlineSVG;
-
-
-InlineSVG.defaultProps = {
-    element: 'i',
-    raw: false,
-    src: ''
-};
-
-InlineSVG.propTypes = {
-    src: _propTypes.string.isRequired,
-    element: _propTypes.string,
-    raw: _propTypes.bool
-};
-
-/***/ }),
-/* 12 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1684,7 +1539,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 13 */
+/* 10 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_10__;
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1694,685 +1555,7 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Dependencies
-const PropTypes = __webpack_require__(2);
-
-const { lengthBubble } = __webpack_require__(14);
-const {
-  getGripType,
-  isGrip,
-  wrapRender,
-  ellipsisElement
-} = __webpack_require__(0);
-const { MODE } = __webpack_require__(3);
-
-const dom = __webpack_require__(1);
-const { span } = dom;
-const { ModePropType } = __webpack_require__(5);
-
-/**
- * Renders an array. The array is enclosed by left and right bracket
- * and the max number of rendered items depends on the current mode.
- */
-GripArray.propTypes = {
-  object: PropTypes.object.isRequired,
-  // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: ModePropType,
-  provider: PropTypes.object,
-  onDOMNodeMouseOver: PropTypes.func,
-  onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func
-};
-
-function GripArray(props) {
-  let {
-    object,
-    mode = MODE.SHORT
-  } = props;
-
-  let items;
-  let brackets;
-  let needSpace = function (space) {
-    return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
-  };
-
-  const config = {
-    "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-array"
-  };
-
-  const title = getTitle(props, object);
-
-  if (mode === MODE.TINY) {
-    const isEmpty = getLength(object) === 0;
-
-    // Omit bracketed ellipsis for non-empty non-Array arraylikes (f.e: Sets).
-    if (!isEmpty && object.class !== "Array") {
-      return span(config, title);
-    }
-
-    brackets = needSpace(false);
-    return span(config, title, span({
-      className: "arrayLeftBracket"
-    }, brackets.left), isEmpty ? null : ellipsisElement, span({
-      className: "arrayRightBracket"
-    }, brackets.right));
-  }
-
-  let max = maxLengthMap.get(mode);
-  items = arrayIterator(props, object, max);
-  brackets = needSpace(items.length > 0);
-
-  return span({
-    "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-array" }, title, span({
-    className: "arrayLeftBracket"
-  }, brackets.left), ...interleaveCommas(items), span({
-    className: "arrayRightBracket"
-  }, brackets.right), span({
-    className: "arrayProperties",
-    role: "group" }));
-}
-
-function interleaveCommas(items) {
-  return items.reduce((res, item, index) => {
-    if (index !== items.length - 1) {
-      return res.concat(item, ", ");
-    }
-    return res.concat(item);
-  }, []);
-}
-
-function getLength(grip) {
-  if (!grip.preview) {
-    return 0;
-  }
-
-  return grip.preview.length || grip.preview.childNodesLength || 0;
-}
-
-function getTitle(props, object) {
-  let objectLength = getLength(object);
-  let isEmpty = objectLength === 0;
-
-  let title = props.title || object.class || "Array";
-
-  const length = lengthBubble({
-    object,
-    mode: props.mode,
-    maxLengthMap,
-    getLength
-  });
-
-  if (props.mode === MODE.TINY) {
-    if (isEmpty) {
-      return object.class === "Array" ? "" : span({
-        className: "objectTitle" }, title, " ");
-    }
-
-    let trailingSpace;
-    if (object.class === "Array") {
-      title = "";
-      trailingSpace = " ";
-    }
-
-    return span({
-      className: "objectTitle" }, title, length, trailingSpace);
-  }
-
-  return span({
-    className: "objectTitle" }, title, length, " ");
-}
-
-function getPreviewItems(grip) {
-  if (!grip.preview) {
-    return null;
-  }
-
-  return grip.preview.items || grip.preview.childNodes || [];
-}
-
-function arrayIterator(props, grip, max) {
-  let { Rep } = __webpack_require__(4);
-
-  let items = [];
-  const gripLength = getLength(grip);
-
-  if (!gripLength) {
-    return items;
-  }
-
-  const previewItems = getPreviewItems(grip);
-  let provider = props.provider;
-
-  let emptySlots = 0;
-  let foldedEmptySlots = 0;
-  items = previewItems.reduce((res, itemGrip) => {
-    if (res.length >= max) {
-      return res;
-    }
-
-    let object;
-    try {
-      if (!provider && itemGrip === null) {
-        emptySlots++;
-        return res;
-      }
-
-      object = provider ? provider.getValue(itemGrip) : itemGrip;
-    } catch (exc) {
-      object = exc;
-    }
-
-    if (emptySlots > 0) {
-      res.push(getEmptySlotsElement(emptySlots));
-      foldedEmptySlots = foldedEmptySlots + emptySlots - 1;
-      emptySlots = 0;
-    }
-
-    if (res.length < max) {
-      res.push(Rep(Object.assign({}, props, {
-        object,
-        mode: MODE.TINY,
-        // Do not propagate title to array items reps
-        title: undefined
-      })));
-    }
-
-    return res;
-  }, []);
-
-  // Handle trailing empty slots if there are some.
-  if (items.length < max && emptySlots > 0) {
-    items.push(getEmptySlotsElement(emptySlots));
-    foldedEmptySlots = foldedEmptySlots + emptySlots - 1;
-  }
-
-  const itemsShown = items.length + foldedEmptySlots;
-  if (gripLength > itemsShown) {
-    items.push(ellipsisElement);
-  }
-
-  return items;
-}
-
-function getEmptySlotsElement(number) {
-  // TODO: Use l10N - See https://github.com/devtools-html/reps/issues/141
-  return `<${number} empty slot${number > 1 ? "s" : ""}>`;
-}
-
-function supportsObject(grip, noGrip = false) {
-  if (noGrip === true || !isGrip(grip)) {
-    return false;
-  }
-
-  return grip.preview && (grip.preview.kind == "ArrayLike" || getGripType(grip, noGrip) === "DocumentFragment");
-}
-
-const maxLengthMap = new Map();
-maxLengthMap.set(MODE.SHORT, 3);
-maxLengthMap.set(MODE.LONG, 10);
-
-// Exports from this module
-module.exports = {
-  rep: wrapRender(GripArray),
-  supportsObject,
-  maxLengthMap,
-  getLength
-};
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const PropTypes = __webpack_require__(2);
-
-const { wrapRender } = __webpack_require__(0);
-const { MODE } = __webpack_require__(3);
-const { ModePropType } = __webpack_require__(5);
-
-const dom = __webpack_require__(1);
-const { span } = dom;
-
-GripLengthBubble.propTypes = {
-  object: PropTypes.object.isRequired,
-  maxLengthMap: PropTypes.instanceOf(Map).isRequired,
-  getLength: PropTypes.func.isRequired,
-  mode: ModePropType,
-  visibilityThreshold: PropTypes.number
-};
-
-function GripLengthBubble(props) {
-  const {
-    object,
-    mode = MODE.SHORT,
-    visibilityThreshold = 2,
-    maxLengthMap,
-    getLength,
-    showZeroLength = false
-  } = props;
-
-  const length = getLength(object);
-  const isEmpty = length === 0;
-  const isObvious = [MODE.SHORT, MODE.LONG].includes(mode) && length > 0 && length <= maxLengthMap.get(mode) && length <= visibilityThreshold;
-  if (isEmpty && !showZeroLength || isObvious) {
-    return "";
-  }
-
-  return span({
-    className: "objectLengthBubble"
-  }, `(${length})`);
-}
-
-module.exports = {
-  lengthBubble: wrapRender(GripLengthBubble)
-};
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// Dependencies
-
-const { lengthBubble } = __webpack_require__(14);
-const PropTypes = __webpack_require__(2);
-const {
-  isGrip,
-  wrapRender,
-  ellipsisElement
-} = __webpack_require__(0);
-const PropRep = __webpack_require__(6);
-const { MODE } = __webpack_require__(3);
-const { ModePropType } = __webpack_require__(5);
-
-const dom = __webpack_require__(1);
-const { span } = dom;
-
-/**
- * Renders an map. A map is represented by a list of its
- * entries enclosed in curly brackets.
- */
-GripMap.propTypes = {
-  object: PropTypes.object,
-  // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: ModePropType,
-  isInterestingEntry: PropTypes.func,
-  onDOMNodeMouseOver: PropTypes.func,
-  onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func,
-  title: PropTypes.string
-};
-
-function GripMap(props) {
-  let {
-    mode,
-    object
-  } = props;
-
-  const config = {
-    "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-object"
-  };
-
-  const title = getTitle(props, object);
-  const isEmpty = getLength(object) === 0;
-
-  if (isEmpty || mode === MODE.TINY) {
-    return span(config, title);
-  }
-
-  const propsArray = safeEntriesIterator(props, object, maxLengthMap.get(mode));
-
-  return span(config, title, span({
-    className: "objectLeftBrace"
-  }, " { "), ...propsArray, span({
-    className: "objectRightBrace"
-  }, " }"));
-}
-
-function getTitle(props, object) {
-  const title = props.title || (object && object.class ? object.class : "Map");
-  return span({
-    className: "objectTitle" }, title, lengthBubble({
-    object,
-    mode: props.mode,
-    maxLengthMap,
-    getLength,
-    showZeroLength: true
-  }));
-}
-
-function safeEntriesIterator(props, object, max) {
-  max = typeof max === "undefined" ? 3 : max;
-  try {
-    return entriesIterator(props, object, max);
-  } catch (err) {
-    console.error(err);
-  }
-  return [];
-}
-
-function entriesIterator(props, object, max) {
-  // Entry filter. Show only interesting entries to the user.
-  let isInterestingEntry = props.isInterestingEntry || ((type, value) => {
-    return type == "boolean" || type == "number" || type == "string" && value.length != 0;
-  });
-
-  let mapEntries = object.preview && object.preview.entries ? object.preview.entries : [];
-
-  let indexes = getEntriesIndexes(mapEntries, max, isInterestingEntry);
-  if (indexes.length < max && indexes.length < mapEntries.length) {
-    // There are not enough entries yet, so we add uninteresting entries.
-    indexes = indexes.concat(getEntriesIndexes(mapEntries, max - indexes.length, (t, value, name) => {
-      return !isInterestingEntry(t, value, name);
-    }));
-  }
-
-  let entries = getEntries(props, mapEntries, indexes);
-  if (entries.length < getLength(object)) {
-    // There are some undisplayed entries. Then display "…".
-    entries.push(ellipsisElement);
-  }
-
-  return unfoldEntries(entries);
-}
-
-function unfoldEntries(items) {
-  return items.reduce((res, item, index) => {
-    if (Array.isArray(item)) {
-      res = res.concat(item);
-    } else {
-      res.push(item);
-    }
-
-    // Interleave commas between elements
-    if (index !== items.length - 1) {
-      res.push(", ");
-    }
-    return res;
-  }, []);
-}
-
-/**
- * Get entries ordered by index.
- *
- * @param {Object} props Component props.
- * @param {Array} entries Entries array.
- * @param {Array} indexes Indexes of entries.
- * @return {Array} Array of PropRep.
- */
-function getEntries(props, entries, indexes) {
-  let {
-    onDOMNodeMouseOver,
-    onDOMNodeMouseOut,
-    onInspectIconClick
-  } = props;
-
-  // Make indexes ordered by ascending.
-  indexes.sort(function (a, b) {
-    return a - b;
-  });
-
-  return indexes.map((index, i) => {
-    let [key, entryValue] = entries[index];
-    let value = entryValue.value !== undefined ? entryValue.value : entryValue;
-
-    return PropRep({
-      name: key,
-      equal: " \u2192 ",
-      object: value,
-      mode: MODE.TINY,
-      onDOMNodeMouseOver,
-      onDOMNodeMouseOut,
-      onInspectIconClick
-    });
-  });
-}
-
-/**
- * Get the indexes of entries in the map.
- *
- * @param {Array} entries Entries array.
- * @param {Number} max The maximum length of indexes array.
- * @param {Function} filter Filter the entry you want.
- * @return {Array} Indexes of filtered entries in the map.
- */
-function getEntriesIndexes(entries, max, filter) {
-  return entries.reduce((indexes, [key, entry], i) => {
-    if (indexes.length < max) {
-      let value = entry && entry.value !== undefined ? entry.value : entry;
-      // Type is specified in grip's "class" field and for primitive
-      // values use typeof.
-      let type = (value && value.class ? value.class : typeof value).toLowerCase();
-
-      if (filter(type, value, key)) {
-        indexes.push(i);
-      }
-    }
-
-    return indexes;
-  }, []);
-}
-
-function getLength(grip) {
-  return grip.preview.size || 0;
-}
-
-function supportsObject(grip, noGrip = false) {
-  if (noGrip === true || !isGrip(grip)) {
-    return false;
-  }
-  return grip.preview && grip.preview.kind == "MapLike";
-}
-
-const maxLengthMap = new Map();
-maxLengthMap.set(MODE.SHORT, 3);
-maxLengthMap.set(MODE.LONG, 10);
-
-// Exports from this module
-module.exports = {
-  rep: wrapRender(GripMap),
-  supportsObject,
-  maxLengthMap,
-  getLength
-};
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// Dependencies
-const PropTypes = __webpack_require__(2);
-// Shortcuts
-const dom = __webpack_require__(1);
-const { span } = dom;
-const {
-  wrapRender
-} = __webpack_require__(0);
-const PropRep = __webpack_require__(6);
-const { MODE } = __webpack_require__(3);
-/**
- * Renders an map entry. A map entry is represented by its key, a column and its value.
- */
-GripMapEntry.propTypes = {
-  object: PropTypes.object,
-  // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  onDOMNodeMouseOver: PropTypes.func,
-  onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func
-};
-
-function GripMapEntry(props) {
-  const {
-    object
-  } = props;
-
-  const {
-    key,
-    value
-  } = object.preview;
-
-  return span({
-    className: "objectBox objectBox-map-entry"
-  }, ...PropRep(Object.assign({}, props, {
-    name: key,
-    object: value,
-    equal: " \u2192 ",
-    title: null,
-    suppressQuotes: false
-  })));
-}
-
-function supportsObject(grip, noGrip = false) {
-  if (noGrip === true) {
-    return false;
-  }
-  return grip && grip.type === "mapEntry" && grip.preview;
-}
-
-function createGripMapEntry(key, value) {
-  return {
-    type: "mapEntry",
-    preview: {
-      key,
-      value
-    }
-  };
-}
-
-// Exports from this module
-module.exports = {
-  rep: wrapRender(GripMapEntry),
-  createGripMapEntry,
-  supportsObject
-};
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const client = __webpack_require__(18);
-const loadProperties = __webpack_require__(55);
-const node = __webpack_require__(19);
-
-module.exports = {
-  client,
-  loadProperties,
-  node
-};
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-async function enumIndexedProperties(objectClient, start, end) {
-  try {
-    const { iterator } = await objectClient.enumProperties({ ignoreNonIndexedProperties: true });
-    const response = await iteratorSlice(iterator, start, end);
-    return response;
-  } catch (e) {
-    console.error("Error in enumIndexedProperties", e);
-    return {};
-  }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-async function enumNonIndexedProperties(objectClient, start, end) {
-  try {
-    const { iterator } = await objectClient.enumProperties({ ignoreIndexedProperties: true });
-    const response = await iteratorSlice(iterator, start, end);
-    return response;
-  } catch (e) {
-    console.error("Error in enumNonIndexedProperties", e);
-    return {};
-  }
-}
-
-async function enumEntries(objectClient, start, end) {
-  try {
-    const { iterator } = await objectClient.enumEntries();
-    const response = await iteratorSlice(iterator, start, end);
-    return response;
-  } catch (e) {
-    console.error("Error in enumEntries", e);
-    return {};
-  }
-}
-
-async function enumSymbols(objectClient, start, end) {
-  try {
-    const { iterator } = await objectClient.enumSymbols();
-    const response = await iteratorSlice(iterator, start, end);
-    return response;
-  } catch (e) {
-    console.error("Error in enumSymbols", e);
-    return {};
-  }
-}
-
-async function getPrototype(objectClient) {
-  if (typeof objectClient.getPrototype !== "function") {
-    console.error("objectClient.getPrototype is not a function");
-    return Promise.resolve({});
-  }
-  return objectClient.getPrototype();
-}
-
-function iteratorSlice(iterator, start, end) {
-  start = start || 0;
-  const count = end ? end - start + 1 : iterator.count;
-  return iterator.slice(start, count);
-}
-
-module.exports = {
-  enumEntries,
-  enumIndexedProperties,
-  enumNonIndexedProperties,
-  enumSymbols,
-  getPrototype
-};
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const { get, has } = __webpack_require__(56);
+const { get, has } = __webpack_require__(54);
 const { maybeEscapePropertyName } = __webpack_require__(0);
 const ArrayRep = __webpack_require__(5);
 const GripArrayRep = __webpack_require__(13);
@@ -2383,7 +1566,7 @@ const MAX_NUMERICAL_PROPERTIES = 100;
 
 const NODE_TYPES = {
   BUCKET: Symbol("[n…n]"),
-  DEFAULT_PROPERTIES: Symbol("[default properties]"),
+  DEFAULT_PROPERTIES: Symbol("<default properties>"),
   ENTRIES: Symbol("<entries>"),
   GET: Symbol("<get>"),
   GRIP: Symbol("GRIP"),
@@ -2395,7 +1578,8 @@ const NODE_TYPES = {
   PROXY_HANDLER: Symbol("<handler>"),
   PROXY_TARGET: Symbol("<target>"),
   SET: Symbol("<set>"),
-  PROTOTYPE: Symbol("__proto__")
+  PROTOTYPE: Symbol("<prototype>"),
+  BLOCK: Symbol("☲")
 };
 
 let WINDOW_PROPERTIES = {};
@@ -2541,6 +1725,10 @@ function nodeIsGetter(item) {
 
 function nodeIsSetter(item) {
   return getType(item) === NODE_TYPES.SET;
+}
+
+function nodeIsBlock(item) {
+  return getType(item) === NODE_TYPES.BLOCK;
 }
 
 function nodeHasAccessors(item) {
@@ -2732,7 +1920,7 @@ function makeDefaultPropsBucket(propertiesNames, parent, ownProperties) {
   let nodes = makeNodesForOwnProps(userPropertiesNames, parent, ownProperties);
 
   if (defaultProperties.length > 0) {
-    const defaultPropertiesNode = createNode(parent, "[default properties]", `${parentPath}/${SAFE_PATH_PREFIX}default`, null, NODE_TYPES.DEFAULT_PROPERTIES);
+    const defaultPropertiesNode = createNode(parent, "<default properties>", `${parentPath}/${SAFE_PATH_PREFIX}default`, null, NODE_TYPES.DEFAULT_PROPERTIES);
 
     const defaultNodes = defaultProperties.map((name, index) => createNode(defaultPropertiesNode, maybeEscapePropertyName(name), `${parentPath}/${SAFE_PATH_PREFIX}bucket${index}/${name}`, ownProperties[name]));
     nodes.push(setNodeChildren(defaultPropertiesNode, defaultNodes));
@@ -2756,7 +1944,7 @@ function makeNodesForProperties(objProps, parent) {
   const parentPath = parent.path;
   const parentValue = getValue(parent);
 
-  let allProperties = Object.assign({}, ownProperties, safeGetterValues);
+  let allProperties = { ...ownProperties, ...safeGetterValues };
 
   // Ignore properties that are neither non-concrete nor getters/setters.
   const propertiesNames = sortProperties(Object.keys(allProperties)).filter(name => {
@@ -2804,7 +1992,7 @@ function makeNodeForPrototype(objProps, parent) {
 
   // Add the prototype if it exists and is not null
   if (prototype && prototype.type !== "null") {
-    return createNode(parent, "__proto__", `${parent.path}/__proto__`, { value: prototype }, NODE_TYPES.PROTOTYPE);
+    return createNode(parent, "<prototype>", `${parent.path}/<prototype>`, { value: prototype }, NODE_TYPES.PROTOTYPE);
   }
 
   return null;
@@ -2993,6 +2181,7 @@ module.exports = {
   nodeHasChildren,
   nodeHasEntries,
   nodeHasProperties,
+  nodeIsBlock,
   nodeIsBucket,
   nodeIsDefaultProperties,
   nodeIsEntries,
@@ -3021,7 +2210,923 @@ module.exports = {
 };
 
 /***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// ReactJS
+const PropTypes = __webpack_require__(2);
+
+// Reps
+const {
+  getGripType,
+  isGrip,
+  cropString,
+  wrapRender
+} = __webpack_require__(0);
+const { MODE } = __webpack_require__(3);
+
+const dom = __webpack_require__(1);
+const { span } = dom;
+
+const IGNORED_SOURCE_URLS = ["debugger eval code"];
+
+/**
+ * This component represents a template for Function objects.
+ */
+FunctionRep.propTypes = {
+  object: PropTypes.object.isRequired,
+  parameterNames: PropTypes.array,
+  onViewSourceInDebugger: PropTypes.func
+};
+
+function FunctionRep(props) {
+  let {
+    object: grip,
+    onViewSourceInDebugger
+  } = props;
+
+  let jumpToDefinitionButton;
+  if (onViewSourceInDebugger && grip.location && grip.location.url && !IGNORED_SOURCE_URLS.includes(grip.location.url)) {
+    jumpToDefinitionButton = dom.button({
+      className: "jump-definition",
+      draggable: false,
+      title: "Jump to definition",
+      onClick: e => {
+        // Stop the event propagation so we don't trigger ObjectInspector expand/collapse.
+        e.stopPropagation();
+        onViewSourceInDebugger(grip.location);
+      }
+    });
+  }
+
+  return span({
+    "data-link-actor-id": grip.actor,
+    className: "objectBox objectBox-function",
+    // Set dir="ltr" to prevent function parentheses from
+    // appearing in the wrong direction
+    dir: "ltr"
+  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(props), ")", jumpToDefinitionButton);
+}
+
+function getTitle(grip, props) {
+  const {
+    mode
+  } = props;
+
+  if (mode === MODE.TINY && !grip.isGenerator && !grip.isAsync) {
+    return null;
+  }
+
+  let title = mode === MODE.TINY ? "" : "function ";
+
+  if (grip.isGenerator) {
+    title = mode === MODE.TINY ? "* " : "function* ";
+  }
+
+  if (grip.isAsync) {
+    title = "async" + " " + title;
+  }
+
+  return span({
+    className: "objectTitle"
+  }, title);
+}
+
+/**
+ * Returns a ReactElement representing the function name.
+ *
+ * @param {Object} grip : Function grip
+ * @param {Object} props: Function rep props
+ */
+function getFunctionName(grip, props = {}) {
+  let { functionName } = props;
+  let name;
+
+  if (functionName) {
+    let end = functionName.length - 1;
+    functionName = functionName.startsWith('"') && functionName.endsWith('"') ? functionName.substring(1, end) : functionName;
+  }
+
+  if (grip.displayName != undefined && functionName != undefined && grip.displayName != functionName) {
+    name = functionName + ":" + grip.displayName;
+  } else {
+    name = cleanFunctionName(grip.userDisplayName || grip.displayName || grip.name || props.functionName || "");
+  }
+
+  return cropString(name, 100);
+}
+
+const objectProperty = /([\w\d]+)$/;
+const arrayProperty = /\[(.*?)\]$/;
+const functionProperty = /([\w\d]+)[\/\.<]*?$/;
+const annonymousProperty = /([\w\d]+)\(\^\)$/;
+
+/**
+ * Decodes an anonymous naming scheme that
+ * spider monkey implements based on "Naming Anonymous JavaScript Functions"
+ * http://johnjbarton.github.io/nonymous/index.html
+ *
+ * @param {String} name : Function name to clean up
+ * @returns String
+ */
+function cleanFunctionName(name) {
+  for (const reg of [objectProperty, arrayProperty, functionProperty, annonymousProperty]) {
+    const match = reg.exec(name);
+    if (match) {
+      return match[1];
+    }
+  }
+
+  return name;
+}
+
+function renderParams(props) {
+  const {
+    parameterNames = []
+  } = props;
+
+  return parameterNames.filter(param => param).reduce((res, param, index, arr) => {
+    res.push(span({ className: "param" }, param));
+    if (index < arr.length - 1) {
+      res.push(span({ className: "delimiter" }, ", "));
+    }
+    return res;
+  }, []);
+}
+
+// Registration
+function supportsObject(grip, noGrip = false) {
+  const type = getGripType(grip, noGrip);
+  if (noGrip === true || !isGrip(grip)) {
+    return type == "function";
+  }
+
+  return type == "Function";
+}
+
+// Exports from this module
+
+module.exports = {
+  rep: wrapRender(FunctionRep),
+  supportsObject,
+  cleanFunctionName,
+  // exported for testing purpose.
+  getFunctionName
+};
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Dependencies
+const PropTypes = __webpack_require__(2);
+
+const { lengthBubble } = __webpack_require__(14);
+const {
+  interleave,
+  getGripType,
+  isGrip,
+  wrapRender,
+  ellipsisElement
+} = __webpack_require__(0);
+const { MODE } = __webpack_require__(3);
+
+const dom = __webpack_require__(1);
+const { span } = dom;
+const { ModePropType } = __webpack_require__(5);
+const DEFAULT_TITLE = "Array";
+
+/**
+ * Renders an array. The array is enclosed by left and right bracket
+ * and the max number of rendered items depends on the current mode.
+ */
+GripArray.propTypes = {
+  object: PropTypes.object.isRequired,
+  // @TODO Change this to Object.values once it's supported in Node's version of V8
+  mode: ModePropType,
+  provider: PropTypes.object,
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func
+};
+
+function GripArray(props) {
+  let {
+    object,
+    mode = MODE.SHORT
+  } = props;
+
+  let items;
+  let brackets;
+  let needSpace = function (space) {
+    return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
+  };
+
+  const config = {
+    "data-link-actor-id": object.actor,
+    className: "objectBox objectBox-array"
+  };
+
+  const title = getTitle(props, object);
+
+  if (mode === MODE.TINY) {
+    const isEmpty = getLength(object) === 0;
+
+    // Omit bracketed ellipsis for non-empty non-Array arraylikes (f.e: Sets).
+    if (!isEmpty && object.class !== "Array") {
+      return span(config, title);
+    }
+
+    brackets = needSpace(false);
+    return span(config, title, span({
+      className: "arrayLeftBracket"
+    }, brackets.left), isEmpty ? null : ellipsisElement, span({
+      className: "arrayRightBracket"
+    }, brackets.right));
+  }
+
+  let max = maxLengthMap.get(mode);
+  items = arrayIterator(props, object, max);
+  brackets = needSpace(items.length > 0);
+
+  return span({
+    "data-link-actor-id": object.actor,
+    className: "objectBox objectBox-array" }, title, span({
+    className: "arrayLeftBracket"
+  }, brackets.left), ...interleave(items, ", "), span({
+    className: "arrayRightBracket"
+  }, brackets.right), span({
+    className: "arrayProperties",
+    role: "group" }));
+}
+
+function getLength(grip) {
+  if (!grip.preview) {
+    return 0;
+  }
+
+  return grip.preview.length || grip.preview.childNodesLength || 0;
+}
+
+function getTitle(props, object) {
+  let objectLength = getLength(object);
+  let isEmpty = objectLength === 0;
+
+  let title = props.title || object.class || DEFAULT_TITLE;
+
+  const length = lengthBubble({
+    object,
+    mode: props.mode,
+    maxLengthMap,
+    getLength
+  });
+
+  if (props.mode === MODE.TINY) {
+    if (isEmpty) {
+      if (object.class === DEFAULT_TITLE) {
+        return null;
+      }
+
+      return span({ className: "objectTitle" }, `${title} `);
+    }
+
+    let trailingSpace;
+    if (object.class === DEFAULT_TITLE) {
+      title = null;
+      trailingSpace = " ";
+    }
+
+    return span({ className: "objectTitle" }, title, length, trailingSpace);
+  }
+
+  return span({ className: "objectTitle" }, title, length, " ");
+}
+
+function getPreviewItems(grip) {
+  if (!grip.preview) {
+    return null;
+  }
+
+  return grip.preview.items || grip.preview.childNodes || [];
+}
+
+function arrayIterator(props, grip, max) {
+  let { Rep } = __webpack_require__(4);
+
+  let items = [];
+  const gripLength = getLength(grip);
+
+  if (!gripLength) {
+    return items;
+  }
+
+  const previewItems = getPreviewItems(grip);
+  let provider = props.provider;
+
+  let emptySlots = 0;
+  let foldedEmptySlots = 0;
+  items = previewItems.reduce((res, itemGrip) => {
+    if (res.length >= max) {
+      return res;
+    }
+
+    let object;
+    try {
+      if (!provider && itemGrip === null) {
+        emptySlots++;
+        return res;
+      }
+
+      object = provider ? provider.getValue(itemGrip) : itemGrip;
+    } catch (exc) {
+      object = exc;
+    }
+
+    if (emptySlots > 0) {
+      res.push(getEmptySlotsElement(emptySlots));
+      foldedEmptySlots = foldedEmptySlots + emptySlots - 1;
+      emptySlots = 0;
+    }
+
+    if (res.length < max) {
+      res.push(Rep({
+        ...props,
+        object,
+        mode: MODE.TINY,
+        // Do not propagate title to array items reps
+        title: undefined
+      }));
+    }
+
+    return res;
+  }, []);
+
+  // Handle trailing empty slots if there are some.
+  if (items.length < max && emptySlots > 0) {
+    items.push(getEmptySlotsElement(emptySlots));
+    foldedEmptySlots = foldedEmptySlots + emptySlots - 1;
+  }
+
+  const itemsShown = items.length + foldedEmptySlots;
+  if (gripLength > itemsShown) {
+    items.push(ellipsisElement);
+  }
+
+  return items;
+}
+
+function getEmptySlotsElement(number) {
+  // TODO: Use l10N - See https://github.com/devtools-html/reps/issues/141
+  return `<${number} empty slot${number > 1 ? "s" : ""}>`;
+}
+
+function supportsObject(grip, noGrip = false) {
+  if (noGrip === true || !isGrip(grip)) {
+    return false;
+  }
+
+  return grip.preview && (grip.preview.kind == "ArrayLike" || getGripType(grip, noGrip) === "DocumentFragment");
+}
+
+const maxLengthMap = new Map();
+maxLengthMap.set(MODE.SHORT, 3);
+maxLengthMap.set(MODE.LONG, 10);
+
+// Exports from this module
+module.exports = {
+  rep: wrapRender(GripArray),
+  supportsObject,
+  maxLengthMap,
+  getLength
+};
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const PropTypes = __webpack_require__(2);
+
+const { wrapRender } = __webpack_require__(0);
+const { MODE } = __webpack_require__(3);
+const { ModePropType } = __webpack_require__(5);
+
+const dom = __webpack_require__(1);
+const { span } = dom;
+
+GripLengthBubble.propTypes = {
+  object: PropTypes.object.isRequired,
+  maxLengthMap: PropTypes.instanceOf(Map).isRequired,
+  getLength: PropTypes.func.isRequired,
+  mode: ModePropType,
+  visibilityThreshold: PropTypes.number
+};
+
+function GripLengthBubble(props) {
+  const {
+    object,
+    mode = MODE.SHORT,
+    visibilityThreshold = 2,
+    maxLengthMap,
+    getLength,
+    showZeroLength = false
+  } = props;
+
+  const length = getLength(object);
+  const isEmpty = length === 0;
+  const isObvious = [MODE.SHORT, MODE.LONG].includes(mode) && length > 0 && length <= maxLengthMap.get(mode) && length <= visibilityThreshold;
+  if (isEmpty && !showZeroLength || isObvious) {
+    return "";
+  }
+
+  return span({
+    className: "objectLengthBubble"
+  }, `(${length})`);
+}
+
+module.exports = {
+  lengthBubble: wrapRender(GripLengthBubble)
+};
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Dependencies
+
+const { lengthBubble } = __webpack_require__(14);
+const PropTypes = __webpack_require__(2);
+const {
+  interleave,
+  isGrip,
+  wrapRender,
+  ellipsisElement
+} = __webpack_require__(0);
+const PropRep = __webpack_require__(6);
+const { MODE } = __webpack_require__(3);
+const { ModePropType } = __webpack_require__(5);
+
+const { span } = __webpack_require__(1);
+
+/**
+ * Renders an map. A map is represented by a list of its
+ * entries enclosed in curly brackets.
+ */
+GripMap.propTypes = {
+  object: PropTypes.object,
+  // @TODO Change this to Object.values once it's supported in Node's version of V8
+  mode: ModePropType,
+  isInterestingEntry: PropTypes.func,
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func,
+  title: PropTypes.string
+};
+
+function GripMap(props) {
+  let {
+    mode,
+    object
+  } = props;
+
+  const config = {
+    "data-link-actor-id": object.actor,
+    className: "objectBox objectBox-object"
+  };
+
+  const title = getTitle(props, object);
+  const isEmpty = getLength(object) === 0;
+
+  if (isEmpty || mode === MODE.TINY) {
+    return span(config, title);
+  }
+
+  const propsArray = safeEntriesIterator(props, object, maxLengthMap.get(mode));
+
+  return span(config, title, span({
+    className: "objectLeftBrace"
+  }, " { "), ...interleave(propsArray, ", "), span({
+    className: "objectRightBrace"
+  }, " }"));
+}
+
+function getTitle(props, object) {
+  const title = props.title || (object && object.class ? object.class : "Map");
+  return span({
+    className: "objectTitle" }, title, lengthBubble({
+    object,
+    mode: props.mode,
+    maxLengthMap,
+    getLength,
+    showZeroLength: true
+  }));
+}
+
+function safeEntriesIterator(props, object, max) {
+  max = typeof max === "undefined" ? 3 : max;
+  try {
+    return entriesIterator(props, object, max);
+  } catch (err) {
+    console.error(err);
+  }
+  return [];
+}
+
+function entriesIterator(props, object, max) {
+  // Entry filter. Show only interesting entries to the user.
+  let isInterestingEntry = props.isInterestingEntry || ((type, value) => {
+    return type == "boolean" || type == "number" || type == "string" && value.length != 0;
+  });
+
+  let mapEntries = object.preview && object.preview.entries ? object.preview.entries : [];
+
+  let indexes = getEntriesIndexes(mapEntries, max, isInterestingEntry);
+  if (indexes.length < max && indexes.length < mapEntries.length) {
+    // There are not enough entries yet, so we add uninteresting entries.
+    indexes = indexes.concat(getEntriesIndexes(mapEntries, max - indexes.length, (t, value, name) => {
+      return !isInterestingEntry(t, value, name);
+    }));
+  }
+
+  let entries = getEntries(props, mapEntries, indexes);
+  if (entries.length < getLength(object)) {
+    // There are some undisplayed entries. Then display "…".
+    entries.push(ellipsisElement);
+  }
+
+  return entries;
+}
+
+/**
+ * Get entries ordered by index.
+ *
+ * @param {Object} props Component props.
+ * @param {Array} entries Entries array.
+ * @param {Array} indexes Indexes of entries.
+ * @return {Array} Array of PropRep.
+ */
+function getEntries(props, entries, indexes) {
+  let {
+    onDOMNodeMouseOver,
+    onDOMNodeMouseOut,
+    onInspectIconClick
+  } = props;
+
+  // Make indexes ordered by ascending.
+  indexes.sort(function (a, b) {
+    return a - b;
+  });
+
+  return indexes.map((index, i) => {
+    let [key, entryValue] = entries[index];
+    let value = entryValue.value !== undefined ? entryValue.value : entryValue;
+
+    return PropRep({
+      name: key,
+      equal: " \u2192 ",
+      object: value,
+      mode: MODE.TINY,
+      onDOMNodeMouseOver,
+      onDOMNodeMouseOut,
+      onInspectIconClick
+    });
+  });
+}
+
+/**
+ * Get the indexes of entries in the map.
+ *
+ * @param {Array} entries Entries array.
+ * @param {Number} max The maximum length of indexes array.
+ * @param {Function} filter Filter the entry you want.
+ * @return {Array} Indexes of filtered entries in the map.
+ */
+function getEntriesIndexes(entries, max, filter) {
+  return entries.reduce((indexes, [key, entry], i) => {
+    if (indexes.length < max) {
+      let value = entry && entry.value !== undefined ? entry.value : entry;
+      // Type is specified in grip's "class" field and for primitive
+      // values use typeof.
+      let type = (value && value.class ? value.class : typeof value).toLowerCase();
+
+      if (filter(type, value, key)) {
+        indexes.push(i);
+      }
+    }
+
+    return indexes;
+  }, []);
+}
+
+function getLength(grip) {
+  return grip.preview.size || 0;
+}
+
+function supportsObject(grip, noGrip = false) {
+  if (noGrip === true || !isGrip(grip)) {
+    return false;
+  }
+  return grip.preview && grip.preview.kind == "MapLike";
+}
+
+const maxLengthMap = new Map();
+maxLengthMap.set(MODE.SHORT, 3);
+maxLengthMap.set(MODE.LONG, 10);
+
+// Exports from this module
+module.exports = {
+  rep: wrapRender(GripMap),
+  supportsObject,
+  maxLengthMap,
+  getLength
+};
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Dependencies
+const PropTypes = __webpack_require__(2);
+// Shortcuts
+const dom = __webpack_require__(1);
+const { span } = dom;
+const {
+  wrapRender
+} = __webpack_require__(0);
+const PropRep = __webpack_require__(6);
+const { MODE } = __webpack_require__(3);
+/**
+ * Renders an map entry. A map entry is represented by its key, a column and its value.
+ */
+GripMapEntry.propTypes = {
+  object: PropTypes.object,
+  // @TODO Change this to Object.values once it's supported in Node's version of V8
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func
+};
+
+function GripMapEntry(props) {
+  const {
+    object
+  } = props;
+
+  const {
+    key,
+    value
+  } = object.preview;
+
+  return span({
+    className: "objectBox objectBox-map-entry"
+  }, PropRep({
+    ...props,
+    name: key,
+    object: value,
+    equal: " \u2192 ",
+    title: null,
+    suppressQuotes: false
+  }));
+}
+
+function supportsObject(grip, noGrip = false) {
+  if (noGrip === true) {
+    return false;
+  }
+  return grip && grip.type === "mapEntry" && grip.preview;
+}
+
+function createGripMapEntry(key, value) {
+  return {
+    type: "mapEntry",
+    preview: {
+      key,
+      value
+    }
+  };
+}
+
+// Exports from this module
+module.exports = {
+  rep: wrapRender(GripMapEntry),
+  createGripMapEntry,
+  supportsObject
+};
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_17__;
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_18__;
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const client = __webpack_require__(20);
+const loadProperties = __webpack_require__(21);
+const node = __webpack_require__(11);
+const selection = __webpack_require__(55);
+
+module.exports = {
+  client,
+  loadProperties,
+  node,
+  selection
+};
+
+/***/ }),
 /* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+async function enumIndexedProperties(objectClient, start, end) {
+  try {
+    const { iterator } = await objectClient.enumProperties({ ignoreNonIndexedProperties: true });
+    const response = await iteratorSlice(iterator, start, end);
+    return response;
+  } catch (e) {
+    console.error("Error in enumIndexedProperties", e);
+    return {};
+  }
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+async function enumNonIndexedProperties(objectClient, start, end) {
+  try {
+    const { iterator } = await objectClient.enumProperties({ ignoreIndexedProperties: true });
+    const response = await iteratorSlice(iterator, start, end);
+    return response;
+  } catch (e) {
+    console.error("Error in enumNonIndexedProperties", e);
+    return {};
+  }
+}
+
+async function enumEntries(objectClient, start, end) {
+  try {
+    const { iterator } = await objectClient.enumEntries();
+    const response = await iteratorSlice(iterator, start, end);
+    return response;
+  } catch (e) {
+    console.error("Error in enumEntries", e);
+    return {};
+  }
+}
+
+async function enumSymbols(objectClient, start, end) {
+  try {
+    const { iterator } = await objectClient.enumSymbols();
+    const response = await iteratorSlice(iterator, start, end);
+    return response;
+  } catch (e) {
+    console.error("Error in enumSymbols", e);
+    return {};
+  }
+}
+
+async function getPrototype(objectClient) {
+  if (typeof objectClient.getPrototype !== "function") {
+    console.error("objectClient.getPrototype is not a function");
+    return Promise.resolve({});
+  }
+  return objectClient.getPrototype();
+}
+
+function iteratorSlice(iterator, start, end) {
+  start = start || 0;
+  const count = end ? end - start + 1 : iterator.count;
+  return iterator.slice(start, count);
+}
+
+module.exports = {
+  enumEntries,
+  enumIndexedProperties,
+  enumNonIndexedProperties,
+  enumSymbols,
+  getPrototype
+};
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const {
+  getClosestGripNode,
+  getClosestNonBucketNode,
+  getValue,
+  nodeHasAccessors,
+  nodeHasAllEntriesInPreview,
+  nodeHasProperties,
+  nodeIsBucket,
+  nodeIsDefaultProperties,
+  nodeIsEntries,
+  nodeIsMapEntry,
+  nodeIsPrimitive,
+  nodeIsProxy,
+  nodeNeedsNumericalBuckets
+} = __webpack_require__(11);
+
+function shouldLoadItemIndexedProperties(item, loadedProperties = new Map()) {
+  const gripItem = getClosestGripNode(item);
+  const value = getValue(gripItem);
+
+  return value && nodeHasProperties(gripItem) && !loadedProperties.has(item.path) && !nodeIsProxy(item) && !nodeNeedsNumericalBuckets(item) && !nodeIsEntries(getClosestNonBucketNode(item))
+  // The data is loaded when expanding the window node.
+  && !nodeIsDefaultProperties(item);
+}
+
+function shouldLoadItemNonIndexedProperties(item, loadedProperties = new Map()) {
+  const gripItem = getClosestGripNode(item);
+  const value = getValue(gripItem);
+
+  return value && nodeHasProperties(gripItem) && !loadedProperties.has(item.path) && !nodeIsProxy(item) && !nodeIsEntries(getClosestNonBucketNode(item)) && !nodeIsBucket(item)
+  // The data is loaded when expanding the window node.
+  && !nodeIsDefaultProperties(item);
+}
+
+function shouldLoadItemEntries(item, loadedProperties = new Map()) {
+  const gripItem = getClosestGripNode(item);
+  const value = getValue(gripItem);
+
+  return value && nodeIsEntries(getClosestNonBucketNode(item)) && !nodeHasAllEntriesInPreview(gripItem) && !loadedProperties.has(item.path) && !nodeNeedsNumericalBuckets(item);
+}
+
+function shouldLoadItemPrototype(item, loadedProperties = new Map()) {
+  const value = getValue(item);
+
+  return value && !loadedProperties.has(item.path) && !nodeIsBucket(item) && !nodeIsMapEntry(item) && !nodeIsEntries(item) && !nodeIsDefaultProperties(item) && !nodeHasAccessors(item) && !nodeIsPrimitive(item);
+}
+
+function shouldLoadItemSymbols(item, loadedProperties = new Map()) {
+  const value = getValue(item);
+
+  return value && !loadedProperties.has(item.path) && !nodeIsBucket(item) && !nodeIsMapEntry(item) && !nodeIsEntries(item) && !nodeIsDefaultProperties(item) && !nodeHasAccessors(item) && !nodeIsPrimitive(item) && !nodeIsProxy(item);
+}
+
+module.exports = {
+  shouldLoadItemEntries,
+  shouldLoadItemIndexedProperties,
+  shouldLoadItemNonIndexedProperties,
+  shouldLoadItemPrototype,
+  shouldLoadItemSymbols
+};
+
+/***/ }),
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3033,8 +3138,8 @@ module.exports = {
 
 const { MODE } = __webpack_require__(3);
 const { REPS, getRep } = __webpack_require__(4);
-const ObjectInspector = __webpack_require__(48);
-const ObjectInspectorUtils = __webpack_require__(17);
+const ObjectInspector = __webpack_require__(47);
+const ObjectInspectorUtils = __webpack_require__(19);
 
 const {
   parseURLEncodedText,
@@ -3056,13 +3161,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 21 */
+/* 23 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 22 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3104,7 +3209,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 23 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3146,7 +3251,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 24 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3198,7 +3303,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3289,13 +3394,14 @@ function propIterator(props, object, max) {
   const propertiesNames = Object.keys(object);
 
   const pushPropRep = (name, value) => {
-    elements.push(PropRep(Object.assign({}, props, {
+    elements.push(PropRep({
+      ...props,
       key: name,
       mode: MODE.TINY,
       name,
       object: value,
       equal: ": "
-    })));
+    }));
     propertiesNumber++;
 
     if (propertiesNumber < propertiesNames.length) {
@@ -3369,7 +3475,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3421,7 +3527,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 27 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3469,7 +3575,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3506,7 +3612,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3548,9 +3654,7 @@ function Accessor(props) {
   }
   const title = accessors.join(" & ");
 
-  return span({ className: "objectBox objectBox-accessor" }, span({
-    className: "objectTitle"
-  }, title));
+  return span({ className: "objectBox objectBox-accessor objectTitle" }, title);
 }
 
 function hasGetter(object) {
@@ -3576,7 +3680,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3637,7 +3741,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3704,7 +3808,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 32 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3741,7 +3845,7 @@ function Document(props) {
   return span({
     "data-link-actor-id": grip.actor,
     className: "objectBox objectBox-document"
-  }, getTitle(grip), location ? " " : null, location ? span({ className: "location" }, location) : null);
+  }, getTitle(grip), location ? span({ className: "location" }, ` ${location}`) : null);
 }
 
 function getLocation(grip) {
@@ -3772,7 +3876,62 @@ module.exports = {
 };
 
 /***/ }),
-/* 33 */
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// ReactJS
+const PropTypes = __webpack_require__(2);
+
+// Reps
+const {
+  getGripType,
+  isGrip,
+  wrapRender
+} = __webpack_require__(0);
+const dom = __webpack_require__(1);
+const { span } = dom;
+
+/**
+ * Renders DOM documentType object.
+ */
+DocumentType.propTypes = {
+  object: PropTypes.object.isRequired
+};
+
+function DocumentType(props) {
+  const { object } = props;
+  let name = object && object.preview && object.preview.nodeName ? ` ${object.preview.nodeName}` : "";
+  return span({
+    "data-link-actor-id": props.object.actor,
+    className: "objectBox objectBox-document"
+  }, `<!DOCTYPE${name}>`);
+}
+
+// Registration
+function supportsObject(object, noGrip = false) {
+  if (noGrip === true || !isGrip(object)) {
+    return false;
+  }
+
+  const type = getGripType(object, noGrip);
+  return object.preview && type === "DocumentType";
+}
+
+// Exports from this module
+module.exports = {
+  rep: wrapRender(DocumentType),
+  supportsObject
+};
+
+/***/ }),
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3792,7 +3951,7 @@ const {
 } = __webpack_require__(0);
 
 const { MODE } = __webpack_require__(3);
-const { rep } = __webpack_require__(9);
+const { rep } = __webpack_require__(8);
 
 /**
  * Renders DOM event objects.
@@ -3807,16 +3966,18 @@ Event.propTypes = {
 };
 
 function Event(props) {
-  // Use `Object.assign` to keep `props` without changes because:
-  // 1. JSON.stringify/JSON.parse is slow.
-  // 2. Immutable.js is planned for the future.
-  let gripProps = Object.assign({}, props, {
-    title: getTitle(props)
-  });
-  gripProps.object = Object.assign({}, props.object);
-  gripProps.object.preview = Object.assign({}, props.object.preview);
+  let gripProps = {
+    ...props,
+    title: getTitle(props),
+    object: {
+      ...props.object,
+      preview: {
+        ...props.object.preview,
+        ownProperties: {}
+      }
+    }
+  };
 
-  gripProps.object.preview.ownProperties = {};
   if (gripProps.object.preview.target) {
     Object.assign(gripProps.object.preview.ownProperties, {
       target: gripProps.object.preview.target
@@ -3879,235 +4040,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// ReactJS
-const PropTypes = __webpack_require__(2);
-
-// Reps
-const {
-  getGripType,
-  isGrip,
-  cropString,
-  wrapRender
-} = __webpack_require__(0);
-const { MODE } = __webpack_require__(3);
-const Svg = __webpack_require__(10);
-
-const dom = __webpack_require__(1);
-const { span } = dom;
-
-const IGNORED_SOURCE_URLS = ["debugger eval code"];
-
-/**
- * This component represents a template for Function objects.
- */
-FunctionRep.propTypes = {
-  object: PropTypes.object.isRequired,
-  parameterNames: PropTypes.array,
-  onViewSourceInDebugger: PropTypes.func
-};
-
-function FunctionRep(props) {
-  let {
-    object: grip,
-    onViewSourceInDebugger
-  } = props;
-
-  let jumpToDefinitionButton;
-  if (onViewSourceInDebugger && grip.location && grip.location.url && !IGNORED_SOURCE_URLS.includes(grip.location.url)) {
-    jumpToDefinitionButton = Svg("jump-definition", {
-      element: "a",
-      draggable: false,
-      title: "Jump to definition",
-      onClick: e => {
-        // Stop the event propagation so we don't trigger ObjectInspector expand/collapse.
-        e.stopPropagation();
-        onViewSourceInDebugger(grip.location);
-      }
-    });
-  }
-
-  return span({
-    "data-link-actor-id": grip.actor,
-    className: "objectBox objectBox-function",
-    // Set dir="ltr" to prevent function parentheses from
-    // appearing in the wrong direction
-    dir: "ltr"
-  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(props), ")", jumpToDefinitionButton);
-}
-
-function getTitle(grip, props) {
-  const {
-    mode
-  } = props;
-
-  if (mode === MODE.TINY && !grip.isGenerator && !grip.isAsync) {
-    return null;
-  }
-
-  let title = mode === MODE.TINY ? "" : "function ";
-
-  if (grip.isGenerator) {
-    title = mode === MODE.TINY ? "* " : "function* ";
-  }
-
-  if (grip.isAsync) {
-    title = "async" + " " + title;
-  }
-
-  return span({
-    className: "objectTitle"
-  }, title);
-}
-
-// Decodes an anonymous naming scheme that
-// spider monkey implements based on "Naming Anonymous JavaScript Functions"
-// http://johnjbarton.github.io/nonymous/index.html
-const objectProperty = /([\w\d]+)$/;
-const arrayProperty = /\[(.*?)\]$/;
-const functionProperty = /([\w\d]+)[\/\.<]*?$/;
-const annonymousProperty = /([\w\d]+)\(\^\)$/;
-
-function getFunctionName(grip, props = {}) {
-  let { functionName } = props;
-  let name;
-
-  if (functionName) {
-    let end = functionName.length - 1;
-    functionName = functionName.startsWith('"') && functionName.endsWith('"') ? functionName.substring(1, end) : functionName;
-  }
-
-  if (grip.displayName != undefined && functionName != undefined && grip.displayName != functionName) {
-    name = functionName + ":" + grip.displayName;
-  } else {
-    name = grip.userDisplayName || grip.displayName || grip.name || props.functionName || "";
-
-    const scenarios = [objectProperty, arrayProperty, functionProperty, annonymousProperty];
-
-    scenarios.some(reg => {
-      const match = reg.exec(name);
-      if (match) {
-        name = match[1];
-        return true;
-      }
-      return false;
-    });
-  }
-
-  return cropString(name, 100);
-}
-
-function renderParams(props) {
-  const {
-    parameterNames = []
-  } = props;
-
-  return parameterNames.filter(param => param).reduce((res, param, index, arr) => {
-    res.push(span({ className: "param" }, param));
-    if (index < arr.length - 1) {
-      res.push(span({ className: "delimiter" }, ", "));
-    }
-    return res;
-  }, []);
-}
-
-// Registration
-function supportsObject(grip, noGrip = false) {
-  const type = getGripType(grip, noGrip);
-  if (noGrip === true || !isGrip(grip)) {
-    return type == "function";
-  }
-
-  return type == "Function";
-}
-
-// Exports from this module
-
-module.exports = {
-  rep: wrapRender(FunctionRep),
-  supportsObject,
-  // exported for testing purpose.
-  getFunctionName
-};
-
-/***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.convertReactSVGDOMProperty = convertReactSVGDOMProperty;
-exports.startsWith = startsWith;
-exports.serializeAttrs = serializeAttrs;
-exports.getSVGFromSource = getSVGFromSource;
-exports.extractSVGProps = extractSVGProps;
-// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
-
-function convertReactSVGDOMProperty(str) {
-    return str.replace(/[-|:]([a-z])/g, function (g) {
-        return g[1].toUpperCase();
-    });
-}
-
-function startsWith(str, substring) {
-    return str.indexOf(substring) === 0;
-}
-
-var DataPropPrefix = 'data-';
-// Serialize `Attr` objects in `NamedNodeMap`
-function serializeAttrs(map) {
-    var ret = {};
-    for (var prop, i = 0; i < map.length; i++) {
-        var key = map[i].name;
-        if (!startsWith(key, DataPropPrefix)) {
-            prop = convertReactSVGDOMProperty(key);
-        }
-        ret[prop] = map[i].value;
-    }
-    return ret;
-}
-
-function getSVGFromSource(src) {
-    var svgContainer = document.createElement('div');
-    svgContainer.innerHTML = src;
-    var svg = svgContainer.firstElementChild;
-    svg.remove(); // deref from parent element
-    return svg;
-}
-
-// get <svg /> element props
-function extractSVGProps(src) {
-    var map = getSVGFromSource(src).attributes;
-    return map.length > 0 ? serializeAttrs(map) : null;
-}
-
-/***/ }),
-/* 36 */
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8,3L12,3L12,7L14,7L14,8L12,8L12,12L8,12L8,14L7,14L7,12L3,12L3,8L1,8L1,7L3,7L3,3L7,3L7,1L8,1L8,3ZM10,10L10,5L5,5L5,10L10,10Z\"></path></svg>"
-
-/***/ }),
 /* 37 */
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><g stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" stroke-linecap=\"round\"><g id=\"arrow\" transform=\"translate(1.000000, 3.000000)\"><path d=\"M4.5,0.5 L6.5,2.5\"></path><path d=\"M4.5,2.5 L6.5,4.5\" transform=\"translate(5.500000, 3.500000) scale(1, -1) translate(-5.500000, -3.500000) \"></path><path d=\"M6.00090144,2.5 C4.67806937,2.5 3.67938478,2.5 3.00484766,2.5 C1.99304199,2.5 1.01049805,3.5168457 0.993840144,4.52403846 C0.988750751,4.54723808 0.988750751,5.87097168 0.993840144,8.49523926\" id=\"Path-2\" stroke-linejoin=\"round\"></path></g><g id=\"content-lines\" transform=\"translate(9.000000, 2.000000)\"><path d=\"M1.5,3.5 L5.5,3.5\"></path><path d=\"M0.5,1.5 L5.5,1.5\"></path><path d=\"M0.5,5.5 L5.5,5.5\"></path></g></g></svg>"
-
-/***/ }),
-/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4185,13 +4118,14 @@ function getProps(props, promiseState) {
 
   return keys.reduce((res, key, i) => {
     let object = promiseState[key];
-    res = res.concat(PropRep(Object.assign({}, props, {
+    res = res.concat(PropRep({
+      ...props,
       mode: MODE.TINY,
       name: `<${key}>`,
       object,
       equal: ": ",
       suppressQuotes: true
-    })));
+    }));
 
     // Interleave commas between elements
     if (i !== keys.length - 1) {
@@ -4217,7 +4151,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4276,7 +4210,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4344,7 +4278,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4363,7 +4297,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
-const nodeConstants = __webpack_require__(12);
+const nodeConstants = __webpack_require__(9);
 const dom = __webpack_require__(1);
 const { span } = dom;
 
@@ -4410,7 +4344,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4430,8 +4364,7 @@ const {
 } = __webpack_require__(0);
 const { rep: StringRep } = __webpack_require__(7);
 const { MODE } = __webpack_require__(3);
-const nodeConstants = __webpack_require__(12);
-const Svg = __webpack_require__(10);
+const nodeConstants = __webpack_require__(9);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4479,9 +4412,8 @@ function ElementNode(props) {
     }
 
     if (onInspectIconClick) {
-      inspectIcon = Svg("open-inspector", {
-        element: "a",
-        draggable: false,
+      inspectIcon = dom.button({
+        className: "open-inspector",
         // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
         title: "Click to select the node in the inspector",
         onClick: e => onInspectIconClick(object, e)
@@ -4542,7 +4474,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4562,7 +4494,6 @@ const {
   wrapRender
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
-const Svg = __webpack_require__(10);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4609,8 +4540,8 @@ function TextNode(props) {
     }
 
     if (onInspectIconClick) {
-      inspectIcon = Svg("open-inspector", {
-        element: "a",
+      inspectIcon = dom.button({
+        className: "open-inspector",
         draggable: false,
         // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
         title: "Click to select the node in the inspector",
@@ -4651,7 +4582,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 44 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4669,6 +4600,7 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
+const { cleanFunctionName } = __webpack_require__(12);
 const { MODE } = __webpack_require__(3);
 
 const dom = __webpack_require__(1);
@@ -4703,21 +4635,81 @@ function ErrorRep(props) {
     name = "Error";
   }
 
-  let content = props.mode === MODE.TINY ? name : `${name}: ${preview.message}`;
+  const content = [];
+
+  if (props.mode === MODE.TINY) {
+    content.push(name);
+  } else {
+    content.push(`${name}: "${preview.message}"`);
+  }
 
   if (preview.stack && props.mode !== MODE.TINY) {
-    /*
-      * Since Reps are used in the JSON Viewer, we can't localize
-      * the "Stack trace" label (defined in debugger.properties as
-      * "variablesViewErrorStacktrace" property), until Bug 1317038 lands.
-      */
-    content = `${content}\nStack trace:\n${preview.stack}`;
+    content.push("\n", getStacktraceElements(preview));
   }
 
   return span({
     "data-link-actor-id": object.actor,
     className: "objectBox-stackTrace"
   }, content);
+}
+
+/**
+ * Returns a React element reprensenting the Error stacktrace, i.e. transform error.stack
+ * from:
+ *
+ * semicolon@debugger eval code:1:109
+ * jkl@debugger eval code:1:63
+ * asdf@debugger eval code:1:28
+ * @debugger eval code:1:227
+ *
+ * Into a column layout:
+ *
+ * semicolon  (<anonymous>:8:10)
+ * jkl        (<anonymous>:5:10)
+ * asdf       (<anonymous>:2:10)
+ *            (<anonymous>:11:1)
+ */
+function getStacktraceElements(preview) {
+  const stack = [];
+  preview.stack.split("\n").forEach((line, index) => {
+    if (!line) {
+      // Skip any blank lines
+      return;
+    }
+
+    let functionName;
+    let location;
+
+    // Given the input: "functionName@scriptLocation:2:100"
+    // Result:
+    // ["functionName@scriptLocation:2:100", "functionName", "scriptLocation:2:100"]
+    const result = line.match(/^(.*)@(.*)$/);
+    if (result && result.length === 3) {
+      functionName = result[1];
+
+      // If the resource was loaded by base-loader.js, the location looks like:
+      // resource://devtools/shared/base-loader.js -> resource://path/to/file.js .
+      // What's needed is only the last part after " -> ".
+      location = result[2].split(" -> ").pop();
+    }
+
+    if (!functionName) {
+      functionName = "<anonymous>";
+    }
+
+    stack.push(span({
+      key: "fn" + index,
+      className: "objectBox-stackTrace-fn"
+    }, cleanFunctionName(functionName)), span({
+      key: "location" + index,
+      className: "objectBox-stackTrace-location"
+    }, ` (${location})`));
+  });
+
+  return span({
+    key: "stack",
+    className: "objectBox-stackTrace-grid"
+  }, stack);
 }
 
 // Registration
@@ -4735,7 +4727,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 45 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4785,11 +4777,14 @@ function WindowRep(props) {
     return span(config, getTitle(object));
   }
 
-  return span(config, getTitle(object), " ", span({ className: "location" }, getLocation(object)));
+  return span(config, getTitle(object, true), span({ className: "location" }, getLocation(object)));
 }
 
-function getTitle(object) {
+function getTitle(object, trailingSpace) {
   let title = object.displayClass || object.class || "Window";
+  if (trailingSpace === true) {
+    title = `${title} `;
+  }
   return span({ className: "objectTitle" }, title);
 }
 
@@ -4813,7 +4808,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 46 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4849,7 +4844,7 @@ function ObjectWithText(props) {
   return span({
     "data-link-actor-id": grip.actor,
     className: "objectTitle objectBox objectBox-" + getType(grip)
-  }, getType(grip), " ", getDescription(grip));
+  }, `${getType(grip)} `, getDescription(grip));
 }
 
 function getType(grip) {
@@ -4878,7 +4873,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 47 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4944,6 +4939,40 @@ module.exports = {
 };
 
 /***/ }),
+/* 47 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const { createElement, createFactory, PureComponent } = __webpack_require__(10);
+const { Provider } = __webpack_require__(17);
+const ObjectInspector = createFactory(__webpack_require__(48));
+const createStore = __webpack_require__(57);
+
+class OI extends PureComponent {
+
+  constructor(props) {
+    super(props);
+    this.store = createStore(props);
+  }
+
+  getStore() {
+    return this.store;
+  }
+
+  render() {
+    return createElement(Provider, { store: this.store }, ObjectInspector(this.props));
+  }
+}
+
+module.exports = OI;
+
+/***/ }),
 /* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -4960,14 +4989,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Component, createFactory } = __webpack_require__(8);
-const PropTypes = __webpack_require__(2);
+const {
+  Component,
+  createFactory
+} = __webpack_require__(10);
 const dom = __webpack_require__(1);
+const { connect } = __webpack_require__(17);
+const { bindActionCreators } = __webpack_require__(18);
 
 const Tree = createFactory(_devtoolsComponents2.default.Tree);
-__webpack_require__(53);
+__webpack_require__(52);
 
-const classnames = __webpack_require__(54);
+const classnames = __webpack_require__(53);
 
 const {
   REPS: {
@@ -4979,7 +5012,7 @@ const {
   MODE
 } = __webpack_require__(3);
 
-const Utils = __webpack_require__(17);
+const Utils = __webpack_require__(19);
 
 const {
   getChildren,
@@ -4988,6 +5021,7 @@ const {
   getValue,
   nodeHasAccessors,
   nodeHasProperties,
+  nodeIsBlock,
   nodeIsDefaultProperties,
   nodeIsFunction,
   nodeIsGetter,
@@ -5003,13 +5037,9 @@ const {
   nodeIsWindow
 } = Utils.node;
 
-const {
-  loadItemProperties
-} = Utils.loadProperties;
-
 // This implements a component that renders an interactive inspector
 // for looking at JavaScript objects. It expects descriptions of
-// objects from the protocol, and will dynamically fetch child
+// objects from the protocol, and will dynamically fetch children
 // properties as objects are expanded.
 //
 // If you want to inspect a single object, pass the name and the
@@ -5039,37 +5069,30 @@ class ObjectInspector extends Component {
     super();
     this.cachedNodes = new Map();
 
-    this.state = {
-      actors: new Set(),
-      expandedPaths: new Set(),
-      focusedItem: null,
-      loadedProperties: props.loadedProperties || new Map(),
-      loading: new Map()
-    };
-
     const self = this;
 
-    self.getChildren = this.getChildren.bind(this);
+    self.getItemChildren = this.getItemChildren.bind(this);
     self.renderTreeItem = this.renderTreeItem.bind(this);
     self.setExpanded = this.setExpanded.bind(this);
     self.focusItem = this.focusItem.bind(this);
     self.getRoots = this.getRoots.bind(this);
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     const {
       expandedPaths,
-      loadedProperties
-    } = this.state;
+      loadedProperties,
+      roots
+    } = this.props;
 
-    if (this.props.roots !== nextProps.roots) {
+    if (roots !== nextProps.roots) {
       // Since the roots changed, we assume the properties did as well. Thus we can clear
       // the cachedNodes to avoid bugs and memory leaks.
       this.cachedNodes.clear();
       return true;
     }
 
-    return expandedPaths.size !== nextState.expandedPaths.size || loadedProperties.size !== nextState.loadedProperties.size || [...expandedPaths].some(key => !nextState.expandedPaths.has(key));
+    return expandedPaths.size !== nextProps.expandedPaths.size || loadedProperties.size !== nextProps.loadedProperties.size || [...expandedPaths].some(key => !nextProps.expandedPaths.has(key));
   }
 
   componentWillUnmount() {
@@ -5078,16 +5101,16 @@ class ObjectInspector extends Component {
       return;
     }
 
-    const { actors } = this.state;
+    const { actors } = this.props;
     for (let actor of actors) {
       releaseActor(actor);
     }
   }
 
-  getChildren(item) {
+  getItemChildren(item) {
     const {
       loadedProperties
-    } = this.state;
+    } = this.props;
     const { cachedNodes } = this;
 
     return getChildren({
@@ -5101,114 +5124,108 @@ class ObjectInspector extends Component {
     return this.props.roots;
   }
 
-  getKey(item) {
-    return item.path;
+  getNodeKey(item) {
+    return item.path || JSON.stringify(item);
   }
 
-  /**
-   * This function is responsible for expanding/collapsing a given node,
-   * which also means that it will check if we need to fetch properties,
-   * entries, prototype and symbols for the said node. If we do, it will call
-   * the appropriate ObjectClient functions, and change the state of the component
-   * with the results it gets from those functions.
-   */
-  async setExpanded(item, expand) {
+  setExpanded(item, expand) {
     if (nodeIsPrimitive(item)) {
       return;
     }
 
     const {
-      loadedProperties
-    } = this.state;
-
-    const key = this.getKey(item);
-
-    this.setState((prevState, props) => {
-      const newPaths = new Set(prevState.expandedPaths);
-      if (expand === true) {
-        newPaths.add(key);
-      } else {
-        newPaths.delete(key);
-      }
-      return {
-        expandedPaths: newPaths
-      };
-    });
+      createObjectClient,
+      loadedProperties,
+      nodeExpand,
+      nodeCollapse,
+      roots
+    } = this.props;
 
     if (expand === true) {
       const gripItem = getClosestGripNode(item);
       const value = getValue(gripItem);
-      const path = item.path;
-
-      const onItemPropertiesLoaded = loadItemProperties(item, this.props.createObjectClient, loadedProperties);
-      if (onItemPropertiesLoaded !== null) {
-        this.setState((prevState, props) => {
-          const nextLoading = new Map(prevState.loading);
-          nextLoading.set(path, onItemPropertiesLoaded);
-          return {
-            loading: nextLoading
-          };
-        });
-
-        const properties = await onItemPropertiesLoaded;
-
-        this.setState((prevState, props) => {
-          const nextLoading = new Map(prevState.loading);
-          nextLoading.delete(path);
-
-          const isRoot = this.props.roots.some(root => {
-            const rootValue = getValue(root);
-            return rootValue && rootValue.actor === value.actor;
-          });
-
-          return {
-            actors: isRoot ? prevState.actors : new Set(prevState.actors).add(value.actor),
-            loadedProperties: new Map(prevState.loadedProperties).set(path, properties),
-            loading: nextLoading
-          };
-        });
-      }
+      const isRoot = value && roots.some(root => {
+        const rootValue = getValue(root);
+        return rootValue && rootValue.actor === value.actor;
+      });
+      const actor = isRoot || !value ? null : value.actor;
+      nodeExpand(item, actor, loadedProperties, createObjectClient);
+    } else {
+      nodeCollapse(item);
     }
   }
 
   focusItem(item) {
-    if (!this.props.disabledFocus && this.state.focusedItem !== item) {
-      this.setState({
-        focusedItem: item
-      });
+    const {
+      focusedItem,
+      onFocus
+    } = this.props;
 
-      if (this.props.onFocus) {
-        this.props.onFocus(item);
-      }
+    if (focusedItem !== item && onFocus) {
+      onFocus(item);
     }
   }
 
-  renderTreeItem(item, depth, focused, arrow, expanded) {
-    let objectValue;
+  getTreeItemLabelAndValue(item, depth, expanded) {
     let label = item.name;
-    let itemValue = getValue(item);
-
     const isPrimitive = nodeIsPrimitive(item);
 
-    const unavailable = isPrimitive && itemValue && itemValue.hasOwnProperty && itemValue.hasOwnProperty("unavailable");
+    if (nodeIsOptimizedOut(item)) {
+      return {
+        label,
+        value: dom.span({ className: "unavailable" }, "(optimized away)")
+      };
+    }
 
     if (nodeIsUninitializedBinding(item)) {
-      objectValue = dom.span({ className: "unavailable" }, "(uninitialized)");
-    } else if (nodeIsUnmappedBinding(item)) {
-      objectValue = dom.span({ className: "unavailable" }, "(unmapped)");
-    } else if (nodeIsUnscopedBinding(item)) {
-      objectValue = dom.span({ className: "unavailable" }, "(unscoped)");
-    } else if (nodeIsOptimizedOut(item)) {
-      objectValue = dom.span({ className: "unavailable" }, "(optimized away)");
-    } else if (nodeIsMissingArguments(item) || unavailable) {
-      objectValue = dom.span({ className: "unavailable" }, "(unavailable)");
-    } else if (nodeIsFunction(item) && !nodeIsGetter(item) && !nodeIsSetter(item) && (this.props.mode === MODE.TINY || !this.props.mode)) {
-      objectValue = undefined;
-      label = this.renderGrip(item, Object.assign({}, this.props, {
-        functionName: label
-      }));
-    } else if (nodeHasProperties(item) || nodeHasAccessors(item) || nodeIsMapEntry(item) || isPrimitive) {
-      let repsProp = Object.assign({}, this.props);
+      return {
+        label,
+        value: dom.span({ className: "unavailable" }, "(uninitialized)")
+      };
+    }
+
+    if (nodeIsUnmappedBinding(item)) {
+      return {
+        label,
+        value: dom.span({ className: "unavailable" }, "(unmapped)")
+      };
+    }
+
+    if (nodeIsUnscopedBinding(item)) {
+      return {
+        label,
+        value: dom.span({ className: "unavailable" }, "(unscoped)")
+      };
+    }
+
+    if (nodeIsOptimizedOut(item)) {
+      return {
+        label,
+        value: dom.span({ className: "unavailable" }, "(optimized away)")
+      };
+    }
+
+    const itemValue = getValue(item);
+    const unavailable = isPrimitive && itemValue && itemValue.hasOwnProperty && itemValue.hasOwnProperty("unavailable");
+
+    if (nodeIsMissingArguments(item) || unavailable) {
+      return {
+        label,
+        value: dom.span({ className: "unavailable" }, "(unavailable)")
+      };
+    }
+
+    if (nodeIsFunction(item) && !nodeIsGetter(item) && !nodeIsSetter(item) && (this.props.mode === MODE.TINY || !this.props.mode)) {
+      return {
+        label: this.renderGrip(item, {
+          ...this.props,
+          functionName: label
+        })
+      };
+    }
+
+    if (nodeHasProperties(item) || nodeHasAccessors(item) || nodeIsMapEntry(item) || isPrimitive) {
+      let repsProp = { ...this.props };
       if (depth > 0) {
         repsProp.mode = this.props.mode === MODE.LONG ? MODE.SHORT : MODE.TINY;
       }
@@ -5216,74 +5233,112 @@ class ObjectInspector extends Component {
         repsProp.mode = MODE.TINY;
       }
 
-      objectValue = this.renderGrip(item, repsProp);
+      return {
+        label,
+        value: this.renderGrip(item, repsProp)
+      };
     }
 
-    const hasLabel = label !== null && typeof label !== "undefined";
-    const hasValue = typeof objectValue !== "undefined";
+    return {
+      label
+    };
+  }
+
+  renderTreeItemLabel(label, item, depth, focused, expanded) {
+    if (label === null || typeof label === "undefined") {
+      return null;
+    }
 
     const {
-      onDoubleClick,
-      onLabelClick,
-      dimTopLevelWindow
+      onLabelClick
     } = this.props;
 
-    return dom.div({
-      className: classnames("node object-node", {
-        focused,
-        lessen: !expanded && (nodeIsDefaultProperties(item) || nodeIsPrototype(item) || dimTopLevelWindow === true && nodeIsWindow(item) && depth === 0)
-      }),
-      onClick: e => {
-        e.stopPropagation();
-        if (isPrimitive === false) {
-          this.setExpanded(item, !expanded);
-        }
-      },
-      onDoubleClick: onDoubleClick ? e => {
-        e.stopPropagation();
-        onDoubleClick(item, {
-          depth,
-          focused,
-          expanded
-        });
-      } : null
-    }, arrow, hasLabel ? dom.span({
+    return dom.span({
       className: "object-label",
       onClick: onLabelClick ? event => {
         event.stopPropagation();
+
+        // If the user selected text, bail out.
+        if (Utils.selection.documentHasSelection()) {
+          return;
+        }
+
         onLabelClick(item, {
           depth,
           focused,
           expanded,
           setExpanded: this.setExpanded
         });
-      } : null
-    }, label) : null, hasLabel && hasValue ? dom.span({ className: "object-delimiter" }, ": ") : null, hasValue ? objectValue : null);
+      } : undefined
+    }, label);
+  }
+
+  getTreeTopElementProps(item, depth, focused, expanded) {
+    const {
+      onDoubleClick,
+      dimTopLevelWindow
+    } = this.props;
+
+    let parentElementProps = {
+      className: classnames("node object-node", {
+        focused,
+        lessen: !expanded && (nodeIsDefaultProperties(item) || nodeIsPrototype(item) || dimTopLevelWindow === true && nodeIsWindow(item) && depth === 0),
+        block: nodeIsBlock(item)
+      }),
+      onClick: e => {
+        e.stopPropagation();
+
+        // If the user selected text, bail out.
+        if (Utils.selection.documentHasSelection()) {
+          return;
+        }
+
+        this.setExpanded(item, !expanded);
+      }
+    };
+
+    if (onDoubleClick) {
+      parentElementProps.onDoubleClick = e => {
+        e.stopPropagation();
+        onDoubleClick(item, {
+          depth,
+          focused,
+          expanded
+        });
+      };
+    }
+
+    return parentElementProps;
+  }
+
+  renderTreeItem(item, depth, focused, arrow, expanded) {
+    const { label, value } = this.getTreeItemLabelAndValue(item, depth, expanded);
+    const labelElement = this.renderTreeItemLabel(label, item, depth, focused, expanded);
+    const delimiter = value && labelElement ? dom.span({ className: "object-delimiter" }, ": ") : null;
+
+    return dom.div(this.getTreeTopElementProps(item, depth, focused, expanded), arrow, labelElement, delimiter, value);
   }
 
   renderGrip(item, props) {
     const object = getValue(item);
-    return Rep(Object.assign({}, props, {
+    return Rep({
+      ...props,
       object,
       mode: props.mode || MODE.TINY,
       defaultRep: Grip
-    }));
+    });
   }
 
   render() {
     const {
-      autoExpandDepth = 1,
       autoExpandAll = true,
+      autoExpandDepth = 1,
       disabledFocus,
-      inline,
-      itemHeight = 20,
-      disableWrap = false
-    } = this.props;
-
-    const {
+      disableWrap = false,
       expandedPaths,
-      focusedItem
-    } = this.state;
+      focusedItem,
+      inline
+    } = this.props;
 
     let roots = this.getRoots();
     if (roots.length === 1) {
@@ -5303,16 +5358,15 @@ class ObjectInspector extends Component {
       autoExpandAll,
       autoExpandDepth,
       disabledFocus,
-      itemHeight,
 
-      isExpanded: item => expandedPaths.has(this.getKey(item)),
+      isExpanded: item => expandedPaths && expandedPaths.has(this.getNodeKey(item)),
       isExpandable: item => nodeIsPrimitive(item) === false,
       focused: focusedItem,
 
       getRoots: this.getRoots,
       getParent,
-      getChildren: this.getChildren,
-      getKey: this.getKey,
+      getChildren: this.getItemChildren,
+      getKey: this.getNodeKey,
 
       onExpand: item => this.setExpanded(item, true),
       onCollapse: item => this.setExpanded(item, false),
@@ -5323,24 +5377,20 @@ class ObjectInspector extends Component {
   }
 }
 
-ObjectInspector.displayName = "ObjectInspector";
+function mapStateToProps(state, props) {
+  return {
+    actors: state.actors,
+    expandedPaths: state.expandedPaths,
+    focusedItem: state.focusedItem,
+    loadedProperties: state.loadedProperties
+  };
+}
 
-ObjectInspector.propTypes = {
-  autoExpandAll: PropTypes.bool,
-  autoExpandDepth: PropTypes.number,
-  disabledFocus: PropTypes.bool,
-  disableWrap: PropTypes.bool,
-  inline: PropTypes.bool,
-  roots: PropTypes.array,
-  itemHeight: PropTypes.number,
-  mode: PropTypes.oneOf(Object.values(MODE)),
-  createObjectClient: PropTypes.func.isRequired,
-  onFocus: PropTypes.func,
-  onDoubleClick: PropTypes.func,
-  onLabelClick: PropTypes.func
-};
+function mapDispatchToProps(dispatch) {
+  return bindActionCreators(__webpack_require__(56), dispatch);
+}
 
-module.exports = ObjectInspector;
+module.exports = connect(mapStateToProps, mapDispatchToProps)(ObjectInspector);
 
 /***/ }),
 /* 49 */
@@ -5372,7 +5422,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _react = __webpack_require__(8);
+var _react = __webpack_require__(10);
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -5384,21 +5434,13 @@ var _propTypes = __webpack_require__(2);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
-var _svgInlineReact = __webpack_require__(11);
-
-var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
-
-var _arrow = __webpack_require__(51);
-
-var _arrow2 = _interopRequireDefault(_arrow);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const { Component, createFactory, createElement } = _react2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                      * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                      * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const { Component, createFactory } = _react2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                       * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                       * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__(52);
+__webpack_require__(51);
 
 const AUTO_EXPAND_DEPTH = 0; // depth
 
@@ -5426,9 +5468,8 @@ class ArrowExpander extends Component {
     if (expanded) {
       classNames.push("expanded");
     }
-    return createElement(_svgInlineReact2.default, {
-      className: classNames.join(" "),
-      src: _arrow2.default
+    return _reactDomFactories2.default.img({
+      className: classNames.join(" ")
     });
   }
 }
@@ -5486,7 +5527,7 @@ class TreeNode extends Component {
       className: "tree-node" + (focused ? " focused" : ""),
       onClick: this.props.onClick,
       role: "treeitem",
-      "aria-level": depth,
+      "aria-level": depth + 1,
       "aria-expanded": ariaExpanded,
       "data-expandable": this.props.isExpandable
     }, ...items);
@@ -6159,7 +6200,7 @@ exports.default = Tree;
 /* 51 */
 /***/ (function(module, exports) {
 
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
+// removed by extract-text-webpack-plugin
 
 /***/ }),
 /* 52 */
@@ -6169,12 +6210,6 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 
 /***/ }),
 /* 53 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -6218,15 +6253,21 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 		module.exports = classNames;
 	} else if (true) {
 		// register as 'classnames', consistent with npm package name
-		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = (function () {
 			return classNames;
-		}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+		}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	} else {
 		window.classNames = classNames;
 	}
 }());
 
+
+/***/ }),
+/* 54 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_54__;
 
 /***/ }),
 /* 55 */
@@ -6239,137 +6280,354 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { ELEMENT_NODE } = __webpack_require__(9);
+
+function documentHasSelection() {
+  const selection = getSelection();
+  if (!selection) {
+    return false;
+  }
+
+  const {
+    anchorNode,
+    focusNode
+  } = selection;
+
+  // When clicking the arrow, which is an inline svg element, the selection do have a type
+  // of "Range". We need to have an explicit case when the anchor and the focus node are
+  // the same and they have an arrow ancestor.
+  if (focusNode && focusNode === anchorNode && focusNode.nodeType == ELEMENT_NODE && focusNode.closest(".arrow")) {
+    return false;
+  }
+
+  return selection.type === "Range";
+}
+
+module.exports = {
+  documentHasSelection
+};
+
+/***/ }),
+/* 56 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const {
+  getClosestGripNode,
+  getValue
+} = __webpack_require__(11); /* This Source Code Form is subject to the terms of the Mozilla Public
+                              * License, v. 2.0. If a copy of the MPL was not distributed with this
+                              * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const {
+  shouldLoadItemEntries,
+  shouldLoadItemIndexedProperties,
+  shouldLoadItemNonIndexedProperties,
+  shouldLoadItemPrototype,
+  shouldLoadItemSymbols
+} = __webpack_require__(21);
+
 const {
   enumEntries,
   enumIndexedProperties,
   enumNonIndexedProperties,
   getPrototype,
   enumSymbols
-} = __webpack_require__(18);
+} = __webpack_require__(20);
 
-const {
-  getClosestGripNode,
-  getClosestNonBucketNode,
-  getValue,
-  nodeHasAccessors,
-  nodeHasAllEntriesInPreview,
-  nodeHasProperties,
-  nodeIsBucket,
-  nodeIsDefaultProperties,
-  nodeIsEntries,
-  nodeIsMapEntry,
-  nodeIsPrimitive,
-  nodeIsProxy,
-  nodeNeedsNumericalBuckets
-} = __webpack_require__(19);
-
-function loadItemProperties(item, createObjectClient, loadedProperties) {
-  const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
-
-  let objectClient;
-  const getObjectClient = () => {
-    if (objectClient) {
-      return objectClient;
-    }
-
-    const gripItem = getClosestGripNode(item);
-    const value = getValue(gripItem);
-    return createObjectClient(value);
-  };
-
-  let loadingPromises = [];
-  if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
-    loadingPromises.push(enumIndexedProperties(getObjectClient(), start, end));
-  }
-
-  if (shouldLoadItemNonIndexedProperties(item, loadedProperties)) {
-    loadingPromises.push(enumNonIndexedProperties(getObjectClient(), start, end));
-  }
-
-  if (shouldLoadItemEntries(item, loadedProperties)) {
-    loadingPromises.push(enumEntries(getObjectClient(), start, end));
-  }
-
-  if (shouldLoadItemPrototype(item, loadedProperties)) {
-    loadingPromises.push(getPrototype(getObjectClient()));
-  }
-
-  if (shouldLoadItemSymbols(item, loadedProperties)) {
-    loadingPromises.push(enumSymbols(getObjectClient(), start, end));
-  }
-
-  if (loadingPromises.length === 0) {
-    return null;
-  }
-
-  return Promise.all(loadingPromises).then(responses => responses.reduce((accumulator, res) => {
-    // Let's loop through the responses to build a single response object.
-    Object.entries(res).forEach(([k, v]) => {
-      if (accumulator.hasOwnProperty(k)) {
-        if (Array.isArray(accumulator[k])) {
-          accumulator[k].push(...v);
-        } else if (typeof accumulator[k] === "object") {
-          accumulator[k] = Object.assign({}, accumulator[k], v);
-        }
-      } else {
-        accumulator[k] = v;
-      }
+/**
+ * This action is responsible for expanding a given node,
+ * which also means that it will call the action responsible to fetch properties.
+ */
+function nodeExpand(node, actor, loadedProperties, createObjectClient) {
+  return async ({ dispatch }) => {
+    dispatch({
+      type: "NODE_EXPAND",
+      data: { node }
     });
-    return accumulator;
-  }, {}));
+    dispatch(nodeLoadProperties(node, actor, loadedProperties, createObjectClient));
+  };
 }
 
-function shouldLoadItemIndexedProperties(item, loadedProperties = new Map()) {
-  const gripItem = getClosestGripNode(item);
-  const value = getValue(gripItem);
-
-  return value && nodeHasProperties(gripItem) && !loadedProperties.has(item.path) && !nodeIsProxy(item) && !nodeNeedsNumericalBuckets(item) && !nodeIsEntries(getClosestNonBucketNode(item))
-  // The data is loaded when expanding the window node.
-  && !nodeIsDefaultProperties(item);
+function nodeCollapse(node) {
+  return {
+    type: "NODE_COLLAPSE",
+    data: { node }
+  };
 }
 
-function shouldLoadItemNonIndexedProperties(item, loadedProperties = new Map()) {
-  const gripItem = getClosestGripNode(item);
-  const value = getValue(gripItem);
+function nodeFocus(node) {
+  return {
+    type: "NODE_FOCUS",
+    data: { node }
+  };
+}
+/*
+ * This action checks if we need to fetch properties, entries, prototype and symbols
+ * for a given node. If we do, it will call the appropriate ObjectClient functions.
+ */
+function nodeLoadProperties(item, actor, loadedProperties, createObjectClient) {
+  return async ({ dispatch }) => {
+    try {
+      const gripItem = getClosestGripNode(item);
+      const value = getValue(gripItem);
 
-  return value && nodeHasProperties(gripItem) && !loadedProperties.has(item.path) && !nodeIsProxy(item) && !nodeIsEntries(getClosestNonBucketNode(item)) && !nodeIsBucket(item)
-  // The data is loaded when expanding the window node.
-  && !nodeIsDefaultProperties(item);
+      const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
+
+      let promises = [];
+      let objectClient;
+      const getObjectClient = () => objectClient || createObjectClient(value);
+
+      if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
+        promises.push(enumIndexedProperties(getObjectClient(), start, end));
+      }
+
+      if (shouldLoadItemNonIndexedProperties(item, loadedProperties)) {
+        promises.push(enumNonIndexedProperties(getObjectClient(), start, end));
+      }
+
+      if (shouldLoadItemEntries(item, loadedProperties)) {
+        promises.push(enumEntries(getObjectClient(), start, end));
+      }
+
+      if (shouldLoadItemPrototype(item, loadedProperties)) {
+        promises.push(getPrototype(getObjectClient()));
+      }
+
+      if (shouldLoadItemSymbols(item, loadedProperties)) {
+        promises.push(enumSymbols(getObjectClient(), start, end));
+      }
+
+      if (promises.length > 0) {
+        const responses = await Promise.all(promises);
+        dispatch(nodePropertiesLoaded(item, actor, responses));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 }
 
-function shouldLoadItemEntries(item, loadedProperties = new Map()) {
-  const gripItem = getClosestGripNode(item);
-  const value = getValue(gripItem);
-
-  return value && nodeIsEntries(getClosestNonBucketNode(item)) && !nodeHasAllEntriesInPreview(gripItem) && !loadedProperties.has(item.path) && !nodeNeedsNumericalBuckets(item);
-}
-
-function shouldLoadItemPrototype(item, loadedProperties = new Map()) {
-  const value = getValue(item);
-
-  return value && !loadedProperties.has(item.path) && !nodeIsBucket(item) && !nodeIsMapEntry(item) && !nodeIsEntries(item) && !nodeIsDefaultProperties(item) && !nodeHasAccessors(item) && !nodeIsPrimitive(item);
-}
-
-function shouldLoadItemSymbols(item, loadedProperties = new Map()) {
-  const value = getValue(item);
-
-  return value && !loadedProperties.has(item.path) && !nodeIsBucket(item) && !nodeIsMapEntry(item) && !nodeIsEntries(item) && !nodeIsDefaultProperties(item) && !nodeHasAccessors(item) && !nodeIsPrimitive(item) && !nodeIsProxy(item);
+function nodePropertiesLoaded(node, actor, responses) {
+  return {
+    type: "NODE_PROPERTIES_LOADED",
+    data: { node, actor, responses }
+  };
 }
 
 module.exports = {
-  loadItemProperties,
-  shouldLoadItemEntries,
-  shouldLoadItemIndexedProperties,
-  shouldLoadItemNonIndexedProperties,
-  shouldLoadItemPrototype,
-  shouldLoadItemSymbols
+  nodeExpand,
+  nodeCollapse,
+  nodeFocus,
+  nodeLoadProperties,
+  nodePropertiesLoaded
 };
 
 /***/ }),
-/* 56 */
-/***/ (function(module, exports) {
+/* 57 */
+/***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_56__;
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const { applyMiddleware, createStore } = __webpack_require__(18);
+const { thunk } = __webpack_require__(58);
+const { waitUntilService } = __webpack_require__(59);
+const reducer = __webpack_require__(60);
+
+function createInitialState(overrides) {
+  return {
+    actors: new Set(),
+    expandedPaths: new Set(),
+    focusedItem: null,
+    loadedProperties: new Map(),
+    ...overrides
+  };
+}
+
+module.exports = props => {
+  const middlewares = [thunk];
+  if (props.injectWaitService) {
+    middlewares.push(waitUntilService);
+  }
+
+  return createStore(reducer, createInitialState(props), applyMiddleware(...middlewares));
+};
+
+/***/ }),
+/* 58 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * A middleware that allows thunks (functions) to be dispatched.
+ * If it's a thunk, it is called with `dispatch` and `getState`,
+ * allowing the action to create multiple actions (most likely
+ * asynchronously).
+ */
+function thunk({ dispatch, getState }) {
+  return next => action => {
+    return typeof action === "function" ? action({ dispatch, getState }) : next(action);
+  };
+}
+exports.thunk = thunk;
+
+/***/ }),
+/* 59 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const WAIT_UNTIL_TYPE = "@@service/waitUntil";
+/**
+ * A middleware which acts like a service, because it is stateful
+ * and "long-running" in the background. It provides the ability
+ * for actions to install a function to be run once when a specific
+ * condition is met by an action coming through the system. Think of
+ * it as a thunk that blocks until the condition is met. Example:
+ *
+ * ```js
+ * const services = { WAIT_UNTIL: require('wait-service').NAME };
+ *
+ * { type: services.WAIT_UNTIL,
+ *   predicate: action => action.type === "ADD_ITEM",
+ *   run: (dispatch, getState, action) => {
+ *     // Do anything here. You only need to accept the arguments
+ *     // if you need them. `action` is the action that satisfied
+ *     // the predicate.
+ *   }
+ * }
+ * ```
+ */
+function waitUntilService({ dispatch, getState }) {
+  let pending = [];
+
+  function checkPending(action) {
+    const readyRequests = [];
+    const stillPending = [];
+
+    // Find the pending requests whose predicates are satisfied with
+    // this action. Wait to run the requests until after we update the
+    // pending queue because the request handler may synchronously
+    // dispatch again and run this service (that use case is
+    // completely valid).
+    for (const request of pending) {
+      if (request.predicate(action)) {
+        readyRequests.push(request);
+      } else {
+        stillPending.push(request);
+      }
+    }
+
+    pending = stillPending;
+    for (const request of readyRequests) {
+      request.run(dispatch, getState, action);
+    }
+  }
+
+  return next => action => {
+    if (action.type === WAIT_UNTIL_TYPE) {
+      pending.push(action);
+      return null;
+    }
+    const result = next(action);
+    checkPending(action);
+    return result;
+  };
+}
+
+module.exports = {
+  WAIT_UNTIL_TYPE,
+  waitUntilService
+};
+
+/***/ }),
+/* 60 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function reducer(state = {}, action) {
+  const {
+    type,
+    data
+  } = action;
+
+  const cloneState = overrides => ({ ...state, ...overrides });
+
+  if (type === "NODE_EXPAND") {
+    return cloneState({
+      expandedPaths: new Set(state.expandedPaths).add(data.node.path)
+    });
+  }
+
+  if (type === "NODE_COLLAPSE") {
+    const expandedPaths = new Set(state.expandedPaths);
+    expandedPaths.delete(data.node.path);
+    return cloneState({ expandedPaths });
+  }
+
+  if (type === "NODE_PROPERTIES_LOADED") {
+    // Let's loop through the responses to build a single object.
+    const properties = mergeResponses(data.responses);
+
+    return cloneState({
+      actors: data.actor ? new Set(state.actors || []).add(data.actor) : state.actors,
+      loadedProperties: new Map(state.loadedProperties).set(data.node.path, properties)
+    });
+  }
+
+  if (type === "NODE_FOCUS") {
+    return cloneState({
+      focusedItem: data.node
+    });
+  }
+
+  return state;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function mergeResponses(responses) {
+  const data = {};
+
+  for (const response of responses) {
+    if (response.hasOwnProperty("ownProperties")) {
+      data.ownProperties = { ...data.ownProperties, ...response.ownProperties };
+    }
+
+    if (response.ownSymbols && response.ownSymbols.length > 0) {
+      data.ownSymbols = response.ownSymbols;
+    }
+
+    if (response.prototype) {
+      data.prototype = response.prototype;
+    }
+  }
+
+  return data;
+}
+
+module.exports = reducer;
 
 /***/ })
 /******/ ]);
