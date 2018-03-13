@@ -29,6 +29,7 @@ class nsIContent;
 
 namespace mozilla {
 namespace dom {
+class DocumentType;
 class Element;
 } // namespace dom
 } // namespace mozilla
@@ -60,7 +61,7 @@ public:
                                          nsAString& aStr) override  { return NS_OK; }
   NS_IMETHOD AppendComment(nsIContent* aComment, int32_t aStartOffset,
                            int32_t aEndOffset, nsAString& aStr) override  { return NS_OK; }
-  NS_IMETHOD AppendDoctype(nsIContent *aDoctype,
+  NS_IMETHOD AppendDoctype(mozilla::dom::DocumentType* aDoctype,
                            nsAString& aStr) override  { return NS_OK; }
   NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
                                 mozilla::dom::Element* aOriginalElement,
