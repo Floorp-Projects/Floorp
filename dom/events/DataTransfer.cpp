@@ -223,16 +223,7 @@ DataTransfer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return DataTransferBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-DataTransfer::GetDropEffect(nsAString& aDropEffect)
-{
-  nsString dropEffect;
-  GetDropEffect(dropEffect);
-  aDropEffect = dropEffect;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 DataTransfer::SetDropEffect(const nsAString& aDropEffect)
 {
   // the drop effect can only be 'none', 'copy', 'move' or 'link'.
@@ -246,8 +237,6 @@ DataTransfer::SetDropEffect(const nsAString& aDropEffect)
       break;
     }
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
