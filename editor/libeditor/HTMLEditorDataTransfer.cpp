@@ -1210,13 +1210,13 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
 }
 
 static void
-GetStringFromDataTransfer(nsIDOMDataTransfer* aDataTransfer,
+GetStringFromDataTransfer(DataTransfer* aDataTransfer,
                           const nsAString& aType,
                           int32_t aIndex,
                           nsAString& aOutputString)
 {
   nsCOMPtr<nsIVariant> variant;
-  DataTransfer::Cast(aDataTransfer)->GetDataAtNoSecurityCheck(aType, aIndex, getter_AddRefs(variant));
+  aDataTransfer->GetDataAtNoSecurityCheck(aType, aIndex, getter_AddRefs(variant));
   if (variant) {
     variant->GetAsAString(aOutputString);
   }
@@ -1254,7 +1254,7 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
           type.EqualsLiteral(kPNGImageMime) ||
           type.EqualsLiteral(kGIFImageMime)) {
         nsCOMPtr<nsIVariant> variant;
-        DataTransfer::Cast(aDataTransfer)->GetDataAtNoSecurityCheck(type, aIndex, getter_AddRefs(variant));
+        aDataTransfer->GetDataAtNoSecurityCheck(type, aIndex, getter_AddRefs(variant));
         if (variant) {
           nsCOMPtr<nsISupports> object;
           variant->GetAsISupports(getter_AddRefs(object));

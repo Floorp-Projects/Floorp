@@ -146,8 +146,8 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                    bool aDoDeleteSelection)
 {
   nsCOMPtr<nsIVariant> data;
-  DataTransfer::Cast(aDataTransfer)->GetDataAtNoSecurityCheck(NS_LITERAL_STRING("text/plain"), aIndex,
-                                                              getter_AddRefs(data));
+  aDataTransfer->GetDataAtNoSecurityCheck(NS_LITERAL_STRING("text/plain"), aIndex,
+                                          getter_AddRefs(data));
   if (data) {
     nsAutoString insertText;
     data->GetAsAString(insertText);

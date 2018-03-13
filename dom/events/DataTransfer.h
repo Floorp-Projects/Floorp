@@ -58,11 +58,6 @@ public:
 
   friend class mozilla::EventStateManager;
 
-  static DataTransfer* Cast(nsIDOMDataTransfer* aArg)
-  {
-    return static_cast<DataTransfer*>(aArg);
-  }
-
   /// An enum which represents which "Drag Data Store Mode" the DataTransfer is
   /// in according to the spec.
   enum class Mode : uint8_t {
