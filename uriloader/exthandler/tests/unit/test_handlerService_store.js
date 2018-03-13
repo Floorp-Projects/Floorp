@@ -2,15 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Tests the nsIHandlerService interface using the JSON backend.
+ * Tests the nsIHandlerService interface.
  */
-
-let gHandlerService = gHandlerServiceJSON;
-let unloadHandlerStore = unloadHandlerStoreJSON;
-let deleteHandlerStore = deleteHandlerStoreJSON;
-let copyTestDataToHandlerStore = copyTestDataToHandlerStoreJSON;
-
-HandlerServiceTestUtils.handlerService = gHandlerService;
 
 // Set up an nsIWebHandlerApp instance that can be used in multiple tests.
 let webHandlerApp = Cc["@mozilla.org/uriloader/web-handler-app;1"]
@@ -443,7 +436,7 @@ add_task(async function test_store_no_duplicates() {
 
 /**
  * Tests that "store" deletes properties that have their default values from
- * the data store. This is mainly relevant for the JSON back-end.
+ * the data store.
  *
  * File extensions are never deleted once they have been associated.
  */
@@ -615,7 +608,7 @@ add_task(async function test_default_protocol_handlers_no_duplicates() {
 
 /**
  * Ensures forward compatibility by checking that the "store" method preserves
- * unknown properties in the test data. This is specific to the JSON back-end.
+ * unknown properties in the test data.
  */
 add_task(async function test_store_keeps_unknown_properties() {
   // Create a new nsIHandlerInfo instance before loading the test data.

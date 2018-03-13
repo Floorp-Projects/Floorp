@@ -18,7 +18,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://testing-common/HandlerServiceTestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gHandlerServiceJSON",
+XPCOMUtils.defineLazyServiceGetter(this, "gHandlerService",
                                    "@mozilla.org/uriloader/handler-service;1",
                                    "nsIHandlerService");
 
@@ -30,11 +30,11 @@ let jsonPath = OS.Path.join(OS.Constants.Path.profileDir, "handlers.json");
  * Unloads the nsIHandlerService data store, so the back-end file can be
  * accessed or modified, and the new data will be loaded at the next access.
  */
-let unloadHandlerStoreJSON = async function() {
+let unloadHandlerStore = async function() {
   // If this function is called before the nsIHandlerService instance has been
   // initialized for the first time, the observer below will not be registered.
   // We have to force initialization to prevent the function from stalling.
-  gHandlerServiceJSON;
+  gHandlerService;
 
   let promise = TestUtils.topicObserved("handlersvc-json-replace-complete");
   Services.obs.notifyObservers(null, "handlersvc-json-replace", null);
@@ -44,8 +44,8 @@ let unloadHandlerStoreJSON = async function() {
 /**
  * Unloads the data store and deletes it.
  */
-let deleteHandlerStoreJSON = async function() {
-  await unloadHandlerStoreJSON();
+let deleteHandlerStore = async function() {
+  await unloadHandlerStore();
 
   await OS.File.remove(jsonPath, { ignoreAbsent: true });
 };
@@ -53,8 +53,8 @@ let deleteHandlerStoreJSON = async function() {
 /**
  * Unloads the data store and replaces it with the test data file.
  */
-let copyTestDataToHandlerStoreJSON = async function() {
-  await unloadHandlerStoreJSON();
+let copyTestDataToHandlerStore = async function() {
+  await unloadHandlerStore();
 
   await OS.File.copy(do_get_file("handlers.json").path, jsonPath);
 };
@@ -63,5 +63,5 @@ let copyTestDataToHandlerStoreJSON = async function() {
  * Ensures the files are removed and the services unloaded when the tests end.
  */
 registerCleanupFunction(async function test_terminate() {
-  await deleteHandlerStoreJSON();
+  await deleteHandlerStore();
 });
