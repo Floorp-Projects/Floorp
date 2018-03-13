@@ -653,21 +653,24 @@ pub const MADV_MERGEABLE: ::c_int = 12;
 pub const MADV_UNMERGEABLE: ::c_int = 13;
 pub const MADV_HWPOISON: ::c_int = 100;
 
-pub const IFF_UP: ::c_int = 0x1;
-pub const IFF_BROADCAST: ::c_int = 0x2;
-pub const IFF_DEBUG: ::c_int = 0x4;
-pub const IFF_LOOPBACK: ::c_int = 0x8;
-pub const IFF_POINTOPOINT: ::c_int = 0x10;
-pub const IFF_NOTRAILERS: ::c_int = 0x20;
-pub const IFF_RUNNING: ::c_int = 0x40;
-pub const IFF_NOARP: ::c_int = 0x80;
-pub const IFF_PROMISC: ::c_int = 0x100;
-pub const IFF_ALLMULTI: ::c_int = 0x200;
-pub const IFF_MASTER: ::c_int = 0x400;
-pub const IFF_SLAVE: ::c_int = 0x800;
-pub const IFF_MULTICAST: ::c_int = 0x1000;
-pub const IFF_PORTSEL: ::c_int = 0x2000;
-pub const IFF_AUTOMEDIA: ::c_int = 0x4000;
+// https://github.com/kraj/uClibc/blob/master/include/net/if.h#L44
+pub const IFF_UP: ::c_int = 0x1; // Interface is up.
+pub const IFF_BROADCAST: ::c_int = 0x2; // Broadcast address valid.
+pub const IFF_DEBUG: ::c_int = 0x4; // Turn on debugging.
+pub const IFF_LOOPBACK: ::c_int = 0x8; // Is a loopback net.
+pub const IFF_POINTOPOINT: ::c_int = 0x10; // Interface is point-to-point link.
+pub const IFF_NOTRAILERS: ::c_int = 0x20; // Avoid use of trailers.
+pub const IFF_RUNNING: ::c_int = 0x40; // Resources allocated.
+pub const IFF_NOARP: ::c_int = 0x80; // No address resolution protocol.
+pub const IFF_PROMISC: ::c_int = 0x100; // Receive all packets.
+// Not supported
+pub const IFF_ALLMULTI: ::c_int = 0x200; // Receive all multicast packets.
+pub const IFF_MASTER: ::c_int = 0x400; // Master of a load balancer.
+pub const IFF_SLAVE: ::c_int = 0x800; // Slave of a load balancer.
+pub const IFF_MULTICAST: ::c_int = 0x1000; // Supports multicast.
+pub const IFF_PORTSEL: ::c_int = 0x2000; // Can set media type.
+pub const IFF_AUTOMEDIA: ::c_int = 0x4000; // Auto media select active.
+// Dialup device with changing addresses.
 pub const IFF_DYNAMIC: ::c_int = 0x8000;
 
 pub const SOL_IP: ::c_int = 0;
@@ -787,6 +790,8 @@ pub const IP_TTL: ::c_int = 2;
 pub const IP_HDRINCL: ::c_int = 3;
 pub const IP_ADD_MEMBERSHIP: ::c_int = 35;
 pub const IP_DROP_MEMBERSHIP: ::c_int = 36;
+pub const IPV6_ADD_MEMBERSHIP: ::c_int = 20;
+pub const IPV6_DROP_MEMBERSHIP: ::c_int = 21;
 
 pub const IPV6_JOIN_GROUP: ::c_int = 20;
 pub const IPV6_LEAVE_GROUP: ::c_int = 21;

@@ -576,8 +576,13 @@ pub const IP_HDRINCL: ::c_int = 3;
 pub const IP_ADD_MEMBERSHIP: ::c_int = 35;
 pub const IP_DROP_MEMBERSHIP: ::c_int = 36;
 pub const IP_TRANSPARENT: ::c_int = 19;
+pub const IPV6_UNICAST_HOPS: ::c_int = 16;
+pub const IPV6_MULTICAST_IF: ::c_int = 17;
+pub const IPV6_MULTICAST_HOPS: ::c_int = 18;
+pub const IPV6_MULTICAST_LOOP: ::c_int = 19;
 pub const IPV6_ADD_MEMBERSHIP: ::c_int = 20;
 pub const IPV6_DROP_MEMBERSHIP: ::c_int = 21;
+pub const IPV6_V6ONLY: ::c_int = 26;
 
 pub const TCP_NODELAY: ::c_int = 1;
 pub const TCP_MAXSEG: ::c_int = 2;
@@ -592,9 +597,6 @@ pub const TCP_WINDOW_CLAMP: ::c_int = 10;
 pub const TCP_INFO: ::c_int = 11;
 pub const TCP_QUICKACK: ::c_int = 12;
 pub const TCP_CONGESTION: ::c_int = 13;
-
-pub const IPV6_MULTICAST_LOOP: ::c_int = 19;
-pub const IPV6_V6ONLY: ::c_int = 26;
 
 pub const SO_DEBUG: ::c_int = 1;
 

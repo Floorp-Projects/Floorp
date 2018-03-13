@@ -33,6 +33,8 @@ To target a version of `libclang`, enable one of the following Cargo features:
   ([Documentation](https://kylemayes.github.io/clang-sys/4_0/clang_sys))
 * `clang_5_0` - requires `libclang` 5.0 or later
   ([Documentation](https://kylemayes.github.io/clang-sys/5_0/clang_sys))
+* `clang_6_0` - requires `libclang` 6.0 or later
+  ([Documentation](https://kylemayes.github.io/clang-sys/6_0/clang_sys))
 
 If you do not enable one of these features, the API provided by `libclang` 3.5 will be available by
 default.
@@ -70,12 +72,12 @@ build it from source.
 The following environment variables, if set, are used by this crate to find the required libraries
 and executables:
 
-* `LLVM_CONFIG_PATH` **(compile time)** - provides a path to an `llvm-config` executable
-* `LIBCLANG_PATH` **(compile time)** - provides a path to a directory containing a `libclang` shared
+* `LLVM_CONFIG_PATH` **(compiletime)** - provides a path to an `llvm-config` executable
+* `LIBCLANG_PATH` **(compiletime)** - provides a path to a directory containing a `libclang` shared
   library
-* `LIBCLANG_STATIC_PATH` **(compile time)** - provides a path to a directory containing LLVM and
+* `LIBCLANG_STATIC_PATH` **(compiletime)** - provides a path to a directory containing LLVM and
   Clang static libraries
-* `CLANG_PATH` **(run time)** - provides a path to a `clang` executable
+* `CLANG_PATH` **(runtime)** - provides a path to a `clang` executable
 
 ## Linking
 
@@ -83,8 +85,9 @@ and executables:
 
 First, the `libclang` shared library will be searched for in the directory provided by the
 `LIBCLANG_PATH` environment variable if it was set. If this fails, the directory returned by
-`llvm-config --libdir` will be searched. If neither of these approaches is successful, a list of
-likely directories will be searched (e.g., `/usr/local/lib` on Linux).
+`llvm-config --libdir` will be searched. Failing that, the directories in the `LD_LIBRARY_PATH`
+environment variable will be searched. If none of these approaches is successful, a list of likely
+directories will be searched (e.g., `/usr/local/lib` on Linux).
 
 On Linux, running an executable that has been dynamically linked to `libclang` may require you to
 add a path to `libclang.so` to the `LD_LIBRARY_PATH` environment variable. The same is true on OS

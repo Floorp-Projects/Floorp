@@ -546,17 +546,23 @@ DoConnect(const char* aPath, size_t aLen, int aType)
 }
 
 size_t
-SandboxBroker::ConvertToRealPath(char* aPath, size_t aBufSize, size_t aPathLen)
+SandboxBroker::RealPath(char* aPath, size_t aBufSize, size_t aPathLen)
+{
+  char* result = realpath(aPath, nullptr);
+  if (result != nullptr) {
+    base::strlcpy(aPath, result, aBufSize);
+    free(result);
+    // Size changed, but guaranteed to be 0 terminated
+    aPathLen = strlen(aPath);
+  }
+  return aPathLen;
+}
+
+size_t
+SandboxBroker::ConvertRelativePath(char* aPath, size_t aBufSize, size_t aPathLen)
 {
   if (strstr(aPath, "..") != nullptr) {
-    char* result = realpath(aPath, nullptr);
-    if (result != nullptr) {
-      base::strlcpy(aPath, result, aBufSize);
-      free(result);
-      // Size changed, but guaranteed to be 0 terminated
-      aPathLen = strlen(aPath);
-    }
-    // ValidatePath will handle failure to translate
+    return RealPath(aPath, aBufSize, aPathLen);
   }
   return aPathLen;
 }
@@ -784,7 +790,7 @@ SandboxBroker::ThreadMain(void)
       pathLen = first_len;
 
       // Look up the first pathname but first translate relative paths.
-      pathLen = ConvertToRealPath(pathBuf, sizeof(pathBuf), pathLen);
+      pathLen = ConvertRelativePath(pathBuf, sizeof(pathBuf), pathLen);
       perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
 
       // We don't have permissions on the requested dir.
@@ -796,10 +802,20 @@ SandboxBroker::ThreadMain(void)
           // Did we arrive from a symlink in a path that is not writable?
           // Then try to figure out the original path and see if that is
           // readable. Work on the original path, this reverses
-          // ConvertToRealPath above.
+            // ConvertRelative above.
           int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
           if (symlinkPerms > 0) {
             perms = symlinkPerms;
+          }
+          if (!perms) {
+            // Now try the opposite case: translate symlinks to their
+            // actual destination file. Firefox always resolves symlinks,
+            // and in most cases we have whitelisted fixed paths that
+            // libraries will rely on and try to open. So this codepath
+            // is mostly useful for Mesa which had its kernel interface
+            // moved around.
+            pathLen = RealPath(pathBuf, sizeof(pathBuf), pathLen);
+            perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
           }
         }
       }
@@ -809,7 +825,7 @@ SandboxBroker::ThreadMain(void)
       if (pathLen2 > 0) {
         // Force 0 termination.
         pathBuf2[pathLen2] = '\0';
-        pathLen2 = ConvertToRealPath(pathBuf2, sizeof(pathBuf2), pathLen2);
+        pathLen2 = ConvertRelativePath(pathBuf2, sizeof(pathBuf2), pathLen2);
         int perms2 = mPolicy->Lookup(nsDependentCString(pathBuf2, pathLen2));
 
         // Take the intersection of the permissions for both paths.
