@@ -12,7 +12,7 @@
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMDocument.h"
-#include "DocumentType.h"
+#include "mozilla/dom/DocumentType.h"
 #include "nsTextNode.h"
 
 namespace mozilla {
@@ -67,7 +67,7 @@ DOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
 nsresult
 DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
                                   const nsAString& aQualifiedName,
-                                  nsIDOMDocumentType* aDoctype,
+                                  DocumentType* aDoctype,
                                   nsIDocument** aDocument)
 {
   *aDocument = nullptr;
@@ -124,7 +124,7 @@ DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 already_AddRefed<nsIDocument>
 DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
                                   const nsAString& aQualifiedName,
-                                  nsIDOMDocumentType* aDoctype,
+                                  DocumentType* aDoctype,
                                   ErrorResult& aRv)
 {
   nsCOMPtr<nsIDocument> document;
