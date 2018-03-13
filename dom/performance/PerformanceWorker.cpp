@@ -49,5 +49,11 @@ PerformanceWorker::CreationTime() const
   return mWorkerPrivate->CreationTime();
 }
 
+uint64_t
+PerformanceWorker::GetRandomTimelineSeed()
+{
+  return mWorkerPrivate->GetRandomTimelineSeed();
+}
+
 } // dom namespace
 } // mozilla namespace

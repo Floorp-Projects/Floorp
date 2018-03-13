@@ -108,6 +108,8 @@ public:
     return mSystemPrincipal;
   }
 
+  virtual uint64_t GetRandomTimelineSeed() = 0;
+
   void MemoryPressure();
 
   size_t SizeOfUserEntries(mozilla::MallocSizeOf aMallocSizeOf) const;

@@ -83,7 +83,8 @@ PerformanceTiming::PerformanceTiming(Performance* aPerformance,
   mTimingData.reset(new PerformanceTimingData(aChannel, aHttpChannel,
     aPerformance->IsSystemPrincipal()
     ? aZeroTime
-    : nsRFPService::ReduceTimePrecisionAsMSecs(aZeroTime)));
+    : nsRFPService::ReduceTimePrecisionAsMSecs(aZeroTime,
+        aPerformance->GetRandomTimelineSeed())));
 
   // Non-null aHttpChannel implies that this PerformanceTiming object is being
   // used for subresources, which is irrelevant to this probe.
@@ -257,7 +258,8 @@ PerformanceTimingData::FetchStartHighRes(Performance* aPerformance)
   if (aPerformance->IsSystemPrincipal()) {
     return mFetchStart;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(mFetchStart);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(mFetchStart,
+    aPerformance->GetRandomTimelineSeed());
 }
 
 DOMTimeMilliSec
@@ -336,7 +338,8 @@ PerformanceTimingData::AsyncOpenHighRes(Performance* aPerformance)
   if (aPerformance->IsSystemPrincipal()) {
     return rawValue;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue,
+    aPerformance->GetRandomTimelineSeed());
 }
 
 DOMHighResTimeStamp
@@ -352,7 +355,8 @@ PerformanceTimingData::WorkerStartHighRes(Performance* aPerformance)
   if (aPerformance->IsSystemPrincipal()) {
     return rawValue;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue,
+    aPerformance->GetRandomTimelineSeed());
 }
 
 /**
@@ -465,7 +469,8 @@ PerformanceTimingData::DomainLookupEndHighRes(Performance* aPerformance)
   if (aPerformance->IsSystemPrincipal()) {
     return rawValue;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue,
+    aPerformance->GetRandomTimelineSeed());
 }
 
 DOMTimeMilliSec
@@ -490,7 +495,8 @@ PerformanceTimingData::ConnectStartHighRes(Performance* aPerformance)
   if (aPerformance->IsSystemPrincipal()) {
     return rawValue;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue,
+    aPerformance->GetRandomTimelineSeed());
 }
 
 DOMTimeMilliSec
@@ -519,7 +525,8 @@ PerformanceTimingData::SecureConnectionStartHighRes(Performance* aPerformance)
   if (aPerformance->IsSystemPrincipal()) {
     return rawValue;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue,
+    aPerformance->GetRandomTimelineSeed());
 }
 
 DOMTimeMilliSec
@@ -545,7 +552,8 @@ PerformanceTimingData::ConnectEndHighRes(Performance* aPerformance)
   if (aPerformance->IsSystemPrincipal()) {
     return rawValue;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue,
+    aPerformance->GetRandomTimelineSeed());
 }
 
 DOMTimeMilliSec
@@ -628,7 +636,8 @@ PerformanceTimingData::ResponseEndHighRes(Performance* aPerformance)
   if (aPerformance->IsSystemPrincipal()) {
     return rawValue;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawValue,
+    aPerformance->GetRandomTimelineSeed());
 }
 
 DOMTimeMilliSec
