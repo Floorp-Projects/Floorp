@@ -15,13 +15,16 @@ const AnimationListHeader = createFactory(require("./AnimationListHeader"));
 class AnimationListContainer extends PureComponent {
   static get propTypes() {
     return {
+      addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      removeAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
+      setAnimationsCurrentTime: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
@@ -30,13 +33,16 @@ class AnimationListContainer extends PureComponent {
 
   render() {
     const {
+      addAnimationsCurrentTimeListener,
       animations,
       emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      removeAnimationsCurrentTimeListener,
       selectAnimation,
+      setAnimationsCurrentTime,
       setSelectedNode,
       simulateAnimation,
       timeScale,
@@ -48,6 +54,9 @@ class AnimationListContainer extends PureComponent {
       },
       AnimationListHeader(
         {
+          addAnimationsCurrentTimeListener,
+          removeAnimationsCurrentTimeListener,
+          setAnimationsCurrentTime,
           timeScale,
         }
       ),

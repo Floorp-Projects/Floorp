@@ -16,6 +16,7 @@
   --pause-image: url(chrome://devtools/skin/images/pause.svg);
   --resume-image: url(chrome://devtools/skin/images/play.svg);
   --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
+  --scrubber-color: #dd00a9;
   --sidebar-width: 200px;
   --stroke-color-cssanimation: var(--theme-highlight-lightorange);
   --stroke-color-csstransition: var(--theme-highlight-bluegrey);
@@ -95,26 +96,67 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   height: 100%;
   overflow: hidden;
   width: 100%;
+  -moz-user-select: none;
+}
+
+.animation-list-container.active-scrubber {
+  cursor: col-resize;
 }
 
 /* Animation List Header */
 .animation-list-header {
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) calc(100% - var(--sidebar-width) - var(--graph-right-offset)) var(--graph-right-offset);
   padding: 0;
 }
 
 /* Animation Timeline Tick List */
 .animation-timeline-tick-list {
-  margin-right: var(--graph-right-offset);
+  grid-column: 2/3;
   position: relative;
-  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
 .animation-timeline-tick-item {
   border-left: var(--tick-line-style);
   height: 100vh;
+  pointer-events: none;
   position: absolute;
+}
+
+/* Current Time Scrubber */
+.current-time-scrubber-controller {
+  cursor: col-resize;
+  grid-column: 2 / 3;
+  padding: 0;
+}
+
+.current-time-scrubber {
+  cursor: col-resize;
+  height: 100vh;
+  margin-left: -6px;
+  position: absolute;
+  width: 12px;
+  z-index: 1;
+}
+
+.current-time-scrubber::before {
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--scrubber-color);
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 0;
+}
+
+.current-time-scrubber::after {
+  border-left: 1px solid var(--scrubber-color);
+  content: "";
+  height: 100%;
+  left: 5px;
+  position: absolute;
+  top: 0;
+  width: 0;
 }
 
 /* Animation List */
@@ -287,11 +329,13 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 /* Animation Detail */
 .animation-detail-container {
+  background-color: var(--theme-body-background);
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
   width: 100%;
+  z-index: 1;
 }
 
 .animation-detail-header {
