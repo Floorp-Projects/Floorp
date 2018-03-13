@@ -7091,7 +7091,7 @@ nsWindow::SetProgress(unsigned long progressPercent)
     return;
   }
 
-  progressPercent = CLAMP(progressPercent, 0, 100);
+  progressPercent = MIN(progressPercent, 100);
 
   set_window_hint_cardinal(GDK_WINDOW_XID(gtk_widget_get_window(mShell)),
                            PROGRESS_HINT,
