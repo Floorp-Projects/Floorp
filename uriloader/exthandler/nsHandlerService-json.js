@@ -130,22 +130,7 @@ HandlerService.prototype = {
     }
 
     for (let scheme of Object.keys(schemes)) {
-
-      // This clause is essentially a reimplementation of
-      // nsIExternalProtocolHandlerService.getProtocolHandlerInfo().
-      // Necessary because calling that from here would make XPConnect barf
-      // when getService tried to re-enter the constructor for this
-      // service.
-      let osDefaultHandlerFound = {};
-      let protoInfo = gExternalProtocolService.getProtocolHandlerInfoFromOS(scheme,
-                                                                            osDefaultHandlerFound);
-
-      if (this.exists(protoInfo)) {
-        this.fillHandlerInfo(protoInfo, null);
-      } else {
-        gExternalProtocolService.setProtocolHandlerDefaults(protoInfo,
-                                                            osDefaultHandlerFound.value);
-      }
+      let protoInfo = gExternalProtocolService.getProtocolHandlerInfo(scheme);
 
       // cache the possible handlers to avoid extra xpconnect traversals.
       let possibleHandlers = protoInfo.possibleApplicationHandlers;
