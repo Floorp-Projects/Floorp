@@ -21,6 +21,8 @@ loader.lazyRequireGetter(this, "showNotification", "devtools/client/responsive.h
 loader.lazyRequireGetter(this, "l10n", "devtools/client/responsive.html/utils/l10n");
 loader.lazyRequireGetter(this, "EmulationFront", "devtools/shared/fronts/emulation", true);
 loader.lazyRequireGetter(this, "PriorityLevels", "devtools/client/shared/components/NotificationBox", true);
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
 const RELOAD_NOTIFICATION_PREF = "devtools.responsive.reloadNotification.enabled";
@@ -84,6 +86,12 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     }
     if (!this.isActiveForTab(tab)) {
       this.initMenuCheckListenerFor(window);
+
+      // Track whether a toolbox was opened before RDM was opened.
+      let hasToolbox = !!gDevTools.getToolbox(TargetFactory.forTab(tab));
+      if (hasToolbox) {
+        Services.telemetry.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
+      }
 
       let ui = new ResponsiveUI(window, tab);
       this.activeTabs.set(tab, ui);
