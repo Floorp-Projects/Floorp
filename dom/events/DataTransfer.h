@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsIVariant.h"
 #include "nsIPrincipal.h"
-#include "nsIDOMDataTransfer.h"
 #include "nsIDOMElement.h"
 #include "nsIDragService.h"
 #include "nsCycleCollectionParticipant.h"
@@ -45,14 +44,13 @@ template<typename T> class Optional;
 { 0x6c5f90d1, 0xa886, 0x42c8, \
   { 0x85, 0x06, 0x10, 0xbe, 0x5c, 0x0d, 0xc6, 0x77 } }
 
-class DataTransfer final : public nsIDOMDataTransfer,
+class DataTransfer final : public nsISupports,
                            public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DATATRANSFER_IID)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMDATATRANSFER
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DataTransfer)
 
