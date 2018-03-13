@@ -18,7 +18,37 @@ ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.defineModuleGetter(this, "CryptoUtils",
                                "resource://services-crypto/utils.js");
 
-const Prefs = new Preferences("services.common.");
+function decodeString(data, charset) {
+  if (!data || !charset) {
+    return data;
+  }
+
+  // This could be simpler if we assumed the charset is only ever UTF-8.
+  // It's unclear to me how willing we are to assume this, though...
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
+                     .createInstance(Ci.nsIStringInputStream);
+  stringStream.setData(data, data.length);
+
+  let converterStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
+                        .createInstance(Ci.nsIConverterInputStream);
+
+  converterStream.init(stringStream, charset, 0,
+                       converterStream.DEFAULT_REPLACEMENT_CHARACTER);
+
+  let remaining = data.length;
+  let body = "";
+  while (remaining > 0) {
+    let str = {};
+    let num = converterStream.readString(remaining, str);
+    if (!num) {
+      break;
+    }
+    remaining -= num;
+    body += str.value;
+  }
+  return body;
+}
+
 
 /**
  * Single use HTTP requests to RESTish resources.
@@ -87,8 +117,7 @@ function RESTRequest(uri) {
 
   this._headers = {};
   this._log = Log.repository.getLogger(this._logName);
-  this._log.level =
-    Log.Level[Prefs.get("log.logger.rest.request")];
+  this._log.manageLevelFromPref("services.common.log.logger.rest.request");
 }
 RESTRequest.prototype = {
 
@@ -432,10 +461,8 @@ RESTRequest.prototype = {
     this._log.trace("onStartRequest: " + channel.requestMethod + " " +
                     channel.URI.spec);
 
-    // Create a response object and fill it with some data.
-    let response = this.response = new RESTResponse();
-    response.request = this;
-    response.body = "";
+    // Create a new response object.
+    this.response = new RESTResponse(this);
 
     this.delayTimeout();
   },
@@ -470,6 +497,20 @@ RESTRequest.prototype = {
       this._log.error("Unexpected error: onComplete not defined in " +
                       "abortRequest.");
       this.onProgress = null;
+      return;
+    }
+
+    try {
+      // Decode this.response._rawBody,
+      this.response.body = decodeString(this.response._rawBody, this.response.charset);
+      this.response._rawBody = null;
+      // Call the 'progress' callback a single time with all the data.
+      this.onProgress();
+    } catch (ex) {
+      this._log.warn(`Exception handling response - ${this.method} ${channel.URI.spec}`, ex);
+      this.status = this.ABORTED;
+      this.onComplete(ex);
+      this.onComplete = this.onProgress = null;
       return;
     }
 
@@ -516,61 +557,17 @@ RESTRequest.prototype = {
 
     if (channel.contentCharset) {
       this.response.charset = channel.contentCharset;
-
-      if (!this._converterStream) {
-        this._converterStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
-                                   .createInstance(Ci.nsIConverterInputStream);
-      }
-      this._converterStream.init(stream, channel.contentCharset, 0,
-                                 this._converterStream.DEFAULT_REPLACEMENT_CHARACTER);
-
-      try {
-        let remaining = count;
-        while (remaining > 0) {
-          let str = {};
-          let num = this._converterStream.readString(remaining, str);
-          if (!num) {
-            break;
-          }
-          remaining -= num;
-          this.response.body += str.value;
-        }
-      } catch (ex) {
-        this._log.warn("Exception thrown reading " + count + " bytes from " +
-                       "the channel", ex);
-        throw ex;
-      }
     } else {
       this.response.charset = null;
-
-      if (!this._inputStream) {
-        this._inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
-                              .createInstance(Ci.nsIScriptableInputStream);
-      }
-
-      this._inputStream.init(stream);
-
-      this.response.body += this._inputStream.read(count);
     }
 
-    try {
-      this.onProgress();
-    } catch (ex) {
-      this._log.warn("Got exception calling onProgress handler, aborting " +
-                     this.method + " " + channel.URI.spec, ex);
-      this.abort();
-
-      if (!this.onComplete) {
-        this._log.error("Unexpected error: onComplete not defined in " +
-                        "onDataAvailable.");
-        this.onProgress = null;
-        return;
-      }
-
-      this.onComplete(ex);
-      this.onComplete = this.onProgress = null;
-      return;
+    if (!this._inputStream) {
+      this._inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
+                            .createInstance(Ci.nsIScriptableInputStream);
     }
+    this._inputStream.init(stream);
+
+    this.response._rawBody += this._inputStream.read(count);
 
     this.delayTimeout();
   },
@@ -642,10 +639,12 @@ RESTRequest.prototype = {
  * Response object for a RESTRequest. This will be created automatically by
  * the RESTRequest.
  */
-function RESTResponse() {
+function RESTResponse(request = null) {
+  this.body = "";
+  this._rawBody = "";
+  this.request = request;
   this._log = Log.repository.getLogger(this._logName);
-  this._log.level =
-    Log.Level[Prefs.get("log.logger.rest.response")];
+  this._log.manageLevelFromPref("services.common.log.logger.rest.response");
 }
 RESTResponse.prototype = {
 
