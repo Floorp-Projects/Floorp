@@ -214,6 +214,12 @@ Element::GetSVGAnimatedClass() const
 NS_IMETHODIMP
 Element::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+  if (aIID.Equals(NS_GET_IID(Element))) {
+    NS_ADDREF_THIS();
+    *aInstancePtr = this;
+    return NS_OK;
+  }
+
   NS_ASSERTION(aInstancePtr,
                "QueryInterface requires a non-NULL destination!");
   nsresult rv = FragmentOrElement::QueryInterface(aIID, aInstancePtr);
