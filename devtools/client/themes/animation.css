@@ -67,6 +67,23 @@
   background-image: var(--resume-image);
 }
 
+select.playback-rate-selector.devtools-button {
+  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  background-position: calc(100% - 4px) center;
+  background-repeat: no-repeat;
+  padding-right: 1em;
+  text-align: center;
+}
+
+select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.checked):hover {
+  background: none;
+  background-color: var(--toolbarbutton-background);
+  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  background-position: calc(100% - 4px) center;
+  background-repeat: no-repeat;
+  border-color: var(--toolbarbutton-hover-border-color);
+}
+
 .rewind-button::before {
   background-image: var(--rewind-image);
 }
