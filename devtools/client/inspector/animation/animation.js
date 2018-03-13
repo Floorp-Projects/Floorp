@@ -38,6 +38,7 @@ class AnimationInspector {
       this.removeAnimationsCurrentTimeListener.bind(this);
     this.rewindAnimationsCurrentTime = this.rewindAnimationsCurrentTime.bind(this);
     this.selectAnimation = this.selectAnimation.bind(this);
+    this.setAnimationsCurrentTime = this.setAnimationsCurrentTime.bind(this);
     this.setAnimationsPlaybackRate = this.setAnimationsPlaybackRate.bind(this);
     this.setAnimationsPlayState = this.setAnimationsPlayState.bind(this);
     this.setDetailVisibility = this.setDetailVisibility.bind(this);
@@ -76,6 +77,7 @@ class AnimationInspector {
       removeAnimationsCurrentTimeListener,
       rewindAnimationsCurrentTime,
       selectAnimation,
+      setAnimationsCurrentTime,
       setAnimationsPlaybackRate,
       setAnimationsPlayState,
       setDetailVisibility,
@@ -87,6 +89,7 @@ class AnimationInspector {
     this.animationsFront = new AnimationsFront(target.client, target.form);
 
     this.animationsCurrentTimeListeners = [];
+    this.isCurrentTimeSet = false;
 
     const provider = createElement(Provider,
       {
@@ -107,6 +110,7 @@ class AnimationInspector {
           removeAnimationsCurrentTimeListener,
           rewindAnimationsCurrentTime,
           selectAnimation,
+          setAnimationsCurrentTime,
           setAnimationsPlaybackRate,
           setAnimationsPlayState,
           setDetailVisibility,
@@ -226,6 +230,13 @@ class AnimationInspector {
            this.inspector.sidebar.getCurrentTabID() === "newanimationinspector";
   }
 
+  /**
+   * This method should call when the current time is changed.
+   * Then, dispatches the current time to listeners that are registered
+   * by addAnimationsCurrentTimeListener.
+   *
+   * @param {Number} currentTime
+   */
   onAnimationsCurrentTimeUpdated(currentTime) {
     for (const listener of this.animationsCurrentTimeListeners) {
       listener(currentTime);
@@ -259,20 +270,37 @@ class AnimationInspector {
   }
 
   async rewindAnimationsCurrentTime() {
-    const animations = this.state.animations;
-    await this.animationsFront.setCurrentTimes(animations, 0, true);
-    await this.updateAnimations(animations);
-    this.onAnimationsCurrentTimeUpdated(0);
+    await this.setAnimationsCurrentTime(0, true);
   }
 
   selectAnimation(animation) {
     this.inspector.store.dispatch(updateSelectedAnimation(animation));
   }
 
+  async setAnimationsCurrentTime(currentTime, shouldRefresh) {
+    this.stopAnimationsCurrentTimeTimer();
+    this.onAnimationsCurrentTimeUpdated(currentTime);
+
+    if (!shouldRefresh && this.isCurrentTimeSet) {
+      return;
+    }
+
+    const animations = this.state.animations;
+    this.isCurrentTimeSet = true;
+    await this.animationsFront.setCurrentTimes(animations, currentTime, true);
+    await this.updateAnimations(animations);
+    this.isCurrentTimeSet = false;
+
+    if (shouldRefresh) {
+      this.updateState([...animations]);
+    }
+  }
+
   async setAnimationsPlaybackRate(playbackRate) {
     const animations = this.state.animations;
     await this.animationsFront.setPlaybackRates(animations, playbackRate);
     await this.updateAnimations(animations);
+    await this.updateState([...animations]);
   }
 
   async setAnimationsPlayState(doPlay) {
@@ -282,7 +310,8 @@ class AnimationInspector {
       await this.animationsFront.pauseAll();
     }
 
-    this.updateAnimations(this.state.animations);
+    await this.updateAnimations(this.state.animations);
+    await this.updateState([...this.state.animations]);
   }
 
   setDetailVisibility(isVisible) {
@@ -376,8 +405,6 @@ class AnimationInspector {
     });
 
     await Promise.all(promises);
-
-    this.updateState([...animations]);
   }
 
   updateState(animations) {
