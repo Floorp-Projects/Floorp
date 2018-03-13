@@ -138,7 +138,7 @@ public class DownloadTest {
         TestHelper.mDevice.openNotification();
 
         TestHelper.savedNotification.waitForExists(waitingTime);
-        TestHelper.savedNotification.swipeRight(600);
+        TestHelper.savedNotification.swipeRight(50);
         TestHelper.pressBackKey();
     }
 }

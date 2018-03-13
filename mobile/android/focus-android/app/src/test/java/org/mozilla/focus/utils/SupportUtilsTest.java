@@ -34,7 +34,7 @@ public class SupportUtilsTest {
         final String testTopicStr = testTopic.topicStr;
 
         Locale.setDefault(Locale.GERMANY);
-        assertEquals("https://support.mozilla.org/1/mobile/" + versionName +"/Android/de-DE/" + testTopicStr,
+        assertEquals("https://support.mozilla.org/1/mobile/" + versionName + "/Android/de-DE/" + testTopicStr,
                 SupportUtils.getSumoURLForTopic(RuntimeEnvironment.application, testTopic));
 
         Locale.setDefault(Locale.CANADA_FRENCH);
