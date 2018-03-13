@@ -95,7 +95,10 @@
  * for client -> server and for server -> client.  Note that the
  * types must be able to Copy() from one another -- the default Copy()
  * implementation uses the type's assignment operator.
- * See e.g. EndpointHandler<CLIENT>::IPCTypeMap<LPOPENFILENAMEW>.
+ * The EndpointHandler itself is a template parameter of the FunctionBroker.
+ * The default EndpointHandler recognizes basic types.
+ * See e.g. FileDlgEndpointHandler<CLIENT>::IPCTypeMap<LPOPENFILENAMEW>
+ * for an example of specialization.
  *
  * * Anything more complex involving parameter transmission:
  *
@@ -456,15 +459,16 @@ inline void Copy(PTimeStamp& aDest, const uint64_t& aSrc)
 
 #endif // defined(XP_WIN)
 
-template<Endpoint e> struct EndpointHandler;
-template<> struct EndpointHandler<CLIENT> {
+template<Endpoint e, typename SelfType> struct BaseEndpointHandler;
+template<typename SelfType>
+struct BaseEndpointHandler<CLIENT,SelfType> {
   static const Endpoint OtherSide = SERVER;
 
   template<typename DestType, typename SrcType>
   inline static void Copy(ServerCallData* aScd, DestType& aDest, const SrcType& aSrc)
   {
     MOZ_ASSERT(!aScd);    // never used in the CLIENT
-    Copy(aDest, aSrc);
+    SelfType::Copy(aDest, aSrc);
   }
 
   template<typename DestType, typename SrcType>
@@ -472,109 +476,54 @@ template<> struct EndpointHandler<CLIENT> {
   {
     mozilla::plugins::Copy(aDest, aSrc);
   }
+
+  // const char* should be null terminated but this is not always the case.
+  // In those cases, we must override this default behavior.
+  inline static void Copy(nsDependentCSubstring& aDest, const char* const& aSrc)
+  {
+    // In the client, we just bind to the caller's string
+    if (aSrc) {
+      aDest.Rebind(aSrc, strlen(aSrc));
+    } else {
+      aDest.SetIsVoid(true);
+    }
+  }
+
+  inline static void Copy(const char*& aDest, const nsDependentCSubstring& aSrc)
+  {
+    MOZ_ASSERT_UNREACHABLE("Cannot return const parameters.");
+  }
+
+  inline static void Copy(nsDependentCSubstring& aDest, char* const& aSrc)
+  {
+    // In the client, we just bind to the caller's string
+    if (aSrc) {
+      aDest.Rebind(aSrc, strlen(aSrc));
+    } else {
+      aDest.SetIsVoid(true);
+    }
+  }
+
+  inline static void Copy(char*& aDest, const nsDependentCSubstring& aSrc)
+  {
+    MOZ_ASSERT_UNREACHABLE("Returning char* parameters is not yet suported.");
+  }
+
+#if defined(XP_WIN)
+  inline static void Copy(uint32_t& aDest, const LPDWORD& aSrc)
+  {
+    aDest = *aSrc;
+  }
+
+  inline static void Copy(LPDWORD& aDest, const uint32_t& aSrc)
+  {
+    *aDest = aSrc;
+  }
+#endif // #if defined(XP_WIN)
 };
 
-#if defined(XP_WIN)
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(uint64_t& aDest, const PSecHandle& aSrc)
-{
-  MOZ_ASSERT((aSrc->dwLower == aSrc->dwUpper) && IsOdd(aSrc->dwLower));
-  aDest = static_cast<uint64_t>(aSrc->dwLower);
-}
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(PSecHandle& aDest, const uint64_t& aSrc)
-{
-  MOZ_ASSERT(IsOdd(aSrc));
-  aDest->dwLower = static_cast<ULONG_PTR>(aSrc);
-  aDest->dwUpper = static_cast<ULONG_PTR>(aSrc);
-}
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(OpenFileNameIPC& aDest, const LPOPENFILENAMEW& aSrc)
-{
-  aDest.CopyFromOfn(aSrc);
-}
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(LPOPENFILENAMEW& aDest, const OpenFileNameRetIPC& aSrc)
-{
-  aSrc.AddToOfn(aDest);
-}
-
-#endif // defined(XP_WIN)
-
-// const char* should be null terminated but this is not always the case.
-// In those cases, we must override this default behavior.
-template<>
-inline void EndpointHandler<CLIENT>::Copy(nsDependentCSubstring& aDest, const char* const& aSrc)
-{
-  // In the client, we just bind to the caller's string
-  if (aSrc) {
-    aDest.Rebind(aSrc, strlen(aSrc));
-  } else {
-    aDest.SetIsVoid(true);
-  }
-}
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(const char*& aDest, const nsDependentCSubstring& aSrc)
-{
-  MOZ_ASSERT_UNREACHABLE("Cannot return const parameters.");
-}
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(nsDependentCSubstring& aDest, char* const& aSrc)
-{
-  // In the client, we just bind to the caller's string
-  if (aSrc) {
-    aDest.Rebind(aSrc, strlen(aSrc));
-  } else {
-    aDest.SetIsVoid(true);
-  }
-}
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(char*& aDest,
-                                          const nsDependentCSubstring& aSrc)
-{
-  MOZ_ASSERT_UNREACHABLE("Returning char* parameters is not yet suported.");
-}
-
-#if defined(XP_WIN)
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(IPCSchannelCred& aDest,
-                                          const PSCHANNEL_CRED& aSrc)
-{
-  if (aSrc) {
-    aDest.CopyFrom(aSrc);
-  }
-}
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(IPCInternetBuffers& aDest,
-                                          const LPINTERNET_BUFFERSA& aSrc)
-{
-  aDest.CopyFrom(aSrc);
-}
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(uint32_t& aDest, const LPDWORD& aSrc)
-{
-  aDest = *aSrc;
-}
-
-template<>
-inline void EndpointHandler<CLIENT>::Copy(LPDWORD& aDest, const uint32_t& aSrc)
-{
-  *aDest = aSrc;
-}
-
-#endif // #if defined(XP_WIN)
-
-template<> struct EndpointHandler<SERVER> {
+template<typename SelfType>
+struct BaseEndpointHandler<SERVER, SelfType> {
   static const Endpoint OtherSide = CLIENT;
 
   // Specializations of this method may allocate memory for types that need it
@@ -585,7 +534,7 @@ template<> struct EndpointHandler<SERVER> {
   template<typename DestType, typename SrcType>
   inline static void Copy(ServerCallData* aScd, DestType& aDest, const SrcType& aSrc)
   {
-    Copy(aDest, aSrc);
+    SelfType::Copy(aDest, aSrc);
   }
 
   template<typename DestType, typename SrcType>
@@ -593,195 +542,65 @@ template<> struct EndpointHandler<SERVER> {
   {
     mozilla::plugins::Copy(aDest, aSrc);
   }
+
+  inline static void Copy(nsDependentCSubstring& aDest, const nsDependentCSubstring& aSrc)
+  {
+    aDest.Rebind(aSrc.Data(), aSrc.Length());
+    aDest.SetIsVoid(aSrc.IsVoid());
+  }
+
+  // const char* should be null terminated but this is not always the case.
+  // In those cases, we override this default behavior.
+  inline static void Copy(nsDependentCSubstring& aDest, const char* const& aSrc)
+  {
+    MOZ_ASSERT_UNREACHABLE("Const parameter cannot be returned by brokering process.");
+  }
+
+  inline static void Copy(nsDependentCSubstring& aDest, char* const& aSrc)
+  {
+    MOZ_ASSERT_UNREACHABLE("Returning char* parameters is not yet suported.");
+  }
+
+  inline static void Copy(ServerCallData* aScd, char*& aDest, const nsDependentCSubstring& aSrc)
+  {
+    // In the parent, we must allocate the string.
+    MOZ_ASSERT(aScd);
+    if (aSrc.IsVoid()) {
+      aDest = nullptr;
+      return;
+    }
+    aScd->AllocateMemory(aSrc.Length() + 1, aDest);
+    memcpy(aDest, aSrc.Data(), aSrc.Length());
+    aDest[aSrc.Length()] = '\0';
+  }
+
+  inline static void Copy(ServerCallData* aScd, const char*& aDest, const nsDependentCSubstring& aSrc)
+  {
+    char* nonConstDest;
+    Copy(aScd, nonConstDest, aSrc);
+    aDest = nonConstDest;
+  }
+
+#if defined(XP_WIN)
+  inline static void Copy(uint32_t& aDest, const LPDWORD& aSrc)
+  {
+    aDest = *aSrc;
+  }
+
+  inline static void Copy(LPDWORD& aDest, const uint32_t& aSrc)
+  {
+    MOZ_RELEASE_ASSERT(aDest);
+    *aDest = aSrc;
+  }
+
+  inline static void Copy(ServerCallData* aScd, PTimeStamp& aDest, const uint64_t& aSrc)
+  {
+    MOZ_ASSERT(!aDest);
+    aDest = aScd->Allocate<::TimeStamp>();
+    Copy(aDest, aSrc);
+  }
+#endif // defined(XP_WIN)
 };
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(nsDependentCSubstring& aDest, const nsDependentCSubstring& aSrc)
-{
-  aDest.Rebind(aSrc.Data(), aSrc.Length());
-  aDest.SetIsVoid(aSrc.IsVoid());
-}
-
-// const char* should be null terminated but this is not always the case.
-// In those cases, we override this default behavior.
-template<>
-inline void EndpointHandler<SERVER>::Copy(nsDependentCSubstring& aDest, const char* const& aSrc)
-{
-  MOZ_ASSERT_UNREACHABLE("Const parameter cannot be returned by brokering process.");
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(nsDependentCSubstring& aDest, char* const& aSrc)
-{
-  MOZ_ASSERT_UNREACHABLE("Returning char* parameters is not yet suported.");
-}
-
-#if defined(XP_WIN)
-
-// PSecHandle is the same thing as PCtxtHandle and PCredHandle
-template<>
-inline void EndpointHandler<SERVER>::Copy(uint64_t& aDest, const PSecHandle& aSrc)
-{
-  static uint64_t sNextVal = 1;
-  UlongPair key(aSrc->dwLower, aSrc->dwUpper);
-  // Fetch val by reference to update the value in the map
-  uint64_t& val = sPairToIdMap[key];
-  if (val == 0) {
-    MOZ_ASSERT(IsOdd(sNextVal));
-    val = sNextVal;
-    sIdToPairMap[val] = key;
-    sNextVal += 2;
-  }
-  aDest = val;
-}
-
-// HANDLEs and HINTERNETs marshal (for return values)
-template<>
-inline void EndpointHandler<SERVER>::Copy(uint64_t& aDest, void* const & aSrc)
-{
-  // If the HANDLE/HINSTANCE was an error then don't store it.
-  if (!aSrc) {
-    aDest = 0;
-    return;
-  }
-
-  static uint64_t sNextVal = 1;
-  // Fetch val by reference to update the value in the map
-  uint64_t& val = sPtrToIdMap[aSrc];
-  if (val == 0) {
-    MOZ_ASSERT(IsOdd(sNextVal));
-    val = sNextVal;
-    sIdToPtrMap[val] = aSrc;
-    sNextVal += 2;
-  }
-  aDest = val;
-}
-
-// HANDLEs and HINTERNETs unmarshal
-template<>
-inline void EndpointHandler<SERVER>::Copy(void*& aDest, const uint64_t& aSrc)
-{
-  aDest = nullptr;
-  MOZ_RELEASE_ASSERT(IsOdd(aSrc));
-
-  // If the src is not found in the map then we get aDest == 0
-  void* ptr = sIdToPtrMap[aSrc];
-  aDest = reinterpret_cast<void*>(ptr);
-  MOZ_RELEASE_ASSERT(aDest);
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(OpenFileNameRetIPC& aDest, const LPOPENFILENAMEW& aSrc)
-{
-  aDest.CopyFromOfn(aSrc);
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(PSCHANNEL_CRED& aDest, const IPCSchannelCred& aSrc)
-{
-  if (aDest) {
-    aSrc.CopyTo(aDest);
-  }
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(uint32_t& aDest, const LPDWORD& aSrc)
-{
-  aDest = *aSrc;
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(LPDWORD& aDest, const uint32_t& aSrc)
-{
-  MOZ_RELEASE_ASSERT(aDest);
-  *aDest = aSrc;
-}
-
-#endif // defined(XP_WIN)
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(ServerCallData* aScd, char*& aDest, const nsDependentCSubstring& aSrc)
-{
-  // In the parent, we must allocate the string.
-  MOZ_ASSERT(aScd);
-  if (aSrc.IsVoid()) {
-    aDest = nullptr;
-    return;
-  }
-  aScd->AllocateMemory(aSrc.Length() + 1, aDest);
-  memcpy(aDest, aSrc.Data(), aSrc.Length());
-  aDest[aSrc.Length()] = '\0';
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(ServerCallData* aScd, const char*& aDest, const nsDependentCSubstring& aSrc)
-{
-  char* nonConstDest;
-  Copy(aScd, nonConstDest, aSrc);
-  aDest = nonConstDest;
-}
-
-#if defined(XP_WIN)
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(ServerCallData* aScd, PSecHandle& aDest, const uint64_t& aSrc)
-{
-  MOZ_ASSERT(!aDest);
-  MOZ_RELEASE_ASSERT(IsOdd(aSrc));
-
-  // If the src is not found in the map then we get the pair { 0, 0 }
-  aDest = aScd->Allocate<SecHandle>();
-  const UlongPair& pair = sIdToPairMap[aSrc];
-  MOZ_RELEASE_ASSERT(pair.first || pair.second);
-  aDest->dwLower = pair.first;
-  aDest->dwUpper = pair.second;
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(ServerCallData* aScd, PTimeStamp& aDest, const uint64_t& aSrc)
-{
-  MOZ_ASSERT(!aDest);
-  aDest = aScd->Allocate<::TimeStamp>();
-  Copy(aDest, aSrc);
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(ServerCallData* aScd, LPOPENFILENAMEW& aDest, const OpenFileNameIPC& aSrc)
-{
-  MOZ_ASSERT(!aDest);
-  ServerCallData::DestructorType* destructor =
-    [](void* aObj) {
-      OpenFileNameIPC::FreeOfnStrings(static_cast<LPOPENFILENAMEW>(aObj));
-      DeleteDestructor<OPENFILENAMEW>(aObj);
-    };
-  aDest = aScd->Allocate<OPENFILENAMEW>(destructor);
-  aSrc.AllocateOfnStrings(aDest);
-  aSrc.AddToOfn(aDest);
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(ServerCallData* aScd, PSCHANNEL_CRED& aDest, const IPCSchannelCred& aSrc)
-{
-  MOZ_ASSERT(!aDest);
-  aDest = aScd->Allocate<SCHANNEL_CRED>();
-  Copy(aDest, aSrc);
-}
-
-template<>
-inline void EndpointHandler<SERVER>::Copy(ServerCallData* aScd, LPINTERNET_BUFFERSA& aDest, const IPCInternetBuffers& aSrc)
-{
-  MOZ_ASSERT(!aDest);
-  aSrc.CopyTo(aDest);
-  ServerCallData::DestructorType* destructor =
-    [](void* aObj) {
-      LPINTERNET_BUFFERSA inetBuf = static_cast<LPINTERNET_BUFFERSA>(aObj);
-      IPCInternetBuffers::FreeBuffers(inetBuf);
-      FreeDestructor(inetBuf);
-    };
-  aScd->PostDestructor(aDest, destructor);
-}
-
-#endif // defined(XP_WIN)
 
 // PhaseHandler is a RequestHandler or a ResponseHandler.
 template<Endpoint endpoint, typename PhaseHandler>
@@ -818,7 +637,8 @@ struct Marshaler
       HOOK_LOG(LogLevel::Verbose,
                ("%s marshaling parameter %d.", EndpointMsg(endpoint), paramIndex));
       IPCType ipcObject;
-      EndpointHandler<endpoint>::Copy(ipcObject, aParam);  // Must be able to Copy() from OrigType to IPCType
+      // EndpointHandler must be able to Copy() from OrigType to IPCType
+      PhaseHandler::EHContainer::template EndpointHandler<endpoint>::Copy(ipcObject, aParam);
       LogParameterValue(paramIndex, ipcObject);
       aMarshaledTuple.AddElement(ipcObject);
     }
@@ -881,7 +701,7 @@ struct Marshaler
       HOOK_LOG(LogLevel::Verbose,
                ("%s unmarshaled parameter %d.", EndpointMsg(endpoint), tupleIndex));
       LogParameterValue(tupleIndex, *ipcObject);
-      EndpointHandler<endpoint>::Copy(aUnmarshaledTuple.GetServerCallData(), aParam, *ipcObject);
+      PhaseHandler::EHContainer::template EndpointHandler<endpoint>::Copy(aUnmarshaledTuple.GetServerCallData(), aParam, *ipcObject);
       ++aNextTupleIdx;
       return true;
     }
@@ -923,7 +743,7 @@ struct Marshaler
     {
       nsDependentCSubstring tempStr;
       bool ret = MaybeUnmarshalParameter<tupleIndex, nsDependentCSubstring, true, false>::UnmarshalParameter(aUnmarshaledTuple, aNextTupleIdx, tempStr);
-      EndpointHandler<endpoint>::Copy(aUnmarshaledTuple.GetServerCallData(), aParam, tempStr);
+      PhaseHandler::EHContainer::template EndpointHandler<endpoint>::Copy(aUnmarshaledTuple.GetServerCallData(), aParam, tempStr);
       return ret;
     }
   };
@@ -1022,7 +842,7 @@ template<FunctionHookId functionId> struct RequestInfo
  * This base stores the RequestHandler's IPCTypeMap.  It really only
  * exists to circumvent the arbitrary C++ rule (enforced by mingw) forbidding
  * full class specialization of a class (IPCTypeMap<T>) inside of an
- * unspecialized template class (RequestHandler<T>).p
+ * unspecialized template class (RequestHandler<T>).
  */
 struct RequestHandlerBase
 {
@@ -1042,15 +862,20 @@ struct RequestHandlerBase::IPCTypeMap<LPOPENFILENAMEW> { typedef OpenFileNameIPC
 
 #endif // defined(XP_WIN)
 
-template<FunctionHookId functionId, typename FunctionType> struct RequestHandler;
+struct BaseEHContainer {
+  template <Endpoint e> struct EndpointHandler : public BaseEndpointHandler<e,EndpointHandler<e>> {};
+};
 
-template<FunctionHookId functionId, typename ResultType, typename ... ParamTypes>
-struct RequestHandler<functionId, ResultType HOOK_CALL (ParamTypes...)> :
+template<FunctionHookId functionId, typename FunctionType, typename EHContainer> struct RequestHandler;
+
+template<FunctionHookId functionId, typename EHContainerType, typename ResultType, typename ... ParamTypes>
+struct RequestHandler<functionId, ResultType HOOK_CALL (ParamTypes...), EHContainerType> :
   public RequestHandlerBase
 {
   typedef ResultType(HOOK_CALL FunctionType)(ParamTypes...);
-  typedef RequestHandler<functionId, FunctionType> SelfType;
+  typedef RequestHandler<functionId, FunctionType, EHContainerType> SelfType;
   typedef RequestInfo<functionId> Info;
+  typedef EHContainerType EHContainer;
 
   static void Marshal(IpdlTuple& aTuple, const ParamTypes&... aParams)
   {
@@ -1164,15 +989,16 @@ struct ResponseHandlerBase::IPCTypeMap<LPOPENFILENAMEW> { typedef OpenFileNameRe
 
 #endif
 
-template<FunctionHookId functionId, typename FunctionType> struct ResponseHandler;
+template<FunctionHookId functionId, typename FunctionType, typename EHContainer> struct ResponseHandler;
 
-template<FunctionHookId functionId, typename ResultType, typename ... ParamTypes>
-struct ResponseHandler<functionId, ResultType HOOK_CALL (ParamTypes...)> :
+template<FunctionHookId functionId, typename EHContainerType, typename ResultType, typename ... ParamTypes>
+struct ResponseHandler<functionId, ResultType HOOK_CALL (ParamTypes...), EHContainerType> :
   public ResponseHandlerBase
 {
   typedef ResultType(HOOK_CALL FunctionType)(ParamTypes...);
-  typedef ResponseHandler<functionId, FunctionType> SelfType;
+  typedef ResponseHandler<functionId, FunctionType, EHContainerType> SelfType;
   typedef ResponseInfo<functionId> Info;
+  typedef EHContainerType EHContainer;
 
   static void Marshal(IpdlTuple& aTuple, const ResultType& aResult, const ParamTypes&... aParams)
   {
@@ -1215,11 +1041,12 @@ private:
  * Data for hooking a function that we automatically broker in a remote
  * process.
  */
-template <FunctionHookId functionId, typename FunctionType>
+template <FunctionHookId functionId, typename FunctionType,
+          typename EHContainer = BaseEHContainer>
 class FunctionBroker;
 
-template <FunctionHookId functionId, typename ResultType, typename ... ParamTypes>
-class FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...)> :
+template <FunctionHookId functionId, typename EHContainer, typename ResultType, typename ... ParamTypes>
+class FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...), EHContainer> :
   public BasicFunctionHook<functionId, ResultType HOOK_CALL (ParamTypes...)>
 {
 public:
@@ -1230,12 +1057,17 @@ public:
   static const size_t numParams = sizeof...(ParamTypes);
 
   typedef ResultType (HOOK_CALL FunctionType)(ParamTypes...);
-  typedef FunctionBroker<functionId, FunctionType> SelfType;
+  typedef FunctionBroker<functionId, FunctionType, EHContainer> SelfType;
   typedef BasicFunctionHook<functionId, FunctionType> FunctionHookInfoType;
   typedef FunctionHookInfoType BaseType;
 
-  typedef RequestHandler<functionId, FunctionType> Request;
-  typedef ResponseHandler<functionId, FunctionType> Response;
+  typedef RequestHandler<functionId, FunctionType, EHContainer> Request;
+  typedef ResponseHandler<functionId, FunctionType, EHContainer> Response;
+
+  template <typename DelegateFcnType>
+  using RequestDelegate = RequestHandler<functionId, DelegateFcnType, EHContainer>;
+  template <typename DelegateFcnType>
+  using ResponseDelegate = ResponseHandler<functionId, DelegateFcnType, EHContainer>;
 
   FunctionBroker(const char* aModuleName, const char* aMethodName,
                        FunctionType* aOriginalFunction) :
@@ -1327,9 +1159,9 @@ protected:
   }
 };
 
-template <FunctionHookId functionId, typename ResultType, typename ... ParamTypes>
+template <FunctionHookId functionId, typename EHContainer, typename ResultType, typename ... ParamTypes>
 ResultType
-FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...)>::MaybeBrokerCallClient(ParamTypes&... aParameters) const
+FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...), EHContainer>::MaybeBrokerCallClient(ParamTypes&... aParameters) const
 {
   MOZ_ASSERT(FunctionBrokerChild::GetInstance());
 
@@ -1364,9 +1196,9 @@ FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...)>::MaybeBrokerCal
   return FunctionHookInfoType::mOldFunction(aParameters...);
 }
 
-template <FunctionHookId functionId, typename ResultType, typename ... ParamTypes>
+template <FunctionHookId functionId, typename EHContainer, typename ResultType, typename ... ParamTypes>
 bool
-FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...)>::BrokerCallClient(uint32_t& aWinError,
+FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...), EHContainer>::BrokerCallClient(uint32_t& aWinError,
                                                                   ResultType& aResult,
                                                                   ParamTypes&... aParameters) const
 {
@@ -1411,9 +1243,9 @@ FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...)>::BrokerCallClie
   return false;
 }
 
-template <FunctionHookId functionId, typename ResultType, typename ... ParamTypes>
+template <FunctionHookId functionId, typename EHContainer, typename ResultType, typename ... ParamTypes>
 bool
-FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...)>::BrokerCallServer(base::ProcessId aClientId, const IpdlTuple &aInTuple,
+FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...), EHContainer>::BrokerCallServer(base::ProcessId aClientId, const IpdlTuple &aInTuple,
                   IpdlTuple *aOutTuple, ParamTypes&... aParams) const
 {
   HOOK_LOG(LogLevel::Info, ("[%s] Server brokering function.", FunctionHookInfoType::mFunctionName.Data()));
@@ -1459,9 +1291,9 @@ FunctionBroker<functionId, ResultType HOOK_CALL (ParamTypes...)>::BrokerCallServ
   return true;
 }
 
-template <FunctionHookId functionId, typename ResultType, typename ... ParamTypes>
+template <FunctionHookId functionId, typename EHContainer, typename ResultType, typename ... ParamTypes>
 bool
-FunctionBroker<functionId,ResultType HOOK_CALL (ParamTypes...)>::
+FunctionBroker<functionId,ResultType HOOK_CALL (ParamTypes...), EHContainer>::
 PostToDispatchThread(uint32_t& aWinError, ResultType& aRet,
                      ParamTypes&... aParameters) const
 {
