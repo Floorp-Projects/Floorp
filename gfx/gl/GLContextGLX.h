@@ -11,6 +11,8 @@
 #include "GLXLibrary.h"
 #include "mozilla/X11Util.h"
 
+class gfxXlibSurface;
+
 namespace mozilla {
 namespace gl {
 
