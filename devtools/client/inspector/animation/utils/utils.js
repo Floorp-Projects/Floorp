@@ -70,6 +70,16 @@ function isAllAnimationEqual(animationsA, animationsB) {
 }
 
 /**
+ * Check wether the animations are running at least one.
+ *
+ * @param {Array} animations.
+ * @return {Boolean} true: playing
+ */
+function hasPlayingAnimation(animations) {
+  return animations.some(({state}) => state.playState === "running");
+}
+
+/**
  * Check the equality given states as effect timing.
  *
  * @param {Object} state of animation.
@@ -88,5 +98,6 @@ function isTimingEffectEqual(stateA, stateB) {
 }
 
 exports.findOptimalTimeInterval = findOptimalTimeInterval;
+exports.hasPlayingAnimation = hasPlayingAnimation;
 exports.isAllAnimationEqual = isAllAnimationEqual;
 exports.isTimingEffectEqual = isTimingEffectEqual;

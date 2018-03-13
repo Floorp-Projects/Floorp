@@ -18,6 +18,7 @@ const SplitBox = createFactory(require("devtools/client/shared/components/splitt
 class App extends PureComponent {
   static get propTypes() {
     return {
+      addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
       detailVisibility: PropTypes.bool.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
@@ -26,12 +27,14 @@ class App extends PureComponent {
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      removeAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       rewindAnimationsCurrentTime: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
       setAnimationsPlayState: PropTypes.func.isRequired,
       setDetailVisibility: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
+      timeScale: PropTypes.object.isRequired,
       toggleElementPicker: PropTypes.func.isRequired,
     };
   }
@@ -42,6 +45,7 @@ class App extends PureComponent {
 
   render() {
     const {
+      addAnimationsCurrentTimeListener,
       animations,
       detailVisibility,
       emitEventForTest,
@@ -50,12 +54,14 @@ class App extends PureComponent {
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      removeAnimationsCurrentTimeListener,
       rewindAnimationsCurrentTime,
       selectAnimation,
       setAnimationsPlayState,
       setDetailVisibility,
       setSelectedNode,
       simulateAnimation,
+      timeScale,
       toggleElementPicker,
     } = this.props;
 
@@ -68,7 +74,9 @@ class App extends PureComponent {
       [
         AnimationToolbar(
           {
+            addAnimationsCurrentTimeListener,
             animations,
+            removeAnimationsCurrentTimeListener,
             rewindAnimationsCurrentTime,
             setAnimationsPlayState,
           }
@@ -98,6 +106,7 @@ class App extends PureComponent {
               selectAnimation,
               setSelectedNode,
               simulateAnimation,
+              timeScale,
             }
           ),
           vert: false,
@@ -117,6 +126,7 @@ const mapStateToProps = state => {
   return {
     animations: state.animations.animations,
     detailVisibility: state.animations.detailVisibility,
+    timeScale: state.animations.timeScale,
   };
 };
 
