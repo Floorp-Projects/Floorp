@@ -213,7 +213,6 @@ public:
   void SetAlinkColor(const nsAString& aAlinkColor);
   void GetBgColor(nsAString& aBgColor);
   void SetBgColor(const nsAString& aBgColor);
-  nsIHTMLCollection* Anchors();
   void Clear() const
   {
     // Deprecated
@@ -240,9 +239,6 @@ protected:
                        int32_t* aHeight);
 
   nsIContent *MatchId(nsIContent *aContent, const nsAString& aId);
-
-  static bool MatchAnchors(mozilla::dom::Element* aElement, int32_t aNamespaceID,
-                           nsAtom* aAtom, void* aData);
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
@@ -303,8 +299,6 @@ protected:
 
   friend class ContentListHolder;
   ContentListHolder* mContentListHolder;
-
-  RefPtr<nsContentList> mAnchors;
 
   RefPtr<mozilla::dom::HTMLAllCollection> mAll;
 

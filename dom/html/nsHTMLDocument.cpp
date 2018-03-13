@@ -196,7 +196,6 @@ nsHTMLDocument::~nsHTMLDocument()
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, nsDocument,
                                    mAll,
-                                   mAnchors,
                                    mWyciwygChannel,
                                    mMidasCommandManager)
 
@@ -1045,39 +1044,6 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
 
   NS_TryToSetImmutable(newURI);
   rv = NodePrincipal()->SetDomain(newURI);
-}
-
-bool
-nsHTMLDocument::MatchAnchors(Element* aElement, int32_t aNamespaceID,
-                             nsAtom* aAtom, void* aData)
-{
-  NS_ASSERTION(aElement->IsInUncomposedDoc(),
-               "This method should never be called on content nodes that "
-               "are not in a document!");
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIHTMLDocument> htmldoc =
-      do_QueryInterface(aElement->GetUncomposedDoc());
-    NS_ASSERTION(htmldoc,
-                 "Huh, how did this happen? This should only be used with "
-                 "HTML documents!");
-  }
-#endif
-
-  if (aElement->IsHTMLElement(nsGkAtoms::a)) {
-    return aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::name);
-  }
-
-  return false;
-}
-
-nsIHTMLCollection*
-nsHTMLDocument::Anchors()
-{
-  if (!mAnchors) {
-    mAnchors = new nsContentList(this, MatchAnchors, nullptr, nullptr);
-  }
-  return mAnchors;
 }
 
 already_AddRefed<nsIChannel>
