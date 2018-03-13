@@ -14,8 +14,6 @@ interface HTMLDocument : Document {
   [Throws]
   getter object (DOMString name);
   [Pure]
-  readonly attribute HTMLHeadElement? head;
-  [Pure]
   readonly attribute HTMLCollection images;
   [Pure]
   readonly attribute HTMLCollection embeds;

@@ -123,7 +123,8 @@ partial interface Document {
            attribute DOMString dir;
   [CEReactions, Pure, SetterThrows]
            attribute HTMLElement? body;
-  //(HTML only)readonly attribute HTMLHeadElement? head;
+  [Pure]
+  readonly attribute HTMLHeadElement? head;
   //(HTML only)readonly attribute HTMLCollection images;
   //(HTML only)readonly attribute HTMLCollection embeds;
   //(HTML only)readonly attribute HTMLCollection plugins;

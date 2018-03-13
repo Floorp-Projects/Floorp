@@ -62,6 +62,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FramingChecker.h"
+#include "mozilla/dom/HTMLSharedElement.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/ProcessingInstruction.h"
@@ -6314,6 +6315,12 @@ nsIDocument::SetBody(nsGenericHTMLElement* newBody, ErrorResult& rv)
   } else {
     root->AppendChild(*newBody, rv);
   }
+}
+
+HTMLSharedElement*
+nsIDocument::GetHead()
+{
+  return static_cast<HTMLSharedElement*>(GetHeadElement());
 }
 
 Element*
