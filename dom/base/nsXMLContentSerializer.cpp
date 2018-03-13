@@ -15,7 +15,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMComment.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
@@ -29,6 +28,7 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
+#include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/intl/LineBreaker.h"
 #include "nsParserConstants.h"
@@ -360,19 +360,17 @@ nsXMLContentSerializer::AppendComment(nsIContent* aComment,
 }
 
 NS_IMETHODIMP
-nsXMLContentSerializer::AppendDoctype(nsIContent* aDocType,
+nsXMLContentSerializer::AppendDoctype(DocumentType* aDocType,
                                       nsAString& aStr)
 {
-  nsCOMPtr<nsIDOMDocumentType> docType = do_QueryInterface(aDocType);
-  NS_ENSURE_ARG(docType);
   nsresult rv;
   nsAutoString name, publicId, systemId;
 
-  rv = docType->GetName(name);
+  rv = aDocType->GetName(name);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  rv = docType->GetPublicId(publicId);
+  rv = aDocType->GetPublicId(publicId);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  rv = docType->GetSystemId(systemId);
+  rv = aDocType->GetSystemId(systemId);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
