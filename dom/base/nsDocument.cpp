@@ -1980,6 +1980,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mForms);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScripts);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplets);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchors);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnonymousContents)
 
   // Traverse all our nsCOMArrays.
@@ -2076,6 +2077,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mForms);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mScripts);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplets);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchors);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOrientationPendingPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle);
@@ -6881,6 +6883,23 @@ nsIDocument::Applets()
     mApplets = new nsEmptyContentList(this);
   }
   return mApplets;
+}
+
+static bool
+MatchAnchors(Element* aElement, int32_t aNamespaceID,
+             nsAtom* aAtom, void* aData)
+{
+  return aElement->IsHTMLElement(nsGkAtoms::a) &&
+         aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::name);
+}
+
+nsIHTMLCollection*
+nsIDocument::Anchors()
+{
+  if (!mAnchors) {
+    mAnchors = new nsContentList(this, MatchAnchors, nullptr, nullptr);
+  }
+  return mAnchors;
 }
 
 /* static */
