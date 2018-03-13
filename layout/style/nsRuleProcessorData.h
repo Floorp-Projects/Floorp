@@ -151,93 +151,10 @@ struct MOZ_STACK_CLASS TreeMatchContext {
   /**
    * Initialize the ancestor filter and list of style scopes.  If aElement is
    * not null, it and all its ancestors will be passed to
-   * mAncestorFilter.PushAncestor and PushStyleScope, starting from the root and
+   * mAncestorFilter.PushAncestor, starting from the root and
    * going down the tree.  Must only be called for elements in a document.
    */
   void InitAncestors(mozilla::dom::Element *aElement);
-
-  /**
-   * Like InitAncestors, but only initializes the style scope list, not the
-   * ancestor filter.  May be called for elements outside a document.
-   */
-  void InitStyleScopes(mozilla::dom::Element* aElement);
-
-  void PushStyleScope(mozilla::dom::Element* aElement)
-  {
-    NS_PRECONDITION(aElement, "aElement must not be null");
-    if (aElement->IsScopedStyleRoot()) {
-      mStyleScopes.AppendElement(aElement);
-    }
-  }
-
-  void PopStyleScope(mozilla::dom::Element* aElement)
-  {
-    NS_PRECONDITION(aElement, "aElement must not be null");
-    if (mStyleScopes.SafeLastElement(nullptr) == aElement) {
-      mStyleScopes.TruncateLength(mStyleScopes.Length() - 1);
-    }
-  }
-
-  bool PopStyleScopeForSelectorMatching(mozilla::dom::Element* aElement)
-  {
-    NS_ASSERTION(mForScopedStyle, "only call PopStyleScopeForSelectorMatching "
-                                  "when mForScopedStyle is true");
-
-    if (!mCurrentStyleScope) {
-      return false;
-    }
-    if (mCurrentStyleScope == aElement) {
-      mCurrentStyleScope = nullptr;
-    }
-    return true;
-  }
-
-#ifdef DEBUG
-  void AssertHasAllStyleScopes(mozilla::dom::Element* aElement) const;
-#endif
-
-  bool SetStyleScopeForSelectorMatching(mozilla::dom::Element* aSubject,
-                                        mozilla::dom::Element* aScope)
-  {
-#ifdef DEBUG
-    AssertHasAllStyleScopes(aSubject);
-#endif
-
-    mForScopedStyle = !!aScope;
-    if (!aScope) {
-      // This is not for a scoped style sheet; return true, as we want
-      // selector matching to proceed.
-      mCurrentStyleScope = nullptr;
-      return true;
-    }
-    if (aScope == aSubject) {
-      // Although the subject is the same element as the scope, as soon
-      // as we continue with selector matching up the tree we don't want
-      // to match any more elements.  So we return true to indicate that
-      // we want to do the initial selector matching, but set
-      // mCurrentStyleScope to null so that no ancestor elements will match.
-      mCurrentStyleScope = nullptr;
-      return true;
-    }
-    if (mStyleScopes.Contains(aScope)) {
-      // mStyleScopes contains all of the scope elements that are ancestors of
-      // aSubject, so if aScope is in mStyleScopes, then we do want selector
-      // matching to proceed.
-      mCurrentStyleScope = aScope;
-      return true;
-    }
-    // Otherwise, we're not in the scope, and we don't want to proceed
-    // with selector matching.
-    mCurrentStyleScope = nullptr;
-    return false;
-  }
-
-  bool IsWithinStyleScopeForSelectorMatching() const
-  {
-    NS_ASSERTION(mForScopedStyle, "only call IsWithinScopeForSelectorMatching "
-                                  "when mForScopedStyle is true");
-    return mCurrentStyleScope;
-  }
 
   /*
    * Helper class for maintaining the ancestor state.
@@ -250,14 +167,13 @@ struct MOZ_STACK_CLASS TreeMatchContext {
     explicit AutoAncestorPusher(TreeMatchContext* aTreeMatchContext
                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mPushedAncestor(false)
-      , mPushedStyleScope(false)
       , mTreeMatchContext(aTreeMatchContext)
       , mElement(nullptr)
     {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    void PushAncestorAndStyleScope(mozilla::dom::Element* aElement) {
+    void PushAncestor(mozilla::dom::Element* aElement) {
       if (!mTreeMatchContext) {
         MOZ_ASSERT(!aElement || aElement->IsStyledByServo());
         return;
@@ -267,45 +183,18 @@ struct MOZ_STACK_CLASS TreeMatchContext {
       if (aElement) {
         mElement = aElement;
         mPushedAncestor = true;
-        mPushedStyleScope = true;
         mTreeMatchContext->mAncestorFilter.PushAncestor(aElement);
-        mTreeMatchContext->PushStyleScope(aElement);
       }
     }
 
-    void PushAncestorAndStyleScope(nsIContent* aContent) {
+    void PushAncestor(nsIContent* aContent) {
       if (!mTreeMatchContext) {
         MOZ_ASSERT(!aContent || aContent->IsStyledByServo());
         return;
       }
 
       if (aContent && aContent->IsElement()) {
-        PushAncestorAndStyleScope(aContent->AsElement());
-      }
-    }
-
-    void PushStyleScope(mozilla::dom::Element* aElement) {
-      if (!mTreeMatchContext) {
-        MOZ_ASSERT(!aElement || aElement->IsStyledByServo());
-        return;
-      }
-
-      MOZ_ASSERT(!mElement);
-      if (aElement) {
-        mElement = aElement;
-        mPushedStyleScope = true;
-        mTreeMatchContext->PushStyleScope(aElement);
-      }
-    }
-
-    void PushStyleScope(nsIContent* aContent) {
-      if (!mTreeMatchContext) {
-        MOZ_ASSERT(!aContent || aContent->IsStyledByServo());
-        return;
-      }
-
-      if (aContent && aContent->IsElement()) {
-        PushStyleScope(aContent->AsElement());
+        PushAncestor(aContent->AsElement());
       }
     }
 
@@ -313,14 +202,10 @@ struct MOZ_STACK_CLASS TreeMatchContext {
       if (mPushedAncestor) {
         mTreeMatchContext->mAncestorFilter.PopAncestor();
       }
-      if (mPushedStyleScope) {
-        mTreeMatchContext->PopStyleScope(mElement);
-      }
     }
 
   private:
     bool mPushedAncestor;
-    bool mPushedStyleScope;
     TreeMatchContext* mTreeMatchContext;
     mozilla::dom::Element* mElement;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -404,10 +289,6 @@ struct MOZ_STACK_CLASS TreeMatchContext {
   // we ignore "display:flex/grid").
   bool mSkippingParentDisplayBasedStyleFixup;
 
-  // Whether this TreeMatchContext is being used with an nsCSSRuleProcessor
-  // for an HTML5 scoped style sheet.
-  bool mForScopedStyle;
-
   // An enum that communicates the consumer's intensions for this
   // TreeMatchContext in terms of :visited handling.  eNeverMatchVisited means
   // that this TreeMatchContext's VisitedHandlingType will always be
@@ -424,9 +305,6 @@ struct MOZ_STACK_CLASS TreeMatchContext {
   // <style scoped> child).
   AutoTArray<mozilla::dom::Element*, 1> mStyleScopes;
 
-  // The current style scope element for selector matching.
-  mozilla::dom::Element* mCurrentStyleScope;
-
   // Constructor to use when creating a tree match context for styling
   TreeMatchContext(bool aForStyling,
                    nsRuleWalker::VisitedHandlingType aVisitedHandling,
@@ -441,8 +319,6 @@ struct MOZ_STACK_CLASS TreeMatchContext {
     , mCompatMode(aDocument->GetCompatibilityMode())
     , mUsingPrivateBrowsing(false)
     , mSkippingParentDisplayBasedStyleFixup(false)
-    , mForScopedStyle(false)
-    , mCurrentStyleScope(nullptr)
   {
     if (aMatchVisited != eNeverMatchVisited) {
       nsILoadContext* loadContext = mDocument->GetLoadContext();
@@ -651,8 +527,7 @@ public:
   {
   public:
     explicit AutoAncestorPusher(TreeMatchContext* aTreeMatchContext) {}
-    void PushAncestorAndStyleScope(nsIContent* aContent) {}
-    void PushStyleScope(nsIContent* aContent) {}
+    void PushAncestor(nsIContent* aContent) {}
   };
 
   class AutoParentDisplayBasedStyleFixupSkipper

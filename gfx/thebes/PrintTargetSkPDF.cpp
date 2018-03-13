@@ -58,8 +58,7 @@ PrintTargetSkPDF::BeginPrinting(const nsAString& aTitle,
   metadata.fModified.fDateTime = now;
 
   // SkDocument stores a non-owning raw pointer to aStream
-  mPDFDoc = SkDocument::MakePDF(mOStream.get(), SK_ScalarDefaultRasterDPI,
-                                metadata, /*jpegEncoder*/ nullptr, true);
+  mPDFDoc = SkDocument::MakePDF(mOStream.get(), metadata);
 
   return mPDFDoc ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -127,9 +126,7 @@ PrintTargetSkPDF::GetReferenceDrawTarget()
   if (!mRefDT) {
     SkDocument::PDFMetadata metadata;
     // SkDocument stores a non-owning raw pointer to aStream
-    mRefPDFDoc = SkDocument::MakePDF(&mRefOStream,
-                                     SK_ScalarDefaultRasterDPI,
-                                     metadata, nullptr, true);
+    mRefPDFDoc = SkDocument::MakePDF(&mRefOStream, metadata);
     if (!mRefPDFDoc) {
       return nullptr;
     }

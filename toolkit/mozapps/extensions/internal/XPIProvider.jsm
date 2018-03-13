@@ -2048,8 +2048,13 @@ var XPIProvider = {
     }
 
     function addBuiltInInstallLocation(name, key, paths, scope) {
+      let dir;
       try {
-        let dir = FileUtils.getDir(key, paths);
+        dir = FileUtils.getDir(key, paths);
+      } catch (e) {
+        return;
+      }
+      try {
         let location = new BuiltInInstallLocation(name, dir, scope);
 
         XPIProvider.installLocations.push(location);
@@ -4385,13 +4390,14 @@ var XPIProvider = {
         }
       }
 
+      let installLocation = aAddon._installLocation || null;
       let params = {
         id: aAddon.id,
         version: aAddon.version,
         installPath: aFile.clone(),
         resourceURI: getURIForResourceInFile(aFile, ""),
         signedState: aAddon.signedState,
-        temporarilyInstalled: aAddon._installLocation == TemporaryInstallLocation,
+        temporarilyInstalled: installLocation == TemporaryInstallLocation,
       };
 
       if (aMethod == "startup" && aAddon.startupData) {

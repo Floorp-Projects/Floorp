@@ -4,12 +4,22 @@
 
 "use strict";
 
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/dom/webauthn/tests/browser/cbor.js",
-  this);
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/dom/webauthn/tests/browser/u2futil.js",
-  this);
+let exports = this;
+
+const scripts = [
+  "pkijs/common.js",
+  "pkijs/asn1.js",
+  "pkijs/x509_schema.js",
+  "pkijs/x509_simpl.js",
+  "browser/cbor.js",
+  "browser/u2futil.js",
+];
+
+for (let script of scripts) {
+  Services.scriptloader.loadSubScript(
+    `chrome://mochitests/content/browser/dom/webauthn/tests/${script}`,
+    this, "utf-8");
+}
 
 function memcmp(x, y) {
   let xb = new Uint8Array(x);

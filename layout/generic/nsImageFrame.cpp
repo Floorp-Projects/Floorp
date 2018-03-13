@@ -1744,7 +1744,11 @@ nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
     return false;
   }
 
-  return aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, destRect);
+  // If the image container is empty, we don't want to fallback. Any other
+  // failure will be due to resource constraints and fallback is unlikely to
+  // help us. Hence we can ignore the return value from PushImage.
+  aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, destRect);
+  return true;
 }
 
 ImgDrawResult

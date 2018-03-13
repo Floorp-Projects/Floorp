@@ -73,6 +73,9 @@ const ZipWriter = Components.Constructor(
   "@mozilla.org/zipwriter;1",
   "nsIZipWriter", "open");
 
+function isRegExp(val) {
+  return val && typeof val === "object" && typeof val.test === "function";
+}
 
 // We need some internal bits of AddonManager
 var AMscope = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
@@ -367,6 +370,12 @@ var AddonTestUtils = {
         Cu.reportError(e);
       }
     });
+  },
+
+  info(msg) {
+    // info() for mochitests, do_print for xpcshell.
+    let print = this.testScope.info || this.testScope.do_print;
+    print(msg);
   },
 
   cleanupTempXPIs() {
@@ -1254,6 +1263,72 @@ var AddonTestUtils = {
       return {messages, result};
     } finally {
       Services.console.unregisterListener(listener);
+    }
+  },
+
+  /**
+   * An object describing an expected or forbidden console message. Each
+   * property in the object corresponds to a property with the same name
+   * in a console message. If the value in the pattern object is a
+   * regular expression, it must match the value of the corresponding
+   * console message property. If it is any other value, it must be
+   * strictly equal to the correspondng console message property.
+   *
+   * @typedef {object} ConsoleMessagePattern
+   */
+
+  /**
+   * Checks the list of messages returned from `promiseConsoleOutput`
+   * against the given set of expected messages.
+   *
+   * This is roughly equivalent to the expected and forbidden message
+   * matching functionality of SimpleTest.monitorConsole.
+   *
+   * @param {Array<object>} messages
+   *        The array of console messages to match.
+   * @param {object} options
+   *        Options describing how to perform the match.
+   * @param {Array<ConsoleMessagePattern>} [options.expected = []]
+   *        An array of messages which must appear in `messages`. The
+   *        matching messages in the `messages` array must appear in the
+   *        same order as the patterns in the `expected` array.
+   * @param {Array<ConsoleMessagePattern>} [options.forbidden = []]
+   *        An array of messages which must not appear in the `messages`
+   *        array.
+   * @param {bool} [options.forbidUnexpected = false]
+   *        If true, the `messages` array must not contain any messages
+   *        which are not matched by the given `expected` patterns.
+   */
+  checkMessages(messages, {expected = [], forbidden = [], forbidUnexpected = false}) {
+    function msgMatches(msg, expectedMsg) {
+      for (let [prop, pattern] of Object.entries(expectedMsg)) {
+        if (isRegExp(pattern) && typeof msg[prop] === "string") {
+          if (!pattern.test(msg[prop])) {
+            return false;
+          }
+        } else if (msg[prop] !== pattern) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    let i = 0;
+    for (let msg of messages) {
+      if (forbidden.some(pat => msgMatches(msg, pat))) {
+        this.testScope.ok(false, `Got forbidden console message: ${msg}`);
+        continue;
+      }
+
+      if (i < expected.length && msgMatches(msg, expected[i])) {
+        this.info(`Matched expected console message: ${msg}`);
+        i++;
+      } else if (forbidUnexpected) {
+        this.testScope.ok(false, `Got unexpected console message: ${msg}`);
+      }
+    }
+    for (let pat of expected.slice(i)) {
+      this.testScope.ok(false, `Did not get expected console message: ${uneval(pat)}`);
     }
   },
 

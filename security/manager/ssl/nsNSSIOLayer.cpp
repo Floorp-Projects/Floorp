@@ -743,7 +743,8 @@ nsHandleSSLError(nsNSSSocketInfo* socketInfo,
   socketInfo->GetErrorLogMessage(err, errtype, errorString);
 
   if (!errorString.IsEmpty()) {
-    nsContentUtils::LogSimpleConsoleError(errorString, "SSL");
+    nsContentUtils::LogSimpleConsoleError(errorString, "SSL",
+                                          !!socketInfo->GetOriginAttributes().mPrivateBrowsingId);
   }
 }
 

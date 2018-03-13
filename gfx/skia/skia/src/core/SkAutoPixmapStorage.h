@@ -11,10 +11,15 @@
 #include "SkMalloc.h"
 #include "SkPixmap.h"
 
-class SK_API SkAutoPixmapStorage : public SkPixmap {
+class SkAutoPixmapStorage : public SkPixmap {
 public:
     SkAutoPixmapStorage();
     ~SkAutoPixmapStorage();
+
+    /**
+    * Leave the moved-from object in a free-but-valid state.
+    */
+    SkAutoPixmapStorage& operator=(SkAutoPixmapStorage&& other);
 
     /**
     *  Try to allocate memory for the pixels needed to match the specified Info. On success
@@ -30,7 +35,7 @@ public:
     *  to point to that memory. The storage will be freed when this object is destroyed,
     *  or if another call to tryAlloc() or alloc() is made.
     *
-    *  If the memory cannot be allocated, calls sk_throw().
+    *  If the memory cannot be allocated, calls SK_ABORT().
     */
     void alloc(const SkImageInfo&);
 
@@ -52,14 +57,11 @@ public:
         this->freeStorage();
         this->INHERITED::reset();
     }
-    void reset(const SkImageInfo& info, const void* addr, size_t rb, SkColorTable* ctable = NULL) {
+    void reset(const SkImageInfo& info, const void* addr, size_t rb) {
         this->freeStorage();
-        this->INHERITED::reset(info, addr, rb, ctable);
+        this->INHERITED::reset(info, addr, rb);
     }
-    void reset(const SkImageInfo& info) {
-        this->freeStorage();
-        this->INHERITED::reset(info);
-    }
+
     bool SK_WARN_UNUSED_RESULT reset(const SkMask& mask) {
         this->freeStorage();
         return this->INHERITED::reset(mask);

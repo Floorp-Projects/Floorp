@@ -5826,7 +5826,8 @@ nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> a
             R"(origin "%s" from a system principal scope with mismatched )"
             R"(origin "%s".)",
             targetURL.get(), targetOrigin.get(), sourceOrigin.get())),
-          "DOM");
+          "DOM",
+          !!principal->PrivateBrowsingId());
 
         attrs = principal->OriginAttributesRef();
       }

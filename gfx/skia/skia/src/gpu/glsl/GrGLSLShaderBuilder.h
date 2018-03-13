@@ -26,7 +26,7 @@ public:
     virtual ~GrGLSLShaderBuilder() {}
 
     using SamplerHandle      = GrGLSLUniformHandler::SamplerHandle;
-    using ImageStorageHandle = GrGLSLUniformHandler::ImageStorageHandle;
+    using TexelBufferHandle  = GrGLSLUniformHandler::TexelBufferHandle;
 
     /** Appends a 2D texture sample with projection if necessary. coordType must either be Vec2f or
         Vec3f. The latter is interpreted as projective texture coords. The vec length and swizzle
@@ -36,23 +36,23 @@ public:
     void appendTextureLookup(SkString* out,
                              SamplerHandle,
                              const char* coordName,
-                             GrSLType coordType = kVec2f_GrSLType) const;
+                             GrSLType coordType = kHalf2_GrSLType) const;
 
     /** Version of above that appends the result to the shader code instead.*/
     void appendTextureLookup(SamplerHandle,
                              const char* coordName,
-                             GrSLType coordType = kVec2f_GrSLType,
+                             GrSLType coordType = kHalf2_GrSLType,
                              GrGLSLColorSpaceXformHelper* colorXformHelper = nullptr);
 
 
     /** Does the work of appendTextureLookup and modulates the result by modulation. The result is
-        always a vec4. modulation and the swizzle specified by SamplerHandle must both be
-        vec4 or float. If modulation is "" or nullptr it this function acts as though
+        always a half4. modulation and the swizzle specified by SamplerHandle must both be
+        half4 or half. If modulation is "" or nullptr it this function acts as though
         appendTextureLookup were called. */
     void appendTextureLookupAndModulate(const char* modulation,
                                         SamplerHandle,
                                         const char* coordName,
-                                        GrSLType coordType = kVec2f_GrSLType,
+                                        GrSLType coordType = kHalf2_GrSLType,
                                         GrGLSLColorSpaceXformHelper* colorXformHelper = nullptr);
 
     /** Adds a helper function to facilitate color gamut transformation, and produces code that
@@ -68,15 +68,10 @@ public:
     /** Fetches an unfiltered texel from a sampler at integer coordinates. coordExpr must match the
         dimensionality of the sampler and must be within the sampler's range. coordExpr is emitted
         exactly once, so expressions like "idx++" are acceptable. */
-    void appendTexelFetch(SkString* out, SamplerHandle, const char* coordExpr) const;
+    void appendTexelFetch(SkString* out, TexelBufferHandle, const char* coordExpr) const;
 
     /** Version of above that appends the result to the shader code instead.*/
-    void appendTexelFetch(SamplerHandle, const char* coordExpr);
-
-    /** Creates a string of shader code that performs an image load. */
-    void appendImageStorageLoad(SkString* out, ImageStorageHandle, const char* coordExpr);
-    /** Version of above that appends the result to the shader code instead. */
-    void appendImageStorageLoad(ImageStorageHandle, const char* coordExpr);
+    void appendTexelFetch(TexelBufferHandle, const char* coordExpr);
 
     /**
     * Adds a constant declaration to the top of the shader.
@@ -178,9 +173,7 @@ protected:
         kTexelBuffer_GLSLPrivateFeature,
         kFramebufferFetch_GLSLPrivateFeature,
         kNoPerspectiveInterpolation_GLSLPrivateFeature,
-        kSampleVariables_GLSLPrivateFeature,
-        kSampleMaskOverrideCoverage_GLSLPrivateFeature,
-        kLastGLSLPrivateFeature = kSampleMaskOverrideCoverage_GLSLPrivateFeature
+        kLastGLSLPrivateFeature = kNoPerspectiveInterpolation_GLSLPrivateFeature
     };
 
     /*

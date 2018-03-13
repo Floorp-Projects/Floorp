@@ -57,11 +57,6 @@ class EventDispatchingCallback;
 // PresShell. The set contains nsIFrame* pointers.
 typedef nsTHashtable<nsPtrHashKey<nsIFrame>> VisibleFrames;
 
-// A hash table type for tracking visible regions, for use by the visibility
-// code in PresShell. The mapping is from view IDs to regions in the
-// coordinate system of that view's scrolled frame.
-typedef nsClassHashtable<nsUint64HashKey, CSSIntRegion> VisibleRegions;
-
 // This is actually pref-controlled, but we use this value if we fail
 // to get the pref for any reason.
 #ifdef MOZ_WIDGET_ANDROID
@@ -747,11 +742,9 @@ private:
   void ClearApproximatelyVisibleFramesList(const Maybe<OnNonvisible>& aNonvisibleAction
                                              = Nothing());
   static void ClearApproximateFrameVisibilityVisited(nsView* aView, bool aClear);
-  static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList,
-                                                   Maybe<VisibleRegions>& aVisibleRegions);
+  static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList);
   void MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
                                                const nsRect& aRect,
-                                               Maybe<VisibleRegions>& aVisibleRegions,
                                                bool aRemoveOnly = false);
 
   void DecApproximateVisibleCount(VisibleFrames& aFrames,

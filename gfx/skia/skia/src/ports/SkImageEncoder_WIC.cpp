@@ -7,7 +7,7 @@
 
 #include "SkTypes.h"
 
-#if defined(SK_BUILD_FOR_WIN32)
+#if defined(SK_BUILD_FOR_WIN)
 
 // Workaround for:
 // http://connect.microsoft.com/VisualStudio/feedback/details/621653/
@@ -70,7 +70,9 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
 
     // First convert to BGRA if necessary.
     SkBitmap bitmap;
-    if (!bitmapOrig.copyTo(&bitmap, kBGRA_8888_SkColorType)) {
+    if (!bitmap.tryAllocPixels(bitmapOrig.info().makeColorType(kBGRA_8888_SkColorType)) ||
+        !bitmapOrig.readPixels(bitmap.info(), bitmap.getPixels(), bitmap.rowBytes(), 0, 0))
+    {
         return false;
     }
 
@@ -154,10 +156,11 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
     }
 
     if (SUCCEEDED(hr)) {
-        PROPBAG2 name = { 0 };
+        PROPBAG2 name;
+        memset(&name, 0, sizeof(name));
         name.dwType = PROPBAG2_TYPE_DATA;
         name.vt = VT_R4;
-        name.pstrName = L"ImageQuality";
+        name.pstrName = const_cast<LPOLESTR>(L"ImageQuality");
 
         VARIANT value;
         VariantInit(&value);
@@ -211,4 +214,4 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
     return SUCCEEDED(hr);
 }
 
-#endif // defined(SK_BUILD_FOR_WIN32)
+#endif // defined(SK_BUILD_FOR_WIN)

@@ -1662,11 +1662,6 @@ private:
     NodeHasTextNodeDirectionalityMap,
     // Set if a node in the node's parent chain has dir=auto.
     NodeAncestorHasDirAuto,
-    // Set if the element is in the scope of a scoped style sheet; this flag is
-    // only accurate for elements bound to a document
-    ElementIsInStyleScope,
-    // Set if the element is a scoped style sheet root
-    ElementIsScopedStyleRoot,
     // Set if the node is handling a click.
     NodeHandlingClick,
     // Set if the node has had :hover selectors matched against it
@@ -1795,23 +1790,6 @@ public:
   // Implemented in nsIContentInlines.h.
   inline bool NodeOrAncestorHasDirAuto() const;
 
-  void SetIsElementInStyleScope(bool aValue) {
-    MOZ_ASSERT(IsElement(), "SetIsInStyleScope on a non-Element node");
-    SetBoolFlag(ElementIsInStyleScope, aValue);
-  }
-  void SetIsElementInStyleScope() {
-    MOZ_ASSERT(IsElement(), "SetIsInStyleScope on a non-Element node");
-    SetBoolFlag(ElementIsInStyleScope);
-  }
-  void ClearIsElementInStyleScope() {
-    MOZ_ASSERT(IsElement(), "ClearIsInStyleScope on a non-Element node");
-    ClearBoolFlag(ElementIsInStyleScope);
-  }
-  bool IsElementInStyleScope() const { return GetBoolFlag(ElementIsInStyleScope); }
-
-  void SetIsScopedStyleRoot() { SetBoolFlag(ElementIsScopedStyleRoot); }
-  void ClearIsScopedStyleRoot() { ClearBoolFlag(ElementIsScopedStyleRoot); }
-  bool IsScopedStyleRoot() { return GetBoolFlag(ElementIsScopedStyleRoot); }
   bool HasRelevantHoverRules() const { return GetBoolFlag(NodeHasRelevantHoverRules); }
   void SetHasRelevantHoverRules() { SetBoolFlag(NodeHasRelevantHoverRules); }
   void SetParserHasNotified() { SetBoolFlag(ParserHasNotified); };

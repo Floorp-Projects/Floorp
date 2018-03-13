@@ -169,14 +169,14 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     @WrapForJNI
     private static int start(final String type, final String[] args,
-                             final int ipcFd, final int crashFd,
-                             final int crashAnnotationFd) {
-        return INSTANCE.start(type, args, ipcFd, crashFd, crashAnnotationFd, /* retry */ false);
+                             final int prefsFd, final int ipcFd,
+                             final int crashFd, final int crashAnnotationFd) {
+        return INSTANCE.start(type, args, prefsFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ false);
     }
 
-    private int start(final String type, final String[] args, final int ipcFd,
-                      final int crashFd, final int crashAnnotationFd,
-                      final boolean retry) {
+    private int start(final String type, final String[] args, final int prefsFd,
+                      final int ipcFd, final int crashFd,
+                      final int crashAnnotationFd, final boolean retry) {
         final ChildConnection connection = getConnection(type);
         final IChildProcess child = connection.bind();
         if (child == null) {
@@ -184,10 +184,12 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
 
         final Bundle extras = GeckoThread.getActiveExtras();
+        final ParcelFileDescriptor prefsPfd;
         final ParcelFileDescriptor ipcPfd;
         final ParcelFileDescriptor crashPfd;
         final ParcelFileDescriptor crashAnnotationPfd;
         try {
+            prefsPfd = ParcelFileDescriptor.fromFd(prefsFd);
             ipcPfd = ParcelFileDescriptor.fromFd(ipcFd);
             crashPfd = (crashFd >= 0) ? ParcelFileDescriptor.fromFd(crashFd) : null;
             crashAnnotationPfd = (crashAnnotationFd >= 0) ? ParcelFileDescriptor.fromFd(crashAnnotationFd) : null;
@@ -198,7 +200,8 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         boolean started = false;
         try {
-            started = child.start(this, args, extras, ipcPfd, crashPfd, crashAnnotationPfd);
+            started = child.start(this, args, extras, prefsPfd, ipcPfd, crashPfd,
+                                  crashAnnotationPfd);
         } catch (final RemoteException e) {
         }
 
@@ -209,7 +212,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             }
             Log.w(LOGTAG, "Attempting to kill running child " + type);
             connection.unbind();
-            return start(type, args, ipcFd, crashFd, crashAnnotationFd, /* retry */ true);
+            return start(type, args, prefsFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ true);
         }
 
         try {

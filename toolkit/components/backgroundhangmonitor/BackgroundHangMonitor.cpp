@@ -685,6 +685,29 @@ BackgroundHangMonitor::BackgroundHangMonitor(const char* aName,
   : mThread(aThreadType == THREAD_SHARED ? BackgroundHangThread::FindThread() : nullptr)
 {
 #ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
+# ifdef MOZ_VALGRIND
+  // If we're running on Valgrind, we'll be making forward progress at a
+  // rate of somewhere between 1/25th and 1/50th of normal.  This causes the
+  // BHR to capture a lot of stacks, which slows us down even more.  As an
+  // attempt to avoid the worst of this, scale up all presented timeouts by
+  // a factor of thirty, and add six seconds so as to impose a six second
+  // floor on all timeouts.  For a non-Valgrind-enabled build, or for an
+  // enabled build which isn't running on Valgrind, the timeouts are
+  // unchanged.
+  if (RUNNING_ON_VALGRIND) {
+    const uint32_t scaleUp = 30;
+    const uint32_t extraMs = 6000;
+    if (aTimeoutMs != BackgroundHangMonitor::kNoTimeout) {
+      aTimeoutMs *= scaleUp;
+      aTimeoutMs += extraMs;
+    }
+    if (aMaxTimeoutMs != BackgroundHangMonitor::kNoTimeout) {
+      aMaxTimeoutMs *= scaleUp;
+      aMaxTimeoutMs += extraMs;
+    }
+  }
+# endif
+
   if (!BackgroundHangManager::sDisabled && !mThread) {
     mThread = new BackgroundHangThread(aName, aTimeoutMs, aMaxTimeoutMs,
                                        aThreadType);

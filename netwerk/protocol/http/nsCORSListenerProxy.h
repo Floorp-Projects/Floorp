@@ -75,6 +75,7 @@ public:
   // When CORS blocks a request, log the message to the web console, or the
   // browser console if no valid inner window ID is found.
   static void LogBlockedCORSRequest(uint64_t aInnerWindowID,
+                                    bool aPrivateBrowsing,
                                     const nsAString& aMessage);
 private:
   // Only HttpChannelParent can call RemoveFromCorsPreflightCache

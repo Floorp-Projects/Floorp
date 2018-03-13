@@ -4,11 +4,6 @@
 
 %include ../shared/compacttheme.inc.css
 
-:root {
-   /* Matches the #browser-border-start, #browser-border-end color */
-  --chrome-nav-bar-separator-color: rgba(10, 31, 51, 0.35);
-}
-
 /* The window background is white due to no accentcolor in the lightweight
    theme. It can't be changed to transparent when there is no compositor
    (Win 7 in classic / basic theme), or else dragging and focus become

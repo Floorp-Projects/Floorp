@@ -41,7 +41,10 @@ class NoAnimationPanel extends PureComponent {
           className: "animation-element-picker devtools-button" +
                      (elementPickerEnabled ? " checked" : ""),
           "data-standalone": true,
-          onClick: toggleElementPicker
+          onClick: event => {
+            event.stopPropagation();
+            toggleElementPicker();
+          }
         }
       )
     );

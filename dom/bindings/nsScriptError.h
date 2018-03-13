@@ -96,14 +96,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsScriptErrorWithStack)
 
-  NS_IMETHOD Init(const nsAString& message,
-                  const nsAString& sourceName,
-                  const nsAString& sourceLine,
-                  uint32_t lineNumber,
-                  uint32_t columnNumber,
-                  uint32_t flags,
-                  const char* category) override;
-
   NS_IMETHOD GetStack(JS::MutableHandleValue) override;
   NS_IMETHOD ToString(nsACString& aResult) override;
 

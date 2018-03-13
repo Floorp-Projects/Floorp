@@ -85,7 +85,7 @@ wasm::HasCompilerSupport(JSContext* cx)
         return false;
 #endif
 
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_NONE)
     return false;
 #else
     return BaselineCanCompile() || IonCanCompile();

@@ -330,56 +330,6 @@ nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument *aOldDocument,
                             &alternate, aForceUpdate);
 }
 
-static bool
-IsScopedStyleElement(nsIContent* aContent)
-{
-  // This is quicker than, say, QIing aContent to nsStyleLinkElement
-  // and then calling its virtual GetStyleSheetInfo method to find out
-  // if it is scoped.
-  return (aContent->IsHTMLElement(nsGkAtoms::style) ||
-          aContent->IsSVGElement(nsGkAtoms::style)) &&
-         aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::scoped) &&
-         aContent->OwnerDoc()->IsScopedStyleEnabled();
-}
-
-static bool
-HasScopedStyleSheetChild(nsIContent* aContent)
-{
-  for (nsIContent* n = aContent->GetFirstChild(); n; n = n->GetNextSibling()) {
-    if (IsScopedStyleElement(n)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// Called when aElement has had a <style scoped> child removed.
-static void
-UpdateIsElementInStyleScopeFlagOnSubtree(Element* aElement)
-{
-  NS_ASSERTION(aElement->IsElementInStyleScope(),
-               "only call UpdateIsElementInStyleScopeFlagOnSubtree on a "
-               "subtree that has IsElementInStyleScope boolean flag set");
-
-  if (HasScopedStyleSheetChild(aElement)) {
-    return;
-  }
-
-  aElement->ClearIsElementInStyleScope();
-
-  nsIContent* n = aElement->GetNextNode(aElement);
-  while (n) {
-    if (HasScopedStyleSheetChild(n)) {
-      n = n->GetNextNonChildNode(aElement);
-    } else {
-      if (n->IsElement()) {
-        n->ClearIsElementInStyleScope();
-      }
-      n = n->GetNextNode(aElement);
-    }
-  }
-}
-
 nsresult
 nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
                                        ShadowRoot* aOldShadowRoot,
@@ -409,20 +359,6 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     return NS_OK;
   }
 
-  // XXXheycam ServoStyleSheets do not support <style scoped>.
-  Element* oldScopeElement = nullptr;
-  if (mStyleSheet) {
-    if (mStyleSheet->IsServo()) {
-      // XXXheycam ServoStyleSheets don't support <style scoped>.
-    } else {
-#ifdef MOZ_OLD_STYLE
-      oldScopeElement = mStyleSheet->AsGecko()->GetScopeElement();
-#else
-      MOZ_CRASH("old style system disabled");
-#endif
-    }
-  }
-
   if (mStyleSheet && (aOldDocument || aOldShadowRoot)) {
     MOZ_ASSERT(!(aOldDocument && aOldShadowRoot),
                "ShadowRoot content is never in document, thus "
@@ -442,9 +378,6 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     }
 
     nsStyleLinkElement::SetStyleSheet(nullptr);
-    if (oldScopeElement) {
-      UpdateIsElementInStyleScopeFlagOnSubtree(oldScopeElement);
-    }
   }
 
   // When static documents are created, stylesheets are cloned manually.
@@ -492,19 +425,12 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   }
 
   nsAutoString title, type, media;
-  bool isScoped;
   bool isAlternate;
 
-  GetStyleSheetInfo(title, type, media, &isScoped, &isAlternate);
+  GetStyleSheetInfo(title, type, media, &isAlternate);
 
   if (!type.LowerCaseEqualsLiteral("text/css")) {
     return NS_OK;
-  }
-
-  Element* scopeElement = isScoped ? thisContent->GetParentElement() : nullptr;
-  if (scopeElement) {
-    NS_ASSERTION(isInline, "non-inline style must not have scope element");
-    scopeElement->SetIsElementInStyleScopeFlagOnSubtree(true);
   }
 
   bool doneLoading = false;
@@ -538,7 +464,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     // Parse the style sheet.
     rv = doc->CSSLoader()->
       LoadInlineStyle(thisContent, text, triggeringPrincipal, mLineNumber,
-                      title, media, referrerPolicy, scopeElement,
+                      title, media, referrerPolicy,
                       aObserver, &doneLoading, &isAlternate);
   } else {
     nsAutoString integrity;
@@ -576,61 +502,4 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   *aIsAlternate = isAlternate;
 
   return NS_OK;
-}
-
-void
-nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
-{
-  if (!mStyleSheet) {
-    return;
-  }
-
-  if (mStyleSheet->IsServo()) {
-    // XXXheycam ServoStyleSheets don't support <style scoped>.
-    NS_ERROR("stylo: ServoStyleSheets don't support <style scoped>");
-    return;
-  }
-
-#ifdef MOZ_OLD_STYLE
-  CSSStyleSheet* sheet = mStyleSheet->AsGecko();
-
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
-
-  Element* oldScopeElement = sheet->GetScopeElement();
-  Element* newScopeElement = aIsNowScoped ?
-                               thisContent->GetParentElement() :
-                               nullptr;
-
-  if (oldScopeElement == newScopeElement) {
-    return;
-  }
-
-  nsIDocument* document = thisContent->GetOwnerDocument();
-
-  if (thisContent->IsInShadowTree()) {
-    ShadowRoot* containingShadow = thisContent->GetContainingShadow();
-    containingShadow->RemoveSheet(mStyleSheet);
-
-    sheet->SetScopeElement(newScopeElement);
-
-    containingShadow->InsertSheet(mStyleSheet, thisContent);
-  } else {
-    document->BeginUpdate(UPDATE_STYLE);
-    document->RemoveStyleSheet(mStyleSheet);
-
-    sheet->SetScopeElement(newScopeElement);
-
-    document->AddStyleSheet(mStyleSheet);
-    document->EndUpdate(UPDATE_STYLE);
-  }
-
-  if (oldScopeElement) {
-    UpdateIsElementInStyleScopeFlagOnSubtree(oldScopeElement);
-  }
-  if (newScopeElement) {
-    newScopeElement->SetIsElementInStyleScopeFlagOnSubtree(true);
-  }
-#else
-  MOZ_CRASH("old style system disabled");
-#endif
 }

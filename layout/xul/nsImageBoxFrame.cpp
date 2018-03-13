@@ -463,7 +463,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                                                                       aBuilder, aResources,
                                                                       aSc, size, Nothing());
   if (key.isNothing()) {
-    return ImgDrawResult::BAD_IMAGE;
+    return ImgDrawResult::NOT_READY;
   }
   wr::LayoutRect fill = aSc.ToRelativeLayoutRect(fillRect);
 

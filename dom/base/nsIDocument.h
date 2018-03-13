@@ -166,6 +166,7 @@ class FrameRequestCallback;
 struct FullscreenRequest;
 class ImageTracker;
 class HTMLBodyElement;
+class HTMLSharedElement;
 class HTMLImageElement;
 struct LifecycleCallbackArgs;
 class Link;
@@ -1598,6 +1599,8 @@ public:
   nsGenericHTMLElement* GetBody();
   // Set the "body" in the sense of document.body.
   void SetBody(nsGenericHTMLElement* aBody, mozilla::ErrorResult& rv);
+  // Get the "head" element in the sense of document.head.
+  mozilla::dom::HTMLSharedElement* GetHead();
 
   /**
    * Accessors to the collection of stylesheets owned by this document.
@@ -2134,12 +2137,12 @@ public:
    * was no standalone parameter in the declaration, that it was given as no,
    * or that it was given as yes.
    */
-  virtual void SetXMLDeclaration(const char16_t *aVersion,
-                                 const char16_t *aEncoding,
-                                 const int32_t aStandalone) = 0;
-  virtual void GetXMLDeclaration(nsAString& aVersion,
-                                 nsAString& aEncoding,
-                                 nsAString& Standalone) = 0;
+  void SetXMLDeclaration(const char16_t* aVersion,
+                         const char16_t* aEncoding,
+                         const int32_t aStandalone);
+  void GetXMLDeclaration(nsAString& aVersion,
+                         nsAString& aEncoding,
+                         nsAString& Standalone);
 
   /**
    * Returns true if this is what HTML 5 calls an "HTML document" (for example
@@ -3280,6 +3283,15 @@ public:
   void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv);
   void GetDir(nsAString& aDirection) const;
   void SetDir(const nsAString& aDirection);
+  nsIHTMLCollection* Images();
+  nsIHTMLCollection* Embeds();
+  nsIHTMLCollection* Plugins()
+  {
+    return Embeds();
+  }
+  nsIHTMLCollection* Links();
+  nsIHTMLCollection* Forms();
+  nsIHTMLCollection* Scripts();
   already_AddRefed<nsContentList> GetElementsByName(const nsAString& aName)
   {
     return GetFuncStringContentList<nsCachableElementsByNameNodeList>(this,
@@ -3294,6 +3306,8 @@ public:
   }
   Element* GetActiveElement();
   bool HasFocus(mozilla::ErrorResult& rv) const;
+  nsIHTMLCollection* Applets();
+  nsIHTMLCollection* Anchors();
   mozilla::TimeStamp LastFocusTime() const;
   void SetLastFocusTime(const mozilla::TimeStamp& aFocusTime);
   // Event handlers are all on nsINode already
@@ -3871,6 +3885,15 @@ protected:
   // Our cached .children collection
   nsCOMPtr<nsIHTMLCollection> mChildrenCollection;
 
+  // Various DOM lists
+  RefPtr<nsContentList> mImages;
+  RefPtr<nsContentList> mEmbeds;
+  RefPtr<nsContentList> mLinks;
+  RefPtr<nsContentList> mForms;
+  RefPtr<nsContentList> mScripts;
+  nsCOMPtr<nsIHTMLCollection> mApplets;
+  RefPtr<nsContentList> mAnchors;
+
   // container for per-context fonts (downloadable, SVG, etc.)
   RefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
 
@@ -4105,11 +4128,9 @@ protected:
   // Used to prevent multiple requests to ServiceWorkerManager.
   bool mMaybeServiceWorkerControlled: 1;
 
-  // Whether <style scoped> support is enabled in this document.
-  enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
-  unsigned int mIsScopedStyleEnabled : 2;
-
   uint8_t mPendingFullscreenRequests;
+
+  uint8_t mXMLDeclarationBits;
 
   // Compatibility mode
   nsCompatibility mCompatMode;

@@ -8,6 +8,8 @@
 
 #include "ContentProcess.h"
 #include "ContentPrefs.h"
+#include "base/shared_memory.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Scheduler.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
@@ -15,7 +17,6 @@
 #endif
 
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
-#include "mozilla/Preferences.h"
 #include "mozilla/SandboxSettings.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryService.h"
@@ -81,6 +82,16 @@ SetUpSandboxEnvironment()
 }
 #endif
 
+#ifdef ANDROID
+static int gPrefsFd = -1;
+
+void
+SetPrefsFd(int aFd)
+{
+  gPrefsFd = aFd;
+}
+#endif
+
 bool
 ContentProcess::Init(int aArgc, char* aArgv[])
 {
@@ -88,9 +99,10 @@ ContentProcess::Init(int aArgc, char* aArgv[])
   bool foundAppdir = false;
   bool foundChildID = false;
   bool foundIsForBrowser = false;
-  bool foundIntPrefs = false;
-  bool foundBoolPrefs = false;
-  bool foundStringPrefs = false;
+#ifdef XP_WIN
+  bool foundPrefsHandle = false;
+#endif
+  bool foundPrefsLen = false;
   bool foundSchedulerPrefs = false;
 
   uint64_t childID;
@@ -103,7 +115,8 @@ ContentProcess::Init(int aArgc, char* aArgv[])
 #endif
 
   char* schedulerPrefs = nullptr;
-  InfallibleTArray<Pref> prefsArray;
+  base::SharedMemoryHandle prefsHandle = base::SharedMemory::NULLHandle();
+  size_t prefsLen = 0;
   for (int idx = aArgc; idx > 0; idx--) {
     if (!aArgv[idx]) {
       continue;
@@ -134,54 +147,24 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       }
       isForBrowser = strcmp(aArgv[idx], "-notForBrowser");
       foundIsForBrowser = true;
-    } else if (!strcmp(aArgv[idx], "-intPrefs")) {
+#ifdef XP_WIN
+    } else if (!strcmp(aArgv[idx], "-prefsHandle")) {
       char* str = aArgv[idx + 1];
-      while (*str) {
-        int32_t index = strtol(str, &str, 10);
-        MOZ_ASSERT(str[0] == ':');
-        str++;
-        MaybePrefValue value(PrefValue(static_cast<int32_t>(strtol(str, &str, 10))));
-        MOZ_ASSERT(str[0] == '|');
-        str++;
-        // XXX: we assume these values as default values, which may not be
-        // true. We also assume they are unlocked. Fortunately, these prefs
-        // get reset properly by the first IPC message.
-        Pref pref(nsCString(ContentPrefs::GetEarlyPref(index)),
-                  /* isLocked */ false, value, MaybePrefValue());
-        prefsArray.AppendElement(pref);
-      }
-      foundIntPrefs = true;
-    } else if (!strcmp(aArgv[idx], "-boolPrefs")) {
+      MOZ_ASSERT(str[0] != '\0');
+      // ContentParent uses %zu to print a word-sized unsigned integer. So even
+      // though strtoull() returns a long long int, it will fit in a uintptr_t.
+      prefsHandle = reinterpret_cast<HANDLE>(strtoull(str, &str, 10));
+      MOZ_ASSERT(str[0] == '\0');
+      foundPrefsHandle = true;
+#endif
+    } else if (!strcmp(aArgv[idx], "-prefsLen")) {
       char* str = aArgv[idx + 1];
-      while (*str) {
-        int32_t index = strtol(str, &str, 10);
-        MOZ_ASSERT(str[0] == ':');
-        str++;
-        MaybePrefValue value(PrefValue(!!strtol(str, &str, 10)));
-        MOZ_ASSERT(str[0] == '|');
-        str++;
-        Pref pref(nsCString(ContentPrefs::GetEarlyPref(index)),
-                  /* isLocked */ false, value, MaybePrefValue());
-        prefsArray.AppendElement(pref);
-      }
-      foundBoolPrefs = true;
-    } else if (!strcmp(aArgv[idx], "-stringPrefs")) {
-      char* str = aArgv[idx + 1];
-      while (*str) {
-        int32_t index = strtol(str, &str, 10);
-        MOZ_ASSERT(str[0] == ':');
-        str++;
-        int32_t length = strtol(str, &str, 10);
-        MOZ_ASSERT(str[0] == ';');
-        str++;
-        MaybePrefValue value(PrefValue(nsCString(str, length)));
-        Pref pref(nsCString(ContentPrefs::GetEarlyPref(index)),
-                  /* isLocked */ false, value, MaybePrefValue());
-        prefsArray.AppendElement(pref);
-        str += length + 1;
-        MOZ_ASSERT(*(str - 1) == '|');
-      }
-      foundStringPrefs = true;
+      MOZ_ASSERT(str[0] != '\0');
+      // ContentParent uses %zu to print a word-sized unsigned integer. So even
+      // though strtoull() returns a long long int, it will fit in a uintptr_t.
+      prefsLen = strtoull(str, &str, 10);
+      MOZ_ASSERT(str[0] == '\0');
+      foundPrefsLen = true;
     } else if (!strcmp(aArgv[idx], "-schedulerPrefs")) {
       schedulerPrefs = aArgv[idx + 1];
       foundSchedulerPrefs = true;
@@ -209,21 +192,43 @@ ContentProcess::Init(int aArgc, char* aArgv[])
     bool allFound = foundAppdir
                  && foundChildID
                  && foundIsForBrowser
-                 && foundIntPrefs
-                 && foundBoolPrefs
-                 && foundStringPrefs
-                 && foundSchedulerPrefs;
-
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
-    allFound &= foundProfile;
+                 && foundPrefsLen
+                 && foundSchedulerPrefs
+#ifdef XP_WIN
+                 && foundPrefsHandle
 #endif
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+                 && foundProfile
+#endif
+                 && true;
 
     if (allFound) {
       break;
     }
   }
 
-  Preferences::SetEarlyPreferences(&prefsArray);
+#ifdef ANDROID
+  // Android is different; get the FD via gPrefsFd instead of a fixed fd.
+  MOZ_RELEASE_ASSERT(gPrefsFd != -1);
+  prefsHandle = base::FileDescriptor(gPrefsFd, /* auto_close */ true);
+#elif XP_UNIX
+  prefsHandle = base::FileDescriptor(kPrefsFileDescriptor,
+                                     /* auto_close */ true);
+#endif
+
+  // Set up early prefs from the shared memory.
+  base::SharedMemory shm;
+  if (!shm.SetHandle(prefsHandle, /* read_only */ true)) {
+    NS_ERROR("failed to open shared memory in the child");
+    return false;
+  }
+  if (!shm.Map(prefsLen)) {
+    NS_ERROR("failed to map shared memory in the child");
+    return false;
+  }
+  Preferences::DeserializeEarlyPreferences(static_cast<char*>(shm.memory()),
+                                           prefsLen);
+
   Scheduler::SetPrefs(schedulerPrefs);
   mContent.Init(IOThreadChild::message_loop(),
                 ParentPid(),

@@ -181,7 +181,7 @@ class Port {
 
       onDisconnect: new EventManager(this.context, "Port.onDisconnect", fire => {
         return this.registerOnDisconnect(holder => {
-          let error = holder.deserialize(this.context.cloneScope);
+          let error = holder && holder.deserialize(this.context.cloneScope);
           portError = error && this.context.normalizeError(error);
           fire.asyncWithoutClone(portObj);
         });

@@ -17,7 +17,7 @@ namespace SkSL {
  */
 struct UnresolvedFunction : public Symbol {
     UnresolvedFunction(std::vector<const FunctionDeclaration*> funcs)
-    : INHERITED(Position(), kUnresolvedFunction_Kind, funcs[0]->fName)
+    : INHERITED(-1, kUnresolvedFunction_Kind, funcs[0]->fName)
     , fFunctions(std::move(funcs)) {
 #ifdef DEBUG
         for (auto func : funcs) {
@@ -26,7 +26,7 @@ struct UnresolvedFunction : public Symbol {
 #endif
     }
 
-    virtual String description() const override {
+    String description() const override {
         return fName;
     }
 

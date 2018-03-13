@@ -96,33 +96,22 @@ async function test_i18n_css(options = {}) {
   await extension.startup();
   let cssURL = await extension.awaitMessage("ready");
 
-  function fetch(url) {
-    return new Promise((resolve, reject) => {
-      let xhr = new XMLHttpRequest();
-      xhr.overrideMimeType("text/plain");
-      xhr.open("GET", url);
-      xhr.onload = () => { resolve(xhr.responseText); };
-      xhr.onerror = reject;
-      xhr.send();
-    });
-  }
+  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  let css = await fetch(cssURL);
+  let css = await contentPage.fetch(cssURL);
 
   equal(css, "body { max-width: 42px; }", "CSS file localized in mochitest scope");
-
-  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
   let maxWidth = await extension.awaitMessage("content-maxWidth");
 
   equal(maxWidth, "42px", "stylesheet correctly applied");
 
-  await contentPage.close();
-
   cssURL = cssURL.replace(/foo.css$/, "locale.css");
 
-  css = await fetch(cssURL);
+  css = await contentPage.fetch(cssURL);
   equal(css, '* { content: "en-US ltr rtl left right" }', "CSS file localized in mochitest scope");
+
+  await contentPage.close();
 
   // We don't currently have a good way to mock this.
   if (false) {

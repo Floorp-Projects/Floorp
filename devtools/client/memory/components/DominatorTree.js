@@ -134,6 +134,7 @@ class DominatorTree extends Component {
     return Tree({
       key: "dominator-tree-tree",
       autoExpandDepth: DOMINATOR_TREE_AUTO_EXPAND_DEPTH,
+      preventNavigationOnArrowRight: false,
       focused: dominatorTree.focused,
       getParent: node =>
         node instanceof DominatorTreeLazyChildren

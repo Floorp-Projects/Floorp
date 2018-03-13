@@ -97,9 +97,18 @@ LogBlockedRequest(nsIRequest* aRequest,
     NS_WARNING("Failed to log blocked cross-site request to web console from parent->child, falling back to browser console");
   }
 
+  bool privateBrowsing = false;
+  if (aRequest) {
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    rv = aRequest->GetLoadGroup(getter_AddRefs(loadGroup));
+    NS_ENSURE_SUCCESS_VOID(rv);
+    privateBrowsing = nsContentUtils::IsInPrivateBrowsing(loadGroup);
+  }
+
   // log message ourselves
   uint64_t innerWindowID = nsContentUtils::GetInnerWindowID(aRequest);
-  nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, msg);
+  nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
+                                             msg);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -221,7 +230,7 @@ nsPreflightCache::CacheEntry::CheckRequest(const nsCString& aMethod,
     }
   }
 
-  const struct CheckHeaderToken {
+  struct CheckHeaderToken {
     bool Equals(const TokenTime& e, const nsCString& header) const {
       return e.token.Equals(header, comparator);
     }
@@ -1567,6 +1576,7 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
 // static
 void
 nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
+                                           bool aPrivateBrowsing,
                                            const nsAString& aMessage)
 {
   nsresult rv = NS_OK;
@@ -1604,7 +1614,8 @@ nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
                            0,             // lineNumber
                            0,             // columnNumber
                            nsIScriptError::warningFlag,
-                           "CORS");
+                           "CORS",
+                           aPrivateBrowsing);
   }
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to log blocked cross-site request (scriptError init failed)");

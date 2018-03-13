@@ -1146,7 +1146,6 @@ Loader::PrepareSheet(StyleSheet* aSheet,
                      const nsAString& aTitle,
                      const nsAString& aMediaString,
                      MediaList* aMediaList,
-                     Element* aScopeElement,
                      bool aIsAlternate)
 {
   NS_PRECONDITION(aSheet, "Must have a sheet!");
@@ -1163,18 +1162,6 @@ Loader::PrepareSheet(StyleSheet* aSheet,
 
   aSheet->SetTitle(aTitle);
   aSheet->SetEnabled(!aIsAlternate);
-
-  if (aSheet->IsGecko()) {
-#ifdef MOZ_OLD_STYLE
-    aSheet->AsGecko()->SetScopeElement(aScopeElement);
-#else
-    MOZ_CRASH("old style system disabled");
-#endif
-  } else {
-    if (aScopeElement) {
-      NS_WARNING("stylo: scoped style sheets not supported");
-    }
-  }
 }
 
 /**
@@ -2005,7 +1992,6 @@ Loader::LoadInlineStyle(nsIContent* aElement,
                         const nsAString& aTitle,
                         const nsAString& aMedia,
                         ReferrerPolicy aReferrerPolicy,
-                        Element* aScopeElement,
                         nsICSSLoaderObserver* aObserver,
                         bool* aCompleted,
                         bool* aIsAlternate)
@@ -2041,7 +2027,7 @@ Loader::LoadInlineStyle(nsIContent* aElement,
 
   LOG(("  Sheet is alternate: %d", *aIsAlternate));
 
-  PrepareSheet(sheet, aTitle, aMedia, nullptr, aScopeElement, *aIsAlternate);
+  PrepareSheet(sheet, aTitle, aMedia, nullptr, *aIsAlternate);
 
   if (aElement->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
     ShadowRoot* containingShadow = aElement->GetContainingShadow();
@@ -2152,7 +2138,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
 
   LOG(("  Sheet is alternate: %d", *aIsAlternate));
 
-  PrepareSheet(sheet, aTitle, aMedia, nullptr, nullptr, *aIsAlternate);
+  PrepareSheet(sheet, aTitle, aMedia, nullptr, *aIsAlternate);
 
   rv = InsertSheetInDoc(sheet, aElement, mDocument);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2326,7 +2312,7 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
                      false, empty, state, &isAlternate, &sheet);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PrepareSheet(sheet, empty, empty, aMedia, nullptr, isAlternate);
+    PrepareSheet(sheet, empty, empty, aMedia, isAlternate);
   }
 
   rv = InsertChildSheet(sheet, aParentSheet, aGeckoParentRule);
@@ -2482,7 +2468,7 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
                    false, empty, state, &isAlternate, &sheet);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PrepareSheet(sheet, empty, empty, nullptr, nullptr, isAlternate);
+  PrepareSheet(sheet, empty, empty, nullptr, isAlternate);
 
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete"));
