@@ -6,6 +6,7 @@
 
 %filter substitution
 %define navbarTabsShadowSize 1px
+%define themeTransition background-color 0.1s cubic-bezier(.17,.67,.83,.67)
 
 :root {
   /* Note: Setting this to 0 (without px) breaks CSS calculations for OSX. */
@@ -14,6 +15,10 @@
 
 :root[extradragspace][tabsintitlebar]:not([inFullscreen]) {
   --space-above-tabbar: 8px;
+}
+
+:root:-moz-lwtheme {
+  transition: @themeTransition@;
 }
 
 /* Toolbar / content area border */
@@ -28,12 +33,16 @@
   border-bottom-style: none;
 }
 
+#nav-bar:-moz-lwtheme {
+  transition: @themeTransition@;
+}
+
 /* Bookmark toolbar */
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
   overflow: -moz-hidden-unscrollable;
   max-height: 4em;
-  transition: min-height 170ms ease-out, max-height 170ms ease-out;
+  transition: min-height 170ms ease-out, max-height 170ms ease-out, @themeTransition@;
   padding: 0 6px 2px;
 }
 
