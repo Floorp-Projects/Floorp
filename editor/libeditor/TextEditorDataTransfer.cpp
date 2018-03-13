@@ -9,6 +9,8 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/SelectionState.h"
+#include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
@@ -18,9 +20,7 @@
 #include "nsError.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDOMDataTransfer.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDragEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMUIEvent.h"
@@ -165,12 +165,11 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 {
   CommitComposition();
 
-  nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aDropEvent));
+  Event* dropEvent = aDropEvent->InternalDOMEvent();
+  DragEvent* dragEvent = dropEvent->AsDragEvent();
   NS_ENSURE_TRUE(dragEvent, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMDataTransfer> domDataTransfer;
-  dragEvent->GetDataTransfer(getter_AddRefs(domDataTransfer));
-  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(domDataTransfer);
+  RefPtr<DataTransfer> dataTransfer = dragEvent->GetDataTransfer();
   NS_ENSURE_TRUE(dataTransfer, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
@@ -196,9 +195,7 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsIDOMDocument> destdomdoc = GetDOMDocument();
   NS_ENSURE_TRUE(destdomdoc, NS_ERROR_NOT_INITIALIZED);
 
-  uint32_t numItems = 0;
-  nsresult rv = dataTransfer->GetMozItemCount(&numItems);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t numItems = dataTransfer->MozItemCount();
   if (numItems < 1) {
     return NS_ERROR_FAILURE;  // Nothing to drop?
   }
@@ -214,7 +211,7 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   NS_ENSURE_TRUE(uiEvent, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> newSelectionParent;
-  rv = uiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
+  nsresult rv = uiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
 

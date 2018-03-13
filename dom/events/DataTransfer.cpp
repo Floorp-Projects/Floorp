@@ -484,13 +484,6 @@ DataTransfer::ClearData(const Optional<nsAString>& aFormat,
 }
 
 NS_IMETHODIMP
-DataTransfer::GetMozItemCount(uint32_t* aCount)
-{
-  *aCount = MozItemCount();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 DataTransfer::GetMozCursor(nsAString& aCursorState)
 {
   nsString cursor;
