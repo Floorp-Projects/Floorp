@@ -1,6 +1,8 @@
 browser/components/translation/cld2/
 browser/extensions/mortar/ppapi/
 db/sqlite3/src/
+devtools/client/sourceeditor/codemirror/
+devtools/client/sourceeditor/tern/
 extensions/spellcheck/hunspell/src/
 gfx/angle/
 gfx/cairo/
@@ -11,8 +13,8 @@ gfx/qcms/
 gfx/sfntly/
 gfx/skia/
 gfx/vr/openvr/
-gfx/webrender
-gfx/webrender_api
+gfx/webrender/
+gfx/webrender_api/
 gfx/wrench/
 gfx/ycbcr/
 intl/hyphenation/hyphen/
@@ -56,6 +58,7 @@ modules/libbz2/
 modules/libmar/
 modules/pdfium/
 modules/woff2/
+modules/xz-embedded/
 modules/zlib/
 netwerk/sctp/src/
 netwerk/srtp/src/
@@ -95,4 +98,4 @@ toolkit/components/protobuf/
 toolkit/components/url-classifier/chromium/
 toolkit/components/url-classifier/protobuf/
 toolkit/crashreporter/google-breakpad/
-tools/fuzzing/libfuzzer
+tools/fuzzing/libfuzzer/
