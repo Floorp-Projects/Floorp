@@ -1,7 +1,7 @@
 [package]
 name = "mozrunner"
-version = "0.5.0"
-authors = ["Mozilla Tools and Automation <auto-tools@mozilla.com>"]
+version = "0.6.0"
+authors = ["Mozilla"]
 description = "Library for starting Firefox binaries."
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozrunner"
 license = "MPL-2.0"

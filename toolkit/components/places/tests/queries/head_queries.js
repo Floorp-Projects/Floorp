@@ -217,7 +217,7 @@ function queryData(obj) {
   this.isTag = obj.isTag ? obj.isTag : false;
   this.tagArray = obj.tagArray ? obj.tagArray : null;
   this.isLivemark = obj.isLivemark ? obj.isLivemark : false;
-  this.parentGuid = obj.parentGuid || PlacesUtils.bookmarks.rootGuid;
+  this.parentGuid = obj.parentGuid || PlacesUtils.bookmarks.unfiledGuid;
   this.feedURI = obj.feedURI ? obj.feedURI : "";
   this.index = obj.index ? obj.index : PlacesUtils.bookmarks.DEFAULT_INDEX;
   this.isFolder = obj.isFolder ? obj.isFolder : false;

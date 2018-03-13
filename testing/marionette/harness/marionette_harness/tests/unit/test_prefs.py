@@ -32,8 +32,16 @@ class TestPreferences(MarionetteTestCase):
         required_prefs = geckoinstance.GeckoInstance.required_prefs
 
         for key, value in required_prefs.iteritems():
-            self.assertEqual(self.marionette.get_pref(key), value,
-                             "Preference {} hasn't been set to {}".format(key, value))
+            # The extensions.shield-recipe-client.* prefs branch
+            # is as of Firefox 60 migrated to app.normandy.*.
+            #
+            # This is a workaround that can be removed together
+            # with extensions.shield-recipe-client.api_url.
+            if key == "extensions.shield-recipe-client.api_url":
+                self.assertEqual(self.marionette.get_pref("app.normandy.api_url"), value)
+            else:
+                self.assertEqual(self.marionette.get_pref(key), value,
+                                 "Preference {} hasn't been set to {}".format(key, repr(value)))
 
     @skip_if_mobile("Only runnable with Firefox")
     def test_desktop_instance_preferences(self):
