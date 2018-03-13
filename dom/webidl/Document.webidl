@@ -135,7 +135,7 @@ partial interface Document {
   [SameObject] readonly attribute HTMLCollection images;
   [SameObject] readonly attribute HTMLCollection embeds;
   [SameObject] readonly attribute HTMLCollection plugins;
-  //(HTML only)readonly attribute HTMLCollection links;
+  [SameObject] readonly attribute HTMLCollection links;
   [SameObject] readonly attribute HTMLCollection forms;
   [SameObject] readonly attribute HTMLCollection scripts;
   [Pure]
