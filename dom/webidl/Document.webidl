@@ -246,7 +246,7 @@ partial interface Document {
   //(HTML only)[CEReactions] attribute [TreatNullAs=EmptyString] DOMString alinkColor;
   //(HTML only)[CEReactions] attribute [TreatNullAs=EmptyString] DOMString bgColor;
 
-  //(HTML only)[SameObject] readonly attribute HTMLCollection anchors;
+  [SameObject] readonly attribute HTMLCollection anchors;
   [SameObject] readonly attribute HTMLCollection applets;
 
   //(HTML only)void clear();

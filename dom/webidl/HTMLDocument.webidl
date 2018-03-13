@@ -48,9 +48,6 @@ interface HTMLDocument : Document {
   [CEReactions, TreatNullAs=EmptyString] attribute DOMString alinkColor;
   [CEReactions, TreatNullAs=EmptyString] attribute DOMString bgColor;
 
-  [Pure]
-  readonly attribute HTMLCollection anchors;
-
   void clear();
 
   readonly attribute HTMLAllCollection all;

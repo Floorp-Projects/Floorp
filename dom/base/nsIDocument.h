@@ -3307,6 +3307,7 @@ public:
   Element* GetActiveElement();
   bool HasFocus(mozilla::ErrorResult& rv) const;
   nsIHTMLCollection* Applets();
+  nsIHTMLCollection* Anchors();
   mozilla::TimeStamp LastFocusTime() const;
   void SetLastFocusTime(const mozilla::TimeStamp& aFocusTime);
   // Event handlers are all on nsINode already
@@ -3891,6 +3892,7 @@ protected:
   RefPtr<nsContentList> mForms;
   RefPtr<nsContentList> mScripts;
   nsCOMPtr<nsIHTMLCollection> mApplets;
+  RefPtr<nsContentList> mAnchors;
 
   // container for per-context fonts (downloadable, SVG, etc.)
   RefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
