@@ -191,6 +191,7 @@ private:
 
   uint64_t mTabId;
   nsString mRequestId;
+  nsString mCompleteStatus;
   nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   nsCOMPtr<nsIArray> mPaymentMethods;
   nsCOMPtr<nsIPaymentDetails> mPaymentDetails;

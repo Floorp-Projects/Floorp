@@ -681,6 +681,20 @@ PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails)
   return mPaymentDetails->Update(aPaymentDetails);
 }
 
+NS_IMETHODIMP
+PaymentRequest::SetCompleteStatus(const nsAString& aCompleteStatus)
+{
+  mCompleteStatus = aCompleteStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentRequest::GetCompleteStatus(nsAString& aCompleteStatus)
+{
+  aCompleteStatus = mCompleteStatus;
+  return NS_OK;
+}
+
 /* PaymentAddress */
 
 NS_IMPL_ISUPPORTS(PaymentAddress, nsIPaymentAddress)
