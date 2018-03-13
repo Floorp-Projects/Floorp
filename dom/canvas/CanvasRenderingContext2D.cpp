@@ -5283,6 +5283,9 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       HTMLVideoElement* video = &aImage.GetAsHTMLVideoElement();
       int32_t displayWidth = video->VideoWidth();
       int32_t displayHeight = video->VideoHeight();
+      if (displayWidth == 0 || displayHeight == 0) {
+        return;
+      }
       aSw *= (double)imgSize.width / (double)displayWidth;
       aSh *= (double)imgSize.height / (double)displayHeight;
     }

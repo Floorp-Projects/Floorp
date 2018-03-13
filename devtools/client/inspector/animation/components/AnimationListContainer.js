@@ -12,36 +12,41 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const AnimationList = createFactory(require("./AnimationList"));
 const AnimationListHeader = createFactory(require("./AnimationListHeader"));
 
-const TimeScale = require("../utils/timescale");
-
 class AnimationListContainer extends PureComponent {
   static get propTypes() {
     return {
+      addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      removeAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
+      setAnimationsCurrentTime: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
+      timeScale: PropTypes.object.isRequired,
     };
   }
 
   render() {
     const {
+      addAnimationsCurrentTimeListener,
       animations,
       emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      removeAnimationsCurrentTimeListener,
       selectAnimation,
+      setAnimationsCurrentTime,
       setSelectedNode,
       simulateAnimation,
+      timeScale,
     } = this.props;
-    const timeScale = new TimeScale(animations);
 
     return dom.div(
       {
@@ -49,6 +54,9 @@ class AnimationListContainer extends PureComponent {
       },
       AnimationListHeader(
         {
+          addAnimationsCurrentTimeListener,
+          removeAnimationsCurrentTimeListener,
+          setAnimationsCurrentTime,
           timeScale,
         }
       ),

@@ -21,8 +21,14 @@
 #include "SkTMultiMap.h"
 
 class GrCaps;
+class GrProxyProvider;
 class SkString;
 class SkTraceMemoryDump;
+
+struct GrGpuResourceFreedMessage {
+    GrGpuResource* fResource;
+    uint32_t fOwningUniqueID;
+};
 
 /**
  * Manages the lifetime of all GrGpuResource instances.
@@ -43,7 +49,7 @@ class SkTraceMemoryDump;
  */
 class GrResourceCache {
 public:
-    GrResourceCache(const GrCaps* caps);
+    GrResourceCache(const GrCaps*, uint32_t contextUniqueID);
     ~GrResourceCache();
 
     // Default maximum number of budgeted resources in the cache.
@@ -86,6 +92,11 @@ public:
      * Returns the number of bytes consumed by resources.
      */
     size_t getResourceBytes() const { return fBytes; }
+
+    /**
+     * Returns the number of bytes held by unlocked reosources which are available for purging.
+     */
+    size_t getPurgeableBytes() const { return fPurgeableBytes; }
 
     /**
      * Returns the number of bytes consumed by budgeted resources.
@@ -163,16 +174,32 @@ public:
     /** Purge all resources not used since the passed in time. */
     void purgeResourcesNotUsedSince(GrStdSteadyClock::time_point);
 
+    bool overBudget() const { return fBudgetedBytes > fMaxBytes || fBudgetedCount > fMaxCount; }
+
+    /**
+     * Purge unlocked resources from the cache until the the provided byte count has been reached
+     * or we have purged all unlocked resources. The default policy is to purge in LRU order, but
+     * can be overridden to prefer purging scratch resources (in LRU order) prior to purging other
+     * resource types.
+     *
+     * @param maxBytesToPurge the desired number of bytes to be purged.
+     * @param preferScratchResources If true scratch resources will be purged prior to other
+     *                               resource types.
+     */
+    void purgeUnlockedResources(size_t bytesToPurge, bool preferScratchResources);
+
     /** Returns true if the cache would like a flush to occur in order to make more resources
         purgeable. */
     bool requestsFlush() const { return fRequestFlush; }
 
     enum FlushType {
         kExternal,
-        kImmediateMode,
         kCacheRequested,
     };
     void notifyFlushOccurred(FlushType);
+
+    /** Maintain a ref to this resource until we receive a GrGpuResourceFreedMessage. */
+    void insertCrossContextGpuResource(GrGpuResource* resource);
 
 #if GR_CACHE_STATS
     struct Stats {
@@ -225,6 +252,8 @@ public:
     // Enumerates all cached resources and dumps their details to traceMemoryDump.
     void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const;
 
+    void setProxyProvider(GrProxyProvider* proxyProvider) { fProxyProvider = proxyProvider; }
+
 private:
     ///////////////////////////////////////////////////////////////////////////
     /// @name Methods accessible via ResourceAccess
@@ -241,9 +270,9 @@ private:
     /// @}
 
     void processInvalidUniqueKeys(const SkTArray<GrUniqueKeyInvalidatedMessage>&);
+    void processFreedGpuResources();
     void addToNonpurgeableArray(GrGpuResource*);
     void removeFromNonpurgeableArray(GrGpuResource*);
-    bool overBudget() const { return fBudgetedBytes > fMaxBytes || fBudgetedCount > fMaxCount; }
 
     bool wouldFit(size_t bytes) {
         return fBudgetedBytes+bytes <= fMaxBytes && fBudgetedCount+1 <= fMaxCount;
@@ -268,6 +297,7 @@ private:
         }
 
         static uint32_t Hash(const GrScratchKey& key) { return key.hash(); }
+        static void OnFree(GrGpuResource*) { }
     };
     typedef SkTMultiMap<GrGpuResource, GrScratchKey, ScratchMapTraits> ScratchMap;
 
@@ -287,9 +317,11 @@ private:
     }
 
     typedef SkMessageBus<GrUniqueKeyInvalidatedMessage>::Inbox InvalidUniqueKeyInbox;
+    typedef SkMessageBus<GrGpuResourceFreedMessage>::Inbox FreedGpuResourceInbox;
     typedef SkTDPQueue<GrGpuResource*, CompareTimestamp, AccessResourceIndex> PurgeableQueue;
     typedef SkTDArray<GrGpuResource*> ResourceArray;
 
+    GrProxyProvider*                    fProxyProvider;
     // Whenever a resource is added to the cache or the result of a cache lookup, fTimestamp is
     // assigned as the resource's timestamp and then incremented. fPurgeableQueue orders the
     // purgeable resources by this value, and thus is used to purge resources in LRU order.
@@ -321,11 +353,15 @@ private:
     // our current stats for resources that count against the budget
     int                                 fBudgetedCount;
     size_t                              fBudgetedBytes;
+    size_t                              fPurgeableBytes;
 
     bool                                fRequestFlush;
     uint32_t                            fExternalFlushCnt;
 
     InvalidUniqueKeyInbox               fInvalidUniqueKeyInbox;
+    FreedGpuResourceInbox               fFreedGpuResourceInbox;
+
+    uint32_t                            fContextUniqueID;
 
     // This resource is allowed to be in the nonpurgeable array for the sake of validate() because
     // we're in the midst of converting it to purgeable status.

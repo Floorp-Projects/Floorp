@@ -1,39 +1,14 @@
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(this, "proxyService",
-                                   "@mozilla.org/network/protocol-proxy-service;1",
-                                   "nsIProtocolProxyService");
-
-const server = createHttpServer();
-const gHost = "localhost";
-const gPort = server.identity.primaryPort;
-
 const HOSTS = new Set([
   "example.com",
   "example.org",
   "example.net",
 ]);
 
-for (let host of HOSTS) {
-  server.identity.add("http", host, 80);
-}
+const server = createHttpServer({hosts: HOSTS});
 
-const proxyFilter = {
-  proxyInfo: proxyService.newProxyInfo("http", gHost, gPort, 0, 4096, null),
-
-  applyFilter(service, channel, defaultProxyInfo, callback) {
-    if (HOSTS.has(channel.URI.host)) {
-      callback.onProxyFilterResult(this.proxyInfo);
-    } else {
-      callback.onProxyFilterResult(defaultProxyInfo);
-    }
-  },
-};
-
-proxyService.registerChannelFilter(proxyFilter, 0);
-registerCleanupFunction(() => {
-  proxyService.unregisterChannelFilter(proxyFilter);
-});
+const FETCH_ORIGIN = "http://example.com/dummy";
 
 server.registerPathHandler("/redirect", (request, response) => {
   let params = new URLSearchParams(request.queryString);
@@ -48,11 +23,7 @@ server.registerPathHandler("/dummy", (request, response) => {
   response.write("ok");
 });
 
-Cu.importGlobalProperties(["fetch"]);
-
 add_task(async function() {
-  const {fetch} = Cu.Sandbox("http://example.com/", {wantGlobalProperties: ["fetch"]});
-
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       let pending = [];
@@ -115,8 +86,7 @@ add_task(async function() {
     ["http://example.com/redirect?redirect_uri=http://example.net/dummy", "ok"],
     ["http://example.net/redirect?redirect_uri=http://example.com/dummy", "http://example.com/dummy"],
   ].map(async ([url, expectedResponse]) => {
-    let resp = await fetch(url);
-    let text = await resp.text();
+    let text = await ExtensionTestUtils.fetch(FETCH_ORIGIN, url);
     equal(text, expectedResponse, `Expected response for ${url}`);
   });
 

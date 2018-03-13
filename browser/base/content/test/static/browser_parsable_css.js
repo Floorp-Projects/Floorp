@@ -96,9 +96,6 @@ let propNameWhitelist = [
   // Bug 1441837
   {propName: "--in-content-category-text-active",
    isFromDevTools: false},
-  // Bug 1441844
-  {propName: "--chrome-nav-bar-separator-color",
-   isFromDevTools: false},
   // Bug 1441855
   {propName: "--chrome-nav-buttons-background",
    isFromDevTools: false},

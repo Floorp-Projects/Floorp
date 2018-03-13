@@ -78,26 +78,18 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::type, aType, aError);
   }
-  bool Scoped()
-  {
-    return GetBoolAttr(nsGkAtoms::scoped);
-  }
-  void SetScoped(bool aScoped, ErrorResult& aError)
-  {
-    SetHTMLBoolAttr(nsGkAtoms::scoped, aScoped, aError);
-  }
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   virtual ~HTMLStyleElement();
 
-  already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) override;
+  already_AddRefed<nsIURI>
+    GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) final;
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
-                         bool* aIsScoped,
-                         bool* aIsAlternate) override;
+                         bool* aIsAlternate) final;
   /**
    * Common method to call from the various mutation observer methods.
    * aContent is a content node that's either the one that changed or its

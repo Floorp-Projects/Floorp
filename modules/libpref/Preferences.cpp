@@ -2470,9 +2470,6 @@ Preferences::HandleDirty()
 static nsresult
 openPrefFile(nsIFile* aFile, PrefValueKind aKind);
 
-static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
-static const char kChannelPref[] = "app.update.channel";
-
 // clang-format off
 static const char kPrefFileHeader[] =
   "// Mozilla User Preferences"
@@ -2920,8 +2917,94 @@ public:
 
 } // namespace
 
-// A list of prefs sent early from the parent, via the command line.
+// A list of prefs sent early from the parent, via shared memory.
 static InfallibleTArray<dom::Pref>* gEarlyDomPrefs;
+
+static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
+static const char kChannelPref[] = "app.update.channel";
+
+#ifdef MOZ_WIDGET_ANDROID
+
+static Maybe<bool>
+TelemetryPrefValue()
+{
+  // Leave it unchanged if it's already set.
+  // XXX: how could it already be set?
+  if (Preferences::GetType(kTelemetryPref) != nsIPrefBranch::PREF_INVALID) {
+    return Nothing();
+  }
+
+    // Determine the correct default for toolkit.telemetry.enabled. If this
+    // build has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel,
+    // telemetry is on by default, otherwise not. This is necessary so that
+    // beta users who are testing final release builds don't flipflop defaults.
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+  return Some(true);
+#else
+  nsAutoCString channelPrefValue;
+  Unused << Preferences::GetCString(
+    kChannelPref, channelPrefValue, PrefValueKind::Default);
+  return Some(prefValue.EqualsLiteral("beta"));
+#endif
+}
+
+/* static */ void
+Preferences::SetupTelemetryPref()
+{
+  Maybe<bool> telemetryPrefValue = TelemetryPrefValue();
+  if (telemetryPrefValue.isSome()) {
+    Preferences::SetBoolInAnyProcess(
+      kTelemetryPref, *telemetryPrefValue, PrefValueKind::Default);
+  }
+}
+
+#else // !MOZ_WIDGET_ANDROID
+
+static bool
+TelemetryPrefValue()
+{
+  // For platforms with Unified Telemetry (here meaning not-Android),
+  // toolkit.telemetry.enabled determines whether we send "extended" data.
+  // We only want extended data from pre-release channels due to size.
+
+  NS_NAMED_LITERAL_CSTRING(channel, NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+
+  // Easy cases: Nightly, Aurora, Beta.
+  if (channel.EqualsLiteral("nightly") || channel.EqualsLiteral("aurora") ||
+      channel.EqualsLiteral("beta")) {
+    return true;
+  }
+
+#ifndef MOZILLA_OFFICIAL
+  // Local developer builds: non-official builds on the "default" channel.
+  if (channel.EqualsLiteral("default")) {
+    return true;
+  }
+#endif
+
+  // Release Candidate builds: builds that think they are release builds, but
+  // are shipped to beta users.
+  if (channel.EqualsLiteral("release")) {
+    nsAutoCString channelPrefValue;
+    Unused << Preferences::GetCString(
+      kChannelPref, channelPrefValue, PrefValueKind::Default);
+    if (channelPrefValue.EqualsLiteral("beta")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* static */ void
+Preferences::SetupTelemetryPref()
+{
+  Preferences::SetBoolInAnyProcess(
+    kTelemetryPref, TelemetryPrefValue(), PrefValueKind::Default);
+  Preferences::LockInAnyProcess(kTelemetryPref);
+}
+
+#endif // MOZ_WIDGET_ANDROID
 
 /* static */ already_AddRefed<Preferences>
 Preferences::GetInstanceForService()
@@ -3081,11 +3164,130 @@ NS_IMPL_ISUPPORTS(Preferences,
                   nsISupportsWeakReference)
 
 /* static */ void
-Preferences::SetEarlyPreferences(const nsTArray<dom::Pref>* aDomPrefs)
+Preferences::SerializeEarlyPreferences(nsCString& aStr)
+{
+  MOZ_RELEASE_ASSERT(InitStaticMembers());
+
+  nsAutoCStringN<256> boolPrefs, intPrefs, stringPrefs;
+  size_t numEarlyPrefs;
+  dom::ContentPrefs::GetEarlyPrefs(&numEarlyPrefs);
+
+  for (unsigned int i = 0; i < numEarlyPrefs; i++) {
+    const char* prefName = dom::ContentPrefs::GetEarlyPref(i);
+    MOZ_ASSERT_IF(i > 0,
+                  strcmp(prefName, dom::ContentPrefs::GetEarlyPref(i - 1)) > 0);
+
+    Pref* pref = pref_HashTableLookup(prefName);
+    if (!pref || !pref->MustSendToContentProcesses()) {
+      continue;
+    }
+
+    switch (pref->Type()) {
+      case PrefType::Bool:
+        boolPrefs.Append(
+          nsPrintfCString("%u:%d|", i, Preferences::GetBool(prefName)));
+        break;
+      case PrefType::Int:
+        intPrefs.Append(
+          nsPrintfCString("%u:%d|", i, Preferences::GetInt(prefName)));
+        break;
+      case PrefType::String: {
+        nsAutoCString value;
+        Preferences::GetCString(prefName, value);
+        stringPrefs.Append(
+          nsPrintfCString("%u:%d;%s|", i, value.Length(), value.get()));
+      } break;
+      case PrefType::None:
+        break;
+      default:
+        printf_stderr("preference type: %d\n", int(pref->Type()));
+        MOZ_CRASH();
+    }
+  }
+
+  aStr.Truncate();
+  aStr.Append(boolPrefs);
+  aStr.Append('\n');
+  aStr.Append(intPrefs);
+  aStr.Append('\n');
+  aStr.Append(stringPrefs);
+  aStr.Append('\n');
+  aStr.Append('\0');
+}
+
+/* static */ void
+Preferences::DeserializeEarlyPreferences(char* aStr, size_t aStrLen)
 {
   MOZ_ASSERT(!XRE_IsParentProcess());
 
-  gEarlyDomPrefs = new InfallibleTArray<dom::Pref>(mozilla::Move(*aDomPrefs));
+  MOZ_ASSERT(!gEarlyDomPrefs);
+  gEarlyDomPrefs = new InfallibleTArray<dom::Pref>();
+
+  char* p = aStr;
+
+  // XXX: we assume these pref values are default values, which may not be
+  // true. We also assume they are unlocked. Fortunately, these prefs get reset
+  // properly by the first IPC message.
+
+  // Get the bool prefs.
+  while (*p != '\n') {
+    int32_t index = strtol(p, &p, 10);
+    MOZ_ASSERT(p[0] == ':');
+    p++;
+    int v = strtol(p, &p, 10);
+    MOZ_ASSERT(v == 0 || v == 1);
+    dom::MaybePrefValue value(dom::PrefValue(!!v));
+    MOZ_ASSERT(p[0] == '|');
+    p++;
+    dom::Pref pref(nsCString(dom::ContentPrefs::GetEarlyPref(index)),
+                   /* isLocked */ false,
+                   value,
+                   dom::MaybePrefValue());
+    gEarlyDomPrefs->AppendElement(pref);
+  }
+  p++;
+
+  // Get the int prefs.
+  while (*p != '\n') {
+    int32_t index = strtol(p, &p, 10);
+    MOZ_ASSERT(p[0] == ':');
+    p++;
+    dom::MaybePrefValue value(
+      dom::PrefValue(static_cast<int32_t>(strtol(p, &p, 10))));
+    MOZ_ASSERT(p[0] == '|');
+    p++;
+    dom::Pref pref(nsCString(dom::ContentPrefs::GetEarlyPref(index)),
+                   /* isLocked */ false,
+                   value,
+                   dom::MaybePrefValue());
+    gEarlyDomPrefs->AppendElement(pref);
+  }
+  p++;
+
+  // Get the string prefs.
+  while (*p != '\n') {
+    int32_t index = strtol(p, &p, 10);
+    MOZ_ASSERT(p[0] == ':');
+    p++;
+    int32_t length = strtol(p, &p, 10);
+    MOZ_ASSERT(p[0] == ';');
+    p++;
+    dom::MaybePrefValue value(dom::PrefValue(nsCString(p, length)));
+    dom::Pref pref(nsCString(dom::ContentPrefs::GetEarlyPref(index)),
+                   /* isLocked */ false,
+                   value,
+                   dom::MaybePrefValue());
+    gEarlyDomPrefs->AppendElement(pref);
+    p += length + 1;
+    MOZ_ASSERT(*(p - 1) == '|');
+  }
+  p++;
+
+  MOZ_ASSERT(*p == '\0');
+
+  // We finished parsing on a '\0'. That should be the last char in the shared
+  // memory.
+  MOZ_ASSERT(aStr + aStrLen - 1 == p);
 
 #ifdef DEBUG
   MOZ_ASSERT(gPhase == ContentProcessPhase::eNoPrefsSet);
@@ -3944,58 +4146,7 @@ Preferences::InitInitialObjects()
     }
   }
 
-#ifdef MOZ_WIDGET_ANDROID
-  // Set up the correct default for toolkit.telemetry.enabled. If this build
-  // has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel, telemetry
-  // is on by default, otherwise not. This is necessary so that beta users who
-  // are testing final release builds don't flipflop defaults.
-  if (Preferences::GetType(kTelemetryPref) == nsIPrefBranch::PREF_INVALID) {
-    bool prerelease = false;
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-    prerelease = true;
-#else
-    nsAutoCString prefValue;
-    Preferences::GetCString(kChannelPref, prefValue, PrefValueKind::Default);
-    if (prefValue.EqualsLiteral("beta")) {
-      prerelease = true;
-    }
-#endif
-    Preferences::SetBoolInAnyProcess(
-      kTelemetryPref, prerelease, PrefValueKind::Default);
-  }
-#else
-  // For platforms with Unified Telemetry (here meaning not-Android),
-  // toolkit.telemetry.enabled determines whether we send "extended" data.
-  // We only want extended data from pre-release channels due to size. We
-  // also want it to be recorded for local developer builds (non-official builds
-  // on the "default" channel).
-  bool developerBuild = false;
-#ifndef MOZILLA_OFFICIAL
-  developerBuild = !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "default");
-#endif
-
-  // Release Candidate builds are builds that think they are release builds, but
-  // are shipped to beta users. We still need extended data from these users.
-  bool releaseCandidateOnBeta = false;
-  if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "release")) {
-    nsAutoCString updateChannelPrefValue;
-    Preferences::GetCString(
-      kChannelPref, updateChannelPrefValue, PrefValueKind::Default);
-    releaseCandidateOnBeta = updateChannelPrefValue.EqualsLiteral("beta");
-  }
-
-  if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "nightly") ||
-      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "aurora") ||
-      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") || developerBuild ||
-      releaseCandidateOnBeta) {
-    Preferences::SetBoolInAnyProcess(
-      kTelemetryPref, true, PrefValueKind::Default);
-  } else {
-    Preferences::SetBoolInAnyProcess(
-      kTelemetryPref, false, PrefValueKind::Default);
-  }
-  Preferences::LockInAnyProcess(kTelemetryPref);
-#endif // MOZ_WIDGET_ANDROID
+  SetupTelemetryPref();
 
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
                                 nullptr,
@@ -4296,15 +4447,6 @@ Preferences::HasUserValue(const char* aPrefName)
 
   Pref* pref = pref_HashTableLookup(aPrefName);
   return pref && pref->HasUserValue();
-}
-
-/* static */ bool
-Preferences::MustSendToContentProcesses(const char* aPrefName)
-{
-  NS_ENSURE_TRUE(InitStaticMembers(), false);
-
-  Pref* pref = pref_HashTableLookup(aPrefName);
-  return pref && pref->MustSendToContentProcesses();
 }
 
 /* static */ int32_t

@@ -77,14 +77,14 @@ protected:
 
   nsCOMPtr<nsIURI> mOverriddenBaseURI;
 
-  already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) override;
+  already_AddRefed<nsIURI>
+    GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) final;
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
-                         bool* aIsScoped,
-                         bool* aIsAlternate) override;
-  virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const override;
+                         bool* aIsAlternate) final;
+  nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo* aNodeInfo,
+                                      bool aCloneText) const final;
 };
 
 } // namespace dom

@@ -208,7 +208,8 @@ LogInvalidCertError(nsNSSSocketInfo* socketInfo,
   nsString message;
   socketInfo->GetErrorLogMessage(errorCode, errorMessageType, message);
   if (!message.IsEmpty()) {
-    nsContentUtils::LogSimpleConsoleError(message, "SSL");
+    nsContentUtils::LogSimpleConsoleError(message, "SSL",
+                                          !!socketInfo->GetOriginAttributes().mPrivateBrowsingId);
   }
 }
 

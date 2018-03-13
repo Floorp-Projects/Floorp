@@ -828,10 +828,11 @@ parent:
     async ConsoleMessage(nsString message);
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
                       uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
-                      nsCString category);
+                      nsCString category, bool privateWindow);
     async ScriptErrorWithStack(nsString message, nsString sourceName, nsString sourceLine,
                                uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
-                               nsCString category, ClonedMessageData stack);
+                               nsCString category, bool privateWindow,
+                               ClonedMessageData stack);
 
     // Places the items within dataTransfer on the clipboard.
     async SetClipboard(IPCDataTransfer aDataTransfer,

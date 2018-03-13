@@ -1008,7 +1008,8 @@ public:
    *   @param classification Name of the module reporting error
    */
   static void LogSimpleConsoleError(const nsAString& aErrorText,
-                                    const char * classification);
+                                    const char * classification,
+                                    bool aFromPrivateWindow);
 
   /**
    * Report a non-localized error message to the error console.
@@ -2446,14 +2447,6 @@ public:
   }
 
   /**
-   * Returns true if the <style scoped> enabling pref is true.
-   */
-  static bool IsScopedStylePrefEnabled()
-  {
-    return sIsScopedStyleEnabled;
-  }
-
-  /**
    * Fire mutation events for changes caused by parsing directly into a
    * context node.
    *
@@ -3468,7 +3461,6 @@ private:
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;
 #endif
-  static bool sIsScopedStyleEnabled;
   static bool sIsBytecodeCacheEnabled;
   static int32_t sBytecodeCacheStrategy;
   static uint32_t sCookiesLifetimePolicy;

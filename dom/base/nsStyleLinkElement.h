@@ -91,13 +91,10 @@ protected:
                                     mozilla::dom::ShadowRoot *aOldShadowRoot,
                                     bool aForceUpdate = false);
 
-  void UpdateStyleSheetScopedness(bool aIsNowScoped);
-
   virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) = 0;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
-                                 bool* aIsScoped,
                                  bool* aIsAlternate) = 0;
 
   virtual mozilla::CORSMode GetCORSMode() const

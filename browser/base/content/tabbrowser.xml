@@ -1906,39 +1906,6 @@
         <parameter name="aMuteReason"/>
         <body>
         <![CDATA[
-          // Do not attempt to toggle mute state if browser is lazy.
-          if (!this.linkedPanel) {
-            return;
-          }
-
-          let browser = this.linkedBrowser;
-          let modifiedAttrs = [];
-          let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
-
-          if (this.hasAttribute("activemedia-blocked")) {
-            this.removeAttribute("activemedia-blocked");
-            modifiedAttrs.push("activemedia-blocked");
-
-            browser.resumeMedia();
-            hist.add(3 /* unblockByClickingIcon */);
-            this.finishMediaBlockTimer();
-          } else {
-            if (browser.audioMuted) {
-              browser.unmute();
-              this.removeAttribute("muted");
-              BrowserUITelemetry.countTabMutingEvent("unmute", aMuteReason);
-              hist.add(1 /* unmute */);
-            } else {
-              browser.mute();
-              this.setAttribute("muted", "true");
-              BrowserUITelemetry.countTabMutingEvent("mute", aMuteReason);
-              hist.add(0 /* mute */);
-            }
-            this.muteReason = aMuteReason || null;
-            modifiedAttrs.push("muted");
-          }
-          gBrowser._tabAttrModified(this, modifiedAttrs);
-        ]]>
         </body>
       </method>
 
