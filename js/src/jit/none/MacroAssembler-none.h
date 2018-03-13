@@ -41,17 +41,6 @@ static constexpr Register IntArgReg2 { Registers::invalid_reg };
 static constexpr Register IntArgReg3 { Registers::invalid_reg };
 static constexpr Register HeapReg { Registers::invalid_reg };
 
-static constexpr Register WasmIonExitRegCallee { Registers::invalid_reg };
-static constexpr Register WasmIonExitRegE0 { Registers::invalid_reg };
-static constexpr Register WasmIonExitRegE1 { Registers::invalid_reg };
-
-static constexpr Register WasmIonExitRegReturnData { Registers::invalid_reg };
-static constexpr Register WasmIonExitRegReturnType { Registers::invalid_reg };
-static constexpr Register WasmIonExitTlsReg { Registers::invalid_reg };
-static constexpr Register WasmIonExitRegD0 { Registers::invalid_reg };
-static constexpr Register WasmIonExitRegD1 { Registers::invalid_reg };
-static constexpr Register WasmIonExitRegD2 { Registers::invalid_reg };
-
 static constexpr Register RegExpTesterRegExpReg { Registers::invalid_reg };
 static constexpr Register RegExpTesterStringReg { Registers::invalid_reg };
 static constexpr Register RegExpTesterLastIndexReg { Registers::invalid_reg };
