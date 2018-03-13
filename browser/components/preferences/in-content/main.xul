@@ -130,9 +130,10 @@
           <button id="browserContainersSettings"
                   class="accessory-button"
                   data-l10n-id="browser-containers-settings"
-                  searchkeywords="&addButton.label;
-                                  &preferencesButton.label;
-                                  &removeButton.label;"/>
+                  search-l10n-ids="containers-add-button.label,
+                    containers-preferences-button.label,
+                    containers-remove-button.label"
+                  />
         </hbox>
       </hbox>
     </vbox>

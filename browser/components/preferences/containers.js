@@ -5,9 +5,22 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
 
-const containersBundle = Services.strings.createBundle("chrome://browser/locale/preferences/containers.properties");
+/**
+ * We want to set the window title immediately to prevent flickers.
+ */
+function setTitle() {
+  let params = window.arguments[0] || {};
 
-const HTMLNS = "http://www.w3.org/1999/xhtml";
+  let winElem = document.documentElement;
+  if (params.userContextId) {
+    document.l10n.setAttributes(winElem, "containers-window-update", {
+      name: params.identity.name
+    });
+  } else {
+    document.l10n.setAttributes(winElem, "containers-window-new");
+  }
+}
+setTitle();
 
 let gContainersManager = {
   icons: [
@@ -45,10 +58,6 @@ let gContainersManager = {
     this.userContextId = aParams.userContextId || null;
     this.identity = aParams.identity;
 
-    if (aParams.windowTitle) {
-      document.title = aParams.windowTitle;
-    }
-
     const iconWrapper = document.getElementById("iconWrapper");
     iconWrapper.appendChild(this.createIconButtons());
 
@@ -61,28 +70,14 @@ let gContainersManager = {
       this.checkForm();
     }
 
-    this.setLabelsMinWidth();
-
     // This is to prevent layout jank caused by the svgs and outlines rendering at different times
     document.getElementById("containers-content").removeAttribute("hidden");
-  },
-
-  setLabelsMinWidth() {
-    const labelMinWidth = containersBundle.GetStringFromName("containers.labelMinWidth");
-    const labels = [
-      document.getElementById("nameLabel"),
-      document.getElementById("iconLabel"),
-      document.getElementById("colorLabel")
-    ];
-    for (let label of labels) {
-      label.style.minWidth = labelMinWidth;
-    }
   },
 
   uninit() {
   },
 
-  // Check if name string as to if the form can be submitted
+  // Check if name is provided to determine if the form can be submitted
   checkForm() {
     const name = document.getElementById("name");
     let btnApplyChanges = document.getElementById("btnApplyChanges");
@@ -109,8 +104,7 @@ let gContainersManager = {
         iconSwatch.setAttribute("selected", true);
       }
 
-      iconSwatch.setAttribute("label",
-        containersBundle.GetStringFromName(`containers.${icon}.label`));
+      document.l10n.setAttributes(iconSwatch, `containers-icon-${icon}`);
       let iconElement = document.createElement("hbox");
       iconElement.className = "userContext-icon";
       iconElement.setAttribute("data-identity-icon", icon);
@@ -138,8 +132,7 @@ let gContainersManager = {
         colorSwatch.setAttribute("selected", true);
       }
 
-      colorSwatch.setAttribute("label",
-        containersBundle.GetStringFromName(`containers.${color}.label`));
+      document.l10n.setAttributes(colorSwatch, `containers-color-${color}`);
       let iconElement = document.createElement("hbox");
       iconElement.className = "userContext-icon";
       iconElement.setAttribute("data-identity-icon", "circle");
