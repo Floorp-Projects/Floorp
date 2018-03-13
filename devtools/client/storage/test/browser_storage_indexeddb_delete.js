@@ -25,7 +25,8 @@ add_task(function* () {
   yield selectTreeItem(deletedDb);
 
   // Wait once for update and another time for value fetching
-  let eventWait = gUI.once("store-objects-updated");
+  let eventWait = gUI.once("store-objects-updated").then(
+    () => gUI.once("store-objects-updated"));
 
   let selector = `[data-id='${JSON.stringify(deletedDb)}'] > .tree-widget-item`;
   let target = gPanelWindow.document.querySelector(selector);

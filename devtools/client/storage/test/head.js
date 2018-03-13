@@ -30,7 +30,7 @@ const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 // devtools/client/storage/ui.js and devtools/server/tests/browser/head.js
 const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
 
-var gToolbox, gPanelWindow, gUI;
+var gToolbox, gPanelWindow, gWindow, gUI;
 
 // Services.prefs.setBoolPref(DUMPEMIT_PREF, true);
 // Services.prefs.setBoolPref(DEBUGGERLOG_PREF, true);
@@ -38,7 +38,7 @@ var gToolbox, gPanelWindow, gUI;
 Services.prefs.setBoolPref(STORAGE_PREF, true);
 Services.prefs.setBoolPref(CACHES_ON_HTTP_PREF, true);
 registerCleanupFunction(() => {
-  gToolbox = gPanelWindow = gUI = null;
+  gToolbox = gPanelWindow = gWindow = gUI = null;
   Services.prefs.clearUserPref(CACHES_ON_HTTP_PREF);
   Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
   Services.prefs.clearUserPref(DOM_CACHE);
@@ -57,6 +57,9 @@ registerCleanupFunction(() => {
  */
 function* openTab(url, options = {}) {
   let tab = yield addTab(url, options);
+  let content = tab.linkedBrowser.contentWindowAsCPOW;
+
+  gWindow = content.wrappedJSObject;
 
   // Setup the async storages in main window and for all its iframes
   yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
@@ -216,6 +219,8 @@ function forceCollections() {
  * Cleans up and finishes the test
  */
 function* finishTests() {
+  // Bug 1233497 makes it so that we can no longer yield CPOWs from Tasks.
+  // We work around this by calling clear() via a ContentTask instead.
   while (gBrowser.tabs.length > 1) {
     yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
       /**
@@ -507,17 +512,11 @@ function matchVariablesViewProperty(prop, rule) {
  *        The array id of the item in the tree
  */
 function* selectTreeItem(ids) {
+  /* If this item is already selected, return */
   if (gUI.tree.isSelected(ids)) {
-    info(`"${ids}" is already selected, returning.`);
-    return;
-  }
-  if (!gUI.tree.exists(ids)) {
-    info(`"${ids}" does not exist, returning.`);
     return;
   }
 
-  // The item exists but is not selected... select it.
-  info(`Selecting "${ids}".`);
   let updated = gUI.once("store-objects-updated");
   gUI.tree.selectedItem = ids;
   yield updated;
@@ -991,7 +990,7 @@ function* performAdd(store) {
   }
 
   let eventEdit = gUI.table.once("row-edit");
-  let eventWait = gUI.once("store-objects-edit");
+  let eventWait = gUI.once("store-objects-updated");
 
   menuAdd.click();
 
