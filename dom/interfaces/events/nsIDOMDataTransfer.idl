@@ -31,13 +31,6 @@ interface nsIDOMDataTransfer : nsISupports
   attribute DOMString effectAllowed;
 
   /**
-   * Holds a list of all the local files available on this data transfer.
-   * A dataTransfer containing no files will return an empty list, and an
-   * invalid index access on the resulting file list will return null. 
-   */
-  readonly attribute nsIDOMFileList files;
-
-  /**
    * Set the image to be used for dragging if a custom one is desired. Most of
    * the time, this would not be set, as a default image is created from the
    * node that was dragged.
