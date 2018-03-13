@@ -53,6 +53,8 @@ public:
     return nullptr;
   }
 
+  virtual uint64_t GetRandomTimelineSeed() override;
+
   virtual nsITimedChannel* GetChannel() const override
   {
     MOZ_CRASH("This should not be called on workers.");

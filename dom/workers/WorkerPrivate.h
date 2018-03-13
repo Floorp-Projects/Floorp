@@ -10,6 +10,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/RelativeTimeline.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIEventTarget.h"
 #include "nsTObserverArray.h"
@@ -102,6 +103,7 @@ public:
 };
 
 class WorkerPrivate
+  : public RelativeTimeline
 {
 public:
   struct LocationInfo
