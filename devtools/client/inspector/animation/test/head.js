@@ -364,7 +364,7 @@ const waitForRendering = async function(animationInspector) {
 
 const waitForAnimationDetail = async function(animationInspector) {
   if (animationInspector.state.selectedAnimation &&
-      animationInspector.state.detailVisibility)
+      animationInspector.state.detailVisibility) {
     await animationInspector.once("animation-keyframes-rendered");
   }
 };
