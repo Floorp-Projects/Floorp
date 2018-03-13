@@ -202,15 +202,6 @@ private:
 };
 
 mozilla::ipc::IPCResult
-ImageBridgeParent::RecvInitReadLocks(ReadLockArray&& aReadLocks)
-{
-  if (!AddReadLocks(Move(aReadLocks))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 ImageBridgeParent::RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
                               const uint64_t& aFwdTransactionId)
 {
@@ -218,7 +209,6 @@ ImageBridgeParent::RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
   // to early-return from RecvUpdate without doing so.
   AutoImageBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
   UpdateFwdTransactionId(aFwdTransactionId);
-  AutoClearReadLocks clearLocks(mReadLocks);
 
   for (EditArray::index_type i = 0; i < aEdits.Length(); ++i) {
     if (!ReceiveCompositableUpdate(aEdits[i])) {
