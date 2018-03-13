@@ -18,7 +18,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': False,
     'vcs_share_base': '/builds/hg-shared',
-    'enable_count_ctors': True,
     # allows triggering of dependent jobs when --artifact try syntax is detected on buildbot
     'perfherder_extra_options': ['artifact'],
     #########################################################################
