@@ -17,104 +17,104 @@ const TEST_URI = `
 
 add_task(function* () {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = yield openLayoutView();
+  let {inspector, view} = yield openBoxModelView();
   yield selectNode("div", inspector);
 
-  yield testInitialFocus(inspector, boxmodel);
-  yield testChangingLevels(inspector, boxmodel);
-  yield testTabbingWrapAround(inspector, boxmodel);
-  yield testChangingLevelsByClicking(inspector, boxmodel);
+  yield testInitialFocus(inspector, view);
+  yield testChangingLevels(inspector, view);
+  yield testTabbingWrapAround(inspector, view);
+  yield testChangingLevelsByClicking(inspector, view);
 });
 
-function* testInitialFocus(inspector, boxmodel) {
-  info("Test that the focus is(on margin layout.");
-  let doc = boxmodel.document;
-  let container = doc.querySelector(".boxmodel-container");
-  container.focus();
+function* testInitialFocus(inspector, view) {
+  info("Test that the focus is on margin layout.");
+  let viewdoc = view.document;
+  let boxmodel = viewdoc.querySelector(".boxmodel-container");
+  boxmodel.focus();
   EventUtils.synthesizeKey("KEY_Enter");
 
-  is(container.getAttribute("activedescendant"), "boxmodel-main devtools-monospace",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-main devtools-monospace",
     "Should be set to the position layout.");
 }
 
-function* testChangingLevels(inspector, boxmodel) {
+function* testChangingLevels(inspector, view) {
   info("Test that using arrow keys updates level.");
-  let doc = boxmodel.document;
-  let container = doc.querySelector(".boxmodel-container");
-  container.focus();
+  let viewdoc = view.document;
+  let boxmodel = viewdoc.querySelector(".boxmodel-container");
+  boxmodel.focus();
   EventUtils.synthesizeKey("KEY_Enter");
   EventUtils.synthesizeKey("KEY_Escape");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(container.getAttribute("activedescendant"), "boxmodel-margins",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-margins",
     "Should be set to the margin layout.");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(container.getAttribute("activedescendant"), "boxmodel-borders",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-borders",
     "Should be set to the border layout.");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(container.getAttribute("activedescendant"), "boxmodel-paddings",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-paddings",
     "Should be set to the padding layout.");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(container.getAttribute("activedescendant"), "boxmodel-contents",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-contents",
     "Should be set to the content layout.");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(container.getAttribute("activedescendant"), "boxmodel-paddings",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-paddings",
     "Should be set to the padding layout.");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(container.getAttribute("activedescendant"), "boxmodel-borders",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-borders",
     "Should be set to the border layout.");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(container.getAttribute("activedescendant"), "boxmodel-margins",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-margins",
     "Should be set to the margin layout.");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(container.getAttribute("activedescendant"), "boxmodel-main devtools-monospace",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-main devtools-monospace",
     "Should be set to the position layout.");
 }
 
-function* testTabbingWrapAround(inspector, boxmodel) {
+function* testTabbingWrapAround(inspector, view) {
   info("Test that using arrow keys updates level.");
-  let doc = boxmodel.document;
-  let container = doc.querySelector(".boxmodel-container");
-  container.focus();
+  let viewdoc = view.document;
+  let boxmodel = viewdoc.querySelector(".boxmodel-container");
+  boxmodel.focus();
   EventUtils.synthesizeKey("KEY_Enter");
 
-  let editLevel = container.getAttribute("activedescendant").split(" ")[0];
-  let dataLevel = doc.querySelector(`.${editLevel}`).getAttribute("data-box");
-  let editBoxes = [...doc.querySelectorAll(
+  let editLevel = boxmodel.getAttribute("activedescendant").split(" ")[0];
+  let dataLevel = viewdoc.querySelector(`.${editLevel}`).getAttribute("data-box");
+  let editBoxes = [...viewdoc.querySelectorAll(
     `[data-box="${dataLevel}"].boxmodel-editable`)];
 
   EventUtils.synthesizeKey("KEY_Escape");
   editBoxes[3].focus();
   EventUtils.synthesizeKey("KEY_Tab");
-  is(editBoxes[0], doc.activeElement, "Top edit box should have focus.");
+  is(editBoxes[0], viewdoc.activeElement, "Top edit box should have focus.");
 
   editBoxes[0].focus();
   EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
-  is(editBoxes[3], doc.activeElement, "Left edit box should have focus.");
+  is(editBoxes[3], viewdoc.activeElement, "Left edit box should have focus.");
 }
 
-function* testChangingLevelsByClicking(inspector, boxmodel) {
+function* testChangingLevelsByClicking(inspector, view) {
   info("Test that clicking on levels updates level.");
-  let doc = boxmodel.document;
-  let container = doc.querySelector(".boxmodel-container");
-  container.focus();
+  let viewdoc = view.document;
+  let boxmodel = viewdoc.querySelector(".boxmodel-container");
+  boxmodel.focus();
 
-  let marginLayout = doc.querySelector(".boxmodel-margins");
-  let borderLayout = doc.querySelector(".boxmodel-borders");
-  let paddingLayout = doc.querySelector(".boxmodel-paddings");
-  let contentLayout = doc.querySelector(".boxmodel-contents");
+  let marginLayout = viewdoc.querySelector(".boxmodel-margins");
+  let borderLayout = viewdoc.querySelector(".boxmodel-borders");
+  let paddingLayout = viewdoc.querySelector(".boxmodel-paddings");
+  let contentLayout = viewdoc.querySelector(".boxmodel-contents");
   let layouts = [contentLayout, paddingLayout, borderLayout, marginLayout];
 
   layouts.forEach(layout => {
     layout.click();
-    is(container.getAttribute("activedescendant"), layout.className,
+    is(boxmodel.getAttribute("activedescendant"), layout.className,
       "Should be set to" + layout.getAttribute("data-box") + "layout.");
   });
 }

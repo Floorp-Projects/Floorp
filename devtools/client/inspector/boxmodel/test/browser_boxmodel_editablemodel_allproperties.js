@@ -16,15 +16,15 @@ const TEST_URI = "<style>" +
 
 add_task(function* () {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openBoxModelView();
 
-  yield testEditing(inspector, boxmodel, testActor);
-  yield testEditingAndCanceling(inspector, boxmodel, testActor);
-  yield testDeleting(inspector, boxmodel, testActor);
-  yield testDeletingAndCanceling(inspector, boxmodel, testActor);
+  yield testEditing(inspector, view, testActor);
+  yield testEditingAndCanceling(inspector, view, testActor);
+  yield testDeleting(inspector, view, testActor);
+  yield testDeletingAndCanceling(inspector, view, testActor);
 });
 
-function* testEditing(inspector, boxmodel, testActor) {
+function* testEditing(inspector, view, testActor) {
   info("When all properties are set on the node editing one should work");
 
   yield setStyle(testActor, "#div1", "padding", "5px");
@@ -32,29 +32,29 @@ function* testEditing(inspector, boxmodel, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
+  let span = view.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("7", {}, boxmodel.document.defaultView);
+  EventUtils.synthesizeKey("7", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "7", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "padding-bottom")), "7px",
      "Should have updated the padding");
 
-  EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.document.defaultView);
 
   is((yield getStyle(testActor, "#div1", "padding-bottom")), "7px",
      "Should be the right padding.");
   is(span.textContent, 7, "Should have the right value in the box model.");
 }
 
-function* testEditingAndCanceling(inspector, boxmodel, testActor) {
+function* testEditingAndCanceling(inspector, view, testActor) {
   info("When all properties are set on the node editing one and then " +
        "cancelling with ESCAPE should work");
 
@@ -63,22 +63,22 @@ function* testEditingAndCanceling(inspector, boxmodel, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
+  let span = view.document.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("8", {}, boxmodel.document.defaultView);
+  EventUtils.synthesizeKey("8", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "8", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "padding-left")), "8px",
      "Should have updated the padding");
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, boxmodel.document.defaultView);
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
 
   is((yield getStyle(testActor, "#div1", "padding-left")), "5px",
@@ -86,34 +86,34 @@ function* testEditingAndCanceling(inspector, boxmodel, testActor) {
   is(span.textContent, 5, "Should have the right value in the box model.");
 }
 
-function* testDeleting(inspector, boxmodel, testActor) {
+function* testDeleting(inspector, view, testActor) {
   info("When all properties are set on the node deleting one should work");
 
   yield selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
+  let span = view.document.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("VK_DELETE", {}, boxmodel.document.defaultView);
+  EventUtils.synthesizeKey("VK_DELETE", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "padding-left")), "",
      "Should have updated the padding");
 
-  EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.document.defaultView);
 
   is((yield getStyle(testActor, "#div1", "padding-left")), "",
      "Should be the right padding.");
   is(span.textContent, 3, "Should have the right value in the box model.");
 }
 
-function* testDeletingAndCanceling(inspector, boxmodel, testActor) {
+function* testDeletingAndCanceling(inspector, view, testActor) {
   info("When all properties are set on the node deleting one then cancelling " +
        "should work");
 
@@ -122,22 +122,22 @@ function* testDeletingAndCanceling(inspector, boxmodel, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
+  let span = view.document.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
-  let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("VK_DELETE", {}, boxmodel.document.defaultView);
+  EventUtils.synthesizeKey("VK_DELETE", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "padding-left")), "",
      "Should have updated the padding");
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, boxmodel.document.defaultView);
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
 
   is((yield getStyle(testActor, "#div1", "padding-left")), "5px",
