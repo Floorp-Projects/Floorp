@@ -7,7 +7,7 @@
 // * element existence
 // * label content at plural timing
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 

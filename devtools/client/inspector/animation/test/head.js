@@ -128,7 +128,7 @@ const clickOnDetailCloseButton = function(panel) {
  * @param {AnimationsPanel} panel
  *        The panel instance.
  */
-const clickOnPauseResumeButton = async function (animationInspector, panel) {
+const clickOnPauseResumeButton = async function(animationInspector, panel) {
   info("Click on pause/resume button");
   const buttonEl = panel.querySelector(".pause-resume-button");
   const bounds = buttonEl.getBoundingClientRect();
@@ -145,7 +145,7 @@ const clickOnPauseResumeButton = async function (animationInspector, panel) {
  * @param {AnimationsPanel} panel
  *        The panel instance.
  */
-const clickOnRewindButton = async function (animationInspector, panel) {
+const clickOnRewindButton = async function(animationInspector, panel) {
   info("Click on rewind button");
   const buttonEl = panel.querySelector(".rewind-button");
   const bounds = buttonEl.getBoundingClientRect();
@@ -165,10 +165,10 @@ const clickOnRewindButton = async function (animationInspector, panel) {
  *        `mouseDownPosition * offsetWidth + offsetLeft of scrubber controller pane`
  *        as the clientX of MouseEvent.
  */
-const clickOnCurrentTimeScrubberController = async function (animationInspector,
-                                                             panel,
-                                                             mouseDownPosition,
-                                                             mouseMovePosition) {
+const clickOnCurrentTimeScrubberController = async function(animationInspector,
+                                                            panel,
+                                                            mouseDownPosition,
+                                                            mouseMovePosition) {
   const controllerEl = panel.querySelector(".current-time-scrubber-controller");
   const bounds = controllerEl.getBoundingClientRect();
   const mousedonwX = bounds.width * mouseDownPosition;
@@ -185,7 +185,7 @@ const clickOnCurrentTimeScrubberController = async function (animationInspector,
  * @param {AnimationsPanel} panel
  * @param {Number} rate
  */
-const clickOnPlaybackRateSelector = async function (animationInspector, panel, rate) {
+const clickOnPlaybackRateSelector = async function(animationInspector, panel, rate) {
   info(`Click on playback rate selector to select ${rate}`);
   const selectEl = panel.querySelector(".playback-rate-selector");
   const optionEl = [...selectEl.options].filter(o => Number(o.value) === rate)[0];
@@ -217,11 +217,11 @@ const clickOnPlaybackRateSelector = async function (animationInspector, panel, r
  * @param {Number} mouseYPixel
  *        Y of mouse in pixel.
  */
-const dragOnCurrentTimeScrubber = async function (animationInspector,
-                                                  panel,
-                                                  mouseDownPosition,
-                                                  mouseMovePosition,
-                                                  mouseYPixel) {
+const dragOnCurrentTimeScrubber = async function(animationInspector,
+                                                 panel,
+                                                 mouseDownPosition,
+                                                 mouseMovePosition,
+                                                 mouseYPixel) {
   const controllerEl = panel.querySelector(".current-time-scrubber");
   const bounds = controllerEl.getBoundingClientRect();
   const mousedonwX = bounds.width * mouseDownPosition;
@@ -251,7 +251,7 @@ const dragOnCurrentTimeScrubber = async function (animationInspector,
  *        Dispatch mousemove event with mouseMovePosition after mousedown.
  *        Calculation for clinetX is same to above.
  */
-const dragOnCurrentTimeScrubberController = async function (animationInspector,
+const dragOnCurrentTimeScrubberController = async function(animationInspector,
                                                             panel,
                                                             mouseDownPosition,
                                                             mouseMovePosition) {
@@ -284,7 +284,7 @@ const dragOnCurrentTimeScrubberController = async function (animationInspector,
  *           rate,
  *         }
  */
-const getDurationAndRate = function (animationInspector, panel, pixels) {
+const getDurationAndRate = function(animationInspector, panel, pixels) {
   const controllerEl = panel.querySelector(".current-time-scrubber-controller");
   const bounds = controllerEl.getBoundingClientRect();
   const duration =
@@ -322,7 +322,7 @@ const selectNodeAndWaitForAnimations = async function(data, inspector, reason = 
  * @param {AnimationInspector} animationInspector
  * @param {AnimationsPanel} panel
  */
-const sendSpaceKeyEvent = async function (animationInspector, panel) {
+const sendSpaceKeyEvent = async function(animationInspector, panel) {
   panel.focus();
   EventUtils.sendKey("SPACE", panel.ownerGlobal);
   await waitForSummaryAndDetail(animationInspector);
@@ -397,7 +397,7 @@ const waitForAllSummaryGraph = async function(animationInspector) {
  *
  * @param {AnimationInspector} inspector
  */
-const waitForSummaryAndDetail = async function (animationInspector) {
+const waitForSummaryAndDetail = async function(animationInspector) {
   await Promise.all([
     waitForAllSummaryGraph(animationInspector),
     waitForAnimationDetail(animationInspector),
