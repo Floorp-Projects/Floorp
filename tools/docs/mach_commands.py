@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import platform
 import sys
 
 from mach.decorators import (
@@ -46,7 +47,7 @@ class Documentation(MachCommandBase):
     def build_docs(self, what=None, format=None, outdir=None, auto_open=True,
                    http=None, archive=False, upload=False):
         try:
-            which.which('jsdoc')
+            jsdoc = which.which('jsdoc')
         except which.WhichError:
             return die('jsdoc not found - please install from npm.')
 
@@ -175,3 +176,4 @@ def die(msg, exit_code=1):
     msg = '%s: %s' % (sys.argv[0], msg)
     print(msg, file=sys.stderr)
     return exit_code
+
