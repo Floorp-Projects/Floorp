@@ -4875,9 +4875,6 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
 {
   ChangeNetworkState(NETWORK_LOADING);
 
-  // Force a same-origin check before allowing events for this media resource.
-  mMediaSecurityVerified = false;
-
   // Set mDecoder now so if methods like GetCurrentSrc get called between
   // here and Load(), they work.
   SetDecoder(aDecoder);

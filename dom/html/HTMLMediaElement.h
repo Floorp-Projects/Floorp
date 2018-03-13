@@ -1599,10 +1599,6 @@ protected:
   // 'Pause' method, or playback not yet having started.
   WakeLockBoolWrapper mPaused;
 
-  // True if the media statistics are currently being shown by the builtin
-  // video controls
-  bool mStatsShowing = false;
-
   // The following two fields are here for the private storage of the builtin
   // video controls, and control 'casting' of the video to external devices
   // (TVs, projectors etc.)
@@ -1679,9 +1675,6 @@ protected:
 
   // True if we've connected mSrcStream to the media element output.
   bool mSrcStreamIsPlaying = false;
-
-  // True if a same-origin check has been done for the media element and resource.
-  bool mMediaSecurityVerified = false;
 
   // True if we should set nsIClassOfService::UrgentStart to the channel to
   // get the response ASAP for better user responsiveness.
