@@ -1025,7 +1025,7 @@ imgCacheQueue::Remove(imgCacheEntry* entry)
   if (!IsDirty() && index == 0) {
     std::pop_heap(mQueue.begin(), mQueue.end(),
                   imgLoader::CompareCacheEntries);
-    mQueue.RemoveElementAt(mQueue.Length() - 1);
+    mQueue.RemoveLastElement();
     return;
   }
 
@@ -1071,8 +1071,7 @@ imgCacheQueue::Pop()
   }
 
   std::pop_heap(mQueue.begin(), mQueue.end(), imgLoader::CompareCacheEntries);
-  RefPtr<imgCacheEntry> entry = Move(mQueue.LastElement());
-  mQueue.RemoveElementAt(mQueue.Length() - 1);
+  RefPtr<imgCacheEntry> entry = mQueue.PopLastElement();
 
   mSize -= entry->GetDataSize();
   return entry.forget();

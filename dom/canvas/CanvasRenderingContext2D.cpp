@@ -2240,7 +2240,7 @@ CanvasRenderingContext2D::Restore()
     }
   }
 
-  mStyleStack.RemoveElementAt(mStyleStack.Length() - 1);
+  mStyleStack.RemoveLastElement();
 
   mTarget->SetTransform(CurrentState().transform);
 }
