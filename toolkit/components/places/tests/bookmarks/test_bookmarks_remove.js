@@ -71,14 +71,6 @@ add_task(async function remove_roots_fail() {
   }
 });
 
-add_task(async function remove_normal_folder_under_root_succeeds() {
-  let folder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.rootGuid,
-                                                    type: PlacesUtils.bookmarks.TYPE_FOLDER });
-  checkBookmarkObject(folder);
-  await PlacesUtils.bookmarks.remove(folder);
-  Assert.strictEqual((await PlacesUtils.bookmarks.fetch(folder.guid)), null);
-});
-
 add_task(async function remove_bookmark() {
   // When removing a bookmark we need to check the frecency. First we confirm
   // that there is a normal update when it is inserted.

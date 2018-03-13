@@ -3741,7 +3741,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayList list;
   nsDisplayList extraPositionedDescendants;
-  const ActiveScrolledRoot* wrapListASR = aBuilder->CurrentActiveScrolledRoot();
+  const ActiveScrolledRoot* wrapListASR;
   bool canSkipWrapList = false;
   if (isStackingContext) {
     if (effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {

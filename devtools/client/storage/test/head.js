@@ -635,6 +635,17 @@ function getRowCells(id, includeHidden = false) {
 }
 
 /**
+ * Check for an empty table.
+ */
+function isTableEmpty() {
+  let doc = gPanelWindow.document;
+  let table = gUI.table;
+  let cells = doc.querySelectorAll(".table-widget-column#" + table.uniqueId +
+                                   " .table-widget-cell");
+  return cells.length === 0;
+}
+
+/**
  * Get available ids... useful for error reporting.
  */
 function getAvailableIds() {
