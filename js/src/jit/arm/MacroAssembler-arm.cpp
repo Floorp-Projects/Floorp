@@ -4482,42 +4482,6 @@ MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset)
     *u32 = (targetOffset - addOffset) - 8;
 }
 
-void
-MacroAssembler::repatchFarJump(uint8_t* code, uint32_t farJumpOffset, uint32_t targetOffset)
-{
-    uint32_t* u32 = reinterpret_cast<uint32_t*>(code + farJumpOffset);
-
-    uint32_t addOffset = farJumpOffset - 4;
-    MOZ_ASSERT(reinterpret_cast<Instruction*>(code + addOffset)->is<InstALU>());
-
-    *u32 = (targetOffset - addOffset) - 8;
-}
-
-CodeOffset
-MacroAssembler::nopPatchableToNearJump()
-{
-    // Inhibit pools so that the offset points precisely to the nop.
-    AutoForbidPools afp(this, 1);
-
-    CodeOffset offset(currentOffset());
-    ma_nop();
-    return offset;
-}
-
-void
-MacroAssembler::patchNopToNearJump(uint8_t* jump, uint8_t* target)
-{
-    MOZ_ASSERT(reinterpret_cast<Instruction*>(jump)->is<InstNOP>());
-    new (jump) InstBImm(BOffImm(target - jump), Assembler::Always);
-}
-
-void
-MacroAssembler::patchNearJumpToNop(uint8_t* jump)
-{
-    MOZ_ASSERT(reinterpret_cast<Instruction*>(jump)->is<InstBImm>());
-    new (jump) InstNOP();
-}
-
 CodeOffset
 MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
 {
