@@ -13,8 +13,6 @@ interface HTMLDocument : Document {
   // DOM tree accessors
   [Throws]
   getter object (DOMString name);
-  [Pure]
-  readonly attribute HTMLCollection links;
 
   // dynamic markup insertion
   [CEReactions, Throws]

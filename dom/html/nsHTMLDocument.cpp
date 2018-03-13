@@ -196,7 +196,6 @@ nsHTMLDocument::~nsHTMLDocument()
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, nsDocument,
                                    mAll,
-                                   mLinks,
                                    mAnchors,
                                    mWyciwygChannel,
                                    mMidasCommandManager)
@@ -1046,47 +1045,6 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
 
   NS_TryToSetImmutable(newURI);
   rv = NodePrincipal()->SetDomain(newURI);
-}
-
-bool
-nsHTMLDocument::MatchLinks(Element* aElement, int32_t aNamespaceID,
-                           nsAtom* aAtom, void* aData)
-{
-  nsIDocument* doc = aElement->GetUncomposedDoc();
-
-  if (doc) {
-    NS_ASSERTION(aElement->IsInUncomposedDoc(),
-                 "This method should never be called on content nodes that "
-                 "are not in a document!");
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIHTMLDocument> htmldoc =
-        do_QueryInterface(aElement->GetUncomposedDoc());
-      NS_ASSERTION(htmldoc,
-                   "Huh, how did this happen? This should only be used with "
-                   "HTML documents!");
-    }
-#endif
-
-    mozilla::dom::NodeInfo *ni = aElement->NodeInfo();
-
-    nsAtom *localName = ni->NameAtom();
-    if (ni->NamespaceID() == kNameSpaceID_XHTML &&
-        (localName == nsGkAtoms::a || localName == nsGkAtoms::area)) {
-      return aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
-    }
-  }
-
-  return false;
-}
-
-nsIHTMLCollection*
-nsHTMLDocument::Links()
-{
-  if (!mLinks) {
-    mLinks = new nsContentList(this, MatchLinks, nullptr, nullptr);
-  }
-  return mLinks;
 }
 
 bool

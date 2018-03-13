@@ -1976,6 +1976,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildrenCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImages);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEmbeds);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLinks);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mForms);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScripts);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplets);
@@ -2071,6 +2072,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildrenCollection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mImages);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEmbeds);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLinks);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mForms);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mScripts);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplets);
@@ -6833,6 +6835,23 @@ nsIDocument::Embeds()
     mEmbeds = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::embed, nsGkAtoms::embed);
   }
   return mEmbeds;
+}
+
+static bool
+MatchLinks(Element* aElement, int32_t aNamespaceID,
+           nsAtom* aAtom, void* aData)
+{
+  return aElement->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area) &&
+         aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
+}
+
+nsIHTMLCollection*
+nsIDocument::Links()
+{
+  if (!mLinks) {
+    mLinks = new nsContentList(this, MatchLinks, nullptr, nullptr);
+  }
+  return mLinks;
 }
 
 nsIHTMLCollection*
