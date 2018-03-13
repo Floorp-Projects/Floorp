@@ -38,7 +38,7 @@ add_task(function* () {
     let row = getRowCells(rowName);
     ok(gUI.table.items.has(rowName), `There is a row '${rowName}' in ${treeItemName}`);
 
-    let eventWait = gUI.once("store-objects-updated");
+    let eventWait = gUI.once("store-objects-edit");
 
     yield waitForContextMenu(contextMenu, row[cellToClick], () => {
       info(`Opened context menu in ${treeItemName}, row '${rowName}'`);
