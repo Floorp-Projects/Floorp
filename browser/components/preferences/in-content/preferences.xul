@@ -41,8 +41,6 @@
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences/sync.dtd">
 <!ENTITY % securityDTD SYSTEM
   "chrome://browser/locale/preferences/security.dtd">
-<!ENTITY % containersDTD SYSTEM
-  "chrome://browser/locale/preferences/containers.dtd">
 <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
 <!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences/main.dtd">
 <!ENTITY % aboutHomeDTD SYSTEM "chrome://browser/locale/aboutHome.dtd">
@@ -70,7 +68,6 @@
 %syncBrandDTD;
 %syncDTD;
 %securityDTD;
-%containersDTD;
 %sanitizeDTD;
 %mainDTD;
 %aboutHomeDTD;
