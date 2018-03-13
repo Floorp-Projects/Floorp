@@ -278,7 +278,7 @@ TreeWidget.prototype = {
    * @param {array} item
    *        The array of ids leading up to the item.
    */
-  exists: function (item) {
+  exists: function(item) {
     let bookmark = this.root;
 
     for (let id of item) {

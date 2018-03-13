@@ -80,7 +80,7 @@ add_task(async function() {
   await finishTests();
 });
 
-asyn function setSessionStorageItem(key, value) {
+async function setSessionStorageItem(key, value) {
   await ContentTask.spawn(gBrowser.selectedBrowser, [key, value],
     ([innerKey, innerValue]) => {
       content.wrappedJSObject.sessionStorage.setItem(innerKey, innerValue);
