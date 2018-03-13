@@ -667,7 +667,7 @@ function getAvailableIds() {
  * Show available ids.
  */
 function showAvailableIds() {
-  info(getAvailableIds);
+  info(getAvailableIds());
 }
 
 /**

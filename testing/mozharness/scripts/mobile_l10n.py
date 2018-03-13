@@ -13,7 +13,6 @@ Android.  This also creates nightly updates.
 import glob
 import os
 import re
-import subprocess
 import sys
 
 try:
@@ -31,7 +30,6 @@ from mozharness.base.transfer import TransferMixin
 from mozharness.mozilla.buildbot import BuildbotMixin
 from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.release import ReleaseMixin
-from mozharness.mozilla.signing import MobileSigningMixin
 from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.l10n.locales import LocalesMixin
@@ -43,8 +41,8 @@ from mozharness.base.python import VirtualenvMixin
 
 # MobileSingleLocale {{{1
 class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
-                         MobileSigningMixin, TransferMixin, TooltoolMixin,
-                         BuildbotMixin, PurgeMixin, MercurialScript, BalrogMixin,
+                         TransferMixin, TooltoolMixin, BuildbotMixin,
+                         PurgeMixin, MercurialScript, BalrogMixin,
                          VirtualenvMixin, SecretsMixin):
     config_options = [[
         ['--locale', ],
@@ -185,9 +183,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         if c.get('base_en_us_binary_url') and c.get('release_config_file'):
             rc = self.query_release_config()
             repack_env['EN_US_BINARY_URL'] = c['base_en_us_binary_url'] % replace_dict
-        if 'MOZ_SIGNING_SERVERS' in os.environ:
-            repack_env['MOZ_SIGN_CMD'] = \
-                subprocess.list2cmdline(self.query_moz_sign_cmd(formats=['jar']))
 
         if self.query_is_nightly() or self.query_is_nightly_promotion():
             if self.query_is_nightly():
@@ -227,8 +222,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
 
         upload_env = self.query_env(partial_env=c.get("upload_env"),
                                     replace_dict=replace_dict)
-        if 'MOZ_SIGNING_SERVERS' in os.environ:
-            upload_env['MOZ_SIGN_CMD'] = subprocess.list2cmdline(self.query_moz_sign_cmd())
         if self.query_is_release_or_beta():
             upload_env['MOZ_PKG_VERSION'] = '%(version)s' % replace_dict
         self.upload_env = upload_env

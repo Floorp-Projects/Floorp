@@ -144,13 +144,15 @@ nsRFPService::IsTimerPrecisionReductionEnabled(TimerPrecisionType aType)
 #define HASH_DIGEST_SIZE_BITS  (256)
 #define HASH_DIGEST_SIZE_BYTES (HASH_DIGEST_SIZE_BITS / 8)
 
-class LRUCache
+class LRUCache final
 {
 public:
   LRUCache()
     : mLock("mozilla.resistFingerprinting.LRUCache") {
     this->cache.SetLength(LRU_CACHE_SIZE);
   }
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LRUCache)
 
   nsCString Get(long long aKey) {
     for (auto & cacheEntry : this->cache) {
@@ -202,6 +204,8 @@ public:
 
 
 private:
+  ~LRUCache() = default;
+
   struct CacheEntry {
     Atomic<long long, Relaxed> key;
     PRTime accessTime = 0;
@@ -224,7 +228,7 @@ private:
 };
 
 // We make a single LRUCache
-static StaticAutoPtr<LRUCache> sCache;
+static StaticRefPtr<LRUCache> sCache;
 
 /**
  * The purpose of this function is to deterministicly generate a random midpoint
@@ -293,16 +297,18 @@ nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
   const int kClampTimesPerDigest = HASH_DIGEST_SIZE_BITS / 32;
   static uint8_t * sSecretMidpointSeed = nullptr;
 
-  if(MOZ_UNLIKELY(!sCache)) {
-    StaticMutexAutoLock lock(sLock);
-    if(MOZ_LIKELY(!sCache)) {
-      sCache = new LRUCache();
-      ClearOnShutdown(&sCache);
-    }
-  }
-
   if(MOZ_UNLIKELY(!aMidpointOut)) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<LRUCache> cache;
+  {
+    StaticMutexAutoLock lock(sLock);
+    cache = sCache;
+  }
+
+  if(!cache) {
+    return NS_ERROR_FAILURE;
   }
 
   /*
@@ -328,7 +334,7 @@ nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
   long long reducedResolution = aResolutionUSec * kClampTimesPerDigest;
   long long extraClampedTime = (aClampedTimeUSec / reducedResolution) * reducedResolution;
 
-  nsCString hashResult = sCache->Get(extraClampedTime);
+  nsCString hashResult = cache->Get(extraClampedTime);
 
   if(hashResult.Length() != HASH_DIGEST_SIZE_BYTES) { // Cache Miss =(
     // If someone has pased in the testing-only parameter, replace our seed with it
@@ -395,7 +401,7 @@ nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
      NS_ENSURE_SUCCESS(rv, rv);
 
      // Finally, store it in the cache
-     sCache->Store(extraClampedTime, derivedSecret);
+     cache->Store(extraClampedTime, derivedSecret);
      hashResult = derivedSecret;
   }
 
@@ -695,6 +701,12 @@ nsRFPService::Init()
   // Call Update here to cache the values of the prefs and set the timezone.
   UpdateRFPPref();
 
+  // Create the LRU Cache when we initialize, to avoid accidently trying to
+  // create it (and call ClearOnShutdown) on a non-main-thread
+  if(!sCache) {
+    sCache = new LRUCache();
+  }
+
   return rv;
 }
 
@@ -763,6 +775,11 @@ nsRFPService::StartShutdown()
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+
+  StaticMutexAutoLock lock(sLock);
+  {
+    sCache = nullptr;
+  }
 
   if (obs) {
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
