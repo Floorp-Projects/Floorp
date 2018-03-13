@@ -856,7 +856,6 @@ FrameIter::operator++()
         MOZ_CRASH("Unexpected state");
       case INTERP:
         if (interpFrame()->isDebuggerEvalFrame() &&
-            interpFrame()->evalInFramePrev() &&
             data_.debuggerEvalOption_ == FOLLOW_DEBUGGER_EVAL_PREV_LINK)
         {
             AbstractFramePtr eifPrev = interpFrame()->evalInFramePrev();
