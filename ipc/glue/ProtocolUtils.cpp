@@ -597,6 +597,12 @@ IToplevelProtocol::~IToplevelProtocol()
 base::ProcessId
 IToplevelProtocol::OtherPid() const
 {
+  return OtherPidMaybeInvalid();
+}
+
+base::ProcessId
+IToplevelProtocol::OtherPidMaybeInvalid() const
+{
   return mOtherPid;
 }
 
@@ -721,8 +727,19 @@ IToplevelProtocol::CreateSharedMemory(size_t aSize,
     Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(),
     segment.get(),
     id);
+
+  base::ProcessId pid =
+#ifdef ANDROID
+    // We use OtherPidMaybeInvalid() because on Android this method is actually
+    // called on an unconnected protocol, but Android's shared memory
+    // implementation doesn't actually use the PID.
+    OtherPidMaybeInvalid();
+#else
+    OtherPid();
+#endif
+
   Message* descriptor = shmem.ShareTo(
-    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), OtherPid(), MSG_ROUTING_CONTROL);
+    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), pid, MSG_ROUTING_CONTROL);
   if (!descriptor) {
     return nullptr;
   }
