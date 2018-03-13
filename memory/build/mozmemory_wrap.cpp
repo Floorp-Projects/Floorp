@@ -31,13 +31,13 @@ operator new[](size_t size)
 }
 
 MFBT_API void
-operator delete(void* ptr)
+operator delete(void* ptr) noexcept(true)
 {
   free_impl(ptr);
 }
 
 MFBT_API void
-operator delete[](void* ptr)
+operator delete[](void* ptr) noexcept(true)
 {
   free_impl(ptr);
 }
@@ -55,13 +55,13 @@ operator new[](size_t size, std::nothrow_t const&)
 }
 
 MFBT_API void
-operator delete(void* ptr, std::nothrow_t const&)
+operator delete(void* ptr, std::nothrow_t const&) noexcept(true)
 {
   free_impl(ptr);
 }
 
 MFBT_API void
-operator delete[](void* ptr, std::nothrow_t const&)
+operator delete[](void* ptr, std::nothrow_t const&) noexcept(true)
 {
   free_impl(ptr);
 }
