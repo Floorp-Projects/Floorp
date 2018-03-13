@@ -52,9 +52,8 @@ add_task(async function() {
   ]);
   checkCell(c1id, "value", "1.2.3.4.5.6.7");
 
-  gWindow.addCookie("c1", '{"foo": 4,"bar":6}', "/browser");
-  await gUI.once("sidebar-updated");
-  await gUI.once("store-objects-updated");
+  await addCookie("c1", '{"foo": 4,"bar":6}', "/browser");
+  await gUI.once("store-objects-edit");
 
   await findVariableViewProperties(finalValue[0], false);
   await findVariableViewProperties(finalValue[1], true);
@@ -71,9 +70,9 @@ add_task(async function() {
   checkCell(c1id, "value", '{"foo": 4,"bar":6}');
 
   // Add a new entry
-  gWindow.addCookie("c3", "booyeah");
+  await addCookie("c3", "booyeah");
 
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [
@@ -91,11 +90,9 @@ add_task(async function() {
   checkCell(c3id, "value", "booyeah");
 
   // Add another
-  gWindow.addCookie("c4", "booyeah");
+  await addCookie("c4", "booyeah");
 
-  // Wait once for update and another time for value fetching
-  await gUI.once("store-objects-updated");
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [
@@ -115,10 +112,9 @@ add_task(async function() {
   checkCell(c4id, "value", "booyeah");
 
   // Removing cookies
-  gWindow.removeCookie("c1", "/browser");
+  await removeCookie("c1", "/browser");
 
-  await gUI.once("sidebar-updated");
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [
@@ -139,9 +135,9 @@ add_task(async function() {
   await findVariableViewProperties([{name: "c2", value: "foobar"}]);
 
   // Keep deleting till no rows
-  gWindow.removeCookie("c3");
+  await removeCookie("c3");
 
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [
@@ -157,10 +153,9 @@ add_task(async function() {
   // Check if next element's value is visible in sidebar
   await findVariableViewProperties([{name: "c2", value: "foobar"}]);
 
-  gWindow.removeCookie("c2", "/browser");
+  await removeCookie("c2", "/browser");
 
-  await gUI.once("sidebar-updated");
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [
@@ -175,9 +170,9 @@ add_task(async function() {
   // Check if next element's value is visible in sidebar
   await findVariableViewProperties([{name: "c4", value: "booyeah"}]);
 
-  gWindow.removeCookie("c4");
+  await removeCookie("c4");
 
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [["cookies", "http://test1.example.org"], [ ]],
@@ -187,3 +182,19 @@ add_task(async function() {
 
   await finishTests();
 });
+
+async function addCookie(name, value, path) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, [name, value, path],
+    ([nam, valu, pat]) => {
+      content.wrappedJSObject.addCookie(nam, valu, pat);
+    }
+  );
+}
+
+async function removeCookie(name, path) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, [name, path],
+    ([nam, pat]) => {
+      content.wrappedJSObject.removeCookie(nam, pat);
+    }
+  );
+}
