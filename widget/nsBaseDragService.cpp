@@ -476,9 +476,9 @@ void
 nsBaseDragService::DiscardInternalTransferData()
 {
   if (mDataTransfer && mSourceNode) {
-    MOZ_ASSERT(!!DataTransfer::Cast(mDataTransfer));
+    MOZ_ASSERT(mDataTransfer);
 
-    DataTransferItemList* items = DataTransfer::Cast(mDataTransfer)->Items();
+    DataTransferItemList* items = mDataTransfer->Items();
     for (size_t i = 0; i < items->Length(); i++) {
       bool found;
       DataTransferItem* item = items->IndexedGetter(i, found);

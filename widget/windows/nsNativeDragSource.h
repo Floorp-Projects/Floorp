@@ -6,7 +6,6 @@
 #define _nsNativeDragSource_h_
 
 #include "nscore.h"
-#include "nsIDOMDataTransfer.h"
 #include <ole2.h>
 #include <oleidl.h>
 #include "mozilla/Attributes.h"
