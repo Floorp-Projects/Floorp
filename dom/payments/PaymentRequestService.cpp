@@ -318,8 +318,31 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
       }
       break;
     }
-    case nsIPaymentActionRequest::ABORT_ACTION:
+    case nsIPaymentActionRequest::ABORT_ACTION: {
+      rv = LaunchUIAction(requestId, type);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_ERROR_FAILURE;
+      }
+      break;
+    }
     case nsIPaymentActionRequest::COMPLETE_ACTION: {
+      nsCOMPtr<nsIPaymentCompleteActionRequest> request =
+        do_QueryInterface(aRequest);
+      MOZ_ASSERT(request);
+      nsAutoString completeStatus;
+      rv = request->GetCompleteStatus(completeStatus);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_ERROR_FAILURE;
+      }
+      nsCOMPtr<nsIPaymentRequest> payment;
+      rv = GetPaymentRequestById(requestId, getter_AddRefs(payment));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_ERROR_FAILURE;
+      }
+      rv = payment->SetCompleteStatus(completeStatus);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_ERROR_FAILURE;
+      }
       rv = LaunchUIAction(requestId, type);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return NS_ERROR_FAILURE;
