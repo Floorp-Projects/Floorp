@@ -33,21 +33,6 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 NS_IMPL_ADDREF_INHERITED(ClipboardEvent, Event)
 NS_IMPL_RELEASE_INHERITED(ClipboardEvent, Event)
 
-nsresult
-ClipboardEvent::InitClipboardEvent(const nsAString& aType,
-                                   bool aCanBubble,
-                                   bool aCancelable,
-                                   nsIDOMDataTransfer* aClipboardData)
-{
-  nsCOMPtr<DataTransfer> clipboardData = do_QueryInterface(aClipboardData);
-  // Null clipboardData is OK
-
-  ErrorResult rv;
-  InitClipboardEvent(aType, aCanBubble, aCancelable, clipboardData);
-
-  return rv.StealNSResult();
-}
-
 void
 ClipboardEvent::InitClipboardEvent(const nsAString& aType, bool aCanBubble,
                                    bool aCancelable,
@@ -88,13 +73,6 @@ ClipboardEvent::Constructor(const GlobalObject& aGlobal,
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);
   return e.forget();
-}
-
-NS_IMETHODIMP
-ClipboardEvent::GetClipboardData(nsIDOMDataTransfer** aClipboardData)
-{
-  NS_IF_ADDREF(*aClipboardData = GetClipboardData());
-  return NS_OK;
 }
 
 DataTransfer*
