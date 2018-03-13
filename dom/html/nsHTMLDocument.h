@@ -168,9 +168,6 @@ public:
                    JS::MutableHandle<JSObject*> aRetval,
                    mozilla::ErrorResult& rv);
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  mozilla::dom::HTMLSharedElement *GetHead() {
-    return static_cast<mozilla::dom::HTMLSharedElement*>(GetHeadElement());
-  }
   nsIHTMLCollection* Images();
   nsIHTMLCollection* Embeds();
   nsIHTMLCollection* Plugins();
