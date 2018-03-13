@@ -26,13 +26,6 @@ ClipboardEvent::ClipboardEvent(EventTarget* aOwner,
   }
 }
 
-NS_INTERFACE_MAP_BEGIN(ClipboardEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMClipboardEvent)
-NS_INTERFACE_MAP_END_INHERITING(Event)
-
-NS_IMPL_ADDREF_INHERITED(ClipboardEvent, Event)
-NS_IMPL_RELEASE_INHERITED(ClipboardEvent, Event)
-
 void
 ClipboardEvent::InitClipboardEvent(const nsAString& aType, bool aCanBubble,
                                    bool aCancelable,
