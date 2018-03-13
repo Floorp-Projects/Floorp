@@ -99,6 +99,7 @@ public:
   , mScriptLine(0)
   , mScriptColumn(0)
   , mInnerWindowID(0)
+  , mPrivateBrowsing(false)
   , mWorkerPrivate(nullptr)
 #ifdef DEBUG
   , mHasWorkerHolderRegistered(false)
@@ -211,6 +212,7 @@ public:
   uint32_t mScriptLine;
   uint32_t mScriptColumn;
   uint64_t mInnerWindowID;
+  bool mPrivateBrowsing;
 
   WorkerPrivate* mWorkerPrivate;
   nsAutoPtr<WorkerHolder> mWorkerHolder;
@@ -390,7 +392,8 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
     rv = errorObject->Init(message,
                            NS_ConvertUTF8toUTF16(mScriptFile),
                            EmptyString(), mScriptLine, mScriptColumn,
-                           nsIScriptError::errorFlag, "Web Socket");
+                           nsIScriptError::errorFlag, "Web Socket",
+                           mPrivateBrowsing);
   }
 
   NS_ENSURE_SUCCESS_VOID(rv);
@@ -1568,6 +1571,8 @@ WebSocketImpl::Init(JSContext* aCx,
     mInnerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(aCx);
   }
 
+  mPrivateBrowsing = !!aPrincipal->OriginAttributesRef().mPrivateBrowsingId;
+
   // parses the url
   rv = ParseURL(PromiseFlatString(aURL));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1640,7 +1645,8 @@ WebSocketImpl::Init(JSContext* aCx,
                         0, // aLineNumber
                         0, // aColumnNumber
                         nsIScriptError::warningFlag, "CSP",
-                        mInnerWindowID);
+                        mInnerWindowID,
+                        mPrivateBrowsing);
   }
 
   // Don't allow https:// to open ws://

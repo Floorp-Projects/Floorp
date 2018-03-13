@@ -1008,7 +1008,8 @@ public:
    *   @param classification Name of the module reporting error
    */
   static void LogSimpleConsoleError(const nsAString& aErrorText,
-                                    const char * classification);
+                                    const char * classification,
+                                    bool aFromPrivateWindow);
 
   /**
    * Report a non-localized error message to the error console.

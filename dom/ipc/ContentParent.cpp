@@ -3892,11 +3892,12 @@ ContentParent::RecvScriptError(const nsString& aMessage,
                                const uint32_t& aLineNumber,
                                const uint32_t& aColNumber,
                                const uint32_t& aFlags,
-                               const nsCString& aCategory)
+                               const nsCString& aCategory,
+                               const bool& aFromPrivateWindow)
 {
   return RecvScriptErrorInternal(aMessage, aSourceName, aSourceLine,
                                  aLineNumber, aColNumber, aFlags,
-                                 aCategory);
+                                 aCategory, aFromPrivateWindow);
 }
 
 mozilla::ipc::IPCResult
@@ -3907,11 +3908,12 @@ ContentParent::RecvScriptErrorWithStack(const nsString& aMessage,
                                         const uint32_t& aColNumber,
                                         const uint32_t& aFlags,
                                         const nsCString& aCategory,
+                                        const bool& aFromPrivateWindow,
                                         const ClonedMessageData& aFrame)
 {
   return RecvScriptErrorInternal(aMessage, aSourceName, aSourceLine,
                                  aLineNumber, aColNumber, aFlags,
-                                 aCategory, &aFrame);
+                                 aCategory, aFromPrivateWindow, &aFrame);
 }
 
 mozilla::ipc::IPCResult
@@ -3922,6 +3924,7 @@ ContentParent::RecvScriptErrorInternal(const nsString& aMessage,
                                        const uint32_t& aColNumber,
                                        const uint32_t& aFlags,
                                        const nsCString& aCategory,
+                                       const bool& aFromPrivateWindow,
                                        const ClonedMessageData* aStack)
 {
   RefPtr<nsConsoleService> consoleService = GetConsoleService();
@@ -3955,9 +3958,9 @@ ContentParent::RecvScriptErrorInternal(const nsString& aMessage,
     msg = new nsScriptError();
   }
 
-  nsresult rv = msg->InitWithWindowID(aMessage, aSourceName, aSourceLine,
-                                      aLineNumber, aColNumber, aFlags,
-                                      aCategory, 0);
+  nsresult rv = msg->Init(aMessage, aSourceName, aSourceLine,
+                          aLineNumber, aColNumber, aFlags,
+                          aCategory.get(), aFromPrivateWindow);
   if (NS_FAILED(rv))
     return IPC_OK();
 
