@@ -18,7 +18,7 @@ using namespace mozilla;
 // static array of unicode tag names
 #define HTML_TAG(_tag, _classname, _interfacename) (u"" #_tag),
 #define HTML_OTHER(_tag)
-const char16_t* const nsHTMLTags::sTagUnicodeTable[] = {
+const char16_t* const nsHTMLTags::sTagNames[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
@@ -68,7 +68,7 @@ nsHTMLTags::RegisterAtoms(void)
     // let's verify that all names in the unicode strings above are
     // correct.
     for (int32_t i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      nsAutoString temp1(sTagUnicodeTable[i]);
+      nsAutoString temp1(sTagNames[i]);
       nsAutoString temp2((char16_t*)sTagAtomSetup[i].mString);
       NS_ASSERTION(temp1.Equals(temp2), "Bad unicode tag name!");
     }
@@ -76,7 +76,7 @@ nsHTMLTags::RegisterAtoms(void)
     // let's verify that NS_HTMLTAG_NAME_MAX_LENGTH is correct
     uint32_t maxTagNameLength = 0;
     for (int32_t i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      uint32_t len = NS_strlen(sTagUnicodeTable[i]);
+      uint32_t len = NS_strlen(sTagNames[i]);
       maxTagNameLength = std::max(len, maxTagNameLength);
     }
     NS_ASSERTION(maxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH,
@@ -101,7 +101,7 @@ nsHTMLTags::AddRefTable(void)
 
     int32_t i;
     for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      const char16_t* tagName = sTagUnicodeTable[i];
+      const char16_t* tagName = sTagNames[i];
       const nsHTMLTag tagValue = static_cast<nsHTMLTag>(i + 1);
       // We use AssignLiteral here to avoid a string copy. This is okay
       // because this is truly static data.
@@ -172,7 +172,7 @@ nsHTMLTags::TestTagTable()
      nsHTMLTags::AddRefTable();
      // Make sure we can find everything we are supposed to
      for (int i = 0; i < NS_HTML_TAG_MAX; ++i) {
-       tag = sTagUnicodeTable[i];
+       tag = sTagNames[i];
        const nsAString& tagString = nsDependentString(tag);
        id = StringTagToId(tagString);
        NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");
