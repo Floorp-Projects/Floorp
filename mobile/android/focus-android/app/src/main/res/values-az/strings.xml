@@ -17,6 +17,7 @@
   <string name="menu_help">Kömək</string>
   <string name="menu_rights">Hüquqlarınız</string>
   <string name="menu_trackers_blocked_title">İzləyicilər bloklandı</string>
+  <string name="menu_custom_tab_branding">%1$s Tərəfindən</string>
   <string name="share_dialog_title">Bununla paylaş:</string>
   <string name="notification_erase_text">Səyahət keçmişini poz</string>
   <string name="notification_action_open">Aç</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">İstifadəçi adı</string>
   <string name="gv_prompt_password_hint">Parol</string>
   <string name="gv_prompt_clear">Təmizlə</string>
+  <string name="security_popup_secure_connection">Təhlükəsiz Əlaqə</string>
+  <string name="security_popup_insecure_connection">Təhlükəli Əlaqə</string>
+  <string name="security_popup_security_verified">Doğrulayan: %1$s</string>
+  <string name="site_security_icon_content_description">Sayt Təhlükəsizliyi</string>
 </resources>

@@ -8,6 +8,8 @@
   <string name="feedback_erase">Via retuma historio estis viŝita.</string>
   <string name="search_hint">Serĉi %1$s</string>
   <string name="menu_share">Dividi…</string>
+  <string name="menu_open_with_default_browser2">Malfermi per %1$s</string>
+  <string name="menu_open_with_a_browser2">Malfermi per…</string>
   <string name="menu_add_to_home_screen">Aldoni al hejmekrano</string>
   <string name="menu_whats_new">Novaĵoj</string>
   <string name="menu_settings">Agordoj</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">Helpo</string>
   <string name="menu_rights">Viaj rajtoj</string>
   <string name="menu_trackers_blocked_title">Blokitaj spuriloj</string>
+  <string name="menu_custom_tab_branding">Kun teknologio de %1$s</string>
   <string name="share_dialog_title">Dividi per</string>
   <string name="notification_erase_text">Forviŝi retuman historion</string>
   <string name="notification_action_open">Malfermi</string>
@@ -181,4 +184,11 @@
   <string name="your_rights_content3"><![CDATA["Neniu rajto por la registritaj markoj de Mozilla Foundation aŭ de iu alia estas ceditaj al vi. Tio inkluzivas, sed ne nur tion, la nomon aŭ emblemon de Mozilla, Firefox aŭ %1$s.  Pli da informo pri registritaj markoj troveblas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#265;i tie</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Aldona fonta kodo por %1$s estas havebla sub pluraj aliaj libera kaj malfermitkodaj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">permesiloj</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s uzas ankaŭ listojn de blokado provizitaj de Disconnect, Inc. kiel apartajn kaj sendependajn verkojn sub la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#284;enerala publika permesilo de GNU v3</a>" kiu haveblas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#265;i tie</a>.]]></string>
+  <string name="gv_prompt_username_hint">Nomo de uzanto</string>
+  <string name="gv_prompt_password_hint">Pasvorto</string>
+  <string name="gv_prompt_clear">Viŝi</string>
+  <string name="security_popup_secure_connection">Sekura konekto</string>
+  <string name="security_popup_insecure_connection">Nesekura konekto</string>
+  <string name="security_popup_security_verified">Kontrolita de: %1$s</string>
+  <string name="site_security_icon_content_description">Sekureco de retejo</string>
 </resources>

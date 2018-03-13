@@ -17,6 +17,7 @@
   <string name="menu_help">Help</string>
   <string name="menu_rights">Jo rjochten</string>
   <string name="menu_trackers_blocked_title">Trackers blokkearre</string>
+  <string name="menu_custom_tab_branding">Mooglik makke troch %1$s</string>
   <string name="share_dialog_title">Diele fia</string>
   <string name="notification_erase_text">Navigaasjeskiednis wiskje</string>
   <string name="notification_action_open">Iepenje</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Brûkersnamme</string>
   <string name="gv_prompt_password_hint">Wachtwurd</string>
   <string name="gv_prompt_clear">Wiskje</string>
+  <string name="security_popup_secure_connection">Befeilige ferbining</string>
+  <string name="security_popup_insecure_connection">Net-befeilige ferbining</string>
+  <string name="security_popup_security_verified">Ferifiearre troch: %1$s</string>
+  <string name="site_security_icon_content_description">Sidefeilichheid</string>
 </resources>

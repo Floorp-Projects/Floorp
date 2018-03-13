@@ -181,4 +181,8 @@
   <string name="your_rights_content3"><![CDATA["Nu vi se acordă niciun drept sau licență asupra mărcilor comerciale ale Mozilla Foundation sau ale oricărei părți, inclusiv numele sau logourile Mozilla, Firefox sau %1$s. Informații suplimentare pot fi găsite "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aici</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Codul sursă suplimentar pentru %1$s este disponibil sub diferite alte "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licen&#539;e</a>" gratuite și cu sursă deschisă."]]></string>
   <string name="your_rights_content5"><![CDATA["De asemenea, %1$s folosește lista de blocări furnizată de Disconnect Inc. ca activitate separată și independentă sub "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;a Public&#259; General&#259; GNU v3</a>" și disponibil "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aici</a>.]]></string>
+  <string name="security_popup_secure_connection">Conexiune securizată</string>
+  <string name="security_popup_insecure_connection">Conexiune nesigură</string>
+  <string name="security_popup_security_verified">Verificat de: %1$s</string>
+  <string name="site_security_icon_content_description">Securitatea site-ului</string>
 </resources>
