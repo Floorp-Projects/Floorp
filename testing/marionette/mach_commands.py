@@ -51,13 +51,13 @@ def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
     args = argparse.Namespace(tests=tests)
 
     args.binary = binary
+    args.logger = kwargs.pop('log', None)
 
     for k, v in kwargs.iteritems():
         setattr(args, k, v)
 
     parser.verify_usage(args)
 
-    args.logger = kwargs.get('log')
     if not args.logger:
         args.logger = commandline.setup_logging("Marionette Unit Tests",
                                                 args,
