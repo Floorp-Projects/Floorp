@@ -633,10 +633,19 @@ GetWidgetIconSurface(GtkWidget* aWidgetIcon, int aScale)
     g_object_get_data(G_OBJECT(aWidgetIcon), surfaceName.get());
 }
 
-static GtkWidget*
-CreateHeaderBarButton(WidgetNodeType aWidgetType)
+static void
+CreateHeaderBarButton(GtkWidget* aParentWidget,
+                      WidgetNodeType aWidgetType)
 {
   GtkWidget* widget = gtk_button_new();
+
+  // We have to add button to widget hierarchy now to pick
+  // right icon style at LoadWidgetIconPixbuf().
+  if (GTK_IS_BOX(aParentWidget)) {
+      gtk_box_pack_start(GTK_BOX(aParentWidget), widget, FALSE, FALSE, 0);
+  } else {
+      gtk_container_add(GTK_CONTAINER(aParentWidget), widget);
+  }
 
   // We bypass GetWidget() here because we create all titlebar
   // buttons at once when a first one is requested.
@@ -690,8 +699,6 @@ CreateHeaderBarButton(WidgetNodeType aWidgetType)
    gtk_style_context_invalidate(style);
 
    LoadWidgetIconPixbuf(image);
-
-   return widget;
 }
 
 static bool
@@ -726,21 +733,19 @@ CreateHeaderBarButtons()
 
   if (IsToolbarButtonEnabled(buttonLayout, activeButtons,
                              MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE)) {
-    GtkWidget* button = CreateHeaderBarButton(MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE);
-    gtk_box_pack_start(GTK_BOX(buttonBox), button, FALSE, FALSE, 0);
+    CreateHeaderBarButton(buttonBox, MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE);
   }
   if (IsToolbarButtonEnabled(buttonLayout, activeButtons,
                              MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE)) {
-    GtkWidget* button = CreateHeaderBarButton(MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE);
-    gtk_box_pack_start(GTK_BOX(buttonBox), button, FALSE, FALSE, 0);
-    // We don't pack "restore" headerbar button as it's an icon
-    // placeholder only.
-    CreateHeaderBarButton(MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE);
+    CreateHeaderBarButton(buttonBox, MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE);
+    // We don't pack "restore" headerbar button to box as it's an icon
+    // placeholder. Pack it only to header bar to get correct style.
+    CreateHeaderBarButton(GetWidget(MOZ_GTK_HEADER_BAR),
+                          MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE);
   }
   if (IsToolbarButtonEnabled(buttonLayout, activeButtons,
                              MOZ_GTK_HEADER_BAR_BUTTON_CLOSE)) {
-    GtkWidget* button = CreateHeaderBarButton(MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
-    gtk_box_pack_start(GTK_BOX(buttonBox), button, FALSE, FALSE, 0);
+    CreateHeaderBarButton(buttonBox, MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
   }
 }
 

@@ -118,8 +118,8 @@ macro_rules! link {
             mod build;
 
             let file = try!(build::find_shared_library());
-            let library = libloading::Library::new(&file).map_err(|_| {
-                format!("the `libclang` shared library could not be opened: {}", file.display())
+            let library = libloading::Library::new(&file).map_err(|e| {
+                format!("the `libclang` shared library at {} could not be opened: {}", file.display(), e)
             });
             let mut library = SharedLibrary::new(try!(library));
             $(load::$name(&mut library);)+

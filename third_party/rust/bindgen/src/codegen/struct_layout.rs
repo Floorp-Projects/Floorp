@@ -155,10 +155,7 @@ impl<'a> StructLayoutTracker<'a> {
         field_ty: &Type,
         field_offset: Option<usize>,
     ) -> Option<quote::Tokens> {
-        let mut field_layout = match field_ty.layout(self.ctx) {
-            Some(l) => l,
-            None => return None,
-        };
+        let mut field_layout = field_ty.layout(self.ctx)?;
 
         if let TypeKind::Array(inner, len) =
             *field_ty.canonical_type(self.ctx).kind()

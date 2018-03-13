@@ -1,65 +1,106 @@
-extern crate rustc_serialize;
 extern crate toml;
+extern crate serde;
+extern crate serde_json;
 
-use std::collections::BTreeMap;
-use rustc_serialize::json::Json;
+use toml::{Value as Toml, to_string_pretty};
+use serde::ser::Serialize;
+use serde_json::Value as Json;
 
-use toml::{Parser, Value};
-use toml::Value::{Table, Integer, Float, Boolean, Datetime, Array};
-
-fn to_json(toml: Value) -> Json {
+fn to_json(toml: toml::Value) -> Json {
     fn doit(s: &str, json: Json) -> Json {
-        let mut map = BTreeMap::new();
-        map.insert(format!("{}", "type"), Json::String(format!("{}", s)));
-        map.insert(format!("{}", "value"), json);
+        let mut map = serde_json::Map::new();
+        map.insert("type".to_string(), Json::String(s.to_string()));
+        map.insert("value".to_string(), json);
         Json::Object(map)
     }
+
     match toml {
-        Value::String(s) => doit("string", Json::String(s)),
-        Integer(i) => doit("integer", Json::String(format!("{}", i))),
-        Float(f) => doit("float", Json::String({
+        Toml::String(s) => doit("string", Json::String(s)),
+        Toml::Integer(i) => doit("integer", Json::String(i.to_string())),
+        Toml::Float(f) => doit("float", Json::String({
             let s = format!("{:.15}", f);
             let s = format!("{}", s.trim_right_matches('0'));
-            if s.ends_with(".") {format!("{}0", s)} else {s}
+            if s.ends_with('.') {format!("{}0", s)} else {s}
         })),
-        Boolean(b) => doit("bool", Json::String(format!("{}", b))),
-        Datetime(s) => doit("datetime", Json::String(s)),
-        Array(arr) => {
+        Toml::Boolean(b) => doit("bool", Json::String(format!("{}", b))),
+        Toml::Datetime(s) => doit("datetime", Json::String(s.to_string())),
+        Toml::Array(arr) => {
             let is_table = match arr.first() {
-                Some(&Table(..)) => true,
+                Some(&Toml::Table(..)) => true,
                 _ => false,
             };
             let json = Json::Array(arr.into_iter().map(to_json).collect());
             if is_table {json} else {doit("array", json)}
         }
-        Table(table) => Json::Object(table.into_iter().map(|(k, v)| {
-            (k, to_json(v))
-        }).collect()),
+        Toml::Table(table) => {
+            let mut map = serde_json::Map::new();
+            for (k, v) in table {
+                map.insert(k, to_json(v));
+            }
+            Json::Object(map)
+        }
     }
 }
 
-fn run(toml: &str, json: &str) {
-    let mut p = Parser::new(toml);
-    let table = p.parse();
-    assert!(p.errors.len() == 0, "had_errors: {:?}",
-            p.errors.iter().map(|e| {
-                (e.desc.clone(), &toml[e.lo - 5..e.hi + 5])
-            }).collect::<Vec<(String, &str)>>());
-    assert!(table.is_some());
-    let toml = Table(table.unwrap());
-    let toml_string = format!("{}", toml);
+fn run_pretty(toml: Toml) {
+    // Assert toml == json
+    println!("### pretty round trip parse.");
+    
+    // standard pretty
+    let toml_raw = to_string_pretty(&toml).expect("to string");
+    let toml2 = toml_raw.parse().expect("from string");
+    assert_eq!(toml, toml2);
 
-    let json = Json::from_str(json).unwrap();
+    // pretty with indent 2
+    let mut result = String::with_capacity(128);
+    {
+        let mut serializer = toml::Serializer::pretty(&mut result);
+        serializer.pretty_array_indent(2);
+        toml.serialize(&mut serializer).expect("to string");
+    }
+    assert_eq!(toml, result.parse().expect("from str"));
+    result.clear();
+    {
+        let mut serializer = toml::Serializer::new(&mut result);
+        serializer.pretty_array_trailing_comma(false);
+        toml.serialize(&mut serializer).expect("to string");
+    }
+    assert_eq!(toml, result.parse().expect("from str"));
+    result.clear();
+    {
+        let mut serializer = toml::Serializer::pretty(&mut result);
+        serializer.pretty_string(false);
+        toml.serialize(&mut serializer).expect("to string");
+        assert_eq!(toml, toml2);
+    }
+    assert_eq!(toml, result.parse().expect("from str"));
+    result.clear();
+    {
+        let mut serializer = toml::Serializer::pretty(&mut result);
+        serializer.pretty_array(false);
+        toml.serialize(&mut serializer).expect("to string");
+        assert_eq!(toml, toml2);
+    }
+    assert_eq!(toml, result.parse().expect("from str"));
+}
+
+fn run(toml_raw: &str, json_raw: &str) {
+    println!("parsing:\n{}", toml_raw);
+    let toml: Toml = toml_raw.parse().unwrap();
+    let json: Json = json_raw.parse().unwrap();
+
+    // Assert toml == json
     let toml_json = to_json(toml.clone());
     assert!(json == toml_json,
             "expected\n{}\ngot\n{}\n",
-            json.pretty(),
-            toml_json.pretty());
+            serde_json::to_string_pretty(&json).unwrap(),
+            serde_json::to_string_pretty(&toml_json).unwrap());
 
-    let table2 = Parser::new(&toml_string).parse().unwrap();
-    // floats are a little lossy
-    if table2.values().any(|v| v.as_float().is_some()) { return }
-    assert_eq!(toml, Table(table2));
+    // Assert round trip
+    println!("round trip parse: {}", toml);
+    let toml2 = toml.to_string().parse().unwrap();
+    assert_eq!(toml, toml2);
+    run_pretty(toml);
 }
 
 macro_rules! test( ($name:ident, $toml:expr, $json:expr) => (
@@ -166,6 +207,9 @@ test!(table_empty,
 test!(table_sub_empty,
        include_str!("valid/table-sub-empty.toml"),
        include_str!("valid/table-sub-empty.json"));
+test!(table_multi_empty,
+       include_str!("valid/table-multi-empty.toml"),
+       include_str!("valid/table-multi-empty.json"));
 test!(table_whitespace,
        include_str!("valid/table-whitespace.toml"),
        include_str!("valid/table-whitespace.json"));
@@ -193,3 +237,13 @@ test!(example4,
 test!(example_bom,
        include_str!("valid/example-bom.toml"),
        include_str!("valid/example.json"));
+
+test!(datetime_truncate,
+      include_str!("valid/datetime-truncate.toml"),
+      include_str!("valid/datetime-truncate.json"));
+test!(key_quote_newline,
+      include_str!("valid/key-quote-newline.toml"),
+      include_str!("valid/key-quote-newline.json"));
+test!(table_array_nest_no_keys,
+      include_str!("valid/table-array-nest-no-keys.toml"),
+      include_str!("valid/table-array-nest-no-keys.json"));

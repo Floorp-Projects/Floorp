@@ -147,13 +147,13 @@ impl Default for CodegenConfig {
 /// use bindgen::builder;
 ///
 /// // Configure and generate bindings.
-/// let bindings = try!(builder().header("path/to/input/header")
-///                              .whitelisted_type("SomeCoolClass")
-///                              .whitelisted_function("do_some_cool_thing")
-///                              .generate());
+/// let bindings = builder().header("path/to/input/header")
+///     .whitelisted_type("SomeCoolClass")
+///     .whitelisted_function("do_some_cool_thing")
+///     .generate()?;
 ///
 /// // Write the generated bindings to an output file.
-/// try!(bindings.write_to_file("path/to/output.rs"));
+/// bindings.write_to_file("path/to/output.rs")?;
 /// ```
 #[derive(Debug, Default)]
 pub struct Builder {
@@ -673,7 +673,7 @@ impl Builder {
 
     /// Hide the given type from the generated bindings. Regular expressions are
     /// supported.
-    #[deprecated = "Use blacklist_type instead"]
+    #[deprecated(note = "Use blacklist_type instead")]
     pub fn hide_type<T: AsRef<str>>(self, arg: T) -> Builder {
         self.blacklist_type(arg)
     }
@@ -695,7 +695,7 @@ impl Builder {
     /// Whitelist the given type so that it (and all types that it transitively
     /// refers to) appears in the generated bindings. Regular expressions are
     /// supported.
-    #[deprecated = "use whitelist_type instead"]
+    #[deprecated(note = "use whitelist_type instead")]
     pub fn whitelisted_type<T: AsRef<str>>(self, arg: T) -> Builder {
         self.whitelist_type(arg)
     }
@@ -719,7 +719,7 @@ impl Builder {
     /// Whitelist the given function.
     ///
     /// Deprecated: use whitelist_function instead.
-    #[deprecated = "use whitelist_function instead"]
+    #[deprecated(note = "use whitelist_function instead")]
     pub fn whitelisted_function<T: AsRef<str>>(self, arg: T) -> Builder {
         self.whitelist_function(arg)
     }
@@ -735,7 +735,7 @@ impl Builder {
     /// Whitelist the given variable.
     ///
     /// Deprecated: use whitelist_var instead.
-    #[deprecated = "use whitelist_var instead"]
+    #[deprecated(note = "use whitelist_var instead")]
     pub fn whitelisted_var<T: AsRef<str>>(self, arg: T) -> Builder {
         self.whitelist_var(arg)
     }
@@ -1648,7 +1648,7 @@ impl Bindings {
         {
             let _t = time::Timer::new("parse")
                                   .with_output(time_phases);
-            try!(parse(&mut context));
+            parse(&mut context)?;
         }
 
         let (items, options) = codegen::codegen(context);

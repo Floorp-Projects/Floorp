@@ -1,7 +1,9 @@
+pub type c_char = i8;
 pub type dev_t = u32;
 pub type mode_t = u16;
 pub type pthread_attr_t = *mut ::c_void;
 pub type rlim_t = i64;
+pub type mqd_t = *mut ::c_void;
 pub type pthread_mutex_t = *mut ::c_void;
 pub type pthread_mutexattr_t = *mut ::c_void;
 pub type pthread_cond_t = *mut ::c_void;
@@ -158,6 +160,20 @@ s! {
         pub int_n_sep_by_space: ::c_char,
         pub int_p_sign_posn: ::c_char,
         pub int_n_sign_posn: ::c_char,
+    }
+
+    pub struct cmsgcred {
+        pub cmcred_pid: ::pid_t,
+        pub cmcred_uid: ::uid_t,
+        pub cmcred_euid: ::uid_t,
+        pub cmcred_gid: ::gid_t,
+        pub cmcred_ngroups: ::c_short,
+        pub cmcred_groups: [::gid_t; CMGROUP_MAX],
+    }
+
+    pub struct rtprio {
+        pub type_: ::c_ushort,
+        pub prio: ::c_ushort,
     }
 }
 
@@ -446,7 +462,16 @@ pub const POLLSTANDARD: ::c_short = ::POLLIN | ::POLLPRI | ::POLLOUT |
     ::POLLRDNORM | ::POLLRDBAND | ::POLLWRBAND | ::POLLERR |
     ::POLLHUP | ::POLLNVAL;
 
+pub const EAI_AGAIN: ::c_int = 2;
+pub const EAI_BADFLAGS: ::c_int = 3;
+pub const EAI_FAIL: ::c_int = 4;
+pub const EAI_FAMILY: ::c_int = 5;
+pub const EAI_MEMORY: ::c_int = 6;
+pub const EAI_NONAME: ::c_int = 8;
+pub const EAI_SERVICE: ::c_int = 9;
+pub const EAI_SOCKTYPE: ::c_int = 10;
 pub const EAI_SYSTEM: ::c_int = 11;
+pub const EAI_OVERFLOW: ::c_int = 14;
 
 pub const F_DUPFD: ::c_int = 0;
 pub const F_GETFD: ::c_int = 1;
@@ -639,8 +664,6 @@ pub const SO_SNDTIMEO: ::c_int = 0x1005;
 pub const SO_RCVTIMEO: ::c_int = 0x1006;
 pub const SO_ERROR: ::c_int = 0x1007;
 pub const SO_TYPE: ::c_int = 0x1008;
-
-pub const IFF_LOOPBACK: ::c_int = 0x8;
 
 pub const SHUT_RD: ::c_int = 0;
 pub const SHUT_WR: ::c_int = 1;
@@ -936,6 +959,18 @@ pub const OCRNL: ::tcflag_t = 0x10;
 pub const ONOCR: ::tcflag_t = 0x20;
 pub const ONLRET: ::tcflag_t = 0x40;
 
+pub const CMGROUP_MAX: usize = 16;
+
+// https://github.com/freebsd/freebsd/blob/master/sys/net/bpf.h
+// sizeof(long)
+pub const BPF_ALIGNMENT: ::c_int = 8;
+
+// Values for rtprio struct (prio field) and syscall (function argument)
+pub const RTP_PRIO_MIN: ::c_ushort = 0;
+pub const RTP_PRIO_MAX: ::c_ushort = 31;
+pub const RTP_LOOKUP: ::c_int = 0;
+pub const RTP_SET: ::c_int = 1;
+
 f! {
     pub fn WIFCONTINUED(status: ::c_int) -> bool {
         status == 0x13
@@ -969,6 +1004,41 @@ extern {
                         groups: *mut ::gid_t,
                         ngroups: *mut ::c_int) -> ::c_int;
     pub fn initgroups(name: *const ::c_char, basegid: ::gid_t) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__getpwent_r50")]
+    pub fn getpwent_r(pwd: *mut ::passwd,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::passwd) -> ::c_int;
+    pub fn getgrent_r(grp: *mut ::group,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::group) -> ::c_int;
+    pub fn mq_open(name: *const ::c_char, oflag: ::c_int, ...) -> ::mqd_t;
+    pub fn mq_close(mqd: ::mqd_t) -> ::c_int;
+    pub fn mq_getattr(mqd: ::mqd_t, attr: *mut ::mq_attr) -> ::c_int;
+    pub fn mq_notify(mqd: ::mqd_t, notification: *const ::sigevent) -> ::c_int;
+    pub fn mq_receive(mqd: ::mqd_t,
+                      msg_ptr: *mut ::c_char,
+                      msg_len: ::size_t,
+                      msq_prio: *mut ::c_uint) -> ::ssize_t;
+    pub fn mq_send(mqd: ::mqd_t,
+                   msg_ptr: *const ::c_char,
+                   msg_len: ::size_t,
+                   msq_prio: ::c_uint) -> ::c_int;
+    pub fn mq_setattr(mqd: ::mqd_t,
+                      newattr: *const ::mq_attr,
+                      oldattr: *mut ::mq_attr) -> ::c_int;
+    pub fn mq_timedreceive(mqd: ::mqd_t,
+                           msg_ptr: *mut ::c_char,
+                           msg_len: ::size_t,
+                           msq_prio: *mut ::c_uint,
+                           abs_timeout: *const ::timespec) -> ::ssize_t;
+    pub fn mq_timedsend(mqd: ::mqd_t,
+                        msg_ptr: *const ::c_char,
+                        msg_len: ::size_t,
+                        msq_prio: ::c_uint,
+                        abs_timeout: *const ::timespec) -> ::c_int;
+    pub fn mq_unlink(name: *const ::c_char) -> ::c_int;
 }
 
 #[link(name = "util")]
@@ -991,6 +1061,7 @@ extern {
                        serv: *mut ::c_char,
                        servlen: ::size_t,
                        flags: ::c_int) -> ::c_int;
+    #[cfg_attr(target_os = "freebsd", link_name = "kevent@FBSD_1.0")]
     pub fn kevent(kq: ::c_int,
                   changelist: *const ::kevent,
                   nchanges: ::c_int,
@@ -1085,9 +1156,11 @@ extern {
                                          val: ::c_int) -> ::c_int;
     pub fn getpriority(which: ::c_int, who: ::c_int) -> ::c_int;
     pub fn setpriority(which: ::c_int, who: ::c_int, prio: ::c_int) -> ::c_int;
+    pub fn rtprio(function: ::c_int, pid: ::pid_t, rtp: *mut rtprio) -> ::c_int;
 
     pub fn fdopendir(fd: ::c_int) -> *mut ::DIR;
 
+    #[cfg_attr(target_os = "freebsd", link_name = "mknodat@FBSD_1.1")]
     pub fn mknodat(dirfd: ::c_int, pathname: *const ::c_char,
                   mode: ::mode_t, dev: dev_t) -> ::c_int;
     pub fn mkfifoat(dirfd: ::c_int, pathname: *const ::c_char,
@@ -1107,9 +1180,8 @@ extern {
                  timeout: *const ::timespec,
                  sigmask: *const sigset_t) -> ::c_int;
     pub fn settimeofday(tv: *const ::timeval, tz: *const ::timezone) -> ::c_int;
-    pub fn fexecve(fd: ::c_int, argv: *const *const ::c_char,
-                   envp: *const *const ::c_char)
-                   -> ::c_int;
+    pub fn getdomainname(name: *mut ::c_char, len: ::c_int) -> ::c_int;
+    pub fn setdomainname(name: *const ::c_char, len: ::c_int) -> ::c_int;
 }
 
 cfg_if! {

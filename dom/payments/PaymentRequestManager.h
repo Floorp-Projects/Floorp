@@ -56,7 +56,8 @@ public:
                            const PaymentComplete& aComplete);
   nsresult UpdatePayment(JSContext* aCx,
                          const nsAString& aRequestId,
-                         const PaymentDetailsUpdate& aDetails);
+                         const PaymentDetailsUpdate& aDetails,
+                         bool aRequestShipping);
 
   nsresult RespondPayment(const IPCPaymentActionResponse& aResponse);
   nsresult ChangeShippingAddress(const nsAString& aRequestId,

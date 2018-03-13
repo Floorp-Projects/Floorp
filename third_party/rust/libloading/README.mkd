@@ -19,9 +19,3 @@ functions and static variables these libraries contain.
 [changelog]: https://docs.rs/libloading/*/libloading/changelog/index.html
 
 libloading is distributed under ISC (MIT-like) license.
-
----
-
-Note, that this library is not a drop-in replacement for the deprecated `dynamic_lib`. Many
-dubious APIs (notably, library search path modification) were prunned and string arguments
-take types that match conventions and system APIs better.

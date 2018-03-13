@@ -148,7 +148,7 @@ fn run(executable: &str, arguments: &[&str]) -> Result<(String, String), String>
         let stdout = String::from_utf8_lossy(&o.stdout).into_owned();
         let stderr = String::from_utf8_lossy(&o.stderr).into_owned();
         (stdout, stderr)
-    }).map_err(|_| format!("could not run executable: `{}`", executable))
+    }).map_err(|e| format!("could not run executable `{}`: {}", executable, e))
 }
 
 /// Runs `clang`, returning the `stdout` and `stderr` output.

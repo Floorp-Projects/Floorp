@@ -1248,6 +1248,7 @@ nsXULAppInfo::SetEnabled(bool aEnabled)
 NS_IMETHODIMP
 nsXULAppInfo::GetServerURL(nsIURL** aServerURL)
 {
+  NS_ENSURE_ARG_POINTER(aServerURL);
   if (!CrashReporter::GetEnabled())
     return NS_ERROR_NOT_INITIALIZED;
 
