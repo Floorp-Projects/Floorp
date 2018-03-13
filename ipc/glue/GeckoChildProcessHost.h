@@ -103,6 +103,16 @@ public:
   }
 #endif
 
+#ifdef XP_WIN
+  void AddHandleToShare(HANDLE aHandle) {
+    mLaunchOptions->handles_to_inherit.push_back(aHandle);
+  }
+#else
+  void AddFdToRemap(int aSrcFd, int aDstFd) {
+    mLaunchOptions->fds_to_remap.push_back(std::make_pair(aSrcFd, aDstFd));
+  }
+#endif
+
   /**
    * Must run on the IO thread.  Cause the OS process to exit and
    * ensure its OS resources are cleaned up.

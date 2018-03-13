@@ -202,6 +202,28 @@ ProxyMessenger = {
     MessageChannel.addListener(messageManagers, "Extension:Message", this);
     MessageChannel.addListener(messageManagers, "Extension:Port:Disconnect", this);
     MessageChannel.addListener(messageManagers, "Extension:Port:PostMessage", this);
+
+    Services.obs.addObserver(this, "message-manager-close");
+
+    this.ports = new DefaultMap(() => new Map());
+  },
+
+  observe(subject, topic, data) {
+    if (topic === "message-manager-close") {
+      if (this.ports.has(subject)) {
+        let ports = this.ports.get(subject);
+        this.ports.delete(subject);
+
+        for (let [portId, {sender, recipient, receiverMM}] of ports.entries()) {
+          recipient.portId = portId;
+          MessageChannel.sendMessage(receiverMM, "Extension:Port:Disconnect", null, {
+            sender,
+            recipient,
+            responseType: MessageChannel.RESPONSE_TYPE_NONE,
+          }).catch(() => {});
+        }
+      }
+    }
   },
 
   async receiveMessage({target, messageName, channelId, sender, recipient, data, responseType}) {
@@ -244,6 +266,16 @@ ProxyMessenger = {
       recipient,
       responseType,
     });
+
+    if (messageName === "Extension:Connect") {
+      this.ports.get(target.messageManager).set(data.portId, {receiverMM, sender, recipient});
+      promise1.catch(() => {
+        this.ports.get(target.messageManager).delete(data.portId);
+      });
+    } else if (messageName === "Extension:Port:Disconnect") {
+      this.ports.get(target.messageManager).delete(data.portId);
+    }
+
 
     if (!(extension.isEmbedded || recipient.toProxyScript) || !extension.remote) {
       return promise1;

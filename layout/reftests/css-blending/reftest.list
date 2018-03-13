@@ -25,7 +25,7 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-darke
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-difference.html background-blending-difference-ref.svg
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-exclusion.html background-blending-exclusion-ref.svg
 fuzzy-if(cocoaWidget||d2d,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hard-light.html background-blending-hard-light-ref.svg
-fuzzy-if(d2d,1,9600) fuzzy-if(azureSkia||gtkWidget,2,9600) fuzzy-if(webrender,1-1,11200-11200) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hue.html background-blending-hue-ref.svg
+fuzzy-if(d2d,1,9600) fuzzy-if(azureSkia||gtkWidget,1,11200) fuzzy-if(webrender,1-1,11200-11200) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hue.html background-blending-hue-ref.svg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-lighten.html background-blending-lighten-ref.svg
 fuzzy-if(d2d,1,8000) fuzzy-if(azureSkia||gtkWidget,2,9600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-luminosity.html background-blending-luminosity-ref.svg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-multiply.html background-blending-multiply-ref.svg

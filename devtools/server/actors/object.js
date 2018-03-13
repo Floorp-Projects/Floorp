@@ -1918,7 +1918,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       props.push("propertyName", "pseudoElement");
     } else if (obj.class == "AnimationEvent") {
       props.push("animationName", "pseudoElement");
-    } else if (rawObj instanceof Ci.nsIDOMClipboardEvent) {
+    } else if (obj.class == "ClipboardEvent") {
       props.push("clipboardData");
     }
 

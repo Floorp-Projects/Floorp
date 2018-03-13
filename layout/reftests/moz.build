@@ -229,8 +229,6 @@ with Files('printing/**'):
     BUG_COMPONENT = ('Core', 'Printing: Output')
 with Files('reftest-sanity/**'):
     BUG_COMPONENT = ('Testing', 'Reftest')
-with Files('scoped-style/**'):
-    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('scrolling/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('selection/**'):

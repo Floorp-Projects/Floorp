@@ -1885,11 +1885,15 @@ struct Frame
     // effectively the callee's instance.
     TlsData* tls;
 
-#if defined(JS_CODEGEN_MIPS32)
-    // Double word aligned frame ensures correct alignment for wasm locals
-    // on architectures that require the stack alignment to be more than word size.
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_ARM64)
+    // Double word aligned frame ensures:
+    // - correct alignment for wasm locals on architectures that require the
+    //   stack alignment to be more than word size.
+    // - correct stack alignment on architectures that require the SP alignment
+    //   to be more than word size.
     uintptr_t padding_;
 #endif
+
     // The return address pushed by the call (in the case of ARM/MIPS the return
     // address is pushed by the first instruction of the prologue).
     void* returnAddress;
@@ -1898,6 +1902,10 @@ struct Frame
 
     Instance* instance() const { return tls->instance; }
 };
+
+#if defined(JS_CODEGEN_ARM64)
+static_assert(sizeof(Frame) % 16 == 0, "frame size");
+#endif
 
 // A DebugFrame is a Frame with additional fields that are added after the
 // normal function prologue by the baseline compiler. If a Module is compiled

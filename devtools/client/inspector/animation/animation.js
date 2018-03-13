@@ -11,6 +11,7 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const App = createFactory(require("./components/App"));
+const CurrentTimeTimer = require("./current-time-timer");
 
 const {
   updateAnimations,
@@ -19,21 +20,38 @@ const {
   updateSelectedAnimation,
   updateSidebarSize
 } = require("./actions/animations");
-const { isAllAnimationEqual } = require("./utils/utils");
+const {
+  isAllAnimationEqual,
+  hasAnimationIterationCountInfinite,
+  hasRunningAnimation,
+} = require("./utils/utils");
 
 class AnimationInspector {
   constructor(inspector, win) {
     this.inspector = inspector;
     this.win = win;
 
+    this.addAnimationsCurrentTimeListener =
+      this.addAnimationsCurrentTimeListener.bind(this);
     this.getAnimatedPropertyMap = this.getAnimatedPropertyMap.bind(this);
+    this.getAnimationsCurrentTime = this.getAnimationsCurrentTime.bind(this);
     this.getComputedStyle = this.getComputedStyle.bind(this);
     this.getNodeFromActor = this.getNodeFromActor.bind(this);
+    this.removeAnimationsCurrentTimeListener =
+      this.removeAnimationsCurrentTimeListener.bind(this);
+    this.rewindAnimationsCurrentTime = this.rewindAnimationsCurrentTime.bind(this);
     this.selectAnimation = this.selectAnimation.bind(this);
+    this.setAnimationsCurrentTime = this.setAnimationsCurrentTime.bind(this);
+    this.setAnimationsPlaybackRate = this.setAnimationsPlaybackRate.bind(this);
+    this.setAnimationsPlayState = this.setAnimationsPlayState.bind(this);
     this.setDetailVisibility = this.setDetailVisibility.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
+    this.simulateAnimationForKeyframesProgressBar =
+      this.simulateAnimationForKeyframesProgressBar.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
+    this.onAnimationsCurrentTimeUpdated = this.onAnimationsCurrentTimeUpdated.bind(this);
+    this.onCurrentTimeTimerUpdated = this.onCurrentTimeTimerUpdated.bind(this);
     this.onElementPickerStarted = this.onElementPickerStarted.bind(this);
     this.onElementPickerStopped = this.onElementPickerStopped.bind(this);
     this.onSidebarResized = this.onSidebarResized.bind(this);
@@ -56,18 +74,30 @@ class AnimationInspector {
     } = this.inspector.getPanel("boxmodel").getComponentProps();
 
     const {
+      addAnimationsCurrentTimeListener,
       emit: emitEventForTest,
       getAnimatedPropertyMap,
+      getAnimationsCurrentTime,
       getComputedStyle,
       getNodeFromActor,
+      isAnimationsRunning,
+      removeAnimationsCurrentTimeListener,
+      rewindAnimationsCurrentTime,
       selectAnimation,
+      setAnimationsCurrentTime,
+      setAnimationsPlaybackRate,
+      setAnimationsPlayState,
       setDetailVisibility,
       simulateAnimation,
+      simulateAnimationForKeyframesProgressBar,
       toggleElementPicker,
     } = this;
 
     const target = this.inspector.target;
     this.animationsFront = new AnimationsFront(target.client, target.form);
+
+    this.animationsCurrentTimeListeners = [];
+    this.isCurrentTimeSet = false;
 
     const provider = createElement(Provider,
       {
@@ -77,16 +107,25 @@ class AnimationInspector {
       },
       App(
         {
+          addAnimationsCurrentTimeListener,
           emitEventForTest,
           getAnimatedPropertyMap,
+          getAnimationsCurrentTime,
           getComputedStyle,
           getNodeFromActor,
+          isAnimationsRunning,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
+          removeAnimationsCurrentTimeListener,
+          rewindAnimationsCurrentTime,
           selectAnimation,
+          setAnimationsCurrentTime,
+          setAnimationsPlaybackRate,
+          setAnimationsPlayState,
           setDetailVisibility,
           setSelectedNode,
           simulateAnimation,
+          simulateAnimationForKeyframesProgressBar,
           toggleElementPicker,
         }
       )
@@ -117,8 +156,23 @@ class AnimationInspector {
       this.simulatedElement = null;
     }
 
+    if (this.simulatedAnimationForKeyframesProgressBar) {
+      this.simulatedAnimationForKeyframesProgressBar.cancel();
+      this.simulatedAnimationForKeyframesProgressBar = null;
+    }
+
+    this.stopAnimationsCurrentTimeTimer();
+
     this.inspector = null;
     this.win = null;
+  }
+
+  get state() {
+    return this.inspector.store.getState().animations;
+  }
+
+  addAnimationsCurrentTimeListener(listener) {
+    this.animationsCurrentTimeListeners.push(listener);
   }
 
   /**
@@ -160,6 +214,10 @@ class AnimationInspector {
     return animatedPropertyMap;
   }
 
+  getAnimationsCurrentTime() {
+    return this.currentTime;
+  }
+
   /**
    * Return the computed style of the specified property after setting the given styles
    * to the simulated element.
@@ -189,6 +247,110 @@ class AnimationInspector {
     return this.inspector && this.inspector.toolbox && this.inspector.sidebar &&
            this.inspector.toolbox.currentToolId === "inspector" &&
            this.inspector.sidebar.getCurrentTabID() === "newanimationinspector";
+  }
+
+  /**
+   * This method should call when the current time is changed.
+   * Then, dispatches the current time to listeners that are registered
+   * by addAnimationsCurrentTimeListener.
+   *
+   * @param {Number} currentTime
+   */
+  onAnimationsCurrentTimeUpdated(currentTime) {
+    this.currentTime = currentTime;
+
+    for (const listener of this.animationsCurrentTimeListeners) {
+      listener(currentTime);
+    }
+  }
+
+  /**
+   * This method is called when the current time proceed by CurrentTimeTimer.
+   *
+   * @param {Number} currentTime
+   * @param {Bool} shouldStop
+   */
+  onCurrentTimeTimerUpdated(currentTime, shouldStop) {
+    if (shouldStop) {
+      this.setAnimationsCurrentTime(currentTime, true);
+    } else {
+      this.onAnimationsCurrentTimeUpdated(currentTime);
+    }
+  }
+
+  onElementPickerStarted() {
+    this.inspector.store.dispatch(updateElementPickerEnabled(true));
+  }
+
+  onElementPickerStopped() {
+    this.inspector.store.dispatch(updateElementPickerEnabled(false));
+  }
+
+  onSidebarSelect() {
+    this.update();
+    this.onSidebarResized(null, this.inspector.getSidebarSize());
+  }
+
+  onSidebarResized(type, size) {
+    if (!this.isPanelVisible()) {
+      return;
+    }
+
+    this.inspector.store.dispatch(updateSidebarSize(size));
+  }
+
+  removeAnimationsCurrentTimeListener(listener) {
+    this.animationsCurrentTimeListeners =
+      this.animationsCurrentTimeListeners.filter(l => l !== listener);
+  }
+
+  async rewindAnimationsCurrentTime() {
+    await this.setAnimationsCurrentTime(0, true);
+  }
+
+  selectAnimation(animation) {
+    this.inspector.store.dispatch(updateSelectedAnimation(animation));
+  }
+
+  async setAnimationsCurrentTime(currentTime, shouldRefresh) {
+    this.stopAnimationsCurrentTimeTimer();
+    this.onAnimationsCurrentTimeUpdated(currentTime);
+
+    if (!shouldRefresh && this.isCurrentTimeSet) {
+      return;
+    }
+
+    const animations = this.state.animations;
+    this.isCurrentTimeSet = true;
+    await this.animationsFront.setCurrentTimes(animations, currentTime, true);
+    await this.updateAnimations(animations);
+    this.isCurrentTimeSet = false;
+
+    if (shouldRefresh) {
+      this.updateState([...animations]);
+    }
+  }
+
+  async setAnimationsPlaybackRate(playbackRate) {
+    const animations = this.state.animations;
+    await this.animationsFront.setPlaybackRates(animations, playbackRate);
+    await this.updateAnimations(animations);
+    await this.updateState([...animations]);
+  }
+
+  async setAnimationsPlayState(doPlay) {
+    if (doPlay) {
+      await this.animationsFront.playAll();
+    } else {
+      await this.animationsFront.pauseAll();
+    }
+
+    await this.updateAnimations(this.state.animations);
+    await this.updateState([...this.state.animations]);
+  }
+
+  setDetailVisibility(isVisible) {
+    this.inspector.store.dispatch(updateDetailVisibility(isVisible));
   }
 
   /**
@@ -233,6 +395,46 @@ class AnimationInspector {
     return this.simulatedAnimation;
   }
 
+  /**
+   * Returns a simulatable efect timing animation for the keyframes progress bar.
+   * The returned animation is implementing Animation interface of Web Animation API.
+   * https://drafts.csswg.org/web-animations/#the-animation-interface
+   *
+   * @param {Object} effectTiming
+   *        e.g. { duration: 1000, fill: "both" }
+   * @return {Animation}
+   *         https://drafts.csswg.org/web-animations/#the-animation-interface
+   */
+  simulateAnimationForKeyframesProgressBar(effectTiming) {
+    if (!this.simulatedAnimationForKeyframesProgressBar) {
+      this.simulatedAnimationForKeyframesProgressBar = new this.win.Animation();
+    }
+
+    this.simulatedAnimationForKeyframesProgressBar.effect =
+      new this.win.KeyframeEffect(null, null, effectTiming);
+
+    return this.simulatedAnimationForKeyframesProgressBar;
+  }
+
+  stopAnimationsCurrentTimeTimer() {
+    if (this.currentTimeTimer) {
+      this.currentTimeTimer.destroy();
+      this.currentTimeTimer = null;
+    }
+  }
+
+  startAnimationsCurrentTimeTimer() {
+    const timeScale = this.state.timeScale;
+    const shouldStopAfterEndTime =
+      !hasAnimationIterationCountInfinite(this.state.animations);
+
+    const currentTimeTimer =
+      new CurrentTimeTimer(timeScale, shouldStopAfterEndTime,
+                           this.win, this.onCurrentTimeTimerUpdated);
+    currentTimeTimer.start();
+    this.currentTimeTimer = currentTimeTimer;
+  }
+
   toggleElementPicker() {
     this.inspector.toolbox.highlighterUtils.togglePicker();
   }
@@ -246,48 +448,35 @@ class AnimationInspector {
     const done = this.inspector.updating("newanimationinspector");
 
     const selection = this.inspector.selection;
-    const animations =
+    const nextAnimations =
       selection.isConnected() && selection.isElementNode()
       ? await this.animationsFront.getAnimationPlayersForNode(selection.nodeFront)
       : [];
+    const currentAnimations = this.state.animations;
 
-    if (!this.animations || !isAllAnimationEqual(animations, this.animations)) {
-      this.inspector.store.dispatch(updateAnimations(animations));
-      this.animations = animations;
-      // If number of displayed animations is one, we select the animation automatically.
-      this.selectAnimation(animations.length === 1 ? animations[0] : null);
+    if (!currentAnimations || !isAllAnimationEqual(currentAnimations, nextAnimations)) {
+      this.updateState(nextAnimations);
     }
 
     done();
   }
 
-  selectAnimation(animation) {
-    this.inspector.store.dispatch(updateSelectedAnimation(animation));
+  async updateAnimations(animations) {
+    const promises = animations.map(animation => {
+      return animation.refreshState();
+    });
+
+    await Promise.all(promises);
   }
 
-  setDetailVisibility(isVisible) {
-    this.inspector.store.dispatch(updateDetailVisibility(isVisible));
-  }
+  updateState(animations) {
+    this.stopAnimationsCurrentTimeTimer();
 
-  onElementPickerStarted() {
-    this.inspector.store.dispatch(updateElementPickerEnabled(true));
-  }
+    this.inspector.store.dispatch(updateAnimations(animations));
 
-  onElementPickerStopped() {
-    this.inspector.store.dispatch(updateElementPickerEnabled(false));
-  }
-
-  onSidebarSelect() {
-    this.update();
-    this.onSidebarResized(null, this.inspector.getSidebarSize());
-  }
-
-  onSidebarResized(type, size) {
-    if (!this.isPanelVisible()) {
-      return;
+    if (hasRunningAnimation(animations)) {
+      this.startAnimationsCurrentTimeTimer();
     }
-
-    this.inspector.store.dispatch(updateSidebarSize(size));
   }
 }
 

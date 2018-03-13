@@ -35,11 +35,11 @@ class AnimationTimelineTickList extends PureComponent {
   }
 
   componentDidMount() {
-    this.updateTickList();
+    this.updateTickList(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.updateTickList();
+    this.updateTickList(nextProps);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -51,7 +51,7 @@ class AnimationTimelineTickList extends PureComponent {
       const currentTickItem = this.state.tickList[i];
       const nextTickItem = nextState.tickList[i];
 
-      if (currentTickItem.text !== nextTickItem.text) {
+      if (currentTickItem.timeTickLabel !== nextTickItem.timeTickLabel) {
         return true;
       }
     }
@@ -59,8 +59,8 @@ class AnimationTimelineTickList extends PureComponent {
     return false;
   }
 
-  updateTickList() {
-    const { timeScale } = this.props;
+  updateTickList(props) {
+    const { timeScale } = props;
     const tickListEl = ReactDOM.findDOMNode(this);
     const width = tickListEl.offsetWidth;
     const animationDuration = timeScale.getDuration();

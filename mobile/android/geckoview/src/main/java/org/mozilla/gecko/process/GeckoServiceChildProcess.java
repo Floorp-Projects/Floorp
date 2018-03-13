@@ -63,6 +63,7 @@ public class GeckoServiceChildProcess extends Service {
         public boolean start(final IProcessManager procMan,
                              final String[] args,
                              final Bundle extras,
+                             final ParcelFileDescriptor prefsPfd,
                              final ParcelFileDescriptor ipcPfd,
                              final ParcelFileDescriptor crashReporterPfd,
                              final ParcelFileDescriptor crashAnnotationPfd) {
@@ -74,6 +75,7 @@ public class GeckoServiceChildProcess extends Service {
                 sProcessManager = procMan;
             }
 
+            final int prefsFd = prefsPfd.detachFd();
             final int ipcFd = ipcPfd.detachFd();
             final int crashReporterFd = crashReporterPfd != null ?
                                         crashReporterPfd.detachFd() : -1;
@@ -83,7 +85,7 @@ public class GeckoServiceChildProcess extends Service {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (GeckoThread.initChildProcess(args, extras, ipcFd, crashReporterFd,
+                    if (GeckoThread.initChildProcess(args, extras, prefsFd, ipcFd, crashReporterFd,
                                                      crashAnnotationFd)) {
                         GeckoThread.launch();
                     }

@@ -494,8 +494,12 @@ public:
     SwapScaleWidthHeightForRotation(scaleHint, rotationDeg);
     container->SetScaleHint(scaleHint);
 
+    // If the image container is empty, we don't want to fallback. Any other
+    // failure will be due to resource constraints and fallback is unlikely to
+    // help us. Hence we can ignore the return value from PushImage.
     LayoutDeviceRect rect(destGFXRect.x, destGFXRect.y, destGFXRect.width, destGFXRect.height);
-    return aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, rect);
+    aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, rect);
+    return true;
   }
 
   // It would be great if we could override GetOpaqueRegion to return nonempty here,

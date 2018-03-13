@@ -199,13 +199,6 @@ public:
   virtual void BeginLoad() override;
   virtual void EndLoad() override;
 
-  virtual void SetXMLDeclaration(const char16_t *aVersion,
-                                 const char16_t *aEncoding,
-                                 const int32_t aStandalone) override;
-  virtual void GetXMLDeclaration(nsAString& aVersion,
-                                 nsAString& aEncoding,
-                                 nsAString& Standalone) override;
-
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
                             nsIRadioVisitor* aVisitor,
@@ -403,8 +396,6 @@ public:
   // pointing to them.  We track whether we ever reported use counters so
   // that we only report them once for the document.
   bool mReportedUseCounters:1;
-
-  uint8_t mXMLDeclarationBits;
 
   // The application cache that this document is associated with, if
   // any.  This can change during the lifetime of the document.

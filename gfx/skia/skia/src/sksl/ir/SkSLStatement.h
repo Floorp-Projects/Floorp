@@ -25,16 +25,23 @@ struct Statement : public IRNode {
         kDo_Kind,
         kExpression_Kind,
         kFor_Kind,
+        kGroup_Kind,
         kIf_Kind,
+        kNop_Kind,
         kReturn_Kind,
         kSwitch_Kind,
+        kVarDeclaration_Kind,
         kVarDeclarations_Kind,
         kWhile_Kind
     };
 
-    Statement(Position position, Kind kind)
-    : INHERITED(position)
+    Statement(int offset, Kind kind)
+    : INHERITED(offset)
     , fKind(kind) {}
+
+    virtual bool isEmpty() const {
+        return false;
+    }
 
     const Kind fKind;
 

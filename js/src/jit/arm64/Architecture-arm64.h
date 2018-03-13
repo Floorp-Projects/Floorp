@@ -366,10 +366,10 @@ struct FloatRegister
     bool volatile_() const {
         return !!((SetType(1) << code()) & FloatRegisters::VolatileMask);
     }
-    bool operator!=(FloatRegister other) const {
+    constexpr bool operator!=(FloatRegister other) const {
         return other.code_ != code_ || other.k_ != k_;
     }
-    bool operator==(FloatRegister other) const {
+    constexpr bool operator==(FloatRegister other) const {
         return other.code_ == code_ && other.k_ == k_;
     }
     bool aliases(FloatRegister other) const {

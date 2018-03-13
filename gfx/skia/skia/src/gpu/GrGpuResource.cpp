@@ -7,6 +7,7 @@
 
 #include "GrGpuResource.h"
 #include "GrContext.h"
+#include "GrContextPriv.h"
 #include "GrResourceCache.h"
 #include "GrGpu.h"
 #include "GrGpuResourcePriv.h"
@@ -15,8 +16,8 @@
 static inline GrResourceCache* get_resource_cache(GrGpu* gpu) {
     SkASSERT(gpu);
     SkASSERT(gpu->getContext());
-    SkASSERT(gpu->getContext()->getResourceCache());
-    return gpu->getContext()->getResourceCache();
+    SkASSERT(gpu->getContext()->contextPriv().getResourceCache());
+    return gpu->getContext()->contextPriv().getResourceCache();
 }
 
 GrGpuResource::GrGpuResource(GrGpu* gpu)
@@ -41,17 +42,6 @@ void GrGpuResource::registerWithCacheWrapped() {
     // Currently resources referencing wrapped objects are not budgeted.
     fRefsWrappedObjects = true;
     get_resource_cache(fGpu)->resourceAccess().insertResource(this);
-}
-
-void GrGpuResource::detachFromCache() {
-    if (this->wasDestroyed()) {
-        return;
-    }
-    if (fUniqueKey.isValid()) {
-        this->removeUniqueKey();
-    }
-    this->removeScratchKey();
-    this->makeUnbudgeted();
 }
 
 GrGpuResource::~GrGpuResource() {
@@ -134,8 +124,11 @@ void GrGpuResource::setUniqueKey(const GrUniqueKey& key) {
     SkASSERT(this->internalHasRef());
     SkASSERT(key.isValid());
 
-    // Wrapped and uncached resources can never have a unique key.
-    if (SkBudgeted::kNo == this->resourcePriv().isBudgeted()) {
+    // Uncached resources can never have a unique key, unless they're wrapped resources. Wrapped
+    // resources are a special case: the unique keys give us a weak ref so that we can reuse the
+    // same resource (rather than re-wrapping). When a wrapped resource is no longer referenced,
+    // it will always be released - it is never converted to a scratch resource.
+    if (SkBudgeted::kNo == this->resourcePriv().isBudgeted() && !this->fRefsWrappedObjects) {
         return;
     }
 
@@ -169,8 +162,7 @@ bool GrGpuResource::notifyRefCountIsZero() const {
     }
 
     GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
-    uint32_t flags =
-        GrResourceCache::ResourceAccess::kRefCntReachedZero_RefNotificationFlag;
+    uint32_t flags = GrResourceCache::ResourceAccess::kRefCntReachedZero_RefNotificationFlag;
     if (!this->internalHasPendingIO()) {
         flags |= GrResourceCache::ResourceAccess::kAllCntsReachedZero_RefNotificationFlag;
     }

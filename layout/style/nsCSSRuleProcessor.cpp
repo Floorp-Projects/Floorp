@@ -985,7 +985,6 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(sheet_array_type&& aSheets,
                        ? aPreviousCSSRuleProcessor->CloneMQCacheKey()
                        : UniquePtr<nsMediaQueryResultCacheKey>())
   , mLastPresContext(nullptr)
-  , mScopeElement(aScopeElement)
   , mStyleSetRefCnt(0)
   , mSheetType(aSheetType)
   , mIsShared(aIsShared)
@@ -995,9 +994,6 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(sheet_array_type&& aSheets,
   , mDocumentRulesAndCacheKeyValid(false)
 #endif
 {
-  NS_ASSERTION(!!mScopeElement == (aSheetType == SheetType::ScopedDoc),
-               "aScopeElement must be specified iff aSheetType is "
-               "eScopedDocSheet");
   for (sheet_array_type::size_type i = mSheets.Length(); i-- != 0; ) {
     mSheets[i]->AddRuleProcessor(this);
   }
@@ -1025,12 +1021,10 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSRuleProcessor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSRuleProcessor)
   tmp->ClearSheets();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mScopeElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSRuleProcessor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSheets)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScopeElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 void
@@ -1757,18 +1751,7 @@ static bool SelectorMatches(Element* aElement,
       break;
 
     case CSSPseudoClassType::scope:
-      if (aTreeMatchContext.mForScopedStyle) {
-        if (aTreeMatchContext.mCurrentStyleScope) {
-          // If mCurrentStyleScope is null, aElement must be the style
-          // scope root.  This is because the PopStyleScopeForSelectorMatching
-          // call in SelectorMatchesTree sets mCurrentStyleScope to null
-          // as soon as we visit the style scope element, and we won't
-          // progress further up the tree after this call to
-          // SelectorMatches.  Thus if mCurrentStyleScope is still set,
-          // we know the selector does not match.
-          return false;
-        }
-      } else if (aTreeMatchContext.HasSpecifiedScope()) {
+      if (aTreeMatchContext.HasSpecifiedScope()) {
         if (!aTreeMatchContext.IsScopeElement(aElement)) {
           return false;
         }
@@ -2001,14 +1984,6 @@ SelectorMatchesTree(Element* aPrevElement,
                  selector->mNext->mOperator != char16_t(0),
                  "compound selector without combinator");
 
-    // If after the previous selector match we are now outside the
-    // current style scope, we don't need to match any further.
-    if (aTreeMatchContext.mForScopedStyle &&
-        !aTreeMatchContext.IsWithinStyleScopeForSelectorMatching()) {
-      ASSERT_XBL_CHILDREN_HACK();
-      return false;
-    }
-
     // for adjacent sibling combinators, the content to test against the
     // selector is the previous sibling *element*
     Element* element = nullptr;
@@ -2038,20 +2013,12 @@ SelectorMatchesTree(Element* aPrevElement,
       // element parents.
       if (content && content->IsElement()) {
         element = content->AsElement();
-        if (aTreeMatchContext.mForScopedStyle) {
-          // We are moving up to the parent element; tell the
-          // TreeMatchContext, so that in case this element is the
-          // style scope element, selector matching stops before we
-          // traverse further up the tree.
-          aTreeMatchContext.PopStyleScopeForSelectorMatching(element);
-        }
 
         // Compatibility hack: First try matching this selector as though the
         // <xbl:children> element wasn't in the tree to allow old selectors
         // were written before <xbl:children> participated in CSS selector
         // matching to work.
         if (selector->mOperator == '>' && element->IsActiveChildrenElement()) {
-          Element* styleScope = aTreeMatchContext.mCurrentStyleScope;
           xblChildrenMatched |=
             SelectorMatchesTree(element, selector, aTreeMatchContext, aFlags);
 
@@ -2062,12 +2029,6 @@ SelectorMatchesTree(Element* aPrevElement,
             return true;
           }
 #endif
-
-          // We want to reset mCurrentStyleScope on aTreeMatchContext
-          // back to its state before the SelectorMatchesTree call, in
-          // case that call happens to traverse past the style scope element
-          // and sets it to null.
-          aTreeMatchContext.mCurrentStyleScope = styleScope;
         }
       }
     }
@@ -2123,15 +2084,9 @@ SelectorMatchesTree(Element* aPrevElement,
         // it tests from the top of the content tree, down.  This
         // doesn't matter much for performance since most selectors
         // don't match.  (If most did, it might be faster...)
-        Element* styleScope = aTreeMatchContext.mCurrentStyleScope;
         if (SelectorMatchesTree(element, selector, aTreeMatchContext, aFlags)) {
           return true;
         }
-        // We want to reset mCurrentStyleScope on aTreeMatchContext
-        // back to its state before the SelectorMatchesTree call, in
-        // case that call happens to traverse past the style scope element
-        // and sets it to null.
-        aTreeMatchContext.mCurrentStyleScope = styleScope;
       }
       selector = selector->mNext;
     }
@@ -2162,12 +2117,6 @@ void ContentEnumFunc(const RuleValue& value, nsCSSSelector* aSelector,
       !ancestorFilter->MightHaveMatchingAncestor<RuleValue::eMaxAncestorHashes>(
           value.mAncestorSelectorHashes)) {
     // We won't match; nothing else to do here
-    return;
-  }
-  if (!data->mTreeMatchContext.SetStyleScopeForSelectorMatching(data->mElement,
-                                                                data->mScope)) {
-    // The selector is for a rule in a scoped style sheet, and the subject
-    // of the selector matching is not in its scope.
     return;
   }
   nsCSSSelector* selector = aSelector;
@@ -2324,10 +2273,6 @@ nsCSSRuleProcessor::HasStateDependentStyle(ElementDependentRuleProcessorData* aD
                                            CSSPseudoElementType aPseudoType,
                                            EventStates aStateMask)
 {
-  MOZ_ASSERT(!aData->mTreeMatchContext.mForScopedStyle,
-             "mCurrentStyleScope will need to be saved and restored after the "
-             "SelectorMatchesTree call");
-
   bool isPseudoElement =
     aPseudoType != CSSPseudoElementType::NotPseudo;
 
@@ -2512,13 +2457,6 @@ AttributeEnumFunc(nsCSSSelector* aSelector,
                   AttributeEnumData* aData)
 {
   AttributeRuleProcessorData *data = aData->data;
-
-  if (!data->mTreeMatchContext.SetStyleScopeForSelectorMatching(data->mElement,
-                                                                data->mScope)) {
-    // The selector is for a rule in a scoped style sheet, and the subject
-    // of the selector matching is not in its scope.
-    return;
-  }
 
   nsRestyleHint possibleChange =
     RestyleHintForSelectorWithAttributeChange(aData->change,
@@ -3579,10 +3517,6 @@ nsCSSRuleProcessor::SelectorListMatches(Element* aElement,
                                         TreeMatchContext& aTreeMatchContext,
                                         nsCSSSelectorList* aSelectorList)
 {
-  MOZ_ASSERT(!aTreeMatchContext.mForScopedStyle,
-             "mCurrentStyleScope will need to be saved and restored after the "
-             "SelectorMatchesTree call");
-
   while (aSelectorList) {
     nsCSSSelector* sel = aSelectorList->mSelectors;
     NS_ASSERTION(sel, "Should have *some* selectors");
@@ -3649,7 +3583,6 @@ TreeMatchContext::InitAncestors(Element *aElement)
 {
   MOZ_ASSERT(!mAncestorFilter.mFilter);
   MOZ_ASSERT(mAncestorFilter.mHashes.IsEmpty());
-  MOZ_ASSERT(mStyleScopes.IsEmpty());
 
   mAncestorFilter.mFilter = new AncestorFilter::Filter();
 
@@ -3670,28 +3603,6 @@ TreeMatchContext::InitAncestors(Element *aElement)
     // Now push them in reverse order.
     for (uint32_t i = ancestors.Length(); i-- != 0; ) {
       mAncestorFilter.PushAncestor(ancestors[i]);
-      PushStyleScope(ancestors[i]);
-    }
-  }
-}
-
-void
-TreeMatchContext::InitStyleScopes(Element* aElement)
-{
-  MOZ_ASSERT(mStyleScopes.IsEmpty());
-
-  if (MOZ_LIKELY(aElement)) {
-    // Collect up the ancestors
-    AutoTArray<Element*, 50> ancestors;
-    Element* cur = aElement;
-    do {
-      ancestors.AppendElement(cur);
-      cur = cur->GetParentElementCrossingShadowRoot();
-    } while (cur);
-
-    // Now push them in reverse order.
-    for (uint32_t i = ancestors.Length(); i-- != 0; ) {
-      PushStyleScope(ancestors[i]);
     }
   }
 }
@@ -3754,23 +3665,6 @@ AncestorFilter::AssertHasAllAncestors(Element *aElement) const
   Element* cur = aElement->GetParentElementCrossingShadowRoot();
   while (cur) {
     MOZ_ASSERT(mElements.Contains(cur));
-    cur = cur->GetParentElementCrossingShadowRoot();
-  }
-}
-
-void
-TreeMatchContext::AssertHasAllStyleScopes(Element* aElement) const
-{
-  if (aElement->IsInNativeAnonymousSubtree()) {
-    // Document style sheets are never applied to native anonymous content,
-    // so it's not possible for them to be in a <style scoped> scope.
-    return;
-  }
-  Element* cur = aElement->GetParentElementCrossingShadowRoot();
-  while (cur) {
-    if (cur->IsScopedStyleRoot()) {
-      MOZ_ASSERT(mStyleScopes.Contains(cur));
-    }
     cur = cur->GetParentElementCrossingShadowRoot();
   }
 }

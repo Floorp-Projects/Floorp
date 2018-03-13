@@ -116,6 +116,8 @@ StreamFilterParent::StreamFilterParent()
 
 StreamFilterParent::~StreamFilterParent()
 {
+  NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mChannel",
+                                    mChannel.forget());
   NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mOrigListener",
                                     mOrigListener.forget());
   NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mContext",
@@ -370,7 +372,6 @@ StreamFilterParent::RecvWrite(Data&& aData)
 {
   AssertIsActorThread();
 
-
   RunOnIOThread(
     NewRunnableMethod<Data&&>("StreamFilterParent::WriteMove",
                               this,
@@ -428,16 +429,6 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     });
   }
 
-  if (!mDisconnected) {
-    RefPtr<StreamFilterParent> self(this);
-    RunOnActorThread(FUNC, [=] {
-      if (self->IPCActive()) {
-        self->mState = State::TransferringData;
-        self->CheckResult(self->SendStartRequest());
-      }
-    });
-  }
-
   nsresult rv = mOrigListener->OnStartRequest(aRequest, aContext);
 
   // Important: Do this only *after* running the next listener in the chain, so
@@ -448,6 +439,20 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     if (thread) {
       mIOThread = Move(thread);
     }
+  }
+
+  // Important: Do this *after* we have set the thread delivery target, or it is
+  // possible in rare circumstances for an extension to attempt to write data
+  // before the thread has been set up, even though there are several layers of
+  // asynchrony involved.
+  if (!mDisconnected) {
+    RefPtr<StreamFilterParent> self(this);
+    RunOnActorThread(FUNC, [=] {
+      if (self->IPCActive()) {
+        self->mState = State::TransferringData;
+        self->CheckResult(self->SendStartRequest());
+      }
+    });
   }
 
   return rv;

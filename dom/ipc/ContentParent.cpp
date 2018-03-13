@@ -7,6 +7,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "base/basictypes.h"
+#include "base/shared_memory.h"
 
 #include "ContentParent.h"
 #include "TabParent.h"
@@ -1998,61 +1999,56 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   extraArgs.push_back(idStr);
   extraArgs.push_back(IsForBrowser() ? "-isForBrowser" : "-notForBrowser");
 
-  nsAutoCStringN<1024> boolPrefs;
-  nsAutoCStringN<1024> intPrefs;
-  nsAutoCStringN<1024> stringPrefs;
+  // Prefs information is passed via anonymous shared memory to avoid bloating
+  // the command line.
 
-  size_t prefsLen;
-  ContentPrefs::GetEarlyPrefs(&prefsLen);
+  // Serialize the early prefs.
+  nsAutoCStringN<1024> prefs;
+  Preferences::SerializeEarlyPreferences(prefs);
 
-  for (unsigned int i = 0; i < prefsLen; i++) {
-    const char* prefName = ContentPrefs::GetEarlyPref(i);
-    MOZ_ASSERT(i == 0 || strcmp(prefName, ContentPrefs::GetEarlyPref(i - 1)) > 0,
-               "Content process preferences should be sorted alphabetically.");
-
-    if (!Preferences::MustSendToContentProcesses(prefName)) {
-      continue;
-    }
-
-    switch (Preferences::GetType(prefName)) {
-    case nsIPrefBranch::PREF_INT:
-      intPrefs.Append(nsPrintfCString("%u:%d|", i, Preferences::GetInt(prefName)));
-      break;
-    case nsIPrefBranch::PREF_BOOL:
-      boolPrefs.Append(nsPrintfCString("%u:%d|", i, Preferences::GetBool(prefName)));
-      break;
-    case nsIPrefBranch::PREF_STRING: {
-      nsAutoCString value;
-      Preferences::GetCString(prefName, value);
-      stringPrefs.Append(nsPrintfCString("%u:%d;%s|", i, value.Length(), value.get()));
-      }
-      break;
-    case nsIPrefBranch::PREF_INVALID:
-      break;
-    default:
-      printf("preference type: %x\n", Preferences::GetType(prefName));
-      MOZ_CRASH();
-    }
+  // Set up the shared memory.
+  base::SharedMemory shm;
+  if (!shm.Create("", /* read_only */ false, /* open_existing */ false,
+                  prefs.Length())) {
+    NS_ERROR("failed to create shared memory in the parent");
+    MarkAsDead();
+    return false;
+  }
+  if (!shm.Map(prefs.Length())) {
+    NS_ERROR("failed to map shared memory in the parent");
+    MarkAsDead();
+    return false;
   }
 
-  nsCString schedulerPrefs = Scheduler::GetPrefs();
+  // Copy the serialized prefs into the shared memory.
+  memcpy(static_cast<char*>(shm.memory()), prefs.get(), prefs.Length());
 
-  // Only do these ones if they're non-empty.
-  if (!intPrefs.IsEmpty()) {
-    extraArgs.push_back("-intPrefs");
-    extraArgs.push_back(intPrefs.get());
-  }
-  if (!boolPrefs.IsEmpty()) {
-    extraArgs.push_back("-boolPrefs");
-    extraArgs.push_back(boolPrefs.get());
-  }
-  if (!stringPrefs.IsEmpty()) {
-    extraArgs.push_back("-stringPrefs");
-    extraArgs.push_back(stringPrefs.get());
-  }
+#if defined(XP_WIN)
+  // Record the handle as to-be-shared, and pass it via a command flag. This
+  // works because Windows handles are system-wide.
+  HANDLE prefsHandle = shm.handle();
+  mSubprocess->AddHandleToShare(prefsHandle);
+  extraArgs.push_back("-prefsHandle");
+  extraArgs.push_back(
+    nsPrintfCString("%zu", reinterpret_cast<uintptr_t>(prefsHandle)).get());
+#else
+  // In contrast, Unix fds are per-process. So remap the fd to a fixed one that
+  // will be used in the child.
+  // XXX: bug 1440207 is about improving how fixed fds are used.
+  //
+  // Note: on Android, AddFdToRemap() sets up the fd to be passed via a Parcel,
+  // and the fixed fd isn't used. However, we still need to mark it for
+  // remapping so it doesn't get closed in the child.
+  mSubprocess->AddFdToRemap(shm.handle().fd, kPrefsFileDescriptor);
+#endif
+
+  // Pass the length via a command flag.
+  extraArgs.push_back("-prefsLen");
+  extraArgs.push_back(nsPrintfCString("%zu", uintptr_t(prefs.Length())).get());
 
   // Scheduler prefs need to be handled differently because the scheduler needs
   // to start up in the content process before the normal preferences service.
+  nsCString schedulerPrefs = Scheduler::GetPrefs();
   extraArgs.push_back("-schedulerPrefs");
   extraArgs.push_back(schedulerPrefs.get());
 
@@ -2061,6 +2057,7 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   }
 
   if (!mSubprocess->LaunchAndWaitForProcessHandle(extraArgs)) {
+    NS_ERROR("failed to launch child in the parent");
     MarkAsDead();
     return false;
   }
@@ -3895,11 +3892,12 @@ ContentParent::RecvScriptError(const nsString& aMessage,
                                const uint32_t& aLineNumber,
                                const uint32_t& aColNumber,
                                const uint32_t& aFlags,
-                               const nsCString& aCategory)
+                               const nsCString& aCategory,
+                               const bool& aFromPrivateWindow)
 {
   return RecvScriptErrorInternal(aMessage, aSourceName, aSourceLine,
                                  aLineNumber, aColNumber, aFlags,
-                                 aCategory);
+                                 aCategory, aFromPrivateWindow);
 }
 
 mozilla::ipc::IPCResult
@@ -3910,11 +3908,12 @@ ContentParent::RecvScriptErrorWithStack(const nsString& aMessage,
                                         const uint32_t& aColNumber,
                                         const uint32_t& aFlags,
                                         const nsCString& aCategory,
+                                        const bool& aFromPrivateWindow,
                                         const ClonedMessageData& aFrame)
 {
   return RecvScriptErrorInternal(aMessage, aSourceName, aSourceLine,
                                  aLineNumber, aColNumber, aFlags,
-                                 aCategory, &aFrame);
+                                 aCategory, aFromPrivateWindow, &aFrame);
 }
 
 mozilla::ipc::IPCResult
@@ -3925,6 +3924,7 @@ ContentParent::RecvScriptErrorInternal(const nsString& aMessage,
                                        const uint32_t& aColNumber,
                                        const uint32_t& aFlags,
                                        const nsCString& aCategory,
+                                       const bool& aFromPrivateWindow,
                                        const ClonedMessageData* aStack)
 {
   RefPtr<nsConsoleService> consoleService = GetConsoleService();
@@ -3958,9 +3958,9 @@ ContentParent::RecvScriptErrorInternal(const nsString& aMessage,
     msg = new nsScriptError();
   }
 
-  nsresult rv = msg->InitWithWindowID(aMessage, aSourceName, aSourceLine,
-                                      aLineNumber, aColNumber, aFlags,
-                                      aCategory, 0);
+  nsresult rv = msg->Init(aMessage, aSourceName, aSourceLine,
+                          aLineNumber, aColNumber, aFlags,
+                          aCategory.get(), aFromPrivateWindow);
   if (NS_FAILED(rv))
     return IPC_OK();
 

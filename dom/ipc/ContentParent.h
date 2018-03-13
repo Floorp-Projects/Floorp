@@ -1056,7 +1056,8 @@ private:
                                                   const uint32_t& aLineNumber,
                                                   const uint32_t& aColNumber,
                                                   const uint32_t& aFlags,
-                                                  const nsCString& aCategory) override;
+                                                  const nsCString& aCategory,
+                                                  const bool& aIsFromPrivateWindow) override;
 
   virtual mozilla::ipc::IPCResult RecvScriptErrorWithStack(const nsString& aMessage,
                                                            const nsString& aSourceName,
@@ -1065,6 +1066,7 @@ private:
                                                            const uint32_t& aColNumber,
                                                            const uint32_t& aFlags,
                                                            const nsCString& aCategory,
+                                                           const bool& aIsFromPrivateWindow,
                                                            const ClonedMessageData& aStack) override;
 
 private:
@@ -1075,6 +1077,7 @@ private:
                                                   const uint32_t& aColNumber,
                                                   const uint32_t& aFlags,
                                                   const nsCString& aCategory,
+                                                  const bool& aIsFromPrivateWindow,
                                                   const ClonedMessageData* aStack = nullptr);
 
 public:

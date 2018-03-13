@@ -62,6 +62,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FramingChecker.h"
+#include "mozilla/dom/HTMLSharedElement.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/ProcessingInstruction.h"
@@ -1500,8 +1501,8 @@ nsIDocument::nsIDocument()
     mDelayFrameLoaderInitialization(false),
     mSynchronousDOMContentLoaded(false),
     mMaybeServiceWorkerControlled(false),
-    mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mPendingFullscreenRequests(0),
+    mXMLDeclarationBits(0),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
     mStyleBackendType(StyleBackendType::None),
@@ -1557,7 +1558,6 @@ nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
   , mParserAborted(false)
   , mReportedUseCounters(false)
-  , mXMLDeclarationBits(0)
   , mOnloadBlockCount(0)
   , mAsyncOnloadBlockCount(0)
   , mValidWidth(false)
@@ -1973,6 +1973,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingAnimationTracker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildrenCollection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImages);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEmbeds);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLinks);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mForms);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScripts);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplets);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchors);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnonymousContents)
 
   // Traverse all our nsCOMArrays.
@@ -2063,6 +2070,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingAnimationTracker)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildrenCollection)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mImages);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEmbeds);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLinks);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mForms);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mScripts);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplets);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchors);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOrientationPendingPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle);
@@ -6316,6 +6330,12 @@ nsIDocument::SetBody(nsGenericHTMLElement* newBody, ErrorResult& rv)
   }
 }
 
+HTMLSharedElement*
+nsIDocument::GetHead()
+{
+  return static_cast<HTMLSharedElement*>(GetHeadElement());
+}
+
 Element*
 nsIDocument::GetTitleElement()
 {
@@ -6798,6 +6818,87 @@ nsIDocument::SetDir(const nsAString& aDirection)
     rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
                          aDirection, true);
   }
+}
+
+nsIHTMLCollection*
+nsIDocument::Images()
+{
+  if (!mImages) {
+    mImages = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::img, nsGkAtoms::img);
+  }
+  return mImages;
+}
+
+nsIHTMLCollection*
+nsIDocument::Embeds()
+{
+  if (!mEmbeds) {
+    mEmbeds = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::embed, nsGkAtoms::embed);
+  }
+  return mEmbeds;
+}
+
+static bool
+MatchLinks(Element* aElement, int32_t aNamespaceID,
+           nsAtom* aAtom, void* aData)
+{
+  return aElement->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area) &&
+         aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
+}
+
+nsIHTMLCollection*
+nsIDocument::Links()
+{
+  if (!mLinks) {
+    mLinks = new nsContentList(this, MatchLinks, nullptr, nullptr);
+  }
+  return mLinks;
+}
+
+nsIHTMLCollection*
+nsIDocument::Forms()
+{
+  if (!mForms) {
+    // Please keep this in sync with nsHTMLDocument::GetFormsAndFormControls.
+    mForms = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::form, nsGkAtoms::form);
+  }
+
+  return mForms;
+}
+
+nsIHTMLCollection*
+nsIDocument::Scripts()
+{
+  if (!mScripts) {
+    mScripts = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::script, nsGkAtoms::script);
+  }
+  return mScripts;
+}
+
+nsIHTMLCollection*
+nsIDocument::Applets()
+{
+  if (!mApplets) {
+    mApplets = new nsEmptyContentList(this);
+  }
+  return mApplets;
+}
+
+static bool
+MatchAnchors(Element* aElement, int32_t aNamespaceID,
+             nsAtom* aAtom, void* aData)
+{
+  return aElement->IsHTMLElement(nsGkAtoms::a) &&
+         aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::name);
+}
+
+nsIHTMLCollection*
+nsIDocument::Anchors()
+{
+  if (!mAnchors) {
+    mAnchors = new nsContentList(this, MatchAnchors, nullptr, nullptr);
+  }
+  return mAnchors;
 }
 
 /* static */
@@ -7626,9 +7727,9 @@ nsIDocument::FlushExternalResources(FlushType aType)
 }
 
 void
-nsDocument::SetXMLDeclaration(const char16_t *aVersion,
-                              const char16_t *aEncoding,
-                              const int32_t aStandalone)
+nsIDocument::SetXMLDeclaration(const char16_t* aVersion,
+                               const char16_t* aEncoding,
+                               const int32_t aStandalone)
 {
   if (!aVersion || *aVersion == '\0') {
     mXMLDeclarationBits = 0;
@@ -7651,8 +7752,9 @@ nsDocument::SetXMLDeclaration(const char16_t *aVersion,
 }
 
 void
-nsDocument::GetXMLDeclaration(nsAString& aVersion, nsAString& aEncoding,
-                              nsAString& aStandalone)
+nsIDocument::GetXMLDeclaration(nsAString& aVersion,
+                               nsAString& aEncoding,
+                               nsAString& aStandalone)
 {
   aVersion.Truncate();
   aEncoding.Truncate();
@@ -13236,18 +13338,6 @@ nsIDocument::IsThirdParty()
   // Fall-through. Document is not a Third-Party Document.
   mIsThirdParty.emplace(false);
   return mIsThirdParty.value();
-}
-
-bool
-nsIDocument::IsScopedStyleEnabled()
-{
-  if (mIsScopedStyleEnabled == eScopedStyle_Unknown) {
-    mIsScopedStyleEnabled = nsContentUtils::IsChromeDoc(this) ||
-                            nsContentUtils::IsScopedStylePrefEnabled()
-                              ? eScopedStyle_Enabled
-                              : eScopedStyle_Disabled;
-  }
-  return mIsScopedStyleEnabled == eScopedStyle_Enabled;
 }
 
 void

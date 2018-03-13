@@ -207,12 +207,13 @@ protected:
   virtual ~HTMLLinkElement();
 
   // nsStyleLinkElement
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) override;
-  virtual void GetStyleSheetInfo(nsAString& aTitle,
-                                 nsAString& aType,
-                                 nsAString& aMedia,
-                                 bool* aIsScoped,
-                                 bool* aIsAlternate) override;
+  already_AddRefed<nsIURI>
+    GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) final;
+
+  void GetStyleSheetInfo(nsAString& aTitle,
+                         nsAString& aType,
+                         nsAString& aMedia,
+                         bool* aIsAlternate) final;
 protected:
   RefPtr<nsDOMTokenList> mRelList;
 };

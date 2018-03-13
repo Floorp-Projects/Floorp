@@ -23,6 +23,19 @@ public:
         SkDEBUGCODE(fOwner = SkGetThreadID();)
     }
 
+    bool try_acquire() {
+#ifdef SK_DEBUG
+        if (fSemaphore.try_wait()) {
+            fOwner = SkGetThreadID();
+            return true;
+        } else {
+            return false;
+        }
+#else
+        return fSemaphore.try_wait();
+#endif
+    }
+
     void release() {
         this->assertHeld();
         SkDEBUGCODE(fOwner = kIllegalThreadID;)

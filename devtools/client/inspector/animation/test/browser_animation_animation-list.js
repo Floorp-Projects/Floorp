@@ -14,7 +14,7 @@ add_task(async function() {
   ok(panel.querySelector(".animation-list"),
      "The animation-list is in the DOM");
   is(panel.querySelectorAll(".animation-list .animation-item").length,
-     animationInspector.animations.length,
+     animationInspector.state.animations.length,
      "The number of animations displayed matches the number of animations");
 
   info("Checking the background color for the animation list items");

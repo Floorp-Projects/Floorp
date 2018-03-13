@@ -8,7 +8,9 @@
 #ifndef SkPaintPriv_DEFINED
 #define SkPaintPriv_DEFINED
 
+#include "SkImageInfo.h"
 #include "SkPaint.h"
+#include "SkMatrix.h"
 
 class SkBitmap;
 class SkImage;
@@ -46,6 +48,25 @@ public:
     static bool Overwrites(const SkImage*, const SkPaint* paint);
 
     static void ScaleFontMetrics(SkPaint::FontMetrics*, SkScalar);
+
+    /**
+     *  Return a matrix that applies the paint's text values: size, scale, skew
+     */
+    static void MakeTextMatrix(SkMatrix* matrix, SkScalar size, SkScalar scaleX, SkScalar skewX) {
+        matrix->setScale(size * scaleX, size);
+        if (skewX) {
+            matrix->postSkew(skewX, 0);
+        }
+    }
+
+    static void MakeTextMatrix(SkMatrix* matrix, const SkPaint& paint) {
+        MakeTextMatrix(matrix, paint.getTextSize(), paint.getTextScaleX(), paint.getTextSkewX());
+    }
+
+    static bool ShouldDither(const SkPaint&, SkColorType);
+
+    // returns 0 if buffer is invalid for specified encoding
+    static int ValidCountText(const void* text, size_t length, SkPaint::TextEncoding);
 };
 
 #endif

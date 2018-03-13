@@ -148,6 +148,7 @@ nsSimpleContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsEmptyContentList, nsBaseContentList, mRoot)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEmptyContentList)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLCollection)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 
 
@@ -157,7 +158,7 @@ NS_IMPL_RELEASE_INHERITED(nsEmptyContentList, nsBaseContentList)
 JSObject*
 nsEmptyContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return NodeListBinding::Wrap(cx, this, aGivenProto);
+  return HTMLCollectionBinding::Wrap(cx, this, aGivenProto);
 }
 
 NS_IMETHODIMP
