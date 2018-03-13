@@ -577,7 +577,6 @@ class MDefinition : public MNode
     Opcode op() const { return op_; }
 
     virtual const char* opName() const = 0;
-    virtual void accept(MDefinitionVisitor* visitor) = 0;
 
     void printName(GenericPrinter& out) const;
     static void PrintOpcodeName(GenericPrinter& out, Opcode op);
@@ -1211,9 +1210,6 @@ class MInstruction
     using MThisOpcode = M##opcode;                                          \
     const char* opName() const override {                                   \
         return #opcode;                                                     \
-    }                                                                       \
-    void accept(MDefinitionVisitor* visitor) override {                     \
-        visitor->visit##opcode(this);                                       \
     }
 
 #define INSTRUCTION_HEADER(opcode)                                          \
