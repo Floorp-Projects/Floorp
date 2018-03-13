@@ -377,7 +377,7 @@ PluginWrapper.prototype = {
 
   get blocklistState() {
     let { tags: [tag] } = pluginFor(this);
-    return Services.blocklist.getPluginBlocklistState(tag);
+    return tag.blocklistState;
   },
 
   get blocklistURL() {

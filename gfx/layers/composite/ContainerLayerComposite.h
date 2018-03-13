@@ -16,6 +16,7 @@
 namespace mozilla {
 namespace layers {
 
+class APZSampler;
 class CompositableHost;
 class CompositingRenderTarget;
 struct PreparedData;
@@ -54,7 +55,9 @@ class ContainerLayerComposite : public ContainerLayer,
                         const RenderTargetIntRect& aClipRect);
 
   template<class ContainerT>
-  void RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
+  void RenderMinimap(ContainerT* aContainer,
+                     const RefPtr<APZSampler>& aSampler,
+                     LayerManagerComposite* aManager,
                      const RenderTargetIntRect& aClipRect, Layer* aLayer);
 public:
   explicit ContainerLayerComposite(LayerManagerComposite *aManager);
