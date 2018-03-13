@@ -72,43 +72,43 @@ const VALUES_TEST_DATA = [{
 
 add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = yield openLayoutView();
+  let {inspector, view} = yield openBoxModelView();
 
   info("Checking the regions tooltips");
 
-  ok(boxmodel.document.querySelector(".boxmodel-margins").hasAttribute("title"),
+  ok(view.document.querySelector(".boxmodel-margins").hasAttribute("title"),
     "The margin region has a tooltip");
-  is(boxmodel.document.querySelector(".boxmodel-margins").getAttribute("title"), "margin",
+  is(view.document.querySelector(".boxmodel-margins").getAttribute("title"), "margin",
     "The margin region has the correct tooltip content");
 
-  ok(boxmodel.document.querySelector(".boxmodel-borders").hasAttribute("title"),
+  ok(view.document.querySelector(".boxmodel-borders").hasAttribute("title"),
     "The border region has a tooltip");
-  is(boxmodel.document.querySelector(".boxmodel-borders").getAttribute("title"), "border",
+  is(view.document.querySelector(".boxmodel-borders").getAttribute("title"), "border",
     "The border region has the correct tooltip content");
 
-  ok(boxmodel.document.querySelector(".boxmodel-paddings").hasAttribute("title"),
+  ok(view.document.querySelector(".boxmodel-paddings").hasAttribute("title"),
     "The padding region has a tooltip");
-  is(boxmodel.document.querySelector(".boxmodel-paddings").getAttribute("title"),
-    "padding", "The padding region has the correct tooltip content");
+  is(view.document.querySelector(".boxmodel-paddings").getAttribute("title"), "padding",
+    "The padding region has the correct tooltip content");
 
-  ok(boxmodel.document.querySelector(".boxmodel-content").hasAttribute("title"),
+  ok(view.document.querySelector(".boxmodel-content").hasAttribute("title"),
     "The content region has a tooltip");
-  is(boxmodel.document.querySelector(".boxmodel-content").getAttribute("title"),
-    "content", "The content region has the correct tooltip content");
+  is(view.document.querySelector(".boxmodel-content").getAttribute("title"), "content",
+    "The content region has the correct tooltip content");
 
   for (let {selector, values} of VALUES_TEST_DATA) {
     info("Selecting " + selector + " and checking the values tooltips");
     yield selectNode(selector, inspector);
 
     info("Iterate over all values");
-    for (let key in boxmodel.map) {
+    for (let key in view.map) {
       if (key === "position") {
         continue;
       }
 
-      let name = boxmodel.map[key].property;
+      let name = view.map[key].property;
       let expectedTooltipData = values.find(o => o.name === name);
-      let el = boxmodel.document.querySelector(boxmodel.map[key].selector);
+      let el = view.document.querySelector(view.map[key].selector);
 
       ok(el.hasAttribute("title"), "The " + name + " value has a tooltip");
 

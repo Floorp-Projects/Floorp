@@ -64,10 +64,10 @@ add_task(function* () {
   yield onRuleViewChanged;
   yield checkTextBox(inspector.panelDoc.activeElement, toolbox);
 
-  info("Switching to the layout-view");
-  let onBoxModelUpdated = inspector.once("boxmodel-view-updated");
-  selectLayoutView(inspector);
-  yield onBoxModelUpdated;
+  info("Switching to the computed-view");
+  let onComputedViewReady = inspector.once("boxmodel-view-updated");
+  selectComputedView(inspector);
+  yield onComputedViewReady;
 
   info("Testing the box-model region");
   let margin = inspector.panelDoc.querySelector(

@@ -19,7 +19,7 @@ var highlightedNodeFront, highlighterOptions;
 
 add_task(async function () {
   await addTab(TEST_URL);
-  let {toolbox, inspector, boxmodel} = await openLayoutView();
+  let {toolbox, inspector, view} = await openBoxModelView();
   await selectNode("div", inspector);
 
   // Mock the highlighter by replacing the showBoxModel method.
@@ -28,17 +28,17 @@ add_task(async function () {
     highlighterOptions = options;
   };
 
-  let elt = boxmodel.document.querySelector(".boxmodel-margins");
-  await testGuideOnLayoutHover(elt, "margin", inspector);
+  let elt = view.document.querySelector(".boxmodel-margins");
+  await testGuideOnLayoutHover(elt, "margin", inspector, view);
 
-  elt = boxmodel.document.querySelector(".boxmodel-borders");
-  await testGuideOnLayoutHover(elt, "border", inspector);
+  elt = view.document.querySelector(".boxmodel-borders");
+  await testGuideOnLayoutHover(elt, "border", inspector, view);
 
-  elt = boxmodel.document.querySelector(".boxmodel-paddings");
-  await testGuideOnLayoutHover(elt, "padding", inspector);
+  elt = view.document.querySelector(".boxmodel-paddings");
+  await testGuideOnLayoutHover(elt, "padding", inspector, view);
 
-  elt = boxmodel.document.querySelector(".boxmodel-content");
-  await testGuideOnLayoutHover(elt, "content", inspector);
+  elt = view.document.querySelector(".boxmodel-content");
+  await testGuideOnLayoutHover(elt, "content", inspector, view);
 });
 
 async function testGuideOnLayoutHover(elt, expectedRegion, inspector) {

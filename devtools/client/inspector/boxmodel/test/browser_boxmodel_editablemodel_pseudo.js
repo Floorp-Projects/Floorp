@@ -22,25 +22,24 @@ const TEST_URI =
 
 add_task(function* () {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openBoxModelView();
 
   yield selectNode(".test", inspector);
 
   // No margin-top defined.
   info("Test that margins are not impacted by a pseudo element");
   is((yield getStyle(testActor, ".test", "margin-top")), "", "margin-top is correct");
-  yield checkValueInBoxModel(".boxmodel-margin.boxmodel-top", "0", boxmodel.document);
+  yield checkValueInBoxModel(".boxmodel-margin.boxmodel-top", "0", view.document);
 
   // No padding-top defined.
   info("Test that paddings are not impacted by a pseudo element");
   is((yield getStyle(testActor, ".test", "padding-top")), "", "padding-top is correct");
-  yield checkValueInBoxModel(".boxmodel-padding.boxmodel-top", "0", boxmodel.document);
+  yield checkValueInBoxModel(".boxmodel-padding.boxmodel-top", "0", view.document);
 
   // Width should be driven by the parent div.
   info("Test that dimensions are not impacted by a pseudo element");
   is((yield getStyle(testActor, ".test", "width")), "", "width is correct");
-  yield checkValueInBoxModel(".boxmodel-content.boxmodel-width", "200",
-    boxmodel.document);
+  yield checkValueInBoxModel(".boxmodel-content.boxmodel-width", "200", view.document);
 });
 
 function* checkValueInBoxModel(selector, expectedValue, doc) {
