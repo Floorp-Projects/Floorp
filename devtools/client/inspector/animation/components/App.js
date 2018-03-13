@@ -11,6 +11,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const AnimationDetailContainer = createFactory(require("./AnimationDetailContainer"));
 const AnimationListContainer = createFactory(require("./AnimationListContainer"));
+const AnimationToolbar = createFactory(require("./AnimationToolbar"));
 const NoAnimationPanel = createFactory(require("./NoAnimationPanel"));
 const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
 
@@ -60,35 +61,38 @@ class App extends PureComponent {
         className: detailVisibility ? "animation-detail-visible" : "",
       },
       animations.length ?
-      SplitBox({
-        className: "animation-container-splitter",
-        endPanel: AnimationDetailContainer(
-          {
-            emitEventForTest,
-            getAnimatedPropertyMap,
-            getComputedStyle,
-            setDetailVisibility,
-            simulateAnimation,
-          }
-        ),
-        endPanelControl: true,
-        initialHeight: "50%",
-        splitterSize: 1,
-        startPanel: AnimationListContainer(
-          {
-            animations,
-            emitEventForTest,
-            getAnimatedPropertyMap,
-            getNodeFromActor,
-            onHideBoxModelHighlighter,
-            onShowBoxModelHighlighterForNode,
-            selectAnimation,
-            setSelectedNode,
-            simulateAnimation,
-          }
-        ),
-        vert: false,
-      })
+      [
+        AnimationToolbar(),
+        SplitBox({
+          className: "animation-container-splitter",
+          endPanel: AnimationDetailContainer(
+            {
+              emitEventForTest,
+              getAnimatedPropertyMap,
+              getComputedStyle,
+              setDetailVisibility,
+              simulateAnimation,
+            }
+          ),
+          endPanelControl: true,
+          initialHeight: "50%",
+          splitterSize: 1,
+          startPanel: AnimationListContainer(
+            {
+              animations,
+              emitEventForTest,
+              getAnimatedPropertyMap,
+              getNodeFromActor,
+              onHideBoxModelHighlighter,
+              onShowBoxModelHighlighterForNode,
+              selectAnimation,
+              setSelectedNode,
+              simulateAnimation,
+            }
+          ),
+          vert: false,
+        })
+      ]
       :
       NoAnimationPanel(
         {
