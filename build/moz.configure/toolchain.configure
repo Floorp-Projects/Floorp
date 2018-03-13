@@ -1354,6 +1354,9 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
     # fno-common -----------------------------------------
     # Do not merge variables for ASAN; can detect some subtle bugs
     if asan:
+        # clang-cl does not recognize the flag, it must be passed down to clang
+        if c_compiler.type == 'clang-cl':
+            flags.append("-Xclang")
         flags.append("-fno-common")
 
     return namespace(
