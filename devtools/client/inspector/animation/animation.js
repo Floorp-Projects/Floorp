@@ -383,7 +383,6 @@ class AnimationInspector {
   updateState(animations) {
     this.stopAnimationsCurrentTimeTimer();
 
-    this.inspector.store.dispatch(updateAnimations(animations));
     // If number of displayed animations is one, we select the animation automatically.
     // But if selected animation is in given animations, ignores.
     const selectedAnimation = this.state.selectedAnimation;
@@ -392,6 +391,8 @@ class AnimationInspector {
         !animations.find(animation => animation.actorID === selectedAnimation.actorID)) {
       this.selectAnimation(animations.length === 1 ? animations[0] : null);
     }
+
+    this.inspector.store.dispatch(updateAnimations(animations));
 
     if (hasPlayingAnimation(animations)) {
       this.startAnimationsCurrentTimeTimer();
