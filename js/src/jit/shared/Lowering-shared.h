@@ -22,7 +22,7 @@ class MDefinition;
 class MInstruction;
 class LOsiPoint;
 
-class LIRGeneratorShared : public MDefinitionVisitor
+class LIRGeneratorShared
 {
   protected:
     MIRGenerator* gen;
@@ -82,6 +82,8 @@ class LIRGeneratorShared : public MDefinitionVisitor
     // The lowest-level calls to use, those that do not wrap another call to
     // use(), must prefix grabbing virtual register IDs by these calls.
     inline void ensureDefined(MDefinition* mir);
+
+    void visitEmittedAtUses(MInstruction* ins);
 
     // These all create a use of a virtual register, with an optional
     // allocation policy.
@@ -287,8 +289,8 @@ class LIRGeneratorShared : public MDefinitionVisitor
         define(new(alloc()) LFloat32(f), mir);
     }
 
-    void visitConstant(MConstant* ins) override;
-    void visitWasmFloatConstant(MWasmFloatConstant* ins) override;
+    void visitConstant(MConstant* ins);
+    void visitWasmFloatConstant(MWasmFloatConstant* ins);
 
     // Whether to generate typed reads for element accesses with hole checks.
     static bool allowTypedElementHoleCheck() {
@@ -305,16 +307,16 @@ class LIRGeneratorShared : public MDefinitionVisitor
     // these stubs in the specific sub-classes.
     // Some SIMD visitors are implemented in LIRGenerator in Lowering.cpp. These
     // shared implementations are not included here.
-    void visitSimdInsertElement(MSimdInsertElement*) override { MOZ_CRASH("NYI"); }
-    void visitSimdExtractElement(MSimdExtractElement*) override { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryArith(MSimdBinaryArith*) override { MOZ_CRASH("NYI"); }
-    void visitSimdSelect(MSimdSelect*) override { MOZ_CRASH("NYI"); }
-    void visitSimdSplat(MSimdSplat*) override { MOZ_CRASH("NYI"); }
-    void visitSimdValueX4(MSimdValueX4*) override { MOZ_CRASH("NYI"); }
-    void visitSimdBinarySaturating(MSimdBinarySaturating*) override { MOZ_CRASH("NYI"); }
-    void visitSimdSwizzle(MSimdSwizzle*) override { MOZ_CRASH("NYI"); }
-    void visitSimdShuffle(MSimdShuffle*) override { MOZ_CRASH("NYI"); }
-    void visitSimdGeneralShuffle(MSimdGeneralShuffle*) override { MOZ_CRASH("NYI"); }
+    void visitSimdInsertElement(MSimdInsertElement*) { MOZ_CRASH("NYI"); }
+    void visitSimdExtractElement(MSimdExtractElement*) { MOZ_CRASH("NYI"); }
+    void visitSimdBinaryArith(MSimdBinaryArith*) { MOZ_CRASH("NYI"); }
+    void visitSimdSelect(MSimdSelect*) { MOZ_CRASH("NYI"); }
+    void visitSimdSplat(MSimdSplat*) { MOZ_CRASH("NYI"); }
+    void visitSimdValueX4(MSimdValueX4*) { MOZ_CRASH("NYI"); }
+    void visitSimdBinarySaturating(MSimdBinarySaturating*) { MOZ_CRASH("NYI"); }
+    void visitSimdSwizzle(MSimdSwizzle*) { MOZ_CRASH("NYI"); }
+    void visitSimdShuffle(MSimdShuffle*) { MOZ_CRASH("NYI"); }
+    void visitSimdGeneralShuffle(MSimdGeneralShuffle*) { MOZ_CRASH("NYI"); }
 };
 
 } // namespace jit
