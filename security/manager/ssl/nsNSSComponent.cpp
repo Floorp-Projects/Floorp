@@ -58,6 +58,11 @@
 #include "sslproto.h"
 #include "prmem.h"
 
+#if defined(XP_LINUX) && !defined(ANDROID)
+#include <linux/magic.h>
+#include <sys/vfs.h>
+#endif
+
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
 #include "nsILocalFileWin.h"
@@ -1753,7 +1758,7 @@ nsNSSComponent::setEnabledTLSVersions()
   return NS_OK;
 }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || (defined(XP_LINUX) && !defined(ANDROID))
 // If the profile directory is on a networked drive, we want to set the
 // environment variable NSS_SDB_USE_CACHE to yes (as long as it hasn't been set
 // before).
@@ -1769,25 +1774,39 @@ SetNSSDatabaseCacheModeAsAppropriate()
     return;
   }
 
-  nsCOMPtr<nsILocalFileWin> profileFileWin(do_QueryInterface(profileFile));
-  if (!profileFileWin) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin?"));
-    return;
-  }
+  static const char sNSS_SDB_USE_CACHE[] = "NSS_SDB_USE_CACHE";
+  static const char sNSS_SDB_USE_CACHE_WITH_VALUE[] = "NSS_SDB_USE_CACHE=yes";
   auto profilePath = profileFile->NativePath();
-  wchar_t volPath[MAX_PATH];
-  if (::GetVolumePathNameW(profilePath.get(), volPath, MAX_PATH) &&
-      ::GetDriveTypeW(volPath) == DRIVE_REMOTE &&
-      !PR_GetEnv("NSS_SDB_USE_CACHE")) {
+
+#if defined(XP_LINUX) && !defined(ANDROID)
+  struct statfs statfs_s;
+  if (statfs(profilePath.get(), &statfs_s) == 0 &&
+      statfs_s.f_type == NFS_SUPER_MAGIC &&
+      !PR_GetEnv(sNSS_SDB_USE_CACHE)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("profile is remote (and NSS_SDB_USE_CACHE wasn't set): "
              "setting NSS_SDB_USE_CACHE"));
-    PR_SetEnv("NSS_SDB_USE_CACHE=yes");
+    PR_SetEnv(sNSS_SDB_USE_CACHE_WITH_VALUE);
   } else {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("not setting NSS_SDB_USE_CACHE"));
   }
-}
+#endif // defined(XP_LINUX) && !defined(ANDROID)
+
+#ifdef XP_WIN
+  wchar_t volPath[MAX_PATH];
+  if (::GetVolumePathNameW(profilePath.get(), volPath, MAX_PATH) &&
+      ::GetDriveTypeW(volPath) == DRIVE_REMOTE &&
+      !PR_GetEnv(sNSS_SDB_USE_CACHE)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("profile is remote (and NSS_SDB_USE_CACHE wasn't set): "
+             "setting NSS_SDB_USE_CACHE"));
+    PR_SetEnv(sNSS_SDB_USE_CACHE_WITH_VALUE);
+  } else {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("not setting NSS_SDB_USE_CACHE"));
+  }
 #endif // XP_WIN
+}
+#endif // defined(XP_WIN) || (defined(XP_LINUX) && !defined(ANDROID))
 
 static nsresult
 GetNSSProfilePath(nsAutoCString& aProfilePath)
@@ -2049,7 +2068,7 @@ nsNSSComponent::InitializeNSS()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || (defined(XP_LINUX) && !defined(ANDROID))
   SetNSSDatabaseCacheModeAsAppropriate();
 #endif
 
