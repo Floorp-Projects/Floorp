@@ -7,7 +7,10 @@
 #include "mozilla/layers/APZSampler.h"
 
 #include "APZCTreeManager.h"
+#include "AsyncPanZoomController.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/LayerMetricsWrapper.h"
+#include "TreeTraversal.h"
 
 namespace mozilla {
 namespace layers {
@@ -120,6 +123,91 @@ APZSampler::SetTestAsyncZoom(uint64_t aLayersId,
   } else {
     NS_WARNING("Unable to find APZC in SetTestAsyncZoom");
   }
+}
+
+bool
+APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
+                             const TimeStamp& aSampleTime)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
+  // TODO: eventually we can drop the aLayer argument and just walk the APZ
+  // tree directly in mApz.
+
+  bool activeAnimations = false;
+
+  ForEachNodePostOrder<ForwardIterator>(aLayer,
+      [&activeAnimations, &aSampleTime](LayerMetricsWrapper aLayerMetrics)
+      {
+        if (AsyncPanZoomController* apzc = aLayerMetrics.GetApzc()) {
+          apzc->ReportCheckerboard(aSampleTime);
+          activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
+        }
+      }
+  );
+
+  return activeAnimations;
+}
+
+LayerToParentLayerMatrix4x4
+APZSampler::ComputeTransformForScrollThumb(const LayerToParentLayerMatrix4x4& aCurrentTransform,
+                                           const LayerMetricsWrapper& aContent,
+                                           const ScrollThumbData& aThumbData,
+                                           bool aScrollbarIsDescendant,
+                                           AsyncTransformComponentMatrix* aOutClipTransform)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  return mApz->ComputeTransformForScrollThumb(aCurrentTransform,
+                                              aContent.GetTransform(),
+                                              aContent.GetApzc(),
+                                              aContent.Metrics(),
+                                              aThumbData,
+                                              aScrollbarIsDescendant,
+                                              aOutClipTransform);
+}
+
+ParentLayerPoint
+APZSampler::GetCurrentAsyncScrollOffset(const LayerMetricsWrapper& aLayer)
+{
+  MOZ_ASSERT(aLayer.GetApzc());
+  return aLayer.GetApzc()->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForCompositing);
+}
+
+AsyncTransform
+APZSampler::GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer)
+{
+  MOZ_ASSERT(aLayer.GetApzc());
+  return aLayer.GetApzc()->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);
+}
+
+AsyncTransformComponentMatrix
+APZSampler::GetOverscrollTransform(const LayerMetricsWrapper& aLayer)
+{
+  MOZ_ASSERT(aLayer.GetApzc());
+  return aLayer.GetApzc()->GetOverscrollTransform(AsyncPanZoomController::eForCompositing);
+}
+
+AsyncTransformComponentMatrix
+APZSampler::GetCurrentAsyncTransformWithOverscroll(const LayerMetricsWrapper& aLayer)
+{
+  MOZ_ASSERT(aLayer.GetApzc());
+  return aLayer.GetApzc()->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::eForCompositing);
+}
+
+void
+APZSampler::MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer)
+{
+  MOZ_ASSERT(aLayer.GetApzc());
+  aLayer.GetApzc()->MarkAsyncTransformAppliedToContent();
+}
+
+bool
+APZSampler::HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer)
+{
+  AsyncPanZoomController* apzc = aLayer.GetApzc();
+  return apzc
+      && !apzc->GetAsyncTransformAppliedToContent()
+      && !AsyncTransformComponentMatrix(apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForHitTesting)).IsIdentity();
 }
 
 } // namespace layers

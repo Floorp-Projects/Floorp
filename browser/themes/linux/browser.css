@@ -660,7 +660,7 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   /* Add extra space to titlebar for dragging */
   :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar,
   :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar {
-    margin-top: var(--space-above-tabbar);
+    padding-top: var(--space-above-tabbar);
   }
 
   /* Private browsing and accessibility indicators */
@@ -668,7 +668,15 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .accessibility-indicator,
   :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .private-browsing-indicator,
   :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .accessibility-indicator {
-    margin-top: calc(-1 * var(--space-above-tabbar));
+    padding-top: calc(-1 * var(--space-above-tabbar));
+  }
+
+  /* Make #TabsToolbar transparent as we style underlying #titlebar with
+   * -moz-window-titlebar (Gtk+ theme).
+   */
+  :root[tabsintitlebar] #TabsToolbar,
+  :root[tabsintitlebar] #toolbar-menubar {
+    -moz-appearance: none;
   }
 
   /* The button box must appear on top of the navigator-toolbox in order for
