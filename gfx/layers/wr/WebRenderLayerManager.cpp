@@ -154,6 +154,12 @@ WebRenderLayerManager::GetCompositorBridgeChild()
   return WrBridge()->GetCompositorBridgeChild();
 }
 
+int32_t
+WebRenderLayerManager::GetMaxTextureSize() const
+{
+  return WrBridge()->GetMaxTextureSize();
+}
+
 bool
 WebRenderLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
