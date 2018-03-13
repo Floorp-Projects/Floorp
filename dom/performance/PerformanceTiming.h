@@ -91,7 +91,8 @@ public:
       return rawTimestamp;
     }
 
-    return nsRFPService::ReduceTimePrecisionAsMSecs(rawTimestamp);
+    return nsRFPService::ReduceTimePrecisionAsMSecs(rawTimestamp,
+      aPerformance->GetRandomTimelineSeed());
   }
 
   /**
@@ -278,7 +279,8 @@ public:
       return GetDOMTiming()->GetNavigationStart();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetNavigationStart());
+      GetDOMTiming()->GetNavigationStart(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMTimeMilliSec UnloadEventStart()
@@ -291,7 +293,8 @@ public:
       return GetDOMTiming()->GetUnloadEventStart();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetUnloadEventStart());
+      GetDOMTiming()->GetUnloadEventStart(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMTimeMilliSec UnloadEventEnd()
@@ -304,7 +307,8 @@ public:
       return GetDOMTiming()->GetUnloadEventEnd();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetUnloadEventEnd());
+      GetDOMTiming()->GetUnloadEventEnd(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   // Low resolution (used by navigation timing)
@@ -330,7 +334,8 @@ public:
       return GetDOMTiming()->GetDomLoading();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetDomLoading());
+      GetDOMTiming()->GetDomLoading(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMTimeMilliSec DomInteractive() const
@@ -343,7 +348,8 @@ public:
       return GetDOMTiming()->GetDomInteractive();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetDomInteractive());
+      GetDOMTiming()->GetDomInteractive(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMTimeMilliSec DomContentLoadedEventStart() const
@@ -356,7 +362,8 @@ public:
       return GetDOMTiming()->GetDomContentLoadedEventStart();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetDomContentLoadedEventStart());
+      GetDOMTiming()->GetDomContentLoadedEventStart(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMTimeMilliSec DomContentLoadedEventEnd() const
@@ -369,7 +376,8 @@ public:
       return GetDOMTiming()->GetDomContentLoadedEventEnd();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetDomContentLoadedEventEnd());
+      GetDOMTiming()->GetDomContentLoadedEventEnd(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMTimeMilliSec DomComplete() const
@@ -382,7 +390,8 @@ public:
       return GetDOMTiming()->GetDomComplete();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetDomComplete());
+      GetDOMTiming()->GetDomComplete(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMTimeMilliSec LoadEventStart() const
@@ -395,7 +404,8 @@ public:
       return GetDOMTiming()->GetLoadEventStart();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetLoadEventStart());
+      GetDOMTiming()->GetLoadEventStart(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMTimeMilliSec LoadEventEnd() const
@@ -408,7 +418,8 @@ public:
       return GetDOMTiming()->GetLoadEventEnd();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetLoadEventEnd());
+      GetDOMTiming()->GetLoadEventEnd(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMTimeMilliSec TimeToNonBlankPaint() const
@@ -421,7 +432,8 @@ public:
       return GetDOMTiming()->GetTimeToNonBlankPaint();
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetTimeToNonBlankPaint());
+      GetDOMTiming()->GetTimeToNonBlankPaint(),
+      mPerformance->GetRandomTimelineSeed());
   }
 
   PerformanceTimingData* Data() const

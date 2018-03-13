@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/RelativeTimeline.h"
 #include "mozilla/TimeStamp.h"
 
 class nsDocShell;
@@ -19,6 +20,7 @@ typedef unsigned long long DOMTimeMilliSec;
 typedef double DOMHighResTimeStamp;
 
 class nsDOMNavigationTiming final
+  : public mozilla::RelativeTimeline
 {
 public:
   enum Type {
