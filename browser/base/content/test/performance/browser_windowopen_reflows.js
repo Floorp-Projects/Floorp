@@ -62,8 +62,12 @@ add_task(async function() {
   let win = OpenBrowserWindow();
 
   await withReflowObserver(async function() {
-    await TestUtils.topicObserved("browser-delayed-startup-finished",
-                                  subject => subject == win);
+    let resizeEvent = BrowserTestUtils.waitForEvent(win, "resize");
+    let delayedStartup =
+      TestUtils.topicObserved("browser-delayed-startup-finished",
+                              subject => subject == win);
+    await resizeEvent;
+    await delayedStartup;
   }, EXPECTED_REFLOWS, win);
 
   await BrowserTestUtils.closeWindow(win);
