@@ -73,7 +73,7 @@ loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsiv
 var openRDM = async function(tab) {
   info("Opening responsive design mode");
   let manager = ResponsiveUIManager;
-  let ui = await manager.openIfNeeded(tab.ownerGlobal, tab);
+  let ui = await manager.openIfNeeded(tab.ownerGlobal, tab, { trigger: "test" });
   info("Responsive design mode opened");
   return { ui, manager };
 };

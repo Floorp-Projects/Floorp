@@ -280,7 +280,9 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         HUDService.openBrowserConsoleOrFocus();
         break;
       case "responsiveDesignMode":
-        ResponsiveUIManager.toggle(window, window.gBrowser.selectedTab);
+        ResponsiveUIManager.toggle(window, window.gBrowser.selectedTab, {
+          trigger: "shortcut"
+        });
         break;
       case "scratchpad":
         ScratchpadManager.openScratchpad();
