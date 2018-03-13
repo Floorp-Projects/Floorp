@@ -273,6 +273,25 @@ TreeWidget.prototype = {
   },
 
   /**
+   * Check if an item exists.
+   *
+   * @param {array} item
+   *        The array of ids leading up to the item.
+   */
+  exists: function (item) {
+    let bookmark = this.root;
+
+    for (let id of item) {
+      if (bookmark.items.has(id)) {
+        bookmark = bookmark.items.get(id);
+      } else {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  /**
    * Removes the specified item and all of its child items from the tree.
    *
    * @param {array} item

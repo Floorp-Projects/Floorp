@@ -20,10 +20,9 @@ add_task(async function() {
     ],
   ]);
 
-  gWindow.sessionStorage.setItem("ss4", "new-item");
+  await setSessionStorageItem("ss4", "new-item");
 
-  await gUI.once("store-objects-updated");
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [
@@ -34,13 +33,13 @@ add_task(async function() {
 
   // deleting item
 
-  gWindow.sessionStorage.removeItem("ss3");
+  await removeSessionStorageItem("ss3");
 
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
-  gWindow.sessionStorage.removeItem("ss1");
+  await removeSessionStorageItem("ss1");
 
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [
@@ -56,7 +55,7 @@ add_task(async function() {
   // Checking for correct value in sidebar before update
   await findVariableViewProperties([{name: "ss2", value: "foobar"}]);
 
-  gWindow.sessionStorage.setItem("ss2", "changed=ss2");
+  await setSessionStorageItem("ss2", "changed=ss2");
 
   await gUI.once("sidebar-updated");
 
@@ -80,3 +79,19 @@ add_task(async function() {
 
   await finishTests();
 });
+
+asyn function setSessionStorageItem(key, value) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, [key, value],
+    ([innerKey, innerValue]) => {
+      content.wrappedJSObject.sessionStorage.setItem(innerKey, innerValue);
+    }
+  );
+}
+
+async function removeSessionStorageItem(key) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, key,
+    innerKey => {
+      content.wrappedJSObject.sessionStorage.removeItem(innerKey);
+    }
+  );
+}

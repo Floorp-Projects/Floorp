@@ -22,7 +22,7 @@ async function performDelete(store, rowName, action) {
 
   await selectTreeItem(store);
 
-  let eventWait = gUI.once("store-objects-updated");
+  let eventWait = gUI.once("store-objects-edit");
   let cells = getRowCells(rowName, true);
 
   await waitForContextMenu(contextMenu, cells.name, () => {
