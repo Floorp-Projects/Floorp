@@ -36,6 +36,11 @@ public:
     return DragEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
+  DragEvent* AsDragEvent() override
+  {
+    return this;
+  }
+
   DataTransfer* GetDataTransfer();
 
   void InitDragEvent(const nsAString& aType,
