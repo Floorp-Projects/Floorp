@@ -8,6 +8,9 @@ const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum([
 
+  // Toggle the visibiltiy of the font editor
+  "UPDATE_EDITOR_VISIBILITY",
+
   // Update the list of fonts.
   "UPDATE_FONTS",
 
