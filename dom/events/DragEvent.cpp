@@ -66,13 +66,6 @@ DragEvent::InitDragEvent(const nsAString& aType,
   }
 }
 
-NS_IMETHODIMP
-DragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
-{
-  NS_IF_ADDREF(*aDataTransfer = GetDataTransfer());
-  return NS_OK;
-}
-
 DataTransfer*
 DragEvent::GetDataTransfer()
 {
