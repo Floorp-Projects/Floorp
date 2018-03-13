@@ -1,5 +1,8 @@
 extern crate winapi;
-extern crate kernel32;
+use self::winapi::shared::minwindef::{WORD, DWORD, HMODULE, FARPROC};
+use self::winapi::shared::ntdef::WCHAR;
+use self::winapi::shared::winerror;
+use self::winapi::um::{errhandlingapi, libloaderapi};
 
 use util::{ensure_compatible_types, cstr_cow_from_bytes};
 
@@ -10,7 +13,7 @@ use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
 
 
 /// A platform-specific equivalent of the cross-platform `Library`.
-pub struct Library(winapi::HMODULE);
+pub struct Library(HMODULE);
 
 unsafe impl Send for Library {}
 // Now, this is sort-of-tricky. MSDN documentation does not really make any claims as to safety of
@@ -40,7 +43,7 @@ impl Library {
         let ret = with_get_last_error(|| {
             // Make sure no winapi calls as a result of drop happen inside this closure, because
             // otherwise that might change the return value of the GetLastError.
-            let handle = unsafe { kernel32::LoadLibraryW(wide_filename.as_ptr()) };
+            let handle = unsafe { libloaderapi::LoadLibraryW(wide_filename.as_ptr()) };
             if handle.is_null()  {
                 None
             } else {
@@ -68,10 +71,10 @@ impl Library {
     /// Pointer to a value of arbitrary type is returned. Using a value with wrong type is
     /// undefined.
     pub unsafe fn get<T>(&self, symbol: &[u8]) -> ::Result<Symbol<T>> {
-        ensure_compatible_types::<T, winapi::FARPROC>();
+        ensure_compatible_types::<T, FARPROC>();
         let symbol = try!(cstr_cow_from_bytes(symbol));
         with_get_last_error(|| {
-            let symbol = kernel32::GetProcAddress(self.0, symbol.as_ptr());
+            let symbol = libloaderapi::GetProcAddress(self.0, symbol.as_ptr());
             if symbol.is_null() {
                 None
             } else {
@@ -91,11 +94,11 @@ impl Library {
     ///
     /// Pointer to a value of arbitrary type is returned. Using a value with wrong type is
     /// undefined.
-    pub unsafe fn get_ordinal<T>(&self, ordinal: winapi::WORD) -> ::Result<Symbol<T>> {
-        ensure_compatible_types::<T, winapi::FARPROC>();
+    pub unsafe fn get_ordinal<T>(&self, ordinal: WORD) -> ::Result<Symbol<T>> {
+        ensure_compatible_types::<T, FARPROC>();
         with_get_last_error(|| {
             let ordinal = ordinal as usize as *mut _;
-            let symbol = kernel32::GetProcAddress(self.0, ordinal);
+            let symbol = libloaderapi::GetProcAddress(self.0, ordinal);
             if symbol.is_null() {
                 None
             } else {
@@ -113,7 +116,7 @@ impl Library {
 impl Drop for Library {
     fn drop(&mut self) {
         with_get_last_error(|| {
-            if unsafe { kernel32::FreeLibrary(self.0) == 0 } {
+            if unsafe { libloaderapi::FreeLibrary(self.0) == 0 } {
                 None
             } else {
                 Some(())
@@ -125,8 +128,8 @@ impl Drop for Library {
 impl fmt::Debug for Library {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         unsafe {
-            let mut buf: [winapi::WCHAR; 1024] = mem::uninitialized();
-            let len = kernel32::GetModuleFileNameW(self.0,
+            let mut buf: [WCHAR; 1024] = mem::uninitialized();
+            let len = libloaderapi::GetModuleFileNameW(self.0,
                                                    (&mut buf[..]).as_mut_ptr(), 1024) as usize;
             if len == 0 {
                 f.write_str(&format!("Library@{:p}", self.0))
@@ -143,8 +146,22 @@ impl fmt::Debug for Library {
 /// A major difference compared to the cross-platform `Symbol` is that this does not ensure the
 /// `Symbol` does not outlive `Library` it comes from.
 pub struct Symbol<T> {
-    pointer: winapi::FARPROC,
+    pointer: FARPROC,
     pd: marker::PhantomData<T>
+}
+
+impl<T> Symbol<Option<T>> {
+    /// Lift Option out of the symbol.
+    pub fn lift_option(self) -> Option<Symbol<T>> {
+        if self.pointer.is_null() {
+            None
+        } else {
+            Some(Symbol {
+                pointer: self.pointer,
+                pd: marker::PhantomData,
+            })
+        }
+    }
 }
 
 unsafe impl<T: Send> Send for Symbol<T> {}
@@ -174,22 +191,50 @@ impl<T> fmt::Debug for Symbol<T> {
 
 
 static USE_ERRORMODE: AtomicBool = ATOMIC_BOOL_INIT;
-struct ErrorModeGuard(winapi::DWORD);
+struct ErrorModeGuard(DWORD);
 
 impl ErrorModeGuard {
-    fn new() -> ErrorModeGuard {
-        let mut ret = ErrorModeGuard(0);
-
-        if !USE_ERRORMODE.load(Ordering::Acquire) {
-            if unsafe { kernel32::SetThreadErrorMode(1, &mut ret.0) == 0
-                        && kernel32::GetLastError() == winapi::ERROR_CALL_NOT_IMPLEMENTED } {
-                USE_ERRORMODE.store(true, Ordering::Release);
-            } else {
-                return ret;
+    fn new() -> Option<ErrorModeGuard> {
+        const SEM_FAILCE: DWORD = 1;
+        unsafe {
+            if !USE_ERRORMODE.load(Ordering::Acquire) {
+                let mut previous_mode = 0;
+                let success = errhandlingapi::SetThreadErrorMode(SEM_FAILCE, &mut previous_mode) != 0;
+                if !success && errhandlingapi::GetLastError() == winerror::ERROR_CALL_NOT_IMPLEMENTED {
+                    USE_ERRORMODE.store(true, Ordering::Release);
+                } else if !success {
+                    // SetThreadErrorMode failed with some other error? How in the world is it
+                    // possible for what is essentially a simple variable swap to fail?
+                    // For now we just ignore the error -- the worst that can happen here is
+                    // the previous mode staying on and user seeing a dialog error on older Windows
+                    // machines.
+                    return None;
+                } else if previous_mode == SEM_FAILCE {
+                    return None;
+                } else {
+                    return Some(ErrorModeGuard(previous_mode));
+                }
+            }
+            match errhandlingapi::SetErrorMode(SEM_FAILCE) {
+                SEM_FAILCE => {
+                    // This is important to reduce racy-ness when this library is used on multiple
+                    // threads. In particular this helps with following race condition:
+                    //
+                    // T1: SetErrorMode(SEM_FAILCE)
+                    // T2: SetErrorMode(SEM_FAILCE)
+                    // T1: SetErrorMode(old_mode) # not SEM_FAILCE
+                    // T2: SetErrorMode(SEM_FAILCE) # restores to SEM_FAILCE on drop
+                    //
+                    // This is still somewhat racy in a sense that T1 might resture the error
+                    // mode before T2 finishes loading the library, but that is less of a
+                    // concern – it will only end up in end user seeing a dialog.
+                    //
+                    // Also, SetErrorMode itself is probably not an atomic operation.
+                    None
+                }
+                a => Some(ErrorModeGuard(a))
             }
         }
-        ret.0 = unsafe { kernel32::SetErrorMode(1) };
-        ret
     }
 }
 
@@ -197,9 +242,9 @@ impl Drop for ErrorModeGuard {
     fn drop(&mut self) {
         unsafe {
             if !USE_ERRORMODE.load(Ordering::Relaxed) {
-                kernel32::SetThreadErrorMode(self.0, ptr::null_mut());
+                errhandlingapi::SetThreadErrorMode(self.0, ptr::null_mut());
             } else {
-                kernel32::SetErrorMode(self.0);
+                errhandlingapi::SetErrorMode(self.0);
             }
         }
     }
@@ -208,7 +253,7 @@ impl Drop for ErrorModeGuard {
 fn with_get_last_error<T, F>(closure: F) -> Result<T, Option<io::Error>>
 where F: FnOnce() -> Option<T> {
     closure().ok_or_else(|| {
-        let error = unsafe { kernel32::GetLastError() };
+        let error = unsafe { errhandlingapi::GetLastError() };
         if error == 0 {
             None
         } else {
@@ -220,23 +265,23 @@ where F: FnOnce() -> Option<T> {
 #[test]
 fn works_getlasterror() {
     let lib = Library::new("kernel32.dll").unwrap();
-    let gle: Symbol<unsafe extern "system" fn() -> winapi::DWORD> = unsafe {
+    let gle: Symbol<unsafe extern "system" fn() -> DWORD> = unsafe {
         lib.get(b"GetLastError").unwrap()
     };
     unsafe {
-        kernel32::SetLastError(42);
-        assert_eq!(kernel32::GetLastError(), gle())
+        errhandlingapi::SetLastError(42);
+        assert_eq!(errhandlingapi::GetLastError(), gle())
     }
 }
 
 #[test]
 fn works_getlasterror0() {
     let lib = Library::new("kernel32.dll").unwrap();
-    let gle: Symbol<unsafe extern "system" fn() -> winapi::DWORD> = unsafe {
+    let gle: Symbol<unsafe extern "system" fn() -> DWORD> = unsafe {
         lib.get(b"GetLastError\0").unwrap()
     };
     unsafe {
-        kernel32::SetLastError(42);
-        assert_eq!(kernel32::GetLastError(), gle())
+        errhandlingapi::SetLastError(42);
+        assert_eq!(errhandlingapi::GetLastError(), gle())
     }
 }

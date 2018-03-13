@@ -23,6 +23,7 @@
 //! * 3.9 - [Documentation](https://kylemayes.github.io/clang-sys/3_9/clang_sys)
 //! * 4.0 - [Documentation](https://kylemayes.github.io/clang-sys/4_0/clang_sys)
 //! * 5.0 - [Documentation](https://kylemayes.github.io/clang-sys/5_0/clang_sys)
+//! * 6.0 - [Documentation](https://kylemayes.github.io/clang-sys/6_0/clang_sys)
 
 #![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]
 
@@ -44,6 +45,8 @@ mod link;
 use std::mem;
 
 use libc::{c_char, c_int, c_longlong, c_uint, c_ulong, c_ulonglong, c_void, time_t};
+#[cfg(feature="gte_clang_6_0")]
+use libc::{size_t};
 
 pub type CXClientData = *mut c_void;
 pub type CXCursorVisitor = extern fn(CXCursor, CXCursor, CXClientData) -> CXChildVisitResult;
@@ -654,6 +657,15 @@ cenum! {
 }
 
 cenum! {
+    #[cfg(feature="gte_clang_6_0")]
+    enum CXTLSKind {
+        const CXTLS_None = 0,
+        const CXTLS_Dynamic = 1,
+        const CXTLS_Static = 2,
+    }
+}
+
+cenum! {
     enum CXTUResourceUsageKind {
         const CXTUResourceUsage_AST = 1,
         const CXTUResourceUsage_Identifiers = 2,
@@ -734,6 +746,8 @@ cenum! {
         const CXType_Float128 = 30,
         /// Only produced by `libclang` 5.0 and later.
         const CXType_Half = 31,
+        /// Only produced by `libclang` 6.0 and later.
+        const CXType_Float16 = 32,
         const CXType_Complex = 100,
         const CXType_Pointer = 101,
         const CXType_BlockPointer = 102,
@@ -1458,6 +1472,8 @@ link! {
     pub fn clang_CXCursorSet_insert(set: CXCursorSet, cursor: CXCursor) -> c_uint;
     pub fn clang_CXIndex_getGlobalOptions(index: CXIndex) -> CXGlobalOptFlags;
     pub fn clang_CXIndex_setGlobalOptions(index: CXIndex, flags: CXGlobalOptFlags);
+    #[cfg(feature="gte_clang_6_0")]
+    pub fn clang_CXIndex_setInvocationEmissionPathOption(index: CXIndex, path: *const c_char);
     #[cfg(feature="gte_clang_3_9")]
     pub fn clang_CXXConstructor_isConvertingConstructor(cursor: CXCursor) -> c_uint;
     #[cfg(feature="gte_clang_3_9")]
@@ -1474,6 +1490,8 @@ link! {
     pub fn clang_CXXMethod_isPureVirtual(cursor: CXCursor) -> c_uint;
     pub fn clang_CXXMethod_isStatic(cursor: CXCursor) -> c_uint;
     pub fn clang_CXXMethod_isVirtual(cursor: CXCursor) -> c_uint;
+    #[cfg(feature="gte_clang_6_0")]
+    pub fn clang_CXXRecord_isAbstract(cursor: CXCursor) -> c_uint;
     pub fn clang_CompilationDatabase_dispose(database: CXCompilationDatabase);
     pub fn clang_CompilationDatabase_fromDirectory(directory: *const c_char, error: *mut CXCompilationDatabase_Error) -> CXCompilationDatabase;
     pub fn clang_CompilationDatabase_getAllCompileCommands(database: CXCompilationDatabase) -> CXCompileCommands;
@@ -1504,6 +1522,8 @@ link! {
     #[cfg(feature="gte_clang_3_6")]
     pub fn clang_Cursor_getNumTemplateArguments(cursor: CXCursor) -> c_int;
     pub fn clang_Cursor_getObjCDeclQualifiers(cursor: CXCursor) -> CXObjCDeclQualifierKind;
+    #[cfg(feature="gte_clang_6_0")]
+    pub fn clang_Cursor_getObjCManglings(cursor: CXCursor) -> *mut CXStringSet;
     pub fn clang_Cursor_getObjCPropertyAttributes(cursor: CXCursor, reserved: c_uint) -> CXObjCPropertyAttrKind;
     pub fn clang_Cursor_getObjCSelectorIndex(cursor: CXCursor) -> c_int;
     #[cfg(feature="gte_clang_3_7")]
@@ -1684,6 +1704,8 @@ link! {
     pub fn clang_getCursorResultType(cursor: CXCursor) -> CXType;
     pub fn clang_getCursorSemanticParent(cursor: CXCursor) -> CXCursor;
     pub fn clang_getCursorSpelling(cursor: CXCursor) -> CXString;
+    #[cfg(feature="gte_clang_6_0")]
+    pub fn clang_getCursorTLSKind(cursor: CXCursor) -> CXTLSKind;
     pub fn clang_getCursorType(cursor: CXCursor) -> CXType;
     pub fn clang_getCursorUSR(cursor: CXCursor) -> CXString;
     #[cfg(feature="gte_clang_3_8")]
@@ -1713,6 +1735,8 @@ link! {
     pub fn clang_getExpansionLocation(location: CXSourceLocation, file: *mut CXFile, line: *mut c_uint, column: *mut c_uint, offset: *mut c_uint);
     pub fn clang_getFieldDeclBitWidth(cursor: CXCursor) -> c_int;
     pub fn clang_getFile(tu: CXTranslationUnit, file: *const c_char) -> CXFile;
+    #[cfg(feature="gte_clang_6_0")]
+    pub fn clang_getFileContents(tu: CXTranslationUnit, file: CXFile, size: *mut size_t) -> *const c_char;
     pub fn clang_getFileLocation(location: CXSourceLocation, file: *mut CXFile, line: *mut c_uint, column: *mut c_uint, offset: *mut c_uint);
     pub fn clang_getFileName(file: CXFile) -> CXString;
     pub fn clang_getFileTime(file: CXFile) -> time_t;

@@ -36,14 +36,23 @@ pub trait ParseCallbacks: fmt::Debug + UnwindSafe {
     }
 
     /// This function should return whether, given the a given enum variant
-    /// name, and value, returns whether this enum variant will forcibly be a
-    /// constant.
+    /// name, and value, this enum variant will forcibly be a constant.
     fn enum_variant_behavior(
         &self,
         _enum_name: Option<&str>,
-        _variant_name: &str,
+        _original_variant_name: &str,
         _variant_value: EnumVariantValue,
     ) -> Option<EnumVariantCustomBehavior> {
+        None
+    }
+
+    /// Allows to rename an enum variant, replacing `_original_variant_name`.
+    fn enum_variant_name(
+        &self,
+        _enum_name: Option<&str>,
+        _original_variant_name: &str,
+        _variant_value: EnumVariantValue,
+    ) -> Option<String> {
         None
     }
 }

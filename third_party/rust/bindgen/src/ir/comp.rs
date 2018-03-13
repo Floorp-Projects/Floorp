@@ -1169,7 +1169,7 @@ impl CompInfo {
             }
         }
 
-        let kind = try!(kind);
+        let kind = kind?;
 
         debug!("CompInfo::from_ty({:?}, {:?})", kind, cursor);
 

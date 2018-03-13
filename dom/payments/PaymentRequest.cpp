@@ -629,6 +629,7 @@ PaymentRequest::PaymentRequest(nsPIDOMWindowInner* aWindow, const nsAString& aIn
   , mInternalId(aInternalId)
   , mShippingAddress(nullptr)
   , mUpdating(false)
+  , mRequestShipping(false)
   , mUpdateError(NS_OK)
   , mState(eCreated)
 {
@@ -845,7 +846,7 @@ PaymentRequest::UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetai
   if (NS_WARN_IF(!manager)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = manager->UpdatePayment(aCx, mInternalId, aDetails);
+  nsresult rv = manager->UpdatePayment(aCx, mInternalId, aDetails, mRequestShipping);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

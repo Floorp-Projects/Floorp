@@ -2228,7 +2228,7 @@ impl<'a> EnumBuilder<'a> {
         self,
         ctx: &BindgenContext,
         variant: &EnumVariant,
-        mangling_prefix: Option<&String>,
+        mangling_prefix: Option<&str>,
         rust_ty: quote::Tokens,
         result: &mut CodegenResult<'b>,
     ) -> Self {
@@ -2548,9 +2548,9 @@ impl CodeGenerator for Enum {
 
         let constant_mangling_prefix = if ctx.options().prepend_enum_name {
             if enum_ty.name().is_none() {
-                parent_canonical_name.as_ref().map(|n| &*n)
+                parent_canonical_name.as_ref().map(|n| &**n)
             } else {
-                Some(&name)
+                Some(&*name)
             }
         } else {
             None

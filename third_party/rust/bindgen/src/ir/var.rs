@@ -98,15 +98,15 @@ impl DotAttributes for Var {
         W: io::Write,
     {
         if self.is_const {
-            try!(writeln!(out, "<tr><td>const</td><td>true</td></tr>"));
+            writeln!(out, "<tr><td>const</td><td>true</td></tr>")?;
         }
 
         if let Some(ref mangled) = self.mangled_name {
-            try!(writeln!(
+            writeln!(
                 out,
                 "<tr><td>mangled name</td><td>{}</td></tr>",
                 mangled
-            ));
+            )?;
         }
 
         Ok(())
@@ -307,10 +307,7 @@ fn parse_macro(
 ) -> Option<(Vec<u8>, cexpr::expr::EvalResult)> {
     use cexpr::{expr, nom};
 
-    let mut cexpr_tokens = match cursor.cexpr_tokens() {
-        None => return None,
-        Some(tokens) => tokens,
-    };
+    let mut cexpr_tokens = cursor.cexpr_tokens()?;
 
     let parser = expr::IdentifierParser::new(ctx.parsed_macros());
 
@@ -327,9 +324,7 @@ fn parse_macro(
     // See:
     //   https://bugs.llvm.org//show_bug.cgi?id=9069
     //   https://reviews.llvm.org/D26446
-    if cexpr_tokens.pop().is_none() {
-        return None;
-    }
+    cexpr_tokens.pop()?;
 
     match parser.macro_definition(&cexpr_tokens) {
         nom::IResult::Done(_, (id, val)) => Some((id.into(), val)),
@@ -341,10 +336,7 @@ fn parse_int_literal_tokens(cursor: &clang::Cursor) -> Option<i64> {
     use cexpr::{expr, nom};
     use cexpr::expr::EvalResult;
 
-    let cexpr_tokens = match cursor.cexpr_tokens() {
-        None => return None,
-        Some(tokens) => tokens,
-    };
+    let cexpr_tokens = cursor.cexpr_tokens()?;
 
     // TODO(emilio): We can try to parse other kinds of literals.
     match expr::expr(&cexpr_tokens) {

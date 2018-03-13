@@ -1,4 +1,5 @@
 {
+    "answer1": {"type": "string", "value": "\u000B"},
     "answer4": {"type": "string", "value": "\u03B4α"},
     "answer8": {"type": "string", "value": "\u03B4β"}
 }
