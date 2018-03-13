@@ -2078,8 +2078,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
 
   // check which drag effect should initially be used. If the effect was not
   // set, just use all actions, otherwise Windows won't allow a drop.
-  uint32_t action;
-  aDataTransfer->GetEffectAllowedInt(&action);
+  uint32_t action = aDataTransfer->EffectAllowedInt();
   if (action == nsIDragService::DRAGDROP_ACTION_UNINITIALIZED)
     action = nsIDragService::DRAGDROP_ACTION_COPY |
              nsIDragService::DRAGDROP_ACTION_MOVE |
@@ -3579,8 +3578,9 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // drag was originally started by directly calling the drag service.
         // Just assume that all effects are allowed.
         uint32_t effectAllowed = nsIDragService::DRAGDROP_ACTION_UNINITIALIZED;
-        if (dataTransfer)
-          dataTransfer->GetEffectAllowedInt(&effectAllowed);
+        if (dataTransfer) {
+          effectAllowed = dataTransfer->EffectAllowedInt();
+        }
 
         // set the drag action based on the drop effect and effect allowed.
         // The drop effect field on the drag transfer object specifies the

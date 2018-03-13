@@ -275,13 +275,6 @@ DataTransfer::SetEffectAllowed(const nsAString& aEffectAllowed)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DataTransfer::GetEffectAllowedInt(uint32_t* aEffectAllowed)
-{
-  *aEffectAllowed = mEffectAllowed;
-  return  NS_OK;
-}
-
 void
 DataTransfer::GetMozTriggeringPrincipalURISpec(nsAString& aPrincipalURISpec)
 {
@@ -294,13 +287,6 @@ DataTransfer::GetMozTriggeringPrincipalURISpec(nsAString& aPrincipalURISpec)
   nsCString principalURISpec;
   dragSession->GetTriggeringPrincipalURISpec(principalURISpec);
   CopyUTF8toUTF16(principalURISpec, aPrincipalURISpec);
-}
-
-NS_IMETHODIMP
-DataTransfer::SetEffectAllowedInt(uint32_t aEffectAllowed)
-{
-  mEffectAllowed = aEffectAllowed;
-  return  NS_OK;
 }
 
 NS_IMETHODIMP
