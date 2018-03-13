@@ -150,6 +150,23 @@ class ScriptMixin(PlatformMixin):
     env = None
     script_obj = None
 
+    def query_filesize(self, file_path):
+        self.info("Determining filesize for %s" % file_path)
+        length = os.path.getsize(file_path)
+        self.info(" %s" % str(length))
+        return length
+
+    # TODO this should be parallelized with the to-be-written BaseHelper!
+    def query_sha512sum(self, file_path):
+        self.info("Determining sha512sum for %s" % file_path)
+        m = hashlib.sha512()
+        contents = self.read_from_file(file_path, verbose=False,
+                                       open_mode='rb')
+        m.update(contents)
+        sha512 = m.hexdigest()
+        self.info(" %s" % sha512)
+        return sha512
+
     def platform_name(self):
         """ Return the platform name on which the script is running on.
         Returns:
