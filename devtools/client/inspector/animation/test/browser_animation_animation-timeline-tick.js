@@ -19,7 +19,7 @@ const TIME_GRADUATION_MIN_SPACING = 40;
 add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   const { animationInspector, inspector, panel } = await openAnimationInspector();
-  const timeScale = new TimeScale(animationInspector.animations);
+  const timeScale = new TimeScale(animationInspector.state.animations);
 
   info("Checking animation list header element existence");
   const listContainerEl = panel.querySelector(".animation-list-container");
