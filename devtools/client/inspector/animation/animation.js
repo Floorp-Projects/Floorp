@@ -32,6 +32,7 @@ class AnimationInspector {
     this.addAnimationsCurrentTimeListener =
       this.addAnimationsCurrentTimeListener.bind(this);
     this.getAnimatedPropertyMap = this.getAnimatedPropertyMap.bind(this);
+    this.getAnimationsCurrentTime = this.getAnimationsCurrentTime.bind(this);
     this.getComputedStyle = this.getComputedStyle.bind(this);
     this.getNodeFromActor = this.getNodeFromActor.bind(this);
     this.removeAnimationsCurrentTimeListener =
@@ -43,6 +44,8 @@ class AnimationInspector {
     this.setAnimationsPlayState = this.setAnimationsPlayState.bind(this);
     this.setDetailVisibility = this.setDetailVisibility.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
+    this.simulateAnimationForKeyframesProgressBar =
+      this.simulateAnimationForKeyframesProgressBar.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
     this.onAnimationsCurrentTimeUpdated = this.onAnimationsCurrentTimeUpdated.bind(this);
@@ -71,6 +74,7 @@ class AnimationInspector {
       addAnimationsCurrentTimeListener,
       emit: emitEventForTest,
       getAnimatedPropertyMap,
+      getAnimationsCurrentTime,
       getComputedStyle,
       getNodeFromActor,
       isAnimationsRunning,
@@ -82,6 +86,7 @@ class AnimationInspector {
       setAnimationsPlayState,
       setDetailVisibility,
       simulateAnimation,
+      simulateAnimationForKeyframesProgressBar,
       toggleElementPicker,
     } = this;
 
@@ -102,6 +107,7 @@ class AnimationInspector {
           addAnimationsCurrentTimeListener,
           emitEventForTest,
           getAnimatedPropertyMap,
+          getAnimationsCurrentTime,
           getComputedStyle,
           getNodeFromActor,
           isAnimationsRunning,
@@ -116,6 +122,7 @@ class AnimationInspector {
           setDetailVisibility,
           setSelectedNode,
           simulateAnimation,
+          simulateAnimationForKeyframesProgressBar,
           toggleElementPicker,
         }
       )
@@ -144,6 +151,11 @@ class AnimationInspector {
     if (this.simulatedElement) {
       this.simulatedElement.remove();
       this.simulatedElement = null;
+    }
+
+    if (this.simulatedAnimationForKeyframesProgressBar) {
+      this.simulatedAnimationForKeyframesProgressBar.cancel();
+      this.simulatedAnimationForKeyframesProgressBar = null;
     }
 
     this.stopAnimationsCurrentTimeTimer();
@@ -199,6 +211,10 @@ class AnimationInspector {
     return animatedPropertyMap;
   }
 
+  getAnimationsCurrentTime() {
+    return this.currentTime;
+  }
+
   /**
    * Return the computed style of the specified property after setting the given styles
    * to the simulated element.
@@ -238,6 +254,8 @@ class AnimationInspector {
    * @param {Number} currentTime
    */
   onAnimationsCurrentTimeUpdated(currentTime) {
+    this.currentTime = currentTime;
+
     for (const listener of this.animationsCurrentTimeListeners) {
       listener(currentTime);
     }
@@ -360,6 +378,27 @@ class AnimationInspector {
     return this.simulatedAnimation;
   }
 
+  /**
+   * Returns a simulatable efect timing animation for the keyframes progress bar.
+   * The returned animation is implementing Animation interface of Web Animation API.
+   * https://drafts.csswg.org/web-animations/#the-animation-interface
+   *
+   * @param {Object} effectTiming
+   *        e.g. { duration: 1000, fill: "both" }
+   * @return {Animation}
+   *         https://drafts.csswg.org/web-animations/#the-animation-interface
+   */
+  simulateAnimationForKeyframesProgressBar(effectTiming) {
+    if (!this.simulatedAnimationForKeyframesProgressBar) {
+      this.simulatedAnimationForKeyframesProgressBar = new this.win.Animation();
+    }
+
+    this.simulatedAnimationForKeyframesProgressBar.effect =
+      new this.win.KeyframeEffect(null, null, effectTiming);
+
+    return this.simulatedAnimationForKeyframesProgressBar;
+  }
+
   stopAnimationsCurrentTimeTimer() {
     if (this.currentTimeTimer) {
       this.currentTimeTimer.destroy();
@@ -409,15 +448,6 @@ class AnimationInspector {
 
   updateState(animations) {
     this.stopAnimationsCurrentTimeTimer();
-
-    // If number of displayed animations is one, we select the animation automatically.
-    // But if selected animation is in given animations, ignores.
-    const selectedAnimation = this.state.selectedAnimation;
-
-    if (!selectedAnimation ||
-        !animations.find(animation => animation.actorID === selectedAnimation.actorID)) {
-      this.selectAnimation(animations.length === 1 ? animations[0] : null);
-    }
 
     this.inspector.store.dispatch(updateAnimations(animations));
 
