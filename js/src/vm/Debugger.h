@@ -842,17 +842,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     void fireOnGarbageCollectionHook(JSContext* cx,
                                      const JS::dbg::GarbageCollectionEvent::Ptr& gcData);
 
-    /*
-     * Gets a Debugger.Frame object. If maybeIter is non-null, we eagerly copy
-     * its data if we need to make a new Debugger.Frame.
-     */
-    MOZ_MUST_USE bool getFrameWithIter(JSContext* cx, AbstractFramePtr frame,
-                                       const FrameIter* maybeIter,
-                                       MutableHandleValue vp);
-    MOZ_MUST_USE bool getFrameWithIter(JSContext* cx, AbstractFramePtr frame,
-                                       const FrameIter* maybeIter,
-                                       MutableHandleDebuggerFrame result);
-
     inline Breakpoint* firstBreakpoint() const;
 
     static MOZ_MUST_USE bool replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
@@ -1053,30 +1042,16 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                                MutableHandle<PropertyDescriptor> desc);
 
     /*
-     * Store the Debugger.Frame object for frame in *vp.
+     * Store the Debugger.Frame object for iter in *vp/result.
      *
-     * Use this if you have already access to a frame pointer without having
-     * to incur the cost of walking the stack.
-     */
-    MOZ_MUST_USE bool getFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleValue vp) {
-        return getFrameWithIter(cx, frame, nullptr, vp);
-    }
-
-    /*
-     * Store the Debugger.Frame object for iter in *vp/result. Eagerly copies a
-     * ScriptFrameIter::Data.
-     *
-     * Use this if you had to make a ScriptFrameIter to get the required
-     * frame, in which case the cost of walking the stack has already been
-     * paid.
+     * If this Debugger does not already have a Frame object for the frame
+     * `iter` points to, a new Frame object is created, and `iter`'s private
+     * data is copied into it.
      */
     MOZ_MUST_USE bool getFrame(JSContext* cx, const FrameIter& iter,
-                               MutableHandleValue vp) {
-        return getFrameWithIter(cx, iter.abstractFramePtr(), &iter, vp);
-    }
+                               MutableHandleValue vp);
     MOZ_MUST_USE bool getFrame(JSContext* cx, const FrameIter& iter,
                                MutableHandleDebuggerFrame result);
-
 
     /*
      * Set |*resumeMode| and |*value| to a (ResumeMode, Value) pair reflecting a
@@ -1354,8 +1329,8 @@ class DebuggerFrame : public NativeObject
     static const Class class_;
 
     static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor, HandleObject objProto);
-    static DebuggerFrame* create(JSContext* cx, HandleObject proto, AbstractFramePtr referent,
-                                 const FrameIter* maybeIter, HandleNativeObject debugger);
+    static DebuggerFrame* create(JSContext* cx, HandleObject proto, const FrameIter& iter,
+                                 HandleNativeObject debugger);
 
     static MOZ_MUST_USE bool getArguments(JSContext* cx, HandleDebuggerFrame frame,
                                           MutableHandleDebuggerArguments result);
