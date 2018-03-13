@@ -8194,7 +8194,6 @@ DebuggerFrame_checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
  * always create a FrameIter from the cached Data.
  *
  * Methods that only need the AbstractFramePtr should use THIS_FRAME.
- * Methods that need a FrameIterator should use THIS_FRAME_ITER.
  */
 
 #define THIS_DEBUGGER_FRAME(cx, argc, vp, fnname, args, frame)                          \
@@ -8216,34 +8215,6 @@ DebuggerFrame_checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
         FrameIter iter(*(FrameIter::Data*)(frame.raw()));                      \
         frame = iter.abstractFramePtr();                                       \
     }
-
-#define THIS_FRAME_ITER(cx, argc, vp, fnname, args, thisobj, maybeIter, iter)  \
-    THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj);                   \
-    Maybe<FrameIter> maybeIter;                                                \
-    {                                                                          \
-        AbstractFramePtr f = AbstractFramePtr::FromRaw(thisobj->getPrivate()); \
-        if (f.isScriptFrameIterData()) {                                       \
-            maybeIter.emplace(*(FrameIter::Data*)(f.raw()));                   \
-        } else {                                                               \
-            maybeIter.emplace(cx, FrameIter::IGNORE_DEBUGGER_EVAL_PREV_LINK);  \
-            FrameIter& iter = *maybeIter;                                      \
-            while (!iter.hasUsableAbstractFramePtr() || iter.abstractFramePtr() != f) \
-                ++iter;                                                        \
-            AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();         \
-            if (!data)                                                         \
-                return false;                                                  \
-            thisobj->setPrivate(data.raw());                                   \
-        }                                                                      \
-    }                                                                          \
-    FrameIter& iter = *maybeIter
-
-#define THIS_FRAME_OWNER(cx, argc, vp, fnname, args, thisobj, frame, dbg)      \
-    THIS_FRAME(cx, argc, vp, fnname, args, thisobj, frame);                    \
-    Debugger* dbg = Debugger::fromChildJSObject(thisobj)
-
-#define THIS_FRAME_OWNER_ITER(cx, argc, vp, fnname, args, thisobj, maybeIter, iter, dbg) \
-    THIS_FRAME_ITER(cx, argc, vp, fnname, args, thisobj, maybeIter, iter);               \
-    Debugger* dbg = Debugger::fromChildJSObject(thisobj)
 
 /* static */ bool
 DebuggerFrame::typeGetter(JSContext* cx, unsigned argc, Value* vp)
