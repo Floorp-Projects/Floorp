@@ -722,7 +722,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool updateExecutionObservability(JSContext* cx, ExecutionObservableSet& obs,
                                              IsObserving observing);
 
-    template <typename FrameFn /* void (NativeObject*) */>
+    template <typename FrameFn /* void (DebuggerFrame*) */>
     static void forEachDebuggerFrame(AbstractFramePtr frame, FrameFn fn);
 
     /*
@@ -1332,6 +1332,7 @@ class DebuggerFrame : public NativeObject
     static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor, HandleObject objProto);
     static DebuggerFrame* create(JSContext* cx, HandleObject proto, const FrameIter& iter,
                                  HandleNativeObject debugger);
+    void freeFrameIterData(FreeOp* fop);
 
     static MOZ_MUST_USE bool getArguments(JSContext* cx, HandleDebuggerFrame frame,
                                           MutableHandleDebuggerArguments result);
