@@ -21,7 +21,6 @@
   --chrome-color: rgb(249, 249, 250);
   --chrome-secondary-background-color: hsl(240, 1%, 20%);
   --toolbox-border-bottom-color: hsla(240, 5%, 5%, .1);
-  --chrome-nav-bar-separator-color: rgba(0,0,0,.2);
   --chrome-nav-buttons-background: hsla(240, 5%, 5%, .1);
   --chrome-nav-buttons-hover-background: hsla(240, 5%, 5%, .15);
   --chrome-nav-bar-controls-border-color: hsla(240, 5%, 5%, .3);
@@ -41,7 +40,6 @@
   --chrome-color: #18191a;
   --chrome-secondary-background-color: #f5f6f7;
   --toolbox-border-bottom-color: #cccccc;
-  --chrome-nav-bar-separator-color: #B6B6B8;
   --chrome-nav-buttons-background: #ffffff; /* --theme-body-background */
   --chrome-nav-buttons-hover-background: #DADBDB;
   --chrome-nav-bar-controls-border-color: #ccc;

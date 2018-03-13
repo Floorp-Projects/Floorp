@@ -216,10 +216,16 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   if (cbp) {
     root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge.get();
   }
-  if (!root) {
+
+  RefPtr<wr::WebRenderAPI> api;
+  if (root) {
+    api = root->GetWebRenderAPI();
+  }
+
+  if (!root || !api) {
     // This could happen when this function is called after CompositorBridgeParent destruction.
     // This was observed during Tab move between different windows.
-    NS_WARNING("Created child without a matching parent?");
+    NS_WARNING(nsPrintfCString("Created child without a matching parent? root %p", root).get());
     parent = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
     parent->AddRef(); // IPDL reference
     *aIdNamespace = parent->GetIdNamespace();
@@ -227,7 +233,6 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
     return parent;
   }
 
-  RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
   api = api->Clone();
   RefPtr<AsyncImagePipelineManager> holder = root->AsyncImageManager();
   RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage();
@@ -616,39 +621,6 @@ bool
 CrossProcessCompositorBridgeParent::IsSameProcess() const
 {
   return OtherPid() == base::GetCurrentProcId();
-}
-
-mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
-                                                                         const uint32_t& aPresShellId)
-{
-  CompositorBridgeParent* parent;
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    parent = sIndirectLayerTrees[aLayersId].mParent;
-  }
-  if (parent) {
-    parent->ClearApproximatelyVisibleRegions(aLayersId, Some(aPresShellId));
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                                                         const CSSIntRegion& aRegion)
-{
-  CompositorBridgeParent* parent;
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    parent = sIndirectLayerTrees[aGuid.mLayersId].mParent;
-  }
-  if (parent) {
-    if (!parent->RecvNotifyApproximatelyVisibleRegion(aGuid, aRegion)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-    return IPC_OK();;
-  }
-  return IPC_OK();
 }
 
 void

@@ -8,6 +8,7 @@
 #include "SkScan.h"
 #include "SkBlitter.h"
 #include "SkMathPriv.h"
+#include "SkPaint.h"
 #include "SkRasterClip.h"
 #include "SkFDot6.h"
 #include "SkLineClipper.h"
@@ -143,17 +144,14 @@ void SkScan::HairLineRgn(const SkPoint array[], int arrayCount, const SkRegion* 
 
 // we don't just draw 4 lines, 'cause that can leave a gap in the bottom-right
 // and double-hit the top-left.
-// TODO: handle huge coordinates on rect (before calling SkScalarToFixed)
 void SkScan::HairRect(const SkRect& rect, const SkRasterClip& clip,
                       SkBlitter* blitter) {
     SkAAClipBlitterWrapper wrapper;
-    SkBlitterClipper    clipper;
-    SkIRect             r;
-
-    r.set(SkScalarToFixed(rect.fLeft) >> 16,
-          SkScalarToFixed(rect.fTop) >> 16,
-          (SkScalarToFixed(rect.fRight) >> 16) + 1,
-          (SkScalarToFixed(rect.fBottom) >> 16) + 1);
+    SkBlitterClipper clipper;
+    const SkIRect r = SkIRect::MakeLTRB(SkScalarFloorToInt(rect.fLeft),
+                                        SkScalarFloorToInt(rect.fTop),
+                                        SkScalarFloorToInt(rect.fRight) + 1,
+                                        SkScalarFloorToInt(rect.fBottom) + 1);
 
     if (clip.quickReject(r)) {
         return;
@@ -196,7 +194,7 @@ void SkScan::HairRect(const SkRect& rect, const SkRasterClip& clip,
 #define kMaxCubicSubdivideLevel 9
 #define kMaxQuadSubdivideLevel  5
 
-static int compute_int_quad_dist(const SkPoint pts[3]) {
+static uint32_t compute_int_quad_dist(const SkPoint pts[3]) {
     // compute the vector between the control point ([1]) and the middle of the
     // line connecting the start and end ([0] and [2])
     SkScalar dx = SkScalarHalf(pts[0].fX + pts[2].fX) - pts[1].fX;
@@ -204,9 +202,11 @@ static int compute_int_quad_dist(const SkPoint pts[3]) {
     // we want everyone to be positive
     dx = SkScalarAbs(dx);
     dy = SkScalarAbs(dy);
-    // convert to whole pixel values (use ceiling to be conservative)
-    int idx = SkScalarCeilToInt(dx);
-    int idy = SkScalarCeilToInt(dy);
+    // convert to whole pixel values (use ceiling to be conservative).
+    // assign to unsigned so we can safely add 1/2 of the smaller and still fit in
+    // uint32_t, since SkScalarCeilToInt() returns 31 bits at most.
+    uint32_t idx = SkScalarCeilToInt(dx);
+    uint32_t idy = SkScalarCeilToInt(dy);
     // use the cheap approx for distance
     if (idx > idy) {
         return idx + (idy >> 1);
@@ -404,7 +404,7 @@ static inline void haircubic(const SkPoint pts[4], const SkRegion* clip, const S
 }
 
 static int compute_quad_level(const SkPoint pts[3]) {
-    int d = compute_int_quad_dist(pts);
+    uint32_t d = compute_int_quad_dist(pts);
     /*  quadratics approach the line connecting their start and end points
      4x closer with each subdivision, so we compute the number of
      subdivisions to be the minimum need to get that distance to be less
@@ -447,7 +447,8 @@ void extend_pts(SkPath::Verb prevVerb, SkPath::Verb nextVerb, SkPoint* pts, int 
             ++first;
         } while (++controls < ptCount);
     }
-    if (SkPath::kMove_Verb == nextVerb || SkPath::kDone_Verb == nextVerb) {
+    if (SkPath::kMove_Verb == nextVerb || SkPath::kDone_Verb == nextVerb
+            || SkPath::kClose_Verb == nextVerb) {
         SkPoint* last = &pts[ptCount - 1];
         SkPoint* ctrl = last;
         int controls = ptCount - 1;

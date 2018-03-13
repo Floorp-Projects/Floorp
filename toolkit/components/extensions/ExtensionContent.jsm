@@ -34,7 +34,7 @@ ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
-Cu.importGlobalProperties(["crypto", "TextDecoder", "TextEncoder"]);
+Cu.importGlobalProperties(["crypto", "TextEncoder"]);
 
 const {
   DefaultMap,
@@ -313,7 +313,7 @@ class Script {
 
     // Store the hash of the cssCode.
     const buffer = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(cssCode));
-    this.cssCodeHash = new TextDecoder().decode(buffer);
+    this.cssCodeHash = String.fromCharCode(...new Uint16Array(buffer));
 
     // Cache and preload the cssCode stylesheet.
     this.cssCodeCache.addCSSCode(this.cssCodeHash, cssCode);

@@ -6,7 +6,7 @@
  */
 
 #include "SkTypes.h"
-#if defined(SK_BUILD_FOR_WIN32)
+#if defined(SK_BUILD_FOR_WIN)
 
 #undef GetGlyphIndices
 
@@ -42,7 +42,7 @@ static SkSharedMutex DWriteFactoryMutex;
 
 typedef SkAutoSharedMutexShared Shared;
 
-static bool isLCD(const SkScalerContext::Rec& rec) {
+static bool isLCD(const SkScalerContextRec& rec) {
     return SkMask::kLCD16_Format == rec.fMaskFormat;
 }
 
@@ -197,7 +197,7 @@ static bool both_zero(SkScalar a, SkScalar b) {
 }
 
 // returns false if there is any non-90-rotation or skew
-static bool is_axis_aligned(const SkScalerContext::Rec& rec) {
+static bool is_axis_aligned(const SkScalerContextRec& rec) {
     return 0 == rec.fPreSkewX &&
            (both_zero(rec.fPost2x2[0][1], rec.fPost2x2[1][0]) ||
             both_zero(rec.fPost2x2[0][0], rec.fPost2x2[1][1]));
@@ -214,7 +214,7 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
                    typeface->fDWriteFontFace2 &&
                    typeface->fDWriteFontFace2->IsColorFont();
 
-    // In general, all glyphs should DWriteFontFace::GetRecommendedRenderingMode
+    // In general, all glyphs should use DWriteFontFace::GetRecommendedRenderingMode
     // except when bi-level rendering is requested or there are embedded
     // bi-level bitmaps (and the embedded bitmap flag is set and no rotation).
     //
@@ -231,9 +231,7 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
     // horizontal glyphs and the subpixel flag should not affect glyph shapes.
 
     SkVector scale;
-    SkMatrix GsA;
-    fRec.computeMatrices(SkScalerContextRec::kVertical_PreMatrixScale,
-                         &scale, &fSkXform, &GsA, &fG_inv);
+    fRec.computeMatrices(SkScalerContextRec::kVertical_PreMatrixScale, &scale, &fSkXform);
 
     fXform.m11 = SkScalarToFloat(fSkXform.getScaleX());
     fXform.m12 = SkScalarToFloat(fSkXform.getSkewY());
@@ -241,13 +239,6 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
     fXform.m22 = SkScalarToFloat(fSkXform.getScaleY());
     fXform.dx = 0;
     fXform.dy = 0;
-
-    fGsA.m11 = SkScalarToFloat(GsA.get(SkMatrix::kMScaleX));
-    fGsA.m12 = SkScalarToFloat(GsA.get(SkMatrix::kMSkewY)); // This should be ~0.
-    fGsA.m21 = SkScalarToFloat(GsA.get(SkMatrix::kMSkewX));
-    fGsA.m22 = SkScalarToFloat(GsA.get(SkMatrix::kMScaleY));
-    fGsA.dx = 0;
-    fGsA.dy = 0;
 
     // realTextSize is the actual device size we want (as opposed to the size the user requested).
     // gdiTextSize is the size we request when GDI compatible.
@@ -308,7 +299,6 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
     // If the font has a gasp table version 1, use it to determine symmetric rendering.
     } else if ((get_gasp_range(typeface, SkScalarRoundToInt(gdiTextSize), &range) &&
                 range.fVersion >= 1) ||
-    // If the requested size is above 20px or there are no bytecode hints, use symmetric rendering.
                realTextSize > SkIntToScalar(20) || !is_hinted(typeface)) {
         fTextSizeRender = realTextSize;
         fTextureType = DWRITE_TEXTURE_CLEARTYPE_3x1;
@@ -416,7 +406,9 @@ void SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
         HRVM(this->getDWriteTypeface()->fDWriteFontFace->GetGdiCompatibleGlyphMetrics(
                  fTextSizeMeasure,
                  1.0f, // pixelsPerDip
-                 &fGsA,
+                 // This parameter does not act like the lpmat2 parameter to GetGlyphOutlineW.
+                 // If it did then GsA here and G_inv below to mapVectors.
+                 nullptr,
                  DWRITE_MEASURING_MODE_GDI_NATURAL == fMeasuringMode,
                  &glyphId, 1,
                  &gm),
@@ -434,20 +426,18 @@ void SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
     }
     SkScalar advanceX = fTextSizeMeasure * gm.advanceWidth / dwfm.designUnitsPerEm;
 
-    SkVector vecs[1] = { { advanceX, 0 } };
+    SkVector advance = { advanceX, 0 };
     if (DWRITE_MEASURING_MODE_GDI_CLASSIC == fMeasuringMode ||
         DWRITE_MEASURING_MODE_GDI_NATURAL == fMeasuringMode)
     {
         // DirectWrite produced 'compatible' metrics, but while close,
         // the end result is not always an integer as it would be with GDI.
-        vecs[0].fX = SkScalarRoundToScalar(advanceX);
-        fG_inv.mapVectors(vecs, SK_ARRAY_COUNT(vecs));
-    } else {
-        fSkXform.mapVectors(vecs, SK_ARRAY_COUNT(vecs));
+        advance.fX = SkScalarRoundToScalar(advance.fX);
     }
+    fSkXform.mapVectors(&advance, 1);
 
-    glyph->fAdvanceX = SkScalarToFloat(vecs[0].fX);
-    glyph->fAdvanceY = SkScalarToFloat(vecs[0].fY);
+    glyph->fAdvanceX = SkScalarToFloat(advance.fX);
+    glyph->fAdvanceY = SkScalarToFloat(advance.fY);
 }
 
 HRESULT SkScalerContext_DW::getBoundingBox(SkGlyph* glyph,
@@ -525,6 +515,14 @@ static bool glyph_check_and_set_bounds(SkGlyph* glyph, const RECT& bbox) {
     if (bbox.left >= bbox.right || bbox.top >= bbox.bottom) {
         return false;
     }
+
+    // We're trying to pack left and top into int16_t,
+    // and width and height into uint16_t, after outsetting by 1.
+    if (!SkIRect::MakeXYWH(-32767, -32767, 65535, 65535).contains(
+                SkIRect::MakeLTRB(bbox.left, bbox.top, bbox.right, bbox.bottom))) {
+        return false;
+    }
+
     glyph->fWidth = SkToU16(bbox.right - bbox.left);
     glyph->fHeight = SkToU16(bbox.bottom - bbox.top);
     glyph->fLeft = SkToS16(bbox.left);
@@ -632,9 +630,13 @@ void SkScalerContext_DW::generateFontMetrics(SkPaint::FontMetrics* metrics) {
     metrics->fCapHeight = fTextSizeRender * SkIntToScalar(dwfm.capHeight) / upem;
     metrics->fUnderlineThickness = fTextSizeRender * SkIntToScalar(dwfm.underlineThickness) / upem;
     metrics->fUnderlinePosition = -(fTextSizeRender * SkIntToScalar(dwfm.underlinePosition) / upem);
+    metrics->fStrikeoutThickness = fTextSizeRender * SkIntToScalar(dwfm.strikethroughThickness) / upem;
+    metrics->fStrikeoutPosition = -(fTextSizeRender * SkIntToScalar(dwfm.strikethroughPosition) / upem);
 
     metrics->fFlags |= SkPaint::FontMetrics::kUnderlineThicknessIsValid_Flag;
     metrics->fFlags |= SkPaint::FontMetrics::kUnderlinePositionIsValid_Flag;
+    metrics->fFlags |= SkPaint::FontMetrics::kStrikeoutThicknessIsValid_Flag;
+    metrics->fFlags |= SkPaint::FontMetrics::kStrikeoutPositionIsValid_Flag;
 
     if (this->getDWriteTypeface()->fDWriteFontFace1.get()) {
         DWRITE_FONT_METRICS1 dwfm1;
@@ -668,7 +670,7 @@ void SkScalerContext_DW::generateFontMetrics(SkPaint::FontMetrics* metrics) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "SkColorPriv.h"
+#include "SkColorData.h"
 
 static void bilevel_to_bw(const uint8_t* SK_RESTRICT src, const SkGlyph& glyph) {
     const int width = glyph.fWidth;
@@ -886,10 +888,10 @@ void SkScalerContext_DW::generateColorGlyphImage(const SkGlyph& glyph) {
 
         SkColor color;
         if (colorGlyph->paletteIndex != 0xffff) {
-            color = SkColorSetARGB(SkFloatToIntRound(colorGlyph->runColor.a * 255),
-                                   SkFloatToIntRound(colorGlyph->runColor.r * 255),
-                                   SkFloatToIntRound(colorGlyph->runColor.g * 255),
-                                   SkFloatToIntRound(colorGlyph->runColor.b * 255));
+            color = SkColorSetARGB(sk_float_round2int(colorGlyph->runColor.a * 255),
+                                   sk_float_round2int(colorGlyph->runColor.r * 255),
+                                   sk_float_round2int(colorGlyph->runColor.g * 255),
+                                   sk_float_round2int(colorGlyph->runColor.b * 255));
         } else {
             // If all components of runColor are 0 or (equivalently) paletteIndex is 0xFFFF then
             // the 'current brush' is used. fRec.getLuminanceColor() is kinda sorta what is wanted
@@ -1006,4 +1008,4 @@ void SkScalerContext_DW::generatePath(SkGlyphID glyph, SkPath* path) {
     path->transform(fSkXform);
 }
 
-#endif//defined(SK_BUILD_FOR_WIN32)
+#endif//defined(SK_BUILD_FOR_WIN)

@@ -448,6 +448,7 @@ DocAccessible::Shutdown()
       parentDocument->RemoveChildDocument(this);
 
     mParent->RemoveChild(this);
+    MOZ_ASSERT(!mParent, "Parent has to be null!");
   }
 
   // Walk the array backwards because child documents remove themselves from the

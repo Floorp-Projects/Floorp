@@ -105,7 +105,7 @@ struct GLContextSymbols final
     void (GLAPIENTRY * fGetUniformfv)(GLuint, GLint, GLfloat*);
     void (GLAPIENTRY * fGetUniformiv)(GLuint, GLint, GLint*);
     void (GLAPIENTRY * fGetUniformuiv)(GLuint, GLint, GLuint*);
-    GLint (GLAPIENTRY * fGetUniformLocation)(GLint, const GLchar*);
+    GLint (GLAPIENTRY * fGetUniformLocation)(GLuint, const GLchar*);
     void (GLAPIENTRY * fGetVertexAttribfv)(GLuint, GLenum, GLfloat*);
     void (GLAPIENTRY * fGetVertexAttribiv)(GLuint, GLenum, GLint*);
     void (GLAPIENTRY * fGetVertexAttribPointerv)(GLuint, GLenum, GLvoid**);

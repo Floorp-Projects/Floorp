@@ -2093,7 +2093,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_INTERFACE_MAP_BEGIN(FragmentOrElement)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(FragmentOrElement)
-  NS_INTERFACE_MAP_ENTRY(Element)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
@@ -2467,42 +2466,5 @@ FragmentOrElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
   nsDOMSlots* slots = GetExistingDOMSlots();
   if (slots) {
     *aNodeSize += slots->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
-  }
-}
-
-void
-FragmentOrElement::SetIsElementInStyleScopeFlagOnSubtree(bool aInStyleScope)
-{
-  if (aInStyleScope && IsElementInStyleScope()) {
-    return;
-  }
-
-  if (IsElement()) {
-    SetIsElementInStyleScope(aInStyleScope);
-    SetIsElementInStyleScopeFlagOnShadowTree(aInStyleScope);
-  }
-
-  nsIContent* n = GetNextNode(this);
-  while (n) {
-    if (n->IsElementInStyleScope()) {
-      n = n->GetNextNonChildNode(this);
-    } else {
-      if (n->IsElement()) {
-        n->SetIsElementInStyleScope(aInStyleScope);
-        n->AsElement()->SetIsElementInStyleScopeFlagOnShadowTree(aInStyleScope);
-      }
-      n = n->GetNextNode(this);
-    }
-  }
-}
-
-void
-FragmentOrElement::SetIsElementInStyleScopeFlagOnShadowTree(bool aInStyleScope)
-{
-  NS_ASSERTION(IsElement(), "calling SetIsElementInStyleScopeFlagOnShadowTree "
-                            "on a non-Element is useless");
-  ShadowRoot* shadowRoot = GetShadowRoot();
-  if (shadowRoot) {
-    shadowRoot->SetIsElementInStyleScopeFlagOnSubtree(aInStyleScope);
   }
 }

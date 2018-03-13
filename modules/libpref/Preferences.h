@@ -41,6 +41,11 @@ class PrefValue;
 
 struct PrefsSizes;
 
+#ifdef XP_UNIX
+// XXX: bug 1440207 is about improving how fixed fds such as this are used.
+static const int kPrefsFileDescriptor = 8;
+#endif
+
 // Keep this in sync with PrefType in parser/src/lib.rs.
 enum class PrefValueKind : uint8_t
 {
@@ -230,9 +235,6 @@ public:
   // Whether the pref has a user value or not.
   static bool HasUserValue(const char* aPref);
 
-  // Must the pref be sent to content processes when they start?
-  static bool MustSendToContentProcesses(const char* aPref);
-
   // Adds/Removes the observer for the root pref branch. See nsIPrefBranch.idl
   // for details.
   static nsresult AddStrongObserver(nsIObserver* aObserver, const char* aPref);
@@ -328,11 +330,12 @@ public:
 
   // When a content process is created these methods are used to pass prefs in
   // bulk from the parent process. "Early" preferences are ones that are needed
-  // very early on in the content process's lifetime; they are passed via the
-  // command line. "Late" preferences are the remainder, which are passed via
-  // IPC message.
+  // very early on in the content process's lifetime; they are passed via a
+  // special shared memory segment. "Late" preferences are the remainder, which
+  // are passed via a standard IPC message.
+  static void SerializeEarlyPreferences(nsCString& aStr);
+  static void DeserializeEarlyPreferences(char* aStr, size_t aStrLen);
   static void GetPreferences(InfallibleTArray<dom::Pref>* aSettings);
-  static void SetEarlyPreferences(const nsTArray<dom::Pref>* aSettings);
   static void SetLatePreferences(const nsTArray<dom::Pref>* aSettings);
 
   // When a single pref is changed in the parent process, these methods are
@@ -395,6 +398,7 @@ public:
   };
 
 private:
+  static void SetupTelemetryPref();
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects();
 
   // Functions above that modify prefs will fail if they are not run in the

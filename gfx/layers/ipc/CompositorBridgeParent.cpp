@@ -616,39 +616,6 @@ CompositorBridgeParent::RecvStopFrameTimeRecording(const uint32_t& aStartIndex,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CompositorBridgeParent::RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
-                                                             const uint32_t& aPresShellId)
-{
-  ClearApproximatelyVisibleRegions(aLayersId, Some(aPresShellId));
-  return IPC_OK();
-}
-
-void
-CompositorBridgeParent::ClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
-                                                         const Maybe<uint32_t>& aPresShellId)
-{
-  if (mLayerManager) {
-    mLayerManager->ClearApproximatelyVisibleRegions(aLayersId, aPresShellId);
-
-    // We need to recomposite to update the minimap.
-    ScheduleComposition();
-  }
-}
-
-mozilla::ipc::IPCResult
-CompositorBridgeParent::RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                                             const CSSIntRegion& aRegion)
-{
-  if (mLayerManager) {
-    mLayerManager->UpdateApproximatelyVisibleRegion(aGuid, aRegion);
-
-    // We need to recomposite to update the minimap.
-    ScheduleComposition();
-  }
-  return IPC_OK();
-}
-
 void
 CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
 {
@@ -1850,7 +1817,6 @@ EraseLayerState(uint64_t aId)
   if (iter != sIndirectLayerTrees.end()) {
     CompositorBridgeParent* parent = iter->second.mParent;
     if (parent) {
-      parent->ClearApproximatelyVisibleRegions(aId, Nothing());
       if (RefPtr<APZSampler> apz = parent->GetAPZSampler()) {
         apz->NotifyLayerTreeRemoved(aId);
       }

@@ -1442,8 +1442,12 @@ nsPluginFrame::CreateWebRenderCommands(nsDisplayItem* aItem,
   }
   lm->AddDidCompositeObserver(mDidCompositeObserver.get());
 
+  // If the image container is empty, we don't want to fallback. Any other
+  // failure will be due to resource constraints and fallback is unlikely to
+  // help us. Hence we can ignore the return value from PushImage.
   LayoutDeviceRect dest(r.x, r.y, size.width, size.height);
-  return aManager->CommandBuilder().PushImage(aItem, container, aBuilder, aResources, aSc, dest);
+  aManager->CommandBuilder().PushImage(aItem, container, aBuilder, aResources, aSc, dest);
+  return true;
 }
 
 

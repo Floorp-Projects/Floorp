@@ -183,13 +183,6 @@ public:
   bool AppendFontFeatureValuesRules(nsPresContext* aPresContext,
                               nsTArray<nsCSSFontFeatureValuesRule*>& aArray);
 
-  /**
-   * Returns the scope element for the scoped style sheets this rule
-   * processor is for.  If this is not a rule processor for scoped style
-   * sheets, it returns null.
-   */
-  mozilla::dom::Element* GetScopeElement() const { return mScopeElement; }
-
   void TakeDocumentRulesAndCacheKey(
       nsPresContext* aPresContext,
       nsTArray<mozilla::css::DocumentRule*>& aDocumentRules,
@@ -247,10 +240,6 @@ private:
 
   // The last pres context for which GetRuleCascades was called.
   nsPresContext *mLastPresContext;
-
-  // The scope element for this rule processor's scoped style sheets.
-  // Only used if mSheetType == nsStyleSet::eScopedDocSheet.
-  RefPtr<mozilla::dom::Element> mScopeElement;
 
   nsTArray<mozilla::css::DocumentRule*> mDocumentRules;
   nsDocumentRuleResultCacheKey mDocumentCacheKey;

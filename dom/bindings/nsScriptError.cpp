@@ -181,22 +181,6 @@ nsScriptErrorBase::SetErrorMessageName(const nsAString& aErrorMessageName) {
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsScriptErrorBase::Init(const nsAString& message,
-                        const nsAString& sourceName,
-                        const nsAString& sourceLine,
-                        uint32_t lineNumber,
-                        uint32_t columnNumber,
-                        uint32_t flags,
-                        const char* category)
-{
-    return InitWithWindowID(message, sourceName, sourceLine, lineNumber,
-                            columnNumber, flags,
-                            category ? nsDependentCString(category)
-                                     : EmptyCString(),
-                            0);
-}
-
 static void
 AssignSourceNameHelper(nsString& aSourceNameDest, const nsAString& aSourceNameSrc)
 {
@@ -225,6 +209,26 @@ AssignSourceNameHelper(nsIURI* aSourceURI, nsString& aSourceNameDest)
                                                   aSourceNameDest))) {
         aSourceNameDest.AssignLiteral("[nsIURI::GetSpec failed]");
     }
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::Init(const nsAString& message,
+                        const nsAString& sourceName,
+                        const nsAString& sourceLine,
+                        uint32_t lineNumber,
+                        uint32_t columnNumber,
+                        uint32_t flags,
+                        const char* category,
+                        bool fromPrivateWindow)
+{
+    InitializationHelper(message, sourceLine, lineNumber, columnNumber, flags,
+                         category ? nsDependentCString(category)
+                                  : EmptyCString(),
+                         0 /* inner Window ID */);
+    AssignSourceNameHelper(mSourceName, sourceName);
+
+    mIsFromPrivateWindow = fromPrivateWindow;
+    return NS_OK;
 }
 
 void

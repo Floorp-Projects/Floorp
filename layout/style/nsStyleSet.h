@@ -430,7 +430,7 @@ class nsStyleSet final
                                   mozilla::CSSStyleSheet* aNewSheet,
                                   mozilla::CSSStyleSheet* aReferenceSheet);
 
-  // Enable/Disable entire author style level (Doc, ScopedDoc & PresHint levels)
+  // Enable/Disable entire author style level (Doc & PresHint levels)
   bool GetAuthorStyleDisabled() const
   {
     return mAuthorStyleDisabled;
@@ -622,13 +622,8 @@ private:
   mozilla::EnumeratedArray<mozilla::SheetType, mozilla::SheetType::Count,
                            nsTArray<RefPtr<mozilla::CSSStyleSheet>>> mSheets;
 
-  // mRuleProcessors[eScopedDocSheet] is always null; rule processors
-  // for scoped style sheets are stored in mScopedDocSheetRuleProcessors.
   mozilla::EnumeratedArray<mozilla::SheetType, mozilla::SheetType::Count,
                            nsCOMPtr<nsIStyleRuleProcessor>> mRuleProcessors;
-
-  // Rule processors for HTML5 scoped style sheets, one per scope.
-  nsTArray<nsCOMPtr<nsIStyleRuleProcessor> > mScopedDocSheetRuleProcessors;
 
   RefPtr<nsBindingManager> mBindingManager;
 

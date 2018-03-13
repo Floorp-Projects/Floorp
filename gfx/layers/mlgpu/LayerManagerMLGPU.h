@@ -56,10 +56,6 @@ public:
   TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
   LayersBackend GetBackendType() override;
   void AddInvalidRegion(const nsIntRegion& aRegion) override;
-  void ClearApproximatelyVisibleRegions(uint64_t aLayersId,
-                                                const Maybe<uint32_t>& aPresShellId) override {}
-  void UpdateApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                                const CSSIntRegion& aRegion) override {}
   void EndTransaction(const TimeStamp& aTimeStamp, EndTransactionFlags aFlags) override;
   void EndTransaction(DrawPaintedLayerCallback aCallback,
                       void* aCallbackData,

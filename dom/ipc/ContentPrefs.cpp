@@ -180,7 +180,6 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "layout.css.prefixes.transitions",
   "layout.css.prefixes.webkit",
   "layout.css.scope-pseudo.enabled",
-  "layout.css.scoped-style.enabled",
   "layout.css.scroll-behavior.property-enabled",
   "layout.css.scroll-snap.enabled",
 #ifdef MOZ_STYLO

@@ -1251,6 +1251,38 @@ bool nsXULWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight)
   return gotPosition;
 }
 
+static Maybe<int32_t>
+ReadIntAttribute(const Element& aElement, nsAtom* aAtom)
+{
+  nsAutoString attrString;
+  if (!aElement.GetAttr(kNameSpaceID_None, aAtom, attrString)) {
+    return Nothing();
+  }
+
+  nsresult res = NS_OK;
+  int32_t ret = attrString.ToInteger(&res);
+  return NS_SUCCEEDED(res) ? Some(ret) : Nothing();
+}
+
+static Maybe<int32_t>
+ReadSize(const Element& aElement,
+         nsAtom* aAttr,
+         nsAtom* aMinAttr,
+         nsAtom* aMaxAttr)
+{
+  Maybe<int32_t> attr = ReadIntAttribute(aElement, aAttr);
+  if (!attr) {
+    return Nothing();
+  }
+
+  int32_t min =
+    std::max(100, ReadIntAttribute(aElement, aMinAttr).valueOr(100));
+  int32_t max = ReadIntAttribute(aElement, aMaxAttr)
+    .valueOr(std::numeric_limits<int32_t>::max());
+
+  return Some(std::min(max, std::max(*attr, min)));
+}
+
 bool
 nsXULWindow::LoadSizeFromXUL(int32_t& aSpecWidth, int32_t& aSpecHeight)
 {
@@ -1265,24 +1297,23 @@ nsXULWindow::LoadSizeFromXUL(int32_t& aSpecWidth, int32_t& aSpecHeight)
   nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   NS_ENSURE_TRUE(windowElement, false);
 
-  nsresult errorCode;
-  int32_t temp;
-
   // Obtain the sizing information from the <xul:window> element.
   aSpecWidth = 100;
   aSpecHeight = 100;
-  nsAutoString sizeString;
 
-  windowElement->GetAttribute(WIDTH_ATTRIBUTE, sizeString);
-  temp = sizeString.ToInteger(&errorCode);
-  if (NS_SUCCEEDED(errorCode) && temp > 0) {
-    aSpecWidth = std::max(temp, 100);
+  if (auto width = ReadSize(*windowElement,
+                            nsGkAtoms::width,
+                            nsGkAtoms::minwidth,
+                            nsGkAtoms::maxwidth)) {
+    aSpecWidth = *width;
     gotSize = true;
   }
-  windowElement->GetAttribute(HEIGHT_ATTRIBUTE, sizeString);
-  temp = sizeString.ToInteger(&errorCode);
-  if (NS_SUCCEEDED(errorCode) && temp > 0) {
-    aSpecHeight = std::max(temp, 100);
+
+  if (auto height = ReadSize(*windowElement,
+                             nsGkAtoms::height,
+                             nsGkAtoms::minheight,
+                             nsGkAtoms::maxheight)) {
+    aSpecHeight = *height;
     gotSize = true;
   }
 

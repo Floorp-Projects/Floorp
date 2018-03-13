@@ -367,7 +367,7 @@ ExtensionPageChild = {
       global.docShell.isAppTab = true;
     }
 
-    promiseEvent(global, "DOMContentLoaded", true).then(() => {
+    promiseEvent(global, "DOMContentLoaded", true, event => event.target.location != "about:blank").then(() => {
       let windowId = getInnerWindowID(global.content);
       let context = this.extensionContexts.get(windowId);
 

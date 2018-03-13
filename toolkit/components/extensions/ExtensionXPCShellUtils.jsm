@@ -14,10 +14,14 @@ ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonTestUtils",
                                "resource://testing-common/AddonTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "ContentTask",
+                               "resource://testing-common/ContentTask.jsm");
 ChromeUtils.defineModuleGetter(this, "Extension",
                                "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "MessageChannel",
+                               "resource://gre/modules/MessageChannel.jsm");
 ChromeUtils.defineModuleGetter(this, "Schemas",
                                "resource://gre/modules/Schemas.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
@@ -55,17 +59,25 @@ let BASE_MANIFEST = Object.freeze({
 
 
 function frameScript() {
+  ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
   ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   Services.obs.notifyObservers(this, "tab-content-frameloader-created");
+
+  const messageListener = {
+    async receiveMessage({target, messageName, recipient, data, name}) {
+      /* globals content */
+      let resp = await content.fetch(data.url, data.options);
+      return resp.text();
+    },
+  };
+  MessageChannel.addListener(this, "Test:Fetch", messageListener);
 
   // eslint-disable-next-line mozilla/balanced-listeners, no-undef
   addEventListener("MozHeapMinimize", () => {
     Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");
   }, true, true);
 }
-
-const FRAME_SCRIPT = `data:text/javascript,(${encodeURI(frameScript)}).call(this)`;
 
 let kungFuDeathGrip = new Set();
 function promiseBrowserLoaded(browser, url, redirectUrl) {
@@ -74,7 +86,7 @@ function promiseBrowserLoaded(browser, url, redirectUrl) {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIWebProgressListener]),
 
       onStateChange(webProgress, request, stateFlags, statusCode) {
-        let requestUrl = request.URI ? request.URI.spec : webProgress.DOMWindow.location.href;
+        let requestUrl = request.originalURI ? request.originalURI.spec : webProgress.DOMWindow.location.href;
         if (webProgress.isTopLevel &&
             (requestUrl === url || requestUrl === redirectUrl) &&
             (stateFlags & Ci.nsIWebProgressListener.STATE_STOP)) {
@@ -139,10 +151,20 @@ class ContentPage {
     chromeDoc.documentElement.appendChild(browser);
 
     await awaitFrameLoader;
-    browser.messageManager.loadFrameScript(FRAME_SCRIPT, true);
-
     this.browser = browser;
+
+    this.loadFrameScript(frameScript);
+
     return browser;
+  }
+
+  sendMessage(msg, data) {
+    return MessageChannel.sendMessage(this.browser.messageManager, msg, data);
+  }
+
+  loadFrameScript(func) {
+    let frameScript = `data:text/javascript,(${encodeURI(func)}).call(this)`;
+    this.browser.messageManager.loadFrameScript(frameScript, true);
   }
 
   async loadURL(url, redirectUrl = undefined) {
@@ -150,6 +172,14 @@ class ContentPage {
 
     this.browser.loadURI(url);
     return promiseBrowserLoaded(this.browser, url, redirectUrl);
+  }
+
+  async fetch(url, options) {
+    return this.sendMessage("Test:Fetch", {url, options});
+  }
+
+  spawn(params, task) {
+    return ContentTask.spawn(this.browser, params, task);
   }
 
   async close() {
@@ -617,6 +647,8 @@ var ExtensionTestUtils = {
 
     this.profileDir = scope.do_get_profile();
 
+    this.fetchScopes = new Map();
+
     // We need to load at least one frame script into every message
     // manager to ensure that the scriptable wrapper for its global gets
     // created before we try to access it externally. If we don't, we
@@ -649,6 +681,9 @@ var ExtensionTestUtils = {
       Services.dirsvc.unregisterProvider(dirProvider);
 
       this.currentScope = null;
+
+      return Promise.all(Array.from(this.fetchScopes.values(),
+                                    promise => promise.then(scope => scope.close())));
     });
   },
 
@@ -696,6 +731,17 @@ var ExtensionTestUtils = {
     REMOTE_CONTENT_SCRIPTS = !!val;
   },
 
+  async fetch(origin, url, options) {
+    let fetchScopePromise = this.fetchScopes.get(origin);
+    if (!fetchScopePromise) {
+      fetchScopePromise = this.loadContentPage(origin);
+      this.fetchScopes.set(origin, fetchScopePromise);
+    }
+
+    let fetchScope = await fetchScopePromise;
+    return fetchScope.sendMessage("Test:Fetch", {url, options});
+  },
+
   /**
    * Loads a content page into a hidden docShell.
    *
@@ -715,6 +761,8 @@ var ExtensionTestUtils = {
    * @returns {ContentPage}
    */
   loadContentPage(url, {extension = undefined, remote = undefined, redirectUrl = undefined} = {}) {
+    ContentTask.setTestScope(this.currentScope);
+
     let contentPage = new ContentPage(remote, extension && extension.extension);
 
     return contentPage.loadURL(url, redirectUrl).then(() => {

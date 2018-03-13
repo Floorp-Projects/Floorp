@@ -368,10 +368,23 @@ main()
     BigEndian::readUint64(&unsigned_bytes[0]) == 0x0102030405060708ULL);
 
   if (sizeof(uintptr_t) == 8) {
+    // MSVC warning C4309 is "'static_cast': truncation of constant value" and
+    // will hit for the literal casts below in 32-bit builds -- in dead code,
+    // because only the other arm of this |if| runs.  Turn off the warning for
+    // these two uses in dead code.
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable: 4309)
+#endif
     MOZ_RELEASE_ASSERT(
-      LittleEndian::readUintptr(&unsigned_bytes[0]) == 0x0807060504030201ULL);
+      LittleEndian::readUintptr(&unsigned_bytes[0]) ==
+      static_cast<uintptr_t>(0x0807060504030201ULL));
     MOZ_RELEASE_ASSERT(
-      BigEndian::readUintptr(&unsigned_bytes[0]) == 0x0102030405060708ULL);
+      BigEndian::readUintptr(&unsigned_bytes[0]) ==
+      static_cast<uintptr_t>(0x0102030405060708ULL));
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
   } else {
     MOZ_RELEASE_ASSERT(
       LittleEndian::readUintptr(&unsigned_bytes[0]) == 0x04030201U);

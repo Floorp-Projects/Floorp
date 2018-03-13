@@ -294,7 +294,7 @@ Simulator::handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes)
     uint8_t* fp = (uint8_t*)get_fp();
 
     const js::wasm::CodeSegment* segment = js::wasm::LookupCodeSegment(pc);
-    if (!segment)
+    if (!segment || !segment->isModule())
         return false;
     const js::wasm::ModuleSegment* moduleSegment = segment->asModule();
 

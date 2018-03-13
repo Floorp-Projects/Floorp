@@ -14,7 +14,7 @@ add_task(async function() {
 
   info("Checking the animation target elements existance");
   const animationItemEls = panel.querySelectorAll(".animation-list .animation-item");
-  is(animationItemEls.length, animationInspector.animations.length,
+  is(animationItemEls.length, animationInspector.state.animations.length,
      "Number of animation target element should be same to number of animations "
      + "that displays");
 
