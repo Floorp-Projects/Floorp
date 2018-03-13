@@ -619,7 +619,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
                                                                           aResources, aSc, size, Nothing());
 
       if (key.isNothing()) {
-        return ImgDrawResult::BAD_IMAGE;
+        return ImgDrawResult::NOT_READY;
       }
 
       nsPoint firstTilePos = nsLayoutUtils::GetBackgroundFirstTilePos(aDest.TopLeft(),
