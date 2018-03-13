@@ -1179,8 +1179,7 @@ TabParent::QueryDropLinksForVerification()
     return false;
   }
 
-  nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
-  dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
+  RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
   if (!initialDataTransfer) {
     NS_WARNING("No initialDataTransfer to query links for verification");
     return false;

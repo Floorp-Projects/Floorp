@@ -483,22 +483,11 @@ DataTransfer::ClearData(const Optional<nsAString>& aFormat,
   }
 }
 
-NS_IMETHODIMP
-DataTransfer::GetMozCursor(nsAString& aCursorState)
-{
-  nsString cursor;
-  GetMozCursor(cursor);
-  aCursorState = cursor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 DataTransfer::SetMozCursor(const nsAString& aCursorState)
 {
   // Lock the cursor to an arrow during the drag.
   mCursorState = aCursorState.EqualsLiteral("default");
-
-  return NS_OK;
 }
 
 already_AddRefed<nsINode>
