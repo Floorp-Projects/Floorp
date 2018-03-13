@@ -88,10 +88,10 @@ js::Debugger::onPromiseSettled(JSContext* cx, Handle<PromiseObject*> promise)
 }
 
 inline bool
-js::Debugger::getScriptFrame(JSContext* cx, const FrameIter& iter,
-                             MutableHandle<DebuggerFrame*> result)
+js::Debugger::getFrame(JSContext* cx, const FrameIter& iter,
+                       MutableHandle<DebuggerFrame*> result)
 {
-    return getScriptFrameWithIter(cx, iter.abstractFramePtr(), &iter, result);
+    return getFrameWithIter(cx, iter.abstractFramePtr(), &iter, result);
 }
 
 inline js::Debugger*

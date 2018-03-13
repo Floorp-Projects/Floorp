@@ -776,11 +776,11 @@ Debugger::memory() const
 }
 
 bool
-Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
-                                 const FrameIter* maybeIter, MutableHandleValue vp)
+Debugger::getFrameWithIter(JSContext* cx, AbstractFramePtr referent,
+                           const FrameIter* maybeIter, MutableHandleValue vp)
 {
     RootedDebuggerFrame result(cx);
-    if (!Debugger::getScriptFrameWithIter(cx, referent, maybeIter, &result))
+    if (!Debugger::getFrameWithIter(cx, referent, maybeIter, &result))
         return false;
 
     vp.setObject(*result);
@@ -788,9 +788,9 @@ Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
 }
 
 bool
-Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
-                                 const FrameIter* maybeIter,
-                                 MutableHandleDebuggerFrame result)
+Debugger::getFrameWithIter(JSContext* cx, AbstractFramePtr referent,
+                           const FrameIter* maybeIter,
+                           MutableHandleDebuggerFrame result)
 {
     MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == referent);
     MOZ_ASSERT_IF(referent.hasScript(), !referent.script()->selfHosted());
@@ -1763,7 +1763,7 @@ Debugger::fireDebuggerStatement(JSContext* cx, MutableHandleValue vp)
 
     ScriptFrameIter iter(cx);
     RootedValue scriptFrame(cx);
-    if (!getScriptFrame(cx, iter, &scriptFrame))
+    if (!getFrame(cx, iter, &scriptFrame))
         return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
@@ -1791,7 +1791,7 @@ Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp)
     RootedValue wrappedExc(cx, exc);
 
     FrameIter iter(cx);
-    if (!getScriptFrame(cx, iter, &scriptFrame) || !wrapDebuggeeValue(cx, &wrappedExc))
+    if (!getFrame(cx, iter, &scriptFrame) || !wrapDebuggeeValue(cx, &wrappedExc))
         return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
@@ -1816,7 +1816,7 @@ Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp)
     RootedValue scriptFrame(cx);
 
     FrameIter iter(cx);
-    if (!getScriptFrame(cx, iter, &scriptFrame))
+    if (!getFrame(cx, iter, &scriptFrame))
         return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
@@ -2029,7 +2029,7 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
             EnterDebuggeeNoExecute nx(cx, *dbg);
 
             RootedValue scriptFrame(cx);
-            if (!dbg->getScriptFrame(cx, iter, &scriptFrame))
+            if (!dbg->getFrame(cx, iter, &scriptFrame))
                 return dbg->reportUncaughtException(ac);
             RootedValue rv(cx);
             Rooted<JSObject*> handler(cx, bp->handler);
@@ -3889,7 +3889,7 @@ Debugger::getNewestFrame(JSContext* cx, unsigned argc, Value* vp)
             FrameIter iter(i.activation()->cx());
             while (!iter.hasUsableAbstractFramePtr() || iter.abstractFramePtr() != frame)
                 ++iter;
-            return dbg->getScriptFrame(cx, iter, args.rval());
+            return dbg->getFrame(cx, iter, args.rval());
         }
     }
     args.rval().setNull();
@@ -7694,7 +7694,7 @@ DebuggerFrame::getOlder(JSContext* cx, HandleDebuggerFrame frame,
         if (dbg->observesFrame(iter)) {
             if (iter.isIon() && !iter.ensureHasRematerializedFrame(cx))
                 return false;
-            return dbg->getScriptFrame(cx, iter, result);
+            return dbg->getFrame(cx, iter, result);
         }
     }
 

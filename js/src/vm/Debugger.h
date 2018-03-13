@@ -846,12 +846,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * Gets a Debugger.Frame object. If maybeIter is non-null, we eagerly copy
      * its data if we need to make a new Debugger.Frame.
      */
-    MOZ_MUST_USE bool getScriptFrameWithIter(JSContext* cx, AbstractFramePtr frame,
-                                             const FrameIter* maybeIter,
-                                             MutableHandleValue vp);
-    MOZ_MUST_USE bool getScriptFrameWithIter(JSContext* cx, AbstractFramePtr frame,
-                                             const FrameIter* maybeIter,
-                                             MutableHandleDebuggerFrame result);
+    MOZ_MUST_USE bool getFrameWithIter(JSContext* cx, AbstractFramePtr frame,
+                                       const FrameIter* maybeIter,
+                                       MutableHandleValue vp);
+    MOZ_MUST_USE bool getFrameWithIter(JSContext* cx, AbstractFramePtr frame,
+                                       const FrameIter* maybeIter,
+                                       MutableHandleDebuggerFrame result);
 
     inline Breakpoint* firstBreakpoint() const;
 
@@ -1058,8 +1058,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * Use this if you have already access to a frame pointer without having
      * to incur the cost of walking the stack.
      */
-    MOZ_MUST_USE bool getScriptFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleValue vp) {
-        return getScriptFrameWithIter(cx, frame, nullptr, vp);
+    MOZ_MUST_USE bool getFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleValue vp) {
+        return getFrameWithIter(cx, frame, nullptr, vp);
     }
 
     /*
@@ -1070,12 +1070,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * frame, in which case the cost of walking the stack has already been
      * paid.
      */
-    MOZ_MUST_USE bool getScriptFrame(JSContext* cx, const FrameIter& iter,
-                                     MutableHandleValue vp) {
-        return getScriptFrameWithIter(cx, iter.abstractFramePtr(), &iter, vp);
+    MOZ_MUST_USE bool getFrame(JSContext* cx, const FrameIter& iter,
+                               MutableHandleValue vp) {
+        return getFrameWithIter(cx, iter.abstractFramePtr(), &iter, vp);
     }
-    MOZ_MUST_USE bool getScriptFrame(JSContext* cx, const FrameIter& iter,
-                                     MutableHandleDebuggerFrame result);
+    MOZ_MUST_USE bool getFrame(JSContext* cx, const FrameIter& iter,
+                               MutableHandleDebuggerFrame result);
 
 
     /*
