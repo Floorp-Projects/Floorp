@@ -1520,12 +1520,8 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
         }
 
         if (NS_SUCCEEDED(status)) {
-            if (rec->mTRRSuccess == 0) { // first one
-                rec->mTrrDuration = TimeStamp::Now() - rec->mTrrStart;
-            }
             rec->mTRRSuccess++;
         }
-
         if (TRROutstanding()) {
             if (NS_FAILED(status)) {
                 return LOOKUP_OK; // wait for outstanding
@@ -1579,6 +1575,12 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
             }
             // continue
         }
+
+        if (NS_SUCCEEDED(status) && (rec->mTRRSuccess == 1)) {
+            // store the duration on first (used) TRR response
+            rec->mTrrDuration = TimeStamp::Now() - rec->mTrrStart;
+        }
+
     } else { // native resolve completed
         if (rec->usingAnyThread) {
             mActiveAnyThreadCount--;
