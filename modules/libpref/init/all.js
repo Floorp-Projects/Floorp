@@ -4750,8 +4750,8 @@ pref("image.mem.animated.use_heap", false);
 #endif
 
 // Decodes images into shared memory to allow direct use in separate
-// rendering processes.
-pref("image.mem.shared", 2);
+// rendering processes. Only applicable with WebRender.
+pref("image.mem.shared", 1);
 
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
