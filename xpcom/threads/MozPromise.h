@@ -303,8 +303,8 @@ private:
       if (--mOutstandingPromises == 0) {
         nsTArray<ResolveValueType> resolveValues;
         resolveValues.SetCapacity(mResolveValues.Length());
-        for (size_t i = 0; i < mResolveValues.Length(); ++i) {
-          resolveValues.AppendElement(Move(mResolveValues[i].ref()));
+        for (auto&& resolveValue : mResolveValues) {
+          resolveValues.AppendElement(Move(resolveValue.ref()));
         }
 
         mPromise->Resolve(Move(resolveValues), __func__);
@@ -1035,13 +1035,13 @@ protected:
   void DispatchAll()
   {
     mMutex.AssertCurrentThreadOwns();
-    for (size_t i = 0; i < mThenValues.Length(); ++i) {
-      mThenValues[i]->Dispatch(this);
+    for (auto&& thenValue : mThenValues) {
+      thenValue->Dispatch(this);
     }
     mThenValues.Clear();
 
-    for (size_t i = 0; i < mChainedPromises.Length(); ++i) {
-      ForwardTo(mChainedPromises[i]);
+    for (auto&& chainedPromise : mChainedPromises) {
+      ForwardTo(chainedPromise);
     }
     mChainedPromises.Clear();
   }
