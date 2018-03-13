@@ -122,6 +122,178 @@ const clickOnDetailCloseButton = function (panel) {
 };
 
 /**
+ * Click on pause/resume button.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ *        The panel instance.
+ */
+const clickOnPauseResumeButton = async function (animationInspector, panel) {
+  info("Click on pause/resume button");
+  const buttonEl = panel.querySelector(".pause-resume-button");
+  const bounds = buttonEl.getBoundingClientRect();
+  const x = bounds.width / 2;
+  const y = bounds.height / 2;
+  EventUtils.synthesizeMouse(buttonEl, x, y, {}, buttonEl.ownerGlobal);
+  await waitForSummaryAndDetail(animationInspector);
+};
+
+/**
+ * Click on rewind button.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ *        The panel instance.
+ */
+const clickOnRewindButton = async function (animationInspector, panel) {
+  info("Click on rewind button");
+  const buttonEl = panel.querySelector(".rewind-button");
+  const bounds = buttonEl.getBoundingClientRect();
+  const x = bounds.width / 2;
+  const y = bounds.height / 2;
+  EventUtils.synthesizeMouse(buttonEl, x, y, {}, buttonEl.ownerGlobal);
+  await waitForSummaryAndDetail(animationInspector);
+};
+
+/**
+ * Click on the scrubber controller pane to update the animation current time.
+ *
+ * @param {AnimationsPanel} panel
+ * @param {Number} mouseDownPosition
+ *        rate on scrubber controller pane.
+ *        This method calculates
+ *        `mouseDownPosition * offsetWidth + offsetLeft of scrubber controller pane`
+ *        as the clientX of MouseEvent.
+ */
+const clickOnCurrentTimeScrubberController = async function (animationInspector,
+                                                             panel,
+                                                             mouseDownPosition,
+                                                             mouseMovePosition) {
+  const controllerEl = panel.querySelector(".current-time-scrubber-controller");
+  const bounds = controllerEl.getBoundingClientRect();
+  const mousedonwX = bounds.width * mouseDownPosition;
+
+  info(`Click ${ mousedonwX } on scrubber controller`);
+  EventUtils.synthesizeMouse(controllerEl, mousedonwX, 0, {}, controllerEl.ownerGlobal);
+  await waitForSummaryAndDetail(animationInspector);
+};
+
+/**
+ * Click on playback rate selector to select given rate.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ * @param {Number} rate
+ */
+const clickOnPlaybackRateSelector = async function (animationInspector, panel, rate) {
+  info(`Click on playback rate selector to select ${rate}`);
+  const selectEl = panel.querySelector(".playback-rate-selector");
+  const optionEl = [...selectEl.options].filter(o => Number(o.value) === rate)[0];
+
+  if (!optionEl) {
+    ok(false, `Could not find an option for rate ${ rate } in the rate selector. ` +
+              `Values are: ${ [...selectEl.options].map(o => o.value) }`);
+    return;
+  }
+
+  const win = selectEl.ownerGlobal;
+  EventUtils.synthesizeMouseAtCenter(selectEl, { type: "mousedown" }, win);
+  EventUtils.synthesizeMouseAtCenter(optionEl, { type: "mouseup" }, win);
+  await waitForSummaryAndDetail(animationInspector);
+};
+
+/**
+ * Drag on the scrubber to update the animation current time.
+ *
+ * @param {AnimationsPanel} panel
+ * @param {Number} mouseDownPosition
+ *        rate on scrubber controller pane.
+ *        This method calculates
+ *        `mouseDownPosition * offsetWidth + offsetLeft of scrubber controller pane`
+ *        as the clientX of MouseEvent.
+ * @param {Number} mouseMovePosition
+ *        Dispatch mousemove event with mouseMovePosition after mousedown.
+ *        Calculation for clinetX is same to above.
+ * @param {Number} mouseYPixel
+ *        Y of mouse in pixel.
+ */
+const dragOnCurrentTimeScrubber = async function (animationInspector,
+                                                  panel,
+                                                  mouseDownPosition,
+                                                  mouseMovePosition,
+                                                  mouseYPixel) {
+  const controllerEl = panel.querySelector(".current-time-scrubber");
+  const bounds = controllerEl.getBoundingClientRect();
+  const mousedonwX = bounds.width * mouseDownPosition;
+  const mousemoveX = bounds.width * mouseMovePosition;
+
+  info(`Drag on scrubber from ${ mousedonwX } to ${ mousemoveX }`);
+  EventUtils.synthesizeMouse(controllerEl, mousedonwX, mouseYPixel,
+                             { type: "mousedown" }, controllerEl.ownerGlobal);
+  await waitForSummaryAndDetail(animationInspector);
+  EventUtils.synthesizeMouse(controllerEl, mousemoveX, mouseYPixel,
+                             { type: "mousemove" }, controllerEl.ownerGlobal);
+  EventUtils.synthesizeMouse(controllerEl, mousemoveX, mouseYPixel,
+                             { type: "mouseup" }, controllerEl.ownerGlobal);
+  await waitForSummaryAndDetail(animationInspector);
+};
+
+/**
+ * Drag on the scrubber controller pane to update the animation current time.
+ *
+ * @param {AnimationsPanel} panel
+ * @param {Number} mouseDownPosition
+ *        rate on scrubber controller pane.
+ *        This method calculates
+ *        `mouseDownPosition * offsetWidth + offsetLeft of scrubber controller pane`
+ *        as the clientX of MouseEvent.
+ * @param {Number} mouseMovePosition
+ *        Dispatch mousemove event with mouseMovePosition after mousedown.
+ *        Calculation for clinetX is same to above.
+ */
+const dragOnCurrentTimeScrubberController = async function (animationInspector,
+                                                            panel,
+                                                            mouseDownPosition,
+                                                            mouseMovePosition) {
+  const controllerEl = panel.querySelector(".current-time-scrubber-controller");
+  const bounds = controllerEl.getBoundingClientRect();
+  const mousedonwX = bounds.width * mouseDownPosition;
+  const mousemoveX = bounds.width * mouseMovePosition;
+
+  info(`Drag on scrubber controller from ${ mousedonwX } to ${ mousemoveX }`);
+  EventUtils.synthesizeMouse(controllerEl, mousedonwX, 0,
+                             { type: "mousedown" }, controllerEl.ownerGlobal);
+  await waitForSummaryAndDetail(animationInspector);
+  EventUtils.synthesizeMouse(controllerEl, mousemoveX, 0,
+                             { type: "mousemove" }, controllerEl.ownerGlobal);
+  EventUtils.synthesizeMouse(controllerEl, mousemoveX, 0,
+                             { type: "mouseup" }, controllerEl.ownerGlobal);
+  await waitForSummaryAndDetail(animationInspector);
+};
+
+/**
+ * Get current animation duration and rate of
+ * clickOrDragOnCurrentTimeScrubberController in given pixels.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ * @param {Number} pixels
+ * @return {Object}
+ *         {
+ *           duration,
+ *           rate,
+ *         }
+ */
+const getDurationAndRate = function (animationInspector, panel, pixels) {
+  const controllerEl = panel.querySelector(".current-time-scrubber-controller");
+  const bounds = controllerEl.getBoundingClientRect();
+  const duration =
+    animationInspector.state.timeScale.getDuration() / bounds.width * pixels;
+  const rate = 1 / bounds.width * pixels;
+  return { duration, rate };
+};
+
+/**
  * Set the inspector's current selection to a node or to the first match of the
  * given css selector and wait for the animations to be displayed
  *
@@ -142,6 +314,18 @@ const selectNodeAndWaitForAnimations = async function (data, inspector, reason =
   await selectNode(data, inspector, reason);
   await onUpdated;
   await waitForRendering(inspector.animationinspector);
+};
+
+/**
+ * Send keyboard event of space to given panel.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ */
+const sendSpaceKeyEvent = async function (animationInspector, panel) {
+  panel.focus();
+  EventUtils.sendKey("SPACE", panel.ownerGlobal);
+  await waitForSummaryAndDetail(animationInspector);
 };
 
 /**
@@ -178,7 +362,8 @@ const waitForRendering = async function (animationInspector) {
  * @param {AnimationInspector} inspector
  */
 const waitForAnimationDetail = async function (animationInspector) {
-  if (animationInspector.state.animations.length === 1) {
+  if (animationInspector.state.selectedAnimation &&
+      animationInspector.state.detailVisibility) {
     await animationInspector.once("animation-keyframes-rendered");
   }
 };
@@ -205,6 +390,69 @@ const waitForAllSummaryGraph = async function (animationInspector) {
     await animationInspector.once("animation-summary-graph-rendered");
   }
 };
+
+/**
+ * Wait for rendering of all summary graph and detail.
+ *
+ * @param {AnimationInspector} inspector
+ */
+const waitForSummaryAndDetail = async function (animationInspector) {
+  await Promise.all([
+    waitForAllSummaryGraph(animationInspector),
+    waitForAnimationDetail(animationInspector),
+  ]);
+};
+
+/**
+ * Check whether current time of all animations and UI are given specified time.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ * @param {Number} time
+ */
+function assertAnimationsCurrentTime(animationInspector, time) {
+  const isTimeEqual =
+    animationInspector.state.animations.every(({state}) => state.currentTime === time);
+  ok(isTimeEqual, `Current time of animations should be ${ time }`);
+}
+
+/**
+ * Check whether the animations are pausing.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ */
+function assertAnimationsPausing(animationInspector, panel) {
+  assertAnimationsPausingOrRunning(animationInspector, panel, true);
+}
+
+/**
+ * Check whether the animations are pausing/running.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ * @param {boolean} shouldPause
+ */
+function assertAnimationsPausingOrRunning(animationInspector, panel, shouldPause) {
+  const hasRunningAnimation =
+    animationInspector.state.animations.some(({state}) => state.playState === "running");
+
+  if (shouldPause) {
+    is(hasRunningAnimation, false, "All animations should be paused");
+  } else {
+    is(hasRunningAnimation, true, "Animations should be running at least one");
+  }
+}
+
+/**
+ * Check whether the animations are running.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ */
+function assertAnimationsRunning(animationInspector, panel) {
+  assertAnimationsPausingOrRunning(animationInspector, panel, false);
+}
 
 /**
  * Check the <stop> element in the given linearGradientEl for the correct offset

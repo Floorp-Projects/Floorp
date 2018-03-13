@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      background-color: lime;
+      height: 100px;
+    }
+    </style>
+  </head>
+  <body>
+    <script>
+    "use strict";
+
+    const duration = 100000;
+
+    function createAnimation() {
+      const div = document.createElement("div");
+      document.body.appendChild(div);
+      const animation = div.animate([{ opacity: 0 }], duration);
+      animation.playbackRate = 1.5;
+    }
+
+    createAnimation();
+    createAnimation();
+    </script>
+  </body>
+</html>
