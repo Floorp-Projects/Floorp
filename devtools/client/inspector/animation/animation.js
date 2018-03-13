@@ -191,6 +191,35 @@ class AnimationInspector {
            this.inspector.sidebar.getCurrentTabID() === "newanimationinspector";
   }
 
+  onElementPickerStarted() {
+    this.inspector.store.dispatch(updateElementPickerEnabled(true));
+  }
+
+  onElementPickerStopped() {
+    this.inspector.store.dispatch(updateElementPickerEnabled(false));
+  }
+
+  onSidebarSelect() {
+    this.update();
+    this.onSidebarResized(null, this.inspector.getSidebarSize());
+  }
+
+  onSidebarResized(type, size) {
+    if (!this.isPanelVisible()) {
+      return;
+    }
+
+    this.inspector.store.dispatch(updateSidebarSize(size));
+  }
+
+  selectAnimation(animation) {
+    this.inspector.store.dispatch(updateSelectedAnimation(animation));
+  }
+
+  setDetailVisibility(isVisible) {
+    this.inspector.store.dispatch(updateDetailVisibility(isVisible));
+  }
+
   /**
    * Returns simulatable animation by given parameters.
    * The returned animation is implementing Animation interface of Web Animation API.
@@ -259,35 +288,6 @@ class AnimationInspector {
     }
 
     done();
-  }
-
-  selectAnimation(animation) {
-    this.inspector.store.dispatch(updateSelectedAnimation(animation));
-  }
-
-  setDetailVisibility(isVisible) {
-    this.inspector.store.dispatch(updateDetailVisibility(isVisible));
-  }
-
-  onElementPickerStarted() {
-    this.inspector.store.dispatch(updateElementPickerEnabled(true));
-  }
-
-  onElementPickerStopped() {
-    this.inspector.store.dispatch(updateElementPickerEnabled(false));
-  }
-
-  onSidebarSelect() {
-    this.update();
-    this.onSidebarResized(null, this.inspector.getSidebarSize());
-  }
-
-  onSidebarResized(type, size) {
-    if (!this.isPanelVisible()) {
-      return;
-    }
-
-    this.inspector.store.dispatch(updateSidebarSize(size));
   }
 }
 
