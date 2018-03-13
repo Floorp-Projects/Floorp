@@ -1194,10 +1194,7 @@ function RedirectLoad({ target: browser, data }) {
 }
 
 if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
-  document.addEventListener("MozBeforeInitialXULLayout", function() {
-    gBrowserInit.onBeforeInitialXULLayout();
-  }, { once: true });
-  document.addEventListener("DOMContentLoaded", function() {
+  addEventListener("DOMContentLoaded", function() {
     gBrowserInit.onDOMContentLoaded();
   }, { once: true });
 }
@@ -1209,27 +1206,6 @@ var delayedStartupPromise = new Promise(resolve => {
 
 var gBrowserInit = {
   delayedStartupFinished: false,
-
-  onBeforeInitialXULLayout() {
-    // Set a sane starting width/height for all resolutions on new profiles.
-    if (Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
-      // When the fingerprinting resistance is enabled, making sure that we don't
-      // have a maximum window to interfere with generating rounded window dimensions.
-      document.documentElement.setAttribute("sizemode", "normal");
-    } else if (!document.documentElement.hasAttribute("width")) {
-      const TARGET_WIDTH = 1280;
-      const TARGET_HEIGHT = 1040;
-      let width = Math.min(screen.availWidth * .9, TARGET_WIDTH);
-      let height = Math.min(screen.availHeight * .9, TARGET_HEIGHT);
-
-      document.documentElement.setAttribute("width", width);
-      document.documentElement.setAttribute("height", height);
-
-      if (width < TARGET_WIDTH && height < TARGET_HEIGHT) {
-        document.documentElement.setAttribute("sizemode", "maximized");
-      }
-    }
-  },
 
   onDOMContentLoaded() {
     window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1268,6 +1244,25 @@ var gBrowserInit = {
         sameProcessAsFrameLoader = linkedBrowser.frameLoader;
       }
       initBrowser.removeAttribute("blank");
+    }
+
+    // Set a sane starting width/height for all resolutions on new profiles.
+    if (Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
+      // When the fingerprinting resistance is enabled, making sure that we don't
+      // have a maximum window to interfere with generating rounded window dimensions.
+      document.documentElement.setAttribute("sizemode", "normal");
+    } else if (!document.documentElement.hasAttribute("width")) {
+      const TARGET_WIDTH = 1280;
+      const TARGET_HEIGHT = 1040;
+      let width = Math.min(screen.availWidth * .9, TARGET_WIDTH);
+      let height = Math.min(screen.availHeight * .9, TARGET_HEIGHT);
+
+      document.documentElement.setAttribute("width", width);
+      document.documentElement.setAttribute("height", height);
+
+      if (width < TARGET_WIDTH && height < TARGET_HEIGHT) {
+        document.documentElement.setAttribute("sizemode", "maximized");
+      }
     }
 
     gBrowser.updateBrowserRemoteness(initBrowser, isRemote, {
