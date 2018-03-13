@@ -221,12 +221,6 @@ s! {
         __unused5: *mut ::c_void,
     }
 
-    pub struct ucred {
-        pub pid: ::pid_t,
-        pub uid: ::uid_t,
-        pub gid: ::gid_t,
-    }
-
     pub struct flock {
         pub l_type: ::c_short,
         pub l_whence: ::c_short,
@@ -323,10 +317,11 @@ pub const SFD_CLOEXEC: ::c_int = 0x080000;
 pub const NCCS: usize = 32;
 
 pub const O_TRUNC: ::c_int = 512;
-pub const O_LARGEFILE: ::c_int = 0o0100000;
+pub const O_LARGEFILE: ::c_int = 0;
 pub const O_NOATIME: ::c_int = 0o1000000;
 pub const O_CLOEXEC: ::c_int = 0x80000;
 pub const O_PATH: ::c_int = 0o10000000;
+pub const O_TMPFILE: ::c_int = 0o20000000 | O_DIRECTORY;
 
 pub const EBFONT: ::c_int = 59;
 pub const ENOSTR: ::c_int = 60;
@@ -913,8 +908,8 @@ pub const ECHOPRT: ::tcflag_t = 0o002000;
 pub const ECHOKE: ::tcflag_t = 0o004000;
 pub const PENDIN: ::tcflag_t = 0o040000;
 
-pub const POLLWRNORM: ::c_short = 0x004;
-pub const POLLWRBAND: ::c_short = 0x100;
+pub const POLLWRNORM: ::c_short = 0x100;
+pub const POLLWRBAND: ::c_short = 0x200;
 
 pub const IXON: ::tcflag_t = 0o002000;
 pub const IXOFF: ::tcflag_t = 0o010000;
@@ -1219,20 +1214,20 @@ pub const SYS_mlock2: ::c_long = 374;
 pub const SYS_copy_file_range: ::c_long = 375;
 pub const SYS_preadv2: ::c_long = 376;
 pub const SYS_pwritev2: ::c_long = 377;
-pub const SYS_lchown: ::c_long = 16;
-pub const SYS_setuid: ::c_long = 23;
-pub const SYS_getuid: ::c_long = 24;
-pub const SYS_setgid: ::c_long = 46;
-pub const SYS_getgid: ::c_long = 47;
-pub const SYS_geteuid: ::c_long = 49;
-pub const SYS_setreuid: ::c_long = 70;
-pub const SYS_setregid: ::c_long = 71;
-pub const SYS_getrlimit: ::c_long = 76;
-pub const SYS_getgroups: ::c_long = 80;
-pub const SYS_fchown: ::c_long = 95;
-pub const SYS_setresuid: ::c_long = 164;
-pub const SYS_setresgid: ::c_long = 170;
-pub const SYS_getresgid: ::c_long = 171;
+pub const SYS_lchown: ::c_long = 198;
+pub const SYS_setuid: ::c_long = 213;
+pub const SYS_getuid: ::c_long = 199;
+pub const SYS_setgid: ::c_long = 214;
+pub const SYS_getgid: ::c_long = 200;
+pub const SYS_geteuid: ::c_long = 201;
+pub const SYS_setreuid: ::c_long = 203;
+pub const SYS_setregid: ::c_long = 204;
+pub const SYS_getrlimit: ::c_long = 191;
+pub const SYS_getgroups: ::c_long = 205;
+pub const SYS_fchown: ::c_long = 207;
+pub const SYS_setresuid: ::c_long = 208;
+pub const SYS_setresgid: ::c_long = 210;
+pub const SYS_getresgid: ::c_long = 211;
 pub const SYS_select: ::c_long = 142;
 pub const SYS_getegid: ::c_long = 202;
 pub const SYS_setgroups: ::c_long = 206;

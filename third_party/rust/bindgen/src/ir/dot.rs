@@ -25,16 +25,16 @@ pub fn write_dot_file<P>(ctx: &BindgenContext, path: P) -> io::Result<()>
 where
     P: AsRef<Path>,
 {
-    let file = try!(File::create(path));
+    let file = File::create(path)?;
     let mut dot_file = io::BufWriter::new(file);
-    try!(writeln!(&mut dot_file, "digraph {{"));
+    writeln!(&mut dot_file, "digraph {{")?;
 
     let mut err: Option<io::Result<_>> = None;
 
     for (id, item) in ctx.items() {
         let is_whitelisted = ctx.whitelisted_items().contains(id);
 
-        try!(writeln!(
+        writeln!(
             &mut dot_file,
             r#"{} [fontname="courier", color={}, label=< <table border="0" align="left">"#,
             id.as_usize(),
@@ -43,9 +43,9 @@ where
             } else {
                 "gray"
             }
-        ));
-        try!(item.dot_attributes(ctx, &mut dot_file));
-        try!(writeln!(&mut dot_file, r#"</table> >];"#));
+        )?;
+        item.dot_attributes(ctx, &mut dot_file)?;
+        writeln!(&mut dot_file, r#"</table> >];"#)?;
 
         item.trace(
             ctx,
@@ -79,16 +79,16 @@ where
 
         if let Some(module) = item.as_module() {
             for child in module.children() {
-                try!(writeln!(
+                writeln!(
                     &mut dot_file,
                     "{} -> {} [style=dotted, color=gray]",
                     item.id().as_usize(),
                     child.as_usize()
-                ));
+                )?;
             }
         }
     }
 
-    try!(writeln!(&mut dot_file, "}}"));
+    writeln!(&mut dot_file, "}}")?;
     Ok(())
 }

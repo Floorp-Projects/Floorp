@@ -423,20 +423,20 @@ impl DotAttributes for Type {
         W: io::Write,
     {
         if let Some(ref layout) = self.layout {
-            try!(writeln!(
+            writeln!(
                 out,
                 "<tr><td>size</td><td>{}</td></tr>
                            <tr><td>align</td><td>{}</td></tr>",
                 layout.size,
                 layout.align
-            ));
+            )?;
             if layout.packed {
-                try!(writeln!(out, "<tr><td>packed</td><td>true</td></tr>"));
+                writeln!(out, "<tr><td>packed</td><td>true</td></tr>")?;
             }
         }
 
         if self.is_const {
-            try!(writeln!(out, "<tr><td>const</td><td>true</td></tr>"));
+            writeln!(out, "<tr><td>const</td><td>true</td></tr>")?;
         }
 
         self.kind.dot_attributes(ctx, out)
@@ -818,7 +818,7 @@ impl Type {
                     // trying to see if it has a valid return type.
                     if ty.ret_type().is_some() {
                         let signature =
-                            try!(FunctionSig::from_ty(ty, &location, ctx));
+                            FunctionSig::from_ty(ty, &location, ctx)?;
                         TypeKind::Function(signature)
                     // Same here, with template specialisations we can safely
                     // assume this is a Comp(..)
@@ -1122,7 +1122,7 @@ impl Type {
                 CXType_FunctionNoProto |
                 CXType_FunctionProto => {
                     let signature =
-                        try!(FunctionSig::from_ty(ty, &location, ctx));
+                        FunctionSig::from_ty(ty, &location, ctx)?;
                     TypeKind::Function(signature)
                 }
                 CXType_Typedef => {
