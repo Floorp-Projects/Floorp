@@ -9,7 +9,6 @@ config = {
     ],
     'stage_platform': 'linux64-ccov',
     'enable_signing': False,
-    'enable_count_ctors': False,
     #### 64 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),

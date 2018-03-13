@@ -9,7 +9,6 @@ config = {
     "buildbot_json_path": "buildprops.json",
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     'vcs_share_base': '/builds/hg-shared',
-    'enable_count_ctors': True,
     # debug specific
     'debug_build': True,
     # decides whether we want to use moz_sign_cmd in env
