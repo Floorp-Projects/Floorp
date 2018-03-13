@@ -23,7 +23,6 @@ native nsSize (nsSize);
 
 interface nsIDOMDocument;
 interface nsIDOMNode;
-interface nsIDOMDataTransfer;
 
 [scriptable, builtinclass, uuid(25bce737-73f0-43c7-bc20-c71044a73c5a)]
 interface nsIDragSession : nsISupports
@@ -76,16 +75,17 @@ interface nsIDragSession : nsISupports
   attribute AUTF8String triggeringPrincipalURISpec;
 
   /**
-   * The data transfer object for the current drag.
+   * The data transfer object for the current drag.  Should become a
+   * DataTransfer once bug 1444991 is fixed.
    */
   [binaryname(DataTransferXPCOM)]
-  attribute nsIDOMDataTransfer dataTransfer;
+  attribute nsISupports dataTransfer;
   [notxpcom, nostdcall] DataTransferPtr getDataTransfer();
   [notxpcom, nostdcall] void setDataTransfer(in DataTransferPtr aDataTransfer);
 
   /**
     * Get data from a Drag&Drop. Can be called while the drag is in process
-    * or after the drop has completed.  
+    * or after the drop has completed.
     *
     * @param  aTransferable the transferable for the data to be put into
     * @param  aItemIndex which of multiple drag items, zero-based
