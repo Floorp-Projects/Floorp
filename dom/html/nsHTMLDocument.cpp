@@ -196,13 +196,6 @@ nsHTMLDocument::~nsHTMLDocument()
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, nsDocument,
                                    mAll,
-                                   mImages,
-                                   mApplets,
-                                   mEmbeds,
-                                   mLinks,
-                                   mAnchors,
-                                   mScripts,
-                                   mForms,
                                    mWyciwygChannel,
                                    mMidasCommandManager)
 
@@ -1053,107 +1046,6 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
   rv = NodePrincipal()->SetDomain(newURI);
 }
 
-nsIHTMLCollection*
-nsHTMLDocument::Images()
-{
-  if (!mImages) {
-    mImages = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::img, nsGkAtoms::img);
-  }
-  return mImages;
-}
-
-nsIHTMLCollection*
-nsHTMLDocument::Applets()
-{
-  if (!mApplets) {
-    mApplets = new nsEmptyContentList(this);
-  }
-  return mApplets;
-}
-
-bool
-nsHTMLDocument::MatchLinks(Element* aElement, int32_t aNamespaceID,
-                           nsAtom* aAtom, void* aData)
-{
-  nsIDocument* doc = aElement->GetUncomposedDoc();
-
-  if (doc) {
-    NS_ASSERTION(aElement->IsInUncomposedDoc(),
-                 "This method should never be called on content nodes that "
-                 "are not in a document!");
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIHTMLDocument> htmldoc =
-        do_QueryInterface(aElement->GetUncomposedDoc());
-      NS_ASSERTION(htmldoc,
-                   "Huh, how did this happen? This should only be used with "
-                   "HTML documents!");
-    }
-#endif
-
-    mozilla::dom::NodeInfo *ni = aElement->NodeInfo();
-
-    nsAtom *localName = ni->NameAtom();
-    if (ni->NamespaceID() == kNameSpaceID_XHTML &&
-        (localName == nsGkAtoms::a || localName == nsGkAtoms::area)) {
-      return aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
-    }
-  }
-
-  return false;
-}
-
-nsIHTMLCollection*
-nsHTMLDocument::Links()
-{
-  if (!mLinks) {
-    mLinks = new nsContentList(this, MatchLinks, nullptr, nullptr);
-  }
-  return mLinks;
-}
-
-bool
-nsHTMLDocument::MatchAnchors(Element* aElement, int32_t aNamespaceID,
-                             nsAtom* aAtom, void* aData)
-{
-  NS_ASSERTION(aElement->IsInUncomposedDoc(),
-               "This method should never be called on content nodes that "
-               "are not in a document!");
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIHTMLDocument> htmldoc =
-      do_QueryInterface(aElement->GetUncomposedDoc());
-    NS_ASSERTION(htmldoc,
-                 "Huh, how did this happen? This should only be used with "
-                 "HTML documents!");
-  }
-#endif
-
-  if (aElement->IsHTMLElement(nsGkAtoms::a)) {
-    return aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::name);
-  }
-
-  return false;
-}
-
-nsIHTMLCollection*
-nsHTMLDocument::Anchors()
-{
-  if (!mAnchors) {
-    mAnchors = new nsContentList(this, MatchAnchors, nullptr, nullptr);
-  }
-  return mAnchors;
-}
-
-nsIHTMLCollection*
-nsHTMLDocument::Scripts()
-{
-  if (!mScripts) {
-    mScripts = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::script, nsGkAtoms::script);
-  }
-  return mScripts;
-}
-
 already_AddRefed<nsIChannel>
 nsHTMLDocument::CreateDummyChannelForCookies(nsIURI* aCodebaseURI)
 {
@@ -1996,16 +1888,6 @@ nsHTMLDocument::SetFgColor(const nsAString& aFgColor)
   }
 }
 
-
-nsIHTMLCollection*
-nsHTMLDocument::Embeds()
-{
-  if (!mEmbeds) {
-    mEmbeds = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::embed, nsGkAtoms::embed);
-  }
-  return mEmbeds;
-}
-
 void
 nsHTMLDocument::CaptureEvents()
 {
@@ -2016,13 +1898,6 @@ void
 nsHTMLDocument::ReleaseEvents()
 {
   WarnOnceAbout(nsIDocument::eUseOfReleaseEvents);
-}
-
-// Mapped to document.embeds for NS4 compatibility
-nsIHTMLCollection*
-nsHTMLDocument::Plugins()
-{
-  return Embeds();
 }
 
 nsISupports*
@@ -2100,17 +1975,6 @@ nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames)
 //----------------------------
 
 // forms related stuff
-
-nsContentList*
-nsHTMLDocument::GetForms()
-{
-  if (!mForms) {
-    // Please keep this in sync with nsContentUtils::GenerateStateKey().
-    mForms = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::form, nsGkAtoms::form);
-  }
-
-  return mForms;
-}
 
 bool
 nsHTMLDocument::MatchFormControls(Element* aElement, int32_t aNamespaceID,
@@ -3431,13 +3295,8 @@ nsHTMLDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mImages
-  // - mApplets
-  // - mEmbeds
   // - mLinks
   // - mAnchors
-  // - mScripts
-  // - mForms
   // - mWyciwygChannel
   // - mMidasCommandManager
 }
@@ -3498,8 +3357,11 @@ nsHTMLDocument::GetFormsAndFormControls(nsContentList** aFormList,
     RefPtr<nsContentList> htmlForms = GetExistingForms();
     if (!htmlForms) {
       // If the document doesn't have an existing forms content list, create a
-      // new one which will be released soon by ContentListHolder.
-      // Please keep this in sync with nsHTMLDocument::GetForms().
+      // new one which will be released soon by ContentListHolder.  The idea is
+      // that we don't have that list hanging around for a long time and slowing
+      // down future DOM mutations.
+      //
+      // Please keep this in sync with nsIDocument::Forms().
       htmlForms = new nsContentList(this, kNameSpaceID_XHTML,
                                     nsGkAtoms::form, nsGkAtoms::form,
                                     /* aDeep = */ true,

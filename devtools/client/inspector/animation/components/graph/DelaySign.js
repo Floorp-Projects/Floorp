@@ -21,19 +21,23 @@ class DelaySign extends PureComponent {
       animation,
       timeScale,
     } = this.props;
+    const {
+      fill,
+      playbackRate,
+      previousStartTime = 0,
+    } = animation.state;
 
-    const { state } = animation;
-    const startTime = (state.previousStartTime || 0) - timeScale.minStartTime
-                      + (state.delay < 0 ? state.delay : 0);
+    const delay = animation.state.delay / playbackRate;
+    const startTime =
+      previousStartTime - timeScale.minStartTime + (delay < 0 ? delay : 0);
     const offset = startTime / timeScale.getDuration() * 100;
-    const width = Math.abs(state.delay) / timeScale.getDuration() * 100;
-
-    const delayClass = state.delay < 0 ? "negative" : "";
-    const fillClass = state.fill === "both" || state.fill === "backwards" ? "fill" : "";
+    const width = Math.abs(delay) / timeScale.getDuration() * 100;
 
     return dom.div(
       {
-        className: `animation-delay-sign ${ delayClass } ${ fillClass }`,
+        className: "animation-delay-sign" +
+                   (delay < 0 ? " negative" : "") +
+                   (fill === "both" || fill === "backwards" ? " fill" : ""),
         style: {
           width: `${ width }%`,
           left: `${ offset }%`,

@@ -8,8 +8,8 @@
 #ifndef GrGpuResource_DEFINED
 #define GrGpuResource_DEFINED
 
+#include "../private/GrTypesPriv.h"
 #include "GrResourceKey.h"
-#include "GrTypesPriv.h"
 
 class GrContext;
 class GrGpu;
@@ -91,6 +91,7 @@ protected:
     bool internalHasPendingIO() const { return SkToBool(fPendingWrites | fPendingReads); }
 
     bool internalHasRef() const { return SkToBool(fRefCnt); }
+    bool internalHasUniqueRef() const { return fRefCnt == 1; }
 
 private:
     friend class GrIORefProxy; // needs to forward on wrapped IO calls
@@ -154,7 +155,7 @@ public:
      * @return true if the object has been released or abandoned,
      *         false otherwise.
      */
-    bool wasDestroyed() const { return NULL == fGpu; }
+    bool wasDestroyed() const { return nullptr == fGpu; }
 
     /**
      * Retrieves the context that owns the object. Note that it is possible for
@@ -259,11 +260,6 @@ protected:
     // should be called once the object is fully initialized (i.e. only from the constructors of the
     // final class).
     void registerWithCacheWrapped();
-
-    // This is only called by resources that are being exported from Ganesh to client code. It
-    // ensures that the cache can no longer reach this resource, and that it no longer counts
-    // against the budget.
-    void detachFromCache();
 
     GrGpuResource(GrGpu*);
     virtual ~GrGpuResource();

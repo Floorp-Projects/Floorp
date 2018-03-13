@@ -121,9 +121,6 @@ static const int32_t PRECONNECT_MIN_DEFAULT = 90;
 static const char PREDICTOR_PRERESOLVE_MIN_PREF[] =
   "network.predictor.preresolve-min-confidence";
 static const int32_t PRERESOLVE_MIN_DEFAULT = 60;
-static const char PREDICTOR_REDIRECT_LIKELY_PREF[] =
-  "network.predictor.redirect-likely-confidence";
-static const int32_t REDIRECT_LIKELY_DEFAULT = 75;
 
 static const char PREDICTOR_PREFETCH_FORCE_VALID_PREF[] =
   "network.predictor.prefetch-force-valid-for";
@@ -349,7 +346,6 @@ Predictor::Predictor()
   ,mPrefetchMinConfidence(PREFETCH_MIN_DEFAULT)
   ,mPreconnectMinConfidence(PRECONNECT_MIN_DEFAULT)
   ,mPreresolveMinConfidence(PRERESOLVE_MIN_DEFAULT)
-  ,mRedirectLikelyConfidence(REDIRECT_LIKELY_DEFAULT)
   ,mPrefetchForceValidFor(PREFETCH_FORCE_VALID_DEFAULT)
   ,mMaxResourcesPerEntry(PREDICTOR_MAX_RESOURCES_DEFAULT)
   ,mStartupCount(1)
@@ -433,9 +429,6 @@ Predictor::InstallObserver()
   Preferences::AddIntVarCache(&mPreresolveMinConfidence,
                               PREDICTOR_PRERESOLVE_MIN_PREF,
                               PRERESOLVE_MIN_DEFAULT);
-  Preferences::AddIntVarCache(&mRedirectLikelyConfidence,
-                              PREDICTOR_REDIRECT_LIKELY_PREF,
-                              REDIRECT_LIKELY_DEFAULT);
 
   Preferences::AddIntVarCache(&mPrefetchForceValidFor,
                               PREDICTOR_PREFETCH_FORCE_VALID_PREF,
@@ -445,7 +438,7 @@ Predictor::InstallObserver()
                               PREDICTOR_MAX_RESOURCES_PREF,
                               PREDICTOR_MAX_RESOURCES_DEFAULT);
 
-  Preferences::AddBoolVarCache(&mCleanedUp, PREDICTOR_CLEANED_UP_PREF, false);
+  mCleanedUp = Preferences::GetBool(PREDICTOR_CLEANED_UP_PREF, false);
 
   Preferences::AddUintVarCache(&mMaxURILength, PREDICTOR_MAX_URI_LENGTH_PREF,
                                PREDICTOR_MAX_URI_LENGTH_DEFAULT);

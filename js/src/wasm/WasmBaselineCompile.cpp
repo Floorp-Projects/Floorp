@@ -165,6 +165,8 @@ typedef bool ZeroOnOverflow;
 typedef unsigned ByteSize;
 typedef unsigned BitSize;
 
+class BaseStackFrame;
+
 // UseABI::Wasm implies that the Tls/Heap/Global registers are nonvolatile,
 // except when InterModule::True is also set, when they are volatile.
 //
@@ -183,7 +185,7 @@ typedef unsigned BitSize;
 enum class UseABI { Wasm, System };
 enum class InterModule { False = false, True = true };
 
-#if defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_NONE)
+#if defined(JS_CODEGEN_NONE)
 # define RABALDR_SCRATCH_I32
 # define RABALDR_SCRATCH_F32
 # define RABALDR_SCRATCH_F64
@@ -191,6 +193,26 @@ enum class InterModule { False = false, True = true };
 static const Register RabaldrScratchI32 = Register::Invalid();
 static const FloatRegister RabaldrScratchF32 = InvalidFloatReg;
 static const FloatRegister RabaldrScratchF64 = InvalidFloatReg;
+#endif
+
+#ifdef JS_CODEGEN_ARM64
+# define RABALDR_CHUNKY_STACK
+# define RABALDR_SCRATCH_I32
+# define RABALDR_SCRATCH_F32
+# define RABALDR_SCRATCH_F64
+# define RABALDR_SCRATCH_F32_ALIASES_F64
+
+static const Register RabaldrScratchI32 = Register::FromCode(15);
+
+// Note, the float scratch regs cannot be registers that are used for parameter
+// passing in any ABI we use.  Argregs tend to be low-numbered; register 30
+// should be safe.
+
+static constexpr FloatRegister RabaldrScratchF32 = FloatRegister(30, FloatRegisters::Single);
+static constexpr FloatRegister RabaldrScratchF64 = FloatRegister(30, FloatRegisters::Double);
+
+static_assert(RabaldrScratchF32 != ScratchFloat32Reg, "Too busy");
+static_assert(RabaldrScratchF64 != ScratchDoubleReg, "Too busy");
 #endif
 
 #ifdef JS_CODEGEN_X86
@@ -236,6 +258,12 @@ static const Register RabaldrScratchI32 = CallTempReg2;
 #ifdef JS_CODEGEN_MIPS64
 # define RABALDR_SCRATCH_I32
 static const Register RabaldrScratchI32 = CallTempReg2;
+#endif
+
+#ifdef RABALDR_SCRATCH_F32_ALIASES_F64
+# if !defined(RABALDR_SCRATCH_F32) || !defined(RABALDR_SCRATCH_F64)
+#  error "Bad configuration"
+# endif
 #endif
 
 template<MIRType t>
@@ -392,6 +420,8 @@ struct SpecificRegs
       : abiReturnRegI64(ReturnReg64)
     {}
 };
+#elif defined(JS_CODEGEN_ARM64)
+struct SpecificRegs {};
 #elif defined(JS_CODEGEN_MIPS32)
 struct SpecificRegs
 {
@@ -595,19 +625,31 @@ class BaseRegAlloc
     {
         RegisterAllocator::takeWasmRegisters(availGPR);
 
-        // Allocate any private scratch registers.  For now we assume none of
-        // these registers alias.
+        // Allocate any private scratch registers.
 #if defined(RABALDR_SCRATCH_I32)
         if (RabaldrScratchI32 != RegI32::Invalid())
             availGPR.take(RabaldrScratchI32);
 #endif
-#if defined(RABALDR_SCRATCH_F32)
+
+#ifdef RABALDR_SCRATCH_F32_ALIASES_F64
+        MOZ_ASSERT(RabaldrScratchF32 != InvalidFloatReg, "Float reg definition");
+        MOZ_ASSERT(RabaldrScratchF64 != InvalidFloatReg, "Float reg definition");
+#endif
+
+#if defined(RABALDR_SCRATCH_F32) && !defined(RABALDR_SCRATCH_F32_ALIASES_F64)
         if (RabaldrScratchF32 != RegF32::Invalid())
             availFPU.take(RabaldrScratchF32);
 #endif
+
 #if defined(RABALDR_SCRATCH_F64)
+# ifdef RABALDR_SCRATCH_F32_ALIASES_F64
+        MOZ_ASSERT(availFPU.has(RabaldrScratchF32));
+# endif
         if (RabaldrScratchF64 != RegF64::Invalid())
             availFPU.take(RabaldrScratchF64);
+# ifdef RABALDR_SCRATCH_F32_ALIASES_F64
+        MOZ_ASSERT(!availFPU.has(RabaldrScratchF32));
+# endif
 #endif
 
 #ifdef DEBUG
@@ -990,11 +1032,66 @@ BaseLocalIter::operator++(int)
     settle();
 }
 
+// Abstraction of the height of the stack, to avoid type confusion.
+
+class StackHeight
+{
+    friend class BaseStackFrame;
+
+    uint32_t height;
+
+  public:
+    StackHeight() : height(UINT32_MAX) {}
+    explicit StackHeight(uint32_t h) : height(h) {}
+    bool isValid() const { return height != UINT32_MAX; }
+};
+
 // Abstraction of the baseline compiler's stack frame (except for the Frame /
 // DebugFrame parts).  See comments above for more.
 
 class BaseStackFrame
 {
+#ifdef RABALDR_CHUNKY_STACK
+    // On platforms that require the stack pointer to be aligned on a boundary
+    // greater than the typical stack item (eg, ARM64 requires 16-byte alignment
+    // but items are 8 bytes), allocate stack memory in chunks, and use a
+    // separate stack height variable to track the effective stack pointer
+    // within the allocated area.  Effectively, there's a variable amount of
+    // free space directly above the stack pointer.
+
+    // The following must be true in order for the stack height to be
+    // predictable at control flow joins:
+    //
+    // - The locals area is always aligned according to WasmStackAlignment, ie,
+    //   masm.framePushed() % WasmStackAlignment is zero after allocating
+    //   locals.
+    //
+    // - ChunkSize is always a multiple of WasmStackAlignment.
+    //
+    // - Pushing and popping are always in units of ChunkSize (hence preserving
+    //   alignment).
+    //
+    // - The free space on the stack (masm.framePushed() - currentFramePushed_)
+    //   is a predictable (nonnegative) amount.
+
+    // As an optimization, we pre-allocate some space on the stack, the size of
+    // this allocation is InitialChunk and it must be a multiple of ChunkSize.
+    // It is allocated as part of the function prologue and deallocated as part
+    // of the epilogue, along with the locals.
+    //
+    // If ChunkSize is too large then we risk overflowing the stack on simple
+    // recursions with few live values where stack overflow should not be a
+    // risk; if it is too small we spend too much time adjusting the stack
+    // pointer.
+    //
+    // Good values for ChunkSize are the subject of future empirical analysis;
+    // eight words is just an educated guess.
+
+    static constexpr uint32_t ChunkSize = 8 * sizeof(void*);
+    static constexpr uint32_t InitialChunk = ChunkSize;
+    static constexpr uint32_t ChunkCutoff = ChunkSize + InitialChunk;
+#endif
+
     MacroAssembler& masm;
 
     // Size of local area in bytes (stable after beginFunction).
@@ -1006,9 +1103,18 @@ class BaseStackFrame
     // High byte offset + 1 of local area for true locals.
     uint32_t varHigh_;
 
-    // The largest stack height, not necessarily zero-based.  Read this for its
+#ifdef RABALDR_CHUNKY_STACK
+    // The current logical height of the frame, ie the sum of space for locals
+    // and space for what is currently pushed.  The allocated size of the frame
+    // -- provided by masm.framePushed() -- is usually larger than
+    // currentFramePushed_, notably at the beginning of execution when we've
+    // allocated InitialChunk extra space.
+    uint32_t currentFramePushed_;
+#endif
+
+    // The largest observed value of currentFramePushed().  Read this for its
     // true value only when code generation is finished.
-    uint32_t maxStackHeight_;
+    uint32_t maxFramePushed_;
 
     // Patch point where we check for stack overflow.
     CodeOffset stackAddOffset_;
@@ -1017,13 +1123,15 @@ class BaseStackFrame
     RegisterOrSP sp_;
 
   public:
-
     explicit BaseStackFrame(MacroAssembler& masm)
       : masm(masm),
         localSize_(UINT32_MAX),
         varLow_(UINT32_MAX),
         varHigh_(UINT32_MAX),
-        maxStackHeight_(0),
+#ifdef RABALDR_CHUNKY_STACK
+        currentFramePushed_(0),
+#endif
+        maxFramePushed_(0),
         stackAddOffset_(0),
         sp_(masm.getStackPointer())
     {}
@@ -1063,20 +1171,28 @@ class BaseStackFrame
         return masm.framePushed() - offset;
     }
 
+    // Just an alias, for clarity.
+    uint32_t minimumSize() const {
+        return fixedSize();
+    }
+
   public:
 
     void endFunctionPrologue() {
-        MOZ_ASSERT(masm.framePushed() == localSize_);
-        MOZ_ASSERT(localSize_ != UINT32_MAX);
-        MOZ_ASSERT(localSize_ % WasmStackAlignment == 0);
-        maxStackHeight_ = localSize_;
+        MOZ_ASSERT(masm.framePushed() == fixedSize());
+        MOZ_ASSERT(fixedSize() % WasmStackAlignment == 0);
+
+        maxFramePushed_ = localSize_;
+#ifdef RABALDR_CHUNKY_STACK
+        currentFramePushed_ = localSize_;
+#endif
     }
 
     // Initialize `localInfo` based on the types of `locals` and `args`.
     bool setupLocals(const ValTypeVector& locals, const ValTypeVector& args, bool debugEnabled,
                      LocalVector* localInfo)
     {
-        MOZ_ASSERT(maxStackHeight_ != UINT32_MAX);
+        MOZ_ASSERT(maxFramePushed_ != UINT32_MAX);
 
         if (!localInfo->reserve(locals.length()))
             return false;
@@ -1110,10 +1226,14 @@ class BaseStackFrame
     // Frame for purposes such as locals and other fixed values.  Includes all
     // necessary alignment.
 
-    uint32_t initialSize() const {
+    uint32_t fixedSize() const {
         MOZ_ASSERT(localSize_ != UINT32_MAX);
 
+#ifdef RABALDR_CHUNKY_STACK
+        return localSize_ + InitialChunk;
+#else
         return localSize_;
+#endif
     }
 
     void zeroLocals(BaseRegAlloc& ra);
@@ -1179,6 +1299,61 @@ class BaseStackFrame
         return masm.framePushed() - offset;
     }
 
+#ifdef RABALDR_CHUNKY_STACK
+
+# define CHUNKY_INVARIANT()                                             \
+    MOZ_ASSERT(masm.framePushed() >= currentFramePushed_);              \
+    MOZ_ASSERT(masm.framePushed() == minimumSize() ||                   \
+               masm.framePushed() - currentFramePushed_ < ChunkSize)
+
+    void pushChunkyBytes(uint32_t bytes) {
+        CHUNKY_INVARIANT();
+        if (masm.framePushed() - currentFramePushed_ < bytes)
+            masm.reserveStack(ChunkSize);
+        currentFramePushed_ += bytes;
+        CHUNKY_INVARIANT();
+    }
+
+    void popChunkyBytes(uint32_t bytes) {
+        CHUNKY_INVARIANT();
+        currentFramePushed_ -= bytes;
+        // Sometimes, popChunkyBytes() is used to pop a larger area, as when we
+        // drop values consumed by a call, and we may need to drop several
+        // chunks.  But never drop the initial chunk.
+        if (masm.framePushed() - currentFramePushed_ >= ChunkSize) {
+            uint32_t target = Max(minimumSize(), AlignBytes(currentFramePushed_, ChunkSize));
+            uint32_t amount = masm.framePushed() - target;
+            if (amount)
+                masm.freeStack(amount);
+            MOZ_ASSERT(masm.framePushed() >= minimumSize());
+        }
+        CHUNKY_INVARIANT();
+    }
+#endif
+
+    // For a given stack height, return the appropriate size of the allocated
+    // frame.
+    uint32_t framePushedForHeight(StackHeight stackHeight) {
+#ifdef RABALDR_CHUNKY_STACK
+        // The allocated frame size is frequently larger than the stack height;
+        // we round up to a chunk boundary, and special case the initial chunk.
+        return stackHeight.height <= minimumSize()
+               ? minimumSize()
+               : minimumSize() + AlignBytes(stackHeight.height - minimumSize(), ChunkSize);
+#else
+        // The allocated frame size equals the stack height.
+        return stackHeight.height;
+#endif
+    }
+
+    uint32_t currentFramePushed() const {
+#ifdef RABALDR_CHUNKY_STACK
+        return currentFramePushed_;
+#else
+        return masm.framePushed();
+#endif
+    }
+
   public:
 
     // Sizes of items in the stack area.
@@ -1217,7 +1392,7 @@ class BaseStackFrame
 
     void patchAllocStack() {
         masm.patchSub32FromStackPtr(stackAddOffset_,
-                                    Imm32(int32_t(maxStackHeight_ - localSize_)));
+                                    Imm32(int32_t(maxFramePushed_ - localSize_)));
     }
 
     // Very large frames are implausible, probably an attack.
@@ -1230,93 +1405,143 @@ class BaseStackFrame
         // - 10,000 values on the eval stack (not an official limit)
         //
         // At sizeof(int64) bytes per slot this works out to about 480KiB.
-        return maxStackHeight_ <= 512 * 1024;
+        return maxFramePushed_ <= 512 * 1024;
     }
 
     // The current height of the stack area, not necessarily zero-based.
-    uint32_t stackHeight() const {
-        return masm.framePushed();
+    StackHeight stackHeight() const {
+        return StackHeight(currentFramePushed());
     }
 
-    // Set the frame height.  This must only be called with a value returned
-    // from stackHeight().
-    void setStackHeight(uint32_t amount) {
-        masm.setFramePushed(amount);
+    // Set the frame height.
+    void setStackHeight(StackHeight amount) {
+#ifdef RABALDR_CHUNKY_STACK
+        currentFramePushed_ = amount.height;
+        masm.setFramePushed(framePushedForHeight(amount));
+        CHUNKY_INVARIANT();
+#else
+        masm.setFramePushed(amount.height);
+#endif
     }
 
     uint32_t pushPtr(Register r) {
-        DebugOnly<uint32_t> stackBefore = stackHeight();
+        DebugOnly<uint32_t> stackBefore = currentFramePushed();
+#ifdef RABALDR_CHUNKY_STACK
+        pushChunkyBytes(StackSizeOfPtr);
+        masm.storePtr(r, Address(sp_, stackOffset(currentFramePushed())));
+#else
         masm.Push(r);
-        maxStackHeight_ = Max(maxStackHeight_, stackHeight());
-        MOZ_ASSERT(stackBefore + StackSizeOfPtr == stackHeight());
-        return stackHeight();
+#endif
+        maxFramePushed_ = Max(maxFramePushed_, currentFramePushed());
+        MOZ_ASSERT(stackBefore + StackSizeOfPtr == currentFramePushed());
+        return currentFramePushed();
     }
 
     uint32_t pushFloat32(FloatRegister r) {
-        DebugOnly<uint32_t> stackBefore = stackHeight();
+        DebugOnly<uint32_t> stackBefore = currentFramePushed();
+#ifdef RABALDR_CHUNKY_STACK
+        pushChunkyBytes(StackSizeOfFloat);
+        masm.storeFloat32(r, Address(sp_, stackOffset(currentFramePushed())));
+#else
         masm.Push(r);
-        maxStackHeight_ = Max(maxStackHeight_, stackHeight());
-        MOZ_ASSERT(stackBefore + StackSizeOfFloat == stackHeight());
-        return stackHeight();
+#endif
+        maxFramePushed_ = Max(maxFramePushed_, currentFramePushed());
+        MOZ_ASSERT(stackBefore + StackSizeOfFloat == currentFramePushed());
+        return currentFramePushed();
     }
 
     uint32_t pushDouble(FloatRegister r) {
-        DebugOnly<uint32_t> stackBefore = stackHeight();
+        DebugOnly<uint32_t> stackBefore = currentFramePushed();
+#ifdef RABALDR_CHUNKY_STACK
+        pushChunkyBytes(StackSizeOfDouble);
+        masm.storeDouble(r, Address(sp_, stackOffset(currentFramePushed())));
+#else
         masm.Push(r);
-        maxStackHeight_ = Max(maxStackHeight_, stackHeight());
-        MOZ_ASSERT(stackBefore + StackSizeOfDouble == stackHeight());
-        return stackHeight();
+#endif
+        maxFramePushed_ = Max(maxFramePushed_, currentFramePushed());
+        MOZ_ASSERT(stackBefore + StackSizeOfDouble == currentFramePushed());
+        return currentFramePushed();
     }
 
    void popPtr(Register r) {
-        DebugOnly<uint32_t> stackBefore = stackHeight();
+        DebugOnly<uint32_t> stackBefore = currentFramePushed();
+#ifdef RABALDR_CHUNKY_STACK
+        masm.loadPtr(Address(sp_, stackOffset(currentFramePushed())), r);
+        popChunkyBytes(StackSizeOfPtr);
+#else
         masm.Pop(r);
-        MOZ_ASSERT(stackBefore - StackSizeOfPtr == stackHeight());
+#endif
+        MOZ_ASSERT(stackBefore - StackSizeOfPtr == currentFramePushed());
     }
 
     void popFloat32(FloatRegister r) {
-        DebugOnly<uint32_t> stackBefore = stackHeight();
+        DebugOnly<uint32_t> stackBefore = currentFramePushed();
+#ifdef RABALDR_CHUNKY_STACK
+        masm.loadFloat32(Address(sp_, stackOffset(currentFramePushed())), r);
+        popChunkyBytes(StackSizeOfFloat);
+#else
         masm.Pop(r);
-        MOZ_ASSERT(stackBefore - StackSizeOfFloat == stackHeight());
+#endif
+        MOZ_ASSERT(stackBefore - StackSizeOfFloat == currentFramePushed());
     }
 
     void popDouble(FloatRegister r) {
-        DebugOnly<uint32_t> stackBefore = stackHeight();
+        DebugOnly<uint32_t> stackBefore = currentFramePushed();
+#ifdef RABALDR_CHUNKY_STACK
+        masm.loadDouble(Address(sp_, stackOffset(currentFramePushed())), r);
+        popChunkyBytes(StackSizeOfDouble);
+#else
         masm.Pop(r);
-        MOZ_ASSERT(stackBefore - StackSizeOfDouble == stackHeight());
+#endif
+        MOZ_ASSERT(stackBefore - StackSizeOfDouble == currentFramePushed());
     }
 
     void popBytes(size_t bytes) {
-        if (bytes > 0)
+        if (bytes > 0) {
+#ifdef RABALDR_CHUNKY_STACK
+            popChunkyBytes(bytes);
+#else
             masm.freeStack(bytes);
+#endif
+        }
     }
 
     // Before branching to an outer control label, pop the execution stack to
     // the level expected by that region, but do not update masm.framePushed()
     // as that will happen as compilation leaves the block.
 
-    void popStackBeforeBranch(uint32_t destStackHeight) {
-        uint32_t stackHere = stackHeight();
-        if (stackHere > destStackHeight)
-            masm.addToStackPtr(Imm32(stackHere - destStackHeight));
+    void popStackBeforeBranch(StackHeight destStackHeight) {
+        uint32_t framePushedHere = masm.framePushed();
+        uint32_t framePushedThere = framePushedForHeight(destStackHeight);
+        if (framePushedHere > framePushedThere)
+            masm.addToStackPtr(Imm32(framePushedHere - framePushedThere));
     }
 
-    bool willPopStackBeforeBranch(uint32_t destStackHeight) {
-        uint32_t stackHere = stackHeight();
-        return stackHere > destStackHeight;
+    bool willPopStackBeforeBranch(StackHeight destStackHeight) {
+        uint32_t framePushedHere = masm.framePushed();
+        uint32_t framePushedThere = framePushedForHeight(destStackHeight);
+        return framePushedHere > framePushedThere;
     }
 
     // Before exiting a nested control region, pop the execution stack
     // to the level expected by the nesting region, and free the
     // stack.
 
-    void popStackOnBlockExit(uint32_t destStackHeight, bool deadCode) {
-        uint32_t stackHere = stackHeight();
-        if (stackHere > destStackHeight) {
+    void popStackOnBlockExit(StackHeight destStackHeight, bool deadCode) {
+        uint32_t framePushedHere = masm.framePushed();
+        uint32_t framePushedThere = framePushedForHeight(destStackHeight);
+        if (framePushedHere > framePushedThere) {
+#ifdef RABALDR_CHUNKY_STACK
             if (deadCode)
-                masm.setFramePushed(destStackHeight);
+                setStackHeight(destStackHeight);
             else
-                masm.freeStack(stackHere - destStackHeight);
+                popChunkyBytes(framePushedHere - framePushedThere);
+#else
+            if (deadCode)
+                masm.setFramePushed(framePushedThere);
+            else
+                masm.freeStack(framePushedHere - framePushedThere);
+#endif
         }
     }
 
@@ -1360,17 +1585,32 @@ class BaseStackFrame
     // We abstract these operations as an optimization: we can merge the freeing
     // of the argument area and dropping values off the stack after a call.  But
     // they always amount to manipulating the real stack pointer by some amount.
+    //
+    // Note that we do not update currentFramePushed_ for this; the frame does
+    // not know about outgoing arguments.  But we do update framePushed(), so we
+    // can still index into the frame below the outgoing arguments area.
 
     // This is always equivalent to a masm.reserveStack() call.
-    void allocArgArea(size_t size) {
-        if (size)
-            masm.reserveStack(size);
+    void allocArgArea(size_t argSize) {
+        if (argSize)
+            masm.reserveStack(argSize);
     }
 
-    // This is always equivalent to a sequence of masm.freeStack() calls.
+    // This frees the argument area allocated by allocArgArea(), and `argSize`
+    // must be equal to the `argSize` argument to allocArgArea().  In addition
+    // we drop some values from the frame, corresponding to the values that were
+    // consumed by the call.
     void freeArgAreaAndPopBytes(size_t argSize, size_t dropSize) {
+#ifdef RABALDR_CHUNKY_STACK
+        // Freeing the outgoing arguments and freeing the consumed values have
+        // different semantics here, which is why the operation is split.
+        if (argSize)
+            masm.freeStack(argSize);
+        popChunkyBytes(dropSize);
+#else
         if (argSize + dropSize)
             masm.freeStack(argSize + dropSize);
+#endif
     }
 };
 
@@ -1494,7 +1734,7 @@ class BaseCompiler final : public BaseCompilerInterface
     struct Control
     {
         Control()
-            : stackHeight(UINT32_MAX),
+            : stackHeight(StackHeight(UINT32_MAX)),
               stackSize(UINT32_MAX),
               bceSafeOnEntry(0),
               bceSafeOnExit(~BCESet(0)),
@@ -1504,7 +1744,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
         NonAssertingLabel label;        // The "exit" label
         NonAssertingLabel otherLabel;   // Used for the "else" branch of if-then-else
-        uint32_t stackHeight;           // From BaseStackFrame
+        StackHeight stackHeight;        // From BaseStackFrame
         uint32_t stackSize;             // Value stack height
         BCESet bceSafeOnEntry;          // Bounds check info flowing into the item
         BCESet bceSafeOnExit;           // Bounds check info flowing out of the item
@@ -1536,7 +1776,7 @@ class BaseCompiler final : public BaseCompilerInterface
       private:
         NonAssertingLabel entry_;
         NonAssertingLabel rejoin_;
-        uint32_t stackHeight_;
+        StackHeight stackHeight_;
 
       public:
         OutOfLineCode() : stackHeight_(UINT32_MAX) {}
@@ -1544,13 +1784,13 @@ class BaseCompiler final : public BaseCompilerInterface
         Label* entry() { return &entry_; }
         Label* rejoin() { return &rejoin_; }
 
-        void setStackHeight(uint32_t stackHeight) {
-            MOZ_ASSERT(stackHeight_ == UINT32_MAX);
+        void setStackHeight(StackHeight stackHeight) {
+            MOZ_ASSERT(!stackHeight_.isValid());
             stackHeight_ = stackHeight;
         }
 
         void bind(BaseStackFrame* fr, MacroAssembler* masm) {
-            MOZ_ASSERT(stackHeight_ != UINT32_MAX);
+            MOZ_ASSERT(stackHeight_.isValid());
             masm->bind(&entry_);
             fr->setStackHeight(stackHeight_);
         }
@@ -2883,7 +3123,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void initControl(Control& item)
     {
         // Make sure the constructor was run properly
-        MOZ_ASSERT(item.stackHeight == UINT32_MAX && item.stackSize == UINT32_MAX);
+        MOZ_ASSERT(!item.stackHeight.isValid() && item.stackSize == UINT32_MAX);
 
         item.stackHeight = fr.stackHeight();
         item.stackSize = stk_.length();
@@ -2926,7 +3166,7 @@ class BaseCompiler final : public BaseCompilerInterface
         IsLeaf isLeaf = true;
         SigIdDesc sigId = env_.funcSigs[func_.index]->id;
         BytecodeOffset trapOffset(func_.lineOrBytecode);
-        GenerateFunctionPrologue(masm, fr.initialSize(), isLeaf, sigId, trapOffset, &offsets_,
+        GenerateFunctionPrologue(masm, fr.fixedSize(), isLeaf, sigId, trapOffset, &offsets_,
                                  mode_ == CompileMode::Tier1 ? Some(func_.index) : Nothing());
 
         fr.endFunctionPrologue();
@@ -3049,7 +3289,7 @@ class BaseCompiler final : public BaseCompilerInterface
             restoreResult();
         }
 
-        GenerateFunctionEpilogue(masm, fr.initialSize(), &offsets_);
+        GenerateFunctionEpilogue(masm, fr.fixedSize(), &offsets_);
 
 #if defined(JS_ION_PERF)
         // FIXME - profiling code missing.  No bug for this.
@@ -3441,6 +3681,17 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.addCodeLabel(tableCl);
 
         masm.branchToComputedAddress(BaseIndex(scratch, switchValue, ScalePointer));
+#elif defined(JS_CODEGEN_ARM64)
+        masm.flush();
+
+        ScratchI32 scratch(*this);
+
+        ARMRegister s(scratch, 64);
+        ARMRegister v(switchValue, 64);
+        masm.Adr(s, theTable);
+        masm.Add(s, s, Operand(v, vixl::LSL, 3));
+        masm.Ldr(s, MemOperand(s, 0));
+        masm.Br(s);
 #else
         MOZ_CRASH("BaseCompiler platform hook: tableSwitch");
 #endif
@@ -3559,6 +3810,13 @@ class BaseCompiler final : public BaseCompilerInterface
         else
             masm.as_ddiv(srcDest.reg, rhs.reg);
         masm.as_mflo(srcDest.reg);
+# elif defined(JS_CODEGEN_ARM64)
+        ARMRegister sd(srcDest.reg, 64);
+        ARMRegister r(rhs.reg, 64);
+        if (isUnsigned)
+            masm.Udiv(sd, sd, r);
+        else
+            masm.Sdiv(sd, sd, r);
 # else
         MOZ_CRASH("BaseCompiler platform hook: quotientI64");
 # endif
@@ -3595,6 +3853,18 @@ class BaseCompiler final : public BaseCompilerInterface
         else
             masm.as_ddiv(srcDest.reg, rhs.reg);
         masm.as_mfhi(srcDest.reg);
+# elif defined(JS_CODEGEN_ARM64)
+        MOZ_ASSERT(reserved.isInvalid());
+        ARMRegister sd(srcDest.reg, 64);
+        ARMRegister r(rhs.reg, 64);
+        ScratchI32 temp(*this);
+        ARMRegister t(temp, 64);
+        if (isUnsigned)
+            masm.Udiv(t, sd, r);
+        else
+            masm.Sdiv(t, sd, r);
+        masm.Mul(t, t, r);
+        masm.Sub(sd, sd, t);
 # else
         MOZ_CRASH("BaseCompiler platform hook: remainderI64");
 # endif
@@ -3605,7 +3875,8 @@ class BaseCompiler final : public BaseCompilerInterface
     RegI32 needRotate64Temp() {
 #if defined(JS_CODEGEN_X86)
         return needI32();
-#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
+#elif defined(JS_CODEGEN_X64) || \
+      defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
       defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         return RegI32::Invalid();
 #else
@@ -3622,7 +3893,8 @@ class BaseCompiler final : public BaseCompilerInterface
     RegI32 needPopcnt32Temp() {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         return AssemblerX86Shared::HasPOPCNT() ? RegI32::Invalid() : needI32();
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         return needI32();
 #else
         MOZ_CRASH("BaseCompiler platform hook: needPopcnt32Temp");
@@ -3632,7 +3904,8 @@ class BaseCompiler final : public BaseCompilerInterface
     RegI32 needPopcnt64Temp() {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         return AssemblerX86Shared::HasPOPCNT() ? RegI32::Invalid() : needI32();
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         return needI32();
 #else
         MOZ_CRASH("BaseCompiler platform hook: needPopcnt64Temp");
@@ -3990,7 +4263,8 @@ class BaseCompiler final : public BaseCompilerInterface
 #endif
     }
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
+#if defined(JS_CODEGEN_X64) || \
+    defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access, AccessCheck* check, RegI32 tls,
                                         RegI32 ptr)
@@ -4106,6 +4380,11 @@ class BaseCompiler final : public BaseCompilerInterface
             else
                 masm.wasmLoad(*access, HeapReg, ptr, ptr, dest.any());
         }
+#elif defined(JS_CODEGEN_ARM64)
+        if (dest.tag == AnyReg::I64)
+            masm.wasmLoadI64(*access, HeapReg, ptr, ptr, dest.i64());
+        else
+            masm.wasmLoad(*access, HeapReg, ptr, ptr, dest.any());
 #else
         MOZ_CRASH("BaseCompiler platform hook: load");
 #endif
@@ -4210,6 +4489,12 @@ class BaseCompiler final : public BaseCompilerInterface
             else
                 masm.wasmStore(*access, src.any(), HeapReg, ptr, ptr);
         }
+#elif defined(JS_CODEGEN_ARM64)
+        MOZ_ASSERT(temp.isInvalid());
+        if (access->type() == Scalar::Int64)
+            masm.wasmStoreI64(*access, src.i64(), HeapReg, ptr, ptr);
+        else
+            masm.wasmStore(*access, src.any(), HeapReg, ptr, ptr);
 #else
         MOZ_CRASH("BaseCompiler platform hook: store");
 #endif
@@ -4407,14 +4692,18 @@ class BaseCompiler final : public BaseCompilerInterface
         *temp = needI32();
 #elif defined(JS_CODEGEN_MIPS64)
         pop2xI64(r0, r1);
-#else
+#elif defined(JS_CODEGEN_ARM)
         pop2xI64(r0, r1);
         *temp = needI32();
+#elif defined(JS_CODEGEN_ARM64)
+        pop2xI64(r0, r1);
+#else
+        MOZ_CRASH("BaseCompiler porting interface: pop2xI64ForMulI64");
 #endif
     }
 
     void pop2xI64ForDivI64(RegI64* r0, RegI64* r1, RegI64* reserved) {
-#ifdef JS_CODEGEN_X64
+#if defined(JS_CODEGEN_X64)
         // r0 must be rax, and rdx will be clobbered.
         need2xI64(specific.rax, specific.rdx);
         *r1 = popI64();
@@ -4516,7 +4805,9 @@ class BaseCompiler final : public BaseCompilerInterface
 
       public:
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-        explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType) : Base(bc) {
+        explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType)
+          : Base(bc)
+        {
             // For cmpxchg, the expected value and the result are both in eax.
             bc->needI32(bc->specific.eax);
             if (type == ValType::I64) {
@@ -4531,8 +4822,10 @@ class BaseCompiler final : public BaseCompilerInterface
         ~PopAtomicCmpXchg32Regs() {
             bc->freeI32(rnew);
         }
-#elif defined(JS_CODEGEN_ARM)
-        explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType) : Base(bc) {
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+        explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType)
+          : Base(bc)
+        {
             if (type == ValType::I64) {
                 rnew = bc->popI64ToI32();
                 rexpect = bc->popI64ToI32();
@@ -4547,7 +4840,9 @@ class BaseCompiler final : public BaseCompilerInterface
             bc->freeI32(rexpect);
         }
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType) : Base(bc) {
+        explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType)
+          : Base(bc)
+        {
             if (type == ValType::I64) {
                 rnew = bc->popI64ToI32();
                 rexpect = bc->popI64ToI32();
@@ -4565,7 +4860,9 @@ class BaseCompiler final : public BaseCompilerInterface
             temps.maybeFree(bc);
         }
 #else
-        explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType) : Base(bc) {
+        explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType)
+            : Base(bc)
+        {
             MOZ_CRASH("BaseCompiler porting interface: PopAtomicCmpXchg32Regs");
         }
 #endif
@@ -4621,7 +4918,7 @@ class BaseCompiler final : public BaseCompilerInterface
             bc->freeI64(rexpect);
             bc->freeI64(rnew);
         }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         explicit PopAtomicCmpXchg64Regs(BaseCompiler* bc) : Base(bc) {
             rnew = bc->popI64();
             rexpect = bc->popI64();
@@ -4747,7 +5044,7 @@ class BaseCompiler final : public BaseCompilerInterface
                 bc->freeI32(rv);
             temps.maybeFree(bc);
         }
-#elif defined(JS_CODEGEN_ARM)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
         explicit PopAtomicRMW32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType,
                                     AtomicOp op)
           : Base(bc)
@@ -4849,7 +5146,7 @@ class BaseCompiler final : public BaseCompilerInterface
             bc->freeI64(rv);
             bc->freeI64(temp);
         }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         explicit PopAtomicRMW64Regs(BaseCompiler* bc, AtomicOp) : Base(bc) {
             rv = bc->popI64();
             temp = bc->needI64();
@@ -4888,13 +5185,17 @@ class BaseCompiler final : public BaseCompilerInterface
 
       public:
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-        explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType) : Base(bc) {
+        explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType)
+          : Base(bc)
+        {
             // The xchg instruction reuses rv as rd.
             rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
             setRd(rv);
         }
-#elif defined(JS_CODEGEN_ARM)
-        explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType) : Base(bc) {
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+        explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType)
+          : Base(bc)
+        {
             rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
             setRd(bc->needI32());
         }
@@ -4902,7 +5203,9 @@ class BaseCompiler final : public BaseCompilerInterface
             bc->freeI32(rv);
         }
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType) : Base(bc) {
+        explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType)
+          : Base(bc)
+        {
             rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
             if (Scalar::byteSize(viewType) < 4)
                 temps.allocate(bc);
@@ -4913,7 +5216,9 @@ class BaseCompiler final : public BaseCompilerInterface
             bc->freeI32(rv);
         }
 #else
-        explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType) : Base(bc) {
+        explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type, Scalar::Type viewType)
+          : Base(bc)
+        {
             MOZ_CRASH("BaseCompiler porting interface: PopAtomicXchg32Regs");
         }
 #endif
@@ -4931,10 +5236,18 @@ class BaseCompiler final : public BaseCompilerInterface
         RegI64 rv;
 
       public:
-#ifdef JS_CODEGEN_X64
+#if defined(JS_CODEGEN_X64)
         explicit PopAtomicXchg64Regs(BaseCompiler* bc) : Base(bc) {
             rv = bc->popI64();
             setRd(rv);
+        }
+#elif defined(JS_CODEGEN_ARM64)
+        explicit PopAtomicXchg64Regs(BaseCompiler* bc) : Base(bc) {
+            rv = bc->popI64();
+            setRd(bc->needI64());
+        }
+        ~PopAtomicXchg64Regs() {
+            bc->freeI64(rv);
         }
 #elif defined(JS_CODEGEN_X86)
         // We'll use cmpxchg8b, so rv must be in ecx:ebx, and rd must be
@@ -5097,7 +5410,9 @@ class BaseCompiler final : public BaseCompilerInterface
     // sniffConditionalControl{Cmp,Eqz}.
 
     struct BranchState {
-        static const int32_t NoPop = ~0;
+        enum NoPopType {
+            NoPop
+        };
 
         union {
             struct {
@@ -5123,17 +5438,35 @@ class BaseCompiler final : public BaseCompilerInterface
         };
 
         Label* const label;        // The target of the branch, never NULL
-        const int32_t stackHeight; // Either NoPop, or the value to pop to along the taken edge
+        const StackHeight stackHeight; // The value to pop to along the taken edge, unless !hasPop()
         const bool invertBranch;   // If true, invert the sense of the branch
         const ExprType resultType; // The result propagated along the edges, or Void
 
-        explicit BranchState(Label* label, int32_t stackHeight = NoPop,
-                             uint32_t invertBranch = false, ExprType resultType = ExprType::Void)
+        explicit BranchState(Label* label)
+          : label(label),
+            stackHeight(StackHeight(UINT32_MAX)),
+            invertBranch(false),
+            resultType(ExprType::Void)
+        {}
+
+        BranchState(Label* label, NoPopType noPop, uint32_t invertBranch)
+          : label(label),
+            stackHeight(StackHeight(UINT32_MAX)),
+            invertBranch(invertBranch),
+            resultType(ExprType::Void)
+        {}
+
+        BranchState(Label* label, StackHeight stackHeight, uint32_t invertBranch,
+                    ExprType resultType)
           : label(label),
             stackHeight(stackHeight),
             invertBranch(invertBranch),
             resultType(resultType)
         {}
+
+        bool hasPop() const {
+            return stackHeight.isValid();
+        }
     };
 
     void setLatentCompare(Assembler::Condition compareOp, ValType operandType) {
@@ -5196,7 +5529,7 @@ class BaseCompiler final : public BaseCompilerInterface
     {
         Maybe<AnyReg> r = popJoinRegUnlessVoid(b->resultType);
 
-        if (b->stackHeight != BranchState::NoPop && fr.willPopStackBeforeBranch(b->stackHeight)) {
+        if (b->hasPop() && fr.willPopStackBeforeBranch(b->stackHeight)) {
             Label notTaken;
             branchTo(b->invertBranch ? cond : Assembler::InvertCondition(cond), lhs, rhs, &notTaken);
             fr.popStackBeforeBranch(b->stackHeight);
@@ -9528,7 +9861,8 @@ js::wasm::BaselineCanCompile()
         return false;
 #endif
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM) || \
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || \
+    defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     return true;
 #else
@@ -9587,6 +9921,7 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
     return code->swap(masm);
 }
 
+#undef CHUNKY_INVARIANT
 #undef RABALDR_INT_DIV_I64_CALLOUT
 #undef RABALDR_I64_TO_FLOAT_CALLOUT
 #undef RABALDR_FLOAT_TO_I64_CALLOUT

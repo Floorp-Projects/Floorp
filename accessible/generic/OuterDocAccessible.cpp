@@ -104,7 +104,10 @@ OuterDocAccessible::Shutdown()
     // to its parent document. Otherwise a document accessible may be lost if
     // its outerdoc has being recreated (see bug 862863 for details).
     if (!mDoc->IsDefunct()) {
-      mDoc->BindChildDocument(child->AsDoc());
+      MOZ_ASSERT(!child->IsDefunct(), "Attempt to reattach shutdown document accessible");
+      if (!child->IsDefunct()) {
+        mDoc->BindChildDocument(child->AsDoc());
+      }
     }
   }
 
@@ -143,8 +146,8 @@ bool
 OuterDocAccessible::RemoveChild(Accessible* aAccessible)
 {
   Accessible* child = mChildren.SafeElementAt(0, nullptr);
+  MOZ_ASSERT(child == aAccessible, "Wrong child to remove!");
   if (child != aAccessible) {
-    NS_ERROR("Wrong child to remove!");
     return false;
   }
 

@@ -24,10 +24,7 @@ namespace SkOpts {
     // Declare function pointers here...
 
     // May return nullptr if we haven't specialized the given Mode.
-    extern SkXfermode* (*create_xfermode)(const ProcCoeff&, SkBlendMode);
-
-    typedef void (*BoxBlur)(const SkPMColor*, int, const SkIRect& srcBounds, SkPMColor*, int, int, int, int, int);
-    extern BoxBlur box_blur_xx, box_blur_xy, box_blur_yx;
+    extern SkXfermode* (*create_xfermode)(SkBlendMode);
 
     typedef void (*Morph)(const SkPMColor*, SkPMColor*, int, int, int, int, int);
     extern Morph dilate_x, dilate_y, erode_x, erode_y;
@@ -49,17 +46,15 @@ namespace SkOpts {
                         inverted_CMYK_to_RGB1, // i.e. convert color space
                         inverted_CMYK_to_BGR1; // i.e. convert color space
 
-    // Blend ndst src pixels over dst, where both src and dst point to sRGB pixels (RGBA or BGRA).
-    // If nsrc < ndst, we loop over src to create a pattern.
-    extern void (*srcover_srgb_srgb)(uint32_t* dst, const uint32_t* src, int ndst, int nsrc);
+    extern void (*memset16)(uint16_t[], uint16_t, int);
+    extern void SK_API (*memset32)(uint32_t[], uint32_t, int);
+    extern void (*memset64)(uint64_t[], uint64_t, int);
 
     // The fastest high quality 32-bit hash we can provide on this platform.
     extern uint32_t (*hash_fn)(const void*, size_t, uint32_t seed);
     static inline uint32_t hash(const void* data, size_t bytes, uint32_t seed=0) {
         return hash_fn(data, bytes, seed);
     }
-
-    extern void (*run_pipeline)(size_t, size_t, const SkRasterPipeline::Stage*, int);
 
     extern void (*convolve_vertically)(const SkConvolutionFilter1D::ConvolutionFixed* filter_values,
                                        int filter_length, unsigned char* const* source_data_rows,

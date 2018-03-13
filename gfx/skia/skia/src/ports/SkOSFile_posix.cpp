@@ -19,24 +19,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-size_t sk_fgetsize(FILE* f) {
-    int fd = fileno(f);
-    if (fd < 0) {
-        return 0;
-    }
-
-    struct stat status;
-    if (0 != fstat(fd, &status)) {
-        return 0;
-    }
-    if (!S_ISREG(status.st_mode)) {
-        return 0;
-    }
-    if (!SkTFitsIn<size_t>(status.st_size)) {
-        return 0;
-    }
-    return static_cast<size_t>(status.st_size);
-}
+#ifdef SK_BUILD_FOR_IOS
+#include "SkOSFile_ios.h"
+#endif
 
 bool sk_exists(const char *path, SkFILE_Flags flags) {
     int mode = F_OK;
@@ -46,7 +31,16 @@ bool sk_exists(const char *path, SkFILE_Flags flags) {
     if (flags & kWrite_SkFILE_Flag) {
         mode |= W_OK;
     }
+#ifdef SK_BUILD_FOR_IOS
+    // if the default path fails, check the bundle (but only if read-only)
+    if (0 == access(path, mode)) {
+        return true;
+    } else {
+        return (kRead_SkFILE_Flag == flags && ios_get_path_in_bundle(path, nullptr));
+    }
+#else
     return (0 == access(path, mode));
+#endif
 }
 
 typedef struct {
@@ -129,7 +123,7 @@ size_t sk_qread(FILE* file, void* buffer, size_t count, size_t offset) {
 ////////////////////////////////////////////////////////////////////////////
 
 struct SkOSFileIterData {
-    SkOSFileIterData() : fDIR(0) { }
+    SkOSFileIterData() : fDIR(nullptr) { }
     DIR* fDIR;
     SkString fPath, fSuffix;
 };
@@ -154,12 +148,18 @@ void SkOSFile::Iter::reset(const char path[], const char suffix[]) {
     SkOSFileIterData& self = *static_cast<SkOSFileIterData*>(fSelf.get());
     if (self.fDIR) {
         ::closedir(self.fDIR);
-        self.fDIR = 0;
+        self.fDIR = nullptr;
     }
-
     self.fPath.set(path);
+
     if (path) {
         self.fDIR = ::opendir(path);
+#ifdef SK_BUILD_FOR_IOS
+        // check bundle for directory
+        if (!self.fDIR && ios_get_path_in_bundle(path, &self.fPath)) {
+            self.fDIR = ::opendir(self.fPath.c_str());
+        }
+#endif
         self.fSuffix.set(suffix);
     } else {
         self.fSuffix.reset();

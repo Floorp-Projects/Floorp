@@ -178,6 +178,8 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fFunctions.fClearStencil = WrapGL(context, &GLContext::fClearStencil);
     i->fFunctions.fColorMask = WrapGL(context, &GLContext::fColorMask);
     i->fFunctions.fCompileShader = WrapGL(context, &GLContext::fCompileShader);
+    i->fFunctions.fCompressedTexImage2D = WrapGL(context, &GLContext::fCompressedTexImage2D);
+    i->fFunctions.fCompressedTexSubImage2D = WrapGL(context, &GLContext::fCompressedTexSubImage2D);
     i->fFunctions.fCopyTexSubImage2D = WrapGL(context, &GLContext::fCopyTexSubImage2D);
     i->fFunctions.fCreateProgram = WrapGL(context, &GLContext::fCreateProgram);
     i->fFunctions.fCreateShader = WrapGL(context, &GLContext::fCreateShader);
@@ -218,6 +220,7 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fFunctions.fGetShaderPrecisionFormat = WrapGL(context, &GLContext::fGetShaderPrecisionFormat);
     i->fFunctions.fGetString = getString;
     i->fFunctions.fGetUniformLocation = WrapGL(context, &GLContext::fGetUniformLocation);
+    i->fFunctions.fIsTexture = WrapGL(context, &GLContext::fIsTexture);
     i->fFunctions.fLineWidth = WrapGL(context, &GLContext::fLineWidth);
     i->fFunctions.fLinkProgram = WrapGL(context, &GLContext::fLinkProgram);
     i->fFunctions.fPixelStorei = WrapGL(context, &GLContext::fPixelStorei);
@@ -227,8 +230,11 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fFunctions.fScissor = WrapGL(context, &GLContext::fScissor);
     i->fFunctions.fShaderSource = WrapGL(context, &GLContext::fShaderSource);
     i->fFunctions.fStencilFunc = WrapGL(context, &GLContext::fStencilFunc);
+    i->fFunctions.fStencilFuncSeparate = WrapGL(context, &GLContext::fStencilFuncSeparate);
     i->fFunctions.fStencilMask = WrapGL(context, &GLContext::fStencilMask);
+    i->fFunctions.fStencilMaskSeparate = WrapGL(context, &GLContext::fStencilMaskSeparate);
     i->fFunctions.fStencilOp = WrapGL(context, &GLContext::fStencilOp);
+    i->fFunctions.fStencilOpSeparate = WrapGL(context, &GLContext::fStencilOpSeparate);
     i->fFunctions.fTexImage2D = WrapGL(context, &GLContext::fTexImage2D);
     i->fFunctions.fTexParameteri = WrapGL(context, &GLContext::fTexParameteri);
     i->fFunctions.fTexParameteriv = WrapGL(context, &GLContext::fTexParameteriv);

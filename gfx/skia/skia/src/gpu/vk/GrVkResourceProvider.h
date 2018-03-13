@@ -8,7 +8,6 @@
 #ifndef GrVkResourceProvider_DEFINED
 #define GrVkResourceProvider_DEFINED
 
-#include "GrGpu.h"
 #include "GrResourceHandle.h"
 #include "GrVkDescriptorPool.h"
 #include "GrVkDescriptorSetManager.h"
@@ -25,7 +24,7 @@
 
 class GrPipeline;
 class GrPrimitiveProcessor;
-class GrSamplerParams;
+class GrSamplerState;
 class GrVkCopyPipeline;
 class GrVkGpu;
 class GrVkPipeline;
@@ -97,18 +96,20 @@ public:
     //       of our cache of GrVkDescriptorPools.
     GrVkDescriptorPool* findOrCreateCompatibleDescriptorPool(VkDescriptorType type, uint32_t count);
 
-    // Finds or creates a compatible GrVkSampler based on the GrSamplerParams.
+    // Finds or creates a compatible GrVkSampler based on the GrSamplerState.
     // The refcount is incremented and a pointer returned.
-    GrVkSampler* findOrCreateCompatibleSampler(const GrSamplerParams&, uint32_t mipLevels);
+    GrVkSampler* findOrCreateCompatibleSampler(const GrSamplerState&, uint32_t maxMipLevel);
 
-    sk_sp<GrVkPipelineState> findOrCreateCompatiblePipelineState(const GrPipeline&,
-                                                                 const GrPrimitiveProcessor&,
-                                                                 GrPrimitiveType,
-                                                                 const GrVkRenderPass& renderPass);
+    GrVkPipelineState* findOrCreateCompatiblePipelineState(const GrPipeline&,
+                                                           const GrPrimitiveProcessor&,
+                                                           GrPrimitiveType,
+                                                           const GrVkRenderPass& renderPass);
 
-    void getSamplerDescriptorSetHandle(const GrVkUniformHandler&,
+    void getSamplerDescriptorSetHandle(VkDescriptorType type,
+                                       const GrVkUniformHandler&,
                                        GrVkDescriptorSetManager::Handle* handle);
-    void getSamplerDescriptorSetHandle(const SkTArray<uint32_t>& visibilities,
+    void getSamplerDescriptorSetHandle(VkDescriptorType type,
+                                       const SkTArray<uint32_t>& visibilities,
                                        GrVkDescriptorSetManager::Handle* handle);
 
     // Returns the compatible VkDescriptorSetLayout to use for uniform buffers. The caller does not
@@ -169,10 +170,10 @@ private:
 
         void abandon();
         void release();
-        sk_sp<GrVkPipelineState> refPipelineState(const GrPipeline&,
-                                                  const GrPrimitiveProcessor&,
-                                                  GrPrimitiveType,
-                                                  const GrVkRenderPass& renderPass);
+        GrVkPipelineState* refPipelineState(const GrPipeline&,
+                                            const GrPrimitiveProcessor&,
+                                            GrPrimitiveType,
+                                            const GrVkRenderPass& renderPass);
 
     private:
         enum {
@@ -255,7 +256,7 @@ private:
     // Cache of GrVkPipelineStates
     PipelineStateCache* fPipelineStateCache;
 
-    SkSTArray<4, GrVkDescriptorSetManager, true> fDescriptorSetManagers;
+    SkSTArray<4, std::unique_ptr<GrVkDescriptorSetManager>> fDescriptorSetManagers;
 
     GrVkDescriptorSetManager::Handle fUniformDSHandle;
 };

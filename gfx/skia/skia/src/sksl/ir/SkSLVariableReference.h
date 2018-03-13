@@ -8,10 +8,13 @@
 #ifndef SKSL_VARIABLEREFERENCE
 #define SKSL_VARIABLEREFERENCE
 
+#include "SkSLBoolLiteral.h"
+#include "SkSLConstructor.h"
 #include "SkSLExpression.h"
 #include "SkSLFloatLiteral.h"
 #include "SkSLIRGenerator.h"
 #include "SkSLIntLiteral.h"
+#include "SkSLSetting.h"
 
 namespace SkSL {
 
@@ -29,8 +32,8 @@ struct VariableReference : public Expression {
         kReadWrite_RefKind
     };
 
-    VariableReference(Position position, const Variable& variable, RefKind refKind = kRead_RefKind)
-    : INHERITED(position, kVariableReference_Kind, variable.fType)
+    VariableReference(int offset, const Variable& variable, RefKind refKind = kRead_RefKind)
+    : INHERITED(offset, kVariableReference_Kind, variable.fType)
     , fVariable(variable)
     , fRefKind(refKind) {
         if (refKind != kRead_RefKind) {
@@ -41,7 +44,7 @@ struct VariableReference : public Expression {
         }
     }
 
-    virtual ~VariableReference() override {
+    ~VariableReference() override {
         if (fRefKind != kWrite_RefKind) {
             fVariable.fReadCount--;
         }
@@ -67,39 +70,76 @@ struct VariableReference : public Expression {
         fRefKind = refKind;
     }
 
+    bool hasSideEffects() const override {
+        return false;
+    }
+
+    bool isConstant() const override {
+        return 0 != (fVariable.fModifiers.fFlags & Modifiers::kConst_Flag);
+    }
+
     String description() const override {
         return fVariable.fName;
     }
 
-    virtual std::unique_ptr<Expression> constantPropagate(
-                                                        const IRGenerator& irGenerator,
-                                                        const DefinitionMap& definitions) override {
-        auto exprIter = definitions.find(&fVariable);
-        if (exprIter != definitions.end() && exprIter->second) {
-            const Expression* expr = exprIter->second->get();
-            switch (expr->fKind) {
-                case Expression::kIntLiteral_Kind:
-                    return std::unique_ptr<Expression>(new IntLiteral(
-                                                                     irGenerator.fContext,
-                                                                     Position(),
-                                                                     ((IntLiteral*) expr)->fValue));
-                case Expression::kFloatLiteral_Kind:
-                    return std::unique_ptr<Expression>(new FloatLiteral(
+    static std::unique_ptr<Expression> copy_constant(const IRGenerator& irGenerator,
+                                                     const Expression* expr) {
+        ASSERT(expr->isConstant());
+        switch (expr->fKind) {
+            case Expression::kIntLiteral_Kind:
+                return std::unique_ptr<Expression>(new IntLiteral(irGenerator.fContext,
+                                                                  -1,
+                                                                  ((IntLiteral*) expr)->fValue));
+            case Expression::kFloatLiteral_Kind:
+                return std::unique_ptr<Expression>(new FloatLiteral(
                                                                    irGenerator.fContext,
-                                                                   Position(),
+                                                                   -1,
                                                                    ((FloatLiteral*) expr)->fValue));
-                default:
-                    break;
+            case Expression::kBoolLiteral_Kind:
+                return std::unique_ptr<Expression>(new BoolLiteral(irGenerator.fContext,
+                                                                   -1,
+                                                                   ((BoolLiteral*) expr)->fValue));
+            case Expression::kConstructor_Kind: {
+                const Constructor* c = (const Constructor*) expr;
+                std::vector<std::unique_ptr<Expression>> args;
+                for (const auto& arg : c->fArguments) {
+                    args.push_back(copy_constant(irGenerator, arg.get()));
+                }
+                return std::unique_ptr<Expression>(new Constructor(-1, c->fType,
+                                                                   std::move(args)));
             }
+            case Expression::kSetting_Kind: {
+                const Setting* s = (const Setting*) expr;
+                return std::unique_ptr<Expression>(new Setting(-1, s->fName,
+                                                               copy_constant(irGenerator,
+                                                                             s->fValue.get())));
+            }
+            default:
+                ABORT("unsupported constant\n");
+        }
+    }
+
+    std::unique_ptr<Expression> constantPropagate(const IRGenerator& irGenerator,
+                                                  const DefinitionMap& definitions) override {
+        if (fRefKind != kRead_RefKind) {
+            return nullptr;
+        }
+        if ((fVariable.fModifiers.fFlags & Modifiers::kConst_Flag) && fVariable.fInitialValue &&
+            fVariable.fInitialValue->isConstant()) {
+            return copy_constant(irGenerator, fVariable.fInitialValue);
+        }
+        auto exprIter = definitions.find(&fVariable);
+        if (exprIter != definitions.end() && exprIter->second &&
+            (*exprIter->second)->isConstant()) {
+            return copy_constant(irGenerator, exprIter->second->get());
         }
         return nullptr;
     }
 
     const Variable& fVariable;
-
-private:
     RefKind fRefKind;
 
+private:
     typedef Expression INHERITED;
 };
 

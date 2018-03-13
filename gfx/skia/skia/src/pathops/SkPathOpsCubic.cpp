@@ -248,29 +248,22 @@ int SkDCubic::ComplexBreak(const SkPoint pointsPtr[4], SkScalar* t) {
     if (cubic.monotonicInX() && cubic.monotonicInY()) {
         return 0;
     }
-    SkScalar d[3];
-    SkCubicType cubicType = SkClassifyCubic(pointsPtr, d);
+    double tt[2], ss[2];
+    SkCubicType cubicType = SkClassifyCubic(pointsPtr, tt, ss);
     switch (cubicType) {
-        case kLoop_SkCubicType: {
-            // crib code from gpu path utils that finds t values where loop self-intersects
-            // use it to find mid of t values which should be a friendly place to chop
-            SkScalar tempSqrt = SkScalarSqrt(4.f * d[0] * d[2] - 3.f * d[1] * d[1]);
-            SkScalar ls = d[1] - tempSqrt;
-            SkScalar lt = 2.f * d[0];
-            SkScalar ms = d[1] + tempSqrt;
-            SkScalar mt = 2.f * d[0];
-            if (roughly_between(0, ls, lt) && roughly_between(0, ms, mt)) {
-                ls = ls / lt;
-                ms = ms / mt;
-                SkASSERT(roughly_between(0, ls, 1) && roughly_between(0, ms, 1));
-                t[0] = (ls + ms) / 2;
+        case SkCubicType::kLoop: {
+            const double &td = tt[0], &te = tt[1], &sd = ss[0], &se = ss[1];
+            if (roughly_between(0, td, sd) && roughly_between(0, te, se)) {
+                SkASSERT(roughly_between(0, td/sd, 1) && roughly_between(0, te/se, 1));
+                t[0] = static_cast<SkScalar>((td * se + te * sd) / (2 * sd * se));
                 SkASSERT(roughly_between(0, *t, 1));
                 return (int) (t[0] > 0 && t[0] < 1);
             }
         }
         // fall through if no t value found
-        case kSerpentine_SkCubicType:
-        case kCusp_SkCubicType: {
+        case SkCubicType::kSerpentine:
+        case SkCubicType::kLocalCusp:
+        case SkCubicType::kCuspAtInfinity: {
             double inflectionTs[2];
             int infTCount = cubic.findInflections(inflectionTs);
             double maxCurvature[3];
@@ -720,7 +713,10 @@ bool SkDCubic::toFloatPoints(SkPoint* pts) const {
     const double* dCubic = &fPts[0].fX;
     SkScalar* cubic = &pts[0].fX;
     for (int index = 0; index < kPointCount * 2; ++index) {
-        *cubic++ = SkDoubleToScalar(*dCubic++);
+        cubic[index] = SkDoubleToScalar(dCubic[index]);
+        if (SkScalarAbs(cubic[index]) < FLT_EPSILON_ORDERABLE_ERR) {
+            cubic[index] = 0;
+        }
     }
     return SkScalarsAreFinite(&pts->fX, kPointCount * 2);
 }

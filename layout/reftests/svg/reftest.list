@@ -359,7 +359,7 @@ fuzzy-if(skiaContent,1,5) == pattern-scale-01a.svg pattern-scale-01-ref.svg
 == pattern-scale-01b.svg pattern-scale-01-ref.svg
 fuzzy-if(skiaContent,3,5) == pattern-scale-01c.svg pattern-scale-01-ref.svg
 fuzzy-if(webrender,0-2,0-227) == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
-== pattern-transformed-01.svg pattern-transformed-01-ref.svg
+fuzzy-if(skiaContent||webrender,72,871) == pattern-transformed-01.svg pattern-transformed-01-ref.svg
 
 == polygon-01.svg polygon-01-ref.svg
 == polygon-marker-01.svg pass.svg

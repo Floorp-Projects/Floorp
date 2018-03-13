@@ -2,10 +2,10 @@
 != backgr_border-table-cell.html empty.html
 fuzzy-if(styloVsGecko,5,330) != backgr_border-table-column-group.html empty.html # Bug 1386543
 # This seems to be caused by bug 527825
-fuzzy-if(styloVsGecko,5,561) asserts-if(gtkWidget,0-12) != backgr_border-table-column.html empty.html # Bug 1386543
+fuzzy-if(styloVsGecko,5,579) asserts-if(gtkWidget,0-12) != backgr_border-table-column.html empty.html # Bug 1386543
 asserts-if(gtkWidget,0-6) fuzzy-if(styloVsGecko&&(winWidget||cocoaWidget),32,88) != backgr_border-table-quirks.html empty.html
 fuzzy-if(styloVsGecko,1,168) != backgr_border-table-row-group.html empty.html # Bug 1386543
-fuzzy-if(styloVsGecko,1,178) != backgr_border-table-row.html empty.html # Bug 1386543
+fuzzy-if(styloVsGecko,1,204) != backgr_border-table-row.html empty.html # Bug 1386543
 != backgr_border-table.html empty.html
 != backgr_fixed-bg.html empty.html
 != backgr_index.html empty.html

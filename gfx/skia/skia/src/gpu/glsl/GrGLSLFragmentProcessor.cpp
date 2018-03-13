@@ -26,16 +26,16 @@ void GrGLSLFragmentProcessor::emitChild(int childIndex, const char* inputColor, 
 
 void GrGLSLFragmentProcessor::emitChild(int childIndex, const char* inputColor,
                                         SkString* outputColor, EmitArgs& args) {
-
     SkASSERT(outputColor);
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     outputColor->append(fragBuilder->getMangleString());
-    fragBuilder->codeAppendf("vec4 %s;", outputColor->c_str());
+    fragBuilder->codeAppendf("half4 %s;", outputColor->c_str());
     this->internalEmitChild(childIndex, inputColor, outputColor->c_str(), args);
 }
 
 void GrGLSLFragmentProcessor::internalEmitChild(int childIndex, const char* inputColor,
                                                 const char* outputColor, EmitArgs& args) {
+    SkASSERT(inputColor);
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
 
     fragBuilder->onBeforeChildProcEmitCode();  // call first so mangleString is updated
@@ -48,8 +48,7 @@ void GrGLSLFragmentProcessor::internalEmitChild(int childIndex, const char* inpu
                              fragBuilder->getMangleString().c_str(), childProc.name());
     TransformedCoordVars coordVars = args.fTransformedCoords.childInputs(childIndex);
     TextureSamplers textureSamplers = args.fTexSamplers.childInputs(childIndex);
-    BufferSamplers bufferSamplers = args.fBufferSamplers.childInputs(childIndex);
-    ImageStorages imageStorages = args.fImageStorages.childInputs(childIndex);
+    TexelBuffers texelBuffers = args.fTexelBuffers.childInputs(childIndex);
     EmitArgs childArgs(fragBuilder,
                        args.fUniformHandler,
                        args.fShaderCaps,
@@ -58,9 +57,7 @@ void GrGLSLFragmentProcessor::internalEmitChild(int childIndex, const char* inpu
                        inputColor,
                        coordVars,
                        textureSamplers,
-                       bufferSamplers,
-                       imageStorages,
-                       args.fGpImplementsDistanceVector);
+                       texelBuffers);
     this->childProcessor(childIndex)->emitCode(childArgs);
     fragBuilder->codeAppend("}\n");
 

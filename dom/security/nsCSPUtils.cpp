@@ -130,7 +130,8 @@ CSP_LogMessage(const nsAString& aMessage,
                uint32_t aColumnNumber,
                uint32_t aFlags,
                const char *aCategory,
-               uint64_t aInnerWindowID)
+               uint64_t aInnerWindowID,
+               bool aFromPrivateWindow)
 {
   nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
 
@@ -170,7 +171,7 @@ CSP_LogMessage(const nsAString& aMessage,
     rv = error->Init(cspMsg, aSourceName,
                      aSourceLine, aLineNumber,
                      aColumnNumber, aFlags,
-                     aCategory);
+                     aCategory, aFromPrivateWindow);
   }
   if (NS_FAILED(rv)) {
     return;
@@ -191,13 +192,14 @@ CSP_LogLocalizedStr(const char* aName,
                     uint32_t aColumnNumber,
                     uint32_t aFlags,
                     const char* aCategory,
-                    uint64_t aInnerWindowID)
+                    uint64_t aInnerWindowID,
+                    bool aFromPrivateWindow)
 {
   nsAutoString logMsg;
   CSP_GetLocalizedStr(aName, aParams, aLength, logMsg);
   CSP_LogMessage(logMsg, aSourceName, aSourceLine,
                  aLineNumber, aColumnNumber, aFlags,
-                 aCategory, aInnerWindowID);
+                 aCategory, aInnerWindowID, aFromPrivateWindow);
 }
 
 /* ===== Helpers ============================ */
