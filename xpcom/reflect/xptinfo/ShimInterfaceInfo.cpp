@@ -8,7 +8,6 @@
 #include "ShimInterfaceInfo.h"
 
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMClientRect.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMCustomEvent.h"
 #ifdef MOZ_WEBRTC
@@ -53,7 +52,6 @@
 #include "nsIWebBrowserPersistable.h"
 
 #include "mozilla/dom/CharacterDataBinding.h"
-#include "mozilla/dom/DOMRectBinding.h"
 #include "mozilla/dom/CommentBinding.h"
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
@@ -93,7 +91,6 @@
 #include "mozilla/dom/PositionErrorBinding.h"
 #include "mozilla/dom/ProcessingInstructionBinding.h"
 #include "mozilla/dom/RangeBinding.h"
-#include "mozilla/dom/RectBinding.h"
 #ifdef MOZ_WEBRTC
 #include "mozilla/dom/RTCDataChannelBinding.h"
 #endif
@@ -171,7 +168,6 @@ struct ComponentsInterfaceShimEntry {
 const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 {
   DEFINE_SHIM(CharacterData),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRect, DOMRectReadOnly),
   DEFINE_SHIM(Comment),
   DEFINE_SHIM(CustomEvent),
   DEFINE_SHIM(DOMCursor),

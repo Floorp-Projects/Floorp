@@ -30,23 +30,6 @@ DOMRectReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 // -----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED(DOMRect, DOMRectReadOnly, nsIDOMClientRect)
-
-#define FORWARD_GETTER(_name)                                                   \
-  NS_IMETHODIMP                                                                 \
-  DOMRect::Get ## _name(float* aResult)                                         \
-  {                                                                             \
-    *aResult = float(_name());                                                  \
-    return NS_OK;                                                               \
-  }
-
-FORWARD_GETTER(Left)
-FORWARD_GETTER(Top)
-FORWARD_GETTER(Right)
-FORWARD_GETTER(Bottom)
-FORWARD_GETTER(Width)
-FORWARD_GETTER(Height)
-
 JSObject*
 DOMRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {

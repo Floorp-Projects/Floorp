@@ -7,7 +7,6 @@
 #ifndef MOZILLA_DOMRECT_H_
 #define MOZILLA_DOMRECT_H_
 
-#include "nsIDOMClientRect.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
@@ -75,7 +74,6 @@ protected:
 };
 
 class DOMRect final : public DOMRectReadOnly
-                    , public nsIDOMClientRect
 {
 public:
   explicit DOMRect(nsISupports* aParent, double aX = 0, double aY = 0,
@@ -88,8 +86,7 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMCLIENTRECT
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(DOMRect, DOMRectReadOnly)
 
   static already_AddRefed<DOMRect>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRV);
@@ -136,6 +133,11 @@ public:
   void SetHeight(double aHeight)
   {
     mHeight = aHeight;
+  }
+
+  static DOMRect* FromSupports(nsISupports* aSupports)
+  {
+    return static_cast<DOMRect*>(aSupports);
   }
 
 protected:
