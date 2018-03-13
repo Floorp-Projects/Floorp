@@ -9,7 +9,7 @@
 // * make animations currentTime to change by click on the controller
 // * mouse drag on the scrubber
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 

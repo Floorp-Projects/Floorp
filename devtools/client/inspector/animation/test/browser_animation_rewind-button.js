@@ -8,7 +8,7 @@
 // * make animations to rewind to zero
 // * the state should be always paused after rewinding
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
   const { animationInspector, panel } = await openAnimationInspector();
 

@@ -10,7 +10,7 @@
 // * state of animations and UI components after end of animation duration
 //   but iteration count is infinity
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 
