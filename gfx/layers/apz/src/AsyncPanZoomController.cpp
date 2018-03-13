@@ -1955,7 +1955,10 @@ AsyncPanZoomController::CanScroll(const InputData& aEvent) const
     return false;
   }
 
-  return CanScrollWithWheel(delta);
+  if (SCROLLWHEEL_INPUT == aEvent.mInputType) {
+    return CanScrollWithWheel(delta);
+  }
+  return CanScroll(delta);
 }
 
 ScrollDirections
@@ -1970,6 +1973,13 @@ AsyncPanZoomController::GetAllowedHandoffDirections() const
     result += ScrollDirection::eVertical;
   }
   return result;
+}
+
+bool
+AsyncPanZoomController::CanScroll(const ParentLayerPoint& aDelta) const
+{
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  return mX.CanScroll(aDelta.x) || mY.CanScroll(aDelta.y);
 }
 
 bool
