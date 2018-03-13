@@ -9,7 +9,7 @@
 // * in case of animations have mixed playback rate
 // * in case of animations have playback rate which is not default selectable value
 
-add_task(async function () {
+add_task(async function() {
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 
