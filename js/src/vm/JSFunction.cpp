@@ -564,7 +564,7 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 }
 
 template<XDRMode mode>
-bool
+XDRResult
 js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
                            HandleScriptSource sourceObject, MutableHandleFunction objp)
 {
@@ -622,22 +622,21 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
 
     // Everything added below can substituted by the non-lazy-script version of
     // this function later.
+    MOZ_TRY(xdr->codeAlign(sizeof(js::XDRAlignment)));
     js::AutoXDRTree funTree(xdr, xdr->getTreeKey(fun));
 
-    if (!xdr->codeUint32(&firstword))
-        return false;
+    MOZ_TRY(xdr->codeUint32(&firstword));
 
-    if ((firstword & HasAtom) && !XDRAtom(xdr, &atom))
-        return false;
-    if (!xdr->codeUint32(&flagsword))
-        return false;
+    if (firstword & HasAtom)
+        MOZ_TRY(XDRAtom(xdr, &atom));
+    MOZ_TRY(xdr->codeUint32(&flagsword));
 
     if (mode == XDR_DECODE) {
         RootedObject proto(cx);
         if (firstword & HasGeneratorProto) {
             proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
             if (!proto)
-                return false;
+                return xdr->fail(JS::TranscodeResult_Throw);
         }
 
         gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
@@ -647,17 +646,14 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
                                    /* enclosingDynamicScope = */ nullptr, nullptr, proto,
                                    allocKind, TenuredObject);
         if (!fun)
-            return false;
+            return xdr->fail(JS::TranscodeResult_Throw);
         script = nullptr;
     }
 
-    if (firstword & IsLazy) {
-        if (!XDRLazyScript(xdr, enclosingScope, sourceObject, fun, &lazy))
-            return false;
-    } else {
-        if (!XDRScript(xdr, enclosingScope, sourceObject, fun, &script))
-            return false;
-    }
+    if (firstword & IsLazy)
+        MOZ_TRY(XDRLazyScript(xdr, enclosingScope, sourceObject, fun, &lazy));
+    else
+        MOZ_TRY(XDRScript(xdr, enclosingScope, sourceObject, fun, &script));
 
     if (mode == XDR_DECODE) {
         fun->setArgCount(flagsword >> 16);
@@ -672,22 +668,25 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
 
         bool singleton = firstword & HasSingletonType;
         if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton))
-            return false;
+            return xdr->fail(JS::TranscodeResult_Throw);
         objp.set(fun);
     }
 
     // Verify marker at end of function to detect buffer trunction.
-    if (!xdr->codeMarker(0x9E35CA1F))
-        return false;
+    MOZ_TRY(xdr->codeMarker(0x9E35CA1F));
 
-    return true;
+    // Required by AutoXDRTree to copy & paste snipet of sub-trees while keeping
+    // the alignment.
+    MOZ_TRY(xdr->codeAlign(sizeof(js::XDRAlignment)));
+
+    return Ok();
 }
 
-template bool
+template XDRResult
 js::XDRInterpretedFunction(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSource,
                            MutableHandleFunction);
 
-template bool
+template XDRResult
 js::XDRInterpretedFunction(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSource,
                            MutableHandleFunction);
 

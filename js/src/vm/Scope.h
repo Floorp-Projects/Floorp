@@ -259,8 +259,8 @@ class Scope : public js::gc::TenuredCell
                          HandleShape envShape, mozilla::UniquePtr<T, D> data);
 
     template <typename ConcreteScope, XDRMode mode>
-    static bool XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
-                                     MutableHandle<typename ConcreteScope::Data*> data);
+    static XDRResult XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
+                                          MutableHandle<typename ConcreteScope::Data*> data);
 
     Shape* maybeCloneEnvironmentShape(JSContext* cx);
 
@@ -406,7 +406,7 @@ class LexicalScope : public Scope
                                 uint32_t firstFrameSlot, HandleScope enclosing);
 
     template <XDRMode mode>
-    static bool XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
+    static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
                     MutableHandleScope scope);
 
   private:
@@ -533,7 +533,7 @@ class FunctionScope : public Scope
                                 HandleScope enclosing);
 
     template <XDRMode mode>
-    static bool XDR(XDRState<mode>* xdr, HandleFunction fun, HandleScope enclosing,
+    static XDRResult XDR(XDRState<mode>* xdr, HandleFunction fun, HandleScope enclosing,
                     MutableHandleScope scope);
 
   private:
@@ -631,7 +631,7 @@ class VarScope : public Scope
                             HandleScope enclosing);
 
     template <XDRMode mode>
-    static bool XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
+    static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
                     MutableHandleScope scope);
 
   private:
@@ -729,7 +729,7 @@ class GlobalScope : public Scope
     static GlobalScope* clone(JSContext* cx, Handle<GlobalScope*> scope, ScopeKind kind);
 
     template <XDRMode mode>
-    static bool XDR(XDRState<mode>* xdr, ScopeKind kind, MutableHandleScope scope);
+    static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind, MutableHandleScope scope);
 
   private:
     static GlobalScope* createWithData(JSContext* cx, ScopeKind kind,
@@ -829,7 +829,7 @@ class EvalScope : public Scope
                              HandleScope enclosing);
 
     template <XDRMode mode>
-    static bool XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
+    static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
                     MutableHandleScope scope);
 
   private:

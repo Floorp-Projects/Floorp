@@ -261,10 +261,10 @@ public:
   IsOnCurrentThread();
 
   bool
-  CloseInternal(JSContext* aCx)
+  CloseInternal()
   {
     AssertIsOnWorkerThread();
-    return NotifyInternal(aCx, Closing);
+    return NotifyInternal(Closing);
   }
 
   bool
@@ -320,7 +320,7 @@ public:
                         const nsAString& aMessage);
 
   bool
-  NotifyInternal(JSContext* aCx, WorkerStatus aStatus);
+  NotifyInternal(WorkerStatus aStatus);
 
   void
   ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
@@ -1317,7 +1317,7 @@ private:
   RemoveHolder(WorkerHolder* aHolder);
 
   void
-  NotifyHolders(JSContext* aCx, WorkerStatus aStatus);
+  NotifyHolders(WorkerStatus aStatus);
 
   bool
   HasActiveHolders()

@@ -264,7 +264,7 @@ public:
               ErrorResult& aRv);
 
   void
-  Close(JSContext* aCx);
+  Close();
 
   IMPL_EVENT_HANDLER(message)
   IMPL_EVENT_HANDLER(messageerror)
@@ -290,7 +290,7 @@ public:
   }
 
   void
-  Close(JSContext* aCx);
+  Close();
 
   IMPL_EVENT_HANDLER(connect)
 };

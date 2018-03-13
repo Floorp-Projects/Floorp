@@ -510,9 +510,7 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    bool ok = aWorkerPrivate->NotifyInternal(aCx, mStatus);
-    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-    return ok;
+    return aWorkerPrivate->NotifyInternal(mStatus);
   }
 };
 
@@ -3194,8 +3192,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
       // If we just changed status, we must schedule the current runnables.
       if (previousStatus != Running && currentStatus != Killing) {
-        NotifyInternal(aCx, Killing);
-        MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+        NotifyInternal(Killing);
 
 #ifdef DEBUG
         {
@@ -3971,10 +3968,9 @@ WorkerPrivate::RemoveHolder(WorkerHolder* aHolder)
 }
 
 void
-WorkerPrivate::NotifyHolders(JSContext* aCx, WorkerStatus aStatus)
+WorkerPrivate::NotifyHolders(WorkerStatus aStatus)
 {
   AssertIsOnWorkerThread();
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   NS_ASSERTION(aStatus > Running, "Bad status!");
 
@@ -3988,7 +3984,6 @@ WorkerPrivate::NotifyHolders(JSContext* aCx, WorkerStatus aStatus)
     if (!holder->Notify(aStatus)) {
       NS_WARNING("Failed to notify holder!");
     }
-    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
   }
 
   AutoTArray<WorkerPrivate*, 10> children;
@@ -4436,7 +4431,7 @@ WorkerPrivate::ReportErrorToDebugger(const nsAString& aFilename,
 }
 
 bool
-WorkerPrivate::NotifyInternal(JSContext* aCx, WorkerStatus aStatus)
+WorkerPrivate::NotifyInternal(WorkerStatus aStatus)
 {
   AssertIsOnWorkerThread();
 
@@ -4486,8 +4481,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, WorkerStatus aStatus)
   MOZ_ASSERT(previousStatus != Pending);
 
   // Let all our holders know the new status.
-  NotifyHolders(aCx, aStatus);
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+  NotifyHolders(aStatus);
 
   // If this is the first time our status has changed then we need to clear the
   // main event queue.
