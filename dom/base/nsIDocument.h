@@ -3283,6 +3283,14 @@ public:
   void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv);
   void GetDir(nsAString& aDirection) const;
   void SetDir(const nsAString& aDirection);
+  nsIHTMLCollection* Images();
+  nsIHTMLCollection* Embeds();
+  nsIHTMLCollection* Plugins()
+  {
+    return Embeds();
+  }
+  nsIHTMLCollection* Forms();
+  nsIHTMLCollection* Scripts();
   already_AddRefed<nsContentList> GetElementsByName(const nsAString& aName)
   {
     return GetFuncStringContentList<nsCachableElementsByNameNodeList>(this,
@@ -3297,6 +3305,7 @@ public:
   }
   Element* GetActiveElement();
   bool HasFocus(mozilla::ErrorResult& rv) const;
+  nsIHTMLCollection* Applets();
   mozilla::TimeStamp LastFocusTime() const;
   void SetLastFocusTime(const mozilla::TimeStamp& aFocusTime);
   // Event handlers are all on nsINode already
@@ -3873,6 +3882,13 @@ protected:
 
   // Our cached .children collection
   nsCOMPtr<nsIHTMLCollection> mChildrenCollection;
+
+  // Various DOM lists
+  RefPtr<nsContentList> mImages;
+  RefPtr<nsContentList> mEmbeds;
+  RefPtr<nsContentList> mForms;
+  RefPtr<nsContentList> mScripts;
+  nsCOMPtr<nsIHTMLCollection> mApplets;
 
   // container for per-context fonts (downloadable, SVG, etc.)
   RefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
