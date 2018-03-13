@@ -756,7 +756,7 @@ IToplevelProtocol::DestroySharedMemory(Shmem& shmem)
   }
 
   Message* descriptor = shmem.UnshareFrom(
-    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), OtherPid(), MSG_ROUTING_CONTROL);
+    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), MSG_ROUTING_CONTROL);
 
   mShmemMap.Remove(aId);
   Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), segment);
