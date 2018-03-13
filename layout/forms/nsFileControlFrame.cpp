@@ -11,8 +11,12 @@
 #include "nsIDocument.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/dom/DOMStringList.h"
+#include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/Directory.h"
+#include "mozilla/dom/DragEvent.h"
+#include "mozilla/dom/FileList.h"
 #include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
@@ -21,10 +25,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/dom/DOMStringList.h"
-#include "mozilla/dom/Directory.h"
-#include "mozilla/dom/FileList.h"
-#include "nsIDOMDragEvent.h"
 #include "nsIDOMFileList.h"
 #include "nsTextNode.h"
 
@@ -238,19 +238,17 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   NS_ASSERTION(mFrame, "We should have been unregistered");
 
-  bool defaultPrevented = false;
-  aEvent->GetDefaultPrevented(&defaultPrevented);
-  if (defaultPrevented) {
+  Event* event = aEvent->InternalDOMEvent();
+  if (event->DefaultPrevented()) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
+  DragEvent* dragEvent = event->AsDragEvent();
   if (!dragEvent) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
-  dragEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
+  RefPtr<DataTransfer> dataTransfer = dragEvent->GetDataTransfer();
   if (!IsValidDropData(dataTransfer)) {
     return NS_OK;
   }

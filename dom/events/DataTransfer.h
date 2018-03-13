@@ -128,10 +128,38 @@ public:
   Constructor(const GlobalObject& aGlobal, const nsAString& aEventType,
               bool aIsExternal, ErrorResult& aRv);
 
-  void GetDropEffect(nsString& aDropEffect)
+  /**
+   * The actual effect that will be used, and should always be one of the
+   * possible values of effectAllowed.
+   *
+   * For dragstart, drag and dragleave events, the dropEffect is initialized
+   * to none. Any value assigned to the dropEffect will be set, but the value
+   * isn't used for anything.
+   *
+   * For the dragenter and dragover events, the dropEffect will be initialized
+   * based on what action the user is requesting. How this is determined is
+   * platform specific, but typically the user can press modifier keys to
+   * adjust which action is desired. Within an event handler for the dragenter
+   * and dragover events, the dropEffect should be modified if the action the
+   * user is requesting is not the one that is desired.
+   *
+   * For the drop and dragend events, the dropEffect will be initialized to
+   * the action that was desired, which will be the value that the dropEffect
+   * had after the last dragenter or dragover event.
+   *
+   * Possible values:
+   *  copy - a copy of the source item is made at the new location
+   *  move - an item is moved to a new location
+   *  link - a link is established to the source at the new location
+   *  none - the item may not be dropped
+   *
+   * Assigning any other value has no effect and retains the old value.
+   */
+  void GetDropEffect(nsAString& aDropEffect)
   {
     aDropEffect.AssignASCII(sEffects[mDropEffect]);
   }
+  void SetDropEffect(const nsAString& aDropEffect);
 
   void GetEffectAllowed(nsString& aEffectAllowed)
   {
