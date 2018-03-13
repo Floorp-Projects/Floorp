@@ -465,7 +465,7 @@ void
 LIRGeneratorShared::ensureDefined(MDefinition* mir)
 {
     if (mir->isEmittedAtUses()) {
-        mir->toInstruction()->accept(this);
+        visitEmittedAtUses(mir->toInstruction());
         MOZ_ASSERT(mir->isLowered());
     }
 }

@@ -187,9 +187,12 @@ class LAllocation : public TempObject
         return bits_;
     }
 
-    UniqueChars toString() const;
     bool aliases(const LAllocation& other) const;
+
+#ifdef JS_JITSPEW
+    UniqueChars toString() const;
     void dump() const;
+#endif
 };
 
 class LUse : public LAllocation
@@ -638,7 +641,9 @@ class LDefinition
 
     UniqueChars toString() const;
 
+#ifdef JS_JITSPEW
     void dump() const;
+#endif
 };
 
 using LInt64Definition = LInt64Value<LDefinition>;
@@ -677,26 +682,26 @@ class LNode
     uint32_t numTemps_ : 4;
 
   public:
-    enum Opcode {
-#define LIROP(name) LOp_##name,
+    enum class Opcode {
+#define LIROP(name) name,
         LIR_OPCODE_LIST(LIROP)
 #undef LIROP
-        LOp_Invalid
+        Invalid
     };
 
     LNode(Opcode op, uint32_t nonPhiNumOperands, uint32_t numDefs, uint32_t numTemps)
       : mir_(nullptr),
         block_(nullptr),
         id_(0),
-        op_(op),
+        op_(uint32_t(op)),
         isCall_(false),
         nonPhiNumOperands_(nonPhiNumOperands),
         nonPhiOperandsOffset_(0),
         numDefs_(numDefs),
         numTemps_(numTemps)
     {
-        MOZ_ASSERT(op_ < LOp_Invalid);
-        MOZ_ASSERT(op_ == op, "opcode must fit in bitfield");
+        MOZ_ASSERT(op < Opcode::Invalid);
+        MOZ_ASSERT(op_ == uint32_t(op), "opcode must fit in bitfield");
         MOZ_ASSERT(nonPhiNumOperands_ == nonPhiNumOperands,
                    "nonPhiNumOperands must fit in bitfield");
         MOZ_ASSERT(numDefs_ == numDefs, "numDefs must fit in bitfield");
@@ -706,11 +711,11 @@ class LNode
     const char* opName() {
         switch (op()) {
 #define LIR_NAME_INS(name)                   \
-            case LOp_##name: return #name;
-            LIR_OPCODE_LIST(LIR_NAME_INS)
+          case Opcode::name: return #name;
+          LIR_OPCODE_LIST(LIR_NAME_INS)
 #undef LIR_NAME_INS
           default:
-            return "Invalid";
+            MOZ_CRASH("Invalid op");
         }
     }
 
@@ -722,14 +727,16 @@ class LNode
     }
 
   public:
+#ifdef JS_JITSPEW
     const char* getExtraName() const;
+#endif
 
     Opcode op() const {
         return Opcode(op_);
     }
 
     bool isInstruction() const {
-        return op() != LOp_Phi;
+        return op() != Opcode::Phi;
     }
     inline LInstruction* toInstruction();
     inline const LInstruction* toInstruction() const;
@@ -774,17 +781,19 @@ class LNode
     // output register will be restored to its original value when bailing out.
     inline bool recoversInput() const;
 
+#ifdef JS_JITSPEW
     void dump(GenericPrinter& out);
     void dump();
     static void printName(GenericPrinter& out, Opcode op);
     void printName(GenericPrinter& out);
     void printOperands(GenericPrinter& out);
+#endif
 
   public:
     // Opcode testing and casts.
 #define LIROP(name)                                                         \
     bool is##name() const {                                                 \
-        return op() == LOp_##name;                                          \
+        return op() == Opcode::name;                                        \
     }                                                                       \
     inline L##name* to##name();                                             \
     inline const L##name* to##name() const;
@@ -792,7 +801,7 @@ class LNode
 #undef LIROP
 
 #define LIR_HEADER(opcode)                                                  \
-    static constexpr LNode::Opcode classOpcode = LNode::LOp_##opcode;
+    static constexpr LNode::Opcode classOpcode = LNode::Opcode::opcode;
 };
 
 class LInstruction
@@ -1085,8 +1094,10 @@ class LBlock
         return begin()->isGoto() && !mir()->isLoopHeader();
     }
 
+#ifdef JS_JITSPEW
     void dump(GenericPrinter& out);
     void dump();
+#endif
 };
 
 namespace details {
@@ -1985,8 +1996,10 @@ class LIRGraph
         return safepoints_[i];
     }
 
+#ifdef JS_JITSPEW
     void dump(GenericPrinter& out);
     void dump();
+#endif
 };
 
 LAllocation::LAllocation(AnyRegister reg)

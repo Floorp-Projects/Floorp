@@ -709,30 +709,40 @@ template JSAtom*
 js::ToAtom<NoGC>(JSContext* cx, const Value& v);
 
 template<XDRMode mode>
-bool
+XDRResult
 js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
 {
+    bool latin1 = false;
+    uint32_t length = 0;
+    uint32_t lengthAndEncoding = 0;
     if (mode == XDR_ENCODE) {
         static_assert(JSString::MAX_LENGTH <= INT32_MAX, "String length must fit in 31 bits");
-        uint32_t length = atomp->length();
-        uint32_t lengthAndEncoding = (length << 1) | uint32_t(atomp->hasLatin1Chars());
-        if (!xdr->codeUint32(&lengthAndEncoding))
-            return false;
-
-        JS::AutoCheckCannotGC nogc;
-        return atomp->hasLatin1Chars()
-               ? xdr->codeChars(atomp->latin1Chars(nogc), length)
-               : xdr->codeChars(const_cast<char16_t*>(atomp->twoByteChars(nogc)), length);
+        latin1 = atomp->hasLatin1Chars();
+        length = atomp->length();
+        lengthAndEncoding = (length << 1) | uint32_t(latin1);
     }
 
+    MOZ_TRY(xdr->codeUint32(&lengthAndEncoding));
+
+    if (mode == XDR_DECODE) {
+        length = lengthAndEncoding >> 1;
+        latin1 = lengthAndEncoding & 0x1;
+    }
+
+    // We need to align the string in the XDR buffer such that we can avoid
+    // non-align loads of 16bits characters.
+    if (!latin1)
+        MOZ_TRY(xdr->codeAlign(sizeof(char16_t)));
+
+    if (mode == XDR_ENCODE) {
+        JS::AutoCheckCannotGC nogc;
+        if (latin1)
+            return xdr->codeChars(atomp->latin1Chars(nogc), length);
+        return xdr->codeChars(const_cast<char16_t*>(atomp->twoByteChars(nogc)), length);
+    }
+
+    MOZ_ASSERT(mode == XDR_DECODE);
     /* Avoid JSString allocation for already existing atoms. See bug 321985. */
-    uint32_t lengthAndEncoding;
-    if (!xdr->codeUint32(&lengthAndEncoding))
-        return false;
-
-    uint32_t length = lengthAndEncoding >> 1;
-    bool latin1 = lengthAndEncoding & 0x1;
-
     JSContext* cx = xdr->cx();
     JSAtom* atom;
     if (latin1) {
@@ -740,8 +750,7 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
         if (length) {
             const uint8_t *ptr;
             size_t nbyte = length * sizeof(Latin1Char);
-            if (!xdr->peekData(&ptr, nbyte))
-                return false;
+            MOZ_TRY(xdr->peekData(&ptr, nbyte));
             chars = reinterpret_cast<const Latin1Char*>(ptr);
         }
         atom = AtomizeChars(cx, chars, length);
@@ -752,8 +761,9 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
         if (length) {
             const uint8_t *ptr;
             size_t nbyte = length * sizeof(char16_t);
-            if (!xdr->peekData(&ptr, nbyte))
-                return false;
+            MOZ_TRY(xdr->peekData(&ptr, nbyte));
+            MOZ_ASSERT(reinterpret_cast<uintptr_t>(ptr) % sizeof(char16_t) == 0,
+                       "non-aligned buffer during JSAtom decoding");
             chars = reinterpret_cast<const char16_t*>(ptr);
         }
         atom = AtomizeChars(cx, chars, length);
@@ -774,7 +784,7 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
              */
             chars = cx->pod_malloc<char16_t>(length);
             if (!chars)
-                return false;
+                return fail(JS::TranscodeResult_Throw);
         }
 
         JS_ALWAYS_TRUE(xdr->codeChars(chars, length));
@@ -785,15 +795,15 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
     }
 
     if (!atom)
-        return false;
+        return xdr->fail(JS::TranscodeResult_Throw);
     atomp.set(atom);
-    return true;
+    return Ok();
 }
 
-template bool
+template XDRResult
 js::XDRAtom(XDRState<XDR_ENCODE>* xdr, MutableHandleAtom atomp);
 
-template bool
+template XDRResult
 js::XDRAtom(XDRState<XDR_DECODE>* xdr, MutableHandleAtom atomp);
 
 Handle<PropertyName*>

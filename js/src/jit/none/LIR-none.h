@@ -47,7 +47,7 @@ class LWasmUint32ToFloat32 : public LInstructionHelper<1, 1, 0>
 {
   public:
     explicit LWasmUint32ToFloat32(const LAllocation&)
-      : LInstructionHelper(LOp_Invalid)
+      : LInstructionHelper(Opcode::Invalid)
     {
         MOZ_CRASH();
     }
@@ -67,7 +67,7 @@ class LDivI : public LBinaryMath<1>
   public:
     LDivI(const LAllocation& , const LAllocation& ,
           const LDefinition& )
-      : LBinaryMath(LOp_Invalid)
+      : LBinaryMath(Opcode::Invalid)
     {
         MOZ_CRASH();
     }
@@ -76,7 +76,7 @@ class LDivI : public LBinaryMath<1>
 class LDivPowTwoI : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LDivPowTwoI(const LAllocation&, int32_t) : LInstructionHelper(LOp_Invalid) { MOZ_CRASH(); }
+    LDivPowTwoI(const LAllocation&, int32_t) : LInstructionHelper(Opcode::Invalid) { MOZ_CRASH(); }
     const LAllocation* numerator() { MOZ_CRASH(); }
     int32_t shift() { MOZ_CRASH(); }
     MDiv* mir() const { MOZ_CRASH(); }
@@ -86,7 +86,7 @@ class LModI : public LBinaryMath<1>
   public:
     LModI(const LAllocation&, const LAllocation&,
           const LDefinition&)
-      : LBinaryMath(LOp_Invalid)
+      : LBinaryMath(Opcode::Invalid)
     {
         MOZ_CRASH();
     }
@@ -98,7 +98,7 @@ class LWasmUint32ToDouble : public LInstructionHelper<1, 1, 0>
 {
   public:
     explicit LWasmUint32ToDouble(const LAllocation&)
-      : LInstructionHelper(LOp_Invalid)
+      : LInstructionHelper(Opcode::Invalid)
     {
         MOZ_CRASH();
     }
@@ -109,7 +109,7 @@ class LModPowTwoI : public LInstructionHelper<1, 1, 0>
   public:
     int32_t shift() { MOZ_CRASH(); }
     LModPowTwoI(const LAllocation& lhs, int32_t shift)
-      : LInstructionHelper(LOp_Invalid)
+      : LInstructionHelper(Opcode::Invalid)
     {
         MOZ_CRASH();
     }

@@ -178,20 +178,6 @@ struct ScratchDoubleScope : public AutoFloatRegisterScope
     { }
 };
 
-// Registers used in the GenerateFFIIonExit Enable Activation block.
-static constexpr Register WasmIonExitRegCallee = r4;
-static constexpr Register WasmIonExitRegE0 = r0;
-static constexpr Register WasmIonExitRegE1 = r1;
-
-// Registers used in the GenerateFFIIonExit Disable Activation block.
-// None of these may be the second scratch register (lr).
-static constexpr Register WasmIonExitRegReturnData = r2;
-static constexpr Register WasmIonExitRegReturnType = r3;
-static constexpr Register WasmIonExitTlsReg = r9;
-static constexpr Register WasmIonExitRegD0 = r0;
-static constexpr Register WasmIonExitRegD1 = r1;
-static constexpr Register WasmIonExitRegD2 = r4;
-
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
 static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
 static constexpr Register RegExpMatcherStringReg = CallTempReg1;

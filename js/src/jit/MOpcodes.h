@@ -338,29 +338,11 @@ namespace jit {
  MIR_OPCODE_LIST(FORWARD_DECLARE)
 #undef FORWARD_DECLARE
 
-class MDefinitionVisitor // interface i.e. pure abstract class
-{
-  public:
-#define VISIT_INS(op) virtual void visit##op(M##op*) = 0;
-    MIR_OPCODE_LIST(VISIT_INS)
-#undef VISIT_INS
-};
-
-// MDefinition visitor which raises a Not Yet Implemented error for
-// non-overloaded visit functions.
-class MDefinitionVisitorDefaultNYI : public MDefinitionVisitor
-{
-  public:
-#define VISIT_INS(op) virtual void visit##op(M##op*) override { MOZ_CRASH("NYI: " #op); }
-    MIR_OPCODE_LIST(VISIT_INS)
-#undef VISIT_INS
-};
-
 // MDefinition visitor which ignores non-overloaded visit functions.
-class MDefinitionVisitorDefaultNoop : public MDefinitionVisitor
+class MDefinitionVisitorDefaultNoop
 {
   public:
-#define VISIT_INS(op) virtual void visit##op(M##op*) override { }
+#define VISIT_INS(op) void visit##op(M##op*) { }
     MIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };

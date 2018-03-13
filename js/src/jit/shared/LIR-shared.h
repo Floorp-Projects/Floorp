@@ -4331,9 +4331,9 @@ inline bool
 LNode::recoversInput() const
 {
     switch (op()) {
-      case LOp_AddI:
+      case Opcode::AddI:
         return toAddI()->recoversInput();
-      case LOp_SubI:
+      case Opcode::SubI:
         return toSubI()->recoversInput();
       default:
         return false;
@@ -9877,9 +9877,9 @@ class LWasmStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
 inline bool
 IsWasmCall(LNode::Opcode op)
 {
-    return (op == LNode::LOp_WasmCall ||
-            op == LNode::LOp_WasmCallVoid ||
-            op == LNode::LOp_WasmCallI64);
+    return (op == LNode::Opcode::WasmCall ||
+            op == LNode::Opcode::WasmCallVoid ||
+            op == LNode::Opcode::WasmCallI64);
 }
 
 template <size_t Defs>

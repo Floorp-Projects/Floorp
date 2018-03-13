@@ -217,7 +217,7 @@ class VerifyToolsMixin(object):
             # in verify mode, run nothing by default (unsupported suite or no files modified)
             args = []
             # otherwise, run once for each file in requested suite
-            references = re.compile(r"(-ref|-noref|-noref.)\.")
+            references = re.compile(r"(-ref|-notref|-noref|-noref.)\.")
             files = []
             jsreftest_extra_dir = os.path.join('js', 'src', 'tests')
             # For some suites, the test path needs to be updated before passing to
