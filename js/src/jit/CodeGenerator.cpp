@@ -5801,10 +5801,10 @@ CodeGenerator::generateBody()
 #endif
 
             switch (iter->op()) {
-#define LIROP(op) case LNode::LOp_##op: visit##op(iter->to##op()); break;
+#define LIROP(op) case LNode::Opcode::op: visit##op(iter->to##op()); break;
     LIR_OPCODE_LIST(LIROP)
 #undef LIROP
-              case LNode::LOp_Invalid:
+              case LNode::Opcode::Invalid:
               default:
                 MOZ_CRASH("Invalid LIR op");
             }
