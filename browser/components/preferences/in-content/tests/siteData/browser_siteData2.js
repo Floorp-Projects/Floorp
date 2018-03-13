@@ -1,6 +1,4 @@
 "use strict";
-const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm", {});
-const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
 /* eslint-disable mozilla/no-cpows-in-tests */
 
@@ -31,7 +29,6 @@ function assertAllSitesNotListed(win) {
 
 // Test selecting and removing all sites one by one
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager, [
     {
       usage: 1024,
@@ -83,7 +80,7 @@ add_task(async function() {
   assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button but cancelling save
-  let cancelPromise = promiseAlertDialogOpen("cancel");
+  let cancelPromise = BrowserTestUtils.promiseAlertDialogOpen("cancel");
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   saveBtn = frameDoc.getElementById("save");
@@ -98,7 +95,7 @@ add_task(async function() {
   assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button and accepting save
-  let acceptPromise = promiseAlertDialogOpen("accept");
+  let acceptPromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
   settingsDialogClosePromise = promiseSettingsDialogClose();
   updatePromise = promiseSiteDataManagerSitesUpdated();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
@@ -129,7 +126,6 @@ add_task(async function() {
 
 // Test selecting and removing partial sites
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager, [
     {
       usage: 1024,
@@ -197,7 +193,7 @@ add_task(async function() {
   assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button but canceling save
-  removeDialogOpenPromise = promiseWindowDialogOpen("cancel", REMOVE_DIALOG_URL);
+  removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("cancel", REMOVE_DIALOG_URL);
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   saveBtn = frameDoc.getElementById("save");
@@ -212,7 +208,7 @@ add_task(async function() {
   assertSitesListed(doc, fakeHosts);
 
   // Test the "Save Changes" button and accepting save
-  removeDialogOpenPromise = promiseWindowDialogOpen("accept", REMOVE_DIALOG_URL);
+  removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   saveBtn = frameDoc.getElementById("save");
@@ -247,7 +243,6 @@ add_task(async function() {
 
 // Test searching and then removing only visible sites
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager, [
     {
       usage: 1024,
@@ -288,7 +283,7 @@ add_task(async function() {
 
   // Test only removing all visible sites listed
   updatePromise = promiseSiteDataManagerSitesUpdated();
-  let acceptRemovePromise = promiseWindowDialogOpen("accept", REMOVE_DIALOG_URL);
+  let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
   let settingsDialogClosePromise = promiseSettingsDialogClose();
   let removeAllBtn = frameDoc.getElementById("removeAll");
   let saveBtn = frameDoc.getElementById("save");
@@ -306,7 +301,6 @@ add_task(async function() {
 
 // Test dynamically clearing all site data
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager, [
     {
       usage: 1024,
@@ -346,7 +340,7 @@ add_task(async function() {
   let win = gBrowser.selectedBrowser.contentWindow;
   let frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   updatePromise = promiseSiteDataManagerSitesUpdated();
-  let acceptRemovePromise = promiseAlertDialogOpen("accept");
+  let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
   let settingsDialogClosePromise = promiseSettingsDialogClose();
   let removeAllBtn = frameDoc.getElementById("removeAll");
   let saveBtn = frameDoc.getElementById("save");

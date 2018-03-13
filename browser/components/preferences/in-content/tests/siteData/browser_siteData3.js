@@ -1,10 +1,7 @@
 "use strict";
-const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm", {});
-const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", {});
 
 // Test not displaying sites which store 0 byte and don't have persistent storage.
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({ set: [["browser.storageManager.enabled", true]] });
   mockSiteDataManager.register(SiteDataManager, [
     {
       usage: 0,
@@ -48,7 +45,6 @@ add_task(async function() {
 
 // Test grouping and listing sites across scheme, port and origin attributes by host
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({ set: [["browser.storageManager.enabled", true]] });
   const quotaUsage = 1024;
   mockSiteDataManager.register(SiteDataManager, [
     {
@@ -107,7 +103,6 @@ add_task(async function() {
 
 // Test sorting
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   mockSiteDataManager.register(SiteDataManager, [
     {
       usage: 1024,
