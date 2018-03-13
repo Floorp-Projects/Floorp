@@ -56,6 +56,7 @@ public:
                                 const nsAttrValue* aOldValue,
                                 nsIPrincipal* aSubjectPrincipal,
                                 bool aNotify) override;
+  bool IsNodeOfType(uint32_t aFlags) const override;
 
   /**
    * Causes this element to discard any Path object that GetOrBuildPath may
@@ -206,6 +207,18 @@ public:
    * this element.
    */
   FillRule GetFillRule();
+
+  enum PathLengthScaleForType {
+    eForTextPath,
+    eForStroking
+  };
+
+  /**
+   * Gets the ratio of the actual element's length to the content author's
+   * estimated length (as provided by the element's 'pathLength' attribute).
+   * This is used to scale stroke dashing, and to scale offsets along a textPath.
+   */
+  float GetPathLengthScale(PathLengthScaleForType aFor);
 
   // WebIDL
   already_AddRefed<SVGAnimatedNumber> PathLength();
