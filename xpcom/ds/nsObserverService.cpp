@@ -221,7 +221,8 @@ nsObserverService::AddObserver(nsIObserver* aObserver, const char* aTopic,
     nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
     error->Init(NS_LITERAL_STRING("http-on-* observers only work in the parent process"),
                 EmptyString(), EmptyString(), 0, 0,
-                nsIScriptError::warningFlag, "chrome javascript");
+                nsIScriptError::warningFlag, "chrome javascript",
+                false /* from private window */);
     console->LogMessage(error);
 
     return NS_ERROR_NOT_IMPLEMENTED;

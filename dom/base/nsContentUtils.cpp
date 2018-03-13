@@ -4146,7 +4146,8 @@ nsresult nsContentUtils::FormatLocalizedString(
 
 /* static */ void
 nsContentUtils::LogSimpleConsoleError(const nsAString& aErrorText,
-                                      const char * classification)
+                                      const char * classification,
+                                      bool aFromPrivateWindow)
 {
   nsCOMPtr<nsIScriptError> scriptError =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
@@ -4156,7 +4157,8 @@ nsContentUtils::LogSimpleConsoleError(const nsAString& aErrorText,
     if (console && NS_SUCCEEDED(scriptError->Init(aErrorText, EmptyString(),
                                                   EmptyString(), 0, 0,
                                                   nsIScriptError::errorFlag,
-                                                  classification))) {
+                                                  classification,
+                                                  aFromPrivateWindow))) {
       console->LogMessage(scriptError);
     }
   }
@@ -5834,7 +5836,8 @@ nsContentUtils::WarnScriptWasIgnored(nsIDocument* aDocument)
   }
   msg.AppendLiteral("Unable to run script because scripts are blocked internally.");
 
-  LogSimpleConsoleError(msg, "DOM");
+  LogSimpleConsoleError(msg, "DOM",
+                        !!aDocument->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId);
 }
 
 /* static */
