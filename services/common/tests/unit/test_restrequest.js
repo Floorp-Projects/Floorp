@@ -141,7 +141,6 @@ add_test(function test_get() {
   let onProgress_called = false;
   function onProgress() {
     onProgress_called = true;
-    Assert.equal(this.status, request.IN_PROGRESS);
     Assert.ok(this.response.body.length > 0);
 
     Assert.ok(!!(this.channel.loadFlags & Ci.nsIRequest.LOAD_BYPASS_CACHE));
@@ -322,7 +321,6 @@ function check_posting_data(method) {
   let onProgress_called = false;
   function onProgress() {
     onProgress_called = true;
-    Assert.equal(this.status, request.IN_PROGRESS);
     Assert.ok(this.response.body.length > 0);
   }
 
@@ -392,7 +390,6 @@ add_test(function test_delete() {
   let onProgress_called = false;
   function onProgress() {
     onProgress_called = true;
-    Assert.equal(this.status, request.IN_PROGRESS);
     Assert.ok(this.response.body.length > 0);
   }
 
