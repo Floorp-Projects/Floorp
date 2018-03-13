@@ -304,13 +304,23 @@
         ]]></getter>
       </property>
 
+      <method name="_getVisibleTabs">
+        <body><![CDATA[
+          // Cannot access gBrowser before it's initialized.
+          if (!gBrowser) {
+            return [ this.firstChild ];
+          }
+
+          return gBrowser.visibleTabs;
+        ]]></body>
+      </method>
+
       <method name="_setPositionalAttributes">
         <body><![CDATA[
-          let visibleTabs = this.tabbrowser.visibleTabs;
-
-          if (!visibleTabs.length)
+          let visibleTabs = this._getVisibleTabs();
+          if (!visibleTabs.length) {
             return;
-
+          }
           let selectedIndex = visibleTabs.indexOf(this.selectedItem);
 
           if (this._beforeSelectedTab) {
@@ -437,7 +447,7 @@
                              .getInterface(Ci.nsIDOMWindowUtils)
                              .getBoundsWithoutFlushing(ele);
               };
-              let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
+              let tab = this._getVisibleTabs()[gBrowser._numPinnedTabs];
               if (tab && rect(tab).width <= this._tabClipWidth) {
                 this.setAttribute("closebuttons", "activetab");
               } else {
@@ -470,9 +480,10 @@
       <method name="_lockTabSizing">
         <parameter name="aTab"/>
         <body><![CDATA[
-          var tabs = this.tabbrowser.visibleTabs;
-          if (!tabs.length)
+          let tabs = this._getVisibleTabs();
+          if (!tabs.length) {
             return;
+          }
 
           var isEndTab = (aTab._tPos > tabs[tabs.length - 1]._tPos);
           var tabWidth = aTab.getBoundingClientRect().width;
@@ -545,9 +556,10 @@
 
           if (this._hasTabTempMaxWidth) {
             this._hasTabTempMaxWidth = false;
-            let tabs = this.tabbrowser.visibleTabs;
-            for (let i = 0; i < tabs.length; i++)
+            let tabs = this._getVisibleTabs();
+            for (let i = 0; i < tabs.length; i++) {
               tabs[i].style.maxWidth = "";
+            }
           }
 
           if (this.hasAttribute("using-closing-tabs-spacer")) {
@@ -569,9 +581,9 @@
       <field name="_pinnedTabsLayoutCache">null</field>
       <method name="_positionPinnedTabs">
         <body><![CDATA[
-          var numPinned = this.tabbrowser._numPinnedTabs;
-          var doPosition = this.getAttribute("overflow") == "true" &&
-                           this.tabbrowser.visibleTabs.length > numPinned &&
+          let numPinned = gBrowser._numPinnedTabs;
+          let doPosition = this.getAttribute("overflow") == "true" &&
+                           this._getVisibleTabs().length > numPinned &&
                            numPinned > 0;
 
           if (doPosition) {
@@ -638,12 +650,13 @@
 
           let rtl = (window.getComputedStyle(this).direction == "rtl");
           let pinned = draggedTab.pinned;
-          let numPinned = this.tabbrowser._numPinnedTabs;
-          let tabs = this.tabbrowser.visibleTabs
-                                    .slice(pinned ? 0 : numPinned,
-                                           pinned ? numPinned : undefined);
-          if (rtl)
+          let numPinned = gBrowser._numPinnedTabs;
+          let tabs = this._getVisibleTabs()
+                         .slice(pinned ? 0 : numPinned,
+                                pinned ? numPinned : undefined);
+          if (rtl) {
             tabs.reverse();
+          }
           let tabWidth = draggedTab.getBoundingClientRect().width;
           draggedTab._dragData.tabWidth = tabWidth;
 
@@ -653,8 +666,9 @@
           let rightTab = tabs[tabs.length - 1];
           let tabScreenX = draggedTab.boxObject.screenX;
           let translateX = screenX - draggedTab._dragData.screenX;
-          if (!pinned)
+          if (!pinned) {
             translateX += this.arrowScrollbox._scrollbox.scrollLeft - draggedTab._dragData.scrollX;
+          }
           let leftBound = leftTab.boxObject.screenX - tabScreenX;
           let rightBound = (rightTab.boxObject.screenX + rightTab.boxObject.width) -
                            (tabScreenX + tabWidth);
@@ -720,11 +734,13 @@
 
       <method name="_finishAnimateTabMove">
         <body><![CDATA[
-          if (this.getAttribute("movingtab") != "true")
+          if (this.getAttribute("movingtab") != "true") {
             return;
+          }
 
-          for (let tab of this.tabbrowser.visibleTabs)
+          for (let tab of this._getVisibleTabs()) {
             tab.style.transform = "";
+          }
 
           this.removeAttribute("movingtab");
           this.parentNode.removeAttribute("movingtab");
@@ -921,12 +937,19 @@
         <parameter name="aTab"/>
         <body>
         <![CDATA[
-          if (!aTab)
+          if (!aTab) {
             return null;
+          }
+
+          // Cannot access gBrowser before it's initialized.
+          if (!gBrowser) {
+            return this.tabbox.tabpanels.firstChild;
+          }
+
           // If the tab's browser is lazy, we need to `_insertBrowser` in order
           // to have a linkedPanel.  This will also serve to bind the browser
           // and make it ready to use when the tab is selected.
-          this.tabbrowser._insertBrowser(aTab);
+          gBrowser._insertBrowser(aTab);
           return document.getElementById(aTab.linkedPanel);
         ]]>
         </body>
@@ -1090,7 +1113,7 @@
           // the tab click is before the end of the last visible tab, we do
           // nothing.
           if (this.tabbrowser._removingTabs.length) {
-            let visibleTabs = this.tabbrowser.visibleTabs;
+            let visibleTabs = this._getVisibleTabs();
             let ltr = (window.getComputedStyle(this).direction == "ltr");
             let lastTab = visibleTabs[visibleTabs.length - 1];
             let endOfTab = lastTab.getBoundingClientRect()[ltr ? "right" : "left"];
@@ -1745,11 +1768,12 @@
 
       <method name="_mouseenter">
         <body><![CDATA[
-          if (this.hidden || this.closing)
+          if (this.hidden || this.closing) {
             return;
+          }
 
           let tabContainer = this.parentNode;
-          let visibleTabs = tabContainer.tabbrowser.visibleTabs;
+          let visibleTabs = tabContainer._getVisibleTabs();
           let tabIndex = visibleTabs.indexOf(this);
 
           if (this.selected)
