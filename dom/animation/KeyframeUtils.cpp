@@ -1188,7 +1188,7 @@ HandleMissingFinalKeyframe(nsTArray<AnimationProperty>& aResult,
     // If we have already appended a new entry for the property so we have to
     // remove it.
     if (aCurrentAnimationProperty) {
-      aResult.RemoveElementAt(aResult.Length() - 1);
+      aResult.RemoveLastElement();
     }
     return;
   }

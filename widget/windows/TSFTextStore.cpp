@@ -5131,7 +5131,7 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
       mPendingActions[mPendingActions.Length() - 2];
     contentForTSF.RestoreCommittedComposition(
       aComposition, pendingCompositionStart, pendingCompositionEnd);
-    mPendingActions.RemoveElementAt(mPendingActions.Length() - 1);
+    mPendingActions.RemoveLastElement();
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
       ("0x%p   TSFTextStore::RecordCompositionStartAction() "
        "succeeded: restoring the committed string as composing string, "

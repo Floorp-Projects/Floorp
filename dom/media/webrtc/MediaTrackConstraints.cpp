@@ -531,7 +531,7 @@ MediaConstraintsHelper::SelectSettings(
     }
     if (aDevices.IsEmpty()) {
       aDevices.AppendElements(Move(rejects));
-      aggregateConstraints.RemoveElementAt(aggregateConstraints.Length() - 1);
+      aggregateConstraints.RemoveLastElement();
     }
   }
   return nullptr;

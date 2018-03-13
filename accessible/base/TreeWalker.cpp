@@ -345,7 +345,6 @@ TreeWalker::AccessibleFor(nsIContent* aNode, uint32_t aFlags, bool* aSkipSubtree
 dom::AllChildrenIterator*
 TreeWalker::PopState()
 {
-  size_t length = mStateStack.Length();
-  mStateStack.RemoveElementAt(length - 1);
+  mStateStack.RemoveLastElement();
   return mStateStack.IsEmpty() ? nullptr : &mStateStack.LastElement();
 }
