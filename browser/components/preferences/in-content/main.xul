@@ -33,7 +33,7 @@
   <vbox id="separateProfileBox">
     <checkbox id="separateProfileMode"
               data-l10n-id="separate-profile-mode"/>
-    <hbox id="sync-dev-edition-root" lign="center" class="indent">
+    <hbox id="sync-dev-edition-root" lign="center" class="indent" hidden="true">
       <label id="useFirefoxSync" data-l10n-id="use-firefox-sync"/>
       <deck id="getStarted">
         <label class="text-link" data-l10n-id="get-started-not-logged-in"/>
