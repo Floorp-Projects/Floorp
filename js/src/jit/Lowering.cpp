@@ -5189,6 +5189,7 @@ LIRGenerator::visitGetPrototypeOf(MGetPrototypeOf* ins)
     assignSafepoint(lir, ins);
 }
 
+#ifdef JS_JITSPEW
 static void
 SpewResumePoint(MBasicBlock* block, MInstruction* ins, MResumePoint* resumePoint)
 {
@@ -5216,6 +5217,7 @@ SpewResumePoint(MBasicBlock* block, MInstruction* ins, MResumePoint* resumePoint
         out.printf("\n");
     }
 }
+#endif
 
 void
 LIRGenerator::visitInstructionDispatch(MInstruction* ins)
@@ -5289,8 +5291,10 @@ void
 LIRGenerator::updateResumeState(MInstruction* ins)
 {
     lastResumePoint_ = ins->resumePoint();
+#ifdef JS_JITSPEW
     if (JitSpewEnabled(JitSpew_IonSnapshots) && lastResumePoint_)
         SpewResumePoint(nullptr, ins, lastResumePoint_);
+#endif
 }
 
 void
@@ -5308,8 +5312,10 @@ LIRGenerator::updateResumeState(MBasicBlock* block)
     MOZ_ASSERT_IF(block->unreachable(), block->graph().osrBlock() ||
                   !mir()->optimizationInfo().gvnEnabled());
     lastResumePoint_ = block->entryResumePoint();
+#ifdef JS_JITSPEW
     if (JitSpewEnabled(JitSpew_IonSnapshots) && lastResumePoint_)
         SpewResumePoint(block, nullptr, lastResumePoint_);
+#endif
 }
 
 bool
