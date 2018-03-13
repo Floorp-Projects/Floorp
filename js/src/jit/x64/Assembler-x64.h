@@ -148,19 +148,6 @@ static constexpr uint32_t NumFloatArgRegs = 8;
 static constexpr FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7 };
 #endif
 
-// Registers used in the GenerateFFIIonExit Enable Activation block.
-static constexpr Register WasmIonExitRegCallee = r10;
-static constexpr Register WasmIonExitRegE0 = rax;
-static constexpr Register WasmIonExitRegE1 = rdi;
-
-// Registers used in the GenerateFFIIonExit Disable Activation block.
-static constexpr Register WasmIonExitRegReturnData = ecx;
-static constexpr Register WasmIonExitRegReturnType = ecx;
-static constexpr Register WasmIonExitTlsReg = r14;
-static constexpr Register WasmIonExitRegD0 = rax;
-static constexpr Register WasmIonExitRegD1 = rdi;
-static constexpr Register WasmIonExitRegD2 = rbx;
-
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
 static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
 static constexpr Register RegExpMatcherStringReg = CallTempReg1;
