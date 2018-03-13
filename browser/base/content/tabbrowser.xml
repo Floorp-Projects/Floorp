@@ -46,8 +46,8 @@
           tabs._expandSpacerBy(this._scrollButtonDown.clientWidth);
         }
 
-        for (let tab of Array.from(gBrowser._removingTabs)) {
-          gBrowser.removeTab(tab);
+        for (let tab of Array.from(tabs.tabbrowser._removingTabs)) {
+          tabs.tabbrowser.removeTab(tab);
         }
 
         tabs._positionPinnedTabs();
@@ -152,7 +152,7 @@
       </destructor>
 
       <field name="tabbox" readonly="true">
-        document.getElementById("tabbrowser-tabbox");
+        this.tabbrowser.tabbox;
       </field>
 
       <field name="contextMenu" readonly="true">
@@ -176,6 +176,12 @@
       <field name="windowUtils">
         window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       </field>
+
+      <property name="tabbrowser" readonly="true">
+        <getter>
+          return window.gBrowser;
+        </getter>
+      </property>
 
       <property name="_tabMinWidth">
         <setter>
@@ -298,23 +304,13 @@
         ]]></getter>
       </property>
 
-      <method name="_getVisibleTabs">
-        <body><![CDATA[
-          // Cannot access gBrowser before it's initialized.
-          if (!gBrowser) {
-            return [ this.firstChild ];
-          }
-
-          return gBrowser.visibleTabs;
-        ]]></body>
-      </method>
-
       <method name="_setPositionalAttributes">
         <body><![CDATA[
-          let visibleTabs = this._getVisibleTabs();
-          if (!visibleTabs.length) {
+          let visibleTabs = this.tabbrowser.visibleTabs;
+
+          if (!visibleTabs.length)
             return;
-          }
+
           let selectedIndex = visibleTabs.indexOf(this.selectedItem);
 
           if (this._beforeSelectedTab) {
@@ -399,11 +395,10 @@
 
       <method name="updateVisibility">
         <body><![CDATA[
-          if (this.childNodes.length - gBrowser._removingTabs.length == 1) {
+          if (this.childNodes.length - this.tabbrowser._removingTabs.length == 1)
             this.visible = window.toolbar.visible;
-          } else {
+          else
             this.visible = true;
-          }
         ]]></body>
       </method>
 
@@ -442,7 +437,7 @@
                              .getInterface(Ci.nsIDOMWindowUtils)
                              .getBoundsWithoutFlushing(ele);
               };
-              let tab = this._getVisibleTabs()[gBrowser._numPinnedTabs];
+              let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
               if (tab && rect(tab).width <= this._tabClipWidth) {
                 this.setAttribute("closebuttons", "activetab");
               } else {
@@ -475,48 +470,45 @@
       <method name="_lockTabSizing">
         <parameter name="aTab"/>
         <body><![CDATA[
-          let tabs = this._getVisibleTabs();
-          if (!tabs.length) {
+          var tabs = this.tabbrowser.visibleTabs;
+          if (!tabs.length)
             return;
-          }
 
           var isEndTab = (aTab._tPos > tabs[tabs.length - 1]._tPos);
           var tabWidth = aTab.getBoundingClientRect().width;
 
-          if (!this._tabDefaultMaxWidth) {
+          if (!this._tabDefaultMaxWidth)
             this._tabDefaultMaxWidth =
               parseFloat(window.getComputedStyle(aTab).maxWidth);
-          }
           this._lastTabClosedByMouse = true;
 
           if (this.getAttribute("overflow") == "true") {
             // Don't need to do anything if we're in overflow mode and aren't scrolled
             // all the way to the right, or if we're closing the last tab.
-            if (isEndTab || !this.arrowScrollbox._scrollButtonDown.disabled) {
+            if (isEndTab || !this.arrowScrollbox._scrollButtonDown.disabled)
               return;
-            }
+
             // If the tab has an owner that will become the active tab, the owner will
             // be to the left of it, so we actually want the left tab to slide over.
             // This can't be done as easily in non-overflow mode, so we don't bother.
-            if (aTab.owner) {
+            if (aTab.owner)
               return;
-            }
+
             this._expandSpacerBy(tabWidth);
           } else { // non-overflow mode
             // Locking is neither in effect nor needed, so let tabs expand normally.
-            if (isEndTab && !this._hasTabTempMaxWidth) {
+            if (isEndTab && !this._hasTabTempMaxWidth)
               return;
-            }
-            let numPinned = gBrowser._numPinnedTabs;
+
+            let numPinned = this.tabbrowser._numPinnedTabs;
             // Force tabs to stay the same width, unless we're closing the last tab,
             // which case we need to let them expand just enough so that the overall
             // tabbar width is the same.
             if (isEndTab) {
               let numNormalTabs = tabs.length - numPinned;
               tabWidth = tabWidth * (numNormalTabs + 1) / numNormalTabs;
-              if (tabWidth > this._tabDefaultMaxWidth) {
+              if (tabWidth > this._tabDefaultMaxWidth)
                 tabWidth = this._tabDefaultMaxWidth;
-              }
             }
             tabWidth += "px";
             for (let i = numPinned; i < tabs.length; i++) {
@@ -529,7 +521,7 @@
               }
             }
             this._hasTabTempMaxWidth = true;
-            gBrowser.addEventListener("mousemove", this);
+            this.tabbrowser.addEventListener("mousemove", this);
             window.addEventListener("mouseout", this);
           }
         ]]></body>
@@ -541,22 +533,21 @@
           let spacer = this._closingTabsSpacer;
           spacer.style.width = parseFloat(spacer.style.width) + pixels + "px";
           this.setAttribute("using-closing-tabs-spacer", "true");
-          gBrowser.addEventListener("mousemove", this);
+          this.tabbrowser.addEventListener("mousemove", this);
           window.addEventListener("mouseout", this);
         ]]></body>
       </method>
 
       <method name="_unlockTabSizing">
         <body><![CDATA[
-          gBrowser.removeEventListener("mousemove", this);
+          this.tabbrowser.removeEventListener("mousemove", this);
           window.removeEventListener("mouseout", this);
 
           if (this._hasTabTempMaxWidth) {
             this._hasTabTempMaxWidth = false;
-            let tabs = this._getVisibleTabs();
-            for (let i = 0; i < tabs.length; i++) {
+            let tabs = this.tabbrowser.visibleTabs;
+            for (let i = 0; i < tabs.length; i++)
               tabs[i].style.maxWidth = "";
-            }
           }
 
           if (this.hasAttribute("using-closing-tabs-spacer")) {
@@ -578,9 +569,9 @@
       <field name="_pinnedTabsLayoutCache">null</field>
       <method name="_positionPinnedTabs">
         <body><![CDATA[
-          let numPinned = gBrowser._numPinnedTabs;
-          let doPosition = this.getAttribute("overflow") == "true" &&
-                           this._getVisibleTabs().length > numPinned &&
+          var numPinned = this.tabbrowser._numPinnedTabs;
+          var doPosition = this.getAttribute("overflow") == "true" &&
+                           this.tabbrowser.visibleTabs.length > numPinned &&
                            numPinned > 0;
 
           if (doPosition) {
@@ -647,13 +638,12 @@
 
           let rtl = (window.getComputedStyle(this).direction == "rtl");
           let pinned = draggedTab.pinned;
-          let numPinned = gBrowser._numPinnedTabs;
-          let tabs = this._getVisibleTabs()
-                         .slice(pinned ? 0 : numPinned,
-                                pinned ? numPinned : undefined);
-          if (rtl) {
+          let numPinned = this.tabbrowser._numPinnedTabs;
+          let tabs = this.tabbrowser.visibleTabs
+                                    .slice(pinned ? 0 : numPinned,
+                                           pinned ? numPinned : undefined);
+          if (rtl)
             tabs.reverse();
-          }
           let tabWidth = draggedTab.getBoundingClientRect().width;
           draggedTab._dragData.tabWidth = tabWidth;
 
@@ -663,9 +653,8 @@
           let rightTab = tabs[tabs.length - 1];
           let tabScreenX = draggedTab.boxObject.screenX;
           let translateX = screenX - draggedTab._dragData.screenX;
-          if (!pinned) {
+          if (!pinned)
             translateX += this.arrowScrollbox._scrollbox.scrollLeft - draggedTab._dragData.scrollX;
-          }
           let leftBound = leftTab.boxObject.screenX - tabScreenX;
           let rightBound = (rightTab.boxObject.screenX + rightTab.boxObject.width) -
                            (tabScreenX + tabWidth);
@@ -731,13 +720,11 @@
 
       <method name="_finishAnimateTabMove">
         <body><![CDATA[
-          if (this.getAttribute("movingtab") != "true") {
+          if (this.getAttribute("movingtab") != "true")
             return;
-          }
 
-          for (let tab of this._getVisibleTabs()) {
+          for (let tab of this.tabbrowser.visibleTabs)
             tab.style.transform = "";
-          }
 
           this.removeAttribute("movingtab");
           this.parentNode.removeAttribute("movingtab");
@@ -896,11 +883,10 @@
       <method name="_handleNewTab">
         <parameter name="tab"/>
         <body><![CDATA[
-          if (tab.parentNode != this) {
+          if (tab.parentNode != this)
             return;
-          }
           tab._fullyOpen = true;
-          gBrowser.tabAnimationsInProgress--;
+          this.tabbrowser.tabAnimationsInProgress--;
 
           this._updateCloseButtons();
 
@@ -918,7 +904,7 @@
           this.arrowScrollbox._updateScrollButtonsDisabledState();
 
           // Preload the next about:newtab if there isn't one already.
-          gBrowser._createPreloadBrowser();
+          this.tabbrowser._createPreloadBrowser();
         ]]></body>
       </method>
 
@@ -935,19 +921,12 @@
         <parameter name="aTab"/>
         <body>
         <![CDATA[
-          if (!aTab) {
+          if (!aTab)
             return null;
-          }
-
-          // Cannot access gBrowser before it's initialized.
-          if (!gBrowser) {
-            return this.tabbox.tabpanels.firstChild;
-          }
-
           // If the tab's browser is lazy, we need to `_insertBrowser` in order
           // to have a linkedPanel.  This will also serve to bind the browser
           // and make it ready to use when the tab is selected.
-          gBrowser._insertBrowser(aTab);
+          this.tabbrowser._insertBrowser(aTab);
           return document.getElementById(aTab.linkedPanel);
         ]]>
         </body>
@@ -1009,20 +988,18 @@
       <handler event="TabSelect" action="this._handleTabSelect();"/>
 
       <handler event="transitionend"><![CDATA[
-        if (event.propertyName != "max-width") {
+        if (event.propertyName != "max-width")
           return;
-        }
 
         var tab = event.target;
 
         if (tab.getAttribute("fadein") == "true") {
-          if (tab._fullyOpen) {
+          if (tab._fullyOpen)
             this._updateCloseButtons();
-          } else {
+          else
             this._handleNewTab(tab);
-          }
         } else if (tab.closing) {
-          gBrowser._endRemoveTab(tab);
+          this.tabbrowser._endRemoveTab(tab);
         }
       ]]></handler>
 
@@ -1098,15 +1075,12 @@
       ]]></handler>
 
       <handler event="click"><![CDATA[
-        if (event.button != 1) {
+        if (event.button != 1)
           return;
-        }
 
         if (event.target.localName == "tab") {
-          gBrowser.removeTab(event.target, {
-            animate: true,
-            byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
-          });
+          this.tabbrowser.removeTab(event.target, {animate: true,
+                byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE});
         } else if (event.originalTarget.localName == "box") {
           // The user middleclicked an open space on the tabstrip. This could
           // be because they intend to open a new tab, but it could also be
@@ -1115,8 +1089,8 @@
           // want to open a tab. So if we're removing one or more tabs, and
           // the tab click is before the end of the last visible tab, we do
           // nothing.
-          if (gBrowser._removingTabs.length) {
-            let visibleTabs = this._getVisibleTabs();
+          if (this.tabbrowser._removingTabs.length) {
+            let visibleTabs = this.tabbrowser.visibleTabs;
             let ltr = (window.getComputedStyle(this).direction == "ltr");
             let lastTab = visibleTabs[visibleTabs.length - 1];
             let endOfTab = lastTab.getBoundingClientRect()[ltr ? "right" : "left"];
@@ -1153,20 +1127,20 @@
 
         switch (event.keyCode) {
           case KeyEvent.DOM_VK_UP:
-            gBrowser.moveTabBackward();
+            this.tabbrowser.moveTabBackward();
             break;
           case KeyEvent.DOM_VK_DOWN:
-            gBrowser.moveTabForward();
+            this.tabbrowser.moveTabForward();
             break;
           case KeyEvent.DOM_VK_RIGHT:
           case KeyEvent.DOM_VK_LEFT:
-            gBrowser.moveTabOver(event);
+            this.tabbrowser.moveTabOver(event);
             break;
           case KeyEvent.DOM_VK_HOME:
-            gBrowser.moveTabToStart();
+            this.tabbrowser.moveTabToStart();
             break;
           case KeyEvent.DOM_VK_END:
-            gBrowser.moveTabToEnd();
+            this.tabbrowser.moveTabToEnd();
             break;
           default:
             // Consume the keydown event for the above keyboard
@@ -1385,11 +1359,10 @@
         if (draggedTab && dropEffect == "copy") {
           // copy the dropped tab (wherever it's from)
           let newIndex = this._getDropIndex(event, false);
-          let newTab = gBrowser.duplicateTab(draggedTab);
-          gBrowser.moveTabTo(newTab, newIndex);
-          if (draggedTab.parentNode != this || event.shiftKey) {
+          let newTab = this.tabbrowser.duplicateTab(draggedTab);
+          this.tabbrowser.moveTabTo(newTab, newIndex);
+          if (draggedTab.parentNode != this || event.shiftKey)
             this.selectedItem = newTab;
-          }
         } else if (draggedTab && draggedTab.parentNode == this) {
           let oldTranslateX = Math.round(draggedTab._dragData.translateX);
           let tabWidth = Math.round(draggedTab._dragData.tabWidth);
@@ -1406,7 +1379,7 @@
           if (dropIndex && dropIndex > draggedTab._tPos)
             dropIndex--;
 
-          let animate = gBrowser.animationsEnabled;
+          let animate = this.tabbrowser.animationsEnabled;
           if (oldTranslateX && oldTranslateX != newTranslateX && animate) {
             draggedTab.setAttribute("tabdrop-samewindow", "true");
             draggedTab.style.transform = "translateX(" + newTranslateX + "px)";
@@ -1420,22 +1393,20 @@
               draggedTab.removeAttribute("tabdrop-samewindow");
 
               this._finishAnimateTabMove();
-              if (dropIndex !== false) {
-                gBrowser.moveTabTo(draggedTab, dropIndex);
-              }
+              if (dropIndex !== false)
+                this.tabbrowser.moveTabTo(draggedTab, dropIndex);
 
-              gBrowser.syncThrobberAnimations(draggedTab);
+              this.tabbrowser.syncThrobberAnimations(draggedTab);
             };
             draggedTab.addEventListener("transitionend", onTransitionEnd);
           } else {
             this._finishAnimateTabMove();
-            if (dropIndex !== false) {
-              gBrowser.moveTabTo(draggedTab, dropIndex);
-            }
+            if (dropIndex !== false)
+              this.tabbrowser.moveTabTo(draggedTab, dropIndex);
           }
         } else if (draggedTab) {
           let newIndex = this._getDropIndex(event, false);
-          gBrowser.adoptTab(draggedTab, newIndex, true);
+          this.tabbrowser.adoptTab(draggedTab, newIndex, true);
         } else {
           // Pass true to disallow dropping javascript: or data: urls
           let links;
@@ -1468,7 +1439,7 @@
               }
             }
 
-            gBrowser.loadTabs(urls, {
+            this.tabbrowser.loadTabs(urls, {
               inBackground,
               replace,
               allowThirdPartyFixup: true,
@@ -1549,7 +1520,7 @@
 
         delete draggedTab._dragData;
 
-        if (gBrowser.tabs.length == 1) {
+        if (this.tabbrowser.tabs.length == 1) {
           // resize _before_ move to ensure the window fits the new screen.  if
           // the window is too large for its screen, the window manager may do
           // automatic repositioning.
@@ -1562,7 +1533,7 @@
             props.outerWidth = winWidth;
             props.outerHeight = winHeight;
           }
-          gBrowser.replaceTabWithWindow(draggedTab, props);
+          this.tabbrowser.replaceTabWithWindow(draggedTab, props);
         }
         event.stopPropagation();
       ]]></handler>
@@ -1651,16 +1622,11 @@
       <property name="_visuallySelected">
         <setter>
           <![CDATA[
-          if (val == (this.getAttribute("visuallyselected") == "true")) {
-            return val;
-          }
-
-          if (val) {
+          if (val)
             this.setAttribute("visuallyselected", "true");
-          } else {
+          else
             this.removeAttribute("visuallyselected");
-          }
-          gBrowser._tabAttrModified(this, ["visuallyselected"]);
+          this.parentNode.tabbrowser._tabAttrModified(this, ["visuallyselected"]);
 
           return val;
           ]]>
@@ -1774,12 +1740,11 @@
 
       <method name="_mouseenter">
         <body><![CDATA[
-          if (this.hidden || this.closing) {
+          if (this.hidden || this.closing)
             return;
-          }
 
           let tabContainer = this.parentNode;
-          let visibleTabs = tabContainer._getVisibleTabs();
+          let visibleTabs = tabContainer.tabbrowser.visibleTabs;
           let tabIndex = visibleTabs.indexOf(this);
 
           if (this.selected)
@@ -1819,9 +1784,9 @@
 
           let tabToWarm = this;
           if (this.mOverCloseButton) {
-            tabToWarm = gBrowser._findTabToBlurTo(this);
+            tabToWarm = tabContainer.tabbrowser._findTabToBlurTo(this);
           }
-          gBrowser.warmupTab(tabToWarm);
+          tabContainer.tabbrowser.warmupTab(tabToWarm);
         ]]></body>
       </method>
 
@@ -1911,6 +1876,7 @@
             return;
           }
 
+          let tabContainer = this.parentNode;
           let browser = this.linkedBrowser;
           let modifiedAttrs = [];
           let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
@@ -1937,7 +1903,7 @@
             this.muteReason = aMuteReason || null;
             modifiedAttrs.push("muted");
           }
-          gBrowser._tabAttrModified(this, modifiedAttrs);
+          tabContainer.tabbrowser._tabAttrModified(this, modifiedAttrs);
         ]]>
         </body>
       </method>
@@ -2012,13 +1978,12 @@
         }
 
         if (event.originalTarget.getAttribute("anonid") == "close-button") {
-          gBrowser.removeTab(this, {
-            animate: true,
-            byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
-          });
+          let tabContainer = this.parentNode;
+          tabContainer.tabbrowser.removeTab(this, {animate: true,
+                  byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE});
           // This enables double-click protection for the tab container
           // (see tabbrowser-tabs 'click' handler).
-          this.parentNode._blockDblClick = true;
+          tabContainer._blockDblClick = true;
         }
       ]]></handler>
 
