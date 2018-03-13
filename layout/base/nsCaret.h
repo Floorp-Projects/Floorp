@@ -130,6 +130,7 @@ class nsCaret final : public nsISelectionListener
      * instead of tracking its selection.
      * Passing null for aNode would set the caret to track its selection again.
      **/
+    void SetCaretPosition(nsINode* aNode, int32_t aOffset);
     void SetCaretPosition(nsIDOMNode* aNode, int32_t aOffset);
 
     /**

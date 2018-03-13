@@ -84,6 +84,7 @@ enum class EditAction : int32_t;
 
 namespace dom {
 class DataTransfer;
+class DragEvent;
 class Element;
 class EventTarget;
 class Text;
@@ -1462,7 +1463,7 @@ public:
                                           int32_t aDestOffset,
                                           bool aDoDeleteSelection) = 0;
 
-  virtual nsresult InsertFromDrop(nsIDOMEvent* aDropEvent) = 0;
+  virtual nsresult InsertFromDrop(dom::DragEvent* aDropEvent) = 0;
 
   /**
    * GetIMESelectionStartOffsetIn() returns the start offset of IME selection in

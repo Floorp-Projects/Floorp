@@ -161,15 +161,13 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
 }
 
 nsresult
-TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
+TextEditor::InsertFromDrop(DragEvent* aDropEvent)
 {
   CommitComposition();
 
-  Event* dropEvent = aDropEvent->InternalDOMEvent();
-  DragEvent* dragEvent = dropEvent->AsDragEvent();
-  NS_ENSURE_TRUE(dragEvent, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aDropEvent, NS_ERROR_FAILURE);
 
-  RefPtr<DataTransfer> dataTransfer = dragEvent->GetDataTransfer();
+  RefPtr<DataTransfer> dataTransfer = aDropEvent->GetDataTransfer();
   NS_ENSURE_TRUE(dataTransfer, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
@@ -207,17 +205,10 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
   // We have to figure out whether to delete and relocate caret only once
   // Parent and offset are under the mouse cursor
-  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aDropEvent);
-  NS_ENSURE_TRUE(uiEvent, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMNode> newSelectionParent;
-  nsresult rv = uiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> newSelectionParent = aDropEvent->GetRangeParent();
   NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
 
-  int32_t newSelectionOffset;
-  rv = uiEvent->GetRangeOffset(&newSelectionOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  int32_t newSelectionOffset = aDropEvent->RangeOffset();
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
@@ -240,7 +231,13 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
         continue;
       }
 
-      rv = range->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
+      IgnoredErrorResult rv;
+      cursorIsInSelection =
+        range->IsPointInRange(*newSelectionParent, newSelectionOffset, rv);
+      if (rv.Failed()) {
+        // Probably don't want to consider this as "in selection!"
+        cursorIsInSelection = false;
+      }
       if (cursorIsInSelection) {
         break;
       }
@@ -283,15 +280,14 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   }
 
   for (uint32_t i = 0; i < numItems; ++i) {
-    InsertFromDataTransfer(dataTransfer, i, srcdomdoc, newSelectionParent,
+    InsertFromDataTransfer(dataTransfer, i, srcdomdoc,
+                           newSelectionParent->AsDOMNode(),
                            newSelectionOffset, deleteSelection);
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    ScrollSelectionIntoView(false);
-  }
+  ScrollSelectionIntoView(false);
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

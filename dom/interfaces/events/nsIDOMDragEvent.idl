@@ -6,10 +6,8 @@
 #include "domstubs.idl"
 #include "nsIDOMMouseEvent.idl"
 
-interface nsIDOMDataTransfer;
-
+// FIXME: Bug 1445417, we should really remove this interface.
 [builtinclass, uuid(d5c0d4c2-c646-4b4b-836e-48408b9c7b80)]
 interface nsIDOMDragEvent : nsIDOMMouseEvent
 {
-  readonly attribute nsIDOMDataTransfer dataTransfer;
 };
