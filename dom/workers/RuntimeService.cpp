@@ -2889,6 +2889,12 @@ GetCurrentThreadWorkerPrivate()
 }
 
 bool
+IsCurrentThreadRunningWorker()
+{
+  return !NS_IsMainThread() && !!GetCurrentThreadWorkerPrivate();
+}
+
+bool
 IsCurrentThreadRunningChromeWorker()
 {
   return GetCurrentThreadWorkerPrivate()->UsesSystemPrincipal();

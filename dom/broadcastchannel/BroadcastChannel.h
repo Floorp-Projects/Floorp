@@ -26,7 +26,7 @@ namespace dom {
 
 class BroadcastChannelChild;
 class BroadcastChannelMessage;
-class WorkerHolder;
+class WorkerRef;
 
 class BroadcastChannel final
   : public DOMEventTargetHelper
@@ -68,8 +68,6 @@ public:
 
 private:
   BroadcastChannel(nsPIDOMWindowInner* aWindow,
-                   const PrincipalInfo& aPrincipalInfo,
-                   const nsACString& aOrigin,
                    const nsAString& aChannel);
 
   ~BroadcastChannel();
@@ -83,7 +81,7 @@ private:
 
   RefPtr<BroadcastChannelChild> mActor;
 
-  nsAutoPtr<WorkerHolder> mWorkerHolder;
+  RefPtr<WorkerRef> mWorkerRef;
 
   nsString mChannel;
 
