@@ -142,7 +142,7 @@ _release_ branch:
 	% git checkout release
 	% git rm -rf .
 	% git clean -fxd
-	% cp -r $SRC/gecko/testing/geckodriver/* .
+	% cp -r $SRC/gecko/testing/geckodriver .
 
 [README.md]: https://searchfox.org/mozilla-central/source/testing/geckodriver/README.md
 [testing/geckodriver]: https://searchfox.org/mozilla-central/source/testing/geckodriver
