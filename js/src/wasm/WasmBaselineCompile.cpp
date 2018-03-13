@@ -1236,7 +1236,7 @@ class BaseStackFrame
 #endif
     }
 
-    void zeroLocals(BaseRegAlloc& ra);
+    void zeroLocals(BaseRegAlloc* ra);
 
     void loadLocalI32(const Local& src, RegI32 dest) {
         masm.load32(Address(sp_, localOffset(src)), dest);
@@ -1615,7 +1615,7 @@ class BaseStackFrame
 };
 
 void
-BaseStackFrame::zeroLocals(BaseRegAlloc& ra)
+BaseStackFrame::zeroLocals(BaseRegAlloc* ra)
 {
     MOZ_ASSERT(varLow_ != UINT32_MAX);
 
@@ -1663,7 +1663,7 @@ BaseStackFrame::zeroLocals(BaseRegAlloc& ra)
     // with instructions like STRD on ARM (store 8 bytes at a time), but that's
     // for another day.
 
-    RegI32 zero = ra.needI32();
+    RegI32 zero = ra->needI32();
     masm.mov(ImmWord(0), zero);
 
     // For the general case we want to have a loop body of UNROLL_LIMIT stores
@@ -1679,7 +1679,7 @@ BaseStackFrame::zeroLocals(BaseRegAlloc& ra)
     if (initWords < 2 * UNROLL_LIMIT)  {
         for (uint32_t i = low; i < high; i += wordSize)
             masm.storePtr(zero, Address(sp_, localOffset(i + wordSize)));
-        ra.freeI32(zero);
+        ra->freeI32(zero);
         return;
     }
 
@@ -1687,13 +1687,13 @@ BaseStackFrame::zeroLocals(BaseRegAlloc& ra)
     // for x86 and ARM, at least.
 
     // Compute pointer to the highest-addressed slot on the frame.
-    RegI32 p = ra.needI32();
+    RegI32 p = ra->needI32();
     masm.computeEffectiveAddress(Address(sp_, localOffset(low + wordSize)),
                                  p);
 
     // Compute pointer to the lowest-addressed slot on the frame that will be
     // initialized by the loop body.
-    RegI32 lim = ra.needI32();
+    RegI32 lim = ra->needI32();
     masm.computeEffectiveAddress(Address(sp_, localOffset(loopHigh + wordSize)), lim);
 
     // The loop body.  Eventually we'll have p == lim and exit the loop.
@@ -1708,9 +1708,9 @@ BaseStackFrame::zeroLocals(BaseRegAlloc& ra)
     for (uint32_t i = 0; i < tailWords; ++i)
         masm.storePtr(zero, Address(p, -(wordSize * i)));
 
-    ra.freeI32(p);
-    ra.freeI32(lim);
-    ra.freeI32(zero);
+    ra->freeI32(p);
+    ra->freeI32(lim);
+    ra->freeI32(zero);
 }
 
 // The baseline compiler proper.
@@ -2232,75 +2232,75 @@ class BaseCompiler final : public BaseCompilerInterface
         return stk_.back();
     }
 
-    void loadConstI32(Stk& src, RegI32 dest) {
+    void loadConstI32(const Stk& src, RegI32 dest) {
         moveImm32(src.i32val(), dest);
     }
 
-    void loadMemI32(Stk& src, RegI32 dest) {
+    void loadMemI32(const Stk& src, RegI32 dest) {
         fr.loadStackI32(src.offs(), dest);
     }
 
-    void loadLocalI32(Stk& src, RegI32 dest) {
+    void loadLocalI32(const Stk& src, RegI32 dest) {
         fr.loadLocalI32(localFromSlot(src.slot(), MIRType::Int32), dest);
     }
 
-    void loadRegisterI32(Stk& src, RegI32 dest) {
+    void loadRegisterI32(const Stk& src, RegI32 dest) {
         moveI32(src.i32reg(), dest);
     }
 
-    void loadConstI64(Stk &src, RegI64 dest) {
+    void loadConstI64(const Stk& src, RegI64 dest) {
         moveImm64(src.i64val(), dest);
     }
 
-    void loadMemI64(Stk& src, RegI64 dest) {
+    void loadMemI64(const Stk& src, RegI64 dest) {
         fr.loadStackI64(src.offs(), dest);
     }
 
-    void loadLocalI64(Stk& src, RegI64 dest) {
+    void loadLocalI64(const Stk& src, RegI64 dest) {
         fr.loadLocalI64(localFromSlot(src.slot(), MIRType::Int64), dest);
     }
 
-    void loadRegisterI64(Stk& src, RegI64 dest) {
+    void loadRegisterI64(const Stk& src, RegI64 dest) {
         moveI64(src.i64reg(), dest);
     }
 
-    void loadConstF64(Stk &src, RegF64 dest) {
+    void loadConstF64(const Stk& src, RegF64 dest) {
         double d;
         src.f64val(&d);
         masm.loadConstantDouble(d, dest);
     }
 
-    void loadMemF64(Stk& src, RegF64 dest) {
+    void loadMemF64(const Stk& src, RegF64 dest) {
         fr.loadStackF64(src.offs(), dest);
     }
 
-    void loadLocalF64(Stk& src, RegF64 dest) {
+    void loadLocalF64(const Stk& src, RegF64 dest) {
         fr.loadLocalF64(localFromSlot(src.slot(), MIRType::Double), dest);
     }
 
-    void loadRegisterF64(Stk& src, RegF64 dest) {
+    void loadRegisterF64(const Stk& src, RegF64 dest) {
         moveF64(src.f64reg(), dest);
     }
 
-    void loadConstF32(Stk &src, RegF32 dest) {
+    void loadConstF32(const Stk& src, RegF32 dest) {
         float f;
         src.f32val(&f);
         masm.loadConstantFloat32(f, dest);
     }
 
-    void loadMemF32(Stk& src, RegF32 dest) {
+    void loadMemF32(const Stk& src, RegF32 dest) {
         fr.loadStackF32(src.offs(), dest);
     }
 
-    void loadLocalF32(Stk& src, RegF32 dest) {
+    void loadLocalF32(const Stk& src, RegF32 dest) {
         fr.loadLocalF32(localFromSlot(src.slot(), MIRType::Float32), dest);
     }
 
-    void loadRegisterF32(Stk& src, RegF32 dest) {
+    void loadRegisterF32(const Stk& src, RegF32 dest) {
         moveF32(src.f32reg(), dest);
     }
 
-    void loadI32(Stk& src, RegI32 dest) {
+    void loadI32(const Stk& src, RegI32 dest) {
         switch (src.kind()) {
           case Stk::ConstI32:
             loadConstI32(src, dest);
@@ -2320,7 +2320,7 @@ class BaseCompiler final : public BaseCompilerInterface
         }
     }
 
-    void loadI64(Stk& src, RegI64 dest) {
+    void loadI64(const Stk& src, RegI64 dest) {
         switch (src.kind()) {
           case Stk::ConstI64:
             loadConstI64(src, dest);
@@ -2341,7 +2341,7 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
 #if !defined(JS_PUNBOX64)
-    void loadI64Low(Stk& src, RegI32 dest) {
+    void loadI64Low(const Stk& src, RegI32 dest) {
         switch (src.kind()) {
           case Stk::ConstI64:
             moveImm32(int32_t(src.i64val()), dest);
@@ -2361,7 +2361,7 @@ class BaseCompiler final : public BaseCompilerInterface
         }
     }
 
-    void loadI64High(Stk& src, RegI32 dest) {
+    void loadI64High(const Stk& src, RegI32 dest) {
         switch (src.kind()) {
           case Stk::ConstI64:
             moveImm32(int32_t(src.i64val() >> 32), dest);
@@ -2382,7 +2382,7 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 #endif
 
-    void loadF64(Stk& src, RegF64 dest) {
+    void loadF64(const Stk& src, RegF64 dest) {
         switch (src.kind()) {
           case Stk::ConstF64:
             loadConstF64(src, dest);
@@ -2402,7 +2402,7 @@ class BaseCompiler final : public BaseCompilerInterface
         }
     }
 
-    void loadF32(Stk& src, RegF32 dest) {
+    void loadF32(const Stk& src, RegF32 dest) {
         switch (src.kind()) {
           case Stk::ConstF32:
             loadConstF32(src, dest);
@@ -2630,7 +2630,7 @@ class BaseCompiler final : public BaseCompilerInterface
     // Call only from other popI32() variants.
     // v must be the stack top.  May pop the CPU stack.
 
-    void popI32(Stk& v, RegI32 dest) {
+    void popI32(const Stk& v, RegI32 dest) {
         MOZ_ASSERT(&v == &stk_.back());
         switch (v.kind()) {
           case Stk::ConstI32:
@@ -2679,7 +2679,7 @@ class BaseCompiler final : public BaseCompilerInterface
     // Call only from other popI64() variants.
     // v must be the stack top.  May pop the CPU stack.
 
-    void popI64(Stk& v, RegI64 dest) {
+    void popI64(const Stk& v, RegI64 dest) {
         MOZ_ASSERT(&v == &stk_.back());
         switch (v.kind()) {
           case Stk::ConstI64:
@@ -2738,7 +2738,7 @@ class BaseCompiler final : public BaseCompilerInterface
     // Call only from other popF64() variants.
     // v must be the stack top.  May pop the CPU stack.
 
-    void popF64(Stk& v, RegF64 dest) {
+    void popF64(const Stk& v, RegF64 dest) {
         MOZ_ASSERT(&v == &stk_.back());
         switch (v.kind()) {
           case Stk::ConstF64:
@@ -2787,7 +2787,7 @@ class BaseCompiler final : public BaseCompilerInterface
     // Call only from other popF32() variants.
     // v must be the stack top.  May pop the CPU stack.
 
-    void popF32(Stk& v, RegF32 dest) {
+    void popF32(const Stk& v, RegF32 dest) {
         MOZ_ASSERT(&v == &stk_.back());
         switch (v.kind()) {
           case Stk::ConstF32:
@@ -3210,7 +3210,7 @@ class BaseCompiler final : public BaseCompilerInterface
             }
         }
 
-        fr.zeroLocals(ra);
+        fr.zeroLocals(&ra);
 
         if (debugEnabled_)
             insertBreakablePoint(CallSiteDesc::EnterFrame);
@@ -3397,16 +3397,16 @@ class BaseCompiler final : public BaseCompilerInterface
         return AlignBytes(i.stackBytesConsumedSoFar(), 16u);
     }
 
-    void startCallArgs(FunctionCall& call, size_t stackArgAreaSize)
+    void startCallArgs(size_t stackArgAreaSize, FunctionCall* call)
     {
-        call.stackArgAreaSize = stackArgAreaSize;
+        call->stackArgAreaSize = stackArgAreaSize;
 
-        size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
+        size_t adjustment = call->stackArgAreaSize + call->frameAlignAdjustment;
         fr.allocArgArea(adjustment);
     }
 
-    const ABIArg reservePointerArgument(FunctionCall& call) {
-        return call.abi.next(MIRType::Pointer);
+    const ABIArg reservePointerArgument(FunctionCall* call) {
+        return call->abi.next(MIRType::Pointer);
     }
 
     // TODO / OPTIMIZE (Bug 1316821): Note passArg is used only in one place.
@@ -3430,10 +3430,10 @@ class BaseCompiler final : public BaseCompilerInterface
     // we have the outgoing size at low cost, and then we can pass
     // args based on the info we read.
 
-    void passArg(FunctionCall& call, ValType type, Stk& arg) {
+    void passArg(ValType type, const Stk& arg, FunctionCall* call) {
         switch (type) {
           case ValType::I32: {
-            ABIArg argLoc = call.abi.next(MIRType::Int32);
+            ABIArg argLoc = call->abi.next(MIRType::Int32);
             if (argLoc.kind() == ABIArg::Stack) {
                 ScratchI32 scratch(*this);
                 loadI32(arg, scratch);
@@ -3444,7 +3444,7 @@ class BaseCompiler final : public BaseCompilerInterface
             break;
           }
           case ValType::I64: {
-            ABIArg argLoc = call.abi.next(MIRType::Int64);
+            ABIArg argLoc = call->abi.next(MIRType::Int64);
             if (argLoc.kind() == ABIArg::Stack) {
                 ScratchI32 scratch(*this);
 #ifdef JS_PUNBOX64
@@ -3462,7 +3462,7 @@ class BaseCompiler final : public BaseCompilerInterface
             break;
           }
           case ValType::F64: {
-            ABIArg argLoc = call.abi.next(MIRType::Double);
+            ABIArg argLoc = call->abi.next(MIRType::Double);
             switch (argLoc.kind()) {
               case ABIArg::Stack: {
                 ScratchF64 scratch(*this);
@@ -3502,7 +3502,7 @@ class BaseCompiler final : public BaseCompilerInterface
             break;
           }
           case ValType::F32: {
-            ABIArg argLoc = call.abi.next(MIRType::Float32);
+            ABIArg argLoc = call->abi.next(MIRType::Float32);
             switch (argLoc.kind()) {
               case ABIArg::Stack: {
                 ScratchF32 scratch(*this);
@@ -3548,7 +3548,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
     // Precondition: sync()
 
-    void callIndirect(uint32_t sigIndex, Stk& indexVal, const FunctionCall& call)
+    void callIndirect(uint32_t sigIndex, const Stk& indexVal, const FunctionCall& call)
     {
         const SigWithId& sig = env_.sigs[sigIndex];
         MOZ_ASSERT(sig.id.kind() != SigIdDesc::Kind::None);
@@ -5566,7 +5566,7 @@ class BaseCompiler final : public BaseCompilerInterface
     MOZ_MUST_USE bool emitBrTable();
     MOZ_MUST_USE bool emitDrop();
     MOZ_MUST_USE bool emitReturn();
-    MOZ_MUST_USE bool emitCallArgs(const ValTypeVector& args, FunctionCall& baselineCall);
+    MOZ_MUST_USE bool emitCallArgs(const ValTypeVector& args, FunctionCall* baselineCall);
     MOZ_MUST_USE bool emitCall();
     MOZ_MUST_USE bool emitCallIndirect();
     MOZ_MUST_USE bool emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
@@ -7550,15 +7550,15 @@ BaseCompiler::emitReturn()
 }
 
 bool
-BaseCompiler::emitCallArgs(const ValTypeVector& argTypes, FunctionCall& baselineCall)
+BaseCompiler::emitCallArgs(const ValTypeVector& argTypes, FunctionCall* baselineCall)
 {
     MOZ_ASSERT(!deadCode_);
 
-    startCallArgs(baselineCall, stackArgAreaSize(argTypes));
+    startCallArgs(stackArgAreaSize(argTypes), baselineCall);
 
     uint32_t numArgs = argTypes.length();
     for (size_t i = 0; i < numArgs; ++i)
-        passArg(baselineCall, argTypes[i], peek(numArgs - 1 - i));
+        passArg(argTypes[i], peek(numArgs - 1 - i), baselineCall);
 
     masm.loadWasmTlsRegFromFrame();
     return true;
@@ -7633,7 +7633,7 @@ BaseCompiler::emitCall()
     FunctionCall baselineCall(lineOrBytecode);
     beginCall(baselineCall, UseABI::Wasm, import ? InterModule::True : InterModule::False);
 
-    if (!emitCallArgs(sig.args(), baselineCall))
+    if (!emitCallArgs(sig.args(), &baselineCall))
         return false;
 
     if (import)
@@ -7683,7 +7683,7 @@ BaseCompiler::emitCallIndirect()
     FunctionCall baselineCall(lineOrBytecode);
     beginCall(baselineCall, UseABI::Wasm, InterModule::True);
 
-    if (!emitCallArgs(sig.args(), baselineCall))
+    if (!emitCallArgs(sig.args(), &baselineCall))
         return false;
 
     callIndirect(sigIndex, callee, baselineCall);
@@ -7742,7 +7742,7 @@ BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandTy
     FunctionCall baselineCall(lineOrBytecode);
     beginCall(baselineCall, UseABI::System, InterModule::False);
 
-    if (!emitCallArgs(signature, baselineCall))
+    if (!emitCallArgs(signature, &baselineCall))
         return false;
 
     builtinCall(callee, baselineCall);
@@ -8589,9 +8589,9 @@ BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode, const MIRTypeVector& sig
     FunctionCall baselineCall(lineOrBytecode);
     beginCall(baselineCall, UseABI::System, InterModule::True);
 
-    ABIArg instanceArg = reservePointerArgument(baselineCall);
+    ABIArg instanceArg = reservePointerArgument(&baselineCall);
 
-    startCallArgs(baselineCall, stackArgAreaSize(sig));
+    startCallArgs(stackArgAreaSize(sig), &baselineCall);
     for (uint32_t i = 1; i < sig.length(); i++) {
         ValType t;
         switch (sig[i]) {
@@ -8599,7 +8599,7 @@ BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode, const MIRTypeVector& sig
           case MIRType::Int64: t = ValType::I64; break;
           default:             MOZ_CRASH("Unexpected type");
         }
-        passArg(baselineCall, t, peek(numArgs - i));
+        passArg(t, peek(numArgs - i), &baselineCall);
     }
     builtinInstanceMethodCall(builtin, instanceArg, baselineCall);
     endCall(baselineCall, stackSpace);
