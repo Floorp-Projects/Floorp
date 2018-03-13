@@ -30,6 +30,7 @@ class App extends PureComponent {
       removeAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       rewindAnimationsCurrentTime: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
+      setAnimationsPlaybackRate: PropTypes.func.isRequired,
       setAnimationsPlayState: PropTypes.func.isRequired,
       setDetailVisibility: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
@@ -57,6 +58,7 @@ class App extends PureComponent {
       removeAnimationsCurrentTimeListener,
       rewindAnimationsCurrentTime,
       selectAnimation,
+      setAnimationsPlaybackRate,
       setAnimationsPlayState,
       setDetailVisibility,
       setSelectedNode,
@@ -78,6 +80,7 @@ class App extends PureComponent {
             animations,
             removeAnimationsCurrentTimeListener,
             rewindAnimationsCurrentTime,
+            setAnimationsPlaybackRate,
             setAnimationsPlayState,
           }
         ),
