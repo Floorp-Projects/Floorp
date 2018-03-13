@@ -29,5 +29,6 @@ DevToolsModules(
     'KeyframesProgressTickList.js',
     'NoAnimationPanel.js',
     'PauseResumeButton.js',
+    'PlaybackRateSelector.js',
     'RewindButton.js',
 )

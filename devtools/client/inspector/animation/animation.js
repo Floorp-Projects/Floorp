@@ -38,6 +38,7 @@ class AnimationInspector {
       this.removeAnimationsCurrentTimeListener.bind(this);
     this.rewindAnimationsCurrentTime = this.rewindAnimationsCurrentTime.bind(this);
     this.selectAnimation = this.selectAnimation.bind(this);
+    this.setAnimationsPlaybackRate = this.setAnimationsPlaybackRate.bind(this);
     this.setAnimationsPlayState = this.setAnimationsPlayState.bind(this);
     this.setDetailVisibility = this.setDetailVisibility.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
@@ -75,6 +76,7 @@ class AnimationInspector {
       removeAnimationsCurrentTimeListener,
       rewindAnimationsCurrentTime,
       selectAnimation,
+      setAnimationsPlaybackRate,
       setAnimationsPlayState,
       setDetailVisibility,
       simulateAnimation,
@@ -105,6 +107,7 @@ class AnimationInspector {
           removeAnimationsCurrentTimeListener,
           rewindAnimationsCurrentTime,
           selectAnimation,
+          setAnimationsPlaybackRate,
           setAnimationsPlayState,
           setDetailVisibility,
           setSelectedNode,
@@ -264,6 +267,12 @@ class AnimationInspector {
 
   selectAnimation(animation) {
     this.inspector.store.dispatch(updateSelectedAnimation(animation));
+  }
+
+  async setAnimationsPlaybackRate(playbackRate) {
+    const animations = this.state.animations;
+    await this.animationsFront.setPlaybackRates(animations, playbackRate);
+    await this.updateAnimations(animations);
   }
 
   async setAnimationsPlayState(doPlay) {
