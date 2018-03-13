@@ -1622,11 +1622,16 @@
       <property name="_visuallySelected">
         <setter>
           <![CDATA[
-          if (val)
+          if (val == (this.getAttribute("visuallyselected") == "true")) {
+            return val;
+          }
+
+          if (val) {
             this.setAttribute("visuallyselected", "true");
-          else
+          } else {
             this.removeAttribute("visuallyselected");
-          this.parentNode.tabbrowser._tabAttrModified(this, ["visuallyselected"]);
+          }
+          gBrowser._tabAttrModified(this, ["visuallyselected"]);
 
           return val;
           ]]>
