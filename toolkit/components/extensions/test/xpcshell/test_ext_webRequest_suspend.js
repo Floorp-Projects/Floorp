@@ -266,7 +266,7 @@ add_task(async function test_logged_error_on_promise_result() {
   let {messages} = await promiseConsoleOutput(async () => {
     await extension.startup();
 
-    let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/dummy`, {remote: true});
+    let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/dummy`);
     await extension.awaitMessage("web-request-event-received");
     await contentPage.close();
   });
