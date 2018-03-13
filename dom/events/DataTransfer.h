@@ -163,7 +163,24 @@ public:
   }
   void SetDropEffect(const nsAString& aDropEffect);
 
-  void GetEffectAllowed(nsString& aEffectAllowed)
+  /*
+   * Specifies the effects that are allowed for this drag. You may set this in
+   * the dragstart event to set the desired effects for the source, and within
+   * the dragenter and dragover events to set the desired effects for the
+   * target. The value is not used for other events.
+   *
+   * Possible values:
+   *  copy - a copy of the source item is made at the new location
+   *  move - an item is moved to a new location
+   *  link - a link is established to the source at the new location
+   *  copyLink, copyMove, linkMove, all - combinations of the above
+   *  none - the item may not be dropped
+   *  uninitialized - the default value when the effect has not been set,
+   *                  equivalent to all.
+   *
+   * Assigning any other value has no effect and retains the old value.
+   */
+  void GetEffectAllowed(nsAString& aEffectAllowed)
   {
     if (mEffectAllowed == nsIDragService::DRAGDROP_ACTION_UNINITIALIZED) {
       aEffectAllowed.AssignLiteral("uninitialized");
@@ -171,7 +188,26 @@ public:
       aEffectAllowed.AssignASCII(sEffects[mEffectAllowed]);
     }
   }
+  void SetEffectAllowed(const nsAString& aEffectAllowed);
 
+  /**
+   * Set the image to be used for dragging if a custom one is desired. Most of
+   * the time, this would not be set, as a default image is created from the
+   * node that was dragged.
+   *
+   * If the node is an HTML img element, an HTML canvas element or a XUL image
+   * element, the image data is used. Otherwise, image should be a visible
+   * node and the drag image will be created from this. If image is null, any
+   * custom drag image is cleared and the default is used instead.
+   *
+   * The coordinates specify the offset into the image where the mouse cursor
+   * should be. To center the image for instance, use values that are half the
+   * width and height.
+   *
+   * @param image a node to use
+   * @param x the horizontal offset
+   * @param y the vertical offset
+   */
   void SetDragImage(Element& aElement, int32_t aX, int32_t aY);
   void UpdateDragImage(Element& aElement, int32_t aX, int32_t aY);
 
