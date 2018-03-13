@@ -776,23 +776,19 @@ Debugger::memory() const
 }
 
 bool
-Debugger::getFrameWithIter(JSContext* cx, AbstractFramePtr referent,
-                           const FrameIter* maybeIter, MutableHandleValue vp)
+Debugger::getFrame(JSContext* cx, const FrameIter& iter, MutableHandleValue vp)
 {
     RootedDebuggerFrame result(cx);
-    if (!Debugger::getFrameWithIter(cx, referent, maybeIter, &result))
+    if (!Debugger::getFrame(cx, iter, &result))
         return false;
-
     vp.setObject(*result);
     return true;
 }
 
 bool
-Debugger::getFrameWithIter(JSContext* cx, AbstractFramePtr referent,
-                           const FrameIter* maybeIter,
-                           MutableHandleDebuggerFrame result)
+Debugger::getFrame(JSContext* cx, const FrameIter& iter, MutableHandleDebuggerFrame result)
 {
-    MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == referent);
+    AbstractFramePtr referent = iter.abstractFramePtr();
     MOZ_ASSERT_IF(referent.hasScript(), !referent.script()->selfHosted());
 
     if (referent.hasScript() && !referent.script()->ensureHasAnalyzedArgsUsage(cx))
@@ -804,8 +800,7 @@ Debugger::getFrameWithIter(JSContext* cx, AbstractFramePtr referent,
         RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
         RootedNativeObject debugger(cx, object);
 
-        RootedDebuggerFrame frame(cx, DebuggerFrame::create(cx, proto, referent, maybeIter,
-                                                            debugger));
+        RootedDebuggerFrame frame(cx, DebuggerFrame::create(cx, proto, iter, debugger));
         if (!frame)
             return false;
 
@@ -7521,8 +7516,8 @@ DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject obj)
 }
 
 /* static */ DebuggerFrame*
-DebuggerFrame::create(JSContext* cx, HandleObject proto, AbstractFramePtr referent,
-                      const FrameIter* maybeIter, HandleNativeObject debugger)
+DebuggerFrame::create(JSContext* cx, HandleObject proto, const FrameIter& iter,
+                      HandleNativeObject debugger)
 {
     JSObject* obj = NewObjectWithGivenProto(cx, &DebuggerFrame::class_, proto);
     if (!obj)
@@ -7530,15 +7525,10 @@ DebuggerFrame::create(JSContext* cx, HandleObject proto, AbstractFramePtr refere
 
     DebuggerFrame& frame = obj->as<DebuggerFrame>();
 
-    // Eagerly copy FrameIter data if we've already walked the stack.
-    if (maybeIter) {
-        AbstractFramePtr data = maybeIter->copyDataAsAbstractFramePtr();
-        if (!data)
-            return nullptr;
-        frame.setPrivate(data.raw());
-    } else {
-        frame.setPrivate(referent.raw());
-    }
+    AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();
+    if (!data)
+        return nullptr;
+    frame.setPrivate(data.raw());
 
     frame.setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*debugger));
 
