@@ -24,11 +24,22 @@ function assertEditorBreakpoint(dbg, line, shouldExist) {
   );
 }
 
+function waitForElementFocus(dbg, el) {
+  const doc = dbg.win.document;
+  return waitFor(() => doc.activeElement == el && doc.hasFocus());
+}
+
+async function assertConditionalBreakpointIsFocused(dbg) {
+  const input = findElement(dbg, "conditionalPanelInput");
+  await waitForElementFocus(dbg, input);
+}
+
 async function setConditionalBreakpoint(dbg, index, condition) {
   rightClickElement(dbg, "gutter", index);
   selectMenuItem(dbg, 2);
-  await waitForElementWithSelector(dbg, ".conditional-breakpoint-panel input");
-  findElementWithSelector(dbg, ".conditional-breakpoint-panel input").focus();
+  await waitForElement(dbg, "conditionalPanelInput");
+  await assertConditionalBreakpointIsFocused(dbg);
+
   // Position cursor reliably at the end of the text.
   pressKey(dbg, "End");
   type(dbg, condition);
@@ -39,21 +50,18 @@ add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
   await selectSource(dbg, "simple2");
 
-  dump("Adding a conditional Breakpoint\n");
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
   let bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "1", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
 
-  dump("Editing a conditional breakpoint\n");
   await setConditionalBreakpoint(dbg, 5, "2");
   await waitForDispatch(dbg, "SET_BREAKPOINT_CONDITION");
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "12", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
 
-  dump("Removing a conditional breakpoint\n");
   clickElement(dbg, "gutter", 5);
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   bp = findBreakpoint(dbg, "simple2", 5);
