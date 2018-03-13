@@ -189,9 +189,13 @@ public:
                  nsIPrincipal& aSubjectPrincipal,
                  mozilla::ErrorResult& aRv);
 
+  /**
+   * Holds a list of all the local files available on this data transfer.
+   * A dataTransfer containing no files will return an empty list, and an
+   * invalid index access on the resulting file list will return null.
+   */
   already_AddRefed<FileList>
-  GetFiles(nsIPrincipal& aSubjectPrincipal,
-           mozilla::ErrorResult& aRv);
+  GetFiles(nsIPrincipal& aSubjectPrincipal);
 
   already_AddRefed<Promise>
   GetFilesAndDirectories(nsIPrincipal& aSubjectPrincipal,

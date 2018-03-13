@@ -276,8 +276,8 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
     aEvent->StopPropagation();
     aEvent->PreventDefault();
 
-    nsCOMPtr<nsIDOMFileList> fileList;
-    dataTransfer->GetFiles(getter_AddRefs(fileList));
+    RefPtr<FileList> fileList =
+      dataTransfer->GetFiles(*nsContentUtils::GetSystemPrincipal());
 
     RefPtr<BlobImpl> webkitDir;
     nsresult rv =
@@ -399,8 +399,8 @@ nsFileControlFrame::DnDListener::CanDropTheseFiles(nsIDOMDataTransfer* aDOMDataT
   nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDOMDataTransfer);
   NS_ENSURE_TRUE(dataTransfer, false);
 
-  nsCOMPtr<nsIDOMFileList> fileList;
-  dataTransfer->GetFiles(getter_AddRefs(fileList));
+  RefPtr<FileList> fileList =
+    dataTransfer->GetFiles(*nsContentUtils::GetSystemPrincipal());
 
   RefPtr<BlobImpl> webkitDir;
   nsresult rv =
