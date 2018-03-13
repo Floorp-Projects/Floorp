@@ -2483,17 +2483,6 @@ nsNavHistory::EndUpdateBatch()
 }
 
 NS_IMETHODIMP
-nsNavHistory::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
-                             nsISupports* aUserData)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aCallback);
-
-  UpdateBatchScoper batch(*this);
-  return aCallback->RunBatched(aUserData);
-}
-
-NS_IMETHODIMP
 nsNavHistory::GetHistoryDisabled(bool *_retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");

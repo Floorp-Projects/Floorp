@@ -242,63 +242,6 @@ add_task(async function test_tracking() {
   }
 });
 
-add_task(async function test_batch_tracking() {
-  _("Test tracker does the correct thing during and after a places 'batch'");
-
-  await startTracking();
-
-  PlacesUtils.bookmarks.runInBatchMode({
-    runBatched() {
-      PlacesUtils.bookmarks.createFolder(
-        PlacesUtils.bookmarks.bookmarksMenuFolder,
-        "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
-      // We should be tracking the new folder and its parent (and need to jump
-      // through blocking hoops...)
-      promiseSpinningly(verifyTrackedCount(2));
-      // But not have bumped the score.
-      Assert.equal(tracker.score, 0);
-    }
-  }, null);
-
-  // Out of batch mode - tracker should be the same, but score should be up.
-  await verifyTrackedCount(2);
-  Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-  await cleanup();
-});
-
-add_task(async function test_nested_batch_tracking() {
-  _("Test tracker does the correct thing if a places 'batch' is nested");
-
-  await startTracking();
-
-  PlacesUtils.bookmarks.runInBatchMode({
-    runBatched() {
-
-      PlacesUtils.bookmarks.runInBatchMode({
-        runBatched() {
-          PlacesUtils.bookmarks.createFolder(
-            PlacesUtils.bookmarks.bookmarksMenuFolder,
-            "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
-          // We should be tracking the new folder and its parent (and need to jump
-          // through blocking hoops...)
-          promiseSpinningly(verifyTrackedCount(2));
-          // But not have bumped the score.
-          Assert.equal(tracker.score, 0);
-        }
-      }, null);
-      _("inner batch complete.");
-      // should still not have a score as the outer batch is pending.
-      promiseSpinningly(verifyTrackedCount(2));
-      Assert.equal(tracker.score, 0);
-    }
-  }, null);
-
-  // Out of both batches - tracker should be the same, but score should be up.
-  await verifyTrackedCount(2);
-  Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-  await cleanup();
-});
-
 add_task(async function test_tracker_sql_batching() {
   _("Test tracker does the correct thing when it is forced to batch SQL queries");
 
