@@ -27,4 +27,5 @@ DevToolsModules(
     'KeyframesProgressTickItem.js',
     'KeyframesProgressTickList.js',
     'NoAnimationPanel.js',
+    'PauseResumeButton.js',
 )

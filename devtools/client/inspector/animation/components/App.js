@@ -27,6 +27,7 @@ class App extends PureComponent {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
+      setAnimationsPlayState: PropTypes.func.isRequired,
       setDetailVisibility: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
@@ -49,6 +50,7 @@ class App extends PureComponent {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
       selectAnimation,
+      setAnimationsPlayState,
       setDetailVisibility,
       setSelectedNode,
       simulateAnimation,
@@ -62,7 +64,12 @@ class App extends PureComponent {
       },
       animations.length ?
       [
-        AnimationToolbar(),
+        AnimationToolbar(
+          {
+            animations,
+            setAnimationsPlayState,
+          }
+        ),
         SplitBox({
           className: "animation-container-splitter",
           endPanel: AnimationDetailContainer(

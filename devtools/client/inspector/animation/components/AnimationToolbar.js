@@ -4,15 +4,36 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const PauseResumeButton = createFactory(require("./PauseResumeButton"));
 
 class AnimationToolbar extends PureComponent {
+  static get propTypes() {
+    return {
+      animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      setAnimationsPlayState: PropTypes.func.isRequired,
+    };
+  }
+
   render() {
+    const {
+      animations,
+      setAnimationsPlayState,
+    } = this.props;
+
     return dom.div(
       {
         className: "animation-toolbar devtools-toolbar",
-      }
+      },
+      PauseResumeButton(
+        {
+          animations,
+          setAnimationsPlayState,
+        }
+      )
     );
   }
 }

@@ -178,7 +178,7 @@ const waitForRendering = async function (animationInspector) {
  * @param {AnimationInspector} inspector
  */
 const waitForAnimationDetail = async function (animationInspector) {
-  if (animationInspector.animations.length === 1) {
+  if (animationInspector.state.animations.length === 1) {
     await animationInspector.once("animation-keyframes-rendered");
   }
 };
@@ -190,7 +190,7 @@ const waitForAnimationDetail = async function (animationInspector) {
  * @param {AnimationInspector} animationInspector
  */
 const waitForAllAnimationTargets = async function (animationInspector) {
-  for (let i = 0; i < animationInspector.animations.length; i++) {
+  for (let i = 0; i < animationInspector.state.animations.length; i++) {
     await animationInspector.once("animation-target-rendered");
   }
 };
@@ -201,7 +201,7 @@ const waitForAllAnimationTargets = async function (animationInspector) {
  * @param {AnimationInspector} inspector
  */
 const waitForAllSummaryGraph = async function (animationInspector) {
-  for (let i = 0; i < animationInspector.animations.length; i++) {
+  for (let i = 0; i < animationInspector.state.animations.length; i++) {
     await animationInspector.once("animation-summary-graph-rendered");
   }
 };
