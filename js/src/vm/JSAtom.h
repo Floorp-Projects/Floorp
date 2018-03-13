@@ -29,17 +29,6 @@ class PropertyName;
 
 }  /* namespace js */
 
-extern bool
-AtomIsPinned(JSContext* cx, JSAtom* atom);
-
-#ifdef DEBUG
-
-// This may be called either with or without the atoms lock held.
-extern bool
-AtomIsPinnedInRuntime(JSRuntime* rt, JSAtom* atom);
-
-#endif // DEBUG
-
 /* Well-known predefined C strings. */
 #define DECLARE_PROTO_STR(name,init,clasp) extern const char js_##name##_str[];
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTO_STR)
