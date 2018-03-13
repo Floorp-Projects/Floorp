@@ -1035,6 +1035,19 @@ devtools.responsive:
     record_in_processes:
       - main
     release_channel_collection: opt-out
+  open_trigger:
+    bug_numbers:
+      - 1444497
+    description: >
+      Number of Responsive Design Mode opens keyed by the UI entry point used.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org, jryans@mozilla.com
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
 
 navigator.storage:
   estimate_count:

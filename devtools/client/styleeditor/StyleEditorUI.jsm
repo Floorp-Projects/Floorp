@@ -1015,7 +1015,7 @@ StyleEditorUI.prototype = {
     let tab = this._target.tab;
     let win = this._target.tab.ownerDocument.defaultView;
 
-    await ResponsiveUIManager.openIfNeeded(win, tab);
+    await ResponsiveUIManager.openIfNeeded(win, tab, { trigger: "style_editor" });
     ResponsiveUIManager.getResponsiveUIForTab(tab).setViewportSize(options);
   },
 
