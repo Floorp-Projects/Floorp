@@ -16,7 +16,6 @@
 
 class nsCaret;
 class nsIContent;
-class nsIDOMDragEvent;
 class nsIDOMEvent;
 class nsIDOMMouseEvent;
 class nsIPresShell;
@@ -35,6 +34,10 @@ class nsPresContext;
 namespace mozilla {
 
 class EditorBase;
+
+namespace dom {
+class DragEvent;
+} // namespace dom
 
 class EditorEventListener : public nsIDOMEventListener
 {
@@ -69,12 +72,12 @@ protected:
   virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent);
   nsresult Focus(InternalFocusEvent* aFocusEvent);
   nsresult Blur(InternalFocusEvent* aBlurEvent);
-  nsresult DragEnter(nsIDOMDragEvent* aDragEvent);
-  nsresult DragOver(nsIDOMDragEvent* aDragEvent);
-  nsresult DragExit(nsIDOMDragEvent* aDragEvent);
-  nsresult Drop(nsIDOMDragEvent* aDragEvent);
+  nsresult DragEnter(dom::DragEvent* aDragEvent);
+  nsresult DragOver(dom::DragEvent* aDragEvent);
+  nsresult DragExit(dom::DragEvent* aDragEvent);
+  nsresult Drop(dom::DragEvent* aDragEvent);
 
-  bool CanDrop(nsIDOMDragEvent* aEvent);
+  bool CanDrop(dom::DragEvent* aEvent);
   void CleanupDragDropCaret();
   nsIPresShell* GetPresShell() const;
   nsPresContext* GetPresContext() const;

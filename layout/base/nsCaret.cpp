@@ -474,13 +474,20 @@ void nsCaret::SetVisibilityDuringSelection(bool aVisibility)
 }
 
 void
-nsCaret::SetCaretPosition(nsIDOMNode* aNode, int32_t aOffset)
+nsCaret::SetCaretPosition(nsINode* aNode, int32_t aOffset)
 {
-  mOverrideContent = do_QueryInterface(aNode);
+  mOverrideContent = aNode;
   mOverrideOffset = aOffset;
 
   ResetBlinking();
   SchedulePaint();
+}
+
+void
+nsCaret::SetCaretPosition(nsIDOMNode* aNode, int32_t aOffset)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  SetCaretPosition(node, aOffset);
 }
 
 void
