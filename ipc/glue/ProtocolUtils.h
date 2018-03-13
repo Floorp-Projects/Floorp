@@ -432,6 +432,8 @@ protected:
     GetActorEventTargetInternal(IProtocol* aActor) override;
 
   private:
+    base::ProcessId OtherPidMaybeInvalid() const;
+
     ProtocolId mProtocolId;
     UniquePtr<Transport> mTrans;
     base::ProcessId mOtherPid;
