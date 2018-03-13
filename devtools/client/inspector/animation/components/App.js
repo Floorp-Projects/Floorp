@@ -23,6 +23,7 @@ class App extends PureComponent {
       detailVisibility: PropTypes.bool.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
+      getAnimationsCurrentTime: PropTypes.func.isRequired,
       getComputedStyle: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
@@ -36,6 +37,7 @@ class App extends PureComponent {
       setDetailVisibility: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
+      simulateAnimationForKeyframesProgressBar: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
       toggleElementPicker: PropTypes.func.isRequired,
     };
@@ -52,6 +54,7 @@ class App extends PureComponent {
       detailVisibility,
       emitEventForTest,
       getAnimatedPropertyMap,
+      getAnimationsCurrentTime,
       getComputedStyle,
       getNodeFromActor,
       onHideBoxModelHighlighter,
@@ -65,6 +68,7 @@ class App extends PureComponent {
       setDetailVisibility,
       setSelectedNode,
       simulateAnimation,
+      simulateAnimationForKeyframesProgressBar,
       timeScale,
       toggleElementPicker,
     } = this.props;
@@ -90,11 +94,16 @@ class App extends PureComponent {
           className: "animation-container-splitter",
           endPanel: AnimationDetailContainer(
             {
+              addAnimationsCurrentTimeListener,
               emitEventForTest,
               getAnimatedPropertyMap,
+              getAnimationsCurrentTime,
               getComputedStyle,
+              removeAnimationsCurrentTimeListener,
               setDetailVisibility,
               simulateAnimation,
+              simulateAnimationForKeyframesProgressBar,
+              timeScale,
             }
           ),
           endPanelControl: true,
