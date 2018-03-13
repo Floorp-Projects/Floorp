@@ -31,6 +31,8 @@
 
 /* Root element of animation inspector */
 #animation-container {
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
@@ -40,6 +42,10 @@
 
 #animation-container:not(.animation-detail-visible) .controlled {
   display: none;
+}
+
+#animation-container .animation-container-splitter {
+  overflow: auto;
 }
 
 /* Animation List Container */
