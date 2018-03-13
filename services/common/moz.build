@@ -16,12 +16,12 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES['services-common'] += [
     'async.js',
     'blocklist-clients.js',
-    'blocklist-updater.js',
     'kinto-http-client.js',
     'kinto-offline-client.js',
     'kinto-storage-adapter.js',
     'logmanager.js',
     'observers.js',
+    'remote-settings.js',
     'rest.js',
     'uptake-telemetry.js',
     'utils.js',
