@@ -26,6 +26,7 @@
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/SavedStacks.h"
+#include "vm/Stack.h"
 #include "wasm/WasmJS.h"
 
 namespace js {
@@ -1394,6 +1395,8 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool evalWithBindingsMethod(JSContext* cx, unsigned argc, Value* vp);
 
     Debugger* owner() const;
+  public:
+    FrameIter::Data* frameIterData() const;
 };
 
 class DebuggerObject : public NativeObject
