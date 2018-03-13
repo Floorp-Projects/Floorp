@@ -61,10 +61,10 @@ async function testNoPrompt(origUrl, id) {
   // There should be no notifications about the update
   is(getBadgeStatus(), "", "Should not have addon alert badge");
 
-  await gCUITestUtils.openMainMenu();
+  await PanelUI.show();
   let addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 0, "Have 0 updates in the PanelUI menu");
-  await gCUITestUtils.hideMainMenu();
+  await PanelUI.hide();
 
   ok(!sawPopup, "Should not have seen permissions notification");
 

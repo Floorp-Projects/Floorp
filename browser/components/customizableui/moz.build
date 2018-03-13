@@ -10,10 +10,6 @@ DIRS += [
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
-TESTING_JS_MODULES += [
-    'test/CustomizableUITestUtils.jsm',
-]
-
 EXTRA_JS_MODULES += [
     'CustomizableUI.jsm',
     'CustomizableWidgets.jsm',

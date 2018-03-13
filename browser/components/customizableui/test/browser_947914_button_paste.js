@@ -29,7 +29,7 @@ add_task(async function() {
 
     // test paste button by pasting text to URL bar
     gURLBar.focus();
-    await gCUITestUtils.openMainMenu();
+    await PanelUI.show();
     info("Menu panel was opened");
 
     ok(!pasteButton.hasAttribute("disabled"), "Paste button is enabled");

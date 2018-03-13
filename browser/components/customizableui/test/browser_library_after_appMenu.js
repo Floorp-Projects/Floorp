@@ -8,7 +8,7 @@
  * also while the view is displayed in the main menu.
  */
 add_task(async function test_library_after_appMenu() {
-  await gCUITestUtils.openMainMenu();
+  await PanelUI.show();
 
   // Show the Library view as a subview of the main menu.
   let libraryView = document.getElementById("appMenu-libraryView");
