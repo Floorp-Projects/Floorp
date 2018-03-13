@@ -52,8 +52,10 @@ add_task(async function test_init() {
   });
 
   // Open and close the panel first so that it is fully initialized.
-  await gCUITestUtils.openMainMenu();
-  await gCUITestUtils.hideMainMenu();
+  await PanelUI.show();
+  let hiddenPromise = promisePanelHidden(window);
+  PanelUI.hide();
+  await hiddenPromise;
 });
 
 // Test updating when the panel is open with the edit-controls on the panel.
@@ -62,7 +64,7 @@ add_task(async function test_panelui_opened() {
   gURLBar.focus();
   gURLBar.value = "test";
 
-  await gCUITestUtils.openMainMenu();
+  await PanelUI.show();
 
   checkState(false, "Update when edit-controls is on panel and visible");
 
@@ -73,7 +75,9 @@ add_task(async function test_panelui_opened() {
   checkState(true, "Update when edit-controls is on panel and selection changed");
 
   overridePromise = expectCommandUpdate(0);
-  await gCUITestUtils.hideMainMenu();
+  let hiddenPromise = promisePanelHidden(window);
+  PanelUI.hide();
+  await hiddenPromise;
   await overridePromise;
 
   // Check that updates do not occur after the panel has been closed.

@@ -79,7 +79,7 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   is(getBadgeStatus(), "addon-alert", "Should have addon alert badge");
 
   // Find the menu entry for the update
-  await gCUITestUtils.openMainMenu();
+  await PanelUI.show();
 
   let addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 1, "Have a menu entry for the update");
@@ -123,10 +123,10 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   // Alert badge and hamburger menu items should be gone
   is(getBadgeStatus(), "", "Addon alert badge should be gone");
 
-  await gCUITestUtils.openMainMenu();
+  await PanelUI.show();
   addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 0, "Update menu entries should be gone");
-  await gCUITestUtils.hideMainMenu();
+  await PanelUI.hide();
 
   // Re-check for an update
   updatePromise = promiseInstallEvent(addon, "onDownloadEnded");
@@ -136,7 +136,7 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   is(getBadgeStatus(), "addon-alert", "Should have addon alert badge");
 
   // Find the menu entry for the update
-  await gCUITestUtils.openMainMenu();
+  await PanelUI.show();
 
   addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 1, "Have a menu entry for the update");

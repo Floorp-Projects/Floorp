@@ -194,24 +194,36 @@ const PanelUI = {
    */
   show(aEvent) {
     this._ensureShortcutsShown();
-    (async () => {
-      await this.ensureReady();
+    return new Promise(resolve => {
+      this.ensureReady().then(() => {
+        if (this.panel.state == "open" ||
+            document.documentElement.hasAttribute("customizing")) {
+          resolve();
+          return;
+        }
 
-      if (this.panel.state == "open" ||
-          document.documentElement.hasAttribute("customizing")) {
-        return;
-      }
+        let anchor;
+        let domEvent = null;
+        if (!aEvent ||
+            aEvent.type == "command") {
+          anchor = this.menuButton;
+        } else {
+          domEvent = aEvent;
+          anchor = aEvent.target;
+        }
 
-      let domEvent = null;
-      if (aEvent && aEvent.type != "command") {
-        domEvent = aEvent;
-      }
+        this.panel.addEventListener("popupshown", function() {
+          resolve();
+        }, {once: true});
 
-      let anchor = this._getPanelAnchor(this.menuButton);
-      await PanelMultiView.openPopup(this.panel, anchor, {
-        triggerEvent: domEvent,
+        anchor = this._getPanelAnchor(anchor);
+        PanelMultiView.openPopup(this.panel, anchor, {
+          triggerEvent: domEvent,
+        }).catch(Cu.reportError);
+      }, (reason) => {
+        console.error("Error showing the PanelUI menu", reason);
       });
-    })().catch(Cu.reportError);
+    });
   },
 
   /**

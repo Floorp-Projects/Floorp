@@ -33,7 +33,7 @@ add_task(async function() {
   newTab = gBrowser.selectedTab;
   await promiseTabLoadEvent(newTab, TEST_PAGE);
 
-  await gCUITestUtils.openMainMenu();
+  await PanelUI.show();
 
   await waitForCondition(() => !feedButton.hasAttribute("disabled"));
   ok(!feedButton.hasAttribute("disabled"), "The Subscribe button gets enabled");

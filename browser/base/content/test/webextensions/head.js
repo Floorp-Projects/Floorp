@@ -8,8 +8,6 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
   return Management;
 });
 
-ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
-let gCUITestUtils = new CustomizableUITestUtils(window);
 
 /**
  * Wait for the given PopupNotification to display

@@ -10,12 +10,16 @@
 
 // Show and hide the menu panel programmatically without an event (like UITour.jsm would)
 add_task(async function() {
-  await gCUITestUtils.openMainMenu();
+  let shownPromise = promisePanelShown(window);
+  PanelUI.show();
+  await shownPromise;
 
   is(PanelUI.panel.getAttribute("panelopen"), "true", "Check that panel has panelopen attribute");
   is(PanelUI.panel.state, "open", "Check that panel state is 'open'");
 
-  await gCUITestUtils.hideMainMenu();
+  let hiddenPromise = promisePanelHidden(window);
+  PanelUI.hide();
+  await hiddenPromise;
 
   ok(!PanelUI.panel.hasAttribute("panelopen"), "Check that panel doesn't have the panelopen attribute");
   is(PanelUI.panel.state, "closed", "Check that panel state is 'closed'");
@@ -23,14 +27,16 @@ add_task(async function() {
 
 // Toggle the menu panel open and closed
 add_task(async function() {
-  await gCUITestUtils.openPanelMultiView(PanelUI.panel, PanelUI.mainView,
-    () => PanelUI.toggle({type: "command"}));
+  let shownPromise = promisePanelShown(window);
+  PanelUI.toggle({type: "command"});
+  await shownPromise;
 
   is(PanelUI.panel.getAttribute("panelopen"), "true", "Check that panel has panelopen attribute");
   is(PanelUI.panel.state, "open", "Check that panel state is 'open'");
 
-  await gCUITestUtils.hidePanelMultiView(PanelUI.panel,
-    () => PanelUI.toggle({type: "command"}));
+  let hiddenPromise = promisePanelHidden(window);
+  PanelUI.toggle({type: "command"});
+  await hiddenPromise;
 
   ok(!PanelUI.panel.hasAttribute("panelopen"), "Check that panel doesn't have the panelopen attribute");
   is(PanelUI.panel.state, "closed", "Check that panel state is 'closed'");
