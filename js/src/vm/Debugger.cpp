@@ -7525,10 +7525,10 @@ DebuggerFrame::create(JSContext* cx, HandleObject proto, const FrameIter& iter,
 
     DebuggerFrame& frame = obj->as<DebuggerFrame>();
 
-    AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();
+    FrameIter::Data* data = iter.copyData();
     if (!data)
         return nullptr;
-    frame.setPrivate(data.raw());
+    frame.setPrivate(data);
 
     frame.setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*debugger));
 
@@ -8051,34 +8051,24 @@ DebuggerFrame_requireLive(JSContext* cx, HandleDebuggerFrame frame)
     return true;
 }
 
+FrameIter::Data*
+DebuggerFrame::frameIterData() const
+{
+    return static_cast<FrameIter::Data*>(getPrivate());
+}
+
 /* static */ AbstractFramePtr
 DebuggerFrame::getReferent(HandleDebuggerFrame frame)
 {
-    AbstractFramePtr referent = AbstractFramePtr::FromRaw(frame->getPrivate());
-    if (referent.isScriptFrameIterData()) {
-        FrameIter iter(*(FrameIter::Data*)(referent.raw()));
-        referent = iter.abstractFramePtr();
-    }
-    return referent;
+    FrameIter iter(*frame->frameIterData());
+    return iter.abstractFramePtr();
 }
 
 /* static */ bool
 DebuggerFrame::getFrameIter(JSContext* cx, HandleDebuggerFrame frame,
                             Maybe<FrameIter>& result)
 {
-    AbstractFramePtr referent = AbstractFramePtr::FromRaw(frame->getPrivate());
-    if (referent.isScriptFrameIterData()) {
-        result.emplace(*reinterpret_cast<FrameIter::Data*>(referent.raw()));
-    } else {
-        result.emplace(cx, FrameIter::IGNORE_DEBUGGER_EVAL_PREV_LINK);
-        FrameIter& iter = *result;
-        while (!iter.hasUsableAbstractFramePtr() || iter.abstractFramePtr() != referent)
-            ++iter;
-        AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();
-        if (!data)
-            return false;
-        frame->setPrivate(data.raw());
-    }
+    result.emplace(*frame->frameIterData());
     return true;
 }
 
@@ -8099,10 +8089,11 @@ DebuggerFrame::requireScriptReferent(JSContext* cx, HandleDebuggerFrame frame)
 static void
 DebuggerFrame_freeScriptFrameIterData(FreeOp* fop, JSObject* obj)
 {
-    AbstractFramePtr frame = AbstractFramePtr::FromRaw(obj->as<NativeObject>().getPrivate());
-    if (frame.isScriptFrameIterData())
-        fop->delete_((FrameIter::Data*) frame.raw());
-    obj->as<NativeObject>().setPrivate(nullptr);
+    DebuggerFrame& frame = obj->as<DebuggerFrame>();
+    if (FrameIter::Data* data = frame.frameIterData()) {
+        fop->delete_(data);
+        frame.setPrivate(nullptr);
+    }
 }
 
 static void
@@ -8181,40 +8172,21 @@ DebuggerFrame_checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
 }
 
 /*
- * To make frequently fired hooks like onEnterFrame more performant,
- * Debugger.Frame methods should not create a FrameIter unless it
- * absolutely needs to. That is, unless the method has to call a method on
- * FrameIter that's otherwise not available on AbstractFramePtr.
+ * Methods can use THIS_DEBUGGER_FRAME to check that `this` is a Debugger.Frame object
+ * and get it in a local Rooted.
  *
- * When a Debugger.Frame is first created, its private slot is set to the
- * AbstractFramePtr itself. The first time the users asks for a
- * FrameIter, we construct one, have it settle on the frame pointed to
- * by the AbstractFramePtr and cache its internal Data in the Debugger.Frame
- * object's private slot. Subsequent uses of the Debugger.Frame object will
- * always create a FrameIter from the cached Data.
- *
- * Methods that only need the AbstractFramePtr should use THIS_FRAME.
+ * Methods that need the AbstractFramePtr should use THIS_FRAME.
  */
-
 #define THIS_DEBUGGER_FRAME(cx, argc, vp, fnname, args, frame)                          \
     CallArgs args = CallArgsFromVp(argc, vp);                                           \
     RootedDebuggerFrame frame(cx, DebuggerFrame_checkThis(cx, args, fnname, true));     \
     if (!frame)                                                                         \
         return false;
 
-#define THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj)                       \
-    CallArgs args = CallArgsFromVp(argc, vp);                                         \
-    RootedNativeObject thisobj(cx, DebuggerFrame_checkThis(cx, args, fnname, true));  \
-    if (!thisobj)                                                                     \
-        return false
-
-#define THIS_FRAME(cx, argc, vp, fnname, args, thisobj, frame)                 \
-    THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj);                   \
-    AbstractFramePtr frame = AbstractFramePtr::FromRaw(thisobj->getPrivate()); \
-    if (frame.isScriptFrameIterData()) {                                       \
-        FrameIter iter(*(FrameIter::Data*)(frame.raw()));                      \
-        frame = iter.abstractFramePtr();                                       \
-    }
+#define THIS_FRAME(cx, argc, vp, fnname, args, thisobj, iter, frame) \
+    THIS_DEBUGGER_FRAME(cx, argc, vp, fnname, args, thisobj); \
+    FrameIter iter(*thisobj->frameIterData()); \
+    AbstractFramePtr frame = iter.abstractFramePtr()
 
 /* static */ bool
 DebuggerFrame::typeGetter(JSContext* cx, unsigned argc, Value* vp)
@@ -8372,7 +8344,7 @@ DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp)
      * to check that it is still live and get the fp.
      */
     args.setThis(argsobj->as<NativeObject>().getReservedSlot(JSSLOT_DEBUGARGUMENTS_FRAME));
-    THIS_FRAME(cx, argc, vp, "get argument", ca2, thisobj, frame);
+    THIS_FRAME(cx, argc, vp, "get argument", ca2, thisobj, frameIter, frame);
 
     // TODO handle wasm frame arguments -- they are not yet reflectable.
     MOZ_ASSERT(!frame.isWasmDebugFrame(), "a wasm frame args");
@@ -8475,7 +8447,7 @@ DebuggerFrame::argumentsGetter(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerFrame_getScript(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME(cx, argc, vp, "get script", args, thisobj, frame);
+    THIS_FRAME(cx, argc, vp, "get script", args, thisobj, frameIter, frame);
     Debugger* debug = Debugger::fromChildJSObject(thisobj);
 
     RootedObject scriptObject(cx);
