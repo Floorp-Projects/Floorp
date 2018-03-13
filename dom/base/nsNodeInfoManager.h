@@ -21,7 +21,6 @@
 class nsBindingManager;
 class nsAtom;
 class nsIDocument;
-class nsIDOMDocumentType;
 class nsIPrincipal;
 class nsWindowSizes;
 struct PLHashEntry;
