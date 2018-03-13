@@ -363,15 +363,10 @@ NS_IMETHODIMP
 nsXMLContentSerializer::AppendDoctype(DocumentType* aDocType,
                                       nsAString& aStr)
 {
-  nsresult rv;
   nsAutoString name, publicId, systemId;
-
-  rv = aDocType->GetName(name);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  rv = aDocType->GetPublicId(publicId);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  rv = aDocType->GetSystemId(systemId);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  aDocType->GetName(name);
+  aDocType->GetPublicId(publicId);
+  aDocType->GetSystemId(systemId);
 
   NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
 

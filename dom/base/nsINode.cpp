@@ -28,6 +28,7 @@
 #ifdef MOZ_OLD_STYLE
 #include "mozilla/css/StyleRule.h"
 #endif
+#include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/L10nUtilsBinding.h"
@@ -62,7 +63,6 @@
 #include "nsIControllers.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNodeList.h"
@@ -106,7 +106,6 @@
 #include "HTMLLegendElement.h"
 #include "nsWrapperCacheInlines.h"
 #include "WrapperFactory.h"
-#include "DocumentType.h"
 #include <algorithm>
 #include "nsGlobalWindow.h"
 #include "nsDOMMutationObserver.h"
@@ -1048,10 +1047,8 @@ nsINode::IsEqualNode(nsINode* aOther)
       }
       case DOCUMENT_TYPE_NODE:
       {
-        nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(node1);
-        nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(node2);
-
-        NS_ASSERTION(docType1 && docType2, "Why don't we have a document type node?");
+        DocumentType* docType1 = static_cast<DocumentType*>(node1);
+        DocumentType* docType2 = static_cast<DocumentType*>(node2);
 
         // Public ID
         docType1->GetPublicId(string1);

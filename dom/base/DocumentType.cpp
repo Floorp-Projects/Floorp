@@ -82,34 +82,28 @@ DocumentType::GetText()
   return nullptr;
 }
 
-NS_IMETHODIMP
-DocumentType::GetName(nsAString& aName)
+void
+DocumentType::GetName(nsAString& aName) const
 {
   aName = NodeName();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-DocumentType::GetPublicId(nsAString& aPublicId)
+void
+DocumentType::GetPublicId(nsAString& aPublicId) const
 {
   aPublicId = mPublicId;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-DocumentType::GetSystemId(nsAString& aSystemId)
+void
+DocumentType::GetSystemId(nsAString& aSystemId) const
 {
   aSystemId = mSystemId;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-DocumentType::GetInternalSubset(nsAString& aInternalSubset)
+void
+DocumentType::GetInternalSubset(nsAString& aInternalSubset) const
 {
   aInternalSubset = mInternalSubset;
-  return NS_OK;
 }
 
 nsGenericDOMDataNode*

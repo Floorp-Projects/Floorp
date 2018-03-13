@@ -18,8 +18,4 @@
 [uuid(cd7467b9-0f26-4787-a359-66e80ba8db92)]
 interface nsIDOMDocumentType : nsIDOMNode
 {
-  readonly attribute  DOMString            name;
-  readonly attribute  DOMString            publicId;
-  readonly attribute  DOMString            systemId;
-  readonly attribute  DOMString            internalSubset;
 };
