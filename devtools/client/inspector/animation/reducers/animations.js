@@ -12,6 +12,8 @@ const {
   UPDATE_SIDEBAR_SIZE,
 } = require("../actions/index");
 
+const TimeScale = require("../utils/timescale");
+
 const INITIAL_STATE = {
   animations: [],
   detailVisibility: false,
@@ -21,12 +23,14 @@ const INITIAL_STATE = {
     height: 0,
     width: 0,
   },
+  timeScale: null,
 };
 
 const reducers = {
   [UPDATE_ANIMATIONS](state, { animations }) {
     return Object.assign({}, state, {
       animations,
+      timeScale: new TimeScale(animations),
     });
   },
 
