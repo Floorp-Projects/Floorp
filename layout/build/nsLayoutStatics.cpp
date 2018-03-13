@@ -155,7 +155,6 @@ nsLayoutStatics::Initialize()
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
   nsGkAtoms::AddRefAtoms();
-  nsHTMLTags::RegisterAtoms();
   nsRDFAtoms::RegisterAtoms();
 
   NS_SetStaticAtomsDone();
