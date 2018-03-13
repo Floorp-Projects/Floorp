@@ -123,14 +123,26 @@ The canonical GitHub repository is
 so make sure you have a local clone of that.  It has three branches:
 _master_ which only contains the [README.md]; _old_ which was the
 state of the project when it was exported to mozilla-central; and
-_release_, from where releases are made.  We will export the contents
-of [testing/geckodriver] to the latter branch:
+_release_, from where releases are made.
+
+Before we copy the code over to the GitHub repository we need to
+check out the [commit we made earlier](#bump-the-version-number)
+against central that bumped the version number:
+
+	% git checkout $BUMP_REVISION
+
+Or:
+
+	% hg update $BUMP_REVISION
+
+We will now export the contents of [testing/geckodriver] to the
+_release_ branch:
 
 	% cd $SRC/geckodriver
 	% git checkout release
 	% git rm -rf .
 	% git clean -fxd
-	% cp -r $SRC/gecko/testing/geckodriver/* .
+	% cp -r $SRC/gecko/testing/geckodriver .
 
 [README.md]: https://searchfox.org/mozilla-central/source/testing/geckodriver/README.md
 [testing/geckodriver]: https://searchfox.org/mozilla-central/source/testing/geckodriver

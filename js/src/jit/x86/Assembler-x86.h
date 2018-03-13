@@ -113,19 +113,6 @@ static constexpr Register WasmTableCallIndexReg = ABINonArgReg2;
 static constexpr Register OsrFrameReg = edx;
 static constexpr Register PreBarrierReg = edx;
 
-// Registers used in the GenerateFFIIonExit Enable Activation block.
-static constexpr Register WasmIonExitRegCallee = ecx;
-static constexpr Register WasmIonExitRegE0 = edi;
-static constexpr Register WasmIonExitRegE1 = eax;
-
-// Registers used in the GenerateFFIIonExit Disable Activation block.
-static constexpr Register WasmIonExitRegReturnData = edx;
-static constexpr Register WasmIonExitRegReturnType = ecx;
-static constexpr Register WasmIonExitTlsReg = esi;
-static constexpr Register WasmIonExitRegD0 = edi;
-static constexpr Register WasmIonExitRegD1 = eax;
-static constexpr Register WasmIonExitRegD2 = ebx;
-
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
 static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
 static constexpr Register RegExpMatcherStringReg = CallTempReg1;
