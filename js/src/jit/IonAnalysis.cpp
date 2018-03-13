@@ -4792,6 +4792,7 @@ jit::CreateMIRRootList(IonBuilder& builder)
     return true;
 }
 
+#ifdef JS_JITSPEW
 static void
 DumpDefinition(GenericPrinter& out, MDefinition* def, size_t depth)
 {
@@ -4806,10 +4807,12 @@ DumpDefinition(GenericPrinter& out, MDefinition* def, size_t depth)
         out.printf(")");
     }
 }
+#endif
 
 void
 jit::DumpMIRExpressions(MIRGraph& graph)
 {
+#ifdef JS_JITSPEW
     if (!JitSpewEnabled(JitSpew_MIRExpressions))
         return;
 
@@ -4822,4 +4825,5 @@ jit::DumpMIRExpressions(MIRGraph& graph)
             out.printf("\n");
         }
     }
+#endif
 }

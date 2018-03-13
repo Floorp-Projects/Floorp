@@ -187,9 +187,12 @@ class LAllocation : public TempObject
         return bits_;
     }
 
-    UniqueChars toString() const;
     bool aliases(const LAllocation& other) const;
+
+#ifdef JS_JITSPEW
+    UniqueChars toString() const;
     void dump() const;
+#endif
 };
 
 class LUse : public LAllocation
@@ -638,7 +641,9 @@ class LDefinition
 
     UniqueChars toString() const;
 
+#ifdef JS_JITSPEW
     void dump() const;
+#endif
 };
 
 using LInt64Definition = LInt64Value<LDefinition>;
@@ -722,7 +727,9 @@ class LNode
     }
 
   public:
+#ifdef JS_JITSPEW
     const char* getExtraName() const;
+#endif
 
     Opcode op() const {
         return Opcode(op_);
@@ -774,11 +781,13 @@ class LNode
     // output register will be restored to its original value when bailing out.
     inline bool recoversInput() const;
 
+#ifdef JS_JITSPEW
     void dump(GenericPrinter& out);
     void dump();
     static void printName(GenericPrinter& out, Opcode op);
     void printName(GenericPrinter& out);
     void printOperands(GenericPrinter& out);
+#endif
 
   public:
     // Opcode testing and casts.
@@ -1085,8 +1094,10 @@ class LBlock
         return begin()->isGoto() && !mir()->isLoopHeader();
     }
 
+#ifdef JS_JITSPEW
     void dump(GenericPrinter& out);
     void dump();
+#endif
 };
 
 namespace details {
@@ -1985,8 +1996,10 @@ class LIRGraph
         return safepoints_[i];
     }
 
+#ifdef JS_JITSPEW
     void dump(GenericPrinter& out);
     void dump();
+#endif
 };
 
 LAllocation::LAllocation(AnyRegister reg)
