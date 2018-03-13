@@ -239,21 +239,12 @@ DataTransfer::SetDropEffect(const nsAString& aDropEffect)
   }
 }
 
-NS_IMETHODIMP
-DataTransfer::GetEffectAllowed(nsAString& aEffectAllowed)
-{
-  nsString effectAllowed;
-  GetEffectAllowed(effectAllowed);
-  aEffectAllowed = effectAllowed;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 DataTransfer::SetEffectAllowed(const nsAString& aEffectAllowed)
 {
   if (aEffectAllowed.EqualsLiteral("uninitialized")) {
     mEffectAllowed = nsIDragService::DRAGDROP_ACTION_UNINITIALIZED;
-    return NS_OK;
+    return;
   }
 
   static_assert(nsIDragService::DRAGDROP_ACTION_NONE == 0,
@@ -271,8 +262,6 @@ DataTransfer::SetEffectAllowed(const nsAString& aEffectAllowed)
       break;
     }
   }
-
-  return NS_OK;
 }
 
 void
@@ -287,13 +276,6 @@ DataTransfer::GetMozTriggeringPrincipalURISpec(nsAString& aPrincipalURISpec)
   nsCString principalURISpec;
   dragSession->GetTriggeringPrincipalURISpec(principalURISpec);
   CopyUTF8toUTF16(principalURISpec, aPrincipalURISpec);
-}
-
-NS_IMETHODIMP
-DataTransfer::GetMozUserCancelled(bool* aUserCancelled)
-{
-  *aUserCancelled = MozUserCancelled();
-  return NS_OK;
 }
 
 already_AddRefed<FileList>
@@ -459,18 +441,6 @@ DataTransfer::GetMozSourceNode()
   }
 
   return node.forget();
-}
-
-NS_IMETHODIMP
-DataTransfer::GetMozSourceNode(nsIDOMNode** aSourceNode)
-{
-  nsCOMPtr<nsINode> sourceNode = GetMozSourceNode();
-  if (!sourceNode) {
-    *aSourceNode = nullptr;
-    return NS_OK;
-  }
-
-  return CallQueryInterface(sourceNode, aSourceNode);
 }
 
 already_AddRefed<DOMStringList>
@@ -766,16 +736,6 @@ DataTransfer::SetDragImage(Element& aImage, int32_t aX, int32_t aY)
   }
 }
 
-NS_IMETHODIMP
-DataTransfer::SetDragImage(nsIDOMElement* aImage, int32_t aX, int32_t aY)
-{
-  nsCOMPtr<Element> image = do_QueryInterface(aImage);
-  if (image) {
-    SetDragImage(*image, aX, aY);
-  }
-  return NS_OK;
-}
-
 void
 DataTransfer::UpdateDragImage(Element& aImage, int32_t aX, int32_t aY)
 {
@@ -845,19 +805,6 @@ DataTransfer::AddElement(Element& aElement, ErrorResult& aRv)
   }
 
   mDragTarget = &aElement;
-}
-
-NS_IMETHODIMP
-DataTransfer::AddElement(nsIDOMElement* aElement)
-{
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_TRUE(element, NS_ERROR_INVALID_ARG);
-
-  ErrorResult rv;
-  AddElement(*element, rv);
-  return rv.StealNSResult();
 }
 
 nsresult
