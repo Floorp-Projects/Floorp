@@ -9,7 +9,7 @@
 #include <ole2.h>
 #include <oleidl.h>
 #include "mozilla/Attributes.h"
-#inclide "mozilla/RefPtr.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 namespace dom {
