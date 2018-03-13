@@ -438,7 +438,7 @@ Predictor::InstallObserver()
                               PREDICTOR_MAX_RESOURCES_PREF,
                               PREDICTOR_MAX_RESOURCES_DEFAULT);
 
-  Preferences::AddBoolVarCache(&mCleanedUp, PREDICTOR_CLEANED_UP_PREF, false);
+  mCleanedUp = Preferences::GetBool(PREDICTOR_CLEANED_UP_PREF, false);
 
   Preferences::AddUintVarCache(&mMaxURILength, PREDICTOR_MAX_URI_LENGTH_PREF,
                                PREDICTOR_MAX_URI_LENGTH_DEFAULT);
