@@ -5422,12 +5422,14 @@ struct ScriptCountBlockState
 
     void visitInstruction(LInstruction* ins)
     {
+#ifdef JS_JITSPEW
         // Prefix stream of assembly instructions with their LIR instruction
         // name and any associated high level info.
         if (const char* extra = ins->getExtraName())
             printer.printf("[%s:%s]\n", ins->opName(), extra);
         else
             printer.printf("[%s]\n", ins->opName());
+#endif
     }
 
     ~ScriptCountBlockState()
@@ -5801,10 +5803,10 @@ CodeGenerator::generateBody()
 #endif
 
             switch (iter->op()) {
-#define LIROP(op) case LNode::LOp_##op: visit##op(iter->to##op()); break;
+#define LIROP(op) case LNode::Opcode::op: visit##op(iter->to##op()); break;
     LIR_OPCODE_LIST(LIROP)
 #undef LIROP
-              case LNode::LOp_Invalid:
+              case LNode::Opcode::Invalid:
               default:
                 MOZ_CRASH("Invalid LIR op");
             }

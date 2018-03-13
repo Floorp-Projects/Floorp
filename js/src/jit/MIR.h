@@ -377,8 +377,10 @@ class MNode : public TempObject
 
     virtual MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const;
 
+#ifdef JS_JITSPEW
     virtual void dump(GenericPrinter& out) const = 0;
     virtual void dump() const = 0;
+#endif
 
   protected:
     // Need visibility on getUseFor to avoid O(n^2) complexity.
@@ -576,9 +578,8 @@ class MDefinition : public MNode
 
     Opcode op() const { return op_; }
 
-    virtual const char* opName() const = 0;
-    virtual void accept(MDefinitionVisitor* visitor) = 0;
-
+#ifdef JS_JITSPEW
+    const char* opName() const;
     void printName(GenericPrinter& out) const;
     static void PrintOpcodeName(GenericPrinter& out, Opcode op);
     virtual void printOpcode(GenericPrinter& out) const;
@@ -586,6 +587,7 @@ class MDefinition : public MNode
     void dump() const override;
     void dumpLocation(GenericPrinter& out) const;
     void dumpLocation() const;
+#endif
 
     // For LICM.
     virtual bool neverHoist() const { return false; }
@@ -1208,13 +1210,7 @@ class MInstruction
 
 #define INSTRUCTION_HEADER_WITHOUT_TYPEPOLICY(opcode)                       \
     static const Opcode classOpcode = Opcode::opcode;                       \
-    using MThisOpcode = M##opcode;                                          \
-    const char* opName() const override {                                   \
-        return #opcode;                                                     \
-    }                                                                       \
-    void accept(MDefinitionVisitor* visitor) override {                     \
-        visitor->visit##opcode(this);                                       \
-    }
+    using MThisOpcode = M##opcode;
 
 #define INSTRUCTION_HEADER(opcode)                                          \
     INSTRUCTION_HEADER_WITHOUT_TYPEPOLICY(opcode)                           \
@@ -1640,7 +1636,9 @@ class MConstant : public MNullaryInstruction
         return res;
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     HashNumber valueHash() const override;
     bool congruentTo(const MDefinition* ins) const override;
@@ -2095,7 +2093,9 @@ class MSimdInsertElement
         return binaryCongruentTo(ins) && lane_ == ins->toSimdInsertElement()->lane();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     ALLOW_CLONE(MSimdInsertElement)
 };
@@ -2425,7 +2425,9 @@ class MSimdUnaryArith
         return congruentIfOperandsEqual(ins) && ins->toSimdUnaryArith()->operation() == operation();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     ALLOW_CLONE(MSimdUnaryArith);
 };
@@ -2522,7 +2524,9 @@ class MSimdBinaryComp
                sign_ == other->signedness();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     ALLOW_CLONE(MSimdBinaryComp)
 };
@@ -2592,7 +2596,9 @@ class MSimdBinaryArith
         return operation_ == ins->toSimdBinaryArith()->operation();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     ALLOW_CLONE(MSimdBinaryArith)
 };
@@ -2654,7 +2660,9 @@ class MSimdBinarySaturating
                sign_ == ins->toSimdBinarySaturating()->signedness();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     ALLOW_CLONE(MSimdBinarySaturating)
 };
@@ -2709,7 +2717,9 @@ class MSimdBinaryBitwise
         return operation_ == ins->toSimdBinaryBitwise()->operation();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     ALLOW_CLONE(MSimdBinaryBitwise)
 };
@@ -2773,7 +2783,9 @@ class MSimdShift
         MOZ_CRASH("unexpected operation");
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     bool congruentTo(const MDefinition* ins) const override {
         if (!binaryCongruentTo(ins))
@@ -2853,8 +2865,9 @@ class MParameter : public MNullaryInstruction
     int32_t index() const {
         return index_;
     }
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
-
+#endif
     HashNumber valueHash() const override;
     bool congruentTo(const MDefinition* ins) const override;
 };
@@ -2920,7 +2933,9 @@ class MControlInstruction : public MInstruction
         return true;
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 };
 
 class MTableSwitch final
@@ -3775,7 +3790,10 @@ class MSimdBox
         return AliasSet::None();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
+
     MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
@@ -3822,7 +3840,9 @@ class MSimdUnbox
         return AliasSet::None();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 };
 
 // Creates a new derived type object. At runtime, this is just a call
@@ -4791,7 +4811,9 @@ class MCompare
         return AliasSet::None();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
     void collectRangeInfoPreTrunc() override;
 
     void trySpecializeFloat32(TempAllocator& alloc) override;
@@ -5005,7 +5027,9 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
     void makeInfallible() {
         // Should only be called if we're already Infallible or TypeBarrier
         MOZ_ASSERT(mode() != Fallible);
@@ -5107,7 +5131,9 @@ class MAssertRange
         return AliasSet::None();
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 };
 
 // Caller-side allocation of |this| for |new|:
@@ -6467,7 +6493,9 @@ class MBinaryArithInstruction
     bool mustPreserveNaN() const { return mustPreserveNaN_; }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     virtual double getIdentity() = 0;
 
@@ -7067,7 +7095,9 @@ class MMathFunction
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     static const char* FunctionName(Function function);
 
@@ -8071,7 +8101,9 @@ class MBeta
     INSTRUCTION_HEADER(Beta)
     TRIVIAL_NEW_WRAPPERS
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -9031,7 +9063,9 @@ class MConstantElements : public MNullaryInstruction
         return value_;
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     HashNumber valueHash() const override {
         return (HashNumber)(size_t) value_.asValue();
@@ -10447,7 +10481,9 @@ class MLoadUnboxedScalar
         return congruentIfOperandsEqual(other);
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     void computeRange(TempAllocator& alloc) override;
 
@@ -11871,7 +11907,9 @@ class MLoadSlot
     }
     AliasType mightAlias(const MDefinition* store) const override;
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     ALLOW_CLONE(MLoadSlot)
 };
@@ -12040,7 +12078,10 @@ class MStoreSlot
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::DynamicSlot);
     }
+
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     ALLOW_CLONE(MStoreSlot)
 };
@@ -12766,7 +12807,9 @@ class MNearbyInt
                ins->toNearbyInt()->roundingMode() == roundingMode_;
     }
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
 
     MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
 
@@ -13202,7 +13245,10 @@ class MTypeBarrier
     INSTRUCTION_HEADER(TypeBarrier)
     TRIVIAL_NEW_WRAPPERS
 
+#ifdef JS_JITSPEW
     void printOpcode(GenericPrinter& out) const override;
+#endif
+
     bool congruentTo(const MDefinition* def) const override;
 
     AliasSet getAliasSet() const override {
@@ -13583,8 +13629,10 @@ class MResumePoint final :
         return stores_.end();
     }
 
+#ifdef JS_JITSPEW
     virtual void dump(GenericPrinter& out) const override;
     virtual void dump() const override;
+#endif
 };
 
 class MIsCallable

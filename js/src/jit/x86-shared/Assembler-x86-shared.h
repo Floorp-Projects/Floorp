@@ -1084,9 +1084,6 @@ class AssemblerX86Shared : public AssemblerShared
         unsigned char* code = masm.data();
         X86Encoding::SetRel32(code + farJump.offset(), code + targetOffset);
     }
-    static void repatchFarJump(uint8_t* code, uint32_t farJumpOffset, uint32_t targetOffset) {
-        X86Encoding::SetRel32(code + farJumpOffset, code + targetOffset);
-    }
 
     // This is for patching during code generation, not after.
     void patchAddl(CodeOffset offset, int32_t n) {
