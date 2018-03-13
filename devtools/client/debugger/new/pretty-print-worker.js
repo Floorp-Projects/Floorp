@@ -70,20 +70,28 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 803);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1282);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 27:
+/***/ 1282:
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(1630);
+
+
+/***/ }),
+
+/***/ 1363:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const networkRequest = __webpack_require__(46);
-const workerUtils = __webpack_require__(47);
+const networkRequest = __webpack_require__(1367);
+const workerUtils = __webpack_require__(1368);
 
 module.exports = {
   networkRequest,
@@ -92,705 +100,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 301:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* -*- Mode: js; js-indent-level: 2; -*- */
-/*
- * Copyright 2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-
-var base64VLQ = __webpack_require__(302);
-var util = __webpack_require__(87);
-var ArraySet = __webpack_require__(303).ArraySet;
-var MappingList = __webpack_require__(809).MappingList;
-
-/**
- * An instance of the SourceMapGenerator represents a source map which is
- * being built incrementally. You may pass an object with the following
- * properties:
- *
- *   - file: The filename of the generated source.
- *   - sourceRoot: A root for all relative URLs in this source map.
- */
-function SourceMapGenerator(aArgs) {
-  if (!aArgs) {
-    aArgs = {};
-  }
-  this._file = util.getArg(aArgs, 'file', null);
-  this._sourceRoot = util.getArg(aArgs, 'sourceRoot', null);
-  this._skipValidation = util.getArg(aArgs, 'skipValidation', false);
-  this._sources = new ArraySet();
-  this._names = new ArraySet();
-  this._mappings = new MappingList();
-  this._sourcesContents = null;
-}
-
-SourceMapGenerator.prototype._version = 3;
-
-/**
- * Creates a new SourceMapGenerator based on a SourceMapConsumer
- *
- * @param aSourceMapConsumer The SourceMap.
- */
-SourceMapGenerator.fromSourceMap =
-  function SourceMapGenerator_fromSourceMap(aSourceMapConsumer) {
-    var sourceRoot = aSourceMapConsumer.sourceRoot;
-    var generator = new SourceMapGenerator({
-      file: aSourceMapConsumer.file,
-      sourceRoot: sourceRoot
-    });
-    aSourceMapConsumer.eachMapping(function (mapping) {
-      var newMapping = {
-        generated: {
-          line: mapping.generatedLine,
-          column: mapping.generatedColumn
-        }
-      };
-
-      if (mapping.source != null) {
-        newMapping.source = mapping.source;
-        if (sourceRoot != null) {
-          newMapping.source = util.relative(sourceRoot, newMapping.source);
-        }
-
-        newMapping.original = {
-          line: mapping.originalLine,
-          column: mapping.originalColumn
-        };
-
-        if (mapping.name != null) {
-          newMapping.name = mapping.name;
-        }
-      }
-
-      generator.addMapping(newMapping);
-    });
-    aSourceMapConsumer.sources.forEach(function (sourceFile) {
-      var content = aSourceMapConsumer.sourceContentFor(sourceFile);
-      if (content != null) {
-        generator.setSourceContent(sourceFile, content);
-      }
-    });
-    return generator;
-  };
-
-/**
- * Add a single mapping from original source line and column to the generated
- * source's line and column for this source map being created. The mapping
- * object should have the following properties:
- *
- *   - generated: An object with the generated line and column positions.
- *   - original: An object with the original line and column positions.
- *   - source: The original source file (relative to the sourceRoot).
- *   - name: An optional original token name for this mapping.
- */
-SourceMapGenerator.prototype.addMapping =
-  function SourceMapGenerator_addMapping(aArgs) {
-    var generated = util.getArg(aArgs, 'generated');
-    var original = util.getArg(aArgs, 'original', null);
-    var source = util.getArg(aArgs, 'source', null);
-    var name = util.getArg(aArgs, 'name', null);
-
-    if (!this._skipValidation) {
-      this._validateMapping(generated, original, source, name);
-    }
-
-    if (source != null) {
-      source = String(source);
-      if (!this._sources.has(source)) {
-        this._sources.add(source);
-      }
-    }
-
-    if (name != null) {
-      name = String(name);
-      if (!this._names.has(name)) {
-        this._names.add(name);
-      }
-    }
-
-    this._mappings.add({
-      generatedLine: generated.line,
-      generatedColumn: generated.column,
-      originalLine: original != null && original.line,
-      originalColumn: original != null && original.column,
-      source: source,
-      name: name
-    });
-  };
-
-/**
- * Set the source content for a source file.
- */
-SourceMapGenerator.prototype.setSourceContent =
-  function SourceMapGenerator_setSourceContent(aSourceFile, aSourceContent) {
-    var source = aSourceFile;
-    if (this._sourceRoot != null) {
-      source = util.relative(this._sourceRoot, source);
-    }
-
-    if (aSourceContent != null) {
-      // Add the source content to the _sourcesContents map.
-      // Create a new _sourcesContents map if the property is null.
-      if (!this._sourcesContents) {
-        this._sourcesContents = Object.create(null);
-      }
-      this._sourcesContents[util.toSetString(source)] = aSourceContent;
-    } else if (this._sourcesContents) {
-      // Remove the source file from the _sourcesContents map.
-      // If the _sourcesContents map is empty, set the property to null.
-      delete this._sourcesContents[util.toSetString(source)];
-      if (Object.keys(this._sourcesContents).length === 0) {
-        this._sourcesContents = null;
-      }
-    }
-  };
-
-/**
- * Applies the mappings of a sub-source-map for a specific source file to the
- * source map being generated. Each mapping to the supplied source file is
- * rewritten using the supplied source map. Note: The resolution for the
- * resulting mappings is the minimium of this map and the supplied map.
- *
- * @param aSourceMapConsumer The source map to be applied.
- * @param aSourceFile Optional. The filename of the source file.
- *        If omitted, SourceMapConsumer's file property will be used.
- * @param aSourceMapPath Optional. The dirname of the path to the source map
- *        to be applied. If relative, it is relative to the SourceMapConsumer.
- *        This parameter is needed when the two source maps aren't in the same
- *        directory, and the source map to be applied contains relative source
- *        paths. If so, those relative source paths need to be rewritten
- *        relative to the SourceMapGenerator.
- */
-SourceMapGenerator.prototype.applySourceMap =
-  function SourceMapGenerator_applySourceMap(aSourceMapConsumer, aSourceFile, aSourceMapPath) {
-    var sourceFile = aSourceFile;
-    // If aSourceFile is omitted, we will use the file property of the SourceMap
-    if (aSourceFile == null) {
-      if (aSourceMapConsumer.file == null) {
-        throw new Error(
-          'SourceMapGenerator.prototype.applySourceMap requires either an explicit source file, ' +
-          'or the source map\'s "file" property. Both were omitted.'
-        );
-      }
-      sourceFile = aSourceMapConsumer.file;
-    }
-    var sourceRoot = this._sourceRoot;
-    // Make "sourceFile" relative if an absolute Url is passed.
-    if (sourceRoot != null) {
-      sourceFile = util.relative(sourceRoot, sourceFile);
-    }
-    // Applying the SourceMap can add and remove items from the sources and
-    // the names array.
-    var newSources = new ArraySet();
-    var newNames = new ArraySet();
-
-    // Find mappings for the "sourceFile"
-    this._mappings.unsortedForEach(function (mapping) {
-      if (mapping.source === sourceFile && mapping.originalLine != null) {
-        // Check if it can be mapped by the source map, then update the mapping.
-        var original = aSourceMapConsumer.originalPositionFor({
-          line: mapping.originalLine,
-          column: mapping.originalColumn
-        });
-        if (original.source != null) {
-          // Copy mapping
-          mapping.source = original.source;
-          if (aSourceMapPath != null) {
-            mapping.source = util.join(aSourceMapPath, mapping.source)
-          }
-          if (sourceRoot != null) {
-            mapping.source = util.relative(sourceRoot, mapping.source);
-          }
-          mapping.originalLine = original.line;
-          mapping.originalColumn = original.column;
-          if (original.name != null) {
-            mapping.name = original.name;
-          }
-        }
-      }
-
-      var source = mapping.source;
-      if (source != null && !newSources.has(source)) {
-        newSources.add(source);
-      }
-
-      var name = mapping.name;
-      if (name != null && !newNames.has(name)) {
-        newNames.add(name);
-      }
-
-    }, this);
-    this._sources = newSources;
-    this._names = newNames;
-
-    // Copy sourcesContents of applied map.
-    aSourceMapConsumer.sources.forEach(function (sourceFile) {
-      var content = aSourceMapConsumer.sourceContentFor(sourceFile);
-      if (content != null) {
-        if (aSourceMapPath != null) {
-          sourceFile = util.join(aSourceMapPath, sourceFile);
-        }
-        if (sourceRoot != null) {
-          sourceFile = util.relative(sourceRoot, sourceFile);
-        }
-        this.setSourceContent(sourceFile, content);
-      }
-    }, this);
-  };
-
-/**
- * A mapping can have one of the three levels of data:
- *
- *   1. Just the generated position.
- *   2. The Generated position, original position, and original source.
- *   3. Generated and original position, original source, as well as a name
- *      token.
- *
- * To maintain consistency, we validate that any new mapping being added falls
- * in to one of these categories.
- */
-SourceMapGenerator.prototype._validateMapping =
-  function SourceMapGenerator_validateMapping(aGenerated, aOriginal, aSource,
-                                              aName) {
-    // When aOriginal is truthy but has empty values for .line and .column,
-    // it is most likely a programmer error. In this case we throw a very
-    // specific error message to try to guide them the right way.
-    // For example: https://github.com/Polymer/polymer-bundler/pull/519
-    if (aOriginal && typeof aOriginal.line !== 'number' && typeof aOriginal.column !== 'number') {
-        throw new Error(
-            'original.line and original.column are not numbers -- you probably meant to omit ' +
-            'the original mapping entirely and only map the generated position. If so, pass ' +
-            'null for the original mapping instead of an object with empty or null values.'
-        );
-    }
-
-    if (aGenerated && 'line' in aGenerated && 'column' in aGenerated
-        && aGenerated.line > 0 && aGenerated.column >= 0
-        && !aOriginal && !aSource && !aName) {
-      // Case 1.
-      return;
-    }
-    else if (aGenerated && 'line' in aGenerated && 'column' in aGenerated
-             && aOriginal && 'line' in aOriginal && 'column' in aOriginal
-             && aGenerated.line > 0 && aGenerated.column >= 0
-             && aOriginal.line > 0 && aOriginal.column >= 0
-             && aSource) {
-      // Cases 2 and 3.
-      return;
-    }
-    else {
-      throw new Error('Invalid mapping: ' + JSON.stringify({
-        generated: aGenerated,
-        source: aSource,
-        original: aOriginal,
-        name: aName
-      }));
-    }
-  };
-
-/**
- * Serialize the accumulated mappings in to the stream of base 64 VLQs
- * specified by the source map format.
- */
-SourceMapGenerator.prototype._serializeMappings =
-  function SourceMapGenerator_serializeMappings() {
-    var previousGeneratedColumn = 0;
-    var previousGeneratedLine = 1;
-    var previousOriginalColumn = 0;
-    var previousOriginalLine = 0;
-    var previousName = 0;
-    var previousSource = 0;
-    var result = '';
-    var next;
-    var mapping;
-    var nameIdx;
-    var sourceIdx;
-
-    var mappings = this._mappings.toArray();
-    for (var i = 0, len = mappings.length; i < len; i++) {
-      mapping = mappings[i];
-      next = ''
-
-      if (mapping.generatedLine !== previousGeneratedLine) {
-        previousGeneratedColumn = 0;
-        while (mapping.generatedLine !== previousGeneratedLine) {
-          next += ';';
-          previousGeneratedLine++;
-        }
-      }
-      else {
-        if (i > 0) {
-          if (!util.compareByGeneratedPositionsInflated(mapping, mappings[i - 1])) {
-            continue;
-          }
-          next += ',';
-        }
-      }
-
-      next += base64VLQ.encode(mapping.generatedColumn
-                                 - previousGeneratedColumn);
-      previousGeneratedColumn = mapping.generatedColumn;
-
-      if (mapping.source != null) {
-        sourceIdx = this._sources.indexOf(mapping.source);
-        next += base64VLQ.encode(sourceIdx - previousSource);
-        previousSource = sourceIdx;
-
-        // lines are stored 0-based in SourceMap spec version 3
-        next += base64VLQ.encode(mapping.originalLine - 1
-                                   - previousOriginalLine);
-        previousOriginalLine = mapping.originalLine - 1;
-
-        next += base64VLQ.encode(mapping.originalColumn
-                                   - previousOriginalColumn);
-        previousOriginalColumn = mapping.originalColumn;
-
-        if (mapping.name != null) {
-          nameIdx = this._names.indexOf(mapping.name);
-          next += base64VLQ.encode(nameIdx - previousName);
-          previousName = nameIdx;
-        }
-      }
-
-      result += next;
-    }
-
-    return result;
-  };
-
-SourceMapGenerator.prototype._generateSourcesContent =
-  function SourceMapGenerator_generateSourcesContent(aSources, aSourceRoot) {
-    return aSources.map(function (source) {
-      if (!this._sourcesContents) {
-        return null;
-      }
-      if (aSourceRoot != null) {
-        source = util.relative(aSourceRoot, source);
-      }
-      var key = util.toSetString(source);
-      return Object.prototype.hasOwnProperty.call(this._sourcesContents, key)
-        ? this._sourcesContents[key]
-        : null;
-    }, this);
-  };
-
-/**
- * Externalize the source map.
- */
-SourceMapGenerator.prototype.toJSON =
-  function SourceMapGenerator_toJSON() {
-    var map = {
-      version: this._version,
-      sources: this._sources.toArray(),
-      names: this._names.toArray(),
-      mappings: this._serializeMappings()
-    };
-    if (this._file != null) {
-      map.file = this._file;
-    }
-    if (this._sourceRoot != null) {
-      map.sourceRoot = this._sourceRoot;
-    }
-    if (this._sourcesContents) {
-      map.sourcesContent = this._generateSourcesContent(map.sources, map.sourceRoot);
-    }
-
-    return map;
-  };
-
-/**
- * Render the source map being generated to a string.
- */
-SourceMapGenerator.prototype.toString =
-  function SourceMapGenerator_toString() {
-    return JSON.stringify(this.toJSON());
-  };
-
-exports.SourceMapGenerator = SourceMapGenerator;
-
-
-/***/ }),
-
-/***/ 302:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* -*- Mode: js; js-indent-level: 2; -*- */
-/*
- * Copyright 2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE or:
- * http://opensource.org/licenses/BSD-3-Clause
- *
- * Based on the Base 64 VLQ implementation in Closure Compiler:
- * https://code.google.com/p/closure-compiler/source/browse/trunk/src/com/google/debugging/sourcemap/Base64VLQ.java
- *
- * Copyright 2011 The Closure Compiler Authors. All rights reserved.
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *  * Neither the name of Google Inc. nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-var base64 = __webpack_require__(808);
-
-// A single base 64 digit can contain 6 bits of data. For the base 64 variable
-// length quantities we use in the source map spec, the first bit is the sign,
-// the next four bits are the actual value, and the 6th bit is the
-// continuation bit. The continuation bit tells us whether there are more
-// digits in this value following this digit.
-//
-//   Continuation
-//   |    Sign
-//   |    |
-//   V    V
-//   101011
-
-var VLQ_BASE_SHIFT = 5;
-
-// binary: 100000
-var VLQ_BASE = 1 << VLQ_BASE_SHIFT;
-
-// binary: 011111
-var VLQ_BASE_MASK = VLQ_BASE - 1;
-
-// binary: 100000
-var VLQ_CONTINUATION_BIT = VLQ_BASE;
-
-/**
- * Converts from a two-complement value to a value where the sign bit is
- * placed in the least significant bit.  For example, as decimals:
- *   1 becomes 2 (10 binary), -1 becomes 3 (11 binary)
- *   2 becomes 4 (100 binary), -2 becomes 5 (101 binary)
- */
-function toVLQSigned(aValue) {
-  return aValue < 0
-    ? ((-aValue) << 1) + 1
-    : (aValue << 1) + 0;
-}
-
-/**
- * Converts to a two-complement value from a value where the sign bit is
- * placed in the least significant bit.  For example, as decimals:
- *   2 (10 binary) becomes 1, 3 (11 binary) becomes -1
- *   4 (100 binary) becomes 2, 5 (101 binary) becomes -2
- */
-function fromVLQSigned(aValue) {
-  var isNegative = (aValue & 1) === 1;
-  var shifted = aValue >> 1;
-  return isNegative
-    ? -shifted
-    : shifted;
-}
-
-/**
- * Returns the base 64 VLQ encoded value.
- */
-exports.encode = function base64VLQ_encode(aValue) {
-  var encoded = "";
-  var digit;
-
-  var vlq = toVLQSigned(aValue);
-
-  do {
-    digit = vlq & VLQ_BASE_MASK;
-    vlq >>>= VLQ_BASE_SHIFT;
-    if (vlq > 0) {
-      // There are still more digits in this value, so we must make sure the
-      // continuation bit is marked.
-      digit |= VLQ_CONTINUATION_BIT;
-    }
-    encoded += base64.encode(digit);
-  } while (vlq > 0);
-
-  return encoded;
-};
-
-/**
- * Decodes the next base 64 VLQ value from the given string and returns the
- * value and the rest of the string via the out parameter.
- */
-exports.decode = function base64VLQ_decode(aStr, aIndex, aOutParam) {
-  var strLen = aStr.length;
-  var result = 0;
-  var shift = 0;
-  var continuation, digit;
-
-  do {
-    if (aIndex >= strLen) {
-      throw new Error("Expected more digits in base 64 VLQ value.");
-    }
-
-    digit = base64.decode(aStr.charCodeAt(aIndex++));
-    if (digit === -1) {
-      throw new Error("Invalid base64 digit: " + aStr.charAt(aIndex - 1));
-    }
-
-    continuation = !!(digit & VLQ_CONTINUATION_BIT);
-    digit &= VLQ_BASE_MASK;
-    result = result + (digit << shift);
-    shift += VLQ_BASE_SHIFT;
-  } while (continuation);
-
-  aOutParam.value = fromVLQSigned(result);
-  aOutParam.rest = aIndex;
-};
-
-
-/***/ }),
-
-/***/ 303:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* -*- Mode: js; js-indent-level: 2; -*- */
-/*
- * Copyright 2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-
-var util = __webpack_require__(87);
-var has = Object.prototype.hasOwnProperty;
-var hasNativeMap = typeof Map !== "undefined";
-
-/**
- * A data structure which is a combination of an array and a set. Adding a new
- * member is O(1), testing for membership is O(1), and finding the index of an
- * element is O(1). Removing elements from the set is not supported. Only
- * strings are supported for membership.
- */
-function ArraySet() {
-  this._array = [];
-  this._set = hasNativeMap ? new Map() : Object.create(null);
-}
-
-/**
- * Static method for creating ArraySet instances from an existing array.
- */
-ArraySet.fromArray = function ArraySet_fromArray(aArray, aAllowDuplicates) {
-  var set = new ArraySet();
-  for (var i = 0, len = aArray.length; i < len; i++) {
-    set.add(aArray[i], aAllowDuplicates);
-  }
-  return set;
-};
-
-/**
- * Return how many unique items are in this ArraySet. If duplicates have been
- * added, than those do not count towards the size.
- *
- * @returns Number
- */
-ArraySet.prototype.size = function ArraySet_size() {
-  return hasNativeMap ? this._set.size : Object.getOwnPropertyNames(this._set).length;
-};
-
-/**
- * Add the given string to this set.
- *
- * @param String aStr
- */
-ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
-  var sStr = hasNativeMap ? aStr : util.toSetString(aStr);
-  var isDuplicate = hasNativeMap ? this.has(aStr) : has.call(this._set, sStr);
-  var idx = this._array.length;
-  if (!isDuplicate || aAllowDuplicates) {
-    this._array.push(aStr);
-  }
-  if (!isDuplicate) {
-    if (hasNativeMap) {
-      this._set.set(aStr, idx);
-    } else {
-      this._set[sStr] = idx;
-    }
-  }
-};
-
-/**
- * Is the given string a member of this set?
- *
- * @param String aStr
- */
-ArraySet.prototype.has = function ArraySet_has(aStr) {
-  if (hasNativeMap) {
-    return this._set.has(aStr);
-  } else {
-    var sStr = util.toSetString(aStr);
-    return has.call(this._set, sStr);
-  }
-};
-
-/**
- * What is the index of the given string in the array?
- *
- * @param String aStr
- */
-ArraySet.prototype.indexOf = function ArraySet_indexOf(aStr) {
-  if (hasNativeMap) {
-    var idx = this._set.get(aStr);
-    if (idx >= 0) {
-        return idx;
-    }
-  } else {
-    var sStr = util.toSetString(aStr);
-    if (has.call(this._set, sStr)) {
-      return this._set[sStr];
-    }
-  }
-
-  throw new Error('"' + aStr + '" is not in the set.');
-};
-
-/**
- * What is the element at the given index?
- *
- * @param Number aIdx
- */
-ArraySet.prototype.at = function ArraySet_at(aIdx) {
-  if (aIdx >= 0 && aIdx < this._array.length) {
-    return this._array[aIdx];
-  }
-  throw new Error('No element indexed by ' + aIdx);
-};
-
-/**
- * Returns the array representation of this set (which has the proper indices
- * indicated by indexOf). Note that this is a copy of the internal array used
- * for storing the members so that no one can mess with internal state.
- */
-ArraySet.prototype.toArray = function ArraySet_toArray() {
-  return this._array.slice();
-};
-
-exports.ArraySet = ArraySet;
-
-
-/***/ }),
-
-/***/ 46:
+/***/ 1367:
 /***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -812,7 +122,7 @@ module.exports = networkRequest;
 
 /***/ }),
 
-/***/ 47:
+/***/ 1368:
 /***/ (function(module, exports) {
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
@@ -951,25 +261,17 @@ module.exports = {
 
 /***/ }),
 
-/***/ 803:
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(804);
-
-
-/***/ }),
-
-/***/ 804:
+/***/ 1630:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _prettyFast = __webpack_require__(805);
+var _prettyFast = __webpack_require__(802);
 
 var _prettyFast2 = _interopRequireDefault(_prettyFast);
 
-var _devtoolsUtils = __webpack_require__(27);
+var _devtoolsUtils = __webpack_require__(1363);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1015,899 +317,7 @@ self.onmessage = workerHandler({ prettyPrint });
 
 /***/ }),
 
-/***/ 805:
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2; fill-column: 80 -*- */
-/*
- * Copyright 2013 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE.md or:
- * http://opensource.org/licenses/BSD-2-Clause
- */
-(function (root, factory) {
-  "use strict";
-
-  if (true) {
-    !(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
-				__WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-  } else if (typeof exports === "object") {
-    module.exports = factory();
-  } else {
-    root.prettyFast = factory();
-  }
-}(this, function () {
-  "use strict";
-
-  var acorn = this.acorn || __webpack_require__(806);
-  var sourceMap = this.sourceMap || __webpack_require__(807);
-  var SourceNode = sourceMap.SourceNode;
-
-  // If any of these tokens are seen before a "[" token, we know that "[" token
-  // is the start of an array literal, rather than a property access.
-  //
-  // The only exception is "}", which would need to be disambiguated by
-  // parsing. The majority of the time, an open bracket following a closing
-  // curly is going to be an array literal, so we brush the complication under
-  // the rug, and handle the ambiguity by always assuming that it will be an
-  // array literal.
-  var PRE_ARRAY_LITERAL_TOKENS = {
-    "typeof": true,
-    "void": true,
-    "delete": true,
-    "case": true,
-    "do": true,
-    "=": true,
-    "in": true,
-    "{": true,
-    "*": true,
-    "/": true,
-    "%": true,
-    "else": true,
-    ";": true,
-    "++": true,
-    "--": true,
-    "+": true,
-    "-": true,
-    "~": true,
-    "!": true,
-    ":": true,
-    "?": true,
-    ">>": true,
-    ">>>": true,
-    "<<": true,
-    "||": true,
-    "&&": true,
-    "<": true,
-    ">": true,
-    "<=": true,
-    ">=": true,
-    "instanceof": true,
-    "&": true,
-    "^": true,
-    "|": true,
-    "==": true,
-    "!=": true,
-    "===": true,
-    "!==": true,
-    ",": true,
-
-    "}": true
-  };
-
-  /**
-   * Determines if we think that the given token starts an array literal.
-   *
-   * @param Object token
-   *        The token we want to determine if it is an array literal.
-   * @param Object lastToken
-   *        The last token we added to the pretty printed results.
-   *
-   * @returns Boolean
-   *          True if we believe it is an array literal, false otherwise.
-   */
-  function isArrayLiteral(token, lastToken) {
-    if (token.type.label != "[") {
-      return false;
-    }
-    if (!lastToken) {
-      return true;
-    }
-    if (lastToken.type.isAssign) {
-      return true;
-    }
-    return !!PRE_ARRAY_LITERAL_TOKENS[
-      lastToken.type.keyword || lastToken.type.label
-    ];
-  }
-
-  // If any of these tokens are followed by a token on a new line, we know that
-  // ASI cannot happen.
-  var PREVENT_ASI_AFTER_TOKENS = {
-    // Binary operators
-    "*": true,
-    "/": true,
-    "%": true,
-    "+": true,
-    "-": true,
-    "<<": true,
-    ">>": true,
-    ">>>": true,
-    "<": true,
-    ">": true,
-    "<=": true,
-    ">=": true,
-    "instanceof": true,
-    "in": true,
-    "==": true,
-    "!=": true,
-    "===": true,
-    "!==": true,
-    "&": true,
-    "^": true,
-    "|": true,
-    "&&": true,
-    "||": true,
-    ",": true,
-    ".": true,
-    "=": true,
-    "*=": true,
-    "/=": true,
-    "%=": true,
-    "+=": true,
-    "-=": true,
-    "<<=": true,
-    ">>=": true,
-    ">>>=": true,
-    "&=": true,
-    "^=": true,
-    "|=": true,
-    // Unary operators
-    "delete": true,
-    "void": true,
-    "typeof": true,
-    "~": true,
-    "!": true,
-    "new": true,
-    // Function calls and grouped expressions
-    "(": true
-  };
-
-  // If any of these tokens are on a line after the token before it, we know
-  // that ASI cannot happen.
-  var PREVENT_ASI_BEFORE_TOKENS = {
-    // Binary operators
-    "*": true,
-    "/": true,
-    "%": true,
-    "<<": true,
-    ">>": true,
-    ">>>": true,
-    "<": true,
-    ">": true,
-    "<=": true,
-    ">=": true,
-    "instanceof": true,
-    "in": true,
-    "==": true,
-    "!=": true,
-    "===": true,
-    "!==": true,
-    "&": true,
-    "^": true,
-    "|": true,
-    "&&": true,
-    "||": true,
-    ",": true,
-    ".": true,
-    "=": true,
-    "*=": true,
-    "/=": true,
-    "%=": true,
-    "+=": true,
-    "-=": true,
-    "<<=": true,
-    ">>=": true,
-    ">>>=": true,
-    "&=": true,
-    "^=": true,
-    "|=": true,
-    // Function calls
-    "(": true
-  };
-
-  /**
-   * Determines if Automatic Semicolon Insertion (ASI) occurs between these
-   * tokens.
-   *
-   * @param Object token
-   *        The current token.
-   * @param Object lastToken
-   *        The last token we added to the pretty printed results.
-   *
-   * @returns Boolean
-   *          True if we believe ASI occurs.
-   */
-  function isASI(token, lastToken) {
-    if (!lastToken) {
-      return false;
-    }
-    if (token.loc.start.line === lastToken.loc.start.line) {
-      return false;
-    }
-    if (PREVENT_ASI_AFTER_TOKENS[
-      lastToken.type.label || lastToken.type.keyword
-    ]) {
-      return false;
-    }
-    if (PREVENT_ASI_BEFORE_TOKENS[token.type.label || token.type.keyword]) {
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Determine if we have encountered a getter or setter.
-   *
-   * @param Object token
-   *        The current token. If this is a getter or setter, it would be the
-   *        property name.
-   * @param Object lastToken
-   *        The last token we added to the pretty printed results. If this is a
-   *        getter or setter, it would be the `get` or `set` keyword
-   *        respectively.
-   * @param Array stack
-   *        The stack of open parens/curlies/brackets/etc.
-   *
-   * @returns Boolean
-   *          True if this is a getter or setter.
-   */
-  function isGetterOrSetter(token, lastToken, stack) {
-    return stack[stack.length - 1] == "{"
-      && lastToken
-      && lastToken.type.label == "name"
-      && (lastToken.value == "get" || lastToken.value == "set")
-      && token.type.label == "name";
-  }
-
-  /**
-   * Determine if we should add a newline after the given token.
-   *
-   * @param Object token
-   *        The token we are looking at.
-   * @param Array stack
-   *        The stack of open parens/curlies/brackets/etc.
-   *
-   * @returns Boolean
-   *          True if we should add a newline.
-   */
-  function isLineDelimiter(token, stack) {
-    if (token.isArrayLiteral) {
-      return true;
-    }
-    var ttl = token.type.label;
-    var top = stack[stack.length - 1];
-    return ttl == ";" && top != "("
-      || ttl == "{"
-      || ttl == "," && top != "("
-      || ttl == ":" && (top == "case" || top == "default");
-  }
-
-  /**
-   * Append the necessary whitespace to the result after we have added the given
-   * token.
-   *
-   * @param Object token
-   *        The token that was just added to the result.
-   * @param Function write
-   *        The function to write to the pretty printed results.
-   * @param Array stack
-   *        The stack of open parens/curlies/brackets/etc.
-   *
-   * @returns Boolean
-   *          Returns true if we added a newline to result, false in all other
-   *          cases.
-   */
-  function appendNewline(token, write, stack) {
-    if (isLineDelimiter(token, stack)) {
-      write("\n", token.loc.start.line, token.loc.start.column);
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Determines if we need to add a space between the last token we added and
-   * the token we are about to add.
-   *
-   * @param Object token
-   *        The token we are about to add to the pretty printed code.
-   * @param Object lastToken
-   *        The last token added to the pretty printed code.
-   */
-  function needsSpaceAfter(token, lastToken) {
-    if (lastToken) {
-      if (lastToken.type.isLoop) {
-        return true;
-      }
-      if (lastToken.type.isAssign) {
-        return true;
-      }
-      if (lastToken.type.binop != null) {
-        return true;
-      }
-
-      var ltt = lastToken.type.label;
-      if (ltt == "?") {
-        return true;
-      }
-      if (ltt == ":") {
-        return true;
-      }
-      if (ltt == ",") {
-        return true;
-      }
-      if (ltt == ";") {
-        return true;
-      }
-
-      var ltk = lastToken.type.keyword;
-      if (ltk != null) {
-        if (ltk == "break" || ltk == "continue" || ltk == "return") {
-          return token.type.label != ";";
-        }
-        if (ltk != "debugger"
-            && ltk != "null"
-            && ltk != "true"
-            && ltk != "false"
-            && ltk != "this"
-            && ltk != "default") {
-          return true;
-        }
-      }
-
-      if (ltt == ")" && (token.type.label != ")"
-                         && token.type.label != "]"
-                         && token.type.label != ";"
-                         && token.type.label != ","
-                         && token.type.label != ".")) {
-        return true;
-      }
-
-      if (lastToken.value == "let") {
-        return true;
-      }
-
-      if (lastToken.value == "const") {
-        return true;
-      }
-    }
-
-    if (token.type.isAssign) {
-      return true;
-    }
-    if (token.type.binop != null) {
-      return true;
-    }
-    if (token.type.label == "?") {
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Add the required whitespace before this token, whether that is a single
-   * space, newline, and/or the indent on fresh lines.
-   *
-   * @param Object token
-   *        The token we are about to add to the pretty printed code.
-   * @param Object lastToken
-   *        The last token we added to the pretty printed code.
-   * @param Boolean addedNewline
-   *        Whether we added a newline after adding the last token to the pretty
-   *        printed code.
-   * @param Function write
-   *        The function to write pretty printed code to the result SourceNode.
-   * @param Object options
-   *        The options object.
-   * @param Number indentLevel
-   *        The number of indents deep we are.
-   * @param Array stack
-   *        The stack of open curlies, brackets, etc.
-   */
-  function prependWhiteSpace(token, lastToken, addedNewline, write, options,
-                             indentLevel, stack) {
-    var ttk = token.type.keyword;
-    var ttl = token.type.label;
-    var newlineAdded = addedNewline;
-    var ltt = lastToken ? lastToken.type.label : null;
-
-    // Handle whitespace and newlines after "}" here instead of in
-    // `isLineDelimiter` because it is only a line delimiter some of the
-    // time. For example, we don't want to put "else if" on a new line after
-    // the first if's block.
-    if (lastToken && ltt == "}") {
-      if (ttk == "while" && stack[stack.length - 1] == "do") {
-        write(" ",
-              lastToken.loc.start.line,
-              lastToken.loc.start.column);
-      } else if (ttk == "else" ||
-                 ttk == "catch" ||
-                 ttk == "finally") {
-        write(" ",
-              lastToken.loc.start.line,
-              lastToken.loc.start.column);
-      } else if (ttl != "(" &&
-                 ttl != ";" &&
-                 ttl != "," &&
-                 ttl != ")" &&
-                 ttl != ".") {
-        write("\n",
-              lastToken.loc.start.line,
-              lastToken.loc.start.column);
-        newlineAdded = true;
-      }
-    }
-
-    if (isGetterOrSetter(token, lastToken, stack)) {
-      write(" ",
-            lastToken.loc.start.line,
-            lastToken.loc.start.column);
-    }
-
-    if (ttl == ":" && stack[stack.length - 1] == "?") {
-      write(" ",
-            lastToken.loc.start.line,
-            lastToken.loc.start.column);
-    }
-
-    if (lastToken && ltt != "}" && ttk == "else") {
-      write(" ",
-            lastToken.loc.start.line,
-            lastToken.loc.start.column);
-    }
-
-    function ensureNewline() {
-      if (!newlineAdded) {
-        write("\n",
-              lastToken.loc.start.line,
-              lastToken.loc.start.column);
-        newlineAdded = true;
-      }
-    }
-
-    if (isASI(token, lastToken)) {
-      ensureNewline();
-    }
-
-    if (decrementsIndent(ttl, stack)) {
-      ensureNewline();
-    }
-
-    if (newlineAdded) {
-      if (ttk == "case" || ttk == "default") {
-        write(repeat(options.indent, indentLevel - 1),
-              token.loc.start.line,
-              token.loc.start.column);
-      } else {
-        write(repeat(options.indent, indentLevel),
-              token.loc.start.line,
-              token.loc.start.column);
-      }
-    } else if (needsSpaceAfter(token, lastToken)) {
-      write(" ",
-            lastToken.loc.start.line,
-            lastToken.loc.start.column);
-    }
-  }
-
-  /**
-   * Repeat the `str` string `n` times.
-   *
-   * @param String str
-   *        The string to be repeated.
-   * @param Number n
-   *        The number of times to repeat the string.
-   *
-   * @returns String
-   *          The repeated string.
-   */
-  function repeat(str, n) {
-    var result = "";
-    while (n > 0) {
-      if (n & 1) {
-        result += str;
-      }
-      n >>= 1;
-      str += str;
-    }
-    return result;
-  }
-
-  /**
-   * Make sure that we output the escaped character combination inside string
-   * literals instead of various problematic characters.
-   */
-  var sanitize = (function () {
-    var escapeCharacters = {
-      // Backslash
-      "\\": "\\\\",
-      // Newlines
-      "\n": "\\n",
-      // Carriage return
-      "\r": "\\r",
-      // Tab
-      "\t": "\\t",
-      // Vertical tab
-      "\v": "\\v",
-      // Form feed
-      "\f": "\\f",
-      // Null character
-      "\0": "\\0",
-      // Single quotes
-      "'": "\\'"
-    };
-
-    var regExpString = "("
-      + Object.keys(escapeCharacters)
-              .map(function (c) { return escapeCharacters[c]; })
-              .join("|")
-      + ")";
-    var escapeCharactersRegExp = new RegExp(regExpString, "g");
-
-    return function (str) {
-      return str.replace(escapeCharactersRegExp, function (_, c) {
-        return escapeCharacters[c];
-      });
-    };
-  }());
-  /**
-   * Add the given token to the pretty printed results.
-   *
-   * @param Object token
-   *        The token to add.
-   * @param Function write
-   *        The function to write pretty printed code to the result SourceNode.
-   */
-  function addToken(token, write) {
-    if (token.type.label == "string") {
-      write("'" + sanitize(token.value) + "'",
-            token.loc.start.line,
-            token.loc.start.column);
-    } else if (token.type.label == "regexp") {
-      write(String(token.value.value),
-            token.loc.start.line,
-            token.loc.start.column);
-    } else {
-      write(String(token.value != null ? token.value : token.type.label),
-            token.loc.start.line,
-            token.loc.start.column);
-    }
-  }
-
-  /**
-   * Returns true if the given token type belongs on the stack.
-   */
-  function belongsOnStack(token) {
-    var ttl = token.type.label;
-    var ttk = token.type.keyword;
-    return ttl == "{"
-      || ttl == "("
-      || ttl == "["
-      || ttl == "?"
-      || ttk == "do"
-      || ttk == "switch"
-      || ttk == "case"
-      || ttk == "default";
-  }
-
-  /**
-   * Returns true if the given token should cause us to pop the stack.
-   */
-  function shouldStackPop(token, stack) {
-    var ttl = token.type.label;
-    var ttk = token.type.keyword;
-    var top = stack[stack.length - 1];
-    return ttl == "]"
-      || ttl == ")"
-      || ttl == "}"
-      || (ttl == ":" && (top == "case" || top == "default" || top == "?"))
-      || (ttk == "while" && top == "do");
-  }
-
-  /**
-   * Returns true if the given token type should cause us to decrement the
-   * indent level.
-   */
-  function decrementsIndent(tokenType, stack) {
-    return tokenType == "}"
-      || (tokenType == "]" && stack[stack.length - 1] == "[\n");
-  }
-
-  /**
-   * Returns true if the given token should cause us to increment the indent
-   * level.
-   */
-  function incrementsIndent(token) {
-    return token.type.label == "{"
-      || token.isArrayLiteral
-      || token.type.keyword == "switch";
-  }
-
-  /**
-   * Add a comment to the pretty printed code.
-   *
-   * @param Function write
-   *        The function to write pretty printed code to the result SourceNode.
-   * @param Number indentLevel
-   *        The number of indents deep we are.
-   * @param Object options
-   *        The options object.
-   * @param Boolean block
-   *        True if the comment is a multiline block style comment.
-   * @param String text
-   *        The text of the comment.
-   * @param Number line
-   *        The line number to comment appeared on.
-   * @param Number column
-   *        The column number the comment appeared on.
-   */
-  function addComment(write, indentLevel, options, block, text, line, column) {
-    var indentString = repeat(options.indent, indentLevel);
-
-    write(indentString, line, column);
-    if (block) {
-      write("/*");
-      write(text
-            .split(new RegExp("/\n" + indentString + "/", "g"))
-            .join("\n" + indentString));
-      write("*/");
-    } else {
-      write("//");
-      write(text);
-    }
-    write("\n");
-  }
-
-  /**
-   * The main function.
-   *
-   * @param String input
-   *        The ugly JS code we want to pretty print.
-   * @param Object options
-   *        The options object. Provides configurability of the pretty
-   *        printing. Properties:
-   *          - url: The URL string of the ugly JS code.
-   *          - indent: The string to indent code by.
-   *
-   * @returns Object
-   *          An object with the following properties:
-   *            - code: The pretty printed code string.
-   *            - map: A SourceMapGenerator instance.
-   */
-  return function prettyFast(input, options) {
-    // The level of indents deep we are.
-    var indentLevel = 0;
-
-    // We will accumulate the pretty printed code in this SourceNode.
-    var result = new SourceNode();
-
-    /**
-     * Write a pretty printed string to the result SourceNode.
-     *
-     * We buffer our writes so that we only create one mapping for each line in
-     * the source map. This enhances performance by avoiding extraneous mapping
-     * serialization, and flattening the tree that
-     * `SourceNode#toStringWithSourceMap` will have to recursively walk. When
-     * timing how long it takes to pretty print jQuery, this optimization
-     * brought the time down from ~390 ms to ~190ms!
-     *
-     * @param String str
-     *        The string to be added to the result.
-     * @param Number line
-     *        The line number the string came from in the ugly source.
-     * @param Number column
-     *        The column number the string came from in the ugly source.
-     */
-    var write = (function () {
-      var buffer = [];
-      var bufferLine = -1;
-      var bufferColumn = -1;
-      return function write(str, line, column) {
-        if (line != null && bufferLine === -1) {
-          bufferLine = line;
-        }
-        if (column != null && bufferColumn === -1) {
-          bufferColumn = column;
-        }
-        buffer.push(str);
-
-        if (str == "\n") {
-          var lineStr = "";
-          for (var i = 0, len = buffer.length; i < len; i++) {
-            lineStr += buffer[i];
-          }
-          result.add(new SourceNode(bufferLine, bufferColumn, options.url,
-                                    lineStr));
-          buffer.splice(0, buffer.length);
-          bufferLine = -1;
-          bufferColumn = -1;
-        }
-      };
-    }());
-
-    // Whether or not we added a newline on after we added the last token.
-    var addedNewline = false;
-
-    // The current token we will be adding to the pretty printed code.
-    var token;
-
-    // Shorthand for token.type.label, so we don't have to repeatedly access
-    // properties.
-    var ttl;
-
-    // Shorthand for token.type.keyword, so we don't have to repeatedly access
-    // properties.
-    var ttk;
-
-    // The last token we added to the pretty printed code.
-    var lastToken;
-
-    // Stack of token types/keywords that can affect whether we want to add a
-    // newline or a space. We can make that decision based on what token type is
-    // on the top of the stack. For example, a comma in a parameter list should
-    // be followed by a space, while a comma in an object literal should be
-    // followed by a newline.
-    //
-    // Strings that go on the stack:
-    //
-    //   - "{"
-    //   - "("
-    //   - "["
-    //   - "[\n"
-    //   - "do"
-    //   - "?"
-    //   - "switch"
-    //   - "case"
-    //   - "default"
-    //
-    // The difference between "[" and "[\n" is that "[\n" is used when we are
-    // treating "[" and "]" tokens as line delimiters and should increment and
-    // decrement the indent level when we find them.
-    var stack = [];
-
-    // Pass through acorn's tokenizer and append tokens and comments into a
-    // single queue to process.  For example, the source file:
-    //
-    //     foo
-    //     // a
-    //     // b
-    //     bar
-    //
-    // After this process, tokenQueue has the following token stream:
-    //
-    //     [ foo, '// a', '// b', bar]
-    var tokenQueue = [];
-
-    var tokens = acorn.tokenizer(input, {
-      locations: true,
-      sourceFile: options.url,
-      onComment: function (block, text, start, end, startLoc, endLoc) {
-        tokenQueue.push({
-          type: {},
-          comment: true,
-          block: block,
-          text: text,
-          loc: { start: startLoc, end: endLoc }
-        });
-      }
-    });
-
-    for (;;) {
-      token = tokens.getToken();
-      tokenQueue.push(token);
-      if (token.type.label == "eof") {
-        break;
-      }
-    }
-
-    for (var i = 0; i < tokenQueue.length; i++) {
-      token = tokenQueue[i];
-
-      if (token.comment) {
-        var commentIndentLevel = indentLevel;
-        if (lastToken && (lastToken.loc.end.line == token.loc.start.line)) {
-          commentIndentLevel = 0;
-          write(" ");
-        }
-        addComment(write, commentIndentLevel, options, token.block, token.text,
-                   token.loc.start.line, token.loc.start.column);
-        addedNewline = true;
-        continue;
-      }
-
-      ttk = token.type.keyword;
-      ttl = token.type.label;
-
-      if (ttl == "eof") {
-        if (!addedNewline) {
-          write("\n");
-        }
-        break;
-      }
-
-      token.isArrayLiteral = isArrayLiteral(token, lastToken);
-
-      if (belongsOnStack(token)) {
-        if (token.isArrayLiteral) {
-          stack.push("[\n");
-        } else {
-          stack.push(ttl || ttk);
-        }
-      }
-
-      if (decrementsIndent(ttl, stack)) {
-        indentLevel--;
-        if (ttl == "}"
-            && stack.length > 1
-            && stack[stack.length - 2] == "switch") {
-          indentLevel--;
-        }
-      }
-
-      prependWhiteSpace(token, lastToken, addedNewline, write, options,
-                        indentLevel, stack);
-      addToken(token, write);
-
-      // If the next token is going to be a comment starting on the same line,
-      // then no need to add one here
-      var nextToken = tokenQueue[i + 1];
-      if (!nextToken || !nextToken.comment || token.loc.end.line != nextToken.loc.start.line) {
-        addedNewline = appendNewline(token, write, stack);
-      }
-
-      if (shouldStackPop(token, stack)) {
-        stack.pop();
-        if (token == "}" && stack.length
-            && stack[stack.length - 1] == "switch") {
-          stack.pop();
-        }
-      }
-
-      if (incrementsIndent(token)) {
-        indentLevel++;
-      }
-
-      // Acorn's tokenizer re-uses tokens, so we have to copy the last token on
-      // every iteration. We follow acorn's lead here, and reuse the lastToken
-      // object the same way that acorn reuses the token object. This allows us
-      // to avoid allocations and minimize GC pauses.
-      if (!lastToken) {
-        lastToken = { loc: { start: {}, end: {} } };
-      }
-      lastToken.start = token.start;
-      lastToken.end = token.end;
-      lastToken.loc.start.line = token.loc.start.line;
-      lastToken.loc.start.column = token.loc.start.column;
-      lastToken.loc.end.line = token.loc.end.line;
-      lastToken.loc.end.column = token.loc.end.column;
-      lastToken.type = token.type;
-      lastToken.value = token.value;
-      lastToken.isArrayLiteral = token.isArrayLiteral;
-    }
-
-    return result.toStringWithSourceMap({ file: options.url });
-  };
-
-}.bind(this)));
-
-
-/***/ }),
-
-/***/ 806:
+/***/ 381:
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -5679,7 +4089,899 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 /***/ }),
 
-/***/ 807:
+/***/ 802:
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2; fill-column: 80 -*- */
+/*
+ * Copyright 2013 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.md or:
+ * http://opensource.org/licenses/BSD-2-Clause
+ */
+(function (root, factory) {
+  "use strict";
+
+  if (true) {
+    !(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
+				__WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else if (typeof exports === "object") {
+    module.exports = factory();
+  } else {
+    root.prettyFast = factory();
+  }
+}(this, function () {
+  "use strict";
+
+  var acorn = this.acorn || __webpack_require__(381);
+  var sourceMap = this.sourceMap || __webpack_require__(815);
+  var SourceNode = sourceMap.SourceNode;
+
+  // If any of these tokens are seen before a "[" token, we know that "[" token
+  // is the start of an array literal, rather than a property access.
+  //
+  // The only exception is "}", which would need to be disambiguated by
+  // parsing. The majority of the time, an open bracket following a closing
+  // curly is going to be an array literal, so we brush the complication under
+  // the rug, and handle the ambiguity by always assuming that it will be an
+  // array literal.
+  var PRE_ARRAY_LITERAL_TOKENS = {
+    "typeof": true,
+    "void": true,
+    "delete": true,
+    "case": true,
+    "do": true,
+    "=": true,
+    "in": true,
+    "{": true,
+    "*": true,
+    "/": true,
+    "%": true,
+    "else": true,
+    ";": true,
+    "++": true,
+    "--": true,
+    "+": true,
+    "-": true,
+    "~": true,
+    "!": true,
+    ":": true,
+    "?": true,
+    ">>": true,
+    ">>>": true,
+    "<<": true,
+    "||": true,
+    "&&": true,
+    "<": true,
+    ">": true,
+    "<=": true,
+    ">=": true,
+    "instanceof": true,
+    "&": true,
+    "^": true,
+    "|": true,
+    "==": true,
+    "!=": true,
+    "===": true,
+    "!==": true,
+    ",": true,
+
+    "}": true
+  };
+
+  /**
+   * Determines if we think that the given token starts an array literal.
+   *
+   * @param Object token
+   *        The token we want to determine if it is an array literal.
+   * @param Object lastToken
+   *        The last token we added to the pretty printed results.
+   *
+   * @returns Boolean
+   *          True if we believe it is an array literal, false otherwise.
+   */
+  function isArrayLiteral(token, lastToken) {
+    if (token.type.label != "[") {
+      return false;
+    }
+    if (!lastToken) {
+      return true;
+    }
+    if (lastToken.type.isAssign) {
+      return true;
+    }
+    return !!PRE_ARRAY_LITERAL_TOKENS[
+      lastToken.type.keyword || lastToken.type.label
+    ];
+  }
+
+  // If any of these tokens are followed by a token on a new line, we know that
+  // ASI cannot happen.
+  var PREVENT_ASI_AFTER_TOKENS = {
+    // Binary operators
+    "*": true,
+    "/": true,
+    "%": true,
+    "+": true,
+    "-": true,
+    "<<": true,
+    ">>": true,
+    ">>>": true,
+    "<": true,
+    ">": true,
+    "<=": true,
+    ">=": true,
+    "instanceof": true,
+    "in": true,
+    "==": true,
+    "!=": true,
+    "===": true,
+    "!==": true,
+    "&": true,
+    "^": true,
+    "|": true,
+    "&&": true,
+    "||": true,
+    ",": true,
+    ".": true,
+    "=": true,
+    "*=": true,
+    "/=": true,
+    "%=": true,
+    "+=": true,
+    "-=": true,
+    "<<=": true,
+    ">>=": true,
+    ">>>=": true,
+    "&=": true,
+    "^=": true,
+    "|=": true,
+    // Unary operators
+    "delete": true,
+    "void": true,
+    "typeof": true,
+    "~": true,
+    "!": true,
+    "new": true,
+    // Function calls and grouped expressions
+    "(": true
+  };
+
+  // If any of these tokens are on a line after the token before it, we know
+  // that ASI cannot happen.
+  var PREVENT_ASI_BEFORE_TOKENS = {
+    // Binary operators
+    "*": true,
+    "/": true,
+    "%": true,
+    "<<": true,
+    ">>": true,
+    ">>>": true,
+    "<": true,
+    ">": true,
+    "<=": true,
+    ">=": true,
+    "instanceof": true,
+    "in": true,
+    "==": true,
+    "!=": true,
+    "===": true,
+    "!==": true,
+    "&": true,
+    "^": true,
+    "|": true,
+    "&&": true,
+    "||": true,
+    ",": true,
+    ".": true,
+    "=": true,
+    "*=": true,
+    "/=": true,
+    "%=": true,
+    "+=": true,
+    "-=": true,
+    "<<=": true,
+    ">>=": true,
+    ">>>=": true,
+    "&=": true,
+    "^=": true,
+    "|=": true,
+    // Function calls
+    "(": true
+  };
+
+  /**
+   * Determines if Automatic Semicolon Insertion (ASI) occurs between these
+   * tokens.
+   *
+   * @param Object token
+   *        The current token.
+   * @param Object lastToken
+   *        The last token we added to the pretty printed results.
+   *
+   * @returns Boolean
+   *          True if we believe ASI occurs.
+   */
+  function isASI(token, lastToken) {
+    if (!lastToken) {
+      return false;
+    }
+    if (token.loc.start.line === lastToken.loc.start.line) {
+      return false;
+    }
+    if (PREVENT_ASI_AFTER_TOKENS[
+      lastToken.type.label || lastToken.type.keyword
+    ]) {
+      return false;
+    }
+    if (PREVENT_ASI_BEFORE_TOKENS[token.type.label || token.type.keyword]) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Determine if we have encountered a getter or setter.
+   *
+   * @param Object token
+   *        The current token. If this is a getter or setter, it would be the
+   *        property name.
+   * @param Object lastToken
+   *        The last token we added to the pretty printed results. If this is a
+   *        getter or setter, it would be the `get` or `set` keyword
+   *        respectively.
+   * @param Array stack
+   *        The stack of open parens/curlies/brackets/etc.
+   *
+   * @returns Boolean
+   *          True if this is a getter or setter.
+   */
+  function isGetterOrSetter(token, lastToken, stack) {
+    return stack[stack.length - 1] == "{"
+      && lastToken
+      && lastToken.type.label == "name"
+      && (lastToken.value == "get" || lastToken.value == "set")
+      && token.type.label == "name";
+  }
+
+  /**
+   * Determine if we should add a newline after the given token.
+   *
+   * @param Object token
+   *        The token we are looking at.
+   * @param Array stack
+   *        The stack of open parens/curlies/brackets/etc.
+   *
+   * @returns Boolean
+   *          True if we should add a newline.
+   */
+  function isLineDelimiter(token, stack) {
+    if (token.isArrayLiteral) {
+      return true;
+    }
+    var ttl = token.type.label;
+    var top = stack[stack.length - 1];
+    return ttl == ";" && top != "("
+      || ttl == "{"
+      || ttl == "," && top != "("
+      || ttl == ":" && (top == "case" || top == "default");
+  }
+
+  /**
+   * Append the necessary whitespace to the result after we have added the given
+   * token.
+   *
+   * @param Object token
+   *        The token that was just added to the result.
+   * @param Function write
+   *        The function to write to the pretty printed results.
+   * @param Array stack
+   *        The stack of open parens/curlies/brackets/etc.
+   *
+   * @returns Boolean
+   *          Returns true if we added a newline to result, false in all other
+   *          cases.
+   */
+  function appendNewline(token, write, stack) {
+    if (isLineDelimiter(token, stack)) {
+      write("\n", token.loc.start.line, token.loc.start.column);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Determines if we need to add a space between the last token we added and
+   * the token we are about to add.
+   *
+   * @param Object token
+   *        The token we are about to add to the pretty printed code.
+   * @param Object lastToken
+   *        The last token added to the pretty printed code.
+   */
+  function needsSpaceAfter(token, lastToken) {
+    if (lastToken) {
+      if (lastToken.type.isLoop) {
+        return true;
+      }
+      if (lastToken.type.isAssign) {
+        return true;
+      }
+      if (lastToken.type.binop != null) {
+        return true;
+      }
+
+      var ltt = lastToken.type.label;
+      if (ltt == "?") {
+        return true;
+      }
+      if (ltt == ":") {
+        return true;
+      }
+      if (ltt == ",") {
+        return true;
+      }
+      if (ltt == ";") {
+        return true;
+      }
+
+      var ltk = lastToken.type.keyword;
+      if (ltk != null) {
+        if (ltk == "break" || ltk == "continue" || ltk == "return") {
+          return token.type.label != ";";
+        }
+        if (ltk != "debugger"
+            && ltk != "null"
+            && ltk != "true"
+            && ltk != "false"
+            && ltk != "this"
+            && ltk != "default") {
+          return true;
+        }
+      }
+
+      if (ltt == ")" && (token.type.label != ")"
+                         && token.type.label != "]"
+                         && token.type.label != ";"
+                         && token.type.label != ","
+                         && token.type.label != ".")) {
+        return true;
+      }
+
+      if (lastToken.value == "let") {
+        return true;
+      }
+
+      if (lastToken.value == "const") {
+        return true;
+      }
+    }
+
+    if (token.type.isAssign) {
+      return true;
+    }
+    if (token.type.binop != null) {
+      return true;
+    }
+    if (token.type.label == "?") {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Add the required whitespace before this token, whether that is a single
+   * space, newline, and/or the indent on fresh lines.
+   *
+   * @param Object token
+   *        The token we are about to add to the pretty printed code.
+   * @param Object lastToken
+   *        The last token we added to the pretty printed code.
+   * @param Boolean addedNewline
+   *        Whether we added a newline after adding the last token to the pretty
+   *        printed code.
+   * @param Function write
+   *        The function to write pretty printed code to the result SourceNode.
+   * @param Object options
+   *        The options object.
+   * @param Number indentLevel
+   *        The number of indents deep we are.
+   * @param Array stack
+   *        The stack of open curlies, brackets, etc.
+   */
+  function prependWhiteSpace(token, lastToken, addedNewline, write, options,
+                             indentLevel, stack) {
+    var ttk = token.type.keyword;
+    var ttl = token.type.label;
+    var newlineAdded = addedNewline;
+    var ltt = lastToken ? lastToken.type.label : null;
+
+    // Handle whitespace and newlines after "}" here instead of in
+    // `isLineDelimiter` because it is only a line delimiter some of the
+    // time. For example, we don't want to put "else if" on a new line after
+    // the first if's block.
+    if (lastToken && ltt == "}") {
+      if (ttk == "while" && stack[stack.length - 1] == "do") {
+        write(" ",
+              lastToken.loc.start.line,
+              lastToken.loc.start.column);
+      } else if (ttk == "else" ||
+                 ttk == "catch" ||
+                 ttk == "finally") {
+        write(" ",
+              lastToken.loc.start.line,
+              lastToken.loc.start.column);
+      } else if (ttl != "(" &&
+                 ttl != ";" &&
+                 ttl != "," &&
+                 ttl != ")" &&
+                 ttl != ".") {
+        write("\n",
+              lastToken.loc.start.line,
+              lastToken.loc.start.column);
+        newlineAdded = true;
+      }
+    }
+
+    if (isGetterOrSetter(token, lastToken, stack)) {
+      write(" ",
+            lastToken.loc.start.line,
+            lastToken.loc.start.column);
+    }
+
+    if (ttl == ":" && stack[stack.length - 1] == "?") {
+      write(" ",
+            lastToken.loc.start.line,
+            lastToken.loc.start.column);
+    }
+
+    if (lastToken && ltt != "}" && ttk == "else") {
+      write(" ",
+            lastToken.loc.start.line,
+            lastToken.loc.start.column);
+    }
+
+    function ensureNewline() {
+      if (!newlineAdded) {
+        write("\n",
+              lastToken.loc.start.line,
+              lastToken.loc.start.column);
+        newlineAdded = true;
+      }
+    }
+
+    if (isASI(token, lastToken)) {
+      ensureNewline();
+    }
+
+    if (decrementsIndent(ttl, stack)) {
+      ensureNewline();
+    }
+
+    if (newlineAdded) {
+      if (ttk == "case" || ttk == "default") {
+        write(repeat(options.indent, indentLevel - 1),
+              token.loc.start.line,
+              token.loc.start.column);
+      } else {
+        write(repeat(options.indent, indentLevel),
+              token.loc.start.line,
+              token.loc.start.column);
+      }
+    } else if (needsSpaceAfter(token, lastToken)) {
+      write(" ",
+            lastToken.loc.start.line,
+            lastToken.loc.start.column);
+    }
+  }
+
+  /**
+   * Repeat the `str` string `n` times.
+   *
+   * @param String str
+   *        The string to be repeated.
+   * @param Number n
+   *        The number of times to repeat the string.
+   *
+   * @returns String
+   *          The repeated string.
+   */
+  function repeat(str, n) {
+    var result = "";
+    while (n > 0) {
+      if (n & 1) {
+        result += str;
+      }
+      n >>= 1;
+      str += str;
+    }
+    return result;
+  }
+
+  /**
+   * Make sure that we output the escaped character combination inside string
+   * literals instead of various problematic characters.
+   */
+  var sanitize = (function () {
+    var escapeCharacters = {
+      // Backslash
+      "\\": "\\\\",
+      // Newlines
+      "\n": "\\n",
+      // Carriage return
+      "\r": "\\r",
+      // Tab
+      "\t": "\\t",
+      // Vertical tab
+      "\v": "\\v",
+      // Form feed
+      "\f": "\\f",
+      // Null character
+      "\0": "\\0",
+      // Single quotes
+      "'": "\\'"
+    };
+
+    var regExpString = "("
+      + Object.keys(escapeCharacters)
+              .map(function (c) { return escapeCharacters[c]; })
+              .join("|")
+      + ")";
+    var escapeCharactersRegExp = new RegExp(regExpString, "g");
+
+    return function (str) {
+      return str.replace(escapeCharactersRegExp, function (_, c) {
+        return escapeCharacters[c];
+      });
+    };
+  }());
+  /**
+   * Add the given token to the pretty printed results.
+   *
+   * @param Object token
+   *        The token to add.
+   * @param Function write
+   *        The function to write pretty printed code to the result SourceNode.
+   */
+  function addToken(token, write) {
+    if (token.type.label == "string") {
+      write("'" + sanitize(token.value) + "'",
+            token.loc.start.line,
+            token.loc.start.column);
+    } else if (token.type.label == "regexp") {
+      write(String(token.value.value),
+            token.loc.start.line,
+            token.loc.start.column);
+    } else {
+      write(String(token.value != null ? token.value : token.type.label),
+            token.loc.start.line,
+            token.loc.start.column);
+    }
+  }
+
+  /**
+   * Returns true if the given token type belongs on the stack.
+   */
+  function belongsOnStack(token) {
+    var ttl = token.type.label;
+    var ttk = token.type.keyword;
+    return ttl == "{"
+      || ttl == "("
+      || ttl == "["
+      || ttl == "?"
+      || ttk == "do"
+      || ttk == "switch"
+      || ttk == "case"
+      || ttk == "default";
+  }
+
+  /**
+   * Returns true if the given token should cause us to pop the stack.
+   */
+  function shouldStackPop(token, stack) {
+    var ttl = token.type.label;
+    var ttk = token.type.keyword;
+    var top = stack[stack.length - 1];
+    return ttl == "]"
+      || ttl == ")"
+      || ttl == "}"
+      || (ttl == ":" && (top == "case" || top == "default" || top == "?"))
+      || (ttk == "while" && top == "do");
+  }
+
+  /**
+   * Returns true if the given token type should cause us to decrement the
+   * indent level.
+   */
+  function decrementsIndent(tokenType, stack) {
+    return tokenType == "}"
+      || (tokenType == "]" && stack[stack.length - 1] == "[\n");
+  }
+
+  /**
+   * Returns true if the given token should cause us to increment the indent
+   * level.
+   */
+  function incrementsIndent(token) {
+    return token.type.label == "{"
+      || token.isArrayLiteral
+      || token.type.keyword == "switch";
+  }
+
+  /**
+   * Add a comment to the pretty printed code.
+   *
+   * @param Function write
+   *        The function to write pretty printed code to the result SourceNode.
+   * @param Number indentLevel
+   *        The number of indents deep we are.
+   * @param Object options
+   *        The options object.
+   * @param Boolean block
+   *        True if the comment is a multiline block style comment.
+   * @param String text
+   *        The text of the comment.
+   * @param Number line
+   *        The line number to comment appeared on.
+   * @param Number column
+   *        The column number the comment appeared on.
+   */
+  function addComment(write, indentLevel, options, block, text, line, column) {
+    var indentString = repeat(options.indent, indentLevel);
+
+    write(indentString, line, column);
+    if (block) {
+      write("/*");
+      write(text
+            .split(new RegExp("/\n" + indentString + "/", "g"))
+            .join("\n" + indentString));
+      write("*/");
+    } else {
+      write("//");
+      write(text);
+    }
+    write("\n");
+  }
+
+  /**
+   * The main function.
+   *
+   * @param String input
+   *        The ugly JS code we want to pretty print.
+   * @param Object options
+   *        The options object. Provides configurability of the pretty
+   *        printing. Properties:
+   *          - url: The URL string of the ugly JS code.
+   *          - indent: The string to indent code by.
+   *
+   * @returns Object
+   *          An object with the following properties:
+   *            - code: The pretty printed code string.
+   *            - map: A SourceMapGenerator instance.
+   */
+  return function prettyFast(input, options) {
+    // The level of indents deep we are.
+    var indentLevel = 0;
+
+    // We will accumulate the pretty printed code in this SourceNode.
+    var result = new SourceNode();
+
+    /**
+     * Write a pretty printed string to the result SourceNode.
+     *
+     * We buffer our writes so that we only create one mapping for each line in
+     * the source map. This enhances performance by avoiding extraneous mapping
+     * serialization, and flattening the tree that
+     * `SourceNode#toStringWithSourceMap` will have to recursively walk. When
+     * timing how long it takes to pretty print jQuery, this optimization
+     * brought the time down from ~390 ms to ~190ms!
+     *
+     * @param String str
+     *        The string to be added to the result.
+     * @param Number line
+     *        The line number the string came from in the ugly source.
+     * @param Number column
+     *        The column number the string came from in the ugly source.
+     */
+    var write = (function () {
+      var buffer = [];
+      var bufferLine = -1;
+      var bufferColumn = -1;
+      return function write(str, line, column) {
+        if (line != null && bufferLine === -1) {
+          bufferLine = line;
+        }
+        if (column != null && bufferColumn === -1) {
+          bufferColumn = column;
+        }
+        buffer.push(str);
+
+        if (str == "\n") {
+          var lineStr = "";
+          for (var i = 0, len = buffer.length; i < len; i++) {
+            lineStr += buffer[i];
+          }
+          result.add(new SourceNode(bufferLine, bufferColumn, options.url,
+                                    lineStr));
+          buffer.splice(0, buffer.length);
+          bufferLine = -1;
+          bufferColumn = -1;
+        }
+      };
+    }());
+
+    // Whether or not we added a newline on after we added the last token.
+    var addedNewline = false;
+
+    // The current token we will be adding to the pretty printed code.
+    var token;
+
+    // Shorthand for token.type.label, so we don't have to repeatedly access
+    // properties.
+    var ttl;
+
+    // Shorthand for token.type.keyword, so we don't have to repeatedly access
+    // properties.
+    var ttk;
+
+    // The last token we added to the pretty printed code.
+    var lastToken;
+
+    // Stack of token types/keywords that can affect whether we want to add a
+    // newline or a space. We can make that decision based on what token type is
+    // on the top of the stack. For example, a comma in a parameter list should
+    // be followed by a space, while a comma in an object literal should be
+    // followed by a newline.
+    //
+    // Strings that go on the stack:
+    //
+    //   - "{"
+    //   - "("
+    //   - "["
+    //   - "[\n"
+    //   - "do"
+    //   - "?"
+    //   - "switch"
+    //   - "case"
+    //   - "default"
+    //
+    // The difference between "[" and "[\n" is that "[\n" is used when we are
+    // treating "[" and "]" tokens as line delimiters and should increment and
+    // decrement the indent level when we find them.
+    var stack = [];
+
+    // Pass through acorn's tokenizer and append tokens and comments into a
+    // single queue to process.  For example, the source file:
+    //
+    //     foo
+    //     // a
+    //     // b
+    //     bar
+    //
+    // After this process, tokenQueue has the following token stream:
+    //
+    //     [ foo, '// a', '// b', bar]
+    var tokenQueue = [];
+
+    var tokens = acorn.tokenizer(input, {
+      locations: true,
+      sourceFile: options.url,
+      onComment: function (block, text, start, end, startLoc, endLoc) {
+        tokenQueue.push({
+          type: {},
+          comment: true,
+          block: block,
+          text: text,
+          loc: { start: startLoc, end: endLoc }
+        });
+      }
+    });
+
+    for (;;) {
+      token = tokens.getToken();
+      tokenQueue.push(token);
+      if (token.type.label == "eof") {
+        break;
+      }
+    }
+
+    for (var i = 0; i < tokenQueue.length; i++) {
+      token = tokenQueue[i];
+
+      if (token.comment) {
+        var commentIndentLevel = indentLevel;
+        if (lastToken && (lastToken.loc.end.line == token.loc.start.line)) {
+          commentIndentLevel = 0;
+          write(" ");
+        }
+        addComment(write, commentIndentLevel, options, token.block, token.text,
+                   token.loc.start.line, token.loc.start.column);
+        addedNewline = true;
+        continue;
+      }
+
+      ttk = token.type.keyword;
+      ttl = token.type.label;
+
+      if (ttl == "eof") {
+        if (!addedNewline) {
+          write("\n");
+        }
+        break;
+      }
+
+      token.isArrayLiteral = isArrayLiteral(token, lastToken);
+
+      if (belongsOnStack(token)) {
+        if (token.isArrayLiteral) {
+          stack.push("[\n");
+        } else {
+          stack.push(ttl || ttk);
+        }
+      }
+
+      if (decrementsIndent(ttl, stack)) {
+        indentLevel--;
+        if (ttl == "}"
+            && stack.length > 1
+            && stack[stack.length - 2] == "switch") {
+          indentLevel--;
+        }
+      }
+
+      prependWhiteSpace(token, lastToken, addedNewline, write, options,
+                        indentLevel, stack);
+      addToken(token, write);
+
+      // If the next token is going to be a comment starting on the same line,
+      // then no need to add one here
+      var nextToken = tokenQueue[i + 1];
+      if (!nextToken || !nextToken.comment || token.loc.end.line != nextToken.loc.start.line) {
+        addedNewline = appendNewline(token, write, stack);
+      }
+
+      if (shouldStackPop(token, stack)) {
+        stack.pop();
+        if (token == "}" && stack.length
+            && stack[stack.length - 1] == "switch") {
+          stack.pop();
+        }
+      }
+
+      if (incrementsIndent(token)) {
+        indentLevel++;
+      }
+
+      // Acorn's tokenizer re-uses tokens, so we have to copy the last token on
+      // every iteration. We follow acorn's lead here, and reuse the lastToken
+      // object the same way that acorn reuses the token object. This allows us
+      // to avoid allocations and minimize GC pauses.
+      if (!lastToken) {
+        lastToken = { loc: { start: {}, end: {} } };
+      }
+      lastToken.start = token.start;
+      lastToken.end = token.end;
+      lastToken.loc.start.line = token.loc.start.line;
+      lastToken.loc.start.column = token.loc.start.column;
+      lastToken.loc.end.line = token.loc.end.line;
+      lastToken.loc.end.column = token.loc.end.column;
+      lastToken.type = token.type;
+      lastToken.value = token.value;
+      lastToken.isArrayLiteral = token.isArrayLiteral;
+    }
+
+    return result.toStringWithSourceMap({ file: options.url });
+  };
+
+}.bind(this)));
+
+
+/***/ }),
+
+/***/ 815:
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -5687,14 +4989,584 @@ Object.defineProperty(exports, '__esModule', { value: true });
  * Licensed under the New BSD license. See LICENSE.txt or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-exports.SourceMapGenerator = __webpack_require__(301).SourceMapGenerator;
-exports.SourceMapConsumer = __webpack_require__(810).SourceMapConsumer;
-exports.SourceNode = __webpack_require__(813).SourceNode;
+exports.SourceMapGenerator = __webpack_require__(816).SourceMapGenerator;
+exports.SourceMapConsumer = __webpack_require__(822).SourceMapConsumer;
+exports.SourceNode = __webpack_require__(825).SourceNode;
 
 
 /***/ }),
 
-/***/ 808:
+/***/ 816:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* -*- Mode: js; js-indent-level: 2; -*- */
+/*
+ * Copyright 2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+var base64VLQ = __webpack_require__(817);
+var util = __webpack_require__(819);
+var ArraySet = __webpack_require__(820).ArraySet;
+var MappingList = __webpack_require__(821).MappingList;
+
+/**
+ * An instance of the SourceMapGenerator represents a source map which is
+ * being built incrementally. You may pass an object with the following
+ * properties:
+ *
+ *   - file: The filename of the generated source.
+ *   - sourceRoot: A root for all relative URLs in this source map.
+ */
+function SourceMapGenerator(aArgs) {
+  if (!aArgs) {
+    aArgs = {};
+  }
+  this._file = util.getArg(aArgs, 'file', null);
+  this._sourceRoot = util.getArg(aArgs, 'sourceRoot', null);
+  this._skipValidation = util.getArg(aArgs, 'skipValidation', false);
+  this._sources = new ArraySet();
+  this._names = new ArraySet();
+  this._mappings = new MappingList();
+  this._sourcesContents = null;
+}
+
+SourceMapGenerator.prototype._version = 3;
+
+/**
+ * Creates a new SourceMapGenerator based on a SourceMapConsumer
+ *
+ * @param aSourceMapConsumer The SourceMap.
+ */
+SourceMapGenerator.fromSourceMap =
+  function SourceMapGenerator_fromSourceMap(aSourceMapConsumer) {
+    var sourceRoot = aSourceMapConsumer.sourceRoot;
+    var generator = new SourceMapGenerator({
+      file: aSourceMapConsumer.file,
+      sourceRoot: sourceRoot
+    });
+    aSourceMapConsumer.eachMapping(function (mapping) {
+      var newMapping = {
+        generated: {
+          line: mapping.generatedLine,
+          column: mapping.generatedColumn
+        }
+      };
+
+      if (mapping.source != null) {
+        newMapping.source = mapping.source;
+        if (sourceRoot != null) {
+          newMapping.source = util.relative(sourceRoot, newMapping.source);
+        }
+
+        newMapping.original = {
+          line: mapping.originalLine,
+          column: mapping.originalColumn
+        };
+
+        if (mapping.name != null) {
+          newMapping.name = mapping.name;
+        }
+      }
+
+      generator.addMapping(newMapping);
+    });
+    aSourceMapConsumer.sources.forEach(function (sourceFile) {
+      var content = aSourceMapConsumer.sourceContentFor(sourceFile);
+      if (content != null) {
+        generator.setSourceContent(sourceFile, content);
+      }
+    });
+    return generator;
+  };
+
+/**
+ * Add a single mapping from original source line and column to the generated
+ * source's line and column for this source map being created. The mapping
+ * object should have the following properties:
+ *
+ *   - generated: An object with the generated line and column positions.
+ *   - original: An object with the original line and column positions.
+ *   - source: The original source file (relative to the sourceRoot).
+ *   - name: An optional original token name for this mapping.
+ */
+SourceMapGenerator.prototype.addMapping =
+  function SourceMapGenerator_addMapping(aArgs) {
+    var generated = util.getArg(aArgs, 'generated');
+    var original = util.getArg(aArgs, 'original', null);
+    var source = util.getArg(aArgs, 'source', null);
+    var name = util.getArg(aArgs, 'name', null);
+
+    if (!this._skipValidation) {
+      this._validateMapping(generated, original, source, name);
+    }
+
+    if (source != null) {
+      source = String(source);
+      if (!this._sources.has(source)) {
+        this._sources.add(source);
+      }
+    }
+
+    if (name != null) {
+      name = String(name);
+      if (!this._names.has(name)) {
+        this._names.add(name);
+      }
+    }
+
+    this._mappings.add({
+      generatedLine: generated.line,
+      generatedColumn: generated.column,
+      originalLine: original != null && original.line,
+      originalColumn: original != null && original.column,
+      source: source,
+      name: name
+    });
+  };
+
+/**
+ * Set the source content for a source file.
+ */
+SourceMapGenerator.prototype.setSourceContent =
+  function SourceMapGenerator_setSourceContent(aSourceFile, aSourceContent) {
+    var source = aSourceFile;
+    if (this._sourceRoot != null) {
+      source = util.relative(this._sourceRoot, source);
+    }
+
+    if (aSourceContent != null) {
+      // Add the source content to the _sourcesContents map.
+      // Create a new _sourcesContents map if the property is null.
+      if (!this._sourcesContents) {
+        this._sourcesContents = Object.create(null);
+      }
+      this._sourcesContents[util.toSetString(source)] = aSourceContent;
+    } else if (this._sourcesContents) {
+      // Remove the source file from the _sourcesContents map.
+      // If the _sourcesContents map is empty, set the property to null.
+      delete this._sourcesContents[util.toSetString(source)];
+      if (Object.keys(this._sourcesContents).length === 0) {
+        this._sourcesContents = null;
+      }
+    }
+  };
+
+/**
+ * Applies the mappings of a sub-source-map for a specific source file to the
+ * source map being generated. Each mapping to the supplied source file is
+ * rewritten using the supplied source map. Note: The resolution for the
+ * resulting mappings is the minimium of this map and the supplied map.
+ *
+ * @param aSourceMapConsumer The source map to be applied.
+ * @param aSourceFile Optional. The filename of the source file.
+ *        If omitted, SourceMapConsumer's file property will be used.
+ * @param aSourceMapPath Optional. The dirname of the path to the source map
+ *        to be applied. If relative, it is relative to the SourceMapConsumer.
+ *        This parameter is needed when the two source maps aren't in the same
+ *        directory, and the source map to be applied contains relative source
+ *        paths. If so, those relative source paths need to be rewritten
+ *        relative to the SourceMapGenerator.
+ */
+SourceMapGenerator.prototype.applySourceMap =
+  function SourceMapGenerator_applySourceMap(aSourceMapConsumer, aSourceFile, aSourceMapPath) {
+    var sourceFile = aSourceFile;
+    // If aSourceFile is omitted, we will use the file property of the SourceMap
+    if (aSourceFile == null) {
+      if (aSourceMapConsumer.file == null) {
+        throw new Error(
+          'SourceMapGenerator.prototype.applySourceMap requires either an explicit source file, ' +
+          'or the source map\'s "file" property. Both were omitted.'
+        );
+      }
+      sourceFile = aSourceMapConsumer.file;
+    }
+    var sourceRoot = this._sourceRoot;
+    // Make "sourceFile" relative if an absolute Url is passed.
+    if (sourceRoot != null) {
+      sourceFile = util.relative(sourceRoot, sourceFile);
+    }
+    // Applying the SourceMap can add and remove items from the sources and
+    // the names array.
+    var newSources = new ArraySet();
+    var newNames = new ArraySet();
+
+    // Find mappings for the "sourceFile"
+    this._mappings.unsortedForEach(function (mapping) {
+      if (mapping.source === sourceFile && mapping.originalLine != null) {
+        // Check if it can be mapped by the source map, then update the mapping.
+        var original = aSourceMapConsumer.originalPositionFor({
+          line: mapping.originalLine,
+          column: mapping.originalColumn
+        });
+        if (original.source != null) {
+          // Copy mapping
+          mapping.source = original.source;
+          if (aSourceMapPath != null) {
+            mapping.source = util.join(aSourceMapPath, mapping.source)
+          }
+          if (sourceRoot != null) {
+            mapping.source = util.relative(sourceRoot, mapping.source);
+          }
+          mapping.originalLine = original.line;
+          mapping.originalColumn = original.column;
+          if (original.name != null) {
+            mapping.name = original.name;
+          }
+        }
+      }
+
+      var source = mapping.source;
+      if (source != null && !newSources.has(source)) {
+        newSources.add(source);
+      }
+
+      var name = mapping.name;
+      if (name != null && !newNames.has(name)) {
+        newNames.add(name);
+      }
+
+    }, this);
+    this._sources = newSources;
+    this._names = newNames;
+
+    // Copy sourcesContents of applied map.
+    aSourceMapConsumer.sources.forEach(function (sourceFile) {
+      var content = aSourceMapConsumer.sourceContentFor(sourceFile);
+      if (content != null) {
+        if (aSourceMapPath != null) {
+          sourceFile = util.join(aSourceMapPath, sourceFile);
+        }
+        if (sourceRoot != null) {
+          sourceFile = util.relative(sourceRoot, sourceFile);
+        }
+        this.setSourceContent(sourceFile, content);
+      }
+    }, this);
+  };
+
+/**
+ * A mapping can have one of the three levels of data:
+ *
+ *   1. Just the generated position.
+ *   2. The Generated position, original position, and original source.
+ *   3. Generated and original position, original source, as well as a name
+ *      token.
+ *
+ * To maintain consistency, we validate that any new mapping being added falls
+ * in to one of these categories.
+ */
+SourceMapGenerator.prototype._validateMapping =
+  function SourceMapGenerator_validateMapping(aGenerated, aOriginal, aSource,
+                                              aName) {
+    // When aOriginal is truthy but has empty values for .line and .column,
+    // it is most likely a programmer error. In this case we throw a very
+    // specific error message to try to guide them the right way.
+    // For example: https://github.com/Polymer/polymer-bundler/pull/519
+    if (aOriginal && typeof aOriginal.line !== 'number' && typeof aOriginal.column !== 'number') {
+        throw new Error(
+            'original.line and original.column are not numbers -- you probably meant to omit ' +
+            'the original mapping entirely and only map the generated position. If so, pass ' +
+            'null for the original mapping instead of an object with empty or null values.'
+        );
+    }
+
+    if (aGenerated && 'line' in aGenerated && 'column' in aGenerated
+        && aGenerated.line > 0 && aGenerated.column >= 0
+        && !aOriginal && !aSource && !aName) {
+      // Case 1.
+      return;
+    }
+    else if (aGenerated && 'line' in aGenerated && 'column' in aGenerated
+             && aOriginal && 'line' in aOriginal && 'column' in aOriginal
+             && aGenerated.line > 0 && aGenerated.column >= 0
+             && aOriginal.line > 0 && aOriginal.column >= 0
+             && aSource) {
+      // Cases 2 and 3.
+      return;
+    }
+    else {
+      throw new Error('Invalid mapping: ' + JSON.stringify({
+        generated: aGenerated,
+        source: aSource,
+        original: aOriginal,
+        name: aName
+      }));
+    }
+  };
+
+/**
+ * Serialize the accumulated mappings in to the stream of base 64 VLQs
+ * specified by the source map format.
+ */
+SourceMapGenerator.prototype._serializeMappings =
+  function SourceMapGenerator_serializeMappings() {
+    var previousGeneratedColumn = 0;
+    var previousGeneratedLine = 1;
+    var previousOriginalColumn = 0;
+    var previousOriginalLine = 0;
+    var previousName = 0;
+    var previousSource = 0;
+    var result = '';
+    var next;
+    var mapping;
+    var nameIdx;
+    var sourceIdx;
+
+    var mappings = this._mappings.toArray();
+    for (var i = 0, len = mappings.length; i < len; i++) {
+      mapping = mappings[i];
+      next = ''
+
+      if (mapping.generatedLine !== previousGeneratedLine) {
+        previousGeneratedColumn = 0;
+        while (mapping.generatedLine !== previousGeneratedLine) {
+          next += ';';
+          previousGeneratedLine++;
+        }
+      }
+      else {
+        if (i > 0) {
+          if (!util.compareByGeneratedPositionsInflated(mapping, mappings[i - 1])) {
+            continue;
+          }
+          next += ',';
+        }
+      }
+
+      next += base64VLQ.encode(mapping.generatedColumn
+                                 - previousGeneratedColumn);
+      previousGeneratedColumn = mapping.generatedColumn;
+
+      if (mapping.source != null) {
+        sourceIdx = this._sources.indexOf(mapping.source);
+        next += base64VLQ.encode(sourceIdx - previousSource);
+        previousSource = sourceIdx;
+
+        // lines are stored 0-based in SourceMap spec version 3
+        next += base64VLQ.encode(mapping.originalLine - 1
+                                   - previousOriginalLine);
+        previousOriginalLine = mapping.originalLine - 1;
+
+        next += base64VLQ.encode(mapping.originalColumn
+                                   - previousOriginalColumn);
+        previousOriginalColumn = mapping.originalColumn;
+
+        if (mapping.name != null) {
+          nameIdx = this._names.indexOf(mapping.name);
+          next += base64VLQ.encode(nameIdx - previousName);
+          previousName = nameIdx;
+        }
+      }
+
+      result += next;
+    }
+
+    return result;
+  };
+
+SourceMapGenerator.prototype._generateSourcesContent =
+  function SourceMapGenerator_generateSourcesContent(aSources, aSourceRoot) {
+    return aSources.map(function (source) {
+      if (!this._sourcesContents) {
+        return null;
+      }
+      if (aSourceRoot != null) {
+        source = util.relative(aSourceRoot, source);
+      }
+      var key = util.toSetString(source);
+      return Object.prototype.hasOwnProperty.call(this._sourcesContents, key)
+        ? this._sourcesContents[key]
+        : null;
+    }, this);
+  };
+
+/**
+ * Externalize the source map.
+ */
+SourceMapGenerator.prototype.toJSON =
+  function SourceMapGenerator_toJSON() {
+    var map = {
+      version: this._version,
+      sources: this._sources.toArray(),
+      names: this._names.toArray(),
+      mappings: this._serializeMappings()
+    };
+    if (this._file != null) {
+      map.file = this._file;
+    }
+    if (this._sourceRoot != null) {
+      map.sourceRoot = this._sourceRoot;
+    }
+    if (this._sourcesContents) {
+      map.sourcesContent = this._generateSourcesContent(map.sources, map.sourceRoot);
+    }
+
+    return map;
+  };
+
+/**
+ * Render the source map being generated to a string.
+ */
+SourceMapGenerator.prototype.toString =
+  function SourceMapGenerator_toString() {
+    return JSON.stringify(this.toJSON());
+  };
+
+exports.SourceMapGenerator = SourceMapGenerator;
+
+
+/***/ }),
+
+/***/ 817:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* -*- Mode: js; js-indent-level: 2; -*- */
+/*
+ * Copyright 2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ *
+ * Based on the Base 64 VLQ implementation in Closure Compiler:
+ * https://code.google.com/p/closure-compiler/source/browse/trunk/src/com/google/debugging/sourcemap/Base64VLQ.java
+ *
+ * Copyright 2011 The Closure Compiler Authors. All rights reserved.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above
+ *    copyright notice, this list of conditions and the following
+ *    disclaimer in the documentation and/or other materials provided
+ *    with the distribution.
+ *  * Neither the name of Google Inc. nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+var base64 = __webpack_require__(818);
+
+// A single base 64 digit can contain 6 bits of data. For the base 64 variable
+// length quantities we use in the source map spec, the first bit is the sign,
+// the next four bits are the actual value, and the 6th bit is the
+// continuation bit. The continuation bit tells us whether there are more
+// digits in this value following this digit.
+//
+//   Continuation
+//   |    Sign
+//   |    |
+//   V    V
+//   101011
+
+var VLQ_BASE_SHIFT = 5;
+
+// binary: 100000
+var VLQ_BASE = 1 << VLQ_BASE_SHIFT;
+
+// binary: 011111
+var VLQ_BASE_MASK = VLQ_BASE - 1;
+
+// binary: 100000
+var VLQ_CONTINUATION_BIT = VLQ_BASE;
+
+/**
+ * Converts from a two-complement value to a value where the sign bit is
+ * placed in the least significant bit.  For example, as decimals:
+ *   1 becomes 2 (10 binary), -1 becomes 3 (11 binary)
+ *   2 becomes 4 (100 binary), -2 becomes 5 (101 binary)
+ */
+function toVLQSigned(aValue) {
+  return aValue < 0
+    ? ((-aValue) << 1) + 1
+    : (aValue << 1) + 0;
+}
+
+/**
+ * Converts to a two-complement value from a value where the sign bit is
+ * placed in the least significant bit.  For example, as decimals:
+ *   2 (10 binary) becomes 1, 3 (11 binary) becomes -1
+ *   4 (100 binary) becomes 2, 5 (101 binary) becomes -2
+ */
+function fromVLQSigned(aValue) {
+  var isNegative = (aValue & 1) === 1;
+  var shifted = aValue >> 1;
+  return isNegative
+    ? -shifted
+    : shifted;
+}
+
+/**
+ * Returns the base 64 VLQ encoded value.
+ */
+exports.encode = function base64VLQ_encode(aValue) {
+  var encoded = "";
+  var digit;
+
+  var vlq = toVLQSigned(aValue);
+
+  do {
+    digit = vlq & VLQ_BASE_MASK;
+    vlq >>>= VLQ_BASE_SHIFT;
+    if (vlq > 0) {
+      // There are still more digits in this value, so we must make sure the
+      // continuation bit is marked.
+      digit |= VLQ_CONTINUATION_BIT;
+    }
+    encoded += base64.encode(digit);
+  } while (vlq > 0);
+
+  return encoded;
+};
+
+/**
+ * Decodes the next base 64 VLQ value from the given string and returns the
+ * value and the rest of the string via the out parameter.
+ */
+exports.decode = function base64VLQ_decode(aStr, aIndex, aOutParam) {
+  var strLen = aStr.length;
+  var result = 0;
+  var shift = 0;
+  var continuation, digit;
+
+  do {
+    if (aIndex >= strLen) {
+      throw new Error("Expected more digits in base 64 VLQ value.");
+    }
+
+    digit = base64.decode(aStr.charCodeAt(aIndex++));
+    if (digit === -1) {
+      throw new Error("Invalid base64 digit: " + aStr.charAt(aIndex - 1));
+    }
+
+    continuation = !!(digit & VLQ_CONTINUATION_BIT);
+    digit &= VLQ_BASE_MASK;
+    result = result + (digit << shift);
+    shift += VLQ_BASE_SHIFT;
+  } while (continuation);
+
+  aOutParam.value = fromVLQSigned(result);
+  aOutParam.rest = aIndex;
+};
+
+
+/***/ }),
+
+/***/ 818:
 /***/ (function(module, exports) {
 
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5768,7 +5640,559 @@ exports.decode = function (charCode) {
 
 /***/ }),
 
-/***/ 809:
+/***/ 819:
+/***/ (function(module, exports) {
+
+/* -*- Mode: js; js-indent-level: 2; -*- */
+/*
+ * Copyright 2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+/**
+ * This is a helper function for getting values from parameter/options
+ * objects.
+ *
+ * @param args The object we are extracting values from
+ * @param name The name of the property we are getting.
+ * @param defaultValue An optional value to return if the property is missing
+ * from the object. If this is not specified and the property is missing, an
+ * error will be thrown.
+ */
+function getArg(aArgs, aName, aDefaultValue) {
+  if (aName in aArgs) {
+    return aArgs[aName];
+  } else if (arguments.length === 3) {
+    return aDefaultValue;
+  } else {
+    throw new Error('"' + aName + '" is a required argument.');
+  }
+}
+exports.getArg = getArg;
+
+var urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.]*)(?::(\d+))?(\S*)$/;
+var dataUrlRegexp = /^data:.+\,.+$/;
+
+function urlParse(aUrl) {
+  var match = aUrl.match(urlRegexp);
+  if (!match) {
+    return null;
+  }
+  return {
+    scheme: match[1],
+    auth: match[2],
+    host: match[3],
+    port: match[4],
+    path: match[5]
+  };
+}
+exports.urlParse = urlParse;
+
+function urlGenerate(aParsedUrl) {
+  var url = '';
+  if (aParsedUrl.scheme) {
+    url += aParsedUrl.scheme + ':';
+  }
+  url += '//';
+  if (aParsedUrl.auth) {
+    url += aParsedUrl.auth + '@';
+  }
+  if (aParsedUrl.host) {
+    url += aParsedUrl.host;
+  }
+  if (aParsedUrl.port) {
+    url += ":" + aParsedUrl.port
+  }
+  if (aParsedUrl.path) {
+    url += aParsedUrl.path;
+  }
+  return url;
+}
+exports.urlGenerate = urlGenerate;
+
+/**
+ * Normalizes a path, or the path portion of a URL:
+ *
+ * - Replaces consecutive slashes with one slash.
+ * - Removes unnecessary '.' parts.
+ * - Removes unnecessary '<dir>/..' parts.
+ *
+ * Based on code in the Node.js 'path' core module.
+ *
+ * @param aPath The path or url to normalize.
+ */
+function normalize(aPath) {
+  var path = aPath;
+  var url = urlParse(aPath);
+  if (url) {
+    if (!url.path) {
+      return aPath;
+    }
+    path = url.path;
+  }
+  var isAbsolute = exports.isAbsolute(path);
+
+  var parts = path.split(/\/+/);
+  for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
+    part = parts[i];
+    if (part === '.') {
+      parts.splice(i, 1);
+    } else if (part === '..') {
+      up++;
+    } else if (up > 0) {
+      if (part === '') {
+        // The first part is blank if the path is absolute. Trying to go
+        // above the root is a no-op. Therefore we can remove all '..' parts
+        // directly after the root.
+        parts.splice(i + 1, up);
+        up = 0;
+      } else {
+        parts.splice(i, 2);
+        up--;
+      }
+    }
+  }
+  path = parts.join('/');
+
+  if (path === '') {
+    path = isAbsolute ? '/' : '.';
+  }
+
+  if (url) {
+    url.path = path;
+    return urlGenerate(url);
+  }
+  return path;
+}
+exports.normalize = normalize;
+
+/**
+ * Joins two paths/URLs.
+ *
+ * @param aRoot The root path or URL.
+ * @param aPath The path or URL to be joined with the root.
+ *
+ * - If aPath is a URL or a data URI, aPath is returned, unless aPath is a
+ *   scheme-relative URL: Then the scheme of aRoot, if any, is prepended
+ *   first.
+ * - Otherwise aPath is a path. If aRoot is a URL, then its path portion
+ *   is updated with the result and aRoot is returned. Otherwise the result
+ *   is returned.
+ *   - If aPath is absolute, the result is aPath.
+ *   - Otherwise the two paths are joined with a slash.
+ * - Joining for example 'http://' and 'www.example.com' is also supported.
+ */
+function join(aRoot, aPath) {
+  if (aRoot === "") {
+    aRoot = ".";
+  }
+  if (aPath === "") {
+    aPath = ".";
+  }
+  var aPathUrl = urlParse(aPath);
+  var aRootUrl = urlParse(aRoot);
+  if (aRootUrl) {
+    aRoot = aRootUrl.path || '/';
+  }
+
+  // `join(foo, '//www.example.org')`
+  if (aPathUrl && !aPathUrl.scheme) {
+    if (aRootUrl) {
+      aPathUrl.scheme = aRootUrl.scheme;
+    }
+    return urlGenerate(aPathUrl);
+  }
+
+  if (aPathUrl || aPath.match(dataUrlRegexp)) {
+    return aPath;
+  }
+
+  // `join('http://', 'www.example.com')`
+  if (aRootUrl && !aRootUrl.host && !aRootUrl.path) {
+    aRootUrl.host = aPath;
+    return urlGenerate(aRootUrl);
+  }
+
+  var joined = aPath.charAt(0) === '/'
+    ? aPath
+    : normalize(aRoot.replace(/\/+$/, '') + '/' + aPath);
+
+  if (aRootUrl) {
+    aRootUrl.path = joined;
+    return urlGenerate(aRootUrl);
+  }
+  return joined;
+}
+exports.join = join;
+
+exports.isAbsolute = function (aPath) {
+  return aPath.charAt(0) === '/' || !!aPath.match(urlRegexp);
+};
+
+/**
+ * Make a path relative to a URL or another path.
+ *
+ * @param aRoot The root path or URL.
+ * @param aPath The path or URL to be made relative to aRoot.
+ */
+function relative(aRoot, aPath) {
+  if (aRoot === "") {
+    aRoot = ".";
+  }
+
+  aRoot = aRoot.replace(/\/$/, '');
+
+  // It is possible for the path to be above the root. In this case, simply
+  // checking whether the root is a prefix of the path won't work. Instead, we
+  // need to remove components from the root one by one, until either we find
+  // a prefix that fits, or we run out of components to remove.
+  var level = 0;
+  while (aPath.indexOf(aRoot + '/') !== 0) {
+    var index = aRoot.lastIndexOf("/");
+    if (index < 0) {
+      return aPath;
+    }
+
+    // If the only part of the root that is left is the scheme (i.e. http://,
+    // file:///, etc.), one or more slashes (/), or simply nothing at all, we
+    // have exhausted all components, so the path is not relative to the root.
+    aRoot = aRoot.slice(0, index);
+    if (aRoot.match(/^([^\/]+:\/)?\/*$/)) {
+      return aPath;
+    }
+
+    ++level;
+  }
+
+  // Make sure we add a "../" for each component we removed from the root.
+  return Array(level + 1).join("../") + aPath.substr(aRoot.length + 1);
+}
+exports.relative = relative;
+
+var supportsNullProto = (function () {
+  var obj = Object.create(null);
+  return !('__proto__' in obj);
+}());
+
+function identity (s) {
+  return s;
+}
+
+/**
+ * Because behavior goes wacky when you set `__proto__` on objects, we
+ * have to prefix all the strings in our set with an arbitrary character.
+ *
+ * See https://github.com/mozilla/source-map/pull/31 and
+ * https://github.com/mozilla/source-map/issues/30
+ *
+ * @param String aStr
+ */
+function toSetString(aStr) {
+  if (isProtoString(aStr)) {
+    return '$' + aStr;
+  }
+
+  return aStr;
+}
+exports.toSetString = supportsNullProto ? identity : toSetString;
+
+function fromSetString(aStr) {
+  if (isProtoString(aStr)) {
+    return aStr.slice(1);
+  }
+
+  return aStr;
+}
+exports.fromSetString = supportsNullProto ? identity : fromSetString;
+
+function isProtoString(s) {
+  if (!s) {
+    return false;
+  }
+
+  var length = s.length;
+
+  if (length < 9 /* "__proto__".length */) {
+    return false;
+  }
+
+  if (s.charCodeAt(length - 1) !== 95  /* '_' */ ||
+      s.charCodeAt(length - 2) !== 95  /* '_' */ ||
+      s.charCodeAt(length - 3) !== 111 /* 'o' */ ||
+      s.charCodeAt(length - 4) !== 116 /* 't' */ ||
+      s.charCodeAt(length - 5) !== 111 /* 'o' */ ||
+      s.charCodeAt(length - 6) !== 114 /* 'r' */ ||
+      s.charCodeAt(length - 7) !== 112 /* 'p' */ ||
+      s.charCodeAt(length - 8) !== 95  /* '_' */ ||
+      s.charCodeAt(length - 9) !== 95  /* '_' */) {
+    return false;
+  }
+
+  for (var i = length - 10; i >= 0; i--) {
+    if (s.charCodeAt(i) !== 36 /* '$' */) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Comparator between two mappings where the original positions are compared.
+ *
+ * Optionally pass in `true` as `onlyCompareGenerated` to consider two
+ * mappings with the same original source/line/column, but different generated
+ * line and column the same. Useful when searching for a mapping with a
+ * stubbed out mapping.
+ */
+function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
+  var cmp = mappingA.source - mappingB.source;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalLine - mappingB.originalLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalColumn - mappingB.originalColumn;
+  if (cmp !== 0 || onlyCompareOriginal) {
+    return cmp;
+  }
+
+  cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.generatedLine - mappingB.generatedLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  return mappingA.name - mappingB.name;
+}
+exports.compareByOriginalPositions = compareByOriginalPositions;
+
+/**
+ * Comparator between two mappings with deflated source and name indices where
+ * the generated positions are compared.
+ *
+ * Optionally pass in `true` as `onlyCompareGenerated` to consider two
+ * mappings with the same generated line and column, but different
+ * source/name/original line and column the same. Useful when searching for a
+ * mapping with a stubbed out mapping.
+ */
+function compareByGeneratedPositionsDeflated(mappingA, mappingB, onlyCompareGenerated) {
+  var cmp = mappingA.generatedLine - mappingB.generatedLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+  if (cmp !== 0 || onlyCompareGenerated) {
+    return cmp;
+  }
+
+  cmp = mappingA.source - mappingB.source;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalLine - mappingB.originalLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalColumn - mappingB.originalColumn;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  return mappingA.name - mappingB.name;
+}
+exports.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated;
+
+function strcmp(aStr1, aStr2) {
+  if (aStr1 === aStr2) {
+    return 0;
+  }
+
+  if (aStr1 > aStr2) {
+    return 1;
+  }
+
+  return -1;
+}
+
+/**
+ * Comparator between two mappings with inflated source and name strings where
+ * the generated positions are compared.
+ */
+function compareByGeneratedPositionsInflated(mappingA, mappingB) {
+  var cmp = mappingA.generatedLine - mappingB.generatedLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = strcmp(mappingA.source, mappingB.source);
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalLine - mappingB.originalLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalColumn - mappingB.originalColumn;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  return strcmp(mappingA.name, mappingB.name);
+}
+exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
+
+
+/***/ }),
+
+/***/ 820:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* -*- Mode: js; js-indent-level: 2; -*- */
+/*
+ * Copyright 2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+var util = __webpack_require__(819);
+var has = Object.prototype.hasOwnProperty;
+var hasNativeMap = typeof Map !== "undefined";
+
+/**
+ * A data structure which is a combination of an array and a set. Adding a new
+ * member is O(1), testing for membership is O(1), and finding the index of an
+ * element is O(1). Removing elements from the set is not supported. Only
+ * strings are supported for membership.
+ */
+function ArraySet() {
+  this._array = [];
+  this._set = hasNativeMap ? new Map() : Object.create(null);
+}
+
+/**
+ * Static method for creating ArraySet instances from an existing array.
+ */
+ArraySet.fromArray = function ArraySet_fromArray(aArray, aAllowDuplicates) {
+  var set = new ArraySet();
+  for (var i = 0, len = aArray.length; i < len; i++) {
+    set.add(aArray[i], aAllowDuplicates);
+  }
+  return set;
+};
+
+/**
+ * Return how many unique items are in this ArraySet. If duplicates have been
+ * added, than those do not count towards the size.
+ *
+ * @returns Number
+ */
+ArraySet.prototype.size = function ArraySet_size() {
+  return hasNativeMap ? this._set.size : Object.getOwnPropertyNames(this._set).length;
+};
+
+/**
+ * Add the given string to this set.
+ *
+ * @param String aStr
+ */
+ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
+  var sStr = hasNativeMap ? aStr : util.toSetString(aStr);
+  var isDuplicate = hasNativeMap ? this.has(aStr) : has.call(this._set, sStr);
+  var idx = this._array.length;
+  if (!isDuplicate || aAllowDuplicates) {
+    this._array.push(aStr);
+  }
+  if (!isDuplicate) {
+    if (hasNativeMap) {
+      this._set.set(aStr, idx);
+    } else {
+      this._set[sStr] = idx;
+    }
+  }
+};
+
+/**
+ * Is the given string a member of this set?
+ *
+ * @param String aStr
+ */
+ArraySet.prototype.has = function ArraySet_has(aStr) {
+  if (hasNativeMap) {
+    return this._set.has(aStr);
+  } else {
+    var sStr = util.toSetString(aStr);
+    return has.call(this._set, sStr);
+  }
+};
+
+/**
+ * What is the index of the given string in the array?
+ *
+ * @param String aStr
+ */
+ArraySet.prototype.indexOf = function ArraySet_indexOf(aStr) {
+  if (hasNativeMap) {
+    var idx = this._set.get(aStr);
+    if (idx >= 0) {
+        return idx;
+    }
+  } else {
+    var sStr = util.toSetString(aStr);
+    if (has.call(this._set, sStr)) {
+      return this._set[sStr];
+    }
+  }
+
+  throw new Error('"' + aStr + '" is not in the set.');
+};
+
+/**
+ * What is the element at the given index?
+ *
+ * @param Number aIdx
+ */
+ArraySet.prototype.at = function ArraySet_at(aIdx) {
+  if (aIdx >= 0 && aIdx < this._array.length) {
+    return this._array[aIdx];
+  }
+  throw new Error('No element indexed by ' + aIdx);
+};
+
+/**
+ * Returns the array representation of this set (which has the proper indices
+ * indicated by indexOf). Note that this is a copy of the internal array used
+ * for storing the members so that no one can mess with internal state.
+ */
+ArraySet.prototype.toArray = function ArraySet_toArray() {
+  return this._array.slice();
+};
+
+exports.ArraySet = ArraySet;
+
+
+/***/ }),
+
+/***/ 821:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5778,7 +6202,7 @@ exports.decode = function (charCode) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-var util = __webpack_require__(87);
+var util = __webpack_require__(819);
 
 /**
  * Determine whether mappingB is after mappingA with respect to generated
@@ -5854,7 +6278,7 @@ exports.MappingList = MappingList;
 
 /***/ }),
 
-/***/ 810:
+/***/ 822:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5864,11 +6288,11 @@ exports.MappingList = MappingList;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-var util = __webpack_require__(87);
-var binarySearch = __webpack_require__(811);
-var ArraySet = __webpack_require__(303).ArraySet;
-var base64VLQ = __webpack_require__(302);
-var quickSort = __webpack_require__(812).quickSort;
+var util = __webpack_require__(819);
+var binarySearch = __webpack_require__(823);
+var ArraySet = __webpack_require__(820).ArraySet;
+var base64VLQ = __webpack_require__(817);
+var quickSort = __webpack_require__(824).quickSort;
 
 function SourceMapConsumer(aSourceMap) {
   var sourceMap = aSourceMap;
@@ -6943,7 +7367,7 @@ exports.IndexedSourceMapConsumer = IndexedSourceMapConsumer;
 
 /***/ }),
 
-/***/ 811:
+/***/ 823:
 /***/ (function(module, exports) {
 
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -7061,7 +7485,7 @@ exports.search = function search(aNeedle, aHaystack, aCompare, aBias) {
 
 /***/ }),
 
-/***/ 812:
+/***/ 824:
 /***/ (function(module, exports) {
 
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -7182,7 +7606,7 @@ exports.quickSort = function (ary, comparator) {
 
 /***/ }),
 
-/***/ 813:
+/***/ 825:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -7192,8 +7616,8 @@ exports.quickSort = function (ary, comparator) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-var SourceMapGenerator = __webpack_require__(301).SourceMapGenerator;
-var util = __webpack_require__(87);
+var SourceMapGenerator = __webpack_require__(816).SourceMapGenerator;
+var util = __webpack_require__(819);
 
 // Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
 // operating systems these days (capturing the result).
@@ -7598,430 +8022,6 @@ SourceNode.prototype.toStringWithSourceMap = function SourceNode_toStringWithSou
 };
 
 exports.SourceNode = SourceNode;
-
-
-/***/ }),
-
-/***/ 87:
-/***/ (function(module, exports) {
-
-/* -*- Mode: js; js-indent-level: 2; -*- */
-/*
- * Copyright 2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-
-/**
- * This is a helper function for getting values from parameter/options
- * objects.
- *
- * @param args The object we are extracting values from
- * @param name The name of the property we are getting.
- * @param defaultValue An optional value to return if the property is missing
- * from the object. If this is not specified and the property is missing, an
- * error will be thrown.
- */
-function getArg(aArgs, aName, aDefaultValue) {
-  if (aName in aArgs) {
-    return aArgs[aName];
-  } else if (arguments.length === 3) {
-    return aDefaultValue;
-  } else {
-    throw new Error('"' + aName + '" is a required argument.');
-  }
-}
-exports.getArg = getArg;
-
-var urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.]*)(?::(\d+))?(\S*)$/;
-var dataUrlRegexp = /^data:.+\,.+$/;
-
-function urlParse(aUrl) {
-  var match = aUrl.match(urlRegexp);
-  if (!match) {
-    return null;
-  }
-  return {
-    scheme: match[1],
-    auth: match[2],
-    host: match[3],
-    port: match[4],
-    path: match[5]
-  };
-}
-exports.urlParse = urlParse;
-
-function urlGenerate(aParsedUrl) {
-  var url = '';
-  if (aParsedUrl.scheme) {
-    url += aParsedUrl.scheme + ':';
-  }
-  url += '//';
-  if (aParsedUrl.auth) {
-    url += aParsedUrl.auth + '@';
-  }
-  if (aParsedUrl.host) {
-    url += aParsedUrl.host;
-  }
-  if (aParsedUrl.port) {
-    url += ":" + aParsedUrl.port
-  }
-  if (aParsedUrl.path) {
-    url += aParsedUrl.path;
-  }
-  return url;
-}
-exports.urlGenerate = urlGenerate;
-
-/**
- * Normalizes a path, or the path portion of a URL:
- *
- * - Replaces consecutive slashes with one slash.
- * - Removes unnecessary '.' parts.
- * - Removes unnecessary '<dir>/..' parts.
- *
- * Based on code in the Node.js 'path' core module.
- *
- * @param aPath The path or url to normalize.
- */
-function normalize(aPath) {
-  var path = aPath;
-  var url = urlParse(aPath);
-  if (url) {
-    if (!url.path) {
-      return aPath;
-    }
-    path = url.path;
-  }
-  var isAbsolute = exports.isAbsolute(path);
-
-  var parts = path.split(/\/+/);
-  for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
-    part = parts[i];
-    if (part === '.') {
-      parts.splice(i, 1);
-    } else if (part === '..') {
-      up++;
-    } else if (up > 0) {
-      if (part === '') {
-        // The first part is blank if the path is absolute. Trying to go
-        // above the root is a no-op. Therefore we can remove all '..' parts
-        // directly after the root.
-        parts.splice(i + 1, up);
-        up = 0;
-      } else {
-        parts.splice(i, 2);
-        up--;
-      }
-    }
-  }
-  path = parts.join('/');
-
-  if (path === '') {
-    path = isAbsolute ? '/' : '.';
-  }
-
-  if (url) {
-    url.path = path;
-    return urlGenerate(url);
-  }
-  return path;
-}
-exports.normalize = normalize;
-
-/**
- * Joins two paths/URLs.
- *
- * @param aRoot The root path or URL.
- * @param aPath The path or URL to be joined with the root.
- *
- * - If aPath is a URL or a data URI, aPath is returned, unless aPath is a
- *   scheme-relative URL: Then the scheme of aRoot, if any, is prepended
- *   first.
- * - Otherwise aPath is a path. If aRoot is a URL, then its path portion
- *   is updated with the result and aRoot is returned. Otherwise the result
- *   is returned.
- *   - If aPath is absolute, the result is aPath.
- *   - Otherwise the two paths are joined with a slash.
- * - Joining for example 'http://' and 'www.example.com' is also supported.
- */
-function join(aRoot, aPath) {
-  if (aRoot === "") {
-    aRoot = ".";
-  }
-  if (aPath === "") {
-    aPath = ".";
-  }
-  var aPathUrl = urlParse(aPath);
-  var aRootUrl = urlParse(aRoot);
-  if (aRootUrl) {
-    aRoot = aRootUrl.path || '/';
-  }
-
-  // `join(foo, '//www.example.org')`
-  if (aPathUrl && !aPathUrl.scheme) {
-    if (aRootUrl) {
-      aPathUrl.scheme = aRootUrl.scheme;
-    }
-    return urlGenerate(aPathUrl);
-  }
-
-  if (aPathUrl || aPath.match(dataUrlRegexp)) {
-    return aPath;
-  }
-
-  // `join('http://', 'www.example.com')`
-  if (aRootUrl && !aRootUrl.host && !aRootUrl.path) {
-    aRootUrl.host = aPath;
-    return urlGenerate(aRootUrl);
-  }
-
-  var joined = aPath.charAt(0) === '/'
-    ? aPath
-    : normalize(aRoot.replace(/\/+$/, '') + '/' + aPath);
-
-  if (aRootUrl) {
-    aRootUrl.path = joined;
-    return urlGenerate(aRootUrl);
-  }
-  return joined;
-}
-exports.join = join;
-
-exports.isAbsolute = function (aPath) {
-  return aPath.charAt(0) === '/' || !!aPath.match(urlRegexp);
-};
-
-/**
- * Make a path relative to a URL or another path.
- *
- * @param aRoot The root path or URL.
- * @param aPath The path or URL to be made relative to aRoot.
- */
-function relative(aRoot, aPath) {
-  if (aRoot === "") {
-    aRoot = ".";
-  }
-
-  aRoot = aRoot.replace(/\/$/, '');
-
-  // It is possible for the path to be above the root. In this case, simply
-  // checking whether the root is a prefix of the path won't work. Instead, we
-  // need to remove components from the root one by one, until either we find
-  // a prefix that fits, or we run out of components to remove.
-  var level = 0;
-  while (aPath.indexOf(aRoot + '/') !== 0) {
-    var index = aRoot.lastIndexOf("/");
-    if (index < 0) {
-      return aPath;
-    }
-
-    // If the only part of the root that is left is the scheme (i.e. http://,
-    // file:///, etc.), one or more slashes (/), or simply nothing at all, we
-    // have exhausted all components, so the path is not relative to the root.
-    aRoot = aRoot.slice(0, index);
-    if (aRoot.match(/^([^\/]+:\/)?\/*$/)) {
-      return aPath;
-    }
-
-    ++level;
-  }
-
-  // Make sure we add a "../" for each component we removed from the root.
-  return Array(level + 1).join("../") + aPath.substr(aRoot.length + 1);
-}
-exports.relative = relative;
-
-var supportsNullProto = (function () {
-  var obj = Object.create(null);
-  return !('__proto__' in obj);
-}());
-
-function identity (s) {
-  return s;
-}
-
-/**
- * Because behavior goes wacky when you set `__proto__` on objects, we
- * have to prefix all the strings in our set with an arbitrary character.
- *
- * See https://github.com/mozilla/source-map/pull/31 and
- * https://github.com/mozilla/source-map/issues/30
- *
- * @param String aStr
- */
-function toSetString(aStr) {
-  if (isProtoString(aStr)) {
-    return '$' + aStr;
-  }
-
-  return aStr;
-}
-exports.toSetString = supportsNullProto ? identity : toSetString;
-
-function fromSetString(aStr) {
-  if (isProtoString(aStr)) {
-    return aStr.slice(1);
-  }
-
-  return aStr;
-}
-exports.fromSetString = supportsNullProto ? identity : fromSetString;
-
-function isProtoString(s) {
-  if (!s) {
-    return false;
-  }
-
-  var length = s.length;
-
-  if (length < 9 /* "__proto__".length */) {
-    return false;
-  }
-
-  if (s.charCodeAt(length - 1) !== 95  /* '_' */ ||
-      s.charCodeAt(length - 2) !== 95  /* '_' */ ||
-      s.charCodeAt(length - 3) !== 111 /* 'o' */ ||
-      s.charCodeAt(length - 4) !== 116 /* 't' */ ||
-      s.charCodeAt(length - 5) !== 111 /* 'o' */ ||
-      s.charCodeAt(length - 6) !== 114 /* 'r' */ ||
-      s.charCodeAt(length - 7) !== 112 /* 'p' */ ||
-      s.charCodeAt(length - 8) !== 95  /* '_' */ ||
-      s.charCodeAt(length - 9) !== 95  /* '_' */) {
-    return false;
-  }
-
-  for (var i = length - 10; i >= 0; i--) {
-    if (s.charCodeAt(i) !== 36 /* '$' */) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/**
- * Comparator between two mappings where the original positions are compared.
- *
- * Optionally pass in `true` as `onlyCompareGenerated` to consider two
- * mappings with the same original source/line/column, but different generated
- * line and column the same. Useful when searching for a mapping with a
- * stubbed out mapping.
- */
-function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
-  var cmp = mappingA.source - mappingB.source;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = mappingA.originalLine - mappingB.originalLine;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = mappingA.originalColumn - mappingB.originalColumn;
-  if (cmp !== 0 || onlyCompareOriginal) {
-    return cmp;
-  }
-
-  cmp = mappingA.generatedColumn - mappingB.generatedColumn;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = mappingA.generatedLine - mappingB.generatedLine;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  return mappingA.name - mappingB.name;
-}
-exports.compareByOriginalPositions = compareByOriginalPositions;
-
-/**
- * Comparator between two mappings with deflated source and name indices where
- * the generated positions are compared.
- *
- * Optionally pass in `true` as `onlyCompareGenerated` to consider two
- * mappings with the same generated line and column, but different
- * source/name/original line and column the same. Useful when searching for a
- * mapping with a stubbed out mapping.
- */
-function compareByGeneratedPositionsDeflated(mappingA, mappingB, onlyCompareGenerated) {
-  var cmp = mappingA.generatedLine - mappingB.generatedLine;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = mappingA.generatedColumn - mappingB.generatedColumn;
-  if (cmp !== 0 || onlyCompareGenerated) {
-    return cmp;
-  }
-
-  cmp = mappingA.source - mappingB.source;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = mappingA.originalLine - mappingB.originalLine;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = mappingA.originalColumn - mappingB.originalColumn;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  return mappingA.name - mappingB.name;
-}
-exports.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated;
-
-function strcmp(aStr1, aStr2) {
-  if (aStr1 === aStr2) {
-    return 0;
-  }
-
-  if (aStr1 > aStr2) {
-    return 1;
-  }
-
-  return -1;
-}
-
-/**
- * Comparator between two mappings with inflated source and name strings where
- * the generated positions are compared.
- */
-function compareByGeneratedPositionsInflated(mappingA, mappingB) {
-  var cmp = mappingA.generatedLine - mappingB.generatedLine;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = mappingA.generatedColumn - mappingB.generatedColumn;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = strcmp(mappingA.source, mappingB.source);
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = mappingA.originalLine - mappingB.originalLine;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  cmp = mappingA.originalColumn - mappingB.originalColumn;
-  if (cmp !== 0) {
-    return cmp;
-  }
-
-  return strcmp(mappingA.name, mappingB.name);
-}
-exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
 
 
 /***/ })
