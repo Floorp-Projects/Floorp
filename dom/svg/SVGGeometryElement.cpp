@@ -125,7 +125,10 @@ SVGGeometryElement::GetOrBuildPath(const DrawTarget* aDrawTarget,
 already_AddRefed<Path>
 SVGGeometryElement::GetOrBuildPathForMeasuring()
 {
-  return nullptr;
+  RefPtr<DrawTarget> drawTarget =
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  FillRule fillRule = mCachedPath ? mCachedPath->GetFillRule() : GetFillRule();
+  return GetOrBuildPath(drawTarget, fillRule);
 }
 
 FillRule
