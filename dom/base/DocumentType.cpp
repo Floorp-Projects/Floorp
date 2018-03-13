@@ -18,33 +18,14 @@
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/DocumentTypeBinding.h"
 
-nsresult
-NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
-                      nsNodeInfoManager *aNodeInfoManager,
-                      nsAtom *aName,
-                      const nsAString& aPublicId,
-                      const nsAString& aSystemId,
-                      const nsAString& aInternalSubset)
-{
-  NS_ENSURE_ARG_POINTER(aDocType);
-  mozilla::ErrorResult rv;
-  *aDocType = NS_NewDOMDocumentType(aNodeInfoManager, aName, aPublicId,
-                                    aSystemId, aInternalSubset, rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<mozilla::dom::DocumentType>
 NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
                       nsAtom *aName,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
-                      const nsAString& aInternalSubset,
-                      mozilla::ErrorResult& rv)
+                      const nsAString& aInternalSubset)
 {
-  if (!aName) {
-    rv.Throw(NS_ERROR_INVALID_POINTER);
-    return nullptr;
-  }
+  MOZ_ASSERT(aName, "Must have a name");
 
   already_AddRefed<mozilla::dom::NodeInfo> ni =
     aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nullptr,

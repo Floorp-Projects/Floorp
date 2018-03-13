@@ -137,12 +137,6 @@ public:
 protected:
   friend class nsIDocument;
   friend class nsXULPrototypeDocument;
-  friend nsresult NS_NewDOMDocumentType(nsIDOMDocumentType** ,
-                                        nsNodeInfoManager *,
-                                        nsAtom *,
-                                        const nsAString& ,
-                                        const nsAString& ,
-                                        const nsAString& );
 
   /**
    * Sets the principal of the document this nodeinfo manager belongs to.

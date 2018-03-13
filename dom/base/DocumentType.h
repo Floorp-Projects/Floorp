@@ -90,15 +90,6 @@ NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
                       nsAtom *aName,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
-                      const nsAString& aInternalSubset,
-                      mozilla::ErrorResult& rv);
-
-nsresult
-NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
-                      nsNodeInfoManager* aNodeInfoManager,
-                      nsAtom *aName,
-                      const nsAString& aPublicId,
-                      const nsAString& aSystemId,
                       const nsAString& aInternalSubset);
 
 #endif // DocumentType_h
