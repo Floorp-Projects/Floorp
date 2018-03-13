@@ -651,10 +651,6 @@ class Tab extends TabBase {
     return this.nativeTab.selected;
   }
 
-  get highlighted() {
-    return this.nativeTab.selected;
-  }
-
   get selected() {
     return this.nativeTab.selected;
   }
@@ -874,6 +870,13 @@ class Window extends WindowBase {
     let {tabManager} = this.extension;
 
     return tabManager.getWrapper(this.window.gBrowser.selectedTab);
+  }
+
+  getTabAtIndex(index) {
+    let nativeTab = this.window.gBrowser.tabs[index];
+    if (nativeTab) {
+      return this.extension.tabManager.getWrapper(nativeTab);
+    }
   }
 
   /**
