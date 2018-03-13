@@ -1974,6 +1974,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingAnimationTracker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildrenCollection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImages);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEmbeds);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mForms);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScripts);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplets);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnonymousContents)
 
   // Traverse all our nsCOMArrays.
@@ -2064,6 +2069,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingAnimationTracker)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildrenCollection)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mImages);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEmbeds);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mForms);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mScripts);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplets);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOrientationPendingPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle);
@@ -6805,6 +6815,53 @@ nsIDocument::SetDir(const nsAString& aDirection)
     rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
                          aDirection, true);
   }
+}
+
+nsIHTMLCollection*
+nsIDocument::Images()
+{
+  if (!mImages) {
+    mImages = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::img, nsGkAtoms::img);
+  }
+  return mImages;
+}
+
+nsIHTMLCollection*
+nsIDocument::Embeds()
+{
+  if (!mEmbeds) {
+    mEmbeds = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::embed, nsGkAtoms::embed);
+  }
+  return mEmbeds;
+}
+
+nsIHTMLCollection*
+nsIDocument::Forms()
+{
+  if (!mForms) {
+    // Please keep this in sync with nsHTMLDocument::GetFormsAndFormControls.
+    mForms = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::form, nsGkAtoms::form);
+  }
+
+  return mForms;
+}
+
+nsIHTMLCollection*
+nsIDocument::Scripts()
+{
+  if (!mScripts) {
+    mScripts = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::script, nsGkAtoms::script);
+  }
+  return mScripts;
+}
+
+nsIHTMLCollection*
+nsIDocument::Applets()
+{
+  if (!mApplets) {
+    mApplets = new nsEmptyContentList(this);
+  }
+  return mApplets;
 }
 
 /* static */

@@ -14,17 +14,7 @@ interface HTMLDocument : Document {
   [Throws]
   getter object (DOMString name);
   [Pure]
-  readonly attribute HTMLCollection images;
-  [Pure]
-  readonly attribute HTMLCollection embeds;
-  [Pure]
-  readonly attribute HTMLCollection plugins;
-  [Pure]
   readonly attribute HTMLCollection links;
-  [Pure]
-  readonly attribute HTMLCollection forms;
-  [Pure]
-  readonly attribute HTMLCollection scripts;
 
   // dynamic markup insertion
   [CEReactions, Throws]
@@ -62,8 +52,6 @@ interface HTMLDocument : Document {
 
   [Pure]
   readonly attribute HTMLCollection anchors;
-  [Pure]
-  readonly attribute HTMLCollection applets;
 
   void clear();
 
