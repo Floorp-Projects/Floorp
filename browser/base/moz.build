@@ -43,6 +43,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/sidebar/browser.ini',
     'content/test/siteIdentity/browser.ini',
     'content/test/static/browser.ini',
+    'content/test/statuspanel/browser.ini',
     'content/test/sync/browser.ini',
     'content/test/tabcrashed/browser.ini',
     'content/test/tabPrompts/browser.ini',
