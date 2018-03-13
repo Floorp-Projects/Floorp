@@ -21,6 +21,7 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/FakePluginTagInitBinding.h"
+#include "mozilla/SandboxSettings.h"
 
 using mozilla::dom::FakePluginTagInit;
 using namespace mozilla;
@@ -421,22 +422,19 @@ nsPluginTag::InitSandboxLevel()
   if (mIsFlashPlugin && mSandboxLevel < 2) {
     mSandboxLevel = 2;
   }
-#endif
-#endif
+#endif /* defined(_AMD64_) */
 
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  // At present, the Mac Flash NPAPI plugin sandbox is controlled via
-  // a boolean with no support for different levels. When the sandbox
-  // is enabled, we set the level to 1.
+#elif defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   if (mIsFlashPlugin) {
-    // Allow enabling the sandbox via the pref
-    // security.sandbox.mac.flash.enabled or via the environment variable
-    // MOZ_SANDBOX_MAC_FLASH_FORCE (which is useful while the sandbox is
-    // off by default).
-    if (Preferences::GetBool("security.sandbox.mac.flash.enabled") ||
-        PR_GetEnv("MOZ_SANDBOX_MAC_FLASH_FORCE")) {
-      mSandboxLevel = 1;
+    if (PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX") ||
+        NS_FAILED(Preferences::GetInt("dom.ipc.plugins.sandbox-level.flash",
+                                      &mSandboxLevel))) {
+      mSandboxLevel = 0;
+    } else {
+      mSandboxLevel = ClampFlashSandboxLevel(mSandboxLevel);
+    }
 
+    if (mSandboxLevel > 0) {
       // Enable sandbox logging in the plugin process if it has
       // been turned on via prefs or environment variables.
       if (Preferences::GetBool("security.sandbox.logging.enabled") ||
@@ -445,8 +443,14 @@ nsPluginTag::InitSandboxLevel()
             mIsSandboxLoggingEnabled = true;
       }
     }
+  } else {
+    // This isn't the flash plugin. At present, Flash is the only
+    // supported plugin on macOS. Other test plugins are used during
+    // testing and they will use the default plugin sandbox level.
+    mSandboxLevel =
+      Preferences::GetInt("dom.ipc.plugins.sandbox-level.default");
   }
-#endif
+#endif /* defined(XP_MACOSX) && defined(MOZ_SANDBOX) */
 }
 
 #if !defined(XP_WIN) && !defined(XP_MACOSX)
