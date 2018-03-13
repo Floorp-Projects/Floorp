@@ -166,7 +166,6 @@ public:
                    JS::MutableHandle<JSObject*> aRetval,
                    mozilla::ErrorResult& rv);
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  nsIHTMLCollection* Links();
   already_AddRefed<nsIDocument> Open(JSContext* cx,
                                      const nsAString& aType,
                                      const nsAString& aReplace,
@@ -242,8 +241,6 @@ protected:
 
   nsIContent *MatchId(nsIContent *aContent, const nsAString& aId);
 
-  static bool MatchLinks(mozilla::dom::Element* aElement, int32_t aNamespaceID,
-                         nsAtom* aAtom, void* aData);
   static bool MatchAnchors(mozilla::dom::Element* aElement, int32_t aNamespaceID,
                            nsAtom* aAtom, void* aData);
 
@@ -307,7 +304,6 @@ protected:
   friend class ContentListHolder;
   ContentListHolder* mContentListHolder;
 
-  RefPtr<nsContentList> mLinks;
   RefPtr<nsContentList> mAnchors;
 
   RefPtr<mozilla::dom::HTMLAllCollection> mAll;

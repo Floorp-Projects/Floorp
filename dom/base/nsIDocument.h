@@ -3289,6 +3289,7 @@ public:
   {
     return Embeds();
   }
+  nsIHTMLCollection* Links();
   nsIHTMLCollection* Forms();
   nsIHTMLCollection* Scripts();
   already_AddRefed<nsContentList> GetElementsByName(const nsAString& aName)
@@ -3886,6 +3887,7 @@ protected:
   // Various DOM lists
   RefPtr<nsContentList> mImages;
   RefPtr<nsContentList> mEmbeds;
+  RefPtr<nsContentList> mLinks;
   RefPtr<nsContentList> mForms;
   RefPtr<nsContentList> mScripts;
   nsCOMPtr<nsIHTMLCollection> mApplets;
