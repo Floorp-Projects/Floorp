@@ -43,8 +43,8 @@ toolbar:not([brighttext]) {
 
 :root:-moz-lwtheme-brighttext,
 toolbar[brighttext] {
-  --toolbarbutton-hover-background: var(--lwt-toolbarbutton-hover-background, hsla(0,0%,100%,.2));
-  --toolbarbutton-active-background: var(--lwt-toolbarbutton-active-background, hsla(0,0%,100%,.3));
+  --toolbarbutton-hover-background: var(--lwt-toolbarbutton-hover-background, hsla(0,0%,70%,.4));
+  --toolbarbutton-active-background: var(--lwt-toolbarbutton-active-background, hsla(0,0%,70%,.6));
 
   --backbutton-background: var(--toolbarbutton-hover-background);
   --backbutton-hover-background: var(--toolbarbutton-active-background);
