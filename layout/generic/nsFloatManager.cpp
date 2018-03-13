@@ -584,7 +584,9 @@ public:
   static UniquePtr<ShapeInfo> CreateImageShape(
     const UniquePtr<nsStyleImage>& aShapeImage,
     float aShapeImageThreshold,
+    nscoord aShapeMargin,
     nsIFrame* const aFrame,
+    const LogicalRect& aMarginRect,
     WritingMode aWM,
     const nsSize& aContainerSize);
 
@@ -984,7 +986,9 @@ public:
                  const LayoutDeviceIntSize& aImageSize,
                  int32_t aAppUnitsPerDevPixel,
                  float aShapeImageThreshold,
+                 nscoord aShapeMargin,
                  const nsRect& aContentRect,
+                 const nsRect& aMarginRect,
                  WritingMode aWM,
                  const nsSize& aContainerSize);
 
@@ -1034,7 +1038,9 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
   const LayoutDeviceIntSize& aImageSize,
   int32_t aAppUnitsPerDevPixel,
   float aShapeImageThreshold,
+  nscoord aShapeMargin,
   const nsRect& aContentRect,
+  const nsRect& aMarginRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
 {
@@ -1045,52 +1051,58 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
   const int32_t w = aImageSize.width;
   const int32_t h = aImageSize.height;
 
-  // Scan the pixels in a double loop. For horizontal writing modes, we do
-  // this row by row, from top to bottom. For vertical writing modes, we do
-  // column by column, from left to right. We define the two loops
-  // generically, then figure out the rows and cols within the i loop.
-  const int32_t bSize = aWM.IsVertical() ? w : h;
-  const int32_t iSize = aWM.IsVertical() ? h : w;
-  for (int32_t b = 0; b < bSize; ++b) {
-    // iMin and iMax store the start and end of the float area for the row
-    // or column represented by this iteration of the b loop.
-    int32_t iMin = -1;
-    int32_t iMax = -1;
+  if (aShapeMargin <= 0) {
+    // Without a positive aShapeMargin, all we have to do is a
+    // direct threshold comparison of the alpha pixels.
+    // https://drafts.csswg.org/css-shapes-1/#valdef-shape-image-threshold-number
 
-    for (int32_t i = 0; i < iSize; ++i) {
-      const int32_t col = aWM.IsVertical() ? b : i;
-      const int32_t row = aWM.IsVertical() ? i : b;
+    // Scan the pixels in a double loop. For horizontal writing modes, we do
+    // this row by row, from top to bottom. For vertical writing modes, we do
+    // column by column, from left to right. We define the two loops
+    // generically, then figure out the rows and cols within the inner loop.
+    const int32_t bSize = aWM.IsVertical() ? w : h;
+    const int32_t iSize = aWM.IsVertical() ? h : w;
+    for (int32_t b = 0; b < bSize; ++b) {
+      // iMin and max store the start and end of the float area for the row
+      // or column represented by this iteration of the outer loop.
+      int32_t iMin = -1;
+      int32_t iMax = -1;
 
-      // Determine if the alpha pixel at this row and column has a value
-      // greater than the threshold. If it does, update our iMin and iMax values
-      // to track the edges of the float area for this row or column.
-      // https://drafts.csswg.org/css-shapes-1/#valdef-shape-image-threshold-number
-      const uint8_t alpha = aAlphaPixels[col + row * aStride];
-      if (alpha > threshold) {
-        if (iMin == -1) {
-          iMin = i;
+      for (int32_t i = 0; i < iSize; ++i) {
+        const int32_t col = aWM.IsVertical() ? b : i;
+        const int32_t row = aWM.IsVertical() ? i : b;
+
+        // Determine if the alpha pixel at this row and column has a value
+        // greater than the threshold. If it does, update our iMin and iMax values
+        // to track the edges of the float area for this row or column.
+        // https://drafts.csswg.org/css-shapes-1/#valdef-shape-image-threshold-number
+        const uint8_t alpha = aAlphaPixels[col + row * aStride];
+        if (alpha > threshold) {
+          if (iMin == -1) {
+            iMin = i;
+          }
+          MOZ_ASSERT(iMax < i);
+          iMax = i;
         }
-        MOZ_ASSERT(iMax < i);
-        iMax = i;
+      }
+
+      // At the end of a row or column; did we find something?
+      if (iMin != -1) {
+        // We need to supply an offset of the content rect top left, since
+        // our col and row have been calculated from the content rect,
+        // instead of the margin rect (against which floats are applied).
+        CreateInterval(iMin, iMax, b, aAppUnitsPerDevPixel,
+                       aContentRect.TopLeft(), aWM, aContainerSize);
       }
     }
 
-    // At the end of a row or column; did we find something?
-    if (iMin != -1) {
-      // We need to supply an offset of the content rect top left, since
-      // our col and row have been calculated from the content rect,
-      // instead of the margin rect (against which floats are applied).
-      CreateInterval(iMin, iMax, b, aAppUnitsPerDevPixel,
-                     aContentRect.TopLeft(), aWM, aContainerSize);
+    if (aWM.IsVerticalRL()) {
+      // vertical-rl or sideways-rl.
+      // Because we scan the columns from left to right, we need to reverse
+      // the array so that it's sorted (in ascending order) on the block
+      // direction.
+      mIntervals.Reverse();
     }
-  }
-
-  if (aWM.IsVerticalRL()) {
-    // vertical-rl or sideways-rl.
-    // Because we scan the columns from left to right, we need to reverse
-    // the array so that it's sorted (in ascending order) on the block
-    // direction.
-    mIntervals.Reverse();
   }
 
   if (!mIntervals.IsEmpty()) {
@@ -1252,9 +1264,14 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 
     case StyleShapeSourceType::Image: {
       float shapeImageThreshold = mFrame->StyleDisplay()->mShapeImageThreshold;
+      nscoord shapeMargin = nsLayoutUtils::ResolveToLength<true>(
+        mFrame->StyleDisplay()->mShapeMargin,
+        LogicalSize(aWM, aContainerSize).ISize(aWM));
       mShapeInfo = ShapeInfo::CreateImageShape(shapeOutside.GetShapeImage(),
                                                shapeImageThreshold,
+                                               shapeMargin,
                                                mFrame,
+                                               aMarginRect,
                                                aWM,
                                                aContainerSize);
       if (!mShapeInfo) {
@@ -1564,7 +1581,9 @@ nsFloatManager::ShapeInfo::CreatePolygon(
 nsFloatManager::ShapeInfo::CreateImageShape(
   const UniquePtr<nsStyleImage>& aShapeImage,
   float aShapeImageThreshold,
+  nscoord aShapeMargin,
   nsIFrame* const aFrame,
+  const LogicalRect& aMarginRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
 {
@@ -1623,6 +1642,8 @@ nsFloatManager::ShapeInfo::CreateImageShape(
   MOZ_ASSERT(sourceSurface->GetSize() == contentSizeInDevPixels.ToUnknownSize(),
              "Who changes the size?");
 
+  nsRect marginRect = aMarginRect.GetPhysicalRect(aWM, aContainerSize);
+
   uint8_t* alphaPixels = map.GetData();
   int32_t stride = map.GetStride();
 
@@ -1633,7 +1654,9 @@ nsFloatManager::ShapeInfo::CreateImageShape(
                                     contentSizeInDevPixels,
                                     appUnitsPerDevPixel,
                                     aShapeImageThreshold,
+                                    aShapeMargin,
                                     contentRect,
+                                    marginRect,
                                     aWM,
                                     aContainerSize);
 }
