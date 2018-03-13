@@ -704,30 +704,6 @@ MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset)
     inst2->SetInstructionBits((uint32_t)(distance >> 32));
 }
 
-void
-MacroAssembler::repatchFarJump(uint8_t* code, uint32_t farJumpOffset, uint32_t targetOffset)
-{
-    MOZ_CRASH("Unimplemented - never used");
-}
-
-CodeOffset
-MacroAssembler::nopPatchableToNearJump()
-{
-    MOZ_CRASH("Unimplemented - never used");
-}
-
-void
-MacroAssembler::patchNopToNearJump(uint8_t* jump, uint8_t* target)
-{
-    MOZ_CRASH("Unimplemented - never used");
-}
-
-void
-MacroAssembler::patchNearJumpToNop(uint8_t* jump)
-{
-    MOZ_CRASH("Unimplemented - never used");
-}
-
 CodeOffset
 MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
 {

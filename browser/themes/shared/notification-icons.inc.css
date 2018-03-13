@@ -131,6 +131,11 @@
   list-style-image: url(chrome://browser/skin/notification-icons/canvas-blocked.svg);
 }
 
+#webauthn-notification-icon,
+.popup-notification-icon[popupid^="webauthn-prompt-"] {
+  list-style-image: url(chrome://browser/skin/notification-icons/webauthn.svg);
+}
+
 #webRTC-preview:not([hidden]) {
   display: -moz-stack;
   border-radius: 4px;

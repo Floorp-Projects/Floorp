@@ -635,10 +635,10 @@ DedicatedWorkerGlobalScope::PostMessage(JSContext* aCx,
 }
 
 void
-DedicatedWorkerGlobalScope::Close(JSContext* aCx)
+DedicatedWorkerGlobalScope::Close()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  mWorkerPrivate->CloseInternal(aCx);
+  mWorkerPrivate->CloseInternal();
 }
 
 SharedWorkerGlobalScope::SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
@@ -663,10 +663,10 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
 }
 
 void
-SharedWorkerGlobalScope::Close(JSContext* aCx)
+SharedWorkerGlobalScope::Close()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  mWorkerPrivate->CloseInternal(aCx);
+  mWorkerPrivate->CloseInternal();
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope,
