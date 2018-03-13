@@ -55,8 +55,8 @@ public class CustomTabTest {
     private MockWebServer webServer;
 
     @Rule
-    public ActivityTestRule<MainActivity> activityTestRule  = new ActivityTestRule<>(
-            MainActivity.class, true, false);
+    public ActivityTestRule<IntentReceiverActivity> activityTestRule  = new ActivityTestRule<>(
+            IntentReceiverActivity.class, true, false);
 
     @After
     public void tearDown() throws Exception {
