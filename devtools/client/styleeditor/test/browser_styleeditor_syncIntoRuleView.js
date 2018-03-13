@@ -14,19 +14,19 @@ const TEST_URI = `
 
 const TESTCASE_CSS_SOURCE = "#testid { color: chartreuse; }";
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
 
-  let { panel, ui } = yield openStyleEditor();
+  let { panel, ui } = await openStyleEditor();
 
-  let editor = yield ui.editors[0].getSourceEditor();
+  let editor = await ui.editors[0].getSourceEditor();
 
   let waitForRuleView = view.once("ruleview-refreshed");
-  yield typeInEditor(editor, panel.panelWindow);
-  yield waitForRuleView;
+  await typeInEditor(editor, panel.panelWindow);
+  await waitForRuleView;
 
   let value = getRuleViewPropertyValue(view, "#testid", "color");
   is(value, "chartreuse", "check that edits were synced to rule view");
@@ -34,7 +34,7 @@ add_task(function* () {
 
 function typeInEditor(editor, panelWindow) {
   return new Promise(resolve => {
-    waitForFocus(function () {
+    waitForFocus(function() {
       for (let c of TESTCASE_CSS_SOURCE) {
         EventUtils.synthesizeKey(c, {}, panelWindow);
       }

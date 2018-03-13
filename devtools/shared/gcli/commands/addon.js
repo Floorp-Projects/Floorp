@@ -35,7 +35,7 @@ const l10n = require("gcli/l10n");
  * new function that returns a promise instead.
  * This should probably live in async-util
  */
-const promiseify = function (scope, functionWithLastParamCallback) {
+const promiseify = function(scope, functionWithLastParamCallback) {
   return (...args) => {
     return new Promise(resolve => {
       args.push((...results) => {
@@ -58,7 +58,7 @@ function pendingOperations(addon) {
     "PENDING_ENABLE", "PENDING_DISABLE", "PENDING_UNINSTALL",
     "PENDING_INSTALL", "PENDING_UPGRADE"
   ];
-  return allOperations.reduce(function (operations, opName) {
+  return allOperations.reduce(function(operations, opName) {
     return addon.pendingOperations & AddonManager[opName] ?
       operations.concat(opName) :
       operations;
@@ -72,7 +72,7 @@ var items = [
     parent: "selection",
     stringifyProperty: "name",
     cacheable: true,
-    constructor: function () {
+    constructor: function() {
       // Tell GCLI to clear the cache of addons when one is added or removed
       let listener = {
         onInstalled: addon => {
@@ -84,7 +84,7 @@ var items = [
       };
       AddonManager.addAddonListener(listener);
     },
-    lookup: function () {
+    lookup: function() {
       return getAllAddons().then(addons => {
         return addons.map(addon => {
           let name = addon.name + " " + addon.version;
@@ -111,7 +111,7 @@ var items = [
       defaultValue: "all",
       description: l10n.lookup("addonListTypeDesc")
     }],
-    exec: function (args, context) {
+    exec: function(args, context) {
       let types = (args.type === "all") ? null : [ args.type ];
       return getAddonsByTypes(types).then(addons => {
         // Remove all hidden add-ons.
@@ -120,7 +120,7 @@ var items = [
         });
 
         // Change the add-ons array to something we can work with.
-        addons = addons.map(function (addon) {
+        addons = addons.map(function(addon) {
           return {
             name: addon.name,
             version: addon.version,
@@ -137,7 +137,7 @@ var items = [
     item: "converter",
     from: "addonsInfo",
     to: "view",
-    exec: function (addonsInfo, context) {
+    exec: function(addonsInfo, context) {
       if (!addonsInfo.addons.length) {
         return context.createView({
           html: "<p>${message}</p>",
@@ -171,7 +171,7 @@ var items = [
       function arrangeAddons(addons) {
         let enabledAddons = [];
         let disabledAddons = [];
-        addons.forEach(function (addon) {
+        addons.forEach(function(addon) {
           if (addon.isActive) {
             enabledAddons.push(addon);
           } else {
@@ -212,7 +212,7 @@ var items = [
           "</table>",
         data: {
           header: header,
-          addons: arrangeAddons(addonsInfo.addons).map(function (addon) {
+          addons: arrangeAddons(addonsInfo.addons).map(function(addon) {
             return {
               name: addon.name,
               label: addon.name.replace(/\s/g, "_") +
@@ -248,7 +248,7 @@ var items = [
         description: l10n.lookup("addonNameDesc")
       }
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       let name = (args.addon.name + " " + args.addon.version).trim();
       if (args.addon.userDisabled) {
         args.addon.userDisabled = false;
@@ -270,7 +270,7 @@ var items = [
         description: l10n.lookup("addonNameDesc")
       }
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       // If the addon is not disabled or is set to "click to play" then
       // disable it. Otherwise display the message "Add-on is already
       // disabled."
@@ -296,7 +296,7 @@ var items = [
         description: l10n.lookup("addonNameDesc")
       }
     ],
-    exec: function (args, context) {
+    exec: function(args, context) {
       let name = (args.addon.name + " " + args.addon.version).trim();
       if (args.addon.type !== "plugin") {
         return l10n.lookupFormat("addonCantCtp", [ name ]);

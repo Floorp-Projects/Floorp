@@ -8,7 +8,7 @@
  * You can also use this initialization format as a template for other tests.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(SINGLE_GET_URL);
   info("Starting test... ");
 

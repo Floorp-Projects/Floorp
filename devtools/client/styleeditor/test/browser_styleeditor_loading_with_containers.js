@@ -22,18 +22,18 @@ const EXPECTED_SHEETS = [
   }
 ];
 
-add_task(function* () {
+add_task(async function() {
   // Using the personal container.
   let userContextId = 1;
-  let { tab } = yield* openTabInUserContext(TESTCASE_URI, userContextId);
-  let { ui } = yield openStyleEditor(tab);
+  let { tab } = await openTabInUserContext(TESTCASE_URI, userContextId);
+  let { ui } = await openStyleEditor(tab);
 
   is(ui.editors.length, 2, "The UI contains two style sheets.");
   checkSheet(ui.editors[0], EXPECTED_SHEETS[0]);
   checkSheet(ui.editors[1], EXPECTED_SHEETS[1]);
 });
 
-function* openTabInUserContext(uri, userContextId) {
+async function openTabInUserContext(uri, userContextId) {
   // Open the tab in the correct userContextId.
   let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
 
@@ -42,7 +42,7 @@ function* openTabInUserContext(uri, userContextId) {
   tab.ownerDocument.defaultView.focus();
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
   return {tab, browser};
 }
 

@@ -18,9 +18,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_source_map();
                            });
@@ -49,8 +49,8 @@ function test_source_map() {
     1
   );
 
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
-    gThreadClient.getFrames(0, 50, function ({ error, frames }) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+    gThreadClient.getFrames(0, 50, function({ error, frames }) {
       Assert.ok(!error);
       Assert.equal(frames.length, 4);
       // b.js should be skipped

@@ -9,7 +9,7 @@ const createStore = require("devtools/client/shared/redux/create-store");
 const reducers = require("devtools/client/inspector/reducers");
 const flags = require("devtools/shared/flags");
 
-module.exports = function () {
+module.exports = function() {
   let shouldLog = false;
   let history;
 

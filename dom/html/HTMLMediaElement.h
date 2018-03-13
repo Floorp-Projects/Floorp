@@ -1368,6 +1368,8 @@ protected:
   void SetCDMProxyFailure(const MediaResult& aResult);
   void ResetSetMediaKeysTempVariables();
 
+  void PauseIfShouldNotBePlaying();
+
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;

@@ -976,51 +976,50 @@ browser[tabmodalPromptShowing] {
 
 /* Status panel */
 
-statuspanel {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#statuspanel");
+#statuspanel {
   position: fixed;
   margin-top: -3em;
   max-width: calc(100% - 5px);
   pointer-events: none;
 }
 
-statuspanel[mirror] {
+#statuspanel[mirror] {
   offset-inline-start: auto;
   offset-inline-end: 0;
 }
 
-statuspanel[sizelimit] {
+#statuspanel[sizelimit] {
   max-width: 50%;
 }
 
-statuspanel[type=status] {
+#statuspanel[type=status] {
   min-width: 23em;
 }
 
 @media all and (max-width: 800px) {
-  statuspanel[type=status] {
+  #statuspanel[type=status] {
     min-width: 33%;
   }
 }
 
-statuspanel[type=overLink] {
+#statuspanel[type=overLink] {
   transition: opacity 120ms ease-out;
 }
 
-statuspanel[type=overLink] > .statuspanel-inner {
+#statuspanel[type=overLink] > #statuspanel-inner {
   direction: ltr;
 }
 
-statuspanel[inactive] {
+#statuspanel[inactive] {
   transition: none;
   opacity: 0;
 }
 
-statuspanel[inactive][previoustype=overLink] {
+#statuspanel[inactive][previoustype=overLink] {
   transition: opacity 200ms ease-out;
 }
 
-.statuspanel-inner {
+#statuspanel-inner {
   height: 3em;
   width: 100%;
   -moz-box-align: end;

@@ -9,12 +9,12 @@
 const TEST_URI = "data:text/html;charset=utf8,<h1>Object Inspector on Maps & Sets</h1>";
 const {ELLIPSIS} = require("devtools/shared/l10n");
 
-add_task(async function () {
+add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   logAllStoreChanges(hud);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.console.log(
       "oi-entries-test",
       new Map(

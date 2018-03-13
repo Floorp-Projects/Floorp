@@ -22,7 +22,7 @@ let reducers = {
 
 };
 
-module.exports = function (touchSimulation = INITIAL_TOUCH_SIMULATION, action) {
+module.exports = function(touchSimulation = INITIAL_TOUCH_SIMULATION, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return touchSimulation;

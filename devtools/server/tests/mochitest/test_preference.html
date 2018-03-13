@@ -45,7 +45,7 @@ function runTests() {
         is(prefs.intPref, localPref.intPref, "read/write int pref");
         is(prefs.charPref, localPref.charPref, "read/write string pref");
 
-        ["test.all.bool", "test.all.int", "test.all.string"].forEach(function (key) {
+        ["test.all.bool", "test.all.int", "test.all.string"].forEach(function(key) {
           let expectedValue;
           switch (Services.prefs.getPrefType(key)) {
             case Ci.nsIPrefBranch.PREF_STRING:
@@ -68,7 +68,7 @@ function runTests() {
              "valid hasUserValue (" + key + ")");
         });
 
-        ["test.bool", "test.int", "test.string"].forEach(function (key) {
+        ["test.bool", "test.int", "test.string"].forEach(function(key) {
           ok(!prefs.allPrefs.hasOwnProperty(key), "expect no pref (" + key + ")");
           is(Services.prefs.getPrefType(key), Ci.nsIPrefBranch.PREF_INVALID,
              "pref (" + key + ") is clear");
@@ -81,7 +81,7 @@ function runTests() {
       }
 
       function updatePrefsProperty(key) {
-        return function (value) {
+        return function(value) {
           prefs[key] = value;
         };
       }
@@ -101,7 +101,7 @@ function runTests() {
   });
 }
 
-window.onload = function () {
+window.onload = function() {
   SpecialPowers.pushPrefEnv({
     "set": [
       ["devtools.debugger.forbid-certified-apps", false],

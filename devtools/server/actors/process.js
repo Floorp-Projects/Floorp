@@ -21,7 +21,7 @@ function ProcessActorList() {
 }
 
 ProcessActorList.prototype = {
-  getList: function () {
+  getList: function() {
     let processes = [];
     for (let i = 0; i < ppmm.childCount; i++) {
       processes.push({
@@ -56,7 +56,7 @@ ProcessActorList.prototype = {
     this._checkListening();
   },
 
-  _checkListening: function () {
+  _checkListening: function() {
     if (this._onListChanged !== null && this._mustNotify) {
       this._knownProcesses = [];
       for (let i = 0; i < ppmm.childCount; i++) {
@@ -70,14 +70,14 @@ ProcessActorList.prototype = {
     }
   },
 
-  _notifyListChanged: function () {
+  _notifyListChanged: function() {
     if (this._mustNotify) {
       this._onListChanged();
       this._mustNotify = false;
     }
   },
 
-  _onMessage: function ({ target }) {
+  _onMessage: function({ target }) {
     if (this._knownProcesses.includes(target)) {
       return;
     }

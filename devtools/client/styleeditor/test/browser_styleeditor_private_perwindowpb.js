@@ -10,23 +10,23 @@
 const TEST_URL = "http://" + TEST_HOST + "/browser/devtools/client/" +
   "styleeditor/test/test_private.html";
 
-add_task(function* () {
+add_task(async function() {
   info("Opening a new private window");
   let win = OpenBrowserWindow({private: true});
-  yield waitForDelayedStartupFinished(win);
+  await waitForDelayedStartupFinished(win);
 
   info("Clearing the browser cache");
   Services.cache2.clear();
 
-  let { toolbox, ui } = yield openStyleEditorForURL(TEST_URL, win);
+  let { toolbox, ui } = await openStyleEditorForURL(TEST_URL, win);
 
   is(ui.editors.length, 1, "The style editor contains one sheet.");
   let editor = ui.editors[0];
 
-  yield editor.getSourceEditor();
-  yield checkDiskCacheFor(TEST_HOST);
+  await editor.getSourceEditor();
+  await checkDiskCacheFor(TEST_HOST);
 
-  yield toolbox.destroy();
+  await toolbox.destroy();
 
   let onUnload = new Promise(done => {
     win.addEventListener("unload", function listener(event) {
@@ -37,7 +37,7 @@ add_task(function* () {
     });
   });
   win.close();
-  yield onUnload;
+  await onUnload;
 });
 
 function checkDiskCacheFor(host) {
@@ -45,15 +45,15 @@ function checkDiskCacheFor(host) {
 
   return new Promise(resolve => {
     Visitor.prototype = {
-      onCacheStorageInfo: function (num) {
+      onCacheStorageInfo: function(num) {
         info("disk storage contains " + num + " entries");
       },
-      onCacheEntryInfo: function (uri) {
+      onCacheEntryInfo: function(uri) {
         let urispec = uri.asciiSpec;
         info(urispec);
         foundPrivateData |= urispec.includes(host);
       },
-      onCacheEntryVisitCompleted: function () {
+      onCacheEntryVisitCompleted: function() {
         is(foundPrivateData, false, "web content present in disk cache");
         resolve();
       }

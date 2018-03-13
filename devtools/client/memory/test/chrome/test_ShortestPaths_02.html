@@ -23,11 +23,11 @@ Test that the ShortestPaths component renders a suggestion to select a node when
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = Task.async(function* () {
+         window.onload = async function () {
            try {
              const container = document.getElementById("container");
 
-             yield renderComponent(ShortestPaths(immutableUpdate(TEST_SHORTEST_PATHS_PROPS,
+             await renderComponent(ShortestPaths(immutableUpdate(TEST_SHORTEST_PATHS_PROPS,
                                                                  { graph: null })),
                                    container);
 
@@ -38,7 +38,7 @@ Test that the ShortestPaths component renders a suggestion to select a node when
            } finally {
              SimpleTest.finish();
            }
-         });
+         };
         </script>
     </pre>
 </body>

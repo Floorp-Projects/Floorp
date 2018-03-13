@@ -13,15 +13,15 @@ function TestStreamListener() {
   this.state = "initial";
 }
 TestStreamListener.prototype = {
-  onStartRequest: function () {
+  onStartRequest: function() {
     this.setState("start");
   },
 
-  onStopRequest: function () {
+  onStopRequest: function() {
     this.setState("stop");
   },
 
-  onDataAvailable: function (request, context, inputStream, offset, count) {
+  onDataAvailable: function(request, context, inputStream, offset, count) {
     const sin = Cc["@mozilla.org/scriptableinputstream;1"]
           .createInstance(nsIScriptableInputStream);
     sin.init(inputStream);
@@ -29,7 +29,7 @@ TestStreamListener.prototype = {
     this.setState("data");
   },
 
-  setState: function (state) {
+  setState: function(state) {
     this.state = state;
     if (this._deferred) {
       this._deferred.resolve(state);
@@ -37,7 +37,7 @@ TestStreamListener.prototype = {
     }
   },
 
-  onStateChanged: function () {
+  onStateChanged: function() {
     if (!this._deferred) {
       this._deferred = defer();
     }
@@ -51,7 +51,7 @@ function TestChannel() {
   this._throttleQueue = null;
 }
 TestChannel.prototype = {
-  QueryInterface: function () {
+  QueryInterface: function() {
     return this;
   },
 
@@ -64,14 +64,14 @@ TestChannel.prototype = {
     this.state = "throttled";
   },
 
-  setNewListener: function (listener) {
+  setNewListener: function(listener) {
     this.listener = listener;
     this.state = "listener";
     return this.testListener;
   },
 };
 
-add_task(async function () {
+add_task(async function() {
   let throttler = new NetworkThrottleManager({
     latencyMean: 1,
     latencyMax: 1,

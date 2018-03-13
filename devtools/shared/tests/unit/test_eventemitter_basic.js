@@ -227,7 +227,7 @@ const TESTS = {
  * @param {Object} tests
  *  The tests descriptor object, contains the tests to run.
  */
-const runnable = (tests) => (async function () {
+const runnable = (tests) => (async function() {
   for (let name of Object.keys(tests)) {
     info(name);
     if (tests[name].length === 1) {

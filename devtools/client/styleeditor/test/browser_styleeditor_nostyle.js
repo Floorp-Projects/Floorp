@@ -8,8 +8,8 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "nostyle.html";
 
-add_task(function* () {
-  let { panel } = yield openStyleEditorForURL(TESTCASE_URI);
+add_task(async function() {
+  let { panel } = await openStyleEditorForURL(TESTCASE_URI);
   let { panelWindow } = panel;
 
   let root = panelWindow.document.querySelector(".splitview-root");

@@ -12,8 +12,8 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
-add_task(function* () {
-  let { panel } = yield initPerformanceInNewTab({
+add_task(async function() {
+  let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
@@ -61,16 +61,16 @@ add_task(function* () {
       "The markers and framerate graphs data scale are the same.");
   };
 
-  yield startRecording(panel);
+  await startRecording(panel);
   doChecks();
 
-  yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);
-  yield waitUntil(() => PerformanceController.getCurrentRecording().getMemory().length);
-  yield waitUntil(() => PerformanceController.getCurrentRecording().getTicks().length);
+  await waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);
+  await waitUntil(() => PerformanceController.getCurrentRecording().getMemory().length);
+  await waitUntil(() => PerformanceController.getCurrentRecording().getTicks().length);
   doChecks();
 
-  yield stopRecording(panel);
+  await stopRecording(panel);
   doChecks();
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

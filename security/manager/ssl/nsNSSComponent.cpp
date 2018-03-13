@@ -1753,6 +1753,42 @@ nsNSSComponent::setEnabledTLSVersions()
   return NS_OK;
 }
 
+#ifdef XP_WIN
+// If the profile directory is on a networked drive, we want to set the
+// environment variable NSS_SDB_USE_CACHE to yes (as long as it hasn't been set
+// before).
+static void
+SetNSSDatabaseCacheModeAsAppropriate()
+{
+  nsCOMPtr<nsIFile> profileFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profileFile));
+  if (NS_FAILED(rv)) {
+    // We're probably running without a profile directory, so this is
+    // irrelevant.
+    return;
+  }
+
+  nsCOMPtr<nsILocalFileWin> profileFileWin(do_QueryInterface(profileFile));
+  if (!profileFileWin) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin?"));
+    return;
+  }
+  auto profilePath = profileFile->NativePath();
+  wchar_t volPath[MAX_PATH];
+  if (::GetVolumePathNameW(profilePath.get(), volPath, MAX_PATH) &&
+      ::GetDriveTypeW(volPath) == DRIVE_REMOTE &&
+      !PR_GetEnv("NSS_SDB_USE_CACHE")) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("profile is remote (and NSS_SDB_USE_CACHE wasn't set): "
+             "setting NSS_SDB_USE_CACHE"));
+    PR_SetEnv("NSS_SDB_USE_CACHE=yes");
+  } else {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("not setting NSS_SDB_USE_CACHE"));
+  }
+}
+#endif // XP_WIN
+
 static nsresult
 GetNSSProfilePath(nsAutoCString& aProfilePath)
 {
@@ -2012,6 +2048,10 @@ nsNSSComponent::InitializeNSS()
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+#ifdef XP_WIN
+  SetNSSDatabaseCacheModeAsAppropriate();
+#endif
 
   bool nocertdb = Preferences::GetBool("security.nocertdb", false);
   bool inSafeMode = true;

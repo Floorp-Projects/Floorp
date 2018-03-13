@@ -12,20 +12,20 @@ const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab }
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 const { getSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
 
-add_task(function* () {
-  let { target, console } = yield initConsoleInNewTab({
+add_task(async function() {
+  let { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
-  yield console.profile("rust");
-  yield console.profileEnd("rust");
+  await console.profile("rust");
+  await console.profileEnd("rust");
 
-  let { panel } = yield initPerformanceInTab({ tab: target.tab });
+  let { panel } = await initPerformanceInTab({ tab: target.tab });
   let { PerformanceController, WaterfallView } = panel.panelWin;
 
-  yield waitUntil(() => PerformanceController.getRecordings().length == 1);
-  yield waitUntil(() => WaterfallView.wasRenderedAtLeastOnce);
+  await waitUntil(() => PerformanceController.getRecordings().length == 1);
+  await waitUntil(() => WaterfallView.wasRenderedAtLeastOnce);
 
   let recordings = PerformanceController.getRecordings();
   is(recordings.length, 1, "One recording found in the performance panel.");
@@ -39,5 +39,5 @@ add_task(function* () {
   is(selected.getLabel(), "rust",
     "The profile label for the first recording is correct.");
 
-  yield teardownToolboxAndRemoveTab(panel);
+  await teardownToolboxAndRemoveTab(panel);
 });

@@ -13,7 +13,7 @@ const server = createTestHTTPServer();
 server.registerContentType("gif", "image/gif");
 function onPageResourceRequest() {
   return new Promise(done => {
-    server.registerPathHandler("/slow.gif", function (metadata, response) {
+    server.registerPathHandler("/slow.gif", function(metadata, response) {
       info("Image has been requested");
       response.processAsync();
       done(response);
@@ -73,7 +73,7 @@ function waitForLinkedBrowserEvent(tab, event) {
 }
 
 function contentReadyState(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, function () {
+  return ContentTask.spawn(tab.linkedBrowser, null, function() {
     return content.document.readyState;
   });
 }

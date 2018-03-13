@@ -22,7 +22,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 public class PanelsPreference extends CustomListPreference {
-    protected String LOGTAG = "PanelsPreference";
+    protected static final String LOGTAG = "PanelsPreference";
 
     // Position state of this Preference in enclosing category.
     private static final int STATE_IS_FIRST = 0;

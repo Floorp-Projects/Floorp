@@ -6,7 +6,7 @@
 function run_test() {
   initTestDebuggerServer();
 
-  add_task(async function () {
+  add_task(async function() {
     await test_transport_events("socket", socket_transport);
     await test_transport_events("local", local_transport);
     DebuggerServer.destroy();

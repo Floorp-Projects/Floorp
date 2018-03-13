@@ -23,7 +23,7 @@
         // Use a random parameter to defeat caching.
         xhr.open("GET", address + "&" + Math.random(), true);
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
             callback();
           }
@@ -36,20 +36,20 @@
 
         /* eslint-disable max-nested-callbacks */
         get("sjs_content-type-test-server.sjs?fmt=html&res=" + options.htmlContent,
-            function () {
-              get("sjs_content-type-test-server.sjs?fmt=css", function () {
-                get("sjs_content-type-test-server.sjs?fmt=js", function () {
+            function() {
+              get("sjs_content-type-test-server.sjs?fmt=css", function() {
+                get("sjs_content-type-test-server.sjs?fmt=js", function() {
                   if (!options.getMedia) {
                     return;
                   }
-                  get("sjs_content-type-test-server.sjs?fmt=font", function () {
-                    get("sjs_content-type-test-server.sjs?fmt=image", function () {
-                      get("sjs_content-type-test-server.sjs?fmt=audio", function () {
-                        get("sjs_content-type-test-server.sjs?fmt=video", function () {
+                  get("sjs_content-type-test-server.sjs?fmt=font", function() {
+                    get("sjs_content-type-test-server.sjs?fmt=image", function() {
+                      get("sjs_content-type-test-server.sjs?fmt=audio", function() {
+                        get("sjs_content-type-test-server.sjs?fmt=video", function() {
                           if (!options.getFlash) {
                             return;
                           }
-                          get("sjs_content-type-test-server.sjs?fmt=flash", function () {
+                          get("sjs_content-type-test-server.sjs?fmt=flash", function() {
                             // Done.
                           });
                         });

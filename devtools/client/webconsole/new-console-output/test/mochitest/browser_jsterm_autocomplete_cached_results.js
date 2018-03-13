@@ -12,7 +12,7 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<p>test cached autocompletion results";
 
-add_task(async function () {
+add_task(async function() {
   let { jsterm } = await openNewTabAndConsole(TEST_URI);
   const {
     autocompletePopup: popup,

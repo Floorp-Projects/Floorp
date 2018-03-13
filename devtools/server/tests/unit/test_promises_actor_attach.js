@@ -10,7 +10,7 @@
 
 const { PromisesFront } = require("devtools/shared/fronts/promises");
 
-add_task(async function () {
+add_task(async function() {
   let client = await startTestDebuggerServer("promises-actor-test");
   let chromeActors = await getChromeActors(client);
 

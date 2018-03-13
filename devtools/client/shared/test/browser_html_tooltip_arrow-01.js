@@ -17,23 +17,23 @@ loadHelperScript("helper_html_tooltip.js");
 
 let useXulWrapper;
 
-add_task(function* () {
+add_task(async function() {
   // Force the toolbox to be 200px high;
-  yield pushPref("devtools.toolbox.footer.height", 200);
+  await pushPref("devtools.toolbox.footer.height", 200);
 
-  yield addTab("about:blank");
-  let [,, doc] = yield createHost("bottom", TEST_URI);
+  await addTab("about:blank");
+  let [,, doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
-  yield runTests(doc);
+  await runTests(doc);
 
   info("Run tests for a Tooltip with a XUL panel");
   useXulWrapper = true;
-  yield runTests(doc);
+  await runTests(doc);
 });
 
-function* runTests(doc) {
+async function runTests(doc) {
   info("Create HTML tooltip");
   let tooltip = new HTMLTooltip(doc, {type: "arrow", useXulWrapper});
   let div = doc.createElementNS(HTML_NS, "div");
@@ -45,7 +45,7 @@ function* runTests(doc) {
   let elements = [...doc.querySelectorAll(".anchor")];
   for (let el of elements) {
     info("Display the tooltip on an anchor.");
-    yield showTooltip(tooltip, el);
+    await showTooltip(tooltip, el);
 
     let arrow = tooltip.arrow;
     ok(arrow, "Tooltip has an arrow");
@@ -67,7 +67,7 @@ function* runTests(doc) {
     ok(isInPanel,
       "The tooltip arrow remains inside the tooltip panel horizontally");
 
-    yield hideTooltip(tooltip);
+    await hideTooltip(tooltip);
   }
 
   tooltip.destroy();

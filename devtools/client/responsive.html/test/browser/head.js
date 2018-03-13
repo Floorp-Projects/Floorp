@@ -70,7 +70,7 @@ loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsiv
 /**
  * Open responsive design mode for the given tab.
  */
-var openRDM = async function (tab) {
+var openRDM = async function(tab) {
   info("Opening responsive design mode");
   let manager = ResponsiveUIManager;
   let ui = await manager.openIfNeeded(tab.ownerGlobal, tab);
@@ -81,7 +81,7 @@ var openRDM = async function (tab) {
 /**
  * Close responsive design mode for the given tab.
  */
-var closeRDM = async function (tab, options) {
+var closeRDM = async function(tab, options) {
   info("Closing responsive design mode");
   let manager = ResponsiveUIManager;
   await manager.closeIfNeeded(tab.ownerGlobal, tab, options);
@@ -100,7 +100,7 @@ var closeRDM = async function (tab, options) {
  *   });
  */
 function addRDMTask(url, task) {
-  add_task(async function () {
+  add_task(async function() {
     const tab = await addTab(url);
     const results = await openRDM(tab);
 
@@ -120,7 +120,7 @@ function spawnViewportTask(ui, args, task) {
 }
 
 function waitForFrameLoad(ui, targetURL) {
-  return spawnViewportTask(ui, { targetURL }, async function (args) {
+  return spawnViewportTask(ui, { targetURL }, async function(args) {
     if ((content.document.readyState == "complete" ||
          content.document.readyState == "interactive") &&
         content.location.href == args.targetURL) {
@@ -131,7 +131,7 @@ function waitForFrameLoad(ui, targetURL) {
 }
 
 function waitForViewportResizeTo(ui, width, height) {
-  return new Promise(async function (resolve) {
+  return new Promise(async function(resolve) {
     let isSizeMatching = (data) => data.width == width && data.height == height;
 
     // If the viewport has already the expected size, we resolve the promise immediately.
@@ -158,7 +158,7 @@ function waitForViewportResizeTo(ui, width, height) {
       resolve();
     };
 
-    let onBrowserLoadEnd = async function () {
+    let onBrowserLoadEnd = async function() {
       let data = await getContentSize(ui);
       onResize(undefined, data);
     };
@@ -170,7 +170,7 @@ function waitForViewportResizeTo(ui, width, height) {
   });
 }
 
-var setViewportSize = async function (ui, manager, width, height) {
+var setViewportSize = async function(ui, manager, width, height) {
   let size = ui.getViewportSize();
   info(`Current size: ${size.width} x ${size.height}, ` +
        `set to: ${width} x ${height}`);
@@ -182,7 +182,7 @@ var setViewportSize = async function (ui, manager, width, height) {
 };
 
 function getViewportDevicePixelRatio(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
+  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
     return content.devicePixelRatio;
   });
 }
@@ -279,7 +279,7 @@ const selectNetworkThrottling = (ui, value) => Promise.all([
 ]);
 
 function getSessionHistory(browser) {
-  return ContentTask.spawn(browser, {}, async function () {
+  return ContentTask.spawn(browser, {}, async function() {
     /* eslint-disable no-undef */
     const { SessionHistory } =
       ChromeUtils.import("resource://gre/modules/sessionstore/SessionHistory.jsm", {});
@@ -380,7 +380,7 @@ function testUserAgent(ui, expected) {
 }
 
 async function testUserAgentFromBrowser(browser, expected) {
-  let ua = await ContentTask.spawn(browser, {}, async function () {
+  let ua = await ContentTask.spawn(browser, {}, async function() {
     return content.navigator.userAgent;
   });
   is(ua, expected, `UA should be set to ${expected}`);

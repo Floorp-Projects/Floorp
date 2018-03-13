@@ -8,7 +8,7 @@
 
 const TEST_URI = `data:text/html,<meta charset=utf8>console API calls`;
 
-add_task(async function () {
+add_task(async function() {
   await addTab(TEST_URI);
   const hud = await HUDService.toggleBrowserConsole();
 
@@ -35,7 +35,7 @@ add_task(async function () {
   ];
   const onAllMessages = Promise.all(expectedMessages.map(m => waitForMessage(hud, m)));
 
-  ContentTask.spawn(gBrowser.selectedBrowser, contentArgs, function (args) {
+  ContentTask.spawn(gBrowser.selectedBrowser, contentArgs, function(args) {
     content.console.log(args.log);
     content.console.warn(args.warn);
     content.console.error(args.error);

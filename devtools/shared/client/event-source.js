@@ -28,7 +28,7 @@ function eventSource(proto) {
    *        is added more than once, it will be called once per
    *        addListener call.
    */
-  proto.addListener = function (name, listener) {
+  proto.addListener = function(name, listener) {
     if (typeof listener != "function") {
       throw TypeError("Listeners must be functions.");
     }
@@ -51,7 +51,7 @@ function eventSource(proto) {
    * @returns Promise
    *          Resolved with an array of the arguments of the event.
    */
-  proto.addOneTimeListener = function (name, listener) {
+  proto.addOneTimeListener = function(name, listener) {
     return new Promise(resolve => {
       let l = (eventName, ...rest) => {
         this.removeListener(name, l);
@@ -74,7 +74,7 @@ function eventSource(proto) {
    *        The callback to remove. If addListener was called multiple
    *        times, all instances will be removed.
    */
-  proto.removeListener = function (name, listener) {
+  proto.removeListener = function(name, listener) {
     if (!this._listeners || (listener && !this._listeners[name])) {
       return;
     }
@@ -94,7 +94,7 @@ function eventSource(proto) {
    * @param name string
    *        The event name.
    */
-  proto._getListeners = function (name) {
+  proto._getListeners = function(name) {
     if (name in this._listeners) {
       return this._listeners[name];
     }
@@ -111,7 +111,7 @@ function eventSource(proto) {
    *        All arguments will be passed along to the listeners,
    *        including the name argument.
    */
-  proto.emit = function () {
+  proto.emit = function() {
     if (!this._listeners) {
       return;
     }

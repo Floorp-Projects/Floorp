@@ -11,7 +11,7 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<p>test code completion";
 
-add_task(async function () {
+add_task(async function() {
   let {jsterm} = await openNewTabAndConsole(TEST_URI);
   let input = jsterm.inputNode;
 

@@ -16,7 +16,7 @@ const TEST_URI_ROOT = "http://example.com/browser/devtools/client/shared/test/";
 const OPTIONS_VIEW_URL = TEST_URI_ROOT + "doc_options-view.xul";
 
 function catchFail(func) {
-  return function () {
+  return function() {
     try {
       return func.apply(null, arguments);
     } catch (ex) {
@@ -93,7 +93,7 @@ function waitForValue(options) {
 
 function oneTimeObserve(name, callback) {
   return new Promise((resolve) => {
-    let func = function () {
+    let func = function() {
       Services.obs.removeObserver(func, name);
       if (callback) {
         callback();
@@ -105,18 +105,18 @@ function oneTimeObserve(name, callback) {
 }
 
 let createHost =
-Task.async(function* (type = "bottom", src = CHROME_URL_ROOT + "dummy.html") {
+async function(type = "bottom", src = CHROME_URL_ROOT + "dummy.html") {
   let host = new Hosts[type](gBrowser.selectedTab);
-  let iframe = yield host.create();
+  let iframe = await host.create();
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     let domHelper = new DOMHelpers(iframe.contentWindow);
     iframe.setAttribute("src", src);
     domHelper.onceDOMReady(resolve);
   });
 
   return [host, iframe.contentWindow, iframe.contentDocument];
-});
+};
 
 /**
  * Check the correctness of the data recorded in Telemetry after
@@ -131,7 +131,7 @@ function checkTelemetryResults(Telemetry) {
     if (histId.endsWith("OPENED_COUNT")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element === true;
       });
 
@@ -139,7 +139,7 @@ function checkTelemetryResults(Telemetry) {
     } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function (element) {
+      let okay = value.every(function(element) {
         return element > 0;
       });
 
@@ -155,17 +155,17 @@ function checkTelemetryResults(Telemetry) {
  * @param {Number} usageTime in milliseconds
  * @param {String} toolId
  */
-function* openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
+async function openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
   for (let i = 0; i < nbOfTimes; i++) {
     info("Opening toolbox " + (i + 1));
     let target = TargetFactory.forTab(gBrowser.selectedTab);
-    yield gDevTools.showToolbox(target, toolId);
+    await gDevTools.showToolbox(target, toolId);
 
     // We use a timeout to check the toolbox's active time
-    yield new Promise(resolve => setTimeout(resolve, usageTime));
+    await new Promise(resolve => setTimeout(resolve, usageTime));
 
     info("Closing toolbox " + (i + 1));
-    yield gDevTools.closeToolbox(target);
+    await gDevTools.closeToolbox(target);
   }
 }
 
@@ -200,7 +200,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function () {
+    setTimeout(function() {
       waitUntil(predicate).then(() => resolve(true));
     }, interval);
   });
@@ -225,12 +225,12 @@ function showFilterPopupPresets(widget) {
  * @return {Promise}
  */
 let showFilterPopupPresetsAndCreatePreset =
-Task.async(function* (widget, name, value) {
-  yield showFilterPopupPresets(widget);
+async function(widget, name, value) {
+  await showFilterPopupPresets(widget);
 
   let onRender = widget.once("render");
   widget.setCssValue(value);
-  yield onRender;
+  await onRender;
 
   let footer = widget.el.querySelector(".presets-list .footer");
   footer.querySelector("input").value = name;
@@ -240,5 +240,5 @@ Task.async(function* (widget, name, value) {
     preventDefault: () => {}
   });
 
-  yield onRender;
-});
+  await onRender;
+};

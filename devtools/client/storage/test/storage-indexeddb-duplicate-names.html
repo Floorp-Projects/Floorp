@@ -32,13 +32,13 @@
       });
     }
 
-    window.clear = function* () {
-      yield deleteDB("idb1", "temporary");
-      yield deleteDB("idb1", "default");
-      yield deleteDB("idb1", "persistent");
-      yield deleteDB("idb2", "temporary");
-      yield deleteDB("idb2", "default");
-      yield deleteDB("idb2", "persistent");
+    window.clear = async function () {
+      await deleteDB("idb1", "temporary");
+      await deleteDB("idb1", "default");
+      await deleteDB("idb1", "persistent");
+      await deleteDB("idb2", "temporary");
+      await deleteDB("idb2", "default");
+      await deleteDB("idb2", "persistent");
 
       dump(`removed indexedDB data from ${document.location}\n`);
     };

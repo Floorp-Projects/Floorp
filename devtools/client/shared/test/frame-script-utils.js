@@ -6,23 +6,22 @@
 /* global addMessageListener, sendAsyncMessage, content */
 "use strict";
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const { Task } = require("devtools/shared/task");
 const Services = require("Services");
 
-addMessageListener("devtools:test:history", function ({ data }) {
+addMessageListener("devtools:test:history", function({ data }) {
   content.history[data.direction]();
 });
 
-addMessageListener("devtools:test:navigate", function ({ data }) {
+addMessageListener("devtools:test:navigate", function({ data }) {
   content.location = data.location;
 });
 
-addMessageListener("devtools:test:reload", function ({ data }) {
+addMessageListener("devtools:test:reload", function({ data }) {
   data = data || {};
   content.location.reload(data.forceget);
 });
 
-addMessageListener("devtools:test:console", function ({ data }) {
+addMessageListener("devtools:test:console", function({ data }) {
   let { method, args, id } = data;
   content.console[method].apply(content.console, args);
   sendAsyncMessage("devtools:test:console:response", { id });
@@ -57,7 +56,7 @@ function promiseXHR(data) {
       url += "?devtools-cachebust=" + Math.random();
     }
 
-    xhr.addEventListener("loadend", function (event) {
+    xhr.addEventListener("loadend", function(event) {
       resolve({ status: xhr.status, response: xhr.response });
     }, {once: true});
 
@@ -101,19 +100,19 @@ function promiseXHR(data) {
  *   response: XMLHttpRequest.response
  * }
  */
-addMessageListener("devtools:test:xhr", Task.async(function* ({ data }) {
+addMessageListener("devtools:test:xhr", async function({ data }) {
   let requests = Array.isArray(data) ? data : [data];
   let responses = [];
 
   for (let request of requests) {
-    let response = yield promiseXHR(request);
+    let response = await promiseXHR(request);
     responses.push(response);
   }
 
   sendAsyncMessage("devtools:test:xhr", responses);
-}));
+});
 
-addMessageListener("devtools:test:profiler", function ({ data }) {
+addMessageListener("devtools:test:profiler", function({ data }) {
   let { method, args, id } = data;
   let result = Services.profiler[method](...args);
   sendAsyncMessage("devtools:test:profiler:response", {
@@ -123,14 +122,14 @@ addMessageListener("devtools:test:profiler", function ({ data }) {
 });
 
 // To eval in content, look at `evalInDebuggee` in the shared-head.js.
-addMessageListener("devtools:test:eval", function ({ data }) {
+addMessageListener("devtools:test:eval", function({ data }) {
   sendAsyncMessage("devtools:test:eval:response", {
     value: content.eval(data.script),
     id: data.id
   });
 });
 
-addEventListener("load", function () {
+addEventListener("load", function() {
   sendAsyncMessage("devtools:test:load");
 }, true);
 
@@ -142,7 +141,7 @@ addEventListener("load", function () {
  * - {String} propertyName The name of the property to set.
  * - {String} propertyValue The value for the property.
  */
-addMessageListener("devtools:test:setStyle", function (msg) {
+addMessageListener("devtools:test:setStyle", function(msg) {
   let {selector, propertyName, propertyValue} = msg.data;
   let node = superQuerySelector(selector);
   if (!node) {
@@ -162,7 +161,7 @@ addMessageListener("devtools:test:setStyle", function (msg) {
  * - {String} attributeName The name of the attribute to set.
  * - {String} attributeValue The value for the attribute.
  */
-addMessageListener("devtools:test:setAttribute", function (msg) {
+addMessageListener("devtools:test:setAttribute", function(msg) {
   let {selector, attributeName, attributeValue} = msg.data;
   let node = superQuerySelector(selector);
   if (!node) {

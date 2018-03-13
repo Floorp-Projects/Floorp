@@ -42,6 +42,6 @@ var simulateColorPickerChange = Task.async(function* (colorPicker, newRgba) {
   spectrum.onChange();
 });
 
-registerCleanupFunction(async function () {
+registerCleanupFunction(async function() {
   await asyncStorage.removeItem("gridInspectorHostColors");
 });

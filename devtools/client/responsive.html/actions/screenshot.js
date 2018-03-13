@@ -62,7 +62,7 @@ function simulateCameraEffects(node) {
 module.exports = {
 
   takeScreenshot() {
-    return async function (dispatch, getState) {
+    return async function(dispatch, getState) {
       await dispatch({ type: TAKE_SCREENSHOT_START });
 
       // Waiting the next repaint, to ensure the react components

@@ -23,7 +23,7 @@
  */
 function createController(ed) {
   return {
-    supportsCommand: function (cmd) {
+    supportsCommand: function(cmd) {
       switch (cmd) {
         case "cmd_find":
         case "cmd_findAgain":
@@ -38,7 +38,7 @@ function createController(ed) {
       return false;
     },
 
-    isCommandEnabled: function (cmd) {
+    isCommandEnabled: function(cmd) {
       let cm = ed.codeMirror;
 
       switch (cmd) {
@@ -59,7 +59,7 @@ function createController(ed) {
       return false;
     },
 
-    doCommand: function (cmd) {
+    doCommand: function(cmd) {
       let cm = ed.codeMirror;
 
       let map = {
@@ -81,7 +81,7 @@ function createController(ed) {
       }
     },
 
-    onEvent: function () {}
+    onEvent: function() {}
   };
 }
 

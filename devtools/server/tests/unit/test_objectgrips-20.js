@@ -189,7 +189,7 @@ async function test_object_grip(debuggee, dbgClient, threadClient, testData = {}
   } = testData;
 
   return new Promise((resolve, reject) => {
-    threadClient.addOneTimeListener("paused", async function (event, packet) {
+    threadClient.addOneTimeListener("paused", async function(event, packet) {
       let [grip] = packet.frame.arguments;
 
       let objClient = threadClient.pauseGrip(grip);

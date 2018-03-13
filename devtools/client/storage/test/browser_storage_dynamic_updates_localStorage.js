@@ -6,75 +6,75 @@
 
 // Test dynamic updates in the storage inspector for localStorage.
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
+add_task(async function() {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
 
   gUI.tree.expandAll();
 
   ok(gUI.sidebar.hidden, "Sidebar is initially hidden");
 
-  yield checkState([
+  await checkState([
     [
       ["localStorage", "http://test1.example.org"],
       ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"]
     ],
   ]);
 
-  yield removeLocalStorageItem("ls4");
+  await removeLocalStorageItem("ls4");
 
-  yield gUI.once("store-objects-edit");
+  await gUI.once("store-objects-edit");
 
-  yield checkState([
+  await checkState([
     [
       ["localStorage", "http://test1.example.org"],
       ["ls1", "ls2", "ls3", "ls5", "ls6", "ls7"]
     ],
   ]);
 
-  yield setLocalStorageItem("ls4", "again");
+  await setLocalStorageItem("ls4", "again");
 
-  yield gUI.once("store-objects-edit");
+  await gUI.once("store-objects-edit");
 
-  yield checkState([
+  await checkState([
     [
       ["localStorage", "http://test1.example.org"],
       ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"]
     ],
   ]);
   // Updating a row
-  yield setLocalStorageItem("ls2", "ls2-changed");
+  await setLocalStorageItem("ls2", "ls2-changed");
 
-  yield gUI.once("store-objects-edit");
+  await gUI.once("store-objects-edit");
 
   checkCell("ls2", "value", "ls2-changed");
 
   // Clearing items.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.clear();
   });
 
-  yield gUI.once("store-objects-cleared");
+  await gUI.once("store-objects-cleared");
 
-  yield checkState([
+  await checkState([
     [
       ["localStorage", "http://test1.example.org"],
       [ ]
     ],
   ]);
 
-  yield finishTests();
+  await finishTests();
 });
 
-function* setLocalStorageItem(key, value) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, [key, value],
+async function setLocalStorageItem(key, value) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, [key, value],
     ([innerKey, innerValue]) => {
       content.wrappedJSObject.localStorage.setItem(innerKey, innerValue);
     }
   );
 }
 
-function* removeLocalStorageItem(key) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, key,
+async function removeLocalStorageItem(key) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, key,
     innerKey => {
       content.wrappedJSObject.localStorage.removeItem(innerKey);
     }

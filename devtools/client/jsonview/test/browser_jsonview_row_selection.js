@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   info("Test 1 JSON row selection started");
 
   // Create a tall JSON so that there is a scrollbar.
@@ -38,7 +38,7 @@ add_task(async function () {
   is(await evalInContent("scroller.scrollTop"), 0, "Scrolled to the top.");
 });
 
-add_task(async function () {
+add_task(async function() {
   info("Test 2 JSON row selection started");
 
   let numRows = 4;
@@ -62,7 +62,7 @@ add_task(async function () {
   await assertRowSelected(numRows - 1);
 });
 
-add_task(async function () {
+add_task(async function() {
   info("Test 3 JSON row selection started");
 
   // Create a JSON with a row taller than the panel.

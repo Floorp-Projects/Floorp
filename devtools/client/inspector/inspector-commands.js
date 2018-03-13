@@ -82,7 +82,7 @@ exports.items = [{
   runAt: "server",
   name: "eyedropper_server",
   hidden: true,
-  exec: function (args, {environment}) {
+  exec: function(args, {environment}) {
     let eyeDropper = windowEyeDroppers.get(environment.window);
 
     if (!eyeDropper) {
@@ -106,7 +106,7 @@ exports.items = [{
   runAt: "server",
   name: "eyedropper_server_hide",
   hidden: true,
-  exec: function (args, {environment}) {
+  exec: function(args, {environment}) {
     let eyeDropper = windowEyeDroppers.get(environment.window);
     if (eyeDropper) {
       eyeDropper.hide();

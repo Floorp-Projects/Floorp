@@ -121,6 +121,11 @@ class AsyncTabSwitcher {
     // re-entrancy guard:
     this._processing = false;
 
+    // For telemetry, keeps track of what most recently cleared
+    // the loadTimer, which can tell us something about the cause
+    // of tab switch spinners.
+    this._loadTimerClearedBy = "none",
+
     this._useDumpForLogging = false;
     this._logInit = false;
 
@@ -452,6 +457,18 @@ class AsyncTabSwitcher {
     }
   }
 
+  maybeClearLoadTimer(caller) {
+    if (this.loadingTab) {
+      this._loadTimerClearedBy = caller;
+      this.loadingTab = null;
+      if (this.loadTimer) {
+        this.clearTimer(this.loadTimer);
+        this.loadTimer = null;
+      }
+    }
+  }
+
+
   // We've decided to try to load requestedTab.
   loadRequestedTab() {
     this.assert(!this.loadTimer);
@@ -515,9 +532,7 @@ class AsyncTabSwitcher {
       this.spinnerTab = null;
     }
     if (this.loadingTab && !this.loadingTab.linkedBrowser) {
-      this.loadingTab = null;
-      this.clearTimer(this.loadTimer);
-      this.loadTimer = null;
+      this.maybeClearLoadTimer("preActions");
     }
   }
 
@@ -541,11 +556,7 @@ class AsyncTabSwitcher {
     // synchronously. Clearing this here means that in the next step,
     // we can load the non-remote browser immediately.
     if (!this.requestedTab.linkedBrowser.isRemoteBrowser) {
-      this.loadingTab = null;
-      if (this.loadTimer) {
-        this.clearTimer(this.loadTimer);
-        this.loadTimer = null;
-      }
+      this.maybeClearLoadTimer("postActions");
     }
 
     // If we're not loading anything, try loading the requested tab.
@@ -653,8 +664,7 @@ class AsyncTabSwitcher {
   onLoadTimeout() {
     this.logState("onLoadTimeout");
     this.preActions();
-    this.loadTimer = null;
-    this.loadingTab = null;
+    this.maybeClearLoadTimer("onLoadTimeout");
     this.postActions();
   }
 
@@ -676,9 +686,7 @@ class AsyncTabSwitcher {
     this.unwarmTab(tab);
 
     if (this.loadingTab === tab) {
-      this.clearTimer(this.loadTimer);
-      this.loadTimer = null;
-      this.loadingTab = null;
+      this.maybeClearLoadTimer("onLayersReady");
     }
   }
 
@@ -744,11 +752,7 @@ class AsyncTabSwitcher {
           this.setTabState(tab, this.STATE_UNLOADING);
         }
       }
-      if (this.loadTimer) {
-        this.clearTimer(this.loadTimer);
-        this.loadTimer = null;
-      }
-      this.loadingTab = null;
+      this.maybeClearLoadTimer("onSizeModeOrOcc");
     } else {
       // We're no longer minimized or occluded. This means we might want
       // to activate the current tab's docShell.
@@ -783,16 +787,12 @@ class AsyncTabSwitcher {
     // case it has been swapped. We also set ourBrowser's state
     // to whatever otherBrowser's state was before the swap.
 
-    if (this.loadTimer) {
-      // Clearing the load timer means that we will
-      // immediately display a spinner if ourBrowser isn't
-      // ready yet. Typically it will already be ready
-      // though. If it's not, we're probably in a new window,
-      // in which case we have no other tabs to display anyway.
-      this.clearTimer(this.loadTimer);
-      this.loadTimer = null;
-    }
-    this.loadingTab = null;
+    // Clearing the load timer means that we will
+    // immediately display a spinner if ourBrowser isn't
+    // ready yet. Typically it will already be ready
+    // though. If it's not, we're probably in a new window,
+    // in which case we have no other tabs to display anyway.
+    this.maybeClearLoadTimer("onEndSwapDocShells");
 
     let { state: otherState } = this.swapMap.get(otherBrowser);
 
@@ -1007,6 +1007,9 @@ class AsyncTabSwitcher {
     // when the spinner is displayed for very long periods.
     TelemetryStopwatch.start("FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS", this.window);
     this.addMarker("AsyncTabSwitch:SpinnerShown");
+    Services.telemetry
+      .getHistogramById("FX_TAB_SWITCH_SPINNER_VISIBLE_TRIGGER")
+      .add(this._loadTimerClearedBy);
   }
 
   spinnerHidden() {
@@ -1017,6 +1020,7 @@ class AsyncTabSwitcher {
     TelemetryStopwatch.finish("FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS", this.window);
     this.addMarker("AsyncTabSwitch:SpinnerHidden");
     // we do not get a onPaint after displaying the spinner
+    this._loadTimerClearedBy = "none";
   }
 
   addMarker(marker) {

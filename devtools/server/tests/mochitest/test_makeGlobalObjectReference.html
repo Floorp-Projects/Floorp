@@ -20,7 +20,7 @@ Debugger.prototype.makeGlobalObjectReference should dereference WindowProxy
 ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   let iframe = document.createElement("iframe");

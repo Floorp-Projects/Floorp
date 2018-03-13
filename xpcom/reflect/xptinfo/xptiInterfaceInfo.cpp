@@ -16,33 +16,32 @@
 using namespace mozilla;
 
 /* static */ xptiInterfaceEntry*
-xptiInterfaceEntry::Create(const char* aName,
-                           const nsID& aIID,
-                           const XPTInterfaceDescriptor* aDescriptor,
+xptiInterfaceEntry::Create(const XPTInterfaceDirectoryEntry* aEntry,
                            xptiTypelibGuts* aTypelib)
 {
     void* place = XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry));
     if (!place) {
         return nullptr;
     }
-    return new (place) xptiInterfaceEntry(aName, aIID, aDescriptor, aTypelib);
+    return new (place) xptiInterfaceEntry(aEntry, aTypelib);
 }
 
-xptiInterfaceEntry::xptiInterfaceEntry(const char* aName,
-                                       const nsID& aIID,
-                                       const XPTInterfaceDescriptor* aDescriptor,
+xptiInterfaceEntry::xptiInterfaceEntry(const XPTInterfaceDirectoryEntry* aEntry,
                                        xptiTypelibGuts* aTypelib)
-    : mIID(aIID)
-    , mDescriptor(aDescriptor)
+    : mIID(aEntry->mIID)
+    , mDescriptor(aEntry->mInterfaceDescriptor)
     , mTypelib(aTypelib)
     , mParent(nullptr)
     , mInfo(nullptr)
     , mMethodBaseIndex(0)
     , mConstantBaseIndex(0)
     , mFlags(0)
-    , mName(aName)
+    , mName(aEntry->mName)
 {
     SetResolvedState(PARTIALLY_RESOLVED);
+    SetScriptableFlag(mDescriptor->IsScriptable());
+    SetBuiltinClassFlag(mDescriptor->IsBuiltinClass());
+    SetMainProcessScriptableOnlyFlag(mDescriptor->IsMainProcessScriptableOnly());
 }
 
 bool

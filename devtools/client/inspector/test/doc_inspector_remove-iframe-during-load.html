@@ -23,7 +23,7 @@
     yay.textContent = "before events";
 
     // Create/remove an iframe on DOMContentLoaded.
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
       let newIframe = document.createElement("iframe");
       document.body.appendChild(newIframe);
       newIframe.remove();
@@ -31,7 +31,7 @@
     });
 
     // Create/remove an iframe on window load.
-    window.addEventListener("load", function () {
+    window.addEventListener("load", function() {
       let newIframe = document.createElement("iframe");
       document.body.appendChild(newIframe);
       newIframe.remove();

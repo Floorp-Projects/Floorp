@@ -30,42 +30,42 @@ const TEST_DATA = [
 ];
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function() {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
 });
 
-function* performTest() {
-  let [host,, doc] = yield createHost("window");
+async function performTest() {
+  let [host,, doc] = await createHost("window");
   doc.body.setAttribute("style",
                         "position: fixed; width: 100%; height: 100%; margin: 0;");
 
   let graph = new LineGraphWidget(doc.body, "fps");
   graph.fixedWidth = 200;
   graph.fixedHeight = 100;
-  yield graph.once("ready");
+  await graph.once("ready");
 
   let refreshCount = 0;
   let refreshCancelledCount = 0;
   graph.on("refresh", () => refreshCount++);
   graph.on("refresh-cancelled", () => refreshCancelledCount++);
 
-  yield testGraph(host, graph);
+  await testGraph(host, graph);
 
   is(refreshCount, 0, "The graph shouldn't have been refreshed at all.");
   is(refreshCancelledCount, 2, "The graph should've had 2 refresh attempts.");
 
-  yield graph.destroy();
+  await graph.destroy();
   host.destroy();
 }
 
-function* testGraph(host, graph) {
+async function testGraph(host, graph) {
   graph.setData(TEST_DATA);
 
   host._window.resizeBy(-100, -100);
-  yield graph.once("refresh-cancelled");
+  await graph.once("refresh-cancelled");
 
   host._window.resizeBy(100, 100);
-  yield graph.once("refresh-cancelled");
+  await graph.once("refresh-cancelled");
 }

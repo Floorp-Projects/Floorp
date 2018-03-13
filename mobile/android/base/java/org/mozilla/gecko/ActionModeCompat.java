@@ -21,7 +21,7 @@ import org.mozilla.gecko.widget.GeckoPopupMenu;
 class ActionModeCompat extends ActionMode implements GeckoPopupMenu.OnMenuItemClickListener,
         GeckoPopupMenu.OnMenuItemLongClickListener,
         View.OnClickListener {
-    private final String LOGTAG = "GeckoActionModeCompat";
+    private static final String LOGTAG = "GeckoActionModeCompat";
 
     private final Callback mCallback;
     private final ActionModeCompatView mView;

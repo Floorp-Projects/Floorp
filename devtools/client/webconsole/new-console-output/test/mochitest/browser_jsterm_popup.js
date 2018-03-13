@@ -9,7 +9,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete popup test";
 
-add_task(async function () {
+add_task(async function() {
   const {jsterm} = await openNewTabAndConsole(TEST_URI);
   const {
     autocompletePopup: popup,

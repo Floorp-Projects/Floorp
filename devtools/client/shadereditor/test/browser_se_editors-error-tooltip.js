@@ -6,21 +6,21 @@
  * a shader compilation error.
  */
 
-function* ifWebGLSupported() {
-  let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
+async function ifWebGLSupported() {
+  let { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
-  yield promise.all([
+  await promise.all([
     once(gFront, "program-linked"),
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
-  let vsEditor = yield ShadersEditorsView._getEditor("vs");
-  let fsEditor = yield ShadersEditorsView._getEditor("fs");
+  let vsEditor = await ShadersEditorsView._getEditor("vs");
+  let fsEditor = await ShadersEditorsView._getEditor("fs");
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  yield once(panel.panelWin, EVENTS.SHADER_COMPILED);
+  await once(panel.panelWin, EVENTS.SHADER_COMPILED);
 
   // Synthesizing 'mouseover' events doesn't work, hack around this by
   // manually calling the event listener with the expected arguments.
@@ -55,6 +55,6 @@ function* ifWebGLSupported() {
   ok(messages[2].textContent.includes("'assign' : cannot convert"),
     "The third message contains the correct text.");
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }

@@ -23,7 +23,7 @@ function Keyframes() {}
 exports.Keyframes = Keyframes;
 
 Keyframes.prototype = {
-  init: function (containerEl) {
+  init: function(containerEl) {
     this.containerEl = containerEl;
 
     this.keyframesEl = createNode({
@@ -32,12 +32,12 @@ Keyframes.prototype = {
     });
   },
 
-  destroy: function () {
+  destroy: function() {
     this.keyframesEl.remove();
     this.containerEl = this.keyframesEl = this.animation = null;
   },
 
-  render: function ({keyframes, propertyName, animation, animationType}) {
+  render: function({keyframes, propertyName, animation, animationType}) {
     this.keyframes = keyframes;
     this.propertyName = propertyName;
     this.animation = animation;

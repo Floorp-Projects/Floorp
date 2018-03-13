@@ -6,7 +6,7 @@
 /**
  * Basic tests for exporting Network panel content into HAR format.
  */
-add_task(async function () {
+add_task(async function() {
   // Disable tcp fast open, because it is setting a response header indicator
   // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
   // number of response headers will vary depending on the platform.

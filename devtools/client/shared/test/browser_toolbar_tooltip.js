@@ -17,8 +17,8 @@ registerCleanupFunction(() => {
 
 let toolbar = gDevToolsBrowser.getDeveloperToolbar(window);
 
-add_task(function* showToolbar() {
-  yield addTab(TEST_URI);
+add_task(async function showToolbar() {
+  await addTab(TEST_URI);
 
   info("Starting browser_toolbar_tooltip.js");
 
@@ -26,14 +26,14 @@ add_task(function* showToolbar() {
 
   let showPromise = observeOnce(toolbar.NOTIFICATIONS.SHOW);
   document.getElementById("menu_devToolbar").doCommand();
-  yield showPromise;
+  await showPromise;
 });
 
-add_task(function* testDimensions() {
+add_task(async function testDimensions() {
   let tooltipPanel = toolbar.tooltipPanel;
 
   toolbar.focusManager.helpRequest();
-  yield toolbar.inputter.setInput("help help");
+  await toolbar.inputter.setInput("help help");
 
   toolbar.inputter.setCursor({ start: "help help".length });
   is(tooltipPanel._dimensions.start, "help ".length,
@@ -56,35 +56,35 @@ add_task(function* testDimensions() {
   ok(getLeftMargin() > 9, "tooltip offset, when cursor at start");
 });
 
-add_task(function* testThemes() {
+add_task(async function testThemes() {
   let tooltipPanel = toolbar.tooltipPanel;
   ok(tooltipPanel.document, "Tooltip panel is initialized");
 
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "dark");
 
-  yield toolbar.inputter.setInput("");
-  yield toolbar.inputter.setInput("help help");
+  await toolbar.inputter.setInput("");
+  await toolbar.inputter.setInput("help help");
   is(tooltipPanel.document.documentElement.getAttribute("devtoolstheme"),
      "dark", "Tooltip panel has correct theme");
 
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "light");
 
-  yield toolbar.inputter.setInput("");
-  yield toolbar.inputter.setInput("help help");
+  await toolbar.inputter.setInput("");
+  await toolbar.inputter.setInput("help help");
   is(tooltipPanel.document.documentElement.getAttribute("devtoolstheme"),
      "light", "Tooltip panel has correct theme");
 });
 
-add_task(function* hideToolbar() {
+add_task(async function hideToolbar() {
   info("Ending browser_toolbar_tooltip.js");
-  yield toolbar.inputter.setInput("");
+  await toolbar.inputter.setInput("");
 
   ok(toolbar.visible, "DeveloperToolbar is visible in hideToolbar");
 
   info("Hide toolbar");
   let hidePromise = observeOnce(toolbar.NOTIFICATIONS.HIDE);
   document.getElementById("menu_devToolbar").doCommand();
-  yield hidePromise;
+  await hidePromise;
 
   ok(!toolbar.visible, "DeveloperToolbar is not visible in hideToolbar");
 
@@ -97,8 +97,8 @@ function getLeftMargin() {
 }
 
 function observeOnce(topic, ownsWeak = false) {
-  return new Promise(function (resolve, reject) {
-    let resolver = function (subject) {
+  return new Promise(function(resolve, reject) {
+    let resolver = function(subject) {
       Services.obs.removeObserver(resolver, topic);
       resolve(subject);
     };

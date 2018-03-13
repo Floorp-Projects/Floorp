@@ -6,16 +6,30 @@
 #include "CustomMatchers.h"
 
 void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
+  auto Refcounted = qualType(hasDeclaration(cxxRecordDecl(isRefCounted())));
   auto InvalidArg =
       // We want to find any expression,
       ignoreTrivials(expr(
           // which has a refcounted pointer type,
-          hasType(pointerType(
-              pointee(hasDeclaration(cxxRecordDecl(isRefCounted()))))),
+          anyOf(
+            hasType(Refcounted),
+            hasType(pointsTo(Refcounted)),
+            hasType(references(Refcounted))
+          ),
           // and which is not this,
           unless(cxxThisExpr()),
           // and which is not a method call on a smart ptr,
           unless(cxxMemberCallExpr(on(hasType(isSmartPtrToRefCounted())))),
+          // and which is not calling operator* on a smart ptr.
+          unless(
+            allOf(
+              cxxOperatorCallExpr(hasOverloadedOperatorName("*")),
+              callExpr(allOf(
+                hasAnyArgument(hasType(isSmartPtrToRefCounted())),
+                argumentCountIs(1)
+              ))
+            )
+          ),
           // and which is not a parameter of the parent function,
           unless(declRefExpr(to(parmVarDecl()))),
           // and which is not a MOZ_KnownLive wrapped value.
@@ -215,7 +229,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   // If we have an invalid argument in the call, we emit the diagnostic to
   // signal it.
   if (InvalidArg) {
-    diag(CallRange.getBegin(), ErrorInvalidArg, DiagnosticIDs::Error)
+    diag(InvalidArg->getExprLoc(), ErrorInvalidArg, DiagnosticIDs::Error)
         << CallRange;
   }
 

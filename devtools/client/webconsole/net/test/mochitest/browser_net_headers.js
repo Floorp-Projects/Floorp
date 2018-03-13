@@ -13,21 +13,21 @@ const JSON_XHR_URL = URL_ROOT + "test.json";
  * networks details in the Console panel and checks that
  * HTTP headers are there.
  */
-add_task(function* () {
+add_task(async function () {
   // Disable rcwn to make cache behavior deterministic.
-  yield pushPref("network.http.rcwn.enabled", false);
+  await pushPref("network.http.rcwn.enabled", false);
 
   info("Test XHR Spy headers started");
 
-  let {hud} = yield addTestTab(TEST_PAGE_URL);
+  let {hud} = await addTestTab(TEST_PAGE_URL);
 
-  let netInfoBody = yield executeAndInspectXhr(hud, {
+  let netInfoBody = await executeAndInspectXhr(hud, {
     method: "GET",
     url: JSON_XHR_URL
   });
 
   // Select "Headers" tab
-  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "headers");
+  let tabBody = await selectNetInfoTab(hud, netInfoBody, "headers");
   let paramName = tabBody.querySelector(
     ".netInfoParamName > span[title='content-type']");
 

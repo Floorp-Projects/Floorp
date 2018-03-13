@@ -10,7 +10,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   const TEST_URI = "data:text/html;charset=utf8,<title>bug871156</title>\n" +
                    "<p>hello world";
   let firstTab = gBrowser.selectedTab;
@@ -26,12 +26,12 @@ add_task(async function () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = gDevTools.getToolbox(target);
 
-  gBrowser.tabContainer.addEventListener("TabClose", function () {
+  gBrowser.tabContainer.addEventListener("TabClose", function() {
     info("tab closed");
     tabClosed.resolve(null);
   }, {once: true});
 
-  gBrowser.tabContainer.addEventListener("TabSelect", function () {
+  gBrowser.tabContainer.addEventListener("TabSelect", function() {
     if (gBrowser.selectedTab == firstTab) {
       info("tab selected");
       tabSelected.resolve(null);

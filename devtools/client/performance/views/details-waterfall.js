@@ -38,7 +38,7 @@ var WaterfallView = extend(DetailsSubview, {
   /**
    * Sets up the view with event binding.
    */
-  initialize: function () {
+  initialize: function() {
     DetailsSubview.initialize.call(this);
 
     this._cache = new WeakMap();
@@ -69,7 +69,7 @@ var WaterfallView = extend(DetailsSubview, {
   /**
    * Unbinds events.
    */
-  destroy: function () {
+  destroy: function() {
     DetailsSubview.destroy.call(this);
 
     clearNamedTimeout("waterfall-resize");
@@ -90,7 +90,7 @@ var WaterfallView = extend(DetailsSubview, {
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
    */
-  render: function (interval = {}) {
+  render: function(interval = {}) {
     let recording = PerformanceController.getCurrentRecording();
     if (recording.isRecording()) {
       return;
@@ -108,7 +108,7 @@ var WaterfallView = extend(DetailsSubview, {
    * Called when a marker is selected in the waterfall view,
    * updating the markers detail view.
    */
-  _onMarkerSelected: function (event, marker) {
+  _onMarkerSelected: function(event, marker) {
     let recording = PerformanceController.getCurrentRecording();
     let frames = recording.getFrames();
     let allocations = recording.getConfiguration().withAllocations;
@@ -125,7 +125,7 @@ var WaterfallView = extend(DetailsSubview, {
   /**
    * Called when the marker details view is resized.
    */
-  _onResize: function () {
+  _onResize: function() {
     setNamedTimeout("waterfall-resize", WATERFALL_RESIZE_EVENTS_DRAIN, () => {
       this.render(OverviewView.getTimeInterval());
     });
@@ -134,7 +134,7 @@ var WaterfallView = extend(DetailsSubview, {
   /**
    * Called whenever an observed pref is changed.
    */
-  _onObservedPrefChange: function (prefName) {
+  _onObservedPrefChange: function(prefName) {
     this._hiddenMarkers = PerformanceController.getPref("hidden-markers");
 
     // Clear the cache as we'll need to recompute the collapsed
@@ -145,14 +145,14 @@ var WaterfallView = extend(DetailsSubview, {
   /**
    * Called when MarkerDetails view emits an event to view source.
    */
-  _onViewSource: function (_, data) {
+  _onViewSource: function(_, data) {
     gToolbox.viewSourceInDebugger(data.url, data.line);
   },
 
   /**
    * Called when MarkerDetails view emits an event to snap to allocations.
    */
-  _onShowAllocations: function (_, data) {
+  _onShowAllocations: function(_, data) {
     let { endTime } = data;
     let startTime = 0;
     let recording = PerformanceController.getCurrentRecording();
@@ -192,7 +192,7 @@ var WaterfallView = extend(DetailsSubview, {
    * Called when the recording is stopped and prepares data to
    * populate the waterfall tree.
    */
-  _prepareWaterfallTree: function (markers) {
+  _prepareWaterfallTree: function(markers) {
     let cached = this._cache.get(markers);
     if (cached) {
       return cached;
@@ -214,7 +214,7 @@ var WaterfallView = extend(DetailsSubview, {
    * Calculates the available width for the waterfall.
    * This should be invoked every time the container node is resized.
    */
-  _recalculateBounds: function () {
+  _recalculateBounds: function() {
     this.waterfallWidth = this.treeContainer.clientWidth
       - this.WATERFALL_MARKER_SIDEBAR_WIDTH
       - this.WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS;
@@ -223,7 +223,7 @@ var WaterfallView = extend(DetailsSubview, {
   /**
    * Renders the waterfall tree.
    */
-  _populateWaterfallTree: function (rootMarkerNode, interval) {
+  _populateWaterfallTree: function(rootMarkerNode, interval) {
     this._recalculateBounds();
 
     let doc = this.treeContainer.ownerDocument;

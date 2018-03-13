@@ -7,7 +7,7 @@
  * Tests if beacons are handled correctly.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { tab, monitor } = await initNetMonitor(SEND_BEACON_URL);
   let { store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -19,7 +19,7 @@ add_task(async function () {
   is(store.getState().requests.requests.size, 0, "The requests menu should be empty.");
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.wrappedJSObject.performRequest();
   });
   await wait;

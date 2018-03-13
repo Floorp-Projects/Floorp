@@ -503,22 +503,10 @@ window._gBrowser = {
     return findBar;
   },
 
-  getStatusPanel() {
-    if (!this._statusPanel) {
-      this._statusPanel = document.createElementNS(this._XUL_NS, "statuspanel");
-      this._statusPanel.setAttribute("inactive", "true");
-      this._statusPanel.setAttribute("layer", "true");
-      this._appendStatusPanel();
-    }
-    return this._statusPanel;
-  },
-
   _appendStatusPanel() {
-    if (this._statusPanel) {
-      let browser = this.selectedBrowser;
-      let browserContainer = this.getBrowserContainer(browser);
-      browserContainer.insertBefore(this._statusPanel, browser.parentNode.nextSibling);
-    }
+    let browser = this.selectedBrowser;
+    let browserContainer = this.getBrowserContainer(browser);
+    browserContainer.insertBefore(StatusPanel.panel, browser.parentNode.nextSibling);
   },
 
   pinTab(aTab) {
@@ -685,7 +673,7 @@ window._gBrowser = {
 
   getTabFromAudioEvent(aEvent) {
     if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
-      !aEvent.isTrusted) {
+        !aEvent.isTrusted) {
       return null;
     }
 
@@ -694,7 +682,7 @@ window._gBrowser = {
     return tab;
   },
 
-  _callProgressListeners(aBrowser, aMethod, aArguments, aCallGlobalListeners, aCallTabsListeners) {
+  _callProgressListeners(aBrowser, aMethod, aArguments, aCallGlobalListeners = true, aCallTabsListeners = true) {
     var rv = true;
 
     function callListeners(listeners, args) {
@@ -711,17 +699,13 @@ window._gBrowser = {
       }
     }
 
-    if (!aBrowser)
-      aBrowser = this.mCurrentBrowser;
+    aBrowser = aBrowser || this.mCurrentBrowser;
 
-    // eslint-disable-next-line mozilla/no-compare-against-boolean-literals
-    if (aCallGlobalListeners != false &&
-        aBrowser == this.mCurrentBrowser) {
+    if (aCallGlobalListeners && aBrowser == this.mCurrentBrowser) {
       callListeners(this.mProgressListeners, aArguments);
     }
 
-    // eslint-disable-next-line mozilla/no-compare-against-boolean-literals
-    if (aCallTabsListeners != false) {
+    if (aCallTabsListeners) {
       aArguments.unshift(aBrowser);
 
       callListeners(this.mTabsProgressListeners, aArguments);
@@ -4613,4 +4597,131 @@ class TabProgressListener {
     throw Cr.NS_NOINTERFACE;
   }
 }
+
+let StatusPanel = {
+  get panel() {
+    window.addEventListener("resize", this);
+
+    delete this.panel;
+    return this.panel = document.getElementById("statuspanel");
+  },
+
+  get isVisible() {
+    return !this.panel.hasAttribute("inactive");
+  },
+
+  update() {
+    let text;
+    let type;
+    let types = ["overLink"];
+    if (XULBrowserWindow.busyUI) {
+      types.push("status");
+    }
+    types.push("defaultStatus");
+    for (type of types) {
+      if ((text = XULBrowserWindow[type])) {
+        break;
+      }
+    }
+
+    if (this._labelElement.value != text) {
+      this.panel.setAttribute("previoustype", this.panel.getAttribute("type"));
+      this.panel.setAttribute("type", type);
+      this._label = text;
+      this._labelElement.setAttribute("crop", type == "overLink" ? "center" : "end");
+    }
+  },
+
+  get _labelElement() {
+    delete this._labelElement;
+    return this._labelElement = document.getElementById("statuspanel-label");
+  },
+
+  set _label(val) {
+    if (!this.isVisible) {
+      this.panel.removeAttribute("mirror");
+      this.panel.removeAttribute("sizelimit");
+    }
+
+    if (this.panel.getAttribute("type") == "status" &&
+        this.panel.getAttribute("previoustype") == "status") {
+      // Before updating the label, set the panel's current width as its
+      // min-width to let the panel grow but not shrink and prevent
+      // unnecessary flicker while loading pages. We only care about the
+      // panel's width once it has been painted, so we can do this
+      // without flushing layout.
+      this.panel.style.minWidth =
+        window.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDOMWindowUtils)
+              .getBoundsWithoutFlushing(this.panel).width + "px";
+    } else {
+      this.panel.style.minWidth = "";
+    }
+
+    if (val) {
+      this._labelElement.value = val;
+      this.panel.removeAttribute("inactive");
+      this._mouseTargetRect = null;
+      MousePosTracker.addListener(this);
+    } else {
+      this.panel.setAttribute("inactive", "true");
+      MousePosTracker.removeListener(this);
+    }
+
+    return val;
+  },
+
+  getMouseTargetRect() {
+    if (!this._mouseTargetRect) {
+      this._calcMouseTargetRect();
+    }
+    return this._mouseTargetRect;
+  },
+
+  onMouseEnter() {
+    this._mirror();
+  },
+
+  onMouseLeave() {
+    this._mirror();
+  },
+
+  handleEvent(event) {
+    if (!this.isVisible) {
+      return;
+    }
+    switch (event.type) {
+      case "resize":
+        this._mouseTargetRect = null;
+        break;
+    }
+  },
+
+  _calcMouseTargetRect() {
+    let container = this.panel.parentNode;
+    let alignRight = (getComputedStyle(container).direction == "rtl");
+    let panelRect = this.panel.getBoundingClientRect();
+    let containerRect = container.getBoundingClientRect();
+
+    this._mouseTargetRect = {
+      top:    panelRect.top,
+      bottom: panelRect.bottom,
+      left:   alignRight ? containerRect.right - panelRect.width : containerRect.left,
+      right:  alignRight ? containerRect.right : containerRect.left + panelRect.width
+    };
+  },
+
+  _mirror() {
+    if (this.panel.hasAttribute("mirror")) {
+      this.panel.removeAttribute("mirror");
+    } else {
+      this.panel.setAttribute("mirror", "true");
+    }
+
+    if (!this.panel.hasAttribute("sizelimit")) {
+      this.panel.setAttribute("sizelimit", "true");
+      this._mouseTargetRect = null;
+    }
+  }
+};
 

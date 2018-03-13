@@ -57,10 +57,10 @@ function openBoxModelView() {
     // The actual highligher show/hide methods are mocked in box model tests.
     // The highlighter is tested in devtools/inspector/test.
     function mockHighlighter({highlighter}) {
-      highlighter.showBoxModel = function () {
+      highlighter.showBoxModel = function() {
         return promise.resolve();
       };
-      highlighter.hideBoxModel = function () {
+      highlighter.hideBoxModel = function() {
         return promise.resolve();
       };
     }

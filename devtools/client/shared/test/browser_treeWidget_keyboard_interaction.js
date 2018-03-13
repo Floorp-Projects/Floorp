@@ -11,7 +11,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<head>" +
   "ets.css'></head><body><div></div><span></span></body>";
 const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 
-add_task(async function () {
+add_task(async function() {
   await addTab("about:blank");
   let [host, win, doc] = await createHost("bottom", TEST_URI);
 

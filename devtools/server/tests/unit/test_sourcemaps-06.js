@@ -18,9 +18,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_source_content();
                            });
@@ -37,7 +37,7 @@ function test_source_content() {
     }
     gThreadClient.removeListener("newSource", _onNewSource);
 
-    gThreadClient.getSources(function (response) {
+    gThreadClient.getSources(function(response) {
       Assert.ok(!response.error, "Should not get an error");
 
       testContents(response.sources, 0, (timesCalled) => {

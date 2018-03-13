@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
 "use strict";
 
-window.onload = function () {
+window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -28,7 +28,7 @@ function assertOwnership() {
 }
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function (err, client, tab, doc) {
+  attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
@@ -144,7 +144,7 @@ addTest(function testQuerySelectors() {
 // Helper to check the response of requests that return hasFirst/hasLast/nodes
 // node lists (like `children` and `siblings`)
 function nodeArrayChecker(first, last, ids) {
-  return function (response) {
+  return function(response) {
     is(response.hasFirst, first,
        "Should " + (first ? "" : "not ") + " have the first node.");
     is(response.hasLast, last, "Should " + (last ? "" : "not ") + " have the last node.");
@@ -287,7 +287,7 @@ addTest(function testLongValue() {
   const WalkerActor = require("devtools/server/actors/inspector/walker");
 
   WalkerActor.setValueSummaryLength(testSummaryLength);
-  SimpleTest.registerCleanupFunction(function () {
+  SimpleTest.registerCleanupFunction(function() {
     WalkerActor.setValueSummaryLength(WalkerActor.DEFAULT_VALUE_SUMMARY_LENGTH);
   });
 

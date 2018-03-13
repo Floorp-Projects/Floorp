@@ -74,7 +74,7 @@ module.exports = {
   updatePreferredDevices: updatePreferredDevices,
 
   addCustomDevice(device) {
-    return async function (dispatch) {
+    return async function(dispatch) {
       // Add custom device to device storage
       await addDevice(device, "custom");
       dispatch({
@@ -101,7 +101,7 @@ module.exports = {
   },
 
   removeCustomDevice(device) {
-    return async function (dispatch, getState) {
+    return async function(dispatch, getState) {
       // Check if the custom device is currently associated with any viewports
       let { viewports } = getState();
       for (let viewport of viewports) {
@@ -130,7 +130,7 @@ module.exports = {
   },
 
   loadDevices() {
-    return async function (dispatch) {
+    return async function(dispatch) {
       dispatch({ type: LOAD_DEVICE_LIST_START });
       let preferredDevices = loadPreferredDevices();
       let devices;

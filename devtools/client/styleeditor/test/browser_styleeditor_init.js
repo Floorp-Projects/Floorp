@@ -20,8 +20,8 @@ const EXPECTED_SHEETS = [
   }
 ];
 
-add_task(function* () {
-  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
+add_task(async function() {
+  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "The UI contains two style sheets.");
   checkSheet(ui.editors[0], EXPECTED_SHEETS[0]);

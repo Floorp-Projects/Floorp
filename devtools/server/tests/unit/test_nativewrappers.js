@@ -6,7 +6,7 @@ function run_test() {
 
   let dbg = new Debugger();
   dbg.addDebuggee(g);
-  dbg.onDebuggerStatement = function (frame) {
+  dbg.onDebuggerStatement = function(frame) {
     let args = frame.arguments;
     try {
       args[0];

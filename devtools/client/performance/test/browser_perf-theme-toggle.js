@@ -17,19 +17,19 @@ Services.prefs.setBoolPref(MEMORY_PREF, false);
 
 requestLongerTimeout(2);
 
-function* spawnTest() {
-  let { panel } = yield initPerformance(SIMPLE_URL);
+async function spawnTest() {
+  let { panel } = await initPerformance(SIMPLE_URL);
   let { EVENTS, $, OverviewView, document: doc } = panel.panelWin;
 
-  yield startRecording(panel);
+  await startRecording(panel);
   let markers = OverviewView.graphs.get("timeline");
   is(markers.backgroundColor, DARK_BG,
     "correct theme on load for markers.");
-  yield stopRecording(panel);
+  await stopRecording(panel);
 
   let refreshed = once(markers, "refresh");
   setTheme("light");
-  yield refreshed;
+  await refreshed;
 
   ok(true, "markers were rerendered after theme change.");
   is(markers.backgroundColor, LIGHT_BG,
@@ -38,24 +38,24 @@ function* spawnTest() {
   // reset back to dark
   refreshed = once(markers, "refresh");
   setTheme("dark");
-  yield refreshed;
+  await refreshed;
 
   info("Testing with memory overview");
 
   Services.prefs.setBoolPref(MEMORY_PREF, true);
 
-  yield startRecording(panel);
+  await startRecording(panel);
   let memory = OverviewView.graphs.get("memory");
   is(memory.backgroundColor, DARK_BG,
     "correct theme on load for memory.");
-  yield stopRecording(panel);
+  await stopRecording(panel);
 
   refreshed = Promise.all([
     once(markers, "refresh"),
     once(memory, "refresh"),
   ]);
   setTheme("light");
-  yield refreshed;
+  await refreshed;
 
   ok(true, "Both memory and markers were rerendered after theme change.");
   is(markers.backgroundColor, LIGHT_BG,
@@ -70,9 +70,9 @@ function* spawnTest() {
 
   // Set theme back to light
   setTheme("light");
-  yield refreshed;
+  await refreshed;
 
-  yield teardown(panel);
+  await teardown(panel);
   finish();
 }
 /* eslint-enable */

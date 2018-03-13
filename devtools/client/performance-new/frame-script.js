@@ -67,7 +67,7 @@ function createPromiseInPage(fun, contentGlobal) {
  * return value available to the page.
  */
 function wrapFunction(fun, contentGlobal) {
-  return function () {
+  return function() {
     let result = fun.apply(this, arguments);
     if (typeof result === "object") {
       if (("then" in result) && (typeof result.then === "function")) {

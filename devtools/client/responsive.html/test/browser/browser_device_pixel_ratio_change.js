@@ -24,7 +24,7 @@ const testDevice = {
 // Add the new device to the list
 addDeviceForTest(testDevice);
 
-addRDMTask(TEST_URL, async function ({ ui, manager }) {
+addRDMTask(TEST_URL, async function({ ui, manager }) {
   await waitStartup(ui);
 
   await testDefaults(ui);
@@ -110,7 +110,7 @@ function testViewportDevicePixelRatioSelect(ui, expected) {
 }
 
 function waitForDevicePixelRatio(ui, expected) {
-  return ContentTask.spawn(ui.getViewportBrowser(), { expected }, function (args) {
+  return ContentTask.spawn(ui.getViewportBrowser(), { expected }, function(args) {
     let initial = content.devicePixelRatio;
     info(`Listening for pixel ratio change ` +
          `(current: ${initial}, expected: ${args.expected})`);

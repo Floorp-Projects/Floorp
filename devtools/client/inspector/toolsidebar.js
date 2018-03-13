@@ -71,7 +71,7 @@ ToolSidebar.prototype = {
 
   // Rendering
 
-  render: function () {
+  render: function() {
     let Tabbar = this.React.createFactory(this.browserRequire(
       "devtools/client/shared/components/tabs/TabBar"));
 
@@ -93,7 +93,7 @@ ToolSidebar.prototype = {
    * @param {Boolean} selected true if the panel should be selected
    * @param {Number} index the position where the tab should be inserted
    */
-  addTab: function (id, title, panel, selected, index) {
+  addTab: function(id, title, panel, selected, index) {
     this._tabbar.addTab(id, title, selected, panel, null, index);
     this.emit("new-tab-registered", id);
   },
@@ -107,7 +107,7 @@ ToolSidebar.prototype = {
    * @param {Boolean} selected true if the panel should be selected
    * @param {Number} index the position where the tab should be inserted
    */
-  addExistingTab: function (id, title, selected, index) {
+  addExistingTab: function(id, title, selected, index) {
     let panel = this.InspectorTabPanel({
       id: id,
       idPrefix: this.TABPANEL_ID_PREFIX,
@@ -129,7 +129,7 @@ ToolSidebar.prototype = {
    * @param {Boolean} selected true if the panel should be selected
    * @param {Number} index the position where the tab should be inserted
    */
-  addFrameTab: function (id, title, url, selected, index) {
+  addFrameTab: function(id, title, url, selected, index) {
     let panel = this.InspectorTabPanel({
       id: id,
       idPrefix: this.TABPANEL_ID_PREFIX,
@@ -143,7 +143,7 @@ ToolSidebar.prototype = {
     this.addTab(id, title, panel, selected, index);
   },
 
-  onSidePanelMounted: function (content, props) {
+  onSidePanelMounted: function(content, props) {
     let iframe = content.querySelector("iframe");
     if (!iframe || iframe.getAttribute("src")) {
       return;
@@ -164,7 +164,7 @@ ToolSidebar.prototype = {
     iframe.setAttribute("src", props.url);
   },
 
-  onSidePanelUnmounted: function (content, props) {
+  onSidePanelUnmounted: function(content, props) {
     let iframe = content.querySelector("iframe");
     if (!iframe || !iframe.hasAttribute("src")) {
       return;
@@ -202,21 +202,21 @@ ToolSidebar.prototype = {
    * @param {Boolean} isVisible True to show the tab/tabpanel, False to hide it.
    * @param {String} id The ID of the tab to be hidden.
    */
-  toggleTab: function (isVisible, id) {
+  toggleTab: function(isVisible, id) {
     this._tabbar.toggleTab(id, isVisible);
   },
 
   /**
    * Select a specific tab.
    */
-  select: function (id) {
+  select: function(id) {
     this._tabbar.select(id);
   },
 
   /**
    * Return the id of the selected tab.
    */
-  getCurrentTabID: function () {
+  getCurrentTabID: function() {
     return this._currentTool;
   },
 
@@ -225,7 +225,7 @@ ToolSidebar.prototype = {
    * @param {String} id
    * @return {DOMNode}
    */
-  getTabPanel: function (id) {
+  getTabPanel: function(id) {
     // Search with and without the ID prefix as there might have been existing
     // tabpanels by the time the sidebar got created
     return this._panelDoc.querySelector("#" +
@@ -235,7 +235,7 @@ ToolSidebar.prototype = {
   /**
    * Event handler.
    */
-  handleSelectionChange: function (id) {
+  handleSelectionChange: function(id) {
     if (this._destroyed) {
       return;
     }
@@ -260,7 +260,7 @@ ToolSidebar.prototype = {
    * @param  {String} previousToolId
    *         id of the previously selected tool.
    */
-  updateTelemetryOnChange: function (currentToolId, previousToolId) {
+  updateTelemetryOnChange: function(currentToolId, previousToolId) {
     if (currentToolId === previousToolId || !this._telemetry) {
       // Skip telemetry if the tool id did not change or telemetry is unavailable.
       return;
@@ -278,7 +278,7 @@ ToolSidebar.prototype = {
    * @param  {String} id
    *         The sidebar tab id to select.
    */
-  show: function (id) {
+  show: function(id) {
     this._tabbox.removeAttribute("hidden");
 
     // If an id is given, select the corresponding sidebar tab.
@@ -292,7 +292,7 @@ ToolSidebar.prototype = {
   /**
    * Show the sidebar.
    */
-  hide: function () {
+  hide: function() {
     this._tabbox.setAttribute("hidden", "true");
 
     this.emit("hide");
@@ -301,7 +301,7 @@ ToolSidebar.prototype = {
   /**
    * Return the window containing the tab content.
    */
-  getWindowForTab: function (id) {
+  getWindowForTab: function(id) {
     // Get the tabpanel and make sure it contains an iframe
     let panel = this.getTabPanel(id);
     if (!panel || !panel.firstElementChild || !panel.firstElementChild.contentWindow) {

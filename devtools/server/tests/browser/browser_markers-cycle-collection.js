@@ -9,7 +9,7 @@
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-add_task(async function () {
+add_task(async function() {
   // This test runs very slowly on linux32 debug EC2 instances.
   requestLongerTimeout(2);
 

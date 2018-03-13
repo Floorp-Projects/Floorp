@@ -14,7 +14,7 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 /**
  * Test that the preference devtools.policy.disabled disables entry points for devtools.
  */
-add_task(async function () {
+add_task(async function() {
   info("Disable DevTools entry points (does not apply to the already created window");
   await new Promise(resolve => {
     let options = {"set": [["devtools.policy.disabled", true]]};

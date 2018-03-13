@@ -60,7 +60,7 @@ exports.items = [
     runAt: "server",
     hidden: true,
     returnType: "highlighterVisibility",
-    exec: function (args, context) {
+    exec: function(args, context) {
       let env = context.environment;
       let { document } = env;
 

@@ -10,7 +10,7 @@ var gThreadClient;
 var gCallback;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -25,9 +25,9 @@ function run_test_with_server(server, callback) {
   }.toString());
 
   gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-grips",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_object_grip();
                            });
@@ -35,13 +35,13 @@ function run_test_with_server(server, callback) {
 }
 
 function test_object_grip() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     let args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Object");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getPrototypeAndProperties(function (response) {
+    objClient.getPrototypeAndProperties(function(response) {
       Assert.equal(response.ownProperties.x.configurable, true);
       Assert.equal(response.ownProperties.x.enumerable, true);
       Assert.equal(response.ownProperties.x.writable, true);
@@ -61,10 +61,10 @@ function test_object_grip() {
       Assert.ok(response.prototype != undefined);
 
       let protoClient = gThreadClient.pauseGrip(response.prototype);
-      protoClient.getOwnPropertyNames(function (response) {
+      protoClient.getOwnPropertyNames(function(response) {
         Assert.ok(response.ownPropertyNames.toString != undefined);
 
-        gThreadClient.resume(function () {
+        gThreadClient.resume(function() {
           gClient.close().then(gCallback);
         });
       });

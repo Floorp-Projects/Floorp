@@ -15,7 +15,7 @@ function run_test() {
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.addListener("connected", function (event, type, traits) {
+  gClient.addListener("connected", function(event, type, traits) {
     gClient.listTabs().then((response) => {
       Assert.ok("tabs" in response);
       for (let tab of response.tabs) {
@@ -37,7 +37,7 @@ function run_test() {
 
 // Attach to |tabActor|, and check the response.
 function test_attach_tab(tabActor) {
-  gClient.request({ to: tabActor, type: "attach" }, function (response) {
+  gClient.request({ to: tabActor, type: "attach" }, function(response) {
     Assert.equal(false, "error" in response);
     Assert.equal(response.from, tabActor);
     Assert.equal(response.type, "tabAttached");
@@ -49,7 +49,7 @@ function test_attach_tab(tabActor) {
 
 // Attach to |threadActor|, check the response, and resume it.
 function test_attach_thread(threadActor) {
-  gClient.request({ to: threadActor, type: "attach" }, function (response) {
+  gClient.request({ to: threadActor, type: "attach" }, function(response) {
     Assert.equal(false, "error" in response);
     Assert.equal(response.from, threadActor);
     Assert.equal(response.type, "paused");
@@ -64,7 +64,7 @@ function test_attach_thread(threadActor) {
 // statement.
 function test_resume_thread(threadActor) {
   // Allow the client to resume execution.
-  gClient.request({ to: threadActor, type: "resume" }, function (response) {
+  gClient.request({ to: threadActor, type: "resume" }, function(response) {
     Assert.equal(false, "error" in response);
     Assert.equal(response.from, threadActor);
     Assert.equal(response.type, "resumed");
@@ -77,7 +77,7 @@ function test_resume_thread(threadActor) {
     Assert.ok(gDebuggee.b);
   });
 
-  gClient.addListener("paused", function (name, packet) {
+  gClient.addListener("paused", function(name, packet) {
     Assert.equal(name, "paused");
     Assert.equal(false, "error" in packet);
     Assert.equal(packet.from, threadActor);
@@ -99,7 +99,7 @@ function test_resume_thread(threadActor) {
 }
 
 function cleanup() {
-  gClient.addListener("closed", function (event, result) {
+  gClient.addListener("closed", function(event, result) {
     do_test_finished();
   });
 

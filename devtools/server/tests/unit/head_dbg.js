@@ -82,13 +82,13 @@ function makeMemoryActorTest(testGeneratorFunction) {
         type: { global: true }
       });
 
-      getTestTab(client, TEST_GLOBAL_NAME, function (tabForm, rootForm) {
+      getTestTab(client, TEST_GLOBAL_NAME, function(tabForm, rootForm) {
         if (!tabForm || !rootForm) {
           ok(false, "Could not attach to test tab: " + TEST_GLOBAL_NAME);
           return;
         }
 
-        (async function () {
+        (async function() {
           try {
             const memoryFront = new MemoryFront(client, tabForm, rootForm);
             await memoryFront.attach();
@@ -120,13 +120,13 @@ function makeFullRuntimeMemoryActorTest(testGeneratorFunction) {
         type: { global: true }
       });
 
-      getChromeActors(client).then(function (form) {
+      getChromeActors(client).then(function(form) {
         if (!form) {
           ok(false, "Could not attach to chrome actors");
           return;
         }
 
-        (async function () {
+        (async function() {
           try {
             const rootForm = await listTabs(client);
             const memoryFront = new MemoryFront(client, form, rootForm);
@@ -184,7 +184,7 @@ function attachTab(client, tab) {
 
 function waitForNewSource(threadClient, url) {
   dump("Waiting for new source with url '" + url + "'.\n");
-  return waitForEvent(threadClient, "newSource", function (packet) {
+  return waitForEvent(threadClient, "newSource", function(packet) {
     return packet.source.url === url;
   });
 }
@@ -268,7 +268,7 @@ function scriptErrorFlagsToKind(flags) {
 // into the ether.
 var errorCount = 0;
 var listener = {
-  observe: function (message) {
+  observe: function(message) {
     try {
       let string;
       errorCount++;
@@ -343,7 +343,7 @@ function addTestGlobal(name, server = DebuggerServer) {
 // List the DebuggerClient |client|'s tabs, look for one whose title is
 // |title|, and apply |callback| to the packet's entry for that tab.
 function getTestTab(client, title, callback) {
-  client.listTabs().then(function (response) {
+  client.listTabs().then(function(response) {
     for (let tab of response.tabs) {
       if (tab.title === title) {
         callback(tab, response);
@@ -357,7 +357,7 @@ function getTestTab(client, title, callback) {
 // Attach to |client|'s tab whose title is |title|; pass |callback| the
 // response packet and a TabClient instance referring to that tab.
 function attachTestTab(client, title, callback) {
-  getTestTab(client, title, function (tab) {
+  getTestTab(client, title, function(tab) {
     client.attachTab(tab.actor, callback);
   });
 }
@@ -367,7 +367,7 @@ function attachTestTab(client, title, callback) {
 // TabClient referring to the tab, and a ThreadClient referring to the
 // thread.
 function attachTestThread(client, title, callback) {
-  attachTestTab(client, title, function (tabResponse, tabClient) {
+  attachTestTab(client, title, function(tabResponse, tabClient) {
     function onAttach(response, threadClient) {
       callback(response, tabClient, threadClient, tabResponse);
     }
@@ -384,8 +384,8 @@ function attachTestThread(client, title, callback) {
 // thread.
 function attachTestTabAndResume(client, title, callback = () => {}) {
   return new Promise((resolve) => {
-    attachTestThread(client, title, function (response, tabClient, threadClient) {
-      threadClient.resume(function (response) {
+    attachTestThread(client, title, function(response, tabClient, threadClient) {
+      threadClient.resume(function(response) {
         callback(response, tabClient, threadClient);
         resolve([response, tabClient, threadClient]);
       });
@@ -399,7 +399,7 @@ function attachTestTabAndResume(client, title, callback = () => {}) {
 function initTestDebuggerServer(server = DebuggerServer) {
   server.registerModule("xpcshell-test/testactors");
   // Allow incoming connections.
-  server.init(function () {
+  server.init(function() {
     return true;
   });
 }
@@ -419,7 +419,7 @@ function startTestDebuggerServer(title, server = DebuggerServer) {
 }
 
 function finishClient(client) {
-  client.close(function () {
+  client.close(function() {
     DebuggerServer.destroy();
     do_test_finished();
   });
@@ -521,7 +521,7 @@ function TracingTransport(childTransport) {
 
 TracingTransport.prototype = {
   // Remove actor names
-  normalize: function (packet) {
+  normalize: function(packet) {
     return JSON.parse(JSON.stringify(packet, (key, value) => {
       if (key === "to" || key === "from" || key === "actor") {
         return "<actorid>";
@@ -529,37 +529,37 @@ TracingTransport.prototype = {
       return value;
     }));
   },
-  send: function (packet) {
+  send: function(packet) {
     this.packets.push({
       type: "sent",
       packet: this.normalize(packet)
     });
     return this.child.send(packet);
   },
-  close: function () {
+  close: function() {
     return this.child.close();
   },
-  ready: function () {
+  ready: function() {
     return this.child.ready();
   },
-  onPacket: function (packet) {
+  onPacket: function(packet) {
     this.packets.push({
       type: "received",
       packet: this.normalize(packet)
     });
     this.hooks.onPacket(packet);
   },
-  onClosed: function () {
+  onClosed: function() {
     this.hooks.onClosed();
   },
 
-  expectSend: function (expected) {
+  expectSend: function(expected) {
     let packet = this.packets[this.checkIndex++];
     Assert.equal(packet.type, "sent");
     deepEqual(packet.packet, this.normalize(expected));
   },
 
-  expectReceive: function (expected) {
+  expectReceive: function(expected) {
     let packet = this.packets[this.checkIndex++];
     Assert.equal(packet.type, "received");
     deepEqual(packet.packet, this.normalize(expected));
@@ -567,7 +567,7 @@ TracingTransport.prototype = {
 
   // Write your tests, call dumpLog at the end, inspect the output,
   // then sprinkle the calls through the right places in your test.
-  dumpLog: function () {
+  dumpLog: function() {
     for (let entry of this.packets) {
       if (entry.type === "sent") {
         dumpn("trace.expectSend(" + entry.packet + ");");
@@ -579,9 +579,9 @@ TracingTransport.prototype = {
 };
 
 function StubTransport() { }
-StubTransport.prototype.ready = function () {};
-StubTransport.prototype.send = function () {};
-StubTransport.prototype.close = function () {};
+StubTransport.prototype.ready = function() {};
+StubTransport.prototype.send = function() {};
+StubTransport.prototype.close = function() {};
 
 // Create async version of the object where calling each method
 // is equivalent of calling it with asyncall. Mainly useful for
@@ -616,7 +616,7 @@ function waitForEvent(client, type, predicate) {
     return client.addOneTimeListener(type);
   }
 
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
     function listener(type, packet) {
       if (!predicate(packet)) {
         return;
@@ -785,7 +785,7 @@ function getSourceContent(sourceClient) {
 function getSource(threadClient, url) {
   let deferred = defer();
   threadClient.getSources((res) => {
-    let source = res.sources.filter(function (s) {
+    let source = res.sources.filter(function(s) {
       return s.url === url;
     });
     if (source.length) {

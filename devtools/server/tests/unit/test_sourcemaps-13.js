@@ -18,9 +18,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              gTabClient = tabClient;
                              setup_code();
@@ -59,7 +59,7 @@ function setup_code() {
 }
 
 function test_initial_sources() {
-  gThreadClient.getSources(function ({ error, sources }) {
+  gThreadClient.getSources(function({ error, sources }) {
     Assert.ok(!error);
     sources = sources.filter(source => source.url);
     Assert.equal(sources.length, 1);
@@ -88,7 +88,7 @@ function setup_new_code() {
 }
 
 function test_new_sources() {
-  gThreadClient.getSources(function ({ error, sources }) {
+  gThreadClient.getSources(function({ error, sources }) {
     Assert.ok(!error);
     sources = sources.filter(source => source.url);
 

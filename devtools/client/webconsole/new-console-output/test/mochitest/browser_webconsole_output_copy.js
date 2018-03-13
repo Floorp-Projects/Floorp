@@ -10,12 +10,12 @@
 // Test copy to clipboard on the console output. See Bug 587617.
 const TEST_URI = "data:text/html,Test copy to clipboard on the console output";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   const smokeMessage = "Hello world!";
   let onMessage = waitForMessage(hud, smokeMessage);
-  ContentTask.spawn(gBrowser.selectedBrowser, smokeMessage, function (msg) {
+  ContentTask.spawn(gBrowser.selectedBrowser, smokeMessage, function(msg) {
     content.wrappedJSObject.console.log(msg);
   });
   const {node} = await onMessage;

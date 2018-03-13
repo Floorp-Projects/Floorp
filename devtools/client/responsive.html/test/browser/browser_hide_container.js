@@ -30,7 +30,7 @@ function flushContainerTabState(tab) {
   });
 }
 
-add_task(async function () {
+add_task(async function() {
   // Load test URL
   let tab = await addTab(TEST_URL);
   let browser = tab.linkedBrowser;

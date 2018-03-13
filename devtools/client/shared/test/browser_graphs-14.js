@@ -29,23 +29,23 @@ const TEST_DATA = [
 ];
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function() {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
 });
 
-function* performTest() {
-  let [host,, doc] = yield createHost();
+async function performTest() {
+  let [host,, doc] = await createHost();
   let graph = new LineGraphWidget(doc.body, "fps");
 
-  yield testGraph(graph);
+  await testGraph(graph);
 
-  yield graph.destroy();
+  await graph.destroy();
   host.destroy();
 }
 
-function* testGraph(graph) {
+async function testGraph(graph) {
   let mouseDownEvents = 0;
   let mouseUpEvents = 0;
   let scrollEvents = 0;
@@ -53,7 +53,7 @@ function* testGraph(graph) {
   graph.on("mouseup", () => mouseUpEvents++);
   graph.on("scroll", () => scrollEvents++);
 
-  yield graph.setDataWhenReady(TEST_DATA);
+  await graph.setDataWhenReady(TEST_DATA);
 
   info("Making a selection.");
 

@@ -11,11 +11,11 @@ const { refresh } = require("./refresh");
  * Change the display we use for labeling individual nodes and refresh the
  * current data.
  */
-exports.setLabelDisplayAndRefresh = function (heapWorker, display) {
-  return function* (dispatch, getState) {
+exports.setLabelDisplayAndRefresh = function(heapWorker, display) {
+  return async function(dispatch, getState) {
     // Clears out all stored census data and sets the display.
     dispatch(setLabelDisplay(display));
-    yield dispatch(refresh(heapWorker));
+    await dispatch(refresh(heapWorker));
   };
 };
 
@@ -24,7 +24,7 @@ exports.setLabelDisplayAndRefresh = function (heapWorker, display) {
  *
  * @param {labelDisplayModel} display
  */
-const setLabelDisplay = exports.setLabelDisplay = function (display) {
+const setLabelDisplay = exports.setLabelDisplay = function(display) {
   assert(typeof display === "object"
          && display
          && display.breakdown

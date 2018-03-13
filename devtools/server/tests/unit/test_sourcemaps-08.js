@@ -16,9 +16,9 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function () {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function (response, tabClient, threadClient) {
+                           function(response, tabClient, threadClient) {
                              gThreadClient = threadClient;
                              test_source_maps();
                            });
@@ -27,9 +27,9 @@ function run_test() {
 }
 
 function test_source_maps() {
-  gThreadClient.addOneTimeListener("newSource", function (event, packet) {
+  gThreadClient.addOneTimeListener("newSource", function(event, packet) {
     let sourceClient = gThreadClient.source(packet.source);
-    sourceClient.source(function ({error, source}) {
+    sourceClient.source(function({error, source}) {
       Assert.ok(!error, "should be able to grab the source");
       Assert.equal(source, "foo",
                    "Should load the source from the sourcesContent field");

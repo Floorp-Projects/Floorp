@@ -34,52 +34,52 @@ const { RESPONSE_HEADERS } = require("../constants");
   RequestListColumnWaterfall
 */
 
-loader.lazyGetter(this, "RequestListColumnCause", function () {
+loader.lazyGetter(this, "RequestListColumnCause", function() {
   return createFactory(require("./RequestListColumnCause"));
 });
-loader.lazyGetter(this, "RequestListColumnContentSize", function () {
+loader.lazyGetter(this, "RequestListColumnContentSize", function() {
   return createFactory(require("./RequestListColumnContentSize"));
 });
-loader.lazyGetter(this, "RequestListColumnCookies", function () {
+loader.lazyGetter(this, "RequestListColumnCookies", function() {
   return createFactory(require("./RequestListColumnCookies"));
 });
-loader.lazyGetter(this, "RequestListColumnDomain", function () {
+loader.lazyGetter(this, "RequestListColumnDomain", function() {
   return createFactory(require("./RequestListColumnDomain"));
 });
-loader.lazyGetter(this, "RequestListColumnFile", function () {
+loader.lazyGetter(this, "RequestListColumnFile", function() {
   return createFactory(require("./RequestListColumnFile"));
 });
-loader.lazyGetter(this, "RequestListColumnMethod", function () {
+loader.lazyGetter(this, "RequestListColumnMethod", function() {
   return createFactory(require("./RequestListColumnMethod"));
 });
-loader.lazyGetter(this, "RequestListColumnProtocol", function () {
+loader.lazyGetter(this, "RequestListColumnProtocol", function() {
   return createFactory(require("./RequestListColumnProtocol"));
 });
-loader.lazyGetter(this, "RequestListColumnRemoteIP", function () {
+loader.lazyGetter(this, "RequestListColumnRemoteIP", function() {
   return createFactory(require("./RequestListColumnRemoteIP"));
 });
-loader.lazyGetter(this, "RequestListColumnResponseHeader", function () {
+loader.lazyGetter(this, "RequestListColumnResponseHeader", function() {
   return createFactory(require("./RequestListColumnResponseHeader"));
 });
-loader.lazyGetter(this, "RequestListColumnTime", function () {
+loader.lazyGetter(this, "RequestListColumnTime", function() {
   return createFactory(require("./RequestListColumnTime"));
 });
-loader.lazyGetter(this, "RequestListColumnScheme", function () {
+loader.lazyGetter(this, "RequestListColumnScheme", function() {
   return createFactory(require("./RequestListColumnScheme"));
 });
-loader.lazyGetter(this, "RequestListColumnSetCookies", function () {
+loader.lazyGetter(this, "RequestListColumnSetCookies", function() {
   return createFactory(require("./RequestListColumnSetCookies"));
 });
-loader.lazyGetter(this, "RequestListColumnStatus", function () {
+loader.lazyGetter(this, "RequestListColumnStatus", function() {
   return createFactory(require("./RequestListColumnStatus"));
 });
-loader.lazyGetter(this, "RequestListColumnTransferredSize", function () {
+loader.lazyGetter(this, "RequestListColumnTransferredSize", function() {
   return createFactory(require("./RequestListColumnTransferredSize"));
 });
-loader.lazyGetter(this, "RequestListColumnType", function () {
+loader.lazyGetter(this, "RequestListColumnType", function() {
   return createFactory(require("./RequestListColumnType"));
 });
-loader.lazyGetter(this, "RequestListColumnWaterfall", function () {
+loader.lazyGetter(this, "RequestListColumnWaterfall", function() {
   return createFactory(require("./RequestListColumnWaterfall"));
 });
 

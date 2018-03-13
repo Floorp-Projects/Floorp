@@ -11,7 +11,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-batching.html";
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
   const messageNumber = 100;
   await testSimpleBatchLogging(hud, messageNumber);
@@ -20,7 +20,7 @@ add_task(async function () {
 
 async function testSimpleBatchLogging(hud, messageNumber) {
   await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber,
-    function (numMessages) {
+    function(numMessages) {
       content.wrappedJSObject.batchLog(numMessages);
     }
   );
@@ -33,7 +33,7 @@ async function testSimpleBatchLogging(hud, messageNumber) {
 
 async function testBatchLoggingAndClear(hud, messageNumber) {
   await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber,
-    function (numMessages) {
+    function(numMessages) {
       content.wrappedJSObject.batchLogAndClear(numMessages);
     }
   );

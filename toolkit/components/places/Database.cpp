@@ -986,6 +986,13 @@ Database::SetupDatabaseConnection(nsCOMPtr<mozIStorageService>& aStorage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Using immediate transactions allows the main connection to retry writes
+  // that fail with `SQLITE_BUSY` because a cloned connection has locked the
+  // database for writing.
+  nsresult rv = mMainConn->SetDefaultTransactionType(
+    mozIStorageConnection::TRANSACTION_IMMEDIATE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // WARNING: any statement executed before setting the journal mode must be
   // finalized, since SQLite doesn't allow changing the journal mode if there
   // is any outstanding statement.
@@ -994,7 +1001,7 @@ Database::SetupDatabaseConnection(nsCOMPtr<mozIStorageService>& aStorage)
     // Get the page size.  This may be different than the default if the
     // database file already existed with a different page size.
     nsCOMPtr<mozIStorageStatement> statement;
-    nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
       MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size"
     ), getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1006,7 +1013,7 @@ Database::SetupDatabaseConnection(nsCOMPtr<mozIStorageService>& aStorage)
   }
 
   // Ensure that temp tables are held in memory, not on disk.
-  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA temp_store = MEMORY")
   );
   NS_ENSURE_SUCCESS(rv, rv);

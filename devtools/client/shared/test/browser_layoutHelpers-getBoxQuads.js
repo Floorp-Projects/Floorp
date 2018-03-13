@@ -8,7 +8,7 @@
 
 const TEST_URI = TEST_URI_ROOT + "doc_layoutHelpers-getBoxQuads.html";
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URI);
 
   info("Running tests");
@@ -17,7 +17,7 @@ add_task(async function () {
   // frontend and runs in the parent process. Here, we use the message manager
   // to allow the Content Task to call this zoom helper whenever it needs to.
   let mm = tab.linkedBrowser.messageManager;
-  mm.addMessageListener("devtools-test:command", async function ({ data }) {
+  mm.addMessageListener("devtools-test:command", async function({ data }) {
     switch (data) {
       case "zoom-enlarge":
         window.FullZoom.enlarge();
@@ -32,7 +32,7 @@ add_task(async function () {
     mm.sendAsyncMessage("devtools-test:done");
   });
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function () {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     // This function allows the Content Task to easily call `FullZoom` API via
     // the message manager.
     function sendCommand(cmd) {

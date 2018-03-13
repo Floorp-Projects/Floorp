@@ -6,7 +6,6 @@
 
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
-const {Task} = require("devtools/shared/task");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
@@ -81,23 +80,23 @@ OptionsPanel.prototype = {
     return this.toolbox.target;
   },
 
-  open: Task.async(function* () {
+  async open() {
     // For local debugging we need to make the target remote.
     if (!this.target.isRemote) {
-      yield this.target.makeRemote();
+      await this.target.makeRemote();
     }
 
     this.setupToolsList();
     this.setupToolbarButtonsList();
     this.setupThemeList();
     this.setupNightlyOptions();
-    yield this.populatePreferences();
+    await this.populatePreferences();
     this.isReady = true;
     this.emit("ready");
     return this;
-  }),
+  },
 
-  _addListeners: function () {
+  _addListeners: function() {
     Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged);
     Services.prefs.addObserver("devtools.theme", this._prefChanged);
     Services.prefs.addObserver("devtools.source-map.client-service.enabled",
@@ -106,7 +105,7 @@ OptionsPanel.prototype = {
     gDevTools.on("theme-unregistered", this._themeUnregistered);
   },
 
-  _removeListeners: function () {
+  _removeListeners: function() {
     Services.prefs.removeObserver("devtools.cache.disabled", this._prefChanged);
     Services.prefs.removeObserver("devtools.theme", this._prefChanged);
     Services.prefs.removeObserver("devtools.source-map.client-service.enabled",
@@ -115,7 +114,7 @@ OptionsPanel.prototype = {
     gDevTools.off("theme-unregistered", this._themeUnregistered);
   },
 
-  _prefChanged: function (subject, topic, prefName) {
+  _prefChanged: function(subject, topic, prefName) {
     if (prefName === "devtools.cache.disabled") {
       let cacheDisabled = GetPref(prefName);
       let cbx = this.panelDoc.getElementById("devtools-disable-cache");
@@ -127,11 +126,11 @@ OptionsPanel.prototype = {
     }
   },
 
-  _themeRegistered: function (event, themeId) {
+  _themeRegistered: function(event, themeId) {
     this.setupThemeList();
   },
 
-  _themeUnregistered: function (event, theme) {
+  _themeUnregistered: function(event, theme) {
     let themeBox = this.panelDoc.getElementById("devtools-theme-box");
     let themeInput = themeBox.querySelector(`[value=${theme.id}]`);
 
@@ -140,9 +139,9 @@ OptionsPanel.prototype = {
     }
   },
 
-  setupToolbarButtonsList: Task.async(function* () {
+  async setupToolbarButtonsList() {
     // Ensure the toolbox is open, and the buttons are all set up.
-    yield this.toolbox.isOpen;
+    await this.toolbox.isOpen;
 
     let enabledToolbarButtonsBox = this.panelDoc.getElementById(
       "enabled-toolbox-buttons-box");
@@ -187,9 +186,9 @@ OptionsPanel.prototype = {
 
       enabledToolbarButtonsBox.appendChild(createCommandCheckbox(button));
     }
-  }),
+  },
 
-  setupToolsList: function () {
+  setupToolsList: function() {
     let defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
     let additionalToolsBox = this.panelDoc.getElementById(
       "additional-tools-box");
@@ -201,7 +200,7 @@ OptionsPanel.prototype = {
 
     // Signal tool registering/unregistering globally (for the tools registered
     // globally) and per toolbox (for the tools registered to a single toolbox).
-    let onCheckboxClick = function (id) {
+    let onCheckboxClick = function(id) {
       let toolDefinition = gDevTools._tools.get(id) || toolbox.getToolDefinition(id);
       // Set the kill switch pref boolean to true
       Services.prefs.setBoolPref(toolDefinition.visibilityswitch, this.checked);
@@ -272,7 +271,7 @@ OptionsPanel.prototype = {
     this.panelWin.focus();
   },
 
-  setupThemeList: function () {
+  setupThemeList: function() {
     let themeBox = this.panelDoc.getElementById("devtools-theme-box");
     let themeLabels = themeBox.querySelectorAll("label");
     for (let label of themeLabels) {
@@ -285,7 +284,7 @@ OptionsPanel.prototype = {
       inputRadio.setAttribute("type", "radio");
       inputRadio.setAttribute("value", theme.id);
       inputRadio.setAttribute("name", "devtools-theme-item");
-      inputRadio.addEventListener("change", function (e) {
+      inputRadio.addEventListener("change", function(e) {
         SetPref(themeBox.getAttribute("data-pref"),
           e.target.value);
       });
@@ -310,7 +309,7 @@ OptionsPanel.prototype = {
   /**
    * Add common preferences enabled only on Nightly.
    */
-  setupNightlyOptions: function () {
+  setupNightlyOptions: function() {
     let isNightly = system.constants.NIGHTLY_BUILD;
     if (!isNightly) {
       return;
@@ -362,14 +361,14 @@ OptionsPanel.prototype = {
     }
   },
 
-  populatePreferences: Task.async(function* () {
+  async populatePreferences() {
     let prefCheckboxes = this.panelDoc.querySelectorAll(
       "input[type=checkbox][data-pref]");
     for (let prefCheckbox of prefCheckboxes) {
       if (GetPref(prefCheckbox.getAttribute("data-pref"))) {
         prefCheckbox.setAttribute("checked", true);
       }
-      prefCheckbox.addEventListener("change", function (e) {
+      prefCheckbox.addEventListener("change", function(e) {
         let checkbox = e.target;
         SetPref(checkbox.getAttribute("data-pref"), checkbox.checked);
       });
@@ -385,7 +384,7 @@ OptionsPanel.prototype = {
           radioInput.setAttribute("checked", true);
         }
 
-        radioInput.addEventListener("change", function (e) {
+        radioInput.addEventListener("change", function(e) {
           SetPref(radioGroup.getAttribute("data-pref"),
             e.target.value);
         });
@@ -395,7 +394,7 @@ OptionsPanel.prototype = {
     for (let prefSelect of prefSelects) {
       let pref = GetPref(prefSelect.getAttribute("data-pref"));
       let options = [...prefSelect.options];
-      options.some(function (option) {
+      options.some(function(option) {
         let value = option.value;
         // non strict check to allow int values.
         if (value == pref) {
@@ -405,7 +404,7 @@ OptionsPanel.prototype = {
         return false;
       });
 
-      prefSelect.addEventListener("change", function (e) {
+      prefSelect.addEventListener("change", function(e) {
         let select = e.target;
         SetPref(select.getAttribute("data-pref"),
           select.options[select.selectedIndex].value);
@@ -413,7 +412,7 @@ OptionsPanel.prototype = {
     }
 
     if (this.target.activeTab) {
-      let [ response ] = yield this.target.client.attachTab(this.target.activeTab._actor);
+      let [ response ] = await this.target.client.attachTab(this.target.activeTab._actor);
       this._origJavascriptEnabled = !response.javascriptEnabled;
       this.disableJSNode.checked = this._origJavascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
@@ -421,9 +420,9 @@ OptionsPanel.prototype = {
       // Hide the checkbox and label
       this.disableJSNode.parentNode.style.display = "none";
     }
-  }),
+  },
 
-  updateCurrentTheme: function () {
+  updateCurrentTheme: function() {
     let currentTheme = GetPref("devtools.theme");
     let themeBox = this.panelDoc.getElementById("devtools-theme-box");
     let themeRadioInput = themeBox.querySelector(`[value=${currentTheme}]`);
@@ -437,7 +436,7 @@ OptionsPanel.prototype = {
     }
   },
 
-  updateSourceMapPref: function () {
+  updateSourceMapPref: function() {
     const prefName = "devtools.source-map.client-service.enabled";
     let enabled = GetPref(prefName);
     let box = this.panelDoc.querySelector(`[data-pref="${prefName}"]`);
@@ -454,7 +453,7 @@ OptionsPanel.prototype = {
    * @param {Event} event
    *        The event sent by checking / unchecking the disable JS checkbox.
    */
-  _disableJSClicked: function (event) {
+  _disableJSClicked: function(event) {
     let checked = event.target.checked;
 
     let options = {
@@ -464,7 +463,7 @@ OptionsPanel.prototype = {
     this.target.activeTab.reconfigure(options);
   },
 
-  destroy: function () {
+  destroy: function() {
     if (this.destroyPromise) {
       return this.destroyPromise;
     }

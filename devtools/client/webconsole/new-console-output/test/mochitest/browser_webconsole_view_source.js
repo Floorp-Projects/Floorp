@@ -16,7 +16,7 @@ const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/" +
                  "test-mixedcontent-securityerrors.html";
 
-add_task(async function () {
+add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
   info("console opened");
 

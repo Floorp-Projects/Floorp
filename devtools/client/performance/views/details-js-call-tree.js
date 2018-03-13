@@ -24,7 +24,7 @@ var JsCallTreeView = extend(DetailsSubview, {
   /**
    * Sets up the view with event binding.
    */
-  initialize: function () {
+  initialize: function() {
     DetailsSubview.initialize.call(this);
 
     this._onLink = this._onLink.bind(this);
@@ -38,7 +38,7 @@ var JsCallTreeView = extend(DetailsSubview, {
   /**
    * Unbinds events.
    */
-  destroy: function () {
+  destroy: function() {
     ReactDOM.unmountComponentAtNode(this.optimizationsElement);
     this.optimizationsElement = null;
     this.container = null;
@@ -52,7 +52,7 @@ var JsCallTreeView = extend(DetailsSubview, {
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
    */
-  render: function (interval = {}) {
+  render: function(interval = {}) {
     let recording = PerformanceController.getCurrentRecording();
     let profile = recording.getProfile();
     let showOptimizations = PerformanceController.getOption("show-jit-optimizations");
@@ -73,15 +73,15 @@ var JsCallTreeView = extend(DetailsSubview, {
     this.emit(EVENTS.UI_JS_CALL_TREE_RENDERED);
   },
 
-  showOptimizations: function () {
+  showOptimizations: function() {
     this.optimizationsElement.classList.remove("hidden");
   },
 
-  hideOptimizations: function () {
+  hideOptimizations: function() {
     this.optimizationsElement.classList.add("hidden");
   },
 
-  _onFocus: function (treeItem) {
+  _onFocus: function(treeItem) {
     let showOptimizations = PerformanceController.getOption("show-jit-optimizations");
     let frameNode = treeItem.frame;
     let optimizationSites = frameNode && frameNode.hasOptimizations()
@@ -119,7 +119,7 @@ var JsCallTreeView = extend(DetailsSubview, {
   /**
    * Fired on the "link" event for the call tree in this container.
    */
-  _onLink: function (_, treeItem) {
+  _onLink: function(_, treeItem) {
     let { url, line } = treeItem.frame.getInfo();
     gToolbox.viewSourceInDebugger(url, line).then(success => {
       if (success) {
@@ -134,7 +134,7 @@ var JsCallTreeView = extend(DetailsSubview, {
    * Called when the recording is stopped and prepares data to
    * populate the call tree.
    */
-  _prepareCallTree: function (profile, { startTime, endTime }, options) {
+  _prepareCallTree: function(profile, { startTime, endTime }, options) {
     let thread = profile.threads[0];
     let { contentOnly, invertTree, flattenRecursion } = options;
     let threadNode = new ThreadNode(thread, { startTime, endTime, contentOnly, invertTree,
@@ -154,7 +154,7 @@ var JsCallTreeView = extend(DetailsSubview, {
   /**
    * Renders the call tree.
    */
-  _populateCallTree: function (frameNode, options = {}) {
+  _populateCallTree: function(frameNode, options = {}) {
     // If we have an empty profile (no samples), then don't invert the tree, as
     // it would hide the root node and a completely blank call tree space can be
     // mis-interpreted as an error.

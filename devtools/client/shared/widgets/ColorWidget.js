@@ -9,7 +9,6 @@
 
 "use strict";
 
-const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {colorUtils} = require("devtools/shared/css/color");
 const {LocalizationHelper} = require("devtools/shared/l10n");
@@ -76,7 +75,7 @@ module.exports.ColorWidget = ColorWidget;
  * |grade| is a string containing the contrast grade.
  * |title| is a string containing the title of the colorwidget.
  */
-ColorWidget.calculateGradeAndTitle = function (contrastRatio, backgroundColor) {
+ColorWidget.calculateGradeAndTitle = function(contrastRatio, backgroundColor) {
   let grade = "";
   let title = "";
 
@@ -107,13 +106,13 @@ ColorWidget.calculateGradeAndTitle = function (contrastRatio, backgroundColor) {
  * @param {Number} contrastRatio The contrast ratio to be formatted.
  * @return {String} The formatted ratio.
  */
-ColorWidget.ratioToString = function (contrastRatio) {
+ColorWidget.ratioToString = function(contrastRatio) {
   let formattedRatio = (contrastRatio < 10) ? "0" : "";
   formattedRatio += contrastRatio.toFixed(2);
   return formattedRatio;
 };
 
-ColorWidget.hsvToRgb = function (h, s, v, a) {
+ColorWidget.hsvToRgb = function(h, s, v, a) {
   let r, g, b;
 
   let i = Math.floor(h * 6);
@@ -134,7 +133,7 @@ ColorWidget.hsvToRgb = function (h, s, v, a) {
   return [r * 255, g * 255, b * 255, a];
 };
 
-ColorWidget.rgbToHsv = function (r, g, b, a) {
+ColorWidget.rgbToHsv = function(r, g, b, a) {
   r = r / 255;
   g = g / 255;
   b = b / 255;
@@ -159,14 +158,14 @@ ColorWidget.rgbToHsv = function (r, g, b, a) {
   return [h, s, v, a];
 };
 
-ColorWidget.hslToCssString = function (h, s, l, a) {
+ColorWidget.hslToCssString = function(h, s, l, a) {
   return `hsla(${h}, ${s}%, ${l}%, ${a})`;
 };
 
-ColorWidget.draggable = function (element, onmove, onstart, onstop) {
-  onmove = onmove || function () {};
-  onstart = onstart || function () {};
-  onstop = onstop || function () {};
+ColorWidget.draggable = function(element, onmove, onstart, onstop) {
+  onmove = onmove || function() {};
+  onstart = onstart || function() {};
+  onstop = onstop || function() {};
 
   let doc = element.ownerDocument;
   let dragging = false;
@@ -259,7 +258,7 @@ ColorWidget.prototype = {
       rgb[3] + ")";
   },
 
-  initializeColorWidget: function () {
+  initializeColorWidget: function() {
     let colorNameLabel = L10N.getStr("inspector.colorwidget.colorNameLabel");
     this.parentEl.innerHTML = "";
     this.element = this.parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
@@ -386,7 +385,7 @@ ColorWidget.prototype = {
     this.hslaValue.addEventListener("input", this.onHslaInputChange);
   },
 
-  show: Task.async(function* () {
+  async show() {
     this.initializeColorWidget();
     this.element.classList.add("colorwidget-show");
 
@@ -400,25 +399,25 @@ ColorWidget.prototype = {
 
     if (this.inspector && this.inspector.selection.nodeFront && this.contrastEnabled) {
       let node = this.inspector.selection.nodeFront;
-      this.closestBackgroundColor = yield node.getClosestBackgroundColor();
+      this.closestBackgroundColor = await node.getClosestBackgroundColor();
     }
     this.updateContrast();
 
     this.updateUI();
-  }),
+  },
 
-  onElementClick: function (e) {
+  onElementClick: function(e) {
     e.stopPropagation();
   },
 
-  onSliderMove: function (dragX, dragY) {
+  onSliderMove: function(dragX, dragY) {
     this.hsv[0] = (dragY / this.slideHeight);
     this.hsl[0] = (dragY / this.slideHeight) * 360;
     this.updateUI();
     this.onChange();
   },
 
-  onDraggerMove: function (dragX, dragY) {
+  onDraggerMove: function(dragX, dragY) {
     this.hsv[1] = dragX / this.dragWidth;
     this.hsv[2] = (this.dragHeight - dragY) / this.dragHeight;
 
@@ -434,14 +433,14 @@ ColorWidget.prototype = {
     this.onChange();
   },
 
-  onAlphaSliderMove: function (dragX, dragY) {
+  onAlphaSliderMove: function(dragX, dragY) {
     this.hsv[3] = dragX / this.alphaSliderWidth;
     this.hsl[3] = dragX / this.alphaSliderWidth;
     this.updateUI();
     this.onChange();
   },
 
-  onSelectValueChange: function (event) {
+  onSelectValueChange: function(event) {
     const selection = event.target.value;
     this.colorSelect.classList.remove("colorwidget-select-spacing");
     this.hexValue.classList.add("colorwidget-hidden");
@@ -463,7 +462,7 @@ ColorWidget.prototype = {
     }
   },
 
-  onHexInputChange: function (event) {
+  onHexInputChange: function(event) {
     const hex = event.target.value;
     const color = new colorUtils.CssColor(hex, true);
     if (!color.rgba) {
@@ -476,7 +475,7 @@ ColorWidget.prototype = {
     this.onChange();
   },
 
-  onRgbaInputChange: function (event) {
+  onRgbaInputChange: function(event) {
     const field = event.target.dataset.id;
     const value = event.target.value.toString();
     if (!value || isNaN(value) || value.endsWith(".")) {
@@ -506,7 +505,7 @@ ColorWidget.prototype = {
     this.onChange();
   },
 
-  onHslaInputChange: function (event) {
+  onHslaInputChange: function(event) {
     const field = event.target.dataset.id;
     let value = event.target.value.toString();
     if ((field === "s" || field === "l") && !value.endsWith("%")) {
@@ -549,12 +548,12 @@ ColorWidget.prototype = {
     this.onChange();
   },
 
-  onChange: function () {
+  onChange: function() {
     this.updateContrast();
     this.emit("changed", this.rgb, this.rgbCssString);
   },
 
-  updateContrast: function () {
+  updateContrast: function() {
     if (!this.contrastEnabled) {
       this.contrast.style.display = "none";
       return;
@@ -594,7 +593,7 @@ ColorWidget.prototype = {
     this.contrastSwatch.style.color = this.rgbCssString;
   },
 
-  updateHelperLocations: function () {
+  updateHelperLocations: function() {
     // If the UI hasn't been shown yet then none of the dimensions will be
     // correct
     if (!this.element.classList.contains("colorwidget-show")) {
@@ -650,7 +649,7 @@ ColorWidget.prototype = {
     this.hslaValueInputs.a.value = parseFloat(this.hsl[3].toFixed(1));
   },
 
-  updateUI: function () {
+  updateUI: function() {
     this.updateHelperLocations();
 
     let rgb = this.rgb;
@@ -671,7 +670,7 @@ ColorWidget.prototype = {
     this.colorName.textContent = colorName || "---";
   },
 
-  destroy: function () {
+  destroy: function() {
     this.element.removeEventListener("click", this.onElementClick);
 
     this.parentEl.removeChild(this.element);

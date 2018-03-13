@@ -13,7 +13,7 @@
         // On the first call, allow all cookies and set cookies, then resume the actual test
         if (!setAllowAllCookies) {
           SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]},
-          function () {
+          function() {
             setAllowAllCookies = true;
             setCookies();
             makeXhrCallback(method, url, requestBody, callback);
@@ -27,7 +27,7 @@
         const xmlhttp = new XMLHttpRequest();
         xmlhttp.open(method, url, true);
         if (callback) {
-          xmlhttp.onreadystatechange = function () {
+          xmlhttp.onreadystatechange = function() {
             if (xmlhttp.readyState == 4) {
               callback();
             }

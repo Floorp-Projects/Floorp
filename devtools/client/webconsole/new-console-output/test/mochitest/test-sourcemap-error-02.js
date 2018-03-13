@@ -1,5 +1,5 @@
 "use strict";
-window.qqz = function () {
+window.qqz = function() {
   console.log("here");
 };
 window.qqz();

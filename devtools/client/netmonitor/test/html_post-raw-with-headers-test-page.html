@@ -22,7 +22,7 @@
         let xhr = new XMLHttpRequest();
         xhr.open("POST", address, true);
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
             callback();
           }
@@ -38,7 +38,7 @@
           "\r",
           "foo=bar&baz=123"
         ];
-        post("sjs_simple-test-server.sjs", rawData.join("\n"), function () {
+        post("sjs_simple-test-server.sjs", rawData.join("\n"), function() {
           // Done.
         });
       }

@@ -7,7 +7,7 @@
  * Bug 1377094 - Test that all column headers have tooltips.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 

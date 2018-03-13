@@ -36,7 +36,7 @@ import android.content.ContentValues;
 import android.content.Context;
 
 public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
-  protected static String LOG_TAG = "BrowserRepositoryTest";
+  protected static final String LOG_TAG = "BrowserRepositoryTest";
 
   protected static void wipe(DataAccessor helper) {
     Logger.debug(LOG_TAG, "Wiping.");

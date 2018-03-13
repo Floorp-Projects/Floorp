@@ -3,7 +3,7 @@
 var SOURCE_URL = getFileUrl("setBreakpoint-on-line-with-no-offsets.js");
 
 function run_test() {
-  return (async function () {
+  return (async function() {
     do_test_pending();
 
     DebuggerServer.registerModule("xpcshell-test/testactors");
@@ -33,7 +33,7 @@ function run_test() {
     let actualLocation = packet.actualLocation;
     Assert.equal(actualLocation.line, 6);
 
-    packet = await executeOnNextTickAndWaitForPause(function () {
+    packet = await executeOnNextTickAndWaitForPause(function() {
       Cu.evalInSandbox("f()", global);
     }, client);
     Assert.equal(packet.type, "paused");

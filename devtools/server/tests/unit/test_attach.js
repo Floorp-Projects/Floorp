@@ -13,8 +13,8 @@ function run_test() {
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect().then(function ([type, traits]) {
-    attachTestTab(gClient, "test-1", function (reply, tabClient) {
+  gClient.connect().then(function([type, traits]) {
+    attachTestTab(gClient, "test-1", function(reply, tabClient) {
       test_attach(tabClient);
     });
   });
@@ -22,14 +22,14 @@ function run_test() {
 }
 
 function test_attach(tabClient) {
-  tabClient.attachThread({}, function (response, threadClient) {
+  tabClient.attachThread({}, function(response, threadClient) {
     Assert.equal(threadClient.state, "paused");
     threadClient.resume(cleanup);
   });
 }
 
 function cleanup() {
-  gClient.addListener("closed", function (event) {
+  gClient.addListener("closed", function(event) {
     do_test_finished();
   });
   gClient.close();

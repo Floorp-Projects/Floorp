@@ -15,21 +15,21 @@ const {DocumentWalker: _documentWalker} = require("devtools/server/actors/inspec
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
-SimpleTest.registerCleanupFunction(function () {
+SimpleTest.registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
 if (!DebuggerServer.initialized) {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
-  SimpleTest.registerCleanupFunction(function () {
+  SimpleTest.registerCleanupFunction(function() {
     DebuggerServer.destroy();
   });
 }
 
 var gAttachCleanups = [];
 
-SimpleTest.registerCleanupFunction(function () {
+SimpleTest.registerCleanupFunction(function() {
   for (let cleanup of gAttachCleanups) {
     cleanup();
   }
@@ -67,7 +67,7 @@ function attachURL(url, callback) {
             if (tab.url === url) {
               window.removeEventListener("message", loadListener);
               // eslint-disable-next-line max-nested-callbacks
-              client.attachTab(tab.actor, function (_response, _tabClient) {
+              client.attachTab(tab.actor, function(_response, _tabClient) {
                 try {
                   callback(null, client, tab, win.document);
                 } catch (ex) {

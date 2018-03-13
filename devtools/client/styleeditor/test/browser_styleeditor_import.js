@@ -15,14 +15,14 @@ var FileUtils = tempScope.FileUtils;
 const FILENAME = "styleeditor-import-test.css";
 const SOURCE = "body{background:red;}";
 
-add_task(function* () {
-  let { panel, ui } = yield openStyleEditorForURL(TESTCASE_URI);
+add_task(async function() {
+  let { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   let added = ui.once("test:editor-updated");
   importSheet(ui, panel.panelWindow);
 
   info("Waiting for editor to be added for the imported sheet.");
-  let editor = yield added;
+  let editor = await added;
 
   is(editor.savedFile.leafName, FILENAME,
      "imported stylesheet will be saved directly into the same file");
@@ -38,13 +38,13 @@ function importSheet(ui, panelWindow) {
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   let istream = converter.convertToInputStream(SOURCE);
-  NetUtil.asyncCopy(istream, ostream, function () {
+  NetUtil.asyncCopy(istream, ostream, function() {
     FileUtils.closeSafeFileOutputStream(ostream);
 
     // click the import button now that the file to import is ready
     ui._mockImportFile = file;
 
-    waitForFocus(function () {
+    waitForFocus(function() {
       let document = panelWindow.document;
       let importButton = document.querySelector(".style-editor-importButton");
       ok(importButton, "import button exists");

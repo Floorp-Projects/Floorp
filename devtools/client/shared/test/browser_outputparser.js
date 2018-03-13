@@ -7,19 +7,19 @@ const OutputParser = require("devtools/client/shared/output-parser");
 const {initCssProperties, getCssProperties} = require("devtools/shared/fronts/css-properties");
 const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
 
-add_task(function* () {
-  yield addTab("about:blank");
-  yield performTest();
+add_task(async function() {
+  await addTab("about:blank");
+  await performTest();
   gBrowser.removeCurrentTab();
 });
 
-function* performTest() {
-  let [host, , doc] = yield createHost("bottom", "data:text/html," +
+async function performTest() {
+  let [host, , doc] = await createHost("bottom", "data:text/html," +
     "<h1>browser_outputParser.js</h1><div></div>");
 
   // Mock the toolbox that initCssProperties expect so we get the fallback css properties.
   let toolbox = {target: {client: {}, hasActor: () => false}};
-  yield initCssProperties(toolbox);
+  await initCssProperties(toolbox);
   let cssProperties = getCssProperties(toolbox);
 
   let parser = new OutputParser(doc, cssProperties);
@@ -449,7 +449,7 @@ function testParseVariable(doc, parser) {
   ];
 
   for (let test of TESTS) {
-    let getValue = function (varName) {
+    let getValue = function(varName) {
       return test.variables[varName];
     };
 

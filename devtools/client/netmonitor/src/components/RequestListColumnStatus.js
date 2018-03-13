@@ -48,7 +48,7 @@ class RequestListColumnStatus extends Component {
     return (
       div({
         className: "requests-list-column requests-list-status",
-        onMouseOver: function ({ target }) {
+        onMouseOver: function({ target }) {
           if (status && statusText && !target.title) {
             target.title = getColumnTitle(item);
           }

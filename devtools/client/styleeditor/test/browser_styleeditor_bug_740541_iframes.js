@@ -4,7 +4,7 @@
 
 // Test that sheets inside iframes are shown in the editor.
 
-add_task(function* () {
+add_task(async function() {
   function makeStylesheet(selector) {
     return ("data:text/css;charset=UTF-8," +
             encodeURIComponent(selector + " { }"));
@@ -19,12 +19,12 @@ add_task(function* () {
          "<html>",
          "<head>",
          "<title>Bug 740541</title>"],
-        stylesheets.map(function (sheet) {
+        stylesheets.map(function(sheet) {
           return '<link rel="stylesheet" type="text/css" href="' + sheet + '">';
         }),
         ["</head>",
          "<body>"],
-        framedDocuments.map(function (doc) {
+        framedDocuments.map(function(doc) {
           return '<iframe src="' + doc + '"></iframe>';
         }),
         ["</body>",
@@ -68,7 +68,7 @@ add_task(function* () {
 
   const EXPECTED_STYLE_SHEET_COUNT = 12;
 
-  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
+  let { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, EXPECTED_STYLE_SHEET_COUNT,
     "Got the expected number of style sheets.");

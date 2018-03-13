@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(async function () {
+add_task(async function() {
   await throttleTest(true);
   await throttleTest(false);
 });

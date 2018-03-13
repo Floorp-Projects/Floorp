@@ -15,7 +15,7 @@ var gSubsumes;
 var gIsOpaque;
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function () {
+  run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
@@ -97,8 +97,8 @@ async function testPrincipal(globalPrincipal) {
 }
 
 function test() {
-  return new Promise(function (resolve) {
-    gThreadClient.addOneTimeListener("paused", async function (event, packet) {
+  return new Promise(function(resolve) {
+    gThreadClient.addOneTimeListener("paused", async function(event, packet) {
       // Get the grips.
       let [proxyGrip, inheritsProxyGrip, inheritsProxy2Grip] = packet.frame.arguments;
 

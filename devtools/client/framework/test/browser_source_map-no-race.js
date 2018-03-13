@@ -28,14 +28,14 @@ const ORIGINAL_URL = "webpack:///code_no_race.js";
 const GENERATED_LINE = 84;
 const ORIGINAL_LINE = 11;
 
-add_task(function* () {
+add_task(async function () {
   // Start with the empty page, then navigate, so that we can properly
   // listen for new sources arriving.
-  const toolbox = yield openNewTabAndToolbox(PAGE_URL, "webconsole");
+  const toolbox = await openNewTabAndToolbox(PAGE_URL, "webconsole");
   const service = toolbox.sourceMapURLService;
 
   info(`checking original location for ${JS_URL}:${GENERATED_LINE}`);
-  let newLoc = yield service.originalPositionFor(JS_URL, GENERATED_LINE);
+  let newLoc = await service.originalPositionFor(JS_URL, GENERATED_LINE);
   is(newLoc.sourceUrl, ORIGINAL_URL, "check mapped URL");
   is(newLoc.line, ORIGINAL_LINE, "check mapped line number");
 });

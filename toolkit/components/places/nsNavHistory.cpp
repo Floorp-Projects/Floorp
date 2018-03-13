@@ -2400,7 +2400,7 @@ nsNavHistory::BeginUpdateBatch()
 {
   if (mBatchLevel++ == 0) {
     mBatchDBTransaction = new mozStorageTransaction(mDB->MainConn(), false,
-                                                    mozIStorageConnection::TRANSACTION_DEFERRED,
+                                                    mozIStorageConnection::TRANSACTION_DEFAULT,
                                                     true);
 
     NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver, OnBeginUpdateBatch());
@@ -2465,15 +2465,15 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
   if (aPlaceIdsQueryString.IsEmpty())
     return NS_OK;
 
-  mozStorageTransaction transaction(mDB->MainConn(), false,
-                                    mozIStorageConnection::TRANSACTION_DEFERRED,
-                                    true);
-
-  // Delete all visits for the specified place ids.
   nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
   if (!conn) {
     return NS_ERROR_UNEXPECTED;
   }
+  mozStorageTransaction transaction(conn, false,
+                                    mozIStorageConnection::TRANSACTION_DEFAULT,
+                                    true);
+
+  // Delete all visits for the specified place ids.
   nsresult rv = conn->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING(
       "DELETE FROM moz_historyvisits WHERE place_id IN (") +

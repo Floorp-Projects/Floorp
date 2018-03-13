@@ -22,12 +22,12 @@ loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 if (!DebuggerServer.initialized) {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
-  SimpleTest.registerCleanupFunction(function () {
+  SimpleTest.registerCleanupFunction(function() {
     DebuggerServer.destroy();
   });
 }
 
-SimpleTest.registerCleanupFunction(function () {
+SimpleTest.registerCleanupFunction(function() {
   const {hiddenXULWindow} = ExtensionParent.DebugUtils;
   const debugBrowserMapSize = ExtensionParent.DebugUtils.debugBrowserPromises.size;
 
@@ -83,7 +83,7 @@ function collectFrameUpdates({client}, matchFn) {
     return collected;
   };
 
-  SimpleTest.registerCleanupFunction(function () {
+  SimpleTest.registerCleanupFunction(function() {
     if (unsubscribe) {
       unsubscribe();
     }

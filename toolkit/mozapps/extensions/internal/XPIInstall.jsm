@@ -60,13 +60,14 @@ ChromeUtils.defineModuleGetter(this, "XPIInternal",
 ChromeUtils.defineModuleGetter(this, "XPIProvider",
                                "resource://gre/modules/addons/XPIProvider.jsm");
 
-/* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, TEMPORARY_ADDON_SUFFIX, TOOLKIT_ID, XPIDatabase, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, recordAddonTelemetry */
+/* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPIDatabase, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, mustSign, recordAddonTelemetry */
 const XPI_INTERNAL_SYMBOLS = [
   "AddonInternal",
   "BOOTSTRAP_REASONS",
   "KEY_APP_SYSTEM_ADDONS",
   "KEY_APP_SYSTEM_DEFAULTS",
   "KEY_APP_TEMPORARY",
+  "SIGNED_TYPES",
   "TEMPORARY_ADDON_SUFFIX",
   "TOOLKIT_ID",
   "XPIDatabase",
@@ -75,6 +76,7 @@ const XPI_INTERNAL_SYMBOLS = [
   "isTheme",
   "isUsableAddon",
   "isWebExtension",
+  "mustSign",
   "recordAddonTelemetry",
 ];
 
@@ -156,29 +158,12 @@ const RESTARTLESS_TYPES = new Set([
   "webextension-theme",
 ]);
 
-const SIGNED_TYPES = new Set([
-  "apiextension",
-  "extension",
-  "experiment",
-  "webextension",
-  "webextension-theme",
-]);
-
-
 // This is a random number array that can be used as "salt" when generating
 // an automatic ID based on the directory path of an add-on. It will prevent
 // someone from creating an ID for a permanent add-on that could be replaced
 // by a temporary add-on (because that would be confusing, I guess).
 const TEMP_INSTALL_ID_GEN_SESSION =
   new Uint8Array(Float64Array.of(Math.random()).buffer);
-
-// Whether add-on signing is required.
-function mustSign(aType) {
-  if (!SIGNED_TYPES.has(aType))
-    return false;
-
-  return AddonSettings.REQUIRE_SIGNING;
-}
 
 const MSG_JAR_FLUSH = "AddonJarFlush";
 const MSG_MESSAGE_MANAGER_CACHES_FLUSH = "AddonMessageManagerCachesFlush";

@@ -180,18 +180,9 @@ interface mozIStorageConnection : mozIStorageAsyncConnection {
   readonly attribute boolean transactionInProgress;
 
   /**
-   * Begin a new transaction.  sqlite default transactions are deferred.
-   * If a transaction is active, throws an error.
+   * Begin a new transaction. If a transaction is active, throws an error.
    */
   void beginTransaction();
-
-  /**
-   * Begins a new transaction with the given type.
-   */
-  const int32_t TRANSACTION_DEFERRED = 0;
-  const int32_t TRANSACTION_IMMEDIATE = 1;
-  const int32_t TRANSACTION_EXCLUSIVE = 2;
-  void beginTransactionAs(in int32_t transactionType);
 
   /**
    * Commits the current transaction.  If no transaction is active,

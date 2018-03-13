@@ -128,7 +128,7 @@ function createSample(i, frames) {
   return sample;
 }
 
-var SAMPLES = (function () {
+var SAMPLES = (function() {
   let samples = [];
 
   for (let i = 0; i < SAMPLE_COUNT;) {

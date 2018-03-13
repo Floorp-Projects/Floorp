@@ -90,7 +90,7 @@ var Prompt = Authenticators.Prompt = {};
 
 Prompt.mode = "PROMPT";
 
-Prompt.Client = function () {};
+Prompt.Client = function() {};
 Prompt.Client.prototype = {
 
   mode: Prompt.mode,
@@ -143,7 +143,7 @@ Prompt.Client.prototype = {
 
 };
 
-Prompt.Server = function () {};
+Prompt.Server = function() {};
 Prompt.Server.prototype = {
 
   mode: Prompt.mode,
@@ -261,7 +261,7 @@ var OOBCert = Authenticators.OOBCert = {};
 
 OOBCert.mode = "OOB_CERT";
 
-OOBCert.Client = function () {};
+OOBCert.Client = function() {};
 OOBCert.Client.prototype = {
 
   mode: OOBCert.mode,
@@ -436,7 +436,7 @@ OOBCert.Client.prototype = {
 
 };
 
-OOBCert.Server = function () {};
+OOBCert.Server = function() {};
 OOBCert.Server.prototype = {
 
   mode: OOBCert.mode,

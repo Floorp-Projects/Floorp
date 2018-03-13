@@ -127,7 +127,7 @@ class ShortestPaths extends Component {
 
     let zoom = this.state.zoom;
     if (!zoom) {
-      zoom = d3.behavior.zoom().on("zoom", function () {
+      zoom = d3.behavior.zoom().on("zoom", function() {
         target.attr(
           "transform",
           `translate(${d3.event.translate}) scale(${d3.event.scale})`
