@@ -6743,7 +6743,7 @@ var CanvasPermissionPromptHelper = {
 };
 
 var WebAuthnPromptHelper = {
-  _icon: "default-notification-icon",
+  _icon: "webauthn-notification-icon",
   _topic: "webauthn-prompt",
 
   // The current notification, if any. The U2F manager is a singleton, we will
