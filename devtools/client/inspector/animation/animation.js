@@ -29,6 +29,7 @@ class AnimationInspector {
     this.getAnimatedPropertyMap = this.getAnimatedPropertyMap.bind(this);
     this.getComputedStyle = this.getComputedStyle.bind(this);
     this.getNodeFromActor = this.getNodeFromActor.bind(this);
+    this.rewindAnimationsCurrentTime = this.rewindAnimationsCurrentTime.bind(this);
     this.selectAnimation = this.selectAnimation.bind(this);
     this.setAnimationsPlayState = this.setAnimationsPlayState.bind(this);
     this.setDetailVisibility = this.setDetailVisibility.bind(this);
@@ -61,6 +62,7 @@ class AnimationInspector {
       getAnimatedPropertyMap,
       getComputedStyle,
       getNodeFromActor,
+      rewindAnimationsCurrentTime,
       selectAnimation,
       setAnimationsPlayState,
       setDetailVisibility,
@@ -85,6 +87,7 @@ class AnimationInspector {
           getNodeFromActor,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
+          rewindAnimationsCurrentTime,
           selectAnimation,
           setAnimationsPlayState,
           setDetailVisibility,
@@ -217,6 +220,12 @@ class AnimationInspector {
     }
 
     this.inspector.store.dispatch(updateSidebarSize(size));
+  }
+
+  async rewindAnimationsCurrentTime() {
+    const animations = this.state.animations;
+    await this.animationsFront.setCurrentTimes(animations, 0, true);
+    this.updateAnimations(animations);
   }
 
   selectAnimation(animation) {

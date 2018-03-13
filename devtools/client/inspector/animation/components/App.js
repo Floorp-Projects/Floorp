@@ -26,6 +26,7 @@ class App extends PureComponent {
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      rewindAnimationsCurrentTime: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
       setAnimationsPlayState: PropTypes.func.isRequired,
       setDetailVisibility: PropTypes.func.isRequired,
@@ -49,6 +50,7 @@ class App extends PureComponent {
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      rewindAnimationsCurrentTime,
       selectAnimation,
       setAnimationsPlayState,
       setDetailVisibility,
@@ -67,6 +69,7 @@ class App extends PureComponent {
         AnimationToolbar(
           {
             animations,
+            rewindAnimationsCurrentTime,
             setAnimationsPlayState,
           }
         ),

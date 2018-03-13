@@ -9,11 +9,13 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const PauseResumeButton = createFactory(require("./PauseResumeButton"));
+const RewindButton = createFactory(require("./RewindButton"));
 
 class AnimationToolbar extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      rewindAnimationsCurrentTime: PropTypes.func.isRequired,
       setAnimationsPlayState: PropTypes.func.isRequired,
     };
   }
@@ -21,6 +23,7 @@ class AnimationToolbar extends PureComponent {
   render() {
     const {
       animations,
+      rewindAnimationsCurrentTime,
       setAnimationsPlayState,
     } = this.props;
 
@@ -28,6 +31,11 @@ class AnimationToolbar extends PureComponent {
       {
         className: "animation-toolbar devtools-toolbar",
       },
+      RewindButton(
+        {
+          rewindAnimationsCurrentTime,
+        }
+      ),
       PauseResumeButton(
         {
           animations,
