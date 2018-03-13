@@ -462,7 +462,7 @@ nsBindingManager::ExecuteDetachedHandlers()
     nsXBLBinding* binding = iter.Get()->GetKey()->GetXBLBinding();
     if (binding && bindings.AppendElement(binding)) {
       if (!boundElements.AppendObject(binding->GetBoundElement())) {
-        bindings.RemoveElementAt(bindings.Length() - 1);
+        bindings.RemoveLastElement();
       }
     }
   }

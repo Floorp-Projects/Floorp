@@ -2739,8 +2739,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
   subtrees.AppendElement(aFrame);
 
   do {
-    nsIFrame *subtreeRoot = subtrees.ElementAt(subtrees.Length() - 1);
-    subtrees.RemoveElementAt(subtrees.Length() - 1);
+    nsIFrame *subtreeRoot = subtrees.PopLastElement();
 
     // Grab |wasDirty| now so we can go ahead and update the bits on
     // subtreeRoot.
@@ -2790,8 +2789,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
       stack.AppendElement(subtreeRoot);
 
       do {
-        nsIFrame *f = stack.ElementAt(stack.Length() - 1);
-        stack.RemoveElementAt(stack.Length() - 1);
+        nsIFrame *f = stack.PopLastElement();
 
         if (f->IsPlaceholderFrame()) {
           nsIFrame *oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);

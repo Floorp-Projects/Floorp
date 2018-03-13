@@ -529,7 +529,7 @@ InterfaceRequestor::GetAnyLiveTabChild()
     }
 
     // Otherwise remove the stale weak reference and check the next one
-    mTabChildList.RemoveElementAt(mTabChildList.Length() - 1);
+    mTabChildList.RemoveLastElement();
   }
 
   return nullptr;
