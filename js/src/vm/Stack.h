@@ -109,25 +109,9 @@ namespace jit {
     class RematerializedFrame;
 } // namespace jit
 
-/*
- * Pointer to either a ScriptFrameIter::Data, an InterpreterFrame, or a Baseline
- * JIT frame.
- *
- * The Debugger may cache ScriptFrameIter::Data as a bookmark to reconstruct a
- * ScriptFrameIter without doing a full stack walk.
- *
- * There is no way to directly create such an AbstractFramePtr. To do so, the
- * user must call ScriptFrameIter::copyDataAsAbstractFramePtr().
- *
- * ScriptFrameIter::abstractFramePtr() will never return an AbstractFramePtr
- * that is in fact a ScriptFrameIter::Data.
- *
- * To recover a ScriptFrameIter settled at the location pointed to by an
- * AbstractFramePtr, use the THIS_FRAME_ITER macro in Debugger.cpp. As an
- * aside, no asScriptFrameIterData() is provided because C++ is stupid and
- * cannot forward declare inner classes.
+/**
+ * Pointer to a live JS or WASM stack frame.
  */
-
 class AbstractFramePtr
 {
     friend class FrameIter;
@@ -135,7 +119,6 @@ class AbstractFramePtr
     uintptr_t ptr_;
 
     enum {
-        Tag_ScriptFrameIterData = 0x0,
         Tag_InterpreterFrame = 0x1,
         Tag_BaselineFrame = 0x2,
         Tag_RematerializedFrame = 0x3,
@@ -179,9 +162,6 @@ class AbstractFramePtr
         return frame;
     }
 
-    bool isScriptFrameIterData() const {
-        return !!ptr_ && (ptr_ & TagMask) == Tag_ScriptFrameIterData;
-    }
     bool isInterpreterFrame() const {
         return (ptr_ & TagMask) == Tag_InterpreterFrame;
     }
@@ -285,7 +265,6 @@ class AbstractFramePtr
     inline HandleValue returnValue() const;
     inline void setReturnValue(const Value& rval) const;
 
-    friend void GDBTestInitAbstractFramePtr(AbstractFramePtr&, void*);
     friend void GDBTestInitAbstractFramePtr(AbstractFramePtr&, InterpreterFrame*);
     friend void GDBTestInitAbstractFramePtr(AbstractFramePtr&, jit::BaselineFrame*);
     friend void GDBTestInitAbstractFramePtr(AbstractFramePtr&, jit::RematerializedFrame*);
@@ -2197,7 +2176,6 @@ class FrameIter
     // -----------------------------------------------------------
 
     AbstractFramePtr abstractFramePtr() const;
-    AbstractFramePtr copyDataAsAbstractFramePtr() const;
     Data* copyData() const;
 
     // This can only be called when isInterp():
