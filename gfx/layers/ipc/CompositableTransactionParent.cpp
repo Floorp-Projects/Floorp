@@ -291,29 +291,6 @@ CompositableParentManager::ReleaseCompositable(const CompositableHandle& aHandle
   host->Detach(nullptr, CompositableHost::FORCE_DETACH);
 }
 
-bool
-CompositableParentManager::AddReadLocks(ReadLockArray&& aReadLocks)
-{
-  for (ReadLockInit& r : aReadLocks) {
-    if (mReadLocks.find(r.handle().Value()) != mReadLocks.end()) {
-      NS_ERROR("Duplicate read lock handle!");
-      return false;
-    }
-    mReadLocks[r.handle().Value()] = TextureReadLock::Deserialize(r.sharedLock(), this);
-  }
-  return true;
-}
-
-TextureReadLock*
-CompositableParentManager::FindReadLock(const ReadLockHandle& aHandle)
-{
-  auto iter = mReadLocks.find(aHandle.Value());
-  if (iter == mReadLocks.end()) {
-    return nullptr;
-  }
-  return iter->second.get();
-}
-
 } // namespace layers
 } // namespace mozilla
 
