@@ -28,8 +28,19 @@ const INITIAL_STATE = {
 
 const reducers = {
   [UPDATE_ANIMATIONS](state, { animations }) {
+    let detailVisibility = state.detailVisibility;
+    let selectedAnimation = state.selectedAnimation;
+
+    if (!state.selectedAnimation ||
+        !animations.find(animation => animation.actorID === selectedAnimation.actorID)) {
+      selectedAnimation = animations.length === 1 ? animations[0] : null;
+      detailVisibility = !!selectedAnimation;
+    }
+
     return Object.assign({}, state, {
       animations,
+      detailVisibility,
+      selectedAnimation,
       timeScale: new TimeScale(animations),
     });
   },

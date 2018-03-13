@@ -14,6 +14,7 @@
   --graph-right-offset: 10px;
   --keyframe-marker-shadow-color: #c4c4c4;
   --pause-image: url(chrome://devtools/skin/images/pause.svg);
+  --progress-bar-color: #909090;
   --resume-image: url(chrome://devtools/skin/images/play.svg);
   --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
   --scrubber-color: #dd00a9;
@@ -356,21 +357,20 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   display: flex;
   flex: 1;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 /* Animated Property List Header */
 .animated-property-list-header {
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) calc(100% - var(--sidebar-width) - var(--graph-right-offset)) var(--graph-right-offset);
   padding: 0;
 }
 
 /* Keyframes Progress Tick List */
 .keyframes-progress-tick-list {
-  margin-right: var(--graph-right-offset);
-  position: absolute;
-  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
+  grid-column: 2 / 3;
+  position: relative;
 }
 
 .keyframes-progress-tick-item {
@@ -384,6 +384,41 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 .keyframes-progress-tick-item.right {
   border-right: var(--tick-line-style);
+}
+
+/* Keyframes Progress Bar */
+.keyframes-progress-bar-area {
+  background: none;
+  grid-column: 2 / 3;
+  padding: 0;
+  pointer-events: none;
+  position: relative;
+}
+
+.keyframes-progress-bar {
+  height: 100vh;
+  position: absolute;
+  z-index: 1;
+}
+
+.keyframes-progress-bar::before {
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--progress-bar-color);
+  content: "";
+  left: -5px;
+  position: absolute;
+  top: 0;
+  width: 0;
+}
+
+.keyframes-progress-bar::after {
+  border-left: 1px solid var(--progress-bar-color);
+  content: "";
+  height: 100%;
+  position: absolute;
+  top: 0;
+  width: 0;
 }
 
 /* Animated Property List */
