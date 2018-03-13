@@ -311,7 +311,6 @@ bool nsContentUtils::sAutoFocusEnabled = true;
 #ifndef RELEASE_OR_BETA
 bool nsContentUtils::sBypassCSSOMOriginCheck = false;
 #endif
-bool nsContentUtils::sIsScopedStyleEnabled = false;
 
 bool nsContentUtils::sIsBytecodeCacheEnabled = false;
 int32_t nsContentUtils::sBytecodeCacheStrategy = 0;
@@ -715,9 +714,6 @@ nsContentUtils::Init()
 #ifndef RELEASE_OR_BETA
   sBypassCSSOMOriginCheck = getenv("MOZ_BYPASS_CSSOM_ORIGIN_CHECK");
 #endif
-
-  Preferences::AddBoolVarCache(&sIsScopedStyleEnabled,
-                               "layout.css.scoped-style.enabled", false);
 
   Preferences::AddBoolVarCache(&sLowerNetworkPriority,
                                "privacy.trackingprotection.lower_network_priority", false);
@@ -4146,7 +4142,8 @@ nsresult nsContentUtils::FormatLocalizedString(
 
 /* static */ void
 nsContentUtils::LogSimpleConsoleError(const nsAString& aErrorText,
-                                      const char * classification)
+                                      const char * classification,
+                                      bool aFromPrivateWindow)
 {
   nsCOMPtr<nsIScriptError> scriptError =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
@@ -4156,7 +4153,8 @@ nsContentUtils::LogSimpleConsoleError(const nsAString& aErrorText,
     if (console && NS_SUCCEEDED(scriptError->Init(aErrorText, EmptyString(),
                                                   EmptyString(), 0, 0,
                                                   nsIScriptError::errorFlag,
-                                                  classification))) {
+                                                  classification,
+                                                  aFromPrivateWindow))) {
       console->LogMessage(scriptError);
     }
   }
@@ -5834,7 +5832,8 @@ nsContentUtils::WarnScriptWasIgnored(nsIDocument* aDocument)
   }
   msg.AppendLiteral("Unable to run script because scripts are blocked internally.");
 
-  LogSimpleConsoleError(msg, "DOM");
+  LogSimpleConsoleError(msg, "DOM",
+                        !!aDocument->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId);
 }
 
 /* static */

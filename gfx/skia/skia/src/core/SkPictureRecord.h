@@ -61,10 +61,6 @@ public:
         return fWriter.snapshotAsData();
     }
 
-    const SkPictureContentInfo& contentInfo() const {
-        return fContentInfo;
-    }
-
     void setFlags(uint32_t recordFlags) {
         fRecordFlags = recordFlags;
     }
@@ -104,7 +100,6 @@ private:
         size_t offset = fWriter.bytesWritten();
 
         this->predrawNotify();
-        fContentInfo.addOperation();
 
         SkASSERT(0 != *size);
         SkASSERT(((uint8_t) drawType) == drawType);
@@ -157,18 +152,14 @@ protected:
     sk_sp<SkSurface> onNewSurface(const SkImageInfo&, const SkSurfaceProps&) override;
     bool onPeekPixels(SkPixmap*) override { return false; }
 
+    void onFlush() override;
+
     void willSave() override;
     SaveLayerStrategy getSaveLayerStrategy(const SaveLayerRec&) override;
     void willRestore() override;
 
     void didConcat(const SkMatrix&) override;
     void didSetMatrix(const SkMatrix&) override;
-
-#ifdef SK_EXPERIMENTAL_SHADOWING
-    void didTranslateZ(SkScalar) override;
-#else
-    void didTranslateZ(SkScalar);
-#endif
 
     void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) override;
 
@@ -203,6 +194,7 @@ protected:
                          const SkPaint*) override;
     void onDrawImageLattice(const SkImage*, const SkCanvas::Lattice& lattice, const SkRect& dst,
                             const SkPaint*) override;
+    void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
     void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
 
     void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
@@ -211,14 +203,6 @@ protected:
     void onClipRegion(const SkRegion&, SkClipOp) override;
 
     void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
-
-#ifdef SK_EXPERIMENTAL_SHADOWING
-    void onDrawShadowedPicture(const SkPicture*, const SkMatrix*,
-                               const SkPaint*, const SkShadowParams& params) override;
-#else
-    void onDrawShadowedPicture(const SkPicture*, const SkMatrix*,
-                               const SkPaint*, const SkShadowParams& params);
-#endif
 
     void onDrawDrawable(SkDrawable*, const SkMatrix*) override;
     void onDrawAnnotation(const SkRect&, const char[], SkData*) override;
@@ -241,24 +225,22 @@ protected:
 
     // SHOULD NEVER BE CALLED
     void onDrawBitmap(const SkBitmap&, SkScalar left, SkScalar top, const SkPaint*) override {
-        sk_throw();
+        SK_ABORT("not reached");
     }
     void onDrawBitmapRect(const SkBitmap&, const SkRect* src, const SkRect& dst, const SkPaint*,
                           SrcRectConstraint) override {
-        sk_throw();
+        SK_ABORT("not reached");
     }
     void onDrawBitmapNine(const SkBitmap&, const SkIRect& center, const SkRect& dst,
                           const SkPaint*) override {
-        sk_throw();
+        SK_ABORT("not reached");
     }
     void onDrawBitmapLattice(const SkBitmap&, const SkCanvas::Lattice& lattice, const SkRect& dst,
                              const SkPaint*) override {
-        sk_throw();
+        SK_ABORT("not reached");
     }
 
 private:
-    SkPictureContentInfo fContentInfo;
-
     SkTArray<SkPaint>  fPaints;
 
     struct PathHash {

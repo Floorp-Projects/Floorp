@@ -12,5 +12,6 @@ DIRS += [
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 DevToolsModules(
-    'animation.js'
+    'animation.js',
+    'current-time-timer.js'
 )

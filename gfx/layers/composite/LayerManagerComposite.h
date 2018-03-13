@@ -108,10 +108,6 @@ public:
 
   virtual void ForcePresent() = 0;
   virtual void AddInvalidRegion(const nsIntRegion& aRegion) = 0;
-  virtual void ClearApproximatelyVisibleRegions(uint64_t aLayersId,
-                                                const Maybe<uint32_t>& aPresShellId) = 0;
-  virtual void UpdateApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                                const CSSIntRegion& aRegion) = 0;
 
   virtual void NotifyShadowTreeTransaction() {}
   virtual void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget,
@@ -378,31 +374,6 @@ public:
     mInvalidRegion.Or(mInvalidRegion, aRegion);
   }
 
-  void ClearApproximatelyVisibleRegions(uint64_t aLayersId,
-                                        const Maybe<uint32_t>& aPresShellId) override
-  {
-    for (auto iter = mVisibleRegions.Iter(); !iter.Done(); iter.Next()) {
-      if (iter.Key().mLayersId == aLayersId &&
-          (!aPresShellId || iter.Key().mPresShellId == *aPresShellId)) {
-        iter.Remove();
-      }
-    }
-  }
-
-  void UpdateApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                        const CSSIntRegion& aRegion) override
-  {
-    CSSIntRegion* regionForScrollFrame = mVisibleRegions.LookupOrAdd(aGuid);
-    MOZ_ASSERT(regionForScrollFrame);
-
-    *regionForScrollFrame = aRegion;
-  }
-
-  CSSIntRegion* GetApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid)
-  {
-    return mVisibleRegions.Get(aGuid);
-  }
-
   Compositor* GetCompositor() const override {
     return mCompositor;
   }
@@ -494,10 +465,6 @@ private:
   gfx::IntRect mTargetBounds;
 
   nsIntRegion mInvalidRegion;
-
-  typedef nsClassHashtable<nsGenericHashKey<ScrollableLayerGuid>,
-                           CSSIntRegion> VisibleRegions;
-  VisibleRegions mVisibleRegions;
 
   bool mInTransaction;
   bool mIsCompositorReady;

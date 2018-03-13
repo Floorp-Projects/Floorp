@@ -141,9 +141,6 @@ public:
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-  dom::Element* GetScopeElement() const { return mScopeElement; }
-  void SetScopeElement(dom::Element* aScopeElement);
-
   void DidDirty() override;
 
 private:
@@ -193,7 +190,6 @@ protected:
 
   RefPtr<CSSRuleListImpl> mRuleCollection;
   bool                  mInRuleProcessorCache;
-  RefPtr<dom::Element> mScopeElement;
 
   AutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
 

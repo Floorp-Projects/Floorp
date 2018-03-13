@@ -10,7 +10,6 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMClientRect.h"
 #include "nsIDOMClientRectList.h"
-#include "nsIDOMClipboardEvent.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMCustomEvent.h"
 #ifdef MOZ_WEBRTC
@@ -60,7 +59,6 @@
 #include "mozilla/dom/CharacterDataBinding.h"
 #include "mozilla/dom/DOMRectBinding.h"
 #include "mozilla/dom/DOMRectListBinding.h"
-#include "mozilla/dom/ClipboardEventBinding.h"
 #include "mozilla/dom/CommentBinding.h"
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
@@ -183,7 +181,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(CharacterData),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRect, DOMRectReadOnly),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRectList, DOMRectList),
-  DEFINE_SHIM(ClipboardEvent),
   DEFINE_SHIM(Comment),
   DEFINE_SHIM(CustomEvent),
   DEFINE_SHIM(DataTransfer),

@@ -73,8 +73,6 @@ public:
 
   virtual nsIContent* GetUnfocusedKeyEventTarget() override;
 
-  nsContentList* GetForms();
-
   nsContentList* GetExistingForms() const
   {
     return mForms;
@@ -168,18 +166,6 @@ public:
                    JS::MutableHandle<JSObject*> aRetval,
                    mozilla::ErrorResult& rv);
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  mozilla::dom::HTMLSharedElement *GetHead() {
-    return static_cast<mozilla::dom::HTMLSharedElement*>(GetHeadElement());
-  }
-  nsIHTMLCollection* Images();
-  nsIHTMLCollection* Embeds();
-  nsIHTMLCollection* Plugins();
-  nsIHTMLCollection* Links();
-  nsIHTMLCollection* Forms()
-  {
-    return nsHTMLDocument::GetForms();
-  }
-  nsIHTMLCollection* Scripts();
   already_AddRefed<nsIDocument> Open(JSContext* cx,
                                      const nsAString& aType,
                                      const nsAString& aReplace,
@@ -227,8 +213,6 @@ public:
   void SetAlinkColor(const nsAString& aAlinkColor);
   void GetBgColor(nsAString& aBgColor);
   void SetBgColor(const nsAString& aBgColor);
-  nsIHTMLCollection* Anchors();
-  nsIHTMLCollection* Applets();
   void Clear() const
   {
     // Deprecated
@@ -255,11 +239,6 @@ protected:
                        int32_t* aHeight);
 
   nsIContent *MatchId(nsIContent *aContent, const nsAString& aId);
-
-  static bool MatchLinks(mozilla::dom::Element* aElement, int32_t aNamespaceID,
-                         nsAtom* aAtom, void* aData);
-  static bool MatchAnchors(mozilla::dom::Element* aElement, int32_t aNamespaceID,
-                           nsAtom* aAtom, void* aData);
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
@@ -320,14 +299,6 @@ protected:
 
   friend class ContentListHolder;
   ContentListHolder* mContentListHolder;
-
-  RefPtr<nsContentList> mImages;
-  RefPtr<nsEmptyContentList> mApplets;
-  RefPtr<nsContentList> mEmbeds;
-  RefPtr<nsContentList> mLinks;
-  RefPtr<nsContentList> mAnchors;
-  RefPtr<nsContentList> mScripts;
-  RefPtr<nsContentList> mForms;
 
   RefPtr<mozilla::dom::HTMLAllCollection> mAll;
 

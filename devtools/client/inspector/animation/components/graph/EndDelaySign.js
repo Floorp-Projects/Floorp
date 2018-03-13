@@ -21,20 +21,27 @@ class EndDelaySign extends PureComponent {
       animation,
       timeScale,
     } = this.props;
+    const {
+      delay,
+      duration,
+      fill,
+      iterationCount,
+      playbackRate,
+      previousStartTime = 0,
+    } = animation.state;
 
-    const { state } = animation;
-    const startTime = (state.previousStartTime || 0) - timeScale.minStartTime;
-    const endTime = state.duration * state.iterationCount + state.delay;
-    const endDelay = state.endDelay < 0 ? state.endDelay : 0;
-    const offset = (startTime + endTime + endDelay) / timeScale.getDuration() * 100;
-    const width = Math.abs(state.endDelay) / timeScale.getDuration() * 100;
-
-    const endDelayClass = state.endDelay < 0 ? "negative" : "";
-    const fillClass = state.fill === "both" || state.fill === "forwards" ? "fill" : "";
+    const endDelay = animation.state.endDelay / playbackRate;
+    const startTime = previousStartTime - timeScale.minStartTime;
+    const endTime =
+      (duration * iterationCount + delay) / playbackRate + (endDelay < 0 ? endDelay : 0);
+    const offset = (startTime + endTime) / timeScale.getDuration() * 100;
+    const width = Math.abs(endDelay) / timeScale.getDuration() * 100;
 
     return dom.div(
       {
-        className: `animation-end-delay-sign ${ endDelayClass } ${ fillClass }`,
+        className: "animation-end-delay-sign" +
+                   (endDelay < 0 ? " negative" : "") +
+                   (fill === "both" || fill === "forwards" ? " fill" : ""),
         style: {
           width: `${ width }%`,
           left: `${ offset }%`,

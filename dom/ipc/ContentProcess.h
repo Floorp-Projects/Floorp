@@ -49,6 +49,11 @@ private:
   DISALLOW_EVIL_CONSTRUCTORS(ContentProcess);
 };
 
+#ifdef ANDROID
+// Android doesn't use -prefsHandle, it gets that FD another way.
+void SetPrefsFd(int aFd);
+#endif
+
 } // namespace dom
 } // namespace mozilla
 

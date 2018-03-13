@@ -67,7 +67,7 @@ var gTests = [
     menulist.getItemAtIndex(2).doCommand();
     ok(!document.getElementById("webRTC-all-windows-shared").hidden,
        "the 'all windows will be shared' warning should now be visible");
-    await promiseWaitForCondition(() => !document.getElementById("webRTC-preview").hidden, 100);
+    await TestUtils.waitForCondition(() => !document.getElementById("webRTC-preview").hidden, 100, 100);
     ok(!document.getElementById("webRTC-preview").hidden,
        "the preview area is visible");
     ok(!document.getElementById("webRTC-previewWarning").hidden,
@@ -169,7 +169,7 @@ var gTests = [
     menulist.getItemAtIndex(scaryIndex).doCommand();
     ok(document.getElementById("webRTC-all-windows-shared").hidden,
        "the 'all windows will be shared' warning should still be hidden");
-    await promiseWaitForCondition(() => !document.getElementById("webRTC-preview").hidden);
+    await TestUtils.waitForCondition(() => !document.getElementById("webRTC-preview").hidden);
     ok(!document.getElementById("webRTC-preview").hidden,
        "the preview area is visible");
     ok(!document.getElementById("webRTC-previewWarning").hidden,
@@ -186,7 +186,7 @@ var gTests = [
       menulist.getItemAtIndex(nonScaryIndex).doCommand();
       ok(document.getElementById("webRTC-all-windows-shared").hidden,
          "the 'all windows will be shared' warning should still be hidden");
-      await promiseWaitForCondition(() => !document.getElementById("webRTC-preview").hidden);
+      await TestUtils.waitForCondition(() => !document.getElementById("webRTC-preview").hidden);
       ok(!document.getElementById("webRTC-preview").hidden,
          "the preview area is visible");
       ok(document.getElementById("webRTC-previewWarning").hidden,
@@ -277,7 +277,7 @@ var gTests = [
     menulist.getItemAtIndex(2).doCommand();
     ok(document.getElementById("webRTC-all-windows-shared").hidden,
        "the 'all windows will be shared' warning should still be hidden");
-    await promiseWaitForCondition(() => !document.getElementById("webRTC-preview").hidden);
+    await TestUtils.waitForCondition(() => !document.getElementById("webRTC-preview").hidden);
     ok(!document.getElementById("webRTC-preview").hidden,
        "the preview area is visible");
     ok(document.getElementById("webRTC-previewWarning").hidden,
@@ -328,7 +328,7 @@ var gTests = [
     menulist.getItemAtIndex(2).doCommand();
     ok(!document.getElementById("webRTC-all-windows-shared").hidden,
        "the 'all windows will be shared' warning should now be visible");
-    await promiseWaitForCondition(() => !document.getElementById("webRTC-preview").hidden);
+    await TestUtils.waitForCondition(() => !document.getElementById("webRTC-preview").hidden);
     ok(!document.getElementById("webRTC-preview").hidden,
        "the preview area is visible");
     ok(!document.getElementById("webRTC-previewWarning").hidden,
@@ -498,7 +498,7 @@ var gTests = [
         Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
       let elt = win.document.getElementById("screenShareButton");
       EventUtils.synthesizeMouseAtCenter(elt, {}, win);
-      await promiseWaitForCondition(() => !gIdentityHandler._identityPopup.hidden);
+      await TestUtils.waitForCondition(() => !gIdentityHandler._identityPopup.hidden);
     }
     ok(!gIdentityHandler._identityPopup.hidden, "control center should be open");
 

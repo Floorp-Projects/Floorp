@@ -318,7 +318,16 @@ function verifySignature(key, data, derSig) {
                           "): " + hexEncode(new Uint8Array(derSig)));
   }
 
-  let sigAsn1 = org.pkijs.fromBER(derSig);
+  // Copy signature data into the current context.
+  let derSigCopy = new ArrayBuffer(derSig.byteLength);
+  new Uint8Array(derSigCopy).set(new Uint8Array(derSig));
+
+  let sigAsn1 = org.pkijs.fromBER(derSigCopy);
+
+  // pkijs.asn1 seems to erroneously set an error code when calling some
+  // internal function. The test suite doesn't like dangling globals.
+  delete window.error;
+
   let sigR = new Uint8Array(sigAsn1.result.value_block.value[0].value_block.value_hex);
   let sigS = new Uint8Array(sigAsn1.result.value_block.value[1].value_block.value_hex);
 

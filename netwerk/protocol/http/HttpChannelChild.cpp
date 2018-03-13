@@ -3987,7 +3987,9 @@ HttpChannelChild::LogBlockedCORSRequest(const nsAString & aMessage)
 {
   if (mLoadInfo) {
     uint64_t innerWindowID = mLoadInfo->GetInnerWindowID();
-    nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, aMessage);
+    bool privateBrowsing = !!mLoadInfo->GetOriginAttributes().mPrivateBrowsingId;
+    nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
+                                               aMessage);
   }
   return NS_OK;
 }

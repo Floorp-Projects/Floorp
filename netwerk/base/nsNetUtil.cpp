@@ -3009,7 +3009,8 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
                               0, // aLineNumber
                               0, // aColumnNumber
                               nsIScriptError::warningFlag, "CSP",
-                              innerWindowId);
+                              innerWindowId,
+                              !!aLoadInfo->GetOriginAttributes().mPrivateBrowsingId);
           Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::CSP);
         } else {
           nsCOMPtr<nsIDocument> doc;

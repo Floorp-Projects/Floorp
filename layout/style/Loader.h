@@ -247,7 +247,6 @@ public:
                            const nsAString& aTitle,
                            const nsAString& aMedia,
                            ReferrerPolicy aReferrerPolicy,
-                           mozilla::dom::Element* aScopeElement,
                            nsICSSLoaderObserver* aObserver,
                            bool* aCompleted,
                            bool* aIsAlternate);
@@ -525,7 +524,6 @@ private:
                     const nsAString& aTitle,
                     const nsAString& aMediaString,
                     dom::MediaList* aMediaList,
-                    dom::Element* aScopeElement,
                     bool aIsAlternate);
 
   nsresult InsertSheetInDoc(StyleSheet* aSheet,

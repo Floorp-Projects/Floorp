@@ -794,18 +794,23 @@ struct ConsoleMsgQueueElem {
 void
 nsCSPContext::flushConsoleMessages()
 {
+  bool privateWindow = false;
+
   // should flush messages even if doc is not available
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
   if (doc) {
     mInnerWindowID = doc->InnerWindowID();
+    privateWindow = !!doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId;
   }
+
   mQueueUpMessages = false;
 
   for (uint32_t i = 0; i < mConsoleMsgQueue.Length(); i++) {
     ConsoleMsgQueueElem &elem = mConsoleMsgQueue[i];
     CSP_LogMessage(elem.mMsg, elem.mSourceName, elem.mSourceLine,
                    elem.mLineNumber, elem.mColumnNumber,
-                   elem.mSeverityFlag, "CSP", mInnerWindowID);
+                   elem.mSeverityFlag, "CSP", mInnerWindowID,
+                   privateWindow);
   }
   mConsoleMsgQueue.Clear();
 }
@@ -833,9 +838,16 @@ nsCSPContext::logToConsole(const char* aName,
     elem.mSeverityFlag = aSeverityFlag;
     return;
   }
+
+  bool privateWindow = false;
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
+  if (doc) {
+    privateWindow = !!doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId;
+  }
+
   CSP_LogLocalizedStr(aName, aParams, aParamsLength, aSourceName,
                       aSourceLine, aLineNumber, aColumnNumber,
-                      aSeverityFlag, "CSP", mInnerWindowID);
+                      aSeverityFlag, "CSP", mInnerWindowID, privateWindow);
 }
 
 /**

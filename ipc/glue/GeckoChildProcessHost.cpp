@@ -1030,9 +1030,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
   if (!CrashReporter::IsDummy()) {
     PROsfd h = PR_FileDesc2NativeHandle(crashAnnotationWritePipe);
-# if defined(MOZ_SANDBOX)
-    mSandboxBroker.AddHandleToShare(reinterpret_cast<HANDLE>(h));
-# endif // defined(MOZ_SANDBOX)
     mLaunchOptions->handles_to_inherit.push_back(reinterpret_cast<HANDLE>(h));
     std::string hStr = std::to_string(h);
     cmdLine.AppendLooseValue(UTF8ToWide(hStr));
@@ -1043,6 +1040,11 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
 # if defined(MOZ_SANDBOX)
   if (shouldSandboxCurrentProcess) {
+    // Mark the handles to inherit as inheritable.
+    for (HANDLE h : mLaunchOptions->handles_to_inherit) {
+      mSandboxBroker.AddHandleToShare(h);
+    }
+
     if (mSandboxBroker.LaunchApp(cmdLine.program().c_str(),
                                  cmdLine.command_line_string().c_str(),
                                  mLaunchOptions->env_map,
@@ -1180,7 +1182,7 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
                                             const base::file_handle_mapping_vector& fds_to_remap,
                                             ProcessHandle* process_handle)
 {
-  MOZ_ASSERT((fds_to_remap.size() > 0) && (fds_to_remap.size() <= 3));
+  MOZ_RELEASE_ASSERT((2 <= fds_to_remap.size()) && (fds_to_remap.size() <= 4));
   JNIEnv* const env = mozilla::jni::GetEnvForThread();
   MOZ_ASSERT(env);
 
@@ -1189,21 +1191,25 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
   for (int ix = 0; ix < argvSize; ix++) {
     jargs->SetElement(ix, jni::StringParam(argv[ix].c_str(), env));
   }
-  base::file_handle_mapping_vector::const_iterator it = fds_to_remap.begin();
-  int32_t ipcFd = it->first;
-  it++;
-  // If the Crash Reporter is disabled, there will not be a second file descriptor.
+
+  // XXX: this processing depends entirely on the internals of
+  // ContentParent::LaunchSubprocess()
+  // GeckoChildProcessHost::PerformAsyncLaunchInternal(), and the order in
+  // which they append to fds_to_remap. There must be a better way to do it.
+  // See bug 1440207.
+  int32_t prefsFd = fds_to_remap[0].first;
+  int32_t ipcFd = fds_to_remap[1].first;
   int32_t crashFd = -1;
   int32_t crashAnnotationFd = -1;
-  if (it != fds_to_remap.end() && !CrashReporter::IsDummy()) {
-    crashFd = it->first;
-    it++;
+  if (fds_to_remap.size() == 3) {
+    crashAnnotationFd = fds_to_remap[2].first;
   }
-  if (it != fds_to_remap.end()) {
-    crashAnnotationFd = it->first;
-    it++;
+  if (fds_to_remap.size() == 4) {
+    crashFd = fds_to_remap[2].first;
+    crashAnnotationFd = fds_to_remap[3].first;
   }
-  int32_t handle = java::GeckoProcessManager::Start(type, jargs, ipcFd, crashFd, crashAnnotationFd);
+
+  int32_t handle = java::GeckoProcessManager::Start(type, jargs, prefsFd, ipcFd, crashFd, crashAnnotationFd);
 
   if (process_handle) {
     *process_handle = handle;

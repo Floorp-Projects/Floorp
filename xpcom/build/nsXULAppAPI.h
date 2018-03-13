@@ -398,7 +398,7 @@ XRE_API(const char*,
 
 #if defined(MOZ_WIDGET_ANDROID)
 XRE_API(void,
-        XRE_SetAndroidChildFds, (JNIEnv* env, int ipcFd, int crashFd, int crashAnnotationFd))
+        XRE_SetAndroidChildFds, (JNIEnv* env, int prefsFd, int ipcFd, int crashFd, int crashAnnotationFd))
 #endif // defined(MOZ_WIDGET_ANDROID)
 
 XRE_API(void,
