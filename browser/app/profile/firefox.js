@@ -1084,7 +1084,18 @@ pref("security.sandbox.content.level", 3);
 #endif
 
 #if defined(NIGHTLY_BUILD) && defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-pref("security.sandbox.mac.flash.enabled", false);
+// Controls whether and how the Mac NPAPI Flash plugin process is sandboxed.
+// On Mac these levels are:
+// 0 - "no sandbox"
+// 1 - "write access to some Flash-specific directories and global
+//      read access triggered by file dialog activity"
+// 2 - "no global read access, read and write access to some
+//      Flash-specific directories"
+pref("dom.ipc.plugins.sandbox-level.flash", 0);
+// Controls the sandbox level used by plugins other than Flash. On Mac,
+// no other plugins are supported and this pref is only used for test
+// plugins used in automated tests.
+pref("dom.ipc.plugins.sandbox-level.default", 0);
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
