@@ -3,22 +3,8 @@
 
 "use strict";
 
-const TEST_QUOTA_USAGE_HOST = "example.com";
-const TEST_QUOTA_USAGE_ORIGIN = "https://" + TEST_QUOTA_USAGE_HOST;
-const TEST_QUOTA_USAGE_URL = TEST_QUOTA_USAGE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/site_data_test.html";
-const TEST_OFFLINE_HOST = "example.org";
-const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
-const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/offline/offline.html";
-const TEST_SERVICE_WORKER_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/service_worker_test.html";
-const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
-
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
-const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", {});
-const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm", {});
-const { OfflineAppCacheHelper } = ChromeUtils.import("resource:///modules/offlineAppCache.jsm", {});
-
 function getPersistentStoragePermStatus(origin) {
-  let uri = NetUtil.newURI(origin);
+  let uri = Services.io.newURI(origin);
   let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
   return Services.perms.testExactPermissionFromPrincipal(principal, "persistent-storage");
 }
@@ -26,8 +12,6 @@ function getPersistentStoragePermStatus(origin) {
 // Test listing site using quota usage or site using appcache
 // This is currently disabled because of bug 1414751.
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-
   // Open a test site which would save into appcache
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_OFFLINE_URL);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -71,7 +55,6 @@ add_task(async function() {
 
 // Test buttons are disabled and loading message shown while updating sites
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatedPromise;
@@ -118,7 +101,6 @@ add_task(async function() {
 
 // Test clearing service wroker through the settings panel
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   // Register a test service worker
   await loadServiceWorkerTestPage(TEST_SERVICE_WORKER_URL);
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -126,7 +108,7 @@ add_task(async function() {
   await promiseServiceWorkerRegisteredFor(TEST_SERVICE_WORKER_URL);
   // Open the Site Data Settings panel and remove the site
   await openSiteDataSettingsDialog();
-  let acceptRemovePromise = promiseAlertDialogOpen("accept");
+  let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
   let updatePromise = promiseSiteDataManagerSitesUpdated();
   ContentTask.spawn(gBrowser.selectedBrowser, { TEST_OFFLINE_HOST }, args => {
     let host = args.TEST_OFFLINE_HOST;
@@ -186,7 +168,7 @@ add_task(async function() {
 
   // Open the site data manager and remove one site.
   await openSiteDataSettingsDialog();
-  let removeDialogOpenPromise = promiseWindowDialogOpen("accept", REMOVE_DIALOG_URL);
+  let removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
   await ContentTask.spawn(gBrowser.selectedBrowser, {creationDate1, creationDate2}, function(args) {
     let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
@@ -221,7 +203,7 @@ add_task(async function() {
 
   // Open the site data manager and remove another site.
   await openSiteDataSettingsDialog();
-  let acceptRemovePromise = promiseAlertDialogOpen("accept");
+  let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
   await ContentTask.spawn(gBrowser.selectedBrowser, {creationDate1}, function(args) {
     let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 

@@ -5,17 +5,6 @@
 
 ChromeUtils.import("resource:///modules/SitePermissions.jsm");
 
-const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm", {});
-const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", {});
-
-const TEST_QUOTA_USAGE_HOST = "example.com";
-const TEST_QUOTA_USAGE_ORIGIN = "https://" + TEST_QUOTA_USAGE_HOST;
-const TEST_QUOTA_USAGE_URL = TEST_QUOTA_USAGE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/site_data_test.html";
-const TEST_OFFLINE_HOST = "example.org";
-const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
-const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/offline/offline.html";
-const TEST_SERVICE_WORKER_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/service_worker_test.html";
-
 async function testClearData(clearSiteData, clearCache) {
   let quotaURI = Services.io.newURI(TEST_QUOTA_USAGE_ORIGIN);
   SitePermissions.set(quotaURI, "persistent-storage", SitePermissions.ALLOW);
@@ -89,7 +78,7 @@ async function testClearData(clearSiteData, clearCache) {
   let updatePromise;
   let cookiesClearedPromise;
   if (clearSiteData) {
-    acceptPromise = promiseAlertDialogOpen("accept");
+    acceptPromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
     updatePromise = promiseSiteDataManagerSitesUpdated();
     cookiesClearedPromise = promiseCookiesCleared();
   }
