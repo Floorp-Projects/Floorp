@@ -950,7 +950,7 @@ namespace js {
 JSString* FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource);
 
 template<XDRMode mode>
-bool
+XDRResult
 XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
                        HandleScriptSource sourceObject, MutableHandleFunction objp);
 
