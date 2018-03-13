@@ -23,7 +23,6 @@
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsPresContext.h"
-#include "nsIDOMDataTransfer.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
@@ -35,6 +34,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/DataTransferItemList.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Unused.h"
 #include "nsFrameLoader.h"
@@ -201,7 +201,7 @@ nsBaseDragService::IsDataFlavorSupported(const char *aDataFlavor,
 }
 
 NS_IMETHODIMP
-nsBaseDragService::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
+nsBaseDragService::GetDataTransferXPCOM(nsIDOMDataTransfer** aDataTransfer)
 {
   *aDataTransfer = mDataTransfer;
   NS_IF_ADDREF(*aDataTransfer);
@@ -209,10 +209,23 @@ nsBaseDragService::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
 }
 
 NS_IMETHODIMP
-nsBaseDragService::SetDataTransfer(nsIDOMDataTransfer* aDataTransfer)
+nsBaseDragService::SetDataTransferXPCOM(nsIDOMDataTransfer* aDataTransfer)
+{
+  // Cast is safe because nsIDOMDataTransfer is builtinclass.
+  mDataTransfer = static_cast<DataTransfer*>(aDataTransfer);
+  return NS_OK;
+}
+
+DataTransfer*
+nsBaseDragService::GetDataTransfer()
+{
+  return mDataTransfer;
+}
+
+void
+nsBaseDragService::SetDataTransfer(DataTransfer* aDataTransfer)
 {
   mDataTransfer = aDataTransfer;
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -271,7 +284,8 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
   NS_ENSURE_TRUE(aDataTransfer, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
-  mDataTransfer = aDataTransfer;
+  // Cast is safe because nsIDOMDataTransfer is builtinclass.
+  mDataTransfer = static_cast<DataTransfer*>(aDataTransfer);
   mSelection = nullptr;
   mHasImage = true;
   mDragPopup = nullptr;
@@ -308,7 +322,8 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
-  mDataTransfer = aDataTransfer;
+  // Cast is safe because nsIDOMDataTransfer is builtinclass.
+  mDataTransfer = static_cast<DataTransfer*>(aDataTransfer);
   mSelection = aSelection;
   mHasImage = true;
   mDragPopup = nullptr;

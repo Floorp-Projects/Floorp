@@ -205,7 +205,7 @@ public:
 
   uint32_t MozItemCount() const;
 
-  void GetMozCursor(nsString& aCursor)
+  void GetMozCursor(nsAString& aCursor)
   {
     if (mCursorState) {
       aCursor.AssignLiteral("default");
@@ -213,6 +213,7 @@ public:
       aCursor.AssignLiteral("auto");
     }
   }
+  void SetMozCursor(const nsAString& aCursor);
 
   already_AddRefed<DOMStringList> MozTypesAt(uint32_t aIndex,
                                              CallerType aCallerType,

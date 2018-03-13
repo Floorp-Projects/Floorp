@@ -1337,8 +1337,7 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       dragSession->DragEventDispatchedToChildProcess();
       dragSession->GetDragAction(&action);
       dragSession->GetTriggeringPrincipalURISpec(principalURISpec);
-      nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
-      dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
+      RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
       if (initialDataTransfer) {
         initialDataTransfer->GetDropEffectInt(&dropEffect);
       }
@@ -3534,8 +3533,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // the initial dataTransfer is the one from the dragstart event that
       // was set on the dragSession when the drag began.
       nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
-      nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
-      dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
+      RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
 
       WidgetDragEvent *dragEvent = aEvent->AsDragEvent();
 
@@ -4781,8 +4779,7 @@ EventStateManager::UpdateDragDataTransfer(WidgetDragEvent* dragEvent)
   if (dragSession) {
     // the initial dataTransfer is the one from the dragstart event that
     // was set on the dragSession when the drag began.
-    nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
-    dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
+    RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
     if (initialDataTransfer) {
       // retrieve the current moz cursor setting and save it.
       nsAutoString mozCursor;

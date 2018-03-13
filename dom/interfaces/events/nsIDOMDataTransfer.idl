@@ -69,20 +69,6 @@ interface nsIDOMDataTransfer : nsISupports
   void addElement(in nsIDOMElement element);
 
   /**
-   * Sets the drag cursor state. Primarily used to control the cursor during
-   * tab drags, but could be expanded to other uses. XXX Currently implemented
-   * on Win32 only.
-   *
-   * Possible values:
-   *  auto - use default system behavior.
-   *  default - set the cursor to an arrow during the drag operation.
-   *
-   * Values other than 'default' are indentical to setting mozCursor to
-   * 'auto'.
-   */
-  attribute DOMString mozCursor;
-
-  /**
    * Will be true when the user has cancelled the drag (typically by pressing
    * Escape) and when the drag has been cancelled unexpectedly.  This will be
    * false otherwise, including when the drop has been rejected by its target.
