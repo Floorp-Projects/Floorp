@@ -4598,7 +4598,7 @@ class TabProgressListener {
   }
 }
 
-let StatusPanel = {
+var StatusPanel = {
   get panel() {
     window.addEventListener("resize", this);
 
