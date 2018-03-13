@@ -1022,6 +1022,20 @@ devtools.onboarding:
     record_in_processes:
       - 'main'
 
+devtools.responsive:
+  toolbox_opened_first:
+    bug_numbers:
+      - 1444497
+    description: >
+      Number of Responsive Design Mode opens with a toolbox already open.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org, jryans@mozilla.com
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+
 navigator.storage:
   estimate_count:
     bug_numbers:
