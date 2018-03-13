@@ -3155,7 +3155,7 @@ Preferences::SetupTelemetryPref()
 
   Maybe<bool> telemetryPrefValue = TelemetryPrefValue();
   if (telemetryPrefValue.isSome()) {
-    Preferences::SetBoolInAnyProcess(
+    Preferences::SetBool(
       kTelemetryPref, *telemetryPrefValue, PrefValueKind::Default);
   }
 }
@@ -3203,9 +3203,9 @@ Preferences::SetupTelemetryPref()
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  Preferences::SetBoolInAnyProcess(
+  Preferences::SetBool(
     kTelemetryPref, TelemetryPrefValue(), PrefValueKind::Default);
-  Preferences::LockInAnyProcess(kTelemetryPref);
+  Preferences::Lock(kTelemetryPref);
 }
 
 static void
@@ -4390,10 +4390,11 @@ Preferences::GetComplex(const char* aPrefName,
 }
 
 /* static */ nsresult
-Preferences::SetCStringInAnyProcess(const char* aPrefName,
-                                    const nsACString& aValue,
-                                    PrefValueKind aKind)
+Preferences::SetCString(const char* aPrefName,
+                        const nsACString& aValue,
+                        PrefValueKind aKind)
 {
+  ENSURE_PARENT_PROCESS("SetCString", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   if (aValue.Length() > MAX_PREF_LENGTH) {
@@ -4415,19 +4416,9 @@ Preferences::SetCStringInAnyProcess(const char* aPrefName,
 }
 
 /* static */ nsresult
-Preferences::SetCString(const char* aPrefName,
-                        const nsACString& aValue,
-                        PrefValueKind aKind)
+Preferences::SetBool(const char* aPrefName, bool aValue, PrefValueKind aKind)
 {
-  ENSURE_PARENT_PROCESS("SetCString", aPrefName);
-  return SetCStringInAnyProcess(aPrefName, aValue, aKind);
-}
-
-/* static */ nsresult
-Preferences::SetBoolInAnyProcess(const char* aPrefName,
-                                 bool aValue,
-                                 PrefValueKind aKind)
-{
+  ENSURE_PARENT_PROCESS("SetBool", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   PrefValue prefValue;
@@ -4442,17 +4433,9 @@ Preferences::SetBoolInAnyProcess(const char* aPrefName,
 }
 
 /* static */ nsresult
-Preferences::SetBool(const char* aPrefName, bool aValue, PrefValueKind aKind)
+Preferences::SetInt(const char* aPrefName, int32_t aValue, PrefValueKind aKind)
 {
-  ENSURE_PARENT_PROCESS("SetBool", aPrefName);
-  return SetBoolInAnyProcess(aPrefName, aValue, aKind);
-}
-
-/* static */ nsresult
-Preferences::SetIntInAnyProcess(const char* aPrefName,
-                                int32_t aValue,
-                                PrefValueKind aKind)
-{
+  ENSURE_PARENT_PROCESS("SetInt", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   PrefValue prefValue;
@@ -4467,13 +4450,6 @@ Preferences::SetIntInAnyProcess(const char* aPrefName,
 }
 
 /* static */ nsresult
-Preferences::SetInt(const char* aPrefName, int32_t aValue, PrefValueKind aKind)
-{
-  ENSURE_PARENT_PROCESS("SetInt", aPrefName);
-  return SetIntInAnyProcess(aPrefName, aValue, aKind);
-}
-
-/* static */ nsresult
 Preferences::SetComplex(const char* aPrefName,
                         const nsIID& aType,
                         nsISupports* aValue,
@@ -4484,8 +4460,9 @@ Preferences::SetComplex(const char* aPrefName,
 }
 
 /* static */ nsresult
-Preferences::LockInAnyProcess(const char* aPrefName)
+Preferences::Lock(const char* aPrefName)
 {
+  ENSURE_PARENT_PROCESS("Lock", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   Pref* pref = pref_HashTableLookup(aPrefName);
@@ -4499,13 +4476,6 @@ Preferences::LockInAnyProcess(const char* aPrefName)
   }
 
   return NS_OK;
-}
-
-/* static */ nsresult
-Preferences::Lock(const char* aPrefName)
-{
-  ENSURE_PARENT_PROCESS("Lock", aPrefName);
-  return Preferences::LockInAnyProcess(aPrefName);
 }
 
 /* static */ nsresult
@@ -4537,8 +4507,9 @@ Preferences::IsLocked(const char* aPrefName)
 }
 
 /* static */ nsresult
-Preferences::ClearUserInAnyProcess(const char* aPrefName)
+Preferences::ClearUser(const char* aPrefName)
 {
+  ENSURE_PARENT_PROCESS("ClearUser", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   PrefEntry* entry = pref_HashTableLookupInner(aPrefName);
@@ -4554,13 +4525,6 @@ Preferences::ClearUserInAnyProcess(const char* aPrefName)
     Preferences::HandleDirty();
   }
   return NS_OK;
-}
-
-/* static */ nsresult
-Preferences::ClearUser(const char* aPrefName)
-{
-  ENSURE_PARENT_PROCESS("ClearUser", aPrefName);
-  return ClearUserInAnyProcess(aPrefName);
 }
 
 /* static */ bool

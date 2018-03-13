@@ -396,29 +396,6 @@ private:
   static void SetupTelemetryPref();
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects();
 
-  // Functions above that modify prefs will fail if they are not run in the
-  // parent process. The "InAnyProcess" functions below will succeed outside
-  // the content process, and are used when passing pref values from the parent
-  // process to content processes.
-
-  static nsresult SetBoolInAnyProcess(
-    const char* aPrefName,
-    bool aValue,
-    PrefValueKind aKind = PrefValueKind::User);
-
-  static nsresult SetIntInAnyProcess(const char* aPrefName,
-                                     int32_t aValue,
-                                     PrefValueKind aKind = PrefValueKind::User);
-
-  static nsresult SetCStringInAnyProcess(
-    const char* aPrefName,
-    const nsACString& aValue,
-    PrefValueKind aKind = PrefValueKind::User);
-
-  static nsresult ClearUserInAnyProcess(const char* aPrefName);
-
-  static nsresult LockInAnyProcess(const char* aPrefName);
-
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const char* aPref,
                                    void* aClosure,
