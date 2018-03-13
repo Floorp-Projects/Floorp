@@ -1,17 +1,9 @@
 extern crate toml;
 
-use toml::{Parser};
-
 fn run(toml: &str) {
-    let mut p = Parser::new(toml);
-    let table = p.parse();
-    assert!(table.is_none());
-    assert!(p.errors.len() > 0);
-
-    // test Parser::to_linecol with the generated error offsets
-    for error in &p.errors {
-      p.to_linecol(error.lo);
-      p.to_linecol(error.hi);
+    println!("test if invalid:\n{}", toml);
+    if let Ok(e) = toml.parse::<toml::Value>() {
+        panic!("parsed to: {:#?}", e);
     }
 }
 
@@ -32,8 +24,6 @@ test!(datetime_malformed_no_secs,
       include_str!("invalid/datetime-malformed-no-secs.toml"));
 test!(datetime_malformed_no_t,
       include_str!("invalid/datetime-malformed-no-t.toml"));
-test!(datetime_malformed_no_z,
-      include_str!("invalid/datetime-malformed-no-z.toml"));
 test!(datetime_malformed_with_milli,
       include_str!("invalid/datetime-malformed-with-milli.toml"));
 test!(duplicate_keys,

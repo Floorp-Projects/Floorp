@@ -1,5 +1,6 @@
 language: rust
 rust:
+  - 1.15.0
   - stable
   - beta
   - nightly
@@ -7,19 +8,16 @@ sudo: false
 before_script:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
 script:
-  - cargo build --verbose
-  - cargo build --verbose --no-default-features
-  - cargo build --verbose --features serde --no-default-features
-  - cargo test --verbose --features serde
-  - cargo test --verbose --manifest-path serde-tests/Cargo.toml
+  - cargo test
   - rustdoc --test README.md -L target
-  - cargo doc --no-deps
+  - test "$TRAVIS_RUST_VERSION" != "1.15.0" && cargo doc --no-deps || echo "skipping cargo doc"
 after_success:
   - travis-cargo --only nightly doc-upload
   - travis-cargo coveralls --no-sudo
 env:
   global:
-    secure: LZMkQQJT5LqLQQ8JyakjvHNqqMPy8lm/SyC+H5cKUVI/xk7xRuti4eKY937N8uSmbff2m9ZYlG6cNwIOfk/nWn8YsqxA8Wg/xugubWzqGuqu+NQ4IZVa7INT2Fiqyk5SPCh8B5fo2x7OBJ24SCkWb2p8bEWAuW8XdZZOdmi3H2I=
+    secure: "IDm3Oc3bmIL4/6zixovwkuTkbinqWnKdLfeuKTtHqT4ZbVy+rxTDQBgLGfVngymjciHWkJnvQ8/2nT3/KW4MPNY9Sqt3NfWvO7vj9cXypeNeJ4xFrVK49F7CMM4KTCeSMlDKR1C0TVYGgxFIViLtBw/imivl9fk6J489eKv36sA="
+
 notifications:
   email:
     on_success: never
