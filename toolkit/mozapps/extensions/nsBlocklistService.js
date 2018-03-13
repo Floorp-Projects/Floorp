@@ -28,12 +28,16 @@ ChromeUtils.defineModuleGetter(this, "OS",
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
 
-// The blocklist updater is the new system in charge of fetching remote data
+// The remote settings updater is the new system in charge of fetching remote data
 // securely and efficiently. It will replace the current XML-based system.
 // See Bug 1257565 and Bug 1252456.
-const BlocklistUpdater = {};
-ChromeUtils.defineModuleGetter(BlocklistUpdater, "checkVersions",
-                               "resource://services-common/blocklist-updater.js");
+const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+XPCOMUtils.defineLazyGetter(this, "RemoteSettings", function() {
+  // Instantiate blocklist clients.
+  BlocklistClients.initialize();
+  // Import RemoteSettings for ``pollChanges()``
+  return ChromeUtils.import("resource://services-common/remote-settings.js", {});
+});
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const KEY_PROFILEDIR                  = "ProfD";
@@ -570,7 +574,7 @@ Blocklist.prototype = {
     // If blocklist update via Kinto is enabled, poll for changes and sync.
     // Currently certificates blocklist relies on it by default.
     if (Services.prefs.getBoolPref(PREF_BLOCKLIST_UPDATE_ENABLED)) {
-      BlocklistUpdater.checkVersions().catch(() => {
+      RemoteSettings.pollChanges().catch(() => {
         // Bug 1254099 - Telemetry (success or errors) will be collected during this process.
       });
     }
