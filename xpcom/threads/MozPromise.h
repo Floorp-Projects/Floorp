@@ -1205,10 +1205,7 @@ public:
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();
     }
-
-    RefPtr<typename PromiseType::Private> p = mPromise;
-    mPromise = nullptr;
-    return p.forget();
+    return mPromise.forget();
   }
 
   void Resolve(const typename PromiseType::ResolveValueType& aResolveValue,
@@ -1551,10 +1548,8 @@ InvokeAsync(nsISerialEventTarget* aTarget, const char* aCallerName,
   typedef typename RemoveSmartPointer<decltype(aFunction())>::Type PromiseType;
   typedef detail::ProxyFunctionRunnable<Function, PromiseType> ProxyRunnableType;
 
-  RefPtr<typename PromiseType::Private> p =
-    new (typename PromiseType::Private)(aCallerName);
-  RefPtr<ProxyRunnableType> r =
-    new ProxyRunnableType(p, Forward<Function>(aFunction));
+  auto p = MakeRefPtr<typename PromiseType::Private>(aCallerName);
+  auto r = MakeRefPtr<ProxyRunnableType>(p, Forward<Function>(aFunction));
   aTarget->Dispatch(r.forget());
   return p.forget();
 }
