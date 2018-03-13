@@ -20,9 +20,9 @@ add_task(async function() {
     ],
   ]);
 
-  gWindow.localStorage.removeItem("ls4");
+  await removeLocalStorageItem("ls4");
 
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [
@@ -31,10 +31,9 @@ add_task(async function() {
     ],
   ]);
 
-  gWindow.localStorage.setItem("ls4", "again");
+  await setLocalStorageItem("ls4", "again");
 
-  await gUI.once("store-objects-updated");
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   await checkState([
     [
@@ -43,10 +42,9 @@ add_task(async function() {
     ],
   ]);
   // Updating a row
-  gWindow.localStorage.setItem("ls2", "ls2-changed");
+  await setLocalStorageItem("ls2", "ls2-changed");
 
-  await gUI.once("store-objects-updated");
-  await gUI.once("store-objects-updated");
+  await gUI.once("store-objects-edit");
 
   checkCell("ls2", "value", "ls2-changed");
 
@@ -66,3 +64,19 @@ add_task(async function() {
 
   await finishTests();
 });
+
+async function setLocalStorageItem(key, value) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, [key, value],
+    ([innerKey, innerValue]) => {
+      content.wrappedJSObject.localStorage.setItem(innerKey, innerValue);
+    }
+  );
+}
+
+async function removeLocalStorageItem(key) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, key,
+    innerKey => {
+      content.wrappedJSObject.localStorage.removeItem(innerKey);
+    }
+  );
+}

@@ -28,7 +28,7 @@ add_task(async function() {
     [["indexedDB", "http://test1.example.org"], ["idb (default)"]]
   ]);
 
-  let eventWait = gUI.once("store-objects-updated");
+  let eventWait = gUI.once("store-objects-edit");
 
   info("telling content to close the db");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -36,7 +36,7 @@ add_task(async function() {
     await win.closeDb();
   });
 
-  info("waiting for store update events");
+  info("waiting for store edit events");
   await eventWait;
 
   info("test state after real delete");
