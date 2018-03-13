@@ -380,27 +380,21 @@ nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(nsIDOMFileList* a
 }
 
 bool
-nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDataTransfer* aDOMDataTransfer)
+nsFileControlFrame::DnDListener::IsValidDropData(DataTransfer* aDataTransfer)
 {
-  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDOMDataTransfer);
-  NS_ENSURE_TRUE(dataTransfer, false);
-
   // We only support dropping files onto a file upload control
   nsTArray<nsString> types;
-  dataTransfer->GetTypes(types, CallerType::System);
+  aDataTransfer->GetTypes(types, CallerType::System);
 
   return types.Contains(NS_LITERAL_STRING("Files"));
 }
 
 bool
-nsFileControlFrame::DnDListener::CanDropTheseFiles(nsIDOMDataTransfer* aDOMDataTransfer,
+nsFileControlFrame::DnDListener::CanDropTheseFiles(DataTransfer* aDataTransfer,
                                                    bool aSupportsMultiple)
 {
-  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDOMDataTransfer);
-  NS_ENSURE_TRUE(dataTransfer, false);
-
   RefPtr<FileList> fileList =
-    dataTransfer->GetFiles(*nsContentUtils::GetSystemPrincipal());
+    aDataTransfer->GetFiles(*nsContentUtils::GetSystemPrincipal());
 
   RefPtr<BlobImpl> webkitDir;
   nsresult rv =
