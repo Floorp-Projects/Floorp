@@ -101,25 +101,6 @@ add_task(function setup() {
   PlacesUtils.bookmarks.addObserver(gBookmarkSkipObserver);
 });
 
-add_task(async function batch() {
-  let promise = Promise.all([
-    gBookmarksObserver.setup([
-      { name: "onBeginUpdateBatch",
-       args: [] },
-      { name: "onEndUpdateBatch",
-       args: [] },
-    ]),
-    gBookmarkSkipObserver.setup([
-      "onBeginUpdateBatch", "onEndUpdateBatch"
-  ])]);
-  PlacesUtils.bookmarks.runInBatchMode({
-    runBatched() {
-      // Nothing.
-    }
-  }, null);
-  await promise;
-});
-
 add_task(async function onItemAdded_bookmark() {
   const title = "Bookmark 1";
   let uri = Services.io.newURI("http://1.mozilla.org/");

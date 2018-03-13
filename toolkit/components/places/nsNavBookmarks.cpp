@@ -163,7 +163,6 @@ nsNavBookmarks::nsNavBookmarks()
   , mToolbarRoot(0)
   , mMobileRoot(0)
   , mCanNotify(false)
-  , mBatching(false)
 {
   NS_ASSERTION(!gBookmarksService,
                "Attempting to create two instances of the service!");
@@ -1944,27 +1943,6 @@ nsNavBookmarks::GetBookmarksForURI(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsNavBookmarks::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
-                               nsISupports* aUserData) {
-  AUTO_PROFILER_LABEL("nsNavBookmarks::RunInBatchMode", OTHER);
-
-  NS_ENSURE_ARG(aCallback);
-
-  mBatching = true;
-
-  // Just forward the request to history.  History service must exist for
-  // bookmarks to work and we are observing it, thus batch notifications will be
-  // forwarded to bookmarks observers.
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  nsresult rv = history->RunInBatchMode(aCallback, aUserData);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsNavBookmarks::AddObserver(nsINavBookmarkObserver* aObserver,
                             bool aOwnsWeak)
 {
@@ -2097,10 +2075,6 @@ nsNavBookmarks::OnBeginUpdateBatch()
 NS_IMETHODIMP
 nsNavBookmarks::OnEndUpdateBatch()
 {
-  if (mBatching) {
-    mBatching = false;
-  }
-
   NOTIFY_OBSERVERS(mCanNotify, mObservers,
                    nsINavBookmarkObserver, OnEndUpdateBatch());
   return NS_OK;
