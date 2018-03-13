@@ -167,6 +167,10 @@ class nsTreeContentView final : public nsITreeView,
 
     void UpdateParentIndexes(int32_t aIndex, int32_t aSkip, int32_t aCount);
 
+    bool CanDrop(int32_t aRow, int32_t aOrientation,
+                 mozilla::ErrorResult& aError);
+    void Drop(int32_t aRow, int32_t aOrientation, mozilla::ErrorResult& aError);
+
     // Content helpers.
     mozilla::dom::Element* GetCell(nsIContent* aContainer, nsTreeColumn& aCol);
 
