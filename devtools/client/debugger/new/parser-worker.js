@@ -2685,12 +2685,16 @@ var _getSymbols2 = _interopRequireDefault(_getSymbols);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function getFramework(sourceId) {
-  if (isReactComponent(sourceId)) {
+  const sourceSymbols = (0, _getSymbols2.default)(sourceId);
+
+  if (isReactComponent(sourceSymbols)) {
     return "React";
   }
-
-  if (isAngularComponent(sourceId)) {
+  if (isAngularComponent(sourceSymbols)) {
     return "Angular";
+  }
+  if (isVueComponent(sourceSymbols)) {
+    return "Vue";
   }
 }
 
@@ -2700,8 +2704,8 @@ function getFramework(sourceId) {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function isReactComponent(sourceId) {
-  const { imports, classes, callExpressions } = (0, _getSymbols2.default)(sourceId);
+function isReactComponent(sourceSymbols) {
+  const { imports, classes, callExpressions } = sourceSymbols;
   return (importsReact(imports) || requiresReact(callExpressions)) && extendsReactComponent(classes);
 }
 
@@ -2726,8 +2730,8 @@ function extendsReactComponent(classes) {
 
 // Angular
 
-const isAngularComponent = sourceId => {
-  const { memberExpressions, identifiers } = (0, _getSymbols2.default)(sourceId);
+const isAngularComponent = sourceSymbols => {
+  const { memberExpressions, identifiers } = sourceSymbols;
   return identifiesAngular(identifiers) && hasAngularExpressions(memberExpressions);
 };
 
@@ -2737,6 +2741,13 @@ const identifiesAngular = identifiers => {
 
 const hasAngularExpressions = memberExpressions => {
   return memberExpressions.some(item => item.name == "controller" || item.name == "module");
+};
+
+// Vue
+
+const isVueComponent = sourceSymbols => {
+  const { identifiers } = sourceSymbols;
+  return identifiers.some(identifier => identifier.name == "Vue");
 };
 
 /***/ }),

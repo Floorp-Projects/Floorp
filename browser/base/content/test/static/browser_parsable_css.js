@@ -129,9 +129,6 @@ let propNameWhitelist = [
   // Bug 1441878
   {propName: "--theme-codemirror-gutter-background",
    isFromDevTools: true},
-  // Bug 1441879
-  {propName: "--arrow-width",
-   isFromDevTools: true},
   // Bug 1442300
   {propName: "--in-content-category-background",
    isFromDevTools: false},

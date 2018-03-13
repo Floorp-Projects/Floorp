@@ -5004,7 +5004,7 @@ module.exports = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getSelectedSourceText = exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getTabs = exports.getSources = undefined;
+exports.getSelectedSourceText = exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getTabs = exports.getSources = exports.SourceRecordClass = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
                                                                                                                                                                                                                                                                    * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -5057,6 +5057,19 @@ function initialSourcesState() {
   })();
 }
 
+const SourceRecordClass = exports.SourceRecordClass = new I.Record({
+  id: undefined,
+  url: undefined,
+  sourceMapURL: undefined,
+  isBlackBoxed: false,
+  isPrettyPrinted: false,
+  isWasm: false,
+  text: undefined,
+  contentType: "",
+  error: undefined,
+  loadedState: "unloaded"
+});
+
 function update(state = initialSourcesState(), action) {
   let location = null;
 
@@ -5069,7 +5082,8 @@ function update(state = initialSourcesState(), action) {
 
     case "ADD_SOURCE":
       {
-        return updateSource(state, action.source);
+        const source = action.source;
+        return updateSource(state, source);
       }
 
     case "ADD_SOURCES":
@@ -5131,7 +5145,7 @@ function update(state = initialSourcesState(), action) {
 
     case "NAVIGATE":
       const source = getSelectedSource({ sources: state });
-      const url = source && source.get("url");
+      const url = source && source.url;
 
       if (!url) {
         return initialSourcesState();
@@ -5172,8 +5186,13 @@ function updateSource(state, source) {
   if (!source.id) {
     return state;
   }
+  const existingSource = state.getIn(["sources", source.id]);
 
-  return state.mergeIn(["sources", source.id], source);
+  if (existingSource) {
+    const updatedSource = existingSource.merge(source);
+    return state.setIn(["sources", source.id], updatedSource);
+  }
+  return state.setIn(["sources", source.id], new SourceRecordClass(source));
 }
 
 function removeSourceFromTabList(tabs, url) {
@@ -5199,7 +5218,7 @@ function restoreTabs() {
  * @static
  */
 function updateTabList(state, url, tabIndex) {
-  let tabs = state.sources.get("tabs");
+  let tabs = state.sources.tabs;
 
   const urlIndex = tabs.indexOf(url);
   const includesUrl = !!tabs.find(tab => tab == url);
@@ -5233,7 +5252,7 @@ function getNewSelectedSourceId(state, availableTabs) {
 
   const selectedTab = state.sources.sources.get(selectedLocation.sourceId);
 
-  const selectedTabUrl = selectedTab ? selectedTab.get("url") : "";
+  const selectedTabUrl = selectedTab ? selectedTab.url : "";
 
   if (availableTabs.includes(selectedTabUrl)) {
     const sources = state.sources.sources;
@@ -5241,10 +5260,10 @@ function getNewSelectedSourceId(state, availableTabs) {
       return "";
     }
 
-    const selectedSource = sources.find(source => source.get("url") == selectedTabUrl);
+    const selectedSource = sources.find(source => source.url == selectedTabUrl);
 
     if (selectedSource) {
-      return selectedSource.get("id");
+      return selectedSource.id;
     }
 
     return "";
@@ -5258,7 +5277,7 @@ function getNewSelectedSourceId(state, availableTabs) {
   const tabSource = getSourceByUrlInSources(state.sources.sources, availableTab);
 
   if (tabSource) {
-    return tabSource.get("id");
+    return tabSource.id;
   }
 
   return "";
@@ -5302,7 +5321,7 @@ function getPrettySource(state, id) {
     return;
   }
 
-  return getSourceByURL(state, (0, _source.getPrettySourceURL)(source.get("url")));
+  return getSourceByURL(state, (0, _source.getPrettySourceURL)(source.url));
 }
 
 function hasPrettySource(state, id) {
@@ -5314,7 +5333,7 @@ function getSourceByUrlInSources(sources, url) {
     return null;
   }
 
-  return sources.find(source => source.get("url") === url);
+  return sources.find(source => source.url === url);
 }
 
 function getSourceInSources(sources, id) {
@@ -5342,7 +5361,7 @@ const getSelectedSource = exports.getSelectedSource = (0, _reselect.createSelect
 });
 
 const getSelectedSourceText = exports.getSelectedSourceText = (0, _reselect.createSelector)(getSelectedSource, getSourcesState, (selectedSource, sources) => {
-  const id = selectedSource.get("id");
+  const id = selectedSource.id;
   return id ? sources.sourcesText.get(id) : null;
 });
 
@@ -6046,7 +6065,8 @@ class SearchInput extends _react.Component {
       query,
       selectedItemId,
       showErrorEmoji,
-      size
+      size,
+      summaryMsg
     } = this.props;
 
     const inputProps = {
@@ -6078,6 +6098,11 @@ class SearchInput extends _react.Component {
       },
       this.renderSvg(),
       _react2.default.createElement("input", inputProps),
+      summaryMsg && _react2.default.createElement(
+        "div",
+        { className: "summary" },
+        summaryMsg
+      ),
       this.renderNav(),
       _react2.default.createElement(_Close2.default, { handleClick: handleClose, buttonClass: size })
     );
@@ -8521,10 +8546,6 @@ Object.defineProperty(exports, "__esModule", {
 exports.Modal = exports.transitionTimeout = undefined;
 exports.default = Slide;
 
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -8541,9 +8562,11 @@ __webpack_require__(1303);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const transitionTimeout = exports.transitionTimeout = 175; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                            * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                            * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const transitionTimeout = exports.transitionTimeout = 175;
 
 class Modal extends _react2.default.Component {
   constructor(...args) {
@@ -8574,7 +8597,7 @@ class Modal extends _react2.default.Component {
 
 exports.Modal = Modal;
 Modal.contextTypes = {
-  shortcuts: _propTypes2.default.object
+  shortcuts: Object
 };
 
 function Slide({
@@ -11977,10 +12000,36 @@ class ResultList extends _react.Component {
 
   constructor(props) {
     super(props);
-    this.renderListItem = this.renderListItem.bind(this);
+
+    _initialiseProps.call(this);
   }
 
-  renderListItem(item, index) {
+  render() {
+    const { size, items, role } = this.props;
+
+    return _react2.default.createElement(
+      "ul",
+      {
+        className: (0, _classnames2.default)("result-list", size),
+        id: "result-list",
+        role: role,
+        "aria-live": "polite"
+      },
+      items.map(this.renderListItem)
+    );
+  }
+}
+exports.default = ResultList; /* This Source Code Form is subject to the terms of the Mozilla Public
+                               * License, v. 2.0. If a copy of the MPL was not distributed with this
+                               * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+ResultList.defaultProps = {
+  size: "small",
+  role: "listbox"
+};
+
+var _initialiseProps = function () {
+  this.renderListItem = (item, index) => {
     const { selectItem, selected } = this.props;
     const props = {
       onClick: event => selectItem(event, item, index),
@@ -12009,30 +12058,7 @@ class ResultList extends _react.Component {
         item.subtitle
       )
     );
-  }
-
-  render() {
-    const { size, items, role } = this.props;
-
-    return _react2.default.createElement(
-      "ul",
-      {
-        className: (0, _classnames2.default)("result-list", size),
-        id: "result-list",
-        role: role,
-        "aria-live": "polite"
-      },
-      items.map(this.renderListItem)
-    );
-  }
-}
-exports.default = ResultList; /* This Source Code Form is subject to the terms of the Mozilla Public
-                               * License, v. 2.0. If a copy of the MPL was not distributed with this
-                               * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-ResultList.defaultProps = {
-  size: "small",
-  role: "listbox"
+  };
 };
 
 /***/ }),
@@ -13149,12 +13175,6 @@ var _sourceQueue2 = _interopRequireDefault(_sourceQueue);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-if (false) {
-  window.Perf = require("react-addons-perf");
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 if ((0, _devtoolsConfig.isFirefoxPanel)()) {
   module.exports = {
     bootstrap: ({
@@ -13193,7 +13213,9 @@ if ((0, _devtoolsConfig.isFirefoxPanel)()) {
       toolboxActions: {}
     });
   });
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /***/ }),
 
@@ -22857,10 +22879,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -22923,9 +22941,11 @@ var _QuickOpenModal2 = _interopRequireDefault(_QuickOpenModal);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const shortcuts = new _devtoolsModules.KeyShortcuts({ window }); /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const shortcuts = new _devtoolsModules.KeyShortcuts({ window });
 
 const { appinfo } = _devtoolsModules.Services;
 
@@ -22938,23 +22958,124 @@ class App extends _react.Component {
 
   constructor(props) {
     super(props);
+
+    this.getChildContext = () => {
+      return { shortcuts };
+    };
+
+    this.onEscape = (_, e) => {
+      const {
+        activeSearch,
+        quickOpenEnabled,
+        closeActiveSearch,
+        closeQuickOpen
+      } = this.props;
+
+      if (activeSearch) {
+        e.preventDefault();
+        closeActiveSearch();
+      }
+
+      if (quickOpenEnabled === true) {
+        closeQuickOpen();
+      }
+    };
+
+    this.onCommandSlash = () => {
+      this.toggleShortcutsModal();
+    };
+
+    this.toggleQuickOpenModal = (_, e, query) => {
+      const { quickOpenEnabled, openQuickOpen, closeQuickOpen } = this.props;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (quickOpenEnabled === true) {
+        closeQuickOpen();
+        return;
+      }
+
+      if (query != null) {
+        openQuickOpen(query);
+        return;
+      }
+      openQuickOpen();
+      return;
+    };
+
+    this.onLayoutChange = () => {
+      this.setOrientation();
+    };
+
+    this.renderEditorPane = () => {
+      const { startPanelCollapsed, endPanelCollapsed } = this.props;
+      const { endPanelSize, startPanelSize } = this.state;
+      const horizontal = this.isHorizontal();
+
+      return _react2.default.createElement(
+        "div",
+        { className: "editor-pane" },
+        _react2.default.createElement(
+          "div",
+          { className: "editor-container" },
+          _react2.default.createElement(_Tabs2.default, {
+            startPanelCollapsed: startPanelCollapsed,
+            endPanelCollapsed: endPanelCollapsed,
+            horizontal: horizontal,
+            startPanelSize: startPanelSize,
+            endPanelSize: endPanelSize
+          }),
+          _react2.default.createElement(_Editor2.default, {
+            horizontal: horizontal,
+            startPanelSize: startPanelSize,
+            endPanelSize: endPanelSize
+          }),
+          !this.props.selectedSource ? _react2.default.createElement(_WelcomeBox2.default, { horizontal: horizontal }) : null,
+          _react2.default.createElement(_ProjectSearch2.default, null)
+        )
+      );
+    };
+
+    this.renderLayout = () => {
+      const { startPanelCollapsed, endPanelCollapsed } = this.props;
+      const horizontal = this.isHorizontal();
+
+      const maxSize = horizontal ? "70%" : "95%";
+      const primaryInitialSize = horizontal ? "250px" : "150px";
+
+      return _react2.default.createElement(_devtoolsSplitter2.default, {
+        style: { width: "100vw" },
+        initialHeight: 400,
+        initialWidth: 300,
+        minSize: 30,
+        maxSize: maxSize,
+        splitterSize: 1,
+        vert: horizontal,
+        startPanel: _react2.default.createElement(_devtoolsSplitter2.default, {
+          style: { width: "100vw" },
+          initialSize: primaryInitialSize,
+          minSize: 30,
+          maxSize: "85%",
+          splitterSize: 1,
+          startPanelCollapsed: startPanelCollapsed,
+          startPanel: _react2.default.createElement(_PrimaryPanes2.default, { horizontal: horizontal }),
+          endPanel: this.renderEditorPane()
+        }),
+        endPanelControl: true,
+        endPanel: _react2.default.createElement(_SecondaryPanes2.default, {
+          horizontal: horizontal,
+          toggleShortcutsModal: () => this.toggleShortcutsModal()
+        }),
+        endPanelCollapsed: endPanelCollapsed
+      });
+    };
+
     this.state = {
       shortcutsModalEnabled: false,
       startPanelSize: 0,
       endPanelSize: 0
     };
-
-    this.getChildContext = this.getChildContext.bind(this);
-    this.onLayoutChange = this.onLayoutChange.bind(this);
-    this.toggleQuickOpenModal = this.toggleQuickOpenModal.bind(this);
-    this.renderEditorPane = this.renderEditorPane.bind(this);
-    this.renderLayout = this.renderLayout.bind(this);
-    this.onEscape = this.onEscape.bind(this);
-    this.onCommandSlash = this.onCommandSlash.bind(this);
-  }
-
-  getChildContext() {
-    return { shortcuts };
   }
 
   componentDidMount() {
@@ -22986,53 +23107,8 @@ class App extends _react.Component {
     shortcuts.off("Escape", this.onEscape);
   }
 
-  onEscape(_, e) {
-    const {
-      activeSearch,
-      quickOpenEnabled,
-      closeActiveSearch,
-      closeQuickOpen
-    } = this.props;
-
-    if (activeSearch) {
-      e.preventDefault();
-      closeActiveSearch();
-    }
-
-    if (quickOpenEnabled === true) {
-      closeQuickOpen();
-    }
-  }
-
-  onCommandSlash() {
-    this.toggleShortcutsModal();
-  }
-
   isHorizontal() {
     return this.props.orientation === "horizontal";
-  }
-
-  toggleQuickOpenModal(_, e, query) {
-    const { quickOpenEnabled, openQuickOpen, closeQuickOpen } = this.props;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (quickOpenEnabled === true) {
-      closeQuickOpen();
-      return;
-    }
-
-    if (query != null) {
-      openQuickOpen(query);
-      return;
-    }
-    openQuickOpen();
-    return;
-  }
-
-  onLayoutChange() {
-    this.setOrientation();
   }
 
   setOrientation() {
@@ -23046,73 +23122,10 @@ class App extends _react.Component {
     }
   }
 
-  renderEditorPane() {
-    const { startPanelCollapsed, endPanelCollapsed } = this.props;
-    const { endPanelSize, startPanelSize } = this.state;
-    const horizontal = this.isHorizontal();
-
-    return _react2.default.createElement(
-      "div",
-      { className: "editor-pane" },
-      _react2.default.createElement(
-        "div",
-        { className: "editor-container" },
-        _react2.default.createElement(_Tabs2.default, {
-          startPanelCollapsed: startPanelCollapsed,
-          endPanelCollapsed: endPanelCollapsed,
-          horizontal: horizontal,
-          startPanelSize: startPanelSize,
-          endPanelSize: endPanelSize
-        }),
-        _react2.default.createElement(_Editor2.default, {
-          horizontal: horizontal,
-          startPanelSize: startPanelSize,
-          endPanelSize: endPanelSize
-        }),
-        !this.props.selectedSource ? _react2.default.createElement(_WelcomeBox2.default, { horizontal: horizontal }) : null,
-        _react2.default.createElement(_ProjectSearch2.default, null)
-      )
-    );
-  }
-
   toggleShortcutsModal() {
     this.setState(prevState => ({
       shortcutsModalEnabled: !prevState.shortcutsModalEnabled
     }));
-  }
-
-  renderLayout() {
-    const { startPanelCollapsed, endPanelCollapsed } = this.props;
-    const horizontal = this.isHorizontal();
-
-    const maxSize = horizontal ? "70%" : "95%";
-    const primaryInitialSize = horizontal ? "250px" : "150px";
-
-    return _react2.default.createElement(_devtoolsSplitter2.default, {
-      style: { width: "100vw" },
-      initialHeight: 400,
-      initialWidth: 300,
-      minSize: 30,
-      maxSize: maxSize,
-      splitterSize: 1,
-      vert: horizontal,
-      startPanel: _react2.default.createElement(_devtoolsSplitter2.default, {
-        style: { width: "100vw" },
-        initialSize: primaryInitialSize,
-        minSize: 30,
-        maxSize: "85%",
-        splitterSize: 1,
-        startPanelCollapsed: startPanelCollapsed,
-        startPanel: _react2.default.createElement(_PrimaryPanes2.default, { horizontal: horizontal }),
-        endPanel: this.renderEditorPane()
-      }),
-      endPanelControl: true,
-      endPanel: _react2.default.createElement(_SecondaryPanes2.default, {
-        horizontal: horizontal,
-        toggleShortcutsModal: () => this.toggleShortcutsModal()
-      }),
-      endPanelCollapsed: endPanelCollapsed
-    });
   }
 
   renderShortcutsModal() {
@@ -23144,7 +23157,7 @@ class App extends _react.Component {
   }
 }
 
-App.childContextTypes = { shortcuts: _propTypes2.default.object };
+App.childContextTypes = { shortcuts: Object };
 
 function mapStateToProps(state) {
   return {
@@ -25939,13 +25952,33 @@ class PrimaryPanes extends _react.Component {
   constructor(props) {
     super(props);
 
-    this.renderShortcut = this.renderShortcut.bind(this);
-    this.showPane = this.showPane.bind(this);
-    this.renderTabs = this.renderTabs.bind(this);
-  }
+    this.showPane = selectedPane => {
+      this.props.setPrimaryPaneTab(selectedPane);
+    };
 
-  showPane(selectedPane) {
-    this.props.setPrimaryPaneTab(selectedPane);
+    this.renderTabs = () => {
+      return _react2.default.createElement(
+        "div",
+        { className: "source-outline-tabs" },
+        this.renderOutlineTabs()
+      );
+    };
+
+    this.renderShortcut = () => {
+      if (this.props.horizontal) {
+        const onClick = () => {
+          if (this.props.sourceSearchOn) {
+            return this.props.closeActiveSearch();
+          }
+          this.props.setActiveSearch("source");
+        };
+        return _react2.default.createElement(
+          "span",
+          { className: "sources-header-info", dir: "ltr", onClick: onClick },
+          L10N.getFormatStr("sources.search", (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2")))
+        );
+      }
+    };
   }
 
   renderOutlineTabs() {
@@ -25978,30 +26011,6 @@ class PrimaryPanes extends _react.Component {
       },
       outline
     )];
-  }
-
-  renderTabs() {
-    return _react2.default.createElement(
-      "div",
-      { className: "source-outline-tabs" },
-      this.renderOutlineTabs()
-    );
-  }
-
-  renderShortcut() {
-    if (this.props.horizontal) {
-      const onClick = () => {
-        if (this.props.sourceSearchOn) {
-          return this.props.closeActiveSearch();
-        }
-        this.props.setActiveSearch("source");
-      };
-      return _react2.default.createElement(
-        "span",
-        { className: "sources-header-info", dir: "ltr", onClick: onClick },
-        L10N.getFormatStr("sources.search", (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2")))
-      );
-    }
   }
 
   render() {
@@ -26551,10 +26560,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -26649,10 +26654,6 @@ __webpack_require__(1333);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
   secondSearchbarHeight: "var(--editor-second-searchbar-height)",
@@ -26660,7 +26661,9 @@ const cssVars = {
 };
 
 // Redux actions
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Editor extends _react.PureComponent {
   constructor(props) {
@@ -27118,7 +27121,7 @@ class Editor extends _react.PureComponent {
 }
 
 Editor.contextTypes = {
-  shortcuts: _propTypes2.default.object
+  shortcuts: Object
 };
 
 const mapStateToProps = state => {
@@ -27371,10 +27374,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -27411,6 +27410,10 @@ __webpack_require__(1323);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function getShortcuts() {
   const searchAgainKey = L10N.getStr("sourceSearch.search.again.key2");
   const searchAgainPrevKey = L10N.getStr("sourceSearch.search.againPrev.key2");
@@ -27421,9 +27424,7 @@ function getShortcuts() {
     searchAgainShortcut: searchAgainKey,
     searchShortcut: searchKey
   };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 class SearchBar extends _react.Component {
   constructor(props) {
@@ -27680,7 +27681,7 @@ class SearchBar extends _react.Component {
 }
 
 SearchBar.contextTypes = {
-  shortcuts: _propTypes2.default.object
+  shortcuts: Object
 };
 
 exports.default = (0, _reactRedux.connect)(state => {
@@ -27723,7 +27724,26 @@ class HighlightLines extends _react.Component {
 
   constructor() {
     super();
-    this.highlightLineRange = this.highlightLineRange.bind(this);
+
+    this.highlightLineRange = () => {
+      const { highlightedLineRange, editor } = this.props;
+
+      const { codeMirror } = editor;
+
+      if ((0, _lodash.isEmpty)(highlightedLineRange) || !codeMirror) {
+        return;
+      }
+
+      const { start, end } = highlightedLineRange;
+
+      codeMirror.operation(() => {
+        editor.alignLine(start);
+
+        (0, _lodash.range)(start - 1, end).forEach(line => {
+          codeMirror.addLineClass(line, "line", "highlight-lines");
+        });
+      });
+    };
   }
 
   componentDidMount() {
@@ -27755,26 +27775,6 @@ class HighlightLines extends _react.Component {
     codeMirror.operation(() => {
       (0, _lodash.range)(start - 1, end).forEach(line => {
         codeMirror.removeLineClass(line, "line", "highlight-lines");
-      });
-    });
-  }
-
-  highlightLineRange() {
-    const { highlightedLineRange, editor } = this.props;
-
-    const { codeMirror } = editor;
-
-    if ((0, _lodash.isEmpty)(highlightedLineRange) || !codeMirror) {
-      return;
-    }
-
-    const { start, end } = highlightedLineRange;
-
-    codeMirror.operation(() => {
-      editor.alignLine(start);
-
-      (0, _lodash.range)(start - 1, end).forEach(line => {
-        codeMirror.addLineClass(line, "line", "highlight-lines");
       });
     });
   }
@@ -31050,34 +31050,33 @@ class Breakpoint extends _react.Component {
 
   constructor() {
     super();
-    this.addBreakpoint = this.addBreakpoint.bind(this);
-  }
 
-  addBreakpoint() {
-    const { breakpoint, editor, selectedSource } = this.props;
+    this.addBreakpoint = () => {
+      const { breakpoint, editor, selectedSource } = this.props;
 
-    // Hidden Breakpoints are never rendered on the client
-    if (breakpoint.hidden) {
-      return;
-    }
+      // Hidden Breakpoints are never rendered on the client
+      if (breakpoint.hidden) {
+        return;
+      }
 
-    // NOTE: we need to wait for the breakpoint to be loaded
-    // to get the generated location
-    if (!selectedSource || breakpoint.loading) {
-      return;
-    }
+      // NOTE: we need to wait for the breakpoint to be loaded
+      // to get the generated location
+      if (!selectedSource || breakpoint.loading) {
+        return;
+      }
 
-    const sourceId = selectedSource.get("id");
-    const line = (0, _editor.toEditorLine)(sourceId, breakpoint.location.line);
+      const sourceId = selectedSource.get("id");
+      const line = (0, _editor.toEditorLine)(sourceId, breakpoint.location.line);
 
-    editor.codeMirror.setGutterMarker(line, "breakpoints", makeMarker(breakpoint.disabled));
+      editor.codeMirror.setGutterMarker(line, "breakpoints", makeMarker(breakpoint.disabled));
 
-    editor.codeMirror.addLineClass(line, "line", "new-breakpoint");
-    if (breakpoint.condition) {
-      editor.codeMirror.addLineClass(line, "line", "has-condition");
-    } else {
-      editor.codeMirror.removeLineClass(line, "line", "has-condition");
-    }
+      editor.codeMirror.addLineClass(line, "line", "new-breakpoint");
+      if (breakpoint.condition) {
+        editor.codeMirror.addLineClass(line, "line", "has-condition");
+      } else {
+        editor.codeMirror.removeLineClass(line, "line", "has-condition");
+      }
+    };
   }
 
   shouldComponentUpdate(nextProps) {
@@ -31298,8 +31297,20 @@ class CallSites extends _react.Component {
 
   constructor(props) {
     super(props);
-    this.onKeyDown = this.onKeyDown.bind(this);
-    this.onKeyUp = this.onKeyUp.bind(this);
+
+    this.onKeyUp = e => {
+      if (e.key === "Alt") {
+        e.preventDefault();
+        this.setState({ showCallSites: false });
+      }
+    };
+
+    this.onKeyDown = e => {
+      if (e.key === "Alt") {
+        e.preventDefault();
+        this.setState({ showCallSites: true });
+      }
+    };
 
     this.state = {
       showCallSites: false
@@ -31322,20 +31333,6 @@ class CallSites extends _react.Component {
     codeMirrorWrapper.removeEventListener("click", e => this.onTokenClick(e));
     document.body.removeEventListener("keydown", this.onKeyDown);
     document.body.removeEventListener("keyup", this.onKeyUp);
-  }
-
-  onKeyUp(e) {
-    if (e.key === "Alt") {
-      e.preventDefault();
-      this.setState({ showCallSites: false });
-    }
-  }
-
-  onKeyDown(e) {
-    if (e.key === "Alt") {
-      e.preventDefault();
-      this.setState({ showCallSites: true });
-    }
   }
 
   onTokenClick(e) {
@@ -32365,7 +32362,10 @@ class ConditionalPanel extends _react.PureComponent {
         defaultValue: condition,
         placeholder: L10N.getStr("editor.conditionalPanel.placeholder"),
         onKeyDown: this.onKey,
-        ref: input => this.input = input
+        ref: input => {
+          this.input = input;
+          this.keepFocusOnInput();
+        }
       })
     ), panel);
     return panel;
@@ -32411,10 +32411,6 @@ exports.default = (0, _reactRedux.connect)(state => {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
 
 var _react = __webpack_require__(0);
 
@@ -32488,11 +32484,9 @@ __webpack_require__(1342);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const Scopes = _prefs.features.chromeScopes ? _ChromeScopes2.default : _Scopes3.default;
+const Scopes = _prefs.features.chromeScopes ? _ChromeScopes2.default : _Scopes3.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                          * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                          * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function debugBtn(onClick, type, className, tooltip) {
   return _react2.default.createElement(
@@ -32729,7 +32723,7 @@ class SecondaryPanes extends _react.Component {
 }
 
 SecondaryPanes.contextTypes = {
-  shortcuts: _propTypes2.default.object
+  shortcuts: Object
 };
 
 exports.default = (0, _reactRedux.connect)(state => ({
@@ -33030,8 +33024,54 @@ class Expressions extends _react.PureComponent {
       this.setState({ editing: false, editIndex: -1, inputValue: "" });
     };
 
+    this.renderExpression = (expression, index) => {
+      const { expressionError, openLink } = this.props;
+      const { editing, editIndex } = this.state;
+      const { input, updating } = expression;
+      const isEditingExpr = editing && editIndex === index;
+      if (isEditingExpr || isEditingExpr && expressionError) {
+        return this.renderExpressionEditInput(expression);
+      }
+
+      if (updating) {
+        return;
+      }
+
+      const { value } = (0, _expressions.getValue)(expression);
+
+      const root = {
+        name: expression.input,
+        path: input,
+        contents: { value }
+      };
+
+      return _react2.default.createElement(
+        "li",
+        { className: "expression-container", key: input },
+        _react2.default.createElement(
+          "div",
+          { className: "expression-content" },
+          _react2.default.createElement(_devtoolsReps.ObjectInspector, {
+            roots: [root],
+            autoExpandDepth: 0,
+            disableWrap: true,
+            disabledFocus: true,
+            onDoubleClick: (items, options) => this.editExpression(expression, index, options),
+            openLink: openLink,
+            createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
+          }),
+          _react2.default.createElement(
+            "div",
+            { className: "expression-container__close-btn" },
+            _react2.default.createElement(_Close2.default, {
+              handleClick: e => this.deleteExpression(e, expression)
+            })
+          )
+        )
+      );
+    };
+
     this.state = { editing: false, editIndex: -1, inputValue: "" };
-    this.renderExpression = this.renderExpression.bind(this);
   }
 
   componentDidMount() {
@@ -33076,53 +33116,6 @@ class Expressions extends _react.PureComponent {
     e.stopPropagation();
     const { deleteExpression } = this.props;
     deleteExpression(expression);
-  }
-
-  renderExpression(expression, index) {
-    const { expressionError, openLink } = this.props;
-    const { editing, editIndex } = this.state;
-    const { input, updating } = expression;
-    const isEditingExpr = editing && editIndex === index;
-    if (isEditingExpr || isEditingExpr && expressionError) {
-      return this.renderExpressionEditInput(expression);
-    }
-
-    if (updating) {
-      return;
-    }
-
-    const { value } = (0, _expressions.getValue)(expression);
-
-    const root = {
-      name: expression.input,
-      path: input,
-      contents: { value }
-    };
-
-    return _react2.default.createElement(
-      "li",
-      { className: "expression-container", key: input },
-      _react2.default.createElement(
-        "div",
-        { className: "expression-content" },
-        _react2.default.createElement(_devtoolsReps.ObjectInspector, {
-          roots: [root],
-          autoExpandDepth: 0,
-          disableWrap: true,
-          disabledFocus: true,
-          onDoubleClick: (items, options) => this.editExpression(expression, index, options),
-          openLink: openLink,
-          createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
-        }),
-        _react2.default.createElement(
-          "div",
-          { className: "expression-container__close-btn" },
-          _react2.default.createElement(_Close2.default, {
-            handleClick: e => this.deleteExpression(e, expression)
-          })
-        )
-      )
-    );
   }
 
   renderNewExpressionInput() {
@@ -33248,25 +33241,32 @@ class Frames extends _react.Component {
   constructor(props) {
     super(props);
 
+    this.toggleFramesDisplay = () => {
+      this.setState(prevState => ({
+        showAllFrames: !prevState.showAllFrames
+      }));
+    };
+
+    this.copyStackTrace = () => {
+      const { frames } = this.props;
+      const framesToCopy = frames.map(f => (0, _frame.formatCopyName)(f)).join("\n");
+      (0, _clipboard.copyToTheClipboard)(framesToCopy);
+    };
+
+    this.toggleFrameworkGrouping = () => {
+      const { toggleFrameworkGrouping, frameworkGroupingOn } = this.props;
+      toggleFrameworkGrouping(!frameworkGroupingOn);
+    };
+
     this.state = {
       showAllFrames: false
     };
-
-    this.toggleFramesDisplay = this.toggleFramesDisplay.bind(this);
-    this.copyStackTrace = this.copyStackTrace.bind(this);
-    this.toggleFrameworkGrouping = this.toggleFrameworkGrouping.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
     const { frames, selectedFrame, frameworkGroupingOn } = this.props;
     const { showAllFrames } = this.state;
     return frames !== nextProps.frames || selectedFrame !== nextProps.selectedFrame || showAllFrames !== nextState.showAllFrames || frameworkGroupingOn !== nextProps.frameworkGroupingOn;
-  }
-
-  toggleFramesDisplay() {
-    this.setState(prevState => ({
-      showAllFrames: !prevState.showAllFrames
-    }));
   }
 
   collapseFrames(frames) {
@@ -33282,17 +33282,6 @@ class Frames extends _react.Component {
     const numFramesToShow = this.state.showAllFrames ? frames.length : NUM_FRAMES_SHOWN;
 
     return frames.slice(0, numFramesToShow);
-  }
-
-  copyStackTrace() {
-    const { frames } = this.props;
-    const framesToCopy = frames.map(f => (0, _frame.formatCopyName)(f)).join("\n");
-    (0, _clipboard.copyToTheClipboard)(framesToCopy);
-  }
-
-  toggleFrameworkGrouping() {
-    const { toggleFrameworkGrouping, frameworkGroupingOn } = this.props;
-    toggleFrameworkGrouping(!frameworkGroupingOn);
   }
 
   renderFrames(frames) {
@@ -33670,40 +33659,38 @@ class EventListeners extends _react.Component {
   constructor(...args) {
     super(...args);
 
-    this.renderListener = this.renderListener.bind(this);
-  }
+    this.renderListener = ({ type, selector, line, sourceId, breakpoint }) => {
+      const checked = breakpoint && !breakpoint.disabled;
+      const location = { sourceId, line };
 
-  renderListener({ type, selector, line, sourceId, breakpoint }) {
-    const checked = breakpoint && !breakpoint.disabled;
-    const location = { sourceId, line };
-
-    return _react2.default.createElement(
-      "div",
-      {
-        className: "listener",
-        onClick: () => this.props.selectLocation({ sourceId, line }),
-        key: `${type}.${selector}.${sourceId}.${line}`
-      },
-      _react2.default.createElement("input", {
-        type: "checkbox",
-        className: "listener-checkbox",
-        checked: checked,
-        onChange: () => this.handleCheckbox(breakpoint, location)
-      }),
-      _react2.default.createElement(
-        "span",
-        { className: "type" },
-        type
-      ),
-      _react2.default.createElement(
-        "span",
-        { className: "selector" },
-        selector
-      ),
-      breakpoint ? _react2.default.createElement(_Close2.default, {
-        handleClick: ev => this.removeBreakpoint(ev, breakpoint)
-      }) : ""
-    );
+      return _react2.default.createElement(
+        "div",
+        {
+          className: "listener",
+          onClick: () => this.props.selectLocation({ sourceId, line }),
+          key: `${type}.${selector}.${sourceId}.${line}`
+        },
+        _react2.default.createElement("input", {
+          type: "checkbox",
+          className: "listener-checkbox",
+          checked: checked,
+          onChange: () => this.handleCheckbox(breakpoint, location)
+        }),
+        _react2.default.createElement(
+          "span",
+          { className: "type" },
+          type
+        ),
+        _react2.default.createElement(
+          "span",
+          { className: "selector" },
+          selector
+        ),
+        breakpoint ? _react2.default.createElement(_Close2.default, {
+          handleClick: ev => this.removeBreakpoint(ev, breakpoint)
+        }) : ""
+      );
+    };
   }
 
   handleCheckbox(breakpoint, location) {
@@ -33924,10 +33911,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -33960,12 +33943,10 @@ var _devtoolsModules = __webpack_require__(1376);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* -*- indent-tabs-mode: nil; js-indent-level: 2; js-indent-level: 2 -*- */
+const { appinfo } = _devtoolsModules.Services; /* -*- indent-tabs-mode: nil; js-indent-level: 2; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const { appinfo } = _devtoolsModules.Services;
 
 const isMacOS = appinfo.OS === "Darwin";
 
@@ -34212,7 +34193,7 @@ class CommandBar extends _react.Component {
 }
 
 CommandBar.contextTypes = {
-  shortcuts: _propTypes2.default.object
+  shortcuts: Object
 };
 
 exports.default = (0, _reactRedux.connect)(state => {
@@ -34482,11 +34463,91 @@ class Scopes extends _react.Component {
     // Cache of dynamically built nodes. We shouldn't need to clear
     // this out ever, since we don't ever "switch out" the object
     // being inspected.
-    this.objectCache = {};
 
-    this.getChildren = this.getChildren.bind(this);
-    this.onExpand = this.onExpand.bind(this);
-    this.renderItem = this.renderItem.bind(this);
+    this.renderItem = (item, depth, focused, _, expanded, { setExpanded }) => {
+      const notEnumberable = false;
+      const objectValue = "";
+
+      return _react2.default.createElement(
+        "div",
+        {
+          className: (0, _classnames2.default)("node object-node", {
+            focused: false,
+            "not-enumerable": notEnumberable
+          }),
+          style: { marginLeft: depth * 15 },
+          key: item.path,
+          onClick: e => {
+            e.stopPropagation();
+            setExpanded(item, !expanded);
+          }
+        },
+        _react2.default.createElement(_Svg2.default, {
+          name: "arrow",
+          className: (0, _classnames2.default)({
+            expanded,
+            hidden: nodeIsPrimitive(item)
+          })
+        }),
+        _react2.default.createElement(
+          "span",
+          { className: "object-label" },
+          item.name
+        ),
+        _react2.default.createElement(
+          "span",
+          { className: "object-delimiter" },
+          objectValue ? ": " : ""
+        ),
+        _react2.default.createElement(
+          "span",
+          { className: "object-value" },
+          objectValue || ""
+        )
+      );
+    };
+
+    this.getChildren = item => {
+      const obj = item.contents;
+
+      // Nodes can either have children already, or be an object with
+      // properties that we need to go and fetch.
+      if (nodeHasChildren(item)) {
+        return item.contents;
+      } else if (nodeHasProperties(item)) {
+        const objectId = obj.value.objectId;
+
+        // Because we are dynamically creating the tree as the user
+        // expands it (not precalcuated tree structure), we cache child
+        // arrays. This not only helps performance, but is necessary
+        // because the expanded state depends on instances of nodes
+        // being the same across renders. If we didn't do this, each
+        // node would be a new instance every render.
+        const key = item.path;
+        if (this.objectCache[key]) {
+          return this.objectCache[key];
+        }
+
+        const loadedProps = this.getObjectProperties(item);
+        if (loadedProps) {
+          const children = this.makeNodesForProperties(loadedProps, item.path);
+          this.objectCache[objectId] = children;
+          return children;
+        }
+        return [];
+      }
+      return [];
+    };
+
+    this.onExpand = item => {
+      const { loadObjectProperties } = this.props;
+
+      if (nodeHasProperties(item)) {
+        loadObjectProperties(item.contents.value);
+      }
+    };
+
+    this.objectCache = {};
   }
 
   makeNodesForProperties(objProps, parentPath) {
@@ -34507,91 +34568,8 @@ class Scopes extends _react.Component {
     return nodes;
   }
 
-  renderItem(item, depth, focused, _, expanded, { setExpanded }) {
-    const notEnumberable = false;
-    const objectValue = "";
-
-    return _react2.default.createElement(
-      "div",
-      {
-        className: (0, _classnames2.default)("node object-node", {
-          focused: false,
-          "not-enumerable": notEnumberable
-        }),
-        style: { marginLeft: depth * 15 },
-        key: item.path,
-        onClick: e => {
-          e.stopPropagation();
-          setExpanded(item, !expanded);
-        }
-      },
-      _react2.default.createElement(_Svg2.default, {
-        name: "arrow",
-        className: (0, _classnames2.default)({
-          expanded,
-          hidden: nodeIsPrimitive(item)
-        })
-      }),
-      _react2.default.createElement(
-        "span",
-        { className: "object-label" },
-        item.name
-      ),
-      _react2.default.createElement(
-        "span",
-        { className: "object-delimiter" },
-        objectValue ? ": " : ""
-      ),
-      _react2.default.createElement(
-        "span",
-        { className: "object-value" },
-        objectValue || ""
-      )
-    );
-  }
-
   getObjectProperties(item) {
     this.props.loadedObjects[item.contents.value.objectId];
-  }
-
-  getChildren(item) {
-    const obj = item.contents;
-
-    // Nodes can either have children already, or be an object with
-    // properties that we need to go and fetch.
-    if (nodeHasChildren(item)) {
-      return item.contents;
-    } else if (nodeHasProperties(item)) {
-      const objectId = obj.value.objectId;
-
-      // Because we are dynamically creating the tree as the user
-      // expands it (not precalcuated tree structure), we cache child
-      // arrays. This not only helps performance, but is necessary
-      // because the expanded state depends on instances of nodes
-      // being the same across renders. If we didn't do this, each
-      // node would be a new instance every render.
-      const key = item.path;
-      if (this.objectCache[key]) {
-        return this.objectCache[key];
-      }
-
-      const loadedProps = this.getObjectProperties(item);
-      if (loadedProps) {
-        const children = this.makeNodesForProperties(loadedProps, item.path);
-        this.objectCache[objectId] = children;
-        return children;
-      }
-      return [];
-    }
-    return [];
-  }
-
-  onExpand(item) {
-    const { loadObjectProperties } = this.props;
-
-    if (nodeHasProperties(item)) {
-      loadObjectProperties(item.contents.value);
-    }
   }
 
   getRoots() {
@@ -35126,8 +35104,6 @@ class Dropdown extends _react.Component {
     this.state = {
       dropdownShown: false
     };
-
-    this.toggleDropdown = this.toggleDropdown.bind(this);
   }
 
   renderPanel() {
@@ -35661,7 +35637,33 @@ async function buildMappedScopes(source, frame, scopes, sourceMaps, client) {
     });
   }));
 
-  return generateClientScope(scopes, mappedOriginalScopes);
+  const mappedGeneratedScopes = generateClientScope(scopes, mappedOriginalScopes);
+
+  return isReliableScope(mappedGeneratedScopes) ? mappedGeneratedScopes : null;
+}
+
+/**
+ * Consider a scope and its parents reliable if the vast majority of its
+ * bindings were successfully mapped to generated scope bindings.
+ */
+function isReliableScope(scope) {
+  let totalBindings = 0;
+  let unknownBindings = 0;
+
+  for (let s = scope; s; s = s.parent) {
+    const vars = s.bindings && s.bindings.variables || {};
+    for (const key of Object.keys(vars)) {
+      const binding = vars[key];
+
+      totalBindings += 1;
+      if (binding.value && typeof binding.value === "object" && (binding.value.type === "unscoped" || binding.value.type === "unmapped")) {
+        unknownBindings += 1;
+      }
+    }
+  }
+
+  // As determined by fair dice roll.
+  return totalBindings === 0 || unknownBindings / totalBindings < 0.9;
 }
 
 function generateClientScope(scopes, originalScopes) {
@@ -37017,19 +37019,14 @@ class QuickOpenModal extends _react.Component {
       this.props.closeQuickOpen();
     };
 
+    this.dropGoto = query => {
+      return query.split(":")[0];
+    };
+
     this.searchSources = query => {
-      if (query == "") {
-        const results = this.props.sources;
-        return this.setState({ results });
-      }
-      if (this.isGotoSourceQuery()) {
-        const [baseQuery] = query.split(":");
-        const results = filter(this.props.sources, baseQuery);
-        this.setState({ results });
-      } else {
-        const results = filter(this.props.sources, query);
-        this.setState({ results });
-      }
+      const { sources } = this.props;
+      const results = query == "" ? sources : filter(sources, this.dropGoto(query));
+      return this.setState({ results });
     };
 
     this.searchSymbols = query => {
@@ -37298,19 +37295,17 @@ class QuickOpenModal extends _react.Component {
     if (!enabled) {
       return null;
     }
-    const summaryMsg = L10N.getFormatStr("sourceSearch.resultsSummary1", this.getResultCount());
-    const showSummary = this.isSourcesQuery() || this.isSymbolSearch() || this.isShortcutQuery();
     const newResults = results && results.slice(0, 100);
     const items = this.highlightMatching(query, newResults || []);
     const expanded = !!items && items.length > 0;
     return _react2.default.createElement(
       _Modal2.default,
       { "in": enabled, handleClose: this.closeModal },
-      _react2.default.createElement(_SearchInput2.default, _extends({
+      _react2.default.createElement(_SearchInput2.default, {
         query: query,
         count: this.getResultCount(),
-        placeholder: L10N.getStr("sourceSearch.search")
-      }, showSummary === true ? { summaryMsg } : {}, {
+        placeholder: L10N.getStr("sourceSearch.search"),
+        summaryMsg: "",
         showErrorEmoji: this.shouldShowErrorEmoji(),
         onChange: this.onChange,
         onKeyDown: this.onKeyDown,
@@ -37318,7 +37313,7 @@ class QuickOpenModal extends _react.Component {
         hasPrefix: this.hasPrefix(),
         expanded: expanded,
         selectedItemId: expanded && items[selectedIndex] ? items[selectedIndex].id : ""
-      })),
+      }),
       newResults && _react2.default.createElement(_ResultList2.default, _extends({
         key: "results",
         items: items,
@@ -42848,7 +42843,9 @@ function createEditor() {
       // Override code mirror keymap to avoid conflicts with split console.
       Esc: false,
       "Cmd-F": false,
-      "Cmd-G": false
+      "Ctrl-F": false,
+      "Cmd-G": false,
+      "Ctrl-G": false
     }
   });
 }
@@ -43905,10 +43902,6 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                                                                                                                                                                                                                    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -44178,7 +44171,7 @@ class ProjectSearch extends _react.Component {
 }
 exports.ProjectSearch = ProjectSearch;
 ProjectSearch.contextTypes = {
-  shortcuts: _propTypes2.default.object
+  shortcuts: Object
 };
 
 exports.default = (0, _reactRedux.connect)(state => ({
@@ -44574,12 +44567,13 @@ class Tab extends _react.PureComponent {
     );
   }
 }
-exports.default = (0, _reactRedux.connect)(state => {
+exports.default = (0, _reactRedux.connect)((state, props) => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
+  const { source } = props;
   return {
     tabSources: (0, _selectors.getSourcesForTabs)(state),
     selectedSource: selectedSource,
-    sourceMetaData: (0, _selectors.getSourceMetaData)(state, selectedSource && selectedSource.get("id")),
+    sourceMetaData: (0, _selectors.getSourceMetaData)(state, source.get("id")),
     activeSearch: (0, _selectors.getActiveSearch)(state)
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Tab);
