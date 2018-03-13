@@ -23,7 +23,10 @@ class RewindButton extends PureComponent {
     return dom.button(
       {
         className: "rewind-button devtools-button",
-        onClick: rewindAnimationsCurrentTime,
+        onClick: event => {
+          event.stopPropagation();
+          rewindAnimationsCurrentTime();
+        },
         title: getStr("timeline.rewindButtonTooltip"),
       }
     );
