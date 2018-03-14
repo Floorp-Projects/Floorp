@@ -184,7 +184,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
                         data: output,
                     })
                 } else {
-                    Err(BlobImageError::Other("Unknown error".to_string()))
+                    panic!("Moz2D replay problem");
                 }
             };
 

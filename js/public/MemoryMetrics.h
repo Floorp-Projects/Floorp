@@ -37,7 +37,13 @@ struct TabSizes
         Other
     };
 
-    TabSizes() { mozilla::PodZero(this); }
+    TabSizes()
+      : objects(0)
+      , strings(0)
+      , private_(0)
+      , other(0)
+    {
+    }
 
     void add(Kind kind, size_t n) {
         switch (kind) {

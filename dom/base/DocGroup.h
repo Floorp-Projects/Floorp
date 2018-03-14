@@ -16,6 +16,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/HTMLSlotElement.h"
+#include "mozilla/PerformanceCounter.h"
+
 
 namespace mozilla {
 class AbstractThread;
@@ -54,6 +56,12 @@ public:
   {
     return aKey == mKey;
   }
+#ifndef RELEASE_OR_BETA
+  PerformanceCounter* GetPerformanceCounter()
+  {
+    return mPerformanceCounter;
+  }
+#endif
   TabGroup* GetTabGroup()
   {
     return mTabGroup;
@@ -126,6 +134,9 @@ private:
   nsTArray<nsIDocument*> mDocuments;
   RefPtr<mozilla::dom::CustomElementReactionsStack> mReactionsStack;
   nsTArray<RefPtr<HTMLSlotElement>> mSignalSlotList;
+#ifndef RELEASE_OR_BETA
+  RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
+#endif
 };
 
 } // namespace dom

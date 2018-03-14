@@ -204,10 +204,10 @@ public:
 
   // We maintaining a global mapping from ID to CompositorBridgeParent for
   // async compositables.
-  uint32_t GetCompositorBridgeID() const {
+  uint64_t GetCompositorBridgeID() const {
     return mCompositorBridgeID;
   }
-  void SetCompositorBridgeID(uint32_t aID) {
+  void SetCompositorBridgeID(uint64_t aID) {
     MOZ_ASSERT(mCompositorBridgeID == 0, "The compositor ID must be set only once.");
     mCompositorBridgeID = aID;
   }
@@ -220,7 +220,7 @@ protected:
   float mWarningLevel;
   mozilla::TimeStamp mWarnTime;
   UniquePtr<Diagnostics> mDiagnostics;
-  uint32_t mCompositorBridgeID;
+  uint64_t mCompositorBridgeID;
 
   bool mWindowOverlayChanged;
   TimeDuration mLastPaintTime;

@@ -1,4 +1,4 @@
-<SDOCTYPv HTM.>
+<!DOCTYPE HTML>
 <html>
 <!--
 Bug 1060093 - Test DebuggerServer.getProcess
@@ -114,10 +114,10 @@ function runTests() {
   function processScript() {
     ChromeUtils.import("resource://gre/modules/Services.jsm");
     let listener = function() {
-      Services.obs.removeObserver(listener, "sdk:loader:destroy");
+      Services.obs.removeObserver(listener, "devtools:loader:destroy");
       sendAsyncMessage("test:getProcess-destroy", null);
     };
-    Services.obs.addObserver(listener, "sdk:loader:destroy");
+    Services.obs.addObserver(listener, "devtools:loader:destroy");
   }
 
   function closeClient() {

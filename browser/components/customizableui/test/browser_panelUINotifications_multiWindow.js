@@ -17,6 +17,7 @@ add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
     let doc = browser.ownerDocument;
 
     let win = await BrowserTestUtils.openNewBrowserWindow();
+    await SimpleTest.promiseFocus(win);
     let mainActionCalled = false;
     let mainAction = {
       callback: () => { mainActionCalled = true; }
@@ -55,6 +56,7 @@ add_task(async function testBackgroundWindowNotificationsAreRemovedByForeground(
 
   await BrowserTestUtils.withNewTab(options, async function(browser) {
     let win = await BrowserTestUtils.openNewBrowserWindow();
+    await SimpleTest.promiseFocus(win);
     AppMenuNotifications.showNotification("update-manual", {callback() {}});
     let doc = win.gBrowser.ownerDocument;
     let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
@@ -85,6 +87,7 @@ add_task(async function testBackgroundWindowNotificationsAreDismissedByForegroun
 
   await BrowserTestUtils.withNewTab(options, async function(browser) {
     let win = await BrowserTestUtils.openNewBrowserWindow();
+    await SimpleTest.promiseFocus(win);
     AppMenuNotifications.showNotification("update-manual", {callback() {}});
     let doc = win.gBrowser.ownerDocument;
     let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
@@ -112,6 +115,7 @@ add_task(async function testOpenWindowAfterShowingNotification() {
   AppMenuNotifications.showNotification("update-manual", {callback() {}});
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
+  await SimpleTest.promiseFocus(win);
   let doc = win.gBrowser.ownerDocument;
   let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
   is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
