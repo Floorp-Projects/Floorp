@@ -669,7 +669,7 @@ Inspector.prototype = {
         break;
       case "boxmodel":
         // box-model isn't a panel on its own, it used to, now it is being used by
-        // computed view and layout which retrieves an instance via getPanel.
+        // the layout view which retrieves an instance via getPanel.
         const BoxModel = require("devtools/client/inspector/boxmodel/box-model");
         panel = new BoxModel(this, this.panelWin);
         break;

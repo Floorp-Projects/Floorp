@@ -28,6 +28,7 @@
 #include "mozilla/IOInterposer.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Scheduler.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
@@ -46,6 +47,7 @@
 #include "ThreadEventTarget.h"
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/DOMPrefs.h"
 
 #ifdef XP_LINUX
 #include <sys/time.h>
@@ -558,6 +560,12 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
   , mIsMainThread(aMainThread)
   , mLastUnlabeledRunnable(TimeStamp::Now())
   , mCanInvokeJS(false)
+#ifndef RELEASE_OR_BETA
+  , mCurrentEvent(nullptr)
+  , mCurrentEventStart(TimeStamp::Now())
+  , mCurrentEventLoopDepth(-1)
+  , mCurrentPerformanceCounter(nullptr)
+#endif
 {
 }
 
@@ -577,6 +585,16 @@ nsThread::~nsThread()
   }
 #endif
 }
+
+#ifndef RELEASE_OR_BETA
+bool
+nsThread::GetSchedulerLoggingEnabled() {
+  if (!NS_IsMainThread() || !mozilla::Preferences::IsServiceAvailable()) {
+    return false;
+  }
+  return mozilla::dom::DOMPrefs::SchedulerLoggingEnabled();
+}
+#endif
 
 nsresult
 nsThread::Init(const nsACString& aName)
@@ -907,6 +925,20 @@ GetLabeledRunnableName(nsIRunnable* aEvent,
 
   return labeled;
 }
+
+mozilla::PerformanceCounter*
+nsThread::GetPerformanceCounter(nsIRunnable* aEvent)
+{
+  RefPtr<SchedulerGroup::Runnable> docRunnable = do_QueryObject(aEvent);
+  if (docRunnable) {
+    mozilla::dom::DocGroup* docGroup = docRunnable->DocGroup();
+    if (docGroup) {
+      return docGroup->GetPerformanceCounter();
+    }
+  }
+  return nullptr;
+}
+
 #endif
 
 NS_IMETHODIMP
@@ -980,6 +1012,16 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
       }
 
 #ifndef RELEASE_OR_BETA
+      bool schedulerLoggingEnabled = GetSchedulerLoggingEnabled();
+      if (schedulerLoggingEnabled
+          && mNestedEventLoopDepth > mCurrentEventLoopDepth
+          && mCurrentPerformanceCounter) {
+          // This is a recursive call, we're saving the time
+          // spent in the parent event if the runnable is linked to a DocGroup.
+          mozilla::TimeDuration duration = TimeStamp::Now() - mCurrentEventStart;
+          mCurrentPerformanceCounter->IncrementExecutionDuration(duration.ToMicroseconds());
+      }
+
       Maybe<Telemetry::AutoTimer<Telemetry::MAIN_THREAD_RUNNABLE_MS>> timer;
       Maybe<Telemetry::AutoTimer<Telemetry::IDLE_RUNNABLE_BUDGET_OVERUSE_MS>> idleTimer;
 
@@ -1037,7 +1079,42 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
       if (priority == EventPriority::Input) {
         timeDurationHelper.emplace();
       }
+
+#ifndef RELEASE_OR_BETA
+      // The event starts to run, storing the timestamp.
+      bool recursiveEvent = false;
+      RefPtr<mozilla::PerformanceCounter> currentPerformanceCounter;
+      if (schedulerLoggingEnabled) {
+        recursiveEvent = mNestedEventLoopDepth > mCurrentEventLoopDepth;
+        mCurrentEventStart = mozilla::TimeStamp::Now();
+        mCurrentEvent = event;
+        mCurrentEventLoopDepth = mNestedEventLoopDepth;
+        mCurrentPerformanceCounter = GetPerformanceCounter(event);
+        currentPerformanceCounter = mCurrentPerformanceCounter;
+      }
+#endif
       event->Run();
+
+#ifndef RELEASE_OR_BETA
+      // End of execution, we can send the duration for the group
+      if (schedulerLoggingEnabled) {
+       if (recursiveEvent) {
+          // If we're in a recursive call, reset the timer,
+          // so the parent gets its remaining execution time right.
+          mCurrentEventStart = mozilla::TimeStamp::Now();
+          mCurrentPerformanceCounter = currentPerformanceCounter;
+        } else {
+          // We're done with this dispatch
+          if (currentPerformanceCounter) {
+            mozilla::TimeDuration duration = TimeStamp::Now() - mCurrentEventStart;
+            currentPerformanceCounter->IncrementExecutionDuration(duration.ToMicroseconds());
+          }
+          mCurrentEvent = nullptr;
+          mCurrentEventLoopDepth = -1;
+          mCurrentPerformanceCounter = nullptr;
+        }
+      }
+#endif
     } else if (aMayWait) {
       MOZ_ASSERT(ShuttingDown(),
                  "This should only happen when shutting down");

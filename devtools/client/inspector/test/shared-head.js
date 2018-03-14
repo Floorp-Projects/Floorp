@@ -54,11 +54,9 @@ var openInspectorSidebarTab = Task.async(function* (id) {
 
   let onSidebarSelect = inspector.sidebar.once("select");
   if (id === "layoutview") {
-    // The layout and computed views should wait until the box-model widget is ready.
+    // The layout view should wait until the box-model and grid-panel are ready.
     let onBoxModelViewReady = inspector.once("boxmodel-view-updated");
-    // The layout view also needs to wait for the grid panel to be fully updated.
-    let onGridPanelReady = id === "layoutview" ?
-      inspector.once("grid-panel-updated") : Promise.resolve();
+    let onGridPanelReady = inspector.once("grid-panel-updated");
     inspector.sidebar.select(id);
     yield onBoxModelViewReady;
     yield onGridPanelReady;

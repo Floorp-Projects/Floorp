@@ -226,7 +226,7 @@ defineLazyGetter(exports.modules, "Debugger", () => {
 
 defineLazyGetter(exports.modules, "Timer", () => {
   let {setTimeout, clearTimeout} = require("resource://gre/modules/Timer.jsm");
-  // Do not return Cu.import result, as SDK loader would freeze Timer.jsm globals...
+  // Do not return Cu.import result, as DevTools loader would freeze Timer.jsm globals...
   return {
     setTimeout,
     clearTimeout
@@ -280,8 +280,8 @@ exports.globals = {
   URL,
   XMLHttpRequest,
 };
-// SDK loader copy globals property descriptors on each module global object
-// so that we have to memoize them from here in order to instanciate each
+// DevTools loader copy globals property descriptors on each module global
+// object so that we have to memoize them from here in order to instantiate each
 // global only once.
 // `globals` is a cache object on which we put all global values
 // and we set getters on `exports.globals` returning `globals` values.

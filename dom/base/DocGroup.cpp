@@ -45,6 +45,9 @@ DocGroup::DocGroup(TabGroup* aTabGroup, const nsACString& aKey)
   : mKey(aKey), mTabGroup(aTabGroup)
 {
   // This method does not add itself to mTabGroup->mDocGroups as the caller does it for us.
+#ifndef RELEASE_OR_BETA
+  mPerformanceCounter = new mozilla::PerformanceCounter(aKey);
+#endif
 }
 
 DocGroup::~DocGroup()
@@ -62,6 +65,9 @@ nsresult
 DocGroup::Dispatch(TaskCategory aCategory,
                    already_AddRefed<nsIRunnable>&& aRunnable)
 {
+#ifndef RELEASE_OR_BETA
+  mPerformanceCounter->IncrementDispatchCounter(DispatchCategory(aCategory));
+#endif
   return mTabGroup->DispatchWithDocGroup(aCategory, Move(aRunnable), this);
 }
 
