@@ -29,6 +29,29 @@ public final class GeckoRuntime implements Parcelable {
     private static final String LOGTAG = "GeckoRuntime";
     private static final boolean DEBUG = false;
 
+    private static GeckoRuntime sDefaultRuntime;
+
+    /**
+     * Get the default runtime for the given context.
+     * This will create and initialize the runtime with the default settings.
+     *
+     * Note: Only use this for session-less apps.
+     *       For regular apps, use create() and createSession() instead.
+     *
+     * @return The (static) default runtime for the context.
+     */
+    public static synchronized @NonNull GeckoRuntime getDefault(
+            final @NonNull Context context) {
+        Log.d(LOGTAG, "getDefault");
+        if (sDefaultRuntime == null) {
+            sDefaultRuntime = new GeckoRuntime();
+            sDefaultRuntime.attachTo(context);
+            sDefaultRuntime.init(new GeckoRuntimeSettings());
+        }
+
+        return sDefaultRuntime;
+    }
+
     private GeckoRuntimeSettings mSettings;
 
     /**
