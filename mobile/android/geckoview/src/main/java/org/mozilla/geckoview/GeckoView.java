@@ -305,10 +305,6 @@ public class GeckoView extends FrameLayout {
         return mSession.getEventDispatcher();
     }
 
-    public GeckoSessionSettings getSettings() {
-        return mSession.getSettings();
-    }
-
     public PanZoomController getPanZoomController() {
         return mSession.getPanZoomController();
     }
@@ -320,11 +316,11 @@ public class GeckoView extends FrameLayout {
     @Override
     public void onAttachedToWindow() {
         if (mSession == null) {
-            setSession(new GeckoSession());
+            setSession(new GeckoSession(), GeckoRuntime.getDefault(getContext()));
         }
 
         if (!mSession.isOpen()) {
-            mSession.open(getContext().getApplicationContext());
+            mSession.open(mRuntime);
         }
 
         mSession.getTextInput().setView(this);
