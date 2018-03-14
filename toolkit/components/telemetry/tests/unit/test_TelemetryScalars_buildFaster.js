@@ -15,7 +15,7 @@ ChromeUtils.import("resource://services-common/utils.js");
 function getDefinitionsPath() {
   // Write the scalar definition to the spec file in the binary directory.
   let definitionFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-  definitionFile = Services.dirsvc.get("GreBinD", Ci.nsIFile);
+  definitionFile = Services.dirsvc.get("GreD", Ci.nsIFile);
   definitionFile.append("ScalarArtifactDefinitions.json");
   return definitionFile.path;
 }

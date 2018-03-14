@@ -80,6 +80,20 @@ eslint:
             - 'tools/lint/eslint/eslint-plugin-mozilla/**'
             - 'tools/lint/eslint/eslint-plugin-spidermonkey-js/**'
 
+mingw-cap:
+    description: lint for MinGW Capitalization issues
+    platform: lint/opt
+    treeherder:
+        symbol: mingw
+    run:
+        mach: lint -l mingw-capitalization -f treeherder
+    when:
+        files-changed:
+            - '**/*.cpp'
+            - '**/*.cc'
+            - '**/*.c'
+            - '**/*.h'
+
 py-compat:
     description: lint for python 2/3 compatibility issues
     platform: lint/opt

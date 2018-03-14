@@ -123,8 +123,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(CacheFileMetadataListener,
                               CACHEFILEMETADATALISTENER_IID)
 
 
-class CacheFileMetadata : public CacheFileIOListener
-                        , public CacheMemoryConsumer
+class CacheFileMetadata final
+  : public CacheFileIOListener
+  , public CacheMemoryConsumer
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

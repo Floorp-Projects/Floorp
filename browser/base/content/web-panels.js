@@ -61,7 +61,7 @@ function loadWebPanel(aURI) {
     var panelBrowser = getPanelBrowser();
     if (gLoadFired) {
         panelBrowser.webNavigation
-                    .loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE,
+                    .loadURI(aURI, Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                              null, null, null);
     }
     panelBrowser.setAttribute("cachedurl", aURI);
@@ -75,7 +75,7 @@ function load() {
     var cachedurl = panelBrowser.getAttribute("cachedurl");
     if (cachedurl) {
         panelBrowser.webNavigation
-                    .loadURI(cachedurl, nsIWebNavigation.LOAD_FLAGS_NONE, null,
+                    .loadURI(cachedurl, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null,
                              null, null);
     }
 
@@ -87,12 +87,12 @@ function unload() {
 }
 
 function PanelBrowserStop() {
-    getPanelBrowser().webNavigation.stop(nsIWebNavigation.STOP_ALL);
+    getPanelBrowser().webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
 }
 
 function PanelBrowserReload() {
     getPanelBrowser().webNavigation
                      .sessionHistory
-                     .QueryInterface(nsIWebNavigation)
-                     .reload(nsIWebNavigation.LOAD_FLAGS_NONE);
+                     .QueryInterface(Ci.nsIWebNavigation)
+                     .reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
 }

@@ -455,6 +455,94 @@ CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType
   reactionsStack->EnqueueCallbackReaction(aCustomElement, Move(callback));
 }
 
+namespace {
+
+class CandidateFinder
+{
+public:
+  CandidateFinder(nsTArray<nsWeakPtr>&& aCandidates, nsIDocument* aDoc);
+  nsTArray<nsCOMPtr<Element>> OrderedCandidates();
+
+private:
+  bool Traverse(Element* aRoot, nsTArray<nsCOMPtr<Element>>& aOrderedElements);
+
+  nsCOMPtr<nsIDocument> mDoc;
+  nsInterfaceHashtable<nsPtrHashKey<Element>, Element> mCandidates;
+};
+
+CandidateFinder::CandidateFinder(nsTArray<nsWeakPtr>&& aCandidates,
+                                 nsIDocument* aDoc)
+  : mDoc(aDoc)
+  , mCandidates(aCandidates.Length())
+{
+  MOZ_ASSERT(mDoc);
+  for (auto& candidate : aCandidates) {
+    nsCOMPtr<Element> elem = do_QueryReferent(candidate);
+    if (!elem) {
+      continue;
+    }
+
+    Element* key = elem.get();
+    mCandidates.Put(key, elem.forget());
+  }
+}
+
+nsTArray<nsCOMPtr<Element>>
+CandidateFinder::OrderedCandidates()
+{
+  if (mCandidates.Count() == 1) {
+    // Fast path for one candidate.
+    for (auto iter = mCandidates.Iter(); !iter.Done(); iter.Next()) {
+      nsTArray<nsCOMPtr<Element>> rval({ Move(iter.Data()) });
+      iter.Remove();
+      return rval;
+    }
+  }
+
+  nsTArray<nsCOMPtr<Element>> orderedElements(mCandidates.Count());
+  for (Element* child = mDoc->GetFirstElementChild(); child; child = child->GetNextElementSibling()) {
+    if (!Traverse(child->AsElement(), orderedElements)) {
+      break;
+    }
+  }
+
+  return orderedElements;
+}
+
+bool
+CandidateFinder::Traverse(Element* aRoot, nsTArray<nsCOMPtr<Element>>& aOrderedElements)
+{
+  nsCOMPtr<Element> elem;
+  if (mCandidates.Remove(aRoot, getter_AddRefs(elem))) {
+    aOrderedElements.AppendElement(Move(elem));
+    if (mCandidates.Count() == 0) {
+      return false;
+    }
+  }
+
+  if (ShadowRoot* root = aRoot->GetShadowRoot()) {
+    // First iterate the children of the shadow root if aRoot is a shadow host.
+    for (Element* child = root->GetFirstElementChild(); child;
+         child = child->GetNextElementSibling()) {
+      if (!Traverse(child, aOrderedElements)) {
+        return false;
+      }
+    }
+  }
+
+  // Iterate the explicit children of aRoot.
+  for (Element* child = aRoot->GetFirstElementChild(); child;
+       child = child->GetNextElementSibling()) {
+    if (!Traverse(child, aOrderedElements)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+}
+
 void
 CustomElementRegistry::UpgradeCandidates(nsAtom* aKey,
                                          CustomElementDefinition* aDefinition,
@@ -466,18 +554,14 @@ CustomElementRegistry::UpgradeCandidates(nsAtom* aKey,
     return;
   }
 
-  // TODO: Bug 1326028 - Upgrade custom element in shadow-including tree order
   nsAutoPtr<nsTArray<nsWeakPtr>> candidates;
   if (mCandidatesMap.Remove(aKey, &candidates)) {
     MOZ_ASSERT(candidates);
     CustomElementReactionsStack* reactionsStack =
       docGroup->CustomElementReactionsStack();
-    for (size_t i = 0; i < candidates->Length(); ++i) {
-      nsCOMPtr<Element> elem = do_QueryReferent(candidates->ElementAt(i));
-      if (!elem) {
-        continue;
-      }
 
+    CandidateFinder finder(Move(*candidates), mWindow->GetExtantDoc());
+    for (auto& elem : finder.OrderedCandidates()) {
       reactionsStack->EnqueueUpgradeReaction(elem, aDefinition);
     }
   }

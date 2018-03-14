@@ -580,8 +580,7 @@ nsGenericDOMDataNode::UnbindFromTree(bool aDeep, bool aNullParent)
   UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE |
              NS_REFRAME_IF_WHITESPACE);
 
-  nsIDocument* document =
-    HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetComposedDoc();
+  nsIDocument* document = GetComposedDoc();
 
   if (aNullParent) {
     if (this->IsRootOfNativeAnonymousSubtree()) {

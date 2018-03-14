@@ -81,9 +81,11 @@ interface nsIPaymentRequest : nsISupports
   readonly attribute uint64_t tabId;
   readonly attribute nsIPrincipal topLevelPrincipal;
   readonly attribute AString requestId;
+  readonly attribute AString completeStatus;
   readonly attribute nsIArray paymentMethods;
   readonly attribute nsIPaymentDetails paymentDetails;
   readonly attribute nsIPaymentOptions paymentOptions;
 
+  [noscript] void setCompleteStatus(in AString aCompleteStatus);
   void updatePaymentDetails(in nsIPaymentDetails aDetails);
 };

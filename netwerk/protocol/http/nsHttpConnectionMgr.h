@@ -506,7 +506,7 @@ private:
     };
     friend class nsHalfOpenSocket;
 
-    class PendingTransactionInfo : public ARefBase
+    class PendingTransactionInfo final : public ARefBase
     {
     public:
         explicit PendingTransactionInfo(nsHttpTransaction * trans)

@@ -78,7 +78,7 @@ protected:
     virtual nsresult SetSpecInternal(const nsACString &input);
     virtual nsresult SetScheme(const nsACString &input);
     virtual nsresult SetUserPass(const nsACString &input);
-    virtual nsresult SetUsername(const nsACString &input);
+    nsresult SetUsername(const nsACString &input);
     virtual nsresult SetPassword(const nsACString &input);
     virtual nsresult SetHostPort(const nsACString &aValue);
     virtual nsresult SetHost(const nsACString &input);
