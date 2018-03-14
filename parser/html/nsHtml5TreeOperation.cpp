@@ -23,7 +23,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIFormControl.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "nsIMutationObserver.h"
@@ -31,6 +30,7 @@
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
 #include "mozilla/dom/Comment.h"
+#include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
@@ -736,16 +736,13 @@ nsHtml5TreeOperation::AppendDoctypeToDocument(nsAtom* aName,
 {
   // Adapted from nsXMLContentSink
   // Create a new doctype node
-  nsCOMPtr<nsIDOMDocumentType> docType;
-  NS_NewDOMDocumentType(getter_AddRefs(docType),
-                        aBuilder->GetNodeInfoManager(),
-                        aName,
-                        aPublicId,
-                        aSystemId,
-                        VoidString());
-  NS_ASSERTION(docType, "Doctype creation failed.");
-  nsCOMPtr<nsIContent> asContent = do_QueryInterface(docType);
-  return AppendToDocument(asContent, aBuilder);
+  RefPtr<dom::DocumentType> docType =
+    NS_NewDOMDocumentType(aBuilder->GetNodeInfoManager(),
+                          aName,
+                          aPublicId,
+                          aSystemId,
+                          VoidString());
+  return AppendToDocument(docType, aBuilder);
 }
 
 nsIContent*

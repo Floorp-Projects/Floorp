@@ -2550,7 +2550,7 @@ static uint32_t GetDropEffect(WidgetGUIEvent* aEvent)
 
   uint32_t action = 0;
   if (dragEvent->mDataTransfer) {
-    dragEvent->mDataTransfer->GetDropEffectInt(&action);
+    action = dragEvent->mDataTransfer->DropEffectInt();
   }
   return action;
 }

@@ -11,8 +11,12 @@
 #include "nsIDocument.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/dom/DOMStringList.h"
+#include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/Directory.h"
+#include "mozilla/dom/DragEvent.h"
+#include "mozilla/dom/FileList.h"
 #include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
@@ -21,10 +25,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/dom/DOMStringList.h"
-#include "mozilla/dom/Directory.h"
-#include "mozilla/dom/FileList.h"
-#include "nsIDOMDragEvent.h"
 #include "nsIDOMFileList.h"
 #include "nsTextNode.h"
 
@@ -238,19 +238,17 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   NS_ASSERTION(mFrame, "We should have been unregistered");
 
-  bool defaultPrevented = false;
-  aEvent->GetDefaultPrevented(&defaultPrevented);
-  if (defaultPrevented) {
+  Event* event = aEvent->InternalDOMEvent();
+  if (event->DefaultPrevented()) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
+  DragEvent* dragEvent = event->AsDragEvent();
   if (!dragEvent) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
-  dragEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
+  RefPtr<DataTransfer> dataTransfer = dragEvent->GetDataTransfer();
   if (!IsValidDropData(dataTransfer)) {
     return NS_OK;
   }
@@ -278,8 +276,8 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
     aEvent->StopPropagation();
     aEvent->PreventDefault();
 
-    nsCOMPtr<nsIDOMFileList> fileList;
-    dataTransfer->GetFiles(getter_AddRefs(fileList));
+    RefPtr<FileList> fileList =
+      dataTransfer->GetFiles(*nsContentUtils::GetSystemPrincipal());
 
     RefPtr<BlobImpl> webkitDir;
     nsresult rv =
@@ -382,27 +380,21 @@ nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(nsIDOMFileList* a
 }
 
 bool
-nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDataTransfer* aDOMDataTransfer)
+nsFileControlFrame::DnDListener::IsValidDropData(DataTransfer* aDataTransfer)
 {
-  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDOMDataTransfer);
-  NS_ENSURE_TRUE(dataTransfer, false);
-
   // We only support dropping files onto a file upload control
   nsTArray<nsString> types;
-  dataTransfer->GetTypes(types, CallerType::System);
+  aDataTransfer->GetTypes(types, CallerType::System);
 
   return types.Contains(NS_LITERAL_STRING("Files"));
 }
 
 bool
-nsFileControlFrame::DnDListener::CanDropTheseFiles(nsIDOMDataTransfer* aDOMDataTransfer,
+nsFileControlFrame::DnDListener::CanDropTheseFiles(DataTransfer* aDataTransfer,
                                                    bool aSupportsMultiple)
 {
-  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDOMDataTransfer);
-  NS_ENSURE_TRUE(dataTransfer, false);
-
-  nsCOMPtr<nsIDOMFileList> fileList;
-  dataTransfer->GetFiles(getter_AddRefs(fileList));
+  RefPtr<FileList> fileList =
+    aDataTransfer->GetFiles(*nsContentUtils::GetSystemPrincipal());
 
   RefPtr<BlobImpl> webkitDir;
   nsresult rv =

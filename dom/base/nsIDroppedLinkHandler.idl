@@ -5,7 +5,6 @@
 #include "nsISupports.idl"
 #include "nsIPrincipal.idl"
 
-interface nsIDOMDataTransfer;
 interface nsIDOMDragEvent;
 
 [scriptable, uuid(69E14F91-2E09-4CA6-A511-A715C99A2804)]
@@ -95,8 +94,10 @@ interface nsIDroppedLinkHandler : nsISupports
    * dragged. Since drag/drop performs a roundtrip of parent, child, parent,
    * it allows the parent to verify that the child did not modify links
    * being dropped.
+   *
+   * @param dataTransfer is a DataTransfer.  See bug 1444991.
    */
-  void queryLinks(in nsIDOMDataTransfer aDataTransfer,
+  void queryLinks(in nsISupports aDataTransfer,
                   [optional] out unsigned long aCount,
                   [retval, array, size_is(aCount)] out nsIDroppedLinkItem aLinks);
 

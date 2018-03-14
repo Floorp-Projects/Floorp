@@ -282,7 +282,7 @@ protected:
             bit = GB2312_CHARSET;
         } else if (aLangGroup == nsGkAtoms::zh_tw) {
             bit = CHINESEBIG5_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::el_) {
+        } else if (aLangGroup == nsGkAtoms::el) {
             bit = GREEK_CHARSET;
         } else if (aLangGroup == nsGkAtoms::he) {
             bit = HEBREW_CHARSET;

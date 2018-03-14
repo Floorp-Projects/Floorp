@@ -168,7 +168,7 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
       if (knownMethod) {
         let isOverloaded = typeof knownMethod.enums === "function";
         if (isOverloaded) {
-          methodSignatureEnums = methodSignatureEnums(args);
+          methodSignatureEnums = knownMethod.enums(args);
         } else {
           methodSignatureEnums = knownMethod.enums;
         }

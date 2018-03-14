@@ -919,7 +919,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     }
   } else if (clipboardData) {
     // check to see if any data was put on the data transfer.
-    clipboardData->GetMozItemCount(&count);
+    count = clipboardData->MozItemCount();
     if (count) {
       nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1"));
       NS_ENSURE_TRUE(clipboard, false);

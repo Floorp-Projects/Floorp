@@ -290,6 +290,8 @@ class JSString : public js::gc::Cell
     static const uint32_t INDEX_VALUE_BIT        = JS_BIT(7);
     static const uint32_t INDEX_VALUE_SHIFT      = 16;
 
+    static const uint32_t PINNED_ATOM_BIT        = JS_BIT(8);
+
     static const uint32_t MAX_LENGTH             = js::MaxStringLength;
 
     static const JS::Latin1Char MAX_LATIN1_CHAR = 0xff;
@@ -1156,10 +1158,22 @@ class JSAtom : public JSFlatString
     }
 
     // Transform this atom into a permanent atom. This is only done during
-    // initialization of the runtime.
+    // initialization of the runtime. Permanent atoms are always pinned.
     MOZ_ALWAYS_INLINE void morphIntoPermanentAtom() {
         MOZ_ASSERT(static_cast<JSString*>(this)->isAtom());
-        d.u1.flags |= PERMANENT_ATOM_FLAGS;
+        d.u1.flags |= PERMANENT_ATOM_FLAGS | PINNED_ATOM_BIT;
+    }
+
+    MOZ_ALWAYS_INLINE
+    bool isPinned() const {
+        return d.u1.flags & PINNED_ATOM_BIT;
+    }
+
+    // Mark the atom as pinned. For use by atomization only.
+    MOZ_ALWAYS_INLINE void setPinned() {
+        MOZ_ASSERT(static_cast<JSString*>(this)->isAtom());
+        MOZ_ASSERT(!isPinned());
+        d.u1.flags |= PINNED_ATOM_BIT;
     }
 
     inline js::HashNumber hash() const;
@@ -1249,7 +1263,7 @@ MOZ_ALWAYS_INLINE JSAtom*
 JSFlatString::morphAtomizedStringIntoPermanentAtom(js::HashNumber hash)
 {
     MOZ_ASSERT(!isAtom());
-    d.u1.flags |= PERMANENT_ATOM_FLAGS;
+    d.u1.flags |= PERMANENT_ATOM_FLAGS | PINNED_ATOM_BIT;
     d.u1.flags &= ~NON_ATOM_BIT;
     JSAtom* atom = &asAtom();
     atom->initHash(hash);

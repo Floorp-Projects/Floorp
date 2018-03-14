@@ -1067,20 +1067,27 @@ StaticStrings::init(JSContext* cx)
     return true;
 }
 
+inline void
+TraceStaticString(JSTracer* trc, JSAtom* atom, const char* name)
+{
+    MOZ_ASSERT(atom->isPinned());
+    TraceProcessGlobalRoot(trc, atom, name);
+}
+
 void
 StaticStrings::trace(JSTracer* trc)
 {
     /* These strings never change, so barriers are not needed. */
 
     for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++)
-        TraceProcessGlobalRoot(trc, unitStaticTable[i], "unit-static-string");
+        TraceStaticString(trc, unitStaticTable[i], "unit-static-string");
 
     for (uint32_t i = 0; i < NUM_SMALL_CHARS * NUM_SMALL_CHARS; i++)
-        TraceProcessGlobalRoot(trc, length2StaticTable[i], "length2-static-string");
+        TraceStaticString(trc, length2StaticTable[i], "length2-static-string");
 
     /* This may mark some strings more than once, but so be it. */
     for (uint32_t i = 0; i < INT_STATIC_LIMIT; i++)
-        TraceProcessGlobalRoot(trc, intStaticTable[i], "int-static-string");
+        TraceStaticString(trc, intStaticTable[i], "int-static-string");
 }
 
 template <typename CharT>

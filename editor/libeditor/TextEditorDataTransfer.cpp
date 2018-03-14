@@ -9,6 +9,8 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/SelectionState.h"
+#include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
@@ -18,9 +20,7 @@
 #include "nsError.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDOMDataTransfer.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDragEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMUIEvent.h"
@@ -146,8 +146,8 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                    bool aDoDeleteSelection)
 {
   nsCOMPtr<nsIVariant> data;
-  DataTransfer::Cast(aDataTransfer)->GetDataAtNoSecurityCheck(NS_LITERAL_STRING("text/plain"), aIndex,
-                                                              getter_AddRefs(data));
+  aDataTransfer->GetDataAtNoSecurityCheck(NS_LITERAL_STRING("text/plain"), aIndex,
+                                          getter_AddRefs(data));
   if (data) {
     nsAutoString insertText;
     data->GetAsAString(insertText);
@@ -161,16 +161,13 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
 }
 
 nsresult
-TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
+TextEditor::InsertFromDrop(DragEvent* aDropEvent)
 {
   CommitComposition();
 
-  nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aDropEvent));
-  NS_ENSURE_TRUE(dragEvent, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aDropEvent, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMDataTransfer> domDataTransfer;
-  dragEvent->GetDataTransfer(getter_AddRefs(domDataTransfer));
-  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(domDataTransfer);
+  RefPtr<DataTransfer> dataTransfer = aDropEvent->GetDataTransfer();
   NS_ENSURE_TRUE(dataTransfer, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
@@ -196,9 +193,7 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsIDOMDocument> destdomdoc = GetDOMDocument();
   NS_ENSURE_TRUE(destdomdoc, NS_ERROR_NOT_INITIALIZED);
 
-  uint32_t numItems = 0;
-  nsresult rv = dataTransfer->GetMozItemCount(&numItems);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t numItems = dataTransfer->MozItemCount();
   if (numItems < 1) {
     return NS_ERROR_FAILURE;  // Nothing to drop?
   }
@@ -210,17 +205,10 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
   // We have to figure out whether to delete and relocate caret only once
   // Parent and offset are under the mouse cursor
-  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aDropEvent);
-  NS_ENSURE_TRUE(uiEvent, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMNode> newSelectionParent;
-  rv = uiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> newSelectionParent = aDropEvent->GetRangeParent();
   NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
 
-  int32_t newSelectionOffset;
-  rv = uiEvent->GetRangeOffset(&newSelectionOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  int32_t newSelectionOffset = aDropEvent->RangeOffset();
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
@@ -243,7 +231,13 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
         continue;
       }
 
-      rv = range->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
+      IgnoredErrorResult rv;
+      cursorIsInSelection =
+        range->IsPointInRange(*newSelectionParent, newSelectionOffset, rv);
+      if (rv.Failed()) {
+        // Probably don't want to consider this as "in selection!"
+        cursorIsInSelection = false;
+      }
       if (cursorIsInSelection) {
         break;
       }
@@ -263,8 +257,7 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       // We are NOT over the selection
       if (srcdomdoc == destdomdoc) {
         // Within the same doc: delete if user doesn't want to copy
-        uint32_t dropEffect;
-        dataTransfer->GetDropEffectInt(&dropEffect);
+        uint32_t dropEffect = dataTransfer->DropEffectInt();
         deleteSelection = !(dropEffect & nsIDragService::DRAGDROP_ACTION_COPY);
       } else {
         // Different source doc: Don't delete
@@ -287,15 +280,14 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   }
 
   for (uint32_t i = 0; i < numItems; ++i) {
-    InsertFromDataTransfer(dataTransfer, i, srcdomdoc, newSelectionParent,
+    InsertFromDataTransfer(dataTransfer, i, srcdomdoc,
+                           newSelectionParent->AsDOMNode(),
                            newSelectionOffset, deleteSelection);
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    ScrollSelectionIntoView(false);
-  }
+  ScrollSelectionIntoView(false);
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

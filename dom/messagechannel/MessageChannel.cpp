@@ -9,7 +9,6 @@
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/Navigator.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"

@@ -25,7 +25,7 @@ GetAtomBit(TenuredCell* thing)
 inline bool
 ThingIsPermanent(JSAtom* atom)
 {
-    return atom->isPermanentAtom();
+    return atom->isPinned();
 }
 
 inline bool

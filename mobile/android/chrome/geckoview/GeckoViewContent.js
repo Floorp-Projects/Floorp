@@ -136,19 +136,21 @@ class GeckoViewContent extends GeckoViewContentModule {
           return node && node.href;
         }
 
-        let node = aEvent.target;
-        let hrefNode = nearestParentHref(node);
-        let isImageNode = (ChromeUtils.getClassName(node) === "HTMLImageElement");
-        let isMediaNode = (ChromeUtils.getClassName(node) === "HTMLVideoElement" ||
-                           ChromeUtils.getClassName(node) === "HTMLAudioElement");
+        const node = aEvent.target;
+        const hrefNode = nearestParentHref(node);
+        const elementType = ChromeUtils.getClassName(node);
+        const isImage = elementType === "HTMLImageElement";
+        const isMedia = elementType === "HTMLVideoElement" ||
+                        elementType === "HTMLAudioElement";
 
-        if (hrefNode || isImageNode || isMediaNode) {
+        if (hrefNode || isImage || isMedia) {
           this.eventDispatcher.sendRequest({
             type: "GeckoView:ContextMenu",
             screenX: aEvent.screenX,
             screenY: aEvent.screenY,
             uri: hrefNode,
-            elementSrc: isImageNode || isMediaNode
+            elementType,
+            elementSrc: (isImage || isMedia)
                         ? node.currentSrc || node.src
                         : null
           });

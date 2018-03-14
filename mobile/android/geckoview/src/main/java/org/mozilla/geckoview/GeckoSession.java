@@ -37,6 +37,7 @@ import android.os.IInterface;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
+import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -108,10 +109,14 @@ public class GeckoSession extends LayerSession
                                       final EventCallback callback) {
 
                 if ("GeckoView:ContextMenu".equals(event)) {
+                    final int type = getContentElementType(
+                        message.getString("elementType"));
+
                     delegate.onContextMenu(GeckoSession.this,
                                            message.getInt("screenX"),
                                            message.getInt("screenY"),
                                            message.getString("uri"),
+                                           type,
                                            message.getString("elementSrc"));
                 } else if ("GeckoView:DOMTitleChanged".equals(event)) {
                     delegate.onTitleChange(GeckoSession.this,
@@ -1315,10 +1320,15 @@ public class GeckoSession extends LayerSession
          * Class representing security information for a site.
          */
         public class SecurityInformation {
+            @IntDef({SECURITY_MODE_UNKNOWN, SECURITY_MODE_IDENTIFIED,
+                     SECURITY_MODE_VERIFIED})
+            public @interface SecurityMode {}
             public static final int SECURITY_MODE_UNKNOWN = 0;
             public static final int SECURITY_MODE_IDENTIFIED = 1;
             public static final int SECURITY_MODE_VERIFIED = 2;
 
+            @IntDef({CONTENT_UNKNOWN, CONTENT_BLOCKED, CONTENT_LOADED})
+            public @interface ContentType {}
             public static final int CONTENT_UNKNOWN = 0;
             public static final int CONTENT_BLOCKED = 1;
             public static final int CONTENT_LOADED = 2;
@@ -1359,22 +1369,22 @@ public class GeckoSession extends LayerSession
              * SECURITY_MODE_IDENTIFIED, and SECURITY_MODE_VERIFIED. SECURITY_MODE_IDENTIFIED
              * indicates domain validation only, while SECURITY_MODE_VERIFIED indicates extended validation.
              */
-            public final int securityMode;
+            public final @SecurityMode int securityMode;
             /**
              * Indicates the presence of passive mixed content; possible values are
              * CONTENT_UNKNOWN, CONTENT_BLOCKED, and CONTENT_LOADED.
              */
-            public final int mixedModePassive;
+            public final @ContentType int mixedModePassive;
             /**
              * Indicates the presence of active mixed content; possible values are
              * CONTENT_UNKNOWN, CONTENT_BLOCKED, and CONTENT_LOADED.
              */
-            public final int mixedModeActive;
+            public final @ContentType int mixedModeActive;
             /**
              * Indicates the status of tracking protection; possible values are
              * CONTENT_UNKNOWN, CONTENT_BLOCKED, and CONTENT_LOADED.
              */
-            public final int trackingMode;
+            public final @ContentType int trackingMode;
 
             /* package */ SecurityInformation(GeckoBundle identityData) {
                 final GeckoBundle mode = identityData.getBundle("mode");
@@ -1418,7 +1428,26 @@ public class GeckoSession extends LayerSession
         void onSecurityChange(GeckoSession session, SecurityInformation securityInfo);
     }
 
+    private static int getContentElementType(final String name) {
+        if ("HTMLImageElement".equals(name)) {
+            return ContentDelegate.ELEMENT_TYPE_IMAGE;
+        } else if ("HTMLVideoElement".equals(name)) {
+            return ContentDelegate.ELEMENT_TYPE_VIDEO;
+        } else if ("HTMLAudioElement".equals(name)) {
+            return ContentDelegate.ELEMENT_TYPE_AUDIO;
+        }
+        return ContentDelegate.ELEMENT_TYPE_NONE;
+    }
+
     public interface ContentDelegate {
+        @IntDef({ELEMENT_TYPE_NONE, ELEMENT_TYPE_IMAGE, ELEMENT_TYPE_VIDEO,
+                 ELEMENT_TYPE_AUDIO})
+        public @interface ElementType {}
+        static final int ELEMENT_TYPE_NONE = 0;
+        static final int ELEMENT_TYPE_IMAGE = 1;
+        static final int ELEMENT_TYPE_VIDEO = 2;
+        static final int ELEMENT_TYPE_AUDIO = 3;
+
         /**
         * A page title was discovered in the content or updated after the content
         * loaded.
@@ -1461,11 +1490,14 @@ public class GeckoSession extends LayerSession
          * @param screenY The screen coordinates of the press.
          * @param uri The URI of the pressed link, set for links and
          *            image-links.
+         * @param elementType The type of the pressed element.
+         *                    One of the {@link ContentDelegate#ELEMENT_TYPE_LINK} flags.
          * @param elementSrc The source URI of the pressed element, set for
          *                   (nested) images and media elements.
          */
         void onContextMenu(GeckoSession session, int screenX, int screenY,
-                           String uri, String elementSrc);
+                           String uri, @ElementType int elementTypes,
+                           String elementSrc);
     }
 
     /**
@@ -1500,6 +1532,8 @@ public class GeckoSession extends LayerSession
         */
         void onCanGoForward(GeckoSession session, boolean canGoForward);
 
+        @IntDef({TARGET_WINDOW_NONE, TARGET_WINDOW_CURRENT, TARGET_WINDOW_NEW})
+        public @interface TargetWindow {}
         public static final int TARGET_WINDOW_NONE = 0;
         public static final int TARGET_WINDOW_CURRENT = 1;
         public static final int TARGET_WINDOW_NEW = 2;
@@ -1514,7 +1548,8 @@ public class GeckoSession extends LayerSession
          * @return Whether or not the load was handled. Returning false will allow Gecko
          *         to continue the load as normal.
          */
-        boolean onLoadRequest(GeckoSession session, String uri, int target);
+        boolean onLoadRequest(GeckoSession session, String uri,
+                              @TargetWindow int target);
 
         /**
         * A request has been made to open a new session. The URI is provided only for
@@ -1672,6 +1707,12 @@ public class GeckoSession extends LayerSession
         }
 
         class AuthOptions {
+            @IntDef(flag = true,
+                    value = {AUTH_FLAG_HOST, AUTH_FLAG_PROXY,
+                             AUTH_FLAG_ONLY_PASSWORD, AUTH_FLAG_PREVIOUS_FAILED,
+                             AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE})
+            public @interface AuthFlag {}
+
             /**
              * The auth prompt is for a network host.
              */
@@ -1693,6 +1734,8 @@ public class GeckoSession extends LayerSession
              */
             public static final int AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE = 32;
 
+            @IntDef({AUTH_LEVEL_NONE, AUTH_LEVEL_PW_ENCRYPTED, AUTH_LEVEL_SECURE})
+            public @interface AuthLevel {}
             /**
              * The auth request is unencrypted or the encryption status is unknown.
              */
@@ -1709,7 +1752,7 @@ public class GeckoSession extends LayerSession
             /**
              * An int bit-field of AUTH_FLAG_* flags.
              */
-            public int flags;
+            public @AuthFlag int flags;
 
             /**
              * A string containing the URI for the auth request or null if unknown.
@@ -1719,7 +1762,7 @@ public class GeckoSession extends LayerSession
             /**
              * An int, one of AUTH_LEVEL_*, indicating level of encryption.
              */
-            public int level;
+            public @AuthLevel int level;
 
             /**
              * A string containing the initial username or null if password-only.
@@ -1753,6 +1796,8 @@ public class GeckoSession extends LayerSession
                            AuthOptions options, AuthCallback callback);
 
         class Choice {
+            @IntDef({CHOICE_TYPE_MENU, CHOICE_TYPE_SINGLE, CHOICE_TYPE_MULTIPLE})
+            public @interface ChoiceType {}
             /**
              * Display choices in a menu that dismisses as soon as an item is chosen.
              */
@@ -1877,8 +1922,9 @@ public class GeckoSession extends LayerSession
          * @param choices Array of Choices each representing an item or group.
          * @param callback Callback interface.
          */
-        void onChoicePrompt(GeckoSession session, String title, String msg, int type,
-                             Choice[] choices, ChoiceCallback callback);
+        void onChoicePrompt(GeckoSession session, String title, String msg,
+                            @Choice.ChoiceType int type, Choice[] choices,
+                            ChoiceCallback callback);
 
         /**
          * Display a color prompt.
@@ -1892,6 +1938,9 @@ public class GeckoSession extends LayerSession
         void onColorPrompt(GeckoSession session, String title, String value,
                             TextCallback callback);
 
+        @IntDef({DATETIME_TYPE_DATE, DATETIME_TYPE_MONTH, DATETIME_TYPE_WEEK,
+                 DATETIME_TYPE_TIME, DATETIME_TYPE_DATETIME_LOCAL})
+        public @interface DatetimeType {}
         /**
          * Prompt for year, month, and day.
          */
@@ -1929,8 +1978,9 @@ public class GeckoSession extends LayerSession
          * @param callback Callback interface; the result passed to confirm() must be in
          *                 HTML date/time format.
          */
-        void onDateTimePrompt(GeckoSession session, String title, int type,
-                               String value, String min, String max, TextCallback callback);
+        void onDateTimePrompt(GeckoSession session, String title,
+                              @DatetimeType int type, String value, String min,
+                              String max, TextCallback callback);
 
         /**
          * Callback interface for notifying the result of file prompts.
@@ -1955,6 +2005,8 @@ public class GeckoSession extends LayerSession
             void confirm(Context context, Uri[] uris);
         }
 
+        @IntDef({FILE_TYPE_SINGLE, FILE_TYPE_MULTIPLE})
+        public @interface FileType {}
         static final int FILE_TYPE_SINGLE = 1;
         static final int FILE_TYPE_MULTIPLE = 2;
 
@@ -1969,8 +2021,8 @@ public class GeckoSession extends LayerSession
          *                  "*" to indicate any value.
          * @param callback Callback interface.
          */
-        void onFilePrompt(GeckoSession session, String title, int type,
-                           String[] mimeTypes, FileCallback callback);
+        void onFilePrompt(GeckoSession session, String title, @FileType int type,
+                          String[] mimeTypes, FileCallback callback);
     }
 
     /**
@@ -1995,6 +2047,10 @@ public class GeckoSession extends LayerSession
      * protection events.
      **/
     public interface TrackingProtectionDelegate {
+        @IntDef(flag = true,
+                value = {CATEGORY_AD, CATEGORY_ANALYTIC, CATEGORY_SOCIAL,
+                         CATEGORY_CONTENT})
+        public @interface Category {}
         static final int CATEGORY_AD = 1 << 0;
         static final int CATEGORY_ANALYTIC = 1 << 1;
         static final int CATEGORY_SOCIAL = 1 << 2;
@@ -2009,7 +2065,8 @@ public class GeckoSession extends LayerSession
         *                   One or more of the {@link TrackingProtectionDelegate#CATEGORY_AD}
         *                   flags.
         */
-        void onTrackerBlocked(GeckoSession session, String uri, int categories);
+        void onTrackerBlocked(GeckoSession session, String uri,
+                              @Category int categories);
     }
 
     /**
@@ -2018,7 +2075,7 @@ public class GeckoSession extends LayerSession
      *                   Use one or more of the {@link TrackingProtectionDelegate#CATEGORY_AD}
      *                   flags.
      **/
-    public void enableTrackingProtection(int categories) {
+    public void enableTrackingProtection(@TrackingProtectionDelegate.Category int categories) {
         mTrackingProtection.enable(categories);
     }
 
@@ -2039,6 +2096,8 @@ public class GeckoSession extends LayerSession
      * permission dialog.
      **/
     public interface PermissionDelegate {
+        @IntDef({PERMISSION_GEOLOCATION, PERMISSION_DESKTOP_NOTIFICATION})
+        public @interface Permission {}
         /**
          * Permission for using the geolocation API.
          * See: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation
@@ -2080,7 +2139,7 @@ public class GeckoSession extends LayerSession
          * @param callback Callback interface.
          */
         void onAndroidPermissionsRequest(GeckoSession session, String[] permissions,
-                                       Callback callback);
+                                         Callback callback);
 
         /**
          * Request content permission.
@@ -2093,10 +2152,16 @@ public class GeckoSession extends LayerSession
          * @param access Not used.
          * @param callback Callback interface.
          */
-        void onContentPermissionRequest(GeckoSession session, String uri, int type,
-                                      String access, Callback callback);
+        void onContentPermissionRequest(GeckoSession session, String uri,
+                                        @Permission int type,
+                                        String access, Callback callback);
 
         class MediaSource {
+            @IntDef({SOURCE_CAMERA, SOURCE_SCREEN, SOURCE_APPLICATION,
+                     SOURCE_WINDOW, SOURCE_BROWSER, SOURCE_MICROPHONE,
+                     SOURCE_AUDIOCAPTURE, SOURCE_OTHER})
+            public @interface Source {}
+
             /**
              * The media source is a camera.
              */
@@ -2137,6 +2202,8 @@ public class GeckoSession extends LayerSession
              */
             public static final int SOURCE_OTHER = 7;
 
+            @IntDef({TYPE_VIDEO, TYPE_AUDIO})
+            public @interface Type {}
             /**
              * The media type is video.
              */
@@ -2171,14 +2238,14 @@ public class GeckoSession extends LayerSession
              * Possible values for an audio source are:
              * SOURCE_MICROPHONE, SOURCE_AUDIOCAPTURE, and SOURCE_OTHER.
              */
-            public final int source;
+            public final @Source int source;
 
             /**
              * An int giving the type of media, must be either TYPE_VIDEO or TYPE_AUDIO.
              */
-            public final int type;
+            public final @Type int type;
 
-            private static int getSourceFromString(String src) {
+            private static @Source int getSourceFromString(String src) {
                 // The strings here should match those in MediaSourceEnum in MediaStreamTrack.webidl
                 if ("camera".equals(src)) {
                     return SOURCE_CAMERA;
@@ -2201,7 +2268,7 @@ public class GeckoSession extends LayerSession
                 }
             }
 
-            private static int getTypeFromString(String type) {
+            private static @Type int getTypeFromString(String type) {
                 // The strings here should match the possible types in MediaDevice::MediaDevice in MediaManager.cpp
                 if ("video".equals(type)) {
                     return TYPE_VIDEO;
@@ -2268,6 +2335,6 @@ public class GeckoSession extends LayerSession
          * @param callback Callback interface.
          */
         void onMediaPermissionRequest(GeckoSession session, String uri, MediaSource[] video,
-                                    MediaSource[] audio, MediaCallback callback);
+                                      MediaSource[] audio, MediaCallback callback);
     }
 }

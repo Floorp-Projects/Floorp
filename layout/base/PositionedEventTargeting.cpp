@@ -226,7 +226,7 @@ GetClickableAncestor(nsIFrame* aFrame, nsAtom* stopAt = nullptr, nsAutoString* a
     if (content->IsHTMLElement(nsGkAtoms::iframe) &&
         content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozbrowser,
                                           nsGkAtoms::_true, eIgnoreCase) &&
-        content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
+        content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::remote,
                                           nsGkAtoms::_true, eIgnoreCase)) {
       return content;
     }

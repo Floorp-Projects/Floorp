@@ -17,6 +17,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
 
 #include "nsArrayUtils.h"
@@ -6260,10 +6261,10 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     // value for NSDragOperationGeneric that is passed by other applications.
     // All that said, NSDragOperationNone is still reliable.
     if (aOperation == NSDragOperationNone) {
-      nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
-      dragService->GetDataTransfer(getter_AddRefs(dataTransfer));
-      if (dataTransfer)
+      RefPtr<dom::DataTransfer> dataTransfer = dragService->GetDataTransfer();
+      if (dataTransfer) {
         dataTransfer->SetDropEffectInt(nsIDragService::DRAGDROP_ACTION_NONE);
+      }
     }
 
     mDragService->EndDragSession(

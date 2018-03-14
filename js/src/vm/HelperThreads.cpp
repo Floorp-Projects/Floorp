@@ -2082,14 +2082,6 @@ js::StartOffThreadPromiseHelperTask(PromiseHelperTask* task)
 void
 GlobalHelperThreadState::trace(JSTracer* trc, gc::AutoTraceSession& session)
 {
-    // There's an assertion that requires the exclusive access lock when tracing
-    // atoms (see AtomIsPinnedInRuntime). Due to mutex ordering requirements we
-    // need to take that lock before the helper thread lock, if we don't have it
-    // already.
-    Maybe<AutoLockForExclusiveAccess> exclusiveLock;
-    if (!session.maybeLock.isSome())
-        exclusiveLock.emplace(trc->runtime());
-
     AutoLockHelperThreadState lock;
     for (auto builder : ionWorklist(lock))
         builder->trace(trc);

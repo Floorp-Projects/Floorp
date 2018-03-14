@@ -2033,7 +2033,7 @@ nsFrameLoader::ShouldUseRemoteProcess()
   // If we're an <iframe mozbrowser> and we don't have a "remote" attribute,
   // fall back to the default.
   if (OwnerIsMozBrowserFrame() &&
-      !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::Remote)) {
+      !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::remote)) {
 
     return Preferences::GetBool("dom.ipc.browser_frames.oop_by_default", false);
   }
@@ -2043,7 +2043,7 @@ nsFrameLoader::ShouldUseRemoteProcess()
   return (OwnerIsMozBrowserFrame() ||
           mOwnerContent->GetNameSpaceID() == kNameSpaceID_XUL) &&
          mOwnerContent->AttrValueIs(kNameSpaceID_None,
-                                    nsGkAtoms::Remote,
+                                    nsGkAtoms::remote,
                                     nsGkAtoms::_true,
                                     eCaseMatters);
 }

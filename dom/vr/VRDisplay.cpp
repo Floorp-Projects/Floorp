@@ -393,7 +393,7 @@ VRDisplay::LastRelease()
 already_AddRefed<VREyeParameters>
 VRDisplay::GetEyeParameters(VREye aEye)
 {
-  gfx::VRDisplayInfo::Eye eye = aEye == VREye::Left ? gfx::VRDisplayInfo::Eye_Left : gfx::VRDisplayInfo::Eye_Right;
+  gfx::VRDisplayState::Eye eye = aEye == VREye::Left ? gfx::VRDisplayState::Eye_Left : gfx::VRDisplayState::Eye_Right;
   RefPtr<VREyeParameters> params =
     new VREyeParameters(GetParentObject(),
                         mClient->GetDisplayInfo().GetEyeTranslation(eye),
@@ -914,9 +914,9 @@ VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
     aDepthFar = aDepthNear + kEpsilon;
   }
 
-  const gfx::VRFieldOfView leftFOV = aInfo.mEyeFOV[gfx::VRDisplayInfo::Eye_Left];
+  const gfx::VRFieldOfView leftFOV = aInfo.mDisplayState.mEyeFOV[gfx::VRDisplayState::Eye_Left];
   mLeftProjection = leftFOV.ConstructProjectionMatrix(aDepthNear, aDepthFar, true);
-  const gfx::VRFieldOfView rightFOV = aInfo.mEyeFOV[gfx::VRDisplayInfo::Eye_Right];
+  const gfx::VRFieldOfView rightFOV = aInfo.mDisplayState.mEyeFOV[gfx::VRDisplayState::Eye_Right];
   mRightProjection = rightFOV.ConstructProjectionMatrix(aDepthNear, aDepthFar, true);
   memcpy(mLeftView.components, aState.leftViewMatrix, sizeof(aState.leftViewMatrix));
   memcpy(mRightView.components, aState.rightViewMatrix, sizeof(aState.rightViewMatrix));

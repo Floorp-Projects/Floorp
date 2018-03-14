@@ -1,0 +1,16 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testcase to check that textPath can point to a line</title>
+
+  <defs>
+    <line id="x" x1="100" y1="100" x2="500" y2="100"/>
+  </defs>
+
+  <text>
+    <textPath xlink:href="#x" font-size="20" fill="black">Should see this</textPath>
+  </text>
+
+</svg>

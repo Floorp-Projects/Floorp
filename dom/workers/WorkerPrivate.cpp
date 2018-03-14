@@ -59,9 +59,7 @@
 #include "WorkerScope.h"
 #include "WorkerThread.h"
 
-#ifdef DEBUG
 #include "nsThreadManager.h"
-#endif
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -5206,10 +5204,8 @@ WorkerPrivate::CreateDebuggerGlobalScope(JSContext* aCx)
   return mDebuggerScope;
 }
 
-#ifdef DEBUG
-
-void
-WorkerPrivate::AssertIsOnWorkerThread() const
+bool
+WorkerPrivate::IsOnWorkerThread() const
 {
   // This is much more complicated than it needs to be but we can't use mThread
   // because it must be protected by mMutex and sometimes this method is called
@@ -5226,10 +5222,15 @@ WorkerPrivate::AssertIsOnWorkerThread() const
 
   bool current;
   rv = thread->IsOnCurrentThread(&current);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  MOZ_ASSERT(current, "Wrong thread!");
+  return NS_SUCCEEDED(rv) && current;
 }
 
+#ifdef DEBUG
+void
+WorkerPrivate::AssertIsOnWorkerThread() const
+{
+  MOZ_ASSERT(IsOnWorkerThread());
+}
 #endif // DEBUG
 
 void

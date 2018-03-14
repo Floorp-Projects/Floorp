@@ -806,44 +806,44 @@ VRDisplayOculus::VRDisplayOculus(VROculusSession* aSession)
   , mEyeHeight(OVR_DEFAULT_EYE_HEIGHT)
 {
   MOZ_COUNT_CTOR_INHERITED(VRDisplayOculus, VRDisplayHost);
-
-  mDisplayInfo.mDisplayName.AssignLiteral("Oculus VR HMD");
-  mDisplayInfo.mIsConnected = true;
-  mDisplayInfo.mIsMounted = false;
+  VRDisplayState& state = mDisplayInfo.mDisplayState;
+  strncpy(state.mDisplayName, "Oculus VR HMD", kVRDisplayNameMaxLen);
+  state.mIsConnected = true;
+  state.mIsMounted = false;
 
   mDesc = ovr_GetHmdDesc(aSession->Get());
 
-  mDisplayInfo.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None;
+  state.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None;
   if (mDesc.AvailableTrackingCaps & ovrTrackingCap_Orientation) {
-    mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Orientation;
-    mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_AngularAcceleration;
+    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Orientation;
+    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_AngularAcceleration;
   }
   if (mDesc.AvailableTrackingCaps & ovrTrackingCap_Position) {
-    mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Position;
-    mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_LinearAcceleration;
-    mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_StageParameters;
+    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Position;
+    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_LinearAcceleration;
+    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_StageParameters;
   }
-  mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
-  mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_MountDetection;
-  mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Present;
+  state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
+  state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_MountDetection;
+  state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Present;
 
-  mFOVPort[VRDisplayInfo::Eye_Left] = mDesc.DefaultEyeFov[ovrEye_Left];
-  mFOVPort[VRDisplayInfo::Eye_Right] = mDesc.DefaultEyeFov[ovrEye_Right];
+  mFOVPort[VRDisplayState::Eye_Left] = mDesc.DefaultEyeFov[ovrEye_Left];
+  mFOVPort[VRDisplayState::Eye_Right] = mDesc.DefaultEyeFov[ovrEye_Right];
 
-  mDisplayInfo.mEyeFOV[VRDisplayInfo::Eye_Left] = FromFovPort(mFOVPort[VRDisplayInfo::Eye_Left]);
-  mDisplayInfo.mEyeFOV[VRDisplayInfo::Eye_Right] = FromFovPort(mFOVPort[VRDisplayInfo::Eye_Right]);
+  state.mEyeFOV[VRDisplayState::Eye_Left] = FromFovPort(mFOVPort[VRDisplayState::Eye_Left]);
+  state.mEyeFOV[VRDisplayState::Eye_Right] = FromFovPort(mFOVPort[VRDisplayState::Eye_Right]);
 
   float pixelsPerDisplayPixel = 1.0;
   ovrSizei texSize[2];
 
   // get eye texture sizes
-  for (uint32_t eye = 0; eye < VRDisplayInfo::NumEyes; eye++) {
+  for (uint32_t eye = 0; eye < VRDisplayState::NumEyes; eye++) {
     texSize[eye] = ovr_GetFovTextureSize(mSession->Get(), (ovrEyeType)eye, mFOVPort[eye], pixelsPerDisplayPixel);
   }
 
   // take the max of both for eye resolution
-  mDisplayInfo.mEyeResolution.width = std::max(texSize[VRDisplayInfo::Eye_Left].w, texSize[VRDisplayInfo::Eye_Right].w);
-  mDisplayInfo.mEyeResolution.height = std::max(texSize[VRDisplayInfo::Eye_Left].h, texSize[VRDisplayInfo::Eye_Right].h);
+  state.mEyeResolution.width = std::max(texSize[VRDisplayState::Eye_Left].w, texSize[VRDisplayState::Eye_Right].w);
+  state.mEyeResolution.height = std::max(texSize[VRDisplayState::Eye_Left].h, texSize[VRDisplayState::Eye_Right].h);
 
   UpdateEyeParameters();
   UpdateStageParameters();
@@ -866,14 +866,15 @@ VRDisplayOculus::UpdateEyeParameters(gfx::Matrix4x4* aHeadToEyeTransforms /* = n
 {
   // Note this must be called every frame, as the IPD adjustment can be changed
   // by the user during a VR session.
-  for (uint32_t eye = 0; eye < VRDisplayInfo::NumEyes; eye++) {
+  for (uint32_t eye = 0; eye < VRDisplayState::NumEyes; eye++) {
     // As of Oculus 1.17 SDK, we must use the ovr_GetRenderDesc2 function to return the updated
     // version of ovrEyeRenderDesc.  This is normally done by the Oculus static lib shim, but we
     // need to do this explicitly as we are loading the Oculus runtime dll directly.
     ovrEyeRenderDesc renderDesc = ovr_GetRenderDesc2(mSession->Get(), (ovrEyeType)eye, mFOVPort[eye]);
-    mDisplayInfo.mEyeTranslation[eye].x = renderDesc.HmdToEyePose.Position.x;
-    mDisplayInfo.mEyeTranslation[eye].y = renderDesc.HmdToEyePose.Position.y;
-    mDisplayInfo.mEyeTranslation[eye].z = renderDesc.HmdToEyePose.Position.z;
+    VRDisplayState& state = mDisplayInfo.mDisplayState;
+    state.mEyeTranslation[eye].x = renderDesc.HmdToEyePose.Position.x;
+    state.mEyeTranslation[eye].y = renderDesc.HmdToEyePose.Position.y;
+    state.mEyeTranslation[eye].z = renderDesc.HmdToEyePose.Position.z;
     if (aHeadToEyeTransforms) {
       Matrix4x4 pose;
       pose.SetRotationFromQuaternion(gfx::Quaternion(renderDesc.HmdToEyePose.Orientation.x, renderDesc.HmdToEyePose.Orientation.y, renderDesc.HmdToEyePose.Orientation.z, renderDesc.HmdToEyePose.Orientation.w));
@@ -890,39 +891,40 @@ VRDisplayOculus::UpdateStageParameters()
   if (!mSession->IsTrackingReady()) {
     return;
   }
+  VRDisplayState& state = mDisplayInfo.mDisplayState;
   ovrVector3f playArea;
   ovrResult res = ovr_GetBoundaryDimensions(mSession->Get(), ovrBoundary_PlayArea, &playArea);
   if (res == ovrSuccess) {
-    mDisplayInfo.mStageSize.width = playArea.x;
-    mDisplayInfo.mStageSize.height = playArea.z;
+    state.mStageSize.width = playArea.x;
+    state.mStageSize.height = playArea.z;
   } else {
     // If we fail, fall back to reasonable defaults.
     // 1m x 1m space
-    mDisplayInfo.mStageSize.width = 1.0f;
-    mDisplayInfo.mStageSize.height = 1.0f;
+    state.mStageSize.width = 1.0f;
+    state.mStageSize.height = 1.0f;
   }
 
   mEyeHeight = ovr_GetFloat(mSession->Get(), OVR_KEY_EYE_HEIGHT, OVR_DEFAULT_EYE_HEIGHT);
 
-  mDisplayInfo.mSittingToStandingTransform._11 = 1.0f;
-  mDisplayInfo.mSittingToStandingTransform._12 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._13 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._14 = 0.0f;
+  state.mSittingToStandingTransform[0] = 1.0f;
+  state.mSittingToStandingTransform[1] = 0.0f;
+  state.mSittingToStandingTransform[2] = 0.0f;
+  state.mSittingToStandingTransform[3] = 0.0f;
 
-  mDisplayInfo.mSittingToStandingTransform._21 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._22 = 1.0f;
-  mDisplayInfo.mSittingToStandingTransform._23 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._24 = 0.0f;
+  state.mSittingToStandingTransform[4] = 0.0f;
+  state.mSittingToStandingTransform[5] = 1.0f;
+  state.mSittingToStandingTransform[6] = 0.0f;
+  state.mSittingToStandingTransform[7] = 0.0f;
 
-  mDisplayInfo.mSittingToStandingTransform._31 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._32 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._33 = 1.0f;
-  mDisplayInfo.mSittingToStandingTransform._34 = 0.0f;
+  state.mSittingToStandingTransform[8] = 0.0f;
+  state.mSittingToStandingTransform[9] = 0.0f;
+  state.mSittingToStandingTransform[10] = 1.0f;
+  state.mSittingToStandingTransform[11] = 0.0f;
 
-  mDisplayInfo.mSittingToStandingTransform._41 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._42 = mEyeHeight;
-  mDisplayInfo.mSittingToStandingTransform._43 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._44 = 1.0f;
+  state.mSittingToStandingTransform[12] = 0.0f;
+  state.mSittingToStandingTransform[13] = mEyeHeight;
+  state.mSittingToStandingTransform[14] = 0.0f;
+  state.mSittingToStandingTransform[15] = 1.0f;
 }
 
 void
@@ -1019,7 +1021,7 @@ VRDisplayOculus::StartPresentation()
   if (!CreateD3DObjects()) {
     return;
   }
-  mSession->StartPresentation(IntSize(mDisplayInfo.mEyeResolution.width * 2, mDisplayInfo.mEyeResolution.height));
+  mSession->StartPresentation(IntSize(mDisplayInfo.mDisplayState.mEyeResolution.width * 2, mDisplayInfo.mDisplayState.mEyeResolution.height));
   if (!mSession->IsPresentationReady()) {
     return;
   }
@@ -1299,8 +1301,8 @@ VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
 void
 VRDisplayOculus::Refresh()
 {
-  mDisplayInfo.mIsConnected = mSession->IsTrackingReady();
-  mDisplayInfo.mIsMounted = mSession->IsMounted();
+  mDisplayInfo.mDisplayState.mIsConnected = mSession->IsTrackingReady();
+  mDisplayInfo.mDisplayState.mIsMounted = mSession->IsMounted();
 }
 
 VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand, uint32_t aDisplayID)
@@ -1311,6 +1313,8 @@ VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand, uint32_t aDisplay
   , mIsVibrateStopped(false)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOculus, VRControllerHost);
+
+  VRControllerState& state = mControllerInfo.mControllerState;
 
   char* touchID = "";
   switch (aHand) {
@@ -1324,17 +1328,18 @@ VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand, uint32_t aDisplay
       MOZ_ASSERT(false);
       break;
   }
-  mControllerInfo.mControllerName = touchID;
+
+  strncpy(state.mControllerName, touchID, kVRControllerNameMaxLen);
 
   MOZ_ASSERT(kNumOculusButton ==
              static_cast<uint32_t>(OculusLeftControllerButtonType::NumButtonType)
              && kNumOculusButton ==
              static_cast<uint32_t>(OculusRightControllerButtonType::NumButtonType));
 
-  mControllerInfo.mNumButtons = kNumOculusButton;
-  mControllerInfo.mNumAxes = static_cast<uint32_t>(
-                             OculusControllerAxisType::NumVRControllerAxisType);
-  mControllerInfo.mNumHaptics = kNumOculusHaptcs;
+  state.mNumButtons = kNumOculusButton;
+  state.mNumAxes = static_cast<uint32_t>(
+                   OculusControllerAxisType::NumVRControllerAxisType);
+  state.mNumHaptics = kNumOculusHaptcs;
 }
 
 float
