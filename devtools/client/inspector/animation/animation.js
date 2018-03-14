@@ -288,10 +288,10 @@ class AnimationInspector {
 
   onSidebarSelect() {
     this.update();
-    this.onSidebarResized(null, this.inspector.getSidebarSize());
+    this.onSidebarResized(this.inspector.getSidebarSize());
   }
 
-  onSidebarResized(type, size) {
+  onSidebarResized(size) {
     if (!this.isPanelVisible()) {
       return;
     }
