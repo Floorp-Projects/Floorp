@@ -1933,7 +1933,14 @@ nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
     return;
   }
   uint64_t layerId = mCompositorSession->RootLayerTreeId();
-  mAPZC->ZoomToRect(ScrollableLayerGuid(layerId, aPresShellId, aViewId), aRect, aFlags);
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
+      "layers::IAPZCTreeManager::ZoomToRect",
+      mAPZC,
+      &IAPZCTreeManager::ZoomToRect,
+      ScrollableLayerGuid(layerId, aPresShellId, aViewId),
+      aRect,
+      aFlags));
 }
 
 #ifdef ACCESSIBILITY
