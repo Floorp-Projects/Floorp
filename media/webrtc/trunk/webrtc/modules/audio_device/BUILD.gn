@@ -147,22 +147,20 @@ rtc_static_library("audio_device") {
     } else {
       if (is_linux) {
         sources += [
+          "linux/alsasymboltable_linux.cc",
+          "linux/alsasymboltable_linux.h",
+          "linux/audio_device_alsa_linux.cc",
+          "linux/audio_device_alsa_linux.h",
+          "linux/audio_mixer_manager_alsa_linux.cc",
+          "linux/audio_mixer_manager_alsa_linux.h",
           "linux/latebindingsymboltable_linux.cc",
           "linux/latebindingsymboltable_linux.h",
         ]
-        libs = [ "dl" ]
-        if (!build_with_mozilla) {
-          sources += [
-            "linux/alsasymboltable_linux.cc",
-            "linux/alsasymboltable_linux.h",
-            "linux/audio_device_alsa_linux.cc",
-            "linux/audio_device_alsa_linux.h",
-            "linux/audio_mixer_manager_alsa_linux.cc",
-            "linux/audio_mixer_manager_alsa_linux.h",
-          ]
-          defines += [ "LINUX_ALSA" ]
-          libs += [ "X11" ]
-        }
+        defines += [ "LINUX_ALSA" ]
+        libs = [
+          "dl",
+          "X11",
+        ]
         if (rtc_include_pulse_audio) {
           sources += [
             "linux/audio_device_pulse_linux.cc",
