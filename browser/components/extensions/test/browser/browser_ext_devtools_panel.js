@@ -20,10 +20,10 @@ const DEVTOOLS_THEME_PREF = "devtools.theme";
  * - devtools.panels.create is able to create a devtools panel.
  */
 
-async function switchTheme(theme) {
-  const waitforThemeChanged = new Promise(resolve => gDevTools.once("theme-changed", resolve));
+function switchTheme(theme) {
+  const waitforThemeChanged = gDevTools.once("theme-changed");
   Preferences.set(DEVTOOLS_THEME_PREF, theme);
-  await waitforThemeChanged;
+  return waitforThemeChanged;
 }
 
 async function testThemeSwitching(extension, locations = ["page"]) {
@@ -276,9 +276,7 @@ add_task(async function test_devtools_page_panels_create() {
   is(secondCycleResults.panelHidden, 2, "panel.onHidden listener has been called twice");
 
   // Turn off the addon devtools panel using the visibilityswitch.
-  const waitToolVisibilityOff = new Promise(resolve => {
-    toolbox.once("tool-unregistered", resolve);
-  });
+  const waitToolVisibilityOff = toolbox.once("tool-unregistered");
 
   Services.prefs.setBoolPref(`devtools.webext-${panelId}.enabled`, false);
   gDevTools.emit("tool-unregistered", panelId);
@@ -292,9 +290,7 @@ add_task(async function test_devtools_page_panels_create() {
      "The tool is not visible on visibilityswitch set to false");
 
   // Turn on the addon devtools panel using the visibilityswitch.
-  const waitToolVisibilityOn = new Promise(resolve => {
-    toolbox.once("tool-registered", resolve);
-  });
+  const waitToolVisibilityOn = toolbox.once("tool-registered");
 
   Services.prefs.setBoolPref(`devtools.webext-${panelId}.enabled`, true);
   gDevTools.emit("tool-registered", panelId);
