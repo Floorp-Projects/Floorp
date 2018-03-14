@@ -33,7 +33,7 @@ WebGLContext::Clear(GLbitfield mask)
     if (mask & LOCAL_GL_COLOR_BUFFER_BIT && mBoundDrawFramebuffer) {
         if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
             for (const auto& cur : mBoundDrawFramebuffer->ColorDrawBuffers()) {
-                if (!cur->IsDefined())
+                if (!cur->HasImage())
                     continue;
 
                 switch (cur->Format()->format->componentType) {
