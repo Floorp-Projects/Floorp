@@ -10,25 +10,21 @@ const FONTS = [{
   name: "Ostrich Sans Medium",
   remote: true,
   url: URL_ROOT + "ostrich-regular.ttf",
-  format: "truetype",
   cssName: "bar"
 }, {
   name: "Ostrich Sans Black",
   remote: true,
   url: URL_ROOT + "ostrich-black.ttf",
-  format: "",
   cssName: "bar"
 }, {
   name: "Ostrich Sans Black",
   remote: true,
   url: URL_ROOT + "ostrich-black.ttf",
-  format: "",
   cssName: "bar"
 }, {
   name: "Ostrich Sans Medium",
   remote: true,
   url: URL_ROOT + "ostrich-regular.ttf",
-  format: "",
   cssName: "barnormal"
 }];
 
@@ -43,16 +39,7 @@ add_task(function* () {
 });
 
 function isRemote(fontLi) {
-  return fontLi.querySelectorAll(".font-format-url a").length === 1;
-}
-
-function getFormat(fontLi) {
-  let link = fontLi.querySelector(".font-format-url a");
-  if (!link) {
-    return null;
-  }
-
-  return link.textContent;
+  return fontLi.querySelector(".font-origin").classList.contains("remote");
 }
 
 function* testBodyFonts(inspector, viewDoc) {
@@ -63,10 +50,9 @@ function* testBodyFonts(inspector, viewDoc) {
     let li = lis[i];
     let font = FONTS[i];
 
-    is(getName(li), font.name, "font " + i + " right font name");
-    is(isRemote(li), font.remote, "font " + i + " remote value correct");
-    is(li.querySelector(".font-url").href, font.url, "font " + i + " url correct");
-    is(getFormat(li), font.format, "font " + i + " format correct");
+    is(getName(li), font.name, `font ${i} right font name`);
+    is(isRemote(li), font.remote, `font ${i} remote value correct`);
+    is(li.querySelector(".font-origin").textContent, font.url, `font ${i} url correct`);
   }
 
   // test that the bold and regular fonts have different previews
