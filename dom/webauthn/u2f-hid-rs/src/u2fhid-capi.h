@@ -24,6 +24,12 @@ const uint8_t U2F_AUTHENTICATOR_TRANSPORT_USB = 1;
 const uint8_t U2F_AUTHENTICATOR_TRANSPORT_NFC = 2;
 const uint8_t U2F_AUTHENTICATOR_TRANSPORT_BLE = 4;
 
+const uint8_t U2F_ERROR_UKNOWN = 1;
+const uint8_t U2F_ERROR_NOT_SUPPORTED = 2;
+const uint8_t U2F_ERROR_INVALID_STATE = 3;
+const uint8_t U2F_ERROR_CONSTRAINT = 4;
+const uint8_t U2F_ERROR_NOT_ALLOWED = 5;
+
 // NOTE: Preconditions
 // * All rust_u2f_mgr* pointers must refer to pointers which are returned
 //   by rust_u2f_mgr_new, and must be freed with rust_u2f_mgr_free.
@@ -95,6 +101,9 @@ void rust_u2f_khs_add(rust_u2f_key_handles* khs,
 
 
 /// U2FResult functions.
+
+// Returns 0 for success, or the U2F_ERROR error code >= 1.
+uint8_t rust_u2f_result_error(const rust_u2f_result *res);
 
 // Call this before `[..]_copy()` to allocate enough space.
 bool rust_u2f_resbuf_length(const rust_u2f_result *res, uint8_t bid, size_t* len);
