@@ -70,6 +70,10 @@ jittest:
             windows10-64-ccov/debug: 6
             macosx.*: 1
             default: 6
+    max-run-time:
+        by-test-platform:
+            windows10-64-ccov/debug: 7200
+            default: 3600
     mozharness:
         chunked:
             by-test-platform:

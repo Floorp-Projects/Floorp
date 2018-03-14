@@ -197,6 +197,10 @@ mochitest-clipboard:
     treeherder-symbol: M(cl)
     loopback-video: true
     instance-size: xlarge
+    max-run-time:
+        by-test-platform:
+            windows10-64-ccov/debug: 7200
+            default: 3600
     e10s:
         by-test-platform:
             linux32/debug: both
@@ -223,7 +227,10 @@ mochitest-devtools-chrome:
             default: mochitest/mochitest-devtools-chrome-chunked
     treeherder-symbol: M(dt)
     loopback-video: true
-    max-run-time: 5400
+    max-run-time:
+        by-test-platform:
+            windows10-64-ccov/debug: 7200
+            default: 5400
     run-on-projects:
         by-test-platform:
             linux64-jsdcov/opt: ['try']  # jsdcov only on try, Bug 1442823
@@ -287,7 +294,10 @@ mochitest-media:
     description: "Mochitest media run"
     suite: mochitest/mochitest-media
     treeherder-symbol: M(mda)
-    max-run-time: 5400
+    max-run-time:
+        by-test-platform:
+            windows10-64-ccov/debug: 7200
+            default: 5400
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'autoland', 'mozilla-inbound', 'try']  # exclude beta and project branches
