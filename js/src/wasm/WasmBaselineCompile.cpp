@@ -4685,6 +4685,9 @@ class BaseCompiler final : public BaseCompilerInterface
         *temp = needI32();
 #elif defined(JS_CODEGEN_MIPS64)
         pop2xI64(r0, r1);
+#elif defined(JS_CODEGEN_MIPS32)
+        pop2xI64(r0, r1);
+        *temp = needI32();
 #elif defined(JS_CODEGEN_ARM)
         pop2xI64(r0, r1);
         *temp = needI32();
