@@ -4598,7 +4598,7 @@ class TabProgressListener {
   }
 }
 
-let StatusPanel = {
+var StatusPanel = {
   get panel() {
     window.addEventListener("resize", this);
 
@@ -4624,7 +4624,8 @@ let StatusPanel = {
       }
     }
 
-    if (this._labelElement.value != text) {
+    if (this._labelElement.value != text ||
+        (text && !this.isVisible)) {
       this.panel.setAttribute("previoustype", this.panel.getAttribute("type"));
       this.panel.setAttribute("type", type);
       this._label = text;

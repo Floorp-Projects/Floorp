@@ -31,7 +31,7 @@ DevToolsUtils.defineLazyGetter(this, "generateUUID", () => {
   return generateUUID;
 });
 
-// Overload `Components` to prevent SDK loader exception on Components
+// Overload `Components` to prevent DevTools loader exception on Components
 // object usage
 Object.defineProperty(this, "Components", {
   get() {
