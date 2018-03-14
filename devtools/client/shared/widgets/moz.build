@@ -23,7 +23,6 @@ DevToolsModules(
     'GraphsWorker.js',
     'LineGraphWidget.js',
     'MountainGraphWidget.js',
-    'ShapesInContextEditor.js',
     'SideMenuWidget.jsm',
     'SimpleListWidget.jsm',
     'Spectrum.js',

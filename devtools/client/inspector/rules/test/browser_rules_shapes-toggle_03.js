@@ -26,7 +26,6 @@ add_task(function* () {
   let highlighters = view.highlighters;
 
   info("Selecting the first shape container.");
-  let onHighlighterArmed = highlighters.once("shapes-highlighter-armed");
   yield selectNode("#shape1", inspector);
   let container = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
   let shapeToggle = container.querySelector(".ruleview-shapeswatch");
@@ -40,8 +39,6 @@ add_task(function* () {
     "No CSS shape highlighter exists in the rule-view.");
   ok(!highlighters.shapesHighlighterShown, "No CSS shapes highlighter is shown.");
 
-  info("Wait for shapes highlighter swatch trigger to be ready");
-  yield onHighlighterArmed;
   info("Toggling ON the CSS shapes highlighter for the first shapes container from the " +
     "rule-view.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
@@ -57,7 +54,6 @@ add_task(function* () {
   ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is shown.");
 
   info("Selecting the second shapes container.");
-  onHighlighterArmed = highlighters.once("shapes-highlighter-armed");
   yield selectNode("#shape2", inspector);
   let firstShapesHighlighterShown = highlighters.shapesHighlighterShown;
   container = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
@@ -68,11 +64,7 @@ add_task(function* () {
   ok(shapeToggle, "shapes highlighter toggle is visible.");
   ok(!shapeToggle.classList.contains("active"),
     "shapes highlighter toggle button is not active.");
-  ok(!highlighters.shapesHighlighterShown, "CSS shapes highlighter is still no longer" +
-    "shown due to selecting another node.");
-
-  info("Wait for shapes highlighter swatch trigger to be ready");
-  yield onHighlighterArmed;
+  ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is still shown.");
 
   info("Toggling ON the CSS shapes highlighter for the second shapes container " +
     "from the rule-view.");

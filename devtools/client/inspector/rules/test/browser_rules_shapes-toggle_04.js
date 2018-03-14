@@ -23,11 +23,7 @@ add_task(function* () {
   let {inspector, view} = yield openRuleView();
   let highlighters = view.highlighters;
 
-  info("Select a node with a shape value");
-  let onHighlighterArmed = highlighters.once("shapes-highlighter-armed");
   yield selectNode("#shape", inspector);
-  info("Wait for shapes highlighter swatch trigger to be ready");
-  yield onHighlighterArmed;
   let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
   let shapeToggle = container.querySelector(".ruleview-shapeswatch");
 
