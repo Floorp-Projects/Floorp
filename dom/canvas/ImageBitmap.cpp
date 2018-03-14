@@ -792,6 +792,11 @@ ImageBitmap::TransferAsImage()
 UniquePtr<ImageBitmapCloneData>
 ImageBitmap::ToCloneData() const
 {
+  if (!mData) {
+    // A closed image cannot be cloned.
+    return nullptr;
+  }
+
   UniquePtr<ImageBitmapCloneData> result(new ImageBitmapCloneData());
   result->mPictureRect = mPictureRect;
   result->mAlphaType = mAlphaType;
