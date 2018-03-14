@@ -28,10 +28,14 @@ def make_task_worker(config, jobs):
         resolve_keyed_by(
             job, 'scopes', item_name=job['name'], project=config.params['project']
         )
+        resolve_keyed_by(
+            job, 'bouncer-products-per-alias',
+            item_name=job['name'], project=config.params['project']
+        )
 
         job['worker']['entries'] = craft_bouncer_entries(config, job)
 
-        del job['bouncer-products']
+        del job['bouncer-products-per-alias']
 
         if job['worker']['entries']:
             yield job
@@ -49,48 +53,11 @@ def craft_bouncer_entries(config, job):
     if not release_type:
         release_type = ''
     current_version = release_config['version']
-    bouncer_products = job['bouncer-products']
+    bouncer_products_per_alias = job['bouncer-products-per-alias']
 
     return {
-        craft_bouncer_alias(product, bouncer_product, release_type): craft_bouncer_product_name(
+        bouncer_alias: craft_bouncer_product_name(
             product, bouncer_product, current_version,
         )
-        for bouncer_product in bouncer_products
+        for bouncer_alias, bouncer_product in bouncer_products_per_alias.items()
     }
-
-
-def craft_bouncer_alias(product, bouncer_product, release_type):
-    return '{product}{channel}{postfix}'.format(
-        product=_craft_product(product),
-        channel=_craft_channel_string_of_alias(product, release_type),
-        postfix=_craft_alias_postfix(bouncer_product)
-    )
-
-
-def _craft_product(product):
-    # XXX devedition is provided in the channel function
-    return 'firefox' if product == 'devedition' else product
-
-
-def _craft_channel_string_of_alias(product, release_type):
-    if product == 'devedition':
-        return '-devedition'
-    elif release_type == 'beta':
-        return '-beta'
-    elif 'esr' in release_type:
-        return '-esr'
-
-    return ''
-
-
-def _craft_alias_postfix(bouncer_product):
-    if 'stub' in bouncer_product:
-        postfix = '-stub'
-    elif 'installer' in bouncer_product or bouncer_product == 'apk':
-        postfix = '-latest'
-        if 'ssl' in bouncer_product:
-            postfix = '{}-ssl'.format(postfix)
-    else:
-        raise Exception('Unknown bouncer product "{}"'.format(bouncer_product))
-
-    return postfix

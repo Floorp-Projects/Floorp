@@ -38,13 +38,50 @@ job-defaults:
 
 jobs:
    devedition:
-      bouncer-products: ['installer', 'installer-ssl', 'stub-installer']
+      bouncer-products-per-alias:
+         firefox-devedition-latest-ssl: installer-ssl
+         firefox-devedition-latest: installer
+         firefox-devedition-stub: stub-installer
       shipping-product: devedition
 
    fennec:
-      bouncer-products: ['apk']
+      bouncer-products-per-alias:
+         by-project:
+            mozilla-beta:
+               fennec-beta-latest: apk
+            mozilla-release:
+               fennec-latest: apk
+            birch:
+               fennec-latest: apk
+            maple:
+               fennec-beta-latest: apk
+            default: {}
       shipping-product: fennec
 
    firefox:
-      bouncer-products: ['installer', 'installer-ssl', 'stub-installer']
+      bouncer-products-per-alias:
+         by-project:
+            mozilla-beta:
+               firefox-beta-latest-ssl: installer-ssl
+               firefox-beta-latest: installer
+               firefox-beta-stub: stub-installer
+            mozilla-release:
+               firefox-latest-ssl: installer-ssl
+               firefox-latest: installer
+               firefox-stub: stub-installer
+            mozilla-esr60:
+               firefox-esr-latest-ssl: installer-ssl
+               firefox-latest-ssl: installer
+            birch:
+               firefox-latest-ssl: installer-ssl
+               firefox-latest: installer
+               firefox-stub: stub-installer
+            jamun:
+               firefox-esr-latest-ssl: installer-ssl
+               firefox-latest-ssl: installer
+            maple:
+               firefox-beta-latest-ssl: installer-ssl
+               firefox-beta-latest: installer
+               firefox-beta-stub: stub-installer
+            default: {}
       shipping-product: firefox
