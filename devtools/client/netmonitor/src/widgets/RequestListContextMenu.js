@@ -289,7 +289,7 @@ class RequestListContextMenu {
     // Fall back to raw payload.
     if (!string) {
       requestPostData = requestPostData ||
-        (await this.props.connector.requestData(id, "requestPostData")).requestPostData;
+        await this.props.connector.requestData(id, "requestPostData");
 
       string = requestPostData.postData.text;
       if (Services.appinfo.OS !== "WINNT") {
@@ -307,7 +307,7 @@ class RequestListContextMenu {
       await this.props.connector.requestData(id, "requestHeaders");
 
     requestPostData = requestPostData ||
-      (await this.props.connector.requestData(id, "requestPostData")).requestPostData;
+      await this.props.connector.requestData(id, "requestPostData");
 
     // Create a sanitized object for the Curl command generator.
     let data = {
