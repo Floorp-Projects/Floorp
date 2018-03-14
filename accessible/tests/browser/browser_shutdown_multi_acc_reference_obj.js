@@ -20,7 +20,7 @@ add_task(async function() {
   // function.
   let acc = await new Promise(resolve => {
     let intervalId = setInterval(() => {
-      let tabAcc = accService.getAccessibleFor(gBrowser.mCurrentTab);
+      let tabAcc = accService.getAccessibleFor(gBrowser.selectedTab);
       if (tabAcc) {
         clearInterval(intervalId);
         resolve(tabAcc);
