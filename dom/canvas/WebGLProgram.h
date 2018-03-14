@@ -85,7 +85,7 @@ struct LinkedProgramInfo final
     : public RefCounted<LinkedProgramInfo>
     , public SupportsWeakPtr<LinkedProgramInfo>
 {
-    friend class WebGLProgram;
+    friend class mozilla::WebGLProgram;
 
     MOZ_DECLARE_REFCOUNTED_TYPENAME(LinkedProgramInfo)
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(LinkedProgramInfo)
