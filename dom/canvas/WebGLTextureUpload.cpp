@@ -224,10 +224,14 @@ FromPboOffset(WebGLContext* webgl, const char* funcName, TexImageTarget target,
 
 static UniquePtr<webgl::TexUnpackBlob>
 FromImageBitmap(WebGLContext* webgl, const char* funcName, TexImageTarget target,
-              uint32_t width, uint32_t height, uint32_t depth,
-              const dom::ImageBitmap& imageBitmap)
+                uint32_t width, uint32_t height, uint32_t depth,
+                const dom::ImageBitmap& imageBitmap)
 {
     UniquePtr<dom::ImageBitmapCloneData> cloneData = Move(imageBitmap.ToCloneData());
+    if (!cloneData) {
+      return nullptr;
+    }
+
     const RefPtr<gfx::DataSourceSurface> surf = cloneData->mSurface;
 
     if (!width) {
