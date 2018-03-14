@@ -8,13 +8,11 @@ function run_test()
 {
   let sandbox = Cu.Sandbox("http://www.blah.com", {
     metadata: "test metadata",
-    addonId: "12345"
   });
 
   Cu.importGlobalProperties(["XMLHttpRequest"]);
 
   Assert.equal(Cu.getSandboxMetadata(sandbox), "test metadata");
-  Assert.equal(Cu.getSandboxAddonId(sandbox), "12345");
 
   sandbox = Cu.Sandbox("http://www.blah.com", {
     metadata: { foopy: { bar: 2 }, baz: "hi" }

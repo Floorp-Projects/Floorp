@@ -235,11 +235,6 @@ pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_i
 // Whether the WebMIDI API is enabled
 pref("dom.webmidi.enabled", false);
 
-// Whether to run add-on code in different compartments from browser code. This
-// causes a separate compartment for each (addon, global) combination, which may
-// significantly increase the number of compartments in the system.
-pref("dom.compartment_per_addon", true);
-
 // Whether to enable the JavaScript start-up cache. This causes one of the first
 // execution to record the bytecode of the JavaScript function used, and save it
 // in the existing cache entry. On the following loads of the same script, the
