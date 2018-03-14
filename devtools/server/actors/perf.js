@@ -45,7 +45,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     Actor.prototype.destroy.call(this);
   },
 
-  startProfiler() {
+  startProfiler(options) {
     if (!IS_SUPPORTED_PLATFORM) {
       return false;
     }
@@ -53,10 +53,10 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     // For a quick implementation, decide on some default values. These may need
     // to be tweaked or made configurable as needed.
     const settings = {
-      entries: 1000000,
-      interval: 1,
-      features: ["js", "stackwalk", "threads", "leaf"],
-      threads: ["GeckoMain", "Compositor"]
+      entries: options.entries || 1000000,
+      interval: options.interval || 1,
+      features: options.features || ["js", "stackwalk", "threads", "leaf"],
+      threads: options.threads || ["GeckoMain", "Compositor"]
     };
 
     try {
@@ -141,6 +141,9 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
         this.emit("profile-unlocked-from-private-browsing");
         break;
       case "profiler-started":
+        let param = subject.QueryInterface(Ci.nsIProfilerStartParams);
+        this.emit(topic, param.entries, param.interval, param.features);
+        break;
       case "profiler-stopped":
         this.emit(topic);
         break;
