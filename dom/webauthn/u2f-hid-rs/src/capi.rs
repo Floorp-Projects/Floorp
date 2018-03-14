@@ -11,8 +11,12 @@ use U2FManager;
 
 type U2FAppIds = Vec<::AppId>;
 type U2FKeyHandles = Vec<::KeyHandle>;
-type U2FResult = HashMap<u8, Vec<u8>>;
 type U2FCallback = extern "C" fn(u64, *mut U2FResult);
+
+pub enum U2FResult {
+    Success(HashMap<u8, Vec<u8>>),
+    Error(::Error),
+}
 
 const RESBUF_ID_REGISTRATION: u8 = 0;
 const RESBUF_ID_KEYHANDLE: u8 = 1;
@@ -91,6 +95,19 @@ pub unsafe extern "C" fn rust_u2f_khs_free(khs: *mut U2FKeyHandles) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn rust_u2f_result_error(res: *const U2FResult) -> u8 {
+    if res.is_null() {
+        return ::Error::Unknown as u8;
+    }
+
+    if let U2FResult::Error(ref err) = *res {
+        return *err as u8;
+    }
+
+    return 0; /* No error, the request succeeded. */
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn rust_u2f_resbuf_length(
     res: *const U2FResult,
     bid: u8,
@@ -100,9 +117,11 @@ pub unsafe extern "C" fn rust_u2f_resbuf_length(
         return false;
     }
 
-    if let Some(buf) = (*res).get(&bid) {
-        *len = buf.len();
-        return true;
+    if let U2FResult::Success(ref bufs) = *res {
+        if let Some(buf) = bufs.get(&bid) {
+            *len = buf.len();
+            return true;
+        }
     }
 
     false
@@ -118,9 +137,11 @@ pub unsafe extern "C" fn rust_u2f_resbuf_copy(
         return false;
     }
 
-    if let Some(buf) = (*res).get(&bid) {
-        ptr::copy_nonoverlapping(buf.as_ptr(), dst, buf.len());
-        return true;
+    if let U2FResult::Success(ref bufs) = *res {
+        if let Some(buf) = bufs.get(&bid) {
+            ptr::copy_nonoverlapping(buf.as_ptr(), dst, buf.len());
+            return true;
+        }
     }
 
     false
@@ -167,13 +188,16 @@ pub unsafe extern "C" fn rust_u2f_mgr_register(
         application,
         key_handles,
         move |rv| {
-            if let Ok(registration) = rv {
-                let mut result = U2FResult::new();
-                result.insert(RESBUF_ID_REGISTRATION, registration);
-                callback(tid, Box::into_raw(Box::new(result)));
-            } else {
-                callback(tid, ptr::null_mut());
+            let result = match rv {
+                Ok(registration) => {
+                    let mut bufs = HashMap::new();
+                    bufs.insert(RESBUF_ID_REGISTRATION, registration);
+                    U2FResult::Success(bufs)
+                }
+                Err(e) => U2FResult::Error(e),
             };
+
+            callback(tid, Box::into_raw(Box::new(result)));
         },
     );
 
@@ -216,15 +240,18 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
 
     let tid = new_tid();
     let res = (*mgr).sign(flags, timeout, challenge, app_ids, key_handles, move |rv| {
-        if let Ok((app_id, key_handle, signature)) = rv {
-            let mut result = U2FResult::new();
-            result.insert(RESBUF_ID_KEYHANDLE, key_handle);
-            result.insert(RESBUF_ID_SIGNATURE, signature);
-            result.insert(RESBUF_ID_APPID, app_id);
-            callback(tid, Box::into_raw(Box::new(result)));
-        } else {
-            callback(tid, ptr::null_mut());
+        let result = match rv {
+            Ok((app_id, key_handle, signature)) => {
+                let mut bufs = HashMap::new();
+                bufs.insert(RESBUF_ID_KEYHANDLE, key_handle);
+                bufs.insert(RESBUF_ID_SIGNATURE, signature);
+                bufs.insert(RESBUF_ID_APPID, app_id);
+                U2FResult::Success(bufs)
+            }
+            Err(e) => U2FResult::Error(e),
         };
+
+        callback(tid, Box::into_raw(Box::new(result)));
     });
 
     if res.is_ok() {

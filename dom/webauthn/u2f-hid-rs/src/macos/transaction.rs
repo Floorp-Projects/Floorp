@@ -8,10 +8,9 @@ use core_foundation_sys::runloop::*;
 use libc::c_void;
 use platform::iokit::{CFRunLoopEntryObserver, IOHIDDeviceRef, SendableRunLoop};
 use platform::monitor::Monitor;
-use std::io;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-use util::{io_err, to_io_err, OnceCallback};
+use util::OnceCallback;
 
 // A transaction will run the given closure in a new thread, thereby using a
 // separate per-thread state machine for each HID. It will either complete or
@@ -23,7 +22,11 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn new<F, T>(timeout: u64, callback: OnceCallback<T>, new_device_cb: F) -> io::Result<Self>
+    pub fn new<F, T>(
+        timeout: u64,
+        callback: OnceCallback<T>,
+        new_device_cb: F,
+    ) -> Result<Self, ::Error>
     where
         F: Fn((IOHIDDeviceRef, Receiver<Vec<u8>>), &Fn() -> bool) + Sync + Send + 'static,
         T: 'static,
@@ -32,31 +35,33 @@ impl Transaction {
         let timeout = (timeout as f64) / 1000.0;
 
         let builder = thread::Builder::new();
-        let thread = builder.spawn(move || {
-            // Add a runloop observer that will be notified when we enter the
-            // runloop and tx.send() the current runloop to the owning thread.
-            // We need to ensure the runloop was entered before unblocking
-            // Transaction::new(), so we can always properly cancel.
-            let context = &tx as *const _ as *mut c_void;
-            let obs = CFRunLoopEntryObserver::new(Transaction::observe, context);
-            obs.add_to_current_runloop();
+        let thread = builder
+            .spawn(move || {
+                // Add a runloop observer that will be notified when we enter the
+                // runloop and tx.send() the current runloop to the owning thread.
+                // We need to ensure the runloop was entered before unblocking
+                // Transaction::new(), so we can always properly cancel.
+                let context = &tx as *const _ as *mut c_void;
+                let obs = CFRunLoopEntryObserver::new(Transaction::observe, context);
+                obs.add_to_current_runloop();
 
-            // Create a new HID device monitor and start polling.
-            let mut monitor = Monitor::new(new_device_cb);
-            try_or!(monitor.start(), |e| callback.call(Err(e)));
+                // Create a new HID device monitor and start polling.
+                let mut monitor = Monitor::new(new_device_cb);
+                try_or!(monitor.start(), |_| callback.call(Err(::Error::Unknown)));
 
-            // This will block until completion, abortion, or timeout.
-            unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, timeout, 0) };
+                // This will block until completion, abortion, or timeout.
+                unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, timeout, 0) };
 
-            // Close the monitor and its devices.
-            monitor.stop();
+                // Close the monitor and its devices.
+                monitor.stop();
 
-            // Send an error, if the callback wasn't called already.
-            callback.call(Err(io_err("aborted or timed out")));
-        })?;
+                // Send an error, if the callback wasn't called already.
+                callback.call(Err(::Error::NotAllowed));
+            })
+            .map_err(|_| ::Error::Unknown)?;
 
         // Block until we enter the CFRunLoop.
-        let runloop = rx.recv().map_err(to_io_err)?;
+        let runloop = rx.recv().map_err(|_| ::Error::Unknown)?;
 
         Ok(Self {
             runloop: Some(runloop),

@@ -79,6 +79,15 @@ pub type AppId = Vec<u8>;
 pub type RegisterResult = Vec<u8>;
 pub type SignResult = (AppId, Vec<u8>, Vec<u8>);
 
+#[derive(Debug, Clone, Copy)]
+pub enum Error {
+    Unknown = 1,
+    NotSupported = 2,
+    InvalidState = 3,
+    ConstraintError = 4,
+    NotAllowed = 5,
+}
+
 #[cfg(fuzzing)]
 pub use u2fprotocol::*;
 #[cfg(fuzzing)]

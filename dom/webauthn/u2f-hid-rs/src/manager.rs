@@ -9,7 +9,7 @@ use std::time::Duration;
 use consts::PARAMETER_SIZE;
 use statemachine::StateMachine;
 use runloop::RunLoop;
-use util::{to_io_err, OnceCallback};
+use util::OnceCallback;
 
 enum QueueAction {
     Register {
@@ -105,24 +105,18 @@ impl U2FManager {
         application: ::AppId,
         key_handles: Vec<::KeyHandle>,
         callback: F,
-    ) -> io::Result<()>
+    ) -> Result<(), ::Error>
     where
-        F: FnOnce(io::Result<::RegisterResult>),
+        F: FnOnce(Result<::RegisterResult, ::Error>),
         F: Send + 'static,
     {
         if challenge.len() != PARAMETER_SIZE || application.len() != PARAMETER_SIZE {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Invalid parameter sizes",
-            ));
+            return Err(::Error::Unknown);
         }
 
         for key_handle in &key_handles {
             if key_handle.credential.len() > 256 {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "Key handle too large",
-                ));
+                return Err(::Error::Unknown);
             }
         }
 
@@ -135,7 +129,7 @@ impl U2FManager {
             key_handles,
             callback,
         };
-        self.tx.send(action).map_err(to_io_err)
+        self.tx.send(action).map_err(|_| ::Error::Unknown)
     }
 
     pub fn sign<F>(
@@ -146,40 +140,28 @@ impl U2FManager {
         app_ids: Vec<::AppId>,
         key_handles: Vec<::KeyHandle>,
         callback: F,
-    ) -> io::Result<()>
+    ) -> Result<(), ::Error>
     where
-        F: FnOnce(io::Result<::SignResult>),
+        F: FnOnce(Result<::SignResult, ::Error>),
         F: Send + 'static,
     {
         if challenge.len() != PARAMETER_SIZE {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Invalid parameter sizes",
-            ));
+            return Err(::Error::Unknown);
         }
 
         if app_ids.len() < 1 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "No app IDs given",
-            ));
+            return Err(::Error::Unknown);
         }
 
         for app_id in &app_ids {
             if app_id.len() != PARAMETER_SIZE {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "Invalid app_id size",
-                ));
+                return Err(::Error::Unknown);
             }
         }
 
         for key_handle in &key_handles {
             if key_handle.credential.len() > 256 {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "Key handle too large",
-                ));
+                return Err(::Error::Unknown);
             }
         }
 
@@ -192,11 +174,13 @@ impl U2FManager {
             key_handles,
             callback,
         };
-        self.tx.send(action).map_err(to_io_err)
+        self.tx.send(action).map_err(|_| ::Error::Unknown)
     }
 
-    pub fn cancel(&self) -> io::Result<()> {
-        self.tx.send(QueueAction::Cancel).map_err(to_io_err)
+    pub fn cancel(&self) -> Result<(), ::Error> {
+        self.tx
+            .send(QueueAction::Cancel)
+            .map_err(|_| ::Error::Unknown)
     }
 }
 

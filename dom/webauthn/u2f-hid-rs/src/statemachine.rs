@@ -7,7 +7,7 @@ use platform::device::Device;
 use platform::transaction::Transaction;
 use std::thread;
 use std::time::Duration;
-use util::{io_err, OnceCallback};
+use util::OnceCallback;
 use u2fprotocol::{u2f_init_device, u2f_is_keyhandle_valid, u2f_register, u2f_sign};
 
 fn is_valid_transport(transports: ::AuthenticatorTransports) -> bool {
@@ -99,7 +99,7 @@ impl StateMachine {
                 if excluded {
                     let blank = vec![0u8; PARAMETER_SIZE];
                     if let Ok(_) = u2f_register(dev, &blank, &blank) {
-                        callback.call(Err(io_err("duplicate registration")));
+                        callback.call(Err(::Error::InvalidState));
                         break;
                     }
                 } else {
@@ -114,9 +114,7 @@ impl StateMachine {
             }
         });
 
-        self.transaction = Some(try_or!(transaction, |_| cbc.call(Err(io_err(
-            "couldn't create transaction"
-        )))));
+        self.transaction = Some(try_or!(transaction, |e| cbc.call(Err(e))));
     }
 
     pub fn sign(
@@ -183,7 +181,7 @@ impl StateMachine {
                 if valid_handles.is_empty() {
                     let blank = vec![0u8; PARAMETER_SIZE];
                     if let Ok(_) = u2f_register(dev, &blank, &blank) {
-                        callback.call(Err(io_err("invalid key")));
+                        callback.call(Err(::Error::InvalidState));
                         break;
                     }
                 } else {
@@ -206,9 +204,7 @@ impl StateMachine {
             }
         });
 
-        self.transaction = Some(try_or!(transaction, |_| cbc.call(Err(io_err(
-            "couldn't create transaction"
-        )))));
+        self.transaction = Some(try_or!(transaction, |e| cbc.call(Err(e))));
     }
 
     // This blocks.
