@@ -1182,15 +1182,6 @@ IsXrayWrapper(JSObject* obj)
     return WrapperFactory::IsXrayWrapper(obj);
 }
 
-JSAddonId*
-NewAddonId(JSContext* cx, const nsACString& id)
-{
-    JS::RootedString str(cx, JS_NewStringCopyN(cx, id.BeginReading(), id.Length()));
-    if (!str)
-        return nullptr;
-    return JS::NewAddonId(cx, str);
-}
-
 } // namespace xpc
 
 namespace mozilla {
