@@ -253,6 +253,16 @@ NewWebConsoleFrame.prototype = {
                    this.window.top.close.bind(this.window.top));
 
       ZoomKeys.register(this.window);
+
+      if (!system.constants.MOZILLA_OFFICIAL) {
+        // In local builds, inject the "quick restart" shortcut.
+        // This script expects to have Services on the global and we haven't yet imported
+        // it into the window, so assign it.
+        this.window.Services = Services;
+        Services.scriptloader.loadSubScript(
+          "chrome://browser/content/browser-development-helpers.js", this.window);
+        shortcuts.on("CmdOrCtrl+Alt+R", this.window.DevelopmentHelpers.quickRestart);
+      }
     } else if (Services.prefs.getBoolPref(PREF_SIDEBAR_ENABLED)) {
       shortcuts.on("Esc", event => {
         if (!this.jsterm.autocompletePopup || !this.jsterm.autocompletePopup.isOpen) {
