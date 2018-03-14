@@ -60,8 +60,8 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "skinnable", "size", "sourceURI", "releaseNotesURI",
                           "softDisabled", "foreignInstall",
                           "strictCompatibility", "locales", "targetApplications",
-                          "targetPlatforms", "multiprocessCompatible", "signedState",
-                          "seen", "dependencies", "hasEmbeddedWebExtension", "mpcOptedOut",
+                          "targetPlatforms", "signedState",
+                          "seen", "dependencies", "hasEmbeddedWebExtension",
                           "userPermissions", "icons", "iconURL", "icon64URL",
                           "blocklistState", "blocklistURL", "startupData"];
 
@@ -213,11 +213,6 @@ Object.assign(DBAddonInternal.prototype, {
         }
       });
     });
-    if (aUpdate.multiprocessCompatible !== undefined &&
-        aUpdate.multiprocessCompatible != this.multiprocessCompatible) {
-      this.multiprocessCompatible = aUpdate.multiprocessCompatible;
-      XPIDatabase.saveChanges();
-    }
 
     if (wasCompatible != this.isCompatible)
       XPIProvider.updateAddonDisabledState(this);

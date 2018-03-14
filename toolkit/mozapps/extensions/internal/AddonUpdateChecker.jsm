@@ -401,7 +401,6 @@ function parseRDFManifest(aId, aUpdateKey, aRequest, aManifestData) {
       let result = {
         id: aId,
         version,
-        multiprocessCompatible: getBooleanProperty(ds, item, "multiprocessCompatible"),
         updateURL: getProperty(ds, targetApp, "updateLink"),
         updateHash: getProperty(ds, targetApp, "updateHash"),
         updateInfoURL: getProperty(ds, targetApp, "updateInfoURL"),
@@ -512,7 +511,6 @@ function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
     let result = {
       id: aId,
       version,
-      multiprocessCompatible: getProperty(update, "multiprocess_compatible", "boolean", true),
       updateURL: getProperty(update, "update_link", "string"),
       updateHash: getProperty(update, "update_hash", "string"),
       updateInfoURL: getProperty(update, "update_info_url", "string"),

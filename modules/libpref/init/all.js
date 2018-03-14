@@ -5113,7 +5113,6 @@ pref("extensions.langpacks.signatures.required", false);
 pref("extensions.minCompatiblePlatformVersion", "2.0");
 pref("extensions.webExtensionsMinPlatformVersion", "42.0a1");
 pref("extensions.legacy.enabled", true);
-pref("extensions.allow-non-mpc-extensions", true);
 
 // Other webextensions prefs
 pref("extensions.webextensions.keepStorageOnUninstall", false);
