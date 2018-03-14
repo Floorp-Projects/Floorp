@@ -21,8 +21,6 @@ add_task(async function() {
 
   // Prime the blocklist service, the remote service doesn't launch on startup.
   await promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html></html>");
-  let exmsg = await promiseInitContentBlocklistSvc(gBrowser.selectedBrowser);
-  ok(!exmsg, "exception: " + exmsg);
 });
 
 // Tests that the going back will reshow the notification for click-to-play
