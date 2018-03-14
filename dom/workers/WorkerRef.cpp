@@ -68,7 +68,13 @@ public:
   bool
   Notify(WorkerStatus aStatus) override
   {
-    mWorkerRef->Notify();
+    MOZ_ASSERT(mWorkerRef);
+
+    // Let's keep this object alive for the whole Notify() execution.
+    RefPtr<WorkerRef> workerRef;
+    workerRef = mWorkerRef;
+
+    workerRef->Notify();
     return true;
   }
 
@@ -150,8 +156,13 @@ WeakWorkerRef::Notify()
 WorkerPrivate*
 WeakWorkerRef::GetPrivate() const
 {
-  MOZ_ASSERT(mHolder);
   NS_ASSERT_OWNINGTHREAD(WeakWorkerRef);
+  return mWorkerPrivate;
+}
+
+WorkerPrivate*
+WeakWorkerRef::GetUnsafePrivate() const
+{
   return mWorkerPrivate;
 }
 

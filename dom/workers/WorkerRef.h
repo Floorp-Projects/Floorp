@@ -115,6 +115,11 @@ public:
   WorkerPrivate*
   GetPrivate() const;
 
+  // This can be called on any thread. It's racy and, in general, the wrong
+  // choice.
+  WorkerPrivate*
+  GetUnsafePrivate() const;
+
 private:
   explicit WeakWorkerRef(WorkerPrivate* aWorkerPrivate);
   ~WeakWorkerRef();
