@@ -1411,14 +1411,6 @@ void
 KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
                                                  GdkEventKey* aGdkKeyEvent)
 {
-    if (!aGdkKeyEvent) {
-        // If aGdkKeyEvent is nullptr, we're trying to dispatch a fake keyboard
-        // event in such case, we don't need to set alternative char codes.
-        // So, we don't need to do nothing here.  This case is typically we're
-        // dispatching eKeyDown or eKeyUp event during composition.
-        return;
-    }
-
     uint32_t charCode = GetCharCodeFor(aGdkKeyEvent);
     if (!charCode) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
