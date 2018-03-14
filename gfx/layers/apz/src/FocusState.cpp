@@ -22,6 +22,12 @@ FocusState::FocusState()
 {
 }
 
+uint64_t
+FocusState::LastAPZProcessedEvent() const
+{
+  return mLastAPZProcessedEvent;
+}
+
 bool
 FocusState::IsCurrent() const
 {
@@ -174,6 +180,12 @@ FocusState::GetVerticalTarget() const
     return Nothing();
   }
   return Some(ScrollableLayerGuid(mFocusLayersId, 0, mFocusVerticalTarget));
+}
+
+bool
+FocusState::CanIgnoreKeyboardShortcutMisses() const
+{
+  return IsCurrent() && !mFocusHasKeyEventListeners;
 }
 
 } // namespace layers
