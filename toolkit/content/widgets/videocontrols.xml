@@ -232,7 +232,7 @@
 
         // We should lock the orientation if we are already in
         // fullscreen and were reattached because of bug 718107.
-        this.updateOrientationState(this.isVideoInFullScreen());
+        this.updateOrientationState(this.isVideoInFullScreen);
 
         if (this.isAudioOnly) {
           this.clickToPlay.hidden = true;
@@ -940,7 +940,7 @@
         // size as the *content area* of the video element,
         // but this is not the same as the video element's
         // border area if the video has border or padding.
-        if (this.isEventWithin(event, this.videocontrols)) {
+        if (this.checkEventWithin(event, this.videocontrols)) {
           return;
         }
 
@@ -1056,17 +1056,17 @@
         // script was controlling video playback.
       },
 
-      isVideoWithoutAudioTrack() {
+      get isVideoWithoutAudioTrack() {
         return this.video.readyState >= this.video.HAVE_METADATA &&
                !this.isAudioOnly &&
                !this.video.mozHasAudio;
       },
 
       toggleMute() {
-        if (this.isVideoWithoutAudioTrack()) {
+        if (this.isVideoWithoutAudioTrack) {
           return;
         }
-        this.video.muted = !this.isEffectivelyMuted();
+        this.video.muted = !this.isEffectivelyMuted;
         if (this.video.volume === 0) {
           this.video.volume = 0.5;
         }
@@ -1076,12 +1076,12 @@
         // controlling volume.
       },
 
-      isVideoInFullScreen() {
+      get isVideoInFullScreen() {
         return document.mozFullScreenElement == this.video;
       },
 
       toggleFullscreen() {
-        this.isVideoInFullScreen() ?
+        this.isVideoInFullScreen ?
           document.mozCancelFullScreen() :
           this.video.mozRequestFullScreen();
       },
@@ -1095,11 +1095,11 @@
         this.controlBar.removeAttribute("fullscreen-unavailable");
         this.adjustControlSize();
 
-        var attrName = this.isVideoInFullScreen() ? "exitfullscreenlabel" : "enterfullscreenlabel";
+        var attrName = this.isVideoInFullScreen ? "exitfullscreenlabel" : "enterfullscreenlabel";
         var value = this.fullscreenButton.getAttribute(attrName);
         this.fullscreenButton.setAttribute("aria-label", value);
 
-        if (this.isVideoInFullScreen()) {
+        if (this.isVideoInFullScreen) {
           this.fullscreenButton.setAttribute("fullscreened", "true");
         } else {
           this.fullscreenButton.removeAttribute("fullscreened");
@@ -1117,14 +1117,14 @@
         // Constructor and destructor will lock/unlock the orientation exactly
         // once. Doing so here again will cause the videocontrols to
         // lock-unlock-lock the orientation when entering the fullscreen.
-        this.updateOrientationState(this.isVideoInFullScreen());
+        this.updateOrientationState(this.isVideoInFullScreen);
 
         // This is already broken by bug 718107 (controls will be hidden
         // as soon as the video enters fullscreen).
         // We can think about restoring the behavior here once the bug is
         // fixed, or we could simply acknowledge the current behavior
         // after-the-fact and try not to fix this.
-        if (this.isVideoInFullScreen()) {
+        if (this.isVideoInFullScreen) {
           Utils._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
         }
 
@@ -1214,12 +1214,12 @@
         this.playButton.setAttribute("aria-label", value);
       },
 
-      isEffectivelyMuted() {
+      get isEffectivelyMuted() {
         return this.video.muted || !this.video.volume;
       },
 
       updateMuteButtonState() {
-        var muted = this.isEffectivelyMuted();
+        var muted = this.isEffectivelyMuted;
 
         if (muted) {
           this.muteButton.setAttribute("muted", "true");
@@ -1356,7 +1356,7 @@
         event.preventDefault(); // Prevent page scrolling
       },
 
-      isSupportedTextTrack(textTrack) {
+      checkTextTrackSupport(textTrack) {
         return textTrack.kind == "subtitles" ||
                textTrack.kind == "captions";
       },
@@ -1370,7 +1370,7 @@
       },
 
       get overlayableTextTracks() {
-        return Array.prototype.filter.call(this.video.textTracks, this.isSupportedTextTrack);
+        return Array.prototype.filter.call(this.video.textTracks, this.checkTextTrackSupport);
       },
 
       get currentTextTrackIndex() {
@@ -1380,12 +1380,12 @@
         return showingTT ? showingTT.index : 0;
       },
 
-      isCastingOn() {
+      get isCastingOn() {
         return this.isCastingAvailable && this.video.mozIsCasting;
       },
 
       setCastingButtonState() {
-        if (this.isCastingOn()) {
+        if (this.isCastingOn) {
           this.castingButton.setAttribute("enabled", "true");
         } else {
           this.castingButton.removeAttribute("enabled");
@@ -1406,7 +1406,7 @@
         this.setCastingButtonState();
       },
 
-      isClosedCaptionOn() {
+      get isClosedCaptionOn() {
         for (let tt of this.overlayableTextTracks) {
           if (tt.mode === "showing") {
             return true;
@@ -1417,7 +1417,7 @@
       },
 
       setClosedCaptionButtonState() {
-        if (this.isClosedCaptionOn()) {
+        if (this.isClosedCaptionOn) {
           this.closedCaptionButton.setAttribute("enabled", "true");
         } else {
           this.closedCaptionButton.removeAttribute("enabled");
@@ -1439,7 +1439,7 @@
       },
 
       addNewTextTrack(tt) {
-        if (!this.isSupportedTextTrack(tt)) {
+        if (!this.checkTextTrackSupport(tt)) {
           return;
         }
 
@@ -1550,7 +1550,7 @@
         this.setClosedCaptionButtonState();
       },
 
-      isEventWithin(event, parent1, parent2) {
+      checkEventWithin(event, parent1, parent2) {
         function isDescendant(node) {
           while (node) {
             if (node == parent1 || node == parent2) {
