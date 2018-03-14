@@ -74,13 +74,16 @@ private:
       : nsExpirationTracker<nsCSSRuleProcessor,3>(
           10000, "RuleProcessorCache::ExpirationTracker",
           SystemGroup::EventTargetFor(TaskCategory::Other))
-      {}
+      , mCache(aCache) {}
 
     void RemoveObjectIfTracked(nsCSSRuleProcessor* aRuleProcessor);
 
     virtual void NotifyExpired(nsCSSRuleProcessor* aRuleProcessor) override {
-      mozilla::RuleProcessorCache::RemoveRuleProcessor(aRuleProcessor);
+      mCache->RemoveRuleProcessor(aRuleProcessor);
     }
+
+  private:
+    RuleProcessorCache* mCache;
   };
 
   RuleProcessorCache() : mExpirationTracker(this) {}

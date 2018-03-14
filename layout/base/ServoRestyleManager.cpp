@@ -601,7 +601,7 @@ UpdateBackdropIfNeeded(nsIFrame* aFrame,
              backdropFrame->GetParent()->IsCanvasFrame());
   nsTArray<nsIFrame*> wrappersToRestyle;
   ServoRestyleState state(aStyleSet, aChangeList, wrappersToRestyle);
-  nsIFrame::UpdateStyleOfOwnedChildFrame(backdropFrame, newContext, state);
+  aFrame->UpdateStyleOfOwnedChildFrame(backdropFrame, newContext, state);
 }
 
 static void

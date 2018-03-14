@@ -274,7 +274,7 @@ CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC, bool aDelayedStart)
       fdSetActor->ForgetFileDescriptors(fds);
 
       if (!aConsumedByIPC) {
-        Unused << FileDescriptorSetChild::Send__delete__(fdSetActor);
+        Unused << fdSetActor->Send__delete__(fdSetActor);
       }
 
     } else if (streamWithFds.optionalFds().type() ==
@@ -292,7 +292,7 @@ CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC, bool aDelayedStart)
       fdSetActor->ForgetFileDescriptors(fds);
 
       if (!aConsumedByIPC) {
-        Unused << FileDescriptorSetParent::Send__delete__(fdSetActor);
+        Unused << fdSetActor->Send__delete__(fdSetActor);
       }
     }
 
@@ -400,7 +400,7 @@ DeserializeIPCStream(const IPCStream& aValue)
     fdSetActor->ForgetFileDescriptors(fds);
     MOZ_ASSERT(!fds.IsEmpty());
 
-    if (!FileDescriptorSetParent::Send__delete__(fdSetActor)) {
+    if (!fdSetActor->Send__delete__(fdSetActor)) {
       // child process is gone, warn and allow actor to clean up normally
       NS_WARNING("Failed to delete fd set actor.");
     }
@@ -414,7 +414,7 @@ DeserializeIPCStream(const IPCStream& aValue)
     fdSetActor->ForgetFileDescriptors(fds);
     MOZ_ASSERT(!fds.IsEmpty());
 
-    Unused << FileDescriptorSetChild::Send__delete__(fdSetActor);
+    Unused << fdSetActor->Send__delete__(fdSetActor);
   }
 
   return InputStreamHelper::DeserializeInputStream(streamWithFds.stream(), fds);

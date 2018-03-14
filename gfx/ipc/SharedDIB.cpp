@@ -37,7 +37,7 @@ SharedDIB::IsValid()
   if (!mShMem)
     return false;
 
-  return base::SharedMemory::IsHandleValid(mShMem->handle());
+  return mShMem->IsHandleValid(mShMem->handle());
 }
 
 nsresult

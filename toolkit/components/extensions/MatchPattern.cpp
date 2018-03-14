@@ -100,7 +100,7 @@ void
 AtomSet::Remove(nsAtom* aAtom)
 {
   auto index = mElems.BinaryIndexOf(aAtom);
-  if (index != ArrayType::NoIndex) {
+  if (index != mElems.NoIndex) {
     mElems.RemoveElementAt(index);
   }
 }

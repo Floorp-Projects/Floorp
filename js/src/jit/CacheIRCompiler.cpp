@@ -159,13 +159,13 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId
         // unbox it and then remove it from the stack, else we just unbox.
         Register reg = allocateRegister(masm);
         if (loc.valueStack() == stackPushed_) {
-            masm.unboxNonDouble(Address(MacroAssembler::getStackPointer(), 0), reg, typedId.type());
+            masm.unboxNonDouble(Address(masm.getStackPointer(), 0), reg, typedId.type());
             masm.addToStackPtr(Imm32(sizeof(js::Value)));
             MOZ_ASSERT(stackPushed_ >= sizeof(js::Value));
             stackPushed_ -= sizeof(js::Value);
         } else {
             MOZ_ASSERT(loc.valueStack() < stackPushed_);
-            masm.unboxNonDouble(Address(MacroAssembler::getStackPointer(), stackPushed_ - loc.valueStack()),
+            masm.unboxNonDouble(Address(masm.getStackPointer(), stackPushed_ - loc.valueStack()),
                                 reg, typedId.type());
         }
         loc.setPayloadReg(reg, typedId.type());
@@ -572,7 +572,7 @@ CacheRegisterAllocator::spillOperandToStack(MacroAssembler& masm, OperandLocatio
         if (!freeValueSlots_.empty()) {
             uint32_t stackPos = freeValueSlots_.popCopy();
             MOZ_ASSERT(stackPos <= stackPushed_);
-            masm.storeValue(loc->valueReg(), Address(MacroAssembler::getStackPointer(),
+            masm.storeValue(loc->valueReg(), Address(masm.getStackPointer(),
                                                      stackPushed_ - stackPos));
             loc->setValueStack(stackPos);
             return;
@@ -588,7 +588,7 @@ CacheRegisterAllocator::spillOperandToStack(MacroAssembler& masm, OperandLocatio
     if (!freePayloadSlots_.empty()) {
         uint32_t stackPos = freePayloadSlots_.popCopy();
         MOZ_ASSERT(stackPos <= stackPushed_);
-        masm.storePtr(loc->payloadReg(), Address(MacroAssembler::getStackPointer(),
+        masm.storePtr(loc->payloadReg(), Address(masm.getStackPointer(),
                                                  stackPushed_ - stackPos));
         loc->setPayloadStack(stackPos, loc->payloadType());
         return;
@@ -639,7 +639,7 @@ CacheRegisterAllocator::popPayload(MacroAssembler& masm, OperandLocation* loc, R
         stackPushed_ -= sizeof(uintptr_t);
     } else {
         MOZ_ASSERT(loc->payloadStack() < stackPushed_);
-        masm.loadPtr(Address(MacroAssembler::getStackPointer(), stackPushed_ - loc->payloadStack()), dest);
+        masm.loadPtr(Address(masm.getStackPointer(), stackPushed_ - loc->payloadStack()), dest);
         masm.propagateOOM(freePayloadSlots_.append(loc->payloadStack()));
     }
 
@@ -659,7 +659,7 @@ CacheRegisterAllocator::popValue(MacroAssembler& masm, OperandLocation* loc, Val
         stackPushed_ -= sizeof(js::Value);
     } else {
         MOZ_ASSERT(loc->valueStack() < stackPushed_);
-        masm.loadValue(Address(MacroAssembler::getStackPointer(), stackPushed_ - loc->valueStack()), dest);
+        masm.loadValue(Address(masm.getStackPointer(), stackPushed_ - loc->valueStack()), dest);
         masm.propagateOOM(freeValueSlots_.append(loc->valueStack()));
     }
 
@@ -756,7 +756,7 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm, bool shouldDisca
                 MOZ_ASSERT(stackPushed_ >= sizeof(js::Value));
                 MOZ_ASSERT(cur.valueStack() <= stackPushed_);
                 MOZ_ASSERT(dest.payloadType() != JSVAL_TYPE_DOUBLE);
-                masm.unboxNonDouble(Address(MacroAssembler::getStackPointer(), stackPushed_ - cur.valueStack()),
+                masm.unboxNonDouble(Address(masm.getStackPointer(), stackPushed_ - cur.valueStack()),
                                     dest.payloadReg(), dest.payloadType());
                 continue;
               case OperandLocation::Constant:
@@ -784,7 +784,7 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm, bool shouldDisca
             stackPushed_ -= sizeof(uintptr_t);
         } else {
             MOZ_ASSERT(spill.stackPushed < stackPushed_);
-            masm.loadPtr(Address(MacroAssembler::getStackPointer(), stackPushed_ - spill.stackPushed),
+            masm.loadPtr(Address(masm.getStackPointer(), stackPushed_ - spill.stackPushed),
                          spill.reg);
         }
     }
@@ -2707,7 +2707,7 @@ CacheIRCompiler::emitMegamorphicLoadSlotByValueResult()
 
     masm.bind(&ok);
     masm.setFramePushed(framePushed);
-    masm.loadTypedOrValue(Address(MacroAssembler::getStackPointer(), 0), output);
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
     masm.adjustStack(sizeof(Value));
     return true;
 }
@@ -2759,7 +2759,7 @@ CacheIRCompiler::emitMegamorphicHasPropResult()
 
     masm.bind(&ok);
     masm.setFramePushed(framePushed);
-    masm.loadTypedOrValue(Address(MacroAssembler::getStackPointer(), 0), output);
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
     masm.adjustStack(sizeof(Value));
     return true;
 }
@@ -2805,7 +2805,7 @@ CacheIRCompiler::emitCallObjectHasSparseElementResult()
 
     masm.bind(&ok);
     masm.setFramePushed(framePushed);
-    masm.loadTypedOrValue(Address(MacroAssembler::getStackPointer(), 0), output);
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
     masm.adjustStack(sizeof(Value));
     return true;
 }

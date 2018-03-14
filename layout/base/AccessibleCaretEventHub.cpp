@@ -51,10 +51,10 @@ public:
     nsEventStatus rv = nsEventStatus_eIgnore;
 
     if (NS_SUCCEEDED(aContext->mManager->PressCaret(aPoint, aEventClass))) {
-      aContext->SetState(AccessibleCaretEventHub::PressCaretState());
+      aContext->SetState(aContext->PressCaretState());
       rv = nsEventStatus_eConsumeNoDefault;
     } else {
-      aContext->SetState(AccessibleCaretEventHub::PressNoCaretState());
+      aContext->SetState(aContext->PressNoCaretState());
     }
 
     aContext->mPressPoint = aPoint;
@@ -66,7 +66,7 @@ public:
   void OnScrollStart(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollStart();
-    aContext->SetState(AccessibleCaretEventHub::ScrollState());
+    aContext->SetState(aContext->ScrollState());
   }
 
   void OnScrollPositionChanged(AccessibleCaretEventHub* aContext) override
@@ -113,7 +113,7 @@ public:
   {
     if (aContext->MoveDistanceIsLarge(aPoint)) {
       if (NS_SUCCEEDED(aContext->mManager->DragCaret(aPoint))) {
-        aContext->SetState(AccessibleCaretEventHub::DragCaretState());
+        aContext->SetState(aContext->DragCaretState());
       }
     }
 
@@ -124,7 +124,7 @@ public:
   {
     aContext->mManager->ReleaseCaret();
     aContext->mManager->TapCaret(aContext->mPressPoint);
-    aContext->SetState(AccessibleCaretEventHub::NoActionState());
+    aContext->SetState(aContext->NoActionState());
 
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -156,7 +156,7 @@ public:
   nsEventStatus OnRelease(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->ReleaseCaret();
-    aContext->SetState(AccessibleCaretEventHub::NoActionState());
+    aContext->SetState(aContext->NoActionState());
 
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -175,7 +175,7 @@ public:
                        const nsPoint& aPoint) override
   {
     if (aContext->MoveDistanceIsLarge(aPoint)) {
-      aContext->SetState(AccessibleCaretEventHub::NoActionState());
+      aContext->SetState(aContext->NoActionState());
     }
 
     return nsEventStatus_eIgnore;
@@ -183,7 +183,7 @@ public:
 
   nsEventStatus OnRelease(AccessibleCaretEventHub* aContext) override
   {
-    aContext->SetState(AccessibleCaretEventHub::NoActionState());
+    aContext->SetState(aContext->NoActionState());
 
     return nsEventStatus_eIgnore;
   }
@@ -191,7 +191,7 @@ public:
   nsEventStatus OnLongTap(AccessibleCaretEventHub* aContext,
                           const nsPoint& aPoint) override
   {
-    aContext->SetState(AccessibleCaretEventHub::LongTapState());
+    aContext->SetState(aContext->LongTapState());
 
     return aContext->GetState()->OnLongTap(aContext, aPoint);
   }
@@ -199,7 +199,7 @@ public:
   void OnScrollStart(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollStart();
-    aContext->SetState(AccessibleCaretEventHub::ScrollState());
+    aContext->SetState(aContext->ScrollState());
   }
 
   void OnBlur(AccessibleCaretEventHub* aContext,
@@ -207,7 +207,7 @@ public:
   {
     aContext->mManager->OnBlur();
     if (aIsLeavingDocument) {
-      aContext->SetState(AccessibleCaretEventHub::NoActionState());
+      aContext->SetState(aContext->NoActionState());
     }
   }
 
@@ -246,7 +246,7 @@ public:
   void OnScrollEnd(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollEnd();
-    aContext->SetState(AccessibleCaretEventHub::NoActionState());
+    aContext->SetState(aContext->NoActionState());
   }
 
   void OnScrollPositionChanged(AccessibleCaretEventHub* aContext) override
@@ -259,7 +259,7 @@ public:
   {
     aContext->mManager->OnBlur();
     if (aIsLeavingDocument) {
-      aContext->SetState(AccessibleCaretEventHub::NoActionState());
+      aContext->SetState(aContext->NoActionState());
     }
   }
 };
@@ -286,7 +286,7 @@ public:
 
   nsEventStatus OnRelease(AccessibleCaretEventHub* aContext) override
   {
-    aContext->SetState(AccessibleCaretEventHub::NoActionState());
+    aContext->SetState(aContext->NoActionState());
 
     // Do not consume the release since the press is not consumed in
     // PressNoCaretState either.
@@ -296,7 +296,7 @@ public:
   void OnScrollStart(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollStart();
-    aContext->SetState(AccessibleCaretEventHub::ScrollState());
+    aContext->SetState(aContext->ScrollState());
   }
 
   void OnReflow(AccessibleCaretEventHub* aContext) override

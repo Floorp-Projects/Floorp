@@ -102,7 +102,10 @@ int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azi
     if (azimuth < 0)
         azimuth += 360.0;
 
-    int numberOfAzimuths = HRTFDatabase::numberOfAzimuths();
+    HRTFDatabase* database = m_databaseLoader->database();
+    MOZ_ASSERT(database);
+
+    int numberOfAzimuths = database->numberOfAzimuths();
     const double angleBetweenAzimuths = 360.0 / numberOfAzimuths;
 
     // Calculate the azimuth index and the blend (0 -> 1) for interpolation.

@@ -209,7 +209,7 @@ WebGLRenderbuffer::RenderbufferStorage(const char* funcName, uint32_t samples,
 
     const GLenum error = DoRenderbufferStorage(samples, usage, width, height);
     if (error) {
-        const char* errorName = WebGLContext::ErrorName(error);
+        const char* errorName = mContext->ErrorName(error);
         mContext->GenerateWarning("%s generated error %s", funcName, errorName);
         return;
     }

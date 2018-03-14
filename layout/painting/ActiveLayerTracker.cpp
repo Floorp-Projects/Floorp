@@ -267,7 +267,7 @@ IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame, LayerActivity* aActivity)
                                            aFrame->StyleContext(),
                                            presContext,
                                            dummy, refBox,
-                                           nsPresContext::AppUnitsPerCSSPixel(),
+                                           presContext->AppUnitsPerCSSPixel(),
                                            &dummyBool);
   Matrix transform2D;
   if (!transform.Is2D(&transform2D)) {

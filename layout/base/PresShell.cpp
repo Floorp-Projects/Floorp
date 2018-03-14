@@ -8210,7 +8210,7 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
           treeBox->GetFirstVisibleRow(&firstVisibleRow);
           treeBox->GetRowHeight(&rowHeight);
 
-          extraTreeY += nsPresContext::CSSPixelsToAppUnits(
+          extraTreeY += presContext->CSSPixelsToAppUnits(
                           (currentIndex - firstVisibleRow + 1) * rowHeight);
           istree = true;
 
