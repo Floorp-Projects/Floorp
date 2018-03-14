@@ -974,12 +974,11 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY updateRestart.cancelButton.accesskey "N">
 <!ENTITY updateRestart.panelUI.label2 "Restart to update &brandShorterName;">
 
-<!ENTITY newTabControlled.message "An extension has changed the page you see when you open a New Tab. You can restore your settings if you do not want this change.">
-<!ENTITY newTabControlled.header.message "Your New Tab has changed.">
+<!ENTITY newTabControlled.header.message2 "Your New Tab has changed.">
 <!ENTITY newTabControlled.keepButton.label "Keep Changes">
 <!ENTITY newTabControlled.keepButton.accesskey "K">
-<!ENTITY newTabControlled.restoreButton.label "Restore Settings">
-<!ENTITY newTabControlled.restoreButton.accesskey "R">
+<!ENTITY newTabControlled.disableButton.label "Disable Extension">
+<!ENTITY newTabControlled.disableButton.accesskey "D">
 
 <!ENTITY pageActionButton.tooltip "Page actions">
 <!ENTITY pageAction.addToUrlbar.label "Add to Address Bar">

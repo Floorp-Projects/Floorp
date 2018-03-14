@@ -2937,13 +2937,15 @@ IsCtrlAltTab(GdkEventKey *aEvent)
 }
 
 bool
-nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, bool *aCancelled)
+nsWindow::DispatchKeyDownOrKeyUpEvent(GdkEventKey* aEvent,
+                                      bool aIsProcessedByIME,
+                                      bool* aIsCancelled)
 {
-    NS_PRECONDITION(aCancelled, "aCancelled must not be null");
+    MOZ_ASSERT(aIsCancelled, "aCancelled must not be null");
 
-    *aCancelled = false;
+    *aIsCancelled = false;
 
-    if (IsCtrlAltTab(aEvent)) {
+    if (aEvent->type == GDK_KEY_PRESS && IsCtrlAltTab(aEvent)) {
         return false;
     }
 
@@ -2953,13 +2955,14 @@ nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, bool *aCancelled)
         return FALSE;
     }
 
-    WidgetKeyboardEvent keydownEvent(true, eKeyDown, this);
-    KeymapWrapper::InitKeyEvent(keydownEvent, aEvent);
+    EventMessage message =
+        aEvent->type == GDK_KEY_PRESS ? eKeyDown : eKeyUp;
+    WidgetKeyboardEvent keyEvent(true, message, this);
+    KeymapWrapper::InitKeyEvent(keyEvent, aEvent, aIsProcessedByIME);
     nsEventStatus status = nsEventStatus_eIgnore;
     bool dispatched =
-        dispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent,
-                                          status, aEvent);
-    *aCancelled = (status == nsEventStatus_eConsumeNoDefault);
+        dispatcher->DispatchKeyboardEvent(message, keyEvent, status, aEvent);
+    *aIsCancelled = (status == nsEventStatus_eConsumeNoDefault);
     return dispatched ? TRUE : FALSE;
 }
 
@@ -3045,7 +3048,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
     // KEYDOWN -> KEYPRESS -> KEYUP -> KEYDOWN -> KEYPRESS -> KEYUP...
 
     bool isKeyDownCancelled = false;
-    if (DispatchKeyDownEvent(aEvent, &isKeyDownCancelled) &&
+    if (DispatchKeyDownOrKeyUpEvent(aEvent, false, &isKeyDownCancelled) &&
         (MOZ_UNLIKELY(mIsDestroyed) || isKeyDownCancelled)) {
         return TRUE;
     }
@@ -3094,7 +3097,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
     }
 
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, this);
-    KeymapWrapper::InitKeyEvent(keypressEvent, aEvent);
+    KeymapWrapper::InitKeyEvent(keypressEvent, aEvent, false);
 
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
@@ -3178,7 +3181,7 @@ nsWindow::MaybeDispatchContextMenuEvent(const GdkEventKey* aEvent)
 }
 
 gboolean
-nsWindow::OnKeyReleaseEvent(GdkEventKey *aEvent)
+nsWindow::OnKeyReleaseEvent(GdkEventKey* aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
 
@@ -3186,16 +3189,10 @@ nsWindow::OnKeyReleaseEvent(GdkEventKey *aEvent)
         return TRUE;
     }
 
-    RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
-    nsresult rv = dispatcher->BeginNativeInputTransaction();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
+    bool isCancelled = false;
+    if (NS_WARN_IF(!DispatchKeyDownOrKeyUpEvent(aEvent, false, &isCancelled))) {
+        return FALSE;
     }
-
-    WidgetKeyboardEvent keyupEvent(true, eKeyUp, this);
-    KeymapWrapper::InitKeyEvent(keyupEvent, aEvent);
-    nsEventStatus status = nsEventStatus_eIgnore;
-    dispatcher->DispatchKeyboardEvent(eKeyUp, keyupEvent, status, aEvent);
 
     return TRUE;
 }

@@ -215,7 +215,6 @@ public:
   // caller), nullptr if not.
   IPC::Message*
   UnshareFrom(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
-              base::ProcessId aTargetPid,
               int32_t routingId);
 
   // Return a SharedMemory instance in this process using the

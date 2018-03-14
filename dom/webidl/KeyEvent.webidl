@@ -195,6 +195,12 @@ interface KeyEvent
   // for compatibility with the other web browsers on Windows.
   const unsigned long DOM_VK_WIN_ICO_HELP    = 0xE3;
   const unsigned long DOM_VK_WIN_ICO_00      = 0xE4;
+
+  // IME processed key.
+  const unsigned long DOM_VK_PROCESSKEY      = 0xE5;
+
+  // OEM specific virtual keyCode of Windows should pass through DOM keyCode
+  // for compatibility with the other web browsers on Windows.
   const unsigned long DOM_VK_WIN_ICO_CLEAR   = 0xE6;
   const unsigned long DOM_VK_WIN_OEM_RESET   = 0xE9;
   const unsigned long DOM_VK_WIN_OEM_JUMP    = 0xEA;

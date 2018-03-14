@@ -65,13 +65,26 @@ public:
     void OnSelectionChange(nsWindow* aCaller,
                            const IMENotification& aIMENotification);
 
-    // OnKeyEvent is called when aWindow gets a native key press event or a
-    // native key release event.  If this returns TRUE, the key event was
-    // filtered by IME.  Otherwise, this returns FALSE.
-    // NOTE: When the keypress event starts composition, this returns TRUE but
-    //       this dispatches keydown event before compositionstart event.
+    /**
+     * OnKeyEvent() is called when aWindow gets a native key press event or a
+     * native key release event.  If this returns true, the key event was
+     * filtered by IME.  Otherwise, this returns false.
+     * NOTE: When the native key press event starts composition, this returns
+     *       true but dispatches an eKeyDown event or eKeyUp event before
+     *       dispatching composition events or content command event.
+     *
+     * @param aWindow                       A window on which user operate the
+     *                                      key.
+     * @param aEvent                        A native key press or release
+     *                                      event.
+     * @param aKeyboardEventWasDispatched   true if eKeyDown or eKeyUp event
+     *                                      for aEvent has already been
+     *                                      dispatched.  In this case,
+     *                                      this class doesn't dispatch
+     *                                      keyboard event anymore.
+     */
     bool OnKeyEvent(nsWindow* aWindow, GdkEventKey* aEvent,
-                      bool aKeyDownEventWasSent = false);
+                    bool aKeyboardEventWasDispatched = false);
 
     // IME related nsIWidget methods.
     nsresult EndIMEComposition(nsWindow* aCaller);
@@ -263,16 +276,20 @@ protected:
     // mIsIMFocused is set to TRUE when we call gtk_im_context_focus_in(). And
     // it's set to FALSE when we call gtk_im_context_focus_out().
     bool mIsIMFocused;
-    // mFilterKeyEvent is used by OnKeyEvent().  If the commit event should
-    // be processed as simple key event, this is set to TRUE by the commit
-    // handler.
-    bool mFilterKeyEvent;
-    // mKeyDownEventWasSent is used by OnKeyEvent() and
-    // DispatchCompositionStart().  DispatchCompositionStart() dispatches
-    // a keydown event if the composition start is caused by a native
-    // keypress event.  If this is true, the keydown event has been dispatched.
-    // Then, DispatchCompositionStart() doesn't dispatch keydown event.
-    bool mKeyDownEventWasSent;
+    // mFallbackToKeyEvent is set to false when this class starts to handle
+    // a native key event (at that time, mProcessingKeyEvent is set to the
+    // native event).  If active IME just commits composition with a character
+    // which is produced by the key with current keyboard layout, this is set
+    // to true.
+    bool mFallbackToKeyEvent;
+    // mKeyboardEventWasDispatched is used by OnKeyEvent() and
+    // MaybeDispatchKeyEventAsProcessedByIME().
+    // MaybeDispatchKeyEventAsProcessedByIME() dispatches an eKeyDown or
+    // eKeyUp event event if the composition is caused by a native
+    // key press event.  If this is true, a keyboard event has been dispatched
+    // for the native event.  If so, MaybeDispatchKeyEventAsProcessedByIME()
+    // won't dispatch keyboard event anymore.
+    bool mKeyboardEventWasDispatched;
     // mIsDeletingSurrounding is true while OnDeleteSurroundingNative() is
     // trying to delete the surrounding text.
     bool mIsDeletingSurrounding;
@@ -443,10 +460,26 @@ protected:
      *    Following methods dispatch gecko events.  Then, the focused widget
      *    can be destroyed, and also it can be stolen focus.  If they returns
      *    FALSE, callers cannot continue the composition.
+     *      - MaybeDispatchKeyEventAsProcessedByIME
      *      - DispatchCompositionStart
      *      - DispatchCompositionChangeEvent
      *      - DispatchCompositionCommitEvent
      */
+
+    /**
+     * Dispatch an eKeyDown or eKeyUp event whose mKeyCode value is
+     * NS_VK_PROCESSKEY and mKeyNameIndex is KEY_NAME_INDEX_Process if
+     * mProcessingKeyEvent is not nullptr and mKeyboardEventWasDispatched is
+     * still false.  If this dispatches a keyboard event, this sets
+     * mKeyboardEventWasDispatched to true.
+     *
+     * @return                      If the caller can continue to handle
+     *                              composition, returns true.  Otherwise,
+     *                              false.  For example, if focus is moved
+     *                              by dispatched keyboard event, returns
+     *                              false.
+     */
+    bool MaybeDispatchKeyEventAsProcessedByIME();
 
     /**
      * Dispatches a composition start event.

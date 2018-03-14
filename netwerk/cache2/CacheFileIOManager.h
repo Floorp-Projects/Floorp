@@ -43,7 +43,7 @@ class CacheFileHandlesEntry;
 #define TRASH_DIR   "trash"
 
 
-class CacheFileHandle : public nsISupports
+class CacheFileHandle final : public nsISupports
 {
 public:
   enum class PinningStatus : uint32_t {
@@ -259,8 +259,9 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(CacheFileIOListener, CACHEFILEIOLISTENER_IID)
 
 
-class CacheFileIOManager : public nsITimerCallback
-                         , public nsINamed
+class CacheFileIOManager final
+  : public nsITimerCallback
+  , public nsINamed
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

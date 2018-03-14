@@ -3,6 +3,7 @@
 
 package org.mozilla.gecko.media;
 
+import android.content.Context;
 import android.content.Intent;
 
 import junit.framework.Assert;
@@ -10,6 +11,7 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -22,44 +24,52 @@ import java.lang.ref.WeakReference;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 @RunWith(TestRunner.class)
 public class TestMediaControlService {
 
     private MediaControlService mSpyService;
+    private AudioFocusAgent mSpyAudioAgent;
+    private Context mMockContext;
     private Tab mMockTab;
 
     @Before
     public void setUp() {
         MediaControlService service = Robolectric.buildService(MediaControlService.class).get();
         mSpyService = spy(service);
+        mSpyAudioAgent = spy(AudioFocusAgent.getInstance());
+        mMockContext = mock(Context.class);
         mMockTab = mock(Tab.class);
         // We should use White-box as less as possible. But this is not avoidable so far.
         Whitebox.setInternalState(mSpyService, "mInitialize", true);
+        Whitebox.setInternalState(mSpyAudioAgent,"mContext", mMockContext);
     }
 
     @Test
     public void testTabPlayingMedia() throws Exception {
-        // If tab is playing media and got another MEDIA_PLAYING_CHANGE
-        // state should be PLAYING
-        Whitebox.setInternalState(mSpyService, "mTabReference", new WeakReference<>(mMockTab));
+        // If the tab is playing media and we got another MEDIA_PLAYING_CHANGE,
+        // we should notify the service that its state should be PLAYING.
+        Whitebox.setInternalState(mSpyAudioAgent, "mTabReference", new WeakReference<>(mMockTab));
         doReturn(true).when(mMockTab).isMediaPlaying();
 
-        mSpyService.onTabChanged(mMockTab, Tabs.TabEvents.MEDIA_PLAYING_CHANGE, "");
-        State state = (State) Whitebox.getInternalState(mSpyService, "mMediaState");
-        Assert.assertEquals(state, State.PLAYING);
+        mSpyAudioAgent.onTabChanged(mMockTab, Tabs.TabEvents.MEDIA_PLAYING_CHANGE, "");
+        ArgumentCaptor<Intent> serviceIntent = ArgumentCaptor.forClass(Intent.class);
+        verify(mMockContext).startService(serviceIntent.capture());
+        Assert.assertEquals(MediaControlService.ACTION_TAB_STATE_PLAYING, serviceIntent.getValue().getAction());
     }
 
     @Test
     public void testTabNotPlayingMedia() throws Exception {
-        // If tab is not playing media and got another MEDIA_PLAYING_CHANGE
-        // state should be STOPPED
-        Whitebox.setInternalState(mSpyService, "mTabReference", new WeakReference<>(mMockTab));
+        // If the tab is not playing media and we got another MEDIA_PLAYING_CHANGE,
+        // we should notify the service that its state should be STOPPED.
+        Whitebox.setInternalState(mSpyAudioAgent, "mTabReference", new WeakReference<>(mMockTab));
         doReturn(false).when(mMockTab).isMediaPlaying();
 
-        mSpyService.onTabChanged(mMockTab, Tabs.TabEvents.MEDIA_PLAYING_CHANGE, "");
-        State state = (State) Whitebox.getInternalState(mSpyService, "mMediaState");
-        Assert.assertEquals(state, State.STOPPED);
+        mSpyAudioAgent.onTabChanged(mMockTab, Tabs.TabEvents.MEDIA_PLAYING_CHANGE, "");
+        ArgumentCaptor<Intent> serviceIntent = ArgumentCaptor.forClass(Intent.class);
+        verify(mMockContext).startService(serviceIntent.capture());
+        Assert.assertEquals(MediaControlService.ACTION_TAB_STATE_STOPPED, serviceIntent.getValue().getAction());
     }
 
     @Test

@@ -137,7 +137,7 @@ class ExtensionStreamGetter : public RefCounted<ExtensionStreamGetter>
     bool mIsJarChannel;
 };
 
-class ExtensionJARFileOpener : public nsISupports
+class ExtensionJARFileOpener final : public nsISupports
 {
 public:
   ExtensionJARFileOpener(nsIFile* aFile,

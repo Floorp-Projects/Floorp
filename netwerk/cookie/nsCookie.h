@@ -27,7 +27,7 @@ using mozilla::OriginAttributes;
  * implementation
  ******************************************************************************/
 
-class nsCookie : public nsICookie2
+class nsCookie final : public nsICookie2
 {
   public:
     // nsISupports

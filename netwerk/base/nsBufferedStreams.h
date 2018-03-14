@@ -61,13 +61,14 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsBufferedInputStream : public nsBufferedStream,
-                              public nsIBufferedInputStream,
-                              public nsIStreamBufferAccess,
-                              public nsIIPCSerializableInputStream,
-                              public nsIAsyncInputStream,
-                              public nsIInputStreamCallback,
-                              public nsICloneableInputStream
+class nsBufferedInputStream final
+    : public nsBufferedStream,
+      public nsIBufferedInputStream,
+      public nsIStreamBufferAccess,
+      public nsIIPCSerializableInputStream,
+      public nsIAsyncInputStream,
+      public nsIInputStreamCallback,
+      public nsICloneableInputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED

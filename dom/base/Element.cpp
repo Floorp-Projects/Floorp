@@ -564,8 +564,7 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
     return nullptr;
   }
 
-  nsIDocument* doc =
-    HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetComposedDoc();
+  nsIDocument* doc = GetComposedDoc();
   if (!doc) {
     // There's no baseclass that cares about this call so we just
     // return here.
@@ -1570,9 +1569,6 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                   (!aBindingParent && aParent &&
                    aParent->GetBindingParent() == GetBindingParent()),
                   "Already have a binding parent.  Unbind first!");
-  NS_PRECONDITION(!aParent || !aDocument ||
-                  !aParent->HasFlag(NODE_FORCE_XBL_BINDINGS),
-                  "Parent in document but flagged as forcing XBL");
   NS_PRECONDITION(aBindingParent != this,
                   "Content must not be its own binding parent");
   NS_PRECONDITION(!IsRootOfNativeAnonymousSubtree() ||
@@ -1623,20 +1619,14 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
-  bool hadForceXBL = HasFlag(NODE_FORCE_XBL_BINDINGS);
-
   bool hadParent = !!GetParentNode();
 
-  // Now set the parent and set the "Force attach xbl" flag if needed.
+  // Now set the parent.
   if (aParent) {
     if (!GetParent()) {
       NS_ADDREF(aParent);
     }
     mParent = aParent;
-
-    if (aParent->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
-      SetFlags(NODE_FORCE_XBL_BINDINGS);
-    }
   }
   else {
     mParent = aDocument;
@@ -1663,10 +1653,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Being added to a document.
     SetIsInDocument();
 
-    // Unset this flag since we now really are in a document.
-    UnsetFlags(NODE_FORCE_XBL_BINDINGS |
-               // And clear the lazy frame construction bits.
-               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
+    // Clear the lazy frame construction bits.
+    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
                // And the restyle bits. These shouldn't even get set if we came
                // from a Servo-styled document, but they may be set if the
                // element comes from a Gecko-backed document, see bug 1394586.
@@ -1683,8 +1671,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // inserted into a document.
     //
     // See the comment about the restyle bits above, it also applies.
-    UnsetFlags(NODE_FORCE_XBL_BINDINGS | NODE_NEEDS_FRAME |
-               NODE_DESCENDANTS_NEED_FRAMES | ELEMENT_ALL_RESTYLE_FLAGS);
+    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
+               ELEMENT_ALL_RESTYLE_FLAGS);
   } else {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
@@ -1724,11 +1712,10 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   UpdateEditableState(false);
 
-  // If NODE_FORCE_XBL_BINDINGS was set, or we had a pre-existing XBL binding,
+  // If we had a pre-existing XBL binding,
   // we might have anonymous children that also need to be told that they are
   // moving.
-  if (hadForceXBL ||
-      (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) && !GetShadowRoot())) {
+  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) && !GetShadowRoot()) {
     nsXBLBinding* binding =
       OwnerDoc()->BindingManager()->GetBindingWithContent(this);
 
@@ -1889,8 +1876,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   RemoveFromIdTable();
 
   // Make sure to unbind this node before doing the kids
-  nsIDocument* document =
-    HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetComposedDoc();
+  nsIDocument* document = GetComposedDoc();
 
   if (HasPointerLock()) {
     nsIDocument::UnlockPointer();
@@ -1994,8 +1980,6 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
   }
 
-  // Unset this since that's what the old code effectively did.
-  UnsetFlags(NODE_FORCE_XBL_BINDINGS);
   bool clearBindingParent = true;
 
 #ifdef MOZ_XUL
@@ -2702,7 +2686,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     oldValue = aOldValue;
   }
 
-  if (aComposedDocument || HasFlag(NODE_FORCE_XBL_BINDINGS)) {
+  if (aComposedDocument) {
     RefPtr<nsXBLBinding> binding = GetXBLBinding();
     if (binding) {
       binding->AttributeChanged(aName, aNamespaceID, false, aNotify);
@@ -3009,7 +2993,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
 
   PostIdMaybeChange(aNameSpaceID, aName, nullptr);
 
-  if (document || HasFlag(NODE_FORCE_XBL_BINDINGS)) {
+  if (document) {
     RefPtr<nsXBLBinding> binding = GetXBLBinding();
     if (binding) {
       binding->AttributeChanged(aName, aNameSpaceID, true, aNotify);

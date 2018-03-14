@@ -529,6 +529,9 @@ KEY_MAP_ANDROID (NonConvert, AKEYCODE_MUHENKAN)
 // PreviousCandidate
 KEY_MAP_GTK     (PreviousCandidate, GDK_PreviousCandidate) // OADG 109, Mae Koho
 
+// Process
+KEY_MAP_WIN     (Process, VK_PROCESSKEY)
+
 // SingleCandidate
 KEY_MAP_GTK     (SingleCandidate, GDK_SingleCandidate)
 
