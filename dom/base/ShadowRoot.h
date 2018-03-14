@@ -109,6 +109,7 @@ private:
     HTMLSlotElement* mSlot = nullptr;
     Maybe<uint32_t> mIndex;
 
+    SlotAssignment() = default;
     SlotAssignment(HTMLSlotElement* aSlot, Maybe<uint32_t> aIndex)
       : mSlot(aSlot)
       , mIndex(aIndex)
