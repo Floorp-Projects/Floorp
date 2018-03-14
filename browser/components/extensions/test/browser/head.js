@@ -289,12 +289,10 @@ async function openContextMenuInSidebar(selector = "body") {
   return contentAreaContextMenu;
 }
 
-async function openContextMenuInFrame(frameId) {
+async function openContextMenuInFrame(frameSelector) {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  let doc = gBrowser.selectedBrowser.contentDocumentAsCPOW;
-  let frame = doc.getElementById(frameId);
-  EventUtils.synthesizeMouseAtCenter(frame.contentDocument.body, {type: "contextmenu"}, frame.contentWindow);
+  await BrowserTestUtils.synthesizeMouseAtCenter([frameSelector, "body"], {type: "contextmenu"}, gBrowser.selectedBrowser);
   await popupShownPromise;
   return contentAreaContextMenu;
 }
