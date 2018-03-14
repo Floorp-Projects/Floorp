@@ -78,6 +78,9 @@ function init(aEvent) {
         currentChannelText.hidden = true;
   }
 
+  if (AppConstants.MOZ_UPDATE_CHANNEL == "esr") {
+    document.getElementById("release").hidden = false;
+  }
   if (AppConstants.platform == "macosx") {
     // it may not be sized at this point, and we need its width to calculate its position
     window.sizeToContent();
