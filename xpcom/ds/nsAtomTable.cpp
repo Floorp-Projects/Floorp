@@ -15,17 +15,18 @@
 
 #include "nsAtom.h"
 #include "nsAtomTable.h"
+#include "nsAutoPtr.h"
+#include "nsCRT.h"
+#include "nsDataHashtable.h"
+#include "nsGkAtoms.h"
+#include "nsHashKeys.h"
+#include "nsPrintfCString.h"
 #include "nsStaticAtom.h"
 #include "nsString.h"
-#include "nsCRT.h"
+#include "nsThreadUtils.h"
+#include "nsUnicharUtils.h"
 #include "PLDHashTable.h"
 #include "prenv.h"
-#include "nsThreadUtils.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
-#include "nsAutoPtr.h"
-#include "nsUnicharUtils.h"
-#include "nsPrintfCString.h"
 
 // There are two kinds of atoms handled by this module.
 //
@@ -606,33 +607,19 @@ nsAtom::Release()
 // Have the static atoms been inserted into the table?
 static bool gStaticAtomsDone = false;
 
-class DefaultAtoms
-{
-public:
-  NS_STATIC_ATOM_DECL(empty)
-};
-
-NS_STATIC_ATOM_DEFN(DefaultAtoms, empty)
-
-NS_STATIC_ATOM_BUFFER(empty, "")
-
-static const nsStaticAtomSetup sDefaultAtomSetup[] = {
-  NS_STATIC_ATOM_SETUP(DefaultAtoms, empty)
-};
-
 void
 NS_InitAtomTable()
 {
   MOZ_ASSERT(!gAtomTable);
   gAtomTable = new nsAtomTable();
 
-  // Bug 1340710 has caused us to generate an empty atom at arbitrary times
-  // after startup.  If we end up creating one before nsGkAtoms::_empty is
-  // registered, we get an assertion about transmuting a dynamic atom into a
-  // static atom.  In order to avoid that, we register an empty string static
-  // atom as soon as we initialize the atom table to guarantee that the empty
-  // string atom will always be static.
-  NS_RegisterStaticAtoms(sDefaultAtomSetup);
+  // Bug 1340710 has caused us to use an empty atom at arbitrary times after
+  // startup. If we end up creating one before nsGkAtoms::_empty is registered,
+  // we get an assertion about transmuting a dynamic atom into a static atom.
+  // In order to avoid that, we register nsGkAtoms immediately after creating
+  // the atom table to guarantee that the empty string atom will always be
+  // static.
+  nsGkAtoms::AddRefAtoms();
 }
 
 void
