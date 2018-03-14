@@ -259,9 +259,8 @@ var RecipeRunner = {
             log.info(`Executing recipe "${recipe.name}" (action=${recipe.action})`);
             await manager.runAsyncCallback("action", recipe);
             status = Uptake.RECIPE_SUCCESS;
-          } catch (e) {
-            log.error(`Could not execute recipe ${recipe.name}:`);
-            Cu.reportError(e);
+          } catch (err) {
+            log.error(`Could not execute recipe ${recipe.name}: ${err}`);
             status = Uptake.RECIPE_EXECUTION_ERROR;
           }
         }
@@ -340,9 +339,7 @@ var RecipeRunner = {
       const result = await FilterExpressions.eval(recipe.filter_expression, context);
       return !!result;
     } catch (err) {
-      log.error(`Error checking filter for "${recipe.name}"`);
-      log.error(`Filter: "${recipe.filter_expression}"`);
-      log.error(`Error: "${err}"`);
+      log.error(`Error checking filter for "${recipe.name}". Filter: [${recipe.filter_expression}]. Error: "${err}"`);
       return false;
     }
   },
