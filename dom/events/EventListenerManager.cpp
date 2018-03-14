@@ -7,7 +7,6 @@
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
-#include "mozilla/AddonPathService.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -987,8 +986,6 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
                                    typeAtom, win,
                                    &argCount, &argNames);
 
-  JSAddonId *addonId = MapURIToAddonID(uri);
-
   // Wrap the event target, so that we can use it as the scope for the event
   // handler. Note that mTarget is different from aElement in the <body> case,
   // where mTarget is a Window.
@@ -1006,20 +1003,6 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
     }
   }
 
-  if (addonId) {
-    JS::Rooted<JSObject*> vObj(cx, &v.toObject());
-    JS::Rooted<JSObject*> addonScope(cx, xpc::GetAddonScope(cx, vObj, addonId));
-    if (!addonScope) {
-      return NS_ERROR_FAILURE;
-    }
-    JSAutoCompartment ac(cx, addonScope);
-
-    // Wrap our event target into the addon scope, since that's where we want to
-    // do all our work.
-    if (!JS_WrapValue(cx, &v)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
   JS::Rooted<JSObject*> target(cx, &v.toObject());
   JSAutoCompartment ac(cx, target);
 
