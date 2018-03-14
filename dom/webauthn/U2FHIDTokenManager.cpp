@@ -18,12 +18,13 @@ static nsIThread* gPBackgroundThread;
 static void
 u2f_register_callback(uint64_t aTransactionId, rust_u2f_result* aResult)
 {
+  UniquePtr<U2FResult> rv = MakeUnique<U2FResult>(aTransactionId, aResult);
+
   StaticMutexAutoLock lock(gInstanceMutex);
   if (!gInstance || NS_WARN_IF(!gPBackgroundThread)) {
     return;
   }
 
-  UniquePtr<U2FResult> rv = MakeUnique<U2FResult>(aTransactionId, aResult);
   nsCOMPtr<nsIRunnable> r(NewRunnableMethod<UniquePtr<U2FResult>&&>(
       "U2FHIDTokenManager::HandleRegisterResult", gInstance,
       &U2FHIDTokenManager::HandleRegisterResult, Move(rv)));
@@ -35,12 +36,13 @@ u2f_register_callback(uint64_t aTransactionId, rust_u2f_result* aResult)
 static void
 u2f_sign_callback(uint64_t aTransactionId, rust_u2f_result* aResult)
 {
+  UniquePtr<U2FResult> rv = MakeUnique<U2FResult>(aTransactionId, aResult);
+
   StaticMutexAutoLock lock(gInstanceMutex);
   if (!gInstance || NS_WARN_IF(!gPBackgroundThread)) {
     return;
   }
 
-  UniquePtr<U2FResult> rv = MakeUnique<U2FResult>(aTransactionId, aResult);
   nsCOMPtr<nsIRunnable> r(NewRunnableMethod<UniquePtr<U2FResult>&&>(
       "U2FHIDTokenManager::HandleSignResult", gInstance,
       &U2FHIDTokenManager::HandleSignResult, Move(rv)));
@@ -218,6 +220,11 @@ U2FHIDTokenManager::HandleRegisterResult(UniquePtr<U2FResult>&& aResult)
 
   MOZ_ASSERT(!mRegisterPromise.IsEmpty());
 
+  if (aResult->IsError()) {
+    mRegisterPromise.Reject(aResult->GetError(), __func__);
+    return;
+  }
+
   nsTArray<uint8_t> registration;
   if (!aResult->CopyRegistration(registration)) {
     mRegisterPromise.Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
@@ -240,6 +247,11 @@ U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult)
   }
 
   MOZ_ASSERT(!mSignPromise.IsEmpty());
+
+  if (aResult->IsError()) {
+    mSignPromise.Reject(aResult->GetError(), __func__);
+    return;
+  }
 
   nsTArray<uint8_t> appId;
   if (!aResult->CopyAppId(appId)) {
