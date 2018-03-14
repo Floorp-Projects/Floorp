@@ -5146,6 +5146,7 @@ var TabsProgressListener = {
     // or history.push/pop/replaceState.
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
       // Reader mode cares about history.pushState and friends.
+      // FIXME: The content process should manage this directly (bug 1445351).
       aBrowser.messageManager.sendAsyncMessage("Reader:PushState", {
         isArticle: aBrowser.isArticle,
       });
