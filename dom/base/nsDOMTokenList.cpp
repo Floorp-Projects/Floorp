@@ -314,7 +314,7 @@ nsDOMTokenList::Toggle(const nsAString& aToken,
   return isPresent;
 }
 
-void
+bool
 nsDOMTokenList::Replace(const nsAString& aToken,
                         const nsAString& aNewToken,
                         ErrorResult& aError)
@@ -324,28 +324,28 @@ nsDOMTokenList::Replace(const nsAString& aToken,
   // SyntaxError, not an InvalidCharacterError.
   if (aNewToken.IsEmpty()) {
     aError.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return;
+    return false;
   }
 
   aError = CheckToken(aToken);
   if (aError.Failed()) {
-    return;
+    return false;
   }
 
   aError = CheckToken(aNewToken);
   if (aError.Failed()) {
-    return;
+    return false;
   }
 
   const nsAttrValue* attr = GetParsedAttr();
   if (!attr) {
-    return;
+    return false;
   }
 
-  ReplaceInternal(attr, aToken, aNewToken);
+  return ReplaceInternal(attr, aToken, aNewToken);
 }
 
-void
+bool
 nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
                                 const nsAString& aToken,
                                 const nsAString& aNewToken)
@@ -363,7 +363,7 @@ nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
   }
   if (!haveOld) {
     // Make sure to not touch the attribute value in this case.
-    return;
+    return false;
   }
 
   bool sawIt = false;
@@ -390,6 +390,7 @@ nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
 
   MOZ_ASSERT(sawIt, "How could we not have found our token this time?");
   mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, true);
+  return true;
 }
 
 bool
