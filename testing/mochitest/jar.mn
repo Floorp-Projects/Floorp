@@ -2,7 +2,6 @@ mochikit.jar:
 % content mochikit %content/
   content/browser-harness.xul (browser-harness.xul)
   content/browser-test.js (browser-test.js)
-  content/browser-test-overlay.xul (browser-test-overlay.xul)
   content/chrome-harness.js (chrome-harness.js)
   content/mochitest-e10s-utils.js (mochitest-e10s-utils.js)
   content/shutdown-leaks-collector.js (shutdown-leaks-collector.js)

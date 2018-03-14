@@ -42,7 +42,6 @@ TEST_HARNESS_FILES.testing.mochitest += [
     '/netwerk/test/httpserver/httpd.js',
     'bisection.py',
     'browser-harness.xul',
-    'browser-test-overlay.xul',
     'browser-test.js',
     'chrome-harness.js',
     'chunkifyTests.js',
