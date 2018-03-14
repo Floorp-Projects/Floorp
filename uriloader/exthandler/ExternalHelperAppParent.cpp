@@ -196,7 +196,7 @@ ExternalHelperAppParent::RecvDivertToParentUsing(PChannelDiverterParent* diverte
 #ifdef DEBUG
   mDiverted = true;
 #endif
-  Unused << ChannelDiverterParent::Send__delete__(p);
+  Unused << p->Send__delete__(p);
   return IPC_OK();
 }
 

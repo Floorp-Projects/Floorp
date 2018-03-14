@@ -95,10 +95,10 @@ AppUnitsToGfxUnits(const nsPoint& aPoint, const nsPresContext* aContext)
 static gfxRect
 AppUnitsToFloatCSSPixels(const gfxRect& aRect, const nsPresContext* aContext)
 {
-  return gfxRect(nsPresContext::AppUnitsToFloatCSSPixels(aRect.x),
-                 nsPresContext::AppUnitsToFloatCSSPixels(aRect.y),
-                 nsPresContext::AppUnitsToFloatCSSPixels(aRect.width),
-                 nsPresContext::AppUnitsToFloatCSSPixels(aRect.height));
+  return gfxRect(aContext->AppUnitsToFloatCSSPixels(aRect.x),
+                 aContext->AppUnitsToFloatCSSPixels(aRect.y),
+                 aContext->AppUnitsToFloatCSSPixels(aRect.width),
+                 aContext->AppUnitsToFloatCSSPixels(aRect.height));
 }
 
 /**
@@ -801,7 +801,8 @@ TextRenderedRun::GetTransformFromUserSpaceForPainting(
     return m;
   }
 
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = aContext->
+    AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
   // Glyph position in user space.
   m.PreTranslate(mPosition / cssPxPerDevPx);
@@ -841,7 +842,8 @@ TextRenderedRun::GetTransformFromRunUserSpaceToUserSpace(
     return m;
   }
 
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = aContext->
+    AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
   nscoord start, end;
   GetClipEdges(start, end);
@@ -888,7 +890,7 @@ TextRenderedRun::GetTransformFromRunUserSpaceToFrameUserSpace(
 
   // Translate by the horizontal distance into the text frame this
   // rendered run is.
-  gfxFloat appPerCssPx = nsPresContext::AppUnitsPerCSSPixel();
+  gfxFloat appPerCssPx = aContext->AppUnitsPerCSSPixel();
   gfxPoint t = IsVertical() ? gfxPoint(0, start / appPerCssPx)
                             : gfxPoint(start / appPerCssPx, 0);
   return m.PreTranslate(t);
@@ -971,8 +973,8 @@ TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   // it around the text's origin.
   ScaleAround(fill,
               textRun->IsVertical()
-                ? gfxPoint(nsPresContext::AppUnitsToFloatCSSPixels(baseline), 0.0)
-                : gfxPoint(0.0, nsPresContext::AppUnitsToFloatCSSPixels(baseline)),
+                ? gfxPoint(aContext->AppUnitsToFloatCSSPixels(baseline), 0.0)
+                : gfxPoint(0.0, aContext->AppUnitsToFloatCSSPixels(baseline)),
               1.0 / mFontSizeScaleFactor);
 
   // Include the fill if requested.
@@ -1095,7 +1097,8 @@ TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
     return -1;
   }
 
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = aContext->
+    AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
   // Convert the point from user space into run user space, and take
   // into account any mFontSizeScaleFactor.
@@ -2620,7 +2623,8 @@ CharIterator::GetGlyphAdvance(nsPresContext* aContext) const
   gfxSkipCharsIterator it = TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
   Range range = ConvertOriginalToSkipped(it, offset, length);
 
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = aContext->
+    AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
   gfxFloat advance = mTextRun->GetAdvanceWidth(range, nullptr);
   return aContext->AppUnitsToGfxUnits(advance) *
@@ -2630,7 +2634,8 @@ CharIterator::GetGlyphAdvance(nsPresContext* aContext) const
 gfxFloat
 CharIterator::GetAdvance(nsPresContext* aContext) const
 {
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = aContext->
+    AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
   uint32_t offset = mSkipCharsIterator.GetSkippedOffset();
   gfxFloat advance = mTextRun->
@@ -2652,7 +2657,8 @@ CharIterator::GetGlyphPartialAdvance(uint32_t aPartLength,
   gfxSkipCharsIterator it = TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
   Range range = ConvertOriginalToSkipped(it, offset, length);
 
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = aContext->
+    AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
   gfxFloat advance = mTextRun->GetAdvanceWidth(range, nullptr);
   return aContext->AppUnitsToGfxUnits(advance) *
@@ -3625,7 +3631,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
   // dev pixels. Here we multiply a CSS-px-to-dev-pixel factor onto aTransform
   // so our non-SVG nsTextFrame children paint correctly.
   auto auPerDevPx = presContext->AppUnitsPerDevPixel();
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(auPerDevPx);
+  float cssPxPerDevPx = presContext->AppUnitsToFloatCSSPixels(auPerDevPx);
   gfxMatrix canvasTMForChildren = aTransform;
   canvasTMForChildren.PreScale(cssPxPerDevPx, cssPxPerDevPx);
   initialMatrix.PreScale(1 / cssPxPerDevPx, 1 / cssPxPerDevPx);
@@ -3811,7 +3817,7 @@ SVGTextFrame::ReflowSVG()
     mRect.SetEmpty();
   } else {
     mRect =
-      nsLayoutUtils::RoundGfxRectToAppRect(r.ToThebesRect(), nsPresContext::AppUnitsPerCSSPixel());
+      nsLayoutUtils::RoundGfxRectToAppRect(r.ToThebesRect(), presContext->AppUnitsPerCSSPixel());
 
     // Due to rounding issues when we have a transform applied, we sometimes
     // don't include an additional row of pixels.  For now, just inflate our
@@ -4177,7 +4183,8 @@ SVGTextFrame::GetSubStringLength(nsIContent* aContent,
   }
 
   nsPresContext* presContext = PresContext();
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = presContext->
+    AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
 
   *aResult = presContext->AppUnitsToGfxUnits(textLength) *
                cssPxPerDevPx / mFontSizeScaleFactor;
@@ -4252,7 +4259,8 @@ SVGTextFrame::GetSubStringLengthSlowFallback(nsIContent* aContent,
   }
 
   nsPresContext* presContext = PresContext();
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = presContext->
+    AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
 
   *aResult = presContext->AppUnitsToGfxUnits(textLength) *
                cssPxPerDevPx / mFontSizeScaleFactor;
@@ -4402,7 +4410,8 @@ SVGTextFrame::GetExtentOfChar(nsIContent* aContent,
 
   nsPresContext* presContext = PresContext();
 
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = presContext->
+    AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
 
   // We need to return the extent of the whole glyph.
   uint32_t startIndex = it.GlyphStartTextElementCharIndex();
@@ -5267,7 +5276,8 @@ SVGTextFrame::DoGlyphPositioning()
   nsPresContext* presContext = PresContext();
   bool vertical = GetWritingMode().IsVertical();
 
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
+  float cssPxPerDevPx = presContext->
+    AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
   double factor = cssPxPerDevPx / mFontSizeScaleFactor;
 
   // Determine how much to compress or expand glyph positions due to
@@ -5567,7 +5577,7 @@ SVGTextFrame::UpdateFontSizeScaleFactor()
     return mFontSizeScaleFactor != oldFontSizeScaleFactor;
   }
 
-  double minSize = nsPresContext::AppUnitsToFloatCSSPixels(min);
+  double minSize = presContext->AppUnitsToFloatCSSPixels(min);
 
   if (geometricPrecision) {
     // We want to ensure minSize is scaled to PRECISE_SIZE.
@@ -5589,14 +5599,14 @@ SVGTextFrame::UpdateFontSizeScaleFactor()
   }
   mLastContextScale = contextScale;
 
-  double maxSize = nsPresContext::AppUnitsToFloatCSSPixels(max);
+  double maxSize = presContext->AppUnitsToFloatCSSPixels(max);
 
   // But we want to ignore any scaling required due to HiDPI displays, since
   // regular CSS text frames will still create text runs using the font size
   // in CSS pixels, and we want SVG text to have the same rendering as HTML
   // text for regular font sizes.
   float cssPxPerDevPx =
-    nsPresContext::AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
+    presContext->AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
   contextScale *= cssPxPerDevPx;
 
   double minTextRunSize = minSize * contextScale;
@@ -5648,8 +5658,9 @@ SVGTextFrame::TransformFramePointToTextChild(const Point& aPoint,
   // Add in the mRect offset to aPoint, as that will have been taken into
   // account when transforming the point from the ancestor frame down
   // to this one.
-  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
-  float factor = nsPresContext::AppUnitsPerCSSPixel();
+  float cssPxPerDevPx = presContext->
+    AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
+  float factor = presContext->AppUnitsPerCSSPixel();
   Point framePosition(NSAppUnitsToFloatPixels(mRect.x, factor),
                       NSAppUnitsToFloatPixels(mRect.y, factor));
   Point pointInUserSpace = aPoint * cssPxPerDevPx + framePosition;
@@ -5756,7 +5767,7 @@ SVGTextFrame::TransformFrameRectFromTextChild(const nsRect& aRect,
 
   // Subtract the mRect offset from the result, as our user space for
   // this frame is relative to the top-left of mRect.
-  float factor = nsPresContext::AppUnitsPerCSSPixel();
+  float factor = presContext->AppUnitsPerCSSPixel();
   gfxPoint framePosition(NSAppUnitsToFloatPixels(mRect.x, factor),
                          NSAppUnitsToFloatPixels(mRect.y, factor));
 

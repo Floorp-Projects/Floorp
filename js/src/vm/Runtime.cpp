@@ -594,10 +594,10 @@ JSContext::requestInterrupt(InterruptMode mode)
         // not regularly polled. Wake ilooping Ion code, irregexp JIT code and
         // Atomics.wait()
         interruptRegExpJit_ = true;
-        FutexThread::lock();
+        fx.lock();
         if (fx.isWaiting())
             fx.wake(FutexThread::WakeForJSInterrupt);
-        FutexThread::unlock();
+        fx.unlock();
         InterruptRunningJitCode(this);
     }
 }

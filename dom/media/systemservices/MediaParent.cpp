@@ -72,7 +72,7 @@ class OriginKeyStore : public nsISupports
       OriginKey* key;
       if (!mKeys.Get(principalString, &key)) {
         nsCString salt; // Make a new one
-        nsresult rv = GenerateRandomName(salt, OriginKey::EncodedLength);
+        nsresult rv = GenerateRandomName(salt, key->EncodedLength);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }

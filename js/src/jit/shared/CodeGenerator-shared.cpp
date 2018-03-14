@@ -122,7 +122,7 @@ CodeGeneratorShared::generatePrologue()
 
     // If profiling, save the current frame pointer to a per-thread global field.
     if (isProfilerInstrumentationEnabled())
-        masm.profilerEnterFrame(MacroAssembler::getStackPointer(), CallTempReg0);
+        masm.profilerEnterFrame(masm.getStackPointer(), CallTempReg0);
 
     // Ensure that the Ion frame is properly aligned.
     masm.assertStackAlignment(JitStackAlignment, 0);

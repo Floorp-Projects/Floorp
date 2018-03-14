@@ -1303,7 +1303,7 @@ FracNumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d, int base = 10)
          */
         const double_conversion::DoubleToStringConverter& converter
             = double_conversion::DoubleToStringConverter::EcmaScriptConverter();
-        double_conversion::StringBuilder builder(cbuf->sbuf, js::ToCStringBuf::sbufSize);
+        double_conversion::StringBuilder builder(cbuf->sbuf, cbuf->sbufSize);
         converter.ToShortest(d, &builder);
         numStr = builder.Finalize();
     } else {

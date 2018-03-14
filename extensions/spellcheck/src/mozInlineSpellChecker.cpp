@@ -1497,7 +1497,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
 
     // check spelling and add to selection if misspelled
     bool isMisspelled;
-    mozInlineSpellWordUtil::NormalizeWord(wordText);
+    aWordUtil.NormalizeWord(wordText);
     nsresult rv = mSpellCheck->CheckCurrentWordNoSuggest(wordText,
                                                          &isMisspelled);
     if (NS_FAILED(rv))

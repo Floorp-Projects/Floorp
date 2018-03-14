@@ -35,10 +35,10 @@ MoveOperand::MoveOperand(MacroAssembler& masm, const ABIArg& arg)
         break;
       case ABIArg::Stack:
         kind_ = MEMORY;
-        if (IsHiddenSP(MacroAssembler::getStackPointer()))
+        if (IsHiddenSP(masm.getStackPointer()))
             MOZ_CRASH("Hidden SP cannot be represented as register code on this platform");
         else
-            code_ = AsRegister(MacroAssembler::getStackPointer()).code();
+            code_ = AsRegister(masm.getStackPointer()).code();
         disp_ = arg.offsetFromArgBase();
         break;
       case ABIArg::Uninitialized:

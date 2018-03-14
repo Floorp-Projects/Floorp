@@ -286,7 +286,7 @@ Address
 CodeGeneratorShared::ToAddress(const LAllocation& a)
 {
     MOZ_ASSERT(a.isMemory());
-    return Address(MacroAssembler::getStackPointer(), ToStackOffset(&a));
+    return Address(masm.getStackPointer(), ToStackOffset(&a));
 }
 
 Address

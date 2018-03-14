@@ -233,7 +233,7 @@ ImageBitmapRenderingContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
   RefPtr<ImageContainer> imageContainer = imageLayer->GetContainer();
   if (!imageContainer) {
-    imageContainer = LayerManager::CreateImageContainer();
+    imageContainer = aManager->CreateImageContainer();
     imageLayer->SetContainer(imageContainer);
   }
 

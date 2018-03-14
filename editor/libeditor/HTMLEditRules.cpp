@@ -1739,7 +1739,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
     MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
     blockParent =
-      HTMLEditor::GetBlock(*atStartOfSelection.GetContainer(), host);
+      mHTMLEditor->GetBlock(*atStartOfSelection.GetContainer(), host);
     if (NS_WARN_IF(!blockParent)) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -2673,8 +2673,8 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
       // Figure out block parents
       NS_ENSURE_STATE(mHTMLEditor);
-      nsCOMPtr<Element> leftParent = HTMLEditor::GetBlock(*startNode);
-      nsCOMPtr<Element> rightParent = HTMLEditor::GetBlock(*endNode);
+      nsCOMPtr<Element> leftParent = mHTMLEditor->GetBlock(*startNode);
+      nsCOMPtr<Element> rightParent = mHTMLEditor->GetBlock(*endNode);
 
       // Are endpoint block parents the same?  Use default deletion
       if (leftParent && leftParent == rightParent) {

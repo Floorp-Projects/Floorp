@@ -156,7 +156,7 @@ class TypedArrayObject : public NativeObject
     bool hasInlineElements() const;
     void setInlineElements();
     uint8_t* elementsRaw() const {
-        return *(uint8_t **)((((char *)this) + js::TypedArrayObject::dataOffset()));
+        return *(uint8_t **)((((char *)this) + this->dataOffset()));
     }
     uint8_t* elements() const {
         assertZeroLengthArrayData();

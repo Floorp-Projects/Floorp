@@ -28,7 +28,7 @@ WebBrowserPersistRemoteDocument
 WebBrowserPersistRemoteDocument::~WebBrowserPersistRemoteDocument()
 {
     if (mActor) {
-        Unused << WebBrowserPersistDocumentParent::Send__delete__(mActor);
+        Unused << mActor->Send__delete__(mActor);
         // That will call mActor->ActorDestroy, which calls this->ActorDestroy
         // (whether or not the IPC send succeeds).
     }
