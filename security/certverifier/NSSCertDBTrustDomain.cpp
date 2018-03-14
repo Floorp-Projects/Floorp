@@ -81,6 +81,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mSHA1Mode(sha1Mode)
   , mNetscapeStepUpPolicy(netscapeStepUpPolicy)
   , mDistrustedCAPolicy(distrustedCAPolicy)
+  , mSawDistrustedCAByPolicyError(false)
   , mOriginAttributes(originAttributes)
   , mBuiltChain(builtChain)
   , mPinningTelemetryInfo(pinningTelemetryInfo)
@@ -913,6 +914,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
     if (isDistrusted) {
+      mSawDistrustedCAByPolicyError = true;
       return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
     }
   }
@@ -1070,6 +1072,7 @@ NSSCertDBTrustDomain::ResetAccumulatedState()
   mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   mSCTListFromOCSPStapling = nullptr;
   mSCTListFromCertificate = nullptr;
+  mSawDistrustedCAByPolicyError = false;
 }
 
 static Input
@@ -1097,6 +1100,12 @@ Input
 NSSCertDBTrustDomain::GetSCTListFromOCSPStapling() const
 {
   return SECItemToInput(mSCTListFromOCSPStapling);
+}
+
+bool
+NSSCertDBTrustDomain::GetIsErrorDueToDistrustedCAPolicy() const
+{
+  return mSawDistrustedCAByPolicyError;
 }
 
 void
