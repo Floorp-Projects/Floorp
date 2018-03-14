@@ -81,24 +81,22 @@ function WebRequestEventManager(context, eventName) {
     };
   };
 
-  return EventManager.call(this, context, name, register);
+  return new EventManager({context, name, register}).api();
 }
-
-WebRequestEventManager.prototype = Object.create(EventManager.prototype);
 
 this.webRequest = class extends ExtensionAPI {
   getAPI(context) {
     return {
       webRequest: {
-        onBeforeRequest: new WebRequestEventManager(context, "onBeforeRequest").api(),
-        onBeforeSendHeaders: new WebRequestEventManager(context, "onBeforeSendHeaders").api(),
-        onSendHeaders: new WebRequestEventManager(context, "onSendHeaders").api(),
-        onHeadersReceived: new WebRequestEventManager(context, "onHeadersReceived").api(),
-        onAuthRequired: new WebRequestEventManager(context, "onAuthRequired").api(),
-        onBeforeRedirect: new WebRequestEventManager(context, "onBeforeRedirect").api(),
-        onResponseStarted: new WebRequestEventManager(context, "onResponseStarted").api(),
-        onErrorOccurred: new WebRequestEventManager(context, "onErrorOccurred").api(),
-        onCompleted: new WebRequestEventManager(context, "onCompleted").api(),
+        onBeforeRequest: WebRequestEventManager(context, "onBeforeRequest"),
+        onBeforeSendHeaders: WebRequestEventManager(context, "onBeforeSendHeaders"),
+        onSendHeaders: WebRequestEventManager(context, "onSendHeaders"),
+        onHeadersReceived: WebRequestEventManager(context, "onHeadersReceived"),
+        onAuthRequired: WebRequestEventManager(context, "onAuthRequired"),
+        onBeforeRedirect: WebRequestEventManager(context, "onBeforeRedirect"),
+        onResponseStarted: WebRequestEventManager(context, "onResponseStarted"),
+        onErrorOccurred: WebRequestEventManager(context, "onErrorOccurred"),
+        onCompleted: WebRequestEventManager(context, "onCompleted"),
         handlerBehaviorChanged: function() {
           // TODO: Flush all caches.
         },

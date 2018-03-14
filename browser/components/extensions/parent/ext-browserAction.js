@@ -584,15 +584,20 @@ this.browserAction = class extends ExtensionAPI {
 
     return {
       browserAction: {
-        onClicked: new InputEventManager(context, "browserAction.onClicked", fire => {
-          let listener = (event, browser) => {
-            context.withPendingBrowser(browser, () =>
-              fire.sync(tabManager.convert(tabTracker.activeTab)));
-          };
-          browserAction.on("click", listener);
-          return () => {
-            browserAction.off("click", listener);
-          };
+        onClicked: new EventManager({
+          context,
+          name: "browserAction.onClicked",
+          inputHandling: true,
+          register: fire => {
+            let listener = (event, browser) => {
+              context.withPendingBrowser(browser, () =>
+                fire.sync(tabManager.convert(tabTracker.activeTab)));
+            };
+            browserAction.on("click", listener);
+            return () => {
+              browserAction.off("click", listener);
+            };
+          },
         }).api(),
 
         enable: function(tabId) {
