@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.MockRecord;
+import org.mozilla.gecko.background.testhelpers.NullPayloadRecord;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.InfoCollections;
@@ -25,8 +26,6 @@ import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
-import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
-import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -478,6 +477,34 @@ public class BatchingUploaderTest {
         }
 
         assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
+    }
+
+    // Same as above, except that uploader is configured to ignore failures due to invalid records.
+    @Test
+    public void testFailDoesNotAbortBatch() {
+        BatchingUploader uploader = makeConstrainedUploader(2, 10, 10, false, false);
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 10));
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 10));
+        assertEquals(0, ((MockStoreDelegate) storeDelegate).storeFailed);
+        assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
+        assertEquals(((MockStoreDelegate) storeDelegate).lastStoreFailedException, null);
+
+        // "Record too large" failures are not recorded.
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 11));
+        assertEquals(((MockStoreDelegate) storeDelegate).lastRecordStoreFailedException, null);
+        assertEquals(((MockStoreDelegate) storeDelegate).lastStoreFailedException, null);
+
+        // Null record failures are recorded.
+        uploader.process(new NullPayloadRecord());
+        assertTrue(((MockStoreDelegate) storeDelegate).lastRecordStoreFailedException instanceof BatchingUploader.IllegalRecordException);
+        assertEquals(((MockStoreDelegate) storeDelegate).lastStoreFailedException, null);
+
+        // Ensure that further calls to process still work.
+        for (int i = 0; i < 6; ++i) {
+            uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 1));
+        }
+
+        assertEquals(4, ((MockExecutorService) workQueue).totalPayloads);
     }
 
 
