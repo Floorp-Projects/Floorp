@@ -181,8 +181,8 @@ include empty/reftest.list
 == wide--contain--percent-width-percent-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--contain--percent-width-percent-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
 
-== wide--cover--nonpercent-width-nonpercent-height.html ref-wide-lime768x256.html
-== wide--cover--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html
+fuzzy-if(webrender,127-127,768-768) == wide--cover--nonpercent-width-nonpercent-height.html ref-wide-lime768x256.html
+fuzzy-if(webrender,127-127,768-768) == wide--cover--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html
 == wide--cover--nonpercent-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--cover--nonpercent-width-omitted-height-viewbox.html ref-wide-lime768x256.html
 == wide--cover--nonpercent-width-percent-height.html ref-wide-lime768x128-aqua768x128.html
