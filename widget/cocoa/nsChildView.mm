@@ -4593,12 +4593,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
   else
     geckoEvent.button = WidgetMouseEvent::eLeftButton;
 
+  // Remember the event's position before calling DispatchInputEvent, because
+  // that call can mutate it and convert it into a different coordinate space.
+  LayoutDeviceIntPoint pos = geckoEvent.mRefPoint;
+
   // This might destroy our widget (and null out mGeckoChild).
   bool defaultPrevented =
     (mGeckoChild->DispatchInputEvent(&geckoEvent) == nsEventStatus_eConsumeNoDefault);
 
   // Check to see if we are double-clicking in draggable parts of the window.
-  LayoutDeviceIntPoint pos = geckoEvent.mRefPoint;
   if (!defaultPrevented && [theEvent clickCount] == 2 &&
       !mGeckoChild->GetNonDraggableRegion().Contains(pos.x, pos.y)) {
     if ([self shouldZoomOnDoubleClick]) {
