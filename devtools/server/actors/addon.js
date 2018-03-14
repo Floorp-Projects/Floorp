@@ -15,7 +15,6 @@ var { assert, update } = DevToolsUtils;
 
 loader.lazyRequireGetter(this, "AddonThreadActor", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
-loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyRequireGetter(this, "WebConsoleActor", "devtools/server/actors/webconsole", true);
 
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
@@ -218,27 +217,7 @@ BrowserAddonActor.prototype = {
     }
 
     if (global instanceof Ci.nsIDOMWindow) {
-      return mapURIToAddonID(global.document.documentURIObject) == this.id;
-    }
-
-    // Check the global for a __URI__ property and then try to map that to an
-    // add-on
-    let uridescriptor = givenGlobal.getOwnPropertyDescriptor("__URI__");
-    if (uridescriptor && "value" in uridescriptor && uridescriptor.value) {
-      let uri;
-      try {
-        uri = Services.io.newURI(uridescriptor.value);
-      } catch (e) {
-        DevToolsUtils.reportException(
-          "BrowserAddonActor.prototype._shouldAddNewGlobalAsDebuggee",
-          new Error("Invalid URI: " + uridescriptor.value)
-        );
-        return false;
-      }
-
-      if (mapURIToAddonID(uri) == this.id) {
-        return true;
-      }
+      return global.document.nodePrincipal.addonId;
     }
 
     return false;

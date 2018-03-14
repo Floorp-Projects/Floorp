@@ -1004,22 +1004,6 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     creationOptions.setInvisibleToDebugger(options.invisibleToDebugger)
                    .setTrace(TraceXPCGlobal);
 
-    // Try to figure out any addon this sandbox should be associated with.
-    // The addon could have been passed in directly, as part of the metadata,
-    // or by being constructed from an addon's code.
-    JSAddonId* addonId = nullptr;
-    if (options.addonId) {
-        addonId = JS::NewAddonId(cx, options.addonId);
-        NS_ENSURE_TRUE(addonId, NS_ERROR_FAILURE);
-    } else if (principal == nsXPConnect::SystemPrincipal()) {
-        if (JSObject* obj = JS::CurrentGlobalOrNull(cx)) {
-            if (JSAddonId* id = JS::AddonIdOfObject(obj))
-                addonId = id;
-        }
-    }
-
-    creationOptions.setAddonId(addonId);
-
     compartmentOptions.behaviors().setDiscardSource(options.discardSource);
 
     const js::Class* clasp = &SandboxClass;
