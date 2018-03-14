@@ -329,14 +329,15 @@ GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, const Maybe<ImmP
 
     // Save the return address if it wasn't already saved by the call insn.
 #ifdef JS_USE_LINK_REGISTER
-# if defined(JS_CODEGEN_ARM)
+# if defined(JS_CODEGEN_ARM) || \
+     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     masm.pushReturnAddress();
 # elif defined(JS_CODEGEN_ARM64)
     // WasmPush updates framePushed() unlike pushReturnAddress(), but that's
     // cancelled by the setFramePushed() below.
     WasmPush(masm, lr);
 # else
-#   MOZ_CRASH("Implement this");
+    MOZ_CRASH("Implement this");
 # endif
 #endif
 
