@@ -1935,6 +1935,24 @@ void
 APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                                        const Maybe<ZoomConstraints>& aConstraints)
 {
+  if (!APZThreadUtils::IsSamplerThread()) {
+    // This can happen if we're in the UI process and got a call directly from
+    // nsBaseWidget (as opposed to over PAPZCTreeManager). We want this function
+    // to run on the sampler thread, so bounce it over.
+    MOZ_ASSERT(XRE_IsParentProcess());
+
+    APZThreadUtils::RunOnSamplerThread(
+        NewRunnableMethod<ScrollableLayerGuid, Maybe<ZoomConstraints>>(
+            "APZCTreeManager::UpdateZoomConstraints",
+            this,
+            &APZCTreeManager::UpdateZoomConstraints,
+            aGuid,
+            aConstraints));
+    return;
+  }
+
+  APZThreadUtils::AssertOnSamplerThread();
+
   RecursiveMutexAutoLock lock(mTreeLock);
   RefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
   MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
