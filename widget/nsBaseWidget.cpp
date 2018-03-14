@@ -938,7 +938,13 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
 
   ConfigureAPZControllerThread();
 
-  mAPZC->SetDPI(GetDPI());
+  float dpi = GetDPI();
+  // On Android the main thread is not the controller thread
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod<float>(
+      "layers::IAPZCTreeManager::SetDPI",
+      mAPZC,
+      &IAPZCTreeManager::SetDPI,
+      dpi));
 
   if (gfxPrefs::APZKeyboardEnabled()) {
     KeyboardMap map = nsXBLWindowKeyHandler::CollectKeyboardShortcuts();
