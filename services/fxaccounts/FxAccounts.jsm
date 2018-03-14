@@ -75,20 +75,6 @@ var publicProperties = [
   "whenVerified",
 ];
 
-// A poor-man's "registry" of promise-returning functions to call before we
-// send observer notifications. Primarily used so parts of Firefox which are
-// yet to load for performance reasons can be force-loaded and thus not miss
-// the notification.
-const OBSERVER_PRELOADS = [
-  // Sync
-  () => {
-    let scope = {};
-    ChromeUtils.import("resource://services-sync/main.js", scope);
-    return scope.Weave.Service.promiseInitialized;
-  },
-
-];
-
 // An AccountState object holds all state related to one specific account.
 // Only one AccountState is ever "current" in the FxAccountsInternal object -
 // whenever a user logs out or logs in, the current AccountState is discarded,
@@ -350,6 +336,21 @@ var FxAccounts = function(mockInternal) {
         .getService(Ci.nsISupports)
         .wrappedJSObject;
     });
+  }
+
+  if (!internal.observerPreloads) {
+    // A registry of promise-returning functions that `notifyObservers` should
+    // call before sending notifications. Primarily used so parts of Firefox
+    // which have yet to load for performance reasons can be force-loaded, and
+    // thus not miss notifications.
+    internal.observerPreloads = [
+      // Sync
+      () => {
+        let scope = {};
+        ChromeUtils.import("resource://services-sync/main.js", scope);
+        return scope.Weave.Service.promiseInitialized;
+      },
+    ];
   }
 
   // wait until after the mocks are setup before initializing.
@@ -1272,7 +1273,7 @@ FxAccountsInternal.prototype = {
   },
 
   async notifyObservers(topic, data) {
-    for (let f of OBSERVER_PRELOADS) {
+    for (let f of this.observerPreloads) {
       try {
         await f();
       } catch (O_o) {}
@@ -1600,7 +1601,7 @@ FxAccountsInternal.prototype = {
       if (sessionToken && deviceId) {
         await this.fxAccountsClient.signOutAndDestroyDevice(sessionToken, deviceId);
       }
-      this.currentAccountState.updateUserAccountData({
+      await this.currentAccountState.updateUserAccountData({
         deviceId: null,
         deviceRegistrationVersion: null
       });
