@@ -985,7 +985,7 @@ class Files(SubContext):
             """The bug component that tracks changes to these files.
 
             Values are a 2-tuple of unicode describing the Bugzilla product and
-            component. e.g. ``('Core', 'Build Config')``.
+            component. e.g. ``('Firefox Build System', 'General')``.
             """),
 
         'FINAL': (bool, bool,
