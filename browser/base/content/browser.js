@@ -1229,6 +1229,9 @@ var gBrowserInit = {
         document.documentElement.setAttribute("sizemode", "maximized");
       }
     }
+
+    TabsInTitlebar.init();
+    TabsInTitlebar.updateAppearance();
   },
 
   onDOMContentLoaded() {

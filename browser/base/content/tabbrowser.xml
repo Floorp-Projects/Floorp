@@ -756,7 +756,6 @@
           switch (aEvent.type) {
             case "DOMContentLoaded":
               this.updateVisibility();
-              TabsInTitlebar.init();
               break;
             case "resize":
               if (aEvent.target != window)
