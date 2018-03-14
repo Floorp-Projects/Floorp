@@ -126,7 +126,7 @@ FindReservedWord(JSLinearString* str)
 
 template <typename CharT>
 static bool
-IsIdentifier(const CharT* chars, size_t length)
+IsIdentifierImpl(const CharT* chars, size_t length)
 {
     using namespace js;
 
@@ -170,7 +170,7 @@ IsIdentifierMaybeNonBMP(const char16_t* chars, size_t length)
 {
     using namespace js;
 
-    if (IsIdentifier(chars, length))
+    if (IsIdentifierImpl(chars, length))
         return true;
 
     if (length == 0)
@@ -203,20 +203,20 @@ IsIdentifier(JSLinearString* str)
     JS::AutoCheckCannotGC nogc;
     MOZ_ASSERT(str);
     if (str->hasLatin1Chars())
-        return ::IsIdentifier(str->latin1Chars(nogc), str->length());
+        return ::IsIdentifierImpl(str->latin1Chars(nogc), str->length());
     return ::IsIdentifierMaybeNonBMP(str->twoByteChars(nogc), str->length());
 }
 
 bool
 IsIdentifier(const char* chars, size_t length)
 {
-    return ::IsIdentifier(chars, length);
+    return ::IsIdentifierImpl(chars, length);
 }
 
 bool
 IsIdentifier(const char16_t* chars, size_t length)
 {
-    return ::IsIdentifier(chars, length);
+    return ::IsIdentifierImpl(chars, length);
 }
 
 bool

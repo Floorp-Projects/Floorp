@@ -12,6 +12,7 @@
 #include <stdarg.h>
 
 #include "jsapi.h" // for JSErrorNotes, JSErrorReport
+#include "jsfriendapi.h" // for ScriptEnvironmentPreparer
 
 #include "js/UniquePtr.h" // for UniquePtr
 #include "js/Utility.h" // for UniqueTwoByteChars
@@ -66,6 +67,18 @@ class CompileError : public JSErrorReport
 {
   public:
     void throwError(JSContext* cx);
+};
+
+class MOZ_STACK_CLASS ReportExceptionClosure final
+  : public ScriptEnvironmentPreparer::Closure
+{
+    JS::HandleValue exn_;
+
+  public:
+    explicit ReportExceptionClosure(JS::HandleValue exn)
+      : exn_(exn) { }
+
+    bool operator()(JSContext* cx) override;
 };
 
 /** Send a JSErrorReport to the warningReporter callback. */
