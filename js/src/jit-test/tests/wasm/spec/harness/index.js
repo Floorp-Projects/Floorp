@@ -80,7 +80,7 @@ function reinitializeRegistry() {
 
     registry = {
         spectest: {
-            print: console.log.bind(console),
+            print: console.log,
             global: 666,
             table: new WebAssembly.Table({initial: 10, maximum: 20, element: 'anyfunc'}),
             memory: new WebAssembly.Memory({initial: 1, maximum: 2})
