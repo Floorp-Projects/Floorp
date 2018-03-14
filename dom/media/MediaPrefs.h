@@ -182,9 +182,6 @@ private:
   // Hls
   DECL_MEDIA_PREF("media.hls.enabled",                        HLSEnabled, bool, false);
 
-  // Both rust/stagefright will be enabled when this is true regardless of 'media.rust.mp4parser'.
-  DECL_MEDIA_PREF("media.rust.test_mode",                     RustTestMode, bool, false);
-
   // True, it enables rust parser and fallback to stagefright if rust parser fails.
   // False, it uses stagefright only.
   DECL_MEDIA_PREF("media.rust.mp4parser",                     EnableRustMP4Parser, bool, true);

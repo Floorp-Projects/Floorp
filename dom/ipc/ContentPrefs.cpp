@@ -239,7 +239,6 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "media.resume-bkgnd-video-on-tabhover",
   "media.ruin-av-sync.enabled",
   "media.rust.mp4parser",
-  "media.rust.test_mode",
   "media.seamless-looping",
   "media.suspend-bkgnd-video.delay-ms",
   "media.suspend-bkgnd-video.enabled",
