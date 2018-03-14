@@ -80,6 +80,19 @@ if CONFIG['HAVE_DTRACE']:
 
     EXPORTS += ['!javascript-trace.h']
 
+# Generate jit/MOpcodes.h from jit/MIR.h
+GENERATED_FILES += ['jit/MOpcodes.h']
+MOpcodesGenerated = GENERATED_FILES['jit/MOpcodes.h']
+MOpcodesGenerated.script = 'jit/GenerateOpcodeFiles.py:generate_mir_header'
+MOpcodesGenerated.inputs = ['jit/MIR.h']
+
+# Generate jit/LOpcodes.h from jit/LIR.h, jit/shared/LIR-shared.h, and
+# platform-specific LIR files.
+GENERATED_FILES += ['jit/LOpcodes.h']
+LOpcodesGenerated = GENERATED_FILES['jit/LOpcodes.h']
+LOpcodesGenerated.script = 'jit/GenerateOpcodeFiles.py:generate_lir_header'
+LOpcodesGenerated.inputs = ['jit/LIR.h', 'jit/shared/LIR-shared.h']
+
 # Changes to internal header files, used externally, massively slow down
 # browser builds.  Don't add new files here unless you know what you're
 # doing!
@@ -450,6 +463,7 @@ if not CONFIG['ENABLE_ION']:
         'jit/none/Trampoline-none.cpp'
     ]
 elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
+    LOpcodesGenerated.inputs += ['jit/x86-shared/LIR-x86-shared.h']
     UNIFIED_SOURCES += [
         'jit/x86-shared/Architecture-x86-shared.cpp',
         'jit/x86-shared/Assembler-x86-shared.cpp',
@@ -465,6 +479,7 @@ elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
         'jit/x86-shared/Disassembler-x86-shared.cpp',  # using namespace js::jit::X86Encoding;
     ]
     if CONFIG['JS_CODEGEN_X64']:
+        LOpcodesGenerated.inputs += ['jit/x64/LIR-x64.h']
         UNIFIED_SOURCES += [
             'jit/x64/Assembler-x64.cpp',
             'jit/x64/Bailouts-x64.cpp',
@@ -477,6 +492,7 @@ elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
             'jit/x64/Trampoline-x64.cpp',
         ]
     else:
+        LOpcodesGenerated.inputs += ['jit/x86/LIR-x86.h']
         UNIFIED_SOURCES += [
             'jit/x86/Assembler-x86.cpp',
             'jit/x86/Bailouts-x86.cpp',
@@ -489,6 +505,7 @@ elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
             'jit/x86/Trampoline-x86.cpp',
         ]
 elif CONFIG['JS_CODEGEN_ARM']:
+    LOpcodesGenerated.inputs += ['jit/arm/LIR-arm.h']
     UNIFIED_SOURCES += [
         'jit/arm/Architecture-arm.cpp',
         'jit/arm/Assembler-arm.cpp',
@@ -514,6 +531,7 @@ elif CONFIG['JS_CODEGEN_ARM']:
             'jit/arm/llvm-compiler-rt/arm/aeabi_uidivmod.S',
         ]
 elif CONFIG['JS_CODEGEN_ARM64']:
+    LOpcodesGenerated.inputs += ['jit/arm64/LIR-arm64.h']
     UNIFIED_SOURCES += [
         'jit/arm64/Architecture-arm64.cpp',
         'jit/arm64/Assembler-arm64.cpp',
@@ -545,6 +563,7 @@ elif CONFIG['JS_CODEGEN_ARM64']:
             'jit/arm64/vixl/Simulator-vixl.cpp'
         ]
 elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
+    LOpcodesGenerated.inputs += ['jit/mips-shared/LIR-mips-shared.h']
     UNIFIED_SOURCES += [
         'jit/mips-shared/Architecture-mips-shared.cpp',
         'jit/mips-shared/Assembler-mips-shared.cpp',
@@ -557,6 +576,7 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
         'jit/mips-shared/MoveEmitter-mips-shared.cpp',
     ]
     if CONFIG['JS_CODEGEN_MIPS32']:
+        LOpcodesGenerated.inputs += ['jit/mips32/LIR-mips32.h']
         UNIFIED_SOURCES += [
             'jit/mips32/Architecture-mips32.cpp',
             'jit/mips32/Assembler-mips32.cpp',
@@ -575,6 +595,7 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
                 'jit/mips32/Simulator-mips32.cpp'
             ]
     elif CONFIG['JS_CODEGEN_MIPS64']:
+        LOpcodesGenerated.inputs += ['jit/mips64/LIR-mips64.h']
         UNIFIED_SOURCES += [
             'jit/mips64/Architecture-mips64.cpp',
             'jit/mips64/Assembler-mips64.cpp',
