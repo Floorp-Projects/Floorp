@@ -21,7 +21,7 @@ var defer = require("devtools/shared/defer");
 var Services = require("Services");
 var ChromeUtils = require("ChromeUtils");
 var {gDevTools} = require("devtools/client/framework/devtools");
-var EventEmitter = require("devtools/shared/old-event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 var { attachThread, detachThread } = require("./attach-thread");
 var Menu = require("devtools/client/framework/menu");
@@ -308,7 +308,7 @@ Toolbox.prototype = {
     if (panel) {
       deferred.resolve(panel);
     } else {
-      this.on(id + "-ready", (e, initializedPanel) => {
+      this.on(id + "-ready", initializedPanel => {
         deferred.resolve(initializedPanel);
       });
     }
@@ -2183,7 +2183,7 @@ Toolbox.prototype = {
       type: "listFrames"
     };
     return this._target.client.request(packet, resp => {
-      this._updateFrames(null, { frames: resp.frames });
+      this._updateFrames({ frames: resp.frames });
     });
   },
 
@@ -2308,7 +2308,7 @@ Toolbox.prototype = {
    *                 parentID {Number}: ID of the parent frame (not set
    *                                    for top level window)
    */
-  _updateFrames: function(event, data) {
+  _updateFrames: function(data) {
     if (!Services.prefs.getBoolPref("devtools.command-button-frames.enabled")) {
       return;
     }
@@ -2502,12 +2502,10 @@ Toolbox.prototype = {
 
   /**
    * Handler for the tool-registered event.
-   * @param  {string} event
-   *         Name of the event ("tool-registered")
    * @param  {string} toolId
    *         Id of the tool that was registered
    */
-  _toolRegistered: function(event, toolId) {
+  _toolRegistered: function(toolId) {
     // Tools can either be in the global devtools, or added to this specific toolbox
     // as an additional tool.
     let definition = gDevTools.getToolDefinition(toolId);
@@ -2534,12 +2532,10 @@ Toolbox.prototype = {
 
   /**
    * Handler for the tool-unregistered event.
-   * @param  {string} event
-   *         Name of the event ("tool-unregistered")
    * @param  {string} toolId
    *         id of the tool that was unregistered
    */
-  _toolUnregistered: function(event, toolId) {
+  _toolUnregistered: function(toolId) {
     this.unloadTool(toolId);
     // Emit the event so tools can listen to it from the toolbox level
     // instead of gDevTools
@@ -2572,14 +2568,14 @@ Toolbox.prototype = {
     return this._initInspector;
   },
 
-  _onNewSelectedNodeFront: function(evt) {
+  _onNewSelectedNodeFront: function() {
     // Emit a "selection-changed" event when the toolbox.selection has been set
     // to a new node (or cleared). Currently used in the WebExtensions APIs (to
     // provide the `devtools.panels.elements.onSelectionChanged` event).
     this.emit("selection-changed");
   },
 
-  _onInspectObject: function(evt, packet) {
+  _onInspectObject: function(packet) {
     this.inspectObjectActor(packet.objectActor, packet.inspectFromAnnotation);
   },
 

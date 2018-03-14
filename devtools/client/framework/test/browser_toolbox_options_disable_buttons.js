@@ -46,7 +46,7 @@ function testSelectTool(devtoolsToolbox) {
 
   toolbox = devtoolsToolbox;
   doc = toolbox.doc;
-  toolbox.once("options-selected", (event, tool) => {
+  toolbox.once("options-selected", tool => {
     ok(true, "Options panel selected via selectTool method");
     panelWin = tool.panelWin;
     deferred.resolve();
