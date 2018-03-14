@@ -17,7 +17,7 @@ async function ifTestingSupported() {
   let thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
   let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([
+  await Promise.all([
     recordingFinished,
     callListPopulated,
     thumbnailsDisplayed,

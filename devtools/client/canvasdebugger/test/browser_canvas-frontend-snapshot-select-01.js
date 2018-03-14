@@ -68,7 +68,7 @@ async function ifTestingSupported() {
     let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
     let snapshotSelected = waitForSnapshotSelection();
     SnapshotsListView._onRecordButtonClick();
-    return promise.all([recordingFinished, snapshotSelected]);
+    return Promise.all([recordingFinished, snapshotSelected]);
   }
 
   function recordAndWaitForAnotherSnapshot() {
@@ -81,7 +81,7 @@ async function ifTestingSupported() {
     let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
     let thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
     let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
-    return promise.all([
+    return Promise.all([
       callListPopulated,
       thumbnailsDisplayed,
       screenshotDisplayed

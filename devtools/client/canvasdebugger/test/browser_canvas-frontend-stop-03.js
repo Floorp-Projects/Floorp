@@ -23,7 +23,7 @@ async function ifTestingSupported() {
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let recordingCancelled = once(window, EVENTS.SNAPSHOT_RECORDING_CANCELLED);
 
-  await promise.all([recordingFinished, recordingCancelled]);
+  await Promise.all([recordingFinished, recordingCancelled]);
 
   ok(true, "Recording stopped and was considered failed.");
 
