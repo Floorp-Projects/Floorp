@@ -5,6 +5,27 @@ ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
 ChromeUtils.defineModuleGetter(this, "TestUtils",
   "resource://testing-common/TestUtils.jsm");
 
+// We need to cache these before test runs...
+let leftPaneGetters = new Map([["leftPaneFolderId", null]]);
+for (let [key, val] of leftPaneGetters) {
+  if (!val) {
+    let getter = Object.getOwnPropertyDescriptor(PlacesUIUtils, key).get;
+    if (typeof getter == "function") {
+      leftPaneGetters.set(key, getter);
+    }
+  }
+}
+
+// ...And restore them when test ends.
+function restoreLeftPaneGetters() {
+  for (let [key, getter] of leftPaneGetters) {
+    Object.defineProperty(PlacesUIUtils, key, {
+      enumerable: true, configurable: true, get: getter
+    });
+  }
+}
+registerCleanupFunction(restoreLeftPaneGetters);
+
 function openLibrary(callback, aLeftPaneRoot) {
   let library = window.openDialog("chrome://browser/content/places/places.xul",
                                   "", "chrome,toolbar=yes,dialog=no,resizable",

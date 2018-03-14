@@ -206,6 +206,10 @@ let InternalFaviconLoader = {
 };
 
 var PlacesUIUtils = {
+  ORGANIZER_LEFTPANE_VERSION: 8,
+  ORGANIZER_FOLDER_ANNO: "PlacesOrganizer/OrganizerFolder",
+  ORGANIZER_QUERY_ANNO: "PlacesOrganizer/OrganizerQuery",
+
   LOAD_IN_SIDEBAR_ANNO: "bookmarkProperties/loadInSidebar",
   DESCRIPTION_ANNO: "bookmarkProperties/description",
 
@@ -527,16 +531,11 @@ var PlacesUIUtils = {
     }
 
     // Is it a query pointing to one of the special root folders?
-    if (PlacesUtils.nodeIsQuery(parentNode)) {
-      if (PlacesUtils.nodeIsFolder(aNode)) {
-        let guid = PlacesUtils.getConcreteItemGuid(aNode);
-        // If the parent folder is not a folder, it must be a query, and so this node
-        // cannot be removed.
-        if (PlacesUtils.isRootItem(guid)) {
-          return false;
-        }
-      } else if (PlacesUtils.isVirtualLeftPaneItem(aNode.bookmarkGuid)) {
-        // If the item is a left-pane top-level item, it can't be removed.
+    if (PlacesUtils.nodeIsQuery(parentNode) && PlacesUtils.nodeIsFolder(aNode)) {
+      let guid = PlacesUtils.getConcreteItemGuid(aNode);
+      // If the parent folder is not a folder, it must be a query, and so this node
+      // cannot be removed.
+      if (PlacesUtils.isRootItem(guid)) {
         return false;
       }
     }
@@ -591,7 +590,21 @@ var PlacesUIUtils = {
         view.controller.hasCachedLivemarkInfo(placesNode))
       return true;
 
-    return false;
+    // leftPaneFolderId is a lazy getter
+    // performing at least a synchronous DB query (and on its very first call
+    // in a fresh profile, it also creates the entire structure).
+    // Therefore we don't want to this function, which is called very often by
+    // isCommandEnabled, to ever be the one that invokes it first, especially
+    // because isCommandEnabled may be called way before the left pane folder is
+    // even created (for example, if the user only uses the bookmarks menu or
+    // toolbar for managing bookmarks).  To do so, we avoid comparing to those
+    // special folder if the lazy getter is still in place.  This is safe merely
+    // because the only way to access the left pane contents goes through
+    // "resolving" the leftPaneFolderId getter.
+    if (typeof Object.getOwnPropertyDescriptor(this, "leftPaneFolderId").get == "function") {
+      return false;
+    }
+    return itemId == this.leftPaneFolderId;
   },
 
   /** aItemsToOpen needs to be an array of objects of the form:
@@ -799,6 +812,261 @@ var PlacesUIUtils = {
       title = aNode.title;
 
     return title || this.getString("noTitle");
+  },
+
+  get leftPaneQueries() {
+    // build the map
+    this.leftPaneFolderId;
+    return this.leftPaneQueries;
+  },
+
+  get leftPaneFolderId() {
+    delete this.leftPaneFolderId;
+    return this.leftPaneFolderId = this.maybeRebuildLeftPane();
+  },
+
+  // Get the folder id for the organizer left-pane folder.
+  maybeRebuildLeftPane() {
+    let leftPaneRoot = -1;
+
+    // Shortcuts to services.
+    let bs = PlacesUtils.bookmarks;
+    let as = PlacesUtils.annotations;
+
+    // This is the list of the left pane queries.
+    let queries = {
+      "PlacesRoot": { title: "" },
+      "History": { title: this.getString("OrganizerQueryHistory") },
+      "Downloads": { title: this.getString("OrganizerQueryDownloads") },
+      "Tags": { title: this.getString("OrganizerQueryTags") },
+      "AllBookmarks": { title: this.getString("OrganizerQueryAllBookmarks") },
+    };
+    // All queries but PlacesRoot.
+    const EXPECTED_QUERY_COUNT = 4;
+
+    // Removes an item and associated annotations, ignoring eventual errors.
+    function safeRemoveItem(aItemId) {
+      try {
+        if (as.itemHasAnnotation(aItemId, PlacesUIUtils.ORGANIZER_QUERY_ANNO) &&
+            !(as.getItemAnnotation(aItemId, PlacesUIUtils.ORGANIZER_QUERY_ANNO) in queries)) {
+          // Some extension annotated their roots with our query annotation,
+          // so we should not delete them.
+          return;
+        }
+        // removeItemAnnotation does not check if item exists, nor the anno,
+        // so this is safe to do.
+        as.removeItemAnnotation(aItemId, PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
+        as.removeItemAnnotation(aItemId, PlacesUIUtils.ORGANIZER_QUERY_ANNO);
+        // This will throw if the annotation is an orphan.
+        bs.removeItem(aItemId);
+      } catch (e) { /* orphan anno */ }
+    }
+
+    // Returns true if item really exists, false otherwise.
+    function itemExists(aItemId) {
+      try {
+        bs.getFolderIdForItem(aItemId);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Get all items marked as being the left pane folder.
+    let items = as.getItemsWithAnnotation(this.ORGANIZER_FOLDER_ANNO);
+    if (items.length > 1) {
+      // Something went wrong, we cannot have more than one left pane folder,
+      // remove all left pane folders and continue.  We will create a new one.
+      items.forEach(safeRemoveItem);
+    } else if (items.length == 1 && items[0] != -1) {
+      leftPaneRoot = items[0];
+      // Check that organizer left pane root is valid.
+      let version = as.getItemAnnotation(leftPaneRoot, this.ORGANIZER_FOLDER_ANNO);
+      if (version != this.ORGANIZER_LEFTPANE_VERSION ||
+          !itemExists(leftPaneRoot)) {
+        // Invalid root, we must rebuild the left pane.
+        safeRemoveItem(leftPaneRoot);
+        leftPaneRoot = -1;
+      }
+    }
+
+    if (leftPaneRoot != -1) {
+      // A valid left pane folder has been found.
+      // Build the leftPaneQueries Map.  This is used to quickly access them,
+      // associating a mnemonic name to the real item ids.
+      delete this.leftPaneQueries;
+      this.leftPaneQueries = {};
+
+      let queryItems = as.getItemsWithAnnotation(this.ORGANIZER_QUERY_ANNO);
+      // While looping through queries we will also check for their validity.
+      let queriesCount = 0;
+      let corrupt = false;
+      for (let i = 0; i < queryItems.length; i++) {
+        let queryName = as.getItemAnnotation(queryItems[i], this.ORGANIZER_QUERY_ANNO);
+
+        // Some extension did use our annotation to decorate their items
+        // with icons, so we should check only our elements, to avoid dataloss.
+        if (!(queryName in queries))
+          continue;
+
+        let query = queries[queryName];
+        query.itemId = queryItems[i];
+
+        if (!itemExists(query.itemId)) {
+          // Orphan annotation, bail out and create a new left pane root.
+          corrupt = true;
+          break;
+        }
+
+        // Check that all queries have valid parents.
+        let parentId = bs.getFolderIdForItem(query.itemId);
+        if (!queryItems.includes(parentId) && parentId != leftPaneRoot) {
+          // The parent is not part of the left pane, bail out and create a new
+          // left pane root.
+          corrupt = true;
+          break;
+        }
+
+        // Titles could have been corrupted or the user could have changed his
+        // locale.  Check title and eventually fix it.
+        if (bs.getItemTitle(query.itemId) != query.title)
+          bs.setItemTitle(query.itemId, query.title);
+        if ("concreteId" in query) {
+          if (bs.getItemTitle(query.concreteId) != query.concreteTitle)
+            bs.setItemTitle(query.concreteId, query.concreteTitle);
+        }
+
+        // Add the query to our cache.
+        this.leftPaneQueries[queryName] = query.itemId;
+        queriesCount++;
+      }
+
+      // Note: it's not enough to just check for queriesCount, since we may
+      // find an invalid query just after accounting for a sufficient number of
+      // valid ones.  As well as we can't just rely on corrupt since we may find
+      // less valid queries than expected.
+      if (corrupt || queriesCount != EXPECTED_QUERY_COUNT) {
+        // Queries number is wrong, so the left pane must be corrupt.
+        // Note: we can't just remove the leftPaneRoot, because some query could
+        // have a bad parent, so we have to remove all items one by one.
+        queryItems.forEach(safeRemoveItem);
+        safeRemoveItem(leftPaneRoot);
+      } else {
+        // Everything is fine, return the current left pane folder.
+        return leftPaneRoot;
+      }
+    }
+
+    // Create a new left pane folder.
+    var callback = {
+      // Helper to create an organizer special query.
+      create_query: function CB_create_query(aQueryName, aParentId, aQueryUrl) {
+        let itemId = bs.insertBookmark(aParentId,
+                                       Services.io.newURI(aQueryUrl),
+                                       bs.DEFAULT_INDEX,
+                                       queries[aQueryName].title);
+        // Mark as special organizer query.
+        as.setItemAnnotation(itemId, PlacesUIUtils.ORGANIZER_QUERY_ANNO, aQueryName,
+                             0, as.EXPIRE_NEVER);
+        // We should never backup this, since it changes between profiles.
+        as.setItemAnnotation(itemId, PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, 1,
+                             0, as.EXPIRE_NEVER);
+        // Add to the queries map.
+        PlacesUIUtils.leftPaneQueries[aQueryName] = itemId;
+        return itemId;
+      },
+
+      // Helper to create an organizer special folder.
+      create_folder: function CB_create_folder(aFolderName, aParentId, aIsRoot) {
+              // Left Pane Root Folder.
+        let folderId = bs.createFolder(aParentId,
+                                       queries[aFolderName].title,
+                                       bs.DEFAULT_INDEX);
+        // We should never backup this, since it changes between profiles.
+        as.setItemAnnotation(folderId, PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, 1,
+                             0, as.EXPIRE_NEVER);
+
+        if (aIsRoot) {
+          // Mark as special left pane root.
+          as.setItemAnnotation(folderId, PlacesUIUtils.ORGANIZER_FOLDER_ANNO,
+                               PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION,
+                               0, as.EXPIRE_NEVER);
+        } else {
+          // Mark as special organizer folder.
+          as.setItemAnnotation(folderId, PlacesUIUtils.ORGANIZER_QUERY_ANNO, aFolderName,
+                           0, as.EXPIRE_NEVER);
+          PlacesUIUtils.leftPaneQueries[aFolderName] = folderId;
+        }
+        return folderId;
+      },
+
+      runBatched: function CB_runBatched(aUserData) {
+        delete PlacesUIUtils.leftPaneQueries;
+        PlacesUIUtils.leftPaneQueries = { };
+
+        // Left Pane Root Folder.
+        leftPaneRoot = this.create_folder("PlacesRoot", bs.placesRoot, true);
+
+        // History Query.
+        this.create_query("History", leftPaneRoot,
+                          "place:type=" +
+                          Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY +
+                          "&sort=" +
+                          Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
+
+        // Downloads.
+        this.create_query("Downloads", leftPaneRoot,
+                          "place:transition=" +
+                          Ci.nsINavHistoryService.TRANSITION_DOWNLOAD +
+                          "&sort=" +
+                          Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
+
+        // Tags Query.
+        this.create_query("Tags", leftPaneRoot,
+                          "place:type=" +
+                          Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
+                          "&sort=" +
+                          Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING);
+
+        // All Bookmarks Folder.
+        this.create_query("AllBookmarks", leftPaneRoot,
+                          "place:type=" +
+                          Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY);
+      }
+    };
+    bs.runInBatchMode(callback, null);
+
+    return leftPaneRoot;
+  },
+
+  /**
+   * If an item is a left-pane query, returns the name of the query
+   * or an empty string if not.
+   *
+   * @param aItemId id of a container
+   * @return the name of the query, or empty string if not a left-pane query
+   */
+  getLeftPaneQueryNameFromId: function PUIU_getLeftPaneQueryNameFromId(aItemId) {
+    var queryName = "";
+    // If the let pane hasn't been built, use the annotation service
+    // directly, to avoid building the left pane too early.
+    if (Object.getOwnPropertyDescriptor(this, "leftPaneFolderId").value === undefined) {
+      try {
+        queryName = PlacesUtils.annotations.
+                                getItemAnnotation(aItemId, this.ORGANIZER_QUERY_ANNO);
+      } catch (ex) {
+        // doesn't have the annotation
+        queryName = "";
+      }
+    } else {
+      // If the left pane has already been built, use the name->id map
+      // cached in PlacesUIUtils.
+      for (let [name, id] of Object.entries(this.leftPaneQueries)) {
+        if (aItemId == id)
+          queryName = name;
+      }
+    }
+    return queryName;
   },
 
   shouldShowTabsFromOtherComputersMenuitem() {
@@ -1086,7 +1354,14 @@ function canMoveUnwrappedNode(unwrappedNode) {
       parentGuid == PlacesUtils.bookmarks.rootGuid) {
     return false;
   }
-
+  // leftPaneFolderId and allBookmarksFolderId are lazy getters running
+  // at least a synchronous DB query. Therefore we don't want to invoke
+  // them first, especially because isCommandEnabled may be called way
+  // before the left pane folder is even necessary.
+  if (typeof Object.getOwnPropertyDescriptor(PlacesUIUtils, "leftPaneFolderId").get != "function" &&
+      (unwrappedNode.parent == PlacesUIUtils.leftPaneFolderId)) {
+    return false;
+  }
   return true;
 }
 

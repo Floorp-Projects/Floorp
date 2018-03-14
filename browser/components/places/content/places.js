@@ -36,7 +36,8 @@ var PlacesOrganizer = {
   ],
 
   _initFolderTree() {
-    this._places.place = `place:type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_LEFT_PANE_QUERY}&excludeItems=1&expandQueries=0`;
+    var leftPaneRoot = PlacesUIUtils.leftPaneFolderId;
+    this._places.place = "place:excludeItems=1&expandQueries=0&folder=" + leftPaneRoot;
   },
 
   /**
@@ -49,34 +50,31 @@ var PlacesOrganizer = {
   selectLeftPaneBuiltIn(item) {
     switch (item) {
       case "AllBookmarks":
-        this._places.selectItems([PlacesUtils.virtualAllBookmarksGuid]);
-        PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
-        break;
       case "History":
-        this._places.selectItems([PlacesUtils.virtualHistoryGuid]);
-        PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
-        break;
       case "Downloads":
-        this._places.selectItems([PlacesUtils.virtualDownloadsGuid]);
+      case "Tags": {
+        var itemId = PlacesUIUtils.leftPaneQueries[item];
+        this._places.selectItems([itemId]);
+        // Forcefully expand all-bookmarks
+        if (item == "AllBookmarks" || item == "History")
+          PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
         break;
-      case "Tags":
-        this._places.selectItems([PlacesUtils.virtualTagsGuid]);
-        break;
+      }
       case "BookmarksMenu":
         this.selectLeftPaneContainerByHierarchy([
-          PlacesUtils.virtualAllBookmarksGuid,
+          PlacesUIUtils.leftPaneQueries.AllBookmarks,
           PlacesUtils.bookmarks.virtualMenuGuid
         ]);
         break;
       case "BookmarksToolbar":
         this.selectLeftPaneContainerByHierarchy([
-          PlacesUtils.virtualAllBookmarksGuid,
+          PlacesUIUtils.leftPaneQueries.AllBookmarks,
           PlacesUtils.bookmarks.virtualToolbarGuid
         ]);
         break;
       case "UnfiledBookmarks":
         this.selectLeftPaneContainerByHierarchy([
-          PlacesUtils.virtualAllBookmarksGuid,
+          PlacesUIUtils.leftPaneQueries.AllBookmarks,
           PlacesUtils.bookmarks.virtualUnfiledGuid
         ]);
         break;
@@ -94,6 +92,7 @@ var PlacesOrganizer = {
    *                   container may be either an item id, a Places URI string,
    *                   or a named query, like:
    *                   "BookmarksMenu", "BookmarksToolbar", "UnfiledBookmarks", "AllBookmarks".
+   * @see PlacesUIUtils.leftPaneQueries for supported named queries.
    */
   selectLeftPaneContainerByHierarchy(aHierarchy) {
     if (!aHierarchy)
@@ -313,12 +312,12 @@ var PlacesOrganizer = {
    *          the node to set up scope from
    */
   _setSearchScopeForNode: function PO__setScopeForNode(aNode) {
-    let itemGuid = aNode.bookmarkGuid;
+    let itemId = aNode.itemId;
 
     if (PlacesUtils.nodeIsHistoryContainer(aNode) ||
-        itemGuid == PlacesUtils.virtualHistoryGuid) {
+        itemId == PlacesUIUtils.leftPaneQueries.History) {
       PlacesQueryBuilder.setScope("history");
-    } else if (itemGuid == PlacesUtils.virtualDownloadsGuid) {
+    } else if (itemId == PlacesUIUtils.leftPaneQueries.Downloads) {
       PlacesQueryBuilder.setScope("downloads");
     } else {
       // Default to All Bookmarks for all other nodes, per bug 469437.
