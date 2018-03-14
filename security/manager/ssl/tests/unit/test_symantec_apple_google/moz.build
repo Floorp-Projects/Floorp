@@ -12,6 +12,7 @@
 #    'ee-not-whitelisted-after-cutoff.pem',
 #    'ee-not-whitelisted-before-cutoff.pem',
 #    'intermediate-other.pem',
+#    'intermediate-other-crossigned.pem',
 #    'intermediate-whitelisted.pem',
 #    'test-ca.pem',
 #)
