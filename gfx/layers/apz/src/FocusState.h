@@ -77,7 +77,7 @@ public:
    * will never be zero as that is used to catch uninitialized focus sequence
    * numbers on input events.
    */
-  uint64_t LastAPZProcessedEvent() const { return mLastAPZProcessedEvent; }
+  uint64_t LastAPZProcessedEvent() const;
 
   /**
    * Whether the current focus state is known to be current or else if an event
@@ -131,10 +131,7 @@ public:
    * Gets whether it is safe to not increment the focus sequence number for an
    * unmatched keyboard event.
    */
-  bool CanIgnoreKeyboardShortcutMisses() const
-  {
-    return IsCurrent() && !mFocusHasKeyEventListeners;
-  }
+  bool CanIgnoreKeyboardShortcutMisses() const;
 
 private:
   // The set of focus targets received indexed by their layer tree ID
