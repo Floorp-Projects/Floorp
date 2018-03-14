@@ -354,7 +354,7 @@ public class WebAppActivity extends AppCompatActivity
 
     @Override // GeckoSession.ContentDelegate
     public void onContextMenu(GeckoSession session, int screenX, int screenY,
-                              String uri, String elementSrc) {
+                              String uri, int elementType, String elementSrc) {
         final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";
         final Uri validUri = WebApps.getValidURL(content);
         if (validUri == null) {

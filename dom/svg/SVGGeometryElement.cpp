@@ -55,6 +55,12 @@ SVGGeometryElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
 }
 
 bool
+SVGGeometryElement::IsNodeOfType(uint32_t aFlags) const
+{
+  return !(aFlags & ~eSHAPE);
+}
+
+bool
 SVGGeometryElement::AttributeDefinesGeometry(const nsAtom *aName)
 {
   if (aName == nsGkAtoms::pathLength) {
@@ -125,7 +131,10 @@ SVGGeometryElement::GetOrBuildPath(const DrawTarget* aDrawTarget,
 already_AddRefed<Path>
 SVGGeometryElement::GetOrBuildPathForMeasuring()
 {
-  return nullptr;
+  RefPtr<DrawTarget> drawTarget =
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  FillRule fillRule = mCachedPath ? mCachedPath->GetFillRule() : GetFillRule();
+  return GetOrBuildPath(drawTarget, fillRule);
 }
 
 FillRule
@@ -171,6 +180,37 @@ SVGGeometryElement::GetPointAtLength(float distance, ErrorResult& rv)
     new DOMSVGPoint(path->ComputePointAtLength(
       clamped(distance, 0.f, path->ComputeLength())));
   return point.forget();
+}
+
+float
+SVGGeometryElement::GetPathLengthScale(PathLengthScaleForType aFor)
+{
+  MOZ_ASSERT(aFor == eForTextPath || aFor == eForStroking,
+             "Unknown enum");
+  if (mPathLength.IsExplicitlySet()) {
+    float authorsPathLengthEstimate = mPathLength.GetAnimValue();
+    if (authorsPathLengthEstimate > 0) {
+      RefPtr<Path> path = GetOrBuildPathForMeasuring();
+      if (!path) {
+        // The path is empty or invalid so its length must be zero and
+        // we know that 0 / authorsPathLengthEstimate = 0.
+        return 0.0;
+      }
+      if (aFor == eForTextPath) {
+        // For textPath, a transform on the referenced path affects the
+        // textPath layout, so when calculating the actual path length
+        // we need to take that into account.
+        gfxMatrix matrix = PrependLocalTransformsTo(gfxMatrix());
+        if (!matrix.IsIdentity()) {
+          RefPtr<PathBuilder> builder =
+            path->TransformedCopyToBuilder(ToMatrix(matrix));
+          path = builder->Finish();
+        }
+      }
+      return path->ComputeLength() / authorsPathLengthEstimate;
+    }
+  }
+  return 1.0;
 }
 
 already_AddRefed<SVGAnimatedNumber>

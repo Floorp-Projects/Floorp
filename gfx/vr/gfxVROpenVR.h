@@ -112,8 +112,6 @@ private:
 
   // The index of tracked devices from ::vr::IVRSystem.
   uint32_t mTrackedIndex;
-  nsTArray<float> mTrigger;
-  nsTArray<float> mAxisMove;
   RefPtr<VRThread> mVibrateThread;
   Atomic<bool> mIsVibrateStopped;
 };

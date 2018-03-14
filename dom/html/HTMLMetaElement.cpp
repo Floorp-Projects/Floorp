@@ -35,24 +35,21 @@ HTMLMetaElement::~HTMLMetaElement()
 NS_IMPL_ELEMENT_CLONE(HTMLMetaElement)
 
 
-nsresult
+void
 HTMLMetaElement::SetMetaReferrer(nsIDocument* aDocument)
 {
   if (!aDocument ||
       !AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, nsGkAtoms::referrer, eIgnoreCase)) {
-    return NS_OK;
+    return;
   }
   nsAutoString content;
-  nsresult rv = GetContent(content);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  GetContent(content);
+
   Element* headElt = aDocument->GetHeadElement();
   if (headElt && nsContentUtils::ContentIsDescendantOf(this, headElt)) {
       content = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(content);
       aDocument->SetHeaderData(nsGkAtoms::referrer, content);
   }
-  return NS_OK;
 }
 
 nsresult
@@ -68,17 +65,13 @@ HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (document && AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                   nsGkAtoms::viewport, eIgnoreCase)) {
         nsAutoString content;
-        nsresult rv = GetContent(content);
-        NS_ENSURE_SUCCESS(rv, rv);
+        GetContent(content);
         nsContentUtils::ProcessViewportInfo(document, content);
       }
       CreateAndDispatchEvent(document, NS_LITERAL_STRING("DOMMetaChanged"));
     }
     // Update referrer policy when it got changed from JS
-    nsresult rv = SetMetaReferrer(document);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    SetMetaReferrer(document);
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
@@ -97,8 +90,7 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   if (aDocument &&
       AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, nsGkAtoms::viewport, eIgnoreCase)) {
     nsAutoString content;
-    rv = GetContent(content);
-    NS_ENSURE_SUCCESS(rv, rv);
+    GetContent(content);
     nsContentUtils::ProcessViewportInfo(aDocument, content);
   }
 
@@ -111,8 +103,7 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (headElt && nsContentUtils::ContentIsDescendantOf(this, headElt)) {
 
       nsAutoString content;
-      rv = GetContent(content);
-      NS_ENSURE_SUCCESS(rv, rv);
+      GetContent(content);
       content = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(content);
 
       nsIPrincipal* principal = aDocument->NodePrincipal();
@@ -145,10 +136,7 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Referrer Policy spec requires a <meta name="referrer" tag to be in the
   // <head> element.
-  rv = SetMetaReferrer(aDocument);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  SetMetaReferrer(aDocument);
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMMetaAdded"));
   return rv;
 }

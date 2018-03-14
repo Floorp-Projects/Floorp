@@ -20,7 +20,6 @@ interface nsIDOMCharacterData;
 interface nsIDOMComment;
 interface nsIDOMDocument;
 interface nsIDOMDocumentFragment;
-interface nsIDOMDocumentType;
 interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIDOMNodeList;

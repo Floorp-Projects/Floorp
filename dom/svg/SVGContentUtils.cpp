@@ -104,9 +104,9 @@ GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
     if (dashArrayLength <= 0) {
       return eContinuousStroke;
     }
-    if (aElement->IsSVGElement(nsGkAtoms::path)) {
-      pathScale = static_cast<SVGPathElement*>(aElement)->
-        GetPathLengthScale(SVGPathElement::eForStroking);
+    if (aElement->IsNodeOfType(nsINode::eSHAPE)) {
+      pathScale = static_cast<SVGGeometryElement*>(aElement)->
+        GetPathLengthScale(SVGGeometryElement::eForStroking);
       if (pathScale <= 0) {
         return eContinuousStroke;
       }

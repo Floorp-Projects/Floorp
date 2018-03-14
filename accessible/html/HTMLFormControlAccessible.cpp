@@ -406,7 +406,7 @@ HTMLTextFieldAccessible::NativeState()
   }
 
   // Expose autocomplete state if it has associated autocomplete list.
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::list))
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::list_))
     return state | states::SUPPORTS_AUTOCOMPLETION | states::HASPOPUP;
 
   // Ordinal XUL textboxes don't support autocomplete.

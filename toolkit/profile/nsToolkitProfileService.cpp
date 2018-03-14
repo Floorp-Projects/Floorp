@@ -284,9 +284,9 @@ nsToolkitProfile::Remove(bool removeFiles)
 }
 
 NS_IMETHODIMP
-nsToolkitProfile::RemoveInBackground()
+nsToolkitProfile::RemoveInBackground(bool removeFiles)
 {
-    return RemoveInternal(true /* remove Files */, true /* in background */);
+    return RemoveInternal(removeFiles, true /* in background */);
 }
 
 NS_IMETHODIMP

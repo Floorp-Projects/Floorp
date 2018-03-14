@@ -418,7 +418,9 @@ public:
     /** animation elements */
     eANIMATION           = 1 << 10,
     /** filter elements that implement SVGFilterPrimitiveStandardAttributes */
-    eFILTER              = 1 << 11
+    eFILTER              = 1 << 11,
+    /** SVGGeometryElement */
+    eSHAPE               = 1 << 12
   };
 
   /**

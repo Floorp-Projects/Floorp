@@ -398,7 +398,7 @@ nsNSSASN1Tree::PerformActionOnCell(const char16_t*, int32_t, nsITreeColumn*)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::CanDrop(int32_t, int32_t, nsIDOMDataTransfer*, bool* _retval)
+nsNSSASN1Tree::CanDrop(int32_t, int32_t, nsISupports*, bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
@@ -406,7 +406,7 @@ nsNSSASN1Tree::CanDrop(int32_t, int32_t, nsIDOMDataTransfer*, bool* _retval)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::Drop(int32_t, int32_t, nsIDOMDataTransfer*)
+nsNSSASN1Tree::Drop(int32_t, int32_t, nsISupports*)
 {
   return NS_OK;
 }

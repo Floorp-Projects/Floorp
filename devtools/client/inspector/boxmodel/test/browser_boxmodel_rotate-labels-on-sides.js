@@ -32,11 +32,11 @@ const LONG_TEXT_ROTATE_LIMIT = 3;
 
 add_task(function* () {
   yield addTab("data:text/html," + TEST_URI);
-  let {inspector, view} = yield openBoxModelView();
+  let {inspector, boxmodel} = yield openLayoutView();
   yield selectNode("div", inspector);
 
   for (let i = 0; i < res1.length; i++) {
-    let elt = view.document.querySelector(res1[i].selector);
+    let elt = boxmodel.document.querySelector(res1[i].selector);
     let isLong = elt.textContent.length > LONG_TEXT_ROTATE_LIMIT;
     let classList = elt.parentNode.classList;
     let canBeRotated = classList.contains("boxmodel-left") ||

@@ -193,13 +193,6 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
     return Ok();
 }
 
-template<XDRMode mode>
-XDRResult
-XDRState<mode>::codeConstValue(MutableHandleValue vp)
-{
-    return XDRScriptConst(this, vp);
-}
-
 template class js::XDRState<XDR_ENCODE>;
 template class js::XDRState<XDR_DECODE>;
 

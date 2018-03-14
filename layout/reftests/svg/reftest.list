@@ -475,6 +475,7 @@ fuzzy(16,3) == text-stroke-scaling-02b.html text-stroke-scaling-02-ref.html # an
 fuzzy-if(skiaContent,1,610) == textPath-03.svg pass.svg
 == textPath-04.svg pass.svg
 == textPath-05.html pass.svg
+== textPath-line-01.svg textPath-line-01-ref.svg
 
 == text-white-space-01.svg text-white-space-01-ref.svg
 

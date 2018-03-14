@@ -18,7 +18,7 @@ using namespace mozilla;
 // static array of unicode tag names
 #define HTML_TAG(_tag, _classname, _interfacename) (u"" #_tag),
 #define HTML_OTHER(_tag)
-const char16_t* const nsHTMLTags::sTagUnicodeTable[] = {
+const char16_t* const nsHTMLTags::sTagNames[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
@@ -29,61 +29,6 @@ nsHTMLTags::TagStringHash* nsHTMLTags::gTagTable;
 nsHTMLTags::TagAtomHash* nsHTMLTags::gTagAtomTable;
 
 #define NS_HTMLTAG_NAME_MAX_LENGTH 10
-
-// This would use NS_STATIC_ATOM_DEFN if it wasn't an array.
-nsStaticAtom* nsHTMLTags::sTagAtomTable[eHTMLTag_userdefined - 1];
-
-#define HTML_TAG(_tag, _classname, _interfacename) \
-  NS_STATIC_ATOM_BUFFER(_tag, #_tag)
-#define HTML_OTHER(_tag)
-#include "nsHTMLTagList.h"
-#undef HTML_TAG
-#undef HTML_OTHER
-
-/* static */ void
-nsHTMLTags::RegisterAtoms(void)
-{
-  // This would use NS_STATIC_ATOM_SETUP if it wasn't an array.
-  static const nsStaticAtomSetup sTagAtomSetup[] = {
-    #define HTML_TAG(_tag, _classname, _interfacename) \
-      { _tag##_buffer, &nsHTMLTags::sTagAtomTable[eHTMLTag_##_tag - 1] },
-    #define HTML_OTHER(_tag)
-    #include "nsHTMLTagList.h"
-    #undef HTML_TAG
-    #undef HTML_OTHER
-  };
-
-  NS_RegisterStaticAtoms(sTagAtomSetup);
-
-#if defined(DEBUG)
-  {
-    // let's verify that all names in the the table are lowercase...
-    for (int32_t i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      nsAutoString temp1((char16_t*)sTagAtomSetup[i].mString);
-      nsAutoString temp2((char16_t*)sTagAtomSetup[i].mString);
-      ToLowerCase(temp1);
-      NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
-    }
-
-    // let's verify that all names in the unicode strings above are
-    // correct.
-    for (int32_t i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      nsAutoString temp1(sTagUnicodeTable[i]);
-      nsAutoString temp2((char16_t*)sTagAtomSetup[i].mString);
-      NS_ASSERTION(temp1.Equals(temp2), "Bad unicode tag name!");
-    }
-
-    // let's verify that NS_HTMLTAG_NAME_MAX_LENGTH is correct
-    uint32_t maxTagNameLength = 0;
-    for (int32_t i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      uint32_t len = NS_strlen(sTagUnicodeTable[i]);
-      maxTagNameLength = std::max(len, maxTagNameLength);
-    }
-    NS_ASSERTION(maxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH,
-                 "NS_HTMLTAG_NAME_MAX_LENGTH not set correctly!");
-  }
-#endif
-}
 
 // static
 nsresult
@@ -99,17 +44,39 @@ nsHTMLTags::AddRefTable(void)
     // keys and the value of the corresponding enum as the value in
     // the table.
 
-    int32_t i;
-    for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      const char16_t* tagName = sTagUnicodeTable[i];
+    for (int32_t i = 0; i < NS_HTML_TAG_MAX; ++i) {
+      const char16_t* tagName = sTagNames[i];
       const nsHTMLTag tagValue = static_cast<nsHTMLTag>(i + 1);
+
       // We use AssignLiteral here to avoid a string copy. This is okay
       // because this is truly static data.
       nsString tmp;
       tmp.AssignLiteral(tagName, nsString::char_traits::length(tagName));
       gTagTable->Put(tmp, tagValue);
-      gTagAtomTable->Put(sTagAtomTable[i], tagValue);
+
+      // All the HTML tag names are static atoms within nsGkAtoms, and they are
+      // registered before this code is reached.
+      nsStaticAtom* atom = NS_GetStaticAtom(tmp);
+      MOZ_ASSERT(atom);
+      gTagAtomTable->Put(atom, tagValue);
     }
+
+#ifdef DEBUG
+    // Check all tagNames are lowercase, and that NS_HTMLTAG_NAME_MAX_LENGTH is
+    // correct.
+    uint32_t maxTagNameLength = 0;
+    for (int i = 0; i < NS_HTML_TAG_MAX; ++i) {
+      const char16_t* tagName = sTagNames[i];
+
+      nsAutoString lowerTagName(tagName);
+      ToLowerCase(lowerTagName);
+      MOZ_ASSERT(lowerTagName.Equals(tagName));
+
+      maxTagNameLength = std::max(NS_strlen(tagName), maxTagNameLength);
+    }
+
+    MOZ_ASSERT(maxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH);
+#endif
   }
 
   return NS_OK;
@@ -172,7 +139,7 @@ nsHTMLTags::TestTagTable()
      nsHTMLTags::AddRefTable();
      // Make sure we can find everything we are supposed to
      for (int i = 0; i < NS_HTML_TAG_MAX; ++i) {
-       tag = sTagUnicodeTable[i];
+       tag = sTagNames[i];
        const nsAString& tagString = nsDependentString(tag);
        id = StringTagToId(tagString);
        NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");

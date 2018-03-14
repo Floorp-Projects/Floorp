@@ -32,6 +32,7 @@ class HTMLEditRules;
 enum class EditAction : int32_t;
 
 namespace dom {
+class DragEvent;
 class Selection;
 } // namespace dom
 
@@ -153,7 +154,7 @@ public:
                                           int32_t aDestOffset,
                                           bool aDoDeleteSelection) override;
 
-  virtual nsresult InsertFromDrop(nsIDOMEvent* aDropEvent) override;
+  virtual nsresult InsertFromDrop(dom::DragEvent* aDropEvent) override;
 
   /**
    * Extends the selection for given deletion operation

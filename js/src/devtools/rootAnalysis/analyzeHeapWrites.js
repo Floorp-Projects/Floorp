@@ -34,10 +34,7 @@ function checkExternalFunction(entry)
         "Servo_IsWorkerThread",
         /nsIFrame::AppendOwnedAnonBoxes/,
         // Assume that atomic accesses are threadsafe.
-        /^__atomic_fetch_/,
-        /^__atomic_load_/,
-        /^__atomic_store_/,
-        /^__atomic_thread_fence/,
+        /^__atomic_/,
     ];
     if (entry.matches(whitelist))
         return;
@@ -299,6 +296,10 @@ function checkFieldWrite(entry, location, fields)
             return;
 
         if (/\bThreadLocal<\b/.test(field))
+            return;
+
+        // Debugging check for string corruption.
+        if (field == "nsStringBuffer.mCanary")
             return;
     }
 
@@ -924,6 +925,7 @@ function processAssign(body, entry, location, lhs, edge)
                 return;
         } else if (lhs.Exp[0].Kind == "Fld") {
             const {
+                Name: [ fieldName ],
                 Type: {Kind, Type: fieldType},
                 FieldCSU: {Type: {Kind: containerTypeKind,
                                   Name: containerTypeName}}
@@ -933,11 +935,10 @@ function processAssign(body, entry, location, lhs, edge)
             if (containerTypeKind == 'CSU' &&
                 Kind == 'Pointer' &&
                 isEdgeSafeArgument(entry, containerExpr) &&
-                isSafeMemberPointer(containerTypeName, fieldType))
+                isSafeMemberPointer(containerTypeName, fieldName, fieldType))
             {
                 return;
             }
-
         }
         if (fields.length)
             checkFieldWrite(entry, location, fields);
@@ -1198,6 +1199,16 @@ function expressionValueEdge(exp) {
     return edge;
 }
 
+// Examples:
+//
+//   void foo(type* aSafe) {
+//     type* safeBecauseNew = new type(...);
+//     type* unsafeBecauseMultipleAssignments = new type(...);
+//     if (rand())
+//       unsafeBecauseMultipleAssignments = bar();
+//     type* safeBecauseSingleAssignmentOfSafe = aSafe;
+//   }
+//
 function isSafeVariable(entry, variable)
 {
     var index = safeArgumentIndex(variable);
@@ -1244,7 +1255,8 @@ function isSafeLocalVariable(entry, name)
             // itself is threadsafe.
             if ((isDirectCall(edge, /operator\[\]/) ||
                  isDirectCall(edge, /nsTArray.*?::InsertElementAt\b/) ||
-                 isDirectCall(edge, /nsStyleContent::ContentAt/)) &&
+                 isDirectCall(edge, /nsStyleContent::ContentAt/) ||
+                 isDirectCall(edge, /nsTArray_base.*?::GetAutoArrayBuffer\b/)) &&
                 isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
             {
                 return true;
@@ -1343,8 +1355,12 @@ function isSafeLocalVariable(entry, name)
     return true;
 }
 
-function isSafeMemberPointer(containerType, memberType)
+function isSafeMemberPointer(containerType, memberName, memberType)
 {
+    // nsTArray owns its header.
+    if (containerType.includes("nsTArray_base") && memberName == "mHdr")
+        return true;
+
     if (memberType.Kind != 'Pointer')
         return false;
 

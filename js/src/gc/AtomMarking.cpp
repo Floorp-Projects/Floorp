@@ -218,12 +218,6 @@ AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing)
     if (ThingIsPermanent(thing))
         return true;
 
-    if (mozilla::IsSame<T, JSAtom>::value) {
-        JSAtom* atom = reinterpret_cast<JSAtom*>(thing);
-        if (AtomIsPinnedInRuntime(zone->runtimeFromAnyThread(), atom))
-            return true;
-    }
-
     size_t bit = GetAtomBit(&thing->asTenured());
     return zone->markedAtoms().getBit(bit);
 }

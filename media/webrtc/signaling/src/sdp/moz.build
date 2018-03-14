@@ -37,8 +37,15 @@ UNIFIED_SOURCES += [
     'SipccSdpParser.cpp',
 ]
 
-# Multiple definitions of "logTag" mean we can't use unified build here.
 SOURCES += [
+    # Building these as part of the unified build leads to multiply defined
+    # symbols on windows.
+    'RsdparsaSdp.cpp',
+    'RsdparsaSdpAttributeList.cpp',
+    'RsdparsaSdpGlue.cpp',
+    'RsdparsaSdpMediaSection.cpp',
+    'RsdparsaSdpParser.cpp',
+    # Multiple definitions of "logTag" mean we can't use unified build here.
     'sipcc/cpr_string.c',
     'sipcc/sdp_access.c',
     'sipcc/sdp_attr.c',

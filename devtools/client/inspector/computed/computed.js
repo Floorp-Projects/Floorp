@@ -27,12 +27,6 @@ const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overl
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
-const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
-
-const BoxModelApp = createFactory(require("devtools/client/inspector/boxmodel/components/BoxModelApp"));
-
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
@@ -156,7 +150,6 @@ UpdateProcess.prototype = {
 function CssComputedView(inspector, document, pageStyle) {
   this.inspector = inspector;
   this.highlighters = inspector.highlighters;
-  this.store = inspector.store;
   this.styleDocument = document;
   this.styleWindow = this.styleDocument.defaultView;
   this.pageStyle = pageStyle;
@@ -177,7 +170,6 @@ function CssComputedView(inspector, document, pageStyle) {
 
   let doc = this.styleDocument;
   this.element = doc.getElementById("computed-property-container");
-  this.boxModelWrapper = doc.getElementById("boxmodel-wrapper");
   this.searchField = doc.getElementById("computed-searchbox");
   this.searchClearButton = doc.getElementById("computed-searchinput-clear");
   this.includeBrowserStylesCheckbox = doc.getElementById("browser-style-checkbox");
@@ -209,7 +201,6 @@ function CssComputedView(inspector, document, pageStyle) {
   // The element that we're inspecting, and the document that it comes from.
   this._viewedElement = null;
 
-  this.createBoxModelView();
   this.createStyleViews();
 
   this._contextmenu = new StyleInspectorMenu(this, { isRuleView: false });
@@ -577,10 +568,8 @@ CssComputedView.prototype = {
     this._filterChangedTimeout = setTimeout(() => {
       if (this.searchField.value.length > 0) {
         this.searchField.setAttribute("filled", true);
-        this.boxModelWrapper.hidden = true;
       } else {
         this.searchField.removeAttribute("filled");
-        this.boxModelWrapper.hidden = false;
       }
 
       this.refreshPanel();
@@ -620,38 +609,6 @@ CssComputedView.prototype = {
     this._sourceFilter = this.includeBrowserStyles ?
                                  CssLogic.FILTER.UA :
                                  CssLogic.FILTER.USER;
-  },
-
-  /**
-   * Render the box model view.
-   */
-  createBoxModelView: function() {
-    let {
-      setSelectedNode,
-      onShowBoxModelHighlighterForNode,
-    } = this.inspector.getCommonComponentProps();
-
-    let {
-      onHideBoxModelHighlighter,
-      onShowBoxModelEditor,
-      onShowBoxModelHighlighter,
-      onToggleGeometryEditor,
-    } = this.inspector.getPanel("boxmodel").getComponentProps();
-
-    let provider = createElement(
-      Provider,
-      { store: this.store },
-      BoxModelApp({
-        setSelectedNode,
-        showBoxModelProperties: false,
-        onHideBoxModelHighlighter,
-        onShowBoxModelEditor,
-        onShowBoxModelHighlighter,
-        onShowBoxModelHighlighterForNode,
-        onToggleGeometryEditor,
-      })
-    );
-    ReactDOM.render(provider, this.boxModelWrapper);
   },
 
   /**
@@ -797,7 +754,6 @@ CssComputedView.prototype = {
 
     // Nodes used in templating
     this.element = null;
-    this.boxModelWrapper = null;
     this.searchField = null;
     this.searchClearButton = null;
     this.includeBrowserStylesCheckbox = null;
@@ -810,7 +766,6 @@ CssComputedView.prototype = {
 
     this.inspector = null;
     this.highlighters = null;
-    this.store = null;
     this.styleDocument = null;
     this.styleWindow = null;
 

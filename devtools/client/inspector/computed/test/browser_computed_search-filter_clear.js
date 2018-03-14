@@ -49,8 +49,6 @@ function* testClearSearchFilter(inspector, computedView) {
   info("Clearing the search filter");
 
   let win = computedView.styleWindow;
-  let doc = computedView.styleDocument;
-  let boxModelWrapper = doc.getElementById("boxmodel-wrapper");
   let propertyViews = computedView.propertyViews;
   let searchField = computedView.searchField;
   let searchClearButton = computedView.searchClearButton;
@@ -58,8 +56,6 @@ function* testClearSearchFilter(inspector, computedView) {
 
   EventUtils.synthesizeMouseAtCenter(searchClearButton, {}, win);
   yield onRefreshed;
-
-  ok(!boxModelWrapper.hidden, "Box model is displayed");
 
   info("Check that the correct properties are visible");
 

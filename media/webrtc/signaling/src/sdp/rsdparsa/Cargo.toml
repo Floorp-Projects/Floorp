@@ -1,0 +1,7 @@
+[package]
+name = "rsdparsa"
+version = "0.1.0"
+authors = ["Nils Ohlmeier <github@ohlmeier.org>"]
+
+[features]
+default = []
