@@ -18,11 +18,11 @@ data_dir=$HOME_DIR/src/build/unix/build-gcc
 # Download and unpack upstream toolchain artifacts (ie, the gcc binary).
 . $(dirname $0)/tooltool-download.sh
 
-gcc_version=4.9.4
-gcc_ext=bz2
+gcc_version=6.4.0
+gcc_ext=xz
 binutils_version=2.25.1
 binutils_ext=bz2
-sixgill_rev=59b74c2e21bd
+sixgill_rev=39b87ac48871
 sixgill_repo=https://hg.mozilla.org/users/sfink_mozilla.com/sixgill
 
 . $data_dir/build-gcc.sh
@@ -40,10 +40,9 @@ $GPG --import $data_dir/AD17A21EF8AED8F1CC02DBD9F7D5C9BF765C61E3.key
 
 cat > $HOME_DIR/checksums <<EOF
 b5b14added7d78a8d1ca70b5cb75fef57ce2197264f4f5835326b0df22ac9f22  binutils-2.25.1.tar.bz2
-02500a4edd14875f94fe84cbeda4290425cb0c1c2474c6f75d75a303d64b4196  cloog-0.18.1.tar.gz
-6c11d292cd01b294f9f84c9a59c230d80e9e4a47e5c6355f046bb36d4f358092  gcc-4.9.4.tar.bz2
+850bf21eafdfe5cd5f6827148184c08c4a0852a37ccf36ce69855334d2c914d4  gcc-6.4.0.tar.xz
 752079520b4690531171d0f4532e40f08600215feefede70b24fabdc6f1ab160  gmp-5.1.3.tar.bz2
-f4b3dbee9712850006e44f0db2103441ab3d13b406f77996d1df19ee89d11fb4  isl-0.12.2.tar.bz2
+8ceebbf4d9a81afa2b4449113cee4b7cb14a687d7a549a963deb5e2a41458b6b  isl-0.15.tar.bz2
 ae79f8d41d8a86456b68607e9ca398d00f8b7342d1d83bcf4428178ac45380c7  mpc-0.8.2.tar.gz
 ca498c1c7a74dd37a576f353312d1e68d490978de4395fa28f1cbd46a364e658  mpfr-3.1.5.tar.bz2
 EOF

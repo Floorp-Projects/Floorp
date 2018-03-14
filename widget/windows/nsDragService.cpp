@@ -326,7 +326,7 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   HRESULT res = ::DoDragDrop(aDataObj, nativeDragSrc, effects, &winDropRes);
 
   // In  cases where the drop operation completed outside the application, update
-  // the source node's nsIDOMDataTransfer dropEffect value so it is up to date.
+  // the source node's DataTransfer dropEffect value so it is up to date.
   if (!mSentLocalDropEvent) {
     uint32_t dropResult;
     // Order is important, since multiple flags can be returned.

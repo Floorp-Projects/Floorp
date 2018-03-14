@@ -29,8 +29,8 @@
 #include "nsID.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/DragEvent.h"
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
-#include "nsIDOMDragEvent.h"            // for nsIDOMDragEvent
 #include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
@@ -386,23 +386,19 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
   switch (internalEvent->mMessage) {
     // dragenter
     case eDragEnter: {
-      nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
-      return DragEnter(dragEvent);
+      return DragEnter(aEvent->InternalDOMEvent()->AsDragEvent());
     }
     // dragover
     case eDragOver: {
-      nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
-      return DragOver(dragEvent);
+      return DragOver(aEvent->InternalDOMEvent()->AsDragEvent());
     }
     // dragexit
     case eDragExit: {
-      nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
-      return DragExit(dragEvent);
+      return DragExit(aEvent->InternalDOMEvent()->AsDragEvent());
     }
     // drop
     case eDrop: {
-      nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
-      return Drop(dragEvent);
+      return Drop(aEvent->InternalDOMEvent()->AsDragEvent());
     }
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keydown
@@ -803,7 +799,7 @@ EditorEventListener::HandleChangeComposition(
  */
 
 nsresult
-EditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
+EditorEventListener::DragEnter(DragEvent* aDragEvent)
 {
   if (NS_WARN_IF(!aDragEvent) || DetachedFromEditor()) {
     return NS_OK;
@@ -828,32 +824,29 @@ EditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
 }
 
 nsresult
-EditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
+EditorEventListener::DragOver(DragEvent* aDragEvent)
 {
   if (NS_WARN_IF(!aDragEvent) ||
       DetachedFromEditorOrDefaultPrevented(
-        aDragEvent->AsEvent()->WidgetEventPtr())) {
+        aDragEvent->WidgetEventPtr())) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> parent;
-  aDragEvent->GetRangeParent(getter_AddRefs(parent));
+  nsCOMPtr<nsINode> parent = aDragEvent->GetRangeParent();
   nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
   NS_ENSURE_TRUE(dropParent, NS_ERROR_FAILURE);
 
   if (dropParent->IsEditable() && CanDrop(aDragEvent)) {
-    aDragEvent->AsEvent()->PreventDefault(); // consumed
+    aDragEvent->PreventDefault(); // consumed
 
     if (!mCaret) {
       return NS_OK;
     }
 
-    int32_t offset = 0;
-    nsresult rv = aDragEvent->GetRangeOffset(&offset);
-    NS_ENSURE_SUCCESS(rv, rv);
+    int32_t offset = aDragEvent->RangeOffset();
 
     mCaret->SetVisible(true);
-    mCaret->SetCaretPosition(parent, offset);
+    mCaret->SetCaretPosition(dropParent, offset);
 
     return NS_OK;
   }
@@ -861,7 +854,7 @@ EditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
   if (!IsFileControlTextBox()) {
     // This is needed when dropping on an input, to prevent the editor for
     // the editable parent from receiving the event.
-    aDragEvent->AsEvent()->StopPropagation();
+    aDragEvent->StopPropagation();
   }
 
   if (mCaret) {
@@ -889,13 +882,13 @@ EditorEventListener::CleanupDragDropCaret()
 }
 
 nsresult
-EditorEventListener::DragExit(nsIDOMDragEvent* aDragEvent)
+EditorEventListener::DragExit(DragEvent* aDragEvent)
 {
   // XXX If aDragEvent was created by chrome script, its defaultPrevented
   //     may be true, though.  We shouldn't handle such event but we don't
   //     have a way to distinguish if coming event is created by chrome script.
   NS_WARNING_ASSERTION(
-    !aDragEvent->AsEvent()->WidgetEventPtr()->DefaultPrevented(),
+    !aDragEvent->WidgetEventPtr()->DefaultPrevented(),
     "eDragExit shouldn't be cancelable");
   if (NS_WARN_IF(!aDragEvent) || DetachedFromEditor()) {
     return NS_OK;
@@ -907,18 +900,17 @@ EditorEventListener::DragExit(nsIDOMDragEvent* aDragEvent)
 }
 
 nsresult
-EditorEventListener::Drop(nsIDOMDragEvent* aDragEvent)
+EditorEventListener::Drop(DragEvent* aDragEvent)
 {
   CleanupDragDropCaret();
 
   if (NS_WARN_IF(!aDragEvent) ||
       DetachedFromEditorOrDefaultPrevented(
-        aDragEvent->AsEvent()->WidgetEventPtr())) {
+        aDragEvent->WidgetEventPtr())) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> parent;
-  aDragEvent->GetRangeParent(getter_AddRefs(parent));
+  nsCOMPtr<nsINode> parent = aDragEvent->GetRangeParent();
   nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
   NS_ENSURE_TRUE(dropParent, NS_ERROR_FAILURE);
 
@@ -931,22 +923,22 @@ EditorEventListener::Drop(nsIDOMDragEvent* aDragEvent)
       // since someone else handling it might be unintentional and the
       // user could probably re-drag to be not over the disabled/readonly
       // editfields if that is what is desired.
-      return aDragEvent->AsEvent()->StopPropagation();
+      return aDragEvent->StopPropagation();
     }
     return NS_OK;
   }
 
-  aDragEvent->AsEvent()->StopPropagation();
-  aDragEvent->AsEvent()->PreventDefault();
+  aDragEvent->StopPropagation();
+  aDragEvent->PreventDefault();
   RefPtr<EditorBase> editorBase(mEditorBase);
-  return editorBase->InsertFromDrop(aDragEvent->AsEvent());
+  return editorBase->InsertFromDrop(aDragEvent);
 }
 
 bool
-EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
+EditorEventListener::CanDrop(DragEvent* aEvent)
 {
   MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(
-                aEvent->AsEvent()->WidgetEventPtr()));
+                aEvent->WidgetEventPtr()));
 
   // if the target doc is read-only, we can't drop
   RefPtr<EditorBase> editorBase(mEditorBase);
@@ -954,9 +946,7 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     return false;
   }
 
-  nsCOMPtr<nsIDOMDataTransfer> domDataTransfer;
-  aEvent->GetDataTransfer(getter_AddRefs(domDataTransfer));
-  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(domDataTransfer);
+  RefPtr<DataTransfer> dataTransfer = aEvent->GetDataTransfer();
   NS_ENSURE_TRUE(dataTransfer, false);
 
   nsTArray<nsString> types;
@@ -1011,15 +1001,12 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     return true;
   }
 
-  nsCOMPtr<nsIDOMNode> parent;
-  nsresult rv = aEvent->GetRangeParent(getter_AddRefs(parent));
-  if (NS_FAILED(rv) || !parent) {
+  nsCOMPtr<nsINode> parent = aEvent->GetRangeParent();
+  if (!parent) {
     return false;
   }
 
-  int32_t offset = 0;
-  rv = aEvent->GetRangeOffset(&offset);
-  NS_ENSURE_SUCCESS(rv, false);
+  int32_t offset = aEvent->RangeOffset();
 
   uint32_t rangeCount = selection->RangeCount();
   for (uint32_t i = 0; i < rangeCount; i++) {
@@ -1029,9 +1016,9 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
       continue;
     }
 
-    bool inRange = true;
-    range->IsPointInRange(parent, offset, &inRange);
-    if (inRange) {
+    IgnoredErrorResult rv;
+    bool inRange = range->IsPointInRange(*parent, offset, rv);
+    if (!rv.Failed() && inRange) {
       // Okay, now you can bail, we are over the orginal selection
       return false;
     }

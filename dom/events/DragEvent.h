@@ -30,10 +30,18 @@ public:
   NS_DECL_NSIDOMDRAGEVENT
 
   NS_FORWARD_TO_MOUSEEVENT
+  // And now pull in some things we just shadowed.
+  using UIEvent::GetRangeParent;
+  using UIEvent::RangeOffset;
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return DragEventBinding::Wrap(aCx, this, aGivenProto);
+  }
+
+  DragEvent* AsDragEvent() override
+  {
+    return this;
   }
 
   DataTransfer* GetDataTransfer();

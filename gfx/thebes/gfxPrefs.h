@@ -364,6 +364,7 @@ private:
   DECL_GFX_PREF(Once, "dom.vr.enabled",                        VREnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.autoactivate.enabled",           VRAutoActivateEnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.controller_trigger_threshold",   VRControllerTriggerThreshold, float, 0.1f);
+  DECL_GFX_PREF(Once, "dom.vr.external.enabled",               VRExternalEnabled, bool, true);
   DECL_GFX_PREF(Live, "dom.vr.navigation.timeout",             VRNavigationTimeout, int32_t, 1000);
   DECL_GFX_PREF(Once, "dom.vr.oculus.enabled",                 VROculusEnabled, bool, true);
   DECL_GFX_PREF(Live, "dom.vr.oculus.invisible.enabled",       VROculusInvisibleEnabled, bool, true);

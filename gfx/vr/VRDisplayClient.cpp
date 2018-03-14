@@ -108,7 +108,7 @@ VRDisplayClient::FireEvents()
   }
 
   // Check if we need to trigger onvrdisplayactivate event
-  if (!bLastEventWasMounted && mDisplayInfo.mIsMounted) {
+  if (!bLastEventWasMounted && mDisplayInfo.mDisplayState.mIsMounted) {
     bLastEventWasMounted = true;
     if (gfxPrefs::VRAutoActivateEnabled()) {
       vm->FireDOMVRDisplayMountedEvent(mDisplayInfo.mDisplayID);
@@ -116,7 +116,7 @@ VRDisplayClient::FireEvents()
   }
 
   // Check if we need to trigger onvrdisplaydeactivate event
-  if (bLastEventWasMounted && !mDisplayInfo.mIsMounted) {
+  if (bLastEventWasMounted && !mDisplayInfo.mDisplayState.mIsMounted) {
     bLastEventWasMounted = false;
     if (gfxPrefs::VRAutoActivateEnabled()) {
       vm->FireDOMVRDisplayUnmountedEvent(mDisplayInfo.mDisplayID);
@@ -145,7 +145,7 @@ VRDisplayClient::GetIsConnected() const
 void
 VRDisplayClient::NotifyDisconnected()
 {
-  mDisplayInfo.mIsConnected = false;
+  mDisplayInfo.mDisplayState.mIsConnected = false;
 }
 
 void

@@ -899,7 +899,7 @@ public abstract class GeckoApp extends GeckoActivity
     @Override
     public void onContextMenu(final GeckoSession session, final int screenX,
                               final int screenY, final String uri,
-                              final String elementSrc) {
+                              int elementType, final String elementSrc) {
     }
 
     protected void setFullScreen(final boolean fullscreen) {

@@ -54,9 +54,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIRDFContentSink, NS_IRDFCONTENTSINK_IID)
 nsresult
 NS_NewRDFContentSink(nsIRDFContentSink** aResult);
 
-class nsRDFAtoms {
-public:
-    static void RegisterAtoms();
-};
-
 #endif // nsIRDFContentSink_h___

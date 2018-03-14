@@ -56,48 +56,50 @@ VRDisplayPuppet::VRDisplayPuppet()
 {
   MOZ_COUNT_CTOR_INHERITED(VRDisplayPuppet, VRDisplayHost);
 
-  mDisplayInfo.mDisplayName.AssignLiteral("Puppet HMD");
-  mDisplayInfo.mIsConnected = true;
-  mDisplayInfo.mIsMounted = false;
-  mDisplayInfo.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None |
-                                  VRDisplayCapabilityFlags::Cap_Orientation |
-                                  VRDisplayCapabilityFlags::Cap_Position |
-                                  VRDisplayCapabilityFlags::Cap_External |
-                                  VRDisplayCapabilityFlags::Cap_Present |
-                                  VRDisplayCapabilityFlags::Cap_StageParameters;
-  mDisplayInfo.mEyeResolution.width = 1836; // 1080 * 1.7
-  mDisplayInfo.mEyeResolution.height = 2040; // 1200 * 1.7
+  VRDisplayState& state = mDisplayInfo.mDisplayState;
+  strncpy(state.mDisplayName, "Puppet HMD", kVRDisplayNameMaxLen);
+  state.mIsConnected = true;
+  state.mIsMounted = false;
+  state.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None |
+                           VRDisplayCapabilityFlags::Cap_Orientation |
+                           VRDisplayCapabilityFlags::Cap_Position |
+                           VRDisplayCapabilityFlags::Cap_External |
+                           VRDisplayCapabilityFlags::Cap_Present |
+                           VRDisplayCapabilityFlags::Cap_StageParameters;
+  state.mEyeResolution.width = 1836; // 1080 * 1.7
+  state.mEyeResolution.height = 2040; // 1200 * 1.7
 
   // SteamVR gives the application a single FOV to use; it's not configurable as with Oculus
   for (uint32_t eye = 0; eye < 2; ++eye) {
-    mDisplayInfo.mEyeTranslation[eye].x = 0.0f;
-    mDisplayInfo.mEyeTranslation[eye].y = 0.0f;
-    mDisplayInfo.mEyeTranslation[eye].z = 0.0f;
-    mDisplayInfo.mEyeFOV[eye] = VRFieldOfView(45.0, 45.0, 45.0, 45.0);
+    state.mEyeTranslation[eye].x = 0.0f;
+    state.mEyeTranslation[eye].y = 0.0f;
+    state.mEyeTranslation[eye].z = 0.0f;
+    state.mEyeFOV[eye] = VRFieldOfView(45.0, 45.0, 45.0, 45.0);
   }
 
   // default: 1m x 1m space, 0.75m high in seated position
-  mDisplayInfo.mStageSize.width = 1.0f;
-  mDisplayInfo.mStageSize.height = 1.0f;
+  state.mStageSize.width = 1.0f;
+  state.mStageSize.height = 1.0f;
 
-  mDisplayInfo.mSittingToStandingTransform._11 = 1.0f;
-  mDisplayInfo.mSittingToStandingTransform._12 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._13 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._14 = 0.0f;
+  state.mSittingToStandingTransform[0] = 1.0f;
+  state.mSittingToStandingTransform[1] = 0.0f;
+  state.mSittingToStandingTransform[2] = 0.0f;
+  state.mSittingToStandingTransform[3] = 0.0f;
 
-  mDisplayInfo.mSittingToStandingTransform._21 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._22 = 1.0f;
-  mDisplayInfo.mSittingToStandingTransform._23 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._24 = 0.0f;
+  state.mSittingToStandingTransform[4] = 0.0f;
+  state.mSittingToStandingTransform[5] = 1.0f;
+  state.mSittingToStandingTransform[6] = 0.0f;
+  state.mSittingToStandingTransform[7] = 0.0f;
 
-  mDisplayInfo.mSittingToStandingTransform._31 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._32 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._33 = 1.0f;
-  mDisplayInfo.mSittingToStandingTransform._34 = 0.0f;
+  state.mSittingToStandingTransform[8] = 0.0f;
+  state.mSittingToStandingTransform[9] = 0.0f;
+  state.mSittingToStandingTransform[10] = 1.0f;
+  state.mSittingToStandingTransform[11] = 0.0f;
 
-  mDisplayInfo.mSittingToStandingTransform._41 = 0.0f;
-  mDisplayInfo.mSittingToStandingTransform._42 = 0.75f;
-  mDisplayInfo.mSittingToStandingTransform._43 = 0.0f;
+  state.mSittingToStandingTransform[12] = 0.0f;
+  state.mSittingToStandingTransform[13] = 0.75f;
+  state.mSittingToStandingTransform[14] = 0.0f;
+  state.mSittingToStandingTransform[15] = 1.0f;
 
   gfx::Quaternion rot;
 
@@ -128,12 +130,13 @@ void
 VRDisplayPuppet::SetDisplayInfo(const VRDisplayInfo& aDisplayInfo)
 {
   // We are only interested in the eye and mount info of the display info.
-  mDisplayInfo.mEyeResolution = aDisplayInfo.mEyeResolution;
-  mDisplayInfo.mIsMounted = aDisplayInfo.mIsMounted;
-  memcpy(&mDisplayInfo.mEyeFOV, &aDisplayInfo.mEyeFOV,
-         sizeof(mDisplayInfo.mEyeFOV[0]) * VRDisplayInfo::NumEyes);
-  memcpy(&mDisplayInfo.mEyeTranslation, &aDisplayInfo.mEyeTranslation,
-         sizeof(mDisplayInfo.mEyeTranslation[0]) * VRDisplayInfo::NumEyes);
+  VRDisplayState& state = mDisplayInfo.mDisplayState;
+  state.mEyeResolution = aDisplayInfo.mDisplayState.mEyeResolution;
+  state.mIsMounted = aDisplayInfo.mDisplayState.mIsMounted;
+  memcpy(&state.mEyeFOV, &aDisplayInfo.mDisplayState.mEyeFOV,
+         sizeof(state.mEyeFOV[0]) * VRDisplayState::NumEyes);
+  memcpy(&state.mEyeTranslation, &aDisplayInfo.mDisplayState.mEyeTranslation,
+         sizeof(state.mEyeTranslation[0]) * VRDisplayState::NumEyes);
 }
 
 void
@@ -154,7 +157,7 @@ VRDisplayPuppet::GetSensorState()
 
   Matrix4x4 matHeadToEye[2];
   for (uint32_t eye = 0; eye < 2; ++eye) {
-    matHeadToEye[eye].PreTranslate(mDisplayInfo.mEyeTranslation[eye]);
+    matHeadToEye[eye].PreTranslate(mDisplayInfo.GetEyeTranslation(eye));
   }
   mSensorState.CalcViewMatrices(matHeadToEye);
 
@@ -572,7 +575,7 @@ void
 VRDisplayPuppet::Refresh()
 {
   // We update mIsConneced once per refresh.
-  mDisplayInfo.mIsConnected = true;
+  mDisplayInfo.mDisplayState.mIsConnected = true;
 }
 
 VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand, uint32_t aDisplayID)
@@ -581,10 +584,11 @@ VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand, uint32_t aDisplay
   , mButtonTouchState(0)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerPuppet, VRControllerHost);
-  mControllerInfo.mControllerName.AssignLiteral("Puppet Gamepad");
-  mControllerInfo.mNumButtons = kNumPuppetButtonMask;
-  mControllerInfo.mNumAxes = kNumPuppetAxis;
-  mControllerInfo.mNumHaptics = kNumPuppetHaptcs;
+  VRControllerState& state = mControllerInfo.mControllerState;
+  strncpy(state.mControllerName, "Puppet Gamepad", kVRControllerNameMaxLen);
+  state.mNumButtons = kNumPuppetButtonMask;
+  state.mNumAxes = kNumPuppetAxis;
+  state.mNumHaptics = kNumPuppetHaptcs;
 }
 
 VRControllerPuppet::~VRControllerPuppet()
@@ -668,13 +672,13 @@ VRControllerPuppet::GetPoseMoveState()
 float
 VRControllerPuppet::GetAxisMove(uint32_t aAxis)
 {
-  return mAxisMove[aAxis];
+  return mControllerInfo.mControllerState.mAxisValue[aAxis];
 }
 
 void
 VRControllerPuppet::SetAxisMove(uint32_t aAxis, float aValue)
 {
-  mAxisMove[aAxis] = aValue;
+  mControllerInfo.mControllerState.mAxisValue[aAxis] = aValue;
 }
 
 VRSystemManagerPuppet::VRSystemManagerPuppet()

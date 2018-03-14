@@ -578,14 +578,14 @@ inDOMView::IsSorted(bool *_retval)
 
 NS_IMETHODIMP
 inDOMView::CanDrop(int32_t index, int32_t orientation,
-                   nsIDOMDataTransfer* aDataTransfer, bool *_retval)
+                   nsISupports* aDataTransfer, bool *_retval)
 {
   *_retval = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::Drop(int32_t row, int32_t orientation, nsIDOMDataTransfer* aDataTransfer)
+inDOMView::Drop(int32_t row, int32_t orientation, nsISupports* aDataTransfer)
 {
   return NS_OK;
 }

@@ -285,37 +285,6 @@ SVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
   mD.GetAnimValue().GetMarkerPositioningData(aMarks);
 }
 
-float
-SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
-{
-  MOZ_ASSERT(aFor == eForTextPath || aFor == eForStroking,
-             "Unknown enum");
-  if (mPathLength.IsExplicitlySet()) {
-    float authorsPathLengthEstimate = mPathLength.GetAnimValue();
-    if (authorsPathLengthEstimate > 0) {
-      RefPtr<Path> path = GetOrBuildPathForMeasuring();
-      if (!path) {
-        // The path is empty or invalid so its length must be zero and
-        // we know that 0 / authorsPathLengthEstimate = 0.
-        return 0.0;
-      }
-      if (aFor == eForTextPath) {
-        // For textPath, a transform on the referenced path affects the
-        // textPath layout, so when calculating the actual path length
-        // we need to take that into account.
-        gfxMatrix matrix = PrependLocalTransformsTo(gfxMatrix());
-        if (!matrix.IsIdentity()) {
-          RefPtr<PathBuilder> builder =
-            path->TransformedCopyToBuilder(ToMatrix(matrix));
-          path = builder->Finish();
-        }
-      }
-      return path->ComputeLength() / authorsPathLengthEstimate;
-    }
-  }
-  return 1.0;
-}
-
 already_AddRefed<Path>
 SVGPathElement::BuildPath(PathBuilder* aBuilder)
 {

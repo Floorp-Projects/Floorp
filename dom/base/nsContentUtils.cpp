@@ -132,7 +132,6 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -6034,15 +6033,9 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   nsCOMPtr<nsIDragSession> dragSession = GetDragSession();
   NS_ENSURE_TRUE(dragSession, NS_OK); // no drag in progress
 
-  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
-  nsCOMPtr<DataTransfer> initialDataTransfer;
-  dragSession->GetDataTransfer(getter_AddRefs(dataTransfer));
-  if (dataTransfer) {
-    initialDataTransfer = do_QueryInterface(dataTransfer);
-    if (!initialDataTransfer) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
+  RefPtr<DataTransfer> initialDataTransfer =
+    dragSession->GetDataTransfer();
+  if (!initialDataTransfer) {
     // A dataTransfer won't exist when a drag was started by some other
     // means, for instance calling the drag service directly, or a drag
     // from another application. In either case, a new dataTransfer should
@@ -6072,9 +6065,9 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   // from the drop action, which platform specific widget code sets before
   // the event is fired based on the keyboard state.
   if (aDragEvent->mMessage == eDragEnter || aDragEvent->mMessage == eDragOver) {
-    uint32_t action, effectAllowed;
+    uint32_t action;
     dragSession->GetDragAction(&action);
-    aDragEvent->mDataTransfer->GetEffectAllowedInt(&effectAllowed);
+    uint32_t effectAllowed = aDragEvent->mDataTransfer->EffectAllowedInt();
     aDragEvent->mDataTransfer->SetDropEffectInt(
                                  FilterDropEffect(action, effectAllowed));
   }
@@ -6084,9 +6077,8 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
     // last value that the dropEffect had. This will have been set in
     // EventStateManager::PostHandleEvent for the last dragenter or
     // dragover event.
-    uint32_t dropEffect;
-    initialDataTransfer->GetDropEffectInt(&dropEffect);
-    aDragEvent->mDataTransfer->SetDropEffectInt(dropEffect);
+    aDragEvent->mDataTransfer->SetDropEffectInt(
+      initialDataTransfer->DropEffectInt());
   }
 
   return NS_OK;

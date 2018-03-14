@@ -190,9 +190,10 @@ public class GeckoViewActivity extends Activity {
 
         @Override
         public void onContextMenu(GeckoSession session, int screenX, int screenY,
-                                  String uri, String elementSrc) {
+                                  String uri, int elementType, String elementSrc) {
             Log.d(LOGTAG, "onContextMenu screenX=" + screenX +
                           " screenY=" + screenY + " uri=" + uri +
+                          " elementType=" + elementType +
                           " elementSrc=" + elementSrc);
         }
     }
