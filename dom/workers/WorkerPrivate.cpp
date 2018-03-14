@@ -420,6 +420,11 @@ private:
       return false;
     }
 
+    // PerformanceStorage needs to be initialized on the worker thread before
+    // being used on main-thread. Let's be sure that it is created before any
+    // content loading.
+    aWorkerPrivate->EnsurePerformanceStorage();
+
     ErrorResult rv;
     workerinternals::LoadMainScript(aWorkerPrivate, mScriptURL, WorkerScript, rv);
     rv.WouldReportJSException();
@@ -3432,6 +3437,16 @@ WorkerPrivate::EnsureClientSource()
   return true;
 }
 
+void
+WorkerPrivate::EnsurePerformanceStorage()
+{
+  AssertIsOnWorkerThread();
+
+  if (!mPerformanceStorage) {
+    mPerformanceStorage = PerformanceStorageWorker::Create(this);
+  }
+}
+
 const ClientInfo&
 WorkerPrivate::GetClientInfo() const
 {
@@ -5244,11 +5259,7 @@ PerformanceStorage*
 WorkerPrivate::GetPerformanceStorage()
 {
   AssertIsOnMainThread();
-
-  if (!mPerformanceStorage) {
-    mPerformanceStorage = PerformanceStorageWorker::Create(this);
-  }
-
+  MOZ_ASSERT(mPerformanceStorage);
   return mPerformanceStorage;
 }
 
