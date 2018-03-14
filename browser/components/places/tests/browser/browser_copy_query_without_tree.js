@@ -50,7 +50,7 @@ add_task(async function copy_mobile_shortcut() {
   });
 
   library.PlacesOrganizer.selectLeftPaneContainerByHierarchy([
-    PlacesUtils.virtualAllBookmarksGuid,
+    PlacesUIUtils.leftPaneQueries.AllBookmarks,
     PlacesUtils.bookmarks.virtualMobileGuid,
   ]);
 

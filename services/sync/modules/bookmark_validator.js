@@ -22,7 +22,15 @@ Cu.importGlobalProperties(["URLSearchParams"]);
 
 var EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
+const LEFT_PANE_ROOT_ANNO = "PlacesOrganizer/OrganizerFolder";
+const LEFT_PANE_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
 const QUERY_PROTOCOL = "place:";
+
+// Indicates if a local bookmark tree node should be excluded from syncing.
+function isNodeIgnored(treeNode) {
+  return treeNode.annos && treeNode.annos.some(anno => anno.name == LEFT_PANE_ROOT_ANNO ||
+                                                       anno.name == LEFT_PANE_QUERY_ANNO);
+}
 
 function areURLsEqual(a, b) {
   if (a === b) {
@@ -645,6 +653,8 @@ class BookmarkValidator {
       await this.maybeYield();
       if (!synced) {
         synced = syncedRoots.includes(treeNode.guid);
+      } else if (isNodeIgnored(treeNode)) {
+        synced = false;
       }
       let localId = treeNode.id;
       let guid = PlacesSyncUtils.bookmarks.guidToRecordId(treeNode.guid);
