@@ -2657,10 +2657,10 @@ mp_toradix(mp_int *mp, char *str, int radix)
         /* Reverse the digits and sign indicator     */
         ix = 0;
         while (ix < pos) {
-            char tmp = str[ix];
+            char tmpc = str[ix];
 
             str[ix] = str[pos];
-            str[pos] = tmp;
+            str[pos] = tmpc;
             ++ix;
             --pos;
         }
@@ -3313,13 +3313,14 @@ s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
     /* could check for power of 2 here, but mp_div_d does that. */
     if (MP_USED(mp) == 1) {
         mp_digit n = MP_DIGIT(mp, 0);
-        mp_digit rem;
+        mp_digit remdig;
 
         q = n / d;
-        rem = n % d;
+        remdig = n % d;
         MP_DIGIT(mp, 0) = q;
-        if (r)
-            *r = rem;
+        if (r) {
+            *r = remdig;
+        }
         return MP_OKAY;
     }
 

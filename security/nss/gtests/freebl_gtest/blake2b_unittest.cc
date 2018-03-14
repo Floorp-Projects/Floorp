@@ -50,7 +50,7 @@ TEST_P(Blake2BKATUnkeyed, Unkeyed) {
 TEST_P(Blake2BKATKeyed, Keyed) {
   std::vector<uint8_t> values(BLAKE2B512_LENGTH);
   SECStatus rv = BLAKE2B_MAC_HashBuf(values.data(), kat_data.data(),
-                                     std::get<0>(GetParam()), key.data(),
+                                     std::get<0>(GetParam()), kat_key.data(),
                                      BLAKE2B_KEY_SIZE);
   ASSERT_EQ(SECSuccess, rv);
   EXPECT_EQ(values, std::get<1>(GetParam()));
@@ -139,7 +139,7 @@ TEST_F(Blake2BTests, NullTest) {
   EXPECT_EQ(std::get<1>(TestcasesUnkeyed[0]), digest);
 
   digest = std::vector<uint8_t>(BLAKE2B512_LENGTH);
-  rv = BLAKE2B_MAC_HashBuf(digest.data(), nullptr, 0, key.data(),
+  rv = BLAKE2B_MAC_HashBuf(digest.data(), nullptr, 0, kat_key.data(),
                            BLAKE2B_KEY_SIZE);
   ASSERT_EQ(SECSuccess, rv);
   EXPECT_EQ(std::get<1>(TestcasesKeyed[0]), digest);

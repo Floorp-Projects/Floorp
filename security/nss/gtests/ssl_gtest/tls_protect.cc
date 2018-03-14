@@ -91,9 +91,9 @@ bool AeadCipherChacha20Poly1305::Aead(bool decrypt, uint64_t seq,
                    in, inlen, out, outlen, maxlen);
 }
 
-bool TlsCipherSpec::Init(uint16_t epoch, SSLCipherAlgorithm cipher,
+bool TlsCipherSpec::Init(uint16_t epoc, SSLCipherAlgorithm cipher,
                          PK11SymKey *key, const uint8_t *iv) {
-  epoch_ = epoch;
+  epoch_ = epoc;
   switch (cipher) {
     case ssl_calg_aes_gcm:
       aead_.reset(new AeadCipherAesGcm());
