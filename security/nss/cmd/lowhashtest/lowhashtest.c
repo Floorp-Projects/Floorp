@@ -390,7 +390,7 @@ testSHA512(NSSLOWInitContext *initCtx)
 }
 
 static void
-Usage()
+Usage(char *progName)
 {
     fprintf(stderr, "Usage: %s [algorithm]\n",
             progName);
@@ -436,7 +436,7 @@ main(int argc, char **argv)
         rv += testSHA512(initCtx);
     } else {
         SECU_PrintError(progName, "Unsupported hash type %s\n", argv[0]);
-        Usage();
+        Usage(progName);
     }
 
     NSSLOW_Shutdown(initCtx);

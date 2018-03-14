@@ -17,8 +17,8 @@ namespace nss_test {
 class DataBuffer {
  public:
   DataBuffer() : data_(nullptr), len_(0) {}
-  DataBuffer(const uint8_t* d, size_t l) : data_(nullptr), len_(0) {
-    Assign(d, l);
+  DataBuffer(const uint8_t* data, size_t len) : data_(nullptr), len_(0) {
+    Assign(data, len);
   }
   DataBuffer(const DataBuffer& other) : data_(nullptr), len_(0) {
     Assign(other);
@@ -32,17 +32,17 @@ class DataBuffer {
     return *this;
   }
 
-  void Allocate(size_t l) {
+  void Allocate(size_t len) {
     delete[] data_;
-    data_ = new uint8_t[l ? l : 1];  // Don't depend on new [0].
-    len_ = l;
+    data_ = new uint8_t[len ? len : 1];  // Don't depend on new [0].
+    len_ = len;
   }
 
-  void Truncate(size_t l) { len_ = (std::min)(len_, l); }
+  void Truncate(size_t len) { len_ = (std::min)(len_, len); }
 
   void Assign(const DataBuffer& other) { Assign(other.data(), other.len()); }
 
-  void Assign(const uint8_t* d, size_t l);
+  void Assign(const uint8_t* data, size_t len);
 
   // Write will do a new allocation and expand the size of the buffer if needed.
   // Returns the offset of the end of the write.

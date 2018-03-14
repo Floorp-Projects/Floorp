@@ -18,12 +18,12 @@
 
 namespace nss_test {
 
-void DataBuffer::Assign(const uint8_t* d, size_t l) {
-  if (d) {
-    Allocate(l);
-    memcpy(static_cast<void*>(data_), static_cast<const void*>(d), l);
+void DataBuffer::Assign(const uint8_t* data, size_t len) {
+  if (data) {
+    Allocate(len);
+    memcpy(static_cast<void*>(data_), static_cast<const void*>(data), len);
   } else {
-    assert(l == 0);
+    assert(len == 0);
     data_ = nullptr;
     len_ = 0;
   }

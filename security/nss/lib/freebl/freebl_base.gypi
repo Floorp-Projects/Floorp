@@ -167,7 +167,7 @@
                 }, {
                   # !Windows & !x64 & !arm64 & !aarch64
                   'sources': [
-                    'verified/Hacl_Poly1305_32.c',
+                    'poly1305.c',
                   ],
                 }],
               ],
@@ -176,7 +176,7 @@
         }, {
           # Windows
           'sources': [
-            'verified/Hacl_Poly1305_32.c',
+            'poly1305.c',
           ],
         }],
       ],

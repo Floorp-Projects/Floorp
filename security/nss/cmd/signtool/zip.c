@@ -129,7 +129,7 @@ handle_zerror(int err, char *msg)
  * been opened with JzipOpen.
  */
 int
-JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int lvl)
+JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
 {
     ZIPentry *entry;
     PRFileDesc *readfp;
@@ -319,7 +319,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int lvl)
      * It causes zlib to leave out its headers and footers, which don't
      * work in PKZIP files.
      */
-    err = deflateInit2(&zstream, lvl, Z_DEFLATED,
+    err = deflateInit2(&zstream, compression_level, Z_DEFLATED,
                        -MAX_WBITS, 8 /*default*/, Z_DEFAULT_STRATEGY);
     if (err != Z_OK) {
         handle_zerror(err, zstream.msg);

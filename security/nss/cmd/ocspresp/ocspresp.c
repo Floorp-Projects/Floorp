@@ -194,8 +194,8 @@ main(int argc, char **argv)
                                                        &obtainedSignerCert, caCert));
 #ifdef DEBUG
     {
-        rv = CERT_GetOCSPStatusForCertID(certHandle, decodedRev, cid,
-                                         obtainedSignerCert, now);
+        SECStatus rv = CERT_GetOCSPStatusForCertID(certHandle, decodedRev, cid,
+                                                   obtainedSignerCert, now);
         PORT_Assert(rv == SECFailure);
         PORT_Assert(PORT_GetError() == SEC_ERROR_REVOKED_CERTIFICATE);
     }
@@ -211,7 +211,7 @@ main(int argc, char **argv)
     decodedFail = CERT_DecodeOCSPResponse(encodedFail);
 #ifdef DEBUG
     {
-        rv = CERT_GetOCSPResponseStatus(decodedFail);
+        SECStatus rv = CERT_GetOCSPResponseStatus(decodedFail);
         PORT_Assert(rv == SECFailure);
         PORT_Assert(PORT_GetError() == SEC_ERROR_OCSP_TRY_SERVER_LATER);
     }

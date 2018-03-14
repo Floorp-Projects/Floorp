@@ -27,8 +27,8 @@ class TlsFuzzTest : public ::testing::Test {};
 // Record the application data stream.
 class TlsApplicationDataRecorder : public TlsRecordFilter {
  public:
-  TlsApplicationDataRecorder(const std::shared_ptr<TlsAgent>& a)
-      : TlsRecordFilter(a), buffer_() {}
+  TlsApplicationDataRecorder(const std::shared_ptr<TlsAgent>& agent)
+      : TlsRecordFilter(agent), buffer_() {}
 
   virtual PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                             const DataBuffer& input,

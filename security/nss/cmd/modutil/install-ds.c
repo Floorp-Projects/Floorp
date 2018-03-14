@@ -88,11 +88,11 @@ static const char* errString[] = {
 
 static char* PR_Strdup(const char* str);
 
-#define PAD(x)                                \
-    {                                         \
-        int pad_i;                            \
-        for (pad_i = 0; pad_i < (x); pad_i++) \
-            printf(" ");                      \
+#define PAD(x)                  \
+    {                           \
+        int i;                  \
+        for (i = 0; i < x; i++) \
+            printf(" ");        \
     }
 #define PADINC 4
 

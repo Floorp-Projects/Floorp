@@ -103,8 +103,8 @@ TEST_P(TlsPaddingTest, LastByteOfPadWrong) {
 
 class RecordReplacer : public TlsRecordFilter {
  public:
-  RecordReplacer(const std::shared_ptr<TlsAgent>& a, size_t size)
-      : TlsRecordFilter(a), enabled_(false), size_(size) {}
+  RecordReplacer(const std::shared_ptr<TlsAgent>& agent, size_t size)
+      : TlsRecordFilter(agent), enabled_(false), size_(size) {}
 
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                     const DataBuffer& data,

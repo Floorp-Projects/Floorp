@@ -2164,12 +2164,12 @@ BLAKE2B_NewContext(void)
 }
 
 void
-BLAKE2B_DestroyContext(BLAKE2BContext *ctx, PRBool freeit)
+BLAKE2B_DestroyContext(BLAKE2BContext *BLAKE2BContext, PRBool freeit)
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
         return;
     }
-    (vector->p_BLAKE2B_DestroyContext)(ctx, freeit);
+    (vector->p_BLAKE2B_DestroyContext)(BLAKE2BContext, freeit);
 }
 
 SECStatus

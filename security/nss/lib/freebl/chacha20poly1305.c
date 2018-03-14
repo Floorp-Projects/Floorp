@@ -24,60 +24,36 @@ extern void Hacl_Chacha20_Vec128_chacha20(uint8_t *output, uint8_t *plain,
 extern void Hacl_Chacha20_chacha20(uint8_t *output, uint8_t *plain, uint32_t len,
                                    uint8_t *k, uint8_t *n1, uint32_t ctr);
 
+/* Poly1305Do writes the Poly1305 authenticator of the given additional data
+ * and ciphertext to |out|. */
 #if defined(HAVE_INT128_SUPPORT) && (defined(NSS_X86_OR_X64) || defined(__aarch64__))
 /* Use HACL* Poly1305 on 64-bit Intel and ARM */
 #include "verified/Hacl_Poly1305_64.h"
-#define NSS_POLY1305_64 1
-#define Hacl_Poly1305_update Hacl_Poly1305_64_update
-#define Hacl_Poly1305_mk_state Hacl_Poly1305_64_mk_state
-#define Hacl_Poly1305_init Hacl_Poly1305_64_init
-#define Hacl_Poly1305_finish Hacl_Poly1305_64_finish
-typedef Hacl_Impl_Poly1305_64_State_poly1305_state Hacl_Impl_Poly1305_State_poly1305_state;
-#else
-/* All other platforms get the 32-bit poly1305 HACL* implementation. */
-#include "verified/Hacl_Poly1305_32.h"
-#define NSS_POLY1305_32 1
-#define Hacl_Poly1305_update Hacl_Poly1305_32_update
-#define Hacl_Poly1305_mk_state Hacl_Poly1305_32_mk_state
-#define Hacl_Poly1305_init Hacl_Poly1305_32_init
-#define Hacl_Poly1305_finish Hacl_Poly1305_32_finish
-typedef Hacl_Impl_Poly1305_32_State_poly1305_state Hacl_Impl_Poly1305_State_poly1305_state;
-#endif /* HAVE_INT128_SUPPORT */
 
 static void
-Poly1305PadUpdate(Hacl_Impl_Poly1305_State_poly1305_state state,
+Poly1305PadUpdate(Hacl_Impl_Poly1305_64_State_poly1305_state state,
                   unsigned char *block, const unsigned char *p,
                   const unsigned int pLen)
 {
     unsigned int pRemLen = pLen % 16;
-    Hacl_Poly1305_update(state, (uint8_t *)p, (pLen / 16));
+    Hacl_Poly1305_64_update(state, (uint8_t *)p, (pLen / 16));
     if (pRemLen > 0) {
         memcpy(block, p + (pLen - pRemLen), pRemLen);
-        Hacl_Poly1305_update(state, block, 1);
+        Hacl_Poly1305_64_update(state, block, 1);
     }
 }
 
-/* Poly1305Do writes the Poly1305 authenticator of the given additional data
- * and ciphertext to |out|. */
 static void
 Poly1305Do(unsigned char *out, const unsigned char *ad, unsigned int adLen,
            const unsigned char *ciphertext, unsigned int ciphertextLen,
            const unsigned char key[32])
 {
-#ifdef NSS_POLY1305_64
-    uint64_t stateStack[6U] = { 0U };
-    size_t offset = 3;
-#elif defined NSS_POLY1305_32
-    uint32_t stateStack[10U] = { 0U };
-    size_t offset = 5;
-#else
-#error "This can't happen."
-#endif
-    Hacl_Impl_Poly1305_State_poly1305_state state =
-        Hacl_Poly1305_mk_state(stateStack, stateStack + offset);
+    uint64_t tmp1[6U] = { 0U };
+    Hacl_Impl_Poly1305_64_State_poly1305_state state =
+        Hacl_Poly1305_64_mk_state(tmp1, tmp1 + 3);
 
     unsigned char block[16] = { 0 };
-    Hacl_Poly1305_init(state, (uint8_t *)key);
+    Hacl_Poly1305_64_init(state, (uint8_t *)key);
 
     Poly1305PadUpdate(state, block, ad, adLen);
     memset(block, 0, 16);
@@ -92,11 +68,49 @@ Poly1305Do(unsigned char *out, const unsigned char *ad, unsigned int adLen,
         block[i] = j;
     }
 
-    Hacl_Poly1305_update(state, block, 1);
-    Hacl_Poly1305_finish(state, out, (uint8_t *)(key + 16));
-#undef NSS_POLY1305_64
-#undef NSS_POLY1305_32
+    Hacl_Poly1305_64_update(state, block, 1);
+    Hacl_Poly1305_64_finish(state, out, (uint8_t *)(key + 16));
 }
+#else
+/* All other platforms get the 32-bit poly1305 reference implementation. */
+#include "poly1305.h"
+
+static void
+Poly1305Do(unsigned char *out, const unsigned char *ad, unsigned int adLen,
+           const unsigned char *ciphertext, unsigned int ciphertextLen,
+           const unsigned char key[32])
+{
+    poly1305_state state;
+    unsigned int j;
+    unsigned char lengthBytes[8];
+    static const unsigned char zeros[15];
+    unsigned int i;
+
+    Poly1305Init(&state, key);
+    Poly1305Update(&state, ad, adLen);
+    if (adLen % 16 > 0) {
+        Poly1305Update(&state, zeros, 16 - adLen % 16);
+    }
+    Poly1305Update(&state, ciphertext, ciphertextLen);
+    if (ciphertextLen % 16 > 0) {
+        Poly1305Update(&state, zeros, 16 - ciphertextLen % 16);
+    }
+    j = adLen;
+    for (i = 0; i < sizeof(lengthBytes); i++) {
+        lengthBytes[i] = j;
+        j >>= 8;
+    }
+    Poly1305Update(&state, lengthBytes, sizeof(lengthBytes));
+    j = ciphertextLen;
+    for (i = 0; i < sizeof(lengthBytes); i++) {
+        lengthBytes[i] = j;
+        j >>= 8;
+    }
+    Poly1305Update(&state, lengthBytes, sizeof(lengthBytes));
+    Poly1305Finish(&state, out);
+}
+
+#endif /* HAVE_INT128_SUPPORT */
 #endif /* NSS_DISABLE_CHACHAPOLY */
 
 SECStatus
