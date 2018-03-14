@@ -77,6 +77,9 @@ def Libxul(name):
     if CONFIG['OS_ARCH'] == 'Darwin':
         LDFLAGS += ['-Wl,-no_compact_unwind,-lresolv']
 
+    if CONFIG['MOZ_DEBUG_SYMBOLS'] and CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+        LDFLAGS += ['-NATVIS:%s/toolkit/library/gecko.natvis' % TOPSRCDIR]
+
 Libxul('xul')
 
 FORCE_STATIC_LIB = True
