@@ -340,15 +340,16 @@ public:
   bool HitTestAPZC(const ScreenIntPoint& aPoint);
 
   /**
-   * Sets the dpi value used by all AsyncPanZoomControllers.
-   * DPI defaults to 72 if not set using SetDPI() at any point.
+   * Sets the dpi value used by all AsyncPanZoomControllers attached to this
+   * tree manager.
+   * DPI defaults to 160 if not set using SetDPI() at any point.
    */
-  void SetDPI(float aDpiValue) override { sDPI = aDpiValue; }
+  void SetDPI(float aDpiValue) override;
 
   /**
    * Returns the current dpi value in use.
    */
-  static float GetDPI() { return sDPI; }
+  float GetDPI() const;
 
   /**
    * Find the hit testing node for the scrollbar thumb that matches these
@@ -747,7 +748,8 @@ private:
   std::unordered_map<uint64_t, UniquePtr<APZTestData>> mTestData;
   mutable mozilla::Mutex mTestDataLock;
 
-  static float sDPI;
+  // This must only be touched on the controller thread.
+  float mDPI;
 
 #if defined(MOZ_WIDGET_ANDROID)
 public:
