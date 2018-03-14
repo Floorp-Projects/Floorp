@@ -248,7 +248,11 @@ APZCTreeManagerParent::RecvUpdateZoomConstraints(
 mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetDPI(const float& aDpiValue)
 {
-  mTreeManager->SetDPI(aDpiValue);
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod<float>(
+    "layers::IAPZCTreeManager::SetDPI",
+    mTreeManager,
+    &IAPZCTreeManager::SetDPI,
+    aDpiValue));
   return IPC_OK();
 }
 
