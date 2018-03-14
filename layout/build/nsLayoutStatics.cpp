@@ -147,14 +147,14 @@ nsLayoutStatics::Initialize()
 
   ContentParent::StartUp();
 
-  // Register all of our atoms once
+  // Register static atoms. Note that nsGkAtoms must be initialized earlier
+  // than here, so it's done in NS_InitAtomTable() instead.
   nsCSSAnonBoxes::AddRefAtoms();
   nsCSSPseudoClasses::AddRefAtoms();
   nsCSSPseudoElements::AddRefAtoms();
   nsCSSKeywords::AddRefTable();
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
-  nsGkAtoms::AddRefAtoms();
 
   NS_SetStaticAtomsDone();
 
