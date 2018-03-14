@@ -619,6 +619,13 @@ public:
     return *this;
   }
 
+  nsCOMPtr<T>& operator=(nsCOMPtr<T>&& aRhs)
+  {
+    assign_assuming_AddRef(aRhs.forget().take());
+    NSCAP_ASSERT_NO_QUERY_NEEDED();
+    return *this;
+  }
+
   nsCOMPtr<T>& operator=(T* aRhs)
   {
     assign_with_AddRef(aRhs);

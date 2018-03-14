@@ -960,29 +960,20 @@ var PageInfoListener = {
     };
 
     if (computedStyle) {
-      let addImgFunc = (label, val) => {
-        if (val.primitiveType == content.CSSPrimitiveValue.CSS_URI) {
-          addImage(val.getStringValue(), label, strings.notSet, elem, true);
-        } else if (val.primitiveType == content.CSSPrimitiveValue.CSS_STRING) {
-          // This is for -moz-image-rect.
-          // TODO: Reimplement once bug 714757 is fixed.
-          let strVal = val.getStringValue();
-          if (strVal.search(/^.*url\(\"?/) > -1) {
-            let url = strVal.replace(/^.*url\(\"?/, "").replace(/\"?\).*$/, "");
-            addImage(url, label, strings.notSet, elem, true);
-          }
-        } else if (val.cssValueType == content.CSSValue.CSS_VALUE_LIST) {
-          // Recursively resolve multiple nested CSS value lists.
-          for (let i = 0; i < val.length; i++) {
-            addImgFunc(label, val.item(i));
-          }
+      let addImgFunc = (label, urls) => {
+        for (let url of urls) {
+          addImage(url, label, strings.notSet, elem, true);
         }
       };
-
-      addImgFunc(strings.mediaBGImg, computedStyle.getPropertyCSSValue("background-image"));
-      addImgFunc(strings.mediaBorderImg, computedStyle.getPropertyCSSValue("border-image-source"));
-      addImgFunc(strings.mediaListImg, computedStyle.getPropertyCSSValue("list-style-image"));
-      addImgFunc(strings.mediaCursor, computedStyle.getPropertyCSSValue("cursor"));
+      // FIXME: This is missing properties. See the implementation of
+      // getCSSImageURLs for a list of properties.
+      //
+      // If you don't care about the message you can also pass "all" here and
+      // get all the ones the browser knows about.
+      addImgFunc(strings.mediaBGImg, computedStyle.getCSSImageURLs("background-image"));
+      addImgFunc(strings.mediaBorderImg, computedStyle.getCSSImageURLs("border-image-source"));
+      addImgFunc(strings.mediaListImg, computedStyle.getCSSImageURLs("list-style-image"));
+      addImgFunc(strings.mediaCursor, computedStyle.getCSSImageURLs("cursor"));
     }
 
     // One swi^H^H^Hif-else to rule them all.
