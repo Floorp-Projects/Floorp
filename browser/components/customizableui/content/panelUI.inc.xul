@@ -707,7 +707,7 @@
        tabspecific="true">
   <popupnotification id="extension-new-tab-notification"
                      popupid="extension-new-tab"
-                     label="&newTabControlled.header.message2;"
+                     label="&newTabControlled.header.message;"
                      buttonlabel="&newTabControlled.keepButton.label;"
                      buttonaccesskey="&newTabControlled.keepButton.accesskey;"
                      secondarybuttonlabel="&newTabControlled.disableButton.label;"
