@@ -375,6 +375,12 @@ function addXULBrowserDecorations(browser) {
       swapBrowser() {},
     };
   }
+  if (browser._remoteWebProgress == undefined) {
+    browser._remoteWebProgress = {
+      addProgressListener() {},
+      removeProgressListener() {},
+    };
+  }
 }
 
 function tabLoaded(tab) {
