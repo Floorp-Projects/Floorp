@@ -3086,7 +3086,7 @@ pref("layout.css.prefixes.webkit", true);
 // Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
 // (Note: this pref has no effect if the master 'layout.css.prefixes.webkit'
 // pref is set to false.)
-pref("layout.css.prefixes.device-pixel-ratio-webkit", true);
+pref("layout.css.prefixes.device-pixel-ratio-webkit", false);
 
 // Is support for the :scope selector enabled?
 pref("layout.css.scope-pseudo.enabled", true);
