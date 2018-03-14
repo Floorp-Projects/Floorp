@@ -317,4 +317,28 @@ add_task(async function() {
     ["aNamespace3", "{\u2026}"],
     "root()"
   ]);
+
+  await breakpointScopes(dbg, "webpack-standalone", { line: 11, column: 0 }, [
+    "Block",
+    ["<this>", '"this-value"'],
+    ["arg", '"arg-value"'],
+    ["arguments", "Arguments"],
+    ["inner", "undefined"],
+    "Block",
+    ["someName", "(optimized away)"],
+    "Block",
+    ["two", "2"],
+    "Block",
+    ["one", "1"],
+    "root",
+    ["arguments", "Arguments"],
+    "fn:someName()",
+    "webpackStandalone",
+    ["__webpack_exports__", "(optimized away)"],
+    ["__WEBPACK_IMPORTED_MODULE_0__src_mod1__", "{\u2026}"],
+    ["__webpack_require__", "(optimized away)"],
+    ["arguments", "(unavailable)"],
+    ["module", "(optimized away)"],
+    "root()"
+  ]);
 });

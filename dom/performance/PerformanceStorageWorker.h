@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-class WorkerHolder;
+class WeakWorkerRef;
 class WorkerPrivate;
 
 class PerformanceProxyData;
@@ -25,8 +25,6 @@ public:
   static already_AddRefed<PerformanceStorageWorker>
   Create(WorkerPrivate* aWorkerPrivate);
 
-  void InitializeOnWorker();
-
   void ShutdownOnWorker();
 
   void AddEntry(nsIHttpChannel* aChannel,
@@ -35,25 +33,14 @@ public:
   void AddEntryOnWorker(UniquePtr<PerformanceProxyData>&& aData);
 
 private:
-  explicit PerformanceStorageWorker(WorkerPrivate* aWorkerPrivate);
+  PerformanceStorageWorker();
   ~PerformanceStorageWorker();
 
   Mutex mMutex;
 
   // Protected by mutex.
-  // This raw pointer is nullified when the WorkerHolder communicates the
-  // shutting down of the worker thread.
-  WorkerPrivate* mWorkerPrivate;
-
-  // Protected by mutex.
-  enum {
-    eInitializing,
-    eReady,
-    eTerminated,
-  } mState;
-
-  // Touched on worker-thread only.
-  UniquePtr<WorkerHolder> mWorkerHolder;
+  // Created and released on worker-thread. Used also on main-thread.
+  RefPtr<WeakWorkerRef> mWorkerRef;
 };
 
 } // namespace dom

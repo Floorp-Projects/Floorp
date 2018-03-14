@@ -800,6 +800,7 @@ class LNode
     LIR_OPCODE_LIST(LIROP)
 #undef LIROP
 
+// Note: GenerateOpcodeFiles.py generates LOpcodes.h based on this macro.
 #define LIR_HEADER(opcode)                                                  \
     static constexpr LNode::Opcode classOpcode = LNode::Opcode::opcode;
 };

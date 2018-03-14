@@ -8,9 +8,8 @@
 #include "IPCBlobInputStreamThread.h"
 
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/dom/WorkerHolder.h"
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerRef.h"
 
 namespace mozilla {
 namespace dom {
@@ -90,45 +89,6 @@ private:
   nsCOMPtr<nsIInputStream> mCreatedStream;
 };
 
-class IPCBlobInputStreamWorkerHolder final : public WorkerHolder
-{
-public:
-  IPCBlobInputStreamWorkerHolder()
-    : WorkerHolder("IPCBlobInputStreamWorkerHolder")
-  {}
-
-  bool Notify(WorkerStatus aStatus) override
-  {
-    // We must keep the worker alive until the migration is completed.
-    return true;
-  }
-};
-
-class ReleaseWorkerHolderRunnable final : public CancelableRunnable
-{
-public:
-  explicit ReleaseWorkerHolderRunnable(UniquePtr<WorkerHolder>&& aWorkerHolder)
-    : CancelableRunnable("dom::ReleaseWorkerHolderRunnable")
-    , mWorkerHolder(Move(aWorkerHolder))
-  {}
-
-  NS_IMETHOD
-  Run() override
-  {
-    mWorkerHolder = nullptr;
-    return NS_OK;
-  }
-
-  nsresult
-  Cancel() override
-  {
-    return Run();
-  }
-
-private:
-  UniquePtr<WorkerHolder> mWorkerHolder;
-};
-
 } // anonymous
 
 IPCBlobInputStreamChild::IPCBlobInputStreamChild(const nsID& aID,
@@ -143,13 +103,18 @@ IPCBlobInputStreamChild::IPCBlobInputStreamChild(const nsID& aID,
   // before the thread is released.
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    if (workerPrivate) {
-      UniquePtr<WorkerHolder> workerHolder(
-        new IPCBlobInputStreamWorkerHolder());
-      if (workerHolder->HoldWorker(workerPrivate, Canceling)) {
-        mWorkerHolder.swap(workerHolder);
-      }
+    if (!workerPrivate) {
+      return;
     }
+
+    RefPtr<StrongWorkerRef> workerRef =
+      StrongWorkerRef::Create(workerPrivate, "IPCBlobInputStreamChild");
+    if (!workerRef) {
+      return;
+    }
+
+    // We must keep the worker alive until the migration is completed.
+    mWorkerRef = new ThreadSafeWorkerRef(workerRef);
   }
 }
 
@@ -163,7 +128,7 @@ IPCBlobInputStreamChild::Shutdown()
 
   RefPtr<IPCBlobInputStreamChild> kungFuDeathGrip = this;
 
-  mWorkerHolder = nullptr;
+  mWorkerRef = nullptr;
   mPendingOperations.Clear();
 
   if (mState == eActive) {
@@ -195,7 +160,7 @@ IPCBlobInputStreamChild::ActorDestroy(IProtocol::ActorDestroyReason aReason)
     return;
   }
 
-  // Let's cleanup the workerHolder and the pending operation queue.
+  // Let's cleanup the workerRef and the pending operation queue.
   Shutdown();
 }
 
@@ -339,11 +304,7 @@ IPCBlobInputStreamChild::Migrated()
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mState == eInactiveMigrating);
 
-  if (mWorkerHolder) {
-    RefPtr<ReleaseWorkerHolderRunnable> runnable =
-      new ReleaseWorkerHolderRunnable(Move(mWorkerHolder));
-    mOwningEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
-  }
+  mWorkerRef = nullptr;
 
   mOwningEventTarget = GetCurrentThreadSerialEventTarget();
   MOZ_ASSERT(IPCBlobInputStreamThread::IsOnFileEventTarget(mOwningEventTarget));
