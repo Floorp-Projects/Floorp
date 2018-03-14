@@ -49,16 +49,16 @@ TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.crashreporter.test.browser 
 ]
 
 with Files('moz.*'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('toolkit.mozbuild'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('nss.configure'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('library/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('mozapps/installer/windows/**'):
     BUG_COMPONENT = ('Toolkit', 'NSIS Installer')
