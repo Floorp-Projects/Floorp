@@ -128,14 +128,12 @@ interface nsIXULWindow : nsISupports
   attribute nsIXULBrowserWindow XULBrowserWindow;
 
   /**
-   * Back-door method to make sure some stuff is done when the document is
-   * ready for layout, that would cause expensive computation otherwise later.
-   *
-   * Do NOT call this unless you know what you're doing!  In particular,
+   * Back-door method to force application of chrome flags at a particular
+   * time.  Do NOT call this unless you know what you're doing!  In particular,
    * calling this when this XUL window doesn't yet have a document in its
    * docshell could cause problems.
    */
-  [noscript] void beforeStartLayout();
+  [noscript] void applyChromeFlags();
 
   /**
    * Given the dimensions of some content area held within this
