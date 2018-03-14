@@ -47,6 +47,10 @@ add_task(async function test_sidebar_disconnect() {
   await extension.startup();
   await connected;
 
+  // Bug 1445080 fixes currentURI, test to avoid future breakage.
+  let currentURI = window.SidebarUI.browser.contentDocument.getElementById("webext-panels-browser").currentURI;
+  is(currentURI.scheme, "moz-extension", "currentURI is set correctly");
+
   // switching sidebar to another extension
   let extension2 = ExtensionTestUtils.loadExtension(extensionData);
   let switched = Promise.all([
