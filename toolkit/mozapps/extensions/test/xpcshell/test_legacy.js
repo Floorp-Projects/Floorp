@@ -11,7 +11,6 @@ add_task(async function test_disable() {
       name: "Bootstrap add-on",
       version: "1.0",
       bootstrap: true,
-      multiprocessCompatible: true,
     },
     {
       id: "apiexperiment@tests.mozilla.org",
@@ -40,7 +39,6 @@ add_task(async function test_disable() {
       name: "Privileged Bootstrap add-on",
       version: "1.0",
       bootstrap: true,
-      multiprocessCompatible: true,
     },
     {
       id: "dictionary@tests.mozilla.org",

@@ -408,8 +408,6 @@ public:
 
   bool Enabled() { return GetBool("enabled"); }
 
-  bool ShimsEnabled() { return GetBool("enableShims"); }
-
   double LastModifiedTime() { return GetNumber("lastModifiedTime"); }
 
 
@@ -604,11 +602,6 @@ AddonManagerStartup::InitializeExtensions(JS::HandleValue locations, JSContext* 
 
       if (addon.Enabled() && !addon.Bootstrapped()) {
         Unused << AddInstallLocation(addon);
-
-        if (addon.ShimsEnabled()) {
-          NS_ConvertUTF16toUTF8 id(addon.Id());
-          Unused << xpc::AllowCPOWsInAddon(id, true);
-        }
       }
     }
   }

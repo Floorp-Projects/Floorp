@@ -139,7 +139,6 @@ function escaped(strings, ...values) {
 
 class AddonsList {
   constructor(file) {
-    this.multiprocessIncompatibleIDs = new Set();
     this.extensions = [];
     this.themes = [];
 
@@ -152,7 +151,7 @@ class AddonsList {
     for (let loc of Object.values(data)) {
       let dir = loc.path && new nsFile(loc.path);
 
-      for (let [id, addon] of Object.entries(loc.addons)) {
+      for (let addon of Object.values(loc.addons)) {
         if (addon.enabled && !addon.bootstrapped) {
           let file;
           if (dir) {
@@ -172,9 +171,6 @@ class AddonsList {
             this.themes.push(file);
           } else {
             this.extensions.push(file);
-            if (addon.enableShims) {
-              this.multiprocessIncompatibleIDs.add(id);
-            }
           }
         }
       }
@@ -198,10 +194,6 @@ class AddonsList {
         return file.equals(xpiPath);
       return false;
     });
-  }
-
-  isMultiprocessIncompatible(id) {
-    return this.multiprocessIncompatibleIDs.has(id);
   }
 
   hasTheme(dir, id) {
@@ -683,7 +675,7 @@ var AddonTestUtils = {
 
       for (let versionData of data[addon]) {
         rdf += "    <li><Description>\n";
-        rdf += this._writeProps(versionData, ["version", "multiprocessCompatible"],
+        rdf += this._writeProps(versionData, ["version"],
                                 `      `);
         for (let app of versionData.targetApplications || []) {
           rdf += "      <em:targetApplication><Description>\n";
@@ -737,7 +729,7 @@ var AddonTestUtils = {
     let props = ["id", "version", "type", "internalName", "updateURL", "updateKey",
                  "optionsURL", "optionsType", "aboutURL", "iconURL", "icon64URL",
                  "skinnable", "bootstrap", "unpack", "strictCompatibility",
-                 "multiprocessCompatible", "hasEmbeddedWebExtension"];
+                 "hasEmbeddedWebExtension"];
     rdf += this._writeProps(data, props);
 
     rdf += this._writeLocaleStrings(data);
