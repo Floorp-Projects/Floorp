@@ -2605,6 +2605,7 @@ mozilla::ipc::IPCResult
 ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
                                 const bool& aIsPrivateData,
                                 const IPC::Principal& aRequestingPrincipal,
+                                const uint32_t& aContentPolicyType,
                                 const int32_t& aWhichClipboard)
 {
   nsresult rv;
@@ -2619,6 +2620,7 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
   rv = nsContentUtils::IPCTransferableToTransferable(aDataTransfer,
                                                      aIsPrivateData,
                                                      aRequestingPrincipal,
+                                                     aContentPolicyType,
                                                      trans, this, nullptr);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
