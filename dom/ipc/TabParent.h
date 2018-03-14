@@ -497,7 +497,8 @@ public:
 
   bool SendPasteTransferable(const IPCDataTransfer& aDataTransfer,
                              const bool& aIsPrivateData,
-                             const IPC::Principal& aRequestingPrincipal);
+                             const IPC::Principal& aRequestingPrincipal,
+                             const uint32_t& aContentPolicyType);
 
   static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
 
