@@ -176,6 +176,10 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
                        ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
                        buttonArg, relatedTargetArg);
 
+  // If documentURIObject exists or `window` is a stub object, we're in
+  // a chrome scope, so don't bother trying to go through SpecialPowers.
+  if (!window.document || window.document.documentURIObject)
+    return aTarget.dispatchEvent(event);
   return SpecialPowers.dispatchEvent(aWindow, aTarget, event);
 }
 
@@ -1238,6 +1242,14 @@ function _getDOMWindowUtils(aWindow = window)
   // to this, causing the |window| default argument not to get picked up.
   if (!aWindow) {
     aWindow = window;
+  }
+
+  // If documentURIObject exists or `window` is a stub object, we're in
+  // a chrome scope, so don't bother trying to go through SpecialPowers.
+  if (!window.document || window.document.documentURIObject) {
+    return aWindow
+        .QueryInterface(_EU_Ci.nsIInterfaceRequestor)
+        .getInterface(_EU_Ci.nsIDOMWindowUtils);
   }
 
   // we need parent.SpecialPowers for:
