@@ -16,14 +16,13 @@ Bug 1067491 - Test recording allocations.
 "use strict";
 
 window.onload = function() {
-  let { Task } = require("devtools/shared/task");
   SimpleTest.waitForExplicitFinish();
 
-  Task.spawn(function* () {
-    let { memory, client } = yield startServerAndGetSelectedTabMemory();
-    yield memory.attach();
+  (async function() {
+    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
 
-    yield memory.startRecordingAllocations();
+    await memory.startRecordingAllocations();
     ok(true, "Can start recording allocations");
 
     // Allocate some objects.
@@ -43,9 +42,9 @@ window.onload = function() {
     }());
     /* eslint-enable max-nested-callbacks */
 
-    let response = yield memory.getAllocations();
+    let response = await memory.getAllocations();
 
-    yield memory.stopRecordingAllocations();
+    await memory.stopRecordingAllocations();
     ok(true, "Can stop recording allocations");
 
     // Filter out allocations by library and test code, and get only the
@@ -95,9 +94,9 @@ window.onload = function() {
     is(expectedLines.size, 0,
        "Should have found all the expected lines");
 
-    yield memory.detach();
+    await memory.detach();
     destroyServerAndFinish(client);
-  });
+  })();
 };
 </script>
 </pre>

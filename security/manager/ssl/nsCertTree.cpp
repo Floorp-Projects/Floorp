@@ -1224,7 +1224,7 @@ nsCertTree::dumpMap()
 // CanDrop
 //
 NS_IMETHODIMP nsCertTree::CanDrop(int32_t index, int32_t orientation,
-                                  nsIDOMDataTransfer* aDataTransfer, bool *_retval)
+                                  nsISupports* aDataTransfer, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
@@ -1236,7 +1236,8 @@ NS_IMETHODIMP nsCertTree::CanDrop(int32_t index, int32_t orientation,
 //
 // Drop
 //
-NS_IMETHODIMP nsCertTree::Drop(int32_t row, int32_t orient, nsIDOMDataTransfer* aDataTransfer)
+NS_IMETHODIMP nsCertTree::Drop(int32_t row, int32_t orient,
+			       nsISupports* aDataTransfer)
 {
   return NS_OK;
 }

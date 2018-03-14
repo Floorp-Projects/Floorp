@@ -1438,7 +1438,7 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
 
         // Recursively copy dense elements.
         for (unsigned i = 0; i < initialized; i++)
-            MOZ_TRY(xdr->codeConstValue(values[i]));
+            MOZ_TRY(XDRScriptConst(xdr, values[i]));
 
         uint32_t copyOnWrite;
         if (mode == XDR_ENCODE) {
@@ -1477,8 +1477,8 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
             tmpValue = properties[i].get().value;
         }
 
-        MOZ_TRY(xdr->codeConstValue(&tmpIdValue));
-        MOZ_TRY(xdr->codeConstValue(&tmpValue));
+        MOZ_TRY(XDRScriptConst(xdr, &tmpIdValue));
+        MOZ_TRY(XDRScriptConst(xdr, &tmpValue));
 
         if (mode == XDR_DECODE) {
             if (!ValueToId<CanGC>(cx, tmpIdValue, &tmpId))

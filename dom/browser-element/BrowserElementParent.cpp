@@ -59,7 +59,7 @@ CreateIframe(Element* aOpenerFrameElement, const nsAString& aName, bool aRemote)
                              aName, /* aNotify = */ false);
 
   // Indicate whether the iframe is should be remote.
-  popupFrameElement->SetAttr(kNameSpaceID_None, nsGkAtoms::Remote,
+  popupFrameElement->SetAttr(kNameSpaceID_None, nsGkAtoms::remote,
                              aRemote ? NS_LITERAL_STRING("true") :
                                        NS_LITERAL_STRING("false"),
                              /* aNotify = */ false);

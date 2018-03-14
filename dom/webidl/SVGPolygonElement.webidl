@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGPolygonElement : SVGGraphicsElement {
+interface SVGPolygonElement : SVGGeometryElement {
 };
 
 SVGPolygonElement implements SVGAnimatedPoints;

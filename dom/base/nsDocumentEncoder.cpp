@@ -24,7 +24,6 @@
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMProcessingInstruction.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIDOMNodeList.h"
 #include "nsRange.h"
 #include "nsIDOMRange.h"
@@ -45,6 +44,7 @@
 #include "nsTArray.h"
 #include "nsIFrame.h"
 #include "nsStringBuffer.h"
+#include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsLayoutUtils.h"
@@ -430,7 +430,7 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
     }
     case nsINode::DOCUMENT_TYPE_NODE:
     {
-      mSerializer->AppendDoctype(static_cast<nsIContent*>(node), aStr);
+      mSerializer->AppendDoctype(static_cast<DocumentType*>(node), aStr);
       break;
     }
   }

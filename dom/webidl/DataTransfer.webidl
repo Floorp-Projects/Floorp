@@ -26,7 +26,7 @@ interface DataTransfer {
   void setData(DOMString format, DOMString data);
   [Throws, NeedsSubjectPrincipal]
   void clearData(optional DOMString format);
-  [Throws, NeedsSubjectPrincipal]
+  [NeedsSubjectPrincipal]
   readonly attribute FileList? files;
 };
 
