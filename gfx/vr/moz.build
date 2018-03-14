@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'external_api/moz_external_vr.h',
     'gfxVR.h',
     'ipc/VRLayerChild.h',
     'ipc/VRManagerChild.h',
@@ -39,6 +40,7 @@ UNIFIED_SOURCES += [
 # which define Size and Points types in the root namespace that
 # often conflict with our own types.
 SOURCES += [
+    'gfxVRExternal.cpp',
     'gfxVRPuppet.cpp',
     'VRDisplayHost.cpp',
 ]
