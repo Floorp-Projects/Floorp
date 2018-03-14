@@ -19,7 +19,7 @@ add_task(async function themeRegistration() {
   toolbox = await gDevTools.showToolbox(target, "options");
 
   let themeId = await new Promise(resolve => {
-    gDevTools.once("theme-registered", (e, registeredThemeId) => {
+    gDevTools.once("theme-registered", registeredThemeId => {
       resolve(registeredThemeId);
     });
 
@@ -44,7 +44,7 @@ add_task(async function themeInOptionsPanel() {
     `input[type=radio][value=${TEST_THEME_NAME}]`);
   let eventsRecorded = [];
 
-  function onThemeChanged(event, theme) {
+  function onThemeChanged(theme) {
     eventsRecorded.push(theme);
   }
   gDevTools.on("theme-changed", onThemeChanged);
@@ -101,7 +101,7 @@ add_task(async function themeUnregistration() {
   let onThemeSwitchComplete = once(panelWin, "theme-switch-complete");
   let eventsRecorded = [];
 
-  function onThemeChanged(event, theme) {
+  function onThemeChanged(theme) {
     eventsRecorded.push(theme);
   }
   gDevTools.on("theme-changed", onThemeChanged);

@@ -6,7 +6,7 @@
 
 const { Ci } = require("chrome");
 const defer = require("devtools/shared/defer");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -622,7 +622,7 @@ TabTarget.prototype = {
 
     // Save a reference to the tab as it will be nullified on destroy
     let tab = this._tab;
-    let onToolboxDestroyed = (event, target) => {
+    let onToolboxDestroyed = target => {
       if (target != this) {
         return;
       }
