@@ -40,10 +40,10 @@ module.exports = async function() {
     }`
   ) + ")()", true);
 
+  let test = runTest("console.bulklog");
   // Kick off the logging
   messageManager.sendAsyncMessage("do-logs");
 
-  let test = runTest("console.bulklog");
   await allMessagesReceived;
   test.done();
 
