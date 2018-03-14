@@ -151,7 +151,8 @@ class GeckoProfile(object):
                     self.browser_config['symbols_path']
                 )
             elif os.path.isdir(self.browser_config['symbols_path']):
-                symbolicator.options["symbolPaths"]["FIREFOX"] = self.browser_config['symbols_path']
+                sym_path = self.browser_config['symbols_path']
+                symbolicator.options["symbolPaths"]["FIREFOX"] = sym_path
                 self.cleanup = False
 
         missing_symbols_zip = os.path.join(self.upload_dir,
