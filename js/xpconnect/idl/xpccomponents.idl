@@ -176,19 +176,6 @@ interface nsIXPCComponents_Utils : nsISupports
                         [optional] in long lineNo);
 
     /*
-     * getSandboxAddonId is designed to be called from JavaScript only.
-     *
-     * getSandboxAddonId retrieves the add-on ID associated with
-     * a sandbox object. It will return undefined if there
-     * is no add-on ID attached to the sandbox.
-     *
-     * var s = C.u.Sandbox(..., { addonId: "123" });
-     * var id = C.u.getSandboxAddonId(s);
-     */
-    [implicit_jscontext]
-    jsval getSandboxAddonId(in jsval sandbox);
-
-    /*
      * getSandboxMetadata is designed to be called from JavaScript only.
      *
      * getSandboxMetadata retrieves the metadata associated with
