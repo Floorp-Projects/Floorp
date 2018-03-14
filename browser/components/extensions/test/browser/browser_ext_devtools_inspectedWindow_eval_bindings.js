@@ -93,9 +93,7 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
   info("Toolbox switched back to the styleeditor panel");
 
   const inspectorPanelSelectedPromise = (async () => {
-    const toolId = await new Promise(resolve => {
-      toolbox.once("select", (evt, toolId) => resolve(toolId));
-    });
+    const toolId = await toolbox.once("select");
 
     if (toolId === "inspector") {
       const selectedNodeName = toolbox.selection.nodeFront &&
