@@ -558,6 +558,9 @@ public:
   bool
   EnsureClientSource();
 
+  void
+  EnsurePerformanceStorage();
+
   const ClientInfo&
   GetClientInfo() const;
 
