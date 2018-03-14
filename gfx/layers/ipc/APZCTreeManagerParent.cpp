@@ -340,15 +340,6 @@ APZCTreeManagerParent::RecvSetLongTapEnabled(const bool& aTapGestureEnabled)
 }
 
 mozilla::ipc::IPCResult
-APZCTreeManagerParent::RecvProcessTouchVelocity(
-  const uint32_t& aTimestampMs,
-  const float& aSpeedY)
-{
-  mTreeManager->ProcessTouchVelocity(aTimestampMs, aSpeedY);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvUpdateWheelTransaction(
         const LayoutDeviceIntPoint& aRefPoint,
         const EventMessage& aEventMessage)
