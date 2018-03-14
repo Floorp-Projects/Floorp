@@ -1342,8 +1342,8 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 void
 JSCompartment::reportTelemetry()
 {
-    // Only report telemetry for web content, not add-ons or chrome JS.
-    if (creationOptions_.addonIdOrNull() || isSystem_)
+    // Only report telemetry for web content, not chrome JS.
+    if (isSystem_)
         return;
 
     // Hazard analysis can't tell that the telemetry callbacks don't GC.
@@ -1359,8 +1359,8 @@ JSCompartment::reportTelemetry()
 void
 JSCompartment::addTelemetry(const char* filename, DeprecatedLanguageExtension e)
 {
-    // Only report telemetry for web content, not add-ons or chrome JS.
-    if (creationOptions_.addonIdOrNull() || isSystem_)
+    // Only report telemetry for web content, not chrome JS.
+    if (isSystem_)
         return;
     if (!filename || strncmp(filename, "http", 4) != 0)
         return;
