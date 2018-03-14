@@ -36,13 +36,6 @@
     // Hacky stuffs
 
     // This is the hacks needed to use a searchbar without browser.js.
-    function getBrowser()
-    {
-      return {
-        mCurrentBrowser: { engines: new Array() }
-      };
-    }
-
     var BrowserSearch = {
       updateOpenSearchBadge: function() {}
     };
