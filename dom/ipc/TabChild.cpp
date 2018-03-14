@@ -2164,7 +2164,8 @@ TabChild::RecvNormalPrioritySelectionEvent(const WidgetSelectionEvent& aEvent)
 mozilla::ipc::IPCResult
 TabChild::RecvPasteTransferable(const IPCDataTransfer& aDataTransfer,
                                 const bool& aIsPrivateData,
-                                const IPC::Principal& aRequestingPrincipal)
+                                const IPC::Principal& aRequestingPrincipal,
+                                const uint32_t& aContentPolicyType)
 {
   nsresult rv;
   nsCOMPtr<nsITransferable> trans =
@@ -2175,6 +2176,7 @@ TabChild::RecvPasteTransferable(const IPCDataTransfer& aDataTransfer,
   rv = nsContentUtils::IPCTransferableToTransferable(aDataTransfer,
                                                      aIsPrivateData,
                                                      aRequestingPrincipal,
+                                                     aContentPolicyType,
                                                      trans, nullptr, this);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 

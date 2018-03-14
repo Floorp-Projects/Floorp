@@ -5466,8 +5466,11 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
             transferable->GetIsPrivateData(&isPrivateData);
             nsCOMPtr<nsIPrincipal> requestingPrincipal;
             transferable->GetRequestingPrincipal(getter_AddRefs(requestingPrincipal));
+            nsContentPolicyType contentPolicyType = nsIContentPolicy::TYPE_OTHER;
+            transferable->GetContentPolicyType(&contentPolicyType);
             remote->SendPasteTransferable(ipcDataTransfer, isPrivateData,
-                                          IPC::Principal(requestingPrincipal));
+                                          IPC::Principal(requestingPrincipal),
+                                          contentPolicyType);
             rv = NS_OK;
           } else {
             nsCOMPtr<nsICommandController> commandController = do_QueryInterface(controller);
