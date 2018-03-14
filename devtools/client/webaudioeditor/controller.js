@@ -44,11 +44,10 @@ var WebAudioEditorController = {
    * Listen for events emitted by the current tab target.
    */
   async initialize() {
-    this._onTabNavigated = this._onTabNavigated.bind(this);
+    this._onTabWillNavigate = this._onTabWillNavigate.bind(this);
     this._onThemeChange = this._onThemeChange.bind(this);
 
-    gTarget.on("will-navigate", this._onTabNavigated);
-    gTarget.on("navigate", this._onTabNavigated);
+    gTarget.on("will-navigate", this._onTabWillNavigate);
     gFront.on("start-context", this._onStartContext);
     gFront.on("create-node", this._onCreateNode);
     gFront.on("connect-node", this._onConnectNode);
@@ -85,8 +84,7 @@ var WebAudioEditorController = {
    * Remove events emitted by the current tab target.
    */
   destroy: function () {
-    gTarget.off("will-navigate", this._onTabNavigated);
-    gTarget.off("navigate", this._onTabNavigated);
+    gTarget.off("will-navigate", this._onTabWillNavigate);
     gFront.off("start-context", this._onStartContext);
     gFront.off("create-node", this._onCreateNode);
     gFront.off("connect-node", this._onConnectNode);
@@ -142,37 +140,27 @@ var WebAudioEditorController = {
   /**
    * Called for each location change in the debugged tab.
    */
-  async _onTabNavigated(event, {isFrameSwitching}) {
-    switch (event) {
-      case "will-navigate": {
-        // Clear out current UI.
-        this.reset();
+  _onTabWillNavigate: function({isFrameSwitching}) {
+    // Clear out current UI.
+    this.reset();
 
-        // When switching to an iframe, ensure displaying the reload button.
-        // As the document has already been loaded without being hooked.
-        if (isFrameSwitching) {
-          $("#reload-notice").hidden = false;
-          $("#waiting-notice").hidden = true;
-        } else {
-          // Otherwise, we are loading a new top level document,
-          // so we don't need to reload anymore and should receive
-          // new node events.
-          $("#reload-notice").hidden = true;
-          $("#waiting-notice").hidden = false;
-        }
-
-        // Clear out stored audio nodes
-        gAudioNodes.reset();
-
-        window.emit(EVENTS.UI_RESET);
-        break;
-      }
-      case "navigate": {
-        // TODO Case of bfcache, needs investigating
-        // bug 994250
-        break;
-      }
+    // When switching to an iframe, ensure displaying the reload button.
+    // As the document has already been loaded without being hooked.
+    if (isFrameSwitching) {
+      $("#reload-notice").hidden = false;
+      $("#waiting-notice").hidden = true;
+    } else {
+      // Otherwise, we are loading a new top level document,
+      // so we don't need to reload anymore and should receive
+      // new node events.
+      $("#reload-notice").hidden = true;
+      $("#waiting-notice").hidden = false;
     }
+
+    // Clear out stored audio nodes
+    gAudioNodes.reset();
+
+    window.emit(EVENTS.UI_RESET);
   },
 
   /**
