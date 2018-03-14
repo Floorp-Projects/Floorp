@@ -35,6 +35,7 @@ function WebConsoleConnectionProxy(webConsoleFrame, target) {
   this._onReflowActivity = this._onReflowActivity.bind(this);
   this._onServerLogCall = this._onServerLogCall.bind(this);
   this._onTabNavigated = this._onTabNavigated.bind(this);
+  this._onTabWillNavigate = this._onTabWillNavigate.bind(this);
   this._onAttachConsole = this._onAttachConsole.bind(this);
   this._onCachedMessages = this._onCachedMessages.bind(this);
   this._connectionTimeout = this._connectionTimeout.bind(this);
@@ -142,7 +143,7 @@ WebConsoleConnectionProxy.prototype = {
     client.addListener("lastPrivateContextExited",
                        this._onLastPrivateContextExited);
 
-    this.target.on("will-navigate", this._onTabNavigated);
+    this.target.on("will-navigate", this._onTabWillNavigate);
     this.target.on("navigate", this._onTabNavigated);
 
     this._consoleActor = this.target.form.consoleActor;
@@ -450,21 +451,33 @@ WebConsoleConnectionProxy.prototype = {
   },
 
   /**
-   * The "will-navigate" and "navigate" event handlers. We redirect any message
-   * to the UI for displaying.
+   * The "navigate" event handlers. We redirect any message to the UI for displaying.
    *
    * @private
-   * @param string event
-   *        Event type.
    * @param object packet
    *        The message received from the server.
    */
-  _onTabNavigated: function(event, packet) {
+  _onTabNavigated: function(packet) {
     if (!this.webConsoleFrame) {
       return;
     }
 
-    this.webConsoleFrame.handleTabNavigated(event, packet);
+    this.webConsoleFrame.handleTabNavigated(packet);
+  },
+
+  /**
+   * The "will-navigate" event handlers. We redirect any message to the UI for displaying.
+   *
+   * @private
+   * @param object packet
+   *        The message received from the server.
+   */
+  _onTabWillNavigate: function(packet) {
+    if (!this.webConsoleFrame) {
+      return;
+    }
+
+    this.webConsoleFrame.handleTabWillNavigate(packet);
   },
 
   /**
@@ -507,7 +520,7 @@ WebConsoleConnectionProxy.prototype = {
                                this._onLastPrivateContextExited);
     this.webConsoleClient.off("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.off("networkEventUpdate", this._onNetworkEventUpdate);
-    this.target.off("will-navigate", this._onTabNavigated);
+    this.target.off("will-navigate", this._onTabWillNavigate);
     this.target.off("navigate", this._onTabNavigated);
 
     this.client = null;
