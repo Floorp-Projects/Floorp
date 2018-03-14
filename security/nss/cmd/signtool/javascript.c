@@ -1300,6 +1300,7 @@ extract_js(char *filename)
      * Now we have a stream of tags and text.  Go through and deal with each.
      */
     for (curitem = head; curitem; curitem = curitem->next) {
+        TagItem *tagp = NULL;
         AVPair *pairp = NULL;
         char *src = NULL, *id = NULL, *codebase = NULL;
         PRBool hasEventHandler = PR_FALSE;
@@ -1668,14 +1669,11 @@ loser:
  * Returns PR_SUCCESS if the directory is present, PR_FAILURE otherwise.
  */
 static PRStatus
-ensureExists(char *basepath, char *path)
+ensureExists(char *base, char *path)
 {
     char fn[FNSIZE];
     PRDir *dir;
-    int c = snprintf(fn, sizeof(fn), "%s/%s", basepath, path);
-    if (c >= sizeof(fn)) {
-        return PR_FAILURE;
-    }
+    sprintf(fn, "%s/%s", base, path);
 
     /*PR_fprintf(outputFD, "Trying to open directory %s.\n", fn);*/
 

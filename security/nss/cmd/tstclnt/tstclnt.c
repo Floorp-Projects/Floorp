@@ -172,7 +172,7 @@ printSecurityInfo(PRFileDesc *fd)
 }
 
 static void
-PrintUsageHeader()
+PrintUsageHeader(const char *progName)
 {
     fprintf(stderr,
             "Usage:  %s -h host [-a 1st_hs_name ] [-a 2nd_hs_name ] [-p port]\n"
@@ -186,7 +186,7 @@ PrintUsageHeader()
 }
 
 static void
-PrintParameterUsage()
+PrintParameterUsage(void)
 {
     fprintf(stderr, "%-20s Send different SNI name. 1st_hs_name - at first\n"
                     "%-20s handshake, 2nd_hs_name - at second handshake.\n"
@@ -259,17 +259,17 @@ PrintParameterUsage()
 }
 
 static void
-Usage()
+Usage(const char *progName)
 {
-    PrintUsageHeader();
+    PrintUsageHeader(progName);
     PrintParameterUsage();
     exit(1);
 }
 
 static void
-PrintCipherUsage()
+PrintCipherUsage(const char *progName)
 {
-    PrintUsageHeader();
+    PrintUsageHeader(progName);
     fprintf(stderr, "%-20s Letter(s) chosen from the following list\n",
             "-c ciphers");
     fprintf(stderr,
@@ -303,7 +303,7 @@ milliPause(PRUint32 milli)
 }
 
 void
-disableAllSSLCiphers()
+disableAllSSLCiphers(void)
 {
     const PRUint16 *cipherSuites = SSL_GetImplementedCiphers();
     int i = SSL_GetNumImplementedCiphers();
@@ -844,7 +844,7 @@ separateReqHeader(const PRFileDesc *outFd, const char *buf, const int nb,
     } else if (((c) >= 'A') && ((c) <= 'F')) { \
         i = (c) - 'A' + 10;                    \
     } else {                                   \
-        Usage();                               \
+        Usage(progName);                       \
     }
 
 static SECStatus
@@ -1015,17 +1015,17 @@ handshakeCallback(PRFileDesc *fd, void *client_data)
 #define REQUEST_WAITING (requestString && !requestSent)
 
 static SECStatus
-installServerCertificate(PRFileDesc *s, char *nick)
+installServerCertificate(PRFileDesc *s, char *nickname)
 {
     CERTCertificate *cert;
     SECKEYPrivateKey *privKey = NULL;
 
-    if (!nick) {
+    if (!nickname) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
 
-    cert = PK11_FindCertFromNickname(nick, &pwdata);
+    cert = PK11_FindCertFromNickname(nickname, &pwdata);
     if (cert == NULL) {
         return SECFailure;
     }
@@ -1129,7 +1129,7 @@ connectToServer(PRFileDesc *s, PRPollDesc *pollset)
 }
 
 static int
-run()
+run(void)
 {
     int headerSeparatorPtrnId = 0;
     int error = 0;
@@ -1225,18 +1225,19 @@ run()
                 cipherString++;
             } else {
                 if (!isalpha(ndx))
-                    Usage();
+                    Usage(progName);
                 ndx = tolower(ndx) - 'a';
                 if (ndx < PR_ARRAY_SIZE(ssl3CipherSuites)) {
                     cipher = ssl3CipherSuites[ndx];
                 }
             }
             if (cipher > 0) {
-                rv = SSL_CipherPrefSet(s, cipher, SSL_ALLOWED);
-                if (rv != SECSuccess)
+                SECStatus status;
+                status = SSL_CipherPrefSet(s, cipher, SSL_ALLOWED);
+                if (status != SECSuccess)
                     SECU_PrintError(progName, "SSL_CipherPrefSet()");
             } else {
-                Usage();
+                Usage(progName);
             }
         }
         PORT_Free(cstringSaved);
@@ -1652,18 +1653,18 @@ main(int argc, char **argv)
         switch (optstate->option) {
             case '?':
             default:
-                Usage();
+                Usage(progName);
                 break;
 
             case '4':
                 allowIPv6 = PR_FALSE;
                 if (!allowIPv4)
-                    Usage();
+                    Usage(progName);
                 break;
             case '6':
                 allowIPv4 = PR_FALSE;
                 if (!allowIPv6)
-                    Usage();
+                    Usage(progName);
                 break;
 
             case 'A':
@@ -1734,7 +1735,7 @@ main(int argc, char **argv)
                     actAsServer = 1;
                 } else {
                     if (strcmp(optstate->value, "client")) {
-                        Usage();
+                        Usage(progName);
                     }
                 }
                 break;
@@ -1767,11 +1768,11 @@ main(int argc, char **argv)
                 if (!strcmp(optstate->value, "alt-server-hello")) {
                     enableAltServerHello = PR_TRUE;
                 } else {
-                    Usage();
+                    Usage(progName);
                 }
                 break;
             case 'Y':
-                PrintCipherUsage();
+                PrintCipherUsage(progName);
                 exit(0);
                 break;
 
@@ -1785,7 +1786,7 @@ main(int argc, char **argv)
                 } else if (!hs2SniHostName) {
                     hs2SniHostName = PORT_Strdup(optstate->value);
                 } else {
-                    Usage();
+                    Usage(progName);
                 }
                 break;
 
@@ -1874,7 +1875,7 @@ main(int argc, char **argv)
                 if (rv != SECSuccess) {
                     PL_DestroyOptState(optstate);
                     fprintf(stderr, "Bad group specified.\n");
-                    Usage();
+                    Usage(progName);
                 }
                 break;
         }
@@ -1888,18 +1889,18 @@ main(int argc, char **argv)
                                             enabledVersions, &enabledVersions) !=
             SECSuccess) {
             fprintf(stderr, "Bad version specified.\n");
-            Usage();
+            Usage(progName);
         }
         PORT_Free(versionString);
     }
 
     if (optstatus == PL_OPT_BAD) {
-        Usage();
+        Usage(progName);
     }
 
     if (!host || !portno) {
         fprintf(stderr, "%s: parameters -h and -p are mandatory\n", progName);
-        Usage();
+        Usage(progName);
     }
 
     if (serverCertAuth.testFreshStatusFromSideChannel &&

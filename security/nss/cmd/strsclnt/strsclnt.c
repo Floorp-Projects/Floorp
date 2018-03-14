@@ -137,7 +137,7 @@ SECItem bigBuf;
     fprintf
 
 static void
-Usage(void)
+Usage(const char *progName)
 {
     fprintf(stderr,
             "Usage: %s [-n nickname] [-p port] [-d dbdir] [-c connections]\n"
@@ -260,6 +260,7 @@ void
 printSecurityInfo(PRFileDesc *fd)
 {
     CERTCertificate *cert = NULL;
+    SSL3Statistics *ssl3stats = SSL_GetStatistics();
     SECStatus result;
     SSLChannelInfo channel;
     SSLCipherSuiteInfo suite;
@@ -1094,6 +1095,7 @@ client_main(
         while (0 != (ndx = *cipherString)) {
             const char *startCipher = cipherString++;
             int cipher = 0;
+            SECStatus rv;
 
             if (ndx == ':') {
                 cipher = hexchar_to_int(*cipherString++);
@@ -1351,7 +1353,7 @@ main(int argc, char **argv)
                                                     enabledVersions, &enabledVersions) !=
                     SECSuccess) {
                     fprintf(stderr, "Bad version specified.\n");
-                    Usage();
+                    Usage(progName);
                 }
                 break;
 
@@ -1429,27 +1431,27 @@ main(int argc, char **argv)
 
             case 0: /* positional parameter */
                 if (hostName) {
-                    Usage();
+                    Usage(progName);
                 }
                 hostName = PL_strdup(optstate->value);
                 break;
 
             default:
             case '?':
-                Usage();
+                Usage(progName);
                 break;
         }
     }
     PL_DestroyOptState(optstate);
 
     if (!hostName || status == PL_OPT_BAD)
-        Usage();
+        Usage(progName);
 
     if (fullhs != NO_FULLHS_PERCENTAGE && (fullhs < 0 || fullhs > 100 || NoReuse))
-        Usage();
+        Usage(progName);
 
     if (port == 0)
-        Usage();
+        Usage(progName);
 
     if (fileName)
         readBigFile(fileName);

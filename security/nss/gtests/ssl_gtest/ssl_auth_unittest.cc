@@ -155,8 +155,8 @@ TEST_P(TlsConnectTls12, ClientAuthBigRsaCheckSigAlg) {
 
 class TlsZeroCertificateRequestSigAlgsFilter : public TlsHandshakeFilter {
  public:
-  TlsZeroCertificateRequestSigAlgsFilter(const std::shared_ptr<TlsAgent>& a)
-      : TlsHandshakeFilter(a, {kTlsHandshakeCertificateRequest}) {}
+  TlsZeroCertificateRequestSigAlgsFilter(const std::shared_ptr<TlsAgent>& agent)
+      : TlsHandshakeFilter(agent, {kTlsHandshakeCertificateRequest}) {}
   virtual PacketFilter::Action FilterHandshake(
       const TlsHandshakeFilter::HandshakeHeader& header,
       const DataBuffer& input, DataBuffer* output) {

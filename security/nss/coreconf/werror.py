@@ -54,7 +54,7 @@ def main():
             set_warning(w, 'no-')
         print('-Qunused-arguments')
 
-    set_warning('shadow')
+    # set_warning('shadow') # Bug 1309068
 
 if __name__ == '__main__':
     main()

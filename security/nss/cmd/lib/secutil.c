@@ -1528,9 +1528,9 @@ SECU_PrintDumpDerIssuerAndSerial(FILE *out, SECItem *der, char *m,
         unsigned int i;
         for (i = 0; i < c->serialNumber.len; ++i) {
             unsigned char *chardata = (unsigned char *)(c->serialNumber.data);
-            unsigned char ch = *(chardata + i);
+            unsigned char c = *(chardata + i);
 
-            fprintf(out, "\\x%02x", ch);
+            fprintf(out, "\\x%02x", c);
         }
         fprintf(out, "\" }\n");
     }
@@ -3137,7 +3137,7 @@ typedef enum {
 static int
 secu_PrintSignedDataSigOpt(FILE *out, SECItem *der, const char *m,
                            int level, SECU_PPFunc inner,
-                           SignatureOptionType signatureOption)
+                           SignatureOptionType withSignature)
 {
     PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     CERTSignedData *sd;
@@ -3164,7 +3164,7 @@ secu_PrintSignedDataSigOpt(FILE *out, SECItem *der, const char *m,
     }
     rv = (*inner)(out, &sd->data, "Data", level + 1);
 
-    if (signatureOption == withSignature) {
+    if (withSignature) {
         SECU_PrintAlgorithmID(out, &sd->signatureAlgorithm, "Signature Algorithm",
                               level + 1);
         DER_ConvertBitString(&sd->signature);

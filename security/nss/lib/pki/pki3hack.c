@@ -1143,8 +1143,8 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
         (PRBool)(trust->sslFlags & CERTDB_GOVT_APPROVED_CA);
     if (c->object.cryptoContext != NULL) {
         /* The cert is in a context, set the trust there */
-        NSSCryptoContext *cctx = c->object.cryptoContext;
-        nssrv = nssCryptoContext_ImportTrust(cctx, nssTrust);
+        NSSCryptoContext *cc = c->object.cryptoContext;
+        nssrv = nssCryptoContext_ImportTrust(cc, nssTrust);
         if (nssrv != PR_SUCCESS) {
             goto done;
         }

@@ -44,12 +44,13 @@ const std::string TlsAgent::kServerEcdhRsa = "ecdh_rsa";
 const std::string TlsAgent::kServerEcdhEcdsa = "ecdh_ecdsa";
 const std::string TlsAgent::kServerDsa = "dsa";
 
-TlsAgent::TlsAgent(const std::string& nm, Role rl, SSLProtocolVariant var)
-    : name_(nm),
-      variant_(var),
-      role_(rl),
+TlsAgent::TlsAgent(const std::string& name, Role role,
+                   SSLProtocolVariant variant)
+    : name_(name),
+      variant_(variant),
+      role_(role),
       server_key_bits_(0),
-      adapter_(new DummyPrSocket(role_str(), var)),
+      adapter_(new DummyPrSocket(role_str(), variant)),
       ssl_fd_(nullptr),
       state_(STATE_INIT),
       timer_handle_(nullptr),
@@ -102,11 +103,11 @@ TlsAgent::~TlsAgent() {
   }
 }
 
-void TlsAgent::SetState(State s) {
-  if (state_ == s) return;
+void TlsAgent::SetState(State state) {
+  if (state_ == state) return;
 
-  LOG("Changing state from " << state_ << " to " << s);
-  state_ = s;
+  LOG("Changing state from " << state_ << " to " << state);
+  state_ = state;
 }
 
 /*static*/ bool TlsAgent::LoadCertificate(const std::string& name,
@@ -123,11 +124,11 @@ void TlsAgent::SetState(State s) {
   return true;
 }
 
-bool TlsAgent::ConfigServerCert(const std::string& id, bool updateKeyBits,
+bool TlsAgent::ConfigServerCert(const std::string& name, bool updateKeyBits,
                                 const SSLExtraServerCertData* serverCertData) {
   ScopedCERTCertificate cert;
   ScopedSECKEYPrivateKey priv;
-  if (!TlsAgent::LoadCertificate(id, &cert, &priv)) {
+  if (!TlsAgent::LoadCertificate(name, &cert, &priv)) {
     return false;
   }
 
@@ -281,8 +282,8 @@ bool TlsAgent::GetPeerChainLength(size_t* count) {
   return true;
 }
 
-void TlsAgent::CheckCipherSuite(uint16_t suite) {
-  EXPECT_EQ(csinfo_.cipherSuite, suite);
+void TlsAgent::CheckCipherSuite(uint16_t cipher_suite) {
+  EXPECT_EQ(csinfo_.cipherSuite, cipher_suite);
 }
 
 void TlsAgent::RequestClientAuth(bool requireAuth) {
@@ -441,7 +442,9 @@ void TlsAgent::GetVersionRange(uint16_t* minver, uint16_t* maxver) {
   *maxver = vrange_.max;
 }
 
-void TlsAgent::SetExpectedVersion(uint16_t ver) { expected_version_ = ver; }
+void TlsAgent::SetExpectedVersion(uint16_t version) {
+  expected_version_ = version;
+}
 
 void TlsAgent::SetServerKeyBits(uint16_t bits) { server_key_bits_ = bits; }
 
@@ -488,10 +491,10 @@ void TlsAgent::SetSignatureSchemes(const SSLSignatureScheme* schemes,
   EXPECT_EQ(i, configuredCount) << "schemes in use were all set";
 }
 
-void TlsAgent::CheckKEA(SSLKEAType kea, SSLNamedGroup kea_group,
+void TlsAgent::CheckKEA(SSLKEAType kea_type, SSLNamedGroup kea_group,
                         size_t kea_size) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
-  EXPECT_EQ(kea, info_.keaType);
+  EXPECT_EQ(kea_type, info_.keaType);
   if (kea_size == 0) {
     switch (kea_group) {
       case ssl_grp_ec_curve25519:
@@ -512,7 +515,7 @@ void TlsAgent::CheckKEA(SSLKEAType kea, SSLNamedGroup kea_group,
       case ssl_grp_ffdhe_custom:
         break;
       default:
-        if (kea == ssl_kea_rsa) {
+        if (kea_type == ssl_kea_rsa) {
           kea_size = server_key_bits_;
         } else {
           EXPECT_TRUE(false) << "need to update group sizes";
@@ -531,13 +534,13 @@ void TlsAgent::CheckOriginalKEA(SSLNamedGroup kea_group) const {
   }
 }
 
-void TlsAgent::CheckAuthType(SSLAuthType auth,
+void TlsAgent::CheckAuthType(SSLAuthType auth_type,
                              SSLSignatureScheme sig_scheme) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
-  EXPECT_EQ(auth, info_.authType);
+  EXPECT_EQ(auth_type, info_.authType);
   EXPECT_EQ(server_key_bits_, info_.authKeyBits);
   if (expected_version_ < SSL_LIBRARY_VERSION_TLS_1_2) {
-    switch (auth) {
+    switch (auth_type) {
       case ssl_auth_rsa_sign:
         sig_scheme = ssl_sig_rsa_pkcs1_sha1md5;
         break;
@@ -555,8 +558,9 @@ void TlsAgent::CheckAuthType(SSLAuthType auth,
   }
 
   // Check authAlgorithm, which is the old value for authType.  This is a second
-  // switch statement because default label is different.
-  switch (auth) {
+  // switch
+  // statement because default label is different.
+  switch (auth_type) {
     case ssl_auth_rsa_sign:
       EXPECT_EQ(ssl_auth_rsa_decrypt, csinfo_.authAlgorithm)
           << "authAlgorithm for RSA is always decrypt";
@@ -570,7 +574,7 @@ void TlsAgent::CheckAuthType(SSLAuthType auth,
           << "authAlgorithm for ECDH_ECDSA is ECDSA (i.e., wrong)";
       break;
     default:
-      EXPECT_EQ(auth, csinfo_.authAlgorithm)
+      EXPECT_EQ(auth_type, csinfo_.authAlgorithm)
           << "authAlgorithm is (usually) the same as authType";
       break;
   }
@@ -596,15 +600,15 @@ void TlsAgent::EnableAlpn(const uint8_t* val, size_t len) {
 
 void TlsAgent::CheckAlpn(SSLNextProtoState expected_state,
                          const std::string& expected) const {
-  SSLNextProtoState npn_state;
+  SSLNextProtoState state;
   char chosen[10];
   unsigned int chosen_len;
-  SECStatus rv = SSL_GetNextProto(ssl_fd(), &npn_state,
+  SECStatus rv = SSL_GetNextProto(ssl_fd(), &state,
                                   reinterpret_cast<unsigned char*>(chosen),
                                   &chosen_len, sizeof(chosen));
   EXPECT_EQ(SECSuccess, rv);
-  EXPECT_EQ(expected_state, npn_state);
-  if (npn_state == SSL_NEXT_PROTO_NO_SUPPORT) {
+  EXPECT_EQ(expected_state, state);
+  if (state == SSL_NEXT_PROTO_NO_SUPPORT) {
     EXPECT_EQ("", expected);
   } else {
     EXPECT_NE("", expected);
@@ -836,10 +840,10 @@ void TlsAgent::CheckSecretsDestroyed() {
   ASSERT_EQ(PR_TRUE, SSLInt_CheckSecretsDestroyed(ssl_fd()));
 }
 
-void TlsAgent::SetDowngradeCheckVersion(uint16_t ver) {
+void TlsAgent::SetDowngradeCheckVersion(uint16_t version) {
   ASSERT_TRUE(EnsureTlsSetup());
 
-  SECStatus rv = SSL_SetDowngradeCheckVersion(ssl_fd(), ver);
+  SECStatus rv = SSL_SetDowngradeCheckVersion(ssl_fd(), version);
   ASSERT_EQ(SECSuccess, rv);
 }
 

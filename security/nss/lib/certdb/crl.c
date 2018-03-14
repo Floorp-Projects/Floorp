@@ -898,13 +898,13 @@ static PLHashAllocOps preAllocOps = { PreAllocTable, PreFreeTable,
 
 /* destructor for PreAllocator object */
 void
-PreAllocator_Destroy(PreAllocator* allocator)
+PreAllocator_Destroy(PreAllocator* PreAllocator)
 {
-    if (!allocator) {
+    if (!PreAllocator) {
         return;
     }
-    if (allocator->arena) {
-        PORT_FreeArena(allocator->arena, PR_TRUE);
+    if (PreAllocator->arena) {
+        PORT_FreeArena(PreAllocator->arena, PR_TRUE);
     }
 }
 

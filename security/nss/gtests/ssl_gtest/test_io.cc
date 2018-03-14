@@ -99,8 +99,8 @@ int32_t DummyPrSocket::Write(PRFileDesc *f, const void *buf, int32_t length) {
     return -1;
   }
 
-  auto dst = peer_.lock();
-  if (!dst) {
+  auto peer = peer_.lock();
+  if (!peer) {
     PR_SetError(PR_IO_ERROR, 0);
     return -1;
   }
@@ -116,14 +116,14 @@ int32_t DummyPrSocket::Write(PRFileDesc *f, const void *buf, int32_t length) {
     case PacketFilter::CHANGE:
       LOG("Original packet: " << packet);
       LOG("Filtered packet: " << filtered);
-      dst->PacketReceived(filtered);
+      peer->PacketReceived(filtered);
       break;
     case PacketFilter::DROP:
       LOG("Droppped packet: " << packet);
       break;
     case PacketFilter::KEEP:
       LOGV("Packet: " << packet);
-      dst->PacketReceived(packet);
+      peer->PacketReceived(packet);
       break;
   }
   // libssl can't handle it if this reports something other than the length

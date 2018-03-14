@@ -59,9 +59,9 @@ class PacketFilter {
 
 class DummyPrSocket : public DummyIOLayerMethods {
  public:
-  DummyPrSocket(const std::string& name, SSLProtocolVariant var)
+  DummyPrSocket(const std::string& name, SSLProtocolVariant variant)
       : name_(name),
-        variant_(var),
+        variant_(variant),
         peer_(),
         input_(),
         filter_(nullptr),
@@ -73,7 +73,7 @@ class DummyPrSocket : public DummyIOLayerMethods {
   ScopedPRFileDesc CreateFD();
 
   std::weak_ptr<DummyPrSocket>& peer() { return peer_; }
-  void SetPeer(const std::shared_ptr<DummyPrSocket>& p) { peer_ = p; }
+  void SetPeer(const std::shared_ptr<DummyPrSocket>& peer) { peer_ = peer; }
   void SetPacketFilter(const std::shared_ptr<PacketFilter>& filter) {
     filter_ = filter;
   }
