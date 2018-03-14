@@ -8,7 +8,6 @@
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIScriptElement.h"
 #include "nsCharsetSource.h"
 #include "nsIRefreshURI.h"
@@ -28,6 +27,7 @@
 #include "nsIDocumentTransformer.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/Encoding.h"
@@ -885,8 +885,6 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
             qName.Assign(aName);
         }
 
-        nsCOMPtr<nsIDOMDocumentType> documentType;
-
         nsresult rv = nsContentUtils::CheckQName(qName);
         if (NS_SUCCEEDED(rv)) {
             RefPtr<nsAtom> doctypeName = NS_Atomize(qName);
@@ -895,16 +893,14 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
             }
 
             // Indicate that there is no internal subset (not just an empty one)
-            rv = NS_NewDOMDocumentType(getter_AddRefs(documentType),
-                                       mNodeInfoManager,
-                                       doctypeName,
-                                       mOutputFormat.mPublicId,
-                                       mOutputFormat.mSystemId,
-                                       VoidString());
-            NS_ENSURE_SUCCESS(rv, rv);
+            RefPtr<DocumentType> documentType =
+                NS_NewDOMDocumentType(mNodeInfoManager,
+                                      doctypeName,
+                                      mOutputFormat.mPublicId,
+                                      mOutputFormat.mSystemId,
+                                      VoidString());
 
-            nsCOMPtr<nsIContent> docType = do_QueryInterface(documentType);
-            rv = mDocument->AppendChildTo(docType, true);
+            rv = mDocument->AppendChildTo(documentType, true);
             NS_ENSURE_SUCCESS(rv, rv);
         }
     }

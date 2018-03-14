@@ -704,7 +704,8 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void onContextMenu(GeckoSession session, int screenX, int screenY,
-                              final String uri, final String elementSrc) {
+                              final String uri, int elementType,
+                              final String elementSrc) {
 
         final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";
         final Uri validUri = WebApps.getValidURL(content);

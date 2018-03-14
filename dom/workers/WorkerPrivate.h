@@ -422,6 +422,9 @@ public:
   void
   SetThread(WorkerThread* aThread);
 
+  bool
+  IsOnWorkerThread() const;
+
   void
   AssertIsOnWorkerThread() const
 #ifdef DEBUG

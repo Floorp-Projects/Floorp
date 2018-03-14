@@ -4774,8 +4774,8 @@ pref("image.mem.animated.use_heap", false);
 #endif
 
 // Decodes images into shared memory to allow direct use in separate
-// rendering processes.
-pref("image.mem.shared", 2);
+// rendering processes. Only applicable with WebRender.
+pref("image.mem.shared", 1);
 
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
@@ -5368,6 +5368,8 @@ pref("dom.vr.enabled", false);
 pref("dom.vr.autoactivate.enabled", false);
 // The threshold value of trigger inputs for VR controllers
 pref("dom.vr.controller_trigger_threshold", "0.1");
+// Enable external XR API integrations
+pref("dom.vr.external.enabled", false);
 // Maximum number of milliseconds the browser will wait for content to call
 // VRDisplay.requestPresent after emitting vrdisplayactivate during VR
 // link traversal.  This prevents a long running event handler for

@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGEllipseElement : SVGGraphicsElement {
+interface SVGEllipseElement : SVGGeometryElement {
   [Constant]
   readonly attribute SVGAnimatedLength cx;
   [Constant]
