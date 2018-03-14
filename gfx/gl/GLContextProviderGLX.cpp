@@ -885,6 +885,34 @@ ChooseConfig(GLXLibrary* glx, Display* display, int screen, const SurfaceCaps& m
 }
 
 bool
+GLContextGLX::FindVisual(Display* display, int screen, bool useWebRender,
+                         bool useAlpha, int* const out_visualId)
+{
+    int attribs[] = {
+        LOCAL_GLX_RGBA,
+        LOCAL_GLX_DOUBLEBUFFER,
+        LOCAL_GLX_RED_SIZE, 8,
+        LOCAL_GLX_GREEN_SIZE, 8,
+        LOCAL_GLX_BLUE_SIZE, 8,
+        LOCAL_GLX_ALPHA_SIZE, useAlpha ? 8 : 0,
+        LOCAL_GLX_DEPTH_SIZE, useWebRender ? 24 : 0,
+        LOCAL_GL_NONE
+    };
+
+    if (!sGLXLibrary.EnsureInitialized()) {
+        return false;
+    }
+
+    XVisualInfo* visuals = sGLXLibrary.fChooseVisual(display, screen, attribs);
+    if (!visuals) {
+        return false;
+    }
+
+    *out_visualId = visuals[0].visualid;
+    return true;
+}
+
+bool
 GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
                                     ScopedXFree<GLXFBConfig>* const out_scopedConfigArr,
                                     GLXFBConfig* const out_config, int* const out_visid,
