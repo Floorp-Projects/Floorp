@@ -335,7 +335,7 @@ nsBindingManager::RemoveFromAttachedQueue(nsXBLBinding* aBinding)
   // Don't remove items here as that could mess up an executing
   // ProcessAttachedQueue. Instead, null the entry in the queue.
   size_t index = mAttachedStack.IndexOf(aBinding);
-  if (index != nsBindingList::NoIndex) {
+  if (index != mAttachedStack.NoIndex) {
     mAttachedStack[index] = nullptr;
   }
 }

@@ -451,7 +451,7 @@ bool
 InputType::ParseTime(const nsAString& aValue, uint32_t* aResult) const
 {
   // see comment in InputType::ParseDate().
-  return mozilla::dom::HTMLInputElement::ParseTime(aValue, aResult);
+  return mInputElement->ParseTime(aValue, aResult);
 }
 
 bool

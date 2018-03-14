@@ -53,7 +53,7 @@ mozSpellChecker::~mozSpellChecker()
 
   if (mEngine) {
     MOZ_ASSERT(XRE_IsContentProcess());
-    RemoteSpellcheckEngineChild::Send__delete__(mEngine);
+    mEngine->Send__delete__(mEngine);
     MOZ_ASSERT(!mEngine);
   }
 }

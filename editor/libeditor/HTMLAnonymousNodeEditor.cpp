@@ -235,7 +235,7 @@ HTMLEditor::CreateAnonymousElement(nsAtom* aTag,
   if (ServoStyleSet* styleSet = ps->StyleSet()->GetAsServo()) {
     // Sometimes editor likes to append anonymous content to elements
     // in display:none subtrees, so avoid styling in those cases.
-    if (ServoStyleSet::MayTraverseFrom(newContent)) {
+    if (styleSet->MayTraverseFrom(newContent)) {
       styleSet->StyleNewSubtree(newContent);
     }
   }

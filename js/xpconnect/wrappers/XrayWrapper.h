@@ -278,7 +278,7 @@ public:
     {
         JSXrayTraits& self = JSXrayTraits::singleton;
         JS::RootedObject holder(cx, self.ensureHolder(cx, wrapper));
-        if (xpc::JSXrayTraits::getProtoKey(holder) == JSProto_Function)
+        if (self.getProtoKey(holder) == JSProto_Function)
             return baseInstance.call(cx, wrapper, args);
 
         JS::RootedValue v(cx, JS::ObjectValue(*wrapper));

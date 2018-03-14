@@ -27,7 +27,7 @@ Address
 CacheRegisterAllocator::addressOf(MacroAssembler& masm, BaselineFrameSlot slot) const
 {
     uint32_t offset = stackPushed_ + ICStackValueOffset + slot.slot() * sizeof(JS::Value);
-    return Address(jit::MacroAssembler::getStackPointer(), offset);
+    return Address(masm.getStackPointer(), offset);
 }
 
 // BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
@@ -587,7 +587,7 @@ BaselineCacheIRCompiler::emitMegamorphicLoadSlotResult()
     masm.mov(ReturnReg, scratch2);
     masm.PopRegsInMask(volatileRegs);
 
-    masm.loadTypedOrValue(Address(jit::MacroAssembler::getStackPointer(), 0), output);
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
     masm.adjustStack(sizeof(Value));
 
     masm.branchIfFalseBool(scratch2, failure->label());
@@ -632,7 +632,7 @@ BaselineCacheIRCompiler::emitMegamorphicStoreSlot()
     masm.mov(ReturnReg, scratch1);
     masm.PopRegsInMask(volatileRegs);
 
-    masm.loadValue(Address(jit::MacroAssembler::getStackPointer(), 0), val);
+    masm.loadValue(Address(masm.getStackPointer(), 0), val);
     masm.adjustStack(sizeof(Value));
 
     masm.branchIfFalseBool(scratch1, failure->label());

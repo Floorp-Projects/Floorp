@@ -263,13 +263,13 @@ CacheRegisterAllocator::saveIonLiveRegisters(MacroAssembler& masm, LiveRegisterS
 
         // Push the operand below the live register space.
         if (loc.kind() == OperandLocation::PayloadStack) {
-            masm.push(Address(MacroAssembler::getStackPointer(), stackPushed_ - operandStackPushed));
+            masm.push(Address(masm.getStackPointer(), stackPushed_ - operandStackPushed));
             stackPushed_ += operandSize;
             loc.setPayloadStack(stackPushed_, loc.payloadType());
             continue;
         }
         MOZ_ASSERT(loc.kind() == OperandLocation::ValueStack);
-        masm.pushValue(Address(MacroAssembler::getStackPointer(), stackPushed_ - operandStackPushed));
+        masm.pushValue(Address(masm.getStackPointer(), stackPushed_ - operandStackPushed));
         stackPushed_ += operandSize;
         loc.setValueStack(stackPushed_);
     }
@@ -288,7 +288,7 @@ CacheRegisterAllocator::saveIonLiveRegisters(MacroAssembler& masm, LiveRegisterS
         }
 
         size_t stackBottom = stackPushed_ + sizeOfLiveRegsInBytes;
-        masm.storeRegsInMask(liveRegs, Address(MacroAssembler::getStackPointer(), stackBottom), scratch);
+        masm.storeRegsInMask(liveRegs, Address(masm.getStackPointer(), stackBottom), scratch);
         masm.setFramePushed(masm.framePushed() + sizeOfLiveRegsInBytes);
     } else {
         // If no operands are on the stack, discard the unused stack space.
@@ -997,7 +997,7 @@ IonCacheIRCompiler::emitMegamorphicLoadSlotResult()
     masm.mov(ReturnReg, scratch2);
     masm.PopRegsInMask(volatileRegs);
 
-    masm.loadTypedOrValue(Address(MacroAssembler::getStackPointer(), 0), output);
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
     masm.adjustStack(sizeof(Value));
 
     masm.branchIfFalseBool(scratch2, failure->label());
@@ -1042,7 +1042,7 @@ IonCacheIRCompiler::emitMegamorphicStoreSlot()
     masm.mov(ReturnReg, scratch1);
     masm.PopRegsInMask(volatileRegs);
 
-    masm.loadValue(Address(MacroAssembler::getStackPointer(), 0), val);
+    masm.loadValue(Address(masm.getStackPointer(), 0), val);
     masm.adjustStack(sizeof(Value));
 
     masm.branchIfFalseBool(scratch1, failure->label());
@@ -1191,7 +1191,7 @@ IonCacheIRCompiler::emitCallNativeGetterResult()
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
     // Load the outparam vp[0] into output register(s).
-    Address outparam(MacroAssembler::getStackPointer(), IonOOLNativeExitFrameLayout::offsetOfResult());
+    Address outparam(masm.getStackPointer(), IonOOLNativeExitFrameLayout::offsetOfResult());
     masm.loadValue(outparam, output.valueReg());
 
     masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
@@ -1250,7 +1250,7 @@ IonCacheIRCompiler::emitCallProxyGetResult()
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
     // Load the outparam vp[0] into output register(s).
-    Address outparam(MacroAssembler::getStackPointer(), IonOOLProxyExitFrameLayout::offsetOfResult());
+    Address outparam(masm.getStackPointer(), IonOOLProxyExitFrameLayout::offsetOfResult());
     masm.loadValue(outparam, output.valueReg());
 
     // masm.leaveExitFrame & pop locals

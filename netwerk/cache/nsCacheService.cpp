@@ -1432,7 +1432,7 @@ nsCacheService::IsStorageEnabledForPolicy(nsCacheStoragePolicy  storagePolicy,
     if (gService == nullptr) return NS_ERROR_NOT_AVAILABLE;
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_ISSTORAGEENABLEDFORPOLICY));
 
-    *result = nsCacheService::IsStorageEnabledForPolicy_Locked(storagePolicy);
+    *result = gService->IsStorageEnabledForPolicy_Locked(storagePolicy);
     return NS_OK;
 }
 
