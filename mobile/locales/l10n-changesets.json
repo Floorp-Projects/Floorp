@@ -219,13 +219,13 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "20617873cf22"
+        "revision": "6211b4a072a5"
     }, 
     "he": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "7da33fbf4a67"
+        "revision": "81a069da9360"
     }, 
     "hi-IN": {
         "platforms": [
@@ -441,7 +441,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "0d274eb00b33"
+        "revision": "5ba9813735ca"
     }, 
     "son": {
         "platforms": [
