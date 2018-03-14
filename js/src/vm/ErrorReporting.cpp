@@ -55,6 +55,13 @@ js::CompileError::throwError(JSContext* cx)
 }
 
 bool
+js::ReportExceptionClosure::operator()(JSContext* cx)
+{
+    cx->setPendingException(exn_);
+    return false;
+}
+
+bool
 js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
                          unsigned flags, unsigned errorNumber, va_list args)
 {
@@ -124,29 +131,6 @@ js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErro
         err->throwError(cx);
 }
 
-namespace {
-
-class MOZ_STACK_CLASS ReportExceptionClosure
-  : public js::ScriptEnvironmentPreparer::Closure
-{
-  public:
-    explicit ReportExceptionClosure(HandleValue& exn)
-      : exn_(exn)
-    {
-    }
-
-    bool operator()(JSContext* cx) override
-    {
-        cx->setPendingException(exn_);
-        return false;
-    }
-
-  private:
-    HandleValue& exn_;
-};
-
-} // anonymous namespace
-
 void
 js::ReportErrorToGlobal(JSContext* cx, Handle<GlobalObject*> global, HandleValue error)
 {
@@ -157,6 +141,6 @@ js::ReportErrorToGlobal(JSContext* cx, Handle<GlobalObject*> global, HandleValue
         AssertSameCompartment(global, &error.toObject());
     }
 #endif // DEBUG
-    ReportExceptionClosure report(error);
+    js::ReportExceptionClosure report(error);
     PrepareScriptEnvironmentAndInvoke(cx, global, report);
 }

@@ -499,6 +499,8 @@ irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const CharT* cha
     }
 }
 
+#undef BYTECODE
+
 template RegExpRunStatus
 irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const Latin1Char* chars, size_t current,
                         size_t length, MatchPairs* matches, size_t* endIndex);
