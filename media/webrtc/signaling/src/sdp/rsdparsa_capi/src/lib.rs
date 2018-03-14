@@ -1,0 +1,190 @@
+extern crate rsdparsa;
+extern crate libc;
+#[macro_use] extern crate log;
+extern crate nserror;
+
+use std::ffi::CStr;
+use std::{str, slice, ptr};
+use std::os::raw::c_char;
+use std::error::Error;
+
+use libc::size_t;
+
+use std::rc::Rc;
+
+use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
+use rsdparsa::{SdpTiming, SdpBandwidth, SdpSession};
+use rsdparsa::error::SdpParserError;
+use rsdparsa::attribute_type::SdpAttribute;
+
+pub mod types;
+pub mod network;
+pub mod attribute;
+pub mod media_section;
+
+pub use types::{StringView, NULL_STRING};
+use network::{RustSdpOrigin, origin_view_helper, RustSdpConnection,
+              get_bandwidth};
+
+#[no_mangle]
+pub unsafe extern "C" fn parse_sdp(sdp: *const u8, length: u32,
+                                   fail_on_warning: bool,
+                                   session: *mut *const SdpSession,
+                                   error: *mut *const SdpParserError) -> nsresult {
+    // Bug 1433529 tracks fixing the TODOs in this function.
+    // TODO: Do I need to add explicit lifetime here?
+    // https://gankro.github.io/blah/only-in-rust/#honorable-mention-variance
+    let sdp_slice: &[u8] = slice::from_raw_parts(sdp, length as usize);
+    let sdp_c_str = match CStr::from_bytes_with_nul(sdp_slice) {
+        Ok(string) => string,
+        Err(_) => {
+            *session = ptr::null();
+            *error = ptr::null(); // TODO: Give more useful return value here
+            debug!("Error converting string");
+            return NS_ERROR_INVALID_ARG;
+        }
+    };
+    let sdp_buf: &[u8] = sdp_c_str.to_bytes();
+    let sdp_str_slice: &str = match str::from_utf8(sdp_buf) {
+        Ok(string) => string,
+        Err(_) => {
+            *session = ptr::null();
+            *error = ptr::null(); // TODO: Give more useful return value here
+            debug!("Error converting string to utf8");
+            return NS_ERROR_INVALID_ARG;
+        }
+    };
+    let parser_result = rsdparsa::parse_sdp(sdp_str_slice, fail_on_warning);
+    match parser_result {
+        Ok(parsed) => {
+            *session = Rc::into_raw(Rc::new(parsed));
+            *error = ptr::null();
+            NS_OK
+        },
+        Err(e) => {
+            *session = ptr::null();
+            debug!("{:?}", e);
+            debug!("Error parsing SDP in rust: {}", e.description());
+            *error = Box::into_raw(Box::new(e));
+            NS_ERROR_INVALID_ARG
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_free_session(sdp_ptr: *mut SdpSession) {
+    let sdp = Rc::from_raw(sdp_ptr);
+    drop(sdp);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_new_reference(session: *mut SdpSession) -> *const SdpSession {
+    let original = Rc::from_raw(session);
+    let ret = Rc::into_raw(Rc::clone(&original));
+    Rc::into_raw(original); // So the original reference doesn't get dropped
+    ret
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_error_line_num(error: *mut SdpParserError) -> size_t {
+    match *error {
+        SdpParserError::Line {line_number, ..} |
+        SdpParserError::Unsupported { line_number, ..} |
+        SdpParserError::Sequence {line_number, ..} => line_number
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_error_message(error: *mut SdpParserError) -> StringView {
+    StringView::from((*error).description())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_free_error(error: *mut SdpParserError) {
+    let e = Box::from_raw(error);
+    drop(e);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_version(session: *const SdpSession) ->  u64 {
+    (*session).get_version()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_origin(session: *const SdpSession) ->  RustSdpOrigin {
+    origin_view_helper((*session).get_origin())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn session_view(session: *const SdpSession) -> StringView {
+    StringView::from((*session).get_session().as_str())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_session_has_connection(session: *const SdpSession) -> bool {
+    (*session).connection.is_some()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_session_connection(session: *const SdpSession,
+                                                    connection: *mut RustSdpConnection) -> nsresult {
+    match (*session).connection {
+        Some(ref c) => {
+            *connection = RustSdpConnection::from(c);
+            NS_OK
+        },
+        None => NS_ERROR_INVALID_ARG
+    }
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct RustSdpTiming {
+    pub start: u64,
+    pub stop: u64,
+}
+
+impl<'a> From<&'a SdpTiming> for RustSdpTiming {
+    fn from(timing: &SdpTiming) -> Self {
+        RustSdpTiming {start: timing.start, stop: timing.stop}
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_session_has_timing(session: *const SdpSession) -> bool {
+    (*session).timing.is_some()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_session_timing(session: *const SdpSession,
+                                            timing: *mut RustSdpTiming) -> nsresult {
+    match (*session).timing {
+        Some(ref t) => {
+            *timing = RustSdpTiming::from(t);
+            NS_OK
+        },
+        None => NS_ERROR_INVALID_ARG
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_media_section_count(session: *const SdpSession) -> size_t {
+    (*session).media.len()
+}
+
+
+#[no_mangle]
+pub unsafe extern "C" fn get_sdp_bandwidth(session: *const SdpSession,
+                                           bandwidth_type: *const c_char) -> u32 {
+    get_bandwidth(&(*session).bandwidth, bandwidth_type)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_session_bandwidth_vec(session: *const SdpSession) -> *const Vec<SdpBandwidth> {
+    &(*session).bandwidth
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_sdp_session_attributes(session: *const SdpSession) -> *const Vec<SdpAttribute> {
+    &(*session).attribute
+}

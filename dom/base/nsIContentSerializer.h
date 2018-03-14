@@ -16,6 +16,7 @@ class nsIDocument;
 namespace mozilla {
 class Encoding;
 namespace dom {
+class DocumentType;
 class Element;
 } // namespace dom
 } // namespace mozilla
@@ -51,7 +52,7 @@ class nsIContentSerializer : public nsISupports {
   NS_IMETHOD AppendComment(nsIContent* aComment, int32_t aStartOffset,
                            int32_t aEndOffset, nsAString& aStr) = 0;
 
-  NS_IMETHOD AppendDoctype(nsIContent *aDoctype,
+  NS_IMETHOD AppendDoctype(mozilla::dom::DocumentType* aDoctype,
                            nsAString& aStr) = 0;
 
   NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,

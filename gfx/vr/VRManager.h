@@ -24,6 +24,7 @@ class VRLayerParent;
 class VRManagerParent;
 class VRDisplayHost;
 class VRSystemManagerPuppet;
+class VRSystemManagerExternal;
 
 class VRManager
 {
@@ -49,6 +50,7 @@ public:
   void GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo);
   void CreateVRTestSystem();
   VRSystemManagerPuppet* GetPuppetManager();
+  VRSystemManagerExternal* GetExternalManager();
 
   void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                      double aIntensity, double aDuration, const VRManagerPromise& aPromise);
@@ -89,6 +91,7 @@ private:
   TimeStamp mLastDisplayEnumerationTime;
   TimeStamp mLastActiveTime;
   RefPtr<VRSystemManagerPuppet> mPuppetManager;
+  RefPtr<VRSystemManagerExternal> mExternalManager;
   bool mVRDisplaysRequested;
   bool mVRControllersRequested;
 };

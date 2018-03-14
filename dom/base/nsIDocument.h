@@ -95,7 +95,6 @@ class nsIDocShellTreeItem;
 class nsIDocumentEncoder;
 class nsIDocumentObserver;
 class nsIDOMDocument;
-class nsIDOMDocumentType;
 class nsIDOMElement;
 class nsIDOMNodeList;
 class nsIHTMLCollection;
@@ -4587,7 +4586,7 @@ nsresult
 NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   const nsAString& aNamespaceURI,
                   const nsAString& aQualifiedName,
-                  nsIDOMDocumentType* aDoctype,
+                  mozilla::dom::DocumentType* aDoctype,
                   nsIURI* aDocumentURI,
                   nsIURI* aBaseURI,
                   nsIPrincipal* aPrincipal,

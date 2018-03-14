@@ -8,14 +8,12 @@
 #include "nsXMLContentSink.h"
 #include "nsIParser.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMComment.h"
-#include "DocumentType.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -55,6 +53,7 @@
 #include "nsTextNode.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/Comment.h"
+#include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/ProcessingInstruction.h"
@@ -1178,28 +1177,20 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
 {
   FlushText();
 
-  nsresult rv = NS_OK;
-
   NS_ASSERTION(mDocument, "Shouldn't get here from a document fragment");
 
   RefPtr<nsAtom> name = NS_Atomize(aName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
   // Create a new doctype node
-  nsCOMPtr<nsIDOMDocumentType> docType;
-  rv = NS_NewDOMDocumentType(getter_AddRefs(docType), mNodeInfoManager,
-                             name, aPublicId, aSystemId, aSubset);
-  if (NS_FAILED(rv) || !docType) {
-    return rv;
-  }
+  RefPtr<DocumentType> docType = NS_NewDOMDocumentType(mNodeInfoManager,
+                                                       name, aPublicId,
+                                                       aSystemId, aSubset);
 
   MOZ_ASSERT(!aCatalogData, "Need to add back support for catalog style "
                             "sheets");
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(docType);
-  NS_ASSERTION(content, "doctype isn't content?");
-
-  mDocumentChildren.AppendElement(content);
+  mDocumentChildren.AppendElement(docType);
   DidAddContent();
   return DidProcessATokenImpl();
 }

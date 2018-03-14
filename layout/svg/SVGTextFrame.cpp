@@ -42,7 +42,7 @@
 #include "SVGContextPaint.h"
 #include "SVGLengthList.h"
 #include "SVGNumberList.h"
-#include "SVGPathElement.h"
+#include "SVGGeometryElement.h"
 #include "SVGTextPathElement.h"
 #include "nsLayoutUtils.h"
 #include "nsFrameSelection.h"
@@ -4987,8 +4987,8 @@ SVGTextFrame::AdjustPositionsForClusters()
   }
 }
 
-SVGPathElement*
-SVGTextFrame::GetTextPathPathElement(nsIFrame* aTextPathFrame)
+SVGGeometryElement*
+SVGTextFrame::GetTextPathGeometryElement(nsIFrame* aTextPathFrame)
 {
   nsSVGTextPathProperty *property =
     aTextPathFrame->GetProperty(SVGObserverUtils::HrefAsTextPathProperty());
@@ -5023,14 +5023,14 @@ SVGTextFrame::GetTextPathPathElement(nsIFrame* aTextPathFrame)
   }
 
   Element* element = property->GetReferencedElement();
-  return (element && element->IsSVGElement(nsGkAtoms::path)) ?
-    static_cast<SVGPathElement*>(element) : nullptr;
+  return (element && element->IsNodeOfType(nsINode::eSHAPE)) ?
+    static_cast<SVGGeometryElement*>(element) : nullptr;
 }
 
 already_AddRefed<Path>
 SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
 {
-  SVGPathElement* element = GetTextPathPathElement(aTextPathFrame);
+  SVGGeometryElement* element = GetTextPathGeometryElement(aTextPathFrame);
   if (!element) {
     return nullptr;
   }
@@ -5053,11 +5053,11 @@ SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
 gfxFloat
 SVGTextFrame::GetOffsetScale(nsIFrame* aTextPathFrame)
 {
-  SVGPathElement* pathElement = GetTextPathPathElement(aTextPathFrame);
-  if (!pathElement)
+  SVGGeometryElement* element = GetTextPathGeometryElement(aTextPathFrame);
+  if (!element)
     return 1.0;
 
-  return pathElement->GetPathLengthScale(dom::SVGPathElement::eForTextPath);
+  return element->GetPathLengthScale(dom::SVGGeometryElement::eForTextPath);
 }
 
 gfxFloat
