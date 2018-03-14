@@ -15,7 +15,7 @@ async function ifTestingSupported() {
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   let screenshotDisplayed = once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([recordingFinished, callListPopulated, screenshotDisplayed]);
+  await Promise.all([recordingFinished, callListPopulated, screenshotDisplayed]);
 
   is($("#screenshot-container").hidden, false,
     "The screenshot container should now be visible.");
