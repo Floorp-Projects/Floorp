@@ -14,6 +14,9 @@ interface CSSStyleDeclaration {
   readonly attribute unsigned long length;
   getter DOMString item(unsigned long index);
 
+  [Throws, ChromeOnly]
+  sequence<DOMString> getCSSImageURLs(DOMString property);
+
   [Throws]
   DOMString getPropertyValue(DOMString property);
   // Mozilla extension, sort of

@@ -7181,22 +7181,24 @@ nsLayoutUtils::ComputeImageContainerDrawingParameters(imgIContainer*            
   SamplingFilter samplingFilter =
     nsLayoutUtils::GetSamplingFilterForFrame(aForFrame);
 
-  // Compute our SVG context parameters, if any.
+  // Compute our SVG context parameters, if any. Don't replace the viewport
+  // size if it was already set, prefer what the caller gave.
   SVGImageContext::MaybeStoreContextPaint(aSVGContext, aForFrame, aImage);
   if ((scaleFactors.width != 1.0 || scaleFactors.height != 1.0) &&
-      aImage->GetType() == imgIContainer::TYPE_VECTOR) {
-    if (!aSVGContext) {
-      aSVGContext.emplace();
-    }
-
+      aImage->GetType() == imgIContainer::TYPE_VECTOR &&
+      (!aSVGContext || !aSVGContext->GetViewportSize())) {
     gfxSize gfxDestSize(aDestRect.Width(), aDestRect.Height());
     IntSize viewportSize =
       aImage->OptimalImageSizeForDest(gfxDestSize,
                                       imgIContainer::FRAME_CURRENT,
                                       samplingFilter, aFlags);
 
-    aSVGContext->SetViewportSize(Some(CSSIntSize(viewportSize.width,
-                                                 viewportSize.height)));
+    CSSIntSize cssViewportSize(viewportSize.width, viewportSize.height);
+    if (!aSVGContext) {
+      aSVGContext.emplace(Some(cssViewportSize));
+    } else {
+      aSVGContext->SetViewportSize(Some(cssViewportSize));
+    }
   }
 
   // Attempt to snap pixels, the same as ComputeSnappedImageDrawingParameters.
