@@ -301,6 +301,10 @@ devtools.jar:
     content/netmonitor/index.html (netmonitor/index.html)
     content/netmonitor/initializer.js (netmonitor/initializer.js)
 
+    # Application panel
+    content/application/index.html (application/index.html)
+    content/application/initializer.js (application/initializer.js)
+
     # Devtools-components
     skin/images/devtools-components/arrow.svg (themes/images/devtools-components/arrow.svg)
 
