@@ -1878,6 +1878,8 @@ APZCTreeManager::ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY)
 void
 APZCTreeManager::SetKeyboardMap(const KeyboardMap& aKeyboardMap)
 {
+  APZThreadUtils::AssertOnControllerThread();
+
   mKeyboardMap = aKeyboardMap;
 }
 
