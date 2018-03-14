@@ -68,7 +68,7 @@ DigestFile(PLArenaPool *poolp, SECItem ***digests, SECItem *input,
 }
 
 static void
-Usage(void)
+Usage(char *progName)
 {
     fprintf(stderr,
             "Usage:  %s [-C|-D|-E|-O|-S] [<options>] [-d dbdir] [-u certusage]\n"
@@ -280,6 +280,7 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
                     ** or might be an invalid message, such as a QA test message
                     ** or a message from an attacker.
                     */
+                    SECStatus rv;
                     rv = NSS_CMSSignedData_VerifyCertsOnly(sigd,
                                                            decodeOptions->options->certHandle,
                                                            decodeOptions->options->certUsage);
@@ -1126,7 +1127,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -G only supported with option -S.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 signOptions.signingTime = PR_TRUE;
@@ -1136,7 +1137,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -H only supported with option -S.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 decodeOptions.suppressContent = PR_TRUE;
@@ -1166,7 +1167,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -N only supported with option -S.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 signOptions.nickname = PORT_Strdup(optstate->value);
@@ -1179,7 +1180,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -P only supported with option -S.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 signOptions.smimeProfile = PR_TRUE;
@@ -1192,7 +1193,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -T only supported with option -S.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 signOptions.detached = PR_TRUE;
@@ -1202,7 +1203,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -Y only supported with option -S.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 signOptions.encryptionKeyPreferenceNick = strdup(optstate->value);
@@ -1213,7 +1214,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -b only supported with option -D.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 batch = PR_TRUE;
@@ -1224,7 +1225,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -c only supported with option -D.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 contentFile = PR_Open(optstate->value, PR_RDONLY, 006600);
@@ -1260,7 +1261,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -h only supported with option -D.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 decodeOptions.headerLevel = atoi(optstate->value);
@@ -1287,7 +1288,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -k only supported with option -D.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 decodeOptions.keepCerts = PR_TRUE;
@@ -1298,7 +1299,7 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: option -n only supported with option -D.\n",
                             progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 decodeOptions.suppressContent = PR_TRUE;
@@ -1314,7 +1315,7 @@ main(int argc, char **argv)
             case 'p':
                 if (!optstate->value) {
                     fprintf(stderr, "%s: option -p must have a value.\n", progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
 
@@ -1324,7 +1325,7 @@ main(int argc, char **argv)
             case 'f':
                 if (!optstate->value) {
                     fprintf(stderr, "%s: option -f must have a value.\n", progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
 
@@ -1334,7 +1335,7 @@ main(int argc, char **argv)
             case 'r':
                 if (!optstate->value) {
                     fprintf(stderr, "%s: option -r must have a value.\n", progName);
-                    Usage();
+                    Usage(progName);
                     exit(1);
                 }
                 envelopeOptions.recipients = ptrarray;
@@ -1367,11 +1368,11 @@ main(int argc, char **argv)
         }
     }
     if (status == PL_OPT_BAD)
-        Usage();
+        Usage(progName);
     PL_DestroyOptState(optstate);
 
     if (mode == UNKNOWN)
-        Usage();
+        Usage(progName);
 
     if (mode != CERTSONLY && !batch) {
         rv = SECU_FileToItem(&input, inFile);
@@ -1528,7 +1529,7 @@ main(int argc, char **argv)
             break;
         default:
             fprintf(stderr, "One of options -D, -S or -E must be set.\n");
-            Usage();
+            Usage(progName);
             exitstatus = 1;
     }
 

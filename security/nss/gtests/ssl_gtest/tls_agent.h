@@ -209,10 +209,10 @@ class TlsAgent : public PollTarget {
     return info_.protocolVersion;
   }
 
-  bool cipher_suite(uint16_t* suite) const {
+  bool cipher_suite(uint16_t* cipher_suite) const {
     if (state_ != STATE_CONNECTED) return false;
 
-    *suite = info_.cipherSuite;
+    *cipher_suite = info_.cipherSuite;
     return true;
   }
 
@@ -227,17 +227,17 @@ class TlsAgent : public PollTarget {
                                 info_.sessionID + info_.sessionIDLength);
   }
 
-  bool auth_type(SSLAuthType* a) const {
+  bool auth_type(SSLAuthType* auth_type) const {
     if (state_ != STATE_CONNECTED) return false;
 
-    *a = info_.authType;
+    *auth_type = info_.authType;
     return true;
   }
 
-  bool kea_type(SSLKEAType* k) const {
+  bool kea_type(SSLKEAType* kea_type) const {
     if (state_ != STATE_CONNECTED) return false;
 
-    *k = info_.keaType;
+    *kea_type = info_.keaType;
     return true;
   }
 

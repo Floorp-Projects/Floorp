@@ -175,16 +175,16 @@ typedef struct {
  *
  */
 int
-SignAllArc(char *jartree, char *keyName, int javascript, char *metafilename,
-           char *install_script, int optimize_level, PRBool recurse)
+SignAllArc(char *jartree, char *keyName, int javascript, char *metafile,
+           char *install_script, int optimize, PRBool recurse)
 {
     SignArcInfo info;
 
     info.keyName = keyName;
     info.javascript = javascript;
-    info.metafile = metafilename;
+    info.metafile = metafile;
     info.install_script = install_script;
-    info.optimize = optimize_level;
+    info.optimize = optimize;
 
     return foreach (jartree, "", sign_all_arc_fn, recurse,
                     PR_TRUE /*include dirs*/, (void *)&info);
@@ -194,7 +194,7 @@ static int
 sign_all_arc_fn(char *relpath, char *basedir, char *reldir, char *filename,
                 void *arg)
 {
-    char *zipfilename = NULL;
+    char *zipfile = NULL;
     char *arc = NULL, *archive = NULL;
     int retval = 0;
     SignArcInfo *infop = (SignArcInfo *)arg;
@@ -212,8 +212,8 @@ sign_all_arc_fn(char *relpath, char *basedir, char *reldir, char *filename,
         }
         archive = PR_smprintf("%s/%s", basedir, relpath);
 
-        zipfilename = PL_strdup(archive);
-        arc = PORT_Strrchr(zipfilename, '.');
+        zipfile = PL_strdup(archive);
+        arc = PORT_Strrchr(zipfile, '.');
 
         if (arc == NULL) {
             PR_fprintf(errorFD, "%s: Internal failure\n", PROGRAM_NAME);
@@ -225,17 +225,17 @@ sign_all_arc_fn(char *relpath, char *basedir, char *reldir, char *filename,
         PL_strcpy(arc, ".jar");
 
         if (verbosity >= 0) {
-            PR_fprintf(outputFD, "\nsigning: %s\n", zipfilename);
+            PR_fprintf(outputFD, "\nsigning: %s\n", zipfile);
         }
-        retval = SignArchive(archive, infop->keyName, zipfilename,
+        retval = SignArchive(archive, infop->keyName, zipfile,
                              infop->javascript, infop->metafile, infop->install_script,
                              infop->optimize, PR_TRUE /* recurse */);
     }
 finish:
     if (archive)
         PR_Free(archive);
-    if (zipfilename)
-        PR_Free(zipfilename);
+    if (zipfile)
+        PR_Free(zipfile);
 
     return retval;
 }
@@ -707,8 +707,8 @@ SignFile(FILE *outFile, FILE *inFile, CERTCertificate *cert)
 static int
 generate_SF_file(char *manifile, char *who)
 {
-    FILE *sfFile;
-    FILE *mfFile;
+    FILE *sf;
+    FILE *mf;
     long r1, r2, r3;
     char whofile[FNSIZE];
     char *buf, *name = NULL;
@@ -718,12 +718,12 @@ generate_SF_file(char *manifile, char *who)
 
     strcpy(whofile, who);
 
-    if ((mfFile = fopen(manifile, "rb")) == NULL) {
+    if ((mf = fopen(manifile, "rb")) == NULL) {
         perror(manifile);
         exit(ERRX);
     }
 
-    if ((sfFile = fopen(whofile, "wb")) == NULL) {
+    if ((sf = fopen(whofile, "wb")) == NULL) {
         perror(who);
         exit(ERRX);
     }
@@ -736,11 +736,11 @@ generate_SF_file(char *manifile, char *who)
     if (buf == NULL || name == NULL)
         out_of_memory();
 
-    fprintf(sfFile, "Signature-Version: 1.0\n");
-    fprintf(sfFile, "Created-By: %s\n", CREATOR);
-    fprintf(sfFile, "Comments: %s\n", BREAKAGE);
+    fprintf(sf, "Signature-Version: 1.0\n");
+    fprintf(sf, "Created-By: %s\n", CREATOR);
+    fprintf(sf, "Comments: %s\n", BREAKAGE);
 
-    if (fgets(buf, BUFSIZ, mfFile) == NULL) {
+    if (fgets(buf, BUFSIZ, mf) == NULL) {
         PR_fprintf(errorFD, "%s: empty manifest file!\n", PROGRAM_NAME);
         errorCount++;
         exit(ERRX);
@@ -752,15 +752,15 @@ generate_SF_file(char *manifile, char *who)
         exit(ERRX);
     }
 
-    fseek(mfFile, 0L, SEEK_SET);
+    fseek(mf, 0L, SEEK_SET);
 
     /* Process blocks of headers, and calculate their hashen */
 
     while (1) {
         /* Beginning range */
-        r1 = ftell(mfFile);
+        r1 = ftell(mf);
 
-        if (fgets(name, BUFSIZ, mfFile) == NULL)
+        if (fgets(name, BUFSIZ, mf) == NULL)
             break;
 
         line++;
@@ -774,46 +774,46 @@ generate_SF_file(char *manifile, char *who)
         }
 
         r2 = r1;
-        while (fgets(buf, BUFSIZ, mfFile)) {
+        while (fgets(buf, BUFSIZ, mf)) {
             if (*buf == 0 || *buf == '\n' || *buf == '\r')
                 break;
 
             line++;
 
             /* Ending range for hashing */
-            r2 = ftell(mfFile);
+            r2 = ftell(mf);
         }
 
-        r3 = ftell(mfFile);
+        r3 = ftell(mf);
 
         if (r1) {
-            fprintf(sfFile, "\n");
-            fprintf(sfFile, "%s", name);
+            fprintf(sf, "\n");
+            fprintf(sf, "%s", name);
         }
 
-        calculate_MD5_range(mfFile, r1, r2, &dig);
+        calculate_MD5_range(mf, r1, r2, &dig);
 
         if (optimize == 0) {
-            fprintf(sfFile, "Digest-Algorithms: MD5 SHA1\n");
+            fprintf(sf, "Digest-Algorithms: MD5 SHA1\n");
 
             md5 = BTOA_DataToAscii(dig.md5, MD5_LENGTH);
-            fprintf(sfFile, "MD5-Digest: %s\n", md5);
+            fprintf(sf, "MD5-Digest: %s\n", md5);
             PORT_Free(md5);
         }
 
         sha1 = BTOA_DataToAscii(dig.sha1, SHA1_LENGTH);
-        fprintf(sfFile, "SHA1-Digest: %s\n", sha1);
+        fprintf(sf, "SHA1-Digest: %s\n", sha1);
         PORT_Free(sha1);
 
         /* restore normalcy after changing offset position */
-        fseek(mfFile, r3, SEEK_SET);
+        fseek(mf, r3, SEEK_SET);
     }
 
     PORT_Free(buf);
     PORT_Free(name);
 
-    fclose(sfFile);
-    fclose(mfFile);
+    fclose(sf);
+    fclose(mf);
 
     return 0;
 }

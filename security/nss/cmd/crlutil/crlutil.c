@@ -770,7 +770,7 @@ loser:
 }
 
 static void
-Usage()
+Usage(char *progName)
 {
     fprintf(stderr,
             "Usage:  %s -L [-n nickname] [-d keydir] [-P dbprefix] [-t crlType]\n"
@@ -908,7 +908,7 @@ main(int argc, char **argv)
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
-                Usage();
+                Usage(progName);
                 break;
 
             case 'T':
@@ -1038,17 +1038,17 @@ main(int argc, char **argv)
     }
 
     if (deleteCRL && !nickName)
-        Usage();
+        Usage(progName);
     if (importCRL && !inFile)
-        Usage();
+        Usage(progName);
     if (showFileCRL && !inFile)
-        Usage();
+        Usage(progName);
     if ((generateCRL && !nickName) ||
         (modifyCRL && !inFile && !nickName))
-        Usage();
+        Usage(progName);
     if (!(listCRL || deleteCRL || importCRL || showFileCRL || generateCRL ||
           modifyCRL || test || erase))
-        Usage();
+        Usage(progName);
 
     if (listCRL || showFileCRL) {
         readonly = PR_TRUE;

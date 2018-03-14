@@ -58,7 +58,7 @@ getPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 }
 
 static void
-Usage()
+Usage(const char *progName)
 {
     printf("Usage:  %s [-r] [-f] [-i] [-d dbdir ] \n",
            progName);
@@ -96,7 +96,7 @@ main(int argc, char **argv)
         switch (optstate->option) {
             case 'h':
             default:
-                Usage();
+                Usage(progName);
                 break;
 
             case 'r':
@@ -122,7 +122,7 @@ main(int argc, char **argv)
     }
     PL_DestroyOptState(optstate);
     if (optstatus == PL_OPT_BAD)
-        Usage();
+        Usage(progName);
 
     if (dbDir) {
         char *tmp = dbDir;
@@ -181,6 +181,7 @@ main(int argc, char **argv)
         ret = SUCCESS;
         if (doInitTest) {
             PK11SlotInfo *slot = PK11_GetInternalKeySlot();
+            SECStatus rv;
             int passwordSuccess = 0;
             int type = CKM_DES3_CBC;
             SECItem keyid = { 0, NULL, 0 };

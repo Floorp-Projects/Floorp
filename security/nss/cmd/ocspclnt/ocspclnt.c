@@ -38,7 +38,7 @@
 char *program_name;
 
 static void
-synopsis(char *progname)
+synopsis(char *program_name)
 {
     PRFileDesc *pr_stderr;
 
@@ -46,44 +46,44 @@ synopsis(char *progname)
     PR_fprintf(pr_stderr, "Usage:");
     PR_fprintf(pr_stderr,
                "\t%s -p [-d <dir>]\n",
-               progname);
+               program_name);
     PR_fprintf(pr_stderr,
                "\t%s -P [-d <dir>]\n",
-               progname);
+               program_name);
     PR_fprintf(pr_stderr,
                "\t%s -r <name> [-a] [-L] [-s <name>] [-d <dir>]\n",
-               progname);
+               program_name);
     PR_fprintf(pr_stderr,
                "\t%s -R <name> [-a] [-l <location>] [-s <name>] [-d <dir>]\n",
-               progname);
+               program_name);
     PR_fprintf(pr_stderr,
                "\t%s -S <name> [-a] [-l <location> -t <name>]\n",
-               progname);
+               program_name);
     PR_fprintf(pr_stderr,
                "\t\t [-s <name>] [-w <time>] [-d <dir>]\n");
     PR_fprintf(pr_stderr,
                "\t%s -V <name> [-a] -u <usage> [-l <location> -t <name>]\n",
-               progname);
+               program_name);
     PR_fprintf(pr_stderr,
                "\t\t [-s <name>] [-w <time>] [-d <dir>]\n");
 }
 
 static void
-short_usage(char *progname)
+short_usage(char *program_name)
 {
     PR_fprintf(PR_STDERR,
                "Type %s -H for more detailed descriptions\n",
-               progname);
-    synopsis(progname);
+               program_name);
+    synopsis(program_name);
 }
 
 static void
-long_usage(char *progname)
+long_usage(char *program_name)
 {
     PRFileDesc *pr_stderr;
 
     pr_stderr = PR_STDERR;
-    synopsis(progname);
+    synopsis(program_name);
     PR_fprintf(pr_stderr, "\nCommands (must specify exactly one):\n");
     PR_fprintf(pr_stderr,
                "  %-13s Pretty-print a binary request read from stdin\n",

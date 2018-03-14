@@ -50,12 +50,12 @@ inline std::ostream& operator<<(std::ostream& stream,
 
 class VersionRangeWithLabel {
  public:
-  VersionRangeWithLabel(const std::string& txt, const SSLVersionRange& vr)
-      : label_(txt), vr_(vr) {}
-  VersionRangeWithLabel(const std::string& txt, uint16_t start, uint16_t end)
-      : label_(txt) {
-    vr_.min = start;
-    vr_.max = end;
+  VersionRangeWithLabel(const std::string& label, const SSLVersionRange& vr)
+      : label_(label), vr_(vr) {}
+  VersionRangeWithLabel(const std::string& label, uint16_t min, uint16_t max)
+      : label_(label) {
+    vr_.min = min;
+    vr_.max = max;
   }
   VersionRangeWithLabel(const std::string& label) : label_(label) {
     vr_.min = vr_.max = SSL_LIBRARY_VERSION_NONE;

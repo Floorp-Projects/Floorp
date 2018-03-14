@@ -25,8 +25,6 @@ extern const SEC_ASN1Template nsslowkey_ECPrivateKeyTemplate[];
 
 extern const SEC_ASN1Template nsslowkey_PrivateKeyInfoTemplate[];
 extern const SEC_ASN1Template nsslowkey_EncryptedPrivateKeyInfoTemplate[];
-extern const SEC_ASN1Template nsslowkey_SubjectPublicKeyInfoTemplate[];
-extern const SEC_ASN1Template nsslowkey_RSAPublicKeyTemplate[];
 
 /*
  * PKCS #8 attributes
@@ -49,13 +47,6 @@ struct NSSLOWKEYPrivateKeyInfoStr {
 };
 typedef struct NSSLOWKEYPrivateKeyInfoStr NSSLOWKEYPrivateKeyInfo;
 #define NSSLOWKEY_PRIVATE_KEY_INFO_VERSION 0 /* what we *create* */
-
-struct NSSLOWKEYSubjectPublicKeyInfoStr {
-    PLArenaPool *arena;
-    SECAlgorithmID algorithm;
-    SECItem subjectPublicKey;
-};
-typedef struct NSSLOWKEYSubjectPublicKeyInfoStr NSSLOWKEYSubjectPublicKeyInfo;
 
 typedef enum {
     NSSLOWKEYNullKey = 0,

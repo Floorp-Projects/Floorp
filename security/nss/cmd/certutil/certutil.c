@@ -782,17 +782,17 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
                 fprintf(stdout, "%s: certificate is valid\n", progName);
                 GEN_BREAK(SECSuccess)
             } else {
-                char *nick;
+                char *name;
                 CERTVerifyLogNode *node;
 
                 node = log->head;
                 while (node) {
                     if (node->cert->nickname != NULL) {
-                        nick = node->cert->nickname;
+                        name = node->cert->nickname;
                     } else {
-                        nick = node->cert->subjectName;
+                        name = node->cert->subjectName;
                     }
-                    fprintf(stderr, "%s : %s\n", nick,
+                    fprintf(stderr, "%s : %s\n", name,
                             SECU_Strerror(node->error));
                     CERT_DestroyCertificate(node->cert);
                     node = node->next;
@@ -845,7 +845,7 @@ SECItemToHex(const SECItem *item, char *dst)
 }
 
 static const char *const keyTypeName[] = {
-    "null", "rsa", "dsa", "fortezza", "dh", "kea", "ec", "rsaPss"
+    "null", "rsa", "dsa", "fortezza", "dh", "kea", "ec"
 };
 
 #define MAX_CKA_ID_BIN_LEN 20
@@ -999,7 +999,7 @@ DeleteKey(char *nickname, secuPWData *pwdata)
 
     slot = PK11_GetInternalKeySlot();
     if (PK11_NeedLogin(slot)) {
-        rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
+        SECStatus rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "could not authenticate to token %s.",
                             PK11_GetTokenName(slot));
@@ -1066,7 +1066,7 @@ PrintBuildFlags()
 }
 
 static void
-PrintSyntax()
+PrintSyntax(char *progName)
 {
 #define FPS fprintf(stderr,
     FPS "Type %s -H for more detailed descriptions\n", progName);
@@ -1838,7 +1838,7 @@ luBuildFlags(enum usage_level ul, const char *command)
 }
 
 static void
-LongUsage(enum usage_level ul, const char *command)
+LongUsage(char *progName, enum usage_level ul, const char *command)
 {
     luA(ul, command);
     luB(ul, command);
@@ -1866,14 +1866,14 @@ LongUsage(enum usage_level ul, const char *command)
 }
 
 static void
-Usage()
+Usage(char *progName)
 {
     PR_fprintf(PR_STDERR,
                "%s - Utility to manipulate NSS certificate databases\n\n"
                "Usage:  %s <command> -d <database-directory> <options>\n\n"
                "Valid commands:\n",
                progName, progName);
-    LongUsage(usage_selected, NULL);
+    LongUsage(progName, usage_selected, NULL);
     PR_fprintf(PR_STDERR, "\n"
                           "%s -H <command> : Print available options for the given command\n"
                           "%s -H : Print complete help output of all commands and options\n"
@@ -2269,10 +2269,10 @@ flagArray opFlagsArray[] =
       { NAME_SIZE(verify_recover), CKF_VERIFY_RECOVER },
       { NAME_SIZE(wrap), CKF_WRAP },
       { NAME_SIZE(unwrap), CKF_UNWRAP },
-      { NAME_SIZE(derive), CKF_DERIVE }
+      { NAME_SIZE(derive), CKF_DERIVE },
     };
 
-int opFlagsCount = PR_ARRAY_SIZE(opFlagsArray);
+int opFlagsCount = sizeof(opFlagsArray) / sizeof(flagArray);
 
 flagArray attrFlagsArray[] =
     {
@@ -2286,13 +2286,14 @@ flagArray attrFlagsArray[] =
       { NAME_SIZE(insensitive), PK11_ATTR_INSENSITIVE },
       { NAME_SIZE(extractable), PK11_ATTR_EXTRACTABLE },
       { NAME_SIZE(unextractable), PK11_ATTR_UNEXTRACTABLE }
+
     };
 
-int attrFlagsCount = PR_ARRAY_SIZE(attrFlagsArray);
+int attrFlagsCount = sizeof(attrFlagsArray) / sizeof(flagArray);
 
 #define MAX_STRING 30
 CK_ULONG
-GetFlags(char *flagsString, flagArray *flags, int count)
+GetFlags(char *flagsString, flagArray *flagArray, int count)
 {
     CK_ULONG flagsValue = strtol(flagsString, NULL, 0);
     int i;
@@ -2302,10 +2303,10 @@ GetFlags(char *flagsString, flagArray *flags, int count)
     }
     while (*flagsString) {
         for (i = 0; i < count; i++) {
-            if (strncmp(flagsString, flags[i].name, flags[i].nameSize) ==
+            if (strncmp(flagsString, flagArray[i].name, flagArray[i].nameSize) ==
                 0) {
-                flagsValue |= flags[i].value;
-                flagsString += flags[i].nameSize;
+                flagsValue |= flagArray[i].value;
+                flagsString += flagArray[i].nameSize;
                 if (*flagsString != 0) {
                     flagsString++;
                 }
@@ -2690,13 +2691,14 @@ certutil_main(int argc, char **argv, PRBool initialize)
     rv = SECU_ParseCommandLine(argc, argv, progName, &certutil);
 
     if (rv != SECSuccess)
-        Usage();
+        Usage(progName);
 
     if (certutil.commands[cmd_PrintSyntax].activated) {
-        PrintSyntax();
+        PrintSyntax(progName);
     }
 
     if (certutil.commands[cmd_PrintHelp].activated) {
+        int i;
         char buf[2];
         const char *command = NULL;
         for (i = 0; i < max_cmd; i++) {
@@ -2713,7 +2715,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
                 break;
             }
         }
-        LongUsage((command ? usage_selected : usage_all), command);
+        LongUsage(progName, (command ? usage_selected : usage_all), command);
         exit(1);
     }
 
@@ -2821,7 +2823,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
         if (certutil.options[opt_DBPrefix].arg) {
             certPrefix = certutil.options[opt_DBPrefix].arg;
         } else {
-            Usage();
+            Usage(progName);
         }
     }
 
@@ -2830,7 +2832,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
         if (certutil.options[opt_SourcePrefix].arg) {
             srcCertPrefix = certutil.options[opt_SourcePrefix].arg;
         } else {
-            Usage();
+            Usage(progName);
         }
     }
 
@@ -2914,7 +2916,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
         return 255;
     }
     if (commandsEntered == 0) {
-        Usage();
+        Usage(progName);
     }
 
     if (certutil.commands[cmd_ListCerts].activated ||

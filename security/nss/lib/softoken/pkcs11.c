@@ -1343,6 +1343,7 @@ sftk_handleSecretKeyObject(SFTKSession *session, SFTKObject *object,
     if (sftk_isTrue(object, CKA_TOKEN)) {
         SFTKSlot *slot = session->slot;
         SFTKDBHandle *keyHandle = sftk_getKeyDB(slot);
+        CK_RV crv;
 
         if (keyHandle == NULL) {
             return CKR_TOKEN_WRITE_PROTECTED;
@@ -3806,12 +3807,12 @@ NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
         PZ_Unlock(slot->slotLock);
         /* Reset login flags. */
         if (ulNewLen == 0) {
+            PRBool tokenRemoved = PR_FALSE;
             PZ_Lock(slot->slotLock);
             slot->isLoggedIn = PR_FALSE;
             slot->ssoLoggedIn = PR_FALSE;
             PZ_Unlock(slot->slotLock);
 
-            tokenRemoved = PR_FALSE;
             rv = sftkdb_CheckPassword(handle, "", &tokenRemoved);
             if (tokenRemoved) {
                 sftk_CloseAllSessions(slot, PR_FALSE);
@@ -4421,44 +4422,6 @@ NSC_GetObjectSize(CK_SESSION_HANDLE hSession,
     return CKR_OK;
 }
 
-static CK_RV
-nsc_GetTokenAttributeValue(SFTKSession *session, CK_OBJECT_HANDLE hObject,
-                           CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount)
-{
-    SFTKSlot *slot = sftk_SlotFromSession(session);
-    SFTKDBHandle *dbHandle = sftk_getDBForTokenObject(slot, hObject);
-    SFTKDBHandle *keydb = NULL;
-    CK_RV crv;
-
-    if (dbHandle == NULL) {
-        return CKR_OBJECT_HANDLE_INVALID;
-    }
-
-    crv = sftkdb_GetAttributeValue(dbHandle, hObject, pTemplate, ulCount);
-
-    /* make sure we don't export any sensitive information */
-    keydb = sftk_getKeyDB(slot);
-    if (dbHandle == keydb) {
-        CK_ULONG i;
-        for (i = 0; i < ulCount; i++) {
-            if (sftk_isSensitive(pTemplate[i].type, CKO_PRIVATE_KEY)) {
-                crv = CKR_ATTRIBUTE_SENSITIVE;
-                if (pTemplate[i].pValue && (pTemplate[i].ulValueLen != -1)) {
-                    PORT_Memset(pTemplate[i].pValue, 0,
-                                pTemplate[i].ulValueLen);
-                }
-                pTemplate[i].ulValueLen = -1;
-            }
-        }
-    }
-
-    sftk_freeDB(dbHandle);
-    if (keydb) {
-        sftk_freeDB(keydb);
-    }
-    return crv;
-}
-
 /* NSC_GetAttributeValue obtains the value of one or more object attributes. */
 CK_RV
 NSC_GetAttributeValue(CK_SESSION_HANDLE hSession,
@@ -4487,8 +4450,37 @@ NSC_GetAttributeValue(CK_SESSION_HANDLE hSession,
 
     /* short circuit everything for token objects */
     if (sftk_isToken(hObject)) {
-        crv = nsc_GetTokenAttributeValue(session, hObject, pTemplate, ulCount);
+        SFTKSlot *slot = sftk_SlotFromSession(session);
+        SFTKDBHandle *dbHandle = sftk_getDBForTokenObject(slot, hObject);
+        SFTKDBHandle *keydb = NULL;
+
+        if (dbHandle == NULL) {
+            sftk_FreeSession(session);
+            return CKR_OBJECT_HANDLE_INVALID;
+        }
+
+        crv = sftkdb_GetAttributeValue(dbHandle, hObject, pTemplate, ulCount);
+
+        /* make sure we don't export any sensitive information */
+        keydb = sftk_getKeyDB(slot);
+        if (dbHandle == keydb) {
+            for (i = 0; i < (int)ulCount; i++) {
+                if (sftk_isSensitive(pTemplate[i].type, CKO_PRIVATE_KEY)) {
+                    crv = CKR_ATTRIBUTE_SENSITIVE;
+                    if (pTemplate[i].pValue && (pTemplate[i].ulValueLen != -1)) {
+                        PORT_Memset(pTemplate[i].pValue, 0,
+                                    pTemplate[i].ulValueLen);
+                    }
+                    pTemplate[i].ulValueLen = -1;
+                }
+            }
+        }
+
         sftk_FreeSession(session);
+        sftk_freeDB(dbHandle);
+        if (keydb) {
+            sftk_freeDB(keydb);
+        }
         return crv;
     }
 

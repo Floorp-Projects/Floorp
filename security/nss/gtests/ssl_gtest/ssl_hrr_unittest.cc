@@ -69,8 +69,8 @@ TEST_P(TlsConnectTls13, HelloRetryRequestAbortsZeroRtt) {
 // handshake packets, this will break.
 class CorrectMessageSeqAfterHrrFilter : public TlsRecordFilter {
  public:
-  CorrectMessageSeqAfterHrrFilter(const std::shared_ptr<TlsAgent>& a)
-      : TlsRecordFilter(a) {}
+  CorrectMessageSeqAfterHrrFilter(const std::shared_ptr<TlsAgent>& agent)
+      : TlsRecordFilter(agent) {}
 
  protected:
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
@@ -151,8 +151,8 @@ TEST_P(TlsConnectTls13, SecondClientHelloRejectEarlyDataXtn) {
 
 class KeyShareReplayer : public TlsExtensionFilter {
  public:
-  KeyShareReplayer(const std::shared_ptr<TlsAgent>& a)
-      : TlsExtensionFilter(a) {}
+  KeyShareReplayer(const std::shared_ptr<TlsAgent>& agent)
+      : TlsExtensionFilter(agent) {}
 
   virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
                                                const DataBuffer& input,
