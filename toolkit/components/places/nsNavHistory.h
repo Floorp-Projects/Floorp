@@ -40,7 +40,6 @@
 #define QUERYUPDATE_COMPLEX_WITH_BOOKMARKS 3
 #define QUERYUPDATE_HOST 4
 #define QUERYUPDATE_MOBILEPREF 5
-#define QUERYUPDATE_NONE 6
 
 // Clamp title and URL to generously large, but not too large, length.
 // See bug 319004 for details.

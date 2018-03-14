@@ -118,8 +118,7 @@ function serializeNode(aNode, aIsLivemark) {
 
   // Some nodes, e.g. the unfiled/menu/toolbar ones can have a virtual guid, so
   // we ignore any that are a folder shortcut. These will be handled below.
-  if (guid && !PlacesUtils.bookmarks.isVirtualRootItem(guid) &&
-      !PlacesUtils.isVirtualLeftPaneItem(guid)) {
+  if (guid && !PlacesUtils.bookmarks.isVirtualRootItem(guid)) {
     // TODO: Really guid should be set on everything, however currently this upsets
     // the drag 'n' drop / cut/copy/paste operations.
     data.itemGuid = guid;
@@ -343,29 +342,6 @@ var PlacesUtils = {
   TOPIC_BOOKMARKS_RESTORE_FAILED: "bookmarks-restore-failed",
 
   ACTION_SCHEME: "moz-action:",
-
-  /**
-    * GUIDs associated with virtual queries that are used for displaying the
-    * top-level folders in the left pane.
-    */
-  virtualAllBookmarksGuid: "allbms_____v",
-  virtualHistoryGuid: "history____v",
-  virtualDownloadsGuid: "downloads__v",
-  virtualTagsGuid: "tags_______v",
-
-  /**
-   * Checks if a guid is a virtual left-pane root.
-   *
-   * @param {String} guid The guid of the item to look for.
-   * @returns {Boolean} true if guid is a virtual root, false otherwise.
-   */
-  isVirtualLeftPaneItem(guid) {
-    return guid == PlacesUtils.virtualAllBookmarksGuid ||
-           guid == PlacesUtils.virtualHistoryGuid ||
-           guid == PlacesUtils.virtualDownloadsGuid ||
-           guid == PlacesUtils.virtualTagsGuid;
-  },
-
 
   asContainer: aNode => asContainer(aNode),
   asQuery: aNode => asQuery(aNode),

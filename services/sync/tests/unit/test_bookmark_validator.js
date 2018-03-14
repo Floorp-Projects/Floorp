@@ -285,6 +285,11 @@ add_task(async function test_cswc_serverUnexpected() {
       "flags": 0,
       "expires": 4,
       "value": 1
+    }, {
+      "name": "PlacesOrganizer/OrganizerFolder",
+      "flags": 0,
+      "expires": 4,
+      "value": 7
     }],
     "type": "text/x-moz-place-container",
     "children": [{
@@ -295,6 +300,11 @@ add_task(async function test_cswc_serverUnexpected() {
         "flags": 0,
         "expires": 4,
         "value": 1
+      }, {
+        "name": "PlacesOrganizer/OrganizerQuery",
+        "flags": 0,
+        "expires": 4,
+        "value": "History"
       }],
       "type": "text/x-moz-place",
       "uri": "place:type=3&sort=4"
