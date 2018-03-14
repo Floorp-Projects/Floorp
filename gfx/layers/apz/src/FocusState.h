@@ -11,8 +11,8 @@
 #include <unordered_set>    // for std::unordered_set
 
 #include "FrameMetrics.h"   // for FrameMetrics::ViewID
-
 #include "mozilla/layers/FocusTarget.h" // for FocusTarget
+#include "mozilla/Mutex.h"  // for Mutex
 
 namespace mozilla {
 namespace layers {
@@ -80,13 +80,6 @@ public:
   uint64_t LastAPZProcessedEvent() const;
 
   /**
-   * Whether the current focus state is known to be current or else if an event
-   * has been processed that could change the focus but we have not received an
-   * update with a new confirmed target.
-   */
-  bool IsCurrent() const;
-
-  /**
    * Notify focus state of a potentially focus changing event. This will
    * increment the current focus sequence number. The new value can be gotten
    * from LastAPZProcessedEvent().
@@ -134,6 +127,20 @@ public:
   bool CanIgnoreKeyboardShortcutMisses() const;
 
 private:
+  /**
+   * Whether the current focus state is known to be current or else if an event
+   * has been processed that could change the focus but we have not received an
+   * update with a new confirmed target.
+   * This can only be called by methods that have already acquired mMutex; they
+   * have to pass their lock as compile-time proof.
+   */
+  bool IsCurrent(const MutexAutoLock& aLock) const;
+
+private:
+  // All methods should hold this lock, since this class is accessed via both
+  // the sampler and controller threads.
+  mutable Mutex mMutex;
+
   // The set of focus targets received indexed by their layer tree ID
   std::unordered_map<uint64_t, FocusTarget> mFocusTree;
 
