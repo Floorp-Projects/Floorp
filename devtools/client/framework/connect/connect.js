@@ -236,7 +236,7 @@ function openToolbox(form, chrome = false, tool = "webconsole", isTabActor) {
       toolbox.once("destroyed", function () {
         gClient.close();
       });
-    }, console.error.bind(console));
+    }, console.error);
     window.close();
-  }, console.error.bind(console));
+  }, console.error);
 }
