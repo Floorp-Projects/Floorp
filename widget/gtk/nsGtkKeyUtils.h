@@ -131,9 +131,11 @@ public:
      * @param aKeyEvent         It's an WidgetKeyboardEvent which needs to be
      *                          initialized.
      * @param aGdkKeyEvent      A native GDK key event.
+     * @param aIsProcessedByIME true if aGdkKeyEvent is handled by IME.
      */
     static void InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
-                             GdkEventKey* aGdkKeyEvent);
+                             GdkEventKey* aGdkKeyEvent,
+                             bool aIsProcessedByIME);
 
     /**
      * WillDispatchKeyboardEvent() is called via

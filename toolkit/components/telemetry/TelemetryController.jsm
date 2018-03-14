@@ -1071,7 +1071,7 @@ var Impl = {
 
     // Load the scalar probes JSON file.
     const scalarProbeFilename = "ScalarArtifactDefinitions.json";
-    let scalarProbeFile = Services.dirsvc.get("GreBinD", Ci.nsIFile);
+    let scalarProbeFile = Services.dirsvc.get("GreD", Ci.nsIFile);
     scalarProbeFile.append(scalarProbeFilename);
     if (!scalarProbeFile.exists()) {
       this._log.trace("registerJsProbes - no scalar builtin JS probes");

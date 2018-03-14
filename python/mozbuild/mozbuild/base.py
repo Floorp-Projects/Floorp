@@ -502,15 +502,6 @@ class MozbuildObject(ProcessExecutionMixin):
                 self.run_process([notifier, '-title',
                     'Mozilla Build System', '-group', 'mozbuild',
                     '-message', msg], ensure_exit_code=False)
-            elif sys.platform.startswith('linux'):
-                try:
-                    notifier = which.which('notify-send')
-                except which.WhichError:
-                    raise Exception('Install notify-send (usually part of '
-                        'the libnotify package) to get a notification when '
-                        'the build finishes.')
-                self.run_process([notifier, '--app-name=Mozilla Build System',
-                    'Mozilla Build System', msg], ensure_exit_code=False)
             elif sys.platform.startswith('win'):
                 from ctypes import Structure, windll, POINTER, sizeof
                 from ctypes.wintypes import DWORD, HANDLE, WINFUNCTYPE, BOOL, UINT
@@ -536,6 +527,15 @@ class MozbuildObject(ProcessExecutionMixin):
                                     console,
                                     FLASHW_CAPTION | FLASHW_TRAY | FLASHW_TIMERNOFG, 3, 0)
                 FlashWindowEx(params)
+            else:
+                try:
+                    notifier = which.which('notify-send')
+                except which.WhichError:
+                    raise Exception('Install notify-send (usually part of '
+                        'the libnotify package) to get a notification when '
+                        'the build finishes.')
+                self.run_process([notifier, '--app-name=Mozilla Build System',
+                    'Mozilla Build System', msg], ensure_exit_code=False)
         except Exception as e:
             self.log(logging.WARNING, 'notifier-failed', {'error':
                 e.message}, 'Notification center failed: {error}')

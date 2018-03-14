@@ -6,9 +6,13 @@
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
+let expectedCompleteStatus;
 
 function emitTestFail(message) {
   sendAsyncMessage("test-fail", message);
+}
+function emitTestPass(message) {
+  sendAsyncMessage("test-pass", message);
 }
 
 const shippingAddress = Cc["@mozilla.org/dom/payments/payment-address;1"].
@@ -29,6 +33,47 @@ shippingAddress.init("USA",              // country
                      "Bill A. Pacheco",  // recipient
                      "+1-434-441-3879"); // phone
 
+const DummyUIService = {
+  showPayment: function(requestId) {
+    const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
+                                createInstance(Ci.nsIGeneralResponseData);
+    try {
+      showResponseData.initData({ paymentToken: "6880281f-0df3-4b8e-916f-66575e2457c1",});
+    } catch (e) {
+      emitTestFail("Fail to initialize response data with { paymentToken: \"6880281f-0df3-4b8e-916f-66575e2457c1\",}");
+    }
+    let showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
+                   createInstance(Ci.nsIPaymentShowActionResponse);
+    showResponse.init(requestId,
+                      Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+                      "testing-payment-method",   // payment method
+                      showResponseData,           // payment method data
+                      "Bill A. Pacheco",          // payer name
+                      "",                         // payer email
+                      "");                        // payer phone
+    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  },
+  abortPayment: function(requestId) {
+  },
+  completePayment: function(requestId) {
+    let payRequest = paymentSrv.getPaymentRequestById(requestId);
+    if (payRequest.completeStatus == expectedCompleteStatus) {
+      emitTestPass("request.completeStatus matches expectation of " + expectedCompleteStatus);
+    } else {
+      emitTestFail("request.completeStatus incorrect. Expected " +
+                   expectedCompleteStatus + ", got " + payRequest.completeStatus);
+    }
+
+    let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
+                           createInstance(Ci.nsIPaymentCompleteActionResponse);
+    completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED);
+    paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  },
+  updatePayment: function(requestId) {
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
+};
+
 const NormalUIService = {
   shippingOptionChanged: false,
   showPayment: function(requestId) {
@@ -37,6 +82,14 @@ const NormalUIService = {
   abortPayment: function(requestId) {
   },
   completePayment: function(requestId) {
+    let payRequest = paymentSrv.getPaymentRequestById(requestId);
+    if (payRequest.completeStatus == expectedCompleteStatus) {
+      emitTestPass("request.completeStatus matches expectation of " + expectedCompleteStatus);
+    } else {
+      emitTestFail("request.completeStatus incorrect. Expected " +
+                   expectedCompleteStatus + ", got " + payRequest.completeStatus);
+    }
+
     let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
                            createInstance(Ci.nsIPaymentCompleteActionResponse);
     completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED);
@@ -208,6 +261,10 @@ function testInitDataAndResponse() {
   sendAsyncMessage("test-init-data-and-response-complete");
 }
 
+addMessageListener("set-dummy-ui-service", function() {
+  paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
+});
+
 addMessageListener("set-normal-ui-service", function() {
   paymentSrv.setTestingUIService(NormalUIService.QueryInterface(Ci.nsIPaymentUIService));
 });
@@ -222,6 +279,17 @@ addMessageListener("set-update-with-error-ui-service", function() {
 
 addMessageListener("test-init-data-and-response", testInitDataAndResponse);
 
+addMessageListener("set-complete-status-success", function() {
+  expectedCompleteStatus = "success";
+});
+
+addMessageListener("set-complete-status-fail", function() {
+  expectedCompleteStatus = "fail";
+});
+
+addMessageListener("set-complete-status-unknown", function() {
+  expectedCompleteStatus = "unknown";
+});
 
 addMessageListener("teardown", function() {
   paymentSrv.cleanup();

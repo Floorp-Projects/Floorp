@@ -13,6 +13,7 @@
 #include "nsISelection.h"
 
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/TextEvents.h"
@@ -558,9 +559,25 @@ ConvertRectArrayToJavaRectFArray(const nsTArray<LayoutDeviceIntRect>& aRects,
 namespace mozilla {
 namespace widget {
 
+bool GeckoEditableSupport::sDispatchKeyEventsInCompositionForAnyApps = false;
+
 NS_IMPL_ISUPPORTS(GeckoEditableSupport,
                   TextEventDispatcherListener,
                   nsISupportsWeakReference)
+
+void
+GeckoEditableSupport::ObservePrefs()
+{
+    static bool sIsObservingPref = false;
+    if (sIsObservingPref) {
+        return;
+    }
+    sIsObservingPref = true;
+    Preferences::AddBoolVarCache(
+        &sDispatchKeyEventsInCompositionForAnyApps,
+        "intl.ime.hack.on_any_apps.fire_key_events_for_composition",
+        false);
+}
 
 RefPtr<TextComposition>
 GeckoEditableSupport::GetComposition() const
@@ -668,7 +685,6 @@ GeckoEditableSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
 /*
  * Send dummy key events for pages that are unaware of input events,
  * to provide web compatibility for pages that depend on key events.
- * Our dummy key events have 0 as the keycode.
  */
 void
 GeckoEditableSupport::SendIMEDummyKeyEvent(nsIWidget* aWidget, EventMessage msg)
@@ -678,7 +694,12 @@ GeckoEditableSupport::SendIMEDummyKeyEvent(nsIWidget* aWidget, EventMessage msg)
 
     WidgetKeyboardEvent event(true, msg, aWidget);
     event.mTime = PR_Now() / 1000;
-    MOZ_ASSERT(event.mKeyCode == 0);
+    // TODO: If we can know scan code of the key event which caused replacing
+    //       composition string, we should set mCodeNameIndex here.  Then,
+    //       we should rename this method because it becomes not a "dummy"
+    //       keyboard event.
+    event.mKeyCode = NS_VK_PROCESSKEY;
+    event.mKeyNameIndex = KEY_NAME_INDEX_Process;
     NS_ENSURE_SUCCESS_VOID(BeginInputTransaction(mDispatcher));
     mDispatcher->DispatchKeyboardEvent(msg, event, status);
 }
@@ -1027,7 +1048,8 @@ GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
         AddIMETextChange(dummyChange);
     }
 
-    if (mInputContext.mMayBeIMEUnaware) {
+    if (sDispatchKeyEventsInCompositionForAnyApps ||
+        mInputContext.mMayBeIMEUnaware) {
         SendIMEDummyKeyEvent(widget, eKeyDown);
         if (!mDispatcher || widget->Destroyed()) {
             return;
@@ -1046,7 +1068,8 @@ GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
         return;
     }
 
-    if (mInputContext.mMayBeIMEUnaware) {
+    if (sDispatchKeyEventsInCompositionForAnyApps ||
+        mInputContext.mMayBeIMEUnaware) {
         SendIMEDummyKeyEvent(widget, eKeyUp);
         // Widget may be destroyed after dispatching the above event.
     }

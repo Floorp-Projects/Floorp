@@ -207,7 +207,7 @@ APZSampler::HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer)
   AsyncPanZoomController* apzc = aLayer.GetApzc();
   return apzc
       && !apzc->GetAsyncTransformAppliedToContent()
-      && !AsyncTransformComponentMatrix(apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForHitTesting)).IsIdentity();
+      && !AsyncTransformComponentMatrix(apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing)).IsIdentity();
 }
 
 } // namespace layers

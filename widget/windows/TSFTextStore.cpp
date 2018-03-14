@@ -12,6 +12,7 @@
 #include "nscore.h"
 
 #include "IMMHandler.h"
+#include "KeyboardLayout.h"
 #include "WinIMEHandler.h"
 #include "WinUtils.h"
 #include "mozilla/AutoRestore.h"
@@ -1756,7 +1757,9 @@ StaticRefPtr<ITfDocumentMgr> TSFTextStore::sDisabledDocumentMgr;
 StaticRefPtr<ITfContext> TSFTextStore::sDisabledContext;
 StaticRefPtr<ITfInputProcessorProfiles> TSFTextStore::sInputProcessorProfiles;
 StaticRefPtr<TSFTextStore> TSFTextStore::sEnabledTextStore;
+const MSG* TSFTextStore::sHandlingKeyMsg = nullptr;
 DWORD TSFTextStore::sClientId  = 0;
+bool TSFTextStore::sIsKeyboardEventDispatched = false;
 
 #define TEXTSTORE_DEFAULT_VIEW (1)
 
@@ -2254,10 +2257,24 @@ TSFTextStore::FlushPendingActions()
   for (uint32_t i = 0; i < mPendingActions.Length(); i++) {
     PendingAction& action = mPendingActions[i];
     switch (action.mType) {
-      case PendingAction::COMPOSITION_START: {
+      case PendingAction::Type::eKeyboardEvent:
+        if (mDestroyed) {
+          MOZ_LOG(sTextStoreLog, LogLevel::Warning,
+            ("0x%p   TSFTextStore::FlushPendingActions() "
+             "IGNORED pending KeyboardEvent(%s) due to already destroyed",
+             action.mKeyMsg->message == WM_KEYDOWN ? "eKeyDown" : "eKeyUp",
+             this));
+        }
+        MOZ_DIAGNOSTIC_ASSERT(action.mKeyMsg);
+        DispatchKeyboardEventAsProcessedByIME(*action.mKeyMsg);
+        if (!widget || widget->Destroyed()) {
+          break;
+        }
+        break;
+      case PendingAction::Type::eCompositionStart: {
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::FlushPendingActions() "
-           "flushing COMPOSITION_START={ mSelectionStart=%d, "
+           "flushing Type::eCompositionStart={ mSelectionStart=%d, "
            "mSelectionLength=%d }, mDestroyed=%s",
            this, action.mSelectionStart, action.mSelectionLength,
            GetBoolName(mDestroyed)));
@@ -2312,10 +2329,10 @@ TSFTextStore::FlushPendingActions()
         }
         break;
       }
-      case PendingAction::COMPOSITION_UPDATE: {
+      case PendingAction::Type::eCompositionUpdate: {
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::FlushPendingActions() "
-           "flushing COMPOSITION_UPDATE={ mData=\"%s\", "
+           "flushing Type::eCompositionUpdate={ mData=\"%s\", "
            "mRanges=0x%p, mRanges->Length()=%d }",
            this, GetEscapedUTF8String(action.mData).get(),
            action.mRanges.get(),
@@ -2359,10 +2376,10 @@ TSFTextStore::FlushPendingActions()
         }
         break;
       }
-      case PendingAction::COMPOSITION_END: {
+      case PendingAction::Type::eCompositionEnd: {
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::FlushPendingActions() "
-           "flushing COMPOSITION_END={ mData=\"%s\" }",
+           "flushing Type::eCompositionEnd={ mData=\"%s\" }",
            this, GetEscapedUTF8String(action.mData).get()));
 
         // Dispatching eCompositionCommit causes a DOM text event, then,
@@ -2392,10 +2409,10 @@ TSFTextStore::FlushPendingActions()
         }
         break;
       }
-      case PendingAction::SET_SELECTION: {
+      case PendingAction::Type::eSetSelection: {
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::FlushPendingActions() "
-           "flushing SET_SELECTION={ mSelectionStart=%d, "
+           "flushing Type::eSetSelection={ mSelectionStart=%d, "
            "mSelectionLength=%d, mSelectionReversed=%s }, "
            "mDestroyed=%s",
            this, action.mSelectionStart, action.mSelectionLength,
@@ -2519,6 +2536,78 @@ TSFTextStore::MaybeFlushPendingNotifications()
       ("0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
        "calling TSFTextStore::NotifyTSFOfLayoutChange()...", this));
     NotifyTSFOfLayoutChange();
+  }
+}
+
+void
+TSFTextStore::MaybeDispatchKeyboardEventAsProcessedByIME()
+{
+  // If we've already been destroyed, we cannot do anything.
+  if (mDestroyed) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+      ("0x%p   TSFTextStore::MaybeDispatchKeyboardEventAsProcessedByIME(), "
+       "does nothing because it's already been destroyed", this));
+    return;
+  }
+
+  // If we're not handling key message or we've already dispatched a keyboard
+  // event for the handling key message, we should do nothing anymore.
+  if (!sHandlingKeyMsg || sIsKeyboardEventDispatched) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+      ("0x%p   TSFTextStore::MaybeDispatchKeyboardEventAsProcessedByIME(), "
+       "does nothing because not necessary to dispatch keyboard event", this));
+    return;
+  }
+
+  sIsKeyboardEventDispatched = true;
+  // If the document is locked, just adding the task to dispatching an event
+  // to the queue.
+  if (IsReadLocked()) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+      ("0x%p   TSFTextStore::MaybeDispatchKeyboardEventAsProcessedByIME(), "
+       "adding to dispatch a keyboard event into the queue...", this));
+    PendingAction* action = mPendingActions.AppendElement();
+    action->mType = PendingAction::Type::eKeyboardEvent;
+    action->mKeyMsg = sHandlingKeyMsg;
+    return;
+  }
+
+  // Otherwise, dispatch a keyboard event.
+  MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+    ("0x%p   TSFTextStore::MaybeDispatchKeyboardEventAsProcessedByIME(), "
+     "trying to dispatch a keyboard event...", this));
+  DispatchKeyboardEventAsProcessedByIME(*sHandlingKeyMsg);
+}
+
+void
+TSFTextStore::DispatchKeyboardEventAsProcessedByIME(const MSG& aMsg)
+{
+  MOZ_ASSERT(mWidget);
+  MOZ_ASSERT(!mWidget->Destroyed());
+  MOZ_ASSERT(!mDestroyed);
+
+  ModifierKeyState modKeyState;
+  MSG msg(aMsg);
+  msg.wParam = VK_PROCESSKEY;
+  NativeKey nativeKey(mWidget, msg, modKeyState);
+  switch (aMsg.message) {
+    case WM_KEYDOWN:
+      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+        ("0x%p   TSFTextStore::DispatchKeyboardEventAsProcessedByIME(), "
+         "dispatching an eKeyDown event...", this));
+      nativeKey.HandleKeyDownMessage();
+      break;
+    case WM_KEYUP:
+      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+        ("0x%p   TSFTextStore::DispatchKeyboardEventAsProcessedByIME(), "
+         "dispatching an eKeyUp event...", this));
+      nativeKey.HandleKeyUpMessage();
+      break;
+    default:
+      MOZ_LOG(sTextStoreLog, LogLevel::Error,
+        ("0x%p   TSFTextStore::DispatchKeyboardEventAsProcessedByIME(), "
+         "ERROR, it doesn't handle the message", this));
+      break;
   }
 }
 
@@ -3375,6 +3464,14 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
     return E_FAIL;
   }
 
+  MaybeDispatchKeyboardEventAsProcessedByIME();
+  if (mDestroyed) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("0x%p   TSFTextStore::SetSelectionInternal() FAILED due to "
+       "destroyed during dispatching a keyboard event", this));
+    return E_FAIL;
+  }
+
   // If actually the range is not changing, we should do nothing.
   // Perhaps, we can ignore the difference change because it must not be
   // important for following edit.
@@ -3454,7 +3551,7 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
 
   CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
-  action->mType = PendingAction::SET_SELECTION;
+  action->mType = PendingAction::Type::eSetSelection;
   action->mSelectionStart = selectionInContent.acpStart;
   action->mSelectionLength =
     selectionInContent.acpEnd - selectionInContent.acpStart;
@@ -4896,18 +4993,26 @@ TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
     return false;
   }
 
+  MaybeDispatchKeyboardEventAsProcessedByIME();
+  if (mDestroyed) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("0x%p   TSFTextStore::InsertTextAtSelectionInternal() FAILED due to "
+       "destroyed during dispatching a keyboard event", this));
+    return false;
+  }
+
   TS_SELECTION_ACP oldSelection = contentForTSF.Selection().ACP();
   if (!mComposition.IsComposing()) {
     // Use a temporary composition to contain the text
     PendingAction* compositionStart = mPendingActions.AppendElement();
-    compositionStart->mType = PendingAction::COMPOSITION_START;
+    compositionStart->mType = PendingAction::Type::eCompositionStart;
     compositionStart->mSelectionStart = oldSelection.acpStart;
     compositionStart->mSelectionLength =
       oldSelection.acpEnd - oldSelection.acpStart;
     compositionStart->mAdjustSelection = false;
 
     PendingAction* compositionEnd = mPendingActions.AppendElement();
-    compositionEnd->mType = PendingAction::COMPOSITION_END;
+    compositionEnd->mType = PendingAction::Type::eCompositionEnd;
     compositionEnd->mData = aInsertStr;
 
     MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -5003,6 +5108,14 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
     return E_FAIL;
   }
 
+  MaybeDispatchKeyboardEventAsProcessedByIME();
+  if (mDestroyed) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("0x%p   TSFTextStore::RecordCompositionStartAction() FAILED due to "
+       "destroyed during dispatching a keyboard event", this));
+    return false;
+  }
+
   CompleteLastActionIfStillIncomplete();
 
   // TIP may have inserted text at selection before calling
@@ -5033,7 +5146,7 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
   }
 
   PendingAction* action = mPendingActions.AppendElement();
-  action->mType = PendingAction::COMPOSITION_START;
+  action->mType = PendingAction::Type::eCompositionStart;
   action->mSelectionStart = aStart;
   action->mSelectionLength = aLength;
 
@@ -5082,9 +5195,17 @@ TSFTextStore::RecordCompositionEndAction()
 
   MOZ_ASSERT(mComposition.IsComposing());
 
+  MaybeDispatchKeyboardEventAsProcessedByIME();
+  if (mDestroyed) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("0x%p   TSFTextStore::RecordCompositionEndAction() FAILED due to "
+       "destroyed during dispatching a keyboard event", this));
+    return false;
+  }
+
   CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
-  action->mType = PendingAction::COMPOSITION_END;
+  action->mType = PendingAction::Type::eCompositionEnd;
   action->mData = mComposition.mString;
 
   Content& contentForTSF = ContentForTSFRef();
@@ -5101,14 +5222,14 @@ TSFTextStore::RecordCompositionEndAction()
   // dispatch redundant composition events.
   for (size_t i = mPendingActions.Length(), j = 1; i > 0; --i, ++j) {
     PendingAction& pendingAction = mPendingActions[i - 1];
-    if (pendingAction.mType == PendingAction::COMPOSITION_START) {
+    if (pendingAction.mType == PendingAction::Type::eCompositionStart) {
       if (pendingAction.mData != action->mData) {
         break;
       }
       // When only setting selection is necessary, we should append it.
       if (pendingAction.mAdjustSelection) {
         PendingAction* setSelection = mPendingActions.AppendElement();
-        setSelection->mType = PendingAction::SET_SELECTION;
+        setSelection->mType = PendingAction::Type::eSetSelection;
         setSelection->mSelectionStart = pendingAction.mSelectionStart;
         setSelection->mSelectionLength = pendingAction.mSelectionLength;
         setSelection->mSelectionReversed = false;
@@ -6723,38 +6844,56 @@ TSFTextStore::ProcessRawKeyMessage(const MSG& aMsg)
   }
 
   if (aMsg.message == WM_KEYDOWN) {
+    RefPtr<TSFTextStore> textStore(sEnabledTextStore);
+    if (textStore) {
+      textStore->OnStartToHandleKeyMessage();
+      if (NS_WARN_IF(textStore != sEnabledTextStore)) {
+        // Let's handle the key message with new focused TSFTextStore.
+        textStore = sEnabledTextStore;
+      }
+    }
+    AutoRestore<const MSG*> savePreviousKeyMsg(sHandlingKeyMsg);
+    AutoRestore<bool> saveKeyEventDispatched(sIsKeyboardEventDispatched);
+    sHandlingKeyMsg = &aMsg;
+    sIsKeyboardEventDispatched = false;
     BOOL eaten;
     RefPtr<ITfKeystrokeMgr> keystrokeMgr = sKeystrokeMgr;
     HRESULT hr = keystrokeMgr->TestKeyDown(aMsg.wParam, aMsg.lParam, &eaten);
     if (FAILED(hr) || !sKeystrokeMgr || !eaten) {
       return false;
     }
+    hr = keystrokeMgr->KeyDown(aMsg.wParam, aMsg.lParam, &eaten);
+    if (textStore) {
+      textStore->OnEndHandlingKeyMessage(!!eaten);
+    }
+    return SUCCEEDED(hr) &&
+           (eaten || !sKeystrokeMgr || sIsKeyboardEventDispatched);
+  }
+  if (aMsg.message == WM_KEYUP) {
     RefPtr<TSFTextStore> textStore(sEnabledTextStore);
     if (textStore) {
       textStore->OnStartToHandleKeyMessage();
+      if (NS_WARN_IF(textStore != sEnabledTextStore)) {
+        // Let's handle the key message with new focused TSFTextStore.
+        textStore = sEnabledTextStore;
+      }
     }
-    hr = keystrokeMgr->KeyDown(aMsg.wParam, aMsg.lParam, &eaten);
-    if (textStore) {
-      textStore->OnEndHandlingKeyMessage();
-    }
-    return SUCCEEDED(hr) && (eaten || !sKeystrokeMgr);
-  }
-  if (aMsg.message == WM_KEYUP) {
+    AutoRestore<const MSG*> savePreviousKeyMsg(sHandlingKeyMsg);
+    AutoRestore<bool> saveKeyEventDispatched(sIsKeyboardEventDispatched);
+    sHandlingKeyMsg = &aMsg;
+    sIsKeyboardEventDispatched = false;
     BOOL eaten;
     RefPtr<ITfKeystrokeMgr> keystrokeMgr = sKeystrokeMgr;
     HRESULT hr = keystrokeMgr->TestKeyUp(aMsg.wParam, aMsg.lParam, &eaten);
     if (FAILED(hr) || !sKeystrokeMgr || !eaten) {
       return false;
     }
-    RefPtr<TSFTextStore> textStore(sEnabledTextStore);
-    if (textStore) {
-      textStore->OnStartToHandleKeyMessage();
-    }
     hr = keystrokeMgr->KeyUp(aMsg.wParam, aMsg.lParam, &eaten);
     if (textStore) {
-      textStore->OnEndHandlingKeyMessage();
+      textStore->OnEndHandlingKeyMessage(!!eaten);
     }
-    return SUCCEEDED(hr) && (eaten || !sKeystrokeMgr);
+    return SUCCEEDED(hr) &&
+           (eaten || !sKeystrokeMgr || sIsKeyboardEventDispatched);
   }
   return false;
 }
@@ -6954,7 +7093,7 @@ TSFTextStore::Content::StartComposition(ITfCompositionView* aCompositionView,
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(aCompositionView);
   MOZ_ASSERT(!mComposition.mView);
-  MOZ_ASSERT(aCompStart.mType == PendingAction::COMPOSITION_START);
+  MOZ_ASSERT(aCompStart.mType == PendingAction::Type::eCompositionStart);
 
   mComposition.Start(aCompositionView, aCompStart.mSelectionStart,
     GetSubstring(static_cast<uint32_t>(aCompStart.mSelectionStart),
@@ -6979,9 +7118,9 @@ TSFTextStore::Content::RestoreCommittedComposition(
   MOZ_ASSERT(aCompositionView);
   MOZ_ASSERT(!mComposition.mView);
   MOZ_ASSERT(aPendingCompositionStart.mType ==
-               PendingAction::COMPOSITION_START);
+               PendingAction::Type::eCompositionStart);
   MOZ_ASSERT(aCanceledCompositionEnd.mType ==
-               PendingAction::COMPOSITION_END);
+               PendingAction::Type::eCompositionEnd);
   MOZ_ASSERT(GetSubstring(
                static_cast<uint32_t>(aPendingCompositionStart.mSelectionStart),
                static_cast<uint32_t>(aCanceledCompositionEnd.mData.Length())) ==
@@ -7000,7 +7139,7 @@ TSFTextStore::Content::EndComposition(const PendingAction& aCompEnd)
 {
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(mComposition.mView);
-  MOZ_ASSERT(aCompEnd.mType == PendingAction::COMPOSITION_END);
+  MOZ_ASSERT(aCompEnd.mType == PendingAction::Type::eCompositionEnd);
 
   mSelection.CollapseAt(mComposition.mStart + aCompEnd.mData.Length());
   mComposition.End();

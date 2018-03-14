@@ -361,17 +361,8 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     Element* elem = aNode->AsElement();
     ownerDoc->ClearBoxObjectFor(elem);
 
-    NS_ASSERTION(aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) ||
-                 !elem->GetXBLBinding(),
-                 "Non-forced node has binding on destruction");
-
-    // if NODE_FORCE_XBL_BINDINGS is set, the node might still have a binding
-    // attached
-    if (aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) &&
-        ownerDoc->BindingManager()) {
-      ownerDoc->BindingManager()->RemovedFromDocument(elem, ownerDoc,
-                                                      nsBindingManager::eRunDtor);
-    }
+    NS_ASSERTION(!elem->GetXBLBinding(),
+                 "Node has binding on destruction");
   }
 
   aNode->ReleaseWrapper(aNode);
@@ -721,25 +712,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       }
     }
   }
-
-  // XXX setting document on some nodes not in a document so XBL will bind
-  // and chrome won't break. Make XBL bind to document-less nodes!
-  // XXXbz Once this is fixed, fix up the asserts in all implementations of
-  // BindToTree to assert what they would like to assert, and fix the
-  // ChangeDocumentFor() call in nsXULElement::BindToTree as well.  Also,
-  // remove the UnbindFromTree call in ~nsXULElement, and add back in the
-  // precondition in nsXULElement::UnbindFromTree and remove the line in
-  // nsXULElement.h that makes nsNodeUtils a friend of nsXULElement.
-  // Note: Make sure to do this witchery _after_ we've done any deep
-  // cloning, so kids of the new node aren't confused about whether they're
-  // in a document.
-#ifdef MOZ_XUL
-  if (aClone && !aParent && aNode->IsXULElement()) {
-    if (!aNode->OwnerDoc()->IsLoadedAsInteractiveData()) {
-      clone->SetFlags(NODE_FORCE_XBL_BINDINGS);
-    }
-  }
-#endif
 
   return clone.forget();
 }

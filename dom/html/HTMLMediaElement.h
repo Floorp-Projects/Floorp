@@ -1402,11 +1402,11 @@ protected:
   RefPtr<DOMMediaStream> mSrcStream;
 
   // True once mSrcStream's initial set of tracks are known.
-  bool mSrcStreamTracksAvailable;
+  bool mSrcStreamTracksAvailable = false;
 
   // If non-negative, the time we should return for currentTime while playing
   // mSrcStream.
-  double mSrcStreamPausedCurrentTime;
+  double mSrcStreamPausedCurrentTime = -1;
 
   // Holds a reference to the stream connecting this stream to the capture sink.
   RefPtr<MediaInputPort> mCaptureStreamPort;
@@ -1458,8 +1458,8 @@ protected:
 
   // Media loading flags. See:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
-  nsMediaNetworkState mNetworkState;
-  nsMediaReadyState mReadyState;
+  nsMediaNetworkState mNetworkState = HTMLMediaElementBinding::NETWORK_EMPTY;
+  nsMediaReadyState mReadyState = HTMLMediaElementBinding::HAVE_NOTHING;
 
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the
@@ -1475,18 +1475,18 @@ protected:
   // The current media load ID. This is incremented every time we start a
   // new load. Async events note the ID when they're first sent, and only fire
   // if the ID is unchanged when they come to fire.
-  uint32_t mCurrentLoadID;
+  uint32_t mCurrentLoadID = 0;
 
   // Denotes the waiting state of a load algorithm instance. When the load
   // algorithm is waiting for a source element child to be added, this is set
   // to WAITING_FOR_SOURCE, otherwise it's NOT_WAITING.
-  LoadAlgorithmState mLoadWaitStatus;
+  LoadAlgorithmState mLoadWaitStatus = NOT_WAITING;
 
   // Current audio volume
-  double mVolume;
+  double mVolume = 1.0;
 
   // True if the audio track is not silent.
-  bool mIsAudioTrackAudible;
+  bool mIsAudioTrackAudible = false;
 
   enum MutedReasons {
     MUTED_BY_CONTENT               = 0x01,
@@ -1495,7 +1495,7 @@ protected:
     MUTED_BY_AUDIO_TRACK           = 0x08
   };
 
-  uint32_t mMuted;
+  uint32_t mMuted = 0;
 
   UniquePtr<const MetadataTags> mTags;
 
@@ -1512,7 +1512,7 @@ protected:
   // Stores the current preload action for this element. Initially set to
   // PRELOAD_UNDEFINED, its value is changed by calling
   // UpdatePreloadAction().
-  PreloadAction mPreloadAction;
+  PreloadAction mPreloadAction = PRELOAD_UNDEFINED;
 
   // Time that the last timeupdate event was fired. Read/Write from the
   // main thread only.
@@ -1530,31 +1530,31 @@ protected:
 
   // Media 'currentTime' value when the last timeupdate event occurred.
   // Read/Write from the main thread only.
-  double mLastCurrentTime;
+  double mLastCurrentTime = 0.0;
 
   // Logical start time of the media resource in seconds as obtained
   // from any media fragments. A negative value indicates that no
   // fragment time has been set. Read/Write from the main thread only.
-  double mFragmentStart;
+  double mFragmentStart = -1.0;
 
   // Logical end time of the media resource in seconds as obtained
   // from any media fragments. A negative value indicates that no
   // fragment time has been set. Read/Write from the main thread only.
-  double mFragmentEnd;
+  double mFragmentEnd = -1.0;
 
   // The defaultPlaybackRate attribute gives the desired speed at which the
   // media resource is to play, as a multiple of its intrinsic speed.
-  double mDefaultPlaybackRate;
+  double mDefaultPlaybackRate = 1.0;
 
   // The playbackRate attribute gives the speed at which the media resource
   // plays, as a multiple of its intrinsic speed. If it is not equal to the
   // defaultPlaybackRate, then the implication is that the user is using a
   // feature such as fast forward or slow motion playback.
-  double mPlaybackRate;
+  double mPlaybackRate = 1.0;
 
   // True if pitch correction is applied when playbackRate is set to a
   // non-intrinsic value.
-  bool mPreservesPitch;
+  bool mPreservesPitch = true;
 
   // Reference to the source element last returned by GetNextSource().
   // This is the child source element which we're trying to load from.
@@ -1575,14 +1575,14 @@ protected:
   // The dom promise is used for HTMLMediaElement::SetMediaKeys.
   RefPtr<DetailedPromise> mSetMediaKeysDOMPromise;
   // Used to indicate if the MediaKeys attaching operation is on-going or not.
-  bool mAttachingMediaKey;
+  bool mAttachingMediaKey = false;
   MozPromiseRequestHolder<SetCDMPromise> mSetCDMRequest;
 
   // Stores the time at the start of the current 'played' range.
-  double mCurrentPlayRangeStart;
+  double mCurrentPlayRangeStart = 1.0;
 
   // True if loadeddata has been fired.
-  bool mLoadedDataFired;
+  bool mLoadedDataFired = false;
 
   // Indicates whether current playback is a result of user action
   // (ie. calling of the Play method), or automatic playback due to
@@ -1593,108 +1593,101 @@ protected:
   // is a mirror of the HTML attribute. These are different from this
   // 'mAutoplaying' flag, which indicates whether the current playback
   // is a result of the autoplay attribute.
-  bool mAutoplaying;
+  bool mAutoplaying = true;
 
   // Playback of the video is paused either due to calling the
   // 'Pause' method, or playback not yet having started.
   WakeLockBoolWrapper mPaused;
 
-  // True if the media statistics are currently being shown by the builtin
-  // video controls
-  bool mStatsShowing;
-
   // The following two fields are here for the private storage of the builtin
   // video controls, and control 'casting' of the video to external devices
   // (TVs, projectors etc.)
   // True if casting is currently allowed
-  bool mAllowCasting;
+  bool mAllowCasting = false;
   // True if currently casting this video
-  bool mIsCasting;
+  bool mIsCasting = false;
 
   // True if the sound is being captured.
-  bool mAudioCaptured;
+  bool mAudioCaptured = false;
 
   // If TRUE then the media element was actively playing before the currently
   // in progress seeking. If FALSE then the media element is either not seeking
   // or was not actively playing before the current seek. Used to decide whether
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
-  bool mPlayingBeforeSeek;
+  bool mPlayingBeforeSeek = false;
 
   // True iff this element is paused because the document is inactive or has
   // been suspended by the audio channel service.
-  bool mPausedForInactiveDocumentOrChannel;
+  bool mPausedForInactiveDocumentOrChannel = false;
 
   // True iff event delivery is suspended (mPausedForInactiveDocumentOrChannel must also be true).
-  bool mEventDeliveryPaused;
+  bool mEventDeliveryPaused = false;
 
   // True if we're running the "load()" method.
-  bool mIsRunningLoadMethod;
+  bool mIsRunningLoadMethod = false;
 
   // True if we're running or waiting to run queued tasks due to an explicit
   // call to "load()".
-  bool mIsDoingExplicitLoad;
+  bool mIsDoingExplicitLoad = false;
 
   // True if we're loading the resource from the child source elements.
-  bool mIsLoadingFromSourceChildren;
+  bool mIsLoadingFromSourceChildren = false;
 
   // True if we're delaying the "load" event. They are delayed until either
   // an error occurs, or the first frame is loaded.
-  bool mDelayingLoadEvent;
+  bool mDelayingLoadEvent = false;
 
   // True when we've got a task queued to call SelectResource(),
   // or while we're running SelectResource().
-  bool mIsRunningSelectResource;
+  bool mIsRunningSelectResource = false;
 
   // True when we already have select resource call queued
-  bool mHaveQueuedSelectResource;
+  bool mHaveQueuedSelectResource = false;
 
   // True if we suspended the decoder because we were paused,
   // preloading metadata is enabled, autoplay was not enabled, and we loaded
   // the first frame.
-  bool mSuspendedAfterFirstFrame;
+  bool mSuspendedAfterFirstFrame = false;
 
   // True if we are allowed to suspend the decoder because we were paused,
   // preloading metdata was enabled, autoplay was not enabled, and we loaded
   // the first frame.
-  bool mAllowSuspendAfterFirstFrame;
+  bool mAllowSuspendAfterFirstFrame = true;
 
   // True if we've played or completed a seek. We use this to determine
   // when the poster frame should be shown.
-  bool mHasPlayedOrSeeked;
+  bool mHasPlayedOrSeeked = false;
 
   // True if we've added a reference to ourselves to keep the element
   // alive while no-one is referencing it but the element may still fire
   // events of its own accord.
-  bool mHasSelfReference;
+  bool mHasSelfReference = false;
 
   // True if we've received a notification that the engine is shutting
   // down.
-  bool mShuttingDown;
+  bool mShuttingDown = false;
 
   // True if we've suspended a load in the resource selection algorithm
   // due to loading a preload:none media. When true, the resource we'll
   // load when the user initiates either playback or an explicit load is
   // stored in mPreloadURI.
-  bool mSuspendedForPreloadNone;
+  bool mSuspendedForPreloadNone = false;
 
   // True if we've connected mSrcStream to the media element output.
-  bool mSrcStreamIsPlaying;
-
-  // True if a same-origin check has been done for the media element and resource.
-  bool mMediaSecurityVerified;
+  bool mSrcStreamIsPlaying = false;
 
   // True if we should set nsIClassOfService::UrgentStart to the channel to
   // get the response ASAP for better user responsiveness.
   bool mUseUrgentStartForChannel = false;
 
   // The CORS mode when loading the media element
-  CORSMode mCORSMode;
+  CORSMode mCORSMode = CORS_NONE;
 
   // Info about the played media.
   MediaInfo mMediaInfo;
 
   // True if the media has encryption information.
-  bool mIsEncrypted;
+  bool mIsEncrypted = false;
 
   enum WaitingForKeyState {
     NOT_WAITING_FOR_KEY = 0,
@@ -1705,7 +1698,7 @@ protected:
   // True when the CDM cannot decrypt the current block due to lacking a key.
   // Note: the "waitingforkey" event is not dispatched until all decoded data
   // has been rendered.
-  WaitingForKeyState mWaitingForKey;
+  WaitingForKeyState mWaitingForKey = NOT_WAITING_FOR_KEY;
 
   // Listens for waitingForKey events from the owned decoder.
   MediaEventListener mWaitingForKeyListener;
@@ -1719,7 +1712,7 @@ protected:
   // Disable the video playback by track selection. This flag might not be
   // enough if we ever expand the ability of supporting multi-tracks video
   // playback.
-  bool mDisableVideo;
+  bool mDisableVideo = false;
 
   RefPtr<TextTrackManager> mTextTrackManager;
 
@@ -1812,26 +1805,26 @@ private:
   bool mIsBlessed = false;
 
   // True if the first frame has been successfully loaded.
-  bool mFirstFrameLoaded;
+  bool mFirstFrameLoaded = false;
 
   // Media elements also have a default playback start position, which must
   // initially be set to zero seconds. This time is used to allow the element to
   // be seeked even before the media is loaded.
-  double mDefaultPlaybackStartPosition;
+  double mDefaultPlaybackStartPosition = 0.0;
 
   // True if media element has been marked as 'tainted' and can't
   // participate in video decoder suspending.
-  bool mHasSuspendTaint;
+  bool mHasSuspendTaint = false;
 
   // True if media element has been forced into being considered 'hidden'.
   // For use by mochitests. Enabling pref "media.test.video-suspend"
-  bool mForcedHidden;
+  bool mForcedHidden = false;
 
   // True if audio tracks and video tracks are constructed and added into the
   // track list, false if all tracks are removed from the track list.
-  bool mMediaTracksConstructed;
+  bool mMediaTracksConstructed = false;
 
-  Visibility mVisibilityState;
+  Visibility mVisibilityState = Visibility::UNTRACKED;
 
   UniquePtr<ErrorSink> mErrorSink;
 

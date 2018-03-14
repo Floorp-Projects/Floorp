@@ -55,8 +55,9 @@ private:
 };
 
 
-class NetworkActivityMonitor: public nsITimerCallback
-                            , public nsINamed
+class NetworkActivityMonitor final
+    : public nsITimerCallback
+    , public nsINamed
 {
 public:
   enum Direction {

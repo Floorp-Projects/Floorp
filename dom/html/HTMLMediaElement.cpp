@@ -3843,66 +3843,14 @@ private:
 NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
 
 HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    mMainThreadEventTarget(OwnerDoc()->EventTargetFor(TaskCategory::Other)),
-    mAbstractMainThread(OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other)),
-    mSrcStreamTracksAvailable(false),
-    mSrcStreamPausedCurrentTime(-1),
-    mShutdownObserver(new ShutdownObserver),
-    mSourcePointer(nullptr),
-    mNetworkState(NETWORK_EMPTY),
-    mReadyState(HAVE_NOTHING),
-    mCurrentLoadID(0),
-    mLoadWaitStatus(NOT_WAITING),
-    mVolume(1.0),
-    mIsAudioTrackAudible(false),
-    mMuted(0),
-    mPreloadAction(PRELOAD_UNDEFINED),
-    mLastCurrentTime(0.0),
-    mFragmentStart(-1.0),
-    mFragmentEnd(-1.0),
-    mDefaultPlaybackRate(1.0),
-    mPlaybackRate(1.0),
-    mPreservesPitch(true),
-    mPlayed(new TimeRanges(ToSupports(OwnerDoc()))),
-    mAttachingMediaKey(false),
-    mCurrentPlayRangeStart(-1.0),
-    mLoadedDataFired(false),
-    mAutoplaying(true),
-    mPaused(true, *this),
-    mStatsShowing(false),
-    mAllowCasting(false),
-    mIsCasting(false),
-    mAudioCaptured(false),
-    mPlayingBeforeSeek(false),
-    mPausedForInactiveDocumentOrChannel(false),
-    mEventDeliveryPaused(false),
-    mIsRunningLoadMethod(false),
-    mIsDoingExplicitLoad(false),
-    mIsLoadingFromSourceChildren(false),
-    mDelayingLoadEvent(false),
-    mIsRunningSelectResource(false),
-    mHaveQueuedSelectResource(false),
-    mSuspendedAfterFirstFrame(false),
-    mAllowSuspendAfterFirstFrame(true),
-    mHasPlayedOrSeeked(false),
-    mHasSelfReference(false),
-    mShuttingDown(false),
-    mSuspendedForPreloadNone(false),
-    mSrcStreamIsPlaying(false),
-    mMediaSecurityVerified(false),
-    mCORSMode(CORS_NONE),
-    mIsEncrypted(false),
-    mWaitingForKey(NOT_WAITING_FOR_KEY),
-    mDisableVideo(false),
-    mFirstFrameLoaded(false),
-    mDefaultPlaybackStartPosition(0.0),
-    mHasSuspendTaint(false),
-    mForcedHidden(false),
-    mMediaTracksConstructed(false),
-    mVisibilityState(Visibility::UNTRACKED),
-    mErrorSink(new ErrorSink(this)),
-    mAudioChannelWrapper(new AudioChannelAgentCallback(this))
+  : nsGenericHTMLElement(aNodeInfo)
+  , mMainThreadEventTarget(OwnerDoc()->EventTargetFor(TaskCategory::Other))
+  , mAbstractMainThread(OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other))
+  , mShutdownObserver(new ShutdownObserver)
+  , mPlayed(new TimeRanges(ToSupports(OwnerDoc())))
+  , mPaused(true, *this)
+  , mErrorSink(new ErrorSink(this))
+  , mAudioChannelWrapper(new AudioChannelAgentCallback(this))
 {
   MOZ_ASSERT(mMainThreadEventTarget);
   MOZ_ASSERT(mAbstractMainThread);
@@ -4926,9 +4874,6 @@ nsresult
 HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
 {
   ChangeNetworkState(NETWORK_LOADING);
-
-  // Force a same-origin check before allowing events for this media resource.
-  mMediaSecurityVerified = false;
 
   // Set mDecoder now so if methods like GetCurrentSrc get called between
   // here and Load(), they work.

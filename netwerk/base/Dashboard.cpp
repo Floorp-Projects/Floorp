@@ -285,7 +285,7 @@ public:
 NS_IMPL_ISUPPORTS0(LookupArgument)
 
 
-class LookupHelper
+class LookupHelper final
     : public nsIDNSListener
 {
     virtual ~LookupHelper()

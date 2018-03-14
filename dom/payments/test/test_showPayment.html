@@ -19,7 +19,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
   function testFailHandler(message) {
     ok(false, message);
   }
+  function testPassHandler(message) {
+    ok(true, message);
+  }
   gScript.addMessageListener("test-fail", testFailHandler);
+  gScript.addMessageListener("test-pass", testPassHandler);
 
   const defaultMethods = [{
     supportedMethods: "basic-card",
@@ -155,8 +159,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     });
   }
 
-  function testShow() {
+  function testShowWithSuccess() {
+    info("starting testShowWithSuccess");
     gScript.sendAsyncMessage("set-normal-ui-service");
+    gScript.sendAsyncMessage("set-complete-status-success");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
       payRequest.addEventListener("shippingaddresschange", event => {
@@ -206,6 +212,66 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
         is(payRequest.shippingAddress.recipient, "Bill A. Pacheco", "payRequest.shippingAddress.recipient should be 'Bill A. Pacheco' from promise.");
         is(payRequest.shippingAddress.phone, "+1-434-441-3879", "payRequest.shippingAddress.phone should be '+1-434-441-3879' from promise.");
         response.complete("success").then(() =>{
+          resolve();
+        }).catch(e => {
+          ok(false, "Unexpected error: " + e.name);
+          resolve();
+        });
+      }).catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      });
+    });
+  }
+
+  function testShowWithFail() {
+    info("starting testShowWithFail");
+    gScript.sendAsyncMessage("set-dummy-ui-service");
+    gScript.sendAsyncMessage("set-complete-status-fail");
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.show().then(response => {
+        response.complete("fail").then(() => {
+          resolve();
+        }).catch(e => {
+          ok(false, "Unexpected error: " + e.name);
+          resolve();
+        });
+      }).catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      });
+    });
+  }
+
+  function testShowWithUnknown() {
+    info("starting testShowWithUnknown");
+    gScript.sendAsyncMessage("set-dummy-ui-service");
+    gScript.sendAsyncMessage("set-complete-status-unknown");
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.show().then(response => {
+        response.complete("unknown").then(() => {
+          resolve();
+        }).catch(e => {
+          ok(false, "Unexpected error: " + e.name);
+          resolve();
+        });
+      }).catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      });
+    });
+  }
+
+  function testShowWithEmpty() {
+    info("starting testShowWithEmpty");
+    gScript.sendAsyncMessage("set-dummy-ui-service");
+    gScript.sendAsyncMessage("set-complete-status-unknown");
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.show().then(response => {
+        response.complete().then(() => {
           resolve();
         }).catch(e => {
           ok(false, "Unexpected error: " + e.name);
@@ -289,7 +355,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
   function teardown() {
     gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
       gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
-      gScript.removeMessageListener("test-fail", testFailHandler)
+      gScript.removeMessageListener("test-fail", testFailHandler);
+      gScript.removeMessageListener("test-pass", testPassHandler);
       gScript.destroy();
       SimpleTest.finish();
     });
@@ -299,7 +366,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
   function runTests() {
     testCannotMakePaymentShow()
     .then(testRejectShow)
-    .then(testShow)
+    .then(testShowWithSuccess)
+    .then(testShowWithFail)
+    .then(testShowWithUnknown)
+    .then(testShowWithEmpty)
     .then(testUpdateWithError)
     .then(testNullDetailsResponse)
     .then(teardown)

@@ -2944,7 +2944,7 @@ TelemetryPrefValue()
   nsAutoCString channelPrefValue;
   Unused << Preferences::GetCString(
     kChannelPref, channelPrefValue, PrefValueKind::Default);
-  return Some(prefValue.EqualsLiteral("beta"));
+  return Some(channelPrefValue.EqualsLiteral("beta"));
 #endif
 }
 

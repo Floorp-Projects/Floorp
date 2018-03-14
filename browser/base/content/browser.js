@@ -222,8 +222,6 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function() {
   return null;
 });
 
-const nsIWebNavigation = Ci.nsIWebNavigation;
-
 var gBrowser;
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
@@ -1195,7 +1193,7 @@ var gBrowserInit = {
     gBrowser.init();
 
     window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(nsIWebNavigation)
+          .getInterface(Ci.nsIWebNavigation)
           .QueryInterface(Ci.nsIDocShellTreeItem).treeOwner
           .QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIXULWindow)
@@ -2174,9 +2172,8 @@ function BrowserHandleShiftBackspace() {
 }
 
 function BrowserStop() {
-  const stopFlags = nsIWebNavigation.STOP_ALL;
   maybeRecordAbandonmentTelemetry(gBrowser.selectedTab, "stop");
-  gBrowser.webNavigation.stop(stopFlags);
+  gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
 }
 
 function BrowserReloadOrDuplicate(aEvent) {
@@ -2202,13 +2199,14 @@ function BrowserReload() {
     // Bug 1167797: For view source, we always skip the cache
     return BrowserReloadSkipCache();
   }
-  const reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
+  const reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
   BrowserReloadWithFlags(reloadFlags);
 }
 
 function BrowserReloadSkipCache() {
   // Bypass proxy and cache.
-  const reloadFlags = nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+  const reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY |
+                      Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
   BrowserReloadWithFlags(reloadFlags);
 }
 
@@ -3153,7 +3151,7 @@ var BrowserOnClick = {
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
     gBrowser.loadURIWithFlags(gBrowser.currentURI.spec,
-                              nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
+                              Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
                               null, null, null);
 
     Services.perms.add(gBrowser.currentURI, "safe-browsing",
@@ -5322,11 +5320,11 @@ nsBrowserAccess.prototype = {
                             Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                             Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
           gBrowser.loadURIWithFlags(aURI.spec, {
-                                    aTriggeringPrincipal,
-                                    flags: loadflags,
-                                    referrerURI: referrer,
-                                    referrerPolicy,
-                                    });
+            aTriggeringPrincipal,
+            flags: loadflags,
+            referrerURI: referrer,
+            referrerPolicy,
+          });
         }
         if (!Services.prefs.getBoolPref("browser.tabs.loadDivertedInBackground"))
           window.focus();
@@ -6206,7 +6204,7 @@ function BrowserSetForcedCharacterSet(aCharset) {
 }
 
 function BrowserCharsetReload() {
-  BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  BrowserReloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
 function UpdateCurrentCharset(target) {
