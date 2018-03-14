@@ -21,12 +21,6 @@ ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 
 global.EventEmitter = ExtensionUtils.EventEmitter;
 global.EventManager = ExtensionCommon.EventManager;
-global.InputEventManager = class extends EventManager {
-  constructor(...args) {
-    super(...args);
-    this.inputHandling = true;
-  }
-};
 
 /* globals DEFAULT_STORE, PRIVATE_STORE, CONTAINER_STORE */
 

@@ -159,17 +159,21 @@ this.menusInternal = class extends ExtensionAPI {
           return context.childManager.callParentAsyncFunction("menusInternal.removeAll", []);
         },
 
-        onClicked: new EventManager(context, "menus.onClicked", fire => {
-          let listener = (info, tab) => {
-            withHandlingUserInput(context.contentWindow,
-                                  () => fire.sync(info, tab));
-          };
+        onClicked: new EventManager({
+          context,
+          name: "menus.onClicked",
+          register: fire => {
+            let listener = (info, tab) => {
+              withHandlingUserInput(context.contentWindow,
+                                    () => fire.sync(info, tab));
+            };
 
-          let event = context.childManager.getParentEvent("menusInternal.onClicked");
-          event.addListener(listener);
-          return () => {
-            event.removeListener(listener);
-          };
+            let event = context.childManager.getParentEvent("menusInternal.onClicked");
+            event.addListener(listener);
+            return () => {
+              event.removeListener(listener);
+            };
+          },
         }).api(),
       },
     };

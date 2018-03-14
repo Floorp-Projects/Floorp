@@ -411,19 +411,23 @@ this.theme = class extends ExtensionAPI {
 
           Theme.unload(windowId);
         },
-        onUpdated: new EventManager(context, "theme.onUpdated", fire => {
-          let callback = (event, theme, windowId) => {
-            if (windowId) {
-              fire.async({theme, windowId});
-            } else {
-              fire.async({theme});
-            }
-          };
+        onUpdated: new EventManager({
+          context,
+          name: "theme.onUpdated",
+          register: fire => {
+            let callback = (event, theme, windowId) => {
+              if (windowId) {
+                fire.async({theme, windowId});
+              } else {
+                fire.async({theme});
+              }
+            };
 
-          onUpdatedEmitter.on("theme-updated", callback);
-          return () => {
-            onUpdatedEmitter.off("theme-updated", callback);
-          };
+            onUpdatedEmitter.on("theme-updated", callback);
+            return () => {
+              onUpdatedEmitter.off("theme-updated", callback);
+            };
+          },
         }).api(),
       },
     };

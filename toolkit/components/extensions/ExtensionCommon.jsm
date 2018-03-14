@@ -1735,46 +1735,62 @@ defineLazyGetter(LocaleData.prototype, "availableLocales", function() {
 });
 
 /**
-* This is a generic class for managing event listeners.
+ * This is a generic class for managing event listeners.
  *
  * @example
- * new EventManager(context, "api.subAPI", fire => {
- *   let listener = (...) => {
- *     // Fire any listeners registered with addListener.
- *     fire.async(arg1, arg2);
- *   };
- *   // Register the listener.
- *   SomehowRegisterListener(listener);
- *   return () => {
- *     // Return a way to unregister the listener.
- *     SomehowUnregisterListener(listener);
- *   };
+ * new EventManager({
+ *   context,
+ *   name: "api.subAPI",
+ *   register:  fire => {
+ *     let listener = (...) => {
+ *       // Fire any listeners registered with addListener.
+ *       fire.async(arg1, arg2);
+ *     };
+ *     // Register the listener.
+ *     SomehowRegisterListener(listener);
+ *     return () => {
+ *       // Return a way to unregister the listener.
+ *       SomehowUnregisterListener(listener);
+ *     };
+ *   }
  * }).api()
  *
  * The result is an object with addListener, removeListener, and
  * hasListener methods. `context` is an add-on scope (either an
  * ExtensionContext in the chrome process or ExtensionContext in a
- * content process). `name` is for debugging. `register` is a function
- * to register the listener. `register` should return an
- * unregister function that will unregister the listener.
- * @constructor
- *
- * @param {BaseContext} context
- *        An object representing the extension instance using this event.
- * @param {string} name
- *        A name used only for debugging.
- * @param {function} register
- *        A function called whenever a new listener is added.
+ * content process).
  */
-function EventManager(context, name, register) {
-  this.context = context;
-  this.name = name;
-  this.register = register;
-  this.unregister = new Map();
-  this.inputHandling = false;
-}
+class EventManager {
+  /*
+   * @param {object} params
+   *        Parameters that control this EventManager.
+   * @param {BaseContext} params.context
+   *        An object representing the extension instance using this event.
+   * @param {string} params.name
+   *        A name used only for debugging.
+   * @param {functon} params.register
+   *        A function called whenever a new listener is added.
+   * @param {boolean} [params.inputHandling=false]
+   *        If true, the "handling user input" flag is set while handlers
+   *        for this event are executing.
+   */
+  constructor(params) {
+    // Maintain compatibility with the old EventManager API in which
+    // the constructor took parameters (contest, name, register).
+    // Remove this in bug 1451212.
+    if (arguments.length > 1) {
+      [this.context, this.name, this.register] = arguments;
+      this.inputHandling = false;
+    } else {
+      let {context, name, register, inputHandling = false} = params;
+      this.context = context;
+      this.name = name;
+      this.register = register;
+      this.inputHandling = inputHandling;
+    }
+    this.unregister = new Map();
+  }
 
-EventManager.prototype = {
   addListener(callback, ...args) {
     if (this.unregister.has(callback)) {
       return;
@@ -1819,11 +1835,10 @@ EventManager.prototype = {
       },
     };
 
-
     let unregister = this.register(fire, ...args);
     this.unregister.set(callback, unregister);
     this.context.callOnClose(this);
-  },
+  }
 
   removeListener(callback) {
     if (!this.unregister.has(callback)) {
@@ -1840,21 +1855,21 @@ EventManager.prototype = {
     if (this.unregister.size == 0) {
       this.context.forgetOnClose(this);
     }
-  },
+  }
 
   hasListener(callback) {
     return this.unregister.has(callback);
-  },
+  }
 
   revoke() {
     for (let callback of this.unregister.keys()) {
       this.removeListener(callback);
     }
-  },
+  }
 
   close() {
     this.revoke();
-  },
+  }
 
   api() {
     return {
@@ -1864,8 +1879,8 @@ EventManager.prototype = {
       setUserInput: this.inputHandling,
       [Schemas.REVOKE]: () => this.revoke(),
     };
-  },
-};
+  }
+}
 
 // Simple API for event listeners where events never fire.
 function ignoreEvent(context, name) {
