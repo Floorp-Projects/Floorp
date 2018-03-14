@@ -78,7 +78,6 @@ class nsWindow final : public nsBaseWidget
 public:
     typedef mozilla::gfx::DrawTarget DrawTarget;
     typedef mozilla::WidgetEventTime WidgetEventTime;
-    typedef mozilla::WidgetKeyboardEvent WidgetKeyboardEvent;
     typedef mozilla::widget::PlatformCompositorWidgetDelegate PlatformCompositorWidgetDelegate;
 
     nsWindow();
@@ -293,18 +292,6 @@ public:
      */
     bool DispatchKeyDownOrKeyUpEvent(GdkEventKey* aEvent,
                                      bool aProcessedByIME,
-                                     bool* aIsCancelled);
-
-    /**
-     * DispatchKeyDownOrKeyUpEvent() dispatches eKeyDown or eKeyUp event.
-     *
-     * @param aEvent            An eKeyDown or eKeyUp event.  This will be
-     *                          dispatched as is.
-     * @param aIsCancelled      [Out] true if the default is prevented.
-     * @return                  true if eKeyDown event is actually dispatched.
-     *                          Otherwise, false.
-     */
-    bool DispatchKeyDownOrKeyUpEvent(WidgetKeyboardEvent& aEvent,
                                      bool* aIsCancelled);
 
     WidgetEventTime    GetWidgetEventTime(guint32 aEventTime);
