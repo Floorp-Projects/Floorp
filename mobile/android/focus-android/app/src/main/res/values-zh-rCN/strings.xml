@@ -17,6 +17,7 @@
   <string name="menu_help">帮助</string>
   <string name="menu_rights">您的权利</string>
   <string name="menu_trackers_blocked_title">拦截的跟踪器数量</string>
+  <string name="menu_custom_tab_branding">由 %1$s 提供</string>
   <string name="share_dialog_title">分享方式</string>
   <string name="notification_erase_text">清除浏览记录</string>
   <string name="notification_action_open">打开</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">用户名</string>
   <string name="gv_prompt_password_hint">密码</string>
   <string name="gv_prompt_clear">清除</string>
+  <string name="security_popup_secure_connection">安全连接</string>
+  <string name="security_popup_insecure_connection">不安全连接</string>
+  <string name="security_popup_security_verified">验证机构：%1$s</string>
+  <string name="site_security_icon_content_description">网站安全性</string>
 </resources>

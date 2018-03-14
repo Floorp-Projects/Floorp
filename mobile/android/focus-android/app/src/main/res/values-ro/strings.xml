@@ -15,6 +15,7 @@
   <string name="menu_help">Ajutor</string>
   <string name="menu_rights">Drepturile tale</string>
   <string name="menu_trackers_blocked_title">Urmăritori blocați</string>
+  <string name="menu_custom_tab_branding">Susținut de %1$s</string>
   <string name="share_dialog_title">Partajează via</string>
   <string name="notification_erase_text">Șterge istoricul de navigare</string>
   <string name="notification_action_open">Deschide</string>
