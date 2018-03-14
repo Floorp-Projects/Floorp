@@ -2838,6 +2838,7 @@ public:
   static nsresult IPCTransferableToTransferable(const mozilla::dom::IPCDataTransfer& aDataTransfer,
                                                 const bool& aIsPrivateData,
                                                 nsIPrincipal* aRequestingPrincipal,
+                                                const nsContentPolicyType& aContentPolicyType,
                                                 nsITransferable* aTransferable,
                                                 mozilla::dom::nsIContentParent* aContentParent,
                                                 mozilla::dom::TabChild* aTabChild);
