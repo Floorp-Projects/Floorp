@@ -48,7 +48,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   ChromeRegistry: ["@mozilla.org/chrome/chrome-registry;1", "nsIChromeRegistry"],
   ResProtocolHandler: ["@mozilla.org/network/protocol;1?name=resource", "nsIResProtocolHandler"],
   AddonPolicyService: ["@mozilla.org/addons/policy-service;1", "nsIAddonPolicyService"],
-  AddonPathService: ["@mozilla.org/addon-path-service;1", "amIAddonPathService"],
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
 });
 
@@ -1148,10 +1147,6 @@ class XPIState {
       this.lastModifiedTime = saved.currentModifiedTime;
       this.changed = true;
     }
-
-    if (this.enabled) {
-      XPIProvider._addURIMapping(id, this.file);
-    }
   }
 
   /**
@@ -1806,8 +1801,6 @@ var XPIProvider = {
   runPhase: XPI_STARTING,
   // Per-addon telemetry information
   _telemetryDetails: {},
-  // A Map from an add-on install to its ID
-  _addonFileMap: new Map(),
   // Have we started shutting down bootstrap add-ons?
   _closing: false,
 
@@ -1913,20 +1906,6 @@ var XPIProvider = {
         logger.warn("Cancel failed", e);
       }
     }
-  },
-
-  /**
-   * Adds or updates a URI mapping for an Addon.id.
-   *
-   * Mappings should not be removed at any point. This is so that the mappings
-   * will be still valid after an add-on gets disabled or uninstalled, as
-   * consumers may still have URIs of (leaked) resources they want to map.
-   */
-  _addURIMapping(aID, aFile) {
-    logger.info("Mapping " + aID + " to " + aFile.path);
-    this._addonFileMap.set(aID, aFile.path);
-
-    AddonPathService.insertPath(aFile.path, aID);
   },
 
   /**
@@ -2368,7 +2347,6 @@ var XPIProvider = {
 
     // This is needed to allow xpcshell tests to simulate a restart
     this.extensionsActive = false;
-    this._addonFileMap.clear();
 
     await XPIDatabase.shutdown();
   },
@@ -3613,7 +3591,6 @@ var XPIProvider = {
 
     let file = addon._sourceBundle;
 
-    XPIProvider._addURIMapping(addon.id, file);
     let method = callUpdate ? "update" : "install";
     XPIProvider.callBootstrapMethod(addon, file, method, installReason, extraParams);
     addon.state = AddonManager.STATE_INSTALLED;
@@ -3821,24 +3798,6 @@ var XPIProvider = {
     }
 
     aCallback(results.map(install => install.wrapper));
-  },
-
-  /**
-   * Synchronously map a URI to the corresponding Addon ID.
-   *
-   * Mappable URIs are limited to in-application resources belonging to the
-   * add-on, such as Javascript compartments, XUL windows, XBL bindings, etc.
-   * but do not include URIs from meta data, such as the add-on homepage.
-   *
-   * @param  aURI
-   *         nsIURI to map or null
-   * @return string containing the Addon ID
-   * @see    AddonManager.mapURIToAddonID
-   * @see    amIAddonManager.mapURIToAddonID
-   */
-  mapURIToAddonID(aURI) {
-    // Returns `null` instead of empty string if the URI can't be mapped.
-    return AddonPathService.mapURIToAddonId(aURI) || null;
   },
 
   /**
@@ -6001,7 +5960,6 @@ class DirectoryInstallLocation {
       }
 
       this._IDToFileMap[id] = entry;
-      XPIProvider._addURIMapping(id, entry);
     }
   }
 
@@ -6283,7 +6241,6 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
       logger.warn("failed to set lastModifiedTime on " + newFile.path, e);
     }
     this._IDToFileMap[id] = newFile;
-    XPIProvider._addURIMapping(id, newFile);
 
     if (existingAddonID && existingAddonID != id &&
         existingAddonID in this._IDToFileMap) {
@@ -6385,7 +6342,6 @@ class BuiltInInstallLocation extends DirectoryInstallLocation {
       }
 
       this._IDToFileMap[id] = file;
-      XPIProvider._addURIMapping(id, file);
     }
   }
 }
@@ -6832,7 +6788,6 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
       logger.warn("failed to set lastModifiedTime on " + newFile.path, e);
     }
     this._IDToFileMap[id] = newFile;
-    XPIProvider._addURIMapping(id, newFile);
 
     return newFile;
   }
@@ -6933,7 +6888,6 @@ class WinRegInstallLocation extends DirectoryInstallLocation {
       }
 
       this._IDToFileMap[id] = file;
-      XPIProvider._addURIMapping(id, file);
     }
   }
 

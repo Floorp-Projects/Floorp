@@ -215,7 +215,6 @@
 #include "nsRefreshDriver.h"
 #include "Layers.h"
 
-#include "mozilla/AddonPathService.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -1638,13 +1637,6 @@ CreateNativeGlobalForInner(JSContext* aCx,
   JS::CompartmentOptions options;
 
   SelectZoneGroup(aNewInner, options.creationOptions());
-
-  // Sometimes add-ons load their own XUL windows, either as separate top-level
-  // windows or inside a browser element. In such cases we want to tag the
-  // window's compartment with the add-on ID. See bug 1092156.
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    options.creationOptions().setAddonId(MapURIToAddonID(aURI));
-  }
 
   options.creationOptions().setSecureContext(aIsSecureContext);
 
