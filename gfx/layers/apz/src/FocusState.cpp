@@ -6,6 +6,8 @@
 
 #include "FocusState.h"
 
+#include "mozilla/layers/APZThreadUtils.h"
+
 // #define FS_LOG(...) printf_stderr("FS: " __VA_ARGS__)
 #define FS_LOG(...)
 
@@ -26,6 +28,7 @@ FocusState::FocusState()
 uint64_t
 FocusState::LastAPZProcessedEvent() const
 {
+  APZThreadUtils::AssertOnControllerThread();
   MutexAutoLock lock(mMutex);
 
   return mLastAPZProcessedEvent;
@@ -45,6 +48,7 @@ FocusState::IsCurrent(const MutexAutoLock& aProofOfLock) const
 void
 FocusState::ReceiveFocusChangingEvent()
 {
+  APZThreadUtils::AssertOnControllerThread();
   MutexAutoLock lock(mMutex);
 
   mLastAPZProcessedEvent += 1;
@@ -55,6 +59,7 @@ FocusState::Update(uint64_t aRootLayerTreeId,
                    uint64_t aOriginatingLayersId,
                    const FocusTarget& aState)
 {
+  APZThreadUtils::AssertOnSamplerThread();
   MutexAutoLock lock(mMutex);
 
   FS_LOG("Update with rlt=%" PRIu64 ", olt=%" PRIu64 ", ft=(%s, %" PRIu64 ")\n",
@@ -156,6 +161,7 @@ FocusState::Update(uint64_t aRootLayerTreeId,
 void
 FocusState::RemoveFocusTarget(uint64_t aLayersId)
 {
+  APZThreadUtils::AssertOnSamplerThread();
   MutexAutoLock lock(mMutex);
 
   mFocusTree.erase(aLayersId);
@@ -164,6 +170,7 @@ FocusState::RemoveFocusTarget(uint64_t aLayersId)
 Maybe<ScrollableLayerGuid>
 FocusState::GetHorizontalTarget() const
 {
+  APZThreadUtils::AssertOnControllerThread();
   MutexAutoLock lock(mMutex);
 
   // There is not a scrollable layer to async scroll if
@@ -181,6 +188,7 @@ FocusState::GetHorizontalTarget() const
 Maybe<ScrollableLayerGuid>
 FocusState::GetVerticalTarget() const
 {
+  APZThreadUtils::AssertOnControllerThread();
   MutexAutoLock lock(mMutex);
 
   // There is not a scrollable layer to async scroll if:
@@ -198,6 +206,7 @@ FocusState::GetVerticalTarget() const
 bool
 FocusState::CanIgnoreKeyboardShortcutMisses() const
 {
+  APZThreadUtils::AssertOnControllerThread();
   MutexAutoLock lock(mMutex);
 
   return IsCurrent(lock) && !mFocusHasKeyEventListeners;
