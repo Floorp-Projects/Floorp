@@ -64,11 +64,31 @@ public:
   explicit U2FResult(uint64_t aTransactionId, rust_u2f_result* aResult)
     : mTransactionId(aTransactionId)
     , mResult(aResult)
-  { }
+  {
+    MOZ_ASSERT(mResult);
+  }
 
   ~U2FResult() { rust_u2f_res_free(mResult); }
 
   uint64_t GetTransactionId() { return mTransactionId; }
+
+  bool IsError() { return NS_FAILED(GetError()); }
+
+  nsresult GetError() {
+    switch (rust_u2f_result_error(mResult)) {
+      case U2F_ERROR_UKNOWN:
+      case U2F_ERROR_CONSTRAINT:
+        return NS_ERROR_DOM_UNKNOWN_ERR;
+      case U2F_ERROR_NOT_SUPPORTED:
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      case U2F_ERROR_INVALID_STATE:
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
+      case U2F_ERROR_NOT_ALLOWED:
+        return NS_ERROR_DOM_NOT_ALLOWED_ERR;
+      default:
+        return NS_OK;
+    }
+  }
 
   bool CopyRegistration(nsTArray<uint8_t>& aBuffer)
   {
@@ -92,10 +112,6 @@ public:
 
 private:
   bool CopyBuffer(uint8_t aResBufID, nsTArray<uint8_t>& aBuffer) {
-    if (!mResult) {
-      return false;
-    }
-
     size_t len;
     if (!rust_u2f_resbuf_length(mResult, aResBufID, &len)) {
       return false;
