@@ -482,8 +482,7 @@
   border-radius: 0;
 }
 
-.ruleview-shape-point.active,
-.ruleview-shapeswatch.active + .ruleview-shape > .ruleview-shape-point:hover {
+.ruleview-shape-point.active {
   background-color: var(--rule-highlight-background-color);
 }
 
