@@ -217,12 +217,10 @@ GenerateJitExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, Callabl
 void
 GenerateJitEntryPrologue(jit::MacroAssembler& masm, Offsets* offsets);
 
-typedef bool IsLeaf;
-
 void
-GenerateFunctionPrologue(jit::MacroAssembler& masm, uint32_t framePushed, IsLeaf isLeaf,
-                         const SigIdDesc& sigId, BytecodeOffset trapOffset, FuncOffsets* offsets,
-                         const mozilla::Maybe<uint32_t>& tier1FuncIndex = mozilla::Nothing());
+GenerateFunctionPrologue(jit::MacroAssembler& masm, const SigIdDesc& sigId,
+                         const mozilla::Maybe<uint32_t>& tier1FuncIndex,
+                         FuncOffsets* offsets);
 void
 GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);
 
