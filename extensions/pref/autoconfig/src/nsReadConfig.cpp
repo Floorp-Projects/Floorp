@@ -35,35 +35,35 @@ extern nsresult CentralizedAdminPrefManagerInit();
 extern nsresult CentralizedAdminPrefManagerFinish();
 
 
-static void DisplayError(void)
+static nsresult DisplayError(void)
 {
     nsresult rv;
 
     nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
     if (!promptService)
-        return;
+        return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     if (!bundleService)
-        return;
+        return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIStringBundle> bundle;
     bundleService->CreateBundle("chrome://autoconfig/locale/autoconfig.properties",
                                 getter_AddRefs(bundle));
     if (!bundle)
-        return;
+        return NS_ERROR_FAILURE;
 
     nsAutoString title;
     rv = bundle->GetStringFromName("readConfigTitle", title);
     if (NS_FAILED(rv))
-        return;
+        return rv;
 
     nsAutoString err;
     rv = bundle->GetStringFromName("readConfigMsg", err);
     if (NS_FAILED(rv))
-        return;
+        return rv;
 
-    promptService->Alert(nullptr, title.get(), err.get());
+    return promptService->Alert(nullptr, title.get(), err.get());
 }
 
 // nsISupports Implementation
@@ -100,12 +100,13 @@ NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, c
     if (!nsCRT::strcmp(aTopic, NS_PREFSERVICE_READ_TOPIC_ID)) {
         rv = readConfigFile();
         if (NS_FAILED(rv)) {
-            DisplayError();
-
-            nsCOMPtr<nsIAppStartup> appStartup =
-                do_GetService(NS_APPSTARTUP_CONTRACTID);
-            if (appStartup)
-                appStartup->Quit(nsIAppStartup::eAttemptQuit);
+            rv = DisplayError();
+            if (NS_FAILED(rv)) {
+                nsCOMPtr<nsIAppStartup> appStartup =
+                    do_GetService(NS_APPSTARTUP_CONTRACTID);
+                if (appStartup)
+                    appStartup->Quit(nsIAppStartup::eAttemptQuit);
+            }
         }
     }
     return rv;
