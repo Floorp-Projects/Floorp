@@ -731,6 +731,15 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                             CertPolicyId::anyPolicy,
                                             stapledOCSPResponse,
                                             ocspStaplingStatus);
+          if (rv != Success && !IsFatalError(rv) &&
+              rv != Result::ERROR_REVOKED_CERTIFICATE &&
+              trustDomain.GetIsErrorDueToDistrustedCAPolicy()) {
+            // Bug 1444440 - If there are multiple paths, at least one to a CA
+            // distrusted-by-policy, and none of them ending in a trusted root,
+            // then we might show a different error (UNKNOWN_ISSUER) than we
+            // intend, confusing users.
+            rv = Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
+          }
           if (rv == Success &&
               sha1ModeConfigurations[j] == SHA1Mode::ImportedRoot) {
             bool isBuiltInRoot = false;
