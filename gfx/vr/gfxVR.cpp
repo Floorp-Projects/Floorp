@@ -194,10 +194,42 @@ VRHMDSensorState::CalcViewMatrices(const gfx::Matrix4x4* aHeadToEyeTransforms)
   }
   matHead.PreTranslate(-position[0], -position[1], -position[2]);
 
-  gfx::Matrix4x4 matView = matHead * aHeadToEyeTransforms[VRDisplayInfo::Eye_Left];
+  gfx::Matrix4x4 matView = matHead * aHeadToEyeTransforms[VRDisplayState::Eye_Left];
   matView.Normalize();
   memcpy(leftViewMatrix, matView.components, sizeof(matView.components));
-  matView = matHead * aHeadToEyeTransforms[VRDisplayInfo::Eye_Right];
+  matView = matHead * aHeadToEyeTransforms[VRDisplayState::Eye_Right];
   matView.Normalize();
   memcpy(rightViewMatrix, matView.components, sizeof(matView.components));
+}
+
+const IntSize
+VRDisplayInfo::SuggestedEyeResolution() const
+{
+  return IntSize(mDisplayState.mEyeResolution.width,
+                 mDisplayState.mEyeResolution.height);
+}
+
+const Point3D
+VRDisplayInfo::GetEyeTranslation(uint32_t whichEye) const
+{
+  return Point3D(mDisplayState.mEyeTranslation[whichEye].x,
+                 mDisplayState.mEyeTranslation[whichEye].y,
+                 mDisplayState.mEyeTranslation[whichEye].z);
+}
+
+const Size
+VRDisplayInfo::GetStageSize() const
+{
+  return Size(mDisplayState.mStageSize.width,
+              mDisplayState.mStageSize.height);
+}
+
+const Matrix4x4
+VRDisplayInfo::GetSittingToStandingTransform() const
+{
+  Matrix4x4 m;
+  // If we could replace Matrix4x4 with a pod type, we could
+  // use it directly from the VRDisplayInfo struct.
+  memcpy(m.components, mDisplayState.mSittingToStandingTransform, sizeof(float) * 16);
+  return m;
 }

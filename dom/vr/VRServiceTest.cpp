@@ -32,19 +32,20 @@ VRMockDisplay::VRMockDisplay(const nsCString& aID, uint32_t aDeviceID)
  , mSensorState{}
  , mTimestamp(TimeStamp::Now())
 {
-  mDisplayInfo.mDisplayName = aID;
+  VRDisplayState& state = mDisplayInfo.mDisplayState;
+  strncpy(state.mDisplayName, aID.BeginReading(), kVRDisplayNameMaxLen);
   mDisplayInfo.mType = VRDeviceType::Puppet;
-  mDisplayInfo.mIsConnected = true;
-  mDisplayInfo.mIsMounted = false;
-  mDisplayInfo.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None |
-                                  VRDisplayCapabilityFlags::Cap_Orientation |
-                                  VRDisplayCapabilityFlags::Cap_AngularAcceleration |
-                                  VRDisplayCapabilityFlags::Cap_Position |
-                                  VRDisplayCapabilityFlags::Cap_LinearAcceleration |
-                                  VRDisplayCapabilityFlags::Cap_External |
-                                  VRDisplayCapabilityFlags::Cap_Present |
-                                  VRDisplayCapabilityFlags::Cap_StageParameters |
-                                  VRDisplayCapabilityFlags::Cap_MountDetection;
+  state.mIsConnected = true;
+  state.mIsMounted = false;
+  state.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None |
+                           VRDisplayCapabilityFlags::Cap_Orientation |
+                           VRDisplayCapabilityFlags::Cap_AngularAcceleration |
+                           VRDisplayCapabilityFlags::Cap_Position |
+                           VRDisplayCapabilityFlags::Cap_LinearAcceleration |
+                           VRDisplayCapabilityFlags::Cap_External |
+                           VRDisplayCapabilityFlags::Cap_Present |
+                           VRDisplayCapabilityFlags::Cap_StageParameters |
+                           VRDisplayCapabilityFlags::Cap_MountDetection;
 }
 
 JSObject*
@@ -55,8 +56,8 @@ VRMockDisplay::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 void VRMockDisplay::SetEyeResolution(unsigned long aRenderWidth, unsigned long aRenderHeight)
 {
-  mDisplayInfo.mEyeResolution.width = aRenderWidth;
-  mDisplayInfo.mEyeResolution.height = aRenderHeight;
+  mDisplayInfo.mDisplayState.mEyeResolution.width = aRenderWidth;
+  mDisplayInfo.mDisplayState.mEyeResolution.height = aRenderHeight;
 }
 
 void
@@ -65,11 +66,11 @@ VRMockDisplay::SetEyeParameter(VREye aEye, double aOffsetX, double aOffsetY,
                                double aDownDegree, double aLeftDegree)
 {
   uint32_t eye = static_cast<uint32_t>(aEye);
-  mDisplayInfo.mEyeFOV[eye] = gfx ::VRFieldOfView(aUpDegree, aRightDegree,
-                                                  aRightDegree, aLeftDegree);
-  mDisplayInfo.mEyeTranslation[eye].x = aOffsetX;
-  mDisplayInfo.mEyeTranslation[eye].y = aOffsetY;
-  mDisplayInfo.mEyeTranslation[eye].z = aOffsetZ;
+  mDisplayInfo.mDisplayState.mEyeFOV[eye] = gfx ::VRFieldOfView(aUpDegree, aRightDegree,
+                                                                aRightDegree, aLeftDegree);
+  mDisplayInfo.mDisplayState.mEyeTranslation[eye].x = aOffsetX;
+  mDisplayInfo.mDisplayState.mEyeTranslation[eye].y = aOffsetY;
+  mDisplayInfo.mDisplayState.mEyeTranslation[eye].z = aOffsetZ;
 }
 
 void
