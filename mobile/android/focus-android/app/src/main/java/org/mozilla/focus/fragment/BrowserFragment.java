@@ -109,7 +109,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private TextView urlView;
     private AnimatedProgressBar progressView;
     private FrameLayout blockView;
-    private ImageView lockView;
+    private ImageView securityView;
     private ImageButton menuView;
     private View statusBar;
     private View urlBar;
@@ -300,28 +300,28 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         blockView = (FrameLayout) view.findViewById(R.id.block);
 
-        lockView = view.findViewById(R.id.security_info);
+        securityView = view.findViewById(R.id.security_info);
         session.getSecure().observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean secure) {
                 if (!session.getLoading().getValue()) {
                     if (secure) {
-                        lockView.setImageResource(R.drawable.ic_lock);
+                        securityView.setImageResource(R.drawable.ic_lock);
                     } else {
                         if (URLUtil.isHttpUrl(getUrl())) {
                             // HTTP site
-                            lockView.setImageResource(R.drawable.ic_internet);
+                            securityView.setImageResource(R.drawable.ic_internet);
                         } else {
                             // Certificate is bad
-                            lockView.setImageResource(R.drawable.ic_warning);
+                            securityView.setImageResource(R.drawable.ic_warning);
                         }
                     }
                 } else {
-                    lockView.setImageResource(R.drawable.ic_internet);
+                    securityView.setImageResource(R.drawable.ic_internet);
                 }
             }
         });
-        lockView.setOnClickListener(this);
+        securityView.setOnClickListener(this);
 
         session.getProgress().observe(this, new Observer<Integer>() {
             @Override
@@ -446,8 +446,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         // We need to tint some icons.. We already tinted the close button above. Let's tint our other icons too.
-        final Drawable lockIcon = DrawableUtils.INSTANCE.loadAndTintDrawable(getContext(), R.drawable.ic_lock, textColor);
-        lockView.setImageDrawable(lockIcon);
+        securityView.setColorFilter(textColor);
 
         final Drawable menuIcon = DrawableUtils.INSTANCE.loadAndTintDrawable(getContext(), R.drawable.ic_menu, textColor);
         menuView.setImageDrawable(menuIcon);
