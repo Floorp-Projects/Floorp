@@ -74,8 +74,6 @@ EXPORTS += [
     'nsFocusManager.h',
     'nsFrameMessageManager.h',
     'nsGenericDOMDataNode.h',
-    'nsGkAtomList.h',
-    'nsGkAtoms.h',
     'nsGlobalWindow.h',  # Because binding headers include it.
     'nsGlobalWindowInner.h',  # Because binding headers include it.
     'nsGlobalWindowOuter.h',  # Because binding headers include it.
@@ -299,7 +297,6 @@ UNIFIED_SOURCES += [
     'nsFrameLoader.cpp',
     'nsGenConImageContent.cpp',
     'nsGenericDOMDataNode.cpp',
-    'nsGkAtoms.cpp',
     'nsGlobalWindowCommands.cpp',
     'nsHistory.cpp',
     'nsHTMLContentSerializer.cpp',
