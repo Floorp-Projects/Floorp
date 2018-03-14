@@ -108,6 +108,7 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkMaskGamma.cpp',
     'skia/src/core/SkMath.cpp',
     'skia/src/core/SkMatrixImageFilter.cpp',
+    'skia/src/core/SkMD5.cpp',
     'skia/src/core/SkMetaData.cpp',
     'skia/src/core/SkMipMap.cpp',
     'skia/src/core/SkModeColorFilter.cpp',
@@ -335,7 +336,6 @@ SOURCES['skia/src/jumper/SkJumper_stages.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/jumper/SkJumper_stages_lowp.cpp'].flags += skia_opt_flags
 if CONFIG['MOZ_ENABLE_SKIA_PDF']:
     UNIFIED_SOURCES += [
-        'skia/src/core/SkMD5.cpp',
         'skia/src/pdf/SkDeflate.cpp',
         'skia/src/pdf/SkJpegInfo.cpp',
         'skia/src/pdf/SkKeyedImage.cpp',

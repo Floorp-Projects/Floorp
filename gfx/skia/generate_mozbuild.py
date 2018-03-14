@@ -228,7 +228,6 @@ def generate_separated_sources(platform_sources):
     'SkDumpCanvas',
     'SkFrontBufferedStream',
     'SkInterpolator',
-    'SkMD5',
     'SkMultiPictureDocument',
     'SkNullCanvas',
     'SkNWayCanvas',
@@ -281,9 +280,7 @@ def generate_separated_sources(platform_sources):
     'arm': set(),
     'arm64': set(),
     'none': set(),
-    'pdf': {
-      'skia/src/core/SkMD5.cpp',
-    },
+    'pdf': set(),
     'gpu': set()
   })
 
