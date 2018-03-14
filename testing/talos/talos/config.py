@@ -312,8 +312,8 @@ def determine_local_symbols_path(config):
        config['develop'] and \
        'MOZ_DEVELOPER_OBJ_DIR' in os.environ:
         config['symbols_path'] = os.path.join(os.environ['MOZ_DEVELOPER_OBJ_DIR'],
-                                             'dist',
-                                             'crashreporter-symbols')
+                                              'dist',
+                                              'crashreporter-symbols')
 
 
 def get_counters(config):
