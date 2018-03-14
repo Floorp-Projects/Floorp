@@ -249,9 +249,9 @@ public:
   }
 
 #ifdef DEBUG
-  nsIDOMHTMLFormElement* GetForm() const;
+  HTMLFormElement* GetForm() const;
 #endif
-  void SetForm(nsIDOMHTMLFormElement* aForm);
+  void SetForm(HTMLFormElement* aForm);
   void ClearForm(bool aRemoveFromForm);
 
   virtual void DestroyContent() override;

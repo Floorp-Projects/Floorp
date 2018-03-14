@@ -7,7 +7,6 @@
 
 interface nsIControllers;
 interface nsIDOMFileList;
-interface nsIDOMHTMLFormElement;
 
  /**
   * The nsIDOMHTMLInputElement interface is the interface to a [X]HTML
