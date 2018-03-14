@@ -266,7 +266,10 @@ function waitForNEvents(target, eventName, numTimes, useCapture = false) {
   ]) {
     if ((add in target) && (remove in target)) {
       target[add](eventName, function onEvent(...aArgs) {
-        info("Got event: '" + eventName + "' on " + target + ".");
+        if (typeof info === "function") {
+          info("Got event: '" + eventName + "' on " + target + ".");
+        }
+
         if (++count == numTimes) {
           target[remove](eventName, onEvent, useCapture);
           deferred.resolve.apply(deferred, aArgs);
