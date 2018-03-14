@@ -352,6 +352,20 @@ nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
 {
   RemoveDuplicates(aAttr);
 
+  // Trying to do a single pass here leads to really complicated code.  Just do
+  // the simple thing.
+  bool haveOld = false;
+  for (uint32_t i = 0; i < aAttr->GetAtomCount(); ++i) {
+    if (aAttr->AtomAt(i)->Equals(aToken)) {
+      haveOld = true;
+      break;
+    }
+  }
+  if (!haveOld) {
+    // Make sure to not touch the attribute value in this case.
+    return;
+  }
+
   bool sawIt = false;
   nsAutoString resultStr;
   for (uint32_t i = 0; i < aAttr->GetAtomCount(); i++) {
@@ -374,9 +388,8 @@ nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
     resultStr.Append(nsDependentAtomString(aAttr->AtomAt(i)));
   }
 
-  if (sawIt) {
-    mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, true);
-  }
+  MOZ_ASSERT(sawIt, "How could we not have found our token this time?");
+  mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, true);
 }
 
 bool
