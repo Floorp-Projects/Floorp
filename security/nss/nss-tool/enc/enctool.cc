@@ -271,7 +271,6 @@ bool EncTool::DoCipher(std::string file_name, std::string out_file,
   if (file_name.empty()) {
     std::vector<uint8_t> data = ReadInputData("");
     std::vector<uint8_t> out(data.size() + 16);
-    SECStatus rv;
     if (encrypt) {
       rv = PK11_Encrypt(symKey.get(), cipher_mech_, params.get(), out.data(),
                         &outLen, data.size() + 16, data.data(), data.size());
