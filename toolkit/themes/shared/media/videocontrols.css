@@ -14,6 +14,7 @@ audio > xul|videocontrols {
   overflow: hidden;
 }
 
+/* Some CSS custom properties defined here are referenced by videocontrols.xml in JavaScript */
 .controlBar {
   --clickToPlay-width: 48px;
   --clickToPlay-height: var(--clickToPlay-width);
