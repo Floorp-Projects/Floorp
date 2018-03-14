@@ -70,7 +70,6 @@
     locale/browser/preferences/languages.dtd          (%chrome/browser/preferences/languages.dtd)
     locale/browser/preferences/main.dtd               (%chrome/browser/preferences/main.dtd)
     locale/browser/preferences/permissions.dtd        (%chrome/browser/preferences/permissions.dtd)
-    locale/browser/preferences/preferences.dtd        (%chrome/browser/preferences/preferences.dtd)
     locale/browser/preferences/preferences.properties     (%chrome/browser/preferences/preferences.properties)
     locale/browser/preferences/privacy.dtd            (%chrome/browser/preferences/privacy.dtd)
     locale/browser/preferences/security.dtd           (%chrome/browser/preferences/security.dtd)
