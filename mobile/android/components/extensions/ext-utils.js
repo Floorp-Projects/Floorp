@@ -187,11 +187,11 @@ class WindowTracker extends WindowTrackerBase {
 }
 
 /**
- * An event manager API provider which listens for an event in the Android
- * global EventDispatcher, and calls the given listener function whenever an event
- * is received. That listener function receives a `fire` object, which it can
- * use to dispatch events to the extension, and an object detailing the
- * EventDispatcher event that was received.
+ * Helper to create an event manager which listens for an event in the Android
+ * global EventDispatcher, and calls the given listener function whenever the
+ * event is received. That listener function receives a `fire` object,
+ * which it can use to dispatch events to the extension, and an object
+ * detailing the EventDispatcher event that was received.
  *
  * @param {BaseContext} context
  *        The extension context which the event manager belongs to.
@@ -202,10 +202,14 @@ class WindowTracker extends WindowTrackerBase {
  * @param {function} listener
  *        The listener function to call when an EventDispatcher event is
  *        recieved.
+ *
+ * @returns {object} An injectable api for the new event.
  */
-global.GlobalEventManager = class extends EventManager {
-  constructor(context, name, event, listener) {
-    super(context, name, fire => {
+global.makeGlobalEvent = function makeGlobalEvent(context, name, event, listener) {
+  return new EventManager({
+    context,
+    name,
+    register: fire => {
       let listener2 = {
         onEvent(event, data, callback) {
           listener(fire, data);
@@ -216,36 +220,8 @@ global.GlobalEventManager = class extends EventManager {
       return () => {
         GlobalEventDispatcher.unregisterListener(listener2, [event]);
       };
-    });
-  }
-};
-
-/**
- * An event manager API provider which listens for a DOM event in any browser
- * window, and calls the given listener function whenever an event is received.
- * That listener function receives a `fire` object, which it can use to dispatch
- * events to the extension, and a DOM event object.
- *
- * @param {BaseContext} context
- *        The extension context which the event manager belongs to.
- * @param {string} name
- *        The API name of the event manager, e.g.,"runtime.onMessage".
- * @param {string} event
- *        The name of the DOM event to listen for.
- * @param {function} listener
- *        The listener function to call when a DOM event is received.
- */
-global.WindowEventManager = class extends EventManager {
-  constructor(context, name, event, listener) {
-    super(context, name, fire => {
-      let listener2 = listener.bind(null, fire);
-
-      windowTracker.addListener(event, listener2);
-      return () => {
-        windowTracker.removeListener(event, listener2);
-      };
-    });
-  }
+    },
+  }).api();
 };
 
 class TabTracker extends TabTrackerBase {

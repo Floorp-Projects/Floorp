@@ -33,21 +33,25 @@ this.devtools_network = class extends ExtensionAPI {
     return {
       devtools: {
         network: {
-          onRequestFinished: new EventManager(context, "devtools.network.onRequestFinished", fire => {
-            let onFinished = (data) => {
-              const loader = new ChildNetworkResponseLoader(context, data.requestId);
-              const harEntry = {...data.harEntry, ...loader.api()};
-              const result = Cu.cloneInto(harEntry, context.cloneScope, {
-                cloneFunctions: true,
-              });
-              fire.asyncWithoutClone(result);
-            };
+          onRequestFinished: new EventManager({
+            context,
+            name: "devtools.network.onRequestFinished",
+            register: fire => {
+              let onFinished = (data) => {
+                const loader = new ChildNetworkResponseLoader(context, data.requestId);
+                const harEntry = {...data.harEntry, ...loader.api()};
+                const result = Cu.cloneInto(harEntry, context.cloneScope, {
+                  cloneFunctions: true,
+                });
+                fire.asyncWithoutClone(result);
+              };
 
-            let parent = context.childManager.getParentEvent("devtools.network.onRequestFinished");
-            parent.addListener(onFinished);
-            return () => {
-              parent.removeListener(onFinished);
-            };
+              let parent = context.childManager.getParentEvent("devtools.network.onRequestFinished");
+              parent.addListener(onFinished);
+              return () => {
+                parent.removeListener(onFinished);
+              };
+            },
           }).api(),
         },
       },

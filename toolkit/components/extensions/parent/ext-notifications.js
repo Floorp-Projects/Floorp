@@ -117,38 +117,50 @@ this.notifications = class extends ExtensionAPI {
           return Promise.resolve(result);
         },
 
-        onClosed: new EventManager(context, "notifications.onClosed", fire => {
-          let listener = (event, notificationId) => {
-            // TODO Bug 1413188, Support the byUser argument.
-            fire.async(notificationId, true);
-          };
+        onClosed: new EventManager({
+          context,
+          name: "notifications.onClosed",
+          register: fire => {
+            let listener = (event, notificationId) => {
+              // TODO Bug 1413188, Support the byUser argument.
+              fire.async(notificationId, true);
+            };
 
-          notificationsMap.on("closed", listener);
-          return () => {
-            notificationsMap.off("closed", listener);
-          };
+            notificationsMap.on("closed", listener);
+            return () => {
+              notificationsMap.off("closed", listener);
+            };
+          },
         }).api(),
 
-        onClicked: new EventManager(context, "notifications.onClicked", fire => {
-          let listener = (event, notificationId) => {
-            fire.async(notificationId, true);
-          };
+        onClicked: new EventManager({
+          context,
+          name: "notifications.onClicked",
+          register: fire => {
+            let listener = (event, notificationId) => {
+              fire.async(notificationId, true);
+            };
 
-          notificationsMap.on("clicked", listener);
-          return () => {
-            notificationsMap.off("clicked", listener);
-          };
+            notificationsMap.on("clicked", listener);
+            return () => {
+              notificationsMap.off("clicked", listener);
+            };
+          },
         }).api(),
 
-        onShown: new EventManager(context, "notifications.onShown", fire => {
-          let listener = (event, notificationId) => {
-            fire.async(notificationId, true);
-          };
+        onShown: new EventManager({
+          context,
+          name: "notifications.onShown",
+          register: fire => {
+            let listener = (event, notificationId) => {
+              fire.async(notificationId, true);
+            };
 
-          notificationsMap.on("shown", listener);
-          return () => {
-            notificationsMap.off("shown", listener);
-          };
+            notificationsMap.on("shown", listener);
+            return () => {
+              notificationsMap.off("shown", listener);
+            };
+          },
         }).api(),
 
         // TODO Bug 1190681, implement button support.

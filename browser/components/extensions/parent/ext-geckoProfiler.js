@@ -473,11 +473,15 @@ this.geckoProfiler = class extends ExtensionAPI {
           throw new Error(`Ran out of options to get symbols from library ${debugName} ${breakpadId}.`);
         },
 
-        onRunning: new EventManager(context, "geckoProfiler.onRunning", fire => {
-          isRunningObserver.addObserver(fire.async);
-          return () => {
-            isRunningObserver.removeObserver(fire.async);
-          };
+        onRunning: new EventManager({
+          context,
+          name: "geckoProfiler.onRunning",
+          register: fire => {
+            isRunningObserver.addObserver(fire.async);
+            return () => {
+              isRunningObserver.removeObserver(fire.async);
+            };
+          },
         }).api(),
       },
     };

@@ -125,15 +125,19 @@ this.alarms = class extends ExtensionAPI {
           return Promise.resolve(cleared);
         },
 
-        onAlarm: new EventManager(context, "alarms.onAlarm", fire => {
-          let callback = alarm => {
-            fire.sync(alarm.data);
-          };
+        onAlarm: new EventManager({
+          context,
+          name: "alarms.onAlarm",
+          register: fire => {
+            let callback = alarm => {
+              fire.sync(alarm.data);
+            };
 
-          self.callbacks.add(callback);
-          return () => {
-            self.callbacks.delete(callback);
-          };
+            self.callbacks.add(callback);
+            return () => {
+              self.callbacks.delete(callback);
+            };
+          },
         }).api(),
       },
     };

@@ -94,8 +94,10 @@ class ChildDevToolsPanel extends ExtensionUtils.EventEmitter {
 
   api() {
     return {
-      onShown: new EventManager(
-        this.context, "devtoolsPanel.onShown", fire => {
+      onShown: new EventManager({
+        context: this.context,
+        name: "devtoolsPanel.onShown",
+        register: fire => {
           const listener = (eventName, panelContentWindow) => {
             fire.asyncWithoutClone(panelContentWindow);
           };
@@ -103,10 +105,13 @@ class ChildDevToolsPanel extends ExtensionUtils.EventEmitter {
           return () => {
             this.off("shown", listener);
           };
-        }).api(),
+        },
+      }).api(),
 
-      onHidden: new EventManager(
-        this.context, "devtoolsPanel.onHidden", fire => {
+      onHidden: new EventManager({
+        context: this.context,
+        name: "devtoolsPanel.onHidden",
+        register: fire => {
           const listener = () => {
             fire.async();
           };
@@ -114,7 +119,8 @@ class ChildDevToolsPanel extends ExtensionUtils.EventEmitter {
           return () => {
             this.off("hidden", listener);
           };
-        }).api(),
+        },
+      }).api(),
 
       // TODO(rpl): onSearch event and createStatusBarButton method
     };
@@ -189,8 +195,10 @@ class ChildDevToolsInspectorSidebar extends ExtensionUtils.EventEmitter {
     const {context, id} = this;
 
     return {
-      onShown: new EventManager(
-        context, "devtoolsInspectorSidebar.onShown", fire => {
+      onShown: new EventManager({
+        context,
+        name: "devtoolsInspectorSidebar.onShown",
+        register: fire => {
           const listener = (eventName, panelContentWindow) => {
             fire.asyncWithoutClone(panelContentWindow);
           };
@@ -198,10 +206,13 @@ class ChildDevToolsInspectorSidebar extends ExtensionUtils.EventEmitter {
           return () => {
             this.off("shown", listener);
           };
-        }).api(),
+        },
+      }).api(),
 
-      onHidden: new EventManager(
-        context, "devtoolsInspectorSidebar.onHidden", fire => {
+      onHidden: new EventManager({
+        context,
+        name: "devtoolsInspectorSidebar.onHidden",
+        register: fire => {
           const listener = () => {
             fire.async();
           };
@@ -209,7 +220,8 @@ class ChildDevToolsInspectorSidebar extends ExtensionUtils.EventEmitter {
           return () => {
             this.off("hidden", listener);
           };
-        }).api(),
+        },
+      }).api(),
 
       setObject(jsonObject, rootTitle) {
         return context.cloneScope.Promise.resolve().then(() => {
@@ -279,8 +291,10 @@ this.devtools_panels = class extends ExtensionAPI {
           get themeName() {
             return themeChangeObserver.themeName;
           },
-          onThemeChanged: new EventManager(
-            context, "devtools.panels.onThemeChanged", fire => {
+          onThemeChanged: new EventManager({
+            context,
+            name: "devtools.panels.onThemeChanged",
+            register: fire => {
               const listener = (eventName, themeName) => {
                 fire.async(themeName);
               };
@@ -288,7 +302,8 @@ this.devtools_panels = class extends ExtensionAPI {
               return () => {
                 themeChangeObserver.off("themeChanged", listener);
               };
-            }).api(),
+            },
+          }).api(),
         },
       },
     };

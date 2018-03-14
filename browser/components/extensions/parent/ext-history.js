@@ -220,37 +220,49 @@ this.history = class extends ExtensionAPI {
           return Promise.resolve(results);
         },
 
-        onVisited: new EventManager(context, "history.onVisited", fire => {
-          let listener = (event, data) => {
-            fire.sync(data);
-          };
+        onVisited: new EventManager({
+          context,
+          name: "history.onVisited",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.sync(data);
+            };
 
-          getHistoryObserver().on("visited", listener);
-          return () => {
-            getHistoryObserver().off("visited", listener);
-          };
+            getHistoryObserver().on("visited", listener);
+            return () => {
+              getHistoryObserver().off("visited", listener);
+            };
+          },
         }).api(),
 
-        onVisitRemoved: new EventManager(context, "history.onVisitRemoved", fire => {
-          let listener = (event, data) => {
-            fire.sync(data);
-          };
+        onVisitRemoved: new EventManager({
+          context,
+          name: "history.onVisitRemoved",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.sync(data);
+            };
 
-          getHistoryObserver().on("visitRemoved", listener);
-          return () => {
-            getHistoryObserver().off("visitRemoved", listener);
-          };
+            getHistoryObserver().on("visitRemoved", listener);
+            return () => {
+              getHistoryObserver().off("visitRemoved", listener);
+            };
+          },
         }).api(),
 
-        onTitleChanged: new EventManager(context, "history.onTitleChanged", fire => {
-          let listener = (event, data) => {
-            fire.sync(data);
-          };
+        onTitleChanged: new EventManager({
+          context,
+          name: "history.onTitleChanged",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.sync(data);
+            };
 
-          getHistoryObserver().on("titleChanged", listener);
-          return () => {
-            getHistoryObserver().off("titleChanged", listener);
-          };
+            getHistoryObserver().on("titleChanged", listener);
+            return () => {
+              getHistoryObserver().off("titleChanged", listener);
+            };
+          },
         }).api(),
       },
     };

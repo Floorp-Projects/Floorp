@@ -15,37 +15,45 @@ this.devtools_network = class extends ExtensionAPI {
     return {
       devtools: {
         network: {
-          onNavigated: new EventManager(context, "devtools.onNavigated", fire => {
-            let listener = data => {
-              fire.async(data.url);
-            };
+          onNavigated: new EventManager({
+            context,
+            name: "devtools.onNavigated",
+            register: fire => {
+              let listener = data => {
+                fire.async(data.url);
+              };
 
-            let targetPromise = getDevToolsTargetForContext(context);
-            targetPromise.then(target => {
-              target.on("navigate", listener);
-            });
-            return () => {
+              let targetPromise = getDevToolsTargetForContext(context);
               targetPromise.then(target => {
-                target.off("navigate", listener);
+                target.on("navigate", listener);
               });
-            };
+              return () => {
+                targetPromise.then(target => {
+                  target.off("navigate", listener);
+                });
+              };
+            },
           }).api(),
 
           getHAR: function() {
             return context.devToolsToolbox.getHARFromNetMonitor();
           },
 
-          onRequestFinished: new EventManager(context, "devtools.network.onRequestFinished", fire => {
-            const listener = (data) => {
-              fire.async(data);
-            };
+          onRequestFinished: new EventManager({
+            context,
+            name: "devtools.network.onRequestFinished",
+            register: fire => {
+              const listener = (data) => {
+                fire.async(data);
+              };
 
-            const toolbox = context.devToolsToolbox;
-            toolbox.addRequestFinishedListener(listener);
+              const toolbox = context.devToolsToolbox;
+              toolbox.addRequestFinishedListener(listener);
 
-            return () => {
-              toolbox.removeRequestFinishedListener(listener);
-            };
+              return () => {
+                toolbox.removeRequestFinishedListener(listener);
+              };
+            },
           }).api(),
 
           // The following method is used internally to allow the request API

@@ -364,14 +364,18 @@ this.commands = class extends ExtensionAPI {
             this.registerKeys(commands);
           }
         },
-        onCommand: new EventManager(context, "commands.onCommand", fire => {
-          let listener = (eventName, commandName) => {
-            fire.async(commandName);
-          };
-          this.on("command", listener);
-          return () => {
-            this.off("command", listener);
-          };
+        onCommand: new EventManager({
+          context,
+          name: "commands.onCommand",
+          register: fire => {
+            let listener = (eventName, commandName) => {
+              fire.async(commandName);
+            };
+            this.on("command", listener);
+            return () => {
+              this.off("command", listener);
+            };
+          },
         }).api(),
       },
     };

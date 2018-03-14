@@ -43,7 +43,7 @@ class ProxyFilterEventManager extends EventManager {
       };
     };
 
-    super(context, name, register);
+    super({context, name, register});
   }
 }
 
@@ -61,14 +61,18 @@ this.proxy = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
 
-    let onError = new EventManager(context, "proxy.onError", fire => {
-      let listener = (name, error) => {
-        fire.async(error);
-      };
-      extension.on("proxy-error", listener);
-      return () => {
-        extension.off("proxy-error", listener);
-      };
+    let onError = new EventManager({
+      context,
+      name: "proxy.onError",
+      register: fire => {
+        let listener = (name, error) => {
+          fire.async(error);
+        };
+        extension.on("proxy-error", listener);
+        return () => {
+          extension.off("proxy-error", listener);
+        };
+      },
     }).api();
 
     return {

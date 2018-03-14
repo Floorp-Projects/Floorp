@@ -103,21 +103,25 @@ this.tabs = class extends ExtensionAPI {
 
     let self = {
       tabs: {
-        onActivated: new GlobalEventManager(context, "tabs.onActivated", "Tab:Selected", (fire, data) => {
+        onActivated: makeGlobalEvent(context, "tabs.onActivated", "Tab:Selected", (fire, data) => {
           let tab = tabManager.get(data.id);
 
           fire.async({tabId: tab.id, windowId: tab.windowId});
-        }).api(),
+        }),
 
-        onCreated: new EventManager(context, "tabs.onCreated", fire => {
-          let listener = (eventName, event) => {
-            fire.async(tabManager.convert(event.nativeTab));
-          };
+        onCreated: new EventManager({
+          context,
+          name: "tabs.onCreated",
+          register: fire => {
+            let listener = (eventName, event) => {
+              fire.async(tabManager.convert(event.nativeTab));
+            };
 
-          tabTracker.on("tab-created", listener);
-          return () => {
-            tabTracker.off("tab-created", listener);
-          };
+            tabTracker.on("tab-created", listener);
+            return () => {
+              tabTracker.off("tab-created", listener);
+            };
+          },
         }).api(),
 
         /**
@@ -126,114 +130,130 @@ this.tabs = class extends ExtensionAPI {
          * the tabId in an array to match the API.
          * @see  https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Tabs/onHighlighted
         */
-        onHighlighted: new GlobalEventManager(context, "tabs.onHighlighted", "Tab:Selected", (fire, data) => {
+        onHighlighted: makeGlobalEvent(context, "tabs.onHighlighted", "Tab:Selected", (fire, data) => {
           let tab = tabManager.get(data.id);
 
           fire.async({tabIds: [tab.id], windowId: tab.windowId});
+        }),
+
+        onAttached: new EventManager({
+          context,
+          name: "tabs.onAttached",
+          register: fire => { return () => {}; },
         }).api(),
 
-        onAttached: new EventManager(context, "tabs.onAttached", fire => {
-          return () => {};
+        onDetached: new EventManager({
+          context,
+          name: "tabs.onDetached",
+          register: fire => { return () => {}; },
         }).api(),
 
-        onDetached: new EventManager(context, "tabs.onDetached", fire => {
-          return () => {};
+        onRemoved: new EventManager({
+          context,
+          name: "tabs.onRemoved",
+          register: fire => {
+            let listener = (eventName, event) => {
+              fire.async(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
+            };
+
+            tabTracker.on("tab-removed", listener);
+            return () => {
+              tabTracker.off("tab-removed", listener);
+            };
+          },
         }).api(),
 
-        onRemoved: new EventManager(context, "tabs.onRemoved", fire => {
-          let listener = (eventName, event) => {
-            fire.async(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
-          };
-
-          tabTracker.on("tab-removed", listener);
-          return () => {
-            tabTracker.off("tab-removed", listener);
-          };
+        onReplaced: new EventManager({
+          context,
+          name: "tabs.onReplaced",
+          register: fire => { return () => {}; },
         }).api(),
 
-        onReplaced: new EventManager(context, "tabs.onReplaced", fire => {
-          return () => {};
+        onMoved: new EventManager({
+          context,
+          name: "tabs.onMoved",
+          register: fire => { return () => {}; },
         }).api(),
 
-        onMoved: new EventManager(context, "tabs.onMoved", fire => {
-          return () => {};
-        }).api(),
+        onUpdated: new EventManager({
+          context,
+          name: "tabs.onUpdated",
+          register: fire => {
+            const restricted = ["url", "favIconUrl", "title"];
 
-        onUpdated: new EventManager(context, "tabs.onUpdated", fire => {
-          const restricted = ["url", "favIconUrl", "title"];
-
-          function sanitize(extension, changeInfo) {
-            let result = {};
-            let nonempty = false;
-            for (let prop in changeInfo) {
-              if (extension.hasPermission("tabs") || !restricted.includes(prop)) {
-                nonempty = true;
-                result[prop] = changeInfo[prop];
+            function sanitize(extension, changeInfo) {
+              let result = {};
+              let nonempty = false;
+              for (let prop in changeInfo) {
+                if (extension.hasPermission("tabs") || !restricted.includes(prop)) {
+                  nonempty = true;
+                  result[prop] = changeInfo[prop];
+                }
               }
+              return [nonempty, result];
             }
-            return [nonempty, result];
-          }
 
-          let fireForTab = (tab, changed) => {
-            let [needed, changeInfo] = sanitize(extension, changed);
-            if (needed) {
-              fire.async(tab.id, changeInfo, tab.convert());
-            }
-          };
-
-          let listener = event => {
-            let needed = [];
-            let nativeTab;
-            switch (event.type) {
-              case "DOMTitleChanged": {
-                let {BrowserApp} = getBrowserWindow(event.target.ownerGlobal);
-
-                nativeTab = BrowserApp.getTabForWindow(event.target.ownerGlobal);
-                needed.push("title");
-                break;
+            let fireForTab = (tab, changed) => {
+              let [needed, changeInfo] = sanitize(extension, changed);
+              if (needed) {
+                fire.async(tab.id, changeInfo, tab.convert());
               }
+            };
 
-              case "DOMAudioPlaybackStarted":
-              case "DOMAudioPlaybackStopped": {
-                let {BrowserApp} = event.target.ownerGlobal;
-                nativeTab = BrowserApp.getTabForBrowser(event.originalTarget);
-                needed.push("audible");
-                break;
-              }
-            }
+            let listener = event => {
+              let needed = [];
+              let nativeTab;
+              switch (event.type) {
+                case "DOMTitleChanged": {
+                  let {BrowserApp} = getBrowserWindow(event.target.ownerGlobal);
 
-            if (!nativeTab) {
-              return;
-            }
+                  nativeTab = BrowserApp.getTabForWindow(event.target.ownerGlobal);
+                  needed.push("title");
+                  break;
+                }
 
-            let tab = tabManager.getWrapper(nativeTab);
-            let changeInfo = {};
-            for (let prop of needed) {
-              changeInfo[prop] = tab[prop];
-            }
-
-            fireForTab(tab, changeInfo);
-          };
-
-          let statusListener = ({browser, status, url}) => {
-            let {BrowserApp} = browser.ownerGlobal;
-            let nativeTab = BrowserApp.getTabForBrowser(browser);
-            if (nativeTab) {
-              let changed = {status};
-              if (url) {
-                changed.url = url;
+                case "DOMAudioPlaybackStarted":
+                case "DOMAudioPlaybackStopped": {
+                  let {BrowserApp} = event.target.ownerGlobal;
+                  nativeTab = BrowserApp.getTabForBrowser(event.originalTarget);
+                  needed.push("audible");
+                  break;
+                }
               }
 
-              fireForTab(tabManager.wrapTab(nativeTab), changed);
-            }
-          };
+              if (!nativeTab) {
+                return;
+              }
 
-          windowTracker.addListener("status", statusListener);
-          windowTracker.addListener("DOMTitleChanged", listener);
-          return () => {
-            windowTracker.removeListener("status", statusListener);
-            windowTracker.removeListener("DOMTitleChanged", listener);
-          };
+              let tab = tabManager.getWrapper(nativeTab);
+              let changeInfo = {};
+              for (let prop of needed) {
+                changeInfo[prop] = tab[prop];
+              }
+
+              fireForTab(tab, changeInfo);
+            };
+
+            let statusListener = ({browser, status, url}) => {
+              let {BrowserApp} = browser.ownerGlobal;
+              let nativeTab = BrowserApp.getTabForBrowser(browser);
+              if (nativeTab) {
+                let changed = {status};
+                if (url) {
+                  changed.url = url;
+                }
+
+                fireForTab(tabManager.wrapTab(nativeTab), changed);
+              }
+            };
+
+            windowTracker.addListener("status", statusListener);
+            windowTracker.addListener("DOMTitleChanged", listener);
+            return () => {
+              windowTracker.removeListener("status", statusListener);
+              windowTracker.removeListener("DOMTitleChanged", listener);
+            };
+          },
         }).api(),
 
         async create(createProperties) {

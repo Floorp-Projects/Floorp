@@ -16,64 +16,76 @@ this.runtime = class extends ExtensionAPI {
     let {extension} = context;
     return {
       runtime: {
-        onStartup: new EventManager(context, "runtime.onStartup", fire => {
-          if (context.incognito) {
-            // This event should not fire if we are operating in a private profile.
-            return () => {};
-          }
-          let listener = () => {
-            if (extension.startupReason === "APP_STARTUP") {
-              fire.sync();
+        onStartup: new EventManager({
+          context,
+          name: "runtime.onStartup",
+          register: fire => {
+            if (context.incognito) {
+              // This event should not fire if we are operating in a private profile.
+              return () => {};
             }
-          };
-          extension.on("startup", listener);
-          return () => {
-            extension.off("startup", listener);
-          };
-        }).api(),
-
-        onInstalled: new EventManager(context, "runtime.onInstalled", fire => {
-          let temporary = !!extension.addonData.temporarilyInstalled;
-
-          let listener = () => {
-            switch (extension.startupReason) {
-              case "APP_STARTUP":
-                if (AddonManagerPrivate.browserUpdated) {
-                  fire.sync({reason: "browser_update", temporary});
-                }
-                break;
-              case "ADDON_INSTALL":
-                fire.sync({reason: "install", temporary});
-                break;
-              case "ADDON_UPGRADE":
-                fire.sync({
-                  reason: "update",
-                  previousVersion: extension.addonData.oldVersion,
-                  temporary,
-                });
-                break;
-            }
-          };
-          extension.on("startup", listener);
-          return () => {
-            extension.off("startup", listener);
-          };
-        }).api(),
-
-        onUpdateAvailable: new EventManager(context, "runtime.onUpdateAvailable", fire => {
-          let instanceID = extension.addonData.instanceID;
-          AddonManager.addUpgradeListener(instanceID, upgrade => {
-            extension.upgrade = upgrade;
-            let details = {
-              version: upgrade.version,
+            let listener = () => {
+              if (extension.startupReason === "APP_STARTUP") {
+                fire.sync();
+              }
             };
-            fire.sync(details);
-          });
-          return () => {
-            AddonManager.removeUpgradeListener(instanceID).catch(e => {
-              // This can happen if we try this after shutdown is complete.
+            extension.on("startup", listener);
+            return () => {
+              extension.off("startup", listener);
+            };
+          },
+        }).api(),
+
+        onInstalled: new EventManager({
+          context,
+          name: "runtime.onInstalled",
+          register: fire => {
+            let temporary = !!extension.addonData.temporarilyInstalled;
+
+            let listener = () => {
+              switch (extension.startupReason) {
+                case "APP_STARTUP":
+                  if (AddonManagerPrivate.browserUpdated) {
+                    fire.sync({reason: "browser_update", temporary});
+                  }
+                  break;
+                case "ADDON_INSTALL":
+                  fire.sync({reason: "install", temporary});
+                  break;
+                case "ADDON_UPGRADE":
+                  fire.sync({
+                    reason: "update",
+                    previousVersion: extension.addonData.oldVersion,
+                    temporary,
+                  });
+                  break;
+              }
+            };
+            extension.on("startup", listener);
+            return () => {
+              extension.off("startup", listener);
+            };
+          },
+        }).api(),
+
+        onUpdateAvailable: new EventManager({
+          context,
+          name: "runtime.onUpdateAvailable",
+          register: fire => {
+            let instanceID = extension.addonData.instanceID;
+            AddonManager.addUpgradeListener(instanceID, upgrade => {
+              extension.upgrade = upgrade;
+              let details = {
+                version: upgrade.version,
+              };
+              fire.sync(details);
             });
-          };
+            return () => {
+              AddonManager.removeUpgradeListener(instanceID).catch(e => {
+                // This can happen if we try this after shutdown is complete.
+              });
+            };
+          },
         }).api(),
 
         reload: () => {
