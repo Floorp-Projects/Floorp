@@ -26,10 +26,10 @@ function parseTestManifest(testManifest, params, callback) {
     }
     if (params.testRoot != 'tests' && params.testRoot !== undefined) {
       name = params.baseurl + '/' + params.testRoot + '/' + path;
-      links[name] = {'test': {'url': name, 'expected': obj['expected']}};
+      links[name] = {'test': {'url': name, 'expected': obj['expected'], 'uses-unsafe-cpows': obj['uses-unsafe-cpows']}};
     } else {
       name = params.testPrefix + path;
-      paths.push({'test': {'url': name, 'expected': obj['expected']}});
+      paths.push({'test': {'url': name, 'expected': obj['expected'], 'uses-unsafe-cpows': obj['uses-unsafe-cpows']}});
     }
   }
   if (paths.length > 0) {
