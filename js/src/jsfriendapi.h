@@ -3150,6 +3150,28 @@ SetCooperativeYieldCallback(JSContext* cx, YieldCallback callback);
 extern JS_FRIEND_API(bool)
 SystemZoneAvailable(JSContext* cx);
 
+typedef void
+(* LogCtorDtor)(void* self, const char* type, uint32_t sz);
+
+/**
+ * Set global function used to monitor a few internal classes to highlight
+ * leaks, and to hint at the origin of the leaks.
+ */
+extern JS_FRIEND_API(void)
+SetLogCtorDtorFunctions(LogCtorDtor ctor, LogCtorDtor dtor);
+
+extern JS_FRIEND_API(void)
+LogCtor(void* self, const char* type, uint32_t sz);
+
+extern JS_FRIEND_API(void)
+LogDtor(void* self, const char* type, uint32_t sz);
+
+#define JS_COUNT_CTOR(Class)                            \
+    LogCtor((void*) this, #Class, sizeof(Class))
+
+#define JS_COUNT_DTOR(Class)                            \
+    LogDtor((void*) this, #Class, sizeof(Class))
+
 } /* namespace js */
 
 #endif /* jsfriendapi_h */
