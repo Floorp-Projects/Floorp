@@ -76,6 +76,7 @@ jsreftest:
     max-run-time:
         by-test-platform:
             android.*: 7200
+            windows10-64-ccov/debug: 7200
             default: 3600
     tier:
         by-test-platform:
