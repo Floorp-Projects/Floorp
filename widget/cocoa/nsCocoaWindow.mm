@@ -2145,7 +2145,17 @@ nsCocoaWindow::ClientToWindowSize(const LayoutDeviceIntSize& aClientSize)
   LayoutDeviceIntRect r(0, 0, aClientSize.width, aClientSize.height);
   NSRect rect = nsCocoaUtils::DevPixelsToCocoaPoints(r, backingScale);
 
-  NSRect inflatedRect = [mWindow frameRectForContentRect:rect];
+  // Our caller expects the inflated rect for windows *with separate titlebars*,
+  // i.e. for windows where [mWindow drawsContentsIntoWindowFrame] is NO.
+  //
+  // So we call frameRectForContentRect on NSWindow here, instead of mWindow, so
+  // that we don't run into our override if this window is a window that draws
+  // its content into the titlebar.
+  //
+  // This is the same thing the windows widget does, but we probably should fix
+  // that, see bug 1445738.
+  unsigned int features = [mWindow styleMask];
+  NSRect inflatedRect = [NSWindow frameRectForContentRect:rect styleMask:features];
   r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(inflatedRect, backingScale);
   return r.Size();
 
