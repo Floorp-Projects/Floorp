@@ -25,6 +25,7 @@ loader.lazyGetter(this, "StoragePanel", () => require("devtools/client/storage/p
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratchpad/scratchpad-panel").ScratchpadPanel);
 loader.lazyGetter(this, "DomPanel", () => require("devtools/client/dom/dom-panel").DomPanel);
 loader.lazyGetter(this, "AccessibilityPanel", () => require("devtools/client/accessibility/accessibility-panel").AccessibilityPanel);
+loader.lazyGetter(this, "ApplicationPanel", () => require("devtools/client/application/panel").ApplicationPanel);
 
 // Other dependencies
 loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
@@ -444,6 +445,26 @@ Tools.accessibility = {
   }
 };
 
+Tools.application = {
+  id: "application",
+  ordinal: 15,
+  visibilityswitch: "devtools.application.enabled",
+  url: "chrome://devtools/content/application/index.html",
+  label: "Application",
+  panelLabel: "Application",
+  tooltip: "Application",
+  inMenu: false,
+  hiddenInOptions: true,
+
+  isTargetSupported: function(target) {
+    return target.isLocalTab;
+  },
+
+  build: function(iframeWindow, toolbox) {
+    return new ApplicationPanel(iframeWindow, toolbox);
+  }
+};
+
 var defaultTools = [
   Tools.options,
   Tools.webConsole,
@@ -460,6 +481,7 @@ var defaultTools = [
   Tools.memory,
   Tools.dom,
   Tools.accessibility,
+  Tools.application,
 ];
 
 exports.defaultTools = defaultTools;
