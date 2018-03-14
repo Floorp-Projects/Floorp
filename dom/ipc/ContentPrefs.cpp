@@ -234,7 +234,6 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "media.ogg.enabled",
   "media.ogg.flac.enabled",
   "media.playback.warnings-as-errors",
-  "media.playback.warnings-as-errors.stagefright-vs-rust",
   "media.resampling.enabled",
   "media.resume-bkgnd-video-on-tabhover",
   "media.ruin-av-sync.enabled",
