@@ -58,34 +58,6 @@ ForbidUnsafeBrowserCPOWs()
     return result;
 }
 
-// Should we allow CPOWs in aAddonId, even though it's marked as multiprocess
-// compatible? This is controlled by two prefs:
-//   If dom.ipc.cpows.forbid-cpows-in-compat-addons is false, then we allow the CPOW.
-//   If dom.ipc.cpows.forbid-cpows-in-compat-addons is true:
-//     We check if aAddonId is listed in dom.ipc.cpows.allow-cpows-in-compat-addons
-//     (which should be a comma-separated string). If it's present there, we allow
-//     the CPOW. Otherwise we forbid the CPOW.
-static bool
-ForbidCPOWsInCompatibleAddon(const nsACString& aAddonId)
-{
-    bool forbid = Preferences::GetBool("dom.ipc.cpows.forbid-cpows-in-compat-addons", false);
-    if (!forbid) {
-        return false;
-    }
-
-    nsAutoCString allow;
-    allow.Assign(',');
-    nsAutoCString pref;
-    Preferences::GetCString("dom.ipc.cpows.allow-cpows-in-compat-addons", pref);
-    allow.Append(pref);
-    allow.Append(',');
-
-    nsCString searchString(",");
-    searchString.Append(aAddonId);
-    searchString.Append(',');
-    return allow.Find(searchString) == kNotFound;
-}
-
 bool
 JavaScriptParent::allowMessage(JSContext* cx)
 {
@@ -93,12 +65,6 @@ JavaScriptParent::allowMessage(JSContext* cx)
     // unsafe CPOWs based on a pref (which defaults to forbidden). We also allow
     // CPOWs unconditionally in selected globals (based on
     // Cu.permitCPOWsInScope).
-    //
-    // If we're running add-on code, then we check if the add-on is multiprocess
-    // compatible (which eventually translates to a given setting of allowCPOWs
-    // on the scopw). If it's not compatible, then we allow the CPOW but
-    // warn. If it is marked as compatible, then we check the
-    // ForbidCPOWsInCompatibleAddon; see the comment there.
 
     MessageChannel* channel = GetIPCChannel();
     bool isSafe = channel->IsInTransaction();
@@ -108,28 +74,12 @@ JavaScriptParent::allowMessage(JSContext* cx)
     JS::Rooted<JSObject*> jsGlobal(cx, global ? global->GetGlobalJSObject() : nullptr);
     if (jsGlobal) {
         JSAutoCompartment ac(cx, jsGlobal);
-        JSAddonId* addonId = JS::AddonIdOfObject(jsGlobal);
 
         if (!xpc::CompartmentPrivate::Get(jsGlobal)->allowCPOWs) {
-            if (!addonId && ForbidUnsafeBrowserCPOWs() && !isSafe) {
+            if (ForbidUnsafeBrowserCPOWs() && !isSafe) {
                 Telemetry::Accumulate(Telemetry::BROWSER_SHIM_USAGE_BLOCKED, 1);
                 JS_ReportErrorASCII(cx, "unsafe CPOW usage forbidden");
                 return false;
-            }
-
-            if (addonId) {
-                JSFlatString* flat = JS_ASSERT_STRING_IS_FLAT(JS::StringOfAddonId(addonId));
-                nsString addonIdString;
-                AssignJSFlatString(addonIdString, flat);
-                NS_ConvertUTF16toUTF8 addonIdCString(addonIdString);
-                Telemetry::Accumulate(Telemetry::ADDON_FORBIDDEN_CPOW_USAGE, addonIdCString);
-
-                if (ForbidCPOWsInCompatibleAddon(addonIdCString)) {
-                    JS_ReportErrorASCII(cx, "CPOW usage forbidden in this add-on");
-                    return false;
-                }
-
-                warn = true;
             }
         }
     }

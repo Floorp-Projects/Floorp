@@ -3106,20 +3106,6 @@ nsXPCComponents_Utils::GetCompartmentLocation(HandleValue val,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::AllowCPOWsInAddon(const nsACString& addonIdStr,
-                                         bool allow,
-                                         JSContext* cx)
-{
-    JSAddonId* addonId = xpc::NewAddonId(cx, addonIdStr);
-    if (!addonId)
-        return NS_ERROR_FAILURE;
-    if (!XPCWrappedNativeScope::AllowCPOWsInAddon(cx, addonId, allow))
-        return NS_ERROR_FAILURE;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::ReadUTF8File(nsIFile* aFile, nsACString& aResult)
 {
     NS_ENSURE_TRUE(aFile, NS_ERROR_INVALID_ARG);

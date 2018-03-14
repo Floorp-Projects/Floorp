@@ -974,10 +974,6 @@ public:
     static bool
     IsDyingScope(XPCWrappedNativeScope* scope);
 
-    typedef js::HashSet<JSAddonId*,
-                        js::PointerHasher<JSAddonId*>,
-                        js::SystemAllocPolicy> AddonSet;
-
     // Gets the appropriate scope object for XBL in this scope. The context
     // must be same-compartment with the global upon entering, and the scope
     // object is wrapped into the compartment of the global.
@@ -997,28 +993,14 @@ public:
     void ClearContentXBLScope() { mContentXBLScope = nullptr; }
 
     bool IsAddonScope() { return xpc::IsAddonCompartment(Compartment()); }
-
-    static bool AllowCPOWsInAddon(JSContext* cx, JSAddonId* addonId, bool allow);
-
 protected:
     virtual ~XPCWrappedNativeScope();
 
     XPCWrappedNativeScope() = delete;
 
 private:
-    class ClearInterpositionsObserver final : public nsIObserver {
-        ~ClearInterpositionsObserver() {}
-
-      public:
-        NS_DECL_ISUPPORTS
-        NS_DECL_NSIOBSERVER
-    };
-
     static XPCWrappedNativeScope* gScopes;
     static XPCWrappedNativeScope* gDyingScopes;
-
-    static bool                      gShutdownObserverInitialized;
-    static AddonSet*                 gAllowCPOWAddonSet;
 
     Native2WrappedNativeMap*         mWrappedNativeMap;
     ClassInfo2WrappedNativeProtoMap* mWrappedNativeProtoMap;

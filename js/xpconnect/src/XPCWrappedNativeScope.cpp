@@ -26,26 +26,6 @@ using namespace JS;
 
 XPCWrappedNativeScope* XPCWrappedNativeScope::gScopes = nullptr;
 XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nullptr;
-bool XPCWrappedNativeScope::gShutdownObserverInitialized = false;
-XPCWrappedNativeScope::AddonSet* XPCWrappedNativeScope::gAllowCPOWAddonSet = nullptr;
-
-NS_IMPL_ISUPPORTS(XPCWrappedNativeScope::ClearInterpositionsObserver, nsIObserver)
-
-NS_IMETHODIMP
-XPCWrappedNativeScope::ClearInterpositionsObserver::Observe(nsISupports* subject,
-                                                            const char* topic,
-                                                            const char16_t* data)
-{
-    MOZ_ASSERT(strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
-
-    if (gAllowCPOWAddonSet) {
-        delete gAllowCPOWAddonSet;
-        gAllowCPOWAddonSet = nullptr;
-    }
-
-    nsContentUtils::UnregisterShutdownObserver(this);
-    return NS_OK;
-}
 
 static bool
 RemoteXULForbidsXBLScope(nsIPrincipal* aPrincipal, HandleObject aGlobal)
@@ -125,13 +105,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
     }
     if (mUseContentXBLScope) {
         mUseContentXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
-    }
-
-    if (JSAddonId* addonId = JS::AddonIdOfObject(aGlobal)) {
-        // We forbid CPOWs unless they're specifically allowed.
-        priv->allowCPOWs = gAllowCPOWAddonSet ? gAllowCPOWAddonSet->has(addonId) : false;
-        MOZ_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(aGlobal),
-                   "Don't load addons into the shared JSM global");
     }
 }
 
@@ -731,30 +704,6 @@ XPCWrappedNativeScope::SetExpandoChain(JSContext* cx, HandleObject target,
     if (!mXrayExpandos.initialized() && !mXrayExpandos.init(cx))
         return false;
     return mXrayExpandos.put(cx, target, chain);
-}
-
-/* static */ bool
-XPCWrappedNativeScope::AllowCPOWsInAddon(JSContext* cx,
-                                         JSAddonId* addonId,
-                                         bool allow)
-{
-    if (!gAllowCPOWAddonSet) {
-        gAllowCPOWAddonSet = new AddonSet();
-        bool ok = gAllowCPOWAddonSet->init();
-        NS_ENSURE_TRUE(ok, false);
-
-        if (!gShutdownObserverInitialized) {
-            gShutdownObserverInitialized = true;
-            nsContentUtils::RegisterShutdownObserver(new ClearInterpositionsObserver());
-        }
-    }
-    if (allow) {
-        bool ok = gAllowCPOWAddonSet->put(addonId);
-        NS_ENSURE_TRUE(ok, false);
-    } else {
-        gAllowCPOWAddonSet->remove(addonId);
-    }
-    return true;
 }
 
 
