@@ -366,6 +366,7 @@ add_task(async function testFetchArguments() {
           {
             type: "Error",
             value: "testFetchArguments error",
+            module: testPageUrl,
             stacktrace: {
               frames: [
                 {

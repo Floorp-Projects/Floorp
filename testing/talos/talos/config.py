@@ -302,6 +302,20 @@ def fix_init_url(config):
         config['init_url'] = convert_url(config, config['init_url'])
 
 
+@validator
+def determine_local_symbols_path(config):
+    if 'symbols_path' not in config:
+        return
+
+    # use objdir/dist/crashreporter-symbols for symbolsPath if none provided
+    if not config['symbols_path'] and \
+       config['develop'] and \
+       'MOZ_DEVELOPER_OBJ_DIR' in os.environ:
+        config['symbols_path'] = os.path.join(os.environ['MOZ_DEVELOPER_OBJ_DIR'],
+                                              'dist',
+                                              'crashreporter-symbols')
+
+
 def get_counters(config):
     counters = set()
     return counters

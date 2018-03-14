@@ -451,8 +451,10 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
 
   if (aSandboxLevel > 4) {
     result = mPolicy->SetAlternateDesktop(false);
-    MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
-                       "Failed to create alternate desktop for sandbox.");
+    if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
+      LOG_W("SetAlternateDesktop failed, result: %i, last error: %x",
+            result, ::GetLastError());
+    }
   }
 
   if (aSandboxLevel > 3) {
@@ -849,8 +851,10 @@ SandboxBroker::SetSecurityLevelForPDFiumProcess()
                          "SetTokenLevel should never fail with these arguments, what happened?");
 
   result = mPolicy->SetAlternateDesktop(true);
-  SANDBOX_ENSURE_SUCCESS(result,
-                         "Failed to create alternate desktop for sandbox.");
+  if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
+    LOG_W("SetAlternateDesktop failed, result: %i, last error: %x",
+          result, ::GetLastError());
+  }
 
   result = mPolicy->SetIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
   MOZ_ASSERT(sandbox::SBOX_ALL_OK == result,
@@ -928,8 +932,10 @@ SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel)
                          "SetTokenLevel should never fail with these arguments, what happened?");
 
   result = mPolicy->SetAlternateDesktop(true);
-  SANDBOX_ENSURE_SUCCESS(result,
-                         "Failed to create alternate desktop for sandbox.");
+  if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
+    LOG_W("SetAlternateDesktop failed, result: %i, last error: %x",
+          result, ::GetLastError());
+  }
 
   result = mPolicy->SetIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
   MOZ_ASSERT(sandbox::SBOX_ALL_OK == result,

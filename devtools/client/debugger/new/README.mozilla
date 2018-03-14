@@ -1,12 +1,13 @@
 This is the debugger.html project output.
 See https://github.com/devtools-html/debugger.html
 
-Version 20.0
-Comparison: https://github.com/devtools-html/debugger.html/compare/release-19-2...release-20
+Version 21.0
+
+Comparison: https://github.com/devtools-html/debugger.html/compare/release-20...release-21
 
 Packages:
 - babel-plugin-transform-es2015-modules-commonjs @6.26.0
 - babel-preset-react @6.24.1
-- react @15.6.2
-- react-dom @15.6.2
-- webpack @3.10.0
+- react @16.2.0
+- react-dom @16.2.0
+- webpack @3.11.0

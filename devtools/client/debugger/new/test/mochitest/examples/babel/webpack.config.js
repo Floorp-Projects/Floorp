@@ -48,6 +48,7 @@ module.exports = [
   }
 ].concat(
   tests.map(({ name, dirname, input, output }) => {
+    const babelEnabled = name !== "webpackStandalone";
     const babelEnv = name !== "webpackModulesEs6";
     const babelModules = name !== "webpackModules";
 
@@ -63,20 +64,23 @@ module.exports = [
       },
       devtool: "sourcemap",
       module: {
-        loaders: [
-          {
-            test: /\.js$/,
-            exclude: /node_modules/,
-            loader: "babel-loader",
-            options: {
-              babelrc: false,
-              presets: babelEnv
-                ? [["env", { modules: babelModules ? "commonjs" : false }]]
-                : [],
-              plugins: babelEnv && babelModules ? ["add-module-exports"] : []
-            }
-          }
-        ]
+        loaders: babelEnabled
+          ? [
+              {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                loader: "babel-loader",
+                options: {
+                  babelrc: false,
+                  presets: babelEnv
+                    ? [["env", { modules: babelModules ? "commonjs" : false }]]
+                    : [],
+                  plugins:
+                    babelEnv && babelModules ? ["add-module-exports"] : []
+                }
+              }
+            ]
+          : []
       }
     };
   })

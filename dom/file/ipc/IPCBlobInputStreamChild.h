@@ -17,7 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class IPCBlobInputStream;
-class WorkerHolder;
+class ThreadSafeWorkerRef;
 
 class IPCBlobInputStreamChild final
   : public mozilla::ipc::PIPCBlobInputStreamChild
@@ -107,7 +107,7 @@ private:
 
   nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 
-  UniquePtr<WorkerHolder> mWorkerHolder;
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
 };
 
 } // namespace dom

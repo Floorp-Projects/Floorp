@@ -1501,6 +1501,15 @@ nsIDocument::nsIDocument()
     mDelayFrameLoaderInitialization(false),
     mSynchronousDOMContentLoaded(false),
     mMaybeServiceWorkerControlled(false),
+    mValidWidth(false),
+    mValidHeight(false),
+    mAutoSize(false),
+    mAllowZoom(false),
+    mAllowDoubleTapZoom(false),
+    mValidScaleFloat(false),
+    mValidMaxScale(false),
+    mScaleStrEmpty(false),
+    mWidthStrEmpty(false),
     mPendingFullscreenRequests(0),
     mXMLDeclarationBits(0),
     mCompatMode(eCompatibility_FullStandards),
@@ -1560,15 +1569,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mReportedUseCounters(false)
   , mOnloadBlockCount(0)
   , mAsyncOnloadBlockCount(0)
-  , mValidWidth(false)
-  , mValidHeight(false)
-  , mAutoSize(false)
-  , mAllowZoom(false)
-  , mAllowDoubleTapZoom(false)
-  , mValidScaleFloat(false)
-  , mValidMaxScale(false)
-  , mScaleStrEmpty(false)
-  , mWidthStrEmpty(false)
 #ifdef DEBUG
   , mWillReparent(false)
 #endif
@@ -1619,7 +1619,7 @@ nsIDocument::~nsIDocument()
 }
 
 bool
-nsDocument::IsAboutPage() const
+nsIDocument::IsAboutPage() const
 {
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   nsCOMPtr<nsIURI> uri;
@@ -7332,7 +7332,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 }
 
 nsViewportInfo
-nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
+nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 {
   MOZ_ASSERT(mPresShell);
 
@@ -7352,8 +7352,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 
   // Special behaviour for desktop mode, provided we are not on an about: page
   nsPIDOMWindowOuter* win = GetWindow();
-  if (win && win->IsDesktopModeViewport() && !IsAboutPage())
-  {
+  if (win && win->IsDesktopModeViewport() && !IsAboutPage()) {
     CSSCoord viewportWidth = gfxPrefs::DesktopViewportWidth() / fullZoom;
     CSSToScreenScale scaleToFit(aDisplaySize.width / viewportWidth);
     float aspectRatio = (float)aDisplaySize.height / aDisplaySize.width;
@@ -7406,8 +7405,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       GetHeaderData(nsGkAtoms::handheldFriendly, handheldFriendly);
       if (handheldFriendly.EqualsLiteral("true")) {
         mViewportType = DisplayWidthHeight;
-        return nsViewportInfo(aDisplaySize,
-                              defaultScale,
+        return nsViewportInfo(aDisplaySize, defaultScale,
                               /*allowZoom*/true);
       }
     }
