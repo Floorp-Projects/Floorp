@@ -143,9 +143,8 @@ CopyableCanvasRenderer::ReadbackSurface()
   SharedSurface* frontbuffer = nullptr;
   if (mGLFrontbuffer) {
     frontbuffer = mGLFrontbuffer.get();
-  } else {
-    GLScreenBuffer* screen = mGLContext->Screen();
-    const auto& front = screen->Front();
+  } else if (mGLContext->Screen()) {
+    const auto& front = mGLContext->Screen()->Front();
     if (front) {
       frontbuffer = front->Surf();
     }

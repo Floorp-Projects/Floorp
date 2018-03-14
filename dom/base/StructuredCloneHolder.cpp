@@ -1255,7 +1255,13 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
         *aExtraData = 0;
         *aTag = SCTAG_DOM_IMAGEBITMAP;
         *aOwnership = JS::SCTAG_TMO_CUSTOM;
-        *aContent = bitmap->ToCloneData().release();
+
+        UniquePtr<ImageBitmapCloneData> clonedBitmap = bitmap->ToCloneData();
+        if (!clonedBitmap) {
+          return false;
+        }
+
+        *aContent = clonedBitmap.release();
         MOZ_ASSERT(*aContent);
         bitmap->Close();
 

@@ -11,6 +11,7 @@
 #include "nsToolkit.h"
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"
+#include "mozilla/dom/DataTransfer.h"
 
 /*
  * class nsNativeDragSource

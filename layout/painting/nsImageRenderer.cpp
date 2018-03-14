@@ -600,10 +600,13 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
         containerFlags |= imgIContainer::FLAG_SYNC_DECODE;
       }
 
+      CSSIntSize imageSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
+                           nsPresContext::AppUnitsToIntCSSPixels(mSize.height));
+      Maybe<SVGImageContext> svgContext(Some(SVGImageContext(Some(imageSize))));
+
       const int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
       LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
           aDest, appUnitsPerDevPixel);
-      Maybe<SVGImageContext> svgContext;
       gfx::IntSize decodeSize =
         nsLayoutUtils::ComputeImageContainerDrawingParameters(mImageContainer, mForFrame, destRect,
                                                               aSc, containerFlags, svgContext);

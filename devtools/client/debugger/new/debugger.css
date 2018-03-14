@@ -512,19 +512,16 @@ body {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 :root {
-  --arrow-width: 10px;
   --icon-size: 13px;
 }
 
 :root.theme-light,
 :root .theme-light {
-  --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
   --popup-shadow-color: #d0d0d0;
 }
 
 :root.theme-dark,
 :root .theme-dark {
-  --search-overlays-semitransparent: rgba(42, 46, 56, 0.66);
   --popup-shadow-color: #5c667b;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1466,7 +1463,7 @@ html[dir="rtl"] .arrow svg,
 
 .project-text-search .line-match {
   display: "flex";
-  grow: 1;
+  flex-grow: 1;
 }
 
 .project-text-search .search-field {
@@ -1652,7 +1649,9 @@ html[dir="rtl"] .arrow svg,
   background-color: white;
 }
 
-.tree:not(.object-inspector) .tree-node[data-expandable="false"] .tree-indent:last-of-type {
+.tree:not(.object-inspector)
+  .tree-node[data-expandable="false"]
+  .tree-indent:last-of-type {
   margin-inline-end: 4px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1758,7 +1757,6 @@ html[dir="rtl"] .arrow svg,
   text-align: center;
   position: relative;
   padding: 0px 5px;
-  margin-inline-end: 0.3em;
   fill: currentColor;
 }
 
@@ -3439,7 +3437,6 @@ html .breakpoints-list .breakpoint.paused {
   overflow: hidden;
   z-index: 1;
   background-color: var(--theme-toolbar-background);
-  align-items: center;
 }
 
 html[dir="rtl"] .command-bar {
@@ -3544,7 +3541,8 @@ img.resume {
 
 .command-bar .step-position {
   color: var(--theme-comment-alt);
-  margin-inline-end: 1em;
+  padding-top: 8px;
+  margin-inline-end: 4px;
 }
 
 .command-bar .replay-active {
