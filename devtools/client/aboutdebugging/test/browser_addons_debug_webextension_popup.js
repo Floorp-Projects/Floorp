@@ -97,7 +97,7 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
         dump(`Clicked the noautohide button\n`);
 
         popupFramePromise = new Promise(resolve => {
-          let listener = (event, data) => {
+          let listener = data => {
             if (data.frames.some(({url}) => url && url.endsWith("popup.html"))) {
               toolbox.target.off("frame-update", listener);
               resolve();
