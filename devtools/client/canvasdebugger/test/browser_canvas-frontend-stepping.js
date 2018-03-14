@@ -14,7 +14,7 @@ async function ifTestingSupported() {
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([recordingFinished, callListPopulated]);
+  await Promise.all([recordingFinished, callListPopulated]);
 
   checkSteppingButtons(1, 1, 1, 1);
   is(CallsListView.selectedIndex, -1,
