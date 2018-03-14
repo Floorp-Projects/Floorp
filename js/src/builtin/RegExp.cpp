@@ -23,7 +23,6 @@
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;
-using namespace js::unicode;
 
 using mozilla::CheckedInt;
 
