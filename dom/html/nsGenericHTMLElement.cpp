@@ -66,7 +66,6 @@
 #include "nsITextControlFrame.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "nsFocusManager.h"
 #include "nsAttrValueOrString.h"
@@ -1713,13 +1712,13 @@ nsGenericHTMLFormElement::SaveSubtreeState()
 }
 
 void
-nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm)
+nsGenericHTMLFormElement::SetForm(HTMLFormElement* aForm)
 {
   NS_PRECONDITION(aForm, "Don't pass null here");
   NS_ASSERTION(!mForm,
                "We don't support switching from one non-null form to another.");
 
-  SetForm(static_cast<HTMLFormElement*>(aForm), false);
+  SetForm(aForm, false);
 }
 
 void nsGenericHTMLFormElement::SetForm(HTMLFormElement* aForm, bool aBindToTree)
@@ -1774,14 +1773,6 @@ HTMLFieldSetElement*
 nsGenericHTMLFormElement::GetFieldSet()
 {
   return mFieldSet;
-}
-
-nsresult
-nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  NS_ENSURE_ARG_POINTER(aForm);
-  NS_IF_ADDREF(*aForm = mForm);
-  return NS_OK;
 }
 
 nsIContent::IMEState
