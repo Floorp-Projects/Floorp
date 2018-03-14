@@ -221,6 +221,13 @@ public class BatchingUploader {
     }
 
     public void noMoreRecordsToUpload() {
+        // It's possible that we've hit a failure during an upload.
+        // If that's the case, bail out. Our delegate chain has already been notified.
+        if (shouldIgnoreFurtherRecords()) {
+            Logger.debug(LOG_TAG, "Ignoring 'no more records to upload' signal due to previous failure.");
+            return;
+        }
+
         Logger.debug(LOG_TAG, "Received 'no more records to upload' signal.");
 
         // If we have any pending records in the Payload, flush them!
@@ -269,17 +276,12 @@ public class BatchingUploader {
         if (shouldFailBatchOnFailure) {
             // case 3
             Logger.debug(LOG_TAG, "Batch failed with exception: " + e.toString());
-            executor.execute(new PayloadDispatcher.NonPayloadContextRunnable() {
-                @Override
-                public void run() {
-                    sessionStoreDelegate.onRecordStoreFailed(e, record.guid);
-                    payloadDispatcher.doStoreFailed(e);
-                }
-            });
             // Send off to our delegate that we failed.
+            sessionStoreDelegate.onRecordStoreFailed(e, record.guid);
+            payloadDispatcher.doStoreFailed(e);
         } else if (!sizeOverflow) {
             // case 1
-            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(e, record.guid);
+            sessionStoreDelegate.onRecordStoreFailed(e, record.guid);
         }
         // case 2 is an implicit empty else {} here.
     }

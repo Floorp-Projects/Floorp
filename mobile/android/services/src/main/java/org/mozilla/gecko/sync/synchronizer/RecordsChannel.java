@@ -231,6 +231,13 @@ public class RecordsChannel implements
     // Allow this buffer to be reclaimed.
     toProcess = null;
 
+    // It's possible that one of the delegate-driven `store` calls above failed.
+    // In that case, 'onStoreFailed' would have been already called, and we have nothing left to do.
+    if (storeFailed.get()) {
+      Logger.info(LOG_TAG, "Store failed while processing records via sink.store(...); bailing out.");
+      return;
+    }
+
     // Now we wait for onStoreComplete
     Logger.trace(LOG_TAG, "onFetchCompleted. Calling storeDone.");
     sink.storeDone();
