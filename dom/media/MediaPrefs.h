@@ -190,8 +190,6 @@ private:
 
   // Error/warning handling, Decoder Doctor
   DECL_MEDIA_PREF("media.playback.warnings-as-errors",        MediaWarningsAsErrors, bool, false);
-  DECL_MEDIA_PREF("media.playback.warnings-as-errors.stagefright-vs-rust",
-                                                              MediaWarningsAsErrorsStageFrightVsRust, bool, false);
 
   // resume background video decoding when the cursor is hovering over the tab.
   DECL_MEDIA_PREF("media.resume-bkgnd-video-on-tabhover",     ResumeVideoDecodingOnTabHover, bool, false);
