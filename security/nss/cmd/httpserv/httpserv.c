@@ -682,6 +682,7 @@ handle_connection(
                 }
                 if (arena) {
                     PORT_FreeArena(arena, PR_FALSE);
+                    arena = NULL;
                 }
                 if (!request || !request->tbsRequest ||
                     !request->tbsRequest->requestList ||
@@ -753,11 +754,11 @@ handle_connection(
 
                     {
                         PRTime now = PR_Now();
-                        PLArenaPool *arena = NULL;
                         CERTOCSPSingleResponse *sr;
                         CERTOCSPSingleResponse **singleResponses;
                         SECItem *ocspResponse;
 
+                        PORT_Assert(!arena);
                         arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
 
                         if (unknown) {
@@ -787,8 +788,8 @@ handle_connection(
                         } else {
                             PR_Write(ssl_sock, outOcspHeader, strlen(outOcspHeader));
                             PR_Write(ssl_sock, ocspResponse->data, ocspResponse->len);
-                            PORT_FreeArena(arena, PR_FALSE);
                         }
+                        PORT_FreeArena(arena, PR_FALSE);
                     }
                     CERT_DestroyOCSPRequest(request);
                     break;
@@ -1357,7 +1358,6 @@ main(int argc, char **argv)
             caRevoIter = &caRevoInfos->link;
             do {
                 PRFileDesc *inFile;
-                int rv = SECFailure;
                 SECItem crlDER;
                 crlDER.data = NULL;
 
@@ -1413,11 +1413,9 @@ main(int argc, char **argv)
 
     if (provideOcsp) {
         if (caRevoInfos) {
-            PRCList *caRevoIter;
-
             caRevoIter = &caRevoInfos->link;
             do {
-                caRevoInfo *revoInfo = (caRevoInfo *)caRevoIter;
+                revoInfo = (caRevoInfo *)caRevoIter;
                 if (revoInfo->nickname)
                     PORT_Free(revoInfo->nickname);
                 if (revoInfo->crlFilename)

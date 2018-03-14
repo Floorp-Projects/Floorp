@@ -91,23 +91,37 @@ CheckX86CPUSupport()
 }
 #endif /* NSS_X86_OR_X64 */
 
+/* clang-format off */
 #if (defined(__aarch64__) || defined(__arm__)) && !defined(__ANDROID__)
-#if defined(__GNUC__) && __GNUC__ >= 2 && defined(__ELF__)
+#ifndef __has_include
+#define __has_include(x) 0
+#endif
+#if (__has_include(<sys/auxv.h>) || defined(__linux__)) && \
+    defined(__GNUC__) && __GNUC__ >= 2 && defined(__ELF__)
 #include <sys/auxv.h>
 extern unsigned long getauxval(unsigned long type) __attribute__((weak));
 #else
 static unsigned long (*getauxval)(unsigned long) = NULL;
-#define AT_HWCAP2
-#define AT_HWCAP
+#define AT_HWCAP2 0
+#define AT_HWCAP 0
 #endif /* defined(__GNUC__) && __GNUC__ >= 2 && defined(__ELF__)*/
 #endif /* (defined(__aarch64__) || defined(__arm__)) && !defined(__ANDROID__) */
+/* clang-format on */
 
 #if defined(__aarch64__) && !defined(__ANDROID__)
 // Defines from hwcap.h in Linux kernel - ARM64
+#ifndef HWCAP_AES
 #define HWCAP_AES (1 << 3)
+#endif
+#ifndef HWCAP_PMULL
 #define HWCAP_PMULL (1 << 4)
+#endif
+#ifndef HWCAP_SHA1
 #define HWCAP_SHA1 (1 << 5)
+#endif
+#ifndef HWCAP_SHA2
 #define HWCAP_SHA2 (1 << 6)
+#endif
 
 void
 CheckARMSupport()
@@ -131,15 +145,25 @@ CheckARMSupport()
 /*
  * HWCAP flags - for elf_hwcap (in kernel) and AT_HWCAP
  */
+#ifndef HWCAP_NEON
 #define HWCAP_NEON (1 << 12)
+#endif
 
 /*
  * HWCAP2 flags - for elf_hwcap2 (in kernel) and AT_HWCAP2
  */
+#ifndef HWCAP2_AES
 #define HWCAP2_AES (1 << 0)
+#endif
+#ifndef HWCAP2_PMULL
 #define HWCAP2_PMULL (1 << 1)
+#endif
+#ifndef HWCAP2_SHA1
 #define HWCAP2_SHA1 (1 << 2)
+#endif
+#ifndef HWCAP2_SHA2
 #define HWCAP2_SHA2 (1 << 3)
+#endif
 
 void
 CheckARMSupport()

@@ -19,9 +19,9 @@ namespace nss_test {
 
 class TlsExtensionTruncator : public TlsExtensionFilter {
  public:
-  TlsExtensionTruncator(const std::shared_ptr<TlsAgent>& agent,
-                        uint16_t extension, size_t length)
-      : TlsExtensionFilter(agent), extension_(extension), length_(length) {}
+  TlsExtensionTruncator(const std::shared_ptr<TlsAgent>& a, uint16_t extension,
+                        size_t length)
+      : TlsExtensionFilter(a), extension_(extension), length_(length) {}
   virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
                                                const DataBuffer& input,
                                                DataBuffer* output) {
@@ -43,9 +43,9 @@ class TlsExtensionTruncator : public TlsExtensionFilter {
 
 class TlsExtensionDamager : public TlsExtensionFilter {
  public:
-  TlsExtensionDamager(const std::shared_ptr<TlsAgent>& agent,
-                      uint16_t extension, size_t index)
-      : TlsExtensionFilter(agent), extension_(extension), index_(index) {}
+  TlsExtensionDamager(const std::shared_ptr<TlsAgent>& a, uint16_t extension,
+                      size_t index)
+      : TlsExtensionFilter(a), extension_(extension), index_(index) {}
   virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
                                                const DataBuffer& input,
                                                DataBuffer* output) {
@@ -65,11 +65,9 @@ class TlsExtensionDamager : public TlsExtensionFilter {
 
 class TlsExtensionAppender : public TlsHandshakeFilter {
  public:
-  TlsExtensionAppender(const std::shared_ptr<TlsAgent>& agent,
+  TlsExtensionAppender(const std::shared_ptr<TlsAgent>& a,
                        uint8_t handshake_type, uint16_t ext, DataBuffer& data)
-      : TlsHandshakeFilter(agent, {handshake_type}),
-        extension_(ext),
-        data_(data) {}
+      : TlsHandshakeFilter(a, {handshake_type}), extension_(ext), data_(data) {}
 
   virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
                                                const DataBuffer& input,
@@ -628,12 +626,9 @@ typedef std::function<void(TlsPreSharedKeyReplacer*)>
 
 class TlsPreSharedKeyReplacer : public TlsExtensionFilter {
  public:
-  TlsPreSharedKeyReplacer(const std::shared_ptr<TlsAgent>& agent,
+  TlsPreSharedKeyReplacer(const std::shared_ptr<TlsAgent>& a,
                           TlsPreSharedKeyReplacerFunc function)
-      : TlsExtensionFilter(agent),
-        identities_(),
-        binders_(),
-        function_(function) {}
+      : TlsExtensionFilter(a), identities_(), binders_(), function_(function) {}
 
   static size_t CopyAndMaybeReplace(TlsParser* parser, size_t size,
                                     const std::unique_ptr<DataBuffer>& replace,
