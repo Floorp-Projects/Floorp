@@ -1011,10 +1011,8 @@ public:
   {
     return mForm;
   }
-  virtual void SetForm(nsIDOMHTMLFormElement* aForm) override;
+  virtual void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
   virtual void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
-
-  nsresult GetForm(nsIDOMHTMLFormElement** aForm);
 
   NS_IMETHOD SaveState() override
   {

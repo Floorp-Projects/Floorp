@@ -20,7 +20,6 @@
 #include "nsIScriptElement.h"
 #include "nsIDTD.h"
 #include "nsISupportsImpl.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIFormControl.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIObserverService.h"
@@ -32,6 +31,7 @@
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "nsHtml5SVGLoadDispatcher.h"
@@ -649,8 +649,8 @@ nsHtml5TreeOperation::SetFormElement(nsIContent* aNode, nsIContent* aParent)
   RefPtr<dom::HTMLImageElement> domImageElement = dom::HTMLImageElement::FromContentOrNull(aNode);
   // NS_ASSERTION(formControl, "Form-associated element did not implement nsIFormControl.");
   // TODO: uncomment the above line when <keygen> (bug 101019) is supported by Gecko
-  nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(aParent));
-  NS_ASSERTION(formElement, "The form element doesn't implement nsIDOMHTMLFormElement.");
+  RefPtr<dom::HTMLFormElement> formElement = dom::HTMLFormElement::FromContentOrNull(aParent);
+  NS_ASSERTION(formElement, "The form element doesn't implement HTMLFormElement.");
   // avoid crashing on <keygen>
   if (formControl &&
       !aNode->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) {
