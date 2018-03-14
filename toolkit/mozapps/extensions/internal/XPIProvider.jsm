@@ -89,7 +89,6 @@ const PREF_DISTRO_ADDONS_PERMS        = "extensions.distroAddons.promptForPermis
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 const PREF_ALLOW_LEGACY               = "extensions.legacy.enabled";
-const PREF_ALLOW_NON_MPC              = "extensions.allow-non-mpc-extensions";
 
 const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
@@ -151,8 +150,6 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
 XPCOMUtils.defineConstant(this, "DB_SCHEMA", 24);
-
-XPCOMUtils.defineLazyPreferenceGetter(this, "ALLOW_NON_MPC", PREF_ALLOW_NON_MPC);
 
 const NOTIFICATION_TOOLBOX_CONNECTION_CHANGE      = "toolbox-connection-change";
 
@@ -855,12 +852,6 @@ function isUsableAddon(aAddon) {
     return false;
   }
 
-  if (!ALLOW_NON_MPC && aAddon.type == "extension" &&
-      aAddon.multiprocessCompatible !== true) {
-    logger.warn(`disabling ${aAddon.id} since it is not multiprocess compatible`);
-    return false;
-  }
-
   if (AddonManager.checkCompatibility) {
     if (!aAddon.isCompatible) {
       logger.warn(`Add-on ${aAddon.id} is not compatible with application version.`);
@@ -1120,7 +1111,6 @@ const JSON_FIELDS = Object.freeze([
   "changed",
   "dependencies",
   "enabled",
-  "enableShims",
   "file",
   "hasEmbeddedWebExtension",
   "lastModifiedTime",
@@ -1147,7 +1137,6 @@ class XPIState {
     // Set default values.
     this.type = "extension";
     this.bootstrapped = false;
-    this.enableShims = false;
 
     for (let prop of JSON_FIELDS) {
       if (prop in saved) {
@@ -1185,13 +1174,11 @@ class XPIState {
       path: descriptorToPath(saved.d, location.dir),
       lastModifiedTime: saved.mt || saved.st,
       version: saved.v,
-      enableShims: false,
     };
 
     if (bootstrapped) {
       data.bootstrapped = true;
       data.enabled = true;
-      data.enableShims = !bootstrapped.multiprocessCompatible;
       data.path = descriptorToPath(bootstrapped.descriptor, location.dir);
 
       for (let field of BOOTSTRAPPED_FIELDS) {
@@ -1210,9 +1197,6 @@ class XPIState {
   }
   get active() {
     return this.enabled;
-  }
-  get multiprocessCompatible() {
-    return !this.enableShims;
   }
 
 
@@ -1256,9 +1240,6 @@ class XPIState {
     };
     if (this.type != "extension") {
       json.type = this.type;
-    }
-    if (this.enableShims) {
-      json.enableShims = true;
     }
     if (this.bootstrapped) {
       json.bootstrapped = true;
@@ -1320,7 +1301,6 @@ class XPIState {
 
     this.version = aDBAddon.version;
     this.type = aDBAddon.type;
-    this.enableShims = this.type == "extension" && !aDBAddon.multiprocessCompatible;
     this.startupData = aDBAddon.startupData;
 
     this.bootstrapped = !!aDBAddon.bootstrap;
@@ -2182,7 +2162,6 @@ var XPIProvider = {
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this);
       Services.prefs.addObserver(PREF_LANGPACK_SIGNATURES, this);
       Services.prefs.addObserver(PREF_ALLOW_LEGACY, this);
-      Services.prefs.addObserver(PREF_ALLOW_NON_MPC, this);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
       Services.obs.addObserver(this, NOTIFICATION_TOOLBOX_CONNECTION_CHANGE);
 
@@ -3781,7 +3760,6 @@ var XPIProvider = {
         scope,
         isSystem,
         isWebExtension: isWebExtension(addon),
-        multiprocessCompatible: addon.multiprocessCompatible,
       });
     }
 
@@ -4043,7 +4021,6 @@ var XPIProvider = {
       case PREF_XPI_SIGNATURES_REQUIRED:
       case PREF_LANGPACK_SIGNATURES:
       case PREF_ALLOW_LEGACY:
-      case PREF_ALLOW_NON_MPC:
         this.updateAddonAppDisabledStates();
         break;
       }
@@ -4214,8 +4191,6 @@ var XPIProvider = {
    *         The add-on's version
    * @param  aType
    *         The type for the add-on
-   * @param  aMultiprocessCompatible
-   *         Boolean indicating whether the add-on is compatible with electrolysis.
    * @param  aRunInSafeMode
    *         Boolean indicating whether the add-on can run in safe mode.
    * @param  aDependencies
@@ -4224,9 +4199,8 @@ var XPIProvider = {
    *         Boolean indicating whether the add-on has an embedded webextension.
    * @return a JavaScript scope
    */
-  loadBootstrapScope(aId, aFile, aVersion, aType,
-                               aMultiprocessCompatible, aRunInSafeMode,
-                               aDependencies, hasEmbeddedWebExtension) {
+  loadBootstrapScope(aId, aFile, aVersion, aType, aRunInSafeMode, aDependencies,
+                     hasEmbeddedWebExtension) {
     this.activeAddons.set(aId, {
       bootstrapScope: null,
       // a Symbol passed to this add-on, which it can use to identify itself
@@ -4243,9 +4217,6 @@ var XPIProvider = {
 
     let principal = Cc["@mozilla.org/systemprincipal;1"].
                     createInstance(Ci.nsIPrincipal);
-    if (!aMultiprocessCompatible) {
-      Cu.allowCPOWsInAddon(aId, true);
-    }
 
     if (!aFile.exists()) {
       activeAddon.bootstrapScope =
@@ -4307,8 +4278,6 @@ var XPIProvider = {
    *         The add-on's ID
    */
   unloadBootstrapScope(aId) {
-    Cu.allowCPOWsInAddon(aId, false);
-
     this.activeAddons.delete(aId);
     this.addAddonsToCrashReporter();
 
@@ -4353,7 +4322,6 @@ var XPIProvider = {
       let activeAddon = this.activeAddons.get(aAddon.id);
       if (!activeAddon) {
         this.loadBootstrapScope(aAddon.id, aFile, aAddon.version, aAddon.type,
-                                aAddon.multiprocessCompatible || false,
                                 runInSafeMode, aAddon.dependencies,
                                 aAddon.hasEmbeddedWebExtension || false);
         activeAddon = this.activeAddons.get(aAddon.id);
@@ -5130,8 +5098,6 @@ AddonInternal.prototype = {
         }
       }
     }
-    if (aUpdate.multiprocessCompatible !== undefined)
-      this.multiprocessCompatible = aUpdate.multiprocessCompatible;
     this.appDisabled = !isUsableAddon(this);
   },
 
@@ -5771,7 +5737,7 @@ function defineAddonWrapperProperty(name, getter) {
  "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
  "softDisabled", "skinnable", "size", "foreignInstall",
  "strictCompatibility", "updateURL", "dependencies",
- "getDataDirectory", "multiprocessCompatible", "signedState", "mpcOptedOut",
+ "getDataDirectory", "signedState",
  "isCorrectlySigned"].forEach(function(aProp) {
    defineAddonWrapperProperty(aProp, function() {
      let addon = addonFor(this);
@@ -6560,11 +6526,6 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
 
     if (!aAddon.bootstrap) {
       logger.warn(`System add-on ${aAddon.id} isn't restartless.`);
-      return false;
-    }
-
-    if (!aAddon.multiprocessCompatible) {
-      logger.warn(`System add-on ${aAddon.id} isn't multiprocess compatible.`);
       return false;
     }
 
