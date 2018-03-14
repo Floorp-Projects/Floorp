@@ -7977,6 +7977,7 @@ nsresult
 nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransfer,
                                               const bool& aIsPrivateData,
                                               nsIPrincipal* aRequestingPrincipal,
+                                              const nsContentPolicyType& aContentPolicyType,
                                               nsITransferable* aTransferable,
                                               mozilla::dom::nsIContentParent* aContentParent,
                                               mozilla::dom::TabChild* aTabChild)
@@ -8042,6 +8043,7 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
 
   aTransferable->SetIsPrivateData(aIsPrivateData);
   aTransferable->SetRequestingPrincipal(aRequestingPrincipal);
+  aTransferable->SetContentPolicyType(aContentPolicyType);
   return NS_OK;
 }
 

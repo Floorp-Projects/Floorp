@@ -720,7 +720,8 @@ child:
      */
     async PasteTransferable(IPCDataTransfer aDataTransfer,
                             bool aIsPrivateData,
-                            Principal aRequestingPrincipal);
+                            Principal aRequestingPrincipal,
+                            uint32_t aContentPolicyType);
 
     /**
      * Activate event forwarding from client to parent.
