@@ -41,11 +41,6 @@ const MIN_ZOOM = 0.6;
 getJSON("devtools.webide.templatesURL");
 getJSON("devtools.devices.url");
 
-// See bug 989619
-console.log = console.log.bind(console);
-console.warn = console.warn.bind(console);
-console.error = console.error.bind(console);
-
 window.addEventListener("load", function () {
   UI.init();
 }, {once: true});
