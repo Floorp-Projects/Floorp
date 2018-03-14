@@ -470,6 +470,17 @@ class BoxModelMain extends PureComponent {
         onMouseOver: this.onHighlightMouseOver,
         onMouseOut: this.props.onHideBoxModelHighlighter,
       },
+      displayPosition ?
+        dom.span(
+          {
+            className: "boxmodel-legend",
+            "data-box": "position",
+            title: BOXMODEL_L10N.getStr("boxmodel.position"),
+          },
+          BOXMODEL_L10N.getStr("boxmodel.position")
+        )
+        :
+        null,
       dom.div(
         {
           className: "boxmodel-box"
