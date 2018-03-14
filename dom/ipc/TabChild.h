@@ -257,6 +257,7 @@ class TabChild final : public TabChildBase,
   typedef mozilla::layout::RenderFrameChild RenderFrameChild;
   typedef mozilla::layers::APZEventState APZEventState;
   typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
+  typedef mozilla::layers::TouchBehaviorFlags TouchBehaviorFlags;
 
 public:
   /**
