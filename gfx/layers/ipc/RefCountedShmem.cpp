@@ -85,7 +85,7 @@ RefCountedShm::Release(const RefCountedShmem& aShm)
 }
 
 bool
-RefCountedShm::Alloc(IProtocol* aAllocator, size_t aSize,
+RefCountedShm::Alloc(mozilla::ipc::IProtocol* aAllocator, size_t aSize,
                        RefCountedShmem& aShm)
 {
   MOZ_ASSERT(!IsValid(aShm));
@@ -98,7 +98,7 @@ RefCountedShm::Alloc(IProtocol* aAllocator, size_t aSize,
 }
 
 void
-RefCountedShm::Dealloc(IProtocol* aAllocator, RefCountedShmem& aShm)
+RefCountedShm::Dealloc(mozilla::ipc::IProtocol* aAllocator, RefCountedShmem& aShm)
 {
   aAllocator->DeallocShmem(aShm.buffer());
   aShm.buffer() = ipc::Shmem();
