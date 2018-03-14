@@ -32,12 +32,6 @@ add_task(async function() {
 
   // Prime the content process
   await promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html>hi</html>");
-
-  // Make sure the blocklist service(s) are running
-  // eslint-disable-next-line no-unused-expressions
-  Services.blocklist;
-  let exmsg = await promiseInitContentBlocklistSvc(gBrowser.selectedBrowser);
-  ok(!exmsg, "exception: " + exmsg);
 });
 
 // Tests a vulnerable, updatable plugin
