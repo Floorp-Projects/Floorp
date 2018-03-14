@@ -1417,7 +1417,7 @@ function ComputedViewTool(inspector, window) {
   this.onMutations = this.onMutations.bind(this);
   this.onResized = this.onResized.bind(this);
 
-  this.inspector.selection.on("detached-front", this.onSelected);
+  this.inspector.selection.on("detached-front", this.onDetachedFront);
   this.inspector.selection.on("new-node-front", this.onSelected);
   this.inspector.selection.on("pseudoclass", this.refresh);
   this.inspector.sidebar.on("computedview-selected", this.onPanelSelected);
@@ -1438,7 +1438,11 @@ ComputedViewTool.prototype = {
     return this.inspector.sidebar.getCurrentTabID() == "computedview";
   },
 
-  onSelected: function(event) {
+  onDetachedFront: function() {
+    this.onSelected(false);
+  },
+
+  onSelected: function(selectElement = true) {
     // Ignore the event if the view has been destroyed, or if it's inactive.
     // But only if the current selection isn't null. If it's been set to null,
     // let the update go through as this is needed to empty the view on
@@ -1461,7 +1465,7 @@ ComputedViewTool.prototype = {
       return;
     }
 
-    if (!event || event == "new-node-front") {
+    if (selectElement) {
       let done = this.inspector.updating("computed-view");
       this.computedView.selectElement(this.inspector.selection.nodeFront).then(() => {
         done();
@@ -1511,7 +1515,7 @@ ComputedViewTool.prototype = {
     this.inspector.sidebar.off("computedview-selected", this.refresh);
     this.inspector.selection.off("pseudoclass", this.refresh);
     this.inspector.selection.off("new-node-front", this.onSelected);
-    this.inspector.selection.off("detached-front", this.onSelected);
+    this.inspector.selection.off("detached-front", this.onDetachedFront);
     this.inspector.sidebar.off("computedview-selected", this.onPanelSelected);
     if (this.inspector.pageStyle) {
       this.inspector.pageStyle.off("stylesheet-updated", this.refresh);
