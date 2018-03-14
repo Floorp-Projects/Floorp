@@ -5,6 +5,7 @@
 
 #include "nsFeedSniffer.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 
 #include "nsNetCID.h"
@@ -39,6 +40,11 @@
 #define NS_RSS "http://purl.org/rss/1.0/"
 
 #define MAX_BYTES 512u
+
+static bool sFramePrefCached = false;
+static bool sFramingAllowed = false;
+
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsFeedSniffer,
                   nsIContentSniffer,
@@ -218,6 +224,29 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   if (!method.EqualsLiteral("GET")) {
     sniffedType.Truncate();
     return NS_OK;
+  }
+
+  if (!sFramePrefCached) {
+    sFramePrefCached = true;
+    Preferences::AddBoolVarCache(&sFramingAllowed,
+                                 "browser.feeds.unsafelyFrameFeeds");
+  }
+
+  if (!sFramingAllowed) {
+    // Check that we're the toplevel frame:
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    if (!loadInfo) {
+      sniffedType.Truncate();
+      return NS_OK;
+    }
+    auto frameID = loadInfo->GetFrameOuterWindowID();
+    if (!frameID) {
+      frameID = loadInfo->GetOuterWindowID();
+    }
+    if (loadInfo->GetTopOuterWindowID() != frameID) {
+      sniffedType.Truncate();
+      return NS_OK;
+    }
   }
 
   // We need to find out if this is a load of a view-source document. In this
