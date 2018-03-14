@@ -319,7 +319,9 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
   static uint64_t sNextID = 1;
   uint64_t id = sNextID++;
 
-  {
+  // ImageClient of ImageContainer provides aImageContainer.
+  // But offscreen canvas does not provide it.
+  if (aImageContainer) {
     MutexAutoLock lock(mContainerMapLock);
     MOZ_ASSERT(!mImageContainerListeners.Contains(id));
     mImageContainerListeners.Put(id, aImageContainer->GetImageContainerListener());
