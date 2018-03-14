@@ -71,6 +71,14 @@ public:
     }
   }
 
+  virtual void
+  GetCSSImageURLs(const nsAString& aPropertyName,
+                  nsTArray<nsString>& aImageURLs,
+                  mozilla::ErrorResult& aRv)
+  {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  }
+
   // WebIDL interface for CSSStyleDeclaration
   virtual void SetCssText(const nsAString& aString,
                           nsIPrincipal* aSubjectPrincipal,

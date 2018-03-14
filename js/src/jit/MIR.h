@@ -41,6 +41,20 @@ class StringObject;
 
 namespace jit {
 
+// Forward declarations of MIR types.
+#define FORWARD_DECLARE(op) class M##op;
+ MIR_OPCODE_LIST(FORWARD_DECLARE)
+#undef FORWARD_DECLARE
+
+// MDefinition visitor which ignores non-overloaded visit functions.
+class MDefinitionVisitorDefaultNoop
+{
+  public:
+#define VISIT_INS(op) void visit##op(M##op*) { }
+    MIR_OPCODE_LIST(VISIT_INS)
+#undef VISIT_INS
+};
+
 class BaselineInspector;
 class Range;
 
@@ -1208,6 +1222,8 @@ class MInstruction
     virtual MIRType typePolicySpecialization() = 0;
 };
 
+// Note: GenerateOpcodeFiles.py generates MOpcodes.h based on the
+// INSTRUCTION_HEADER* macros.
 #define INSTRUCTION_HEADER_WITHOUT_TYPEPOLICY(opcode)                       \
     static const Opcode classOpcode = Opcode::opcode;                       \
     using MThisOpcode = M##opcode;

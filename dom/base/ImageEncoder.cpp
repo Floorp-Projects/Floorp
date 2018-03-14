@@ -89,7 +89,7 @@ public:
     , mEncodeCompleteCallback(aEncodeCompleteCallback)
     , mFailed(false)
   {
-    if (!NS_IsMainThread() && GetCurrentThreadWorkerPrivate()) {
+    if (!NS_IsMainThread() && IsCurrentThreadRunningWorker()) {
       mCreationEventTarget = GetCurrentThreadEventTarget();
     } else {
       mCreationEventTarget = GetMainThreadEventTarget();

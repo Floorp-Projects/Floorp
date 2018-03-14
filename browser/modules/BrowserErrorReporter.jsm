@@ -170,6 +170,7 @@ class BrowserErrorReporter {
           {
             type: errorName,
             value: errorMessage,
+            module: message.sourceName,
             stacktrace: {
               frames,
             }

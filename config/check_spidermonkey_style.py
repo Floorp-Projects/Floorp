@@ -66,6 +66,8 @@ included_inclnames_to_ignore = set([
     'frontend/ReservedWordsGenerated.h', # generated in $OBJDIR
     'gc/StatsPhasesGenerated.h',         # generated in $OBJDIR
     'gc/StatsPhasesGenerated.cpp',       # generated in $OBJDIR
+    'jit/LOpcodes.h',           # generated in $OBJDIR
+    'jit/MOpcodes.h',           # generated in $OBJDIR
     'jscustomallocator.h',      # provided by embedders;  allowed to be missing
     'js-config.h',              # generated in $OBJDIR
     'fdlibm.h',                 # fdlibm

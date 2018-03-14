@@ -18,6 +18,7 @@
 #include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/SourceSurfaceRawData.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"

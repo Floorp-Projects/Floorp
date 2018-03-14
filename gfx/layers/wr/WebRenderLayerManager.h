@@ -63,7 +63,8 @@ public:
   WebRenderLayerManager* AsWebRenderLayerManager() override { return this; }
   virtual CompositorBridgeChild* GetCompositorBridgeChild() override;
 
-  virtual int32_t GetMaxTextureSize() const override;
+  // WebRender can handle images larger than the max texture size via tiling.
+  virtual int32_t GetMaxTextureSize() const override { return INT32_MAX; }
 
   virtual bool BeginTransactionWithTarget(gfxContext* aTarget) override;
   virtual bool BeginTransaction() override;

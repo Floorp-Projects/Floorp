@@ -685,6 +685,19 @@ NS_IMETHODIMP_(MozExternalRefCountType) _class::AddRef(void)                  \
   return (_aggregator)->AddRef();                                             \
 }
 
+// We decrement the refcnt before logging the actual release, but when logging
+// named things, accessing the name may not be valid after the refcnt
+// decrement, because the object may have been destroyed on a different thread.
+// Use this macro to ensure that we have a local copy of the name prior to
+// the refcnt decrement.  (We use a macro to make absolutely sure the name
+// isn't loaded in builds where it wouldn't be used.)
+#ifdef NS_BUILD_REFCNT_LOGGING
+#define NS_LOAD_NAME_BEFORE_RELEASE(localname, _name) \
+  const char* const localname = _name
+#else
+#define NS_LOAD_NAME_BEFORE_RELEASE(localname, _name)
+#endif
+
 /**
  * Use this macro to implement the Release method for a given
  * <i>_class</i>.
@@ -713,7 +726,8 @@ NS_IMETHODIMP_(MozExternalRefCountType) _class::Release(void)                 \
   if (!mRefCnt.isThreadSafe)                                                  \
     NS_ASSERT_OWNINGTHREAD(_class);                                           \
   nsrefcnt count = --mRefCnt;                                                 \
-  NS_LOG_RELEASE(this, count, _name);                                         \
+  NS_LOAD_NAME_BEFORE_RELEASE(nametmp, _name);                                \
+  NS_LOG_RELEASE(this, count, nametmp);                                       \
   if (count == 0) {                                                           \
     mRefCnt = 1; /* stabilize */                                              \
     _destroy;                                                                 \

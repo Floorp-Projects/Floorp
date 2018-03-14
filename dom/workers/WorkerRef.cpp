@@ -23,7 +23,7 @@ class ReleaseRefControlRunnable final : public WorkerControlRunnable
 public:
   ReleaseRefControlRunnable(WorkerPrivate* aWorkerPrivate,
                             already_AddRefed<StrongWorkerRef> aRef)
-    : WorkerControlRunnable(aWorkerPrivate,WorkerThreadUnchangedBusyCount)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mRef(Move(aRef))
   {
     MOZ_ASSERT(mRef);
@@ -68,7 +68,13 @@ public:
   bool
   Notify(WorkerStatus aStatus) override
   {
-    mWorkerRef->Notify();
+    MOZ_ASSERT(mWorkerRef);
+
+    // Let's keep this object alive for the whole Notify() execution.
+    RefPtr<WorkerRef> workerRef;
+    workerRef = mWorkerRef;
+
+    workerRef->Notify();
     return true;
   }
 
@@ -150,8 +156,13 @@ WeakWorkerRef::Notify()
 WorkerPrivate*
 WeakWorkerRef::GetPrivate() const
 {
-  MOZ_ASSERT(mHolder);
   NS_ASSERT_OWNINGTHREAD(WeakWorkerRef);
+  return mWorkerPrivate;
+}
+
+WorkerPrivate*
+WeakWorkerRef::GetUnsafePrivate() const
+{
   return mWorkerPrivate;
 }
 
@@ -206,8 +217,9 @@ ThreadSafeWorkerRef::~ThreadSafeWorkerRef()
 {
   // Let's release the StrongWorkerRef on the correct thread.
   if (!mRef->mWorkerPrivate->IsOnWorkerThread()) {
+    WorkerPrivate* workerPrivate = mRef->mWorkerPrivate;
     RefPtr<ReleaseRefControlRunnable> r =
-      new ReleaseRefControlRunnable(mRef->mWorkerPrivate, mRef.forget());
+      new ReleaseRefControlRunnable(workerPrivate, mRef.forget());
     r->Dispatch();
     return;
   }
