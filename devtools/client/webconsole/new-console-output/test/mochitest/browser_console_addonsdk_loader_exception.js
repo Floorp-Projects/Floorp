@@ -5,13 +5,13 @@
 
 /* import-globals-from head.js */
 
-// Check that exceptions from scripts loaded with the DevTools loader are
+// Check that exceptions from scripts loaded with the addon-sdk loader are
 // opened correctly in View Source from the Browser Console.
 
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,<p>browser_console_devtools_loader_exception.js</p>";
+  "data:text/html;charset=utf8,<p>browser_console_addonsdk_loader_exception.js</p>";
 
 add_task(async function() {
   let wcHud = await openNewTabAndConsole(TEST_URI);
@@ -20,7 +20,7 @@ add_task(async function() {
   let bcHud = await HUDService.toggleBrowserConsole();
   ok(bcHud, "browser console opened");
 
-  // Cause an exception in a script loaded with the DevTools loader.
+  // Cause an exception in a script loaded with the addon-sdk loader.
   let toolbox = gDevTools.getToolbox(wcHud.target);
   let oldPanels = toolbox._toolPanels;
   // non-iterable

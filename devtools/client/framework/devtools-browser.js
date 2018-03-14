@@ -178,7 +178,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       case "quit-application":
         gDevToolsBrowser.destroy({ shuttingDown: true });
         break;
-      case "devtools:loader:destroy":
+      case "sdk:loader:destroy":
         // This event is fired when the devtools loader unloads, which happens
         // only when the add-on workflow ask devtools to be reloaded.
         if (subject.wrappedJSObject == require("@loader/unload")) {
@@ -711,7 +711,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   /**
-   * Either the DevTools Loader has been destroyed by the add-on contribution
+   * Either the SDK Loader has been destroyed by the add-on contribution
    * workflow, or firefox is shutting down.
 
    * @param {boolean} shuttingDown
@@ -723,7 +723,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
     Services.obs.removeObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
     Services.obs.removeObserver(gDevToolsBrowser, "quit-application");
-    Services.obs.removeObserver(gDevToolsBrowser, "devtools:loader:destroy");
+    Services.obs.removeObserver(gDevToolsBrowser, "sdk:loader:destroy");
 
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
       gDevToolsBrowser._forgetBrowserWindow(win);
@@ -759,7 +759,7 @@ gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 Services.obs.addObserver(gDevToolsBrowser, "quit-application");
 Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
 // Watch for module loader unload. Fires when the tools are reloaded.
-Services.obs.addObserver(gDevToolsBrowser, "devtools:loader:destroy");
+Services.obs.addObserver(gDevToolsBrowser, "sdk:loader:destroy");
 
 // Fake end of browser window load event for all already opened windows
 // that is already fully loaded.

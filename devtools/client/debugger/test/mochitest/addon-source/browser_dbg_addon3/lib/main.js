@@ -9,12 +9,12 @@ var observer = {
 
 observerService.addObserver(observer, "debuggerAttached");
 
-var devtoolsLoaderDestroyObserver = {
+var sdkLoaderDestroyObserver = {
   observe: function () {
-    // Remove all observers on devtools:loader:destroy
+    // Remove all observers on sdk:loader:destroy
     observerService.removeObserver(observer, "debuggerAttached");
-    observerService.removeObserver(devtoolsLoaderDestroyObserver, "devtools:loader:destroy");
+    observerService.removeObserver(sdkLoaderDestroyObserver, "sdk:loader:destroy");
   }
 };
 
-observerService.addObserver(devtoolsLoaderDestroyObserver, "devtools:loader:destroy");
+observerService.addObserver(sdkLoaderDestroyObserver, "sdk:loader:destroy");
