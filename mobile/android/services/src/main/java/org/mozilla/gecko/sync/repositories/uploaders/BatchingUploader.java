@@ -11,11 +11,9 @@ import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.InfoConfiguration;
-import org.mozilla.gecko.sync.Server15PreviousPostFailedException;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
-import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import java.util.ArrayList;
@@ -102,8 +100,10 @@ public class BatchingUploader {
     // maintain this limit for a single sanity check.
     private final long maxPayloadFieldBytes;
 
-    // Set if this channel should ignore further calls to process.
-    private volatile boolean aborted = false;
+    // Depending on the 'shouldFailBatchOnFailure' flag below, "invalid" records (too large or fail
+    // to serialize correctly) will cause uploader to start ignoring any future records in the current
+    // flow.
+    private volatile boolean encounteredInvalidRecord = false;
 
     // Whether or not we should set aborted if there are any issues with the record.
     // This is used to prevent corruption with bookmark records, as uploading
@@ -140,7 +140,7 @@ public class BatchingUploader {
         final String guid = record.guid;
 
         // If store failed entirely, just bail out. We've already told our delegate that we failed.
-        if (payloadDispatcher.storeFailed.get() || aborted) {
+        if (shouldIgnoreFurtherRecords()) {
             return;
         }
 
@@ -148,7 +148,7 @@ public class BatchingUploader {
 
         final String payloadField = (String) recordJSON.get(CryptoRecord.KEY_PAYLOAD);
         if (payloadField == null) {
-            failRecordStore(new IllegalRecordException(), record, false);
+            processInvalidRecord(new IllegalRecordException(), record, false);
             return;
         }
 
@@ -156,13 +156,13 @@ public class BatchingUploader {
         // UTF-8 uses 1 byte per character for the ASCII range. Contents of the payloadField are
         // base64 and hex encoded, so character count is sufficient.
         if (payloadField.length() > this.maxPayloadFieldBytes) {
-            failRecordStore(new PayloadTooLargeToUpload(), record, true);
+            processInvalidRecord(new PayloadTooLargeToUpload(), record, true);
             return;
         }
 
         final byte[] recordBytes = Record.stringToJSONBytes(recordJSON.toJSONString());
         if (recordBytes == null) {
-            failRecordStore(new IllegalRecordException(), record, false);
+            processInvalidRecord(new IllegalRecordException(), record, false);
             return;
         }
 
@@ -171,7 +171,7 @@ public class BatchingUploader {
 
         // We can't upload individual records which exceed our payload total byte limit.
         if ((recordDeltaByteCount + PER_PAYLOAD_OVERHEAD_BYTE_COUNT) > payload.maxBytes) {
-            failRecordStore(new RecordTooLargeToUpload(), record, true);
+            processInvalidRecord(new RecordTooLargeToUpload(), record, true);
             return;
         }
 
@@ -250,8 +250,14 @@ public class BatchingUploader {
         sessionStoreDelegate.deferredStoreDelegate(executor).onStoreCompleted();
     }
 
+    private boolean shouldIgnoreFurtherRecords() {
+        return (shouldFailBatchOnFailure && encounteredInvalidRecord) || payloadDispatcher.storeFailed.get();
+    }
+
     // Common handling for marking a record failure and calling our delegate's onRecordStoreFailed.
-    private void failRecordStore(final Exception e, final Record record, boolean sizeOverflow) {
+    private void processInvalidRecord(final Exception e, final Record record, boolean sizeOverflow) {
+        encounteredInvalidRecord = true;
+
         // There are three cases we're handling here. See bug 1362206 for some rationale here.
         // 1. shouldFailBatchOnFailure is false, and it failed sanity checks for reasons other than
         //    "it's too large" (say, `record`'s json is 0 bytes),
@@ -263,8 +269,6 @@ public class BatchingUploader {
         if (shouldFailBatchOnFailure) {
             // case 3
             Logger.debug(LOG_TAG, "Batch failed with exception: " + e.toString());
-            // Start ignoring records, and send off to our delegate that we failed.
-            aborted = true;
             executor.execute(new PayloadDispatcher.NonPayloadContextRunnable() {
                 @Override
                 public void run() {
@@ -272,6 +276,7 @@ public class BatchingUploader {
                     payloadDispatcher.doStoreFailed(e);
                 }
             });
+            // Send off to our delegate that we failed.
         } else if (!sizeOverflow) {
             // case 1
             sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(e, record.guid);
@@ -342,7 +347,8 @@ public class BatchingUploader {
     /* package-local */ static class PayloadTooLargeToUpload extends BatchingUploaderException {
         private static final long serialVersionUID = 1L;
     }
-    private static class IllegalRecordException extends BatchingUploaderException {
+    @VisibleForTesting
+    /* package-local */ static class IllegalRecordException extends BatchingUploaderException {
         private static final long serialVersionUID = 1L;
     }
 }
