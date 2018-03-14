@@ -225,6 +225,7 @@ class SavedStacks {
     MOZ_MUST_USE bool adoptAsyncStack(JSContext* cx, MutableHandleSavedFrame asyncStack,
                                       HandleAtom asyncCause,
                                       const Maybe<size_t>& maxFrameCount);
+    MOZ_MUST_USE bool checkForEvalInFramePrev(JSContext* cx, SavedFrame::HandleLookup lookup);
     SavedFrame* getOrCreateSavedFrame(JSContext* cx, SavedFrame::HandleLookup lookup);
     SavedFrame* createFrameFromLookup(JSContext* cx, SavedFrame::HandleLookup lookup);
 
