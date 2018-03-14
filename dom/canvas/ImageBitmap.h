@@ -114,6 +114,7 @@ public:
   already_AddRefed<layers::Image>
   TransferAsImage();
 
+  // This method returns null if the image has been already closed.
   UniquePtr<ImageBitmapCloneData>
   ToCloneData() const;
 
