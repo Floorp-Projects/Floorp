@@ -1409,6 +1409,28 @@ or run without that action (ie: --no-{action})"
             halt_on_failure=True,
         )
 
+    def preflight_package_source(self):
+        self._get_mozconfig()
+
+    def package_source(self):
+        """generates source archives and uploads them"""
+        env = self.query_build_env()
+        env.update(self.query_mach_build_env())
+        dirs = self.query_abs_dirs()
+
+        self.run_command(
+            command=[sys.executable, 'mach', '--log-no-times', 'configure'],
+            cwd=dirs['abs_src_dir'],
+            env=env, output_timeout=60*3, halt_on_failure=True,
+        )
+        self.run_command(
+            command=[
+                'make', 'source-package', 'source-upload',
+            ],
+            cwd=dirs['abs_obj_dir'],
+            env=env, output_timeout=60*45, halt_on_failure=True,
+        )
+
     def check_test(self):
         if self.config.get('forced_artifact_build'):
             self.info('Skipping due to forced artifact build.')
