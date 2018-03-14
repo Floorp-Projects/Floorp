@@ -702,10 +702,10 @@ FetchBodyConsumer<Derived>::ContinueConsumeBlobBody(BlobImpl* aBlobImpl,
   // sync with a body read.
   MOZ_ASSERT(mBody->BodyUsed());
 
-  if (!aShuttingDown) {
-    MOZ_ASSERT(mConsumePromise);
-    RefPtr<Promise> localPromise = mConsumePromise.forget();
+  MOZ_ASSERT(mConsumePromise);
+  RefPtr<Promise> localPromise = mConsumePromise.forget();
 
+  if (!aShuttingDown) {
     RefPtr<dom::Blob> blob = dom::Blob::Create(mGlobal, aBlobImpl);
     MOZ_ASSERT(blob);
 
