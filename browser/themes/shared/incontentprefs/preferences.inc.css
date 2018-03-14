@@ -604,10 +604,6 @@ button > hbox > label {
   margin-inline-end: 10px !important;
 }
 
-.fxaEmailAddress {
-  margin-inline-end: 8px !important;
-}
-
 .fxaLoginRejectedWarning {
   list-style-image: url(chrome://browser/skin/warning.svg);
   margin-inline-start: 4px;

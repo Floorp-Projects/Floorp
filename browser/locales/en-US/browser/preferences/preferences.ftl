@@ -471,6 +471,113 @@ containers-preferences-button =
 containers-remove-button =
     .label = Remove
 
+## Sync Section - Signed out
+
+sync-signedout-caption = Take Your Web With You
+sync-signedout-description = Synchronize your bookmarks, history, tabs, passwords, add-ons, and preferences across all your devices.
+
+sync-signedout-account-title = Connect with a { -fxaccount-brand-name }
+sync-signedout-account-create = Don’t have an account? Get started
+    .accesskey = c
+
+sync-signedout-account-signin =
+    .label = Sign In…
+    .accesskey = I
+
+## Sync Section - Signed in
+
+sync-profile-picture =
+    .tooltiptext = Change profile picture
+
+sync-disconnect =
+    .label = Disconnect…
+    .accesskey = D
+
+sync-manage-account = Manage account
+    .accesskey = o
+
+sync-signedin-unverified = { $email } is not verified.
+sync-signedin-login-failure = Please sign in to reconnect { $email }
+
+sync-resend-verification =
+    .label = Resend Verification
+    .accesskey = d
+
+sync-remove-account =
+    .label = Remove Account
+    .accesskey = R
+
+sync-sign-in =
+    .label = Sign in
+    .accesskey = g
+
+sync-signedin-settings-header = Sync Settings
+sync-signedin-settings-desc = Choose what to synchronize on your devices using { -brand-short-name }
+
+sync-engine-bookmarks =
+    .label = Bookmarks
+    .accesskey = m
+
+sync-engine-history =
+    .label = History
+    .accesskey = r
+
+sync-engine-tabs =
+    .label = Open tabs
+    .tooltiptext = A list of what’s open on all synced devices
+    .accesskey = t
+
+sync-engine-logins =
+    .label = Logins
+    .tooltiptext = Usernames and passwords you’ve saved
+    .accesskey = L
+
+sync-engine-addresses =
+    .label = Addresses
+    .tooltiptext = Postal addresses you’ve saved (desktop only)
+    .accesskey = e
+
+sync-engine-creditcards =
+    .label = Credit cards
+    .tooltiptext = Names, numbers and expiry dates (desktop only)
+    .accesskey = C
+
+sync-engine-addons =
+    .label = Add-ons
+    .tooltiptext = Extensions and themes for Firefox desktop
+    .accesskey = A
+
+sync-engine-prefs =
+    .label =
+        { PLATFORM() ->
+            [windows] Options
+           *[other] Preferences
+        }
+    .tooltiptext = General, Privacy, and Security settings you’ve changed
+    .accesskey = s
+
+sync-device-name-header = Device Name
+
+sync-device-name-change =
+    .label = Change Device Name…
+    .accesskey = h
+
+sync-device-name-cancel =
+    .label = Cancel
+    .accesskey = n
+
+sync-device-name-save =
+    .label = Save
+    .accesskey = v
+
+sync-mobilepromo-single = Connect another device
+
+sync-mobilepromo-multi = Manage devices
+
+sync-tos-link = Terms of Service
+
+sync-fxa-privacy-notice = Privacy Notice
+
 ## Privacy Section
 
 privacy-header = Browser Privacy

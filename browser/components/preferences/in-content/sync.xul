@@ -11,7 +11,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneSync">
-  <label class="header-name" flex="1">&paneSync1.title;</label>
+  <label class="header-name" flex="1" data-l10n-id="pane-sync-title" />
 </hbox>
 
 <deck id="weavePrefsDeck" data-category="paneSync" hidden="true"
@@ -19,8 +19,8 @@
   <groupbox id="noFxaAccount">
     <hbox>
       <vbox flex="1">
-        <caption><label id="noFxaCaption">&signedOut.caption;</label></caption>
-        <description id="noFxaDescription" flex="1">&signedOut.description;</description>
+        <caption><label id="noFxaCaption" data-l10n-id="sync-signedout-caption"/></caption>
+        <description id="noFxaDescription" flex="1" data-l10n-id="sync-signedout-description"/>
       </vbox>
       <vbox>
         <image class="fxaSyncIllustration"/>
@@ -33,17 +33,16 @@
       <vbox flex="1">
         <hbox align="center" flex="1">
           <hbox align="center" flex="1">
-            <caption><label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label></caption>
+            <caption><label id="signedOutAccountBoxTitle" data-l10n-id="sync-signedout-account-title"/></caption>
           </hbox>
           <button id="noFxaSignIn"
                   class="accessory-button"
-                  label="&signedOut.accountBox.signin2;"
-                  accesskey="&signedOut.accountBox.signin2.accesskey;"/>
+                  data-l10n-id="sync-signedout-account-signin"/>
         </hbox>
         <hbox align="center" flex="1">
           <html:a id="noFxaSignUp"
                   class="openLink"
-                  accesskey="&signedOut.accountBox.create2.accesskey;">&signedOut.accountBox.create2;</html:a>
+                  data-l10n-id="sync-signedout-account-create" />
         </hbox>
       </vbox>
     </hbox>
@@ -64,7 +63,7 @@
     <hbox>
       <vbox id="fxaContentWrapper" flex="1">
         <groupbox id="fxaGroup">
-          <caption class="search-header" hidden="true"><label>&paneSync1.title;</label></caption>
+          <caption class="search-header" hidden="true"><label data-l10n-id="pane-sync-title"/></caption>
 
           <deck id="fxaLoginStatus" flex="1">
 
@@ -74,20 +73,19 @@
                      role="button"
                      onclick="gSyncPane.openChangeProfileImage(event);"
                      onkeypress="gSyncPane.openChangeProfileImage(event);"
-                     tooltiptext="&profilePicture.tooltip;"/>
+                     data-l10n-id="sync-profile-picture"/>
               <vbox flex="1" pack="center">
                 <hbox flex="1" align="baseline">
                   <caption><label id="fxaDisplayName" hidden="true"/></caption>
-                  <label class="fxaEmailAddress" flex="1" crop="end"/>
+                  <label id="fxaEmailAddress" flex="1" crop="end"/>
                   <button id="fxaUnlinkButton"
                           class="accessory-button"
-                          label="&disconnect3.label;"
-                          accesskey="&disconnect3.accesskey;"/>
+                          data-l10n-id="sync-disconnect"/>
                 </hbox>
                 <hbox>
                   <html:a id="verifiedManage" class="openLink"
-                          accesskey="&verifiedManage.accesskey;"
-                          onkeypress="gSyncPane.openManageFirefoxAccount(event);">&verifiedManage.label;</html:a>
+                          data-l10n-id="sync-manage-account"
+                          onkeypress="gSyncPane.openManageFirefoxAccount(event);"/>
                 </hbox>
               </vbox>
             </hbox>
@@ -100,15 +98,14 @@
               <vbox flex="1" pack="center">
                 <hbox>
                   <image class="fxaLoginRejectedWarning"/>
-                  <description flex="1">
-                    &signedInUnverified.beforename.label;
-                    <label class="fxaEmailAddress"/>
-                    &signedInUnverified.aftername.label;
-                  </description>
+                  <description flex="1"
+                    class="l10nArgsEmailAddress"
+                    data-l10n-id="sync-signedin-unverified"
+                    data-l10n-args='{"email": ""}'/>
                 </hbox>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="verifyFxaAccount" label="&resendVerification.label;" accesskey="&resendVerification.accesskey;"></button>
-                  <button id="unverifiedUnlinkFxaAccount" label="&removeAccount.label;" accesskey="&removeAccount.accesskey;"></button>
+                  <button id="verifyFxaAccount" data-l10n-id="sync-resend-verification"/>
+                  <button id="unverifiedUnlinkFxaAccount" data-l10n-id="sync-remove-account"/>
                 </hbox>
               </vbox>
             </hbox>
@@ -121,63 +118,42 @@
               <vbox flex="1" pack="center">
                 <hbox>
                   <image class="fxaLoginRejectedWarning"/>
-                  <description flex="1">
-                    &signedInLoginFailure.beforename.label;
-                    <label class="fxaEmailAddress"/>
-                    &signedInLoginFailure.aftername.label;
-                  </description>
+                  <description flex="1"
+                    class="l10nArgsEmailAddress"
+                    data-l10n-id="sync-signedin-login-failure"
+                    data-l10n-args='{"email": ""}'/>
                 </hbox>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="rejectReSignIn" label="&signIn.label;" accesskey="&signIn.accesskey;"></button>
-                  <button id="rejectUnlinkFxaAccount" label="&removeAccount.label;" accesskey="&removeAccount.accesskey;"></button>
+                  <button id="rejectReSignIn" data-l10n-id="sync-sign-in"/>
+                  <button id="rejectUnlinkFxaAccount" data-l10n-id="sync-remove-account"/>
                 </hbox>
               </vbox>
             </hbox>
           </deck>
         </groupbox>
         <groupbox id="syncOptions">
-          <caption><label>&signedIn.settings.label;</label></caption>
-          <description>&signedIn.settings.description;</description>
+          <caption><label data-l10n-id="sync-signedin-settings-header"/></caption>
+          <description data-l10n-id="sync-signedin-settings-desc"/>
           <hbox id="fxaSyncEngines">
             <vbox flex="1">
               <!-- by design, no tooltip for bookmarks or history -->
-              <checkbox label="&engine.bookmarks.label;"
-                        accesskey="&engine.bookmarks.accesskey;"
+              <checkbox data-l10n-id="sync-engine-bookmarks"
                         preference="engine.bookmarks"/>
-              <checkbox label="&engine.history.label;"
-                        accesskey="&engine.history.accesskey;"
+              <checkbox data-l10n-id="sync-engine-history"
                         preference="engine.history"/>
-              <checkbox label="&engine.tabs.label2;"
-                        tooltiptext="&engine.tabs.title;"
-                        accesskey="&engine.tabs.accesskey;"
+              <checkbox data-l10n-id="sync-engine-tabs"
                         preference="engine.tabs"/>
-              <checkbox label="&engine.logins.label;"
-                        tooltiptext="&engine.logins.title;"
-                        accesskey="&engine.logins.accesskey;"
+              <checkbox data-l10n-id="sync-engine-logins"
                         preference="engine.passwords"/>
             </vbox>
             <vbox flex="1">
-              <checkbox label="&engine.addresses.label;"
-                        accesskey="&engine.addresses.accesskey;"
-                        tooltiptext="&engine.addresses.title;"
+              <checkbox data-l10n-id="sync-engine-addresses"
                         preference="engine.addresses"/>
-              <checkbox label="&engine.creditcards.label;"
-                        tooltiptext="&engine.creditcards.title;"
-                        accesskey="&engine.creditcards.accesskey;"
+              <checkbox data-l10n-id="sync-engine-creditcards"
                         preference="engine.creditcards"/>
-              <checkbox label="&engine.addons.label;"
-                        tooltiptext="&engine.addons.title;"
-                        accesskey="&engine.addons.accesskey;"
+              <checkbox data-l10n-id="sync-engine-addons"
                         preference="engine.addons"/>
-              <checkbox
-#ifdef XP_WIN
-                        label="&engine.prefsWin.label;"
-                        accesskey="&engine.prefsWin.accesskey;"
-#else
-                        label="&engine.prefs.label;"
-                        accesskey="&engine.prefs.accesskey;"
-#endif
-                        tooltiptext="&engine.prefs.title;"
+              <checkbox data-l10n-id="sync-engine-prefs"
                         preference="engine.prefs"/>
             </vbox>
             <spacer/>
@@ -187,38 +163,29 @@
     </hbox>
     <groupbox>
       <caption>
-        <label control="fxaSyncComputerName">
-          &fxaSyncDeviceName.label;
-        </label>
+        <label control="fxaSyncComputerName" data-l10n-id="sync-device-name-header"/>
       </caption>
       <hbox id="fxaDeviceName">
         <textbox id="fxaSyncComputerName" flex="1" disabled="true"/>
         <button id="fxaChangeDeviceName"
-                label="&changeSyncDeviceName2.label;"
-                accesskey="&changeSyncDeviceName2.accesskey;"/>
+                data-l10n-id="sync-device-name-change"/>
         <button id="fxaCancelChangeDeviceName"
-                label="&cancelChangeSyncDeviceName.label;"
-                accesskey="&cancelChangeSyncDeviceName.accesskey;"
+                data-l10n-id="sync-device-name-cancel"
                 hidden="true"/>
         <button id="fxaSaveChangeDeviceName"
-                label="&saveChangeSyncDeviceName.label;"
-                accesskey="&saveChangeSyncDeviceName.accesskey;"
+                data-l10n-id="sync-device-name-save"
                 hidden="true"/>
       </hbox>
     </groupbox>
     <vbox align="start">
       <label id="mobilePromo-singledevice"
-             class="text-link fxaMobilePromo">&mobilepromo.singledevice;</label>
+             class="text-link fxaMobilePromo" data-l10n-id="sync-mobilepromo-single"/>
       <label id="mobilePromo-multidevice"
-             class="text-link fxaMobilePromo">&mobilepromo.multidevice;</label>
+             class="text-link fxaMobilePromo" data-l10n-id="sync-mobilepromo-multi"/>
     </vbox>
     <vbox id="tosPP-small" align="start">
-      <label id="tosPP-small-ToS" class="text-link">
-        &prefs.tosLink.label;
-      </label>
-      <label id="tosPP-small-PP" class="text-link">
-        &fxaPrivacyNotice.link.label;
-      </label>
+      <label id="tosPP-small-ToS" class="text-link" data-l10n-id="sync-tos-link"/>
+      <label id="tosPP-small-PP" class="text-link" data-l10n-id="sync-fxa-privacy-notice"/>
     </vbox>
   </vbox>
 </deck>
