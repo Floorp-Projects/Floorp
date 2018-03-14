@@ -157,6 +157,8 @@ private:
   // A flag whether there is a key listener on the event target chain for the
   // focused element
   bool mFocusHasKeyEventListeners;
+  // A flag that is false until the first call to Update().
+  bool mReceivedUpdate;
 
   // The layer tree ID which contains the scrollable frame of the focused element
   uint64_t mFocusLayersId;

@@ -19,6 +19,7 @@ FocusState::FocusState()
   , mLastAPZProcessedEvent(1)
   , mLastContentProcessedEvent(0)
   , mFocusHasKeyEventListeners(false)
+  , mReceivedUpdate(false)
   , mFocusLayersId(0)
   , mFocusHorizontalTarget(FrameMetrics::NULL_SCROLL_ID)
   , mFocusVerticalTarget(FrameMetrics::NULL_SCROLL_ID)
@@ -51,7 +52,17 @@ FocusState::ReceiveFocusChangingEvent()
   APZThreadUtils::AssertOnControllerThread();
   MutexAutoLock lock(mMutex);
 
+  if (!mReceivedUpdate) {
+    // In the initial state don't advance mLastAPZProcessedEvent because we
+    // might blow away the information that we're in a freshly-restarted GPU
+    // process. This information (i.e. that mLastAPZProcessedEvent == 1) needs
+    // to be preserved until the first call to Update() which will then advance
+    // mLastAPZProcessedEvent to match the content-side sequence number.
+    return;
+  }
   mLastAPZProcessedEvent += 1;
+  FS_LOG("Focus changing event incremented aseq to %" PRIu64 "\n",
+         mLastAPZProcessedEvent);
 }
 
 void
@@ -67,6 +78,7 @@ FocusState::Update(uint64_t aRootLayerTreeId,
          aOriginatingLayersId,
          aState.Type(),
          aState.mSequenceNumber);
+  mReceivedUpdate = true;
 
   // Update the focus tree with the latest target
   mFocusTree[aOriginatingLayersId] = aState;
@@ -103,11 +115,20 @@ FocusState::Update(uint64_t aRootLayerTreeId,
       const uint64_t mSequenceNumber;
 
       bool match(const FocusTarget::NoFocusTarget& aNoFocusTarget) {
-        FS_LOG("Setting target to nil (reached a nil target)\n");
+        FS_LOG("Setting target to nil (reached a nil target) with seq=%" PRIu64 "\n",
+               mSequenceNumber);
 
         // Mark what sequence number this target has for debugging purposes so
         // we can always accurately report on whether we are stale or not
         mFocusState.mLastContentProcessedEvent = mSequenceNumber;
+
+        // If this focus state was just created and content has experienced more
+        // events then us, then assume we were recreated and sync focus sequence
+        // numbers.
+        if (mFocusState.mLastAPZProcessedEvent == 1 &&
+            mFocusState.mLastContentProcessedEvent > mFocusState.mLastAPZProcessedEvent) {
+          mFocusState.mLastAPZProcessedEvent = mFocusState.mLastContentProcessedEvent;
+        }
         return true;
       }
 
