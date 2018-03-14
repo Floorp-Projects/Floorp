@@ -32,9 +32,6 @@ function waitForPaints() {
 }
 
 promise_test(function(t) {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
-
   // Test that empty animations actually start.
   //
   // Normally we tie the start of animations to when their first frame of
@@ -43,24 +40,30 @@ promise_test(function(t) {
   // that doesn't render or is offscreen) we want to make sure they still
   // start.
   //
-  // Before we start, wait for the document to finish loading. This is because
-  // during loading we will have other paint events taking place which might,
-  // by luck, happen to trigger animations that otherwise would not have been
-  // triggered, leading to false positives.
+  // Before we start, wait for the document to finish loading, then create
+  // div element, and wait for painting. This is because during loading we will
+  // have other paint events taking place which might, by luck, happen to
+  // trigger animations that otherwise would not have been triggered, leading to
+  // false positives.
   //
   // As a result, it's better to wait until we have a more stable state before
   // continuing.
+  var div;
   var promiseCallbackDone = false;
   return waitForDocLoad().then(function() {
+    div = addDiv(t);
+
+    return waitForPaints();
+  }).then(function() {
     div.style.animation = 'empty 1000s';
     var animation = div.getAnimations()[0];
 
-    return animation.ready.then(function() {
+    animation.ready.then(function() {
       promiseCallbackDone = true;
     }).catch(function() {
       assert_unreached('ready promise was rejected');
     });
-  }).then(function() {
+
     // We need to wait for up to three frames. This is because in some
     // cases it can take up to two frames for the initial layout
     // to take place. Even after that happens we don't actually resolve the
@@ -92,27 +95,14 @@ promise_test(function(t) {
 
   // As with the above test, any stray paints can cause this test to produce
   // a false negative (that is, pass when it should fail). To avoid this we
-  // first wait for the document to load, then wait until it is idle, then wait
-  // for paints and only then do we commence the test. Even doing that, this
-  // test can sometimes pass when it should not due to a stray paint. Most of
-  // the time, however, it will correctly fail so hopefully even if we do
-  // occasionally produce a false negative on one platform, another platform
-  // will fail as expected.
-  return waitForDocLoad().then(() => waitForIdle())
-  .then(() => waitForPaints())
-  .then(() => {
+  // wait for paints and only then do we commence the test.
+  return waitForPaints().then(() => {
     div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
                 { duration: 400 * MS_PER_SEC,
                   delay: -200 * MS_PER_SEC });
 
-    // TODO: Current waitForPaint() will not wait for MozAfterPaint in this
-    // case(Bug 1341294), so this waiting code is workaround for it.
-    // This waitForFrame() uses Promise, but bug 1193394 will be using same
-    // handling of  microtask, so if landed bug 1193394 this test might be
-    // failure since this promise will resolve in same tick of Element.animate.
-    return waitForFrame();
-  }).then(() => waitForPaints())
-  .then(() => {
+      return waitForPaints();
+  }).then(() => {
     const transformStr =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
     const translateX = getTranslateXFromTransform(transformStr);
@@ -144,21 +134,16 @@ promise_test(function(t) {
 
   const div = addDiv(t, { class: 'target' });
 
-  // Wait for idle state (see notes in previous test).
-  return waitForDocLoad().then(() => waitForIdle())
-  .then(() => waitForPaints())
-  .then(() => {
+  // Wait for the document to load and painting (see notes in previous test).
+  return waitForPaints().then(() => {
     const animation =
       div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
                   200 * MS_PER_SEC);
     animation.currentTime = 100 * MS_PER_SEC;
     animation.playbackRate = 0.1;
 
-    // As the above test case, we should fix bug 1341294 before bug 1193394
-    // lands.
-    return waitForFrame();
-  }).then(() => waitForPaints())
-  .then(() => {
+    return waitForPaints();
+  }).then(() => {
     const transformStr =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
     const translateX = getTranslateXFromTransform(transformStr);
