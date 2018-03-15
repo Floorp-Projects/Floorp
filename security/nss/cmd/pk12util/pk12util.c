@@ -28,7 +28,7 @@ static PRBool pk12uForceUnicode;
 PRIntn pk12uErrno = 0;
 
 static void
-Usage(char *progName)
+Usage()
 {
 #define FPS PR_fprintf(PR_STDERR,
     FPS "Usage:	 %s -i importfile [-d certdir] [-P dbprefix] [-h tokenname]\n",
@@ -1020,26 +1020,26 @@ main(int argc, char **argv)
     rv = SECU_ParseCommandLine(argc, argv, progName, &pk12util);
 
     if (rv != SECSuccess)
-        Usage(progName);
+        Usage();
 
     pk12_debugging = pk12util.options[opt_Debug].activated;
 
     if ((pk12util.options[opt_Import].activated +
          pk12util.options[opt_Export].activated +
          pk12util.options[opt_List].activated) != 1) {
-        Usage(progName);
+        Usage();
     }
 
     if (pk12util.options[opt_Export].activated &&
         !pk12util.options[opt_Nickname].activated) {
-        Usage(progName);
+        Usage();
     }
 
     rv = NSS_OptionGet(__NSS_PKCS12_DECODE_FORCE_UNICODE, &forceUnicode);
     if (rv != SECSuccess) {
         SECU_PrintError(progName,
                         "Failed to get NSS_PKCS12_DECODE_FORCE_UNICODE option");
-        Usage(progName);
+        Usage();
     }
     pk12uForceUnicode = forceUnicode;
 
@@ -1144,7 +1144,7 @@ main(int argc, char **argv)
         P12U_ListPKCS12File(import_file, slot, &slotPw, &p12FilePw);
 
     } else {
-        Usage(progName);
+        Usage();
         pk12uErrno = PK12UERR_USAGE;
     }
 
