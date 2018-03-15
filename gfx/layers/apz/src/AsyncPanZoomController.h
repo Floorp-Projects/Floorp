@@ -830,6 +830,19 @@ protected:
   // IMPORTANT: See the note about lock ordering at the top of APZCTreeManager.h.
   // This is mutable to allow entering it from 'const' methods; doing otherwise
   // would significantly limit what methods could be 'const'.
+  // FIXME: Please keep in mind that due to some existing coupled relationships
+  // among the class members, we should be aware of indirect usage of the
+  // monitor-protected members. That is, although this monitor isn't required to
+  // be held before manipulating non-protected class members, some functions on
+  // those members might indirectly manipulate the protected members; in such
+  // cases, the monitor should still be held. Let's take mX.CanScroll for
+  // example:
+  // Axis::CanScroll(ParentLayerCoord) calls Axis::CanScroll() which calls
+  // Axis::GetPageLength() which calls Axis::GetFrameMetrics() which calls
+  // AsyncPanZoomController::GetFrameMetrics(), therefore, this monitor should
+  // be held before calling the CanScroll function of |mX| and |mY|. These
+  // coupled relationships bring us the burden of taking care of when the
+  // monitor should be held, so they should be decoupled in the future.
   mutable RecursiveMutex mRecursiveMutex;
 
 private:

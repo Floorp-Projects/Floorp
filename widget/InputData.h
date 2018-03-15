@@ -589,6 +589,10 @@ class KeyboardInput : public InputData
 public:
   typedef mozilla::layers::KeyboardScrollAction KeyboardScrollAction;
 
+  // Note that if you change the first member in this enum(I.e. KEY_DOWN) to one
+  // other member, don't forget to update the minimum value in
+  // ContiguousEnumSerializer for KeyboardEventType in widget/nsGUIEventIPC
+  // accordingly.
   enum KeyboardEventType
   {
     KEY_DOWN,

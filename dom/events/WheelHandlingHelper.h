@@ -210,26 +210,58 @@ protected:
   };
 };
 
+// For some kinds of scrollings, the delta values of WidgetWheelEvent are
+// possbile to be adjusted. For example, the user has configured the pref to let
+// [vertical wheel + Shift key] to perform horizontal scrolling instead of
+// vertical scrolling.
+// The values in this enumeration list all kinds of scrollings whose delta
+// values are possible to be adjusted.
+enum class WheelDeltaAdjustmentStrategy : uint8_t
+{
+  // There is no strategy, don't adjust delta values in any cases.
+  eNone,
+  // This strategy means we're receiving a horizontalized scroll, so we should
+  // apply horizontalization strategy for its delta values.
+  // Horizontalized scrolling means treating vertical wheel scrolling as
+  // horizontal scrolling by adjusting delta values.
+  // It's important to keep in mind with the percise concept of horizontalized
+  // scrolling: Delta values are *ONLY* going to be adjusted during the process
+  // of its default action handling; in views of any programmes other than the
+  // default action handler, such as a DOM event listener or a plugin, delta
+  // values are never going to be adjusted, they will still retrive original
+  // delta values when horizontalization occured for default actions.
+  eHorizontalize,
+  // TODO A new value for auto-dir scrolling is going to be added while
+  // implementing such scrolling.
+};
+
 /**
- * When a wheel event should be treated as specially, e.g., it's a vertical
- * wheel operation but user wants to scroll the target horizontally, this
- * class adjust the delta values automatically.  Then, restores the original
- * value when the instance is destroyed.
+ * When a *pure* vertical wheel event should be treated as if it was a
+ * horizontal scroll because the user wants to horizontalize the wheel scroll,
+ * an instance of this class will adjust the delta values upon calling
+ * Horizontalize(). And the horizontalized delta values will be restored
+ * automatically when the instance of this class is being destructed. Or you can
+ * restore them in advance by calling CancelHorizontalization().
  */
-class MOZ_STACK_CLASS AutoWheelDeltaAdjuster final
+class MOZ_STACK_CLASS WheelDeltaHorizontalizer final
 {
 public:
   /**
-   * @param aWheelEvent        A wheel event.  The delta values may be
-   *                           modified for default handler.
-   *                           Its mDeltaValuesAdjustedForDefaultHandler
-   *                           must not be true because if it's true,
-   *                           the event has already been adjusted the
-   *                           delta values for default handler.
+   * @param aWheelEvent        A wheel event whose delta values will be adjusted
+   *                           upon calling Horizontalize().
    */
-  explicit AutoWheelDeltaAdjuster(WidgetWheelEvent& aWheelEvent);
-  ~AutoWheelDeltaAdjuster();
-  void CancelAdjustment();
+  explicit WheelDeltaHorizontalizer(WidgetWheelEvent& aWheelEvent)
+    : mWheelEvent(aWheelEvent)
+    , mHorizontalized(false)
+  {
+  }
+  /**
+   * Converts vertical scrolling into horizontal scrolling by adjusting the
+   * its delta values.
+   */
+  void Horizontalize();
+  ~WheelDeltaHorizontalizer();
+  void CancelHorizontalization();
 
 private:
   WidgetWheelEvent& mWheelEvent;
@@ -237,7 +269,7 @@ private:
   double mOldDeltaZ;
   double mOldOverflowDeltaX;
   int32_t mOldLineOrPageDeltaX;
-  bool mTreatedVerticalWheelAsHorizontalScroll;
+  bool mHorizontalized;
 };
 
 } // namespace mozilla

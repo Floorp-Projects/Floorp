@@ -3389,11 +3389,18 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           WheelPrefs::ACTION_NONE :
           WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
 
-      // Make the wheel event a horizontal scroll event.  I.e., deltaY values
-      // are set to deltaX and deltaY and deltaZ values are set to 0.
-      // When AutoWheelDeltaAdjuster instance is destroyed, the delta values
-      // are restored and make overflow deltaX becomes 0.
-      AutoWheelDeltaAdjuster adjuster(*wheelEvent);
+      WheelDeltaAdjustmentStrategy strategy =
+        GetWheelDeltaAdjustmentStrategy(*wheelEvent);
+      // Adjust the delta values of the wheel event if the current default
+      // action is to horizontalize scrolling. I.e., deltaY values are set to
+      // deltaX and deltaY and deltaZ values are set to 0.
+      // If horizontalized, the delta values will be restored and its overflow
+      // deltaX will become 0 when the WheelDeltaHorizontalizer instance is
+      // being destroyed.
+      WheelDeltaHorizontalizer horizontalizer(*wheelEvent);
+      if (WheelDeltaAdjustmentStrategy::eHorizontalize == strategy) {
+        horizontalizer.Horizontalize();
+      }
 
       // Check if the frame to scroll before checking the default action
       // because if the scroll target is a plugin, the default action should be
@@ -3405,13 +3412,13 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       if (pluginFrame) {
         MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
         // Plugins should receive original values instead of adjusted values.
-        adjuster.CancelAdjustment();
+        horizontalizer.CancelHorizontalization();
         action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
       }
 
       switch (action) {
         case WheelPrefs::ACTION_SCROLL:
-        case WheelPrefs::ACTION_HORIZONTAL_SCROLL: {
+        case WheelPrefs::ACTION_HORIZONTALIZED_SCROLL: {
           // For scrolling of default action, we should honor the mouse wheel
           // transaction.
 
@@ -5931,12 +5938,12 @@ EventStateManager::WheelPrefs::Init(EventStateManager::WheelPrefs::Index aIndex)
   // Compute action values overridden by .override_x pref.
   // At present, override is possible only for the x-direction
   // because this pref is introduced mainly for tilt wheels.
-  // Note that ACTION_HORIZONTAL_SCROLL isn't a valid value for this pref
+  // Note that ACTION_HORIZONTALIZED_SCROLL isn't a valid value for this pref
   // because it affects only to deltaY.
   prefNameAction.AppendLiteral(".override_x");
   int32_t actionOverrideX = Preferences::GetInt(prefNameAction.get(), -1);
   if (actionOverrideX < -1 || actionOverrideX > int32_t(ACTION_LAST) ||
-      actionOverrideX == ACTION_HORIZONTAL_SCROLL) {
+      actionOverrideX == ACTION_HORIZONTALIZED_SCROLL) {
     NS_WARNING("Unsupported action override pref value, didn't override.");
     actionOverrideX = -1;
   }
@@ -5952,14 +5959,14 @@ EventStateManager::WheelPrefs::GetMultiplierForDeltaXAndY(
                                  double* aMultiplierForDeltaX,
                                  double* aMultiplierForDeltaY)
 {
-  // If the event should be treated as horizontal wheel operation, deltaY
-  // should be multiplied by mMultiplierY, however, it might be moved to
-  // deltaX for handling default action.  In such case, we need to treat
-  // mMultiplierX and mMultiplierY as swapped.
   *aMultiplierForDeltaX = mMultiplierX[aIndex];
   *aMultiplierForDeltaY = mMultiplierY[aIndex];
-  if (aEvent->mDeltaValuesAdjustedForDefaultHandler &&
-      ComputeActionFor(aEvent) == ACTION_HORIZONTAL_SCROLL) {
+  // If the event has been horizontalized(I.e. treated as a horizontal wheel
+  // scroll for a vertical wheel scroll), then we should swap mMultiplierX and
+  // mMultiplierY. By doing this, multipliers will still apply to the delta
+  // values they origianlly corresponded to.
+  if (aEvent->mDeltaValuesHorizontalizedForDefaultHandler &&
+      ComputeActionFor(aEvent) == ACTION_HORIZONTALIZED_SCROLL) {
     std::swap(*aMultiplierForDeltaX, *aMultiplierForDeltaY);
   }
 }
@@ -6033,7 +6040,7 @@ EventStateManager::WheelPrefs::ComputeActionFor(const WidgetWheelEvent* aEvent)
   Action* actions = deltaXPreferred ? mOverriddenActionsX : mActions;
   if (actions[index] == ACTION_NONE ||
       actions[index] == ACTION_SCROLL ||
-      actions[index] == ACTION_HORIZONTAL_SCROLL) {
+      actions[index] == ACTION_HORIZONTALIZED_SCROLL) {
     return actions[index];
   }
 
@@ -6042,7 +6049,7 @@ EventStateManager::WheelPrefs::ComputeActionFor(const WidgetWheelEvent* aEvent)
     // Use the default action.  Note that user might kill the wheel scrolling.
     Init(INDEX_DEFAULT);
     if (actions[INDEX_DEFAULT] == ACTION_SCROLL ||
-        actions[INDEX_DEFAULT] == ACTION_HORIZONTAL_SCROLL) {
+        actions[INDEX_DEFAULT] == ACTION_HORIZONTALIZED_SCROLL) {
       return actions[INDEX_DEFAULT];
     }
     return ACTION_NONE;
@@ -6098,20 +6105,26 @@ EventStateManager::WheelEventIsScrollAction(const WidgetWheelEvent* aEvent)
   WheelPrefs::Action action =
     WheelPrefs::GetInstance()->ComputeActionFor(aEvent);
   return action == WheelPrefs::ACTION_SCROLL ||
-         action == WheelPrefs::ACTION_HORIZONTAL_SCROLL;
+         action == WheelPrefs::ACTION_HORIZONTALIZED_SCROLL;
 }
 
 // static
-bool
-EventStateManager::WheelEventIsHorizontalScrollAction(
-                     const WidgetWheelEvent* aEvent)
+WheelDeltaAdjustmentStrategy
+EventStateManager::GetWheelDeltaAdjustmentStrategy(
+                     const WidgetWheelEvent& aEvent)
 {
-  if (aEvent->mMessage != eWheel) {
-    return false;
+  if (aEvent.mMessage != eWheel) {
+    return WheelDeltaAdjustmentStrategy::eNone;
   }
-  WheelPrefs::Action action =
-    WheelPrefs::GetInstance()->ComputeActionFor(aEvent);
-  return action == WheelPrefs::ACTION_HORIZONTAL_SCROLL;
+  switch (WheelPrefs::GetInstance()->ComputeActionFor(&aEvent)) {
+    case WheelPrefs::ACTION_HORIZONTALIZED_SCROLL:
+      return WheelDeltaAdjustmentStrategy::eHorizontalize;
+    // TODO Auto-dir scrolling is going to be handled here while implementing it
+    default:
+      // Prevent compilation errors generated by -Werror=switch
+      break;
+  }
+  return WheelDeltaAdjustmentStrategy::eNone;
 }
 
 void
