@@ -2,52 +2,16 @@ linux64-source/opt:
     description: "Firefox source builder"
     treeherder:
         platform: linux64/opt
-        symbol: Src
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        max-run-time: 36000
-    run:
-        using: mozharness
-        actions: [build]
-        config:
-            - builds/releng_sub_linux_configs/64_source.py
-        options: []
-        script: "mozharness/scripts/fx_source.py"
-    run-on-projects: []
     shipping-product: firefox
 
 linux64-fennec-source/opt:
     description: "Fennec source builder"
     treeherder:
         platform: android-api-16/opt
-        symbol: Src
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        max-run-time: 36000
-    run:
-        using: mozharness
-        actions: [build]
-        config:
-            - builds/releng_sub_linux_configs/64_source.py
-        options: []
-        script: "mozharness/scripts/fx_source.py"
-    run-on-projects: []
     shipping-product: fennec
 
 linux64-devedition-source/opt:
     description: "Devedition source builder"
     treeherder:
         platform: linux64-devedition-source/opt
-        symbol: Src
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        max-run-time: 36000
-    run:
-        using: mozharness
-        actions: [build]
-        config:
-            - builds/releng_sub_linux_configs/64_source.py
-        options: []
-        script: "mozharness/scripts/fx_source.py"
-    run-on-projects: []
     shipping-product: devedition
