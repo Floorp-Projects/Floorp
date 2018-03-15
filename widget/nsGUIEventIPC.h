@@ -187,7 +187,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     WriteParam(aMsg, aParam.mViewPortIsOverscrolled);
     WriteParam(aMsg, aParam.mCanTriggerSwipe);
     WriteParam(aMsg, aParam.mAllowToOverrideSystemScrollSpeed);
-    WriteParam(aMsg, aParam.mDeltaValuesAdjustedForDefaultHandler);
+    WriteParam(aMsg, aParam.mDeltaValuesHorizontalizedForDefaultHandler);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -212,7 +212,8 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
       ReadParam(aMsg, aIter, &aResult->mViewPortIsOverscrolled) &&
       ReadParam(aMsg, aIter, &aResult->mCanTriggerSwipe) &&
       ReadParam(aMsg, aIter, &aResult->mAllowToOverrideSystemScrollSpeed) &&
-      ReadParam(aMsg, aIter, &aResult->mDeltaValuesAdjustedForDefaultHandler);
+      ReadParam(aMsg, aIter,
+                &aResult->mDeltaValuesHorizontalizedForDefaultHandler);
     aResult->mScrollType =
       static_cast<mozilla::WidgetWheelEvent::ScrollType>(scrollType);
     return rv;
