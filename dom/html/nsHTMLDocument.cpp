@@ -1430,8 +1430,7 @@ nsHTMLDocument::Open(JSContext* cx,
     bool willReparent = mWillReparent;
     mWillReparent = true;
 
-    nsDocument* templateContentsOwner =
-      static_cast<nsDocument*>(mTemplateContentsOwner.get());
+    nsIDocument* templateContentsOwner = mTemplateContentsOwner.get();
 
     if (templateContentsOwner) {
       templateContentsOwner->mWillReparent = true;
