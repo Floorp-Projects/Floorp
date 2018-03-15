@@ -33,9 +33,11 @@ class TestPatchInfo(unittest.TestCase):
     def test_append_add_if_instruction(self):
         self.patch_info.append_add_instruction('distribution/extensions/extension/file.test')
         self.assertEquals(
-            ['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv2)
+            ['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'],  # NOQA: E501
+            self.patch_info.manifestv2)
         self.assertEquals(
-            ['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv3)
+            ['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'],  # NOQA: E501
+            self.patch_info.manifestv3)
 
     def test_append_add_if_not_instruction(self):
         self.patch_info.append_add_if_not_instruction('file.test')
@@ -51,9 +53,11 @@ class TestPatchInfo(unittest.TestCase):
         self.patch_info.append_patch_instruction(
             'distribution/extensions/extension/file.test', 'patchname')
         self.assertEquals(
-            ['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv2)
+            ['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'],  # NOQA: E501
+            self.patch_info.manifestv2)
         self.assertEquals(
-            ['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv3)
+            ['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'],  # NOQA: E501
+            self.patch_info.manifestv3)
 
     def test_append_remove_instruction(self):
         self.patch_info.append_remove_instruction('file.test')
@@ -110,7 +114,9 @@ class TestMakeIncrementalUpdates(unittest.TestCase):
     def setUp(self):
         work_dir = '.'
         self.patch_info = PatchInfo(
-            work_dir, ['update.manifest', 'updatev2.manifest', 'updatev3.manifest'], ['/readme.txt'])
+            work_dir,
+            ['update.manifest', 'updatev2.manifest', 'updatev3.manifest'],
+            ['/readme.txt'])
         root_path = '/'
         filename = 'test.file'
         self.mar_file_entry = MarFileEntry(root_path, filename)
@@ -132,7 +138,8 @@ class TestMakeIncrementalUpdates(unittest.TestCase):
         mkup.extract_mar('filename', 'work_dir')
 
     def test_create_partial_patch_for_file(self):
-        mkup.create_partial_patch_for_file('from_marfile_entry', 'to_marfile_entry', 'shas', self.patch_info)
+        mkup.create_partial_patch_for_file('from_marfile_entry', 'to_marfile_entry', 'shas',
+                                           self.patch_info)
 
     def test_create_add_patch_for_file(self):
         mkup.create_add_patch_for_file('to_marfile_entry', self.patch_info)
@@ -141,7 +148,8 @@ class TestMakeIncrementalUpdates(unittest.TestCase):
         mkup.process_explicit_remove_files('dir_path', self.patch_info)
 
     def test_create_partial_patch(self):
-        mkup.create_partial_patch('from_dir_path', 'to_dir_path', 'patch_filename', 'shas', self.patch_info, 'forced_updates')
+        mkup.create_partial_patch('from_dir_path', 'to_dir_path', 'patch_filename', 'shas',
+                                  self.patch_info, 'forced_updates')
 
     def test_create_partial_patches(patches):
         mkup.create_partial_patches('patches')
