@@ -179,20 +179,20 @@ PacketFilter::Action TlsRecordFilter::FilterRecord(
   return CHANGE;
 }
 
-bool TlsRecordHeader::Parse(uint64_t sequence_number, TlsParser* parser,
+bool TlsRecordHeader::Parse(uint64_t seqno, TlsParser* parser,
                             DataBuffer* body) {
   if (!parser->Read(&content_type_)) {
     return false;
   }
 
-  uint32_t version;
-  if (!parser->Read(&version, 2)) {
+  uint32_t ver;
+  if (!parser->Read(&ver, 2)) {
     return false;
   }
-  version_ = version;
+  version_ = ver;
 
   // If this is DTLS, overwrite the sequence number.
-  if (IsDtls(version)) {
+  if (IsDtls(ver)) {
     uint32_t tmp;
     if (!parser->Read(&tmp, 4)) {
       return false;
@@ -203,7 +203,7 @@ bool TlsRecordHeader::Parse(uint64_t sequence_number, TlsParser* parser,
     }
     sequence_number_ |= static_cast<uint64_t>(tmp);
   } else {
-    sequence_number_ = sequence_number;
+    sequence_number_ = seqno;
   }
   return parser->ReadVariable(body, 2);
 }
@@ -487,10 +487,10 @@ PacketFilter::Action TlsConversationRecorder::FilterRecord(
   return KEEP;
 }
 
-PacketFilter::Action TlsHeaderRecorder::FilterRecord(
-    const TlsRecordHeader& header, const DataBuffer& input,
-    DataBuffer* output) {
-  headers_.push_back(header);
+PacketFilter::Action TlsHeaderRecorder::FilterRecord(const TlsRecordHeader& hdr,
+                                                     const DataBuffer& input,
+                                                     DataBuffer* output) {
+  headers_.push_back(hdr);
   return KEEP;
 }
 

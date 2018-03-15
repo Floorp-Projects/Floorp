@@ -192,8 +192,8 @@ TEST_P(TlsConnectGenericPre13, P384PriorityFromModelSocket) {
 
 class TlsKeyExchangeGroupCapture : public TlsHandshakeFilter {
  public:
-  TlsKeyExchangeGroupCapture(const std::shared_ptr<TlsAgent> &agent)
-      : TlsHandshakeFilter(agent, {kTlsHandshakeServerKeyExchange}),
+  TlsKeyExchangeGroupCapture(const std::shared_ptr<TlsAgent> &a)
+      : TlsHandshakeFilter(a, {kTlsHandshakeServerKeyExchange}),
         group_(ssl_grp_none) {}
 
   SSLNamedGroup group() const { return group_; }

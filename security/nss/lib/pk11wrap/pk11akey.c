@@ -804,12 +804,30 @@ PK11_MakePrivKey(PK11SlotInfo *slot, KeyType keyType,
     /* don't know? look it up */
     if (keyType == nullKey) {
         CK_KEY_TYPE pk11Type = CKK_RSA;
+        SECItem info;
 
         pk11Type = PK11_ReadULongAttribute(slot, privID, CKA_KEY_TYPE);
         isTemp = (PRBool)!PK11_HasAttributeSet(slot, privID, CKA_TOKEN, PR_FALSE);
         switch (pk11Type) {
             case CKK_RSA:
                 keyType = rsaKey;
+                /* determine RSA key type from the CKA_PUBLIC_KEY_INFO if present */
+                rv = PK11_ReadAttribute(slot, privID, CKA_PUBLIC_KEY_INFO, NULL, &info);
+                if (rv == SECSuccess) {
+                    CERTSubjectPublicKeyInfo *spki;
+
+                    spki = SECKEY_DecodeDERSubjectPublicKeyInfo(&info);
+                    if (spki) {
+                        SECOidTag tag;
+
+                        tag = SECOID_GetAlgorithmTag(&spki->algorithm);
+                        if (tag == SEC_OID_PKCS1_RSA_PSS_SIGNATURE)
+                            keyType = rsaPssKey;
+                        SECKEY_DestroySubjectPublicKeyInfo(spki);
+                    }
+                    SECITEM_FreeItem(&info, PR_FALSE);
+                }
+
                 break;
             case CKK_DSA:
                 keyType = dsaKey;
