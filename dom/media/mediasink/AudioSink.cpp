@@ -64,12 +64,7 @@ AudioSink::AudioSink(AbstractThread* aThread,
   }
   MOZ_DIAGNOSTIC_ASSERT(mOutputRate, "output rate can't be 0.");
 
-  bool monoAudioEnabled = MediaPrefs::MonoAudio();
-
-  mOutputChannels =
-    monoAudioEnabled
-    ? 1
-    : (MediaPrefs::AudioSinkForceStereo() ? 2 : mInfo.mChannels);
+  mOutputChannels = DecideAudioPlaybackChannels(mInfo);
 }
 
 AudioSink::~AudioSink()
