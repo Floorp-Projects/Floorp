@@ -60,25 +60,6 @@ RemoteContentController::HandleTapOnMainThread(TapType aTapType,
 }
 
 void
-RemoteContentController::HandleTapOnCompositorThread(TapType aTapType,
-                                                     LayoutDevicePoint aPoint,
-                                                     Modifiers aModifiers,
-                                                     ScrollableLayerGuid aGuid,
-                                                     uint64_t aInputBlockId)
-{
-  MOZ_ASSERT(XRE_IsGPUProcess());
-  MOZ_ASSERT(MessageLoop::current() == mCompositorThread);
-
-  // The raw pointer to APZCTreeManagerParent is ok here because we are on the
-  // compositor thread.
-  APZCTreeManagerParent* apzctmp =
-      CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
-  if (apzctmp) {
-    Unused << apzctmp->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
-  }
-}
-
-void
 RemoteContentController::HandleTap(TapType aTapType,
                                    const LayoutDevicePoint& aPoint,
                                    Modifiers aModifiers,
@@ -88,24 +69,16 @@ RemoteContentController::HandleTap(TapType aTapType,
   APZThreadUtils::AssertOnControllerThread();
 
   if (XRE_GetProcessType() == GeckoProcessType_GPU) {
-    if (MessageLoop::current() == mCompositorThread) {
-      HandleTapOnCompositorThread(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
-    } else {
-      // We have to send messages from the compositor thread
-      mCompositorThread->PostTask(NewRunnableMethod<TapType,
-                                                    LayoutDevicePoint,
-                                                    Modifiers,
-                                                    ScrollableLayerGuid,
-                                                    uint64_t>(
-        "layers::RemoteContentController::HandleTapOnCompositorThread",
-        this,
-        &RemoteContentController::HandleTapOnCompositorThread,
-        aTapType,
-        aPoint,
-        aModifiers,
-        aGuid,
-        aInputBlockId));
+    MOZ_ASSERT(MessageLoop::current() == mCompositorThread);
+
+    // The raw pointer to APZCTreeManagerParent is ok here because we are on the
+    // compositor thread.
+    APZCTreeManagerParent* apzctmp =
+        CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
+    if (apzctmp) {
+      Unused << apzctmp->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
     }
+
     return;
   }
 
@@ -133,24 +106,6 @@ RemoteContentController::HandleTap(TapType aTapType,
 }
 
 void
-RemoteContentController::NotifyPinchGestureOnCompositorThread(
-    PinchGestureInput::PinchGestureType aType,
-    const ScrollableLayerGuid& aGuid,
-    LayoutDeviceCoord aSpanChange,
-    Modifiers aModifiers)
-{
-  MOZ_ASSERT(MessageLoop::current() == mCompositorThread);
-
-  // The raw pointer to APZCTreeManagerParent is ok here because we are on the
-  // compositor thread.
-  APZCTreeManagerParent* apzctmp =
-      CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
-  if (apzctmp) {
-    Unused << apzctmp->SendNotifyPinchGesture(aType, aGuid, aSpanChange, aModifiers);
-  }
-}
-
-void
 RemoteContentController::NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
                                             const ScrollableLayerGuid& aGuid,
                                             LayoutDeviceCoord aSpanChange,
@@ -164,22 +119,16 @@ RemoteContentController::NotifyPinchGesture(PinchGestureInput::PinchGestureType 
   // If we're in the GPU process, try to find a handle to the parent process
   // and send it there.
   if (XRE_IsGPUProcess()) {
-    if (MessageLoop::current() == mCompositorThread) {
-      NotifyPinchGestureOnCompositorThread(aType, aGuid, aSpanChange, aModifiers);
-    } else {
-      mCompositorThread->PostTask(NewRunnableMethod<PinchGestureInput::PinchGestureType,
-                                                    ScrollableLayerGuid,
-                                                    LayoutDeviceCoord,
-                                                    Modifiers>(
-        "layers::RemoteContentController::NotifyPinchGestureOnCompositorThread",
-        this,
-        &RemoteContentController::NotifyPinchGestureOnCompositorThread,
-        aType,
-        aGuid,
-        aSpanChange,
-        aModifiers));
+    MOZ_ASSERT(MessageLoop::current() == mCompositorThread);
+
+    // The raw pointer to APZCTreeManagerParent is ok here because we are on the
+    // compositor thread.
+    APZCTreeManagerParent* apzctmp =
+        CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
+    if (apzctmp) {
+      Unused << apzctmp->SendNotifyPinchGesture(aType, aGuid, aSpanChange, aModifiers);
+      return;
     }
-    return;
   }
 
   // If we're in the parent process, handle it directly. We don't have a handle
