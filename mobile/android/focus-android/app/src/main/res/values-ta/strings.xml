@@ -8,6 +8,8 @@
   <string name="feedback_erase">உங்கள் உலாவல் வரலாறு அழிக்கப்பட்டது.</string>
   <string name="search_hint">%1$s சொல்லைத் தேடு</string>
   <string name="menu_share">பகிர்…</string>
+  <string name="menu_open_with_default_browser2">%1$s உலாவியில் திற</string>
+  <string name="menu_open_with_a_browser2">உலாவியில் திற…</string>
   <string name="menu_add_to_home_screen">முகப்பு திரைக்கு சேர்</string>
   <string name="menu_whats_new">புதிதாய் என்ன</string>
   <string name="menu_settings">அமைவுகள்</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">உதவி</string>
   <string name="menu_rights">உரிமைகள்</string>
   <string name="menu_trackers_blocked_title">பின்தொடரி</string>
+  <string name="menu_custom_tab_branding">%1$s மூலம் இயக்கப்படுகிறது</string>
   <string name="share_dialog_title">தோன்றும் செயலிகளின் வழி பகிர்க</string>
   <string name="notification_erase_text">உலாவல் வரலாற்றை அழி</string>
   <string name="notification_action_open">திற</string>
@@ -181,4 +184,11 @@
   <string name="your_rights_content3"><![CDATA["உங்களுக்கு மொசில்லா அறக்கட்டளையின் அல்லது பிற தரப்பின் வணிகச்சின்னங்கள் மீது எந்த உரிமைகளும் உரிமங்களும் வழப்படவில்லை. இதில் மொசில்லா, பயர்பாக்ஸ் அல்லது %1$s பெயர்கள் அல்லது லாகோக்கள் அடங்கும். கூடுதல் விவரவங்களை "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2951;&#2969;&#3021;&#2965;&#3015;</a>" காணலாம்."]]></string>
   <string name="your_rights_content4"><![CDATA["%1$s உடைய கூடுதல் மூல நிரல் மற்ற கட்டற்ற திறந்த மூல "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2953;&#2992;&#3007;&#2990;&#2969;&#3021;&#2965;&#2995;&#3021;</a>" கீழ் கிடைக்கிறது."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s டிஸ்கணக்ட் இன்க். நிறுவனத்தின் தடைப்பட்டியல்களையும் பயன்படுத்துகிறது. இது தனித்த சுதந்தரிப் பணியாக "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU&#2986;&#3018;&#2980;&#3009; &#2953;&#2992;&#3007;&#2990;&#2990;&#3021; v3</a>" கீழ், "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#2951;&#2969;&#3021;&#2965;&#3015;</a>" கிடைக்கிறது."]]></string>
+  <string name="gv_prompt_username_hint">பயனர்பெயர்</string>
+  <string name="gv_prompt_password_hint">கடவுச்சொல்</string>
+  <string name="gv_prompt_clear">துடை</string>
+  <string name="security_popup_secure_connection">பாதுகாப்பான இணைப்பு</string>
+  <string name="security_popup_insecure_connection">பாதுகாப்பற்ற இணைப்பு</string>
+  <string name="security_popup_security_verified">சரிபார்க்கப்பட்டது: %1$s</string>
+  <string name="site_security_icon_content_description">தள பாதுகாப்பு</string>
 </resources>

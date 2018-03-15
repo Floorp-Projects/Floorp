@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
   <string name="action_ok">ठीक</string>
-  <string name="action_save">सहेजहोऽ</string>
-  <string name="urlbar_hint">खोजहोऽ अथवा पता भरहोऽ</string>
+  <string name="action_save">सेव करियै</string>
+  <string name="urlbar_hint">खोजियै अथवा पता भरियै</string>
   <string name="teaser">स्वचालित निजी ब्रॉउजिंग. \nब्रॉउज. मेटाभोऽ. दोहराभोऽ.\n</string>
   <string name="feedback_erase">तोरोऽ ब्रॉउजिंग इतिहास के मेटाए देलोऽ गेलए.</string>
   <string name="search_hint">" %1$s लेली खोजहोऽ"</string>

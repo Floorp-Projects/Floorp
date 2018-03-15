@@ -186,4 +186,8 @@
   <string name="gv_prompt_username_hint">Nom d’utilisateur</string>
   <string name="gv_prompt_password_hint">Mot de passe</string>
   <string name="gv_prompt_clear">Effacer</string>
+  <string name="security_popup_secure_connection">Connexion sécurisée</string>
+  <string name="security_popup_insecure_connection">Connexion non sécurisée</string>
+  <string name="security_popup_security_verified">Vérifié par : %1$s</string>
+  <string name="site_security_icon_content_description">Sécurité du site</string>
 </resources>
