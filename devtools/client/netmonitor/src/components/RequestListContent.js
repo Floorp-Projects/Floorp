@@ -15,7 +15,6 @@ const { formDataURI } = require("../utils/request-utils");
 const {
   getDisplayedRequests,
   getSelectedRequest,
-  getSortedRequests,
   getWaterfallScale,
 } = require("../selectors/index");
 
@@ -65,7 +64,6 @@ class RequestListContent extends Component {
       openStatistics: PropTypes.func.isRequired,
       scale: PropTypes.number,
       selectedRequest: PropTypes.object,
-      sortedRequests: PropTypes.array.isRequired,
       requestFilterTypes: PropTypes.object.isRequired,
     };
   }
@@ -245,8 +243,8 @@ class RequestListContent extends Component {
 
   onContextMenu(evt) {
     evt.preventDefault();
-    let { selectedRequest, sortedRequests } = this.props;
-    this.contextMenu.open(evt, selectedRequest, sortedRequests);
+    let { selectedRequest, displayedRequests } = this.props;
+    this.contextMenu.open(evt, selectedRequest, displayedRequests);
   }
 
   /**
@@ -317,7 +315,6 @@ module.exports = connect(
     firstRequestStartedMillis: state.requests.firstStartedMillis,
     selectedRequest: getSelectedRequest(state),
     scale: getWaterfallScale(state),
-    sortedRequests: getSortedRequests(state),
     requestFilterTypes: state.filters.requestFilterTypes,
   }),
   (dispatch, props) => ({
