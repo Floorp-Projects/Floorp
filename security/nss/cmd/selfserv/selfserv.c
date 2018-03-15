@@ -57,7 +57,7 @@
 
 int NumSidCacheEntries = 1024;
 
-static int handle_connection(PRFileDesc *, PRFileDesc *, int);
+static int handle_connection(PRFileDesc *, PRFileDesc *);
 
 static const char envVarName[] = { SSL_ENV_VAR_NAME };
 static const char inheritableSockName[] = { "SELFSERV_LISTEN_SOCKET" };
@@ -509,7 +509,6 @@ typedef struct jobStr {
     PRCList link;
     PRFileDesc *tcp_sock;
     PRFileDesc *model_sock;
-    int requestCert;
 } JOB;
 
 static PZLock *qLock;             /* this lock protects all data immediately below */
@@ -541,7 +540,7 @@ setupJobs(int maxJobs)
     return SECSuccess;
 }
 
-typedef int startFn(PRFileDesc *a, PRFileDesc *b, int c);
+typedef int startFn(PRFileDesc *a, PRFileDesc *b);
 
 typedef enum { rs_idle = 0,
                rs_running = 1,
@@ -550,7 +549,6 @@ typedef enum { rs_idle = 0,
 typedef struct perThreadStr {
     PRFileDesc *a;
     PRFileDesc *b;
-    int c;
     int rv;
     startFn *startFunc;
     PRThread *prThread;
@@ -564,7 +562,7 @@ thread_wrapper(void *arg)
 {
     perThread *slot = (perThread *)arg;
 
-    slot->rv = (*slot->startFunc)(slot->a, slot->b, slot->c);
+    slot->rv = (*slot->startFunc)(slot->a, slot->b);
 
     /* notify the thread exit handler. */
     PZ_Lock(qLock);
@@ -575,7 +573,7 @@ thread_wrapper(void *arg)
 }
 
 int
-jobLoop(PRFileDesc *a, PRFileDesc *b, int c)
+jobLoop(PRFileDesc *a, PRFileDesc *b)
 {
     PRCList *myLink = 0;
     JOB *myJob;
@@ -595,8 +593,7 @@ jobLoop(PRFileDesc *a, PRFileDesc *b, int c)
         /* myJob will be null when stopping is true and jobQ is empty */
         if (!myJob)
             break;
-        handle_connection(myJob->tcp_sock, myJob->model_sock,
-                          myJob->requestCert);
+        handle_connection(myJob->tcp_sock, myJob->model_sock);
         PZ_Lock(qLock);
         PR_APPEND_LINK(myLink, &freeJobs);
         PZ_NotifyCondVar(freeListNotEmptyCv);
@@ -609,7 +606,6 @@ launch_threads(
     startFn *startFunc,
     PRFileDesc *a,
     PRFileDesc *b,
-    int c,
     PRBool local)
 {
     int i;
@@ -645,7 +641,6 @@ launch_threads(
         slot->state = rs_running;
         slot->a = a;
         slot->b = b;
-        slot->c = c;
         slot->startFunc = startFunc;
         slot->prThread = PR_CreateThread(PR_USER_THREAD,
                                          thread_wrapper, slot, PR_PRIORITY_NORMAL,
@@ -893,8 +888,7 @@ int /* returns count */
 int
 do_writes(
     PRFileDesc *ssl_sock,
-    PRFileDesc *model_sock,
-    int requestCert)
+    PRFileDesc *model_sock)
 {
     int sent = 0;
     int count = 0;
@@ -925,8 +919,7 @@ do_writes(
 static int
 handle_fdx_connection(
     PRFileDesc *tcp_sock,
-    PRFileDesc *model_sock,
-    int requestCert)
+    PRFileDesc *model_sock)
 {
     PRFileDesc *ssl_sock = NULL;
     SECStatus result;
@@ -960,8 +953,7 @@ handle_fdx_connection(
     lockedVars_AddToCount(&lv, 1);
 
     /* Attempt to launch the writer thread. */
-    result = launch_thread(do_writes, ssl_sock, (PRFileDesc *)&lv,
-                           requestCert);
+    result = launch_thread(do_writes, ssl_sock, (PRFileDesc *)&lv);
 
     if (result == SECSuccess)
         do {
@@ -1093,7 +1085,7 @@ makeCorruptedOCSPResponse(PLArenaPool *arena)
 }
 
 SECItemArray *
-makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
+makeSignedOCSPResponse(PLArenaPool *arena,
                        CERTCertificate *cert, secuPWData *pwdata)
 {
     SECItemArray *result = NULL;
@@ -1117,7 +1109,7 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
 
     nextUpdate = now + (PRTime)60 * 60 * 24 * PR_USEC_PER_SEC; /* plus 1 day */
 
-    switch (osm) {
+    switch (ocspStaplingMode) {
         case osm_good:
         case osm_badsig:
             sr = CERT_CreateOCSPSingleResponseGood(arena, cid, now,
@@ -1150,7 +1142,7 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
     singleResponses[1] = NULL;
 
     ocspResponse = CERT_CreateEncodedOCSPSuccessResponse(arena,
-                                                         (osm == osm_badsig)
+                                                         (ocspStaplingMode == osm_badsig)
                                                              ? NULL
                                                              : ca,
                                                          ocspResponderID_byName, now, singleResponses,
@@ -1175,7 +1167,7 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
 }
 
 void
-setupCertStatus(PLArenaPool *arena, enum ocspStaplingModeEnum ocspStaplingMode,
+setupCertStatus(PLArenaPool *arena,
                 CERTCertificate *cert, int index, secuPWData *pwdata)
 {
     if (ocspStaplingMode == osm_random) {
@@ -1213,7 +1205,7 @@ setupCertStatus(PLArenaPool *arena, enum ocspStaplingModeEnum ocspStaplingMode,
             case osm_unknown:
             case osm_badsig:
                 multiOcspResponses =
-                    makeSignedOCSPResponse(arena, ocspStaplingMode, cert,
+                    makeSignedOCSPResponse(arena, cert,
                                            pwdata);
                 break;
             case osm_corrupted:
@@ -1236,10 +1228,7 @@ setupCertStatus(PLArenaPool *arena, enum ocspStaplingModeEnum ocspStaplingMode,
 }
 
 int
-handle_connection(
-    PRFileDesc *tcp_sock,
-    PRFileDesc *model_sock,
-    int requestCert)
+handle_connection(PRFileDesc *tcp_sock, PRFileDesc *model_sock)
 {
     PRFileDesc *ssl_sock = NULL;
     PRFileDesc *local_file_fd = NULL;
@@ -1272,7 +1261,6 @@ handle_connection(
 
     VLOG(("selfserv: handle_connection: starting\n"));
     if (useModelSocket && model_sock) {
-        SECStatus rv;
         ssl_sock = SSL_ImportFD(model_sock, tcp_sock);
         if (!ssl_sock) {
             errWarn("SSL_ImportFD with model");
@@ -1588,8 +1576,7 @@ sigusr1_handler(int sig)
 SECStatus
 do_accepts(
     PRFileDesc *listen_sock,
-    PRFileDesc *model_sock,
-    int requestCert)
+    PRFileDesc *model_sock)
 {
     PRNetAddr addr;
     PRErrorCode perr;
@@ -1659,7 +1646,6 @@ do_accepts(
             JOB *myJob = (JOB *)myLink;
             myJob->tcp_sock = tcp_sock;
             myJob->model_sock = model_sock;
-            myJob->requestCert = requestCert;
         }
 
         PR_APPEND_LINK(myLink, &jobQ);
@@ -1818,7 +1804,6 @@ handshakeCallback(PRFileDesc *fd, void *client_data)
 void
 server_main(
     PRFileDesc *listen_sock,
-    int requestCert,
     SECKEYPrivateKey **privKey,
     CERTCertificate **cert,
     const char *expectedHostNameVal)
@@ -2021,7 +2006,7 @@ server_main(
     /* end of ssl configuration. */
 
     /* Now, do the accepting, here in the main thread. */
-    rv = do_accepts(listen_sock, model_sock, requestCert);
+    rv = do_accepts(listen_sock, model_sock);
 
     terminateWorkerThreads();
 
@@ -2654,9 +2639,8 @@ main(int argc, char **argv)
                 }
             }
             if (cipher > 0) {
-                SECStatus status;
-                status = SSL_CipherPrefSetDefault(cipher, SSL_ALLOWED);
-                if (status != SECSuccess)
+                rv = SSL_CipherPrefSetDefault(cipher, SSL_ALLOWED);
+                if (rv != SECSuccess)
                     SECU_PrintError(progName, "SSL_CipherPrefSet()");
             } else {
                 fprintf(stderr,
@@ -2684,7 +2668,7 @@ main(int argc, char **argv)
             exit(11);
         }
         if (privKey[i]->keyType != ecKey)
-            setupCertStatus(certStatusArena, ocspStaplingMode, cert[i], i, &pwdata);
+            setupCertStatus(certStatusArena, cert[i], i, &pwdata);
     }
 
     if (configureWeakDHE > 0) {
@@ -2697,7 +2681,7 @@ main(int argc, char **argv)
     }
 
     /* allocate the array of thread slots, and launch the worker threads. */
-    rv = launch_threads(&jobLoop, 0, 0, requestCert, useLocalThreads);
+    rv = launch_threads(&jobLoop, 0, 0, useLocalThreads);
 
     if (rv == SECSuccess && logStats) {
         loggerThread = PR_CreateThread(PR_SYSTEM_THREAD,
@@ -2712,7 +2696,7 @@ main(int argc, char **argv)
     }
 
     if (rv == SECSuccess) {
-        server_main(listen_sock, requestCert, privKey, cert,
+        server_main(listen_sock, privKey, cert,
                     expectedHostNameVal);
     }
 
@@ -2731,7 +2715,6 @@ cleanup:
     }
 
     {
-        int i;
         for (i = 0; i < certNicknameIndex; i++) {
             if (cert[i]) {
                 CERT_DestroyCertificate(cert[i]);

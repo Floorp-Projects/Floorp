@@ -547,16 +547,16 @@ secmod_applyCryptoPolicy(const char *policyString,
         for (i = 0; i < PR_ARRAY_SIZE(algOptList); i++) {
             const oidValDef *algOpt = &algOptList[i];
             unsigned name_size = algOpt->name_size;
-            PRBool newValue = PR_FALSE;
+            PRBool newOption = PR_FALSE;
 
             if ((length >= name_size) && (cipher[name_size] == '/')) {
-                newValue = PR_TRUE;
+                newOption = PR_TRUE;
             }
-            if ((newValue || algOpt->name_size == length) &&
+            if ((newOption || algOpt->name_size == length) &&
                 PORT_Strncasecmp(algOpt->name, cipher, name_size) == 0) {
                 PRUint32 value = algOpt->val;
                 PRUint32 enable, disable;
-                if (newValue) {
+                if (newOption) {
                     value = secmod_parsePolicyValue(&cipher[name_size] + 1,
                                                     length - name_size - 1);
                 }
