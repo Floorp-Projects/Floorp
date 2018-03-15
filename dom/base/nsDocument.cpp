@@ -3363,7 +3363,7 @@ nsIDocument::GetContentType(nsAString& aContentType)
 }
 
 void
-nsDocument::SetContentType(const nsAString& aContentType)
+nsIDocument::SetContentType(const nsAString& aContentType)
 {
   SetContentTypeInternal(NS_ConvertUTF16toUTF8(aContentType));
 }
@@ -3746,7 +3746,7 @@ nsIDocument::DefaultStyleAttrURLData()
 }
 
 void
-nsDocument::SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding)
+nsIDocument::SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding)
 {
   if (mCharacterSet != aEncoding) {
     mCharacterSet = aEncoding;

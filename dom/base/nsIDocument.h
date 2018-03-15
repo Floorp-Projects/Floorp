@@ -789,7 +789,7 @@ public:
   /**
    * Set the document's character encoding.
    */
-  virtual void SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) = 0;
+  virtual void SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding);
 
   int32_t GetDocumentCharacterSetSource() const
   {
@@ -858,7 +858,7 @@ public:
   /**
    * Set the Content-Type of this document.
    */
-  virtual void SetContentType(const nsAString& aContentType) = 0;
+  virtual void SetContentType(const nsAString& aContentType);
 
   /**
    * Return the language of this document.
