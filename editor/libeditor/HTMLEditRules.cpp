@@ -1859,12 +1859,12 @@ HTMLEditRules::InsertBRElement(Selection& aSelection,
     int32_t visOffset = 0;
     WSType wsType;
     nsCOMPtr<nsINode> visNode;
-    wsObj.PriorVisibleNode(pointToBreak.GetContainer(), pointToBreak.Offset(),
+    wsObj.PriorVisibleNode(pointToBreak,
                            address_of(visNode), &visOffset, &wsType);
     if (wsType & WSType::block) {
       brElementIsAfterBlock = true;
     }
-    wsObj.NextVisibleNode(pointToBreak.GetContainer(), pointToBreak.Offset(),
+    wsObj.NextVisibleNode(pointToBreak,
                           address_of(visNode), &visOffset, &wsType);
     if (wsType & WSType::block) {
       brElementIsBeforeBlock = true;
@@ -1924,7 +1924,7 @@ HTMLEditRules::InsertBRElement(Selection& aSelection,
   nsCOMPtr<nsINode> maybeSecondBRNode;
   int32_t visOffset = 0;
   WSType wsType;
-  wsObj.NextVisibleNode(afterBRElement.GetContainer(), afterBRElement.Offset(),
+  wsObj.NextVisibleNode(afterBRElement,
                         address_of(maybeSecondBRNode), &visOffset, &wsType);
   if (wsType == WSType::br) {
     // The next thing after the break we inserted is another break.  Move the
@@ -2004,8 +2004,8 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
     nsCOMPtr<nsINode> visNode;
     int32_t visOffset=0;
     WSType wsType;
-    wsObj.NextVisibleNode(selNode, selOffset, address_of(visNode),
-                          &visOffset, &wsType);
+    wsObj.NextVisibleNode(EditorRawDOMPoint(selNode, selOffset),
+                          address_of(visNode), &visOffset, &wsType);
     if (wsType == WSType::br) {
       // ok, we are just before a break.  is it inside the mailquote?
       if (visNode != citeNode && citeNode->Contains(visNode)) {
@@ -2082,12 +2082,12 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
       nsCOMPtr<nsINode> visNode;
       int32_t visOffset=0;
       WSType wsType;
-      wsObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
-                             &visOffset, &wsType);
+      wsObj.PriorVisibleNode(EditorRawDOMPoint(selNode, selOffset),
+                             address_of(visNode), &visOffset, &wsType);
       if (wsType == WSType::normalWS || wsType == WSType::text ||
           wsType == WSType::special) {
         WSRunObject wsObjAfterBR(htmlEditor, selNode, selOffset + 1);
-        wsObjAfterBR.NextVisibleNode(selNode, selOffset + 1,
+        wsObjAfterBR.NextVisibleNode(EditorRawDOMPoint(selNode, selOffset + 1),
                                      address_of(visNode), &visOffset, &wsType);
         if (wsType == WSType::normalWS || wsType == WSType::text ||
             wsType == WSType::special ||
@@ -2237,11 +2237,11 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
     // Find next visible node
     if (aAction == nsIEditor::eNext) {
-      wsObj.NextVisibleNode(startNode, startOffset, address_of(visNode),
-                            &visOffset, &wsType);
+      wsObj.NextVisibleNode(EditorRawDOMPoint(startNode, startOffset),
+                            address_of(visNode), &visOffset, &wsType);
     } else {
-      wsObj.PriorVisibleNode(startNode, startOffset, address_of(visNode),
-                             &visOffset, &wsType);
+      wsObj.PriorVisibleNode(EditorRawDOMPoint(startNode, startOffset),
+                             address_of(visNode), &visOffset, &wsType);
     }
 
     if (!visNode) {
@@ -2397,7 +2397,8 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
           nsCOMPtr<nsINode> otherNode;
           int32_t otherOffset;
 
-          wsObj.NextVisibleNode(startNode, startOffset, address_of(otherNode),
+          wsObj.NextVisibleNode(EditorRawDOMPoint(startNode, startOffset),
+                                address_of(otherNode),
                                 &otherOffset, &otherWSType);
 
           if (otherWSType == WSType::br) {
@@ -2471,10 +2472,12 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
       // Find node in other direction
       if (aAction == nsIEditor::eNext) {
-        wsObj.PriorVisibleNode(startNode, startOffset, address_of(otherNode),
+        wsObj.PriorVisibleNode(EditorRawDOMPoint(startNode, startOffset),
+                               address_of(otherNode),
                                &otherOffset, &otherWSType);
       } else {
-        wsObj.NextVisibleNode(startNode, startOffset, address_of(otherNode),
+        wsObj.NextVisibleNode(EditorRawDOMPoint(startNode, startOffset),
+                              address_of(otherNode),
                               &otherOffset, &otherWSType);
       }
 
@@ -5546,8 +5549,8 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
   if (selStartNode != selCommon && selStartNode != root) {
     while (true) {
       WSRunObject wsObj(mHTMLEditor, selStartNode, selStartOffset);
-      wsObj.PriorVisibleNode(selStartNode, selStartOffset, address_of(unused),
-                             &visOffset, &wsType);
+      wsObj.PriorVisibleNode(EditorRawDOMPoint(selStartNode, selStartOffset),
+                             address_of(unused), &visOffset, &wsType);
       if (wsType != WSType::thisBlock) {
         break;
       }
@@ -5568,8 +5571,8 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
   if (selEndNode != selCommon && selEndNode != root) {
     for (;;) {
       WSRunObject wsObj(mHTMLEditor, selEndNode, selEndOffset);
-      wsObj.NextVisibleNode(selEndNode, selEndOffset, address_of(unused),
-                            &visOffset, &wsType);
+      wsObj.NextVisibleNode(EditorRawDOMPoint(selEndNode, selEndOffset),
+                            address_of(unused), &visOffset, &wsType);
       if (wsType == WSType::br) {
         if (mHTMLEditor->IsVisibleBRElement(wsObj.mEndReasonNode)) {
           break;
@@ -5695,7 +5698,7 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
   WSRunObject wsEndObj(htmlEditor, endNode, static_cast<int32_t>(endOffset));
   // is there any intervening visible whitespace?  if so we can't push selection past that,
   // it would visibly change maening of users selection
-  wsEndObj.PriorVisibleNode(endNode, static_cast<int32_t>(endOffset),
+  wsEndObj.PriorVisibleNode(EditorRawDOMPoint(endNode, endOffset),
                             address_of(unused), &offset, &wsType);
   if (wsType != WSType::text && wsType != WSType::normalWS) {
     // eThisBlock and eOtherBlock conveniently distinquish cases
@@ -5737,7 +5740,7 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
                          static_cast<int32_t>(startOffset));
   // is there any intervening visible whitespace?  if so we can't push selection past that,
   // it would visibly change maening of users selection
-  wsStartObj.NextVisibleNode(startNode, static_cast<int32_t>(startOffset),
+  wsStartObj.NextVisibleNode(EditorRawDOMPoint(startNode, startOffset),
                              address_of(unused), &offset, &wsType);
   if (wsType != WSType::text && wsType != WSType::normalWS) {
     // eThisBlock and eOtherBlock conveniently distinquish cases
@@ -7305,8 +7308,8 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
         nsCOMPtr<nsINode> visNode;
         int32_t visOffset = 0;
         WSType wsType;
-        wsObj.NextVisibleNode(&aListItem, 0, address_of(visNode),
-                              &visOffset, &wsType);
+        wsObj.NextVisibleNode(EditorRawDOMPoint(&aListItem, 0),
+                              address_of(visNode), &visOffset, &wsType);
         if (wsType == WSType::special || wsType == WSType::br ||
             visNode->IsHTMLElement(nsGkAtoms::hr)) {
           EditorRawDOMPoint atVisNode(visNode);
