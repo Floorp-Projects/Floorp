@@ -134,11 +134,11 @@ class ShaderConstants11 : angle::NonCopyable
     bool mComputeDirty;
 
     std::vector<SamplerMetadata> mSamplerMetadataVS;
-    bool mSamplerMetadataVSDirty;
+    int mNumActiveVSSamplers;
     std::vector<SamplerMetadata> mSamplerMetadataPS;
-    bool mSamplerMetadataPSDirty;
+    int mNumActivePSSamplers;
     std::vector<SamplerMetadata> mSamplerMetadataCS;
-    bool mSamplerMetadataCSDirty;
+    int mNumActiveCSSamplers;
 };
 
 class DrawCallVertexParams final : angle::NonCopyable

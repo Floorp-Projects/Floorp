@@ -274,6 +274,8 @@ protected:
    *
    * If aAdjustWidget is false, don't change the widget focus state.
    */
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY for now, until we annotate callers.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   bool Blur(nsPIDOMWindowOuter* aWindowToClear,
             nsPIDOMWindowOuter* aAncestorWindowToFocus,
             bool aIsLeavingDocument,

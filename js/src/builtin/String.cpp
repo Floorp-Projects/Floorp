@@ -1142,7 +1142,7 @@ LengthUpperCaseSpecialCasing(Latin1Char charCode)
 static inline size_t
 LengthUpperCaseSpecialCasing(char16_t charCode)
 {
-    MOZ_ASSERT(CanUpperCaseSpecialCasing(charCode));
+    MOZ_ASSERT(::CanUpperCaseSpecialCasing(charCode));
 
     return unicode::LengthUpperCaseSpecialCasing(charCode);
 }
@@ -1191,12 +1191,12 @@ ToUpperCaseImpl(DestChar* destChars, const SrcChar* srcChars, size_t startIndex,
             }
         }
 
-        if (MOZ_UNLIKELY(c > 0x7f && CanUpperCaseSpecialCasing(static_cast<SrcChar>(c)))) {
+        if (MOZ_UNLIKELY(c > 0x7f && ::CanUpperCaseSpecialCasing(static_cast<SrcChar>(c)))) {
             // Return if the output buffer is too small.
             if (srcLength == destLength)
                 return i;
 
-            AppendUpperCaseSpecialCasing(c, destChars, &j);
+            ::AppendUpperCaseSpecialCasing(c, destChars, &j);
             continue;
         }
 
@@ -1226,8 +1226,8 @@ ToUpperCaseLength(const CharT* chars, size_t startIndex, size_t length)
     for (size_t i = startIndex; i < length; i++) {
         char16_t c = chars[i];
 
-        if (c > 0x7f && CanUpperCaseSpecialCasing(static_cast<CharT>(c)))
-            upperLength += LengthUpperCaseSpecialCasing(static_cast<CharT>(c)) - 1;
+        if (c > 0x7f && ::CanUpperCaseSpecialCasing(static_cast<CharT>(c)))
+            upperLength += ::LengthUpperCaseSpecialCasing(static_cast<CharT>(c)) - 1;
     }
     return upperLength;
 }
@@ -1307,7 +1307,7 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
                 }
 
                 MOZ_ASSERT(unicode::ToUpperCase(c) > JSString::MAX_LATIN1_CHAR ||
-                           CanUpperCaseSpecialCasing(c));
+                           ::CanUpperCaseSpecialCasing(c));
             }
         }
 
@@ -1329,7 +1329,7 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
             }
             if (unicode::CanUpperCase(c))
                 break;
-            if (MOZ_UNLIKELY(c > 0x7f && CanUpperCaseSpecialCasing(c)))
+            if (MOZ_UNLIKELY(c > 0x7f && ::CanUpperCaseSpecialCasing(c)))
                 break;
         }
 

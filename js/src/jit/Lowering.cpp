@@ -15,7 +15,6 @@
 #include "jit/LIR.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
-#include "wasm/WasmSignalHandlers.h"
 
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/BytecodeUtil-inl.h"
@@ -95,8 +94,8 @@ LIRGenerator::visitIsConstructing(MIsConstructing* ins)
 static void
 TryToUseImplicitInterruptCheck(MIRGraph& graph, MBasicBlock* backedge)
 {
-    // Implicit interrupt checks require wasm signal handlers to be installed.
-    if (!wasm::HaveSignalHandlers() || JitOptions.ionInterruptWithoutSignals)
+    // Implicit interrupt checks require JIT async interrupt support.
+    if (!jit::HaveAsyncInterrupt() || JitOptions.ionInterruptWithoutSignals)
         return;
 
     // To avoid triggering expensive interrupts (backedge patching) in
@@ -2737,6 +2736,13 @@ LIRGenerator::visitInterruptCheck(MInterruptCheck* ins)
     LInstruction* lir = new(alloc()) LInterruptCheck(temp());
     add(lir, ins);
     assignSafepoint(lir, ins);
+}
+
+void
+LIRGenerator::visitWasmInterruptCheck(MWasmInterruptCheck* ins)
+{
+    auto* lir = new(alloc()) LWasmInterruptCheck(useRegisterAtStart(ins->tlsPtr()));
+    add(lir, ins);
 }
 
 void

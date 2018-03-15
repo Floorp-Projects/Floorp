@@ -36,7 +36,6 @@
   _(FutexThread,                 500) \
   _(GeckoProfilerStrings,        500) \
   _(ProtectedRegionTree,         500) \
-  _(WasmSigIdSet,                500) \
   _(ShellOffThreadState,         500) \
   _(SimulatorCacheLock,          500) \
   _(Arm64SimulatorLock,          500) \
@@ -49,14 +48,16 @@
   _(ProcessExecutableRegion,     500) \
   _(OffThreadPromiseState,       500) \
   _(BufferStreamState,           500) \
+  _(SharedArrayGrow,             500) \
+  _(RuntimeScriptData,           500) \
+  _(WasmSigIdSet,                500) \
   _(WasmCodeProfilingLabels,     500) \
   _(WasmModuleTieringLock,       500) \
   _(WasmCompileTaskState,        500) \
   _(WasmCodeStreamEnd,           500) \
   _(WasmTailBytesPtr,            500) \
   _(WasmStreamStatus,            500) \
-  _(SharedArrayGrow,             500) \
-  _(RuntimeScriptData,           500) \
+  _(WasmRuntimeInstances,        500) \
                                       \
   _(ThreadId,                    600) \
   _(WasmCodeSegmentMap,          600) \

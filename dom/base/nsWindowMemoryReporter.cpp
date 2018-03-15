@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "amIAddonManager.h"
 #include "nsWindowMemoryReporter.h"
 #include "nsWindowSizes.h"
 #include "nsGlobalWindow.h"
@@ -243,7 +242,6 @@ ReportCount(const nsCString& aBasePath, const char* aPathTail,
 
 static void
 CollectWindowReports(nsGlobalWindowInner *aWindow,
-                     amIAddonManager *addonManager,
                      nsWindowSizes *aWindowTotalSizes,
                      nsTHashtable<nsUint64HashKey> *aGhostWindowIDs,
                      WindowPaths *aWindowPaths,
@@ -268,17 +266,6 @@ CollectWindowReports(nsGlobalWindowInner *aWindow,
   }
   if (!location) {
     location = GetWindowURI(aWindow);
-  }
-
-  if (addonManager && location) {
-    bool ok;
-    nsAutoCString id;
-    if (NS_SUCCEEDED(addonManager->MapURIToAddonID(location, id, &ok)) && ok) {
-      // Add-on names are not privacy-sensitive, so we can use them with
-      // impunity.
-      windowPath += NS_LITERAL_CSTRING("add-ons/") + id +
-                    NS_LITERAL_CSTRING("/");
-    }
   }
 
   windowPath += NS_LITERAL_CSTRING("window-objects/");
@@ -620,13 +607,8 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   // Collect window memory usage.
   SizeOfState fakeState(nullptr);   // this won't be used
   nsWindowSizes windowTotalSizes(fakeState);
-  nsCOMPtr<amIAddonManager> addonManager;
-  if (XRE_IsParentProcess()) {
-    // Only try to access the service from the main process.
-    addonManager = do_GetService("@mozilla.org/addons/integration;1");
-  }
   for (uint32_t i = 0; i < windows.Length(); i++) {
-    CollectWindowReports(windows[i], addonManager,
+    CollectWindowReports(windows[i],
                          &windowTotalSizes, &ghostWindows,
                          &windowPaths, &topWindowPaths, aHandleReport,
                          aData, aAnonymize);

@@ -7,6 +7,12 @@
  */
 
 .boxmodel-container {
+  --marginbox-color: #fdffdf;
+  --borderbox-color: var(--grey-50);
+  --paddingbox-color: #e3dcff;
+  --contentbox-color: #cff0fb;
+  --marginbox-border-color: #d8e60a;
+  --contentbox-border-color: #54A9FF;
   overflow: auto;
   padding-bottom: 4px;
   max-width: 600px;
@@ -41,14 +47,16 @@
 
 .boxmodel-box {
   margin: 25px;
-  /* The regions are semi-transparent, so the white background is partly
-     visible */
-  background-color: white;
 }
 
-.boxmodel-margin,
 .boxmodel-size {
-  color: var(--theme-highlight-blue);
+  color: var(--grey-90);
+}
+
+.boxmodel-position,
+.boxmodel-margin,
+.boxmodel-padding {
+  color: var(--grey-50);
 }
 
 .theme-dark .boxmodel-margin,
@@ -60,38 +68,41 @@
 
 .boxmodel-contents {
   height: 18px;
-}
-
-.boxmodel-margins,
-.boxmodel-borders,
-.boxmodel-paddings {
-  border-color: hsla(210,100%,85%,0.2);
-  border-width: 18px;
-  border-style: solid;
-  outline: dotted 1px hsl(210,100%,85%);
+  outline: dashed 1px var(--contentbox-border-color);
 }
 
 .boxmodel-margins {
-  /* This opacity applies to all of the regions, since they are nested */
-  opacity: .8;
+  border-width: 22px;
+  border-style: solid;
+  outline: dashed 1px var(--marginbox-border-color);
+}
+
+.boxmodel-borders {
+  border-width: 5px;
+  border-style: solid;
+}
+
+.boxmodel-paddings {
+  border-width: 27px;
+  border-style: solid;
 }
 
 /* Regions colors */
 
 .boxmodel-margins {
-  border-color: #edff64;
+  border-color: var(--marginbox-color);
 }
 
 .boxmodel-borders {
-  border-color: #444444;
+  border-color: var(--borderbox-color);
 }
 
 .boxmodel-paddings {
-  border-color: #6a5acd;
+  border-color: var(--paddingbox-color);
 }
 
 .boxmodel-contents {
-  background-color: #87ceeb;
+  background-color: var(--contentbox-color);
 }
 
 .theme-firebug .boxmodel-main,
@@ -135,27 +146,27 @@
 }
 
 .boxmodel-padding.boxmodel-top {
-  top: 37px;
+  top: 34px;
 }
 
 .boxmodel-padding.boxmodel-bottom {
-  bottom: 38px;
+  bottom: 35px;
 }
 
 .boxmodel-border.boxmodel-top {
-  top: 19px;
+  top: 17px;
 }
 
 .boxmodel-border.boxmodel-bottom {
-  bottom: 20px;
+  bottom: 17px;
 }
 
 .boxmodel-margin.boxmodel-top {
-  top: 1px;
+  top: 0px;
 }
 
 .boxmodel-margin.boxmodel-bottom {
-  bottom: 2px;
+  bottom: 1px;
 }
 
 .boxmodel-size,
@@ -189,27 +200,27 @@
 }
 
 .boxmodel-padding.boxmodel-left {
-  left: 60px;
+  left: 56px;
 }
 
 .boxmodel-padding.boxmodel-right {
-  right: 60px;
+  right: 56px;
 }
 
 .boxmodel-border.boxmodel-left {
-  left: 41px;
+  left: 39px;
 }
 
 .boxmodel-border.boxmodel-right {
-  right: 42px;
+  right: 39px;
 }
 
 .boxmodel-margin.boxmodel-right {
-  right: 25px;
+  right: 24px;
 }
 
 .boxmodel-margin.boxmodel-left {
-  left: 25px;
+  left: 24px;
 }
 
 .boxmodel-rotate.boxmodel-left:not(.boxmodel-editing) {
@@ -242,20 +253,16 @@
 
 /* Box Model Positioning: contains top, right, bottom, left */
 
-.boxmodel-position {
-  color: var(--theme-highlight-purple);
-}
-
 .boxmodel-position.boxmodel-top,
 .boxmodel-position.boxmodel-bottom {
-  border-left: 1px solid var(--theme-highlight-purple);
+  border-left: 1px solid var(--grey-50);
   left: calc(50% - 2px);
   padding-left: 1px;
 }
 
 .boxmodel-position.boxmodel-right,
 .boxmodel-position.boxmodel-left {
-  border-top: 1px solid var(--theme-highlight-purple);
+  border-top: 1px solid var(--grey-50);
   line-height: 15px;
   top: calc(50% - 1px);
   width: 30px;
@@ -281,29 +288,49 @@
 
 .boxmodel-legend {
   position: absolute;
-  margin: 2px 6px;
   z-index: 1;
 }
 
 .boxmodel-legend[data-box="margin"] {
-  color: var(--theme-highlight-blue);
-}
-
-.theme-dark .boxmodel-legend[data-box="margin"] {
-  color: var(--grey-60);
+  margin-left: 9px;
+  margin-top: 4px;
+  color: var(--grey-90);
 }
 
 .boxmodel-legend[data-box="position"] {
-  color: var(--theme-highlight-purple);
-  margin: -18px -9px;
+  color: var(--grey-90);
+  margin: -18px 13px;
+}
+
+.boxmodel-legend[data-box="padding"] {
+  margin-top: 12px;
+  margin-left: 12px;
+  color: var(--grey-90);
+}
+
+.boxmodel-legend[data-box="border"] {
+  background-color: var(--borderbox-color);
+  height: 15px;
+  padding-top: 1px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 3px;
+  margin: 0px 0px;
 }
 
 /* Editable fields */
 
 .boxmodel-editable {
+  position: relative;
   border: 1px dashed transparent;
   -moz-user-select: none;
   white-space: nowrap;
+}
+
+.boxmodel-editable[data-box="border"] {
+  background-color: var(--borderbox-color);
+  border-radius: 3px;
+  padding: 0 2px;
 }
 
 .boxmodel-editable:hover {

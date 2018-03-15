@@ -6,7 +6,6 @@
 
 #include "WorkerPrivate.h"
 
-#include "amIAddonManager.h"
 #include "js/MemoryMetrics.h"
 #include "MessageEventRunnable.h"
 #include "mozilla/dom/ClientManager.h"
@@ -1133,12 +1132,10 @@ class WorkerPrivate::MemoryReporter final : public nsIMemoryReporter
 
   SharedMutex mMutex;
   WorkerPrivate* mWorkerPrivate;
-  bool mAlreadyMappedToAddon;
 
 public:
   explicit MemoryReporter(WorkerPrivate* aWorkerPrivate)
-  : mMutex(aWorkerPrivate->mMutex), mWorkerPrivate(aWorkerPrivate),
-    mAlreadyMappedToAddon(false)
+  : mMutex(aWorkerPrivate->mMutex), mWorkerPrivate(aWorkerPrivate)
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
   }
@@ -1236,10 +1233,6 @@ private:
     NS_ASSERTION(mWorkerPrivate, "Disabled more than once!");
     mWorkerPrivate = nullptr;
   }
-
-  // Only call this from the main thread and under mMutex lock.
-  void
-  TryToMapAddon(nsACString &path);
 };
 
 NS_IMPL_ISUPPORTS(WorkerPrivate::MemoryReporter, nsIMemoryReporter)
@@ -1285,8 +1278,6 @@ WorkerPrivate::MemoryReporter::CollectReports(nsIHandleReportCallback* aHandleRe
     }
     path.AppendPrintf(", 0x%p)/", static_cast<void*>(mWorkerPrivate));
 
-    TryToMapAddon(path);
-
     runnable =
       new CollectReportsRunnable(mWorkerPrivate, aHandleReport, aData, aAnonymize, path);
   }
@@ -1296,46 +1287,6 @@ WorkerPrivate::MemoryReporter::CollectReports(nsIHandleReportCallback* aHandleRe
   }
 
   return NS_OK;
-}
-
-void
-WorkerPrivate::MemoryReporter::TryToMapAddon(nsACString &path)
-{
-  AssertIsOnMainThread();
-  mMutex.AssertCurrentThreadOwns();
-
-  if (mAlreadyMappedToAddon || !mWorkerPrivate) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> scriptURI;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(scriptURI),
-                          mWorkerPrivate->ScriptURL()))) {
-    return;
-  }
-
-  mAlreadyMappedToAddon = true;
-
-  if (!XRE_IsParentProcess()) {
-    // Only try to access the service from the main process.
-    return;
-  }
-
-  nsAutoCString addonId;
-  bool ok;
-  nsCOMPtr<amIAddonManager> addonManager =
-    do_GetService("@mozilla.org/addons/integration;1");
-
-  if (!addonManager ||
-      NS_FAILED(addonManager->MapURIToAddonID(scriptURI, addonId, &ok)) ||
-      !ok) {
-    return;
-  }
-
-  static const size_t explicitLength = strlen("explicit/");
-  addonId.InsertLiteral("add-ons/", 0);
-  addonId += "/";
-  path.Insert(addonId, explicitLength);
 }
 
 WorkerPrivate::MemoryReporter::CollectReportsRunnable::CollectReportsRunnable(

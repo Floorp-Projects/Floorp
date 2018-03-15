@@ -175,7 +175,7 @@ var tests = [
       let notifyObj = new BasicNotification(this.id);
       notifyObj.anchorID = "geo-notification-icon";
       notifyObj.addOptions({neverShow: true});
-      let promiseTopic = promiseTopicObserved("PopupNotifications-updateNotShowing");
+      let promiseTopic = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
       showNotification(notifyObj);
       await promiseTopic;
       isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,

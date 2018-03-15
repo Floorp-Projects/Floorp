@@ -906,9 +906,6 @@ add_task(async function setup() {
   gHttpServer.registerDirectory("/data/", do_get_cwd());
   registerCleanupFunction(() => gHttpServer.stop(() => {}));
 
-  // Allow non-multiprocessCompatible extensions
-  Preferences.set("extensions.allow-non-mpc-extensions", true);
-
   // Create the attribution data file, so that settings.attribution will exist.
   // The attribution functionality only exists in Firefox.
   if (AppConstants.MOZ_BUILD_APP == "browser") {

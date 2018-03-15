@@ -19,7 +19,7 @@ interface DOMTokenList {
   [CEReactions, Throws]
   void remove(DOMString... tokens);
   [CEReactions, Throws]
-  void replace(DOMString token, DOMString newToken);
+  boolean replace(DOMString token, DOMString newToken);
   [CEReactions, Throws]
   boolean toggle(DOMString token, optional boolean force);
   [Throws]

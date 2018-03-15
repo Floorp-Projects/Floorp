@@ -204,7 +204,6 @@ DEFAULTS = dict(
         'media.libavcodec.allow-obsolete': True,
         'extensions.legacy.enabled': True,
         'xpinstall.signatures.required': False,
-        'extensions.allow-non-mpc-extensions': True
     }
 )
 

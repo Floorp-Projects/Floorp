@@ -44,7 +44,6 @@
 #include "AutoMemMap.h"
 #include "ScriptPreloader-inl.h"
 
-#include "mozilla/AddonPathService.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/MacroForEach.h"
@@ -568,7 +567,6 @@ mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 void
 mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
                                          const nsACString& aLocation,
-                                         JSAddonId* aAddonID,
                                          MutableHandleObject aGlobal)
 {
     RefPtr<BackstagePass> backstagePass;
@@ -578,8 +576,7 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
     CompartmentOptions options;
 
     options.creationOptions()
-           .setSystemZone()
-           .setAddonId(aAddonID);
+           .setSystemZone();
 
     if (xpc::SharedMemoryEnabled())
         options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
@@ -614,9 +611,9 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
 }
 
 bool
-mozJSComponentLoader::ReuseGlobal(bool aIsAddon, nsIURI* aURI)
+mozJSComponentLoader::ReuseGlobal(nsIURI* aURI)
 {
-    if (aIsAddon || !mShareLoaderGlobal)
+    if (!mShareLoaderGlobal)
         return false;
 
     nsCString spec;
@@ -651,7 +648,7 @@ mozJSComponentLoader::GetSharedGlobal(JSContext* aCx)
     if (!mLoaderGlobal) {
         JS::RootedObject globalObj(aCx);
         CreateLoaderGlobal(aCx, NS_LITERAL_CSTRING("shared JSM global"),
-                           nullptr, &globalObj);
+                           &globalObj);
 
         // If we fail to create a module global this early, we're not going to
         // get very far, so just bail out now.
@@ -678,8 +675,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     nsAutoCString nativePath;
     NS_ENSURE_SUCCESS(aURI->GetSpec(nativePath), nullptr);
 
-    JSAddonId* addonId = MapURIToAddonID(aURI);
-    bool reuseGlobal = ReuseGlobal(!!addonId, aURI);
+    bool reuseGlobal = ReuseGlobal(aURI);
 
     *aReuseGlobal = reuseGlobal;
 
@@ -688,7 +684,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     if (reuseGlobal) {
         globalObj = GetSharedGlobal(aCx);
     } else if (!globalObj) {
-        CreateLoaderGlobal(aCx, nativePath, addonId, &globalObj);
+        CreateLoaderGlobal(aCx, nativePath, &globalObj);
         createdNewGlobal = true;
     }
 

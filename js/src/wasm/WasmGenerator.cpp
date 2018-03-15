@@ -550,10 +550,6 @@ ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRan
         MOZ_ASSERT(!linkDataTier_->unalignedAccessOffset);
         linkDataTier_->unalignedAccessOffset = codeRange.begin();
         break;
-      case CodeRange::Interrupt:
-        MOZ_ASSERT(!linkDataTier_->interruptOffset);
-        linkDataTier_->interruptOffset = codeRange.begin();
-        break;
       case CodeRange::TrapExit:
         MOZ_ASSERT(!linkDataTier_->trapOffset);
         linkDataTier_->trapOffset = codeRange.begin();

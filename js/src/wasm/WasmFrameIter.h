@@ -49,12 +49,6 @@ struct CallableOffsets;
 //
 // If you want to handle every kind of frames (including JS jit frames), use
 // JitFrameIter.
-//
-// The one exception is that this iterator may be called from the interrupt
-// callback which may be called asynchronously from asm.js code; in this case,
-// the backtrace may not be correct. That being said, we try our best printing
-// an informative message to the user and at least the name of the innermost
-// function stack frame.
 
 class WasmFrameIter
 {
@@ -158,7 +152,7 @@ class ExitReason
 };
 
 // Iterates over the frames of a single wasm JitActivation, given an
-// asynchronously-interrupted thread's state.
+// asynchronously-profiled thread's state.
 class ProfilingFrameIterator
 {
     const Code* code_;
@@ -217,12 +211,10 @@ GenerateJitExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, Callabl
 void
 GenerateJitEntryPrologue(jit::MacroAssembler& masm, Offsets* offsets);
 
-typedef bool IsLeaf;
-
 void
-GenerateFunctionPrologue(jit::MacroAssembler& masm, uint32_t framePushed, IsLeaf isLeaf,
-                         const SigIdDesc& sigId, BytecodeOffset trapOffset, FuncOffsets* offsets,
-                         const mozilla::Maybe<uint32_t>& tier1FuncIndex = mozilla::Nothing());
+GenerateFunctionPrologue(jit::MacroAssembler& masm, const SigIdDesc& sigId,
+                         const mozilla::Maybe<uint32_t>& tier1FuncIndex,
+                         FuncOffsets* offsets);
 void
 GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);
 

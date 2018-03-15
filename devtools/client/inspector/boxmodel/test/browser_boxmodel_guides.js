@@ -43,7 +43,7 @@ add_task(async function() {
 
 async function testGuideOnLayoutHover(elt, expectedRegion, inspector) {
   info("Synthesizing mouseover on the boxmodel-view");
-  EventUtils.synthesizeMouse(elt, 2, 2, {type: "mouseover"},
+  EventUtils.synthesizeMouse(elt, 50, 2, {type: "mouseover"},
     elt.ownerDocument.defaultView);
 
   info("Waiting for the node-highlight event from the toolbox");

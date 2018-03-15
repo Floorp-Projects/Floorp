@@ -64,7 +64,6 @@ add_task(async function test_migrate_prefs() {
     [ID1]: {
       version: "0.1",
       type: "extension",
-      multiprocessCompatible: false,
       descriptor: file1.persistentDescriptor,
       hasEmbeddedWebExtension: true,
     }
@@ -80,7 +79,6 @@ add_task(async function test_migrate_prefs() {
   ok(addon1.bootstrapped, "Addon 1 should be bootstrapped");
   equal(addon1.version, "0.1", "Addon 1 has the correct version");
   equal(addon1.mtime, mt(file1), "Addon 1 has the correct timestamp");
-  ok(addon1.enableShims, "Addon 1 has shims enabled");
   ok(addon1.hasEmbeddedWebExtension, "Addon 1 has an embedded WebExtension");
 
   let addon2 = states.findAddon(ID2);
@@ -88,7 +86,6 @@ add_task(async function test_migrate_prefs() {
   ok(!addon2.bootstrapped, "Addon 2 should be bootstrapped, because that information is not stored in xpiStates");
   equal(addon2.version, "0.2", "Addon 2 has the correct version");
   equal(addon2.mtime, mt(file2), "Addon 2 has the correct timestamp");
-  ok(!addon2.enableShims, "Addon 2 does not have shims enabled");
   ok(!addon2.hasEmbeddedWebExtension, "Addon 2 no embedded WebExtension");
 
   let addon3 = states.findAddon(ID3);
@@ -96,7 +93,6 @@ add_task(async function test_migrate_prefs() {
   ok(!addon3.bootstrapped, "Addon 3 should not be bootstrapped");
   equal(addon3.version, "0.3", "Addon 3 has the correct version");
   equal(addon3.mtime, mt(file3), "Addon 3 has the correct timestamp");
-  ok(!addon3.enableShims, "Addon 3 does not have shims enabled");
   ok(!addon3.hasEmbeddedWebExtension, "Addon 3 no embedded WebExtension");
 
   let addon4 = states.findAddon(ID4);
@@ -104,7 +100,6 @@ add_task(async function test_migrate_prefs() {
   ok(!addon4.bootstrapped, "Addon 4 should not be bootstrapped");
   equal(addon4.version, "0.4", "Addon 4 has the correct version");
   equal(addon4.mtime, mt(file4), "Addon 4 has the correct timestamp");
-  ok(!addon4.enableShims, "Addon 4 does not have shims enabled");
   ok(!addon4.hasEmbeddedWebExtension, "Addon 4 no embedded WebExtension");
 
   // Check that legacy prefs and files have been removed.

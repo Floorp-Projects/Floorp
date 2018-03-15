@@ -17,7 +17,6 @@
 #include "nsIURI.h"
 #include "nsXBLSerialize.h"
 #include "nsXBLPrototypeBinding.h"
-#include "mozilla/AddonPathService.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -402,7 +401,7 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
 
   // We are going to run script via EvaluateString, so we need a script entry
   // point, but as this is XBL related it does not appear in the HTML spec.
-  // We need an actual JSContext to do GetScopeForXBLExecution, and it needs to
+  // We need an actual JSContext to do GetXBLScopeOrGlobal, and it needs to
   // be in the compartment of globalObject.  But we want our XBL execution scope
   // to be our entry global.
   AutoJSAPI jsapi;
@@ -411,8 +410,6 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   }
   MOZ_ASSERT(!::JS_IsExceptionPending(jsapi.cx()),
              "Shouldn't get here when an exception is pending!");
-
-  JSAddonId* addonId = MapURIToAddonID(aBindingDocURI);
 
   // Note: the UNWRAP_OBJECT may mutate boundNode; don't use it after that call.
   JS::Rooted<JSObject*> boundNode(jsapi.cx(), aBoundNode);
@@ -425,7 +422,7 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   // First, enter the xbl scope, build the element's scope chain, and use
   // that as the scope chain for the evaluation.
   JS::Rooted<JSObject*> scopeObject(jsapi.cx(),
-    xpc::GetScopeForXBLExecution(jsapi.cx(), aBoundNode, addonId));
+    xpc::GetXBLScopeOrGlobal(jsapi.cx(), aBoundNode));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
   AutoEntryScript aes(scopeObject, "XBL <field> initialization", true);
