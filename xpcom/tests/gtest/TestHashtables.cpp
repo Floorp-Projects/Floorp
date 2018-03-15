@@ -474,28 +474,6 @@ TEST(Hashtables, DataHashtable_LookupForAdd)
     }
   }
   ASSERT_TRUE(0 == UniToEntity.Count());
-
-  // Remove newly added entries via OrRemove.
-  for (auto& entity : gEntities) {
-    auto entry = UniToEntity.LookupForAdd(entity.mUnicode);
-    ASSERT_FALSE(entry);
-    entry.OrRemove();
-  }
-  ASSERT_TRUE(0 == UniToEntity.Count());
-
-  // Remove existing entries via OrRemove.
-  for (auto& entity : gEntities) {
-    auto entry = UniToEntity.LookupForAdd(entity.mUnicode);
-    const char* val = entry.OrInsert([&entity] () { return entity.mStr; });
-    ASSERT_FALSE(entry);
-    ASSERT_TRUE(val == entity.mStr);
-    ASSERT_TRUE(entry.Data() == entity.mStr);
-
-    auto entry2 = UniToEntity.LookupForAdd(entity.mUnicode);
-    ASSERT_TRUE(entry2);
-    entry2.OrRemove();
-  }
-  ASSERT_TRUE(0 == UniToEntity.Count());
 }
 
 TEST(Hashtables, ClassHashtable_LookupForAdd)
@@ -539,28 +517,6 @@ TEST(Hashtables, ClassHashtable_LookupForAdd)
     if (auto entry = EntToUniClass.Lookup(nsDependentCString(entity.mStr))) {
       entry.Remove();
     }
-  }
-  ASSERT_TRUE(0 == EntToUniClass.Count());
-
-  // Remove newly added entries via OrRemove.
-  for (auto& entity : gEntities) {
-    auto entry = EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr));
-    ASSERT_FALSE(entry);
-    entry.OrRemove();
-  }
-  ASSERT_TRUE(0 == EntToUniClass.Count());
-
-  // Remove existing entries via OrRemove.
-  for (auto& entity : gEntities) {
-    auto entry = EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr));
-    const TestUniChar* val = entry.OrInsert([] () { return nullptr; });
-    ASSERT_FALSE(entry);
-    ASSERT_TRUE(val == nullptr);
-    ASSERT_TRUE(entry.Data() == nullptr);
-
-    auto entry2 = EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr));
-    ASSERT_TRUE(entry2);
-    entry2.OrRemove();
   }
   ASSERT_TRUE(0 == EntToUniClass.Count());
 }

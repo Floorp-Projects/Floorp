@@ -865,7 +865,7 @@ SourceSurfaceImage::GetTextureClient(KnowsCompositor* aForwarder)
   }
 
   // Remove the speculatively added entry.
-  entry.OrRemove();
+  mTextureClients.Remove(aForwarder->GetSerial());
   return nullptr;
 }
 
