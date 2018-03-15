@@ -2687,7 +2687,7 @@ WarnIfSandboxIneffective(nsIDocShell* aDocShell,
 }
 
 bool
-nsDocument::IsSynthesized() {
+nsIDocument::IsSynthesized() {
   nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(mChannel);
   bool synthesized = false;
   if (internalChan) {
@@ -12250,7 +12250,7 @@ ReportExternalResourceUseCounters(nsIDocument* aDocument, void* aData)
 }
 
 void
-nsDocument::ReportUseCounters(UseCounterReportKind aKind)
+nsIDocument::ReportUseCounters(UseCounterReportKind aKind)
 {
   static const bool sDebugUseCounters = false;
   if (mReportedUseCounters) {
