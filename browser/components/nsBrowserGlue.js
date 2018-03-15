@@ -1212,6 +1212,10 @@ BrowserGlue.prototype = {
     Services.tm.idleDispatchToMainThread(() => {
       LanguagePrompt.init();
     });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      Services.blocklist.loadBlocklistAsync();
+    });
   },
 
   /**
