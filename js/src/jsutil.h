@@ -336,36 +336,4 @@ Poison(void* ptr, uint8_t value, size_t num)
 # define JS_EXTRA_POISON(p, val, size) ((void) 0)
 #endif
 
-/* Basic stats */
-#ifdef DEBUG
-# define JS_BASIC_STATS 1
-#endif
-#ifdef JS_BASIC_STATS
-# include <stdio.h>
-typedef struct JSBasicStats {
-    uint32_t    num;
-    uint32_t    max;
-    double      sum;
-    double      sqsum;
-    uint32_t    logscale;           /* logarithmic scale: 0 (linear), 2, 10 */
-    uint32_t    hist[11];
-} JSBasicStats;
-# define JS_INIT_STATIC_BASIC_STATS  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0}}
-# define JS_BASIC_STATS_INIT(bs)     memset((bs), 0, sizeof(JSBasicStats))
-# define JS_BASIC_STATS_ACCUM(bs,val)                                         \
-    JS_BasicStatsAccum(bs, val)
-# define JS_MeanAndStdDevBS(bs,sigma)                                         \
-    JS_MeanAndStdDev((bs)->num, (bs)->sum, (bs)->sqsum, sigma)
-extern void
-JS_BasicStatsAccum(JSBasicStats* bs, uint32_t val);
-extern double
-JS_MeanAndStdDev(uint32_t num, double sum, double sqsum, double* sigma);
-extern void
-JS_DumpBasicStats(JSBasicStats* bs, const char* title, FILE* fp);
-extern void
-JS_DumpHistogram(JSBasicStats* bs, FILE* fp);
-#else
-# define JS_BASIC_STATS_ACCUM(bs,val)
-#endif
-
 #endif /* jsutil_h */
