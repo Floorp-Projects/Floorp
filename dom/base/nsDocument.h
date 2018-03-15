@@ -73,7 +73,6 @@ class nsIRadioVisitor;
 class nsIFormControl;
 struct nsRadioGroupStruct;
 class nsOnloadBlocker;
-class nsUnblockOnloadEvent;
 class nsDOMNavigationTiming;
 class nsWindowSizes;
 class nsHtml5TreeOpExecutor;
@@ -311,13 +310,6 @@ public:
   nsCOMPtr<nsIContent> mFirstBaseNodeWithHref;
 private:
   friend class nsUnblockOnloadEvent;
-
-  void PostUnblockOnloadEvent();
-  void DoUnblockOnload();
-
-  nsresult InitCSP(nsIChannel* aChannel);
-
-  void ClearAllBoxObjects();
 
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);

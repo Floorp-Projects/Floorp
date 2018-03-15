@@ -1588,7 +1588,7 @@ nsDocument::nsDocument(const char* aContentType)
 }
 
 void
-nsDocument::ClearAllBoxObjects()
+nsIDocument::ClearAllBoxObjects()
 {
   if (mBoxObjectTable) {
     for (auto iter = mBoxObjectTable->Iter(); !iter.Done(); iter.Next()) {
@@ -2941,7 +2941,7 @@ nsIDocument::ApplySettingsFromCSP(bool aSpeculative)
 }
 
 nsresult
-nsDocument::InitCSP(nsIChannel* aChannel)
+nsIDocument::InitCSP(nsIChannel* aChannel)
 {
   MOZ_ASSERT(!mScriptGlobalObject,
              "CSP must be initialized before mScriptGlobalObject is set!");
@@ -3009,7 +3009,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   MOZ_LOG(gCspPRLog, LogLevel::Debug, ("Document is an add-on or CSP header specified %p", this));
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->EnsureCSP(this, getter_AddRefs(csp));
+  rv = principal->EnsureCSP(static_cast<nsDocument*>(this), getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ----- if the doc is an addon, apply its CSP.
@@ -8483,7 +8483,7 @@ nsDocument::UnblockOnload(bool aFireSync)
 
 class nsUnblockOnloadEvent : public Runnable {
 public:
-  explicit nsUnblockOnloadEvent(nsDocument* aDoc)
+  explicit nsUnblockOnloadEvent(nsIDocument* aDoc)
     : mozilla::Runnable("nsUnblockOnloadEvent")
     , mDoc(aDoc)
   {
@@ -8493,11 +8493,11 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<nsDocument> mDoc;
+  RefPtr<nsIDocument> mDoc;
 };
 
 void
-nsDocument::PostUnblockOnloadEvent()
+nsIDocument::PostUnblockOnloadEvent()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> evt = new nsUnblockOnloadEvent(this);
@@ -8512,7 +8512,7 @@ nsDocument::PostUnblockOnloadEvent()
 }
 
 void
-nsDocument::DoUnblockOnload()
+nsIDocument::DoUnblockOnload()
 {
   NS_PRECONDITION(!mDisplayDocument,
                   "Shouldn't get here for resource document");
