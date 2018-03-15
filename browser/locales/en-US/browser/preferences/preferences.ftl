@@ -470,3 +470,275 @@ containers-preferences-button =
     .label = Preferences
 containers-remove-button =
     .label = Remove
+
+## Privacy Section
+
+privacy-header = Browser Privacy
+
+## Privacy Section - Forms
+
+forms-header = Forms & Passwords
+forms-remember-logins =
+    .label = Remember logins and passwords for websites
+    .accesskey = R
+forms-exceptions =
+    .label = Exceptions…
+    .accesskey = x
+forms-saved-logins =
+    .label = Saved Logins…
+    .accesskey = L
+forms-master-pw-use =
+    .label = Use a master password
+    .accesskey = U
+forms-master-pw-change =
+    .label = Change Master Password
+    .accesskey = M
+
+## Privacy Section - History
+
+history-header = History
+
+history-remember-description = { -brand-short-name } will remember your browsing, download, form and search history.
+history-dontremember-description = { -brand-short-name } will use the same settings as private browsing, and will not remember any history as you browse the Web.
+
+history-private-browsing-permanent =
+    .label = Always use private browsing mode
+    .accesskey = p
+
+history-remember-option =
+    .label = Remember my browsing and download history
+    .accesskey = b
+
+history-remember-search-option =
+    .label = Remember search and form history
+    .accesskey = f
+
+history-clear-on-close-option =
+    .label = Clear history when { -brand-short-name } closes
+    .accesskey = r
+
+history-clear-on-close-settings =
+    .label = Settings…
+    .accesskey = t
+
+history-clear-button =
+    .label = Clear History…
+    .accesskey = s
+
+## Privacy Section - Site Data
+
+sitedata-header = Cookies and Site Data
+
+sitedata-learn-more = Learn more
+
+sitedata-accept-cookies-option =
+    .label = Accept cookies and site data from websites (recommended)
+    .accesskey = A
+
+sitedata-block-cookies-option =
+    .label = Block cookies and site data (may cause websites to break)
+    .accesskey = B
+
+sitedata-keep-until = Keep until
+    .accesskey = u
+
+sitedata-keep-until-expire =
+    .label = They expire
+sitedata-keep-until-closed =
+    .label = { -brand-short-name } is closed
+
+sitedata-accept-third-party-desc = Accept third-party cookies and site data
+    .accesskey = y
+
+sitedata-accept-third-party-always-option =
+    .label = Always
+sitedata-accept-third-party-visited-option =
+    .label = From visited
+sitedata-accept-third-party-never-option =
+    .label = Never
+
+sitedata-clear =
+    .label = Clear Data…
+    .accesskey = l
+
+sitedata-settings =
+    .label = Manage Data…
+    .accesskey = M
+
+sitedata-cookies-exceptions =
+    .label = Exceptions…
+    .accesskey = E
+
+## Privacy Section - Address Bar
+
+addressbar-header = Address Bar
+
+addressbar-suggest = When using the address bar, suggest
+
+addressbar-locbar-history-option =
+    .label = Browsing history
+    .accesskey = h
+addressbar-locbar-bookmarks-option =
+    .label = Bookmarks
+    .accesskey = k
+addressbar-locbar-openpage-option =
+    .label = Open tabs
+    .accesskey = O
+
+addressbar-suggestions-settings = Change preferences for search engine suggestions
+
+## Privacy Section - Tracking
+
+tracking-header = Tracking Protection
+
+tracking-description = Tracking Protection blocks online trackers that collect your browsing data across multiple websites. <a>Learn more about Tracking Protection and your privacy</a>
+
+tracking-mode-label = Use Tracking Protection to block known trackers
+
+tracking-mode-always =
+    .label = Always
+    .accesskey = y
+tracking-mode-private =
+    .label = Only in private windows
+    .accesskey = l
+tracking-mode-never =
+    .label = Never
+    .accesskey = N
+
+# This string is displayed if privacy.trackingprotection.ui.enabled is set to false.
+# This currently happens on the release and beta channel.
+tracking-pbm-label = Use Tracking Protection in Private Browsing to block known trackers
+    .accesskey = v
+
+tracking-exceptions =
+    .label = Exceptions…
+    .accesskey = x
+
+tracking-change-block-list =
+    .label = Change Block List…
+    .accesskey = C
+
+## Privacy Section - Permissions
+
+permissions-header = Permissions
+
+permissions-location = Location
+permissions-location-settings =
+    .label = Settings…
+    .accesskey = t
+
+permissions-camera = Camera
+permissions-camera-settings =
+    .label = Settings…
+    .accesskey = t
+
+permissions-microphone = Microphone
+permissions-microphone-settings =
+    .label = Settings…
+    .accesskey = t
+
+permissions-notification = Notifications
+permissions-notification-settings =
+    .label = Settings…
+    .accesskey = t
+permissions-notification-link = Learn more
+
+permissions-notification-pause =
+    .label = Pause notifications until { -brand-short-name } restarts
+    .accesskey = n
+
+permissions-block-popups =
+    .label = Block pop-up windows
+    .accesskey = B
+
+permissions-block-popups-exceptions =
+    .label = Exceptions…
+    .accesskey = E
+
+permissions-addon-install-warning =
+    .label = Warn you when websites try to install add-ons
+    .accesskey = W
+
+permissions-addon-exceptions =
+    .label = Exceptions…
+    .accesskey = E
+
+permissions-a11y-privacy-checkbox =
+    .label = Prevent accessibility services from accessing your browser
+    .accesskey = a
+
+permissions-a11y-privacy-link = Learn more
+
+## Privacy Section - Data Collection
+
+collection-header = { -brand-short-name } Data Collection and Use
+
+collection-description = We strive to provide you with choices and collect only what we need to provide and improve { -brand-short-name } for everyone. We always ask permission before receiving personal information.
+collection-privacy-notice = Privacy Notice
+
+collection-health-report =
+    .label = Allow { -brand-short-name } to send technical and interaction data to { -vendor-short-name }
+    .accesskey = r
+collection-health-report-link = Learn more
+
+# This message is displayed above disabled data sharing options in developer builds
+# or builds with no Telemetry support available.
+collection-health-report-disabled = Data reporting is disabled for this build configuration
+
+collection-browser-errors =
+    .label = Allow { -brand-short-name } to send browser error reports (including error messages) to { -vendor-short-name }
+    .accesskey = b
+collection-browser-errors-link = Learn more
+
+collection-backlogged-crash-reports =
+    .label = Allow { -brand-short-name } to send backlogged crash reports on your behalf
+    .accesskey = c
+collection-backlogged-crash-reports-link = Learn more
+
+## Privacy Section - Security
+##
+## It is important that wording follows the guidelines outlined on this page:
+## https://developers.google.com/safe-browsing/developers_guide_v2#AcceptableUsage
+
+security-header = Security
+
+security-browsing-protection = Deceptive Content and Dangerous Software Protection
+
+security-enable-safe-browsing =
+    .label = Block dangerous and deceptive content
+    .accesskey = B
+security-enable-safe-browsing-link = Learn more
+
+security-block-downloads =
+    .label = Block dangerous downloads
+    .accesskey = d
+
+security-block-uncommon-software =
+    .label = Warn you about unwanted and uncommon software
+    .accesskey = c
+
+## Privacy Section - Certificates
+
+certs-header = Certificates
+
+certs-personal-label = When a server requests your personal certificate
+
+certs-select-auto-option =
+    .label = Select one automatically
+    .accesskey = S
+
+certs-select-ask-option =
+    .label = Ask you every time
+    .accesskey = A
+
+certs-enable-ocsp =
+    .label = Query OCSP responder servers to confirm the current validity of certificates
+    .accesskey = Q
+
+certs-view =
+    .label = View Certificates…
+    .accesskey = C
+
+certs-devices =
+    .label = Security Devices…
+    .accesskey = D
