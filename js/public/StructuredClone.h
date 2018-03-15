@@ -341,6 +341,11 @@ namespace js
     };
 }
 
+/**
+ * JSStructuredCloneData represents structured clone data together with the
+ * information needed to read/write/transfer/free the records within it, in the
+ * form of a set of callbacks.
+ */
 class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) :
     public mozilla::BufferList<js::SystemAllocPolicy>
 {
@@ -355,14 +360,6 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) :
     void* closure_ = nullptr;
     OwnTransferablePolicy ownTransferables_ = OwnTransferablePolicy::NoTransferables;
     js::SharedArrayRawBufferRefs refsHeld_;
-
-    void setOptionalCallbacks(const JSStructuredCloneCallbacks* callbacks,
-                              void* closure,
-                              OwnTransferablePolicy policy) {
-        callbacks_ = callbacks;
-        closure_ = closure;
-        ownTransferables_ = policy;
-    }
 
     friend struct JSStructuredCloneWriter;
     friend class JS_PUBLIC_API(JSAutoStructuredCloneBuffer);
@@ -382,7 +379,18 @@ public:
     {}
     JSStructuredCloneData(JSStructuredCloneData&& other) = default;
     JSStructuredCloneData& operator=(JSStructuredCloneData&& other) = default;
-    ~JSStructuredCloneData();
+    ~JSStructuredCloneData() { discardTransferables(); }
+
+    void setCallbacks(const JSStructuredCloneCallbacks* callbacks,
+                      void* closure,
+                      OwnTransferablePolicy policy)
+    {
+        callbacks_ = callbacks;
+        closure_ = closure;
+        ownTransferables_ = policy;
+    }
+
+    void discardTransferables();
 
     using BufferList::BufferList;
 };
@@ -431,7 +439,7 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
                                 const JSStructuredCloneCallbacks* callbacks, void* closure)
         : scope_(scope), version_(JS_STRUCTURED_CLONE_VERSION)
     {
-        data_.setOptionalCallbacks(callbacks, closure, OwnTransferablePolicy::NoTransferables);
+        data_.setCallbacks(callbacks, closure, OwnTransferablePolicy::NoTransferables);
     }
 
     JSAutoStructuredCloneBuffer(JSAutoStructuredCloneBuffer&& other);
