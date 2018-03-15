@@ -1,4 +1,4 @@
-default-preferences  pref(media.peerconnection.enabled,true) pref(media.navigator.permission.disabled,true)
+default-preferences  pref(media.peerconnection.enabled,true) pref(media.navigator.permission.disabled,true) pref(dom.disable_open_during_load,false)
 
 load 780790.html
 load 791270.html
@@ -20,4 +20,6 @@ load 1306476.html
 load 1348381.html
 load 1367930_1.html
 load 1367930_2.html
+pref(browser.link.open_newwindow,2) load 1429507_1.html # window.open() in tab doesn't work for crashtest in e10s, this opens a new window instead
+pref(browser.link.open_newwindow,2) load 1429507_2.html # window.open() in tab doesn't work for crashtest in e10s, this opens a new window instead
 load 1453030.html
