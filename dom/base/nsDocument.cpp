@@ -5966,14 +5966,8 @@ nsIDocument::ResolveScheduledSVGPresAttrs()
   mLazySVGPresElements.Clear();
 }
 
-long
-nsDocument::BlockedTrackingNodeCount() const
-{
-  return mBlockedTrackingNodes.Length();
-}
-
 already_AddRefed<nsSimpleContentList>
-nsDocument::BlockedTrackingNodes() const
+nsIDocument::BlockedTrackingNodes() const
 {
   RefPtr<nsSimpleContentList> list = new nsSimpleContentList(nullptr);
 
