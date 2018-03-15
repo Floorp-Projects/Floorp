@@ -127,6 +127,7 @@ class CSSStyleSheet;
 class Encoding;
 class ErrorResult;
 class EventStates;
+class EventListenerManager;
 class PendingAnimationTracker;
 class StyleSetHandle;
 template<typename> class OwningNonNull;
@@ -2094,15 +2095,16 @@ public:
    * like ResetToURI, but also sets the document's channel to aChannel.
    * The principal of the document will be set from the channel.
    */
-  virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) = 0;
+  virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
   /**
    * Reset this document to aURI, aLoadGroup, and aPrincipal.  aURI must not be
    * null.  If aPrincipal is null, a codebase principal based on aURI will be
    * used.
    */
-  virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup,
-                          nsIPrincipal* aPrincipal) = 0;
+  virtual void ResetToURI(nsIURI* aURI,
+                          nsILoadGroup* aLoadGroup,
+                          nsIPrincipal* aPrincipal);
 
   /**
    * Set the container (docshell) for this document. Virtual so that
@@ -4458,6 +4460,8 @@ protected:
   mozilla::LayoutDeviceToScreenScale mScaleFloat;
   mozilla::CSSToLayoutDeviceScale mPixelRatio;
   mozilla::CSSSize mViewportSize;
+
+  RefPtr<mozilla::EventListenerManager> mListenerManager;
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];

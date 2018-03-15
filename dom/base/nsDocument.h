@@ -45,7 +45,6 @@
 #include "PLDHashTable.h"
 #include "nsDOMAttributeMap.h"
 #include "imgIRequest.h"
-#include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PendingAnimationTracker.h"
@@ -149,10 +148,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
-
-  virtual void Reset(nsIChannel *aChannel, nsILoadGroup *aLoadGroup) override;
-  virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
-                          nsIPrincipal* aPrincipal) override;
 
   already_AddRefed<nsIPrincipal> MaybeDowngradePrincipal(nsIPrincipal* aPrincipal);
 
@@ -370,8 +365,6 @@ public:
   // This can be fixed after updating to rust 1.25 and updating bindgen to
   // include https://github.com/rust-lang-nursery/rust-bindgen/pull/1271.
   js::ExpandoAndGeneration mExpandoAndGeneration;
-
-  RefPtr<mozilla::EventListenerManager> mListenerManager;
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
