@@ -162,18 +162,6 @@ public:
 
   virtual void StopDocumentLoad() override;
 
-  /**
-   * Set the Content-Type of this document.
-   */
-  virtual void SetContentType(const nsAString& aContentType) override;
-
-  /**
-   * Set the document's character encoding. This will
-   * trigger a startDocumentLoad if necessary to answer the question.
-   */
-  virtual void
-    SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) override;
-
   static bool CallerIsTrustedAboutPage(JSContext* aCx, JSObject* aObject);
   static bool IsElementAnimateEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
