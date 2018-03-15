@@ -1129,12 +1129,15 @@ nsXPConnect::ReadFunction(nsIObjectInputStream* stream, JSContext* cx, JSObject*
 
 /* These are here to be callable from a debugger */
 extern "C" {
-JS_EXPORT_API(void) DumpJSStack()
+
+MOZ_EXPORT void
+DumpJSStack()
 {
     xpc_DumpJSStack(true, true, false);
 }
 
-JS_EXPORT_API(void) DumpCompleteHeap()
+MOZ_EXPORT void
+DumpCompleteHeap()
 {
     nsCOMPtr<nsICycleCollectorListener> listener =
       do_CreateInstance("@mozilla.org/cycle-collector-logger;1");
