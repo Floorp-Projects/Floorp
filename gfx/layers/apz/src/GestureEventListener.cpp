@@ -263,7 +263,7 @@ bool GestureEventListener::MoveDistanceExceeds(ScreenCoord aThreshold) const
 
 bool GestureEventListener::MoveDistanceIsLarge() const
 {
-  return MoveDistanceExceeds(AsyncPanZoomController::GetTouchStartTolerance());
+  return MoveDistanceExceeds(mAsyncPanZoomController->GetTouchStartTolerance());
 }
 
 bool GestureEventListener::SecondTapIsFar() const
@@ -271,7 +271,7 @@ bool GestureEventListener::SecondTapIsFar() const
   // Allow a little more room here, because the is actually lifting their finger
   // off the screen before replacing it, and that tends to have more error than
   // wiggling the finger while on the screen.
-  return MoveDistanceExceeds(AsyncPanZoomController::GetSecondTapTolerance());
+  return MoveDistanceExceeds(mAsyncPanZoomController->GetSecondTapTolerance());
 }
 
 nsEventStatus GestureEventListener::HandleInputTouchMove()
