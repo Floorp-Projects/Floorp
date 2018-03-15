@@ -85,14 +85,7 @@ gfxPlatformGtk::gfxPlatformGtk()
     }
 #endif
 
-    uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO);
-    uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
-#ifdef USE_SKIA
-    canvasMask |= BackendTypeBit(BackendType::SKIA);
-    contentMask |= BackendTypeBit(BackendType::SKIA);
-#endif
-    InitBackendPrefs(canvasMask, BackendType::CAIRO,
-                     contentMask, BackendType::CAIRO);
+    InitBackendPrefs(GetBackendPrefs());
 
 #ifdef MOZ_X11
     if (gfxPlatform::IsHeadless() && GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
