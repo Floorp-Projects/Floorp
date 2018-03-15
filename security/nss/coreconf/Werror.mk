@@ -48,9 +48,11 @@ ifndef WARNING_CFLAGS
   else
     # This tests to see if enabling the warning is possible before
     # setting an option to disable it.
-    disable_warning = $(shell $(CC) -x c -E -Werror -W$(1) /dev/null >/dev/null 2>&1 && echo -Wno-$(1))
+    set_warning = $(shell $(CC) -x c -E -Werror -W$(1) /dev/null >/dev/null 2>&1 && echo -W$(2)$(1))
+    enable_warning = $(call set_warning,$(1),)
+    disable_warning = $(call set_warning,$(1),no-)
 
-    WARNING_CFLAGS = -Wall
+    WARNING_CFLAGS = -Wall $(call enable_warning,shadow)
     ifdef CC_IS_CLANG
       # -Qunused-arguments : clang objects to arguments that it doesn't understand
       #    and fixing this would require rearchitecture

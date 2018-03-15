@@ -15,7 +15,7 @@ add_task(async function test() {
 
   function testPopupBlockerMenuItem(aExpectedDisabled, aWindow, aCallback) {
 
-    aWindow.gBrowser.addEventListener("DOMUpdatePageReport", function() {
+    aWindow.gBrowser.addEventListener("DOMUpdateBlockedPopups", function() {
       executeSoon(function() {
         let notification = aWindow.gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked");
         ok(notification, "The notification box should be displayed");

@@ -598,7 +598,7 @@ add_task(async function test_nonexistent_on_one_side() {
     url: "http://example.com/a",
     // Pretend a bookmark restore added A, so that we'll write a tombstone when
     // we remove it.
-    source: PlacesUtils.bookmarks.SOURCES.IMPORT_REPLACE,
+    source: PlacesUtils.bookmarks.SOURCES.RESTORE,
   });
   await PlacesUtils.bookmarks.remove("bookmarkAAAA");
 

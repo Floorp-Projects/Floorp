@@ -8,3 +8,9 @@ Getting started
    :glob:
 
    adding-a-new-probe
+
+Further Reading
+###############
+
+* `Telemetry Portal <https://telemetry.mozilla.org/>`_ - Discover all important resources for working with data
+* `Telemetry Data Documentation <https://docs.telemetry.mozilla.org/>`_ - Find what data is available & how to use it

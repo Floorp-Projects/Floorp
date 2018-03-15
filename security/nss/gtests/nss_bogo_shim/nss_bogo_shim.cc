@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "config.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -90,9 +91,14 @@ class TestAgent {
     PRStatus prv;
     PRNetAddr addr;
 
-    prv = PR_StringToNetAddr("127.0.0.1", &addr);
+    // Try IPv6 first.
+    prv = PR_StringToNetAddr("::1", &addr);
     if (prv != PR_SUCCESS) {
-      return false;
+      // If that fails, try IPv4.
+      prv = PR_StringToNetAddr("127.0.0.1", &addr);
+      if (prv != PR_SUCCESS) {
+        return false;
+      }
     }
     addr.inet.port = PR_htons(cfg_.get<int>("port"));
 
@@ -256,7 +262,11 @@ class TestAgent {
   }
 
   bool SetupOptions() {
-    SECStatus rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_SESSION_TICKETS, PR_TRUE);
+    SECStatus rv =
+        SSL_OptionSet(ssl_fd_, SSL_ENABLE_TLS13_COMPAT_MODE, PR_TRUE);
+    if (rv != SECSuccess) return false;
+
+    rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_SESSION_TICKETS, PR_TRUE);
     if (rv != SECSuccess) return false;
 
     SSLVersionRange vrange;
@@ -284,6 +294,26 @@ class TestAgent {
       rv = SSL_SetNextProtoNego(
           ssl_fd_, reinterpret_cast<const unsigned char*>(alpn.c_str()),
           alpn.size());
+      if (rv != SECSuccess) return false;
+    }
+
+    // Set supported signature schemes.
+    auto sign_prefs = cfg_.get<std::vector<int>>("signing-prefs");
+    auto verify_prefs = cfg_.get<std::vector<int>>("verify-prefs");
+    if (sign_prefs.empty()) {
+      sign_prefs = verify_prefs;
+    } else if (!verify_prefs.empty()) {
+      return false;  // Both shouldn't be set.
+    }
+    if (!sign_prefs.empty()) {
+      std::vector<SSLSignatureScheme> sig_schemes;
+      std::transform(
+          sign_prefs.begin(), sign_prefs.end(), std::back_inserter(sig_schemes),
+          [](int scheme) { return static_cast<SSLSignatureScheme>(scheme); });
+
+      rv = SSL_SignatureSchemePrefSet(
+          ssl_fd_, sig_schemes.data(),
+          static_cast<unsigned int>(sig_schemes.size()));
       if (rv != SECSuccess) return false;
     }
 
@@ -410,7 +440,7 @@ class TestAgent {
 
     size_t left = sizeof(block);
     while (left) {
-      int32_t rv = PR_Read(ssl_fd_, block, left);
+      rv = PR_Read(ssl_fd_, block, left);
       if (rv < 0) {
         std::cerr << "Failure reading\n";
         return SECFailure;
@@ -481,6 +511,24 @@ class TestAgent {
       }
     }
 
+    auto sig_alg = cfg_.get<int>("expect-peer-signature-algorithm");
+    if (sig_alg) {
+      SSLChannelInfo info;
+      rv = SSL_GetChannelInfo(ssl_fd_, &info, sizeof(info));
+      if (rv != SECSuccess) {
+        PRErrorCode err = PR_GetError();
+        std::cerr << "SSL_GetChannelInfo failed with error=" << FormatError(err)
+                  << std::endl;
+        return SECFailure;
+      }
+
+      auto expected = static_cast<SSLSignatureScheme>(sig_alg);
+      if (info.signatureScheme != expected) {
+        std::cerr << "Unexpected signature scheme" << std::endl;
+        return SECFailure;
+      }
+    }
+
     return SECSuccess;
   }
 
@@ -513,6 +561,9 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
   cfg->AddEntry<bool>("verify-peer", false);
   cfg->AddEntry<std::string>("advertise-alpn", "");
   cfg->AddEntry<std::string>("expect-alpn", "");
+  cfg->AddEntry<std::vector<int>>("signing-prefs", std::vector<int>());
+  cfg->AddEntry<std::vector<int>>("verify-prefs", std::vector<int>());
+  cfg->AddEntry<int>("expect-peer-signature-algorithm", 0);
 
   auto rv = cfg->ParseArgs(argc, argv);
   switch (rv) {

@@ -9,26 +9,37 @@
 #include <queue>
 #include <string>
 
-bool ConfigEntryBase::ParseInternal(std::queue<const char *> *args,
-                                    std::string *out) {
-  if (args->empty()) return false;
-  *out = args->front();
-  args->pop();
-  return true;
-}
-
-bool ConfigEntryBase::ParseInternal(std::queue<const char *> *args, int *out) {
-  if (args->empty()) return false;
+bool ConfigEntryBase::ParseInternal(std::queue<const char *> &args,
+                                    std::vector<int> &out) {
+  if (args.empty()) return false;
 
   char *endptr;
-  *out = strtol(args->front(), &endptr, 10);
-  args->pop();
+  out.push_back(strtol(args.front(), &endptr, 10));
+  args.pop();
 
   return !*endptr;
 }
 
-bool ConfigEntryBase::ParseInternal(std::queue<const char *> *args, bool *out) {
-  *out = true;
+bool ConfigEntryBase::ParseInternal(std::queue<const char *> &args,
+                                    std::string &out) {
+  if (args.empty()) return false;
+  out = args.front();
+  args.pop();
+  return true;
+}
+
+bool ConfigEntryBase::ParseInternal(std::queue<const char *> &args, int &out) {
+  if (args.empty()) return false;
+
+  char *endptr;
+  out = strtol(args.front(), &endptr, 10);
+  args.pop();
+
+  return !*endptr;
+}
+
+bool ConfigEntryBase::ParseInternal(std::queue<const char *> &args, bool &out) {
+  out = true;
   return true;
 }
 
@@ -51,7 +62,7 @@ Config::Status Config::ParseArgs(int argc, char **argv) {
     if (e == entries_.end()) {
       return kUnknownFlag;
     }
-    if (!e->second->Parse(&args)) return kMalformedArgument;
+    if (!e->second->Parse(args)) return kMalformedArgument;
   }
 
   return kOK;

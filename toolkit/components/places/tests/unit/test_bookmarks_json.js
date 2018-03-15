@@ -100,7 +100,7 @@ var bookmarksExportedFile;
 add_task(async function test_import_bookmarks() {
   let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks.json");
 
-  await BookmarkJSONUtils.importFromFile(bookmarksFile, true);
+  await BookmarkJSONUtils.importFromFile(bookmarksFile, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
   await testImportedBookmarks();
 });
@@ -114,18 +114,18 @@ add_task(async function test_export_bookmarks() {
 
 add_task(async function test_import_exported_bookmarks() {
   await PlacesUtils.bookmarks.eraseEverything();
-  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
+  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
   await testImportedBookmarks();
 });
 
 add_task(async function test_import_ontop() {
   await PlacesUtils.bookmarks.eraseEverything();
-  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
+  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
   await BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
   await PlacesTestUtils.promiseAsyncUpdates();
-  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
+  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
   await testImportedBookmarks();
 });

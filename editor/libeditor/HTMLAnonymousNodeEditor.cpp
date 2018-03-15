@@ -49,53 +49,33 @@ namespace mozilla {
 
 using namespace dom;
 
-// retrieve an integer stored into a CSS computed float value
-static int32_t GetCSSFloatValue(nsComputedDOMStyle* aComputedStyle,
-                                const nsAString& aProperty)
+// Retrieve the rounded number of CSS pixels from a computed CSS property.
+//
+// Note that this should only be called for properties whose resolved value
+// is CSS pixels (like width, height, left, top, right, bottom, margin, padding,
+// border-*-width, ...).
+//
+// See: https://drafts.csswg.org/cssom/#resolved-values
+static int32_t
+GetCSSFloatValue(nsComputedDOMStyle* aComputedStyle,
+                 const nsAString& aProperty)
 {
   MOZ_ASSERT(aComputedStyle);
 
   // get the computed CSSValue of the property
-  ErrorResult rv;
-  RefPtr<CSSValue> value = aComputedStyle->GetPropertyCSSValue(aProperty, rv);
-  if (rv.Failed() || !value) {
+  nsAutoString value;
+  nsresult rv = aComputedStyle->GetPropertyValue(aProperty, value);
+  if (NS_FAILED(rv)) {
     return 0;
   }
 
-  // check the type of the returned CSSValue; we handle here only
-  // pixel and enum types
-  RefPtr<nsROCSSPrimitiveValue> val = value->AsPrimitiveValue();
-  uint16_t type = val->PrimitiveType();
+  MOZ_ASSERT(value.Length() > 2, "Should always have a `px` suffix");
 
-  float f = 0;
-  switch (type) {
-    case CSSPrimitiveValueBinding::CSS_PX:
-      // the value is in pixels, just get it
-      f = val->GetFloatValue(CSSPrimitiveValueBinding::CSS_PX, rv);
-      if (rv.Failed()) {
-        return 0;
-      }
-      break;
-    case CSSPrimitiveValueBinding::CSS_IDENT: {
-      // the value is keyword, we have to map these keywords into
-      // numeric values
-      nsAutoString str;
-      val->GetStringValue(str, rv);
-      if (rv.Failed()) {
-        return 0;
-      }
-      if (str.EqualsLiteral("thin")) {
-        f = 1;
-      } else if (str.EqualsLiteral("medium")) {
-        f = 3;
-      } else if (str.EqualsLiteral("thick")) {
-        f = 5;
-      }
-      break;
-    }
-  }
+  int32_t val = value.ToInteger(&rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv),
+             "These properties should only get resolved values");
 
-  return (int32_t) f;
+  return val;
 }
 
 class ElementDeletionObserver final : public nsStubMutationObserver

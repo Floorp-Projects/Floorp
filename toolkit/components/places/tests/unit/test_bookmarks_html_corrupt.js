@@ -15,7 +15,7 @@ add_task(async function test_corrupt_file() {
 
   // Import bookmarks from the corrupt file.
   let corruptHtml = OS.Path.join(do_get_cwd().path, "bookmarks.corrupt.html");
-  await BookmarkHTMLUtils.importFromFile(corruptHtml, true);
+  await BookmarkHTMLUtils.importFromFile(corruptHtml, { replace: true });
 
   // Check that bookmarks that are not corrupt have been imported.
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -39,7 +39,7 @@ add_task(async function test_corrupt_database() {
 
   // Import again and check for correctness.
   await PlacesUtils.bookmarks.eraseEverything();
-  await BookmarkHTMLUtils.importFromFile(bookmarksFile, true);
+  await BookmarkHTMLUtils.importFromFile(bookmarksFile, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
   await database_check();
 });

@@ -135,11 +135,6 @@ public:
   RecvSetLongTapEnabled(const bool& aTapGestureEnabled) override;
 
   mozilla::ipc::IPCResult
-  RecvProcessTouchVelocity(
-          const uint32_t& aTimestampMs,
-          const float& aSpeedY) override;
-
-  mozilla::ipc::IPCResult
   RecvUpdateWheelTransaction(
           const LayoutDeviceIntPoint& aRefPoint,
           const EventMessage& aEventMessage) override;

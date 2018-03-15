@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 
 #ifdef HAVE_LOCALECONV
@@ -40,6 +41,7 @@ using namespace js;
 
 using mozilla::Abs;
 using mozilla::ArrayLength;
+using mozilla::Maybe;
 using mozilla::MinNumberValue;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;

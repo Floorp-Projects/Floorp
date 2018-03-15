@@ -3724,7 +3724,7 @@ main(int argc, char **argv)
     /* test the RSA_PopulatePrivateKey function */
     if (bltest.commands[cmd_RSAPopulate].activated) {
         unsigned int keySize = 1024;
-        unsigned long exponent = 65537;
+        unsigned long keyExponent = 65537;
         int rounds = 1;
         int ret = -1;
 
@@ -3735,12 +3735,12 @@ main(int argc, char **argv)
             rounds = PORT_Atoi(bltest.options[opt_Rounds].arg);
         }
         if (bltest.options[opt_Exponent].activated) {
-            exponent = PORT_Atoi(bltest.options[opt_Exponent].arg);
+            keyExponent = PORT_Atoi(bltest.options[opt_Exponent].arg);
         }
 
         for (i = 0; i < rounds; i++) {
             printf("Running RSA Populate test round %d\n", i);
-            ret = doRSAPopulateTest(keySize, exponent);
+            ret = doRSAPopulateTest(keySize, keyExponent);
             if (ret != 0) {
                 break;
             }
