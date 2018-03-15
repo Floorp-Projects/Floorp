@@ -61,6 +61,7 @@ const whitelist = [
   {
     file: "chrome://browser/skin/chevron.svg",
     platforms: ["win", "linux", "macosx"],
+    intermittentShown: ["win"],
   },
 
   {

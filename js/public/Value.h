@@ -11,6 +11,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Compiler.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
@@ -38,15 +39,16 @@ namespace JS { class Value; }
 // Use enums so that printing a JS::Value in the debugger shows nice
 // symbolic type tags.
 
-#if defined(_MSC_VER)
-# define JS_ENUM_HEADER(id, type)              enum id : type
-# define JS_ENUM_FOOTER(id)
-#else
+// Work around a GCC bug. See comment above #undef JS_ENUM_HEADER.
+#if MOZ_IS_GCC
 # define JS_ENUM_HEADER(id, type)              enum id
 # define JS_ENUM_FOOTER(id)                    __attribute__((packed))
+#else
+# define JS_ENUM_HEADER(id, type)              enum id : type
+# define JS_ENUM_FOOTER(id)
 #endif
 
-JS_ENUM_HEADER(JSValueType, uint8_t)
+enum JSValueType : uint8_t
 {
     JSVAL_TYPE_DOUBLE              = 0x00,
     JSVAL_TYPE_INT32               = 0x01,
@@ -62,7 +64,7 @@ JS_ENUM_HEADER(JSValueType, uint8_t)
     /* These never appear in a jsval; they are only provided as an out-of-band value. */
     JSVAL_TYPE_UNKNOWN             = 0x20,
     JSVAL_TYPE_MISSING             = 0x21
-} JS_ENUM_FOOTER(JSValueType);
+};
 
 static_assert(sizeof(JSValueType) == 1,
               "compiler typed enum support is apparently buggy");
@@ -105,7 +107,7 @@ JS_ENUM_HEADER(JSValueTag, uint32_t)
 static_assert(sizeof(JSValueTag) == sizeof(uint32_t),
               "compiler typed enum support is apparently buggy");
 
-JS_ENUM_HEADER(JSValueShiftedTag, uint64_t)
+enum JSValueShiftedTag : uint64_t
 {
     JSVAL_SHIFTED_TAG_MAX_DOUBLE      = ((((uint64_t)JSVAL_TAG_MAX_DOUBLE)     << JSVAL_TAG_SHIFT) | 0xFFFFFFFF),
     JSVAL_SHIFTED_TAG_INT32           = (((uint64_t)JSVAL_TAG_INT32)           << JSVAL_TAG_SHIFT),
@@ -117,7 +119,7 @@ JS_ENUM_HEADER(JSValueShiftedTag, uint64_t)
     JSVAL_SHIFTED_TAG_SYMBOL          = (((uint64_t)JSVAL_TAG_SYMBOL)          << JSVAL_TAG_SHIFT),
     JSVAL_SHIFTED_TAG_PRIVATE_GCTHING = (((uint64_t)JSVAL_TAG_PRIVATE_GCTHING) << JSVAL_TAG_SHIFT),
     JSVAL_SHIFTED_TAG_OBJECT          = (((uint64_t)JSVAL_TAG_OBJECT)          << JSVAL_TAG_SHIFT)
-} JS_ENUM_FOOTER(JSValueShiftedTag);
+};
 
 static_assert(sizeof(JSValueShiftedTag) == sizeof(uint64_t),
               "compiler typed enum support is apparently buggy");
@@ -171,7 +173,7 @@ static_assert((JSVAL_SHIFTED_TAG_NULL ^ JSVAL_SHIFTED_TAG_OBJECT) == JSVAL_OBJEC
 
 #endif /* JS_PUNBOX64 */
 
-typedef enum JSWhyMagic
+enum JSWhyMagic
 {
     /** a hole in a native object's elements */
     JS_ELEMENTS_HOLE,
@@ -228,7 +230,7 @@ typedef enum JSWhyMagic
     JS_GENERIC_MAGIC,
 
     JS_WHY_MAGIC_COUNT
-} JSWhyMagic;
+};
 
 namespace js {
 static inline JS::Value PoisonedObjectValue(uintptr_t poison);

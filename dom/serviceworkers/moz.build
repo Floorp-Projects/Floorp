@@ -82,3 +82,5 @@ BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini',
     'test/isolated/multi-e10s-update/browser.ini',
 ]
+
+TEST_DIRS += ['test/gtest']
