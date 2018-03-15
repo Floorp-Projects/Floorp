@@ -207,6 +207,12 @@ class EditAddress extends EditDialog {
                   FormAutofillUtils.supportedCountries.find(supported => supported == FormAutofillUtils.DEFAULT_REGION);
     super("addresses", elements, record || {country});
 
+    Object.assign(this._elements, {
+      addressLevel1Label: this._elements.form.querySelector("#address-level1-container > span"),
+      postalCodeLabel: this._elements.form.querySelector("#postal-code-container > span"),
+      country: this._elements.form.querySelector("#country"),
+    });
+
     this.formatForm(country);
   }
 
@@ -292,6 +298,10 @@ class EditAddress extends EditDialog {
 class EditCreditCard extends EditDialog {
   constructor(elements, record) {
     super("creditCards", elements, record);
+    Object.assign(this._elements, {
+      ccNumber: this._elements.form.querySelector("#cc-number"),
+      year: this._elements.form.querySelector("#cc-exp-year"),
+    });
     this.generateYears();
   }
 
