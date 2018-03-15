@@ -1349,8 +1349,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
       return NS_OK;
     }
 
-    WSRunObject wsObj(mHTMLEditor,
-                      pointToInsert.GetContainer(), pointToInsert.Offset());
+    WSRunObject wsObj(mHTMLEditor, pointToInsert);
     rv = wsObj.InsertText(*doc, *inString, pointToInsert.AsRaw());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1468,8 +1467,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 
         nsDependentSubstring subStr(tString, oldPos, subStrLen);
         NS_ENSURE_STATE(mHTMLEditor);
-        WSRunObject wsObj(mHTMLEditor, currentPoint.GetContainer(),
-                          currentPoint.Offset());
+        WSRunObject wsObj(mHTMLEditor, currentPoint);
 
         // is it a tab?
         if (subStr.Equals(tabStr)) {
@@ -1857,8 +1855,7 @@ HTMLEditRules::InsertBRElement(Selection& aSelection,
     }
   } else {
     EditorDOMPoint pointToBreak(aPointToBreak);
-    WSRunObject wsObj(htmlEditor, pointToBreak.GetContainer(),
-                      pointToBreak.Offset());
+    WSRunObject wsObj(htmlEditor, pointToBreak);
     int32_t visOffset = 0;
     WSType wsType;
     nsCOMPtr<nsINode> visNode;
@@ -1923,8 +1920,7 @@ HTMLEditRules::InsertBRElement(Selection& aSelection,
   DebugOnly<bool> advanced = afterBRElement.AdvanceOffset();
   NS_WARNING_ASSERTION(advanced,
     "Failed to advance offset after the new <br> element");
-  WSRunObject wsObj(htmlEditor, afterBRElement.GetContainer(),
-                    afterBRElement.Offset());
+  WSRunObject wsObj(htmlEditor, afterBRElement);
   nsCOMPtr<nsINode> maybeSecondBRNode;
   int32_t visOffset = 0;
   WSType wsType;
@@ -2883,8 +2879,7 @@ HTMLEditRules::InsertBRIfNeeded(Selection* aSelection)
   }
 
   // examine selection
-  WSRunObject wsObj(htmlEditor, atStartOfSelection.GetContainer(),
-                    atStartOfSelection.Offset());
+  WSRunObject wsObj(htmlEditor, atStartOfSelection);
   if (((wsObj.mStartReason & WSType::block) ||
        (wsObj.mStartReason & WSType::br)) &&
       (wsObj.mEndReason & WSType::block)) {
