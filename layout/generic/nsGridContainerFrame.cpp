@@ -1185,13 +1185,12 @@ struct nsGridContainerFrame::Tracks
 
   // Helper method for ResolveIntrinsicSize.
   template<TrackSizingPhase phase>
-  bool GrowSizeForSpanningItems(const nsTArray<Step2ItemData>& aItemData,
+  bool GrowSizeForSpanningItems(nsTArray<Step2ItemData>::iterator aIter,
+                                const nsTArray<Step2ItemData>::iterator aEnd,
                                 nsTArray<uint32_t>& aTracks,
                                 nsTArray<TrackSize>& aPlan,
                                 nsTArray<TrackSize>& aItemPlan,
                                 TrackSize::StateBits aSelector,
-                                uint32_t aStartIndex,
-                                uint32_t aEndIndex,
                                 const FitContentClamper& aClamper = nullptr,
                                 bool aNeedInfinitelyGrowableFlag = false);
   /**
@@ -4248,13 +4247,12 @@ nsGridContainerFrame::Tracks::AlignBaselineSubtree(
 template<nsGridContainerFrame::Tracks::TrackSizingPhase phase>
 bool
 nsGridContainerFrame::Tracks::GrowSizeForSpanningItems(
-  const nsTArray<Step2ItemData>& aItemData,
+  nsTArray<Step2ItemData>::iterator aIter,
+  const nsTArray<Step2ItemData>::iterator aIterEnd,
   nsTArray<uint32_t>& aTracks,
   nsTArray<TrackSize>& aPlan,
   nsTArray<TrackSize>& aItemPlan,
   TrackSize::StateBits aSelector,
-  uint32_t aStartIndex,
-  uint32_t aEndIndex,
   const FitContentClamper& aFitContentClamper,
   bool aNeedInfinitelyGrowableFlag)
 {
@@ -4263,8 +4261,8 @@ nsGridContainerFrame::Tracks::GrowSizeForSpanningItems(
     phase == TrackSizingPhase::eMaxContentMaximums;
   bool needToUpdateSizes = false;
   InitializePlan<phase>(aPlan);
-  for (uint32_t i = aStartIndex; i < aEndIndex; ++i) {
-    const Step2ItemData& item = aItemData[i];
+  for (; aIter != aIterEnd; ++aIter) {
+    const Step2ItemData& item = *aIter;
     if (!(item.mState & aSelector)) {
       continue;
     }
@@ -4435,26 +4433,24 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     plan.SetLength(mSizes.Length());
     nsTArray<TrackSize> itemPlan(mSizes.Length());
     itemPlan.SetLength(mSizes.Length());
-    for (uint32_t i = 0, len = step2Items.Length(); i < len; ) {
-      // Start / end index for items of the same span length:
-      const uint32_t spanGroupStartIndex = i;
-      uint32_t spanGroupEndIndex = len;
-      const uint32_t span = step2Items[i].mSpan;
-      for (++i; i < len; ++i) {
-        if (step2Items[i].mSpan != span) {
-          spanGroupEndIndex = i;
-          break;
-        }
+    // Start / end iterator for items of the same span length:
+    auto spanGroupStart = step2Items.begin();
+    auto spanGroupEnd = spanGroupStart;
+    const auto end = step2Items.end();
+    for (; spanGroupStart != end; spanGroupStart = spanGroupEnd) {
+      while (spanGroupEnd != end &&
+             !Step2ItemData::IsSpanLessThan(*spanGroupStart, *spanGroupEnd)) {
+        ++spanGroupEnd;
       }
 
+      const uint32_t span = spanGroupStart->mSpan;
       bool updatedBase = false; // Did we update any mBase in step 2.1 - 2.3?
       TrackSize::StateBits selector(TrackSize::eIntrinsicMinSizing);
       if (stateBitsPerSpan[span] & selector) {
         // Step 2.1 MinSize to intrinsic min-sizing.
         updatedBase =
           GrowSizeForSpanningItems<TrackSizingPhase::eIntrinsicMinimums>(
-            step2Items, tracks, plan, itemPlan, selector,
-            spanGroupStartIndex, spanGroupEndIndex);
+            spanGroupStart, spanGroupEnd, tracks, plan, itemPlan, selector);
       }
 
       selector = contentBasedMinSelector;
@@ -4463,8 +4459,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         // sizing under a min-content constraint) min-sizing.
         updatedBase |=
           GrowSizeForSpanningItems<TrackSizingPhase::eContentBasedMinimums>(
-            step2Items, tracks, plan, itemPlan, selector,
-            spanGroupStartIndex, spanGroupEndIndex);
+            spanGroupStart, spanGroupEnd, tracks, plan, itemPlan, selector);
       }
 
       selector = maxContentMinSelector;
@@ -4473,8 +4468,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         // sizing under a max-content constraint) min-sizing.
         updatedBase |=
           GrowSizeForSpanningItems<TrackSizingPhase::eMaxContentMinimums>(
-            step2Items, tracks, plan, itemPlan, selector,
-            spanGroupStartIndex, spanGroupEndIndex);
+            spanGroupStart, spanGroupEnd, tracks, plan, itemPlan, selector);
       }
 
       if (updatedBase) {
@@ -4486,24 +4480,23 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         }
       }
 
-      if (stateBitsPerSpan[span] & TrackSize::eIntrinsicMaxSizing) {
+      selector = TrackSize::eIntrinsicMaxSizing;
+      if (stateBitsPerSpan[span] & selector) {
         const bool willRunStep2_6 =
           stateBitsPerSpan[span] & TrackSize::eAutoOrMaxContentMaxSizing;
         // Step 2.5 MinSize to intrinsic max-sizing.
         GrowSizeForSpanningItems<TrackSizingPhase::eIntrinsicMaximums>(
-          step2Items, tracks, plan, itemPlan, TrackSize::eIntrinsicMaxSizing,
-          spanGroupStartIndex, spanGroupEndIndex, fitContentClamper,
-          willRunStep2_6);
+          spanGroupStart, spanGroupEnd, tracks, plan, itemPlan, selector,
+          fitContentClamper, willRunStep2_6);
 
         if (willRunStep2_6) {
           // Step 2.6 MaxContentContribution to max-content max-sizing.
+          selector = TrackSize::eAutoOrMaxContentMaxSizing;
           GrowSizeForSpanningItems<TrackSizingPhase::eMaxContentMaximums>(
-            step2Items, tracks, plan, itemPlan, TrackSize::eAutoOrMaxContentMaxSizing,
-            spanGroupStartIndex, spanGroupEndIndex, fitContentClamper);
+            spanGroupStart, spanGroupEnd, tracks, plan, itemPlan, selector,
+            fitContentClamper);
         }
       }
-
-      i = spanGroupEndIndex;
     }
   }
 
