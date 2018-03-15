@@ -3008,7 +3008,8 @@ var BrowserOnClick = {
       case "Browser:CertExceptionError":
         this.onCertError(msg.target, msg.data.elementId,
                          msg.data.isTopFrame, msg.data.location,
-                         msg.data.securityInfoAsString);
+                         msg.data.securityInfoAsString,
+                         msg.data.frameId);
       break;
       case "Browser:OpenCaptivePortalPage":
         CaptivePortalWatcher.ensureCaptivePortalTab();
@@ -3053,7 +3054,7 @@ var BrowserOnClick = {
     }
   },
 
-  onCertError(browser, elementId, isTopFrame, location, securityInfoAsString) {
+  onCertError(browser, elementId, isTopFrame, location, securityInfoAsString, frameId) {
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
     let securityInfo;
 
@@ -3104,9 +3105,10 @@ var BrowserOnClick = {
         securityInfo = getSecurityInfo(securityInfoAsString);
         let errorInfo = getDetailedCertErrorInfo(location,
                                                  securityInfo);
-        browser.messageManager.sendAsyncMessage( "CertErrorDetails", {
+        browser.messageManager.sendAsyncMessage("CertErrorDetails", {
             code: securityInfo.errorCode,
-            info: errorInfo
+            info: errorInfo,
+            frameId,
         });
         break;
 
