@@ -49,8 +49,6 @@ namespace mozilla {
 
 using namespace dom;
 
-#define  BLACK_BG_RGB_TRIGGER 0xd0
-
 nsresult
 HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 {
@@ -619,45 +617,25 @@ HTMLEditor::GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
     CSSEditUtils::GetComputedProperty(aElement, *nsGkAtoms::backgroundColor,
                                       bgColorStr);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!bgColorStr.EqualsLiteral("transparent")) {
+  if (!bgColorStr.EqualsLiteral("rgba(0, 0, 0, 0)")) {
     return NS_OK;
   }
 
-  RefPtr<nsComputedDOMStyle> cssDecl =
-    CSSEditUtils::GetComputedStyle(&aElement);
-  NS_ENSURE_STATE(cssDecl);
+  RefPtr<nsStyleContext> style =
+    nsComputedDOMStyle::GetStyleContext(&aElement, nullptr);
+  NS_ENSURE_STATE(style);
 
-  // from these declarations, get the one we want and that one only
-  ErrorResult error;
-  RefPtr<dom::CSSValue> cssVal =
-    cssDecl->GetPropertyCSSValue(NS_LITERAL_STRING("color"), error);
-  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
+  const uint8_t kBlackBgTrigger = 0xd0;
 
-  nsROCSSPrimitiveValue* val = cssVal->AsPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_FAILURE);
-
-  if (CSSPrimitiveValueBinding::CSS_RGBCOLOR != val->PrimitiveType()) {
-    return NS_OK;
-  }
-
-  nsDOMCSSRGBColor* rgbVal = val->GetRGBColorValue(error);
-  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
-  float r = rgbVal->Red()->
-    GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
-  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
-  float g = rgbVal->Green()->
-    GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
-  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
-  float b = rgbVal->Blue()->
-    GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
-  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
-  if (r >= BLACK_BG_RGB_TRIGGER &&
-      g >= BLACK_BG_RGB_TRIGGER &&
-      b >= BLACK_BG_RGB_TRIGGER) {
+  nscolor color = style->StyleColor()->mColor;
+  if (NS_GET_R(color) >= kBlackBgTrigger &&
+      NS_GET_G(color) >= kBlackBgTrigger &&
+      NS_GET_B(color) >= kBlackBgTrigger) {
     aReturn.AssignLiteral("black");
   } else {
     aReturn.AssignLiteral("white");
   }
+
   return NS_OK;
 }
 
