@@ -52,9 +52,9 @@ public:
   ~GPUProcessHost();
 
   // Launch the subprocess asynchronously. On failure, false is returned.
-  // Otherwise, true is returned, and the OnLaunchComplete listener callback
-  // will be invoked either when a connection has been established, or if a
-  // connection could not be established due to an asynchronous error.
+  // Otherwise, true is returned, and the OnProcessLaunchComplete listener
+  // callback will be invoked either when a connection has been established, or
+  // if a connection could not be established due to an asynchronous error.
   bool Launch();
 
   // If the process is being launched, block until it has launched and
