@@ -28,8 +28,8 @@ async function sync_httpd_setup() {
   let upd = collectionsHelper.with_updated_collection;
 
   let catapultEngine = engineManager.get("catapult");
-  let engines        = {catapult: {version: catapultEngine.version,
-                                   syncID:  catapultEngine.syncID}};
+  let syncID         = await catapultEngine.resetLocalSyncID();
+  let engines        = {catapult: {version: catapultEngine.version, syncID}};
 
   // Track these using the collections helper, which keeps modified times
   // up-to-date.

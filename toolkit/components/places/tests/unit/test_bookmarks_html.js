@@ -94,7 +94,7 @@ add_task(async function setup() {
   // 1. import bookmarks.preplaces.html
   // 2. run the test-suite
   // Note: we do not empty the db before this import to catch bugs like 380999
-  await BookmarkHTMLUtils.importFromFile(gBookmarksFileOld, true);
+  await BookmarkHTMLUtils.importFromFile(gBookmarksFileOld, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
   await testImportedBookmarks();
 
@@ -107,7 +107,7 @@ add_task(async function test_import_new() {
   // Test importing a Places bookmarks.html file.
   // 1. import bookmarks.exported.html
   // 2. run the test-suite
-  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
 
   await testImportedBookmarks();
@@ -128,7 +128,7 @@ add_task(async function test_emptytitle_export() {
   // 8. export to bookmarks.exported.html
   // 9. empty bookmarks db and continue
 
-  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
 
   const NOTITLE_URL = "http://notitle.mozilla.org/";
@@ -142,7 +142,7 @@ add_task(async function test_emptytitle_export() {
   await PlacesTestUtils.promiseAsyncUpdates();
   await PlacesUtils.bookmarks.eraseEverything();
 
-  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
   await testImportedBookmarks();
 
@@ -178,7 +178,7 @@ add_task(async function test_import_chromefavicon() {
   const CHROME_FAVICON_URI_2 = NetUtil.newURI("chrome://global/skin/icons/error-16.png");
 
   info("Importing from html");
-  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
 
   info("Insert bookmark");
@@ -222,7 +222,7 @@ add_task(async function test_import_chromefavicon() {
 
   info("import from html");
   await PlacesUtils.bookmarks.eraseEverything();
-  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
 
   info("Test imported bookmarks");
@@ -251,12 +251,12 @@ add_task(async function test_import_ontop() {
   // 3. import the exported bookmarks file
   // 4. run the test-suite
 
-  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
   await BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
   await testImportedBookmarks();
   await PlacesTestUtils.promiseAsyncUpdates();

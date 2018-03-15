@@ -2184,7 +2184,7 @@ InlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
     // (the first view is held strongly by the buffer) and is used by the
     // buffer marking code to detect whether its data pointer needs to be
     // relocated.
-    JS_ALWAYS_TRUE(buffer->addView(cx, this));
+    MOZ_ALWAYS_TRUE(buffer->addView(cx, this));
 
     buffer->setForInlineTypedObject();
     buffer->setHasTypedObjectViews();

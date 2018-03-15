@@ -1419,9 +1419,8 @@ nssCKFWSession_CopyObject(
         /* use create object */
         NSSArena *tmpArena;
         CK_ATTRIBUTE_PTR newTemplate;
-        CK_ULONG i, j, n, newLength, k;
+        CK_ULONG j, n, newLength, k;
         CK_ATTRIBUTE_TYPE_PTR oldTypes;
-        NSSCKFWObject *rv;
 
         n = nssCKFWObject_GetAttributeCount(fwObject, pError);
         if ((0 == n) && (CKR_OK != *pError)) {

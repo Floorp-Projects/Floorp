@@ -1491,12 +1491,12 @@ public class GeckoSession extends LayerSession
          * @param uri The URI of the pressed link, set for links and
          *            image-links.
          * @param elementType The type of the pressed element.
-         *                    One of the {@link ContentDelegate#ELEMENT_TYPE_LINK} flags.
+         *                    One of the {@link ContentDelegate#ELEMENT_TYPE_NONE} flags.
          * @param elementSrc The source URI of the pressed element, set for
          *                   (nested) images and media elements.
          */
         void onContextMenu(GeckoSession session, int screenX, int screenY,
-                           String uri, @ElementType int elementTypes,
+                           String uri, @ElementType int elementType,
                            String elementSrc);
     }
 

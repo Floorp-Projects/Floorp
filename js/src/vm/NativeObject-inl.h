@@ -35,7 +35,7 @@ inline void
 NativeObject::removeLastProperty(JSContext* cx)
 {
     MOZ_ASSERT(canRemoveLastProperty());
-    JS_ALWAYS_TRUE(setLastProperty(cx, lastProperty()->previous()));
+    MOZ_ALWAYS_TRUE(setLastProperty(cx, lastProperty()->previous()));
 }
 
 inline bool

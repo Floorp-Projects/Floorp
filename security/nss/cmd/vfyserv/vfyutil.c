@@ -310,13 +310,13 @@ myHandshakeCallback(PRFileDesc *socket, void *arg)
 void
 disableAllSSLCiphers(void)
 {
-    const PRUint16 *cipherSuites = SSL_ImplementedCiphers;
+    const PRUint16 *allSuites = SSL_ImplementedCiphers;
     int i = SSL_NumImplementedCiphers;
     SECStatus rv;
 
     /* disable all the SSL3 cipher suites */
     while (--i >= 0) {
-        PRUint16 suite = cipherSuites[i];
+        PRUint16 suite = allSuites[i];
         rv = SSL_CipherPrefSetDefault(suite, PR_FALSE);
         if (rv != SECSuccess) {
             fprintf(stderr,

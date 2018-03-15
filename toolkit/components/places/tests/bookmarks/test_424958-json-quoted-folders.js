@@ -74,7 +74,7 @@ add_task(async function() {
   });
 
   // restore json file
-  await BookmarkJSONUtils.importFromFile(jsonFile, true);
+  await BookmarkJSONUtils.importFromFile(jsonFile, { replace: true });
 
   // validate
   tests.forEach(function(aTest) {

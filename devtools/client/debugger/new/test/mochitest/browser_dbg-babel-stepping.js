@@ -114,8 +114,6 @@ function testStepOveForOfClosure(dbg) {
     { line: 6, column: 2 },
     [
       ["stepOver", { line: 8, column: 2 }],
-      ["stepOver", { line: 8, column: 2 }],
-      ["stepOver", { line: 8, column: 2 }],
       ["stepOver", { line: 12, column: 2 }]
     ]
   );

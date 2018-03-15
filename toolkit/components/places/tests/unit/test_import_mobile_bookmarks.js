@@ -3,7 +3,7 @@ async function importFromFixture(fixture, replace) {
   let path = OS.Path.join(cwd, fixture);
 
   info(`Importing from ${path}`);
-  await BookmarkJSONUtils.importFromFile(path, replace);
+  await BookmarkJSONUtils.importFromFile(path, { replace });
   await PlacesTestUtils.promiseAsyncUpdates();
 }
 

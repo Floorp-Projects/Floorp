@@ -269,6 +269,10 @@ add_task(async function test_bookmark_change_during_sync() {
 
   enableValidationPrefs();
 
+  let engine = Service.engineManager.get("bookmarks");
+  let server = await serverForEnginesWithKeys({"foo": "password"}, [engine]);
+  await SyncTestingInfrastructure(server);
+
   // Already-tracked bookmarks that shouldn't be uploaded during the first sync.
   let bzBmk = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -283,9 +287,6 @@ add_task(async function test_bookmark_change_during_sync() {
     syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
   });
 
-  let engine = Service.engineManager.get("bookmarks");
-  let server = await serverForEnginesWithKeys({"foo": "password"}, [engine]);
-  await SyncTestingInfrastructure(server);
   let collection = server.user("foo").collection("bookmarks");
 
   let bmk3; // New child of Folder 1, created locally during sync.

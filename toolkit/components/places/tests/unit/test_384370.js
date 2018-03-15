@@ -31,7 +31,7 @@ add_task(async function() {
   // Test importing a pre-Places canonical bookmarks file.
   // Note: we do not empty the db before this import to catch bugs like 380999
   let htmlFile = OS.Path.join(do_get_cwd().path, "bookmarks.preplaces.html");
-  await BookmarkHTMLUtils.importFromFile(htmlFile, true);
+  await BookmarkHTMLUtils.importFromFile(htmlFile, { replace: true });
 
   // Populate the database.
   for (let { uri, tags } of tagData) {
@@ -57,7 +57,7 @@ add_task(async function() {
 
   // 2. empty bookmarks db
   // 3. import bookmarks.exported.json
-  await BookmarkJSONUtils.importFromFile(jsonFile, true);
+  await BookmarkJSONUtils.importFromFile(jsonFile, { replace: true });
   info("imported json");
 
   // 4. run the test-suite

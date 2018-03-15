@@ -15,12 +15,16 @@
 #include <unistd.h>
 #endif // defined (XP_WIN) || defined (XP_UNIX)
 
+#include "mozilla/Maybe.h"
+
 #include "frontend/BinTokenReaderTester.h"
 #include "gc/Zone.h"
 
 #include "js/Vector.h"
 
 #include "jsapi-tests/tests.h"
+
+using mozilla::Maybe;
 
 using Tokenizer = js::frontend::BinTokenReaderTester;
 using Chars = Tokenizer::Chars;

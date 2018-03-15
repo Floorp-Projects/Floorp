@@ -52,6 +52,7 @@ static constexpr FloatRegister ABINonArgDoubleReg { FloatRegisters::f21, FloatRe
 // Note: these three registers are all guaranteed to be different
 static constexpr Register ABINonArgReturnReg0 = t0;
 static constexpr Register ABINonArgReturnReg1 = t1;
+static constexpr Register ABINonVolatileReg = s0;
 
 // This register is guaranteed to be clobberable during the prologue and
 // epilogue of an ABI call which must preserve both ABI argument, return
