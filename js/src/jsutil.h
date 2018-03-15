@@ -13,7 +13,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Compiler.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
@@ -155,26 +154,6 @@ Max(T t1, T t2)
 {
     return t1 > t2 ? t1 : t2;
 }
-
-template<typename T>
-class MOZ_RAII AutoScopedAssign
-{
-  public:
-    AutoScopedAssign(T* addr, const T& value
-                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : addr_(addr), old(*addr_)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        *addr_ = value;
-    }
-
-    ~AutoScopedAssign() { *addr_ = old; }
-
-  private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-    T* addr_;
-    T old;
-};
 
 template <typename T, typename U>
 static inline U

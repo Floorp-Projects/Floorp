@@ -10,6 +10,7 @@
 
 #include "jsexn.h"
 
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 
 #include <string.h>
@@ -667,7 +668,11 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     // Prevent infinite recursion.
     if (cx->generatingError)
         return;
-    AutoScopedAssign<bool> asa(&cx->generatingError.ref(), true);
+
+    cx->generatingError = true;
+    auto restore = mozilla::MakeScopeExit([cx] {
+        cx->generatingError = false;
+    });
 
     // Create an exception object.
     RootedString messageStr(cx, reportp->newMessageString(cx));
