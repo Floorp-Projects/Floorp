@@ -294,9 +294,17 @@ SharedArrayRawBufferRefs::releaseAll()
     refs_.clear();
 }
 
+// SCOutput provides an interface to write raw data -- eg uint64_ts, doubles,
+// arrays of bytes -- into a structured clone data output stream. It also knows
+// how to free any transferable data within that stream.
+//
+// Note that it contains a full JSStructuredCloneData object, which holds the
+// callbacks necessary to read/write/transfer/free the data. For the purpose of
+// this class, only the freeTransfer callback is relevant; the rest of the callbacks
+// are used by the higher-level JSStructuredCloneWriter interface.
 struct SCOutput {
   public:
-    using Iter = BufferIterator<uint64_t, TempAllocPolicy>;
+    using Iter = BufferIterator<uint64_t, SystemAllocPolicy>;
 
     explicit SCOutput(JSContext* cx);
 
@@ -313,22 +321,27 @@ struct SCOutput {
     template <class T>
     MOZ_MUST_USE bool writeArray(const T* p, size_t nbytes);
 
-    MOZ_MUST_USE bool extractBuffer(JSStructuredCloneData* data);
-    void discardTransferables(const JSStructuredCloneCallbacks* cb, void* cbClosure);
+    void setCallbacks(const JSStructuredCloneCallbacks* callbacks,
+                      void* closure,
+                      OwnTransferablePolicy policy)
+    {
+        buf.setCallbacks(callbacks, closure, policy);
+    }
+    void extractBuffer(JSStructuredCloneData* data) { *data = Move(buf); }
+    void discardTransferables();
 
     uint64_t tell() const { return buf.Size(); }
     uint64_t count() const { return buf.Size() / sizeof(uint64_t); }
     Iter iter() {
-        return BufferIterator<uint64_t, TempAllocPolicy>(buf);
+        return Iter(buf);
     }
 
     size_t offset(Iter dest) {
         return dest - iter();
     }
 
-  private:
     JSContext* cx;
-    mozilla::BufferList<TempAllocPolicy> buf;
+    JSStructuredCloneData buf;
 };
 
 class SCInput {
@@ -461,11 +474,13 @@ struct JSStructuredCloneWriter {
                                      const Value& tVal)
         : out(cx), scope(scope), objs(out.context()),
           counts(out.context()), entries(out.context()),
-          memory(out.context()), callbacks(cb),
-          closure(cbClosure), transferable(out.context(), tVal),
+          memory(out.context()),
+          transferable(out.context(), tVal),
           transferableObjects(out.context(), GCHashSet<JSObject*>(cx)),
           cloneDataPolicy(cloneDataPolicy)
-    {}
+    {
+        out.setCallbacks(cb, cbClosure, OwnTransferablePolicy::NoTransferables);
+    }
 
     ~JSStructuredCloneWriter();
 
@@ -481,16 +496,8 @@ struct JSStructuredCloneWriter {
 
     SCOutput& output() { return out; }
 
-    bool extractBuffer(JSStructuredCloneData* data) {
-        bool success = out.extractBuffer(data);
-        if (success) {
-            // Move the SharedArrayRawBuf references here, SCOutput::extractBuffer
-            // moves the serialized data.
-            data->refsHeld_.takeOwnership(Move(refsHeld));
-            data->setOptionalCallbacks(callbacks, closure,
-                                       OwnTransferablePolicy::OwnsTransferablesIfAny);
-        }
-        return success;
+    void extractBuffer(JSStructuredCloneData* newData) {
+        out.extractBuffer(newData);
     }
 
     JS::StructuredCloneScope cloneScope() const { return scope; }
@@ -554,20 +561,11 @@ struct JSStructuredCloneWriter {
                                   SystemAllocPolicy>;
     Rooted<CloneMemory> memory;
 
-    // The user defined callbacks that will be used for cloning.
-    const JSStructuredCloneCallbacks* callbacks;
-
-    // Any value passed to JS_WriteStructuredClone.
-    void* closure;
-
     // Set of transferable objects
     RootedValue transferable;
     Rooted<GCHashSet<JSObject*>> transferableObjects;
 
     const JS::CloneDataPolicy cloneDataPolicy;
-
-    // SharedArrayRawBuffers whose reference counts we have incremented.
-    SharedArrayRawBufferRefs refsHeld;
 
     friend bool JS_WriteString(JSStructuredCloneWriter* w, HandleString str);
     friend bool JS_WriteTypedArray(JSStructuredCloneWriter* w, HandleValue v);
@@ -626,7 +624,12 @@ WriteStructuredClone(JSContext* cx, HandleValue v, JSStructuredCloneData* bufp,
                      const Value& transferable)
 {
     JSStructuredCloneWriter w(cx, scope, cloneDataPolicy, cb, cbClosure, transferable);
-    return w.init() && w.write(v) && w.extractBuffer(bufp);
+    if (!w.init())
+        return false;
+    if (!w.write(v))
+        return false;
+    w.extractBuffer(bufp);
+    return true;
 }
 
 bool
@@ -906,7 +909,6 @@ SCInput::readPtr(void** p)
 
 SCOutput::SCOutput(JSContext* cx)
     : cx(cx)
-    , buf(0, 0, 4096, cx)
 {
 }
 
@@ -1014,29 +1016,17 @@ SCOutput::writePtr(const void* p)
     return write(reinterpret_cast<uint64_t>(p));
 }
 
-bool
-SCOutput::extractBuffer(JSStructuredCloneData* data)
-{
-    bool success;
-    mozilla::BufferList<SystemAllocPolicy> out =
-        buf.MoveFallible<SystemAllocPolicy>(&success);
-    if (!success) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-    *data = JSStructuredCloneData(Move(out));
-    return true;
-}
-
 void
-SCOutput::discardTransferables(const JSStructuredCloneCallbacks* cb, void* cbClosure)
+SCOutput::discardTransferables()
 {
-    DiscardTransferables(buf, cb, cbClosure);
+    buf.discardTransferables();
 }
 
 } // namespace js
 
-JSStructuredCloneData::~JSStructuredCloneData()
+
+void
+JSStructuredCloneData::discardTransferables()
 {
     if (!Size())
         return;
@@ -1049,9 +1039,8 @@ JS_STATIC_ASSERT(JSString::MAX_LENGTH < UINT32_MAX);
 JSStructuredCloneWriter::~JSStructuredCloneWriter()
 {
     // Free any transferable data left lying around in the buffer
-    if (out.count()) {
-        out.discardTransferables(callbacks, closure);
-    }
+    if (out.count())
+        out.discardTransferables();
 }
 
 bool
@@ -1129,11 +1118,11 @@ JSStructuredCloneWriter::parseTransferable()
         }
 
         else  {
-            if (!callbacks || !callbacks->canTransfer)
+            if (!out.buf.callbacks_ || !out.buf.callbacks_->canTransfer)
                 return reportDataCloneError(JS_SCERR_TRANSFERABLE);
 
             JSAutoCompartment ac(cx, unwrappedObj);
-            if (!callbacks->canTransfer(cx, unwrappedObj, closure))
+            if (!out.buf.callbacks_->canTransfer(cx, unwrappedObj, out.buf.closure_))
                 return false;
         }
 
@@ -1152,7 +1141,7 @@ JSStructuredCloneWriter::parseTransferable()
 bool
 JSStructuredCloneWriter::reportDataCloneError(uint32_t errorId)
 {
-    ReportDataCloneError(context(), callbacks, errorId);
+    ReportDataCloneError(context(), out.buf.callbacks_, errorId);
     return false;
 }
 
@@ -1285,7 +1274,7 @@ JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj)
     Rooted<SharedArrayBufferObject*> sharedArrayBuffer(context(), &CheckedUnwrap(obj)->as<SharedArrayBufferObject>());
     SharedArrayRawBuffer* rawbuf = sharedArrayBuffer->rawBufferObject();
 
-    if (!refsHeld.acquire(context(), rawbuf))
+    if (!out.buf.refsHeld_.acquire(context(), rawbuf))
         return false;
 
     // We must serialize the length so that the buffer object arrives in the
@@ -1611,8 +1600,8 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             return traverseSavedFrame(obj);
         }
 
-        if (callbacks && callbacks->write)
-            return callbacks->write(context(), this, obj, closure);
+        if (out.buf.callbacks_ && out.buf.callbacks_->write)
+            return out.buf.callbacks_->write(context(), this, obj, out.buf.closure_);
         // else fall through
     }
 
@@ -1755,9 +1744,9 @@ JSStructuredCloneWriter::transferOwnership()
                 extraData = nbytes;
             }
         } else {
-            if (!callbacks || !callbacks->writeTransfer)
+            if (!out.buf.callbacks_ || !out.buf.callbacks_->writeTransfer)
                 return reportDataCloneError(JS_SCERR_TRANSFERABLE);
-            if (!callbacks->writeTransfer(cx, obj, closure, &tag, &ownership, &content, &extraData))
+            if (!out.buf.callbacks_->writeTransfer(cx, obj, out.buf.closure_, &tag, &ownership, &content, &extraData))
                 return false;
             MOZ_ASSERT(tag > SCTAG_TRANSFER_MAP_PENDING_ENTRY);
         }
@@ -2872,7 +2861,7 @@ JSAutoStructuredCloneBuffer::copy(JSContext* cx, const JSStructuredCloneData& sr
     if (!data_.refsHeld_.acquireAll(cx, srcData.refsHeld_))
         return false;
 
-    data_.setOptionalCallbacks(callbacks, closure, OwnTransferablePolicy::NoTransferables);
+    data_.setCallbacks(callbacks, closure, OwnTransferablePolicy::NoTransferables);
     return true;
 }
 
@@ -2884,7 +2873,7 @@ JSAutoStructuredCloneBuffer::adopt(JSStructuredCloneData&& data, uint32_t versio
     clear();
     data_ = Move(data);
     version_ = version;
-    data_.setOptionalCallbacks(callbacks, closure, OwnTransferablePolicy::OwnsTransferablesIfAny);
+    data_.setCallbacks(callbacks, closure, OwnTransferablePolicy::OwnsTransferablesIfAny);
 }
 
 void
@@ -2901,7 +2890,7 @@ JSAutoStructuredCloneBuffer::steal(JSStructuredCloneData* data, uint32_t* versio
     *data = Move(data_);
 
     version_ = 0;
-    data_.setOptionalCallbacks(nullptr, nullptr, OwnTransferablePolicy::NoTransferables);
+    data_.setCallbacks(nullptr, nullptr, OwnTransferablePolicy::NoTransferables);
 }
 
 bool
