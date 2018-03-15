@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BufferList.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
 
 #include <stdint.h>
 
@@ -339,6 +340,8 @@ namespace js
       private:
         js::Vector<js::SharedArrayRawBuffer*, 0, js::SystemAllocPolicy> refs_;
     };
+
+    template <typename T, typename AllocPolicy> struct BufferIterator;
 }
 
 /**
@@ -346,15 +349,15 @@ namespace js
  * information needed to read/write/transfer/free the records within it, in the
  * form of a set of callbacks.
  */
-class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) :
-    public mozilla::BufferList<js::SystemAllocPolicy>
-{
-    typedef js::SystemAllocPolicy AllocPolicy;
-    typedef mozilla::BufferList<js::SystemAllocPolicy> BufferList;
+class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
+  public:
+    using BufferList = mozilla::BufferList<js::SystemAllocPolicy>;
+    using Iterator = BufferList::IterImpl;
 
-    static const size_t kInitialSize = 0;
-    static const size_t kInitialCapacity = 4096;
+  private:
     static const size_t kStandardCapacity = 4096;
+
+    BufferList bufList_;
 
     const JSStructuredCloneCallbacks* callbacks_ = nullptr;
     void* closure_ = nullptr;
@@ -363,16 +366,19 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) :
 
     friend struct JSStructuredCloneWriter;
     friend class JS_PUBLIC_API(JSAutoStructuredCloneBuffer);
+    template <typename T, typename AllocPolicy> friend struct js::BufferIterator;
 
-public:
-    explicit JSStructuredCloneData(AllocPolicy aAP = AllocPolicy())
-        : BufferList(kInitialSize, kInitialCapacity, kStandardCapacity, aAP)
+  public:
+    // The constructor must be infallible but SystemAllocPolicy is not, so both
+    // the initial size and initial capacity of the BufferList must be zero.
+    explicit JSStructuredCloneData()
+        : bufList_(0, 0, kStandardCapacity, js::SystemAllocPolicy())
         , callbacks_(nullptr)
         , closure_(nullptr)
         , ownTransferables_(OwnTransferablePolicy::NoTransferables)
     {}
     MOZ_IMPLICIT JSStructuredCloneData(BufferList&& buffers)
-        : BufferList(Move(buffers))
+        : bufList_(mozilla::Move(buffers))
         , callbacks_(nullptr)
         , closure_(nullptr)
         , ownTransferables_(OwnTransferablePolicy::NoTransferables)
@@ -390,9 +396,82 @@ public:
         ownTransferables_ = policy;
     }
 
-    void discardTransferables();
+    bool Init(size_t initialCapacity = 0) { return bufList_.Init(0, initialCapacity); }
 
-    using BufferList::BufferList;
+    size_t Size() const { return bufList_.Size(); }
+
+    const Iterator Start() const { return bufList_.Iter(); }
+
+    bool Advance(Iterator& iter, size_t distance) const {
+        return iter.AdvanceAcrossSegments(bufList_, distance);
+    }
+
+    bool ReadBytes(Iterator& iter, char* buffer, size_t size) const {
+        return bufList_.ReadBytes(iter, buffer, size);
+    }
+
+    // Append new data to the end of the buffer.
+    bool AppendBytes(const char* data, size_t size) {
+        return bufList_.WriteBytes(data, size);
+    }
+
+    // Update data stored within the existing buffer. There must be at least
+    // 'size' bytes between the position of 'iter' and the end of the buffer.
+    bool UpdateBytes(Iterator& iter, const char* data, size_t size) const {
+        while (size > 0) {
+            size_t remaining = iter.RemainingInSegment();
+            size_t nbytes = std::min(remaining, size);
+            memcpy(iter.Data(), data, nbytes);
+            data += nbytes;
+            size -= nbytes;
+            iter.Advance(bufList_, nbytes);
+        }
+        return true;
+    }
+
+    char* AllocateBytes(size_t maxSize, size_t* size) {
+        return bufList_.AllocateBytes(maxSize, size);
+    }
+
+    void Clear() {
+        discardTransferables();
+        bufList_.Clear();
+    }
+
+    template<typename BorrowingAllocPolicy>
+    mozilla::BufferList<BorrowingAllocPolicy> Borrow(Iterator& iter, size_t size, bool* success,
+                                            BorrowingAllocPolicy ap = BorrowingAllocPolicy()) const
+    {
+        return bufList_.Borrow<BorrowingAllocPolicy>(iter, size, success);
+    }
+
+    // Iterate over all contained data, one BufferList segment's worth at a
+    // time, and invoke the given FunctionToApply with the data pointer and
+    // size. The function should return a bool value, and this loop will exit
+    // with false if the function ever returns false.
+    template <typename FunctionToApply>
+    bool ForEachDataChunk(FunctionToApply&& function) const {
+        Iterator iter = bufList_.Iter();
+        while (!iter.Done()) {
+            if (!function(iter.Data(), iter.RemainingInSegment()))
+                return false;
+            iter.Advance(bufList_, iter.RemainingInSegment());
+        }
+        return true;
+    }
+
+    // Append the entire contents of other's bufList_ to our own.
+    bool Append(const JSStructuredCloneData& other) {
+        return other.ForEachDataChunk([&](const char* data, size_t size) {
+            return AppendBytes(data, size);
+        });
+    }
+
+    size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+        return bufList_.SizeOfExcludingThis(mallocSizeOf);
+    }
+
+    void discardTransferables();
 };
 
 /**
