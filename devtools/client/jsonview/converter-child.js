@@ -12,9 +12,9 @@ const Services = require("Services");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
                                "devtools/shared/webconsole/network-helper");
-loader.lazyGetter(this, "debug", function() {
+loader.lazyGetter(this, "debugJsModules", function() {
   let {AppConstants} = require("resource://gre/modules/AppConstants.jsm");
-  return !!(AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES);
+  return !!(AppConstants.DEBUG_JS_MODULES);
 });
 
 const childProcessMessageManager =
@@ -168,7 +168,7 @@ function exportData(win, request) {
     defineAs: "JSONView"
   });
 
-  data.debug = debug;
+  data.debugJsModules = debugJsModules;
 
   data.json = new win.Text();
 

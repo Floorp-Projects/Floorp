@@ -991,6 +991,9 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     // [SecureContext] API (bug 1273687).  In that case we'd call
     // creationOptions.setSecureContext(true).
 
+    if (principal == nsXPConnect::SystemPrincipal())
+        creationOptions.setClampAndJitterTime(false);
+
     if (xpc::SharedMemoryEnabled())
         creationOptions.setSharedMemoryAndAtomicsEnabled(true);
 

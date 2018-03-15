@@ -859,7 +859,7 @@ HTMLImageElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 #ifdef DEBUG
-nsIDOMHTMLFormElement*
+HTMLFormElement*
 HTMLImageElement::GetForm() const
 {
   return mForm;
@@ -867,13 +867,13 @@ HTMLImageElement::GetForm() const
 #endif
 
 void
-HTMLImageElement::SetForm(nsIDOMHTMLFormElement* aForm)
+HTMLImageElement::SetForm(HTMLFormElement* aForm)
 {
   NS_PRECONDITION(aForm, "Don't pass null here");
   NS_ASSERTION(!mForm,
                "We don't support switching from one non-null form to another.");
 
-  mForm = static_cast<HTMLFormElement*>(aForm);
+  mForm = aForm;
 }
 
 void

@@ -9,7 +9,6 @@
 #include "mozilla/EventForwards.h"
 #include "nsISupports.h"
 
-class nsIDOMHTMLFormElement;
 class nsPresState;
 
 namespace mozilla {
@@ -17,6 +16,7 @@ namespace dom {
 class Element;
 class HTMLFieldSetElement;
 class HTMLFormSubmission;
+class HTMLFormElement;
 } // namespace dom
 } // namespace mozilla
 
@@ -120,7 +120,7 @@ public:
    * so that it can be properly sorted with the other controls in the
    * form.
    */
-  virtual void SetForm(nsIDOMHTMLFormElement* aForm) = 0;
+  virtual void SetForm(mozilla::dom::HTMLFormElement* aForm) = 0;
 
   /**
    * Tell the control to forget about its form.

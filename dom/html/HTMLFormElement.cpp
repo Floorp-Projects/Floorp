@@ -151,7 +151,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLFormElement,
                                              nsGenericHTMLElement,
-                                             nsIDOMHTMLFormElement,
                                              nsIForm,
                                              nsIWebProgressListener,
                                              nsIRadioGroupContainer)
@@ -315,7 +314,7 @@ static void
 CollectOrphans(nsINode* aRemovalRoot,
                const nsTArray<nsGenericHTMLFormElement*>& aArray
 #ifdef DEBUG
-               , nsIDOMHTMLFormElement* aThisForm
+               , HTMLFormElement* aThisForm
 #endif
                )
 {
@@ -349,8 +348,7 @@ CollectOrphans(nsINode* aRemovalRoot,
 
 #ifdef DEBUG
     if (!removed) {
-      nsCOMPtr<nsIDOMHTMLFormElement> form;
-      node->GetForm(getter_AddRefs(form));
+      HTMLFormElement* form = node->GetForm();
       NS_ASSERTION(form == aThisForm, "How did that happen?");
     }
 #endif /* DEBUG */
@@ -361,7 +359,7 @@ static void
 CollectOrphans(nsINode* aRemovalRoot,
                const nsTArray<HTMLImageElement*>& aArray
 #ifdef DEBUG
-               , nsIDOMHTMLFormElement* aThisForm
+               , HTMLFormElement* aThisForm
 #endif
                )
 {
@@ -390,7 +388,7 @@ CollectOrphans(nsINode* aRemovalRoot,
 
 #ifdef DEBUG
     if (!removed) {
-      nsCOMPtr<nsIDOMHTMLFormElement> form = node->GetForm();
+      HTMLFormElement* form = node->GetForm();
       NS_ASSERTION(form == aThisForm, "How did that happen?");
     }
 #endif /* DEBUG */
@@ -982,7 +980,7 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
       nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver(
                       do_QueryInterface(inst));
       if (formSubmitObserver) {
-        rv = formSubmitObserver->Notify(this,
+        rv = formSubmitObserver->Notify(static_cast<nsIContent*>(this),
                                         window ? window->GetCurrentInnerWindow() : nullptr,
                                         aActionURL,
                                         aCancelSubmit);
@@ -1981,7 +1979,7 @@ HTMLFormElement::CheckValidFormSubmission()
         observer = do_QueryInterface(inst);
 
         if (observer) {
-          observer->NotifyInvalidSubmit(this,
+          observer->NotifyInvalidSubmit(static_cast<nsIContent*>(this),
                                         static_cast<nsIArray*>(invalidElements));
         }
       }

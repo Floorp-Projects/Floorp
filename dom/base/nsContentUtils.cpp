@@ -8826,8 +8826,7 @@ bool
 nsContentUtils::IsUpgradableDisplayType(nsContentPolicyType aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return sIsUpgradableDisplayContentPrefEnabled &&
-         (aType == nsIContentPolicy::TYPE_IMAGE ||
+  return (aType == nsIContentPolicy::TYPE_IMAGE ||
           aType == nsIContentPolicy::TYPE_MEDIA);
 }
 

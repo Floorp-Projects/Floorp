@@ -541,6 +541,12 @@ public:
   bool IsSafeToFlush() const;
 
   /**
+   * Informs the document's FontFaceSet that the refresh driver ticked,
+   * flushing style and layout.
+   */
+  void NotifyFontFaceSetOnRefresh();
+
+  /**
    * Flush pending notifications of the type specified.  This method
    * will not affect the content model; it'll just affect style and
    * frames. Callers that actually want up-to-date presentation (other
@@ -555,7 +561,6 @@ public:
    *
    * @param aType the type of notifications to flush
    */
-public:
   void FlushPendingNotifications(mozilla::FlushType aType)
   {
     if (!NeedFlush(aType)) {

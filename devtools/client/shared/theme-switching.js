@@ -135,7 +135,7 @@
       // Final notification for further theme-switching related logic.
       gDevTools.emit("theme-switched", window, newTheme, oldTheme);
       notifyWindow();
-    }, console.error.bind(console));
+    }, console.error);
   }
 
   function handlePrefChange() {

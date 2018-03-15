@@ -2941,7 +2941,7 @@ nsWindow::DispatchKeyDownOrKeyUpEvent(GdkEventKey* aEvent,
                                       bool aIsProcessedByIME,
                                       bool* aIsCancelled)
 {
-    MOZ_ASSERT(aIsCancelled, "aCancelled must not be null");
+    MOZ_ASSERT(aIsCancelled, "aIsCancelled must not be nullptr");
 
     *aIsCancelled = false;
 
@@ -2949,21 +2949,32 @@ nsWindow::DispatchKeyDownOrKeyUpEvent(GdkEventKey* aEvent,
         return false;
     }
 
+    EventMessage message =
+        aEvent->type == GDK_KEY_PRESS ? eKeyDown : eKeyUp;
+    WidgetKeyboardEvent keyEvent(true, message, this);
+    KeymapWrapper::InitKeyEvent(keyEvent, aEvent, aIsProcessedByIME);
+    return DispatchKeyDownOrKeyUpEvent(keyEvent, aIsCancelled);
+}
+bool
+nsWindow::DispatchKeyDownOrKeyUpEvent(WidgetKeyboardEvent& aKeyboardEvent,
+                                      bool* aIsCancelled)
+{
+    MOZ_ASSERT(aIsCancelled, "aIsCancelled must not be nullptr");
+
+    *aIsCancelled = false;
+
     RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
     nsresult rv = dispatcher->BeginNativeInputTransaction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
         return FALSE;
     }
 
-    EventMessage message =
-        aEvent->type == GDK_KEY_PRESS ? eKeyDown : eKeyUp;
-    WidgetKeyboardEvent keyEvent(true, message, this);
-    KeymapWrapper::InitKeyEvent(keyEvent, aEvent, aIsProcessedByIME);
     nsEventStatus status = nsEventStatus_eIgnore;
     bool dispatched =
-        dispatcher->DispatchKeyboardEvent(message, keyEvent, status, aEvent);
+        dispatcher->DispatchKeyboardEvent(aKeyboardEvent.mMessage,
+                                          aKeyboardEvent, status, nullptr);
     *aIsCancelled = (status == nsEventStatus_eConsumeNoDefault);
-    return dispatched ? TRUE : FALSE;
+    return dispatched;
 }
 
 WidgetEventTime

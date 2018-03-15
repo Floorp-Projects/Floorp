@@ -881,7 +881,7 @@ BrowserElementChild.prototype = {
       // one we return the form's method and action uri.
       let parent = elem.parentNode;
       while (parent) {
-        if (parent instanceof Ci.nsIDOMHTMLFormElement &&
+        if (ChromeUtils.getClassName(parent) === "HTMLFormElement" &&
             parent.hasAttribute("action")) {
           let actionHref = docShell.QueryInterface(Ci.nsIWebNavigation)
                                    .currentURI
