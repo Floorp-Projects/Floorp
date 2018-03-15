@@ -23,7 +23,6 @@ const PREF_XPI_SIGNATURES_REQUIRED    = "xpinstall.signatures.required";
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 const PREF_APP_UPDATE_ENABLED         = "app.update.enabled";
-const PREF_ALLOW_NON_MPC              = "extensions.allow-non-mpc-extensions";
 const PREF_DISABLE_SECURITY = ("security.turn_off_all_security_so_that_" +
                                "viruses_can_take_over_this_computer");
 
@@ -638,10 +637,6 @@ function shutdownManager() {
   awaitPromise(promiseShutdownManager());
 }
 
-function isItemMarkedMPIncompatible(aId) {
-  return AddonTestUtils.addonsList.isMultiprocessIncompatible(aId);
-}
-
 function isThemeInAddonsList(aDir, aId) {
   return AddonTestUtils.addonsList.hasTheme(aDir, aId);
 }
@@ -1104,9 +1099,6 @@ Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, "0");
 
 // Ensure signature checks are enabled by default
 Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
-
-// Allow non-multiprocessCompatible extensions for now
-Services.prefs.setBoolPref(PREF_ALLOW_NON_MPC, true);
 
 Services.prefs.setBoolPref("extensions.legacy.enabled", true);
 

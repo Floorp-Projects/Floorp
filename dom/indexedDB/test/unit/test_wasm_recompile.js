@@ -21,7 +21,7 @@ function* testSteps()
     yield undefined;
   }
 
-  getWasmBinary("(module (func (nop)))");
+  getWasmBinary('(module (func $f (result i32) (i32.const 42)) (func (export "run") (result i32) (call $f)))');
   let binary = yield undefined;
 
   wasmData.wasm = getWasmModule(binary);
@@ -31,7 +31,7 @@ function* testSteps()
   clearAllDatabases(continueToNextStepSync);
   yield undefined;
 
-  // The profile was created by an older build (buildId: 20161116145318,
+  // The profile was created with a mythical build (buildId: 20180309213541,
   // cpuId: X64=0x2). It contains one stored wasm module (file id 1 - bytecode
   // and file id 2 - compiled/machine code). The file create_db.js in the
   // package was run locally (specifically it was temporarily added to

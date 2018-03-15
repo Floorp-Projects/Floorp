@@ -129,6 +129,7 @@ static_assert(JitStackAlignment % sizeof(Value) == 0 && JitStackValueAlignment >
 // TODO Copy the static_asserts from x64/x86 assembler files.
 static constexpr uint32_t SimdMemoryAlignment = 8;
 static constexpr uint32_t WasmStackAlignment = SimdMemoryAlignment;
+static const uint32_t WasmTrapInstructionLength = 4;
 
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
 static constexpr bool SupportsUint32x4FloatConversions = false;

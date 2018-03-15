@@ -25,6 +25,13 @@ addMessageListener("Test:SynthesizeMouse", (message) => {
   if (typeof target == "string") {
     target = content.document.querySelector(target);
   }
+  else if (Array.isArray(target)) {
+    let elem = {contentDocument: content.document};
+    for (let sel of target) {
+      elem = elem.contentDocument.querySelector(sel);
+    }
+    target = elem;
+  }
   else if (typeof data.targetFn == "string") {
     let runnablestr = `
       (() => {

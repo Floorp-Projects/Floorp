@@ -357,7 +357,7 @@ add_task(async function test_show_hide_frame() {
         let {contentWindow} = content.document.getElementById("frame");
         return WebNavigationFrames.getFrameId(contentWindow);
       });
-      await openContextMenuInFrame("frame");
+      await openContextMenuInFrame("#frame");
     },
     async doCloseMenu() {
       await closeExtensionContextMenu();

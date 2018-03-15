@@ -9845,9 +9845,14 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffs
 {
     JitSpew(JitSpew_Codegen, "# Emitting wasm code");
 
-    wasm::IsLeaf isLeaf = !gen->needsOverrecursedCheck();
+    wasm::GenerateFunctionPrologue(masm, sigId, mozilla::Nothing(), offsets);
 
-    wasm::GenerateFunctionPrologue(masm, frameSize(), isLeaf, sigId, trapOffset, offsets);
+    if (omitOverRecursedCheck())
+        masm.reserveStack(frameSize());
+    else
+        masm.wasmReserveStackChecked(frameSize(), trapOffset);
+
+    MOZ_ASSERT(masm.framePushed() == frameSize());
 
     if (!generateBody())
         return false;
@@ -12717,6 +12722,14 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck* lir)
     masm.branch32(Assembler::NotEqual, Address(temp, offsetof(JSContext, interrupt_)),
                   Imm32(0), ool->entry());
     masm.bind(ool->rejoin());
+}
+
+void
+CodeGenerator::visitWasmInterruptCheck(LWasmInterruptCheck* lir)
+{
+    MOZ_ASSERT(gen->compilingWasm());
+
+    masm.wasmInterruptCheck(ToRegister(lir->tlsPtr()), lir->mir()->bytecodeOffset());
 }
 
 void

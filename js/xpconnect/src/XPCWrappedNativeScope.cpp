@@ -26,26 +26,6 @@ using namespace JS;
 
 XPCWrappedNativeScope* XPCWrappedNativeScope::gScopes = nullptr;
 XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nullptr;
-bool XPCWrappedNativeScope::gShutdownObserverInitialized = false;
-XPCWrappedNativeScope::AddonSet* XPCWrappedNativeScope::gAllowCPOWAddonSet = nullptr;
-
-NS_IMPL_ISUPPORTS(XPCWrappedNativeScope::ClearInterpositionsObserver, nsIObserver)
-
-NS_IMETHODIMP
-XPCWrappedNativeScope::ClearInterpositionsObserver::Observe(nsISupports* subject,
-                                                            const char* topic,
-                                                            const char16_t* data)
-{
-    MOZ_ASSERT(strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
-
-    if (gAllowCPOWAddonSet) {
-        delete gAllowCPOWAddonSet;
-        gAllowCPOWAddonSet = nullptr;
-    }
-
-    nsContentUtils::UnregisterShutdownObserver(this);
-    return NS_OK;
-}
 
 static bool
 RemoteXULForbidsXBLScope(nsIPrincipal* aPrincipal, HandleObject aGlobal)
@@ -125,13 +105,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
     }
     if (mUseContentXBLScope) {
         mUseContentXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
-    }
-
-    if (JSAddonId* addonId = JS::AddonIdOfObject(aGlobal)) {
-        // We forbid CPOWs unless they're specifically allowed.
-        priv->allowCPOWs = gAllowCPOWAddonSet ? gAllowCPOWAddonSet->has(addonId) : false;
-        MOZ_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(aGlobal),
-                   "Don't load addons into the shared JSM global");
     }
 }
 
@@ -246,21 +219,6 @@ XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
     return true;
 }
 
-static bool
-CompartmentPerAddon()
-{
-    static bool initialized = false;
-    static bool pref = false;
-
-    if (!initialized) {
-        pref = Preferences::GetBool("dom.compartment_per_addon", false) ||
-               BrowserTabsRemoteAutostart();
-        initialized = true;
-    }
-
-    return pref;
-}
-
 JSObject*
 XPCWrappedNativeScope::EnsureContentXBLScope(JSContext* cx)
 {
@@ -332,41 +290,13 @@ namespace xpc {
 JSObject*
 GetXBLScope(JSContext* cx, JSObject* contentScopeArg)
 {
-    MOZ_ASSERT(!IsInAddonScope(contentScopeArg));
-
     JS::RootedObject contentScope(cx, contentScopeArg);
-    JSCompartment* addonComp = js::GetObjectCompartment(contentScope);
-    JS::Rooted<JS::Realm*> addonRealm(cx, JS::GetRealmForCompartment(addonComp));
-    JSAutoCompartment ac(cx, contentScope);
-    JSObject* scope = RealmPrivate::Get(addonRealm)->scope->EnsureContentXBLScope(cx);
-    NS_ENSURE_TRUE(scope, nullptr); // See bug 858642.
-    scope = js::UncheckedUnwrap(scope);
-    JS::ExposeObjectToActiveJS(scope);
-    return scope;
-}
-
-JSObject*
-GetScopeForXBLExecution(JSContext* cx, HandleObject contentScope, JSAddonId* addonId)
-{
-    MOZ_RELEASE_ASSERT(!IsInAddonScope(contentScope));
-
-    RootedObject global(cx, js::GetGlobalForObjectCrossCompartment(contentScope));
-    if (IsInContentXBLScope(contentScope))
-        return global;
-
     JSAutoCompartment ac(cx, contentScope);
     XPCWrappedNativeScope* nativeScope = RealmPrivate::Get(contentScope)->scope;
-    bool isSystem = nsContentUtils::IsSystemPrincipal(nativeScope->GetPrincipal());
 
-    RootedObject scope(cx);
-    if (nativeScope->UseContentXBLScope())
-        scope = nativeScope->EnsureContentXBLScope(cx);
-    else if (addonId && CompartmentPerAddon() && isSystem)
-        scope = nativeScope->EnsureAddonScope(cx, addonId);
-    else
-        scope = global;
-
+    RootedObject scope(cx, nativeScope->EnsureContentXBLScope(cx));
     NS_ENSURE_TRUE(scope, nullptr); // See bug 858642.
+
     scope = js::UncheckedUnwrap(scope);
     JS::ExposeObjectToActiveJS(scope);
     return scope;
@@ -393,73 +323,6 @@ ClearContentXBLScope(JSObject* global)
 }
 
 } /* namespace xpc */
-
-JSObject*
-XPCWrappedNativeScope::EnsureAddonScope(JSContext* cx, JSAddonId* addonId)
-{
-    JS::RootedObject global(cx, GetGlobalJSObject());
-    MOZ_ASSERT(js::IsObjectInContextCompartment(global, cx));
-    MOZ_ASSERT(!IsContentXBLScope());
-    MOZ_ASSERT(!IsAddonScope());
-    MOZ_ASSERT(addonId);
-    MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(GetPrincipal()));
-
-    // In bug 1092156, we found that add-on scopes don't work correctly when the
-    // window navigates. The add-on global's prototype is an outer window, so,
-    // after the navigation, looking up window properties in the add-on scope
-    // will fail. However, in most cases where the window can be navigated, the
-    // entire window is part of the add-on. To solve the problem, we avoid
-    // returning an add-on scope for a window that is already tagged with the
-    // add-on ID.
-    if (AddonIdOfObject(global) == addonId)
-        return global;
-
-    // If we already have an addon scope object, we know what to use.
-    for (size_t i = 0; i < mAddonScopes.Length(); i++) {
-        if (JS::AddonIdOfObject(js::UncheckedUnwrap(mAddonScopes[i])) == addonId)
-            return mAddonScopes[i];
-    }
-
-    SandboxOptions options;
-    options.wantComponents = true;
-    options.proto = global;
-    options.sameZoneAs = global;
-    options.addonId = JS::StringOfAddonId(addonId);
-    options.writeToGlobalPrototype = true;
-
-    RootedValue v(cx);
-    nsresult rv = CreateSandboxObject(cx, &v, GetPrincipal(), options);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-    mAddonScopes.AppendElement(&v.toObject());
-
-    CompartmentPrivate::Get(js::UncheckedUnwrap(&v.toObject()))->isAddonCompartment = true;
-    return &v.toObject();
-}
-
-JSObject*
-xpc::GetAddonScope(JSContext* cx, JS::HandleObject contentScope, JSAddonId* addonId)
-{
-    MOZ_RELEASE_ASSERT(!IsInAddonScope(contentScope));
-
-    if (!addonId || !CompartmentPerAddon()) {
-        return js::GetGlobalForObjectCrossCompartment(contentScope);
-    }
-
-    JSAutoCompartment ac(cx, contentScope);
-    XPCWrappedNativeScope* nativeScope = RealmPrivate::Get(contentScope)->scope;
-    if (nativeScope->GetPrincipal() != nsXPConnect::SystemPrincipal()) {
-        // This can happen if, for example, Jetpack loads an unprivileged HTML
-        // page from the add-on. It's not clear what to do there, so we just use
-        // the normal global.
-        return js::GetGlobalForObjectCrossCompartment(contentScope);
-    }
-    JSObject* scope = nativeScope->EnsureAddonScope(cx, addonId);
-    NS_ENSURE_TRUE(scope, nullptr);
-
-    scope = js::UncheckedUnwrap(scope);
-    JS::ExposeObjectToActiveJS(scope);
-    return scope;
-}
 
 XPCWrappedNativeScope::~XPCWrappedNativeScope()
 {
@@ -571,8 +434,6 @@ XPCWrappedNativeScope::UpdateWeakPointersAfterGC()
     if (!mGlobalJSObject) {
         JSContext* cx = dom::danger::GetJSContext();
         mContentXBLScope.finalize(cx);
-        for (size_t i = 0; i < mAddonScopes.Length(); i++)
-            mAddonScopes[i].finalize(cx);
         GetWrappedNativeMap()->Clear();
         mWrappedNativeProtoMap->Clear();
         return;
@@ -588,12 +449,6 @@ XPCWrappedNativeScope::UpdateWeakPointersAfterGC()
         mContentXBLScope.updateWeakPointerAfterGC();
         MOZ_ASSERT(prev == mContentXBLScope.unbarrieredGet());
         AssertSameCompartment(comp, mContentXBLScope);
-    }
-    for (size_t i = 0; i < mAddonScopes.Length(); i++) {
-        JSObject* prev = mAddonScopes[i].unbarrieredGet();
-        mAddonScopes[i].updateWeakPointerAfterGC();
-        MOZ_ASSERT(prev == mAddonScopes[i].unbarrieredGet());
-        AssertSameCompartment(comp, mAddonScopes[i]);
     }
 #endif
 
@@ -731,30 +586,6 @@ XPCWrappedNativeScope::SetExpandoChain(JSContext* cx, HandleObject target,
     if (!mXrayExpandos.initialized() && !mXrayExpandos.init(cx))
         return false;
     return mXrayExpandos.put(cx, target, chain);
-}
-
-/* static */ bool
-XPCWrappedNativeScope::AllowCPOWsInAddon(JSContext* cx,
-                                         JSAddonId* addonId,
-                                         bool allow)
-{
-    if (!gAllowCPOWAddonSet) {
-        gAllowCPOWAddonSet = new AddonSet();
-        bool ok = gAllowCPOWAddonSet->init();
-        NS_ENSURE_TRUE(ok, false);
-
-        if (!gShutdownObserverInitialized) {
-            gShutdownObserverInitialized = true;
-            nsContentUtils::RegisterShutdownObserver(new ClearInterpositionsObserver());
-        }
-    }
-    if (allow) {
-        bool ok = gAllowCPOWAddonSet->put(addonId);
-        NS_ENSURE_TRUE(ok, false);
-    } else {
-        gAllowCPOWAddonSet->remove(addonId);
-    }
-    return true;
 }
 
 

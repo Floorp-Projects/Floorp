@@ -1638,11 +1638,6 @@ StringToSource(JSContext* cx, JSString* str);
 
 } /* namespace js */
 
-// Addon IDs are interned atoms which are never destroyed. This detail is
-// not exposed outside the API.
-class JSAddonId : public JSAtom
-{};
-
 MOZ_ALWAYS_INLINE bool
 JSString::getChar(JSContext* cx, size_t index, char16_t* code)
 {

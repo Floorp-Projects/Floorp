@@ -7965,9 +7965,6 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
     MOZ_ASSERT(source->creationOptions_.mergeable());
     MOZ_ASSERT(source->creationOptions_.invisibleToDebugger());
 
-    MOZ_ASSERT(source->creationOptions().addonIdOrNull() ==
-               target->creationOptions().addonIdOrNull());
-
     MOZ_ASSERT(!source->hasBeenEntered());
     MOZ_ASSERT(source->zone()->compartments().length() == 1);
     MOZ_ASSERT(source->zone()->group()->zones().length() == 1);

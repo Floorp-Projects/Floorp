@@ -333,32 +333,6 @@ private:
   uint64_t mHandle;
 };
 
-class ReadLockHandle
-{
-  friend struct IPC::ParamTraits<mozilla::layers::ReadLockHandle>;
-public:
-  ReadLockHandle() : mHandle(0)
-  {}
-  ReadLockHandle(const ReadLockHandle& aOther) : mHandle(aOther.mHandle)
-  {}
-  explicit ReadLockHandle(uint64_t aHandle) : mHandle(aHandle)
-  {}
-  bool IsValid() const {
-    return mHandle != 0;
-  }
-  explicit operator bool() const {
-    return IsValid();
-  }
-  bool operator ==(const ReadLockHandle& aOther) const {
-    return mHandle == aOther.mHandle;
-  }
-  uint64_t Value() const {
-    return mHandle;
-  }
-private:
-  uint64_t mHandle;
-};
-
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollDirection, uint32_t, (
   eVertical,
   eHorizontal

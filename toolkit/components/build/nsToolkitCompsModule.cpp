@@ -36,7 +36,6 @@
 #include "mozilla/NativeOSFileInternals.h"
 #include "mozilla/AddonContentPolicy.h"
 #include "mozilla/AddonManagerStartup.h"
-#include "mozilla/AddonPathService.h"
 #include "mozilla/ExtensionPolicyService.h"
 
 #if defined(XP_WIN)
@@ -123,7 +122,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(NativeOSFileInternalsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NativeFileWatcherService, Init)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(AddonContentPolicy)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AddonPathService, AddonPathService::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AddonManagerStartup, AddonManagerStartup::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ExtensionPolicyService, ExtensionPolicyService::GetInstance)
 
@@ -192,7 +190,6 @@ static const Module::CIDEntry kToolkitCIDs[] = {
   { &kFINALIZATIONWITNESSSERVICE_CID, false, nullptr, FinalizationWitnessServiceConstructor },
   { &kNATIVE_OSFILE_INTERNALS_SERVICE_CID, false, nullptr, NativeOSFileInternalsServiceConstructor },
   { &kNS_ADDONCONTENTPOLICY_CID, false, nullptr, AddonContentPolicyConstructor },
-  { &kNS_ADDON_PATH_SERVICE_CID, false, nullptr, AddonPathServiceConstructor },
   { &kNS_ADDON_MANAGER_STARTUP_CID, false, nullptr, AddonManagerStartupConstructor },
   { &kNS_ADDON_POLICY_SERVICE_CID, false, nullptr, ExtensionPolicyServiceConstructor },
   { &kNATIVE_FILEWATCHER_SERVICE_CID, false, nullptr, NativeFileWatcherServiceConstructor },
