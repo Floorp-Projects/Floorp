@@ -83,6 +83,8 @@ public:
 protected:
     bool AccelerateLayersByDefault() override;
 
+    BackendPrefsData GetBackendPrefs() override;
+
 private:
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size) override;
 
