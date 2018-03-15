@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* exported EditAddressDialog, EditCreditCardDialog */
+/* eslint-disable mozilla/balanced-listeners */ // Not relevant since the document gets unloaded.
 
 "use strict";
 
@@ -33,11 +34,6 @@ class AutofillEditDialog {
     // For testing only: loadInitialValues for credit card is an async method, and tests
     // need to wait until the values have been filled before editing the fields.
     window.dispatchEvent(new CustomEvent("FormReady"));
-  }
-
-  uninit() {
-    this.detachEventListeners();
-    this._elements = null;
   }
 
   /**
@@ -85,10 +81,6 @@ class AutofillEditDialog {
     switch (event.type) {
       case "DOMContentLoaded": {
         this.init();
-        break;
-      }
-      case "unload": {
-        this.uninit();
         break;
       }
       case "click": {
@@ -161,16 +153,6 @@ class AutofillEditDialog {
     window.addEventListener("contextmenu", this);
     this._elements.controlsContainer.addEventListener("click", this);
     document.addEventListener("input", this);
-  }
-
-  /**
-   * Remove event listener
-   */
-  detachEventListeners() {
-    window.removeEventListener("keypress", this);
-    window.removeEventListener("contextmenu", this);
-    this._elements.controlsContainer.removeEventListener("click", this);
-    document.removeEventListener("input", this);
   }
 
   // An interface to be inherited.
