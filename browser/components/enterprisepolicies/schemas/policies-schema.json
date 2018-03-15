@@ -142,13 +142,6 @@
       "type": "boolean"
     },
 
-    "DisableBuiltinPDFViewer": {
-      "description": "Disables PDF.js, which displays PDFs within Firefox.",
-      "first_available": "60.0",
-
-      "type": "boolean"
-    },
-
     "DisablePocket": {
       "description": "Prevents ability to save webpages to Pocket.",
       "first_available": "60.0",
