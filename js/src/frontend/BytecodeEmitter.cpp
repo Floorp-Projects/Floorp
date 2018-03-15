@@ -4487,7 +4487,7 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         low = 0;
         high = -1;
     } else {
-        Vector<jsbitmap, 128, SystemAllocPolicy> intmap;
+        Vector<size_t, 128, SystemAllocPolicy> intmap;
         int32_t intmapBitLength = 0;
 
         low  = JSVAL_INT_MAX;
@@ -4533,16 +4533,16 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
             if (i < 0)
                 i += JS_BIT(16);
             if (i >= intmapBitLength) {
-                size_t newLength = (i / JS_BITMAP_NBITS) + 1;
+                size_t newLength = NumWordsForBitArrayOfLength(i + 1);
                 if (!intmap.resize(newLength))
                     return false;
-                intmapBitLength = newLength * JS_BITMAP_NBITS;
+                intmapBitLength = newLength * BitArrayElementBits;
             }
-            if (JS_TEST_BIT(intmap, i)) {
+            if (IsBitArrayElementSet(intmap.begin(), intmap.length(), i)) {
                 switchOp = JSOP_CONDSWITCH;
                 continue;
             }
-            JS_SET_BIT(intmap, i);
+            SetBitArrayElement(intmap.begin(), intmap.length(), i);
         }
 
         // Compute table length and select condswitch instead if overlarge or
