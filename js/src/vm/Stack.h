@@ -1270,6 +1270,12 @@ class LiveSavedFrameCache
         inline bool hasCachedSavedFrame() const;
         inline void setHasCachedSavedFrame();
 
+        // Return true if this FramePtr refers to an interpreter frame.
+        inline bool isInterpreterFrame() const { return ptr.is<InterpreterFrame*>(); }
+
+        // If this FramePtr is an interpreter frame, return a pointer to it.
+        inline InterpreterFrame& asInterpreterFrame() const { return *ptr.as<InterpreterFrame*>(); }
+
         bool operator==(const FramePtr& rhs) const { return rhs.ptr == this->ptr; }
         bool operator!=(const FramePtr& rhs) const { return !(rhs == *this); }
     };
