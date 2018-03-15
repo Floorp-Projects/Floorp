@@ -511,7 +511,10 @@ add_task(async function test_permissions_prompt() {
     return Promise.resolve();
   };
 
-  await promiseCompleteInstall(install);
+  await Promise.all([
+    promiseCompleteInstall(install),
+    promiseWebExtensionStartup(),
+  ]);
 
   notEqual(perminfo, undefined, "Permission handler was invoked");
   equal(perminfo.existingAddon, null, "Permission info does not include an existing addon");
