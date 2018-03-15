@@ -44,16 +44,16 @@
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
     <command id="View:ReaderView" oncommand="ReaderParent.toggleReaderMode(event);"/>
     <command id="cmd_find"
-             oncommand="gLazyFindCommand('onFindCommand')"
+             oncommand="gFindBar.onFindCommand();"
              observes="isImage"/>
     <command id="cmd_findAgain"
-             oncommand="gLazyFindCommand('onFindAgainCommand', false)"
+             oncommand="gFindBar.onFindAgainCommand(false);"
              observes="isImage"/>
     <command id="cmd_findPrevious"
-             oncommand="gLazyFindCommand('onFindAgainCommand', true)"
+             oncommand="gFindBar.onFindAgainCommand(true);"
              observes="isImage"/>
 #ifdef XP_MACOSX
-    <command id="cmd_findSelection" oncommand="gLazyFindCommand('onFindSelectionCommand')"/>
+    <command id="cmd_findSelection" oncommand="gFindBar.onFindSelectionCommand();"/>
 #endif
     <!-- work-around bug 392512 -->
     <command id="Browser:AddBookmarkAs"

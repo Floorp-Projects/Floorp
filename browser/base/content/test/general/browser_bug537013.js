@@ -42,21 +42,19 @@ function test() {
   // Set up the first tab
   gBrowser.selectedTab = tabs[0];
 
-  gBrowser.getFindBar().then(initialTest);
-}
-
-function initialTest() {
   setFindString(texts[0]);
   // Turn on highlight for testing bug 891638
   gFindBar.getElement("highlight").checked = true;
 
   // Make sure the second tab is correct, then set it up
   gBrowser.selectedTab = tabs[1];
-  gBrowser.selectedTab.addEventListener("TabFindInitialized", continueTests1, {once: true});
+  gBrowser.selectedTab.addEventListener("TabFindInitialized", continueTests1);
   // Initialize the findbar
-  gBrowser.getFindBar();
+  gFindBar;
 }
 function continueTests1() {
+  gBrowser.selectedTab.removeEventListener("TabFindInitialized",
+                                           continueTests1);
   ok(true, "'TabFindInitialized' event properly dispatched!");
   ok(gFindBar.hidden, "Second tab doesn't show find bar!");
   gFindBar.open();
@@ -99,11 +97,6 @@ function continueTests3() {
 
   // Set up a third tab, no tests here
   gBrowser.selectedTab = tabs[2];
-  gBrowser.selectedTab.addEventListener("TabFindInitialized", continueTests4, {once: true});
-  gBrowser.getFindBar();
-}
-
-function continueTests4() {
   setFindString(texts[2]);
 
   // Now we jump to the second, then first, and then fourth

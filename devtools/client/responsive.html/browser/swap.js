@@ -188,7 +188,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // Swapping browsers disconnects the find bar UI from the browser.
       // If the find bar has been initialized, reconnect it.
       if (gBrowser.isFindBarInitialized(tab)) {
-        let findBar = gBrowser.getCachedFindBar(tab);
+        let findBar = gBrowser.getFindBar(tab);
         findBar.browser = tab.linkedBrowser;
         if (!findBar.hidden) {
           // Force the find bar to activate again, restoring the search string.
@@ -253,7 +253,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // Swapping browsers disconnects the find bar UI from the browser.
       // If the find bar has been initialized, reconnect it.
       if (gBrowser.isFindBarInitialized(tab)) {
-        let findBar = gBrowser.getCachedFindBar(tab);
+        let findBar = gBrowser.getFindBar(tab);
         findBar.browser = tab.linkedBrowser;
         if (!findBar.hidden) {
           // Force the find bar to activate again, restoring the search string.
