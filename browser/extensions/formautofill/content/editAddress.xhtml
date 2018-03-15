@@ -77,11 +77,16 @@
   <script type="application/javascript"><![CDATA[
     "use strict";
 
+    let {supportedCountries, DEFAULT_REGION} = FormAutofillUtils;
     let record = window.arguments && window.arguments[0];
+
     /* import-globals-from autofillEditForms.js */
     let fieldContainer = new EditAddress({
       form: document.getElementById("form"),
-    }, record);
+    }, record, {
+      DEFAULT_REGION,
+      supportedCountries,
+    });
 
     /* import-globals-from editDialog.js */
     new EditAddressDialog({
