@@ -33,6 +33,8 @@
 #include <cmath>
 #include <string.h>
 
+#include "jit/AtomicOperations.h"
+
 namespace vixl {
 
 const Instruction* Simulator::kEndOfSimAddress = NULL;
@@ -1340,7 +1342,7 @@ void Simulator::VisitLoadStoreExclusive(const Instruction* instr) {
 
     if (is_acquire_release) {
       // Approximate load-acquire by issuing a full barrier after the load.
-      __sync_synchronize();
+      js::jit::AtomicOperations::fenceSeqCst();
     }
 
     LogRead(address, rt, GetPrintRegisterFormatForSize(element_size));
@@ -1351,7 +1353,7 @@ void Simulator::VisitLoadStoreExclusive(const Instruction* instr) {
   } else {
     if (is_acquire_release) {
       // Approximate store-release by issuing a full barrier before the store.
-      __sync_synchronize();
+      js::jit::AtomicOperations::fenceSeqCst();
     }
 
     bool do_store = true;
@@ -2330,7 +2332,7 @@ void Simulator::VisitSystem(const Instruction* instr) {
       default: VIXL_UNIMPLEMENTED();
     }
   } else if (instr->Mask(MemBarrierFMask) == MemBarrierFixed) {
-    __sync_synchronize();
+    js::jit::AtomicOperations::fenceSeqCst();
   } else if ((instr->Mask(SystemSysFMask) == SystemSysFixed)) {
     switch (instr->Mask(SystemSysMask)) {
       case SYS: SysOp_W(instr->SysOp(), xreg(instr->Rt())); break;
@@ -3276,7 +3278,7 @@ void Simulator::VisitNEONModifiedImmediate(const Instruction* instr) {
         vform = q ? kFormat2D : kFormat1D;
         imm = 0;
         for (int i = 0; i < 8; ++i) {
-          if (imm8 & (1 << i)) {
+          if (imm8 & (1ULL << i)) {
             imm |= (UINT64_C(0xff) << (8 * i));
           }
         }
