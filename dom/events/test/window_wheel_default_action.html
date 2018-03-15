@@ -78,11 +78,11 @@ var gScrollableElement = document.getElementById("scrollable");
 var gScrolledElement = document.getElementById("scrolled");
 var gSpacerForBodyElement = document.getElementById("spacerForBody");
 
-const kDefaultActionNone             = 0;
-const kDefaultActionScroll           = 1;
-const kDefaultActionHistory          = 2;
-const kDefaultActionZoom             = 3;
-const kDefaultActionHorizontalScroll = 4;
+const kDefaultActionNone                 = 0;
+const kDefaultActionScroll               = 1;
+const kDefaultActionHistory              = 2;
+const kDefaultActionZoom                 = 3;
+const kDefaultActionHorizontalizedScroll = 4;
 
 const kDefaultActionOverrideXNoOverride = -1;
 const kDefaultActionOverrideXNone       = kDefaultActionNone;
@@ -958,7 +958,7 @@ function doTestScroll(aSettings, aCallback)
   doNextTest();
 }
 
-function doTestHorizontalScroll(aSettings, aCallback)
+function doTestHorizontalizedScroll(aSettings, aCallback)
 {
   const kNoScroll    = 0x00;
   const kScrollLeft  = 0x01;
@@ -1260,7 +1260,7 @@ function doTestHorizontalScroll(aSettings, aCallback)
     gScrollableElement.scrollLeft = 1000;
 
     var currentTest = kTests[currentTestIndex];
-    description = "doTestHorizontalScroll(aSettings=" + aSettings.description + "), " + currentTest.description + ": ";
+    description = "doTestHorizontalizedScroll(aSettings=" + aSettings.description + "), " + currentTest.description + ": ";
     if (currentTest.prepare) {
       currentTest.prepare(doTestCurrentScroll);
     } else {
@@ -2178,7 +2178,7 @@ function runTests()
     ["general.smoothScroll", false],
     ["mousewheel.default.action", kDefaultActionScroll],
     ["mousewheel.default.action.override_x", kDefaultActionOverrideXNoOverride],
-    ["mousewheel.with_shift.action", kDefaultActionHorizontalScroll],
+    ["mousewheel.with_shift.action", kDefaultActionHorizontalizedScroll],
     ["mousewheel.with_shift.action.override_x", kDefaultActionOverrideXNoOverride],
     ["mousewheel.with_control.action", kDefaultActionZoom],
     ["mousewheel.with_control.action.override_x", kDefaultActionOverrideXNoOverride],
@@ -2217,7 +2217,7 @@ function runTests2()
   function doTest() {
     setDeltaMultiplierSettings(kSettings[index], function () {
       doTestScroll(kSettings[index], function () {
-        doTestHorizontalScroll(kSettings[index], function() {
+        doTestHorizontalizedScroll(kSettings[index], function() {
           doTestZoom(kSettings[index], function() {
             if (++index == kSettings.length) {
               setDeltaMultiplierSettings(kSettings[0], function() {

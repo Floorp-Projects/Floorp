@@ -17,6 +17,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsIFrame.h"
 #include "Units.h"
+#include "WheelHandlingHelper.h"          // for WheelDeltaAdjustmentStrategy
 
 #define NS_USER_INTERACTION_INTERVAL 5000 // ms
 
@@ -308,9 +309,19 @@ public:
   // Returns true if the given WidgetWheelEvent will resolve to a scroll action.
   static bool WheelEventIsScrollAction(const WidgetWheelEvent* aEvent);
 
-  // Returns true if the given WidgetWheelEvent will resolve to a horizontal
-  // scroll action but it's a vertical wheel operation.
-  static bool WheelEventIsHorizontalScrollAction(const WidgetWheelEvent* aEvet);
+  // For some kinds of scrollings, the delta values of WidgetWheelEvent are
+  // possbile to be adjusted. This function is used to detect such scrollings
+  // and returns a wheel delta adjustment strategy to use, which is corresponded
+  // to the kind of the scrolling.
+  // It returns WheelDeltaAdjustmentStrategy::eHorizontalize if the current
+  // default action is horizontalized scrolling.
+  // TODO Insert new comment words about the returned value for auto-dir
+  // scrolling while implementing it.
+  // It returns WheelDeltaAdjustmentStrategy::eNone to mean no delta adjustment
+  // strategy should be used if the scrolling is just a tranditional scrolling
+  // whose delta values are never possible to be adjusted.
+  static WheelDeltaAdjustmentStrategy
+  GetWheelDeltaAdjustmentStrategy(const WidgetWheelEvent& aEvent);
 
   // Returns user-set multipliers for a wheel event.
   static void GetUserPrefsForWheelEvent(const WidgetWheelEvent* aEvent,
@@ -563,8 +574,14 @@ protected:
       ACTION_SCROLL,
       ACTION_HISTORY,
       ACTION_ZOOM,
-      ACTION_HORIZONTAL_SCROLL,
-      ACTION_LAST = ACTION_HORIZONTAL_SCROLL,
+      // Horizontalized scrolling means treating vertical wheel scrolling as
+      // horizontal scrolling during the process of its default action and
+      // plugins handling scrolling. Note that delta values as the event object
+      // in a DOM event listener won't be affected, and will be still the
+      // original values. For more details, refer to
+      // mozilla::WheelDeltaAdjustmentStrategy::eHorizontalize
+      ACTION_HORIZONTALIZED_SCROLL,
+      ACTION_LAST = ACTION_HORIZONTALIZED_SCROLL,
       // Following actions are used only by internal processing.  So, cannot
       // specified by prefs.
       ACTION_SEND_TO_PLUGIN,
@@ -633,9 +650,12 @@ protected:
 
     /**
      * Retrieve multiplier for aEvent->mDeltaX and aEvent->mDeltaY.
-     * If the default action is ACTION_HORIZONTAL_SCROLL and the delta values
-     * are adjusted by AutoWheelDeltaAdjuster(), this treats mMultiplierX as
-     * multiplier for deltaY and mMultiplierY as multiplier for deltaY.
+     *
+     * Note that if the default action is ACTION_HORIZONTALIZED_SCROLL and the
+     * delta values have been adjusted by WheelDeltaHorizontalizer() before this
+     * function is called, this function will swap the X and Y multipliers. By
+     * doing this, multipliers will still apply to the delta values they
+     * originally corresponded to.
      *
      * @param aEvent    The event which is being handled.
      * @param aIndex    The index of mMultiplierX and mMultiplierY.
