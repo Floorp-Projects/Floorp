@@ -149,8 +149,6 @@ public:
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
-  already_AddRefed<nsIPrincipal> MaybeDowngradePrincipal(nsIPrincipal* aPrincipal);
-
   // StartDocumentLoad is pure virtual so that subclasses must override it.
   // The nsDocument StartDocumentLoad does some setup, but does NOT set
   // *aDocListener; this is the job of subclasses.
@@ -242,8 +240,6 @@ public:
   static bool IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject);
   // Check whether shadow DOM is enabled for the document this node belongs to.
   static bool IsShadowDOMEnabled(const nsINode* aNode);
-private:
-  void SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages);
 
 public:
   // nsIDOMDocument
@@ -287,8 +283,6 @@ public:
 
   nsresult CloneDocHelper(nsDocument* clone, bool aPreallocateChildren) const;
 
-  void MaybeEndOutermostXBLUpdate();
-
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
@@ -326,8 +320,6 @@ protected:
 
   explicit nsDocument(const char* aContentType);
   virtual ~nsDocument();
-
-  void EnsureOnloadBlocker();
 
 public:
   // FIXME(emilio): This needs to be here instead of in nsIDocument because Rust

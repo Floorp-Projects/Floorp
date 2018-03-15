@@ -2244,7 +2244,7 @@ nsIDocument::IsVisibleConsideringAncestors() const
       }
 
 void
-nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
+nsIDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIPrincipal> principal;
@@ -2448,7 +2448,7 @@ nsIDocument::ResetToURI(nsIURI* aURI,
 }
 
 already_AddRefed<nsIPrincipal>
-nsDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
+nsIDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
 {
   if (!aPrincipal) {
     return nullptr;
@@ -2865,7 +2865,7 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 }
 
 void
-nsDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
+nsIDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
 {
   for (uint32_t i = 0; i < aMessages.Length(); ++i) {
     nsAutoString messageTag;
@@ -5124,7 +5124,7 @@ nsIDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 }
 
 void
-nsDocument::MaybeEndOutermostXBLUpdate()
+nsIDocument::MaybeEndOutermostXBLUpdate()
 {
   // Only call BindingManager()->EndOutermostUpdate() when
   // we're not in an update and it is safe to run scripts.
@@ -8373,7 +8373,7 @@ nsIDocument::GetLayoutHistoryState() const
 }
 
 void
-nsDocument::EnsureOnloadBlocker()
+nsIDocument::EnsureOnloadBlocker()
 {
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
   // -- it's not ours.
