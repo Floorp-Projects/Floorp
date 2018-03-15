@@ -2661,6 +2661,13 @@ XULDocument::DoneWalking()
 
         NotifyPossibleTitleChange(false);
 
+        nsContentUtils::DispatchTrustedEvent(
+            this,
+            static_cast<nsIDocument*>(this),
+            NS_LITERAL_STRING("MozBeforeInitialXULLayout"),
+            true,
+            false);
+
         // Before starting layout, check whether we're a toplevel chrome
         // window.  If we are, setup some state so that we don't have to restyle
         // the whole tree after StartLayout.
@@ -2676,12 +2683,6 @@ XULDocument::DoneWalking()
                 }
             }
         }
-
-        nsContentUtils::DispatchTrustedEvent(this,
-                static_cast<nsIDocument*>(this),
-                NS_LITERAL_STRING("MozBeforeInitialXULLayout"),
-                true,
-                false);
 
         StartLayout();
 
