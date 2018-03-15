@@ -16,7 +16,6 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLProtoImplProperty.h"
 #include "nsIURI.h"
-#include "mozilla/AddonPathService.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/XULElementBinding.h"
 #include "xpcpublic.h"
@@ -83,10 +82,9 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
 
   // First, start by entering the compartment of the XBL scope. This may or may
   // not be the same compartment as globalObject.
-  JSAddonId* addonId = MapURIToAddonID(aPrototypeBinding->BindingURI());
   JS::Rooted<JSObject*> globalObject(cx,
     GetGlobalForObjectCrossCompartment(targetClassObject));
-  JS::Rooted<JSObject*> scopeObject(cx, xpc::GetScopeForXBLExecution(cx, globalObject, addonId));
+  JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScopeOrGlobal(cx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
   MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(scopeObject) == scopeObject);
   JSAutoCompartment ac(cx, scopeObject);

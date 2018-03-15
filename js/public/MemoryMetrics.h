@@ -522,7 +522,8 @@ struct RuntimeSizes
     macro(_, MallocHeap, sharedIntlData) \
     macro(_, MallocHeap, uncompressedSourceCache) \
     macro(_, MallocHeap, scriptData) \
-    macro(_, MallocHeap, tracelogger)
+    macro(_, MallocHeap, tracelogger) \
+    macro(_, MallocHeap, wasmRuntime)
 
     RuntimeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)

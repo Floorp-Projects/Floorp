@@ -138,6 +138,7 @@ public:
                 WidgetPointerEvent* aPointerEvent,
                 WidgetGUIEvent* aMouseOrTouchEvent);
 
+  MOZ_CAN_RUN_SCRIPT
   static void DispatchPointerFromMouseOrTouch(PresShell* aShell,
                                               nsIFrame* aFrame,
                                               nsIContent* aContent,

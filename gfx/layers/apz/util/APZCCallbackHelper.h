@@ -114,6 +114,7 @@ public:
 
     /* Dispatch a mouse event with the given parameters.
      * Return whether or not any listeners have called preventDefault on the event. */
+    MOZ_CAN_RUN_SCRIPT
     static bool DispatchMouseEvent(const nsCOMPtr<nsIPresShell>& aPresShell,
                                    const nsString& aType,
                                    const CSSPoint& aPoint,
