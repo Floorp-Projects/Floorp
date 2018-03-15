@@ -1357,6 +1357,11 @@ class LiveSavedFrameCache
     void find(JSContext* cx, FramePtr& framePtr, const jsbytecode* pc,
               MutableHandleSavedFrame frame) const;
 
+    // Search the cache for a frame matching |framePtr|, without removing any
+    // entries. Return the matching saved frame, or nullptr if none is found.
+    // This is used for resolving |evalInFramePrev| links.
+    void findWithoutInvalidation(const FramePtr& framePtr, MutableHandleSavedFrame frame) const;
+
     // Push a cache entry mapping |framePtr| and |pc| to |savedFrame| on the top
     // of the cache's stack. You must insert entries for frames from oldest to
     // youngest. They must all be younger than the frame that the |find| method
