@@ -70,23 +70,24 @@ async function addJsonViewTab(url, {
   let rootDir = getRootDirectory(gTestPath);
 
   // Catch RequireJS errors (usually timeouts)
-  let error = tabLoaded.then(() => new Promise((resolve, reject) => {
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
-    let {requirejs} = gBrowser.contentWindowAsCPOW.wrappedJSObject;
-    if (requirejs) {
-      requirejs.onError = err => {
-        info(err);
-        ok(false, "RequireJS error");
-        reject(err);
-      };
-    }
+  let error = tabLoaded.then(() => ContentTask.spawn(browser, null, function() {
+    return new Promise((resolve, reject) => {
+      let {requirejs} = content.wrappedJSObject;
+      if (requirejs) {
+        requirejs.onError = err => {
+          info(err);
+          ok(false, "RequireJS error");
+          reject(err);
+        };
+      }
+    });
   }));
 
   let data = {rootDir, appReadyState, docReadyState};
   // eslint-disable-next-line no-shadow
   await Promise.race([error, ContentTask.spawn(browser, data, async function(data) {
     // Check if there is a JSONView object.
-    let {JSONView} = content.window.wrappedJSObject;
+    let {JSONView} = content.wrappedJSObject;
     if (!JSONView) {
       throw new Error("The JSON Viewer did not load.");
     }
@@ -104,7 +105,7 @@ async function addJsonViewTab(url, {
     }
 
     // Wait until the document readyState suffices.
-    let {document} = content.window;
+    let {document} = content;
     while (docReadyStates.indexOf(document.readyState) < docReadyIndex) {
       info(`DocReadyState is "${document.readyState}". Await "${data.docReadyState}"`);
       await new Promise(resolve => {
