@@ -998,6 +998,25 @@ LiveSavedFrameCache::FramePtr::create(const FrameIter& iter)
     MOZ_CRASH("unexpected frame type");
 }
 
+/* static */ inline LiveSavedFrameCache::FramePtr
+LiveSavedFrameCache::FramePtr::create(AbstractFramePtr afp)
+{
+    MOZ_ASSERT(afp);
+
+    if (afp.isBaselineFrame()) {
+        js::jit::CommonFrameLayout *common = afp.asBaselineFrame()->framePrefix();
+        return FramePtr(common);
+    }
+    if (afp.isInterpreterFrame())
+        return FramePtr(afp.asInterpreterFrame());
+    if (afp.isWasmDebugFrame())
+        return FramePtr(afp.asWasmDebugFrame());
+    if (afp.isRematerializedFrame())
+        return FramePtr(afp.asRematerializedFrame());
+
+    MOZ_CRASH("unexpected frame type");
+}
+
 struct LiveSavedFrameCache::FramePtr::HasCachedMatcher {
     template<typename Frame>
     bool match(Frame* f) const { return f->hasCachedSavedFrame(); }
