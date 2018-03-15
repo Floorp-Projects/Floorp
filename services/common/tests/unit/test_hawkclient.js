@@ -85,16 +85,16 @@ async function check_authenticated_request(method) {
   await promiseStopServer(server);
 }
 
-add_task(function test_authenticated_post_request() {
-  check_authenticated_request("POST");
+add_task(async function test_authenticated_post_request() {
+  await check_authenticated_request("POST");
 });
 
-add_task(function test_authenticated_put_request() {
-  check_authenticated_request("PUT");
+add_task(async function test_authenticated_put_request() {
+  await check_authenticated_request("PUT");
 });
 
-add_task(function test_authenticated_patch_request() {
-  check_authenticated_request("PATCH");
+add_task(async function test_authenticated_patch_request() {
+  await check_authenticated_request("PATCH");
 });
 
 add_task(async function test_extra_headers() {
