@@ -882,7 +882,7 @@ window._gBrowser = {
   },
 
   updateCurrentBrowser(aForceUpdate) {
-    var newBrowser = this.getBrowserAtIndex(this.tabContainer.selectedIndex);
+    let newBrowser = this.getBrowserAtIndex(this.tabContainer.selectedIndex);
     if (this.selectedBrowser == newBrowser && !aForceUpdate) {
       return;
     }
@@ -940,14 +940,10 @@ window._gBrowser = {
           !window.isFullyOccluded);
     }
 
-    var updateBlockedPopups = false;
-    if ((oldBrowser.blockedPopups && !newBrowser.blockedPopups) ||
-        (!oldBrowser.blockedPopups && newBrowser.blockedPopups))
-      updateBlockedPopups = true;
-
+    let newTab = this.getTabForBrowser(newBrowser);
     this._selectedBrowser = newBrowser;
-    this._selectedTab = this.tabContainer.selectedItem;
-    this.showTab(this.selectedTab);
+    this._selectedTab = newTab;
+    this.showTab(newTab);
 
     gURLBar.setAttribute("switchingtabs", "true");
     window.addEventListener("MozAfterPaint", function() {
@@ -956,19 +952,18 @@ window._gBrowser = {
 
     this._appendStatusPanel();
 
-    if (updateBlockedPopups)
-      this.selectedBrowser.updateBlockedPopups();
+    if ((oldBrowser.blockedPopups && !newBrowser.blockedPopups) ||
+        (!oldBrowser.blockedPopups && newBrowser.blockedPopups)) {
+      newBrowser.updateBlockedPopups();
+    }
 
     // Update the URL bar.
-    let loc = this.selectedBrowser.currentURI;
-
-    let webProgress = this.selectedBrowser.webProgress;
-    let securityUI = this.selectedBrowser.securityUI;
-
+    let webProgress = newBrowser.webProgress;
     this._callProgressListeners(null, "onLocationChange",
-                                [webProgress, null, loc, 0],
+                                [webProgress, null, newBrowser.currentURI, 0],
                                 true, false);
 
+    let securityUI = newBrowser.securityUI;
     if (securityUI) {
       // Include the true final argument to indicate that this event is
       // simulated (instead of being observed by the webProgressListener).
@@ -977,17 +972,17 @@ window._gBrowser = {
                                   true, false);
     }
 
-    let listener = this._tabListeners.get(this.selectedTab);
+    let listener = this._tabListeners.get(newTab);
     if (listener && listener.mStateFlags) {
       this._callProgressListeners(null, "onUpdateCurrentBrowser",
                                   [listener.mStateFlags, listener.mStatus,
-                                  listener.mMessage, listener.mTotalProgress],
+                                   listener.mMessage, listener.mTotalProgress],
                                   true, false);
     }
 
     if (!this._previewMode) {
-      this.selectedTab.updateLastAccessed();
-      this.selectedTab.removeAttribute("unread");
+      newTab.updateLastAccessed();
+      newTab.removeAttribute("unread");
       oldTab.updateLastAccessed();
 
       let oldFindBar = oldTab._findBar;
@@ -998,22 +993,22 @@ window._gBrowser = {
 
       this.updateTitlebar();
 
-      this.selectedTab.removeAttribute("titlechanged");
-      this.selectedTab.removeAttribute("attention");
+      newTab.removeAttribute("titlechanged");
+      newTab.removeAttribute("attention");
 
       // The tab has been selected, it's not unselected anymore.
       // (1) Call the current tab's finishUnselectedTabHoverTimer()
       //     to save a telemetry record.
       // (2) Call the current browser's unselectedTabHover() with false
       //     to dispatch an event.
-      this.selectedTab.finishUnselectedTabHoverTimer();
-      this.selectedBrowser.unselectedTabHover(false);
+      newTab.finishUnselectedTabHoverTimer();
+      newBrowser.unselectedTabHover(false);
     }
 
     // If the new tab is busy, and our current state is not busy, then
     // we need to fire a start to all progress listeners.
     const nsIWebProgressListener = Ci.nsIWebProgressListener;
-    if (this.selectedTab.hasAttribute("busy") && !this.mIsBusy) {
+    if (newTab.hasAttribute("busy") && !this.mIsBusy) {
       this.mIsBusy = true;
       this._callProgressListeners(null, "onStateChange",
                                   [webProgress, null,
@@ -1024,7 +1019,7 @@ window._gBrowser = {
 
     // If the new tab is not busy, and our current state is busy, then
     // we need to fire a stop to all progress listeners.
-    if (!this.selectedTab.hasAttribute("busy") && this.mIsBusy) {
+    if (!newTab.hasAttribute("busy") && this.mIsBusy) {
       this.mIsBusy = false;
       this._callProgressListeners(null, "onStateChange",
                                   [webProgress, null,
@@ -1045,10 +1040,10 @@ window._gBrowser = {
           previousTab: oldTab
         }
       });
-      this.selectedTab.dispatchEvent(event);
+      newTab.dispatchEvent(event);
 
       this._tabAttrModified(oldTab, ["selected"]);
-      this._tabAttrModified(this.selectedTab, ["selected"]);
+      this._tabAttrModified(newTab, ["selected"]);
 
       if (oldBrowser != newBrowser &&
           oldBrowser.getInPermitUnload) {
@@ -1077,8 +1072,8 @@ window._gBrowser = {
       }
 
       if (!gMultiProcessBrowser) {
-        this._adjustFocusBeforeTabSwitch(oldTab, this.selectedTab);
-        this._adjustFocusAfterTabSwitch(this.selectedTab);
+        this._adjustFocusBeforeTabSwitch(oldTab, newTab);
+        this._adjustFocusAfterTabSwitch(newTab);
       }
     }
 
@@ -1091,7 +1086,7 @@ window._gBrowser = {
     // session to allow the user to easily drag the selected tab.
     // This is currently only supported on Windows.
     oldTab.removeAttribute("touchdownstartsdrag");
-    this.selectedTab.setAttribute("touchdownstartsdrag", "true");
+    newTab.setAttribute("touchdownstartsdrag", "true");
 
     if (!gMultiProcessBrowser) {
       document.commandDispatcher.unlock();
