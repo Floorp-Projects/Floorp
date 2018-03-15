@@ -1221,8 +1221,7 @@ SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame,
     }
 
     AutoGeckoProfilerEntry pseudoFrame(cx, "js::SavedStacks::saveCurrentStack");
-    FrameIter iter(cx);
-    return insertFrames(cx, iter, frame, mozilla::Move(capture));
+    return insertFrames(cx, frame, mozilla::Move(capture));
 }
 
 bool
@@ -1323,7 +1322,7 @@ captureIsSatisfied(JSContext* cx, JSPrincipals* principals, const JSAtom* source
 }
 
 bool
-SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFrame frame,
+SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
                           JS::StackCapture&& capture)
 {
     // In order to look up a cached SavedFrame object, we need to have its parent
@@ -1348,6 +1347,8 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
     // the parent of the frames we have placed in stackChain. If we walk the
     // stack all the way to the end, this remains null.
     RootedSavedFrame parent(cx, nullptr);
+
+    FrameIter iter(cx);
 
     // Once we've seen one frame with its hasCachedSavedFrame bit set, all its
     // parents (that can be cached) ought to have it set too.
