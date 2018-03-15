@@ -6,6 +6,7 @@ ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
 ChromeUtils.import("resource://normandy/lib/CleanupManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ActionSandboxManager.jsm", this);
+ChromeUtils.import("resource://normandy/lib/ActionsManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
 
@@ -120,80 +121,46 @@ async function withMockActionSandboxManagers(actions, testFunction) {
 }
 
 decorate_task(
-  withMockNormandyApi,
   withSpy(AddonStudies, "close"),
   withStub(Uptake, "reportRunner"),
-  withStub(Uptake, "reportAction"),
-  withStub(Uptake, "reportRecipe"),
-  async function testRun(mockApi, closeSpy, reportRunner, reportAction, reportRecipe) {
-    const matchAction = {name: "matchAction"};
-    const noMatchAction = {name: "noMatchAction"};
-    mockApi.actions = [matchAction, noMatchAction];
-
+  withStub(NormandyApi, "fetchRecipes"),
+  withStub(ActionsManager.prototype, "fetchRemoteActions"),
+  withStub(ActionsManager.prototype, "preExecution"),
+  withStub(ActionsManager.prototype, "runRecipe"),
+  withStub(ActionsManager.prototype, "finalize"),
+  async function testRun(
+    closeSpy,
+    reportRunnerStub,
+    fetchRecipesStub,
+    fetchRemoteActionsStub,
+    preExecutionStub,
+    runRecipeStub,
+    finalizeStub
+  ) {
     const matchRecipe = {id: "match", action: "matchAction", filter_expression: "true"};
     const noMatchRecipe = {id: "noMatch", action: "noMatchAction", filter_expression: "false"};
     const missingRecipe = {id: "missing", action: "missingAction", filter_expression: "true"};
-    mockApi.recipes = [matchRecipe, noMatchRecipe, missingRecipe];
+    fetchRecipesStub.callsFake(async () => [matchRecipe, noMatchRecipe, missingRecipe]);
 
-    await withMockActionSandboxManagers(mockApi.actions, async managers => {
-      const matchManager = managers.matchAction;
-      const noMatchManager = managers.noMatchAction;
+    await RecipeRunner.run();
 
-      await RecipeRunner.run();
+    ok(fetchRemoteActionsStub.calledOnce, "remote actions should be fetched");
+    ok(preExecutionStub.calledOnce, "pre-execution hooks should be run");
+    Assert.deepEqual(
+      runRecipeStub.args,
+      [[matchRecipe], [missingRecipe]],
+      "recipe with matching filters should be executed",
+    );
 
-      // match should be called for preExecution, action, and postExecution
-      sinon.assert.calledWith(matchManager.runAsyncCallback, "preExecution");
-      sinon.assert.calledWith(matchManager.runAsyncCallback, "action", matchRecipe);
-      sinon.assert.calledWith(matchManager.runAsyncCallback, "postExecution");
-
-      // noMatch should be called for preExecution and postExecution, and skipped
-      // for action since the filter expression does not match.
-      sinon.assert.calledWith(noMatchManager.runAsyncCallback, "preExecution");
-      sinon.assert.neverCalledWith(noMatchManager.runAsyncCallback, "action", noMatchRecipe);
-      sinon.assert.calledWith(noMatchManager.runAsyncCallback, "postExecution");
-
-      // missing is never called at all due to no matching action/manager.
-
-      // Test uptake reporting
-      sinon.assert.calledWith(reportRunner, Uptake.RUNNER_SUCCESS);
-      sinon.assert.calledWith(reportAction, "matchAction", Uptake.ACTION_SUCCESS);
-      sinon.assert.calledWith(reportAction, "noMatchAction", Uptake.ACTION_SUCCESS);
-      sinon.assert.calledWith(reportRecipe, "match", Uptake.RECIPE_SUCCESS);
-      sinon.assert.neverCalledWith(reportRecipe, "noMatch", Uptake.RECIPE_SUCCESS);
-      sinon.assert.calledWith(reportRecipe, "missing", Uptake.RECIPE_INVALID_ACTION);
-    });
+    // Test uptake reporting
+    Assert.deepEqual(
+      reportRunnerStub.args,
+      [[Uptake.RUNNER_SUCCESS]],
+      "RecipeRunner should report uptake telemetry",
+    );
 
     // Ensure storage is closed after the run.
-    sinon.assert.calledOnce(closeSpy);
-  }
-);
-
-decorate_task(
-  withMockNormandyApi,
-  async function testRunRecipeError(mockApi) {
-    const reportRecipe = sinon.stub(Uptake, "reportRecipe");
-
-    const action = {name: "action"};
-    mockApi.actions = [action];
-
-    const recipe = {id: "recipe", action: "action", filter_expression: "true"};
-    mockApi.recipes = [recipe];
-
-    await withMockActionSandboxManagers(mockApi.actions, async managers => {
-      const manager = managers.action;
-      manager.runAsyncCallback.callsFake(async callbackName => {
-        if (callbackName === "action") {
-          throw new Error("Action execution failure");
-        }
-      });
-
-      await RecipeRunner.run();
-
-      // Uptake should report that the recipe threw an exception
-      sinon.assert.calledWith(reportRecipe, "recipe", Uptake.RECIPE_EXECUTION_ERROR);
-    });
-
-    reportRecipe.restore();
+    ok(closeSpy.calledOnce, "Storage should be closed after the run");
   }
 );
 
@@ -234,106 +201,6 @@ decorate_task(
 
     closeSpy.restore();
     reportRunner.restore();
-  }
-);
-
-decorate_task(
-  withMockNormandyApi,
-  async function testRunPreExecutionFailure(mockApi) {
-    const closeSpy = sinon.spy(AddonStudies, "close");
-    const reportAction = sinon.stub(Uptake, "reportAction");
-    const reportRecipe = sinon.stub(Uptake, "reportRecipe");
-
-    const passAction = {name: "passAction"};
-    const failAction = {name: "failAction"};
-    mockApi.actions = [passAction, failAction];
-
-    const passRecipe = {id: "pass", action: "passAction", filter_expression: "true"};
-    const failRecipe = {id: "fail", action: "failAction", filter_expression: "true"};
-    mockApi.recipes = [passRecipe, failRecipe];
-
-    await withMockActionSandboxManagers(mockApi.actions, async managers => {
-      const passManager = managers.passAction;
-      const failManager = managers.failAction;
-      failManager.runAsyncCallback.returns(Promise.reject(new Error("oh no")));
-
-      await RecipeRunner.run();
-
-      // pass should be called for preExecution, action, and postExecution
-      sinon.assert.calledWith(passManager.runAsyncCallback, "preExecution");
-      sinon.assert.calledWith(passManager.runAsyncCallback, "action", passRecipe);
-      sinon.assert.calledWith(passManager.runAsyncCallback, "postExecution");
-
-      // fail should only be called for preExecution, since it fails during that
-      sinon.assert.calledWith(failManager.runAsyncCallback, "preExecution");
-      sinon.assert.neverCalledWith(failManager.runAsyncCallback, "action", failRecipe);
-      sinon.assert.neverCalledWith(failManager.runAsyncCallback, "postExecution");
-
-      sinon.assert.calledWith(reportAction, "passAction", Uptake.ACTION_SUCCESS);
-      sinon.assert.calledWith(reportAction, "failAction", Uptake.ACTION_PRE_EXECUTION_ERROR);
-      sinon.assert.calledWith(reportRecipe, "fail", Uptake.RECIPE_ACTION_DISABLED);
-    });
-
-    // Ensure storage is closed after the run, despite the failures.
-    sinon.assert.calledOnce(closeSpy);
-    closeSpy.restore();
-    reportAction.restore();
-    reportRecipe.restore();
-  }
-);
-
-decorate_task(
-  withMockNormandyApi,
-  async function testRunPostExecutionFailure(mockApi) {
-    const reportAction = sinon.stub(Uptake, "reportAction");
-
-    const failAction = {name: "failAction"};
-    mockApi.actions = [failAction];
-
-    const failRecipe = {action: "failAction", filter_expression: "true"};
-    mockApi.recipes = [failRecipe];
-
-    await withMockActionSandboxManagers(mockApi.actions, async managers => {
-      const failManager = managers.failAction;
-      failManager.runAsyncCallback.callsFake(async callbackName => {
-        if (callbackName === "postExecution") {
-          throw new Error("postExecution failure");
-        }
-      });
-
-      await RecipeRunner.run();
-
-      // fail should be called for every stage
-      sinon.assert.calledWith(failManager.runAsyncCallback, "preExecution");
-      sinon.assert.calledWith(failManager.runAsyncCallback, "action", failRecipe);
-      sinon.assert.calledWith(failManager.runAsyncCallback, "postExecution");
-
-      // Uptake should report a post-execution error
-      sinon.assert.calledWith(reportAction, "failAction", Uptake.ACTION_POST_EXECUTION_ERROR);
-    });
-
-    reportAction.restore();
-  }
-);
-
-decorate_task(
-  withMockNormandyApi,
-  async function testLoadActionSandboxManagers(mockApi) {
-    mockApi.actions = [
-      {name: "normalAction"},
-      {name: "missingImpl"},
-    ];
-    mockApi.implementations.normalAction = "window.scriptRan = true";
-
-    const managers = await RecipeRunner.loadActionSandboxManagers();
-    ok("normalAction" in managers, "Actions with implementations have managers");
-    ok(!("missingImpl" in managers), "Actions without implementations are skipped");
-
-    const normalManager = managers.normalAction;
-    ok(
-      await normalManager.evalInSandbox("window.scriptRan"),
-      "Implementations are run in the sandbox",
-    );
   }
 );
 

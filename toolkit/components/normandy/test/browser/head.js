@@ -129,7 +129,7 @@ this.withMockNormandyApi = function(testFunction) {
       async action => {
         const impl = mockApi.implementations[action.name];
         if (!impl) {
-          throw new Error("Missing");
+          throw new Error(`Missing implementation for ${action.name}`);
         }
         return impl;
       }
