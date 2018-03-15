@@ -30,23 +30,6 @@ DOMRectReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 // -----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED(DOMRect, DOMRectReadOnly, nsIDOMClientRect)
-
-#define FORWARD_GETTER(_name)                                                   \
-  NS_IMETHODIMP                                                                 \
-  DOMRect::Get ## _name(float* aResult)                                         \
-  {                                                                             \
-    *aResult = float(_name());                                                  \
-    return NS_OK;                                                               \
-  }
-
-FORWARD_GETTER(Left)
-FORWARD_GETTER(Top)
-FORWARD_GETTER(Right)
-FORWARD_GETTER(Bottom)
-FORWARD_GETTER(Width)
-FORWARD_GETTER(Height)
-
 JSObject*
 DOMRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
@@ -77,27 +60,12 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMRectList, mParent, mArray)
 
 NS_INTERFACE_TABLE_HEAD(DOMRectList)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
-  NS_INTERFACE_TABLE(DOMRectList, nsIDOMClientRectList)
+  NS_INTERFACE_TABLE0(DOMRectList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(DOMRectList)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMRectList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMRectList)
-
-
-NS_IMETHODIMP
-DOMRectList::GetLength(uint32_t* aLength)
-{
-  *aLength = Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMRectList::Item(uint32_t aIndex, nsIDOMClientRect** aReturn)
-{
-  NS_IF_ADDREF(*aReturn = Item(aIndex));
-  return NS_OK;
-}
 
 JSObject*
 DOMRectList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
