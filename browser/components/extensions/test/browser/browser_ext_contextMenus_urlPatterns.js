@@ -256,7 +256,7 @@ add_task(async function() {
   await confirmContextMenuItems(contextMenu, expected);
   await closeContextMenu();
 
-  contextMenu = await openContextMenuInFrame("frame");
+  contextMenu = await openContextMenuInFrame("#frame");
   expected = [
     ["documentUrlPatterns-patternMatches-contextAll", true],
     ["documentUrlPatterns-patternMatches-contextFrame", true],

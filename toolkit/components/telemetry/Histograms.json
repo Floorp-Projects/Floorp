@@ -7840,13 +7840,6 @@
     "n_values": 100,
     "description": "Security-related UI events (addons, form submission, TLS certs, Safe Browsing, updates and geolocation). See /security/manager/ssl/nsISecurityUITelemetry.idl for the specific values."
   },
-  "JS_TELEMETRY_ADDON_EXCEPTIONS" : {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version" : "never",
-    "kind": "count",
-    "keyed" : true,
-    "description" : "Exceptions thrown by add-ons"
-  },
   "IPC_TRANSACTION_CANCEL": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["billm@mozilla.com"],

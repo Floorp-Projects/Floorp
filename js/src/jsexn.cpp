@@ -778,67 +778,6 @@ ErrorReport::~ErrorReport()
 {
 }
 
-void
-ErrorReport::ReportAddonExceptionToTelemetry(JSContext* cx)
-{
-    MOZ_ASSERT(exnObject);
-    RootedObject unwrapped(cx, UncheckedUnwrap(exnObject));
-    MOZ_ASSERT(unwrapped, "UncheckedUnwrap failed?");
-
-    // There is not much we can report if the exception is not an ErrorObject, let's ignore those.
-    if (!unwrapped->is<ErrorObject>())
-        return;
-
-    Rooted<ErrorObject*> errObj(cx, &unwrapped->as<ErrorObject>());
-    RootedObject stack(cx, errObj->stack());
-
-    // Let's ignore TOP level exceptions. For regular add-ons those will not be reported anyway,
-    // for SDK based once it should not be a valid case either.
-    // At this point the frame stack is unwound but the exception object stored the stack so let's
-    // use that for getting the function name.
-    if (!stack)
-        return;
-
-    JSCompartment* comp = stack->compartment();
-    JSAddonId* addonId = comp->creationOptions().addonIdOrNull();
-
-    // We only want to send the report if the scope that just have thrown belongs to an add-on.
-    // Let's check the compartment of the youngest function on the stack, to determine that.
-    if (!addonId)
-        return;
-
-    RootedString funnameString(cx);
-    JS::SavedFrameResult result = GetSavedFrameFunctionDisplayName(cx, stack, &funnameString);
-    // AccessDenied should never be the case here for add-ons but let's not risk it.
-    JSAutoByteString bytes;
-    const char* funname = nullptr;
-    bool denied = result == JS::SavedFrameResult::AccessDenied;
-    funname = denied ? "unknown"
-                     : funnameString ? AtomToPrintableString(cx,
-                                                             &funnameString->asAtom(),
-                                                             &bytes)
-                                     : "anonymous";
-
-    UniqueChars addonIdChars(JS_EncodeString(cx, addonId));
-
-    const char* filename = nullptr;
-    if (reportp && reportp->filename) {
-        filename = strrchr(reportp->filename, '/');
-        if (filename)
-            filename++;
-    }
-    if (!filename) {
-        filename = "FILE_NOT_FOUND";
-    }
-    char histogramKey[64];
-    SprintfLiteral(histogramKey, "%s %s %s %u",
-                   addonIdChars.get(),
-                   funname,
-                   filename,
-                   (reportp ? reportp->lineno : 0) );
-    cx->runtime()->addTelemetry(JS_TELEMETRY_ADDON_EXCEPTIONS, 1, histogramKey);
-}
-
 bool
 ErrorReport::init(JSContext* cx, HandleValue exn,
                   SniffingBehavior sniffingBehavior)
@@ -857,10 +796,6 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
                                       JSMSG_ERR_DURING_THROW);
             return false;
         }
-
-        // Let's see if the exception is from add-on code, if so, it should be reported
-        // to telemetry.
-        ReportAddonExceptionToTelemetry(cx);
     }
 
 

@@ -286,10 +286,10 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
   if (asyncPaint) {
     // Create a capture draw target
-    RefPtr<DrawTargetCapture> captureDT =
-      Factory::CreateCaptureDrawTarget(dt->GetBackendType(),
-                                       dt->GetSize(),
-                                       dt->GetFormat());
+    RefPtr<gfx::DrawTargetCapture> captureDT =
+      gfx::Factory::CreateCaptureDrawTarget(dt->GetBackendType(),
+                                            dt->GetSize(),
+                                            dt->GetFormat());
 
     RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(captureDT);
     if (!ctx) {

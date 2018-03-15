@@ -6,12 +6,11 @@
 
 "use strict";
 
+const {Cu} = require("chrome");
+
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
-
-loader.lazyServiceGetter(this, "AddonPathService",
-                         "@mozilla.org/addon-path-service;1",
-                         "amIAddonPathService");
+const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
 
 const B2G_ID = "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}";
 const GRAPHENE_ID = "{d1bfe7d9-c01e-4237-998b-7b5f960a4314}";
@@ -27,14 +26,15 @@ if (!Services.appinfo
     || Services.appinfo.ID === undefined /* XPCShell */
     || Services.appinfo.ID == B2G_ID
     || Services.appinfo.ID == GRAPHENE_ID
-    || !AddonPathService) {
+    || !WebExtensionPolicy) {
   module.exports = function mapURIToAddonId(uri) {
     return false;
   };
 } else {
   module.exports = function mapURIToAddonId(uri) {
     try {
-      return AddonPathService.mapURIToAddonId(uri);
+      let policy = WebExtensionPolicy.getByURI(uri);
+      return policy && policy.id;
     } catch (e) {
       DevToolsUtils.reportException("mapURIToAddonId", e);
       return false;

@@ -26,7 +26,8 @@
 using namespace js;
 using namespace wasm;
 
-Compartment::Compartment(Zone* zone)
+Compartment::Compartment(JSRuntime* rt)
+  : runtime_(rt)
 {}
 
 Compartment::~Compartment()
@@ -62,6 +63,8 @@ struct InstanceComparator
 bool
 Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj)
 {
+    MOZ_ASSERT(runtime_ == cx->runtime());
+
     Instance& instance = instanceObj->instance();
     MOZ_ASSERT(this == &instance.compartment()->wasm);
 
@@ -70,15 +73,27 @@ Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
     if (instance.debugEnabled() && instance.compartment()->debuggerObservesAllExecution())
         instance.ensureEnterFrameTrapsState(cx, true);
 
-    size_t index;
-    if (BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
-        MOZ_CRASH("duplicate registration");
+    {
+        if (!instances_.reserve(instances_.length() + 1))
+            return false;
 
-    if (!instances_.insert(instances_.begin() + index, &instance)) {
-        ReportOutOfMemory(cx);
-        return false;
+        auto runtimeInstances = cx->runtime()->wasmInstances.lock();
+        if (!runtimeInstances->reserve(runtimeInstances->length() + 1))
+            return false;
+
+        // To avoid implementing rollback, do not fail after mutations start.
+
+        InstanceComparator cmp(instance);
+        size_t index;
+
+        MOZ_ALWAYS_FALSE(BinarySearchIf(instances_, 0, instances_.length(), cmp, &index));
+        MOZ_ALWAYS_TRUE(instances_.insert(instances_.begin() + index, &instance));
+
+        MOZ_ALWAYS_FALSE(BinarySearchIf(runtimeInstances.get(), 0, runtimeInstances->length(), cmp, &index));
+        MOZ_ALWAYS_TRUE(runtimeInstances->insert(runtimeInstances->begin() + index, &instance));
     }
 
+    // Notify the debugger after wasmInstances is unlocked.
     Debugger::onNewWasmInstance(cx, instanceObj);
     return true;
 }
@@ -86,10 +101,15 @@ Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
 void
 Compartment::unregisterInstance(Instance& instance)
 {
+    InstanceComparator cmp(instance);
     size_t index;
-    if (!BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
-        return;
-    instances_.erase(instances_.begin() + index);
+
+    if (BinarySearchIf(instances_, 0, instances_.length(), cmp, &index))
+        instances_.erase(instances_.begin() + index);
+
+    auto runtimeInstances = runtime_->wasmInstances.lock();
+    if (BinarySearchIf(runtimeInstances.get(), 0, runtimeInstances->length(), cmp, &index))
+        runtimeInstances->erase(runtimeInstances->begin() + index);
 }
 
 void
@@ -103,4 +123,20 @@ void
 Compartment::addSizeOfExcludingThis(MallocSizeOf mallocSizeOf, size_t* compartmentTables)
 {
     *compartmentTables += instances_.sizeOfExcludingThis(mallocSizeOf);
+}
+
+void
+wasm::InterruptRunningCode(JSContext* cx)
+{
+    auto runtimeInstances = cx->runtime()->wasmInstances.lock();
+    for (Instance* instance : runtimeInstances.get())
+        instance->tlsData()->setInterrupt();
+}
+
+void
+wasm::ResetInterruptState(JSContext* cx)
+{
+    auto runtimeInstances = cx->runtime()->wasmInstances.lock();
+    for (Instance* instance : runtimeInstances.get())
+        instance->tlsData()->resetInterrupt(cx);
 }

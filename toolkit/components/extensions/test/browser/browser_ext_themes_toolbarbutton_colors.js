@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.importGlobalProperties(["InspectorUtils"]);
+/* globals InspectorUtils */
 
 // This test checks whether applied WebExtension themes that attempt to change
 // the button background color properties are applied correctly.

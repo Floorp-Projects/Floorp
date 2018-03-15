@@ -3376,7 +3376,50 @@ MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef, Registe
 void
 MacroAssembler::wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset)
 {
-    append(trap, wasm::TrapSite(wasmTrapInstruction().offset(), bytecodeOffset));
+    uint32_t trapOffset = wasmTrapInstruction().offset();
+    MOZ_ASSERT_IF(!oom(), currentOffset() - trapOffset == WasmTrapInstructionLength);
+
+    append(trap, wasm::TrapSite(trapOffset, bytecodeOffset));
+}
+
+void
+MacroAssembler::wasmInterruptCheck(Register tls, wasm::BytecodeOffset bytecodeOffset)
+{
+    Label ok;
+    branch32(Assembler::Equal, Address(tls, offsetof(wasm::TlsData, interrupt)), Imm32(0), &ok);
+    wasmTrap(wasm::Trap::CheckInterrupt, bytecodeOffset);
+    bind(&ok);
+}
+
+void
+MacroAssembler::wasmReserveStackChecked(uint32_t amount, wasm::BytecodeOffset trapOffset)
+{
+    if (!amount)
+        return;
+
+    // If the frame is large, don't bump sp until after the stack limit check so
+    // that the trap handler isn't called with a wild sp.
+
+    if (amount > MAX_UNCHECKED_LEAF_FRAME_SIZE) {
+        Label ok;
+        Register scratch = ABINonArgReg0;
+        moveStackPtrTo(scratch);
+        subPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)), scratch);
+        branchPtr(Assembler::GreaterThan, scratch, Imm32(amount), &ok);
+        wasmTrap(wasm::Trap::StackOverflow, trapOffset);
+        bind(&ok);
+    }
+
+    reserveStack(amount);
+
+    if (amount <= MAX_UNCHECKED_LEAF_FRAME_SIZE) {
+        Label ok;
+        branchStackPtrRhs(Assembler::Below,
+                          Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
+                          &ok);
+        wasmTrap(wasm::Trap::StackOverflow, trapOffset);
+        bind(&ok);
+    }
 }
 
 void

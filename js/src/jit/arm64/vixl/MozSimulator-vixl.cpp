@@ -86,7 +86,6 @@ void Simulator::ResetState() {
   // Reset registers to 0.
   pc_ = nullptr;
   pc_modified_ = false;
-  wasm_interrupt_ = false;
   for (unsigned i = 0; i < kNumberOfRegisters; i++) {
     set_xreg(i, 0xbadbeef);
   }
@@ -195,15 +194,6 @@ void Simulator::ExecuteInstruction() {
   VIXL_ASSERT(IsWordAligned(pc_));
   decoder_->Decode(pc_);
   increment_pc();
-
-  if (MOZ_UNLIKELY(wasm_interrupt_)) {
-    handle_wasm_interrupt();
-    // Just calling set_pc turns the pc_modified_ flag on, which means it doesn't
-    // auto-step after executing the next instruction.  Force that to off so it
-    // will auto-step after executing the first instruction of the handler.
-    pc_modified_ = false;
-    wasm_interrupt_ = false;
-  }
 }
 
 
@@ -230,12 +220,6 @@ bool Simulator::overRecursedWithExtra(uint32_t extra) const {
 }
 
 
-void Simulator::trigger_wasm_interrupt() {
-  MOZ_ASSERT(!wasm_interrupt_);
-  wasm_interrupt_ = true;
-}
-
-
 static inline JitActivation*
 GetJitActivation(JSContext* cx)
 {
@@ -255,32 +239,6 @@ Simulator::registerState()
   state.lr = (uint8_t*) get_lr();
   state.sp = (uint8_t*) get_sp();
   return state;
-}
-
-// The signal handler only redirects the PC to the interrupt stub when the PC is
-// in function code. However, this guard is racy for the ARM simulator since the
-// signal handler samples PC in the middle of simulating an instruction and thus
-// the current PC may have advanced once since the signal handler's guard. So we
-// re-check here.
-void Simulator::handle_wasm_interrupt()
-{
-  if (!js::wasm::CodeExists)
-    return;
-
-  uint8_t* pc = (uint8_t*)get_pc();
-
-  const js::wasm::ModuleSegment* ms = nullptr;
-  if (!js::wasm::InInterruptibleCode(cx_, pc, &ms))
-      return;
-
-  JitActivation* act = GetJitActivation(cx_);
-  if (!act)
-      return;
-
-  if (!act->startWasmInterrupt(registerState()))
-      return;
-
-  set_pc((Instruction*)ms->interruptCode());
 }
 
 bool
@@ -309,10 +267,7 @@ Simulator::handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes)
 
     const js::wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
-        if (!act->startWasmInterrupt(registerState()))
-	    MOZ_CRASH("Cannot start interrupt");
-        if (!instance->code().containsCodePC(pc))
-            MOZ_CRASH("Cannot map PC to trap handler");
+        act->startWasmTrap(js::wasm::Trap::OutOfBounds, 0, registerState());
         set_pc((Instruction*)moduleSegment->outOfBoundsCode());
         return true;
     }

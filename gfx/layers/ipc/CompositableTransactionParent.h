@@ -24,7 +24,6 @@ namespace layers {
 class CompositableParentManager : public HostIPCAllocator
 {
 public:
-  typedef InfallibleTArray<ReadLockInit> ReadLockArray;
 
   CompositableParentManager() {}
 
@@ -44,9 +43,6 @@ public:
     bool aUseWebRender);
   RefPtr<CompositableHost> FindCompositable(const CompositableHandle& aHandle);
 
-  bool AddReadLocks(ReadLockArray&& aReadLocks);
-  TextureReadLock* FindReadLock(const ReadLockHandle& aLockHandle);
-
 protected:
   /**
    * Handle the IPDL messages that affect PCompositable actors.
@@ -61,22 +57,7 @@ protected:
    * Mapping form IDs to CompositableHosts.
    */
   std::map<uint64_t, RefPtr<CompositableHost>> mCompositables;
-  std::map<uint64_t, RefPtr<TextureReadLock>> mReadLocks;
 
-};
-
-struct AutoClearReadLocks {
-  explicit AutoClearReadLocks(std::map<uint64_t, RefPtr<TextureReadLock>>& aReadLocks)
-    : mReadLocks(aReadLocks)
-
-  {}
-
-  ~AutoClearReadLocks()
-  {
-    mReadLocks.clear();
-  }
-
-  std::map<uint64_t, RefPtr<TextureReadLock>>& mReadLocks;
 };
 
 } // namespace layers
