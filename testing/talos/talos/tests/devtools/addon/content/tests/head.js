@@ -153,5 +153,3 @@ exports.reloadPageAndLog = async function(name, toolbox, onReload) {
   await waitForPendingPaints(toolbox);
   test.done();
 };
-
-dump("Required HEAD successfully\n");
