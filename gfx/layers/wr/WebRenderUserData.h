@@ -11,9 +11,9 @@
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/AnimationInfo.h"
+#include "nsIFrame.h"
 
 class nsDisplayItemGeometry;
-class nsIFrame;
 
 namespace mozilla {
 namespace wr {
@@ -72,6 +72,27 @@ protected:
   WebRenderUserDataRefTable* mTable;
   bool mUsed;
 };
+
+struct WebRenderUserDataKey {
+  WebRenderUserDataKey(uint32_t aFrameKey, WebRenderUserData::UserDataType aType)
+    : mFrameKey(aFrameKey)
+    , mType(aType)
+  { }
+
+  bool operator==(const WebRenderUserDataKey& other) const
+  {
+    return mFrameKey == other.mFrameKey && mType == other.mType;
+  }
+  PLDHashNumber Hash() const
+  {
+    return HashGeneric(mFrameKey, static_cast<std::underlying_type<decltype(mType)>::type>(mType));
+  }
+
+  uint32_t mFrameKey;
+  WebRenderUserData::UserDataType mType;
+};
+
+typedef nsRefPtrHashtable<nsGenericHashKey<mozilla::layers::WebRenderUserDataKey>, WebRenderUserData> WebRenderUserDataTable;
 
 class WebRenderImageData : public WebRenderUserData
 {
@@ -182,6 +203,33 @@ protected:
 
   UniquePtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
 };
+
+extern void DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable);
+
+struct WebRenderUserDataProperty {
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(Key, WebRenderUserDataTable, DestroyWebRenderUserDataTable)
+};
+
+template<class T> already_AddRefed<T>
+GetWebRenderUserData(nsIFrame* aFrame, uint32_t aPerFrameKey)
+{
+  MOZ_ASSERT(aFrame);
+  WebRenderUserDataTable* userDataTable =
+    aFrame->GetProperty(WebRenderUserDataProperty::Key());
+  if (!userDataTable) {
+    return nullptr;
+  }
+
+  WebRenderUserData* data = userDataTable->GetWeak(WebRenderUserDataKey(aPerFrameKey, T::Type()));
+  if (data && (data->GetType() == T::Type())) {
+    RefPtr<T> result = static_cast<T*>(data);
+    return result.forget();
+  }
+
+  return nullptr;
+}
+
+
 
 } // namespace layers
 } // namespace mozilla
