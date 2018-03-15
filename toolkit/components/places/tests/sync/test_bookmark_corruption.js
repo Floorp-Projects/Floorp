@@ -794,8 +794,95 @@ add_task(async function test_new_orphan_with_local_parent() {
 });
 
 add_task(async function test_tombstone_as_child() {
-  // TODO (Bug 1433180): Add a folder that mentions a tombstone in its
-  // `children`.
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  let buf = await openMirror("tombstone_as_child");
+  // Setup the mirror such that an incoming folder references a tombstone
+  // as a child.
+  await buf.store(shuffle([{
+    id: "menu",
+    type: "folder",
+    children: ["folderAAAAAA"],
+  }, {
+    id: "folderAAAAAA",
+    type: "folder",
+    title: "A",
+    children: ["bookmarkAAAA", "bookmarkTTTT", "bookmarkBBBB"],
+  }, {
+    id: "bookmarkAAAA",
+    type: "bookmark",
+    title: "Bookmark A",
+    bmkUri: "http://example.com/a",
+  }, {
+    id: "bookmarkBBBB",
+    type: "bookmark",
+    title: "Bookmark B",
+    bmkUri: "http://example.com/b",
+  }, {
+    id: "bookmarkTTTT",
+    deleted: true,
+  }]), { needsMerge: true });
+
+  let changesToUpload = await buf.apply();
+  let idsToUpload = inspectChangeRecords(changesToUpload);
+  deepEqual(idsToUpload.deleted, [], "no new tombstones were created.");
+  // Note that we do not attempt to re-upload the folder with the correct
+  // list of children - but we might take some action in the future around
+  // this.
+  deepEqual(idsToUpload.updated, [], "parent is not re-uploaded");
+
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
+    guid: PlacesUtils.bookmarks.rootGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "",
+    children: [{
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [{
+        guid: "folderAAAAAA",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        index: 0,
+        title: "A",
+        children: [{
+          guid: "bookmarkAAAA",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          url: "http://example.com/a",
+          index: 0,
+          title: "Bookmark A",
+        }, {
+          // Note that this was the 3rd child specified on the server record,
+          // but we we've correctly moved it back to being the second after
+          // ignoring the tombstone.
+          guid: "bookmarkBBBB",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          url: "http://example.com/b",
+          index: 1,
+          title: "Bookmark B",
+        }],
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 1,
+      title: BookmarksToolbarTitle,
+    }, {
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 3,
+      title: UnfiledBookmarksTitle,
+    }, {
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 4,
+      title: MobileBookmarksTitle,
+    }],
+  }, "Should have ignored tombstone record");
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
 });
 
 // See what happens when a left-pane root and a left-pane query are on the server
