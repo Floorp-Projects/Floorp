@@ -35,16 +35,10 @@ CodeLocationJump::repoint(JitCode* code, MacroAssembler* masm)
 }
 
 void
-CodeLocationLabel::repoint(JitCode* code, MacroAssembler* masm)
+CodeLocationLabel::repoint(JitCode* code)
 {
      MOZ_ASSERT(state_ == Relative);
-     size_t new_off = (size_t)raw_;
-     if (masm != nullptr) {
-#ifdef JS_CODEGEN_X64
-        MOZ_ASSERT((uint64_t)raw_ <= UINT32_MAX);
-#endif
-        new_off = (uintptr_t)raw_;
-     }
+     uintptr_t new_off = uintptr_t(raw_);
      MOZ_ASSERT(new_off < code->instructionsSize());
 
      raw_ = code->raw() + new_off;
