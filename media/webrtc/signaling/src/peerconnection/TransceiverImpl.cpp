@@ -124,7 +124,7 @@ TransceiverImpl::UpdateSinkIdentity(const dom::MediaStreamTrack* aTrack,
                                     nsIPrincipal* aPrincipal,
                                     const PeerIdentity* aSinkIdentity)
 {
-  if (mJsepTransceiver->IsStopped()) {
+  if (!(mJsepTransceiver->mJsDirection & sdp::kSend)) {
     return NS_OK;
   }
 
