@@ -5,18 +5,10 @@
 
 /* The prefs in this file are shipped with the GRE and should apply to all
  * embedding situations. Application-specific preferences belong somewhere else,
- * for example xpfe/bootstrap/browser-prefs.js
+ * such as browser/app/profile/firefox.js or mobile/android/app/mobile.js.
  *
- * Platform-specific #ifdefs at the end of this file override the generic
- * entries at the top.
- */
-
-/*
- * SYNTAX HINTS:
- *
- *  - Dashes are delimiters; use underscores instead.
- *  - The first character after a period must be alphabetic.
- *  - Computed values (e.g. 50 * 1024) don't work.
+ * For the syntax used by this file, consult the comments at the top of
+ * modules/libpref/parser/src/lib.rs.
  */
 
 pref("preferences.allow.omt-write", true);
