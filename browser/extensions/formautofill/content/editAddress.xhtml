@@ -77,7 +77,11 @@
   <script type="application/javascript"><![CDATA[
     "use strict";
 
-    let {supportedCountries, DEFAULT_REGION} = FormAutofillUtils;
+    let {
+      DEFAULT_REGION,
+      getFormFormat,
+      supportedCountries,
+    } = FormAutofillUtils;
     let record = window.arguments && window.arguments[0];
 
     /* import-globals-from autofillEditForms.js */
@@ -85,6 +89,7 @@
       form: document.getElementById("form"),
     }, record, {
       DEFAULT_REGION,
+      getFormFormat: getFormFormat.bind(FormAutofillUtils),
       supportedCountries,
     });
 
