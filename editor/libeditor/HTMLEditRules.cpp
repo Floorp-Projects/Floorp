@@ -2202,9 +2202,12 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
     }
 
     // Test for distance between caret and text that will be deleted
-    rv = CheckBidiLevelForDeletion(aSelection, startNode,
-                                   startOffset, aAction, aCancel);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = CheckBidiLevelForDeletion(aSelection,
+                                   EditorRawDOMPoint(startNode, startOffset),
+                                   aAction, aCancel);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     if (*aCancel) {
       return NS_OK;
     }
