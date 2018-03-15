@@ -221,4 +221,15 @@
   ") WITHOUT ROWID " \
 )
 
+// This table holds key-value metadata for Places and its consumers. Sync stores
+// the sync IDs for the bookmarks and history collections in this table, and the
+// last sync time for history.
+#define CREATE_MOZ_META NS_LITERAL_CSTRING( \
+  "CREATE TABLE moz_meta (" \
+    "key TEXT PRIMARY KEY, " \
+    "value NOT NULL" \
+  ") WITHOUT ROWID " \
+)
+
+
 #endif // __nsPlacesTables_h__

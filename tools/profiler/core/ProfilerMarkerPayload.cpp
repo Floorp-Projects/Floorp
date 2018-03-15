@@ -177,3 +177,17 @@ HangMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 {
   StreamCommonProps("BHR-detected hang", aWriter, aProcessStartTime, aUniqueStacks);
 }
+
+void
+StyleMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                  const TimeStamp& aProcessStartTime,
+                                  UniqueStacks& aUniqueStacks)
+{
+  StreamCommonProps("Styles", aWriter, aProcessStartTime, aUniqueStacks);
+  aWriter.StringProperty("category", "Paint");
+  aWriter.IntProperty("elementsTraversed", mStats.mElementsTraversed);
+  aWriter.IntProperty("elementsStyled", mStats.mElementsStyled);
+  aWriter.IntProperty("elementsMatched", mStats.mElementsMatched);
+  aWriter.IntProperty("stylesShared", mStats.mStylesShared);
+  aWriter.IntProperty("stylesReused", mStats.mStylesReused);
+}

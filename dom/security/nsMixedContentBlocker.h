@@ -72,9 +72,12 @@ public:
                                          bool aActive,
                                          const OriginAttributes& aOriginAttributes);
 
+  static bool ShouldUpgradeMixedDisplayContent();
+
   static bool sBlockMixedScript;
   static bool sBlockMixedObjectSubrequest;
   static bool sBlockMixedDisplay;
+  static bool sUpgradeMixedDisplay;
 };
 
 #endif /* nsMixedContentBlocker_h___ */

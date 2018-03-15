@@ -49,6 +49,7 @@ NS_IMPL_RELEASE_INHERITED(Performance, DOMEventTargetHelper)
 
 /* static */ already_AddRefed<Performance>
 Performance::CreateForMainThread(nsPIDOMWindowInner* aWindow,
+                                 nsIPrincipal* aPrincipal,
                                  nsDOMNavigationTiming* aDOMTiming,
                                  nsITimedChannel* aChannel)
 {
@@ -56,6 +57,7 @@ Performance::CreateForMainThread(nsPIDOMWindowInner* aWindow,
 
   RefPtr<Performance> performance =
     new PerformanceMainThread(aWindow, aDOMTiming, aChannel);
+  performance->mSystemPrincipal = nsContentUtils::IsSystemPrincipal(aPrincipal);
   return performance.forget();
 }
 
@@ -66,6 +68,7 @@ Performance::CreateForWorker(WorkerPrivate* aWorkerPrivate)
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   RefPtr<Performance> performance = new PerformanceWorker(aWorkerPrivate);
+  performance->mSystemPrincipal = aWorkerPrivate->UsesSystemPrincipal();
   return performance.forget();
 }
 
@@ -88,10 +91,23 @@ Performance::~Performance()
 {}
 
 DOMHighResTimeStamp
-Performance::Now() const
+Performance::Now()
+{
+  DOMHighResTimeStamp rawTime = NowUnclamped();
+  if (mSystemPrincipal) {
+    return rawTime;
+  }
+
+  const double maxResolutionMs = 0.020;
+  DOMHighResTimeStamp minimallyClamped = floor(rawTime / maxResolutionMs) * maxResolutionMs;
+  return nsRFPService::ReduceTimePrecisionAsMSecs(minimallyClamped);
+}
+
+DOMHighResTimeStamp
+Performance::NowUnclamped() const
 {
   TimeDuration duration = TimeStamp::Now() - CreationTimeStamp();
-  return RoundTime(duration.ToMilliseconds());
+  return duration.ToMilliseconds();
 }
 
 DOMHighResTimeStamp
@@ -102,8 +118,12 @@ Performance::TimeOrigin()
   }
 
   MOZ_ASSERT(mPerformanceService);
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-    mPerformanceService->TimeOrigin(CreationTimeStamp()));
+  DOMHighResTimeStamp rawTimeOrigin = mPerformanceService->TimeOrigin(CreationTimeStamp());
+  if (mSystemPrincipal) {
+    return rawTimeOrigin;
+  }
+
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawTimeOrigin);
 }
 
 JSObject*
@@ -205,17 +225,6 @@ Performance::ClearResourceTimings()
 {
   mResourceEntries.Clear();
 }
-
-DOMHighResTimeStamp
-Performance::RoundTime(double aTime) const
-{
-  // Round down to the nearest 20us, because if the timer is too accurate people
-  // can do nasty timing attacks with it.
-  const double maxResolutionMs = 0.020;
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-    floor(aTime / maxResolutionMs) * maxResolutionMs);
-}
-
 
 void
 Performance::Mark(const nsAString& aName, ErrorResult& aRv)

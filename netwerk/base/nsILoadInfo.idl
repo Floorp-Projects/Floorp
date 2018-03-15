@@ -515,6 +515,14 @@ interface nsILoadInfo : nsISupports
    * This is very similar in implementation to upgradeInsecureRequests but browser set.
    */
   [infallible] readonly attribute boolean browserUpgradeInsecureRequests;
+
+  /**
+   * Returns true if the the page is https and the content is upgradable from http
+   * requires 'security.mixed_content.upgrade_display_content' pref to be false.
+   * See browserUpgradeInsecureRequests for more details, this only happens
+   * when *not* upgrading purely for telemetry.
+   */
+  [infallible] readonly attribute boolean browserWouldUpgradeInsecureRequests;
   /**
    * If true, the content of the channel is queued up and checked
    * if it matches a content signature. Note, setting this flag

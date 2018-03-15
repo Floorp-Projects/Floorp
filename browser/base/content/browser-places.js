@@ -1398,18 +1398,7 @@ var BookmarkingUI = {
   MOBILE_BOOKMARKS_PREF: "browser.bookmarks.showMobileBookmarks",
 
   _shouldShowMobileBookmarks() {
-    try {
-      return Services.prefs.getBoolPref(this.MOBILE_BOOKMARKS_PREF);
-    } catch (e) {}
-    // No pref set (or invalid pref set), look for a mobile bookmarks left pane query.
-    const organizerQueryAnno = "PlacesOrganizer/OrganizerQuery";
-    const mobileBookmarksAnno = "MobileBookmarks";
-    let shouldShow = PlacesUtils.annotations.getItemsWithAnnotation(organizerQueryAnno, {}).filter(
-      id => PlacesUtils.annotations.getItemAnnotation(id, organizerQueryAnno) == mobileBookmarksAnno
-    ).length > 0;
-    // Sync will change this pref if/when it adds a mobile bookmarks query.
-    Services.prefs.setBoolPref(this.MOBILE_BOOKMARKS_PREF, shouldShow);
-    return shouldShow;
+    return Services.prefs.getBoolPref(this.MOBILE_BOOKMARKS_PREF, false);
   },
 
   _initMobileBookmarks(mobileMenuItem) {

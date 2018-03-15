@@ -69,7 +69,7 @@ var InsecurePasswordUtils = {
    */
   _checkFormSecurity(aForm) {
     let isFormSubmitHTTP = false, isFormSubmitSecure = false;
-    if (aForm.rootElement instanceof Ci.nsIDOMHTMLFormElement) {
+    if (ChromeUtils.getClassName(aForm.rootElement) === "HTMLFormElement") {
       let uri = Services.io.newURI(aForm.rootElement.action || aForm.rootElement.baseURI);
       let principal = gScriptSecurityManager.createCodebasePrincipal(uri, {});
 

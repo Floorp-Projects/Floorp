@@ -780,6 +780,10 @@ nsNavHistory::NormalizeTime(uint32_t aRelative, PRTime aOffset)
 //    QUERYUPDATE_COMPLEX_WITH_BOOKMARKS:
 //      A complex query that additionally has dependence on bookmarks. All
 //      bookmark-dependent queries fall under this category.
+//    QUERYUPDATE_MOBILEPREF:
+//      A complex query but only updates when the mobile preference changes.
+//    QUERYUPDATE_NONE:
+//      A query that never updates, e.g. the left-pane root query.
 //
 //    aHasSearchTerms will be set to true if the query has any dependence on
 //    keywords. When there is no dependence on keywords, we can handle title
@@ -834,6 +838,10 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
   if (aOptions->ResultType() ==
         nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY)
       return QUERYUPDATE_MOBILEPREF;
+
+  if (aOptions->ResultType() ==
+        nsINavHistoryQueryOptions::RESULTS_AS_LEFT_PANE_QUERY)
+      return QUERYUPDATE_NONE;
 
   // Whenever there is a maximum number of results,
   // and we are not a bookmark query we must requery. This
@@ -1416,6 +1424,7 @@ private:
   nsresult SelectAsSite();
   nsresult SelectAsTag();
   nsresult SelectAsRoots();
+  nsresult SelectAsLeftPane();
 
   nsresult Where();
   nsresult GroupBy();
@@ -1519,6 +1528,11 @@ PlacesSQLQueryBuilder::Select()
 
     case nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY:
       rv = SelectAsRoots();
+      NS_ENSURE_SUCCESS(rv, rv);
+      break;
+
+    case nsINavHistoryQueryOptions::RESULTS_AS_LEFT_PANE_QUERY:
+      rv = SelectAsLeftPane();
       NS_ENSURE_SUCCESS(rv, rv);
       break;
 
@@ -1972,6 +1986,48 @@ PlacesSQLQueryBuilder::SelectAsRoots()
     menuTitle.get(),
     unfiledTitle.get(),
     mobileString.get());
+  return NS_OK;
+}
+
+nsresult
+PlacesSQLQueryBuilder::SelectAsLeftPane()
+{
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_STATE(history);
+
+  nsAutoCString historyTitle;
+  nsAutoCString downloadsTitle;
+  nsAutoCString tagsTitle;
+  nsAutoCString allBookmarksTitle;
+
+  history->GetStringFromName("OrganizerQueryHistory", historyTitle);
+  history->GetStringFromName("OrganizerQueryDownloads", downloadsTitle);
+  history->GetStringFromName("TagsFolderTitle", tagsTitle);
+  history->GetStringFromName("OrganizerQueryAllBookmarks", allBookmarksTitle);
+
+  mQueryString = nsPrintfCString(
+    "SELECT * FROM ("
+        "VALUES"
+              "(null, 'place:type=%d&sort=%d', '%s', null, null, null, "
+               "null, null, 0, 0, null, null, null, null, 'history____v', null), "
+              "(null, 'place:transition=%d&sort=%d', '%s', null, null, null, "
+               "null, null, 0, 0, null, null, null, null, 'downloads__v', null), "
+              "(null, 'place:type=%d&sort=%d', '%s', null, null, null, "
+               "null, null, 0, 0, null, null, null, null, 'tags_______v', null), "
+              "(null, 'place:type=%d', '%s', null, null, null, "
+               "null, null, 0, 0, null, null, null, null, 'allbms_____v', null) "
+    ")",
+    nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY,
+    nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING,
+    historyTitle.get(),
+    nsINavHistoryService::TRANSITION_DOWNLOAD,
+    nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING,
+    downloadsTitle.get(),
+    nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY,
+    nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING,
+    tagsTitle.get(),
+    nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY,
+    allBookmarksTitle.get());
   return NS_OK;
 }
 
@@ -3834,7 +3890,8 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY) {
+    if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY ||
+        aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_LEFT_PANE_QUERY) {
       rv = aRow->GetUTF8String(kGetInfoIndex_Guid, guid);
       NS_ENSURE_SUCCESS(rv, rv);
     }

@@ -1,1 +1,0 @@
-// empty worker, always succeed!

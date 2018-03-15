@@ -15,7 +15,6 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIWebProgressListener.h"
 #include "nsIRadioGroupContainer.h"
 #include "nsIWeakReferenceUtils.h"
@@ -36,7 +35,6 @@ class HTMLFormControlsCollection;
 class HTMLImageElement;
 
 class HTMLFormElement final : public nsGenericHTMLElement,
-                              public nsIDOMHTMLFormElement,
                               public nsIWebProgressListener,
                               public nsIForm,
                               public nsIRadioGroupContainer
@@ -54,9 +52,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMHTMLFormElement
-  NS_DECL_NSIDOMHTMLFORMELEMENT
 
   // nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER

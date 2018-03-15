@@ -514,8 +514,8 @@ class IDB extends _base2.default {
    *   transaction.delete(3);
    *   return "foo";
    * })
-   *   .catch(console.error.bind(console));
-   *   .then(console.log.bind(console)); // => "foo"
+   *   .catch(console.error);
+   *   .then(console.log); // => "foo"
    *
    * @override
    * @param  {Function} callback The operation description callback.

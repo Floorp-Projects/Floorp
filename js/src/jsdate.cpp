@@ -1305,12 +1305,13 @@ date_parse(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static ClippedTime
-NowAsMillis()
+NowAsMillis(JSContext* cx)
 {
     double now = PRMJ_Now();
-    if (sReduceMicrosecondTimePrecisionCallback)
+    bool clampAndJitter = JS::CompartmentCreationOptionsRef(js::GetContextCompartment(cx)).clampAndJitterTime();
+    if (clampAndJitter && sReduceMicrosecondTimePrecisionCallback)
         now = sReduceMicrosecondTimePrecisionCallback(now);
-    else if (sResolutionUsec) {
+    else if (clampAndJitter && sResolutionUsec) {
         double clamped = floor(now / sResolutionUsec) * sResolutionUsec;
 
         if (sJitter) {
@@ -1349,7 +1350,7 @@ bool
 js::date_now(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(TimeValue(NowAsMillis()));
+    args.rval().set(TimeValue(NowAsMillis(cx)));
     return true;
 }
 
@@ -3120,7 +3121,7 @@ DateNoArguments(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(args.length() == 0);
 
-    ClippedTime now = NowAsMillis();
+    ClippedTime now = NowAsMillis(cx);
 
     if (args.isConstructing())
         return NewDateObject(cx, args, now);
@@ -3171,7 +3172,7 @@ DateOneArgument(JSContext* cx, const CallArgs& args)
         return NewDateObject(cx, args, t);
     }
 
-    return ToDateString(cx, args, NowAsMillis());
+    return ToDateString(cx, args, NowAsMillis(cx));
 }
 
 static bool
@@ -3251,7 +3252,7 @@ DateMultipleArguments(JSContext* cx, const CallArgs& args)
         return NewDateObject(cx, args, TimeClip(UTC(finalDate)));
     }
 
-    return ToDateString(cx, args, NowAsMillis());
+    return ToDateString(cx, args, NowAsMillis(cx));
 }
 
 bool

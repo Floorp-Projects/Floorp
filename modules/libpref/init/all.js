@@ -4553,6 +4553,13 @@ pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
 pref("intl.ime.use_simple_context_on_password_field", false);
 
+// uim may use key snooper to listen to key events.  Unfortunately, we cannot
+// know whether it uses or not since it's a build option.  So, we need to make
+// distribution switchable whether we think uim uses key snooper or not with
+// this pref.  Debian 9.x still uses uim as their default IM and it uses key
+// snooper.  So, let's use true for its default value.
+pref("intl.ime.hack.uim.using_key_snooper", true);
+
 #ifdef MOZ_WIDGET_GTK
 // maximum number of fonts to substitute for a generic
 pref("gfx.font_rendering.fontconfig.max_generic_substitutions", 3);
