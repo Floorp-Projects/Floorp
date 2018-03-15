@@ -173,7 +173,7 @@ class IonIC
         return (IonInstanceOfIC*)this;
     }
 
-    void updateBaseAddress(JitCode* code, MacroAssembler& masm);
+    void updateBaseAddress(JitCode* code);
 
     // Returns the Register to use as scratch when entering IC stubs. This
     // should either be an output register or a temp.

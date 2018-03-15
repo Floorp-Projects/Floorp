@@ -10454,7 +10454,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     if (runtimeData_.length())
         ionScript->copyRuntimeData(&runtimeData_[0]);
     if (icList_.length())
-        ionScript->copyICEntries(&icList_[0], masm);
+        ionScript->copyICEntries(&icList_[0]);
 
     for (size_t i = 0; i < icInfo_.length(); i++) {
         IonIC& ic = ionScript->getICFromIndex(i);
