@@ -8052,8 +8052,8 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 }
 
 already_AddRefed<Element>
-nsDocument::CreateElem(const nsAString& aName, nsAtom *aPrefix,
-                       int32_t aNamespaceID, const nsAString* aIs)
+nsIDocument::CreateElem(const nsAString& aName, nsAtom *aPrefix,
+                        int32_t aNamespaceID, const nsAString* aIs)
 {
 #ifdef DEBUG
   nsAutoString qName;
