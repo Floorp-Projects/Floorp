@@ -20,7 +20,8 @@ class FlexboxInspector {
     this.store = inspector.store;
     this.walker = inspector.walker;
 
-    this.onHighlighterChange = this.onHighlighterChange.bind(this);
+    this.onHighlighterShown = this.onHighlighterShown.bind(this);
+    this.onHighlighterHidden = this.onHighlighterHidden.bind(this);
     this.onReflow = throttle(this.onReflow, 500, this);
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.onToggleFlexboxHighlighter = this.onToggleFlexboxHighlighter.bind(this);
@@ -43,16 +44,16 @@ class FlexboxInspector {
       return;
     }
 
-    this.highlighters.on("flexbox-highlighter-hidden", this.onHighlighterChange);
-    this.highlighters.on("flexbox-highlighter-shown", this.onHighlighterChange);
+    this.highlighters.on("flexbox-highlighter-hidden", this.onHighlighterHidden);
+    this.highlighters.on("flexbox-highlighter-shown", this.onHighlighterShown);
     this.inspector.sidebar.on("select", this.onSidebarSelect);
 
     this.onSidebarSelect();
   }
 
   destroy() {
-    this.highlighters.off("flexbox-highlighter-hidden", this.onHighlighterChange);
-    this.highlighters.off("flexbox-highlighter-shown", this.onHighlighterChange);
+    this.highlighters.off("flexbox-highlighter-hidden", this.onHighlighterHidden);
+    this.highlighters.off("flexbox-highlighter-shown", this.onHighlighterShown);
     this.inspector.selection.off("new-node-front", this.onUpdatePanel);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
     this.inspector.off("new-root", this.onUpdatePanel);
@@ -82,21 +83,47 @@ class FlexboxInspector {
            this.inspector.toolbox.currentToolId === "inspector" &&
            this.inspector.sidebar.getCurrentTabID() === "layoutview";
   }
+  /**
+   * Handler for "flexbox-highlighter-shown" events emitted from the
+   * HighlightersOverlay. Passes nodefront and highlight status to
+   * handleHighlighterChange.  Required since on and off events need
+   * the same reference object.
+   *
+   * @param  {NodeFront} nodeFront
+   *         The NodeFront of the flex container element for which the flexbox
+   *         highlighter is shown for.
+   */
+  onHighlighterShown(nodeFront) {
+    return this.onHighlighterChange(true, nodeFront);
+  }
+
+  /**
+   * Handler for "flexbox-highlighter-hidden" events emitted from the
+   * HighlightersOverlay. Passes nodefront and highlight status to
+   * handleHighlighterChange.  Required since on and off events need
+   * the same reference object.
+   *
+   * @param  {NodeFront} nodeFront
+   *         The NodeFront of the flex container element for which the flexbox
+   *         highlighter is shown for.
+   */
+  onHighlighterHidden(nodeFront) {
+    return this.onHighlighterChange(false, nodeFront);
+  }
 
   /**
    * Handler for "flexbox-highlighter-shown" and "flexbox-highlighter-hidden" events
    * emitted from the HighlightersOverlay. Updates the flex container highlighted state
    * only if the provided NodeFront is the current selected flex container.
    *
-   * @param  {Event} event
-   *         Event that was triggered.
+   * @param  {Boolean} highlighted
+   *          If the change is to highlight or hide the overlay.
    * @param  {NodeFront} nodeFront
    *         The NodeFront of the flex container element for which the flexbox
    *         highlighter is shown for.
    */
-  onHighlighterChange(event, nodeFront) {
+  onHighlighterChange(highlighted, nodeFront) {
     const { flexbox } = this.store.getState();
-    const highlighted = event === "flexbox-highlighter-shown";
 
     if (flexbox.nodeFront === nodeFront && flexbox.highlighted !== highlighted) {
       this.store.dispatch(updateFlexboxHighlighted(highlighted));
