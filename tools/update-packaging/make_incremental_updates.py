@@ -203,15 +203,16 @@ def copy_file(src_file_abs_path, dst_file_abs_path):
 
 
 def xz_file(filename):
-    """ XZ compresses the file in place.  The original file is replaced with the xz compressed version of itself
-        assumes the path is absolute"""
+    """ XZ compresses the file in place.  The original file is replaced
+        with the xz compressed version of itself assumes the path is absolute"""
     exec_shell_cmd('xz --compress --x86 --lzma2 --format=xz --check=crc64 "' + filename + '"')
     os.rename(filename + ".xz", filename)
 
 
 def xzunzip_file(filename):
-    """ xz decompresses the file in palce.  The original file is replaced with a xz decompressed version of itself.
-        doesn't matter if the filename ends in .xz or not"""
+    """ xz decompresses the file in palce.  The original file is replaced
+        with a xz decompressed version of itself. doesn't matter if the
+        filename ends in .xz or not"""
     if not filename.endswith(".xz"):
         os.rename(filename, filename + ".xz")
         filename = filename + ".xz"
@@ -290,14 +291,16 @@ def create_partial_patch_for_file(from_marfile_entry, to_marfile_entry, shas, pa
 
 
 def create_add_patch_for_file(to_marfile_entry, patch_info):
-    """  Copy the file to the working dir, add the add instruction, and add it to the list of archive files """
+    """  Copy the file to the working dir, add the add instruction,
+         and add it to the list of archive files """
     copy_file(to_marfile_entry.abs_path, os.path.join(patch_info.work_dir, to_marfile_entry.name))
     patch_info.append_add_instruction(to_marfile_entry.name)
     patch_info.archive_files.append('"' + to_marfile_entry.name + '"')
 
 
 def create_add_if_not_patch_for_file(to_marfile_entry, patch_info):
-    """  Copy the file to the working dir, add the add-if-not instruction, and add it to the list of archive files """
+    """  Copy the file to the working dir, add the add-if-not instruction,
+         and add it to the list of archive files """
     copy_file(to_marfile_entry.abs_path, os.path.join(patch_info.work_dir, to_marfile_entry.name))
     patch_info.append_add_if_not_instruction(to_marfile_entry.name)
     patch_info.archive_files.append('"' + to_marfile_entry.name + '"')
@@ -335,7 +338,8 @@ def process_explicit_remove_files(dir_path, patch_info):
                 patch_info.append_remove_instruction(line)
 
 
-def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch_info, forced_updates, add_if_not_list):
+def create_partial_patch(from_dir_path, to_dir_path, patch_filename,
+                         shas, patch_info, forced_updates, add_if_not_list):
     """ Builds a partial patch by comparing the files in from_dir_path to those of to_dir_path"""
     # Cannocolize the paths for safey
     from_dir_path = os.path.abspath(from_dir_path)
@@ -472,18 +476,18 @@ def decode_filename(filepath):
         Returns dict with keys product, version, locale, platform, type
     """
     try:
-      m = re.search(
-        '(?P<product>\w+)(-)(?P<version>\w+\.\w+(\.\w+){0,2})(\.)(?P<locale>.+?)(\.)(?P<platform>.+?)(\.)(?P<type>\w+)(.mar)',
-      os.path.basename(filepath))
-      return m.groupdict()
-    except Exception as exc:
-      try:
         m = re.search(
-          '(?P<platform>.+?)\/(?P<locale>.+?)\/(?P<product>\w+)-(?P<version>\w+\.\w+)\.(?P<type>\w+).mar',
-        filepath)
+            '(?P<product>\w+)(-)(?P<version>\w+\.\w+(\.\w+){0,2})(\.)(?P<locale>.+?)(\.)(?P<platform>.+?)(\.)(?P<type>\w+)(.mar)',  # NOQA: E501
+            os.path.basename(filepath))
         return m.groupdict()
-      except:
-        raise Exception("could not parse filepath %s: %s" % (filepath, exc))
+    except Exception as exc:
+        try:
+            m = re.search(
+                '(?P<platform>.+?)\/(?P<locale>.+?)\/(?P<product>\w+)-(?P<version>\w+\.\w+)\.(?P<type>\w+).mar',  # NOQA: E501
+                filepath)
+            return m.groupdict()
+        except Exception:
+            raise Exception("could not parse filepath %s: %s" % (filepath, exc))
 
 
 def create_partial_patches(patches):
@@ -529,8 +533,14 @@ def create_partial_patches(patches):
 
             mar_extract_time = time.time()
 
-            partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, [
-                                                    'update.manifest', 'updatev2.manifest', 'updatev3.manifest'], []), forced_updates, ['channel-prefs.js', 'update-settings.ini'])
+            partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename,
+                                                    shas, PatchInfo(work_dir, [
+                                                        'update.manifest',
+                                                        'updatev2.manifest',
+                                                        'updatev3.manifest'
+                                                    ], []),
+                                                    forced_updates,
+                                                    ['channel-prefs.js', 'update-settings.ini'])
             partial_shasum = hashlib.sha1(open(partial_filename, "rb").read()).hexdigest()
             partial_size = str(os.path.getsize(partial_filename))
 
@@ -551,8 +561,8 @@ def create_partial_patches(patches):
                 'locale': from_decoded['locale'],
                 'platform': from_decoded['platform'],
             })
-            print("done with patch %s/%s time (%.2fs/%.2fs/%.2fs) (mar/patch/total)" % (str(patch_num),
-                                                                                        str(len(patches)), mar_extract_time - startTime, time.time() - mar_extract_time, time.time() - startTime))
+            print("done with patch %s/%s time (%.2fs/%.2fs/%.2fs) (mar/patch/total)" % (str(patch_num),  # NOQA: E501
+                                                                                        str(len(patches)), mar_extract_time - startTime, time.time() - mar_extract_time, time.time() - startTime))  # NOQA: E501
             patch_num += 1
         return metadata
     finally:
