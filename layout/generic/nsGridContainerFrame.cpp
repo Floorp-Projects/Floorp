@@ -1221,6 +1221,26 @@ struct nsGridContainerFrame::Tracks
                                  SizingConstraint            aConstraint,
                                  const LineRange&            aRange,
                                  const GridItemInfo&         aGridItem);
+  
+  // Helper method that returns the track size to use in §11.5.1.2
+  // https://drafts.csswg.org/css-grid/#extra-space
+  template<TrackSizingPhase phase> static
+  nscoord StartSizeInDistribution(const TrackSize& aSize)
+  {
+    switch (phase) {
+      case TrackSizingPhase::eIntrinsicMinimums:
+      case TrackSizingPhase::eContentBasedMinimums:
+      case TrackSizingPhase::eMaxContentMinimums:
+        return aSize.mBase;
+      case TrackSizingPhase::eIntrinsicMaximums:
+      case TrackSizingPhase::eMaxContentMaximums:
+        if (aSize.mLimit == NS_UNCONSTRAINEDSIZE) {
+          return aSize.mBase;
+        }
+        return aSize.mLimit;
+    }
+  }
+
   /**
    * Collect the tracks which are growable (matching aSelector) into
    * aGrowableTracks, and return the amount of space that can be used
@@ -1264,12 +1284,14 @@ struct nsGridContainerFrame::Tracks
     }
   }
 
-  void ResetBasePlan(nsTArray<TrackSize>& aPlan,
-                     const nsTArray<TrackSize>& aSizes) const
+  template<TrackSizingPhase phase>
+  void InitializePlan(nsTArray<TrackSize>& aPlan) const
   {
-    for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
-      aPlan[i].mBase = aSizes[i].mBase;
-      aPlan[i].mState = aSizes[i].mState;
+    for (size_t i = 0, len = aPlan.Length(); i < len; ++i) {
+      auto& plan = aPlan[i];
+      const auto& sz = mSizes[i];
+      plan.mBase = StartSizeInDistribution<phase>(sz);
+      plan.mState = sz.mState;
     }
   }
 
@@ -4235,7 +4257,7 @@ nsGridContainerFrame::Tracks::GrowBaseForSpanningItems(
   uint32_t aEndIndex)
 {
   bool updatedBase = false;
-  ResetBasePlan(aPlan, mSizes);
+  InitializePlan<phase>(aPlan);
   for (uint32_t i = aStartIndex; i < aEndIndex; ++i) {
     const Step2ItemData& item = aItemData[i];
     if (!(item.mState & aSelector)) {
@@ -4273,7 +4295,7 @@ nsGridContainerFrame::Tracks::GrowLimitForSpanningItems(
   uint32_t aStartIndex,
   uint32_t aEndIndex)
 {
-  ResetBasePlan(aPlan, aSizes);
+  InitializePlan<phase>(aPlan);
   for (uint32_t i = aStartIndex; i < aEndIndex; ++i) {
     const Step2ItemData& item = aItemData[i];
     if (!(item.mState & aSelector)) {
