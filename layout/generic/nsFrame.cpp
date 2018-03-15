@@ -10990,15 +10990,6 @@ nsIFrame::IsSelected() const
     IsFrameSelected() : false;
 }
 
-/*static*/ void
-nsIFrame::DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable)
-{
-  for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
-    iter.UserData()->RemoveFromTable();
-  }
-  delete aTable;
-}
-
 bool
 nsIFrame::IsVisuallyAtomic(EffectSet* aEffectSet,
                            const nsStyleDisplay* aStyleDisplay,

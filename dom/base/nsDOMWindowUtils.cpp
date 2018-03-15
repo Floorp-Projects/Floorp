@@ -3805,8 +3805,8 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
                                     &hadAnimatedOpacity);
         }
       } else if (WebRenderLayerManager* wrlm = widgetLayerManager->AsWebRenderLayerManager()) {
-        RefPtr<WebRenderAnimationData> animationData = wrlm->CommandBuilder()
-            .GetWebRenderUserData<WebRenderAnimationData>(frame, (uint32_t)DisplayItemType::TYPE_OPACITY);
+        RefPtr<WebRenderAnimationData> animationData =
+            GetWebRenderUserData<WebRenderAnimationData>(frame, (uint32_t)DisplayItemType::TYPE_OPACITY);
         if (animationData) {
           wrlm->WrBridge()->SendGetAnimationOpacity(
               animationData->GetAnimationInfo().GetCompositorAnimationsId(),
@@ -3830,8 +3830,8 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
             SendGetAnimationTransform(layer->GetCompositorAnimationsId(), &transform);
         }
       } else if (WebRenderLayerManager* wrlm = widgetLayerManager->AsWebRenderLayerManager()) {
-        RefPtr<WebRenderAnimationData> animationData = wrlm->CommandBuilder()
-            .GetWebRenderUserData<WebRenderAnimationData>(frame, (uint32_t)DisplayItemType::TYPE_TRANSFORM);
+        RefPtr<WebRenderAnimationData> animationData =
+            GetWebRenderUserData<WebRenderAnimationData>(frame, (uint32_t)DisplayItemType::TYPE_TRANSFORM);
         if (animationData) {
           wrlm->WrBridge()->SendGetAnimationTransform(
               animationData->GetAnimationInfo().GetCompositorAnimationsId(),
