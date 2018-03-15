@@ -1412,41 +1412,60 @@ struct nsGridContainerFrame::Tracks
   }
 
   /**
-   * Increase the planned size for tracks in aGrowableTracks that match
-   * aSelector (or all tracks if aSelector is zero) beyond their limit.
+   * Mark all tracks in aGrowableTracks with an eSkipGrowUnlimited bit if
+   * they *shouldn't* grow unlimited in §11.5.1.2.3 "Distribute space beyond
+   * growth limits" https://drafts.csswg.org/css-grid/#extra-space
+   * Return the number of tracks that are still growable.
+   */
+  template<TrackSizingPhase phase>
+  static uint32_t
+  MarkExcludedTracks(nsTArray<TrackSize>&      aPlan,
+                     const nsTArray<uint32_t>& aGrowableTracks,
+                     TrackSize::StateBits      aSelector)
+  {
+    uint32_t numGrowable = aGrowableTracks.Length();
+    if (phase == TrackSizingPhase::eIntrinsicMaximums ||
+        phase == TrackSizingPhase::eMaxContentMaximums) {
+      // "when handling any intrinsic growth limit: all affected tracks"
+      return numGrowable;
+    }
+    MOZ_ASSERT(aSelector == (aSelector & TrackSize::eIntrinsicMinSizing) &&
+                            (aSelector & TrackSize::eMaxContentMinSizing),
+               "Should only get here for track sizing steps 2.1 to 2.3");
+    // Note that eMaxContentMinSizing is always included. We do those first:
+    numGrowable = MarkExcludedTracks(aPlan, numGrowable, aGrowableTracks,
+                                     TrackSize::eMaxContentMinSizing,
+                                     TrackSize::eMaxContentMaxSizing,
+                                     TrackSize::eSkipGrowUnlimited1);
+    // Now mark min-content/auto min-sizing tracks if requested.
+    auto minOrAutoSelector = aSelector & ~TrackSize::eMaxContentMinSizing;
+    if (minOrAutoSelector) {
+      numGrowable = MarkExcludedTracks(aPlan, numGrowable, aGrowableTracks,
+                                       minOrAutoSelector,
+                                       TrackSize::eIntrinsicMaxSizing,
+                                       TrackSize::eSkipGrowUnlimited2);
+    }
+    return numGrowable;
+  }
+
+  /**
+   * Increase the planned size for tracks in aGrowableTracks that aren't
+   * marked with a eSkipGrowUnlimited flag beyond their limit.
    * This implements the "Distribute space beyond growth limits" step in
    * https://drafts.csswg.org/css-grid/#distribute-extra-space
    */
   void GrowSelectedTracksUnlimited(nscoord                   aAvailableSpace,
                                    nsTArray<TrackSize>&      aPlan,
                                    const nsTArray<uint32_t>& aGrowableTracks,
-                                   TrackSize::StateBits      aSelector,
+                                   uint32_t                  aNumGrowable,
                                    const FitContentClamper&  aFitContentClamper) const
   {
-    MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0);
-    uint32_t numGrowable = aGrowableTracks.Length();
-    if (aSelector) {
-      MOZ_ASSERT(aSelector == (aSelector & TrackSize::eIntrinsicMinSizing) &&
-                 (aSelector & TrackSize::eMaxContentMinSizing),
-                 "Should only get here for track sizing steps 2.1 to 2.3");
-      // Note that eMaxContentMinSizing is always included. We do those first:
-      numGrowable = MarkExcludedTracks(aPlan, numGrowable, aGrowableTracks,
-                                       TrackSize::eMaxContentMinSizing,
-                                       TrackSize::eMaxContentMaxSizing,
-                                       TrackSize::eSkipGrowUnlimited1);
-      // Now mark min-content/auto min-sizing tracks if requested.
-      auto minOrAutoSelector = aSelector & ~TrackSize::eMaxContentMinSizing;
-      if (minOrAutoSelector) {
-        numGrowable = MarkExcludedTracks(aPlan, numGrowable, aGrowableTracks,
-                                         minOrAutoSelector,
-                                         TrackSize::eIntrinsicMaxSizing,
-                                         TrackSize::eSkipGrowUnlimited2);
-      }
-    }
+    MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0 &&
+               aNumGrowable <= aGrowableTracks.Length());
     nscoord space = aAvailableSpace;
     DebugOnly<bool> didClamp = false;
-    while (numGrowable) {
-      nscoord spacePerTrack = std::max<nscoord>(space / numGrowable, 1);
+    while (aNumGrowable) {
+      nscoord spacePerTrack = std::max<nscoord>(space / aNumGrowable, 1);
       for (uint32_t track : aGrowableTracks) {
         TrackSize& sz = aPlan[track];
         if (sz.mState & TrackSize::eSkipGrowUnlimited) {
@@ -1462,7 +1481,7 @@ struct nsGridContainerFrame::Tracks
             delta = newBase - sz.mBase;
             MOZ_ASSERT(delta >= 0, "track size shouldn't shrink");
             sz.mState |= TrackSize::eSkipGrowUnlimited1;
-            --numGrowable;
+            --aNumGrowable;
           }
         }
         sz.mBase = newBase;
@@ -1493,8 +1512,10 @@ struct nsGridContainerFrame::Tracks
     nscoord space = GrowTracksToLimit(aAvailableSpace, aItemPlan, aGrowableTracks,
                                       aFitContentClamper);
     if (space > 0) {
-      GrowSelectedTracksUnlimited(space, aItemPlan, aGrowableTracks, aSelector,
-                                  aFitContentClamper);
+      uint32_t numGrowable =
+        MarkExcludedTracks<phase>(aItemPlan, aGrowableTracks, aSelector);
+      GrowSelectedTracksUnlimited(space, aItemPlan, aGrowableTracks,
+                                  numGrowable, aFitContentClamper);
     }
     for (uint32_t track : aGrowableTracks) {
       nscoord& plannedSize = aPlan[track].mBase;
