@@ -12,8 +12,6 @@
 #define jsutil_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Compiler.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
@@ -23,9 +21,6 @@
 #include "js/Initialization.h"
 #include "js/Utility.h"
 #include "js/Value.h"
-
-#define JS_ALWAYS_TRUE(expr)      MOZ_ALWAYS_TRUE(expr)
-#define JS_ALWAYS_FALSE(expr)     MOZ_ALWAYS_FALSE(expr)
 
 #if defined(JS_DEBUG)
 # define JS_DIAGNOSTICS_ASSERT(expr) MOZ_ASSERT(expr)
@@ -155,26 +150,6 @@ Max(T t1, T t2)
 {
     return t1 > t2 ? t1 : t2;
 }
-
-template<typename T>
-class MOZ_RAII AutoScopedAssign
-{
-  public:
-    AutoScopedAssign(T* addr, const T& value
-                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : addr_(addr), old(*addr_)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        *addr_ = value;
-    }
-
-    ~AutoScopedAssign() { *addr_ = old; }
-
-  private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-    T* addr_;
-    T old;
-};
 
 template <typename T, typename U>
 static inline U
@@ -359,76 +334,6 @@ Poison(void* ptr, uint8_t value, size_t num)
 # define JS_EXTRA_POISON(p, val, size) Poison(p, val, size)
 #else
 # define JS_EXTRA_POISON(p, val, size) ((void) 0)
-#endif
-
-/* Basic stats */
-#ifdef DEBUG
-# define JS_BASIC_STATS 1
-#endif
-#ifdef JS_BASIC_STATS
-# include <stdio.h>
-typedef struct JSBasicStats {
-    uint32_t    num;
-    uint32_t    max;
-    double      sum;
-    double      sqsum;
-    uint32_t    logscale;           /* logarithmic scale: 0 (linear), 2, 10 */
-    uint32_t    hist[11];
-} JSBasicStats;
-# define JS_INIT_STATIC_BASIC_STATS  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0}}
-# define JS_BASIC_STATS_INIT(bs)     memset((bs), 0, sizeof(JSBasicStats))
-# define JS_BASIC_STATS_ACCUM(bs,val)                                         \
-    JS_BasicStatsAccum(bs, val)
-# define JS_MeanAndStdDevBS(bs,sigma)                                         \
-    JS_MeanAndStdDev((bs)->num, (bs)->sum, (bs)->sqsum, sigma)
-extern void
-JS_BasicStatsAccum(JSBasicStats* bs, uint32_t val);
-extern double
-JS_MeanAndStdDev(uint32_t num, double sum, double sqsum, double* sigma);
-extern void
-JS_DumpBasicStats(JSBasicStats* bs, const char* title, FILE* fp);
-extern void
-JS_DumpHistogram(JSBasicStats* bs, FILE* fp);
-#else
-# define JS_BASIC_STATS_ACCUM(bs,val)
-#endif
-
-/* A jsbitmap_t is a long integer that can be used for bitmaps. */
-typedef size_t jsbitmap;
-#define JS_BITMAP_NBITS (sizeof(jsbitmap) * CHAR_BIT)
-#define JS_TEST_BIT(_map,_bit)  ((_map)[(_bit)/JS_BITMAP_NBITS] &             \
-                                 (jsbitmap(1)<<((_bit)%JS_BITMAP_NBITS)))
-#define JS_SET_BIT(_map,_bit)   ((_map)[(_bit)/JS_BITMAP_NBITS] |=            \
-                                 (jsbitmap(1)<<((_bit)%JS_BITMAP_NBITS)))
-#define JS_CLEAR_BIT(_map,_bit) ((_map)[(_bit)/JS_BITMAP_NBITS] &=            \
-                                 ~(jsbitmap(1)<<((_bit)%JS_BITMAP_NBITS)))
-
-/* Wrapper for various macros to stop warnings coming from their expansions. */
-#if defined(__clang__)
-# define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
-    JS_BEGIN_MACRO                                                            \
-        _Pragma("clang diagnostic push")                                      \
-        /* If these _Pragmas cause warnings for you, try disabling ccache. */ \
-        _Pragma("clang diagnostic ignored \"-Wunused-value\"")                \
-        { expr; }                                                             \
-        _Pragma("clang diagnostic pop")                                       \
-    JS_END_MACRO
-#elif MOZ_IS_GCC
-
-# define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
-    JS_BEGIN_MACRO                                                            \
-        _Pragma("GCC diagnostic push")                                        \
-        _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"")       \
-        expr;                                                                 \
-        _Pragma("GCC diagnostic pop")                                         \
-    JS_END_MACRO
-#endif
-
-#if !defined(JS_SILENCE_UNUSED_VALUE_IN_EXPR)
-# define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
-    JS_BEGIN_MACRO                                                            \
-        expr;                                                                 \
-    JS_END_MACRO
 #endif
 
 #endif /* jsutil_h */

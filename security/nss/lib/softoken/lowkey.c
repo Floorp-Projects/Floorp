@@ -45,6 +45,23 @@ const SEC_ASN1Template nsslowkey_PrivateKeyInfoTemplate[] = {
     { 0 }
 };
 
+const SEC_ASN1Template nsslowkey_SubjectPublicKeyInfoTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYSubjectPublicKeyInfo) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
+      offsetof(NSSLOWKEYSubjectPublicKeyInfo, algorithm),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { SEC_ASN1_BIT_STRING,
+      offsetof(NSSLOWKEYSubjectPublicKeyInfo, subjectPublicKey) },
+    { 0 }
+};
+
+const SEC_ASN1Template nsslowkey_RSAPublicKeyTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYPublicKey) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPublicKey, u.rsa.modulus) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPublicKey, u.rsa.publicExponent) },
+    { 0 }
+};
+
 const SEC_ASN1Template nsslowkey_PQGParamsTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(PQGParams) },
     { SEC_ASN1_INTEGER, offsetof(PQGParams, prime) },
@@ -132,6 +149,13 @@ prepare_low_rsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
     key->u.rsa.exponent1.type = siUnsignedInteger;
     key->u.rsa.exponent2.type = siUnsignedInteger;
     key->u.rsa.coefficient.type = siUnsignedInteger;
+}
+
+void
+prepare_low_rsa_pub_key_for_asn1(NSSLOWKEYPublicKey *key)
+{
+    key->u.rsa.modulus.type = siUnsignedInteger;
+    key->u.rsa.publicExponent.type = siUnsignedInteger;
 }
 
 void

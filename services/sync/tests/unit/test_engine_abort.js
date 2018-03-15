@@ -24,10 +24,10 @@ add_task(async function test_processIncoming_abort() {
   await generateNewKeys(Service.collectionKeys);
 
   _("Create some server data.");
+  let syncID = await engine.resetLocalSyncID();
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                          syncID: engine.syncID}};
+  meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
   _("Fake applyIncoming to abort.");
   engine._store.applyIncoming = async function(record) {
     let ex = {code: SyncEngine.prototype.eEngineAbortApplyIncoming,

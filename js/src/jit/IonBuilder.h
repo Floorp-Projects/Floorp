@@ -11,6 +11,7 @@
 // JSScript.
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/Maybe.h"
 
 #include "jit/BaselineInspector.h"
 #include "jit/BytecodeAnalysis.h"
@@ -821,10 +822,10 @@ class IonBuilder
                                   BoolVector& choiceSet, MGetPropertyCache* maybeCache);
 
     // Inlining helpers.
-    AbortReasonOr<Ok> inlineGenericFallback(const Maybe<CallTargets>& targets,
+    AbortReasonOr<Ok> inlineGenericFallback(const mozilla::Maybe<CallTargets>& targets,
                                             CallInfo& callInfo,
                                             MBasicBlock* dispatchBlock);
-    AbortReasonOr<Ok> inlineObjectGroupFallback(const Maybe<CallTargets>& targets,
+    AbortReasonOr<Ok> inlineObjectGroupFallback(const mozilla::Maybe<CallTargets>& targets,
                                                 CallInfo& callInfo, MBasicBlock* dispatchBlock,
                                                 MObjectGroupDispatch* dispatch,
                                                 MGetPropertyCache* cache,
@@ -843,8 +844,9 @@ class IonBuilder
 
     bool testNeedsArgumentCheck(JSFunction* target, CallInfo& callInfo);
 
-    AbortReasonOr<MCall*> makeCallHelper(const Maybe<CallTargets>& targets, CallInfo& callInfo);
-    AbortReasonOr<Ok> makeCall(const Maybe<CallTargets>& targets, CallInfo& callInfo);
+    AbortReasonOr<MCall*> makeCallHelper(const mozilla::Maybe<CallTargets>& targets,
+                                         CallInfo& callInfo);
+    AbortReasonOr<Ok> makeCall(const mozilla::Maybe<CallTargets>& targets, CallInfo& callInfo);
     AbortReasonOr<Ok> makeCall(JSFunction* target, CallInfo& callInfo);
 
     MDefinition* patchInlinedReturn(CallInfo& callInfo, MBasicBlock* exit, MBasicBlock* bottom);

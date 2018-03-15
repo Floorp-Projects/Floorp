@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This test can be really slow on debug platforms and should be split
+// This test can be really slow on debug platforms and should be split.
 requestLongerTimeout(4);
 
 // Tests loading sourcemapped sources for Babel's compile output.

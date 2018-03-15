@@ -51,8 +51,6 @@ enum class ScrollSource {
   Keyboard,
 };
 
-typedef uint32_t TouchBehaviorFlags;
-
 // Epsilon to be used when comparing 'float' coordinate values
 // with FuzzyEqualsAdditive. The rationale is that 'float' has 7 decimal
 // digits of precision, and coordinate values should be no larger than in the

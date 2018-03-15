@@ -121,7 +121,7 @@ add_task(async function test_processIncoming_error() {
     };
     // Make the 10 minutes old so it will only be synced in the toFetch phase.
     bogus_record.modified = Date.now() / 1000 - 60 * 10;
-    engine.lastSync = Date.now() / 1000 - 60;
+    await engine.setLastSync(Date.now() / 1000 - 60);
     engine.toFetch = new SerializableSet([BOGUS_GUID]);
 
     let error, pingPayload, fullPing;
@@ -210,8 +210,6 @@ add_task(async function test_upload_failed() {
   await configureIdentity({ username: "foo" }, server);
 
   let engine = new RotaryEngine(Service);
-  engine.lastSync = 123; // needs to be non-zero so that tracker is queried
-  engine.lastSyncLocal = 456;
   engine._store.items = {
     flying: "LNER Class A3 4472",
     scotsman: "Flying Scotsman",
@@ -224,10 +222,12 @@ add_task(async function test_upload_failed() {
   await engine._tracker.addChangedID("scotsman", SCOTSMAN_CHANGED);
   await engine._tracker.addChangedID("peppercorn", PEPPERCORN_CHANGED);
 
+  let syncID = await engine.resetLocalSyncID();
   let meta_global = Service.recordManager.set(engine.metaURL, new WBORecord(engine.metaURL));
-  meta_global.payload.engines = { rotary: { version: engine.version, syncID: engine.syncID } };
+  meta_global.payload.engines = { rotary: { version: engine.version, syncID } };
 
   try {
+    await engine.setLastSync(123); // needs to be non-zero so that tracker is queried
     let changes = await engine._tracker.getChangedIDs();
     _(`test_upload_failed: Rotary tracker contents at first sync: ${
       JSON.stringify(changes)}`);
@@ -237,8 +237,7 @@ add_task(async function test_upload_failed() {
     equal(ping.engines.length, 1);
     equal(ping.engines[0].incoming, null);
     deepEqual(ping.engines[0].outgoing, [{ sent: 3, failed: 2 }]);
-    engine.lastSync = 123;
-    engine.lastSyncLocal = 456;
+    await engine.setLastSync(123);
 
     changes = await engine._tracker.getChangedIDs();
     _(`test_upload_failed: Rotary tracker contents at second sync: ${
@@ -264,9 +263,7 @@ add_task(async function test_sync_partialUpload() {
   await generateNewKeys(Service.collectionKeys);
 
   let engine = new RotaryEngine(Service);
-  engine.lastSync = 123;
-  engine.lastSyncLocal = 456;
-
+  await engine.setLastSync(123);
 
   // Create a bunch of records (and server side handlers)
   for (let i = 0; i < 234; i++) {
@@ -279,10 +276,10 @@ add_task(async function test_sync_partialUpload() {
     }
   }
 
+  let syncID = await engine.resetLocalSyncID();
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                          syncID: engine.syncID}};
+  meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
 
   try {
     let changes = await engine._tracker.getChangedIDs();
@@ -305,8 +302,7 @@ add_task(async function test_sync_partialUpload() {
     await engine._tracker.addChangedID("record-no-1000", 1000);
     collection.insert("record-no-1000", 1000);
 
-    engine.lastSync = 123;
-    engine.lastSyncLocal = 456;
+    await engine.setLastSync(123);
     ping = null;
 
     changes = await engine._tracker.getChangedIDs();

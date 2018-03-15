@@ -44,6 +44,9 @@
         # This is a static build of pk11wrap, softoken, and freebl.
         '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap_static',
       ],
+      'cflags_cc': [
+        '-Wno-error=shadow',
+      ],
       'conditions': [
         ['fuzz_oss==0', {
           'sources': [

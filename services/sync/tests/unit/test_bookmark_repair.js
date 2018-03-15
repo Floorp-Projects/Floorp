@@ -348,7 +348,7 @@ add_task(async function test_bookmark_repair_integration() {
     await cleanup(server);
     clientsEngine = Service.clientsEngine = new ClientEngine(Service);
     clientsEngine.ignoreLastModifiedOnProcessCommands = true;
-    clientsEngine.initialize();
+    await clientsEngine.initialize();
   }
 });
 

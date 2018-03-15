@@ -11,7 +11,8 @@
 #include "mozilla/RefCounted.h"             // for RefCounted
 #include "mozilla/RefPtr.h"                 // for RefPtr
 #include "mozilla/gfx/Matrix.h"             // for Matrix4x4
-#include "mozilla/layers/APZUtils.h"        // for TouchBehaviorFlags
+#include "mozilla/layers/APZUtils.h"     
+#include "mozilla/layers/LayersTypes.h"     // for TouchBehaviorFlags
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/TimeStamp.h"              // for TimeStamp
 #include "nsTArray.h"                       // for nsTArray

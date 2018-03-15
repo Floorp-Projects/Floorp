@@ -10,6 +10,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 
 #include "jit/arm/Simulator-arm.h"
 #include "jit/AtomicOp.h"
@@ -28,6 +29,7 @@ using namespace jit;
 using mozilla::Abs;
 using mozilla::BitwiseCast;
 using mozilla::IsPositiveZero;
+using mozilla::Maybe;
 
 bool
 isValueDTRDCandidate(ValueOperand& val)

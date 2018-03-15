@@ -25,8 +25,8 @@ struct Pkcs11SignatureTestParams {
 
 class Pk11SignatureTest : public ::testing::Test {
  protected:
-  Pk11SignatureTest(CK_MECHANISM_TYPE mechanism, SECOidTag hash_oid)
-      : mechanism_(mechanism), hash_oid_(hash_oid) {}
+  Pk11SignatureTest(CK_MECHANISM_TYPE mech, SECOidTag hash_oid)
+      : mechanism_(mech), hash_oid_(hash_oid) {}
 
   virtual const SECItem* parameters() const { return nullptr; }
   CK_MECHANISM_TYPE mechanism() const { return mechanism_; }

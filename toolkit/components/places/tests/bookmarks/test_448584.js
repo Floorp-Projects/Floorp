@@ -78,7 +78,7 @@ add_task(async function() {
 
   // restore json file
   try {
-    await BookmarkJSONUtils.importFromFile(jsonFile, true);
+    await BookmarkJSONUtils.importFromFile(jsonFile, { replace: true });
   } catch (ex) { do_throw("couldn't import the exported file: " + ex); }
 
   // validate

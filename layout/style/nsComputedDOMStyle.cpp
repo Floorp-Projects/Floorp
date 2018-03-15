@@ -499,7 +499,8 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
   aReturn.Truncate();
 
   ErrorResult error;
-  RefPtr<CSSValue> val = GetPropertyCSSValue(aPropertyName, error);
+  RefPtr<CSSValue> val =
+    GetPropertyCSSValueWithoutWarning(aPropertyName, error);
   if (error.Failed()) {
     return error.StealNSResult();
   }
@@ -1291,7 +1292,19 @@ nsComputedDOMStyle::ClearCurrentStyleSources()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorResult& aRv)
+nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
+                                        ErrorResult& aRv)
+{
+  if (nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocumentWeak)) {
+    document->WarnOnceAbout(nsIDocument::eGetPropertyCSSValue);
+  }
+  return GetPropertyCSSValueWithoutWarning(aPropertyName, aRv);
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::GetPropertyCSSValueWithoutWarning(
+  const nsAString& aPropertyName,
+  ErrorResult& aRv)
 {
   nsCSSPropertyID prop =
     nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);

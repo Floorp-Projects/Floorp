@@ -1659,7 +1659,12 @@ html[dir="rtl"] .arrow svg,
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .outline {
-  overflow-y: auto;
+  overflow-y: hidden;
+}
+
+.outline > div {
+  width: 100%;
+  position: relative;
 }
 
 .outline .outline-pane-info {
@@ -1669,14 +1674,20 @@ html[dir="rtl"] .arrow svg,
   padding: 0.5em;
   user-select: none;
   font-size: 12px;
+  overflow: hidden;
 }
 
 .outline-list {
   list-style-type: none;
-  flex: 1 0 100%;
-  padding: 10px 0px;
+  padding: 10px 0;
   margin: 0;
   font-family: var(--monospace-font-family);
+  overflow: auto;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 25px;
 }
 
 .outline-list__class-list {
@@ -1725,6 +1736,27 @@ html[dir="rtl"] .arrow svg,
 
 .outline-list__element:hover {
   background: var(--theme-toolbar-background-hover);
+}
+
+.outline-footer {
+  background: var(--theme-body-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 1;
+  z-index: 1;
+  -moz-user-select: none;
+  user-select: none;
+  height: 25px;
+  box-sizing: border-box;
+  display: flex;
+}
+
+.outline-footer button.active {
+  background: var(--theme-highlight-blue);
+  color: #ffffff;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3054,11 +3086,19 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 :root.theme-light .expression-container:hover {
-  background-color: var(--theme-tab-toolbar-background);
+  background-color: var(--theme-selection-background-hover);
 }
 
 :root.theme-dark .expression-container:hover {
-  background-color: var(--search-overlays-semitransparent);
+  background-color: var(--theme-selection-background-hover);
+}
+
+:root.theme-firebug .expression-container:hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.tree  .tree-node:not(.focused):hover {
+  background-color: transparent;
 }
 
 .expression-container__close-btn {
@@ -3570,6 +3610,13 @@ img.resume {
 }
 .command-bar.bottom > button:hover {
   color: var(--theme-body-color);
+}
+
+.command-bar .divider {
+  width: 1px;
+  background: var(--theme-splitter-color);
+  height: 10px;
+  margin: 11px 6px 0 6px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4132,4 +4179,9 @@ html .welcomebox .toggle-button-end.collapsed {
 .theme-dark .result-item .title .highlight,
 .theme-dark .result-item .subtitle .highlight {
   color: white;
+}
+
+.loading-indicator {
+  padding: 5px 0 5px 0;
+  text-align: center;
 }

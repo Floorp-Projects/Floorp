@@ -796,7 +796,7 @@ add_task(async function test_command_sync() {
     notEqual(clientWBO(remoteId).payload, undefined);
 
     Svc.Prefs.set("client.GUID", remoteId);
-    engine._resetClient();
+    await engine._resetClient();
     equal(engine.localID, remoteId);
     _("Performing sync on resetted client.");
     await syncClientsEngine(server);
@@ -1386,7 +1386,7 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
     // Reset service (remove mocks)
     engine = Service.clientsEngine = new ClientEngine(Service);
     await engine.initialize();
-    engine._resetClient();
+    await engine._resetClient();
 
     try {
       server.deleteCollections("foo");
@@ -1724,8 +1724,8 @@ add_task(async function test_duplicate_commands_telemetry() {
 add_task(async function test_other_clients_notified_on_first_sync() {
   _("Ensure that other clients are notified when we upload our client record for the first time.");
 
-  engine.resetLastSync();
-  engine._store.wipe();
+  await engine.resetLastSync();
+  await engine._store.wipe();
   await generateNewKeys(Service.collectionKeys);
 
   let server = await serverForFoo(engine);

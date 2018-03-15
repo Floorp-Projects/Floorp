@@ -74,10 +74,10 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
 
   await SyncTestingInfrastructure(server);
 
+  let syncID = await engine.resetLocalSyncID();
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {tabs: {version: engine.version,
-                                        syncID: engine.syncID}};
+  meta_global.payload.engines = {tabs: {version: engine.version, syncID}};
 
   await generateNewKeys(Service.collectionKeys);
 

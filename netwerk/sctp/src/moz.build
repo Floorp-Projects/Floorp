@@ -86,7 +86,5 @@ if CONFIG['OS_TARGET'] == 'OpenBSD':
 if CONFIG['OS_TARGET'] == 'DragonFly':
     DEFINES['__DragonFly__'] = False
 
-NO_PGO = True # Don't PGO
-
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-std=gnu99']

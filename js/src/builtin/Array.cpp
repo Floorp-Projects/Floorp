@@ -2207,11 +2207,11 @@ js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp)
              * strings.
              */
             if (allStrings) {
-                JS_ALWAYS_TRUE(vec.resize(n * 2));
+                MOZ_ALWAYS_TRUE(vec.resize(n * 2));
                 if (!MergeSort(vec.begin(), n, vec.begin() + n, SortComparatorStrings(cx)))
                     return false;
             } else if (allInts) {
-                JS_ALWAYS_TRUE(vec.resize(n * 2));
+                MOZ_ALWAYS_TRUE(vec.resize(n * 2));
                 if (!MergeSort(vec.begin(), n, vec.begin() + n,
                                SortComparatorLexicographicInt32())) {
                     return false;
@@ -2222,7 +2222,7 @@ js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp)
             }
         } else {
             if (allInts) {
-                JS_ALWAYS_TRUE(vec.resize(n * 2));
+                MOZ_ALWAYS_TRUE(vec.resize(n * 2));
                 if (!MergeSort(vec.begin(), n, vec.begin() + n, SortComparatorInt32s[comp]))
                     return false;
             } else {

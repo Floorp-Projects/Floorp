@@ -22,11 +22,9 @@ namespace nss_test {
 class TlsHandshakeSkipFilter : public TlsRecordFilter {
  public:
   // A TLS record filter that skips handshake messages of the identified type.
-  TlsHandshakeSkipFilter(const std::shared_ptr<TlsAgent>& agent,
+  TlsHandshakeSkipFilter(const std::shared_ptr<TlsAgent>& a,
                          uint8_t handshake_type)
-      : TlsRecordFilter(agent),
-        handshake_type_(handshake_type),
-        skipped_(false) {}
+      : TlsRecordFilter(a), handshake_type_(handshake_type), skipped_(false) {}
 
  protected:
   // Takes a record; if it is a handshake record, it removes the first handshake

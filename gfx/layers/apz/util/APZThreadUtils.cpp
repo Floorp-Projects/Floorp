@@ -43,14 +43,6 @@ APZThreadUtils::AssertOnControllerThread() {
 }
 
 /*static*/ void
-APZThreadUtils::AssertOnSamplerThread()
-{
-  if (GetThreadAssertionsEnabled()) {
-    MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  }
-}
-
-/*static*/ void
 APZThreadUtils::RunOnControllerThread(already_AddRefed<Runnable> aTask)
 {
   RefPtr<Runnable> task = aTask;
@@ -72,6 +64,39 @@ APZThreadUtils::RunOnControllerThread(already_AddRefed<Runnable> aTask)
 APZThreadUtils::IsControllerThread()
 {
   return sControllerThread == MessageLoop::current();
+}
+
+/*static*/ void
+APZThreadUtils::AssertOnSamplerThread()
+{
+  if (GetThreadAssertionsEnabled()) {
+    MOZ_ASSERT(IsSamplerThread());
+  }
+}
+
+/*static*/ void
+APZThreadUtils::RunOnSamplerThread(already_AddRefed<Runnable> aTask)
+{
+  RefPtr<Runnable> task = aTask;
+
+  MessageLoop* loop = CompositorThreadHolder::Loop();
+  if (!loop) {
+    // Could happen during startup
+    NS_WARNING("Dropping task posted to sampler thread");
+    return;
+  }
+
+  if (IsSamplerThread()) {
+    task->Run();
+  } else {
+    loop->PostTask(task.forget());
+  }
+}
+
+/*static*/ bool
+APZThreadUtils::IsSamplerThread()
+{
+  return CompositorThreadHolder::IsInCompositorThread();
 }
 
 NS_IMPL_ISUPPORTS(GenericNamedTimerCallbackBase, nsITimerCallback, nsINamed)

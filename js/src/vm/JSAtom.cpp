@@ -749,7 +749,7 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
                 return fail(JS::TranscodeResult_Throw);
         }
 
-        JS_ALWAYS_TRUE(xdr->codeChars(chars, length));
+        MOZ_ALWAYS_TRUE(xdr->codeChars(chars, length));
         atom = AtomizeChars(cx, chars, length);
         if (chars != stackChars)
             js_free(chars);

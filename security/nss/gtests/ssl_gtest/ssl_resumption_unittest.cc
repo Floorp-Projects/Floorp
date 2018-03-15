@@ -484,10 +484,8 @@ TEST_P(TlsConnectStream, TestResumptionOverrideCipher) {
 
 class SelectedVersionReplacer : public TlsHandshakeFilter {
  public:
-  SelectedVersionReplacer(const std::shared_ptr<TlsAgent>& agent,
-                          uint16_t version)
-      : TlsHandshakeFilter(agent, {kTlsHandshakeServerHello}),
-        version_(version) {}
+  SelectedVersionReplacer(const std::shared_ptr<TlsAgent>& a, uint16_t version)
+      : TlsHandshakeFilter(a, {kTlsHandshakeServerHello}), version_(version) {}
 
  protected:
   PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
