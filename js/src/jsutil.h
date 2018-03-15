@@ -12,7 +12,6 @@
 #define jsutil_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Compiler.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
@@ -370,34 +369,6 @@ extern void
 JS_DumpHistogram(JSBasicStats* bs, FILE* fp);
 #else
 # define JS_BASIC_STATS_ACCUM(bs,val)
-#endif
-
-/* Wrapper for various macros to stop warnings coming from their expansions. */
-#if defined(__clang__)
-# define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
-    JS_BEGIN_MACRO                                                            \
-        _Pragma("clang diagnostic push")                                      \
-        /* If these _Pragmas cause warnings for you, try disabling ccache. */ \
-        _Pragma("clang diagnostic ignored \"-Wunused-value\"")                \
-        { expr; }                                                             \
-        _Pragma("clang diagnostic pop")                                       \
-    JS_END_MACRO
-#elif MOZ_IS_GCC
-
-# define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
-    JS_BEGIN_MACRO                                                            \
-        _Pragma("GCC diagnostic push")                                        \
-        _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"")       \
-        expr;                                                                 \
-        _Pragma("GCC diagnostic pop")                                         \
-    JS_END_MACRO
-#endif
-
-#if !defined(JS_SILENCE_UNUSED_VALUE_IN_EXPR)
-# define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
-    JS_BEGIN_MACRO                                                            \
-        expr;                                                                 \
-    JS_END_MACRO
 #endif
 
 #endif /* jsutil_h */
