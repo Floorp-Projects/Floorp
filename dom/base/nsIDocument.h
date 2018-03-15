@@ -1791,7 +1791,7 @@ public:
     return mStyleAttrStyleSheet;
   }
 
-  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
+  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject);
 
   /**
    * Get/set the object from which the context for the event/script handling can

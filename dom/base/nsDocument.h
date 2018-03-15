@@ -174,8 +174,6 @@ public:
     mFailedChannel = aChannel;
   }
 
-  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) override;
-
   virtual void EndUpdate(nsUpdateType aUpdateType) override;
   virtual void BeginLoad() override;
   virtual void EndLoad() override;
