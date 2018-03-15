@@ -221,8 +221,7 @@ class SavedStacks {
         }
     };
 
-    MOZ_MUST_USE bool insertFrames(JSContext* cx, FrameIter& iter,
-                                   MutableHandleSavedFrame frame,
+    MOZ_MUST_USE bool insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
                                    JS::StackCapture&& capture);
     MOZ_MUST_USE bool adoptAsyncStack(JSContext* cx, MutableHandleSavedFrame asyncStack,
                                       HandleAtom asyncCause,
