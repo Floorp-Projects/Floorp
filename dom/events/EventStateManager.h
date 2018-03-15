@@ -313,10 +313,15 @@ public:
   // possbile to be adjusted. This function is used to detect such scrollings
   // and returns a wheel delta adjustment strategy to use, which is corresponded
   // to the kind of the scrolling.
+  // It returns WheelDeltaAdjustmentStrategy::eAutoDir if the current default
+  // action is auto-dir scrolling which honours the scrolling target(The
+  // comments in WheelDeltaAdjustmentStrategy describes the concept in detail).
+  // It returns WheelDeltaAdjustmentStrategy::eAutoDirWithRootHonour if the
+  // current action is auto-dir scrolling which honours the root element in the
+  // document where the scrolling target is(The comments in
+  // WheelDeltaAdjustmentStrategy describes the concept in detail).
   // It returns WheelDeltaAdjustmentStrategy::eHorizontalize if the current
   // default action is horizontalized scrolling.
-  // TODO Insert new comment words about the returned value for auto-dir
-  // scrolling while implementing it.
   // It returns WheelDeltaAdjustmentStrategy::eNone to mean no delta adjustment
   // strategy should be used if the scrolling is just a tranditional scrolling
   // whose delta values are never possible to be adjusted.
@@ -607,6 +612,20 @@ protected:
      */
     static bool WheelEventsEnabledOnPlugins();
 
+    /**
+     * Returns whether the auto-dir feature is enabled for wheel scrolling. For
+     * detailed information on auto-dir,
+     * @see mozilla::WheelDeltaAdjustmentStrategy.
+     */
+    static bool IsAutoDirEnabled();
+
+    /**
+     * Returns whether auto-dir scrolling honours root elements instead of the
+     * scrolling targets. For detailed information on auto-dir,
+     * @see mozilla::WheelDeltaAdjustmentStrategy.
+     */
+    static bool HonoursRootForAutoDir();
+
   private:
     WheelPrefs();
     ~WheelPrefs();
@@ -683,8 +702,9 @@ protected:
     Action mOverriddenActionsX[COUNT_OF_MULTIPLIERS];
 
     static WheelPrefs* sInstance;
-
     static bool sWheelEventsEnabledOnPlugins;
+    static bool sIsAutoDirEnabled;
+    static bool sHonoursRootForAutoDir;
   };
 
   /**
