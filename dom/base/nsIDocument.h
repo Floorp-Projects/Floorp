@@ -2197,10 +2197,10 @@ public:
    * Create an element with the specified name, prefix and namespace ID.
    * Returns null if element name parsing failed.
    */
-  virtual already_AddRefed<Element> CreateElem(const nsAString& aName,
-                                               nsAtom* aPrefix,
-                                               int32_t aNamespaceID,
-                                               const nsAString* aIs = nullptr) = 0;
+  already_AddRefed<Element> CreateElem(const nsAString& aName,
+                                       nsAtom* aPrefix,
+                                       int32_t aNamespaceID,
+                                       const nsAString* aIs = nullptr);
 
   /**
    * Get the security info (i.e. SSL state etc) that the document got

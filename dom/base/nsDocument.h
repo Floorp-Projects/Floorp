@@ -275,12 +275,6 @@ public:
 
   virtual nsresult Init();
 
-  virtual already_AddRefed<Element> CreateElem(const nsAString& aName,
-                                               nsAtom* aPrefix,
-                                               int32_t aNamespaceID,
-                                               const nsAString* aIs = nullptr) override;
-
-
   virtual void Destroy() override;
   virtual void RemovedFromDocShell() override;
 
