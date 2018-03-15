@@ -58,7 +58,7 @@ add_task(async function test_history_download_limit() {
 
   // We have 15 records on the server since the last sync, but our download
   // limit is 5 records at a time. We should eventually fetch all 15.
-  engine.lastSync = lastSync;
+  await engine.setLastSync(lastSync);
   engine.downloadBatchSize = 4;
   engine.downloadLimit = 5;
 
@@ -75,7 +75,7 @@ add_task(async function test_history_download_limit() {
     "place0000006", "place0000007", "place0000008", "place0000009"]);
 
   // We should have fast-forwarded the last sync time.
-  equal(engine.lastSync, lastSync + 15);
+  equal(await engine.getLastSync(), lastSync + 15);
 
   engine.lastModified = collection.modified;
   ping = await sync_engine_and_validate_telem(engine, false);
@@ -108,7 +108,7 @@ add_task(async function test_history_download_limit() {
   let backlogAfterThirdSync = Array.from(engine.toFetch).sort();
   deepEqual(backlogAfterSecondSync, backlogAfterThirdSync);
 
-  equal(engine.lastSync, lastSync + 20);
+  equal(await engine.getLastSync(), lastSync + 20);
 
   // Bump the fetch batch size to let the backlog make progress. We should
   // make 3 requests to fetch 5 backlogged GUIDs.
@@ -176,7 +176,7 @@ add_task(async function test_history_visit_roundtrip() {
   }, Date.now() / 1000 + 10);
 
   // Force a remote sync.
-  engine.lastSync = Date.now() / 1000 - 30;
+  await engine.setLastSync(Date.now() / 1000 - 30);
   await sync_engine_and_validate_telem(engine, false);
 
   // Make sure that we didn't duplicate the visit when inserting. (Prior to bug
@@ -240,7 +240,7 @@ add_task(async function test_history_visit_dedupe_old() {
     );
   }, Date.now() / 1000 + 10);
 
-  engine.lastSync = Date.now() / 1000 - 30;
+  await engine.setLastSync(Date.now() / 1000 - 30);
   await sync_engine_and_validate_telem(engine, false);
 
   allVisits = (await PlacesUtils.history.fetch("https://www.example.com", {
@@ -255,4 +255,44 @@ add_task(async function test_history_visit_dedupe_old() {
 
   await engine.wipeClient();
   await engine.finalize();
+});
+
+add_task(async function test_migrate_sync_metadata() {
+  let engine = new HistoryEngine(Service);
+  await engine.initialize();
+  await engine.resetClient();
+
+  let syncID = Utils.makeGUID();
+  let lastSync = Date.now() / 1000;
+
+  Svc.Prefs.set(`${engine.name}.syncID`, syncID);
+  Svc.Prefs.set(`${engine.name}.lastSync`, lastSync.toString());
+
+  strictEqual(await engine.getSyncID(), "",
+    "Engine should start with empty sync ID");
+  strictEqual(await engine.getLastSync(), 0,
+    "Engine should start with empty last sync");
+
+  info("Migrate Sync metadata prefs");
+  await engine._migrateSyncMetadata();
+
+  equal(await engine.getSyncID(), syncID,
+    "Initializing engine should migrate sync ID");
+  equal(await engine.getLastSync(), lastSync,
+    "Initializing engine should migrate last sync time");
+
+  let newSyncID = Utils.makeGUID();
+  await engine.ensureCurrentSyncID(newSyncID);
+
+  equal(await engine.getSyncID(), newSyncID,
+    "Changing engine sync ID should update Places");
+  strictEqual(await engine.getLastSync(), 0,
+    "Changing engine sync ID should clear last sync in Places");
+
+  equal(Svc.Prefs.get(`${engine.name}.syncID`), newSyncID,
+    "Changing engine sync ID should update prefs");
+  strictEqual(Svc.Prefs.get(`${engine.name}.lastSync`), "0",
+    "Changing engine sync ID should clear last sync pref");
+
+  await engine.wipeClient();
 });

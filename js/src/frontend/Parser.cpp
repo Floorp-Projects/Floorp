@@ -4051,7 +4051,7 @@ Parser<SyntaxParseHandler, CharT>::asmJS(Node list)
     // For simplicity, unconditionally abort the syntax parse when "use asm" is
     // encountered so that asm.js is always validated/compiled exactly once
     // during a full parse.
-    JS_ALWAYS_FALSE(abortIfSyntaxParser());
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
 
     // Record that the current script source constains some AsmJS, to disable
     // any incremental encoder, as AsmJS cannot be encoded with XDR at the

@@ -4798,7 +4798,7 @@ var BrowserEventHandler = {
   init: function init() {
     BrowserApp.deck.addEventListener("touchend", this, true);
 
-    BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport);
+    BrowserApp.deck.addEventListener("DOMUpdateBlockedPopups", PopupBlockerObserver.onUpdateBlockedPopups);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
     BrowserApp.deck.addEventListener("OpenMediaWithExternalApp", this, true);
 
@@ -5252,15 +5252,15 @@ var XPInstallObserver = {
 };
 
 /**
- * Handler for blocked popups, triggered by DOMUpdatePageReport events in browser.xml
+ * Handler for blocked popups, triggered by DOMUpdateBlockedPopups events in browser.xml
  */
 var PopupBlockerObserver = {
-  onUpdatePageReport: function onUpdatePageReport(aEvent) {
+  onUpdateBlockedPopups: function onUpdateBlockedPopups(aEvent) {
     let browser = BrowserApp.selectedBrowser;
     if (aEvent.originalTarget != browser)
       return;
 
-    if (!browser.pageReport)
+    if (!browser.blockedPopups)
       return;
 
     let result = Services.perms.testExactPermission(BrowserApp.selectedBrowser.currentURI, "popup");
@@ -5270,10 +5270,10 @@ var PopupBlockerObserver = {
     // Only show the notification again if we've not already shown it. Since
     // notifications are per-browser, we don't need to worry about re-adding
     // it.
-    if (!browser.pageReport.reported) {
+    if (!browser.blockedPopups.reported) {
       if (Services.prefs.getBoolPref("privacy.popups.showBrowserMessage")) {
         let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-        let popupCount = browser.pageReport.length;
+        let popupCount = browser.blockedPopups.length;
 
         let strings = Strings.browser;
         let message = PluralForm.get(popupCount, strings.GetStringFromName("popup.message"))
@@ -5306,7 +5306,7 @@ var PopupBlockerObserver = {
       }
       // Record the fact that we've reported this blocked popup, so we don't
       // show it again.
-      browser.pageReport.reported = true;
+      browser.blockedPopups.reported = true;
     }
   },
 
@@ -5320,12 +5320,12 @@ var PopupBlockerObserver = {
 
   showPopupsForSite: function showPopupsForSite() {
     let uri = BrowserApp.selectedBrowser.currentURI;
-    let pageReport = BrowserApp.selectedBrowser.pageReport;
-    if (pageReport) {
-      for (let i = 0; i < pageReport.length; ++i) {
-        let popupURIspec = pageReport[i].popupWindowURIspec;
+    let {blockedPopups} = BrowserApp.selectedBrowser;
+    if (blockedPopups) {
+      for (let i = 0; i < blockedPopups.length; ++i) {
+        let popupURIspec = blockedPopups[i].popupWindowURIspec;
 
-        // Sometimes the popup URI that we get back from the pageReport
+        // Sometimes the popup URI that we get back from blockedPopups
         // isn't useful (for instance, netscape.com's popup URI ends up
         // being "http://www.netscape.com", which isn't really the URI of
         // the popup they're trying to show).  This isn't going to be
@@ -5333,8 +5333,8 @@ var PopupBlockerObserver = {
         if (popupURIspec == "" || popupURIspec == "about:blank" || popupURIspec == uri.spec)
           continue;
 
-        let popupFeatures = pageReport[i].popupWindowFeatures;
-        let popupName = pageReport[i].popupWindowName;
+        let popupFeatures = blockedPopups[i].popupWindowFeatures;
+        let popupName = blockedPopups[i].popupWindowName;
 
         let parent = BrowserApp.selectedTab;
         let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(parent.browser);

@@ -868,16 +868,34 @@ AsyncPanZoomController::IsDestroyed() const
   return mTreeManager == nullptr;
 }
 
-/* static */ScreenCoord
-AsyncPanZoomController::GetTouchStartTolerance()
+float
+AsyncPanZoomController::GetDPI() const
 {
-  return (gfxPrefs::APZTouchStartTolerance() * APZCTreeManager::GetDPI());
+  if (APZCTreeManager* localPtr = mTreeManager) {
+    return localPtr->GetDPI();
+  }
+  // If this APZC has been destroyed then this value is not going to be
+  // used for anything that the user will end up seeing, so we can just
+  // return 0.
+  return 0.0;
 }
 
-/* static */ScreenCoord
-AsyncPanZoomController::GetSecondTapTolerance()
+ScreenCoord
+AsyncPanZoomController::GetTouchStartTolerance() const
 {
-  return (gfxPrefs::APZSecondTapTolerance() * APZCTreeManager::GetDPI());
+  return (gfxPrefs::APZTouchStartTolerance() * GetDPI());
+}
+
+ScreenCoord
+AsyncPanZoomController::GetTouchMoveTolerance() const
+{
+  return (gfxPrefs::APZTouchMoveTolerance() * GetDPI());
+}
+
+ScreenCoord
+AsyncPanZoomController::GetSecondTapTolerance() const
+{
+  return (gfxPrefs::APZSecondTapTolerance() * GetDPI());
 }
 
 /* static */AsyncPanZoomController::AxisLockMode AsyncPanZoomController::GetAxisLockMode()
@@ -2646,7 +2664,7 @@ void AsyncPanZoomController::HandlePanningUpdate(const ScreenPoint& aPanDistance
     double angle = atan2(aPanDistance.y, aPanDistance.x); // range [-pi, pi]
     angle = fabs(angle); // range [0, pi]
 
-    float breakThreshold = gfxPrefs::APZAxisBreakoutThreshold() * APZCTreeManager::GetDPI();
+    float breakThreshold = gfxPrefs::APZAxisBreakoutThreshold() * GetDPI();
 
     if (fabs(aPanDistance.x) > breakThreshold || fabs(aPanDistance.y) > breakThreshold) {
       if (mState == PANNING_LOCKED_X) {
@@ -2667,13 +2685,13 @@ void AsyncPanZoomController::HandlePanningUpdate(const ScreenPoint& aPanDistance
 void AsyncPanZoomController::HandlePinchLocking(ScreenCoord spanDistance, ScreenPoint focusChange) {
   if (mPinchLocked) {
     if (GetPinchLockMode() == PINCH_STICKY) {
-      ScreenCoord spanBreakoutThreshold = gfxPrefs::APZPinchLockSpanBreakoutThreshold() * APZCTreeManager::GetDPI();
+      ScreenCoord spanBreakoutThreshold = gfxPrefs::APZPinchLockSpanBreakoutThreshold() * GetDPI();
       mPinchLocked = !(spanDistance > spanBreakoutThreshold);
     }
   } else {
     if (GetPinchLockMode() != PINCH_FREE) {
-      ScreenCoord spanLockThreshold = gfxPrefs::APZPinchLockSpanLockThreshold() * APZCTreeManager::GetDPI();
-      ScreenCoord scrollLockThreshold = gfxPrefs::APZPinchLockScrollLockThreshold() * APZCTreeManager::GetDPI();
+      ScreenCoord spanLockThreshold = gfxPrefs::APZPinchLockSpanLockThreshold() * GetDPI();
+      ScreenCoord scrollLockThreshold = gfxPrefs::APZPinchLockScrollLockThreshold() * GetDPI();
 
       if (spanDistance < spanLockThreshold && focusChange.Length() > scrollLockThreshold) {
         mPinchLocked = true;

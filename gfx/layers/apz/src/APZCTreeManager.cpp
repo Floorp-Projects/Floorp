@@ -65,8 +65,6 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 
 typedef CompositorBridgeParent::LayerTreeState LayerTreeState;
 
-float APZCTreeManager::sDPI = 160.0;
-
 struct APZCTreeManager::TreeBuildingState {
   TreeBuildingState(uint64_t aRootLayersId,
                     bool aIsFirstPaint, uint64_t aOriginatingLayersId,
@@ -230,7 +228,8 @@ APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
       mRetainedTouchIdentifier(-1),
       mInScrollbarTouchDrag(false),
       mApzcTreeLog("apzctree"),
-      mTestDataLock("APZTestDataLock")
+      mTestDataLock("APZTestDataLock"),
+      mDPI(160.0)
 {
   RefPtr<APZCTreeManager> self(this);
   NS_DispatchToMainThread(
@@ -307,6 +306,8 @@ void
 APZCTreeManager::SetAllowedTouchBehavior(uint64_t aInputBlockId,
                                          const nsTArray<TouchBehaviorFlags> &aValues)
 {
+  APZThreadUtils::AssertOnControllerThread();
+
   mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
@@ -732,6 +733,8 @@ void
 APZCTreeManager::StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
                                     const AsyncDragMetrics& aDragMetrics)
 {
+  APZThreadUtils::AssertOnControllerThread();
+
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
   if (!apzc) {
     NotifyScrollbarDragRejected(aGuid);
@@ -746,6 +749,8 @@ bool
 APZCTreeManager::StartAutoscroll(const ScrollableLayerGuid& aGuid,
                                  const ScreenPoint& aAnchorLocation)
 {
+  APZThreadUtils::AssertOnControllerThread();
+
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
   if (!apzc) {
     if (XRE_IsGPUProcess()) {
@@ -765,6 +770,8 @@ APZCTreeManager::StartAutoscroll(const ScrollableLayerGuid& aGuid,
 void
 APZCTreeManager::StopAutoscroll(const ScrollableLayerGuid& aGuid)
 {
+  APZThreadUtils::AssertOnControllerThread();
+
   if (RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid)) {
     apzc->StopAutoscroll();
   }
@@ -1065,7 +1072,7 @@ template<typename PanGestureOrScrollWheelInput>
 static bool
 WillHandleInput(const PanGestureOrScrollWheelInput& aPanInput)
 {
-  if (!NS_IsMainThread()) {
+  if (!XRE_IsParentProcess() || !NS_IsMainThread()) {
     return true;
   }
 
@@ -1796,6 +1803,8 @@ void
 APZCTreeManager::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
                                         EventMessage aEventMessage)
 {
+  APZThreadUtils::AssertOnControllerThread();
+
   WheelBlockState* txn = mInputQueue->GetActiveWheelTransaction();
   if (!txn) {
     return;
@@ -1841,6 +1850,8 @@ APZCTreeManager::ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
                                         ScrollableLayerGuid*  aOutTargetGuid,
                                         uint64_t*             aOutFocusSequenceNumber)
 {
+  APZThreadUtils::AssertOnControllerThread();
+
   // Transform the aRefPoint.
   // If the event hits an overscrolled APZC, instruct the caller to ignore it.
   CompositorHitTestInfo hitResult = CompositorHitTestInfo::eInvisibleToHitTest;
@@ -1878,6 +1889,8 @@ APZCTreeManager::ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY)
 void
 APZCTreeManager::SetKeyboardMap(const KeyboardMap& aKeyboardMap)
 {
+  APZThreadUtils::AssertOnControllerThread();
+
   mKeyboardMap = aKeyboardMap;
 }
 
@@ -1886,6 +1899,11 @@ APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
                             const CSSRect& aRect,
                             const uint32_t aFlags)
 {
+  // We could probably move this to run on the sampler thread if needed, but
+  // either way we should restrict it to a single thread. For now let's use the
+  // controller thread.
+  APZThreadUtils::AssertOnControllerThread();
+
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
   if (apzc) {
     apzc->ZoomToRect(aRect, aFlags);
@@ -1930,6 +1948,24 @@ void
 APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                                        const Maybe<ZoomConstraints>& aConstraints)
 {
+  if (!APZThreadUtils::IsSamplerThread()) {
+    // This can happen if we're in the UI process and got a call directly from
+    // nsBaseWidget (as opposed to over PAPZCTreeManager). We want this function
+    // to run on the sampler thread, so bounce it over.
+    MOZ_ASSERT(XRE_IsParentProcess());
+
+    APZThreadUtils::RunOnSamplerThread(
+        NewRunnableMethod<ScrollableLayerGuid, Maybe<ZoomConstraints>>(
+            "APZCTreeManager::UpdateZoomConstraints",
+            this,
+            &APZCTreeManager::UpdateZoomConstraints,
+            aGuid,
+            aConstraints));
+    return;
+  }
+
+  APZThreadUtils::AssertOnSamplerThread();
+
   RecursiveMutexAutoLock lock(mTreeLock);
   RefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
   MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
@@ -3149,6 +3185,20 @@ APZCTreeManager::ComputeTransformForScrollThumb(
   transform = transform * compensation;
 
   return transform;
+}
+
+void
+APZCTreeManager::SetDPI(float aDpiValue)
+{
+  APZThreadUtils::AssertOnControllerThread();
+  mDPI = aDpiValue;
+}
+
+float
+APZCTreeManager::GetDPI() const
+{
+  APZThreadUtils::AssertOnControllerThread();
+  return mDPI;
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
