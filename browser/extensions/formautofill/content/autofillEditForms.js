@@ -103,7 +103,6 @@ class EditAddress extends EditAutofillForm {
     const {addressLevel1Label, postalCodeLabel, fieldsOrder} = FormAutofillUtils.getFormFormat(country);
     this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
-    FormAutofillUtils.localizeMarkup(document);
     this.arrangeFields(fieldsOrder);
   }
 
@@ -147,7 +146,6 @@ class EditAddress extends EditAutofillForm {
       fragment.appendChild(option);
     }
     this._elements.country.appendChild(fragment);
-    FormAutofillUtils.localizeMarkup(this._elements.country);
   }
 
   handleChange(event) {
