@@ -1376,12 +1376,13 @@ struct nsGridContainerFrame::Tracks
    * assumed that aPlan have no aSkipFlag set for tracks in aGrowableTracks
    * on entry to this method.
    */
-   uint32_t MarkExcludedTracks(nsTArray<TrackSize>&      aPlan,
-                               uint32_t                  aNumGrowable,
-                               const nsTArray<uint32_t>& aGrowableTracks,
-                               TrackSize::StateBits      aMinSizingSelector,
-                               TrackSize::StateBits      aMaxSizingSelector,
-                               TrackSize::StateBits      aSkipFlag) const
+   static uint32_t
+   MarkExcludedTracks(nsTArray<TrackSize>&      aPlan,
+                      uint32_t                  aNumGrowable,
+                      const nsTArray<uint32_t>& aGrowableTracks,
+                      TrackSize::StateBits      aMinSizingSelector,
+                      TrackSize::StateBits      aMaxSizingSelector,
+                      TrackSize::StateBits      aSkipFlag)
   {
     bool foundOneSelected = false;
     bool foundOneGrowable = false;
