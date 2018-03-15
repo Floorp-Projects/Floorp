@@ -9,8 +9,6 @@
 const AUTOFILL_BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 const REGIONS_BUNDLE_URI = "chrome://global/locale/regionNames.properties";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
