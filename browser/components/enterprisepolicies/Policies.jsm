@@ -181,14 +181,6 @@ var Policies = {
     }
   },
 
-  "DisableBuiltinPDFViewer": {
-    onBeforeUIStartup(manager, param) {
-      if (param) {
-        manager.disallowFeature("PDFjs");
-      }
-    }
-  },
-
   "DisablePocket": {
     onBeforeAddons(manager, param) {
       if (param) {
