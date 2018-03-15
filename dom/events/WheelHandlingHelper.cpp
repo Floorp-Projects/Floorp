@@ -6,6 +6,8 @@
 
 #include "WheelHandlingHelper.h"
 
+#include <utility>                      // for std::swap
+
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MouseEvents.h"
@@ -635,6 +637,73 @@ void WheelDeltaHorizontalizer::CancelHorizontalization()
 WheelDeltaHorizontalizer::~WheelDeltaHorizontalizer()
 {
   CancelHorizontalization();
+}
+
+/******************************************************************/
+/* mozilla::AutoDirWheelDeltaAdjuster                             */
+/******************************************************************/
+
+bool
+AutoDirWheelDeltaAdjuster::ShouldBeAdjusted()
+{
+  // Sometimes, this function can be called more than one time. If we have
+  // already checked if the scroll should be adjusted, there's no need to check
+  // it again.
+  if (mCheckedIfShouldBeAdjusted) {
+    return mShouldBeAdjusted;
+  }
+  mCheckedIfShouldBeAdjusted = true;
+
+  // For an auto-dir wheel scroll, if all the following conditions are met, we
+  // should adjust X and Y values:
+  // 1. There is only one non-zero value between DeltaX and DeltaY.
+  // 2. There is only one direction for the target that overflows and is
+  //    scrollable with wheel.
+  // 3. The direction described in Condition 1 is orthogonal to the one
+  // described in Condition 2.
+  if ((mDeltaX && mDeltaY) || (!mDeltaX && !mDeltaY)) {
+    return false;
+  }
+  if (mDeltaX) {
+    if (CanScrollAlongXAxis()) {
+      return false;
+    }
+    if (IsHorizontalContentRightToLeft()) {
+      mShouldBeAdjusted = mDeltaX > 0 ? CanScrollUpwards()
+                                      : CanScrollDownwards();
+    } else {
+      mShouldBeAdjusted = mDeltaX < 0 ? CanScrollUpwards()
+                                      : CanScrollDownwards();
+    }
+    return mShouldBeAdjusted;
+  }
+  MOZ_ASSERT(0 != mDeltaY);
+  if (CanScrollAlongYAxis()) {
+    return false;
+  }
+  if (IsHorizontalContentRightToLeft()) {
+    mShouldBeAdjusted = mDeltaY > 0 ? CanScrollLeftwards()
+                                    : CanScrollRightwards();
+  } else {
+    mShouldBeAdjusted = mDeltaY < 0 ? CanScrollLeftwards()
+                                    : CanScrollRightwards();
+  }
+  return mShouldBeAdjusted;
+}
+
+void
+AutoDirWheelDeltaAdjuster::Adjust()
+{
+  if (!ShouldBeAdjusted()) {
+    return;
+  }
+  std::swap(mDeltaX, mDeltaY);
+  if (IsHorizontalContentRightToLeft()) {
+    mDeltaX *= -1;
+    mDeltaY *= -1;
+  }
+  mShouldBeAdjusted = false;
+  OnAdjusted();
 }
 
 } // namespace mozilla
