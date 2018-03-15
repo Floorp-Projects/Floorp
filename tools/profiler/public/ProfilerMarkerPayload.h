@@ -18,6 +18,7 @@
 
 #include "js/Utility.h"
 #include "gfxASurface.h"
+#include "mozilla/ServoTraversalStatistics.h"
 
 namespace mozilla {
 namespace layers {
@@ -267,6 +268,27 @@ public:
 
   DECL_STREAM_PAYLOAD
 private:
+};
+
+class StyleMarkerPayload : public ProfilerMarkerPayload
+{
+public:
+  StyleMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                     const mozilla::TimeStamp& aEndTime,
+                     UniqueProfilerBacktrace aCause,
+                     const mozilla::ServoTraversalStatistics& aStats)
+    : ProfilerMarkerPayload(aStartTime, aEndTime)
+    , mStats(aStats)
+  {
+    if (aCause) {
+      SetStack(Move(aCause));
+    }
+  }
+
+  DECL_STREAM_PAYLOAD
+
+private:
+  mozilla::ServoTraversalStatistics mStats;
 };
 
 #endif // ProfilerMarkerPayload_h

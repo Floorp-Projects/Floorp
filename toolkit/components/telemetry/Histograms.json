@@ -2630,6 +2630,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "Channel Disposition: 0=Cancel, 1=Disk, 2=NetOK, 3=NetEarlyFail, 4=NetlateFail, +8 for HTTPS"
   },
+  "HTTP_CHANNEL_DISPOSITION_UPGRADE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "seceng-telemetry@mozilla.com", "jkt@mozilla.com"],
+    "bug_numbers": [1440701],
+    "expires_in_version": "70",
+    "kind": "categorical",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "Upgrading display content Channel Disposition",
+    "labels": ["cancel", "disk", "netOk", "netEarlyFail", "netLateFail"]
+  },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1" : {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

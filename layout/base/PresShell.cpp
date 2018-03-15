@@ -8,6 +8,7 @@
 
 #include "mozilla/PresShell.h"
 
+#include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -94,6 +95,9 @@
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsAutoLayoutPhase.h"
+#ifdef MOZ_GECKO_PROFILER
+#include "AutoProfilerStyleMarker.h"
+#endif
 #ifdef MOZ_REFLOW_PERF
 #include "nsFontMetrics.h"
 #endif
@@ -4056,6 +4060,13 @@ nsIPresShell::IsSafeToFlush() const
   return true;
 }
 
+void
+nsIPresShell::NotifyFontFaceSetOnRefresh()
+{
+  if (FontFaceSet* set = mDocument->GetFonts()) {
+    set->DidRefresh();
+  }
+}
 
 void
 PresShell::DoFlushPendingNotifications(FlushType aType)
@@ -4188,9 +4199,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       if (!mIsDestroying) {
         nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
-        AutoProfilerTracing tracingStyleFlush("Paint", "Styles",
-                                              Move(mStyleCause));
-        mStyleCause = nullptr;
+        AutoProfilerStyleMarker tracingStyleFlush(Move(mStyleCause));
 #endif
 
         mPresContext->RestyleManager()->ProcessPendingRestyles();
@@ -4214,9 +4223,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     if (!mIsDestroying) {
       nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
-      AutoProfilerTracing tracingStyleFlush("Paint", "Styles",
-                                            Move(mStyleCause));
-      mStyleCause = nullptr;
+      AutoProfilerStyleMarker tracingStyleFlush(Move(mStyleCause));
 #endif
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
@@ -8610,7 +8617,7 @@ PresShell::WillDoReflow()
 
   mPresContext->FlushFontFeatureValues();
 
-  mLastReflowStart = GetPerformanceNow();
+  mLastReflowStart = GetPerformanceNowUnclamped();
 }
 
 void
@@ -8620,7 +8627,7 @@ PresShell::DidDoReflow(bool aInterruptible)
 
   nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
   if (docShell) {
-    DOMHighResTimeStamp now = GetPerformanceNow();
+    DOMHighResTimeStamp now = GetPerformanceNowUnclamped();
     docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
   }
 
@@ -8632,7 +8639,7 @@ PresShell::DidDoReflow(bool aInterruptible)
 }
 
 DOMHighResTimeStamp
-PresShell::GetPerformanceNow()
+PresShell::GetPerformanceNowUnclamped()
 {
   DOMHighResTimeStamp now = 0;
 
@@ -8640,7 +8647,7 @@ PresShell::GetPerformanceNow()
     Performance* perf = window->GetPerformance();
 
     if (perf) {
-      now = perf->Now();
+      now = perf->NowUnclamped();
     }
   }
 

@@ -14,33 +14,29 @@
 #define LOG_ENABLED() LOG5_ENABLED()
 
 #include "nsHttpConnectionInfo.h"
+
 #include "mozilla/net/DNS.h"
-#include "prnetdb.h"
-#include "nsICryptoHash.h"
 #include "nsComponentManagerUtils.h"
+#include "nsICryptoHash.h"
 #include "nsIProtocolProxyService.h"
+#include "nsNetCID.h"
+#include "prnetdb.h"
 
 static nsresult
 SHA256(const char* aPlainText, nsAutoCString& aResult)
 {
-  static nsICryptoHash* hasher = nullptr;
-  nsresult rv;
-  if (!hasher) {
-    rv = CallCreateInstance("@mozilla.org/security/hash;1", &hasher);
+    nsresult rv;
+    nsCOMPtr<nsICryptoHash> hasher =
+      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       LOG(("nsHttpDigestAuth: no crypto hash!\n"));
       return rv;
     }
-  }
-
-  rv = hasher->Init(nsICryptoHash::SHA256);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = hasher->Update((unsigned char*) aPlainText, strlen(aPlainText));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = hasher->Finish(false, aResult);
-  return rv;
+    rv = hasher->Init(nsICryptoHash::SHA256);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = hasher->Update((unsigned char*) aPlainText, strlen(aPlainText));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return hasher->Finish(false, aResult);
 }
 
 namespace mozilla {

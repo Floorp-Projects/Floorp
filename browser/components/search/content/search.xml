@@ -219,7 +219,7 @@
 
       In addition, browser.js fills two lists of autodetected search engines
       (browser.engines and browser.hiddenEngines) as properties of
-      mCurrentBrowser.  Those lists contain unnamed JS objects of the form
+      selectedBrowser.  Those lists contain unnamed JS objects of the form
       { uri:, title:, icon: }, and that's what the searchbar uses to determine
       whether to show any "Add <EngineName>" menu items in the drop-down.
 

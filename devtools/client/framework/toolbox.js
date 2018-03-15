@@ -565,7 +565,7 @@ Toolbox.prototype = {
 
       this.emit("ready");
       this._isOpenDeferred.resolve();
-    }.bind(this))().catch(console.error.bind(console));
+    }.bind(this))().catch(console.error);
   },
 
   /**

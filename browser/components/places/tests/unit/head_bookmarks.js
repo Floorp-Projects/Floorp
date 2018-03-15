@@ -20,9 +20,6 @@ XPCOMUtils.defineLazyGetter(this, "PlacesUIUtils", function() {
   return PlacesUIUtils;
 });
 
-const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
-const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
-
 // Needed by some test that relies on having an app registered.
 ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo({

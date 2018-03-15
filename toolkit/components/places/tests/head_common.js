@@ -3,10 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// It is expected that the test files importing this file define Cu etc.
-/* global Cu, Ci, Cc, Cr */
-
-const CURRENT_SCHEMA_VERSION = 43;
+const CURRENT_SCHEMA_VERSION = 45;
 const FIRST_UPGRADABLE_SCHEMA_VERSION = 30;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";

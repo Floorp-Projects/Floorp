@@ -55,8 +55,11 @@ bool nsMixedContentBlocker::sBlockMixedScript = false;
 
 bool nsMixedContentBlocker::sBlockMixedObjectSubrequest = false;
 
-// Is mixed display content blocking (images, audio, video, <a ping>) enabled?
+// Is mixed display content blocking (images, audio, video) enabled?
 bool nsMixedContentBlocker::sBlockMixedDisplay = false;
+
+// Is mixed display content upgrading (images, audio, video) enabled?
+bool nsMixedContentBlocker::sUpgradeMixedDisplay = false;
 
 enum MixedContentHSTSState {
   MCB_HSTS_PASSIVE_NO_HSTS   = 0,
@@ -214,6 +217,10 @@ nsMixedContentBlocker::nsMixedContentBlocker()
   // Cache the pref for mixed display blocking
   Preferences::AddBoolVarCache(&sBlockMixedDisplay,
                                "security.mixed_content.block_display_content");
+
+  // Cache the pref for mixed display upgrading
+  Preferences::AddBoolVarCache(&sUpgradeMixedDisplay,
+                               "security.mixed_content.upgrade_display_content");
 }
 
 nsMixedContentBlocker::~nsMixedContentBlocker()
@@ -777,7 +784,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // pref "security.mixed_content.upgrade_display_content" is true.
   // This behaves like GetUpgradeInsecureRequests above in that the channel will
   // be upgraded to https before fetching any data from the netwerk.
-  bool isUpgradableDisplayType = nsContentUtils::IsUpgradableDisplayType(aContentType);
+  bool isUpgradableDisplayType = nsContentUtils::IsUpgradableDisplayType(aContentType) && ShouldUpgradeMixedDisplayContent();
   if (isHttpScheme && isUpgradableDisplayType) {
     *aDecision = ACCEPT;
     return NS_OK;
@@ -1127,4 +1134,10 @@ nsMixedContentBlocker::AccumulateMixedContentHSTS(
                             MCB_HSTS_ACTIVE_WITH_HSTS);
     }
   }
+}
+
+bool
+nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()
+{
+  return sUpgradeMixedDisplay;
 }

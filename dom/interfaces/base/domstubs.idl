@@ -48,7 +48,6 @@ interface nsIDOMEventTarget;
 interface nsIDOMEventListener;
 
 // HTML
-interface nsIDOMHTMLFormElement;
 interface nsIDOMHTMLHeadElement;
 
 // Range

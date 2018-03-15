@@ -2365,7 +2365,7 @@ nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
     timedChannel = nullptr;
   }
   if (timing) {
-    mPerformance = Performance::CreateForMainThread(this, timing, timedChannel);
+    mPerformance = Performance::CreateForMainThread(this, mDoc->NodePrincipal(), timing, timedChannel);
   }
 }
 

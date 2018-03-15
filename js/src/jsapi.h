@@ -1994,7 +1994,8 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         preserveJitCode_(false),
         cloneSingletons_(false),
         sharedMemoryAndAtomics_(false),
-        secureContext_(false)
+        secureContext_(false),
+        clampAndJitterTime_(true)
     {}
 
     JSTraceOp getTrace() const {
@@ -2062,6 +2063,12 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         return *this;
     }
 
+    bool clampAndJitterTime() const { return clampAndJitterTime_; }
+    CompartmentCreationOptions& setClampAndJitterTime(bool flag) {
+        clampAndJitterTime_ = flag;
+        return *this;
+    }
+
   private:
     JSTraceOp traceGlobal_;
     ZoneSpecifier zoneSpec_;
@@ -2072,6 +2079,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     bool cloneSingletons_;
     bool sharedMemoryAndAtomics_;
     bool secureContext_;
+    bool clampAndJitterTime_;
 };
 
 /**

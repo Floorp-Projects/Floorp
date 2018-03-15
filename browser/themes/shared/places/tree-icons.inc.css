@@ -58,16 +58,16 @@ treechildren::-moz-tree-image(query) {
   list-style-image: url("chrome://browser/skin/places/folder-smart.svg");
 }
 
-treechildren::-moz-tree-image(query, OrganizerQuery_AllBookmarks) {
+treechildren::-moz-tree-image(query, OrganizerQuery_allbms_____v) {
   list-style-image: url("chrome://browser/skin/places/allBookmarks.png");
 }
 
-treechildren::-moz-tree-image(query, OrganizerQuery_Downloads) {
+treechildren::-moz-tree-image(query, OrganizerQuery_downloads__v) {
   list-style-image: url("chrome://browser/skin/places/downloads.png");
 }
 
 treechildren::-moz-tree-image(title, query, tagContainer),
-treechildren::-moz-tree-image(query, OrganizerQuery_Tags) {
+treechildren::-moz-tree-image(query, OrganizerQuery_tags_______v) {
   list-style-image: url("chrome://browser/skin/places/tag.png");
 }
 
@@ -80,7 +80,7 @@ treechildren::-moz-tree-image(title, query, hostContainer) {
   list-style-image: url("chrome://browser/skin/places/folder.svg");
 }
 
-treechildren::-moz-tree-image(query, OrganizerQuery_History) {
+treechildren::-moz-tree-image(query, OrganizerQuery_history____v) {
   list-style-image: url("chrome://browser/skin/places/history.svg");
 }
 

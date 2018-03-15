@@ -239,7 +239,7 @@ var AppManager = exports.AppManager = {
     }
     return this.getTarget().then(target => {
       target.activeTab.reload();
-    }, console.error.bind(console));
+    }, console.error);
   },
 
   getTarget: function () {

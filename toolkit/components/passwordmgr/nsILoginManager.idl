@@ -10,7 +10,6 @@ interface nsILoginInfo;
 interface nsIAutoCompleteResult;
 interface nsIFormAutoCompleteObserver;
 interface nsIDOMHTMLInputElement;
-interface nsIDOMHTMLFormElement;
 interface nsIPropertyBag;
 
 [scriptable, uuid(38c7f6af-7df9-49c7-b558-2776b24e6cc1)]

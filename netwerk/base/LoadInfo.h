@@ -94,6 +94,7 @@ public:
   void SetIsPreflight();
   void SetUpgradeInsecureRequests();
   void SetBrowserUpgradeInsecureRequests();
+  void SetBrowserWouldUpgradeInsecureRequests();
 
 private:
   // private constructor that is only allowed to be called from within
@@ -114,6 +115,7 @@ private:
            LoadTainting aTainting,
            bool aUpgradeInsecureRequests,
            bool aBrowserUpgradeInsecureRequests,
+           bool aBrowserWouldUpgradeInsecureRequests,
            bool aVerifySignedContent,
            bool aEnforceSRI,
            bool aAllowDocumentToBeAgnosticToCSP,
@@ -181,6 +183,7 @@ private:
   LoadTainting                     mTainting;
   bool                             mUpgradeInsecureRequests;
   bool                             mBrowserUpgradeInsecureRequests;
+  bool                             mBrowserWouldUpgradeInsecureRequests;
   bool                             mVerifySignedContent;
   bool                             mEnforceSRI;
   bool                             mAllowDocumentToBeAgnosticToCSP;

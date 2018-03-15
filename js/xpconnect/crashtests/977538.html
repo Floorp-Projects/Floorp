@@ -1,0 +1,20 @@
+<script>
+function f() {
+  var buffer = new Uint8Array(8);
+  
+  for (var i=0; i<100; i++) {}
+
+  buffer[0] = 0xff;
+  buffer[1] = 0xff;
+  buffer[2] = 0xff;
+  buffer[3] = 0xff;
+  buffer[4] = 0xff;
+  buffer[5] = 0xff;
+  buffer[6] = 0x0f;
+  buffer[7] = 0x00;
+
+  var view = new DataView(buffer.buffer);
+  view.getFloat64(0);
+}
+f();
+</script>

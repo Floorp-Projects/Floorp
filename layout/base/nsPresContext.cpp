@@ -79,7 +79,6 @@
 #include "gfxPrefs.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsFrameLoader.h"
-#include "mozilla/dom/FontFaceSet.h"
 #include "nsContentUtils.h"
 #include "nsPIWindowRoot.h"
 #include "mozilla/Preferences.h"
@@ -2876,15 +2875,6 @@ nsPresContext::HavePendingInputEvent()
       }
       return false;
     }
-  }
-}
-
-void
-nsPresContext::NotifyFontFaceSetOnRefresh()
-{
-  FontFaceSet* set = mDocument->GetFonts();
-  if (set) {
-    set->DidRefresh();
   }
 }
 
