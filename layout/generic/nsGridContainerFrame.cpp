@@ -1244,28 +1244,26 @@ struct nsGridContainerFrame::Tracks
   /**
    * Collect the tracks which are growable (matching aSelector) into
    * aGrowableTracks, and return the amount of space that can be used
-   * to grow those tracks.  Specifically, we return aAvailableSpace minus
-   * the sum of mBase's (and corresponding grid gaps) in aPlan (clamped to 0)
-   * for the tracks in aRange, or zero when there are no growable tracks.
-   * @note aPlan[*].mBase represents a planned new base or limit.
+   * to grow those tracks.  This method implements CSS Grid §11.5.1.2.
+   * https://drafts.csswg.org/css-grid/#extra-space
    */
-  nscoord CollectGrowable(nscoord                    aAvailableSpace,
-                          const nsTArray<TrackSize>& aPlan,
-                          const LineRange&           aRange,
-                          TrackSize::StateBits       aSelector,
-                          nsTArray<uint32_t>&        aGrowableTracks) const
+  template<TrackSizingPhase phase>
+  nscoord CollectGrowable(nscoord              aAvailableSpace,
+                          const LineRange&     aRange,
+                          TrackSize::StateBits aSelector,
+                          nsTArray<uint32_t>&  aGrowableTracks) const
   {
     MOZ_ASSERT(aAvailableSpace > 0, "why call me?");
     nscoord space = aAvailableSpace - mGridGap * (aRange.Extent() - 1);
     const uint32_t start = aRange.mStart;
     const uint32_t end = aRange.mEnd;
     for (uint32_t i = start; i < end; ++i) {
-      const TrackSize& sz = aPlan[i];
-      space -= sz.mBase;
+      const TrackSize& sz = mSizes[i];
+      space -= StartSizeInDistribution<phase>(sz);
       if (space <= 0) {
         return 0;
       }
-      if ((sz.mState & aSelector) && !sz.IsFrozen()) {
+      if (sz.mState & aSelector) {
         aGrowableTracks.AppendElement(i);
       }
     }
@@ -4268,8 +4266,8 @@ nsGridContainerFrame::Tracks::GrowBaseForSpanningItems(
       continue;
     }
     aTracks.ClearAndRetainStorage();
-    space = CollectGrowable(space, mSizes, item.mLineRange, aSelector,
-                            aTracks);
+    space = CollectGrowable<phase>(space, item.mLineRange, aSelector,
+                                   aTracks);
     if (space > 0) {
       DistributeToTrackBases(space, aPlan, aItemPlan, aTracks, aSelector);
       updatedBase = true;
@@ -4307,8 +4305,8 @@ nsGridContainerFrame::Tracks::GrowLimitForSpanningItems(
     nscoord space = item.SizeContributionForPhase(phase);
     if (space > 0) {
       aTracks.ClearAndRetainStorage();
-      space = CollectGrowable(space, aSizes, item.mLineRange, aSelector,
-                              aTracks);
+      space = CollectGrowable<phase>(space, item.mLineRange, aSelector,
+                                     aTracks);
       if (space > 0) {
         DistributeToTrackLimits(space, aSizes, aPlan, aItemPlan, aTracks,
                                 aFunctions, aPercentageBasis);
