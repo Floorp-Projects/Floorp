@@ -41,9 +41,8 @@ add_task(async function test_authenticated_request() {
   auth = sig.getHeader();
 
   let req = new TokenAuthenticatedRESTRequest(uri, {id, key}, extra);
-  let error = await new Promise(res => req.get(res));
+  await req.get();
 
-  Assert.equal(null, error);
   Assert.equal(message, req.response.body);
 
   await promiseStopServer(server);
