@@ -231,8 +231,33 @@ enum class WheelDeltaAdjustmentStrategy : uint8_t
   // values are never going to be adjusted, they will still retrive original
   // delta values when horizontalization occured for default actions.
   eHorizontalize,
-  // TODO A new value for auto-dir scrolling is going to be added while
-  // implementing such scrolling.
+  // The following two strategies mean we're receving an auto-dir scroll, so we
+  // should apply auto-dir adjustment to the delta of the wheel event if needed.
+  // Auto-dir is a feature which treats any single-wheel scroll as a scroll in
+  // the only one scrollable direction if the target has only one scrollable
+  // direction. For example, if the user scrolls a vertical wheel inside a
+  // target which is horizontally scrollable but vertical unscrollable, then the
+  // vertical scroll is converted to a horizontal scroll for that target.
+  // So why do we need two different strategies for auto-dir scrolling? That's
+  // because when a wheel scroll is converted due to auto-dir, there is one
+  // thing called "honoured target" which decides which side the converted
+  // scroll goes towards. If the content of the honoured target horizontally
+  // is RTL content, then an upward scroll maps to a rightward scroll and a
+  // downward scroll maps to a leftward scroll; otherwise, an upward scroll maps
+  // to a leftward scroll and a downward scroll maps to a rightward scroll.
+  // |eAutoDir| considers the scrolling target as the honoured target.
+  // |eAutoDirWithRootHonour| takes the root element of the document with the
+  // scrolling element, and considers that as the honoured target. But note that
+  // there's one exception: for targets in an HTML document, the real root
+  // element(I.e. the <html> element) is typically not considered as a root
+  // element, but the <body> element is typically considered as a root element.
+  // If there is no <body> element, then consider the <html> element instead.
+  // And also note that like |eHorizontalize|, delta values are *ONLY* going to
+  // be adjusted during the process of its default action handling; in views of
+  // any programmes other than the default action handler, such as a DOM event
+  // listener or a plugin, delta values are never going to be adjusted.
+  eAutoDir,
+  eAutoDirWithRootHonour,
 };
 
 /**
