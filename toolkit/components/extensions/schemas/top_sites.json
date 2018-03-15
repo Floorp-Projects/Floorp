@@ -54,9 +54,11 @@
                 "type": "array",
                 "items": { "type": "string" },
                 "description": "Which providers to get top sites from. Possible values are \"places\" and \"activityStream\".",
+                "default": [],
                 "optional": true
               }
             },
+            "default": {},
             "optional": true
           },
           {
