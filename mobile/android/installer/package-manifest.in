@@ -328,8 +328,8 @@
 @BINPATH@/components/txEXSLTRegExFunctions.js
 @BINPATH@/components/ContentPrefService2.manifest
 @BINPATH@/components/ContentPrefService2.js
-@BINPATH@/components/nsHandlerService-json.manifest
-@BINPATH@/components/nsHandlerService-json.js
+@BINPATH@/components/HandlerService.manifest
+@BINPATH@/components/HandlerService.js
 @BINPATH@/components/nsWebHandlerApp.manifest
 @BINPATH@/components/nsWebHandlerApp.js
 @BINPATH@/components/satchel.manifest
