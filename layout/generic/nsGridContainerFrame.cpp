@@ -1178,6 +1178,7 @@ struct nsGridContainerFrame::Tracks
         case TrackSizingPhase::eMaxContentMaximums:
           return mMaxContentContribution;
       }
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected phase");
     }
   };
 
@@ -1234,6 +1235,7 @@ struct nsGridContainerFrame::Tracks
         }
         return aSize.mLimit;
     }
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected phase");
   }
 
   /**
