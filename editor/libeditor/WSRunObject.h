@@ -163,6 +163,9 @@ public:
   enum {eAfter  = 1 << 1};
   enum {eBoth   = eBefore | eAfter};
 
+  template<typename PT, typename CT>
+  WSRunObject(HTMLEditor* aHTMLEditor,
+              const EditorDOMPointBase<PT, CT>& aPoint);
   WSRunObject(HTMLEditor* aHTMLEditor, nsINode* aNode, int32_t aOffset);
   ~WSRunObject();
 

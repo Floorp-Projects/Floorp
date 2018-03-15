@@ -34,6 +34,18 @@ using namespace dom;
 
 const char16_t kNBSP = 160;
 
+template WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
+                                  const EditorDOMPoint& aPoint);
+template WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
+                                  const EditorRawDOMPoint& aPoint);
+
+template<typename PT, typename CT>
+WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
+                         const EditorDOMPointBase<PT, CT>& aPoint)
+  : WSRunObject(aHTMLEditor, aPoint.GetContainer(), aPoint.Offset())
+{
+}
+
 WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
                          nsINode* aNode,
                          int32_t aOffset)
