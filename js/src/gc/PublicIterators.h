@@ -11,6 +11,8 @@
 #ifndef gc_PublicIterators_h
 #define gc_PublicIterators_h
 
+#include "mozilla/Maybe.h"
+
 #include "gc/Zone.h"
 
 namespace js {
@@ -93,7 +95,7 @@ class ZonesInGroupIter
 class ZonesIter
 {
     ZoneGroupsIter group;
-    Maybe<ZonesInGroupIter> zone;
+    mozilla::Maybe<ZonesInGroupIter> zone;
     JS::Zone* atomsZone;
 
   public:
