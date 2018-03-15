@@ -25,26 +25,11 @@ class AutofillEditDialog {
   }
 
   async init() {
-    if (this._record) {
-      await this.loadInitialValues(this._record);
-    }
     this.attachEventListeners();
-    // For testing only: loadInitialValues for credit card is an async method, and tests
-    // need to wait until the values have been filled before editing the fields.
+    // For testing only: signal to tests that the dialog is ready for testing.
+    // This is likely no longer needed since retrieving from storage is fully
+    // handled in manageDialog.js now.
     window.dispatchEvent(new CustomEvent("FormReady"));
-  }
-
-  /**
-   * Fill the form with a record object.
-   * @param  {object} record
-   */
-  loadInitialValues(record) {
-    for (let field in record) {
-      let input = document.getElementById(field);
-      if (input) {
-        input.value = record[field];
-      }
-    }
   }
 
   /**
@@ -159,9 +144,7 @@ class AutofillEditDialog {
 
 class EditAddressDialog extends AutofillEditDialog {
   constructor(elements, record) {
-    let country = record ? record.country :
-                  FormAutofillUtils.supportedCountries.find(supported => supported == FormAutofillUtils.DEFAULT_REGION);
-    super("addresses", elements, record || {country});
+    super("addresses", elements, record);
   }
 
   localizeDocument() {
@@ -185,15 +168,6 @@ class EditCreditCardDialog extends AutofillEditDialog {
     if (this._record) {
       this._elements.title.dataset.localization = "editCreditCardTitle";
     }
-  }
-
-  /**
-   * Decrypt cc-number first and fill the form.
-   * @param  {object} creditCard
-   */
-  async loadInitialValues(creditCard) {
-    let decryptedCC = await MasterPassword.decrypt(creditCard["cc-number-encrypted"]);
-    super.loadInitialValues(Object.assign({}, creditCard, {"cc-number": decryptedCC}));
   }
 
   async handleSubmit() {

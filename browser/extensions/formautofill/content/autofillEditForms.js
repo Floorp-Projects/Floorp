@@ -78,11 +78,12 @@ class EditAutofillForm {
 }
 
 class EditAddress extends EditAutofillForm {
-  constructor(elements, record) {
+  constructor(elements, record, config) {
     let country = record ? record.country :
-                  FormAutofillUtils.supportedCountries.find(supported => supported == FormAutofillUtils.DEFAULT_REGION);
+                    config.supportedCountries.find(supported => supported == config.DEFAULT_REGION);
     super(elements, record || {country});
 
+    Object.assign(this, config);
     Object.assign(this._elements, {
       addressLevel1Label: this._elements.form.querySelector("#address-level1-container > span"),
       postalCodeLabel: this._elements.form.querySelector("#postal-code-container > span"),
@@ -90,6 +91,9 @@ class EditAddress extends EditAutofillForm {
     });
 
     this.populateCountries();
+    // Need to populate the countries before trying to set the initial country.
+    // Also need to use this._record so it has the default country selected.
+    this.loadInitialValues(this._record);
     this.formatForm(country);
     this.attachEventListeners();
   }
@@ -139,7 +143,7 @@ class EditAddress extends EditAutofillForm {
 
   populateCountries() {
     let fragment = document.createDocumentFragment();
-    for (let country of FormAutofillUtils.supportedCountries) {
+    for (let country of this.supportedCountries) {
       let option = new Option();
       option.value = country;
       option.dataset.localizationRegion = country.toLowerCase();
@@ -166,6 +170,7 @@ class EditCreditCard extends EditAutofillForm {
       year: this._elements.form.querySelector("#cc-exp-year"),
     });
     this.generateYears();
+    this.loadInitialValues(this._record);
     this.attachEventListeners();
   }
 
