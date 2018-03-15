@@ -187,7 +187,12 @@ APZCTreeManagerParent::RecvZoomToRect(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mTreeManager->ZoomToRect(aGuid, aRect, aFlags);
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
+      "layers::IAPZCTreeManager::ZoomToRect",
+      mTreeManager,
+      &IAPZCTreeManager::ZoomToRect,
+      aGuid, aRect, aFlags));
   return IPC_OK();
 }
 
