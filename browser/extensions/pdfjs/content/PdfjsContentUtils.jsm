@@ -26,6 +26,11 @@ var PdfjsContentUtils = {
    * Public API
    */
 
+  get isRemote() {
+    return (Services.appinfo.processType ===
+            Services.appinfo.PROCESS_TYPE_CONTENT);
+  },
+
   init() {
     // child *process* mm, or when loaded into the parent for in-content
     // support the psuedo child process mm 'child PPMM'.

@@ -266,7 +266,7 @@ Object.defineProperty(this, "gFindBar", {
   configurable: true,
   enumerable: true,
   get() {
-    return gBrowser.getCachedFindBar();
+    return window.gBrowser.getFindBar();
   },
 });
 
@@ -274,25 +274,9 @@ Object.defineProperty(this, "gFindBarInitialized", {
   configurable: true,
   enumerable: true,
   get() {
-    return gBrowser.isFindBarInitialized();
+    return window.gBrowser.isFindBarInitialized();
   },
 });
-
-Object.defineProperty(this, "gFindBarPromise", {
-  configurable: true,
-  enumerable: true,
-  get() {
-    return gBrowser.getFindBar();
-  },
-});
-
-async function gLazyFindCommand(cmd, ...args) {
-  let fb = await gFindBarPromise;
-  // We could be closed by now, or the tab with XBL binding could have gone away:
-  if (fb && fb[cmd]) {
-    fb[cmd].apply(fb, args);
-  }
-}
 
 Object.defineProperty(this, "AddonManager", {
   configurable: true,
@@ -2085,7 +2069,7 @@ function HandleAppCommandEvent(evt) {
     BrowserCloseTabOrWindow();
     break;
   case "Find":
-    gLazyFindCommand("onFindCommand");
+    gFindBar.onFindCommand();
     break;
   case "Help":
     openHelpLink("firefox-help");
@@ -3533,7 +3517,7 @@ var PrintPreviewListener = {
       gBrowser.getNotificationBox().notificationsHidden = false;
 
     if (this._chromeState.findOpen)
-      gLazyFindCommand("open");
+      gFindBar.open();
 
     if (this._chromeState.globalNotificationsOpen)
       document.getElementById("global-notificationbox").notificationsHidden = false;
