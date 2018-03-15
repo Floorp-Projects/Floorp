@@ -1020,22 +1020,6 @@
         }
       },
 
-      onTransitionEnd(event) {
-        // Ignore events for things other than opacity changes.
-        if (event.propertyName != "opacity") {
-          return;
-        }
-
-        var element = event.originalTarget;
-
-        // Nothing to do when a fade *in* finishes.
-        if (!element.hasAttribute("fadeout")) {
-          return;
-        }
-
-        element.hidden = true;
-      },
-
       _triggeredByControls: false,
 
       startPlay() {
@@ -1774,7 +1758,6 @@
         }
 
         addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
-        addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
         addListener(this.controlBar, "transitionend", this.onControlBarTransitioned);
         // See comment at onFullscreenChange on bug 718107.
         // addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
