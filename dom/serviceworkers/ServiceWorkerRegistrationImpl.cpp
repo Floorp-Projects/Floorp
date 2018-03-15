@@ -801,27 +801,25 @@ ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
 
 class WorkerListener final : public ServiceWorkerRegistrationListener
 {
-  // Accessed on the main thread.
-  WorkerPrivate* mWorkerPrivate;
   const nsString mScope;
   bool mListeningForEvents;
 
-  // Accessed on the worker thread.
+  // Set and unset on worker thread, used on main-thread and protected by mutex.
   ServiceWorkerRegistrationWorkerThread* mRegistration;
+
+  Mutex mMutex;
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkerListener, override)
 
-  WorkerListener(WorkerPrivate* aWorkerPrivate,
-                 ServiceWorkerRegistrationWorkerThread* aReg,
+  WorkerListener(ServiceWorkerRegistrationWorkerThread* aReg,
                  const nsAString& aScope)
-    : mWorkerPrivate(aWorkerPrivate)
-    , mScope(aScope)
+    : mScope(aScope)
     , mListeningForEvents(false)
     , mRegistration(aReg)
+    , mMutex("WorkerListener::mMutex")
   {
-    MOZ_ASSERT(mWorkerPrivate);
-    mWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(IsCurrentThreadRunningWorker());
     MOZ_ASSERT(mRegistration);
   }
 
@@ -830,7 +828,6 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mListeningForEvents);
-    MOZ_ASSERT(mWorkerPrivate);
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (swm) {
       // FIXME(nsm): Maybe the function shouldn't take an explicit scope.
@@ -849,10 +846,6 @@ public:
     }
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-
-    // We aren't going to need this anymore and we shouldn't hold on since the
-    // worker will go away soon.
-    mWorkerPrivate = nullptr;
 
     if (swm) {
       // FIXME(nsm): Maybe the function shouldn't take an explicit scope.
@@ -888,17 +881,11 @@ public:
     return false;
   }
 
-  ServiceWorkerRegistrationWorkerThread*
-  GetRegistration() const
-  {
-    MOZ_ASSERT(IsCurrentThreadRunningWorker());
-    return mRegistration;
-  }
-
   void
   ClearRegistration()
   {
     MOZ_ASSERT(IsCurrentThreadRunningWorker());
+    MutexAutoLock lock(mMutex);
     mRegistration = nullptr;
   }
 
@@ -1016,8 +1003,6 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 
-  mListener = new WorkerListener(worker, this, mScope);
-
   RefPtr<ServiceWorkerRegistrationWorkerThread> self = this;
   mWorkerRef = WeakWorkerRef::Create(worker, [self]() {
     self->ReleaseListener();
@@ -1030,11 +1015,11 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
     self->mOuter = nullptr;
   });
 
-  if (!mWorkerRef) {
-    mListener = nullptr;
-    NS_WARNING("Could not add feature");
+  if (NS_WARN_IF(!mWorkerRef)) {
     return;
   }
+
+  mListener = new WorkerListener(this, mScope);
 
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod("dom::WorkerListener::StartListeningForEvents",
@@ -1086,11 +1071,7 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-
-    ServiceWorkerRegistrationWorkerThread* reg = mListener->GetRegistration();
-    if (reg) {
-      reg->UpdateFound();
-    }
+    mListener->UpdateFound();
     return true;
   }
 };
@@ -1098,12 +1079,19 @@ public:
 void
 WorkerListener::UpdateFound()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mWorkerPrivate) {
-    RefPtr<FireUpdateFoundRunnable> r =
-      new FireUpdateFoundRunnable(mWorkerPrivate, this);
-    Unused << NS_WARN_IF(!r->Dispatch());
+  MutexAutoLock lock(mMutex);
+  if (!mRegistration) {
+    return;
   }
+
+  if (NS_IsMainThread()) {
+    RefPtr<FireUpdateFoundRunnable> r =
+      new FireUpdateFoundRunnable(mRegistration->GetWorkerPrivate(lock), this);
+    Unused << NS_WARN_IF(!r->Dispatch());
+    return;
+  }
+
+  mRegistration->UpdateFound();
 }
 
 class RegistrationRemovedWorkerRunnable final : public WorkerRunnable
@@ -1126,11 +1114,7 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-
-    ServiceWorkerRegistrationWorkerThread* reg = mListener->GetRegistration();
-    if (reg) {
-      reg->RegistrationRemoved();
-    }
+    mListener->RegistrationRemoved();
     return true;
   }
 };
@@ -1138,16 +1122,21 @@ public:
 void
 WorkerListener::RegistrationRemoved()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mWorkerPrivate) {
+  MutexAutoLock lock(mMutex);
+  if (!mRegistration) {
     return;
   }
 
-  RefPtr<WorkerRunnable> r =
-    new RegistrationRemovedWorkerRunnable(mWorkerPrivate, this);
-  Unused << r->Dispatch();
+  if (NS_IsMainThread()) {
+    RefPtr<WorkerRunnable> r =
+      new RegistrationRemovedWorkerRunnable(mRegistration->GetWorkerPrivate(lock), this);
+    Unused << NS_WARN_IF(!r->Dispatch());
 
-  StopListeningForEvents();
+    StopListeningForEvents();
+    return;
+  }
+
+  mRegistration->RegistrationRemoved();
 }
 
 // Notification API extension.
@@ -1196,6 +1185,15 @@ void
 ServiceWorkerRegistrationWorkerThread::UpdateFound()
 {
   mOuter->DispatchTrustedEvent(NS_LITERAL_STRING("updatefound"));
+}
+
+WorkerPrivate*
+ServiceWorkerRegistrationWorkerThread::GetWorkerPrivate(const MutexAutoLock& aProofOfLock)
+{
+  // In this case, calling GetUnsafePrivate() is ok because we have a proof of
+  // mutex lock.
+  MOZ_ASSERT(mWorkerRef && mWorkerRef->GetUnsafePrivate());
+  return mWorkerRef->GetUnsafePrivate();
 }
 
 } // dom namespace
