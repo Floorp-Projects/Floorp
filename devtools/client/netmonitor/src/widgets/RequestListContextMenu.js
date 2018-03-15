@@ -26,7 +26,7 @@ class RequestListContextMenu {
     this.props = props;
   }
 
-  open(event, selectedRequest, sortedRequests) {
+  open(event, selectedRequest, requests) {
     let {
       id,
       isCustom,
@@ -143,8 +143,8 @@ class RequestListContextMenu {
       id: "request-list-context-copy-all-as-har",
       label: L10N.getStr("netmonitor.context.copyAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
-      visible: sortedRequests.size > 0,
-      click: () => this.copyAllAsHar(sortedRequests),
+      visible: requests.size > 0,
+      click: () => this.copyAllAsHar(requests),
     });
 
     menu.push({
@@ -158,8 +158,8 @@ class RequestListContextMenu {
       id: "request-list-context-save-all-as-har",
       label: L10N.getStr("netmonitor.context.saveAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
-      visible: sortedRequests.size > 0,
-      click: () => this.saveAllAsHar(sortedRequests),
+      visible: requests.size > 0,
+      click: () => this.saveAllAsHar(requests),
     });
 
     menu.push({
@@ -219,7 +219,7 @@ class RequestListContextMenu {
       id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: sortedRequests.size > 0,
+      visible: requests.size > 0,
       click: () => openStatistics(true),
     });
 
@@ -393,25 +393,25 @@ class RequestListContextMenu {
   /**
    * Copy HAR from the network panel content to the clipboard.
    */
-  copyAllAsHar(sortedRequests) {
-    return HarExporter.copy(this.getDefaultHarOptions(sortedRequests));
+  copyAllAsHar(requests) {
+    return HarExporter.copy(this.getDefaultHarOptions(requests));
   }
 
   /**
    * Save HAR from the network panel content to a file.
    */
-  saveAllAsHar(sortedRequests) {
+  saveAllAsHar(requests) {
     // This will not work in launchpad
     // document.execCommand(‘cut’/‘copy’) was denied because it was not called from
     // inside a short running user-generated event handler.
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Interact_with_the_clipboard
-    return HarExporter.save(this.getDefaultHarOptions(sortedRequests));
+    return HarExporter.save(this.getDefaultHarOptions(requests));
   }
 
-  getDefaultHarOptions(sortedRequests) {
+  getDefaultHarOptions(requests) {
     return {
       connector: this.props.connector,
-      items: sortedRequests,
+      items: requests,
     };
   }
 }
