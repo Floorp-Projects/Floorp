@@ -55,11 +55,18 @@
   <script type="application/javascript"><![CDATA[
     "use strict";
 
+    let {
+      isCCNumber,
+    } = FormAutofillUtils;
     let record = window.arguments && window.arguments[0];
+
     /* import-globals-from autofillEditForms.js */
     let fieldContainer = new EditCreditCard({
       form: document.getElementById("form"),
-    }, record);
+    }, record,
+      {
+        isCCNumber: isCCNumber.bind(FormAutofillUtils),
+      });
 
     /* import-globals-from editDialog.js */
     new EditCreditCardDialog({
