@@ -65,8 +65,6 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 
 typedef CompositorBridgeParent::LayerTreeState LayerTreeState;
 
-float APZCTreeManager::sDPI = 160.0;
-
 struct APZCTreeManager::TreeBuildingState {
   TreeBuildingState(uint64_t aRootLayersId,
                     bool aIsFirstPaint, uint64_t aOriginatingLayersId,
@@ -230,7 +228,8 @@ APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
       mRetainedTouchIdentifier(-1),
       mInScrollbarTouchDrag(false),
       mApzcTreeLog("apzctree"),
-      mTestDataLock("APZTestDataLock")
+      mTestDataLock("APZTestDataLock"),
+      mDPI(160.0)
 {
   RefPtr<APZCTreeManager> self(this);
   NS_DispatchToMainThread(
@@ -3151,6 +3150,20 @@ APZCTreeManager::ComputeTransformForScrollThumb(
   transform = transform * compensation;
 
   return transform;
+}
+
+void
+APZCTreeManager::SetDPI(float aDpiValue)
+{
+  APZThreadUtils::AssertOnControllerThread();
+  mDPI = aDpiValue;
+}
+
+float
+APZCTreeManager::GetDPI() const
+{
+  APZThreadUtils::AssertOnControllerThread();
+  return mDPI;
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
