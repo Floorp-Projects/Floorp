@@ -6,25 +6,24 @@
 
 const DUMMY_PAGE = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
-/**
- * This test checks that if you search for something on one tab, then close
- * that tab and have the find bar open on the next tab you get switched to,
- * closing the find bar in that tab works without exceptions.
- */
-add_task(async function test_bug749738() {
-  // Open find bar on initial tab.
-  await gFindBarPromise;
+function test() {
+  waitForExplicitFinish();
 
-  await BrowserTestUtils.withNewTab(DUMMY_PAGE, async function() {
-    await gFindBarPromise;
+  let tab = BrowserTestUtils.addTab(gBrowser);
+  gBrowser.selectedTab = tab;
+
+  BrowserTestUtils.loadURI(tab.linkedBrowser, DUMMY_PAGE);
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
     gFindBar.onFindCommand();
     EventUtils.sendString("Dummy");
-  });
+    gBrowser.removeTab(tab);
 
-  try {
-    gFindBar.close();
-    ok(true, "findbar.close should not throw an exception");
-  } catch (e) {
-    ok(false, "findbar.close threw exception: " + e);
-  }
-});
+    try {
+      gFindBar.close();
+      ok(true, "findbar.close should not throw an exception");
+    } catch (e) {
+      ok(false, "findbar.close threw exception: " + e);
+    }
+    finish();
+  });
+}

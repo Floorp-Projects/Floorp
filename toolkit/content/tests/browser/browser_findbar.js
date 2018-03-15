@@ -17,7 +17,7 @@ add_task(async function test_hotkey_event_propagation() {
   // Opening new tab
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE_URI);
   let browser = gBrowser.getBrowserForTab(tab);
-  let findbar = await gBrowser.getFindBar();
+  let findbar = gBrowser.getFindBar();
 
   // Pressing these keys open the findbar.
   const HOTKEYS = ["/", "'"];
@@ -64,7 +64,7 @@ add_task(async function test_not_found() {
 
   // Search for the first word.
   await promiseFindFinished("--- THIS SHOULD NEVER MATCH ---", false);
-  let findbar = gBrowser.getCachedFindBar();
+  let findbar = gBrowser.getFindBar();
   is(findbar._findStatusDesc.textContent, findbar._notFoundStr,
      "Findbar status text should be 'Phrase not found'");
 
@@ -76,7 +76,7 @@ add_task(async function test_found() {
 
   // Search for a string that WILL be found, with 'Highlight All' on
   await promiseFindFinished("S", true);
-  ok(!gBrowser.getCachedFindBar()._findStatusDesc.textContent,
+  ok(!gBrowser.getFindBar()._findStatusDesc.textContent,
      "Findbar status should be empty");
 
   gBrowser.removeTab(tab);
@@ -86,10 +86,10 @@ add_task(async function test_found() {
 // new tab find bar.
 add_task(async function test_tabwise_case_sensitive() {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE_URI);
-  let findbar1 = await gBrowser.getFindBar();
+  let findbar1 = gBrowser.getFindBar();
 
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE_URI);
-  let findbar2 = await gBrowser.getFindBar();
+  let findbar2 = gBrowser.getFindBar();
 
   // Toggle case sensitivity for first findbar
   findbar1.getElement("find-case-sensitive").click();
@@ -130,7 +130,7 @@ add_task(async function test_reinitialization_at_remoteness_change() {
   // Load a remote page and trigger findbar construction.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE_URI);
   let browser = gBrowser.getBrowserForTab(tab);
-  let findbar = await gBrowser.getFindBar();
+  let findbar = gBrowser.getFindBar();
 
   // Findbar should operate normally.
   await promiseFindFinished("z", false);
@@ -173,7 +173,6 @@ add_task(async function() {
 
   ok(!gFindBarInitialized, "findbar isn't initialized yet");
 
-  await gFindBarPromise;
   let findBar = gFindBar;
   let initialValue = findBar._findField.value;
 
@@ -200,9 +199,9 @@ add_task(async function() {
 });
 
 function promiseFindFinished(searchText, highlightOn) {
-  return new Promise(async (resolve) => {
+  return new Promise(resolve => {
 
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
     findbar.startFind(findbar.FIND_NORMAL);
     let highlightElement = findbar.getElement("highlight");
     if (highlightElement.checked != highlightOn)

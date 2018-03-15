@@ -49,7 +49,7 @@ add_task(async function testModalResults() {
   ]);
   let url = kFixtureBaseURL + "file_FinderSample.html";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
 
     for (let [word, expectedResult] of tests) {
       await promiseOpenFindbar(findbar);
@@ -76,7 +76,7 @@ add_task(async function testModalResults() {
 add_task(async function testModalSwitching() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
     Assert.ok(!findbar.hidden, "Findbar should be open now.");
@@ -113,7 +113,7 @@ add_task(async function testModalSwitching() {
 add_task(async function testDarkPageDetection() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
 
@@ -134,7 +134,7 @@ add_task(async function testDarkPageDetection() {
   });
 
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
 
@@ -172,7 +172,7 @@ add_task(async function testDarkPageDetection() {
 add_task(async function testHighlightAllToggle() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
 
@@ -216,7 +216,7 @@ add_task(async function testXMLDocument() {
   <Error>Error</Error>
 </result>`);
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
 
@@ -238,7 +238,7 @@ add_task(async function testHideOnLocationChange() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let browser = tab.linkedBrowser;
-  let findbar = await gBrowser.getFindBar();
+  let findbar = gBrowser.getFindBar();
 
   await promiseOpenFindbar(findbar);
 
@@ -267,7 +267,7 @@ add_task(async function testHideOnLocationChange() {
 add_task(async function testHideOnClear() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
     await promiseOpenFindbar(findbar);
 
     let word = "Roland";
@@ -299,7 +299,7 @@ add_task(async function testRectsAndTexts() {
     "Here are a lot of words Please use find to highlight some words that wrap" +
     " across a line boundary and see what happens.</div>");
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
     await promiseOpenFindbar(findbar);
 
     let word = "words please use find to";
@@ -322,7 +322,7 @@ add_task(async function testRectsAndTexts() {
 add_task(async function testTooLargeToggle() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let findbar = await gBrowser.getFindBar();
+    let findbar = gBrowser.getFindBar();
     await promiseOpenFindbar(findbar);
 
     await ContentTask.spawn(browser, null, async function() {

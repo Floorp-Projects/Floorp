@@ -21,7 +21,7 @@ add_task(async function() {
   await SimpleTest.promiseFocus(newwindow);
 
   ok(!newwindow.gFindBarInitialized, "find bar is not yet initialized");
-  let findBar = await newwindow.gFindBarPromise;
+  let findBar = newwindow.gFindBar;
 
   await ContentTask.spawn(selectedBrowser, { }, async function() {
     let elt = content.document.getElementById("h1");

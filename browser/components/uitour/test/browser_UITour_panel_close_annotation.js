@@ -16,10 +16,7 @@ var tooltip = document.getElementById("UITourTooltip");
 function test() {
   registerCleanupFunction(() => {
     // Close the find bar in case it's open in the remaining tab
-    let findBar = gBrowser.getCachedFindBar(gBrowser.selectedTab);
-    if (findBar) {
-      findBar.close();
-    }
+    gBrowser.getFindBar(gBrowser.selectedTab).close();
   });
   UITourTest();
 }
