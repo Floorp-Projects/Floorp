@@ -172,9 +172,7 @@ class EditCreditCardDialog extends AutofillEditDialog {
 
   async handleSubmit() {
     let creditCard = this._elements.fieldContainer.buildFormObject();
-    // Show error on the cc-number field if it's empty or invalid
-    if (!FormAutofillUtils.isCCNumber(creditCard["cc-number"])) {
-      this._elements.ccNumber.setCustomValidity(true);
+    if (!this._elements.fieldContainer._elements.form.checkValidity()) {
       return;
     }
 
