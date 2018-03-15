@@ -208,6 +208,7 @@ struct nsGridContainerFrame::TrackSize
     eSkipGrowUnlimited = eSkipGrowUnlimited1 | eSkipGrowUnlimited2,
     eBreakBefore =              0x800,
     eFitContent =              0x1000,
+    eInfinitelyGrowable =      0x2000,
   };
 
   StateBits Initialize(nscoord aPercentageBasis,
@@ -1270,15 +1271,17 @@ struct nsGridContainerFrame::Tracks
     return aGrowableTracks.IsEmpty() ? 0 : space;
   }
 
-  void SetupGrowthPlan(nsTArray<TrackSize>&       aItemPlan,
-                       const nsTArray<TrackSize>& aSizes,
-                       const nsTArray<uint32_t>&  aTracks) const
+  template<TrackSizingPhase phase>
+  void InitializeItemPlan(nsTArray<TrackSize>&      aItemPlan,
+                          const nsTArray<uint32_t>& aTracks) const
   {
     for (uint32_t track : aTracks) {
-      auto& sz = aItemPlan[track];
-      sz.mBase = aSizes[track].mBase;
-      sz.mLimit = aSizes[track].mLimit;
-      sz.mState = aSizes[track].mState;
+      auto& plan = aItemPlan[track];
+      const TrackSize& sz = mSizes[track];
+      plan.mBase = StartSizeInDistribution<phase>(sz);
+      bool unlimited = sz.mState & TrackSize::eInfinitelyGrowable;
+      plan.mLimit = unlimited ? NS_UNCONSTRAINEDSIZE : sz.mLimit;
+      plan.mState = sz.mState;
     }
   }
 
@@ -1304,8 +1307,10 @@ struct nsGridContainerFrame::Tracks
   {
     for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
       MOZ_ASSERT(aPlan[i].mBase >= 0);
+      auto& sz = mSizes[i];
+      sz.mState &= ~TrackSize::eInfinitelyGrowable;
       if (aPlan[i].mState & TrackSize::eModified) {
-        mSizes[i].mLimit = aPlan[i].mBase;
+        sz.mLimit = aPlan[i].mBase;
       }
     }
   }
@@ -1475,13 +1480,14 @@ struct nsGridContainerFrame::Tracks
    * Distribute aAvailableSpace to the planned base size for aGrowableTracks
    * up to their limits, then distribute the remaining space beyond the limits.
    */
+  template<TrackSizingPhase phase>
   void DistributeToTrackBases(nscoord              aAvailableSpace,
                               nsTArray<TrackSize>& aPlan,
                               nsTArray<TrackSize>& aItemPlan,
                               nsTArray<uint32_t>&  aGrowableTracks,
                               TrackSize::StateBits aSelector)
   {
-    SetupGrowthPlan(aItemPlan, mSizes, aGrowableTracks);
+    InitializeItemPlan<phase>(aItemPlan, aGrowableTracks);
     nscoord space = GrowTracksToLimit(aAvailableSpace, aItemPlan, aGrowableTracks, nullptr);
     if (space > 0) {
       GrowSelectedTracksUnlimited(space, aItemPlan, aGrowableTracks, aSelector, nullptr);
@@ -1498,6 +1504,7 @@ struct nsGridContainerFrame::Tracks
   /**
    * Distribute aAvailableSpace to the planned limits for aGrowableTracks.
    */
+  template<TrackSizingPhase phase>
   void DistributeToTrackLimits(nscoord              aAvailableSpace,
                                const nsTArray<TrackSize>& aSizes,
                                nsTArray<TrackSize>& aPlan,
@@ -1517,7 +1524,7 @@ struct nsGridContainerFrame::Tracks
       }
       return false;
     };
-    SetupGrowthPlan(aItemPlan, aSizes, aGrowableTracks);
+    InitializeItemPlan<phase>(aItemPlan, aGrowableTracks);
     nscoord space = GrowTracksToLimit(aAvailableSpace, aItemPlan, aGrowableTracks,
                                       fitContentClamper);
     if (space > 0) {
@@ -4269,7 +4276,7 @@ nsGridContainerFrame::Tracks::GrowBaseForSpanningItems(
     space = CollectGrowable<phase>(space, item.mLineRange, aSelector,
                                    aTracks);
     if (space > 0) {
-      DistributeToTrackBases(space, aPlan, aItemPlan, aTracks, aSelector);
+      DistributeToTrackBases<phase>(space, aPlan, aItemPlan, aTracks, aSelector);
       updatedBase = true;
     }
   }
@@ -4308,8 +4315,8 @@ nsGridContainerFrame::Tracks::GrowLimitForSpanningItems(
       space = CollectGrowable<phase>(space, item.mLineRange, aSelector,
                                      aTracks);
       if (space > 0) {
-        DistributeToTrackLimits(space, aSizes, aPlan, aItemPlan, aTracks,
-                                aFunctions, aPercentageBasis);
+        DistributeToTrackLimits<phase>(space, aSizes, aPlan, aItemPlan, aTracks,
+                                       aFunctions, aPercentageBasis);
       }
     }
   }
@@ -4513,8 +4520,11 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           TrackSize& sz = itemPlan[j];
           sz.mState &= ~(TrackSize::eFrozen | TrackSize::eSkipGrowUnlimited);
           if (plan[j].mState & TrackSize::eModified) {
-            limits[j].mBase = plan[j].mBase;
+            if (mSizes[j].mLimit == NS_UNCONSTRAINEDSIZE) {
+              mSizes[j].mState |= TrackSize::eInfinitelyGrowable;
+            }
             mSizes[j].mLimit = plan[j].mBase;
+            limits[j].mBase = plan[j].mBase;
             if (limits[j].mLimit != NS_UNCONSTRAINEDSIZE) {
               limits[j].mLimit = limits[j].mBase;
             }
