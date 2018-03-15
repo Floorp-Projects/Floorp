@@ -204,7 +204,7 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
     block = new DragBlockState(aTarget, aFlags, aEvent);
 
     INPQ_LOG("started new drag block %p id %" PRIu64 " for %sconfirmed target %p\n",
-        block, block->GetBlockId(), aTargetConfirmed ? "" : "un", aTarget.get());
+        block, block->GetBlockId(), aFlags.mTargetConfirmed ? "" : "un", aTarget.get());
 
     mActiveDragBlock = block;
 

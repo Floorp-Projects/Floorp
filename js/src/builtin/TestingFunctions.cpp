@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
@@ -69,6 +70,7 @@
 using namespace js;
 
 using mozilla::ArrayLength;
+using mozilla::Maybe;
 using mozilla::Move;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with

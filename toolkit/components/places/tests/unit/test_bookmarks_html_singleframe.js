@@ -11,7 +11,7 @@ ChromeUtils.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 
 add_task(async function test_bookmarks_html_singleframe() {
   let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks_html_singleframe.html");
-  await BookmarkHTMLUtils.importFromFile(bookmarksFile, true);
+  await BookmarkHTMLUtils.importFromFile(bookmarksFile, { replace: true });
 
   let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarksMenuFolderId).root;
   Assert.equal(root.childCount, 1);

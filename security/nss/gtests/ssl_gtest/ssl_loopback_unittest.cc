@@ -56,8 +56,8 @@ TEST_P(TlsConnectGeneric, CipherSuiteMismatch) {
 
 class TlsAlertRecorder : public TlsRecordFilter {
  public:
-  TlsAlertRecorder(const std::shared_ptr<TlsAgent>& agent)
-      : TlsRecordFilter(agent), level_(255), description_(255) {}
+  TlsAlertRecorder(const std::shared_ptr<TlsAgent>& a)
+      : TlsRecordFilter(a), level_(255), description_(255) {}
 
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                     const DataBuffer& input,
@@ -87,9 +87,9 @@ class TlsAlertRecorder : public TlsRecordFilter {
 
 class HelloTruncator : public TlsHandshakeFilter {
  public:
-  HelloTruncator(const std::shared_ptr<TlsAgent>& agent)
+  HelloTruncator(const std::shared_ptr<TlsAgent>& a)
       : TlsHandshakeFilter(
-            agent, {kTlsHandshakeClientHello, kTlsHandshakeServerHello}) {}
+            a, {kTlsHandshakeClientHello, kTlsHandshakeServerHello}) {}
   PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
                                        const DataBuffer& input,
                                        DataBuffer* output) override {
@@ -171,8 +171,8 @@ TEST_P(TlsConnectGeneric, ConnectSendReceive) {
 
 class SaveTlsRecord : public TlsRecordFilter {
  public:
-  SaveTlsRecord(const std::shared_ptr<TlsAgent>& agent, size_t index)
-      : TlsRecordFilter(agent), index_(index), count_(0), contents_() {}
+  SaveTlsRecord(const std::shared_ptr<TlsAgent>& a, size_t index)
+      : TlsRecordFilter(a), index_(index), count_(0), contents_() {}
 
   const DataBuffer& contents() const { return contents_; }
 
@@ -227,8 +227,8 @@ TEST_F(TlsConnectStreamTls13, DecryptRecordServer) {
 
 class DropTlsRecord : public TlsRecordFilter {
  public:
-  DropTlsRecord(const std::shared_ptr<TlsAgent>& agent, size_t index)
-      : TlsRecordFilter(agent), index_(index), count_(0) {}
+  DropTlsRecord(const std::shared_ptr<TlsAgent>& a, size_t index)
+      : TlsRecordFilter(a), index_(index), count_(0) {}
 
  protected:
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
@@ -373,8 +373,8 @@ TEST_P(TlsHolddownTest, TestDtlsHolddownExpiryResumption) {
 
 class TlsPreCCSHeaderInjector : public TlsRecordFilter {
  public:
-  TlsPreCCSHeaderInjector(const std::shared_ptr<TlsAgent>& agent)
-      : TlsRecordFilter(agent) {}
+  TlsPreCCSHeaderInjector(const std::shared_ptr<TlsAgent>& a)
+      : TlsRecordFilter(a) {}
   virtual PacketFilter::Action FilterRecord(
       const TlsRecordHeader& record_header, const DataBuffer& input,
       size_t* offset, DataBuffer* output) override {

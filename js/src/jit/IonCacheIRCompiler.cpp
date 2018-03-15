@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRCompiler.h"
@@ -23,6 +24,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::DebugOnly;
+using mozilla::Maybe;
 
 namespace js {
 namespace jit {

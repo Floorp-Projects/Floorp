@@ -688,7 +688,7 @@
         <body>
           <![CDATA[
             let event = document.createEvent("Events");
-            event.initEvent("DOMUpdatePageReport", true, true);
+            event.initEvent("DOMUpdateBlockedPopups", true, true);
             this.dispatchEvent(event);
           ]]>
         </body>
@@ -721,11 +721,6 @@
       </method>
 
       <field name="blockedPopups">null</field>
-
-      <!-- Obsolete name for blockedPopups. Used by android. -->
-      <property name="pageReport"
-         onget="return this.blockedPopups;"
-         readonly="true"/>
 
       <method name="audioPlaybackStarted">
         <body>

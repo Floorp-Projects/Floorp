@@ -222,12 +222,6 @@ APZCTreeManagerChild::SetLongTapEnabled(bool aTapGestureEnabled)
 }
 
 void
-APZCTreeManagerChild::ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY)
-{
-  SendProcessTouchVelocity(aTimestampMs, aSpeedY);
-}
-
-void
 APZCTreeManagerChild::UpdateWheelTransaction(
     LayoutDeviceIntPoint aRefPoint,
     EventMessage aEventMessage)

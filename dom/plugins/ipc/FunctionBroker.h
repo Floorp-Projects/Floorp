@@ -638,6 +638,12 @@ inline void EndpointHandler<SERVER>::Copy(uint64_t& aDest, const PSecHandle& aSr
 template<>
 inline void EndpointHandler<SERVER>::Copy(uint64_t& aDest, void* const & aSrc)
 {
+  // If the HANDLE/HINSTANCE was an error then don't store it.
+  if (!aSrc) {
+    aDest = 0;
+    return;
+  }
+
   static uint64_t sNextVal = 1;
   // Fetch val by reference to update the value in the map
   uint64_t& val = sPtrToIdMap[aSrc];

@@ -27,4 +27,15 @@ add_task(async function() {
   is(item.innerText, "evaledFunc()", "got evaled func");
   item.click();
   assertHighlightLocation(dbg, "simple1", 15);
+
+  // Ensure "main()" is the first function listed
+  const firstFunction = findElementWithSelector(dbg, '.outline-list__element .function-signature');
+  is(firstFunction.innerText, "main()", "Natural first function is first listed");
+  // Sort the list
+  findElementWithSelector(dbg, ".outline-footer button").click();
+  // Button becomes active to show alphabetization
+  is(findElementWithSelector(dbg, ".outline-footer button").className, "active", "Alphabetize button is highlighted when active");
+  // Ensure "doEval()" is the first function listed after alphabetization
+  const firstAlphaFunction = findElementWithSelector(dbg, '.outline-list__element .function-signature');
+  is(firstAlphaFunction.innerText.replace("λ", ""), "doEval()", "Alphabetized first function is correct");
 });

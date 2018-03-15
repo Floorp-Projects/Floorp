@@ -1282,7 +1282,7 @@ var gBrowserInit = {
   },
 
   onLoad() {
-    gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver);
+    gBrowser.addEventListener("DOMUpdateBlockedPopups", gPopupBlockerObserver);
 
     Services.obs.addObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed");
 

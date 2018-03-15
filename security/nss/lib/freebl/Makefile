@@ -517,13 +517,13 @@ ifndef NSS_DISABLE_CHACHAPOLY
         ifdef HAVE_INT128_SUPPORT
             EXTRA_SRCS += Hacl_Poly1305_64.c
         else
-            EXTRA_SRCS += poly1305.c
+            EXTRA_SRCS += Hacl_Poly1305_32.c
         endif
     else
         ifeq ($(CPU_ARCH),aarch64)
             EXTRA_SRCS += Hacl_Poly1305_64.c
         else
-            EXTRA_SRCS += poly1305.c
+            EXTRA_SRCS += Hacl_Poly1305_32.c
         endif
     endif # x86_64
 

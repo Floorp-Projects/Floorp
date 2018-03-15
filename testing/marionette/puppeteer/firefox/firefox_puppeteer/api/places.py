@@ -79,7 +79,7 @@ class Places(BaseLib):
           let defaultBookmarks = 'chrome://browser/locale/bookmarks.html';
 
           // Trigger the import of the default bookmarks
-          BookmarkHTMLUtils.importFromURL(defaultBookmarks, true)
+          BookmarkHTMLUtils.importFromURL(defaultBookmarks, { replace: true })
                            .then(() => marionetteScriptFinished(true))
                            .catch(() => marionetteScriptFinished(false));
         """, script_timeout=10000)

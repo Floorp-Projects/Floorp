@@ -1708,6 +1708,10 @@ function extractSymbol(path, symbols) {
     symbols.hasJsx = true;
   }
 
+  if (t.isGenericTypeAnnotation(path)) {
+    symbols.hasTypes = true;
+  }
+
   if (t.isClassDeclaration(path)) {
     symbols.classes.push({
       name: path.node.id.name,
@@ -1816,7 +1820,8 @@ function extractSymbols(sourceId) {
     identifiers: [],
     classes: [],
     imports: [],
-    hasJsx: false
+    hasJsx: false,
+    hasTypes: false
   };
 
   const ast = (0, _ast.traverseAst)(sourceId, {

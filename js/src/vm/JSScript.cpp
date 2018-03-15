@@ -11,6 +11,7 @@
 #include "vm/JSScript-inl.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
@@ -65,6 +66,7 @@ using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
 
+using mozilla::Maybe;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 

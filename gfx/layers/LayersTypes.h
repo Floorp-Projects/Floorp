@@ -251,6 +251,8 @@ enum TextureDumpMode {
   DoNotCompress  // dump texture uncompressed
 };
 
+typedef uint32_t TouchBehaviorFlags;
+
 // Some specialized typedefs of Matrix4x4Typed.
 typedef gfx::Matrix4x4Typed<LayerPixel, CSSTransformedLayerPixel> CSSTransformMatrix;
 // Several different async transforms can contribute to a layer's transform

@@ -13,6 +13,7 @@ pref("devtools.debugger.pause-on-exceptions", false);
 pref("devtools.debugger.ignore-caught-exceptions", false);
 pref("devtools.debugger.source-maps-enabled", true);
 pref("devtools.debugger.pretty-print-enabled", true);
+pref("devtools.debugger.alphabetize-outline", false);
 pref("devtools.debugger.auto-pretty-print", false);
 pref("devtools.debugger.auto-black-box", true);
 pref("devtools.debugger.workers", false);

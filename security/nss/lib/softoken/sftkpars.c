@@ -162,7 +162,7 @@ sftk_parseParameters(char *param, sftk_parameters *parsed, PRBool isFIPS)
     }
     if (parsed->tokens == NULL) {
         int count = isFIPS ? 1 : 2;
-        int index = count - 1;
+        int i = count - 1;
         sftk_token_parameters *tokens = NULL;
 
         tokens = (sftk_token_parameters *)
@@ -172,30 +172,30 @@ sftk_parseParameters(char *param, sftk_parameters *parsed, PRBool isFIPS)
         }
         parsed->tokens = tokens;
         parsed->token_count = count;
-        tokens[index].slotID = isFIPS ? FIPS_SLOT_ID : PRIVATE_KEY_SLOT_ID;
-        tokens[index].certPrefix = certPrefix;
-        tokens[index].keyPrefix = keyPrefix;
-        tokens[index].minPW = minPW ? atoi(minPW) : 0;
-        tokens[index].readOnly = parsed->readOnly;
-        tokens[index].noCertDB = parsed->noCertDB;
-        tokens[index].noKeyDB = parsed->noCertDB;
-        tokens[index].forceOpen = parsed->forceOpen;
-        tokens[index].pwRequired = parsed->pwRequired;
-        tokens[index].optimizeSpace = parsed->optimizeSpace;
+        tokens[i].slotID = isFIPS ? FIPS_SLOT_ID : PRIVATE_KEY_SLOT_ID;
+        tokens[i].certPrefix = certPrefix;
+        tokens[i].keyPrefix = keyPrefix;
+        tokens[i].minPW = minPW ? atoi(minPW) : 0;
+        tokens[i].readOnly = parsed->readOnly;
+        tokens[i].noCertDB = parsed->noCertDB;
+        tokens[i].noKeyDB = parsed->noCertDB;
+        tokens[i].forceOpen = parsed->forceOpen;
+        tokens[i].pwRequired = parsed->pwRequired;
+        tokens[i].optimizeSpace = parsed->optimizeSpace;
         tokens[0].optimizeSpace = parsed->optimizeSpace;
         certPrefix = NULL;
         keyPrefix = NULL;
         if (isFIPS) {
-            tokens[index].tokdes = ftokdes;
-            tokens[index].updtokdes = pupdtokdes;
-            tokens[index].slotdes = fslotdes;
+            tokens[i].tokdes = ftokdes;
+            tokens[i].updtokdes = pupdtokdes;
+            tokens[i].slotdes = fslotdes;
             fslotdes = NULL;
             ftokdes = NULL;
             pupdtokdes = NULL;
         } else {
-            tokens[index].tokdes = ptokdes;
-            tokens[index].updtokdes = pupdtokdes;
-            tokens[index].slotdes = pslotdes;
+            tokens[i].tokdes = ptokdes;
+            tokens[i].updtokdes = pupdtokdes;
+            tokens[i].slotdes = pslotdes;
             tokens[0].slotID = NETSCAPE_SLOT_ID;
             tokens[0].tokdes = tokdes;
             tokens[0].slotdes = slotdes;

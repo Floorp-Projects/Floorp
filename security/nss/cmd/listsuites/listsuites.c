@@ -64,9 +64,7 @@ main(int argc, char **argv)
     /* disable all the SSL3 cipher suites */
     for (i = 0; i < SSL_NumImplementedCiphers; i++) {
         PRUint16 suite = cipherSuites[i];
-        SECStatus rv;
         PRBool enabled;
-        PRErrorCode err;
         SSLCipherSuiteInfo info;
 
         rv = SSL_CipherPrefGetDefault(suite, &enabled);

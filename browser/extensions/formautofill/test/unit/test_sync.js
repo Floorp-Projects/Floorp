@@ -76,8 +76,9 @@ async function setup() {
   await engine.initialize();
   // Avoid accidental automatic sync due to our own changes
   Service.scheduler.syncThreshold = 10000000;
+  let syncID = await engine.resetLocalSyncID();
   let server = serverForUsers({"foo": "password"}, {
-    meta: {global: {engines: {addresses: {version: engine.version, syncID: engine.syncID}}}},
+    meta: {global: {engines: {addresses: {version: engine.version, syncID}}}},
     addresses: {},
   });
 
@@ -146,7 +147,7 @@ add_task(async function test_outgoing() {
     // The tracker should have a score recorded for the 2 additions we had.
     equal(engine._tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     Assert.equal(collection.count(), 2);
@@ -190,7 +191,7 @@ add_task(async function test_incoming_new() {
     // The tracker should start with no score.
     equal(engine._tracker.score, 0);
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     expectLocalProfiles(profileStorage, [
@@ -220,7 +221,7 @@ add_task(async function test_incoming_existing() {
     let guid2 = profileStorage.addresses.add(TEST_PROFILE_2);
 
     // an initial sync so we don't think they are locally modified.
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     // now server records that modify the existing items.
@@ -229,14 +230,15 @@ add_task(async function test_incoming_existing() {
       "given-name": "NewName",
     });
 
+    let lastSync = await engine.getLastSync();
     server.insertWBO("foo", "addresses", new ServerWBO(guid1, encryptPayload({
       id: guid1,
       entry: modifiedEntry1,
-    }), engine.lastSync + 10));
+    }), lastSync + 10));
     server.insertWBO("foo", "addresses", new ServerWBO(guid2, encryptPayload({
       id: guid2,
       deleted: true,
-    }), engine.lastSync + 10));
+    }), lastSync + 10));
 
     await engine.sync();
 
@@ -254,7 +256,7 @@ add_task(async function test_tombstones() {
   try {
     let existingGUID = profileStorage.addresses.add(TEST_PROFILE_1);
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     Assert.equal(collection.count(), 1);
@@ -280,18 +282,19 @@ add_task(async function test_applyIncoming_both_deleted() {
   try {
     let guid = profileStorage.addresses.add(TEST_PROFILE_1);
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     // Delete synced record locally.
     profileStorage.addresses.remove(guid);
 
     // Delete same record remotely.
+    let lastSync = await engine.getLastSync();
     let collection = server.user("foo").collection("addresses");
     collection.insert(guid, encryptPayload({
       id: guid,
       deleted: true,
-    }), engine.lastSync + 10);
+    }), lastSync + 10);
 
     await engine.sync();
 
@@ -320,7 +323,7 @@ add_task(async function test_applyIncoming_nonexistent_tombstone() {
       deleted: true,
     }), Date.now() / 1000);
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     ok(!profileStorage.addresses.get(guid),
@@ -339,15 +342,16 @@ add_task(async function test_applyIncoming_incoming_deleted() {
   try {
     let guid = profileStorage.addresses.add(TEST_PROFILE_1);
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     // Delete the record remotely.
+    let lastSync = await engine.getLastSync();
     let collection = server.user("foo").collection("addresses");
     collection.insert(guid, encryptPayload({
       id: guid,
       deleted: true,
-    }), engine.lastSync + 10);
+    }), lastSync + 10);
 
     await engine.sync();
 
@@ -370,7 +374,7 @@ add_task(async function test_applyIncoming_incoming_restored() {
     let guid = profileStorage.addresses.add(TEST_PROFILE_1);
 
     // Upload the record to the server.
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     // Removing a synced record should write a tombstone.
@@ -380,7 +384,8 @@ add_task(async function test_applyIncoming_incoming_restored() {
     let collection = server.user("foo").collection("addresses");
     let serverPayload = JSON.parse(JSON.parse(collection.payload(guid)).ciphertext);
     serverPayload.entry["street-address"] = "I moved!";
-    collection.insert(guid, encryptPayload(serverPayload), engine.lastSync + 10);
+    let lastSync = await engine.getLastSync();
+    collection.insert(guid, encryptPayload(serverPayload), lastSync + 10);
 
     // Sync again.
     await engine.sync();
@@ -406,7 +411,7 @@ add_task(async function test_applyIncoming_outgoing_restored() {
     let guid = profileStorage.addresses.add(TEST_PROFILE_1);
 
     // Upload the record to the server.
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     // Modify the local record.
@@ -415,11 +420,12 @@ add_task(async function test_applyIncoming_outgoing_restored() {
     profileStorage.addresses.update(guid, localCopy);
 
     // Replace the record with a tombstone on the server.
+    let lastSync = await engine.getLastSync();
     let collection = server.user("foo").collection("addresses");
     collection.insert(guid, encryptPayload({
       id: guid,
       deleted: true,
-    }), engine.lastSync + 10);
+    }), lastSync + 10);
 
     // Sync again.
     await engine.sync();
@@ -454,7 +460,7 @@ add_task(async function test_reconcile_both_modified_identical() {
       entry: TEST_PROFILE_1,
     }), Date.now() / 1000));
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     expectLocalProfiles(profileStorage, [{guid}]);
@@ -470,7 +476,7 @@ add_task(async function test_incoming_dupes() {
     // server.
     let guid1 = profileStorage.addresses.add(TEST_PROFILE_1);
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     // Create another profile locally, but don't sync it yet.
@@ -478,20 +484,21 @@ add_task(async function test_incoming_dupes() {
 
     // Now create two records on the server with the same contents as our local
     // profiles, but different GUIDs.
+    let lastSync = await engine.getLastSync();
     let guid1_dupe = Utils.makeGUID();
     server.insertWBO("foo", "addresses", new ServerWBO(guid1_dupe, encryptPayload({
       id: guid1_dupe,
       entry: Object.assign({
         version: 1,
       }, TEST_PROFILE_1),
-    }), engine.lastSync + 10));
+    }), lastSync + 10));
     let guid2_dupe = Utils.makeGUID();
     server.insertWBO("foo", "addresses", new ServerWBO(guid2_dupe, encryptPayload({
       id: guid2_dupe,
       entry: Object.assign({
         version: 1,
       }, TEST_PROFILE_2),
-    }), engine.lastSync + 10));
+    }), lastSync + 10));
 
     // Sync again. We should download `guid1_dupe` and `guid2_dupe`, then
     // reconcile changes.
@@ -527,7 +534,7 @@ add_task(async function test_dedupe_identical_unsynced() {
       }, TEST_PROFILE_1),
     }), Date.now() / 1000));
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     // Should have 1 item locally with GUID changed to the remote one.
@@ -549,17 +556,18 @@ add_task(async function test_dedupe_identical_synced() {
     let localGuid = profileStorage.addresses.add(TEST_PROFILE_1);
 
     // sync it - it will no longer be a candidate for de-duping.
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     // and an identical record on the server but different GUID.
+    let lastSync = await engine.getLastSync();
     let remoteGuid = Utils.makeGUID();
     server.insertWBO("foo", "addresses", new ServerWBO(remoteGuid, encryptPayload({
       id: remoteGuid,
       entry: Object.assign({
         version: 1,
       }, TEST_PROFILE_1),
-    }), engine.lastSync + 10));
+    }), lastSync + 10));
 
     await engine.sync();
 
@@ -608,7 +616,7 @@ add_task(async function test_dedupe_multiple_candidates() {
       entry: serverRecord,
     }), Date.now() / 1000));
 
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     expectLocalProfiles(profileStorage, [
@@ -648,7 +656,7 @@ add_task(async function test_reconcile_both_modified_conflict() {
     let guid = profileStorage.addresses.add(TEST_PROFILE_1);
 
     // Upload the record to the server.
-    engine.lastSync = 0;
+    await engine.setLastSync(0);
     await engine.sync();
 
     strictEqual(getSyncChangeCounter(profileStorage.addresses, guid), 0,
@@ -659,10 +667,11 @@ add_task(async function test_reconcile_both_modified_conflict() {
     localCopy["street-address"] = "I moved!";
     profileStorage.addresses.update(guid, localCopy);
 
+    let lastSync = await engine.getLastSync();
     let collection = server.user("foo").collection("addresses");
     let serverPayload = JSON.parse(JSON.parse(collection.payload(guid)).ciphertext);
     serverPayload.entry["street-address"] = "I moved, too!";
-    collection.insert(guid, encryptPayload(serverPayload), engine.lastSync + 10);
+    collection.insert(guid, encryptPayload(serverPayload), lastSync + 10);
 
     // Sync again.
     await engine.sync();

@@ -543,8 +543,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     D_DISTRUST="Distrust.$version"
     D_RSAPSS="RSAPSS.$version"
 
-    # we need relative pathnames of these files abd directories, since our
-    # tools can't handle the unix style absolut pathnames on cygnus
+    # we need relative pathnames of these files and directories, since our
+    # tools can't handle the unix style absolute pathnames on cygnus
 
     R_CADIR=../CA
     R_SERVERDIR=../server
@@ -565,6 +565,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_NOLOGINDIR=../nologin
     R_SSLGTESTDIR=../ssl_gtests
     R_GTESTDIR=../gtests
+    R_RSAPSSDIR=../rsapss
 
     #
     # profiles are either paths or domains depending on the setting of
@@ -581,6 +582,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     P_R_EXT_SERVERDIR=${R_EXT_SERVERDIR}
     P_R_EXT_CLIENTDIR=${R_EXT_CLIENTDIR}
     P_R_IMPLICIT_INIT_DIR=${R_IMPLICIT_INIT_DIR}
+    P_R_RSAPSSDIR=${R_RSAPSSDIR}
     if [ -n "${MULTIACCESS_DBM}" ]; then
         P_R_CADIR="multiaccess:${D_CA}"
         P_R_ALICEDIR="multiaccess:${D_ALICE}"
@@ -593,6 +595,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         P_R_EXT_SERVERDIR="multiaccess:${D_EXT_SERVER}"
         P_R_EXT_CLIENTDIR="multiaccess:${D_EXT_CLIENT}"
         P_R_IMPLICIT_INIT_DIR="multiaccess:${D_IMPLICIT_INIT}"
+	P_R_RSAPSSDIR="multiaccess:${D_RSAPSS}"
     fi
 
     R_PWFILE=../tests.pw

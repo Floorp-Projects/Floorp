@@ -7,7 +7,7 @@
 #ifndef __mozilla_layers_TouchActionHelper_h__
 #define __mozilla_layers_TouchActionHelper_h__
 
-#include "mozilla/layers/APZUtils.h" // for TouchBehaviorFlags
+#include "mozilla/layers/LayersTypes.h" // for TouchBehaviorFlags
 
 class nsIFrame;
 class nsIWidget;

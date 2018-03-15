@@ -1073,15 +1073,15 @@ sec_pkcs5_rc2(SECItem *key, SECItem *iv, SECItem *src, PRBool dummy,
     }
 
     if (encrypt != PR_FALSE) {
-        void *dummy;
+        void *v;
 
-        dummy = CBC_PadBuffer(NULL, dup_src->data,
-                              dup_src->len, &dup_src->len, 8 /* RC2_BLOCK_SIZE */);
-        if (dummy == NULL) {
+        v = CBC_PadBuffer(NULL, dup_src->data,
+                          dup_src->len, &dup_src->len, 8 /* RC2_BLOCK_SIZE */);
+        if (v == NULL) {
             SECITEM_FreeItem(dup_src, PR_TRUE);
             return NULL;
         }
-        dup_src->data = (unsigned char *)dummy;
+        dup_src->data = (unsigned char *)v;
     }
 
     dest = (SECItem *)PORT_ZAlloc(sizeof(SECItem));

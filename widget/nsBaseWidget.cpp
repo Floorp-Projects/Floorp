@@ -933,14 +933,27 @@ nsBaseWidget::CreateRootContentController()
 
 void nsBaseWidget::ConfigureAPZCTreeManager()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mAPZC);
 
   ConfigureAPZControllerThread();
 
-  mAPZC->SetDPI(GetDPI());
+  float dpi = GetDPI();
+  // On Android the main thread is not the controller thread
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod<float>(
+      "layers::IAPZCTreeManager::SetDPI",
+      mAPZC,
+      &IAPZCTreeManager::SetDPI,
+      dpi));
 
   if (gfxPrefs::APZKeyboardEnabled()) {
-    mAPZC->SetKeyboardMap(nsXBLWindowKeyHandler::CollectKeyboardShortcuts());
+    KeyboardMap map = nsXBLWindowKeyHandler::CollectKeyboardShortcuts();
+    // On Android the main thread is not the controller thread
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<KeyboardMap>(
+        "layers::IAPZCTreeManager::SetKeyboardMap",
+        mAPZC,
+        &IAPZCTreeManager::SetKeyboardMap,
+        map));
   }
 
   RefPtr<IAPZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
@@ -1920,7 +1933,14 @@ nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
     return;
   }
   uint64_t layerId = mCompositorSession->RootLayerTreeId();
-  mAPZC->ZoomToRect(ScrollableLayerGuid(layerId, aPresShellId, aViewId), aRect, aFlags);
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
+      "layers::IAPZCTreeManager::ZoomToRect",
+      mAPZC,
+      &IAPZCTreeManager::ZoomToRect,
+      ScrollableLayerGuid(layerId, aPresShellId, aViewId),
+      aRect,
+      aFlags));
 }
 
 #ifdef ACCESSIBILITY

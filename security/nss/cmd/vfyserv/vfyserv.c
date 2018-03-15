@@ -327,9 +327,7 @@ do_connects(void *a, int connection)
 }
 
 void
-client_main(unsigned short port,
-            int connections,
-            const char *hostName)
+client_main(int connections)
 {
     int i;
     SECStatus secStatus;
@@ -553,7 +551,7 @@ main(int argc, char **argv)
         }
     }
 
-    client_main(port, connections, hostName);
+    client_main(connections);
 
 cleanup:
     if (doOcspCheck) {

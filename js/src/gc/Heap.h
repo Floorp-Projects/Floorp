@@ -578,7 +578,7 @@ struct ChunkInfo
  * the arena (with the mark bitmap bytes it uses).
  */
 const size_t BytesPerArenaWithHeader = ArenaSize + ArenaBitmapBytes;
-const size_t ChunkDecommitBitmapBytes = ChunkSize / ArenaSize / JS_BITS_PER_BYTE;
+const size_t ChunkDecommitBitmapBytes = ChunkSize / ArenaSize / CHAR_BIT;
 const size_t ChunkBytesAvailable = ChunkSize - sizeof(ChunkTrailer) - sizeof(ChunkInfo) - ChunkDecommitBitmapBytes;
 const size_t ArenasPerChunk = ChunkBytesAvailable / BytesPerArenaWithHeader;
 

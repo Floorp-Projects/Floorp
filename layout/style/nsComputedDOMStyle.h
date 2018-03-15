@@ -58,6 +58,10 @@ private:
   typedef mozilla::dom::CSSValue CSSValue;
   typedef mozilla::StyleGeometryBox StyleGeometryBox;
 
+  already_AddRefed<CSSValue>
+  GetPropertyCSSValueWithoutWarning(const nsAString& aProp,
+                                    mozilla::ErrorResult& aRv);
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsComputedDOMStyle,
@@ -69,11 +73,13 @@ public:
   nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
                             const nsAString& aValue,
                             nsIPrincipal* aSubjectPrincipal) override;
-  virtual already_AddRefed<CSSValue>
-  GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv)
-    override;
+
+  // Do NOT use this, it is deprecated, see bug 474655.
+  already_AddRefed<CSSValue>
+  GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv) final;
   using nsICSSDeclaration::GetPropertyCSSValue;
-  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) override;
+
+  void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) final;
 
   enum StyleType {
     eDefaultOnly, // Only includes UA and user sheets
