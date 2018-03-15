@@ -627,11 +627,11 @@ IsPrologueBailout(const SnapshotIterator& iter, const ExceptionBailoutInfo* excI
 //                      +===============+
 //
 static bool
-InitFromBailout(JSContext* cx, jsbytecode* callerPC,
+InitFromBailout(JSContext* cx, size_t frameNo,
                 HandleFunction fun, HandleScript script,
                 SnapshotIterator& iter, bool invalidate, BaselineStackBuilder& builder,
                 MutableHandle<GCVector<Value>> startFrameFormals, MutableHandleFunction nextCallee,
-                jsbytecode** callPC, const ExceptionBailoutInfo* excInfo)
+                const ExceptionBailoutInfo* excInfo)
 {
     // The Baseline frames we will reconstruct on the heap are not rooted, so GC
     // must be suppressed here.
@@ -827,7 +827,7 @@ InitFromBailout(JSContext* cx, jsbytecode* callerPC,
         JitSpew(JitSpew_BaselineBailouts, "      frame slots %u, nargs %zu, nfixed %zu",
                 iter.numAllocations(), fun->nargs(), script->nfixed());
 
-        if (!callerPC) {
+        if (frameNo == 0) {
             // This is the first frame. Store the formals in a Vector until we
             // are done. Due to UCE and phi elimination, we could store an
             // UndefinedValue() here for formals we think are unused, but
@@ -842,7 +842,7 @@ InitFromBailout(JSContext* cx, jsbytecode* callerPC,
             Value arg = iter.read();
             JitSpew(JitSpew_BaselineBailouts, "      arg %d = %016" PRIx64,
                         (int) i, *((uint64_t*) &arg));
-            if (callerPC) {
+            if (frameNo > 0) {
                 size_t argOffset = builder.framePushed() + JitFrameLayout::offsetOfActualArg(i);
                 builder.valuePointerAtStackOffset(argOffset).set(arg);
             } else {
@@ -1077,9 +1077,6 @@ InitFromBailout(JSContext* cx, jsbytecode* callerPC,
     // If this was the last inline frame, or we are bailing out to a catch or
     // finally block in this frame, then unpacking is almost done.
     if (!iter.moreFrames() || catchingException) {
-        // Last frame, so PC for call to next frame is set to nullptr.
-        *callPC = nullptr;
-
         // If the bailout was a resumeAfter, and the opcode is monitored,
         // then the bailed out state should be in a position to enter
         // into the ICTypeMonitor chain for the op.
@@ -1257,8 +1254,6 @@ InitFromBailout(JSContext* cx, jsbytecode* callerPC,
 
         return true;
     }
-
-    *callPC = pc;
 
     // Write out descriptor of BaselineJS frame.
     size_t baselineFrameDescr = MakeFrameDescriptor((uint32_t) builder.framePushed(),
@@ -1633,8 +1628,6 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     size_t frameNo = 0;
 
     // Reconstruct baseline frames using the builder.
-    RootedScript caller(cx);
-    jsbytecode* callerPC = nullptr;
     RootedFunction fun(cx, callee);
     Rooted<GCVector<Value>> startFrameFormals(cx, GCVector<Value>(cx));
 
@@ -1663,17 +1656,16 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
         // debug mode.
         bool passExcInfo = handleException || propagatingExceptionForDebugMode;
 
-        jsbytecode* callPC = nullptr;
         RootedFunction nextCallee(cx, nullptr);
-        if (!InitFromBailout(cx, callerPC, fun, scr,
+        if (!InitFromBailout(cx, frameNo, fun, scr,
                              snapIter, invalidate, builder, &startFrameFormals,
-                             &nextCallee, &callPC, passExcInfo ? excInfo : nullptr))
+                             &nextCallee, passExcInfo ? excInfo : nullptr))
         {
             return BAILOUT_RETURN_FATAL_ERROR;
         }
 
         if (!snapIter.moreFrames()) {
-            MOZ_ASSERT(!callPC);
+            MOZ_ASSERT(!nextCallee);
             break;
         }
 
@@ -1681,9 +1673,6 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
             break;
 
         MOZ_ASSERT(nextCallee);
-        MOZ_ASSERT(callPC);
-        caller = scr;
-        callerPC = callPC;
         fun = nextCallee;
         scr = fun->existingScript();
 
