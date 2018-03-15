@@ -133,6 +133,11 @@ interface nsIBlocklistService : nsISupports
    * Whether or not we've finished loading the blocklist.
    */
   readonly attribute boolean isLoaded;
+
+  /**
+   * Trigger loading the blocklist content asynchronously.
+   */
+  void loadBlocklistAsync();
 };
 
 /**
