@@ -35,12 +35,7 @@ window._gBrowser = {
     }
 
     let messageManager = window.getGroupMessageManager("browsers");
-
-    let remote = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIWebNavigation)
-                       .QueryInterface(Ci.nsILoadContext)
-                       .useRemoteTabs;
-    if (remote) {
+    if (gMultiProcessBrowser) {
       messageManager.addMessageListener("DOMTitleChanged", this);
       messageManager.addMessageListener("DOMWindowClose", this);
       window.messageManager.addMessageListener("contextmenu", this);
