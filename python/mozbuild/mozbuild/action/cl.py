@@ -65,6 +65,7 @@ def InvokeClWithDependencyGeneration(cmdline):
     # The deps target lives here
     depstarget = os.path.basename(target) + ".pp"
 
+    showincludes = '-showIncludes' in cmdline
     cmdline += ['-showIncludes']
 
     mk = Makefile()
@@ -82,11 +83,13 @@ def InvokeClWithDependencyGeneration(cmdline):
             dep = normcase(dep)
             if ' ' not in dep:
                 rule.add_dependencies([dep])
-        else:
-            # Make sure we preserve the relevant output from cl. mozprocess
-            # swallows the newline delimiter, so we need to re-add it.
-            sys.stdout.write(line)
-            sys.stdout.write('\n')
+            # Hide the line by returning early
+            if not showincludes:
+                return
+        # Make sure we preserve the relevant output from cl. mozprocess
+        # swallows the newline delimiter, so we need to re-add it.
+        sys.stdout.write(line)
+        sys.stdout.write('\n')
 
     # We need to ignore children because MSVC can fire up a background process
     # during compilation. This process is cleaned up on its own. If we kill it,
