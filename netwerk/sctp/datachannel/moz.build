@@ -30,5 +30,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
 else:
     DEFINES['__Userspace_os_%s' % CONFIG['OS_TARGET']] = 1
 
+NO_PGO = True # Don't PGO
+
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
