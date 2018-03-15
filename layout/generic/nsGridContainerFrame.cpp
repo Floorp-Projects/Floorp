@@ -1294,25 +1294,42 @@ struct nsGridContainerFrame::Tracks
       auto& plan = aPlan[i];
       const auto& sz = mSizes[i];
       plan.mBase = StartSizeInDistribution<phase>(sz);
+      MOZ_ASSERT(phase == TrackSizingPhase::eMaxContentMaximums ||
+                 !(sz.mState & TrackSize::eInfinitelyGrowable),
+                 "forgot to reset the eInfinitelyGrowable bit?");
       plan.mState = sz.mState;
     }
   }
 
-  void CopyPlanToBase(const nsTArray<TrackSize>& aPlan)
+  template<TrackSizingPhase phase>
+  void CopyPlanToSize(const nsTArray<TrackSize>& aPlan,
+                      bool aNeedInfinitelyGrowableFlag = false)
   {
     for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
-      mSizes[i].mBase = aPlan[i].mBase;
-    }
-  }
-
-  void CopyPlanToLimit(const nsTArray<TrackSize>& aPlan)
-  {
-    for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
-      MOZ_ASSERT(aPlan[i].mBase >= 0);
+      const auto& plan = aPlan[i];
+      MOZ_ASSERT(plan.mBase >= 0);
       auto& sz = mSizes[i];
-      sz.mState &= ~TrackSize::eInfinitelyGrowable;
-      if (aPlan[i].mState & TrackSize::eModified) {
-        sz.mLimit = aPlan[i].mBase;
+      switch (phase) {
+        case TrackSizingPhase::eIntrinsicMinimums:
+        case TrackSizingPhase::eContentBasedMinimums:
+        case TrackSizingPhase::eMaxContentMinimums:
+          sz.mBase = plan.mBase;
+          break;
+        case TrackSizingPhase::eIntrinsicMaximums:
+          if (plan.mState & TrackSize::eModified) {
+            if (sz.mLimit == NS_UNCONSTRAINEDSIZE &&
+                aNeedInfinitelyGrowableFlag) {
+              sz.mState |= TrackSize::eInfinitelyGrowable;
+            }
+            sz.mLimit = plan.mBase;
+          }
+          break;
+        case TrackSizingPhase::eMaxContentMaximums:
+          if (plan.mState & TrackSize::eModified) {
+            sz.mLimit = plan.mBase;
+          }
+          sz.mState &= ~TrackSize::eInfinitelyGrowable;
+          break;
       }
     }
   }
@@ -4269,7 +4286,7 @@ nsGridContainerFrame::Tracks::GrowBaseForSpanningItems(
     }
   }
   if (updatedBase) {
-    CopyPlanToBase(aPlan);
+    CopyPlanToSize<phase>(aPlan);
   }
   return updatedBase;
 }
@@ -4502,31 +4519,21 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       }
 
       if (stateBitsPerSpan[span] & TrackSize::eIntrinsicMaxSizing) {
+        const bool willRunStep2_6 =
+          stateBitsPerSpan[span] & TrackSize::eAutoOrMaxContentMaxSizing;
         // Step 2.5 MinSize to intrinsic max-sizing.
         GrowLimitForSpanningItems<TrackSizingPhase::eIntrinsicMaximums>(
           step2Items, tracks, plan, itemPlan, TrackSize::eIntrinsicMaxSizing,
           spanGroupStartIndex, spanGroupEndIndex, fitContentClamper);
+        CopyPlanToSize<TrackSizingPhase::eIntrinsicMaximums>(plan, willRunStep2_6);
 
-        for (size_t j = 0, len = mSizes.Length(); j < len; ++j) {
-          TrackSize& sz = itemPlan[j];
-          sz.mState &= ~(TrackSize::eFrozen | TrackSize::eSkipGrowUnlimited);
-          if (plan[j].mState & TrackSize::eModified) {
-            if (mSizes[j].mLimit == NS_UNCONSTRAINEDSIZE) {
-              mSizes[j].mState |= TrackSize::eInfinitelyGrowable;
-            }
-            mSizes[j].mLimit = plan[j].mBase;
-          }
-          plan[j].mState &= ~(TrackSize::eModified);
-        }
-
-        if (stateBitsPerSpan[span] & TrackSize::eAutoOrMaxContentMaxSizing) {
+        if (willRunStep2_6) {
           // Step 2.6 MaxContentContribution to max-content max-sizing.
           GrowLimitForSpanningItems<TrackSizingPhase::eMaxContentMaximums>(
             step2Items, tracks, plan, itemPlan, TrackSize::eAutoOrMaxContentMaxSizing,
             spanGroupStartIndex, spanGroupEndIndex, fitContentClamper);
-          
+          CopyPlanToSize<TrackSizingPhase::eMaxContentMaximums>(plan);
         }
-        CopyPlanToLimit(plan);
       }
 
       i = spanGroupEndIndex;
