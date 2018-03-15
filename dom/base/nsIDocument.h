@@ -105,6 +105,7 @@ class nsIObserver;
 class nsIPrincipal;
 class nsIRequest;
 class nsIRunnable;
+class nsISecurityConsoleMessage;
 class nsIStreamListener;
 class nsIStructuredCloneContainer;
 class nsIURI;
@@ -1430,6 +1431,8 @@ public:
   already_AddRefed<nsSimpleContentList> BlockedTrackingNodes() const;
 
 protected:
+  void MaybeEndOutermostXBLUpdate();
+
   void DispatchContentLoadedEvents();
 
   void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
@@ -3657,6 +3660,12 @@ public:
   nsIContent* GetContentInThisDocument(nsIFrame* aFrame) const;
 
 protected:
+  already_AddRefed<nsIPrincipal> MaybeDowngradePrincipal(nsIPrincipal* aPrincipal);
+
+  void EnsureOnloadBlocker();
+
+  void SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages);
+
   // Returns true if the scheme for the url for this document is "about".
   bool IsAboutPage() const;
 
