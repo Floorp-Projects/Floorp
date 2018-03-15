@@ -1091,16 +1091,6 @@ class AssemblerX86Shared : public AssemblerShared
         X86Encoding::SetInt32(code + offset.offset(), n);
     }
 
-    CodeOffset twoByteNop() {
-        return CodeOffset(masm.twoByteNop().offset());
-    }
-    static void patchTwoByteNopToJump(uint8_t* jump, uint8_t* target) {
-        X86Encoding::BaseAssembler::patchTwoByteNopToJump(jump, target);
-    }
-    static void patchJumpToTwoByteNop(uint8_t* jump) {
-        X86Encoding::BaseAssembler::patchJumpToTwoByteNop(jump);
-    }
-
     static void patchFiveByteNopToCall(uint8_t* callsite, uint8_t* target) {
         X86Encoding::BaseAssembler::patchFiveByteNopToCall(callsite, target);
     }
