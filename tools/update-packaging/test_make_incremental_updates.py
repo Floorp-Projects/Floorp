@@ -128,16 +128,16 @@ class TestMakeIncrementalUpdates(unittest.TestCase):
     def test_bunzip_file(self):
         mkup.bunzip_file('filename')
 
-    def test_extract_mar(self): 
+    def test_extract_mar(self):
         mkup.extract_mar('filename', 'work_dir')
 
     def test_create_partial_patch_for_file(self):
         mkup.create_partial_patch_for_file('from_marfile_entry', 'to_marfile_entry', 'shas', self.patch_info)
 
-    def test_create_add_patch_for_file(self):           
+    def test_create_add_patch_for_file(self):
         mkup.create_add_patch_for_file('to_marfile_entry', self.patch_info)
 
-    def test_process_explicit_remove_files(self): 
+    def test_process_explicit_remove_files(self):
         mkup.process_explicit_remove_files('dir_path', self.patch_info)
 
     def test_create_partial_patch(self):
