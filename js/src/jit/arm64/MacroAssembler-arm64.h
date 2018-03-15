@@ -230,11 +230,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     void implicitPop(uint32_t args) {
         MOZ_ASSERT(args % sizeof(intptr_t) == 0);
-        adjustFrame(-args);
+        adjustFrame(0 - args);
     }
     void Pop(ARMRegister r) {
         vixl::MacroAssembler::Pop(r);
-        adjustFrame(- r.size() / 8);
+        adjustFrame(0 - r.size() / 8);
     }
     // FIXME: This is the same on every arch.
     // FIXME: If we can share framePushed_, we can share this.
