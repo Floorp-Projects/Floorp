@@ -288,10 +288,24 @@ window._gBrowser = {
     browser.permanentKey = {};
     browser.droppedLinkHandler = handleDroppedLink;
 
-    this._autoScrollPopup = browser._createAutoScrollPopup();
-    this._autoScrollPopup.id = "autoscroller";
-    document.getElementById("mainPopupSet").appendChild(this._autoScrollPopup);
-    browser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
+    let autoScrollPopup = browser._createAutoScrollPopup();
+    autoScrollPopup.id = "autoscroller";
+    document.getElementById("mainPopupSet").appendChild(autoScrollPopup);
+    browser.setAttribute("autoscrollpopup", autoScrollPopup.id);
+
+    this._defaultBrowserAttributes = {
+      autoscrollpopup: "",
+      contextmenu: "",
+      datetimepicker: "",
+      message: "",
+      messagemanagergroup: "",
+      selectmenulist: "",
+      tooltip: "",
+      type: "",
+    };
+    for (let attribute in this._defaultBrowserAttributes) {
+      this._defaultBrowserAttributes[attribute] = browser.getAttribute(attribute);
+    }
 
     let tab = this.tabs[0];
     this._selectedTab = tab;
@@ -1818,11 +1832,10 @@ window._gBrowser = {
 
     let b = document.createElementNS(this._XUL_NS, "browser");
     b.permanentKey = {};
-    b.setAttribute("type", "content");
-    b.setAttribute("message", "true");
-    b.setAttribute("messagemanagergroup", "browsers");
-    b.setAttribute("contextmenu", "contentAreaContextMenu");
-    b.setAttribute("tooltip", "aHTMLTooltip");
+
+    for (let attribute in this._defaultBrowserAttributes) {
+      b.setAttribute(attribute, this._defaultBrowserAttributes[attribute]);
+    }
 
     if (aParams.userContextId) {
       b.setAttribute("usercontextid", aParams.userContextId);
@@ -1867,12 +1880,6 @@ window._gBrowser = {
     if (aParams.isPreloadBrowser) {
       b.setAttribute("preloadedState", "preloaded");
     }
-
-    b.setAttribute("selectmenulist", "ContentSelectDropdown");
-
-    b.setAttribute("datetimepicker", "DateTimePickerPanel");
-
-    b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
     if (aParams.nextTabParentId) {
       if (!aParams.remoteType) {
