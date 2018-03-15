@@ -97,7 +97,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DateTimePickerHelper: "resource://gre/modules/DateTimePickerHelper.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   Feeds: "resource:///modules/Feeds.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -108,7 +107,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -129,7 +127,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
-  SimpleServiceDiscovery: "resource://gre/modules/SimpleServiceDiscovery.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   UITour: "resource:///modules/UITour.jsm",
@@ -1852,190 +1849,6 @@ BrowserGlue.prototype = {
       return;
 
     let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
-
-    if (currentUIVersion < 14) {
-      // DOM Storage doesn't specially handle about: pages anymore.
-      let path = OS.Path.join(OS.Constants.Path.profileDir,
-                              "chromeappsstore.sqlite");
-      OS.File.remove(path);
-    }
-
-    if (currentUIVersion < 16) {
-      xulStore.removeValue(BROWSER_DOCURL, "nav-bar", "collapsed");
-    }
-
-    // Insert the bookmarks-menu-button into the nav-bar if it isn't already
-    // there.
-    if (currentUIVersion < 17) {
-      let currentset = xulStore.getValue(BROWSER_DOCURL, "nav-bar", "currentset");
-      // Need to migrate only if toolbar is customized.
-      if (currentset) {
-        if (!currentset.includes("bookmarks-menu-button")) {
-          // The button isn't in the nav-bar, so let's look for an appropriate
-          // place to put it.
-          if (currentset.includes("bookmarks-menu-button-container")) {
-            currentset = currentset.replace(/(^|,)bookmarks-menu-button-container($|,)/,
-                                            "$1bookmarks-menu-button$2");
-          } else if (currentset.includes("downloads-button")) {
-            currentset = currentset.replace(/(^|,)downloads-button($|,)/,
-                                            "$1bookmarks-menu-button,downloads-button$2");
-          } else if (currentset.includes("home-button")) {
-            currentset = currentset.replace(/(^|,)home-button($|,)/,
-                                            "$1bookmarks-menu-button,home-button$2");
-          } else {
-            // Just append.
-            currentset = currentset.replace(/(^|,)window-controls($|,)/,
-                                            "$1bookmarks-menu-button,window-controls$2");
-          }
-          xulStore.setValue(BROWSER_DOCURL, "nav-bar", "currentset", currentset);
-        }
-      }
-    }
-
-    if (currentUIVersion < 19) {
-      let detector = null;
-      try {
-        detector = Services.prefs.getComplexValue("intl.charset.detector",
-                                                  Ci.nsIPrefLocalizedString).data;
-      } catch (ex) {}
-      if (!(detector == "" ||
-            detector == "ja_parallel_state_machine" ||
-            detector == "ruprob" ||
-            detector == "ukprob")) {
-        // If the encoding detector pref value is not reachable from the UI,
-        // reset to default (varies by localization).
-        Services.prefs.clearUserPref("intl.charset.detector");
-      }
-    }
-
-    if (currentUIVersion < 20) {
-      // Remove persisted collapsed state from TabsToolbar.
-      xulStore.removeValue(BROWSER_DOCURL, "TabsToolbar", "collapsed");
-    }
-
-    if (currentUIVersion < 24) {
-      // Reset homepage pref for users who have it set to start.mozilla.org
-      // or google.com/firefox.
-      const HOMEPAGE_PREF = "browser.startup.homepage";
-      if (Services.prefs.prefHasUserValue(HOMEPAGE_PREF)) {
-        const DEFAULT =
-          Services.prefs.getDefaultBranch(HOMEPAGE_PREF)
-                        .getComplexValue("", Ci.nsIPrefLocalizedString).data;
-        let value = Services.prefs.getStringPref(HOMEPAGE_PREF);
-        let updated =
-          value.replace(/https?:\/\/start\.mozilla\.org[^|]*/i, DEFAULT)
-               .replace(/https?:\/\/(www\.)?google\.[a-z.]+\/firefox[^|]*/i,
-                        DEFAULT);
-        if (updated != value) {
-          if (updated == DEFAULT) {
-            Services.prefs.clearUserPref(HOMEPAGE_PREF);
-          } else {
-            Services.prefs.setStringPref(HOMEPAGE_PREF, updated);
-          }
-        }
-      }
-    }
-
-    if (currentUIVersion < 25) {
-      // Make sure the doNotTrack value conforms to the conversion from
-      // three-state to two-state. (This reverts a setting of "please track me"
-      // to the default "don't say anything").
-      try {
-        if (Services.prefs.getBoolPref("privacy.donottrackheader.enabled") &&
-            Services.prefs.getIntPref("privacy.donottrackheader.value") != 1) {
-          Services.prefs.clearUserPref("privacy.donottrackheader.enabled");
-          Services.prefs.clearUserPref("privacy.donottrackheader.value");
-        }
-      } catch (ex) {}
-    }
-
-    if (currentUIVersion < 26) {
-      // Refactor urlbar suggestion preferences to make it extendable and
-      // allow new suggestion types (e.g: search suggestions).
-      let types = ["history", "bookmark", "openpage"];
-      let defaultBehavior = Services.prefs.getIntPref("browser.urlbar.default.behavior", 0);
-      try {
-        let autocompleteEnabled = Services.prefs.getBoolPref("browser.urlbar.autocomplete.enabled");
-        if (!autocompleteEnabled) {
-          defaultBehavior = -1;
-        }
-      } catch (ex) {}
-
-      // If the default behavior is:
-      //    -1  - all new "...suggest.*" preferences will be false
-      //     0  - all new "...suggest.*" preferences will use the default values
-      //   > 0  - all new "...suggest.*" preferences will be inherited
-      for (let type of types) {
-        let prefValue = defaultBehavior == 0;
-        if (defaultBehavior > 0) {
-          prefValue = !!(defaultBehavior & Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()]);
-        }
-        Services.prefs.setBoolPref("browser.urlbar.suggest." + type, prefValue);
-      }
-
-      // Typed behavior will be used only for results from history.
-      if (defaultBehavior != -1 &&
-          !!(defaultBehavior & Ci.mozIPlacesAutoComplete.BEHAVIOR_TYPED)) {
-        Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", true);
-      }
-    }
-
-    if (currentUIVersion < 27) {
-      // Fix up document color use:
-      const kOldColorPref = "browser.display.use_document_colors";
-      if (Services.prefs.prefHasUserValue(kOldColorPref) &&
-          !Services.prefs.getBoolPref(kOldColorPref)) {
-        Services.prefs.setIntPref("browser.display.document_color_use", 2);
-      }
-    }
-
-    if (currentUIVersion < 29) {
-      let group = null;
-      try {
-        group = Services.prefs.getComplexValue("font.language.group",
-                                               Ci.nsIPrefLocalizedString);
-      } catch (ex) {}
-      if (group &&
-          ["tr", "x-baltic", "x-central-euro"].some(g => g == group.data)) {
-        // Latin groups were consolidated.
-        group.data = "x-western";
-        Services.prefs.setComplexValue("font.language.group",
-                                       Ci.nsIPrefLocalizedString, group);
-      }
-    }
-
-    if (currentUIVersion < 30) {
-      // Convert old devedition theme pref to lightweight theme storage
-      let lightweightThemeSelected = false;
-      let selectedThemeID = null;
-      try {
-        lightweightThemeSelected = Services.prefs.prefHasUserValue("lightweightThemes.selectedThemeID");
-        selectedThemeID = Services.prefs.getCharPref("lightweightThemes.selectedThemeID");
-      } catch (e) {}
-
-      let defaultThemeSelected = false;
-      try {
-         defaultThemeSelected = Services.prefs.getCharPref("general.skins.selectedSkin") == "classic/1.0";
-      } catch (e) {}
-
-      // If we are on the devedition channel, the devedition theme is on by
-      // default.  But we need to handle the case where they didn't want it
-      // applied, and unapply the theme.
-      let userChoseToNotUseDeveditionTheme =
-        !defaultThemeSelected ||
-        (lightweightThemeSelected && selectedThemeID != "firefox-devedition@mozilla.org");
-
-      if (userChoseToNotUseDeveditionTheme && selectedThemeID == "firefox-devedition@mozilla.org") {
-        Services.prefs.setCharPref("lightweightThemes.selectedThemeID", "");
-      }
-
-      Services.prefs.clearUserPref("browser.devedition.showCustomizeButton");
-    }
-
-    if (currentUIVersion < 31) {
-      xulStore.removeValue(BROWSER_DOCURL, "bookmarks-menu-button", "class");
-      xulStore.removeValue(BROWSER_DOCURL, "home-button", "class");
-    }
 
     if (currentUIVersion < 36) {
       xulStore.removeValue("chrome://passwordmgr/content/passwordManager.xul",
