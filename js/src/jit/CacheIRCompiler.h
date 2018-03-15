@@ -7,6 +7,8 @@
 #ifndef jit_CacheIRCompiler_h
 #define jit_CacheIRCompiler_h
 
+#include "mozilla/Maybe.h"
+
 #include "jit/CacheIR.h"
 
 namespace js {
@@ -548,11 +550,11 @@ class MOZ_RAII CacheIRCompiler
     // the IC register allocator allocates GPRs.
     LiveFloatRegisterSet liveFloatRegs_;
 
-    Maybe<TypedOrValueRegister> outputUnchecked_;
+    mozilla::Maybe<TypedOrValueRegister> outputUnchecked_;
     Mode mode_;
 
     // Whether this IC may read double values from uint32 arrays.
-    Maybe<bool> allowDoubleResult_;
+    mozilla::Maybe<bool> allowDoubleResult_;
 
     CacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, Mode mode)
       : cx_(cx),
