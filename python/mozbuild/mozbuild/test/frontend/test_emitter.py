@@ -1041,14 +1041,16 @@ class TestEmitterBasic(unittest.TestCase):
 
         with self.assertRaisesRegexp(
                 SandboxValidationError,
-                'Path specified in LOCAL_INCLUDES is not allowed:'):
+                'Path specified in LOCAL_INCLUDES.*resolves to the '
+                'topsrcdir or topobjdir'):
             objs = self.read_topsrcdir(reader)
 
         reader = self.reader('local_includes-invalid/objdir')
 
         with self.assertRaisesRegexp(
                 SandboxValidationError,
-                'Path specified in LOCAL_INCLUDES is not allowed:'):
+                'Path specified in LOCAL_INCLUDES.*resolves to the '
+                'topsrcdir or topobjdir'):
             objs = self.read_topsrcdir(reader)
 
     def test_generated_includes(self):
