@@ -125,7 +125,7 @@ static inline
 MIRType SimdTypeToMIRType(SimdType type)
 {
     MIRType ret = MIRType::None;
-    JS_ALWAYS_TRUE(MaybeSimdTypeToMIRType(type, &ret));
+    MOZ_ALWAYS_TRUE(MaybeSimdTypeToMIRType(type, &ret));
     return ret;
 }
 
