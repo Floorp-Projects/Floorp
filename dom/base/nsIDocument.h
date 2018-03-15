@@ -4167,9 +4167,33 @@ protected:
   bool mScaleStrEmpty: 1;
   bool mWidthStrEmpty: 1;
 
+  // Parser aborted. True if the parser of this document was forcibly
+  // terminated instead of letting it finish at its own pace.
+  bool mParserAborted: 1;
+
+  // Whether we have reported use counters for this document with Telemetry yet.
+  // Normally this is only done at document destruction time, but for image
+  // documents (SVG documents) that are not guaranteed to be destroyed, we
+  // report use counters when the image cache no longer has any imgRequestProxys
+  // pointing to them.  We track whether we ever reported use counters so
+  // that we only report them once for the document.
+  bool mReportedUseCounters: 1;
+
+#ifdef DEBUG
+public:
+  bool mWillReparent: 1;
+protected:
+#endif
+
   uint8_t mPendingFullscreenRequests;
 
   uint8_t mXMLDeclarationBits;
+
+  // Currently active onload blockers.
+  uint32_t mOnloadBlockCount;
+
+  // Onload blockers which haven't been activated yet.
+  uint32_t mAsyncOnloadBlockCount;
 
   // Compatibility mode
   nsCompatibility mCompatMode;
@@ -4491,6 +4515,9 @@ protected:
   mozilla::CSSSize mViewportSize;
 
   RefPtr<mozilla::EventListenerManager> mListenerManager;
+
+  nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
+  nsCOMPtr<nsIRequest> mOnloadBlocker;
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
