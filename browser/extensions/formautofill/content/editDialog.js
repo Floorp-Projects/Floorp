@@ -7,8 +7,6 @@
 
 "use strict";
 
-const AUTOFILL_BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
-
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
@@ -170,7 +168,7 @@ class EditAddressDialog extends AutofillEditDialog {
     if (this._record) {
       this._elements.title.dataset.localization = "editAddressTitle";
     }
-    FormAutofillUtils.localizeMarkup(AUTOFILL_BUNDLE_URI, document);
+    FormAutofillUtils.localizeMarkup(document);
   }
 
   async handleSubmit() {
@@ -188,7 +186,7 @@ class EditCreditCardDialog extends AutofillEditDialog {
     if (this._record) {
       this._elements.title.dataset.localization = "editCreditCardTitle";
     }
-    FormAutofillUtils.localizeMarkup(AUTOFILL_BUNDLE_URI, document);
+    FormAutofillUtils.localizeMarkup(document);
   }
 
   /**

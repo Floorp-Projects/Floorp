@@ -828,16 +828,24 @@ this.FormAutofillUtils = {
   },
 
   /**
-   * Localize elements with "data-localization" attribute
-   * @param   {string} bundleURI
+   * Localize elements with "data-localization" or "data-localization-region" attributes.
    * @param   {DOMElement} root
    */
-  localizeMarkup(bundleURI, root) {
-    const bundle = Services.strings.createBundle(bundleURI);
+  localizeMarkup(root) {
     let elements = root.querySelectorAll("[data-localization]");
     for (let element of elements) {
-      element.textContent = bundle.GetStringFromName(element.getAttribute("data-localization"));
+      element.textContent = this.stringBundle.GetStringFromName(
+        element.getAttribute("data-localization")
+      );
       element.removeAttribute("data-localization");
+    }
+
+    let regionElements = root.querySelectorAll("[data-localization-region]");
+    for (let element of regionElements) {
+      element.textContent = this.regionsBundle.GetStringFromName(
+        element.getAttribute("data-localization-region")
+      );
+      element.removeAttribute("data-localization-region");
     }
   },
 };
@@ -847,6 +855,10 @@ this.FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
   return Services.strings.createBundle("chrome://formautofill/locale/formautofill.properties");
+});
+
+XPCOMUtils.defineLazyGetter(FormAutofillUtils, "regionsBundle", function() {
+  return Services.strings.createBundle("chrome://global/locale/regionNames.properties");
 });
 
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "brandBundle", function() {
