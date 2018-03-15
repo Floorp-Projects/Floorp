@@ -9955,7 +9955,7 @@ nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
   // Don't count deprecated operations for about pages since those pages
   // are almost in our control, and we always need to remove uses there
   // before we remove the operation itself anyway.
-  if (!static_cast<const nsDocument*>(this)->IsAboutPage()) {
+  if (!IsAboutPage()) {
     const_cast<nsIDocument*>(this)->
       SetDocumentAndPageUseCounter(OperationToUseCounter(aOperation));
   }
