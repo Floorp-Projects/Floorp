@@ -95,6 +95,9 @@
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsAutoLayoutPhase.h"
+#ifdef MOZ_GECKO_PROFILER
+#include "AutoProfilerStyleMarker.h"
+#endif
 #ifdef MOZ_REFLOW_PERF
 #include "nsFontMetrics.h"
 #endif
@@ -4196,9 +4199,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       if (!mIsDestroying) {
         nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
-        AutoProfilerTracing tracingStyleFlush("Paint", "Styles",
-                                              Move(mStyleCause));
-        mStyleCause = nullptr;
+        AutoProfilerStyleMarker tracingStyleFlush(Move(mStyleCause));
 #endif
 
         mPresContext->RestyleManager()->ProcessPendingRestyles();
@@ -4222,9 +4223,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     if (!mIsDestroying) {
       nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
-      AutoProfilerTracing tracingStyleFlush("Paint", "Styles",
-                                            Move(mStyleCause));
-      mStyleCause = nullptr;
+      AutoProfilerStyleMarker tracingStyleFlush(Move(mStyleCause));
 #endif
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
