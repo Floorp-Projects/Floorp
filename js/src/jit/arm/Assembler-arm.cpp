@@ -1783,7 +1783,7 @@ class PoolHintData
   private:
     uint32_t   index_    : 16;
     uint32_t   cond_     : 4;
-    LoadType   loadType_ : 2;
+    uint32_t   loadType_ : 2;
     uint32_t   destReg_  : 5;
     uint32_t   destType_ : 1;
     uint32_t   ONES     : 4;
@@ -1839,7 +1839,7 @@ class PoolHintData
         // want to lie about it so everyone knows it *used* to be a branch.
         if (ONES != ExpectedOnes)
             return PoolHintData::PoolBranch;
-        return loadType_;
+        return static_cast<LoadType>(loadType_);
     }
 
     bool isValidPoolHint() const {
@@ -2870,7 +2870,7 @@ struct PoolHeader : Instruction
         // The size should take into account the pool header.
         // The size is in units of Instruction (4 bytes), not byte.
         uint32_t size : 15;
-        bool isNatural : 1;
+        uint32_t isNatural : 1;
         uint32_t ONES : 16;
 
         Header(int size_, bool isNatural_)

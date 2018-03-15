@@ -1908,11 +1908,11 @@ CodeGenerator::visitWasmReinterpret(LWasmReinterpret* lir)
 
     switch (to) {
       case MIRType::Int32:
-        MOZ_ASSERT(from == MIRType::Float32);
+        MOZ_ASSERT(static_cast<MIRType>(from) == MIRType::Float32);
         masm.ma_vxfer(ToFloatRegister(lir->input()), ToRegister(lir->output()));
         break;
       case MIRType::Float32:
-        MOZ_ASSERT(from == MIRType::Int32);
+        MOZ_ASSERT(static_cast<MIRType>(from) == MIRType::Int32);
         masm.ma_vxfer(ToRegister(lir->input()), ToFloatRegister(lir->output()));
         break;
       case MIRType::Double:
