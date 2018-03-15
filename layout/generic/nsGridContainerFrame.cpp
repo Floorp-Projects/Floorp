@@ -1164,9 +1164,11 @@ struct nsGridContainerFrame::Tracks
     {
       return a.mSpan < b.mSpan;
     }
-    nscoord SizeContributionForPhase(TrackSizingPhase aPhase) const
+
+    template<TrackSizingPhase phase>
+    nscoord SizeContributionForPhase() const
     {
-      switch (aPhase) {
+      switch (phase) {
         case TrackSizingPhase::eIntrinsicMinimums:
         case TrackSizingPhase::eIntrinsicMaximums:
           return mMinSize;
@@ -1176,7 +1178,6 @@ struct nsGridContainerFrame::Tracks
         case TrackSizingPhase::eMaxContentMaximums:
           return mMaxContentContribution;
       }
-      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected phase");
     }
   };
 
@@ -1215,7 +1216,7 @@ struct nsGridContainerFrame::Tracks
                                  SizingConstraint            aConstraint,
                                  const LineRange&            aRange,
                                  const GridItemInfo&         aGridItem);
-  
+
   // Helper method that returns the track size to use in §11.5.1.2
   // https://drafts.csswg.org/css-grid/#extra-space
   template<TrackSizingPhase phase> static
@@ -4271,7 +4272,7 @@ nsGridContainerFrame::Tracks::GrowSizeForSpanningItems(
         aPlan[j].mState |= TrackSize::eModified;
       }
     }
-    nscoord space = item.SizeContributionForPhase(phase);
+    nscoord space = item.SizeContributionForPhase<phase>();
     if (space <= 0) {
       continue;
     }
