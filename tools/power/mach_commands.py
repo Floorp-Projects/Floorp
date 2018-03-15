@@ -134,7 +134,7 @@ class MachCommands(MachCommandBase):
             #
             # - 'kernel' is for the kernel.
             #
-            if re.search(r'(^Name|firefox|plugin-container|Safari\b|WebKit|Chrome|Terminal|WindowServer|kernel)', line):
+            if re.search(r'(^Name|firefox|plugin-container|Safari\b|WebKit|Chrome|Terminal|WindowServer|kernel)', line):  # NOQA: E501
                 print(line)
 
         return 0

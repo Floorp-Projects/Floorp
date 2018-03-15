@@ -33,7 +33,9 @@
 #
 #   poll g_main_poll
 #   GetRuleCascade CSSRuleProcessor::GetRuleCascade(nsPresContext *, nsAtom *)
-#   RuleProcessorData RuleProcessorData::RuleProcessorData(nsPresContext *, nsIContent *, nsRuleWalker *, nsCompatibility *)
+#   RuleProcessorData RuleProcessorData::RuleProcessorData
+#        (nsPresContext *, nsIContent *, nsRuleWalker *, nsCompatibility *)
+#
 #
 # From this input file, the script will construct a profile called
 # jprof-0.html that contains the whole profile, a profile called
