@@ -25,9 +25,10 @@ struct RedirEntry
   URI_SAFE_FOR_UNTRUSTED_CONTENT in the third argument to each map item below
   unless your about: page really needs chrome privileges. Security review is
   required before adding new map entries without
-  URI_SAFE_FOR_UNTRUSTED_CONTENT.  Also note, however, that adding
-  URI_SAFE_FOR_UNTRUSTED_CONTENT will allow random web sites to link to that
-  URI.  Perhaps we should separate the two concepts out...
+  URI_SAFE_FOR_UNTRUSTED_CONTENT.
+
+  URI_SAFE_FOR_UNTRUSTED_CONTENT is not enough to let web pages load that page,
+  for that you need MAKE_LINKABLE.
  */
 static const RedirEntry kRedirMap[] = {
   { "about", "chrome://global/content/aboutAbout.xhtml", 0 },

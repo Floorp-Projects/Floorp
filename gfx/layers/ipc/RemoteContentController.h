@@ -90,6 +90,15 @@ private:
                              Modifiers aModifiers,
                              ScrollableLayerGuid aGuid,
                              uint64_t aInputBlockId);
+  void HandleTapOnCompositorThread(TapType aType,
+                                   LayoutDevicePoint aPoint,
+                                   Modifiers aModifiers,
+                                   ScrollableLayerGuid aGuid,
+                                   uint64_t aInputBlockId);
+  void NotifyPinchGestureOnCompositorThread(PinchGestureInput::PinchGestureType aType,
+                                            const ScrollableLayerGuid& aGuid,
+                                            LayoutDeviceCoord aSpanChange,
+                                            Modifiers aModifiers);
 
   void CancelAutoscrollInProcess(const ScrollableLayerGuid& aScrollId);
   void CancelAutoscrollCrossProcess(const ScrollableLayerGuid& aScrollId);

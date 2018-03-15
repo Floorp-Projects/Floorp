@@ -2471,7 +2471,7 @@ TemporaryTypeSet::getCommonPrototype(CompilerConstraintList* constraints, JSObje
     // Guard against mutating __proto__.
     for (unsigned i = 0; i < count; i++) {
         if (ObjectKey* key = getObject(i))
-            JS_ALWAYS_TRUE(key->hasStableClassAndProto(constraints));
+            MOZ_ALWAYS_TRUE(key->hasStableClassAndProto(constraints));
     }
 
     return true;

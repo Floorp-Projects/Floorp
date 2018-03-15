@@ -309,7 +309,7 @@ TESTS=${NSS_TESTS:-$tests}
 
 ALL_TESTS=${TESTS}
 
-nss_ssl_tests="crl iopr policy"
+nss_ssl_tests="crl iopr policy normal_normal"
 if [ $NO_INIT_SUPPORT -eq 0 ]; then
     nss_ssl_tests="$nss_ssl_tests fips_normal normal_fips"
 fi

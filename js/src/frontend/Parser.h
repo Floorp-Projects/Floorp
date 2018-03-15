@@ -1598,15 +1598,15 @@ template <typename Scope>
 extern typename Scope::Data*
 NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc, uint32_t numBindings);
 
-Maybe<GlobalScope::Data*>
+mozilla::Maybe<GlobalScope::Data*>
 NewGlobalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc);
-Maybe<EvalScope::Data*>
+mozilla::Maybe<EvalScope::Data*>
 NewEvalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc);
-Maybe<FunctionScope::Data*>
+mozilla::Maybe<FunctionScope::Data*>
 NewFunctionScopeData(JSContext* context, ParseContext::Scope& scope, bool hasParameterExprs, LifoAlloc& alloc, ParseContext* pc);
-Maybe<VarScope::Data*>
+mozilla::Maybe<VarScope::Data*>
 NewVarScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc);
-Maybe<LexicalScope::Data*>
+mozilla::Maybe<LexicalScope::Data*>
 NewLexicalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc);
 
 } /* namespace frontend */

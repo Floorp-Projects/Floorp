@@ -22,18 +22,20 @@ async function shared_setup() {
 
   hmacErrorCount = 0;
 
+  let clientsEngine = Service.clientsEngine;
+  let clientsSyncID = await clientsEngine.resetLocalSyncID();
+
   // Make sure RotaryEngine is the only one we sync.
-  let { engine, tracker } = await registerRotaryEngine();
-  engine.lastSync = 123; // Needs to be non-zero so that tracker is queried.
+  let { engine, syncID, tracker } = await registerRotaryEngine();
+  await engine.setLastSync(123); // Needs to be non-zero so that tracker is queried.
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman"};
   await tracker.addChangedID("scotsman", 0);
   Assert.equal(1, Service.engineManager.getEnabled().length);
 
-  let engines = {rotary:  {version: engine.version,
-                           syncID:  engine.syncID},
-                 clients: {version: Service.clientsEngine.version,
-                           syncID:  Service.clientsEngine.syncID}};
+  let engines = {rotary:  {version: engine.version, syncID},
+                 clients: {version: clientsEngine.version,
+                           syncID:  clientsSyncID}};
 
   // Common server objects.
   let global      = new ServerWBO("global", {engines});
@@ -83,7 +85,7 @@ add_task(async function hmac_error_during_404() {
 
     _("Partially resetting client, as if after a restart, and forcing redownload.");
     Service.collectionKeys.clear();
-    engine.lastSync = 0; // So that we redownload records.
+    await engine.setLastSync(0); // So that we redownload records.
     key404Counter = 1;
     _("---------------------------");
     await sync_and_validate_telem();
@@ -206,11 +208,12 @@ add_task(async function hmac_error_during_node_reassignment() {
 
         // Kick off another sync. Can't just call it, because we're inside the
         // lock...
-        CommonUtils.nextTick(function() {
+        (async () => {
+          await Async.promiseYield();
           _("Now a fresh sync will get no HMAC errors.");
           _("Partially resetting client, as if after a restart, and forcing redownload.");
           Service.collectionKeys.clear();
-          engine.lastSync = 0;
+          await engine.setLastSync(0);
           hmacErrorCount = 0;
 
           onSyncFinished = async function() {
@@ -220,18 +223,15 @@ add_task(async function hmac_error_during_node_reassignment() {
             Svc.Obs.remove("weave:service:sync:finish", obs);
             Svc.Obs.remove("weave:service:sync:error", obs);
 
-            (async () => {
-              await tracker.clearChangedIDs();
-              await Service.engineManager.unregister(engine);
-              Svc.Prefs.resetBranch("");
-              Service.recordManager.clearCache();
-              server.stop(resolve);
-            })();
+            await tracker.clearChangedIDs();
+            await Service.engineManager.unregister(engine);
+            Svc.Prefs.resetBranch("");
+            Service.recordManager.clearCache();
+            server.stop(resolve);
           };
 
           Service.sync();
-        },
-        this);
+        })().catch(Cu.reportError);
       };
     };
   });

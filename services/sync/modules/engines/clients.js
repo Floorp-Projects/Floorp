@@ -85,8 +85,6 @@ Utils.deferGetSet(ClientsRec,
 function ClientEngine(service) {
   SyncEngine.call(this, "Clients", service);
 
-  // Reset the last sync timestamp on every startup so that we fetch all clients
-  this.resetLastSync();
   this.fxAccounts = fxAccounts;
   this.addClientCommandQueue = Promise.resolve();
   Utils.defineLazyIDProperty(this, "localID", "services.sync.client.GUID");
@@ -99,6 +97,11 @@ ClientEngine.prototype = {
   allowSkippedRecord: false,
   _knownStaleFxADeviceIds: null,
   _lastDeviceCounts: null,
+
+  async initialize() {
+    // Reset the last sync timestamp on every startup so that we fetch all clients
+    await this.resetLastSync();
+  },
 
   // These two properties allow us to avoid replaying the same commands
   // continuously if we cannot manage to upload our own record.
@@ -371,7 +374,7 @@ ClientEngine.prototype = {
 
   async _processIncoming() {
     // Fetch all records from the server.
-    this.lastSync = 0;
+    await this.setLastSync(0);
     this._incomingClients = {};
     try {
       await SyncEngine.prototype._processIncoming.call(this);
@@ -448,9 +451,10 @@ ClientEngine.prototype = {
     let updatedIDs = this._modified.ids();
     await SyncEngine.prototype._uploadOutgoing.call(this);
     // Record the response time as the server time for each item we uploaded.
+    let lastSync = await this.getLastSync();
     for (let id of updatedIDs) {
       if (id != this.localID) {
-        this._store._remoteClients[id].serverLastModified = this.lastSync;
+        this._store._remoteClients[id].serverLastModified = lastSync;
       }
     }
   },

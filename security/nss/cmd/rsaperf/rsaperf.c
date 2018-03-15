@@ -313,7 +313,7 @@ main(int argc, char **argv)
     char *slotname = NULL;
     long keybits = 0;
     RSAOp fn;
-    void *rsaKey = NULL;
+    void *rsaKeyPtr = NULL;
     PLOptState *optstate;
     PLOptStatus optstatus;
     long iters = DEFAULT_ITERS;
@@ -464,7 +464,7 @@ main(int argc, char **argv)
         if (doPub) {
             /* do public key ops */
             fn = (RSAOp)PK11_PublicKeyOp;
-            rsaKey = (void *)pubHighKey;
+            rsaKeyPtr = (void *)pubHighKey;
 
             kh = PK11_ImportPublicKey(cert->slot, pubHighKey, PR_FALSE);
             if (CK_INVALID_HANDLE == kh) {
@@ -489,7 +489,7 @@ main(int argc, char **argv)
             fn = (RSAOp)PK11_PrivateKeyOp;
             keys.privKey = privHighKey;
             keys.pubKey = pubHighKey;
-            rsaKey = (void *)&keys;
+            rsaKeyPtr = (void *)&keys;
             printf("Using PKCS#11 for RSA decryption with token %s.\n",
                    PK11_GetTokenName(privHighKey->pkcs11Slot));
         }
@@ -537,13 +537,13 @@ main(int argc, char **argv)
         if (doPub) {
             /* do public key operations */
             fn = (RSAOp)PK11_PublicKeyOp;
-            rsaKey = (void *)pubHighKey;
+            rsaKeyPtr = (void *)pubHighKey;
         } else {
             /* do private key operations */
             fn = (RSAOp)PK11_PrivateKeyOp;
             keys.privKey = privHighKey;
             keys.pubKey = pubHighKey;
-            rsaKey = (void *)&keys;
+            rsaKeyPtr = (void *)&keys;
         }
     } else
 
@@ -574,7 +574,7 @@ main(int argc, char **argv)
             pe.data = &pubEx[0];
             pe.type = siBuffer;
 
-            rsaKey = RSA_NewKey(keybits, &pe);
+            rsaKeyPtr = RSA_NewKey(keybits, &pe);
             fprintf(stderr, "Keygen completed.\n");
         } else {
             /* use a hardcoded key */
@@ -589,31 +589,31 @@ main(int argc, char **argv)
         if (doPub) {
             /* do public key operations */
             fn = (RSAOp)RSA_PublicKeyOp;
-            if (rsaKey) {
+            if (rsaKeyPtr) {
                 /* convert the RSAPrivateKey to RSAPublicKey */
                 pubKeyStr.arena = NULL;
-                pubKeyStr.modulus = ((RSAPrivateKey *)rsaKey)->modulus;
+                pubKeyStr.modulus = ((RSAPrivateKey *)rsaKeyPtr)->modulus;
                 pubKeyStr.publicExponent =
-                    ((RSAPrivateKey *)rsaKey)->publicExponent;
-                rsaKey = &pubKeyStr;
+                    ((RSAPrivateKey *)rsaKeyPtr)->publicExponent;
+                rsaKeyPtr = &pubKeyStr;
             } else {
                 /* convert NSSLOWKeyPublicKey to RSAPublicKey */
-                rsaKey = (void *)(&pubKey->u.rsa);
+                rsaKeyPtr = (void *)(&pubKey->u.rsa);
             }
-            PORT_Assert(rsaKey);
+            PORT_Assert(rsaKeyPtr);
         } else {
             /* do private key operations */
             fn = (RSAOp)RSA_PrivateKeyOp;
             if (privKey) {
                 /* convert NSSLOWKeyPrivateKey to RSAPrivateKey */
-                rsaKey = (void *)(&privKey->u.rsa);
+                rsaKeyPtr = (void *)(&privKey->u.rsa);
             }
-            PORT_Assert(rsaKey);
+            PORT_Assert(rsaKeyPtr);
         }
     }
 
     memset(buf, 1, sizeof buf);
-    rv = fn(rsaKey, buf2, buf);
+    rv = fn(rsaKeyPtr, buf2, buf);
     if (rv != SECSuccess) {
         PRErrorCode errNum;
         const char *errStr = NULL;
@@ -638,7 +638,7 @@ main(int argc, char **argv)
         runDataArr[i]->fn = fn;
         runDataArr[i]->buf = buf;
         runDataArr[i]->doIters = &doIters;
-        runDataArr[i]->rsaKey = rsaKey;
+        runDataArr[i]->rsaKey = rsaKeyPtr;
         runDataArr[i]->seconds = seconds;
         runDataArr[i]->iters = iters;
         threadsArr[i] =

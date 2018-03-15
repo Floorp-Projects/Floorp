@@ -586,8 +586,8 @@ ShellPrincipals ShellPrincipals::fullyTrusted(-1, 1);
 
 #ifdef EDITLINE
 extern "C" {
-extern JS_EXPORT_API(char*) readline(const char* prompt);
-extern JS_EXPORT_API(void)   add_history(char* line);
+extern MOZ_EXPORT char* readline(const char* prompt);
+extern MOZ_EXPORT void add_history(char* line);
 } // extern "C"
 #endif
 

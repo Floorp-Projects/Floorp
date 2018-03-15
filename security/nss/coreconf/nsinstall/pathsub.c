@@ -212,7 +212,7 @@ reversepath(char *inpath, char *name, int len, char *outpath)
 	    xchdir("..");
 	} else {
 	    cp -= 3;
-	    strncpy(cp, "../", 3);
+	    memcpy(cp, "../", 3);
 	    xchdir(buf);
 	}
     }
