@@ -156,6 +156,24 @@ LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr, const jsbytecode* p
     frame.set(frames->back().savedFrame);
 }
 
+void
+LiveSavedFrameCache::findWithoutInvalidation(const FramePtr& framePtr,
+                                             MutableHandleSavedFrame frame) const
+{
+    MOZ_ASSERT(initialized());
+    MOZ_ASSERT(framePtr.hasCachedSavedFrame());
+
+    Key key(framePtr);
+    for (auto& entry : (*frames)) {
+        if (entry.key == key) {
+            frame.set(entry.savedFrame);
+            return;
+        }
+    }
+
+    frame.set(nullptr);
+}
+
 struct SavedFrame::Lookup {
     Lookup(JSAtom* source, uint32_t line, uint32_t column,
            JSAtom* functionDisplayName, JSAtom* asyncCause, SavedFrame* parent,
