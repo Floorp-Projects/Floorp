@@ -329,12 +329,7 @@ var gPrivacyPane = {
         document.getElementById("notificationsDoNotDisturbBox");
       notificationsDoNotDisturbBox.removeAttribute("hidden");
       let checkbox = document.getElementById("notificationsDoNotDisturb");
-      let brandName = document.getElementById("bundleBrand")
-        .getString("brandShortName");
-      checkbox.setAttribute("label",
-        bundlePrefs.getFormattedString("pauseNotifications.label",
-          [brandName]));
-      checkbox.setAttribute("accesskey", bundlePrefs.getString("pauseNotifications.accesskey"));
+      document.l10n.setAttributes(checkbox, "permissions-notification-pause");
       if (AlertsServiceDND.manualDoNotDisturb) {
         let notificationsDoNotDisturb =
           document.getElementById("notificationsDoNotDisturb");
