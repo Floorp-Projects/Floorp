@@ -9,9 +9,8 @@
 #include "jsutil.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/MathAlgorithms.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/ThreadLocal.h"
 
 #include <stdio.h>
@@ -24,8 +23,7 @@
 
 using namespace js;
 
-using mozilla::CeilingLog2Size;
-using mozilla::PodArrayZero;
+using mozilla::Maybe;
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 /* For OOM testing functionality in Utility.h. */
