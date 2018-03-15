@@ -1510,8 +1510,15 @@ nsIDocument::nsIDocument()
     mValidMaxScale(false),
     mScaleStrEmpty(false),
     mWidthStrEmpty(false),
+    mParserAborted(false),
+    mReportedUseCounters(false),
+#ifdef DEBUG
+    mWillReparent(false),
+#endif
     mPendingFullscreenRequests(0),
     mXMLDeclarationBits(0),
+    mOnloadBlockCount(0),
+    mAsyncOnloadBlockCount(0),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
     mStyleBackendType(StyleBackendType::None),
@@ -1565,13 +1572,6 @@ nsIDocument::nsIDocument()
 
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
-  , mParserAborted(false)
-  , mReportedUseCounters(false)
-  , mOnloadBlockCount(0)
-  , mAsyncOnloadBlockCount(0)
-#ifdef DEBUG
-  , mWillReparent(false)
-#endif
 {
   SetContentTypeInternal(nsDependentCString(aContentType));
 

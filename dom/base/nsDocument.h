@@ -340,19 +340,7 @@ public:
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
-  // Parser aborted. True if the parser of this document was forcibly
-  // terminated instead of letting it finish at its own pace.
-  bool mParserAborted:1;
-
   friend class nsCallRequestFullScreen;
-
-  // Whether we have reported use counters for this document with Telemetry yet.
-  // Normally this is only done at document destruction time, but for image
-  // documents (SVG documents) that are not guaranteed to be destroyed, we
-  // report use counters when the image cache no longer has any imgRequestProxys
-  // pointing to them.  We track whether we ever reported use counters so
-  // that we only report them once for the document.
-  bool mReportedUseCounters:1;
 
   // The application cache that this document is associated with, if
   // any.  This can change during the lifetime of the document.
@@ -372,19 +360,6 @@ private:
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
-
-  // Currently active onload blockers
-  uint32_t mOnloadBlockCount;
-  // Onload blockers which haven't been activated yet
-  uint32_t mAsyncOnloadBlockCount;
-  nsCOMPtr<nsIRequest> mOnloadBlocker;
-
-  nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
-
-#ifdef DEBUG
-public:
-  bool mWillReparent;
-#endif
 };
 
 class nsDocumentOnStack
