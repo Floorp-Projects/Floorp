@@ -1061,10 +1061,6 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
   // Calculate the tile spacing, which is the repeat size minus the tile size
   LayoutDeviceSize tileSpacing = tileRepeat - firstTileBounds.Size();
 
-  // Make the rects relative to the parent stacking context
-  wr::LayoutRect wrClipBounds = aSc.ToRelativeLayoutRect(clipBounds);
-  wr::LayoutRect wrGradientBounds = aSc.ToRelativeLayoutRect(gradientBounds);
-
   // srcTransform is used for scaling the gradient to match aSrc
   LayoutDeviceRect srcTransform = LayoutDeviceRect(mPresContext->CSSPixelsToAppUnits(aSrc.x),
                                                    mPresContext->CSSPixelsToAppUnits(aSrc.y),
@@ -1079,8 +1075,8 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     lineEnd.y = (lineEnd.y - srcTransform.y) * srcTransform.height;
 
     aBuilder.PushLinearGradient(
-      wrGradientBounds,
-      wrClipBounds,
+      mozilla::wr::ToLayoutRect(gradientBounds),
+      mozilla::wr::ToLayoutRect(clipBounds),
       aIsBackfaceVisible,
       mozilla::wr::ToLayoutPoint(lineStart),
       mozilla::wr::ToLayoutPoint(lineEnd),
@@ -1093,8 +1089,8 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     gradientRadius.height *= srcTransform.height;
 
     aBuilder.PushRadialGradient(
-      wrGradientBounds,
-      wrClipBounds,
+      mozilla::wr::ToLayoutRect(gradientBounds),
+      mozilla::wr::ToLayoutRect(clipBounds),
       aIsBackfaceVisible,
       mozilla::wr::ToLayoutPoint(lineStart),
       mozilla::wr::ToLayoutSize(gradientRadius),
