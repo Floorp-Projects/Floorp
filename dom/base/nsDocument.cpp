@@ -11796,7 +11796,7 @@ nsIDocument::SetPointerLock(Element* aElement, int aCursorStyle)
 }
 
 void
-nsDocument::UnlockPointer(nsIDocument* aDoc)
+nsIDocument::UnlockPointer(nsIDocument* aDoc)
 {
   if (!EventStateManager::sIsPointerLocked) {
     return;
@@ -11807,26 +11807,19 @@ nsDocument::UnlockPointer(nsIDocument* aDoc)
   if (!pointerLockedDoc || (aDoc && aDoc != pointerLockedDoc)) {
     return;
   }
-  nsDocument* doc = static_cast<nsDocument*>(pointerLockedDoc.get());
-  if (!doc->SetPointerLock(nullptr, NS_STYLE_CURSOR_AUTO)) {
+  if (!pointerLockedDoc->SetPointerLock(nullptr, NS_STYLE_CURSOR_AUTO)) {
     return;
   }
 
   nsCOMPtr<Element> pointerLockedElement =
     do_QueryReferent(EventStateManager::sPointerLockedElement);
-  ChangePointerLockedElement(nullptr, doc, pointerLockedElement);
+  ChangePointerLockedElement(nullptr, pointerLockedDoc, pointerLockedElement);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(pointerLockedElement,
                              NS_LITERAL_STRING("MozDOMPointerLock:Exited"),
                              true, true);
   asyncDispatcher->RunDOMEventWhenSafe();
-}
-
-void
-nsIDocument::UnlockPointer(nsIDocument* aDoc)
-{
-  nsDocument::UnlockPointer(aDoc);
 }
 
 void
