@@ -1139,6 +1139,56 @@ struct nsGridContainerFrame::Tracks
    */
   void AlignBaselineSubtree(const GridItemInfo& aGridItem) const;
 
+  enum class TrackSizingPhase
+  {
+    eIntrinsicMinimums,
+    eContentBasedMinimums,
+    eMaxContentMinimums,
+    eIntrinsicMaximums,
+    eMaxContentMaximums,
+  };
+
+  // Some data we collect on each item for Step 2 of the Track Sizing Algorithm
+  // in ResolveIntrinsicSize below.
+  struct Step2ItemData final
+  {
+    uint32_t mSpan;
+    TrackSize::StateBits mState;
+    LineRange mLineRange;
+    nscoord mMinSize;
+    nscoord mMinContentContribution;
+    nscoord mMaxContentContribution;
+    nsIFrame* mFrame;
+    static bool IsSpanLessThan(const Step2ItemData& a, const Step2ItemData& b)
+    {
+      return a.mSpan < b.mSpan;
+    }
+    nscoord SizeContributionForPhase(TrackSizingPhase aPhase) const
+    {
+      switch (aPhase) {
+        case TrackSizingPhase::eIntrinsicMinimums:
+        case TrackSizingPhase::eIntrinsicMaximums:
+          return mMinSize;
+        case TrackSizingPhase::eContentBasedMinimums:
+          return mMinContentContribution;
+        case TrackSizingPhase::eMaxContentMinimums:
+        case TrackSizingPhase::eMaxContentMaximums:
+          return mMaxContentContribution;
+      }
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected phase");
+    }
+  };
+
+  // Helper method for ResolveIntrinsicSize.
+  template<TrackSizingPhase phase>
+  bool GrowBaseForSpanningItems(const nsTArray<Step2ItemData>& aItemData,
+                                nsTArray<uint32_t>& aTracks,
+                                nsTArray<TrackSize>& aPlan,
+                                nsTArray<TrackSize>& aItemPlan,
+                                TrackSize::StateBits aSelector,
+                                uint32_t aStartIndex,
+                                uint32_t aEndIndex);
+
   /**
    * Resolve Intrinsic Track Sizes.
    * http://dev.w3.org/csswg/css-grid/#algo-content
@@ -4163,6 +4213,42 @@ nsGridContainerFrame::Tracks::AlignBaselineSubtree(
   }
 }
 
+template<nsGridContainerFrame::Tracks::TrackSizingPhase phase>
+bool
+nsGridContainerFrame::Tracks::GrowBaseForSpanningItems(
+  const nsTArray<Step2ItemData>& aItemData,
+  nsTArray<uint32_t>& aTracks,
+  nsTArray<TrackSize>& aPlan,
+  nsTArray<TrackSize>& aItemPlan,
+  TrackSize::StateBits aSelector,
+  uint32_t aStartIndex,
+  uint32_t aEndIndex)
+{
+  bool updatedBase = false;
+  ResetBasePlan(aPlan, mSizes);
+  for (uint32_t i = aStartIndex; i < aEndIndex; ++i) {
+    const Step2ItemData& item = aItemData[i];
+    if (!(item.mState & aSelector)) {
+      continue;
+    }
+    nscoord space = item.SizeContributionForPhase(phase);
+    if (space <= 0) {
+      continue;
+    }
+    aTracks.ClearAndRetainStorage();
+    space = CollectGrowable(space, mSizes, item.mLineRange, aSelector,
+                            aTracks);
+    if (space > 0) {
+      DistributeToTrackBases(space, aPlan, aItemPlan, aTracks, aSelector);
+      updatedBase = true;
+    }
+  }
+  if (updatedBase) {
+    CopyPlanToBase(aPlan);
+  }
+  return updatedBase;
+}
+
 void
 nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   GridReflowInput&            aState,
@@ -4172,22 +4258,6 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   nscoord                     aPercentageBasis,
   SizingConstraint            aConstraint)
 {
-  // Some data we collect on each item for Step 2 of the algorithm below.
-  struct Step2ItemData
-  {
-    uint32_t mSpan;
-    TrackSize::StateBits mState;
-    LineRange mLineRange;
-    nscoord mMinSize;
-    nscoord mMinContentContribution;
-    nscoord mMaxContentContribution;
-    nsIFrame* mFrame;
-    static bool IsSpanLessThan(const Step2ItemData& a, const Step2ItemData& b)
-    {
-      return a.mSpan < b.mSpan;
-    }
-  };
-
   // Resolve Intrinsic Track Sizes
   // http://dev.w3.org/csswg/css-grid/#algo-content
   // We're also setting eIsFlexing on the item state here to speed up
@@ -4322,81 +4392,30 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       TrackSize::StateBits selector(TrackSize::eIntrinsicMinSizing);
       if (stateBitsPerSpan[span] & selector) {
         // Step 2.1 MinSize to intrinsic min-sizing.
-        ResetBasePlan(plan, mSizes);
-        for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
-          Step2ItemData& item = step2Items[i];
-          if (!(item.mState & selector)) {
-            continue;
-          }
-          nscoord space = item.mMinSize;
-          if (space <= 0) {
-            continue;
-          }
-          tracks.ClearAndRetainStorage();
-          space = CollectGrowable(space, mSizes, item.mLineRange, selector,
-                                  tracks);
-          if (space > 0) {
-            DistributeToTrackBases(space, plan, itemPlan, tracks, selector);
-            updatedBase = true;
-          }
-        }
-        if (updatedBase) {
-          CopyPlanToBase(plan);
-        }
+        updatedBase =
+          GrowBaseForSpanningItems<TrackSizingPhase::eIntrinsicMinimums>(
+            step2Items, tracks, plan, itemPlan, selector,
+            spanGroupStartIndex, spanGroupEndIndex);
       }
 
       selector = contentBasedMinSelector;
       if (stateBitsPerSpan[span] & selector) {
         // Step 2.2 MinContentContribution to min-/max-content (and 'auto' when
         // sizing under a min-content constraint) min-sizing.
-        ResetBasePlan(plan, mSizes);
-        for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
-          Step2ItemData& item = step2Items[i];
-          if (!(item.mState & selector)) {
-            continue;
-          }
-          nscoord space = item.mMinContentContribution;
-          if (space <= 0) {
-            continue;
-          }
-          tracks.ClearAndRetainStorage();
-          space = CollectGrowable(space, mSizes, item.mLineRange, selector,
-                                  tracks);
-          if (space > 0) {
-            DistributeToTrackBases(space, plan, itemPlan, tracks, selector);
-            updatedBase = true;
-          }
-        }
-        if (updatedBase) {
-          CopyPlanToBase(plan);
-        }
+        updatedBase |=
+          GrowBaseForSpanningItems<TrackSizingPhase::eContentBasedMinimums>(
+            step2Items, tracks, plan, itemPlan, selector,
+            spanGroupStartIndex, spanGroupEndIndex);
       }
 
       selector = maxContentMinSelector;
       if (stateBitsPerSpan[span] & selector) {
         // Step 2.3 MaxContentContribution to max-content (and 'auto' when
         // sizing under a max-content constraint) min-sizing.
-        ResetBasePlan(plan, mSizes);
-        for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
-          Step2ItemData& item = step2Items[i];
-          if (!(item.mState & selector)) {
-            continue;
-          }
-          nscoord space = item.mMaxContentContribution;
-          if (space <= 0) {
-            continue;
-          }
-          tracks.ClearAndRetainStorage();
-          space = CollectGrowable(space, mSizes, item.mLineRange, selector,
-                                  tracks);
-          if (space > 0) {
-            DistributeToTrackBases(space, plan, itemPlan, tracks, selector);
-            updatedBase = true;
-          }
-        }
-        if (updatedBase) {
-          CopyPlanToBase(plan);
-        }
+        updatedBase |=
+          GrowBaseForSpanningItems<TrackSizingPhase::eMaxContentMinimums>(
+            step2Items, tracks, plan, itemPlan, selector,
+            spanGroupStartIndex, spanGroupEndIndex);
       }
 
       if (updatedBase) {
