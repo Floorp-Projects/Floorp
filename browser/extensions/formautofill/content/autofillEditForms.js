@@ -78,6 +78,14 @@ class EditAutofillForm {
 }
 
 class EditAddress extends EditAutofillForm {
+  /**
+   * @param {HTMLElement[]} elements
+   * @param {object} record
+   * @param {object} config
+   * @param {string[]} config.DEFAULT_REGION
+   * @param {function} config.getFormFormat Function to return form layout info for a given country.
+   * @param {string[]} config.supportedCountries
+   */
   constructor(elements, record, config) {
     let country = record ? record.country :
                     config.supportedCountries.find(supported => supported == config.DEFAULT_REGION);
@@ -104,7 +112,7 @@ class EditAddress extends EditAutofillForm {
    * @param  {string} country
    */
   formatForm(country) {
-    const {addressLevel1Label, postalCodeLabel, fieldsOrder} = FormAutofillUtils.getFormFormat(country);
+    const {addressLevel1Label, postalCodeLabel, fieldsOrder} = this.getFormFormat(country);
     this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
     this.arrangeFields(fieldsOrder);
