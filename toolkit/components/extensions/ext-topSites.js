@@ -10,20 +10,17 @@ this.topSites = class extends ExtensionAPI {
     return {
       topSites: {
         get: function(options) {
-          return new Promise(function(resolve) {
-            NewTabUtils.links.populateCache(function() {
+          return new Promise((resolve) => {
+            NewTabUtils.links.populateCache(async () => {
               let urls;
 
-              if (options && options.providers && options.providers.length > 0) {
-                let urlLists = options.providers.map(function(p) {
-                  let provider = NewTabUtils[`${p}Provider`];
-                  return provider ? NewTabUtils.getProviderLinks(provider).slice() : [];
-                });
-                urls = NewTabUtils.links.mergeLinkLists(urlLists);
+              // The placesProvider is a superset of activityStream if sites are blocked, etc.,
+              // there is no need to attempt a merge of multiple provider lists.
+              if (options.providers.includes("places")) {
+                urls = NewTabUtils.getProviderLinks(NewTabUtils.placesProvider).slice();
               } else {
-                urls = NewTabUtils.links.getLinks();
+                urls = await NewTabUtils.activityStreamLinks.getTopSites();
               }
-
               resolve(urls.filter(link => !!link)
                           .map(link => {
                             return {
