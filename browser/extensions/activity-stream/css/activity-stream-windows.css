@@ -78,9 +78,6 @@ input {
     background-image: url("../data/content/assets/glyph-edit-16.svg"); }
   .icon.icon-pocket {
     background-image: url("../data/content/assets/glyph-pocket-16.svg"); }
-  .icon.icon-pocket-small {
-    background-image: url("../data/content/assets/glyph-pocket-16.svg");
-    background-size: 12px; }
   .icon.icon-historyItem {
     background-image: url("../data/content/assets/glyph-historyItem-16.svg"); }
   .icon.icon-trending {
@@ -276,6 +273,21 @@ main {
 
 .non-collapsible-section {
   padding: 0 25px; }
+
+.prefs-button button {
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  fill: rgba(12, 12, 13, 0.6);
+  offset-inline-end: 15px;
+  padding: 15px;
+  position: fixed;
+  top: 15px;
+  z-index: 12001; }
+  .prefs-button button:hover {
+    background-color: #EDEDF0; }
+  .prefs-button button:active {
+    background-color: #F9F9FA; }
 
 .as-error-fallback {
   align-items: center;
@@ -809,146 +821,6 @@ main {
         .context-menu > ul > li > a.disabled {
           opacity: 0.4;
           pointer-events: none; }
-
-.prefs-pane {
-  color: #4A4A4F;
-  font-size: 14px;
-  line-height: 21px; }
-  .prefs-pane .sidebar {
-    background: #FFF;
-    border-left: 1px solid #D7D7DB;
-    box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
-    height: 100%;
-    offset-inline-end: 0;
-    overflow-y: auto;
-    padding: 40px;
-    position: fixed;
-    top: 0;
-    transition: 0.1s cubic-bezier(0, 0, 0, 1);
-    transition-property: transform;
-    width: 400px;
-    z-index: 12000; }
-    .prefs-pane .sidebar.hidden {
-      transform: translateX(100%); }
-      .prefs-pane .sidebar.hidden:dir(rtl) {
-        transform: translateX(-100%); }
-    .prefs-pane .sidebar h1 {
-      font-size: 21px;
-      margin: 0;
-      padding-top: 20px; }
-  .prefs-pane hr {
-    border: 0;
-    border-bottom: 1px solid #D7D7DB;
-    margin: 20px 0; }
-  .prefs-pane .prefs-modal-inner-wrapper {
-    padding-bottom: 100px; }
-    .prefs-pane .prefs-modal-inner-wrapper section {
-      margin: 20px 0; }
-      .prefs-pane .prefs-modal-inner-wrapper section p {
-        margin: 5px 0 20px 30px; }
-      .prefs-pane .prefs-modal-inner-wrapper section label {
-        display: inline-block;
-        position: relative;
-        width: 100%; }
-        .prefs-pane .prefs-modal-inner-wrapper section label input {
-          offset-inline-start: -30px;
-          position: absolute;
-          top: 0; }
-      .prefs-pane .prefs-modal-inner-wrapper section > label {
-        font-size: 16px;
-        font-weight: bold;
-        line-height: 19px; }
-    .prefs-pane .prefs-modal-inner-wrapper .options {
-      background: #F9F9FA;
-      border: 1px solid #D7D7DB;
-      border-radius: 2px;
-      margin: -10px 0 20px;
-      margin-inline-start: 30px;
-      padding: 10px; }
-      .prefs-pane .prefs-modal-inner-wrapper .options.disabled {
-        opacity: 0.5; }
-      .prefs-pane .prefs-modal-inner-wrapper .options label {
-        background-position-x: 35px;
-        background-position-y: 2.5px;
-        background-repeat: no-repeat;
-        display: inline-block;
-        font-size: 14px;
-        font-weight: normal;
-        height: auto;
-        line-height: 21px;
-        width: 100%; }
-        .prefs-pane .prefs-modal-inner-wrapper .options label:dir(rtl) {
-          background-position-x: right 35px; }
-      .prefs-pane .prefs-modal-inner-wrapper .options [type='checkbox']:not(:checked) + label,
-      .prefs-pane .prefs-modal-inner-wrapper .options [type='checkbox']:checked + label {
-        padding-inline-start: 63px; }
-      .prefs-pane .prefs-modal-inner-wrapper .options section {
-        margin: 0; }
-  .prefs-pane .actions {
-    background-color: #F9F9FA;
-    border-left: 1px solid #D7D7DB;
-    bottom: 0;
-    offset-inline-end: 0;
-    position: fixed;
-    width: 400px; }
-    .prefs-pane .actions button {
-      margin-inline-end: 20px; }
-  .prefs-pane [type='checkbox']:not(:checked),
-  .prefs-pane [type='checkbox']:checked {
-    offset-inline-start: -9999px;
-    position: absolute; }
-  .prefs-pane [type='checkbox']:not(:disabled):not(:checked) + label,
-  .prefs-pane [type='checkbox']:not(:disabled):checked + label {
-    cursor: pointer;
-    padding: 0 30px;
-    position: relative; }
-  .prefs-pane [type='checkbox']:not(:checked) + label::before,
-  .prefs-pane [type='checkbox']:checked + label::before {
-    background: #FFF;
-    border: 1px solid #B1B1B3;
-    border-radius: 3px;
-    content: '';
-    height: 21px;
-    offset-inline-start: 0;
-    position: absolute;
-    top: 0;
-    width: 21px; }
-  .prefs-pane [type='checkbox']:not(:checked) + label::after,
-  .prefs-pane [type='checkbox']:checked + label::after {
-    background: url("chrome://global/skin/in-content/check.svg") no-repeat center center;
-    content: '';
-    -moz-context-properties: fill, stroke;
-    fill: #0060DF;
-    height: 21px;
-    offset-inline-start: 0;
-    position: absolute;
-    stroke: none;
-    top: 0;
-    width: 21px; }
-  .prefs-pane [type='checkbox']:not(:checked) + label::after {
-    opacity: 0; }
-  .prefs-pane [type='checkbox']:checked + label::after {
-    opacity: 1; }
-  .prefs-pane [type='checkbox']:not(:disabled) + label:hover::before {
-    border: 1px solid #0060DF; }
-  .prefs-pane [type='checkbox']:not(:disabled):checked:focus + label::before,
-  .prefs-pane [type='checkbox']:not(:disabled):not(:checked):focus + label::before {
-    border: 1px dotted #0060DF; }
-
-.prefs-pane-button button {
-  background-color: transparent;
-  border: 0;
-  cursor: pointer;
-  fill: rgba(12, 12, 13, 0.6);
-  offset-inline-end: 15px;
-  padding: 15px;
-  position: fixed;
-  top: 15px;
-  z-index: 12001; }
-  .prefs-pane-button button:hover {
-    background-color: #EDEDF0; }
-  .prefs-pane-button button:active {
-    background-color: #F9F9FA; }
 
 .confirmation-dialog .modal {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
