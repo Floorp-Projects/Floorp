@@ -1179,7 +1179,7 @@ struct nsGridContainerFrame::Tracks
     }
   };
 
-  // Helper method for ResolveIntrinsicSize.
+  // Helper methods for ResolveIntrinsicSize.
   template<TrackSizingPhase phase>
   bool GrowBaseForSpanningItems(const nsTArray<Step2ItemData>& aItemData,
                                 nsTArray<uint32_t>& aTracks,
@@ -1188,7 +1188,17 @@ struct nsGridContainerFrame::Tracks
                                 TrackSize::StateBits aSelector,
                                 uint32_t aStartIndex,
                                 uint32_t aEndIndex);
-
+  template<TrackSizingPhase phase>
+  bool GrowLimitForSpanningItems(const nsTArray<Step2ItemData>& aItemData,
+                                 nsTArray<uint32_t>& aTracks,
+                                 const nsTArray<TrackSize>& aSizes,
+                                 nsTArray<TrackSize>& aPlan,
+                                 nsTArray<TrackSize>& aItemPlan,
+                                 TrackSize::StateBits aSelector,
+                                 const TrackSizingFunctions& aFunctions,
+                                 nscoord aPercentageBasis,
+                                 uint32_t aStartIndex,
+                                 uint32_t aEndIndex);
   /**
    * Resolve Intrinsic Track Sizes.
    * http://dev.w3.org/csswg/css-grid/#algo-content
@@ -4249,6 +4259,43 @@ nsGridContainerFrame::Tracks::GrowBaseForSpanningItems(
   return updatedBase;
 }
 
+template<nsGridContainerFrame::Tracks::TrackSizingPhase phase>
+bool
+nsGridContainerFrame::Tracks::GrowLimitForSpanningItems(
+  const nsTArray<Step2ItemData>& aItemData,
+  nsTArray<uint32_t>& aTracks,
+  const nsTArray<TrackSize>& aSizes,
+  nsTArray<TrackSize>& aPlan,
+  nsTArray<TrackSize>& aItemPlan,
+  TrackSize::StateBits aSelector,
+  const TrackSizingFunctions& aFunctions,
+  nscoord aPercentageBasis,
+  uint32_t aStartIndex,
+  uint32_t aEndIndex)
+{
+  ResetBasePlan(aPlan, aSizes);
+  for (uint32_t i = aStartIndex; i < aEndIndex; ++i) {
+    const Step2ItemData& item = aItemData[i];
+    if (!(item.mState & aSelector)) {
+      continue;
+    }
+    for (auto j = item.mLineRange.mStart, end = item.mLineRange.mEnd; j < end; ++j) {
+      aPlan[j].mState |= TrackSize::eModified;
+    }
+    nscoord space = item.SizeContributionForPhase(phase);
+    if (space > 0) {
+      aTracks.ClearAndRetainStorage();
+      space = CollectGrowable(space, aSizes, item.mLineRange, aSelector,
+                              aTracks);
+      if (space > 0) {
+        DistributeToTrackLimits(space, aSizes, aPlan, aItemPlan, aTracks,
+                                aFunctions, aPercentageBasis);
+      }
+    }
+  }
+  return true;
+}
+
 void
 nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   GridReflowInput&            aState,
@@ -4438,27 +4485,10 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         }
 
         // Step 2.5 MinSize to intrinsic max-sizing.
-        ResetBasePlan(plan, limits);
-        for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
-          Step2ItemData& item = step2Items[i];
-          if (!(item.mState & TrackSize::eIntrinsicMaxSizing)) {
-            continue;
-          }
-          for (auto j = item.mLineRange.mStart, end = item.mLineRange.mEnd; j < end; ++j) {
-            plan[j].mState |= TrackSize::eModified;
-          }
-          nscoord space = item.mMinSize;
-          if (space > 0) {
-            tracks.ClearAndRetainStorage();
-            space = CollectGrowable(space, limits, item.mLineRange,
-                                    TrackSize::eIntrinsicMaxSizing,
-                                    tracks);
-            if (space > 0) {
-              DistributeToTrackLimits(space, limits, plan, itemPlan, tracks, aFunctions,
-                                      aPercentageBasis);
-            }
-          }
-        }
+        GrowLimitForSpanningItems<TrackSizingPhase::eIntrinsicMaximums>(
+          step2Items, tracks, limits, plan, itemPlan, TrackSize::eIntrinsicMaxSizing,
+          aFunctions, aPercentageBasis, spanGroupStartIndex, spanGroupEndIndex);
+
         for (size_t j = 0, len = mSizes.Length(); j < len; ++j) {
           TrackSize& sz = itemPlan[j];
           sz.mState &= ~(TrackSize::eFrozen | TrackSize::eSkipGrowUnlimited);
@@ -4474,30 +4504,15 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
 
         if (stateBitsPerSpan[span] & TrackSize::eAutoOrMaxContentMaxSizing) {
           // Step 2.6 MaxContentContribution to max-content max-sizing.
-          ResetBasePlan(plan, limits);
-          for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
-            Step2ItemData& item = step2Items[i];
-            if (!(item.mState & TrackSize::eAutoOrMaxContentMaxSizing)) {
-              continue;
-            }
-          for (auto j = item.mLineRange.mStart, end = item.mLineRange.mEnd; j < end; ++j) {
-            plan[j].mState |= TrackSize::eModified;
-          }
-            nscoord space = item.mMaxContentContribution;
-            if (space > 0) {
-              tracks.ClearAndRetainStorage();
-              space = CollectGrowable(space, limits, item.mLineRange,
-                                      TrackSize::eAutoOrMaxContentMaxSizing,
-                                      tracks);
-              if (space > 0) {
-                DistributeToTrackLimits(space, limits, plan, itemPlan, tracks, aFunctions,
-                                        aPercentageBasis);
-              }
-            }
-          }
+          GrowLimitForSpanningItems<TrackSizingPhase::eMaxContentMaximums>(
+            step2Items, tracks, limits, plan, itemPlan, TrackSize::eAutoOrMaxContentMaxSizing,
+            aFunctions, aPercentageBasis, spanGroupStartIndex, spanGroupEndIndex);
+          
         }
         CopyPlanToLimit(plan);
       }
+
+      i = spanGroupEndIndex;
     }
   }
 
