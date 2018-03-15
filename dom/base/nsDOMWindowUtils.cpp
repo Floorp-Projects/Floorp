@@ -1666,7 +1666,7 @@ nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
 
 NS_IMETHODIMP
 nsDOMWindowUtils::GetBoundsWithoutFlushing(nsIDOMElement *aElement,
-                                           nsIDOMClientRect** aResult)
+                                           nsISupports** aResult)
 {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
@@ -1723,7 +1723,7 @@ nsDOMWindowUtils::NeedsFlush(int32_t aFlushType, bool* aResult)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
+nsDOMWindowUtils::GetRootBounds(nsISupports** aResult)
 {
   nsIDocument* doc = GetDocument();
   NS_ENSURE_STATE(doc);

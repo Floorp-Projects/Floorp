@@ -12,6 +12,7 @@ const { require } = BrowserLoaderModule.BrowserLoader({
   window
 });
 const Perf = require("devtools/client/performance-new/components/Perf");
+const Services = require("Services");
 const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
 const { createElement } = require("devtools/client/shared/vendor/react");
 
@@ -25,7 +26,15 @@ function gInit(perfFront) {
     perfFront,
     receiveProfile: profile => {
       // Open up a new tab and send a message with the profile.
-      const browser = top.gBrowser;
+      let browser = top.gBrowser;
+      if (!browser) {
+        // Current isn't browser window. Looking for the recent browser.
+        const win = Services.wm.getMostRecentWindow("navigator:browser");
+        if (!win) {
+          throw new Error("No browser window");
+        }
+        browser = win.gBrowser;
+      }
       const tab = browser.addTab("https://perf-html.io/from-addon");
       browser.selectedTab = tab;
       const mm = tab.linkedBrowser.messageManager;

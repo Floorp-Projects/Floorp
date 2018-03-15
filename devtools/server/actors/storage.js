@@ -167,11 +167,11 @@ StorageActors.defaults = function(typeName, observationTopics) {
           // data: URLs do not support storage of any type.
           return null;
         case "about:":
-          // Fallthrough.
-        case "chrome:":
-          // Fallthrough.
-        case "file:":
           return location.protocol + location.pathname;
+        case "chrome:":
+          return location.protocol + location.pathname;
+        case "file:":
+          return `${location.protocol}//${location.pathname}`;
         case "resource:":
           return location.origin + location.pathname;
         case "moz-extension:":

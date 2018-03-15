@@ -69,9 +69,4 @@ interface nsIDOMRange : nsISupports
    * Returns whether the range intersects node.
    */
   boolean                   intersectsNode(in nsIDOMNode node);
-
-  // These methods come from 
-  // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-range-interface
-  nsIDOMClientRectList getClientRects();
-  nsIDOMClientRect getBoundingClientRect();
 };

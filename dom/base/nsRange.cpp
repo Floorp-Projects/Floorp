@@ -3399,13 +3399,6 @@ nsRange::CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
   } while (!iter.IsDone());
 }
 
-NS_IMETHODIMP
-nsRange::GetBoundingClientRect(nsIDOMClientRect** aResult)
-{
-  *aResult = GetBoundingClientRect(true).take();
-  return NS_OK;
-}
-
 already_AddRefed<DOMRect>
 nsRange::GetBoundingClientRect(bool aClampToEdge, bool aFlushLayout)
 {
@@ -3422,13 +3415,6 @@ nsRange::GetBoundingClientRect(bool aClampToEdge, bool aFlushLayout)
     accumulator.mResultRect;
   rect->SetLayoutRect(r);
   return rect.forget();
-}
-
-NS_IMETHODIMP
-nsRange::GetClientRects(nsIDOMClientRectList** aResult)
-{
-  *aResult = GetClientRects(true).take();
-  return NS_OK;
 }
 
 already_AddRefed<DOMRectList>
