@@ -5,14 +5,10 @@
 import os
 import shutil
 import hashlib
-from os.path import join, getsize
-from stat import *
 import re
 import sys
 import getopt
 import time
-import datetime
-import string
 import tempfile
 import io
 
@@ -535,7 +531,6 @@ def create_partial_patches(patches):
 
             partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, [
                                                     'update.manifest', 'updatev2.manifest', 'updatev3.manifest'], []), forced_updates, ['channel-prefs.js', 'update-settings.ini'])
-            partial_buildid = to_buildid
             partial_shasum = hashlib.sha1(open(partial_filename, "rb").read()).hexdigest()
             partial_size = str(os.path.getsize(partial_filename))
 
