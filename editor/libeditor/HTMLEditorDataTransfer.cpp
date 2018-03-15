@@ -347,8 +347,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     // if there are any invisible br's after our insertion point, remove them.
     // this is because if there is a br at end of what we paste, it will make
     // the invisible br visible.
-    WSRunObject wsObj(this, pointToInsert.GetContainer(),
-                      pointToInsert.Offset());
+    WSRunObject wsObj(this, pointToInsert);
     if (wsObj.mEndReasonNode &&
         TextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
         !IsVisibleBRElement(wsObj.mEndReasonNode)) {
