@@ -6,6 +6,7 @@ buildscript {
     ext.espresso_version = '3.0.1'
     ext.kotlin_version = '1.2.30'
     ext.geckoview_nightly_version = '2018.03.16'
+    ext.spotbugs_version = '3.1.2'
 
     repositories {
         google()
@@ -18,6 +19,7 @@ buildscript {
 
         classpath 'org.ajoberstar:grgit:1.5.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "gradle.plugin.com.github.spotbugs:spotbugs-gradle-plugin:1.6.1"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

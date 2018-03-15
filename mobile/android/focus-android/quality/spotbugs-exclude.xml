@@ -23,4 +23,7 @@
     <Match>
         <Class name="~.*\.*Screenshots"/>
     </Match>
+    <Match>
+        <Bug pattern="NP_NULL_PARAM_DEREF_NONVIRTUAL"/>
+    </Match>
 </FindBugsFilter>

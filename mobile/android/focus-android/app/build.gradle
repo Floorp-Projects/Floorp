@@ -1,6 +1,8 @@
+import com.github.spotbugs.SpotBugsTask
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'findbugs'
+apply plugin: "com.github.spotbugs"
 apply plugin: 'jacoco'
 apply plugin: 'jacoco-android'
 apply plugin: 'pmd'
@@ -313,11 +315,8 @@ dependencies {
 
     compile "android.arch.lifecycle:extensions:$architecture_components_version"
 
-    compile ("com.google.code.findbugs:annotations:3.0.1") {
-        // We really only need the SuppressFBWarnings annotation, everything else can be ignored.
-        // Without this we get weird failures due to dependencies.
-        transitive = false
-    }
+    compileOnly 'net.jcip:jcip-annotations:1.0'
+    compileOnly "com.github.spotbugs:spotbugs-annotations:$spotbugs_version"
 
     compile 'org.mozilla.telemetry:telemetry:1.1.1'
     compile 'org.mozilla.components:ktx:0.1'
@@ -532,8 +531,7 @@ clean.doLast {
 // -------------------------------------------------------------------------------------------------
 // Static Analysis: findbugs and pmd
 // -------------------------------------------------------------------------------------------------
-
-findbugs {
+spotbugs {
     ignoreFailures = false
 
     effort = "min"
@@ -542,10 +540,10 @@ findbugs {
     // TODO: boost this to low once low priority issues are fixed.
     reportLevel = "medium"
 
-    excludeFilter = new File("${project.rootDir}/quality/findbugs-exclude.xml")
+    excludeFilter = new File("${project.rootDir}/quality/spotbugs-exclude.xml")
 }
 
-task findbugs(type: FindBugs, dependsOn: "assemble", group: 'verification') {
+task spotbugs(type: SpotBugsTask, dependsOn: "assemble", group: 'verification') {
     classes = files("$projectDir.absolutePath/build/intermediates/classes")
 
     source = fileTree('src/main/java')
@@ -593,5 +591,5 @@ task checkstyle(type: Checkstyle) {
 }
 
 afterEvaluate {
-    check.dependsOn 'findbugs', 'pmd', 'checkstyle'
+    check.dependsOn 'spotbugs', 'pmd', 'checkstyle'
 }

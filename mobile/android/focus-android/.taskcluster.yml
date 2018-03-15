@@ -12,7 +12,7 @@ tasks:
 #
 # - Build the app (all flavors)
 # - Run unit tests
-# - Run code quality tools (findbugs, lint, checkstyle etc.)
+# - Run code quality tools (spotbugs, lint, checkstyle etc.)
 ###############################################################################
   - provisionerId: '{{ taskcluster.docker.provisionerId }}'
     workerType: '{{ taskcluster.docker.workerType }}'
@@ -37,7 +37,7 @@ tasks:
           && git checkout {{event.head.sha}}
           && echo "--" > .adjust_token
           && python tools/l10n/check_locales.py
-          && ./gradlew --no-daemon clean assemble assembleFocusWebviewUniversalDebugAndroidTest detektCheck ktlint lint pmd checkstyle findbugs test
+          && ./gradlew --no-daemon clean assemble assembleFocusWebviewUniversalDebugAndroidTest detektCheck ktlint lint pmd checkstyle spotbugs test
       artifacts:
         'public':
           type: 'directory'
