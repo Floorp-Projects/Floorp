@@ -455,8 +455,8 @@
 @RESPATH@/components/ContentPrefService2.js
 @RESPATH@/components/nsContentDispatchChooser.manifest
 @RESPATH@/components/nsContentDispatchChooser.js
-@RESPATH@/components/nsHandlerService-json.manifest
-@RESPATH@/components/nsHandlerService-json.js
+@RESPATH@/components/HandlerService.manifest
+@RESPATH@/components/HandlerService.js
 @RESPATH@/components/nsWebHandlerApp.manifest
 @RESPATH@/components/nsWebHandlerApp.js
 @RESPATH@/components/satchel.manifest
