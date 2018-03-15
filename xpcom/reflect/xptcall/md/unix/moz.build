@@ -332,3 +332,5 @@ LOCAL_INCLUDES += [
     '../..',
     '/xpcom/reflect/xptinfo',
 ]
+
+NO_PGO = True
