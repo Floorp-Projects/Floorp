@@ -297,6 +297,88 @@ private:
   bool mHorizontalized;
 };
 
+/**
+ * This class is used to adjust the delta values for wheel scrolling with the
+ * auto-dir functionality.
+ * A traditional wheel scroll only allows the user use the wheel in the same
+ * scrollable direction as that of the scrolling target to scroll the target,
+ * whereas an auto-dir scroll lets the user use any wheel(either a vertical
+ * wheel or a horizontal tilt wheel) to scroll a frame which is scrollable in
+ * only one direction. For detailed information on auto-dir scrolling,
+ * @see mozilla::WheelDeltaAdjustmentStrategy.
+ */
+class MOZ_STACK_CLASS AutoDirWheelDeltaAdjuster
+{
+protected:
+  /**
+   * @param aDeltaX            DeltaX for a wheel event whose delta values will
+   *                           be adjusted upon calling Adjust() when
+   *                           ShouldBeAdjusted() returns true.
+   * @param aDeltaY            DeltaY for a wheel event, like DeltaX.
+   */
+  AutoDirWheelDeltaAdjuster(double& aDeltaX,
+                            double& aDeltaY)
+    : mDeltaX(aDeltaX)
+    , mDeltaY(aDeltaY)
+    , mCheckedIfShouldBeAdjusted(false)
+    , mShouldBeAdjusted(false)
+  {
+  }
+
+public:
+  /**
+   * Gets whether the values of the delta should be adjusted for auto-dir
+   * scrolling. Note that if Adjust() has been called, this function simply
+   * returns false.
+   *
+   * @return true if the delta should be adjusted; otherwise false.
+   */
+  bool ShouldBeAdjusted();
+  /**
+   * Adjusts the values of the delta values for auto-dir scrolling when
+   * ShouldBeAdjusted() returns true. If you call it when ShouldBeAdjusted()
+   * returns false, this function will simply do nothing.
+   */
+  void Adjust();
+
+private:
+  /**
+   * Called by Adjust() if Adjust() successfully adjusted the delta values.
+   */
+  virtual void OnAdjusted()
+  {
+  }
+
+  virtual bool CanScrollAlongXAxis() const = 0;
+  virtual bool CanScrollAlongYAxis() const = 0;
+  virtual bool CanScrollUpwards() const = 0;
+  virtual bool CanScrollDownwards() const = 0;
+  virtual bool CanScrollLeftwards() const = 0;
+  virtual bool CanScrollRightwards() const = 0;
+
+  /**
+   * Gets whether the horizontal content starts at rightside.
+   *
+   * @return If the content is in vertical-RTL writing mode(E.g. "writing-mode:
+   *         vertical-rl" in CSS), or if it's in horizontal-RTL writing-mode
+   *         (E.g. "writing-mode: horizontal-tb; direction: rtl;" in CSS), then
+   *         this function returns true. From the representation perspective,
+   *         frames whose horizontal contents start at rightside also cause
+   *         their horizontal scrollbars, if any, initially start at rightside.
+   *         So we can also learn about the initial side of the horizontal
+   *         scrollbar for the frame by calling this function.
+   */
+  virtual bool IsHorizontalContentRightToLeft() const = 0;
+
+protected:
+  double& mDeltaX;
+  double& mDeltaY;
+
+private:
+  bool mCheckedIfShouldBeAdjusted;
+  bool mShouldBeAdjusted;
+};
+
 } // namespace mozilla
 
 #endif // mozilla_WheelHandlingHelper_h_
