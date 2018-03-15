@@ -28,7 +28,7 @@ const {
 } = require("devtools/shared/css/parsing-utils");
 const promise = require("promise");
 const Services = require("Services");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {Task} = require("devtools/shared/task");
 const {Tools} = require("devtools/client/definitions");
 const {gDevTools} = require("devtools/client/framework/devtools");
