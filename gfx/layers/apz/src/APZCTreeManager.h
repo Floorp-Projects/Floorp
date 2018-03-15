@@ -699,6 +699,7 @@ private:
   std::unordered_map<ScrollableLayerGuid, ZoomConstraints, ScrollableLayerGuidHash> mZoomConstraints;
   /* A list of keyboard shortcuts to use for translating keyboard inputs into
    * keyboard actions. This is gathered on the main thread from XBL bindings.
+   * This must only be accessed on the controller thread.
    */
   KeyboardMap mKeyboardMap;
   /* This tracks the focus targets of chrome and content and whether we have

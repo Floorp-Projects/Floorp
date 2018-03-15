@@ -166,7 +166,11 @@ APZCTreeManagerParent::RecvReceiveKeyboardInputEvent(
 mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap)
 {
-  mTreeManager->SetKeyboardMap(aKeyboardMap);
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod<KeyboardMap>(
+    "layers::IAPZCTreeManager::SetKeyboardMap",
+    mTreeManager,
+    &IAPZCTreeManager::SetKeyboardMap,
+    aKeyboardMap));
 
   return IPC_OK();
 }
