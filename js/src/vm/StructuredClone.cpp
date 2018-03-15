@@ -159,16 +159,16 @@ template<typename T, typename AllocPolicy>
 struct BufferIterator {
     typedef mozilla::BufferList<AllocPolicy> BufferList;
 
-    explicit BufferIterator(BufferList& buffer)
+    explicit BufferIterator(const BufferList& buffer)
         : mBuffer(buffer)
         , mIter(buffer.Iter())
     {
         JS_STATIC_ASSERT(8 % sizeof(T) == 0);
     }
 
-    BufferIterator(const BufferIterator& other)
-        : mBuffer(other.mBuffer)
-        , mIter(other.mIter)
+    explicit BufferIterator(const JSStructuredCloneData& data)
+      : mBuffer(data.bufList_)
+      , mIter(data.Start())
     {
     }
 
@@ -227,7 +227,7 @@ struct BufferIterator {
         return mIter.HasRoomFor(sizeof(T));
     }
 
-    BufferList& mBuffer;
+    const BufferList& mBuffer;
     typename BufferList::IterImpl mIter;
 };
 
@@ -332,9 +332,7 @@ struct SCOutput {
 
     uint64_t tell() const { return buf.Size(); }
     uint64_t count() const { return buf.Size() / sizeof(uint64_t); }
-    Iter iter() {
-        return Iter(buf);
-    }
+    Iter iter() { return Iter(buf); }
 
     size_t offset(Iter dest) {
         return dest - iter();
@@ -720,13 +718,12 @@ DiscardTransferables(mozilla::BufferList<AllocPolicy>& buffer,
 static bool
 StructuredCloneHasTransferObjects(const JSStructuredCloneData& data)
 {
-    auto iter = data.Iter();
-
     if (data.Size() < sizeof(uint64_t))
         return false;
 
     uint64_t u;
-    MOZ_ALWAYS_TRUE(data.ReadBytes(iter, reinterpret_cast<char*>(&u), sizeof(u)));
+    BufferIterator<uint64_t, SystemAllocPolicy> iter(data);
+    MOZ_ALWAYS_TRUE(iter.readBytes(reinterpret_cast<char*>(&u), sizeof(u)));
     uint32_t tag = uint32_t(u >> 32);
     return (tag == SCTAG_TRANSFER_MAP_HEADER);
 }
@@ -737,7 +734,7 @@ SCInput::SCInput(JSContext* cx, JSStructuredCloneData& data)
     : cx(cx), point(data)
 {
 
-    static_assert(JSStructuredCloneData::kSegmentAlignment % 8 == 0,
+    static_assert(JSStructuredCloneData::BufferList::kSegmentAlignment % 8 == 0,
                   "structured clone buffer reads should be aligned");
     MOZ_ASSERT(data.Size() % 8 == 0);
 }
@@ -916,7 +913,11 @@ bool
 SCOutput::write(uint64_t u)
 {
     uint64_t v = NativeEndian::swapToLittleEndian(u);
-    return buf.WriteBytes(reinterpret_cast<char*>(&v), sizeof(u));
+    if (!buf.AppendBytes(reinterpret_cast<char*>(&v), sizeof(u))) {
+        ReportOutOfMemory(context());
+        return false;
+    }
+    return true;
 }
 
 bool
@@ -956,14 +957,14 @@ SCOutput::writeArray(const T* p, size_t nelems)
 
     for (size_t i = 0; i < nelems; i++) {
         T value = NativeEndian::swapToLittleEndian(p[i]);
-        if (!buf.WriteBytes(reinterpret_cast<char*>(&value), sizeof(value)))
+        if (!buf.AppendBytes(reinterpret_cast<char*>(&value), sizeof(value)))
             return false;
     }
 
     // Zero-pad to 8 bytes boundary.
     size_t padbytes = ComputePadding(nelems, sizeof(T));
     char zeroes[sizeof(uint64_t)] = { 0 };
-    if (!buf.WriteBytes(zeroes, padbytes))
+    if (!buf.AppendBytes(zeroes, padbytes))
         return false;
 
     return true;
@@ -976,13 +977,13 @@ SCOutput::writeArray<uint8_t>(const uint8_t* p, size_t nelems)
     if (nelems == 0)
         return true;
 
-    if (!buf.WriteBytes(reinterpret_cast<const char*>(p), nelems))
+    if (!buf.AppendBytes(reinterpret_cast<const char*>(p), nelems))
         return false;
 
     // zero-pad to 8 bytes boundary
     size_t padbytes = ComputePadding(nelems, 1);
     char zeroes[sizeof(uint64_t)] = { 0 };
-    if (!buf.WriteBytes(zeroes, padbytes))
+    if (!buf.AppendBytes(zeroes, padbytes))
         return false;
 
     return true;
@@ -1031,7 +1032,7 @@ JSStructuredCloneData::discardTransferables()
     if (!Size())
         return;
     if (ownTransferables_ == OwnTransferablePolicy::OwnsTransferablesIfAny)
-        DiscardTransferables(*this, callbacks_, closure_);
+        DiscardTransferables(bufList_, callbacks_, closure_);
 }
 
 JS_STATIC_ASSERT(JSString::MAX_LENGTH < UINT32_MAX);
@@ -2822,11 +2823,7 @@ JSAutoStructuredCloneBuffer::operator=(JSAutoStructuredCloneBuffer&& other)
 void
 JSAutoStructuredCloneBuffer::clear()
 {
-    if (!data_.Size())
-        return;
-
-    if (data_.ownTransferables_ == OwnTransferablePolicy::OwnsTransferablesIfAny)
-        DiscardTransferables(data_, callbacks, closure);
+    data_.discardTransferables();
     data_.ownTransferables_ = OwnTransferablePolicy::NoTransferables;
     data_.refsHeld_.releaseAll();
     data_.Clear();

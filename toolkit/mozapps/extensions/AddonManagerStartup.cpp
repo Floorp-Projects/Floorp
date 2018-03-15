@@ -622,12 +622,10 @@ AddonManagerStartup::EncodeBlob(JS::HandleValue value, JSContext* cx, JS::Mutabl
 
   nsAutoCString scData;
 
-  auto& data = holder.Data();
-  auto iter = data.Iter();
-  while (!iter.Done()) {
-    scData.Append(nsDependentCSubstring(iter.Data(), iter.RemainingInSegment()));
-    iter.Advance(data, iter.RemainingInSegment());
-  }
+  holder.Data().ForEachDataChunk([&](const char* aData, size_t aSize) {
+      scData.Append(nsDependentCSubstring(aData, aSize));
+      return true;
+  });
 
   nsCString lz4;
   MOZ_TRY_VAR(lz4, EncodeLZ4(scData, STRUCTURED_CLONE_MAGIC));
