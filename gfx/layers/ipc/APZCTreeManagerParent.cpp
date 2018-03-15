@@ -166,11 +166,7 @@ APZCTreeManagerParent::RecvReceiveKeyboardInputEvent(
 mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap)
 {
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod<KeyboardMap>(
-    "layers::IAPZCTreeManager::SetKeyboardMap",
-    mTreeManager,
-    &IAPZCTreeManager::SetKeyboardMap,
-    aKeyboardMap));
+  mTreeManager->SetKeyboardMap(aKeyboardMap);
 
   return IPC_OK();
 }
@@ -187,12 +183,7 @@ APZCTreeManagerParent::RecvZoomToRect(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  APZThreadUtils::RunOnControllerThread(
-    NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
-      "layers::IAPZCTreeManager::ZoomToRect",
-      mTreeManager,
-      &IAPZCTreeManager::ZoomToRect,
-      aGuid, aRect, aFlags));
+  mTreeManager->ZoomToRect(aGuid, aRect, aFlags);
   return IPC_OK();
 }
 
@@ -253,11 +244,7 @@ APZCTreeManagerParent::RecvUpdateZoomConstraints(
 mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetDPI(const float& aDpiValue)
 {
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod<float>(
-    "layers::IAPZCTreeManager::SetDPI",
-    mTreeManager,
-    &IAPZCTreeManager::SetDPI,
-    aDpiValue));
+  mTreeManager->SetDPI(aDpiValue);
   return IPC_OK();
 }
 
@@ -341,6 +328,15 @@ mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetLongTapEnabled(const bool& aTapGestureEnabled)
 {
   mTreeManager->SetLongTapEnabled(aTapGestureEnabled);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+APZCTreeManagerParent::RecvProcessTouchVelocity(
+  const uint32_t& aTimestampMs,
+  const float& aSpeedY)
+{
+  mTreeManager->ProcessTouchVelocity(aTimestampMs, aSpeedY);
   return IPC_OK();
 }
 

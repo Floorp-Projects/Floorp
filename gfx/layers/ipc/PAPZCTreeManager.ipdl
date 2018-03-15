@@ -85,6 +85,8 @@ parent:
 
   async SetLongTapEnabled(bool aTapGestureEnabled);
 
+  async ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY);
+
   // The following messages are used to
   // implement the ReceiveInputEvent methods
 

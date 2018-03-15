@@ -41,6 +41,13 @@ public:
   static void AssertOnControllerThread();
 
   /**
+   * This can be used to assert that the current thread is the
+   * sampler thread (which samples the async transform).
+   * This does nothing if thread assertions are disabled.
+   */
+  static void AssertOnSamplerThread();
+
+  /**
    * Run the given task on the APZ "controller thread" for this platform. If
    * this function is called from the controller thread itself then the task is
    * run immediately without getting queued.
@@ -51,25 +58,6 @@ public:
    * Returns true if currently on APZ "controller thread".
    */
   static bool IsControllerThread();
-
-  /**
-   * This can be used to assert that the current thread is the
-   * sampler thread (which samples the async transform).
-   * This does nothing if thread assertions are disabled.
-   */
-  static void AssertOnSamplerThread();
-
-  /**
-   * Runs the given task on the APZ "sampler thread" for this platform. If
-   * this function is called from the sampler thread itself then the task is
-   * run immediately without getting queued.
-   */
-  static void RunOnSamplerThread(already_AddRefed<Runnable> aTask);
-
-  /**
-   * Returns true if currently on the APZ "sampler thread".
-   */
-  static bool IsSamplerThread();
 };
 
 // A base class for GenericNamedTimerCallback<Function>.
