@@ -4872,7 +4872,7 @@ nsIDocument::GetContainer() const
 }
 
 void
-nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
+nsIDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 {
   MOZ_ASSERT(aScriptGlobalObject || !mAnimationController ||
              mAnimationController->IsPausedByType(
