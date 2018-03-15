@@ -251,9 +251,9 @@ ShaderConstants11::ShaderConstants11()
     : mVertexDirty(true),
       mPixelDirty(true),
       mComputeDirty(true),
-      mSamplerMetadataVSDirty(true),
-      mSamplerMetadataPSDirty(true),
-      mSamplerMetadataCSDirty(true)
+      mNumActiveVSSamplers(0),
+      mNumActivePSSamplers(0),
+      mNumActiveCSSamplers(0)
 {
 }
 
@@ -286,12 +286,12 @@ size_t ShaderConstants11::getRequiredBufferSize(gl::ShaderType shaderType) const
 
 void ShaderConstants11::markDirty()
 {
-    mVertexDirty            = true;
-    mPixelDirty             = true;
-    mComputeDirty           = true;
-    mSamplerMetadataVSDirty = true;
-    mSamplerMetadataPSDirty = true;
-    mSamplerMetadataCSDirty = true;
+    mVertexDirty         = true;
+    mPixelDirty          = true;
+    mComputeDirty        = true;
+    mNumActiveVSSamplers = 0;
+    mNumActivePSSamplers = 0;
+    mNumActiveCSSamplers = 0;
 }
 
 bool ShaderConstants11::updateSamplerMetadata(SamplerMetadata *data, const gl::Texture &texture)
@@ -460,19 +460,19 @@ void ShaderConstants11::onSamplerChange(gl::ShaderType shaderType,
         case gl::SHADER_VERTEX:
             if (updateSamplerMetadata(&mSamplerMetadataVS[samplerIndex], texture))
             {
-                mSamplerMetadataVSDirty = true;
+                mNumActiveVSSamplers = 0;
             }
             break;
         case gl::SHADER_FRAGMENT:
             if (updateSamplerMetadata(&mSamplerMetadataPS[samplerIndex], texture))
             {
-                mSamplerMetadataPSDirty = true;
+                mNumActivePSSamplers = 0;
             }
             break;
         case gl::SHADER_COMPUTE:
             if (updateSamplerMetadata(&mSamplerMetadataCS[samplerIndex], texture))
             {
-                mSamplerMetadataCSDirty = true;
+                mNumActiveCSSamplers = 0;
             }
             break;
         default:
@@ -491,31 +491,35 @@ gl::Error ShaderConstants11::updateBuffer(Renderer11 *renderer,
     const uint8_t *data        = nullptr;
     const uint8_t *samplerData = nullptr;
 
+    // Re-upload the sampler meta-data if the current program uses more samplers
+    // than we previously uploaded.
+    int numSamplers = programD3D.getUsedSamplerRange(shaderType);
+
     switch (shaderType)
     {
         case gl::SHADER_VERTEX:
-            dirty                   = mVertexDirty || mSamplerMetadataVSDirty;
+            dirty                   = mVertexDirty || (mNumActiveVSSamplers < numSamplers);
             dataSize                = sizeof(Vertex);
             data                    = reinterpret_cast<const uint8_t *>(&mVertex);
             samplerData             = reinterpret_cast<const uint8_t *>(mSamplerMetadataVS.data());
             mVertexDirty            = false;
-            mSamplerMetadataVSDirty = false;
+            mNumActiveVSSamplers    = numSamplers;
             break;
         case gl::SHADER_FRAGMENT:
-            dirty                   = mPixelDirty || mSamplerMetadataPSDirty;
+            dirty                   = mPixelDirty || (mNumActivePSSamplers < numSamplers);
             dataSize                = sizeof(Pixel);
             data                    = reinterpret_cast<const uint8_t *>(&mPixel);
             samplerData             = reinterpret_cast<const uint8_t *>(mSamplerMetadataPS.data());
             mPixelDirty             = false;
-            mSamplerMetadataPSDirty = false;
+            mNumActivePSSamplers    = numSamplers;
             break;
         case gl::SHADER_COMPUTE:
-            dirty                   = mComputeDirty || mSamplerMetadataCSDirty;
+            dirty                   = mComputeDirty || (mNumActiveCSSamplers < numSamplers);
             dataSize                = sizeof(Compute);
             data                    = reinterpret_cast<const uint8_t *>(&mCompute);
             samplerData             = reinterpret_cast<const uint8_t *>(mSamplerMetadataCS.data());
             mComputeDirty           = false;
-            mSamplerMetadataCSDirty = false;
+            mNumActiveCSSamplers    = numSamplers;
             break;
         default:
             UNREACHABLE();
@@ -534,10 +538,10 @@ gl::Error ShaderConstants11::updateBuffer(Renderer11 *renderer,
     ANGLE_TRY(
         renderer->mapResource(driverConstantBuffer.get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapping));
 
-    size_t samplerDataBytes = sizeof(SamplerMetadata) * programD3D.getUsedSamplerRange(shaderType);
-
     memcpy(mapping.pData, data, dataSize);
-    memcpy(reinterpret_cast<uint8_t *>(mapping.pData) + dataSize, samplerData, samplerDataBytes);
+    memcpy(reinterpret_cast<uint8_t *>(mapping.pData) + dataSize,
+           samplerData,
+           sizeof(SamplerMetadata) * numSamplers);
 
     renderer->getDeviceContext()->Unmap(driverConstantBuffer.get(), 0);
 
@@ -1011,6 +1015,7 @@ void StateManager11::syncState(const gl::Context *context, const gl::State::Dirt
                 invalidateTexturesAndSamplers();
                 invalidateProgramUniforms();
                 invalidateProgramUniformBuffers();
+                invalidateDriverUniforms();
                 gl::VertexArray *vao = state.getVertexArray();
                 if (mIsMultiviewEnabled && vao != nullptr)
                 {

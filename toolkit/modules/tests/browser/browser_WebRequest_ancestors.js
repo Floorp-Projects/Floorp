@@ -1,6 +1,8 @@
 "use strict";
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+// This test requires an XMLHttpRequest constructor which isn't
+// associated with a window.
+const {XMLHttpRequest} = Cu.Sandbox(window, {wantGlobalProperties: ["XMLHttpRequest"]});
 
 var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm", {});
 var {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", {});

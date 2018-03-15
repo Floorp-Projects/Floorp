@@ -1010,7 +1010,10 @@ var BrowserTestUtils = {
    * @param target
    *        One of the following:
    *        - a selector string that identifies the element to target. The syntax is as
-   *        for querySelector.
+   *          for querySelector.
+   *        - An array of selector strings. Each selector after the first
+   *          selects for an element in the iframe specified by the previous
+   *          selector.
    *        - a CPOW element (for easier test-conversion).
    *        - a function to be run in the content process that returns the element to
    *        target
@@ -1045,7 +1048,7 @@ var BrowserTestUtils = {
       if (typeof target == "function") {
         targetFn = target.toString();
         target = null;
-      } else if (typeof target != "string") {
+      } else if (typeof target != "string" && !Array.isArray(target)) {
         cpowObject = target;
         target = null;
       }

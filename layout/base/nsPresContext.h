@@ -1222,7 +1222,7 @@ protected:
   static void PrefChangedCallback(const char*, void*);
 
   void UpdateAfterPreferencesChanged();
-  static void PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure);
+  void DispatchPrefChangedRunnableIfNeeded();
 
   void GetUserPreferences();
 
@@ -1353,7 +1353,6 @@ protected:
   nsCOMPtr<nsITheme> mTheme;
   nsLanguageAtomService* mLangService;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  nsCOMPtr<nsITimer>    mPrefChangedTimer;
 
   mozilla::UniquePtr<nsBidi> mBidiEngine;
 
@@ -1461,6 +1460,7 @@ protected:
   unsigned              mPendingThemeChanged : 1;
   unsigned              mPendingUIResolutionChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
+  unsigned              mPostedPrefChangedRunnable : 1;
   unsigned              mIsEmulatingMedia : 1;
 
   // Are we currently drawing an SVG glyph?

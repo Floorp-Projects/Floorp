@@ -141,7 +141,6 @@ public:
   wr::FontKey GetFontKeyForUnscaledFont(gfx::UnscaledFont* aUnscaledFont);
 
   void RemoveExpiredFontKeys();
-  void ClearReadLocks();
 
   void BeginClearCachedResources();
   void EndClearCachedResources();
@@ -218,8 +217,6 @@ private:
   nsTArray<WebRenderParentCommand> mParentCommands;
   nsTArray<OpDestroy> mDestroyedActors;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
-  nsTArray<nsTArray<ReadLockInit>> mReadLocks;
-  uint64_t mReadLockSequenceNumber;
   bool mIsInTransaction;
   bool mIsInClearCachedResources;
   wr::IdNamespace mIdNamespace;

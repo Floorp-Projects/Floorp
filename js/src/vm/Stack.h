@@ -1805,21 +1805,11 @@ class JitActivation : public Activation
         return offsetof(JitActivation, encodedWasmExitReason_);
     }
 
-    // Interrupts are started from the interrupt signal handler (or the ARM
-    // simulator) and cleared by WasmHandleExecutionInterrupt or WasmHandleThrow
-    // when the interrupt is handled.
-
-    // Returns true iff we've entered interrupted state.
-    bool startWasmInterrupt(const wasm::RegisterState& state);
-    void finishWasmInterrupt();
-    bool isWasmInterrupted() const;
-    void* wasmInterruptUnwindPC() const;
-    void* wasmInterruptResumePC() const;
-
     void startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset, const wasm::RegisterState& state);
     void finishWasmTrap();
     bool isWasmTrapping() const;
-    void* wasmTrapPC() const;
+    void* wasmTrapResumePC() const;
+    void* wasmTrapUnwoundPC() const;
     uint32_t wasmTrapBytecodeOffset() const;
 };
 

@@ -212,6 +212,7 @@ class LIRGenerator final : public LIRGeneratorSpecific
     void visitHomeObject(MHomeObject* ins);
     void visitHomeObjectSuperBase(MHomeObjectSuperBase* ins);
     void visitInterruptCheck(MInterruptCheck* ins);
+    void visitWasmInterruptCheck(MWasmInterruptCheck* ins);
     void visitWasmTrap(MWasmTrap* ins);
     void visitWasmReinterpret(MWasmReinterpret* ins);
     void visitStoreSlot(MStoreSlot* ins);

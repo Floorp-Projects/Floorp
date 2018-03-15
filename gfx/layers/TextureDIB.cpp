@@ -7,8 +7,9 @@
 #include "TextureDIB.h"
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h" // For BufferSizeFromDimensions
-#include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/TextureForwarder.h" // For LayersIPCChannel
 
 namespace mozilla {
 

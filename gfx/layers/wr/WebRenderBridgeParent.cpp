@@ -582,7 +582,6 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
 
   AUTO_PROFILER_TRACING("Paint", "SetDisplayList");
   UpdateFwdTransactionId(aFwdTransactionId);
-  AutoClearReadLocks clearLocks(mReadLocks);
 
   // This ensures that destroy operations are always processed. It is not safe
   // to early-return from RecvDPEnd without doing so.
@@ -662,7 +661,6 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
 
   AUTO_PROFILER_TRACING("Paint", "EmptyTransaction");
   UpdateFwdTransactionId(aFwdTransactionId);
-  AutoClearReadLocks clearLocks(mReadLocks);
 
   // This ensures that destroy operations are always processed. It is not safe
   // to early-return without doing so.
@@ -1482,18 +1480,6 @@ WebRenderBridgeParent::RecvReleaseCompositable(const CompositableHandle& aHandle
     return IPC_OK();
   }
   ReleaseCompositable(aHandle);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvInitReadLocks(ReadLockArray&& aReadLocks)
-{
-  if (mDestroyed) {
-    return IPC_OK();
-  }
-  if (!AddReadLocks(Move(aReadLocks))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
   return IPC_OK();
 }
 

@@ -54,12 +54,14 @@ public:
                         Modifiers aModifiers,
                         const ScrollableLayerGuid& aGuid,
                         int32_t aClickCount);
+  MOZ_CAN_RUN_SCRIPT
   void ProcessLongTap(const nsCOMPtr<nsIPresShell>& aUtils,
                       const CSSPoint& aPoint,
                       const CSSToLayoutDeviceScale& aScale,
                       Modifiers aModifiers,
                       const ScrollableLayerGuid& aGuid,
                       uint64_t aInputBlockId);
+  MOZ_CAN_RUN_SCRIPT
   void ProcessLongTapUp(const nsCOMPtr<nsIPresShell>& aPresShell,
                         const CSSPoint& aPoint,
                         const CSSToLayoutDeviceScale& aScale,
@@ -82,6 +84,7 @@ public:
 private:
   ~APZEventState();
   bool SendPendingTouchPreventedResponse(bool aPreventDefault);
+  MOZ_CAN_RUN_SCRIPT
   bool FireContextmenuEvents(const nsCOMPtr<nsIPresShell>& aPresShell,
                              const CSSPoint& aPoint,
                              const CSSToLayoutDeviceScale& aScale,

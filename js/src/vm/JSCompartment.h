@@ -608,10 +608,7 @@ struct JSCompartment
     }
 
     // Used to approximate non-content code when reporting telemetry.
-    inline bool isProbablySystemOrAddonCode() const {
-        if (creationOptions_.addonIdOrNull())
-            return true;
-
+    inline bool isProbablySystemCode() const {
         return isSystem_;
     }
   private:

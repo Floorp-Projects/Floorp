@@ -13,7 +13,7 @@ add_task(async function() {
   gBrowser.selectedTab = tab;
 
   await promiseTabLoadEvent(tab, "data:text/html," + escape(testPage));
-  await SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
+  await SimpleTest.promiseFocus(browser);
 
   const modifier = (navigator.platform.includes("Mac")) ?
                    Ci.nsIDOMWindowUtils.MODIFIER_META :
@@ -133,7 +133,7 @@ add_task(async function() {
   await promisePopupHidden(contextMenu);
 
   // Focus the content again
-  await SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
+  await SimpleTest.promiseFocus(browser);
 
   await ContentTask.spawn(browser, { modifier, htmlPrefix, htmlPostfix }, async function(arg) {
     var doc = content.document;

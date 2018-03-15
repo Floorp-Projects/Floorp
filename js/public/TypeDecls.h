@@ -32,7 +32,6 @@ class JSObject;
 struct JSRuntime;
 class JSScript;
 class JSString;
-class JSAddonId;
 struct JSFreeOp;
 
 struct jsid;

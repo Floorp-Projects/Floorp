@@ -6,8 +6,6 @@ const TEST_MSG = "ContentSearchTest";
 const CONTENT_SEARCH_MSG = "ContentSearch";
 const TEST_CONTENT_SCRIPT_BASENAME = "contentSearch.js";
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
-
 var gMsgMan;
 /* import-globals-from ../../../components/search/test/head.js */
 Services.scriptloader.loadSubScript(
