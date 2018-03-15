@@ -7,9 +7,6 @@
 
 "use strict";
 
-const AUTOFILL_BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
-const REGIONS_BUNDLE_URI = "chrome://global/locale/regionNames.properties";
-
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 class EditAutofillForm {
@@ -77,9 +74,6 @@ class EditAutofillForm {
   }
 
   // An interface to be inherited.
-  localizeDocument() {}
-
-  // An interface to be inherited.
   handleChange(event) {}
 }
 
@@ -95,7 +89,7 @@ class EditAddress extends EditAutofillForm {
       country: this._elements.form.querySelector("#country"),
     });
 
-    this.localizeDocument();
+    this.populateCountries();
     this.formatForm(country);
     this.attachEventListeners();
   }
@@ -109,7 +103,7 @@ class EditAddress extends EditAutofillForm {
     const {addressLevel1Label, postalCodeLabel, fieldsOrder} = FormAutofillUtils.getFormFormat(country);
     this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
-    FormAutofillUtils.localizeMarkup(AUTOFILL_BUNDLE_URI, document);
+    FormAutofillUtils.localizeMarkup(document);
     this.arrangeFields(fieldsOrder);
   }
 
@@ -144,16 +138,16 @@ class EditAddress extends EditAutofillForm {
     }
   }
 
-  localizeDocument() {
+  populateCountries() {
     let fragment = document.createDocumentFragment();
     for (let country of FormAutofillUtils.supportedCountries) {
       let option = new Option();
       option.value = country;
-      option.dataset.localization = country.toLowerCase();
+      option.dataset.localizationRegion = country.toLowerCase();
       fragment.appendChild(option);
     }
     this._elements.country.appendChild(fragment);
-    FormAutofillUtils.localizeMarkup(REGIONS_BUNDLE_URI, this._elements.country);
+    FormAutofillUtils.localizeMarkup(this._elements.country);
   }
 
   handleChange(event) {
@@ -173,7 +167,6 @@ class EditCreditCard extends EditAutofillForm {
       ccNumber: this._elements.form.querySelector("#cc-number"),
       year: this._elements.form.querySelector("#cc-exp-year"),
     });
-    this.localizeDocument();
     this.generateYears();
     this.attachEventListeners();
   }
@@ -196,10 +189,6 @@ class EditCreditCard extends EditAutofillForm {
     if (ccExpYear && ccExpYear > currentYear + count) {
       this._elements.year.appendChild(new Option(ccExpYear));
     }
-  }
-
-  localizeDocument() {
-    FormAutofillUtils.localizeMarkup(AUTOFILL_BUNDLE_URI, document);
   }
 
   handleInput(event) {
