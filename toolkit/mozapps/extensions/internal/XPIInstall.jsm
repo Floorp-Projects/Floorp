@@ -324,7 +324,6 @@ async function loadManifestFromWebManifest(aUri) {
                "webextension" : `webextension-${extension.type}`;
   addon.strictCompatibility = true;
   addon.bootstrap = true;
-  addon.multiprocessCompatible = true;
   addon.internalName = null;
   addon.updateURL = bss.update_url;
   addon.updateKey = null;
@@ -552,10 +551,6 @@ async function loadManifestFromRDF(aUri, aStream) {
   // Only read these properties for extensions.
   if (addon.type == "extension") {
     addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
-
-    let mpcValue = getRDFProperty(ds, root, "multiprocessCompatible");
-    addon.multiprocessCompatible = mpcValue == "true";
-    addon.mpcOptedOut = mpcValue == "false";
 
     addon.hasEmbeddedWebExtension = getRDFProperty(ds, root, "hasEmbeddedWebExtension") == "true";
 

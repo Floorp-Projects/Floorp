@@ -106,10 +106,9 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
 
     void CreateLoaderGlobal(JSContext* aCx,
                             const nsACString& aLocation,
-                            JSAddonId* aAddonID,
                             JS::MutableHandleObject aGlobal);
 
-    bool ReuseGlobal(bool aIsAddon, nsIURI* aComponent);
+    bool ReuseGlobal(nsIURI* aComponent);
 
     JSObject* GetSharedGlobal(JSContext* aCx);
 

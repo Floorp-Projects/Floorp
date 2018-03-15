@@ -180,15 +180,15 @@ VRDisplayOpenVR::UpdateStageParameters()
     state.mSittingToStandingTransform[6] = 0.0f;
     state.mSittingToStandingTransform[7] = 0.0f;
 
+    state.mSittingToStandingTransform[8] = 0.0f;
     state.mSittingToStandingTransform[9] = 0.0f;
-    state.mSittingToStandingTransform[10] = 0.0f;
-    state.mSittingToStandingTransform[11] = 1.0f;
-    state.mSittingToStandingTransform[12] = 0.0f;
+    state.mSittingToStandingTransform[10] = 1.0f;
+    state.mSittingToStandingTransform[11] = 0.0f;
 
-    state.mSittingToStandingTransform[13] = 0.0f;
-    state.mSittingToStandingTransform[14] = 0.75f;
-    state.mSittingToStandingTransform[15] = 0.0f;
-    state.mSittingToStandingTransform[16] = 1.0f;
+    state.mSittingToStandingTransform[12] = 0.0f;
+    state.mSittingToStandingTransform[13] = 0.75f;
+    state.mSittingToStandingTransform[14] = 0.0f;
+    state.mSittingToStandingTransform[15] = 1.0f;
   }
 }
 

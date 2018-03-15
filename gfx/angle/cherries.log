@@ -1,3 +1,19 @@
+commit 27cef491162bfa5d5d69cf65758bd9b85033d339
+Author: Dzmitry Malyshau <kvark@mozilla.com>
+Date:   Fri Mar 9 16:37:22 2018 -0500
+
+    Update driver constants on program change. Comes with a new SamplerMetadataUpdateOnSetProgram test.
+    
+    This is a fix for a graphics problem we've been seeing for a while with WebRender+Angle on Nvidia/Windows. The sampler metadata doesn't get updated properly for some of the draw calls, since it's not invalidated on program change (this is what the CL is fixing). Extra entries get filled with garbage data because the constant buffer is updated with `MAP_WRITE_DISCARD`, and only those samplers are updated that the current program has. This may generally occur undetected, if not for our `textureSize` calls that appear to go the NV-specific Angle workaround path that ignores our `baseLevel = 0` and instead picks the one from the driver constants (which contains garbage), leading to either zeroes returned or even crashing the driver sometimes...
+    
+    BUG=angleproject:2399
+    
+    Change-Id: Ie2bef32184e2305c7255299933b899eb3fffb7ab
+    Reviewed-on: https://chromium-review.googlesource.com/949412
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Geoff Lang <geofflang@chromium.org>
+
 commit 7edc21933ef15d10e5790e6bfb7f9fd62f13be58
 Author: Frank Henigman <fjhenigman@chromium.org>
 Date:   Wed Feb 28 15:47:13 2018 -0500

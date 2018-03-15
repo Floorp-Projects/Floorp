@@ -72,7 +72,10 @@ waitUntilApzStable().then(() => {
 
   target0.addEventListener("pointercancel", (event) => {
     ok(false, "Shouldn't receive pointercancel when content prevents default on touchstart");
-    subtestDone();
+    // Wait until the event is done processing before we end the subtest,
+    // otherwise on Android the pointer events pref is flipped back to false
+    // and debug builds will assert.
+    setTimeout(subtestDone, 0);
   }, { once: true });
 
   target0.addEventListener("touchstart", (event) => {
@@ -81,7 +84,10 @@ waitUntilApzStable().then(() => {
 
   target0.addEventListener("pointerup", (event) => {
     ok(target0_events.length == 0, " should receive " + target0_events + " on target0");
-    subtestDone();
+    // Wait until the event is done processing before we end the subtest,
+    // otherwise on Android the pointer events pref is flipped back to false
+    // and debug builds will assert.
+    setTimeout(subtestDone, 0);
   }, { once: true });
 
   synthesizeNativeTouchDrag(target0, 2, 2, 0, 80);

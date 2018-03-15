@@ -2202,21 +2202,6 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetSandboxAddonId(HandleValue sandboxVal,
-                                         JSContext* cx, MutableHandleValue rval)
-{
-    if (!sandboxVal.isObject())
-        return NS_ERROR_INVALID_ARG;
-
-    RootedObject sandbox(cx, &sandboxVal.toObject());
-    sandbox = js::CheckedUnwrap(sandbox);
-    if (!sandbox || !xpc::IsSandbox(sandbox))
-        return NS_ERROR_INVALID_ARG;
-
-    return xpc::GetSandboxAddonId(cx, sandbox, rval);
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::GetSandboxMetadata(HandleValue sandboxVal,
                                           JSContext* cx, MutableHandleValue rval)
 {
@@ -3102,20 +3087,6 @@ nsXPCComponents_Utils::GetCompartmentLocation(HandleValue val,
     MOZ_ASSERT(obj);
 
     result = xpc::CompartmentPrivate::Get(obj)->GetLocation();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::AllowCPOWsInAddon(const nsACString& addonIdStr,
-                                         bool allow,
-                                         JSContext* cx)
-{
-    JSAddonId* addonId = xpc::NewAddonId(cx, addonIdStr);
-    if (!addonId)
-        return NS_ERROR_FAILURE;
-    if (!XPCWrappedNativeScope::AllowCPOWsInAddon(cx, addonId, allow))
-        return NS_ERROR_FAILURE;
-
     return NS_OK;
 }
 

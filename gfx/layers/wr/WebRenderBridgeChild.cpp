@@ -23,8 +23,7 @@ namespace layers {
 using namespace mozilla::gfx;
 
 WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
-  : mReadLockSequenceNumber(0)
-  , mIsInTransaction(false)
+  : mIsInTransaction(false)
   , mIsInClearCachedResources(false)
   , mIdNamespace{0}
   , mResourceId(0)
@@ -102,23 +101,6 @@ WebRenderBridgeChild::BeginTransaction()
 
   UpdateFwdTransactionId();
   mIsInTransaction = true;
-  mReadLockSequenceNumber = 0;
-  mReadLocks.AppendElement();
-}
-
-void
-WebRenderBridgeChild::ClearReadLocks()
-{
-  for (nsTArray<ReadLockInit>& locks : mReadLocks) {
-    if (locks.Length()) {
-      if (!SendInitReadLocks(locks)) {
-        NS_WARNING("WARNING: sending read locks failed!");
-        return;
-      }
-    }
-  }
-
-  mReadLocks.Clear();
 }
 
 void

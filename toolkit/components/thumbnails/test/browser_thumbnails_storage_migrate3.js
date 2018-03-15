@@ -7,7 +7,7 @@ const URL3 = URL + "#3";
 const THUMBNAIL_DIRECTORY = "thumbnails";
 const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
 
-var tmp = {};
+var tmp = Cu.Sandbox(window, {wantGlobalProperties: ["ChromeUtils"]});
 Services.scriptloader.loadSubScript("resource://gre/modules/PageThumbs.jsm", tmp);
 var {PageThumbsStorageMigrator} = tmp;
 

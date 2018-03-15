@@ -214,15 +214,6 @@ GetEntryDocument()
   nsIGlobalObject* global = GetEntryGlobal();
   nsCOMPtr<nsPIDOMWindowInner> entryWin = do_QueryInterface(global);
 
-  // If our entry global isn't a window, see if it's an addon scope associated
-  // with a window. If it is, the caller almost certainly wants that rather
-  // than null.
-  if (!entryWin && global) {
-    if (auto* win = xpc::AddonWindowOrNull(global->GetGlobalJSObject())) {
-      entryWin = win->AsInner();
-    }
-  }
-
   return entryWin ? entryWin->GetExtantDoc() : nullptr;
 }
 
@@ -553,12 +544,6 @@ WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep)
 
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(aCx);
-  if (!win) {
-    // We run addons in a separate privileged compartment, but if we're in an
-    // addon compartment we should log warnings to the console of the associated
-    // DOM Window.
-    win = xpc::AddonWindowOrNull(JS::CurrentGlobalOrNull(aCx));
-  }
   xpcReport->Init(aRep, nullptr, nsContentUtils::IsSystemCaller(aCx),
                   win ? win->AsInner()->WindowID() : 0);
   xpcReport->LogToConsole();
@@ -593,11 +578,6 @@ AutoJSAPI::ReportException()
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
 
       RefPtr<nsGlobalWindowInner> win = xpc::WindowGlobalOrNull(errorGlobal);
-      if (!win) {
-        // We run addons in a separate privileged compartment, but they still
-        // expect to trigger the onerror handler of their associated DOM Window.
-        win = xpc::AddonWindowOrNull(errorGlobal);
-      }
       nsPIDOMWindowInner* inner = win ? win->AsInner() : nullptr;
       bool isChrome = nsContentUtils::IsSystemPrincipal(
         nsContentUtils::ObjectPrincipal(errorGlobal));

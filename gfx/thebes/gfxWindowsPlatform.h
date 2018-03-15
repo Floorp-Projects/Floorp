@@ -231,6 +231,8 @@ protected:
     void ImportContentDeviceData(const mozilla::gfx::ContentDeviceData& aData) override;
     void BuildContentDeviceData(mozilla::gfx::ContentDeviceData* aOut) override;
 
+    BackendPrefsData GetBackendPrefs() override;
+
 protected:
     RenderMode mRenderMode;
 

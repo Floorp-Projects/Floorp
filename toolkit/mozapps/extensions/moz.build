@@ -16,9 +16,7 @@ DIRS += ['internal']
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
-    'amIAddonManager.idl',
     'amIAddonManagerStartup.idl',
-    'amIAddonPathService.idl',
     'amIWebInstallPrompt.idl',
 ]
 
@@ -49,14 +47,12 @@ EXPORTS.mozilla += [
     'AddonContentPolicy.h',
     'AddonManagerStartup.h',
     'AddonManagerWebAPI.h',
-    'AddonPathService.h',
 ]
 
 UNIFIED_SOURCES += [
     'AddonContentPolicy.cpp',
     'AddonManagerStartup.cpp',
     'AddonManagerWebAPI.cpp',
-    'AddonPathService.cpp',
 ]
 
 LOCAL_INCLUDES += [

@@ -96,7 +96,6 @@ add_task(async function test_default_values() {
   equal(targetApp.maxVersion, "*");
 
   equal(update.version, "0.2");
-  equal(update.multiprocessCompatible, true, "multiprocess_compatible flag");
   equal(update.strictCompatibility, false, "inferred strictConpatibility flag");
   equal(update.updateURL, null, "updateURL");
   equal(update.updateHash, null, "updateHash");
@@ -138,7 +137,6 @@ add_task(async function test_explicit_values() {
       update_link: "https://example.com/foo.xpi",
       update_hash: "sha256:0",
       update_info_url: "https://example.com/update_info.html",
-      multiprocess_compatible: false,
       applications: {
         gecko: {
           strict_min_version: "42.0a2.xpcshell",
@@ -159,7 +157,6 @@ add_task(async function test_explicit_values() {
   equal(targetApp.maxVersion, "43.xpcshell");
 
   equal(update.version, "0.2");
-  equal(update.multiprocessCompatible, false, "multiprocess_compatible flag");
   equal(update.strictCompatibility, true, "inferred strictCompatibility flag");
   equal(update.updateURL, "https://example.com/foo.xpi", "updateURL");
   equal(update.updateHash, "sha256:0", "updateHash");

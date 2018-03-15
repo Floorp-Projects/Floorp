@@ -157,15 +157,6 @@ LayerTransactionParent::RecvPaintTime(const uint64_t& aTransactionId,
 }
 
 mozilla::ipc::IPCResult
-LayerTransactionParent::RecvInitReadLocks(ReadLockArray&& aReadLocks)
-{
-  if (!AddReadLocks(Move(aReadLocks))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
 {
   AUTO_PROFILER_TRACING("Paint", "LayerTransaction");
@@ -176,7 +167,6 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
   MOZ_LAYERS_LOG(("[ParentSide] received txn with %zu edits", aInfo.cset().Length()));
 
   UpdateFwdTransactionId(aInfo.fwdTransactionId());
-  AutoClearReadLocks clearLocks(mReadLocks);
 
   if (mDestroyed || !mLayerManager || mLayerManager->IsDestroyed()) {
     for (const auto& op : aInfo.toDestroy()) {

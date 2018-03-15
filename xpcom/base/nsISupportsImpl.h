@@ -725,8 +725,8 @@ NS_IMETHODIMP_(MozExternalRefCountType) _class::Release(void)                 \
   MOZ_ASSERT(_name != nullptr, "Must specify a name");                        \
   if (!mRefCnt.isThreadSafe)                                                  \
     NS_ASSERT_OWNINGTHREAD(_class);                                           \
-  nsrefcnt count = --mRefCnt;                                                 \
   NS_LOAD_NAME_BEFORE_RELEASE(nametmp, _name);                                \
+  nsrefcnt count = --mRefCnt;                                                 \
   NS_LOG_RELEASE(this, count, nametmp);                                       \
   if (count == 0) {                                                           \
     mRefCnt = 1; /* stabilize */                                              \

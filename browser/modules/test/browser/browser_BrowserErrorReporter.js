@@ -4,8 +4,6 @@
 
 ChromeUtils.import("resource:///modules/BrowserErrorReporter.jsm", this);
 
-Cu.importGlobalProperties(["fetch"]);
-
 /* global sinon */
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
 registerCleanupFunction(function() {
