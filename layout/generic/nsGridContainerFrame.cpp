@@ -195,7 +195,7 @@ struct nsGridContainerFrame::TrackSize
     eMaxContentMinSizing =        0x4,
     eMinOrMaxContentMinSizing = eMinContentMinSizing | eMaxContentMinSizing,
     eIntrinsicMinSizing = eMinOrMaxContentMinSizing | eAutoMinSizing,
-    // 0x8 is unused, feel free to take it!
+    eModified =                   0x8,
     eAutoMaxSizing =             0x10,
     eMinContentMaxSizing =       0x20,
     eMaxContentMaxSizing =       0x40,
@@ -1192,30 +1192,41 @@ struct nsGridContainerFrame::Tracks
     return aGrowableTracks.IsEmpty() ? 0 : space;
   }
 
-  void SetupGrowthPlan(nsTArray<TrackSize>&      aPlan,
-                       const nsTArray<uint32_t>& aTracks) const
+  void SetupGrowthPlan(nsTArray<TrackSize>&       aItemPlan,
+                       const nsTArray<TrackSize>& aSizes,
+                       const nsTArray<uint32_t>&  aTracks) const
   {
     for (uint32_t track : aTracks) {
-      aPlan[track] = mSizes[track];
+      auto& sz = aItemPlan[track];
+      sz.mBase = aSizes[track].mBase;
+      sz.mLimit = aSizes[track].mLimit;
+      sz.mState = aSizes[track].mState;
     }
   }
 
-  void CopyPlanToBase(const nsTArray<TrackSize>& aPlan,
-                      const nsTArray<uint32_t>&  aTracks)
+  void ResetBasePlan(nsTArray<TrackSize>& aPlan,
+                     const nsTArray<TrackSize>& aSizes) const
   {
-    for (uint32_t track : aTracks) {
-      MOZ_ASSERT(mSizes[track].mBase <= aPlan[track].mBase);
-      mSizes[track].mBase = aPlan[track].mBase;
+    for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
+      aPlan[i].mBase = aSizes[i].mBase;
+      aPlan[i].mState = aSizes[i].mState;
     }
   }
 
-  void CopyPlanToLimit(const nsTArray<TrackSize>& aPlan,
-                       const nsTArray<uint32_t>&  aTracks)
+  void CopyPlanToBase(const nsTArray<TrackSize>& aPlan)
   {
-    for (uint32_t track : aTracks) {
-      MOZ_ASSERT(mSizes[track].mLimit == NS_UNCONSTRAINEDSIZE ||
-                 mSizes[track].mLimit <= aPlan[track].mBase);
-      mSizes[track].mLimit = aPlan[track].mBase;
+    for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
+      mSizes[i].mBase = aPlan[i].mBase;
+    }
+  }
+
+  void CopyPlanToLimit(const nsTArray<TrackSize>& aPlan)
+  {
+    for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
+      MOZ_ASSERT(aPlan[i].mBase >= 0);
+      if (aPlan[i].mState & TrackSize::eModified) {
+        mSizes[i].mLimit = aPlan[i].mBase;
+      }
     }
   }
 
@@ -1386,22 +1397,31 @@ struct nsGridContainerFrame::Tracks
    */
   void DistributeToTrackBases(nscoord              aAvailableSpace,
                               nsTArray<TrackSize>& aPlan,
+                              nsTArray<TrackSize>& aItemPlan,
                               nsTArray<uint32_t>&  aGrowableTracks,
                               TrackSize::StateBits aSelector)
   {
-    SetupGrowthPlan(aPlan, aGrowableTracks);
-    nscoord space = GrowTracksToLimit(aAvailableSpace, aPlan, aGrowableTracks, nullptr);
+    SetupGrowthPlan(aItemPlan, mSizes, aGrowableTracks);
+    nscoord space = GrowTracksToLimit(aAvailableSpace, aItemPlan, aGrowableTracks, nullptr);
     if (space > 0) {
-      GrowSelectedTracksUnlimited(space, aPlan, aGrowableTracks, aSelector, nullptr);
+      GrowSelectedTracksUnlimited(space, aItemPlan, aGrowableTracks, aSelector, nullptr);
     }
-    CopyPlanToBase(aPlan, aGrowableTracks);
+    for (uint32_t track : aGrowableTracks) {
+      nscoord& plannedSize = aPlan[track].mBase;
+      nscoord itemIncurredSize = aItemPlan[track].mBase;
+      if (plannedSize < itemIncurredSize) {
+        plannedSize = itemIncurredSize;
+      }
+    }
   }
 
   /**
    * Distribute aAvailableSpace to the planned limits for aGrowableTracks.
    */
   void DistributeToTrackLimits(nscoord              aAvailableSpace,
+                               const nsTArray<TrackSize>& aSizes,
                                nsTArray<TrackSize>& aPlan,
+                               nsTArray<TrackSize>& aItemPlan,
                                nsTArray<uint32_t>&  aGrowableTracks,
                                const TrackSizingFunctions& aFunctions,
                                nscoord                     aPercentageBasis)
@@ -1417,13 +1437,20 @@ struct nsGridContainerFrame::Tracks
       }
       return false;
     };
-    nscoord space = GrowTracksToLimit(aAvailableSpace, aPlan, aGrowableTracks,
+    SetupGrowthPlan(aItemPlan, aSizes, aGrowableTracks);
+    nscoord space = GrowTracksToLimit(aAvailableSpace, aItemPlan, aGrowableTracks,
                                       fitContentClamper);
     if (space > 0) {
-      GrowSelectedTracksUnlimited(aAvailableSpace, aPlan, aGrowableTracks,
+      GrowSelectedTracksUnlimited(space, aItemPlan, aGrowableTracks,
                                   TrackSize::StateBits(0), fitContentClamper);
     }
-    CopyPlanToLimit(aPlan, aGrowableTracks);
+    for (uint32_t track : aGrowableTracks) {
+      nscoord& plannedSize = aPlan[track].mBase;
+      nscoord itemIncurredSize = aItemPlan[track].mBase;
+      if (plannedSize < itemIncurredSize) {
+        plannedSize = itemIncurredSize;
+      }
+    }
   }
 
   /**
@@ -4277,6 +4304,8 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     nsTArray<uint32_t> tracks(maxSpan);
     nsTArray<TrackSize> plan(mSizes.Length());
     plan.SetLength(mSizes.Length());
+    nsTArray<TrackSize> itemPlan(mSizes.Length());
+    itemPlan.SetLength(mSizes.Length());
     for (uint32_t i = 0, len = step2Items.Length(); i < len; ) {
       // Start / end index for items of the same span length:
       const uint32_t spanGroupStartIndex = i;
@@ -4293,6 +4322,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       TrackSize::StateBits selector(TrackSize::eIntrinsicMinSizing);
       if (stateBitsPerSpan[span] & selector) {
         // Step 2.1 MinSize to intrinsic min-sizing.
+        ResetBasePlan(plan, mSizes);
         for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
           Step2ItemData& item = step2Items[i];
           if (!(item.mState & selector)) {
@@ -4306,9 +4336,12 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           space = CollectGrowable(space, mSizes, item.mLineRange, selector,
                                   tracks);
           if (space > 0) {
-            DistributeToTrackBases(space, plan, tracks, selector);
+            DistributeToTrackBases(space, plan, itemPlan, tracks, selector);
             updatedBase = true;
           }
+        }
+        if (updatedBase) {
+          CopyPlanToBase(plan);
         }
       }
 
@@ -4316,6 +4349,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       if (stateBitsPerSpan[span] & selector) {
         // Step 2.2 MinContentContribution to min-/max-content (and 'auto' when
         // sizing under a min-content constraint) min-sizing.
+        ResetBasePlan(plan, mSizes);
         for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
           Step2ItemData& item = step2Items[i];
           if (!(item.mState & selector)) {
@@ -4329,9 +4363,12 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           space = CollectGrowable(space, mSizes, item.mLineRange, selector,
                                   tracks);
           if (space > 0) {
-            DistributeToTrackBases(space, plan, tracks, selector);
+            DistributeToTrackBases(space, plan, itemPlan, tracks, selector);
             updatedBase = true;
           }
+        }
+        if (updatedBase) {
+          CopyPlanToBase(plan);
         }
       }
 
@@ -4339,6 +4376,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       if (stateBitsPerSpan[span] & selector) {
         // Step 2.3 MaxContentContribution to max-content (and 'auto' when
         // sizing under a max-content constraint) min-sizing.
+        ResetBasePlan(plan, mSizes);
         for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
           Step2ItemData& item = step2Items[i];
           if (!(item.mState & selector)) {
@@ -4352,9 +4390,12 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           space = CollectGrowable(space, mSizes, item.mLineRange, selector,
                                   tracks);
           if (space > 0) {
-            DistributeToTrackBases(space, plan, tracks, selector);
+            DistributeToTrackBases(space, plan, itemPlan, tracks, selector);
             updatedBase = true;
           }
+        }
+        if (updatedBase) {
+          CopyPlanToBase(plan);
         }
       }
 
@@ -4366,9 +4407,10 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           }
         }
       }
+
       if (stateBitsPerSpan[span] & TrackSize::eIntrinsicMaxSizing) {
-        plan = mSizes;
-        for (TrackSize& sz : plan) {
+        nsTArray<TrackSize> limits(mSizes);
+        for (TrackSize& sz : limits) {
           if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
             // use mBase as the planned limit
           } else {
@@ -4377,53 +4419,65 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         }
 
         // Step 2.5 MinSize to intrinsic max-sizing.
+        ResetBasePlan(plan, limits);
         for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
           Step2ItemData& item = step2Items[i];
           if (!(item.mState & TrackSize::eIntrinsicMaxSizing)) {
             continue;
           }
-          nscoord space = item.mMinSize;
-          if (space <= 0) {
-            continue;
+          for (auto j = item.mLineRange.mStart, end = item.mLineRange.mEnd; j < end; ++j) {
+            plan[j].mState |= TrackSize::eModified;
           }
-          tracks.ClearAndRetainStorage();
-          space = CollectGrowable(space, plan, item.mLineRange,
-                                  TrackSize::eIntrinsicMaxSizing,
-                                  tracks);
+          nscoord space = item.mMinSize;
           if (space > 0) {
-            DistributeToTrackLimits(space, plan, tracks, aFunctions,
-                                    aPercentageBasis);
+            tracks.ClearAndRetainStorage();
+            space = CollectGrowable(space, limits, item.mLineRange,
+                                    TrackSize::eIntrinsicMaxSizing,
+                                    tracks);
+            if (space > 0) {
+              DistributeToTrackLimits(space, limits, plan, itemPlan, tracks, aFunctions,
+                                      aPercentageBasis);
+            }
           }
         }
         for (size_t j = 0, len = mSizes.Length(); j < len; ++j) {
-          TrackSize& sz = plan[j];
+          TrackSize& sz = itemPlan[j];
           sz.mState &= ~(TrackSize::eFrozen | TrackSize::eSkipGrowUnlimited);
-          if (sz.mLimit != NS_UNCONSTRAINEDSIZE) {
-            sz.mLimit = sz.mBase;  // collect the results from 2.5
+          if (plan[j].mState & TrackSize::eModified) {
+            limits[j].mBase = plan[j].mBase;
+            mSizes[j].mLimit = plan[j].mBase;
+            if (limits[j].mLimit != NS_UNCONSTRAINEDSIZE) {
+              limits[j].mLimit = limits[j].mBase;
+            }
           }
+          plan[j].mState &= ~(TrackSize::eModified);
         }
 
         if (stateBitsPerSpan[span] & TrackSize::eAutoOrMaxContentMaxSizing) {
           // Step 2.6 MaxContentContribution to max-content max-sizing.
+          ResetBasePlan(plan, limits);
           for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
             Step2ItemData& item = step2Items[i];
             if (!(item.mState & TrackSize::eAutoOrMaxContentMaxSizing)) {
               continue;
             }
+          for (auto j = item.mLineRange.mStart, end = item.mLineRange.mEnd; j < end; ++j) {
+            plan[j].mState |= TrackSize::eModified;
+          }
             nscoord space = item.mMaxContentContribution;
-            if (space <= 0) {
-              continue;
-            }
-            tracks.ClearAndRetainStorage();
-            space = CollectGrowable(space, plan, item.mLineRange,
-                                    TrackSize::eAutoOrMaxContentMaxSizing,
-                                    tracks);
             if (space > 0) {
-              DistributeToTrackLimits(space, plan, tracks, aFunctions,
-                                      aPercentageBasis);
+              tracks.ClearAndRetainStorage();
+              space = CollectGrowable(space, limits, item.mLineRange,
+                                      TrackSize::eAutoOrMaxContentMaxSizing,
+                                      tracks);
+              if (space > 0) {
+                DistributeToTrackLimits(space, limits, plan, itemPlan, tracks, aFunctions,
+                                        aPercentageBasis);
+              }
             }
           }
         }
+        CopyPlanToLimit(plan);
       }
     }
   }
@@ -6943,6 +6997,9 @@ nsGridContainerFrame::TrackSize::Dump() const
 
   if (mState & eFrozen) {
     printf("frozen ");
+  }
+  if (mState & eModified) {
+    printf("modified ");
   }
   if (mState & eBreakBefore) {
     printf("break-before ");
