@@ -1135,8 +1135,8 @@ class TreeMetadataEmitter(LoggingMixin):
             if (full_path == context.config.topsrcdir or
                     full_path == context.config.topobjdir):
                 raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
-                    'is not allowed: %s (resolved to %s)' % (local_include,
-                    full_path), context)
+                    '(%s) resolves to the topsrcdir or topobjdir (%s), which is '
+                    'not allowed' % (local_include, full_path), context)
             include_obj = LocalInclude(context, local_include)
             local_includes.append(include_obj.path.full_path)
             yield include_obj
