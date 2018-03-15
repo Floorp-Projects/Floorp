@@ -84,7 +84,7 @@ ServiceWorkerRegistration::CreateForWorker(WorkerPrivate* aWorkerPrivate,
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   RefPtr<Inner> inner =
-    new ServiceWorkerRegistrationWorkerThread(aWorkerPrivate, aDescriptor);
+    new ServiceWorkerRegistrationWorkerThread(aDescriptor);
 
   RefPtr<ServiceWorkerRegistration> registration =
     new ServiceWorkerRegistration(aGlobal, aDescriptor, inner);

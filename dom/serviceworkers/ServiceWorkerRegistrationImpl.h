@@ -101,6 +101,8 @@ class WorkerListener;
 
 class ServiceWorkerRegistrationWorkerThread final : public ServiceWorkerRegistration::Inner
 {
+  friend class WorkerListener;
+
 public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerRegistrationWorkerThread, override)
 
@@ -146,6 +148,10 @@ private:
 
   void
   ReleaseListener();
+
+  // This can be called only by WorkerListener.
+  WorkerPrivate*
+  GetWorkerPrivate(const MutexAutoLock& aProofOfLock);
 
   // Store a strong reference to the outer binding object.  This will create
   // a ref-cycle.  We must hold it alive in case any events need to be fired
