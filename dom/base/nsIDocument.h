@@ -116,6 +116,7 @@ class nsRange;
 class nsSMILAnimationController;
 class nsSVGElement;
 class nsTextNode;
+class nsUnblockOnloadEvent;
 class nsWindowSizes;
 class nsDOMCaretPosition;
 class nsViewportInfo;
@@ -1431,6 +1432,16 @@ public:
   already_AddRefed<nsSimpleContentList> BlockedTrackingNodes() const;
 
 protected:
+  friend class nsUnblockOnloadEvent;
+
+  nsresult InitCSP(nsIChannel* aChannel);
+
+  void PostUnblockOnloadEvent();
+
+  void DoUnblockOnload();
+
+  void ClearAllBoxObjects();
+
   void MaybeEndOutermostXBLUpdate();
 
   void DispatchContentLoadedEvents();
