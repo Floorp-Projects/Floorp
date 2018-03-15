@@ -380,12 +380,16 @@ class ADBAndroid(ADBDevice):
         if intent:
             acmd.extend(["-a", intent])
 
+        # Note that isinstance(True, int) and isinstance(False, int)
+        # is True. This means we must test the type of the value
+        # against bool prior to testing it against int in order to
+        # prevent falsely identifying a bool value as an int.
         if extras:
             for (key, val) in extras.iteritems():
-                if isinstance(val, int):
-                    extra_type_param = "--ei"
-                elif isinstance(val, bool):
+                if isinstance(val, bool):
                     extra_type_param = "--ez"
+                elif isinstance(val, int):
+                    extra_type_param = "--ei"
                 else:
                     extra_type_param = "--es"
                 acmd.extend([extra_type_param, str(key), str(val)])
@@ -394,6 +398,7 @@ class ADBAndroid(ADBDevice):
             acmd.extend(["-d", url])
 
         cmd = self._escape_command_line(acmd)
+        self._logger.info('launch_application: %s' % cmd)
         self.shell_output(cmd, timeout=timeout)
 
     def launch_fennec(self, app_name, intent="android.intent.action.VIEW",
