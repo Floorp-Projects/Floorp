@@ -59,3 +59,60 @@ test_newtab({
       "Topsite should be unpinned");
   }
 });
+
+// Check Topsites add
+test_newtab({
+  // it should be able to click the topsites edit button to reveal the edit topsites modal and overlay.
+  test: async function topsites_add() {
+    let nativeInputValueSetter = Object.getOwnPropertyDescriptor(content.window.HTMLInputElement.prototype, "value").set;
+    let event = new Event("input", {bubbles: true});
+
+    // Find the add topsites button
+    content.document.querySelector(".top-sites .section-top-bar .context-menu-button").click();
+    let contextMenu = content.document.querySelector(".top-sites .section-top-bar .context-menu");
+    ok(contextMenu, "Should find a visible topsite context menu");
+
+    const topsitesAddBtn = content.document.querySelector(".top-sites .context-menu-item a");
+    topsitesAddBtn.click();
+
+    let found = content.document.querySelector(".modal-overlay");
+    ok(found && !found.hidden, "Should find a visible overlay");
+
+    // Write field title
+    let fieldTitle = content.document.querySelector(".field input");
+    ok(fieldTitle && !fieldTitle.hidden, "Should find field title input");
+
+    nativeInputValueSetter.call(fieldTitle, "Bugzilla");
+    fieldTitle.dispatchEvent(event);
+    is(fieldTitle.value, "Bugzilla", "The field title should match");
+
+    // Write field url
+    let fieldURL = content.document.querySelector(".field.url input");
+    ok(fieldURL && !fieldURL.hidden, "Should find field url input");
+
+    nativeInputValueSetter.call(fieldURL, "https://bugzilla.mozilla.org");
+    fieldURL.dispatchEvent(event);
+    is(fieldURL.value, "https://bugzilla.mozilla.org", "The field url should match");
+
+    // Click the "Add" button
+    let addBtn = content.document.querySelector(".done");
+    addBtn.click();
+
+    // Wait for Topsite to be populated
+    await ContentTaskUtils.waitForCondition(() => (content.document.querySelector(".top-site-outer:first-child a").getAttribute("href") === "https://bugzilla.mozilla.org"), "No Topsite found");
+
+    // Remove topsite after test is complete
+    let topsiteContextBtn = content.document.querySelector(".top-sites-list .context-menu-button");
+    topsiteContextBtn.click();
+    await ContentTaskUtils.waitForCondition(() => content.document.querySelector(".top-sites-list .context-menu"),
+      "No context menu found");
+
+    let contextMen = content.document.querySelector(".top-sites-list .context-menu");
+
+    const dismissBtn = contextMen.querySelector(".top-sites .context-menu-item a .icon-dismiss");
+    dismissBtn.click();
+
+    // Wait for Topsite to be removed
+    await ContentTaskUtils.waitForCondition(() => (content.document.querySelector(".top-site-outer:first-child a").getAttribute("href") !== "https://bugzilla.mozilla.org"), "Topsite not removed");
+  }
+});
