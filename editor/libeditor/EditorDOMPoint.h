@@ -593,6 +593,9 @@ public:
     if (NS_WARN_IF(!mParent)) {
       return false;
     }
+    if (!mParent->IsContainerNode()) {
+      return mOffset.value() == mParent->Length();
+    }
     if (mIsChildInitialized) {
       if (!mChild) {
         NS_WARNING_ASSERTION(!mOffset.isSome() ||
