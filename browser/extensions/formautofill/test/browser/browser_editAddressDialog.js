@@ -111,11 +111,15 @@ add_task(async function test_editAddress() {
 });
 
 add_task(async function test_saveAddressCA() {
-  await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
+  await testDialog(EDIT_ADDRESS_DIALOG_URL, async win => {
     let doc = win.document;
     // Change country to verify labels
     doc.querySelector("#country").focus();
     EventUtils.synthesizeKey("Canada", {}, win);
+
+    await TestUtils.waitForCondition(() => {
+      return doc.querySelector("#address-level1-container > span").textContent == "Province";
+    }, "Wait for the mutation observer to change the labels");
     is(doc.querySelector("#address-level1-container > span").textContent, "Province",
                          "CA address-level1 label should be 'Province'");
     is(doc.querySelector("#postal-code-container > span").textContent, "Postal Code",
@@ -158,11 +162,14 @@ add_task(async function test_saveAddressCA() {
 });
 
 add_task(async function test_saveAddressDE() {
-  await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
+  await testDialog(EDIT_ADDRESS_DIALOG_URL, async win => {
     let doc = win.document;
     // Change country to verify labels
     doc.querySelector("#country").focus();
     EventUtils.synthesizeKey("Germany", {}, win);
+    await TestUtils.waitForCondition(() => {
+      return doc.querySelector("#postal-code-container > span").textContent == "Postal Code";
+    }, "Wait for the mutation observer to change the labels");
     is(doc.querySelector("#postal-code-container > span").textContent, "Postal Code",
                          "DE postal-code label should be 'Postal Code'");
     is(doc.querySelector("#address-level1-container").style.display, "none",

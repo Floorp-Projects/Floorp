@@ -828,24 +828,42 @@ this.FormAutofillUtils = {
   },
 
   /**
+   * Localize "data-localization" or "data-localization-region" attributes.
+   * @param {Element} element
+   * @param {string} attributeName
+   */
+  localizeAttributeForElement(element, attributeName) {
+    let bundle = null;
+    switch (attributeName) {
+      case "data-localization": {
+        bundle = this.stringBundle;
+        break;
+      }
+      case "data-localization-region": {
+        bundle = this.regionsBundle;
+        break;
+      }
+      default:
+        throw new Error("Unexpected attributeName");
+    }
+
+    element.textContent = bundle.GetStringFromName(element.getAttribute(attributeName));
+    element.removeAttribute(attributeName);
+  },
+
+  /**
    * Localize elements with "data-localization" or "data-localization-region" attributes.
-   * @param   {DOMElement} root
+   * @param {Element} root
    */
   localizeMarkup(root) {
     let elements = root.querySelectorAll("[data-localization]");
     for (let element of elements) {
-      element.textContent = this.stringBundle.GetStringFromName(
-        element.getAttribute("data-localization")
-      );
-      element.removeAttribute("data-localization");
+      this.localizeAttributeForElement(element, "data-localization");
     }
 
-    let regionElements = root.querySelectorAll("[data-localization-region]");
-    for (let element of regionElements) {
-      element.textContent = this.regionsBundle.GetStringFromName(
-        element.getAttribute("data-localization-region")
-      );
-      element.removeAttribute("data-localization-region");
+    elements = root.querySelectorAll("[data-localization-region]");
+    for (let element of elements) {
+      this.localizeAttributeForElement(element, "data-localization-region");
     }
   },
 };

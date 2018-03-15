@@ -168,7 +168,6 @@ class EditAddressDialog extends AutofillEditDialog {
     if (this._record) {
       this._elements.title.dataset.localization = "editAddressTitle";
     }
-    FormAutofillUtils.localizeMarkup(document);
   }
 
   async handleSubmit() {
@@ -186,7 +185,6 @@ class EditCreditCardDialog extends AutofillEditDialog {
     if (this._record) {
       this._elements.title.dataset.localization = "editCreditCardTitle";
     }
-    FormAutofillUtils.localizeMarkup(document);
   }
 
   /**
