@@ -263,8 +263,10 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
         masm.ma_lsl(Imm32(3), numStackValues, scratch);
         masm.subPtr(scratch, framePtr);
         {
-            masm.ma_sub(sp, Imm32(WINDOWS_BIG_FRAME_TOUCH_INCREMENT), scratch);
-
+            ScratchRegisterScope asmScratch(masm);
+            masm.ma_sub(sp, Imm32(WINDOWS_BIG_FRAME_TOUCH_INCREMENT), scratch, asmScratch);
+        }
+        {
             Label touchFrameLoop;
             Label touchFrameLoopEnd;
             masm.bind(&touchFrameLoop);
