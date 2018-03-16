@@ -36,6 +36,7 @@
 #    'mismatch-untrusted.pem',
 #    'mismatch.pem',
 #    'mismatchCN.pem',
+#    'mitm.pem',
 #    'noValidNames.pem',
 #    'notYetValid.pem',
 #    'notYetValidINT.pem',

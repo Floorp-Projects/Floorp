@@ -88,6 +88,7 @@ const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED  = SEC_ERROR_BASE + 176;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
 const MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT          = MOZILLA_PKIX_ERROR_BASE + 14;
+const MOZILLA_PKIX_ERROR_MITM_DETECTED             = MOZILLA_PKIX_ERROR_BASE + 15;
 
 
 const SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
@@ -318,6 +319,8 @@ var AboutNetAndCertErrorListener = {
 
     if (input.data.certIsUntrusted) {
       switch (input.data.code) {
+        // We only want to measure MitM rates for now. Treat it as unkown issuer.
+        case MOZILLA_PKIX_ERROR_MITM_DETECTED:
         case SEC_ERROR_UNKNOWN_ISSUER:
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer") + "\n";
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer2") + "\n";
@@ -486,6 +489,7 @@ var AboutNetAndCertErrorListener = {
 
     switch (msg.data.code) {
       case SEC_ERROR_UNKNOWN_ISSUER:
+      case MOZILLA_PKIX_ERROR_MITM_DETECTED:
       case MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
         learnMoreLink.href = baseURL + "security-error";
         break;
