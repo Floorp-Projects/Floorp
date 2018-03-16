@@ -23,21 +23,26 @@ var gSafeBrowsing = {
     document.getElementById("menu_HelpPopup_reportPhishingErrortoolmenu")
             .hidden = !isPhishingPage;
 
-    var broadcasterId = isPhishingPage
-                        ? "reportPhishingErrorBroadcaster"
-                        : "reportPhishingBroadcaster";
-
-    var broadcaster = document.getElementById(broadcasterId);
-    if (!broadcaster)
-      return;
-
     // Now look at the currentURI to learn which page we were trying
     // to browse to.
-    let uri = gBrowser.currentURI;
-    if (uri && (uri.schemeIs("http") || uri.schemeIs("https")))
-      broadcaster.removeAttribute("disabled");
-    else
-      broadcaster.setAttribute("disabled", true);
+    const uri = gBrowser.currentURI;
+    const isReportablePage = uri && (uri.schemeIs("http") || uri.schemeIs("https"));
+
+    const disabledByPolicy = !Services.policies.isAllowed("feedbackCommands");
+
+    const reportBroadcaster = document.getElementById("reportPhishingBroadcaster");
+    if (disabledByPolicy || isPhishingPage || !isReportablePage) {
+      reportBroadcaster.setAttribute("disabled", "true");
+    } else {
+      reportBroadcaster.removeAttribute("disabled");
+    }
+
+    const reportErrorBroadcaster = document.getElementById("reportPhishingErrorBroadcaster");
+    if (disabledByPolicy || !isPhishingPage || !isReportablePage) {
+      reportErrorBroadcaster.setAttribute("disabled", "true");
+    } else {
+      reportErrorBroadcaster.removeAttribute("disabled");
+    }
   },
 
   /**
