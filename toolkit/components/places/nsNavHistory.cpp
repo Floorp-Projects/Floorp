@@ -33,6 +33,7 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIIDNService.h"
+#include "nsQueryObject.h"
 #include "nsThreadUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMathUtils.h"
@@ -192,9 +193,8 @@ NS_IMPL_CI_INTERFACE_GETTER(nsNavHistory,
 
 namespace {
 
-static int64_t GetSimpleBookmarksQueryFolder(
-    const nsCOMArray<nsNavHistoryQuery>& aQueries,
-    nsNavHistoryQueryOptions* aOptions);
+static int64_t GetSimpleBookmarksQueryFolder(nsNavHistoryQuery* aQuery,
+                                             nsNavHistoryQueryOptions* aOptions);
 static void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                         nsTArray<nsTArray<nsString>*>* aTerms);
 
@@ -1233,43 +1233,15 @@ nsNavHistory::GetNewQueryOptions(nsINavHistoryQueryOptions **_retval)
   return NS_OK;
 }
 
-// nsNavHistory::ExecuteQuery
-//
 
 NS_IMETHODIMP
-nsNavHistory::ExecuteQuery(nsINavHistoryQuery *aQuery, nsINavHistoryQueryOptions *aOptions,
+nsNavHistory::ExecuteQuery(nsINavHistoryQuery *aQuery,
+                           nsINavHistoryQueryOptions *aOptions,
                            nsINavHistoryResult** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aQuery);
   NS_ENSURE_ARG(aOptions);
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  return ExecuteQueries(&aQuery, 1, aOptions, _retval);
-}
-
-
-// nsNavHistory::ExecuteQueries
-//
-//    This function is actually very simple, we just create the proper root node (either
-//    a bookmark folder or a complex query node) and assign it to the result. The node
-//    will then populate itself accordingly.
-//
-//    Quick overview of query operation: When you call this function, we will construct
-//    the correct container node and set the options you give it. This node will then
-//    fill itself. Folder nodes will call nsNavBookmarks::QueryFolderChildren, and
-//    all other queries will call GetQueryResults. If these results contain other
-//    queries, those will be populated when the container is opened.
-
-NS_IMETHODIMP
-nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, uint32_t aQueryCount,
-                             nsINavHistoryQueryOptions *aOptions,
-                             nsINavHistoryResult** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aQueries);
-  NS_ENSURE_ARG(aOptions);
-  NS_ENSURE_ARG(aQueryCount);
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsresult rv;
@@ -1279,15 +1251,14 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, uint32_t aQueryCount
 
   // concrete queries array
   nsCOMArray<nsNavHistoryQuery> queries;
-  for (uint32_t i = 0; i < aQueryCount; i ++) {
-    nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface(aQueries[i], &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    queries.AppendElement(query.forget());
-  }
+  RefPtr<nsNavHistoryQuery> query = do_QueryObject(aQuery);
+  NS_ENSURE_STATE(query);
+  queries.AppendObject(query);
 
   // Create the root node.
   RefPtr<nsNavHistoryContainerResultNode> rootNode;
-  int64_t folderId = GetSimpleBookmarksQueryFolder(queries, options);
+
+  int64_t folderId = GetSimpleBookmarksQueryFolder(query, options);
   if (folderId) {
     // In the simple case where we're just querying children of a single
     // bookmark folder, we can more efficiently generate results.
@@ -1315,7 +1286,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, uint32_t aQueryCount
 
   // Create the result that will hold nodes.  Inject batching status into it.
   RefPtr<nsNavHistoryResult> result;
-  rv = nsNavHistoryResult::NewHistoryResult(aQueries, aQueryCount, options,
+  rv = nsNavHistoryResult::NewHistoryResult(queries, 1, options,
                                             rootNode, isBatching(),
                                             getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4000,7 +3971,9 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
   // handle it later.
   if (NS_SUCCEEDED(rv)) {
     // Check if this is a folder shortcut, so we can take a faster path.
-    int64_t targetFolderId = GetSimpleBookmarksQueryFolder(queries, options);
+    RefPtr<nsNavHistoryQuery> query = do_QueryObject(queries[0]);
+    NS_ENSURE_STATE(query);
+    int64_t targetFolderId = GetSimpleBookmarksQueryFolder(query, options);
     if (targetFolderId) {
       nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
       NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
@@ -4299,7 +4272,7 @@ namespace {
 
 // GetSimpleBookmarksQueryFolder
 //
-//    Determines if this set of queries is a simple bookmarks query for a
+//    Determines if this is a simple bookmarks query for a
 //    folder with no other constraints. In these common cases, we can more
 //    efficiently compute the results.
 //
@@ -4308,33 +4281,29 @@ namespace {
 //
 //    Returns the folder ID if it is a simple folder query, 0 if not.
 static int64_t
-GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
+GetSimpleBookmarksQueryFolder(nsNavHistoryQuery* aQuery,
                               nsNavHistoryQueryOptions* aOptions)
 {
-  if (aQueries.Count() != 1)
-    return 0;
-
-  nsNavHistoryQuery* query = aQueries[0];
-  if (query->Folders().Length() != 1)
+  if (aQuery->Folders().Length() != 1)
     return 0;
 
   bool hasIt;
-  query->GetHasBeginTime(&hasIt);
+  aQuery->GetHasBeginTime(&hasIt);
   if (hasIt)
     return 0;
-  query->GetHasEndTime(&hasIt);
+  aQuery->GetHasEndTime(&hasIt);
   if (hasIt)
     return 0;
-  query->GetHasDomain(&hasIt);
+  aQuery->GetHasDomain(&hasIt);
   if (hasIt)
     return 0;
-  query->GetHasUri(&hasIt);
+  aQuery->GetHasUri(&hasIt);
   if (hasIt)
     return 0;
-  (void)query->GetHasSearchTerms(&hasIt);
+  (void)aQuery->GetHasSearchTerms(&hasIt);
   if (hasIt)
     return 0;
-  if (query->Tags().Length() > 0)
+  if (aQuery->Tags().Length() > 0)
     return 0;
   if (aOptions->MaxResults() > 0)
     return 0;
@@ -4347,7 +4316,7 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
   // Don't care about onlyBookmarked flag, since specifying a bookmark
   // folder is inferring onlyBookmarked.
 
-  return query->Folders()[0];
+  return aQuery->Folders()[0];
 }
 
 

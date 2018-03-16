@@ -12,15 +12,12 @@
  * @returns the folder id of the folder of the root node of the query.
  */
 function folder_id(aQuery) {
-  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
-
-  dump("Checking query '" + aQuery + "'\n");
+  info("Checking query '" + aQuery + "'\n");
   var options = { };
   var queries = { };
   var size = { };
-  hs.queryStringToQueries(aQuery, queries, size, options);
-  var result = hs.executeQueries(queries.value, size.value, options.value);
+  PlacesUtils.history.queryStringToQueries(aQuery, queries, size, options);
+  var result = PlacesUtils.history.executeQuery(queries.value, options.value);
   var root = result.root;
   root.containerOpen = true;
   Assert.ok(root.hasChildren);
@@ -53,9 +50,7 @@ add_task(async function test_history_string_to_query() {
   });
 
   // add something to the tags folder
-  var ts = Cc["@mozilla.org/browser/tagging-service;1"].
-           getService(Ci.nsITaggingService);
-  ts.tagURI(uri("http://www.example.com/"), ["tag"]);
+  PlacesUtils.tagging.tagURI(uri("http://www.example.com/"), ["tag"]);
 
   // add something to the unfiled bookmarks folder
   await PlacesUtils.bookmarks.insert({
@@ -71,9 +66,8 @@ add_task(async function test_history_string_to_query() {
     url: "http://example.com/tf/",
   });
 
-  for (var i = 0; i < QUERIES.length; i++) {
-    var result = folder_id(QUERIES[i]);
-    dump("expected " + FOLDER_IDS[i] + ", got " + result + "\n");
+  for (let i = 0; i < QUERIES.length; i++) {
+    let result = folder_id(QUERIES[i]);
     Assert.equal(FOLDER_IDS[i], result);
   }
 });

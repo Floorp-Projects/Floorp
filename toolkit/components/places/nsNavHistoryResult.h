@@ -101,7 +101,7 @@ class nsNavHistoryResult final : public nsSupportsWeakReference,
                                  public nsINavHistoryObserver
 {
 public:
-  static nsresult NewHistoryResult(nsINavHistoryQuery** aQueries,
+  static nsresult NewHistoryResult(nsCOMArray<nsNavHistoryQuery>& aQueries,
                                    uint32_t aQueryCount,
                                    nsNavHistoryQueryOptions* aOptions,
                                    nsNavHistoryContainerResultNode* aRoot,
@@ -135,7 +135,7 @@ public:
 public:
   // two-stage init, use NewHistoryResult to construct
   explicit nsNavHistoryResult(nsNavHistoryContainerResultNode* mRoot);
-  nsresult Init(nsINavHistoryQuery** aQueries,
+  nsresult Init(nsCOMArray<nsNavHistoryQuery>& aQueries,
                 uint32_t aQueryCount,
                 nsNavHistoryQueryOptions *aOptions);
 
