@@ -775,6 +775,7 @@ nsSocketTransport::nsSocketTransport()
     , mProxyTransparentResolvesHost(false)
     , mHttpsProxy(false)
     , mConnectionFlags(0)
+    , mResetFamilyPreference(false)
     , mTlsFlags(0)
     , mReuseAddrPort(false)
     , mState(STATE_CLOSED)
@@ -1703,8 +1704,10 @@ nsSocketTransport::RecoverFromError()
 #endif
 
     // can only recover from errors in these states
-    if (mState != STATE_RESOLVING && mState != STATE_CONNECTING)
+    if (mState != STATE_RESOLVING && mState != STATE_CONNECTING) {
+        SOCKET_LOG(("  not in a recoverable state"));
         return false;
+    }
 
     nsresult rv;
 
@@ -1729,15 +1732,19 @@ nsSocketTransport::RecoverFromError()
         mCondition != NS_ERROR_NET_TIMEOUT &&
         mCondition != NS_ERROR_UNKNOWN_HOST &&
         mCondition != NS_ERROR_UNKNOWN_PROXY_HOST &&
-        !(mFDFastOpenInProgress && (mCondition == NS_ERROR_FAILURE)))
+        !(mFDFastOpenInProgress && (mCondition == NS_ERROR_FAILURE))) {
+        SOCKET_LOG(("  not a recoverable error %" PRIx32, static_cast<uint32_t>(mCondition)));
         return false;
+    }
 #else
     if (mCondition != NS_ERROR_CONNECTION_REFUSED &&
         mCondition != NS_ERROR_PROXY_CONNECTION_REFUSED &&
         mCondition != NS_ERROR_NET_TIMEOUT &&
         mCondition != NS_ERROR_UNKNOWN_HOST &&
-        mCondition != NS_ERROR_UNKNOWN_PROXY_HOST)
+        mCondition != NS_ERROR_UNKNOWN_PROXY_HOST) {
+        SOCKET_LOG(("  not a recoverable error %" PRIx32, static_cast<uint32_t>(mCondition)));
         return false;
+    }
 #endif
 
     bool tryAgain = false;
@@ -1779,12 +1786,15 @@ nsSocketTransport::RecoverFromError()
             }
         }
 
-        if (mConnectionFlags & (DISABLE_IPV6 | DISABLE_IPV4) &&
+        if (mConnectionFlags & RETRY_WITH_DIFFERENT_IP_FAMILY &&
             mCondition == NS_ERROR_UNKNOWN_HOST &&
             mState == STATE_RESOLVING &&
             !mProxyTransparentResolvesHost) {
-            SOCKET_LOG(("  trying lookup again with both ipv4/ipv6 enabled\n"));
-            mConnectionFlags &= ~(DISABLE_IPV6 | DISABLE_IPV4);
+            SOCKET_LOG(("  trying lookup again with opposite ip family\n"));
+            mConnectionFlags ^= (DISABLE_IPV6 | DISABLE_IPV4);
+            mConnectionFlags &= ~RETRY_WITH_DIFFERENT_IP_FAMILY;
+            // This will tell the consuming half-open to reset preference on the connection entry
+            mResetFamilyPreference = true;
             tryAgain = true;
         }
 
@@ -1794,17 +1804,15 @@ nsSocketTransport::RecoverFromError()
             if (NS_SUCCEEDED(rv)) {
                 SOCKET_LOG(("  trying again with next ip address\n"));
                 tryAgain = true;
-            }
-            else if (mConnectionFlags & (DISABLE_IPV6 | DISABLE_IPV4)) {
+            } else if (mConnectionFlags & RETRY_WITH_DIFFERENT_IP_FAMILY) {
+                SOCKET_LOG(("  failed to connect, trying with opposite ip family\n"));
                 // Drop state to closed.  This will trigger new round of DNS
                 // resolving bellow.
-                // XXX Could be optimized to only switch the flags to save
-                // duplicate connection attempts.
-                SOCKET_LOG(("  failed to connect all ipv4-only or ipv6-only "
-                            "hosts, trying lookup/connect again with both "
-                            "ipv4/ipv6\n"));
                 mState = STATE_CLOSED;
-                mConnectionFlags &= ~(DISABLE_IPV6 | DISABLE_IPV4);
+                mConnectionFlags ^= (DISABLE_IPV6 | DISABLE_IPV4);
+                mConnectionFlags &= ~RETRY_WITH_DIFFERENT_IP_FAMILY;
+                // This will tell the consuming half-open to reset preference on the connection entry
+                mResetFamilyPreference = true;
                 tryAgain = true;
             } else if (!(mConnectionFlags & DISABLE_TRR)) {
                 bool trrEnabled;
@@ -2327,6 +2335,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
 
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+    mAttached = false;
+
     // if we didn't initiate this detach, then be sure to pass an error
     // condition up to our consumers.  (e.g., STS is shutting down.)
     if (NS_SUCCEEDED(mCondition)) {
@@ -2551,6 +2561,9 @@ nsSocketTransport::OpenOutputStream(uint32_t flags,
 NS_IMETHODIMP
 nsSocketTransport::Close(nsresult reason)
 {
+    SOCKET_LOG(("nsSocketTransport::Close %p reason=%" PRIx32,
+                this, static_cast<uint32_t>(reason)));
+
     if (NS_SUCCEEDED(reason))
         reason = NS_BASE_STREAM_CLOSED;
 
@@ -3014,8 +3027,11 @@ nsSocketTransport::GetConnectionFlags(uint32_t *value)
 NS_IMETHODIMP
 nsSocketTransport::SetConnectionFlags(uint32_t value)
 {
+    SOCKET_LOG(("nsSocketTransport::SetConnectionFlags %p flags=%u", this, value));
+
     mConnectionFlags = value;
     mIsPrivate = value & nsISocketTransport::NO_PERMANENT_STORAGE;
+
     return NS_OK;
 }
 
@@ -3555,6 +3571,13 @@ NS_IMETHODIMP
 nsSocketTransport::GetFirstRetryError(nsresult *aFirstRetryError)
 {
   *aFirstRetryError = mFirstRetryError;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetResetIPFamilyPreference(bool *aReset)
+{
+  *aReset = mResetFamilyPreference;
   return NS_OK;
 }
 
