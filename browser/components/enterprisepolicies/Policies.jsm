@@ -215,14 +215,6 @@ var Policies = {
     }
   },
 
-  "DisableSafeMode": {
-    onBeforeUIStartup(manager, param) {
-      if (param) {
-        manager.disallowFeature("safeMode");
-      }
-    }
-  },
-
   "DisableSysAddonUpdate": {
     onBeforeAddons(manager, param) {
       if (param) {

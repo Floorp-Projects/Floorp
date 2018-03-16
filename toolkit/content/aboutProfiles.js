@@ -85,11 +85,7 @@ function refreshUI() {
   createButton.onclick = createProfileWizard;
 
   let restartSafeModeButton = document.getElementById("restart-in-safe-mode-button");
-  if (Services.policies.isAllowed("safeMode")) {
-    restartSafeModeButton.onclick = function() { restart(true); };
-  } else {
-    restartSafeModeButton.setAttribute("disabled", "true");
-  }
+  restartSafeModeButton.onclick = function() { restart(true); };
 
   let restartNormalModeButton = document.getElementById("restart-button");
   restartNormalModeButton.onclick = function() { restart(false); };
