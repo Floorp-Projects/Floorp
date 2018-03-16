@@ -2201,6 +2201,12 @@ nsNSSComponent::InitializeNSS()
     Preferences::GetString("security.content.signature.root_hash",
                            mContentSigningRootHash);
 
+    mMitmCanaryIssuer.Truncate();
+    Preferences::GetString("security.pki.mitm_canary_issuer",
+                           mMitmCanaryIssuer);
+    mMitmDetecionEnabled =
+      Preferences::GetBool("security.pki.mitm_canary_issuer.enabled", true);
+
     mNSSInitialized = true;
   }
 
@@ -2367,6 +2373,16 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                              mContentSigningRootHash);
     } else if (prefName.Equals(kEnterpriseRootModePref)) {
       MaybeImportEnterpriseRoots();
+    } else if (prefName.EqualsLiteral("security.pki.mitm_canary_issuer")) {
+      MutexAutoLock lock(mMutex);
+      mMitmCanaryIssuer.Truncate();
+      Preferences::GetString("security.pki.mitm_canary_issuer",
+                             mMitmCanaryIssuer);
+    } else if (prefName.EqualsLiteral(
+                 "security.pki.mitm_canary_issuer.enabled")) {
+      MutexAutoLock lock(mMutex);
+      mMitmDetecionEnabled =
+        Preferences::GetBool("security.pki.mitm_canary_issuer.enabled", true);
     } else {
       clearSessionCache = false;
     }
@@ -2493,6 +2509,20 @@ nsNSSComponent::IsCertContentSigningRoot(CERTCertificate* cert, bool& result)
 
   result = mContentSigningRootHash.Equals(certHash);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::IssuerMatchesMitmCanary(const char* aCertIssuer)
+{
+  MutexAutoLock lock(mMutex);
+  if (mMitmDetecionEnabled && !mMitmCanaryIssuer.IsEmpty()) {
+    nsString certIssuer = NS_ConvertUTF8toUTF16(aCertIssuer);
+    if (mMitmCanaryIssuer.Equals(certIssuer)) {
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 SharedCertVerifier::~SharedCertVerifier() { }

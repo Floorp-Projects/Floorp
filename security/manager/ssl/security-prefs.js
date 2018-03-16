@@ -136,3 +136,10 @@ pref("security.cert_pinning.max_max_age_seconds", 5184000);
 // 1: Symantec root distrust policy enforced
 // See https://wiki.mozilla.org/CA/Upcoming_Distrust_Actions for more details.
 pref("security.pki.distrust_ca_policy", 1);
+
+// Issuer we use to detect MitM proxies. Set to the issuer of the cert of the
+// Firefox update service. The string format is whatever NSS uses to print a DN.
+// This value is set and cleared automatically.
+pref("security.pki.mitm_canary_issuer", "");
+// Pref to disable the MitM proxy checks.
+pref("security.pki.mitm_canary_issuer.enabled", true);
