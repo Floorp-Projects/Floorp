@@ -333,9 +333,9 @@ dependencies {
     // What I actually want to define here is geckoArmCompile and geckoX86Compile. But gradle doesn't
     // allow me to define dependencies for such a flavor combination. However as we are not building
     // WebView + (ARM / x86) flavor combinations this should be good enough for now.
-    armCompile "org.mozilla:geckoview-nightly-armeabi-v7a:60.0a1"
-    x86Compile "org.mozilla:geckoview-nightly-x86:60.0a1"
-    aarch64Compile "org.mozilla:geckoview-nightly-arm64-v8a:60.0a1"
+    armCompile "org.mozilla:geckoview-nightly-armeabi-v7a:61.0a1"
+    x86Compile "org.mozilla:geckoview-nightly-x86:61.0a1"
+    aarch64Compile "org.mozilla:geckoview-nightly-arm64-v8a:61.0a1"
 
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.7.1"
