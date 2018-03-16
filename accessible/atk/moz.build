@@ -14,6 +14,7 @@ SOURCES += [
     'ApplicationAccessibleWrap.cpp',
     'AtkSocketAccessible.cpp',
     'DocAccessibleWrap.cpp',
+    'DOMtoATK.cpp',
     'nsMaiHyperlink.cpp',
     'nsMaiInterfaceAction.cpp',
     'nsMaiInterfaceComponent.cpp',
