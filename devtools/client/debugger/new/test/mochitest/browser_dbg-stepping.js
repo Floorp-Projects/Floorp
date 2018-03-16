@@ -26,7 +26,6 @@ add_task(async function test() {
   await stepIn(dbg);
   await stepIn(dbg);
   await stepIn(dbg);
-
   await stepIn(dbg);
   await stepIn(dbg);
   await stepIn(dbg);
