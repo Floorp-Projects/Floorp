@@ -11101,6 +11101,18 @@
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
+    "keys": [
+      "main-crash",
+      "main-hang",
+      "content-crash",
+      "content-hang",
+      "plugin-crash",
+      "plugin-hang",
+      "gmplugin-crash",
+      "gmplugin-hang",
+      "gpu-crash",
+      "gpu-hang"
+    ],
     "releaseChannelCollection": "opt-out",
     "description": "An attempt to submit a crash. Keyed on the CrashManager Crash.type."
   },
