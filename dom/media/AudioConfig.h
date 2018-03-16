@@ -6,8 +6,9 @@
 #if !defined(AudioLayout_h)
 #define AudioLayout_h
 
-#include <initializer_list>
 #include <cstdint>
+#include <initializer_list>
+#include "mozilla/MathAlgorithms.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -102,6 +103,13 @@ public:
     bool HasChannel(Channel aChannel) const
     {
       return mChannelMap & (1 << aChannel);
+    }
+    // Return the number of channels found in this ChannelMap.
+    static uint32_t Channels(ChannelMap aMap)
+    {
+      static_assert(sizeof(ChannelMap) == sizeof(uint32_t),
+                    "Must adjust ChannelMap type");
+      return CountPopulation32(aMap);
     }
 
     static ChannelLayout SMPTEDefault(
