@@ -28,9 +28,9 @@ window._gBrowser = {
     this._setupInitialBrowserAndTab();
 
     if (Services.prefs.getBoolPref("browser.display.use_system_colors")) {
-      this.mPanelContainer.style.backgroundColor = "-moz-default-background-color";
+      this.tabpanels.style.backgroundColor = "-moz-default-background-color";
     } else if (Services.prefs.getIntPref("browser.display.document_color_use") == 2) {
-      this.mPanelContainer.style.backgroundColor =
+      this.tabpanels.style.backgroundColor =
         Services.prefs.getCharPref("browser.display.background_color");
     }
 
@@ -43,7 +43,7 @@ window._gBrowser = {
 
       // If this window has remote tabs, switch to our tabpanels fork
       // which does asynchronous tab switching.
-      this.mPanelContainer.classList.add("tabbrowser-tabpanels");
+      this.tabpanels.classList.add("tabbrowser-tabpanels");
     } else {
       this._outerWindowIDBrowserMap.set(this.selectedBrowser.outerWindowID,
         this.selectedBrowser);
@@ -199,24 +199,24 @@ window._gBrowser = {
     return this.tabbox = document.getElementById("tabbrowser-tabbox");
   },
 
-  get mPanelContainer() {
-    delete this.mPanelContainer;
-    return this.mPanelContainer = document.getElementById("tabbrowser-tabpanels");
+  get tabpanels() {
+    delete this.tabpanels;
+    return this.tabpanels = document.getElementById("tabbrowser-tabpanels");
   },
 
   get addEventListener() {
     delete this.addEventListener;
-    return this.addEventListener = this.mPanelContainer.addEventListener.bind(this.mPanelContainer);
+    return this.addEventListener = this.tabpanels.addEventListener.bind(this.tabpanels);
   },
 
   get removeEventListener() {
     delete this.removeEventListener;
-    return this.removeEventListener = this.mPanelContainer.removeEventListener.bind(this.mPanelContainer);
+    return this.removeEventListener = this.tabpanels.removeEventListener.bind(this.tabpanels);
   },
 
   get dispatchEvent() {
     delete this.dispatchEvent;
-    return this.dispatchEvent = this.mPanelContainer.dispatchEvent.bind(this.mPanelContainer);
+    return this.dispatchEvent = this.tabpanels.dispatchEvent.bind(this.tabpanels);
   },
 
   get visibleTabs() {
@@ -299,7 +299,7 @@ window._gBrowser = {
     this._selectedTab = tab;
 
     let uniqueId = this._generateUniquePanelID();
-    this.mPanelContainer.childNodes[0].id = uniqueId;
+    this.tabpanels.childNodes[0].id = uniqueId;
     tab.linkedPanel = uniqueId;
     tab.permanentKey = browser.permanentKey;
     tab._tPos = 0;
@@ -1799,7 +1799,7 @@ window._gBrowser = {
     this._preloadedBrowser = browser;
 
     let notificationbox = this.getNotificationBox(browser);
-    this.mPanelContainer.appendChild(notificationbox);
+    this.tabpanels.appendChild(notificationbox);
 
     if (remoteType != E10SUtils.NOT_REMOTE) {
       // For remote browsers, we need to make sure that the webProgress is
@@ -2054,7 +2054,7 @@ window._gBrowser = {
       // of those notifications can cause code to run that inspects our
       // state, so it is important that the tab element is fully
       // initialized by this point.
-      this.mPanelContainer.appendChild(notificationbox);
+      this.tabpanels.appendChild(notificationbox);
     }
 
     // wire up a progress listener for the new browser object.
@@ -2145,7 +2145,7 @@ window._gBrowser = {
     aBrowser.destroy();
 
     let notificationbox = this.getNotificationBox(aBrowser);
-    this.mPanelContainer.removeChild(notificationbox);
+    this.tabpanels.removeChild(notificationbox);
     tab.removeAttribute("linkedpanel");
 
     this._createLazyBrowser(tab);
