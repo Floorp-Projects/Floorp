@@ -21,6 +21,74 @@ class APZInputBridgeParent : public PAPZInputBridgeParent
 public:
   explicit APZInputBridgeParent(const uint64_t& aLayersId);
 
+  mozilla::ipc::IPCResult
+  RecvReceiveMultiTouchInputEvent(
+          const MultiTouchInput& aEvent,
+          nsEventStatus* aOutStatus,
+          MultiTouchInput* aOutEvent,
+          ScrollableLayerGuid* aOutTargetGuid,
+          uint64_t* aOutInputBlockId) override;
+
+  mozilla::ipc::IPCResult
+  RecvReceiveMouseInputEvent(
+          const MouseInput& aEvent,
+          nsEventStatus* aOutStatus,
+          MouseInput* aOutEvent,
+          ScrollableLayerGuid* aOutTargetGuid,
+          uint64_t* aOutInputBlockId) override;
+
+  mozilla::ipc::IPCResult
+  RecvReceivePanGestureInputEvent(
+          const PanGestureInput& aEvent,
+          nsEventStatus* aOutStatus,
+          PanGestureInput* aOutEvent,
+          ScrollableLayerGuid* aOutTargetGuid,
+          uint64_t* aOutInputBlockId) override;
+
+  mozilla::ipc::IPCResult
+  RecvReceivePinchGestureInputEvent(
+          const PinchGestureInput& aEvent,
+          nsEventStatus* aOutStatus,
+          PinchGestureInput* aOutEvent,
+          ScrollableLayerGuid* aOutTargetGuid,
+          uint64_t* aOutInputBlockId) override;
+
+  mozilla::ipc::IPCResult
+  RecvReceiveTapGestureInputEvent(
+          const TapGestureInput& aEvent,
+          nsEventStatus* aOutStatus,
+          TapGestureInput* aOutEvent,
+          ScrollableLayerGuid* aOutTargetGuid,
+          uint64_t* aOutInputBlockId) override;
+
+  mozilla::ipc::IPCResult
+  RecvReceiveScrollWheelInputEvent(
+          const ScrollWheelInput& aEvent,
+          nsEventStatus* aOutStatus,
+          ScrollWheelInput* aOutEvent,
+          ScrollableLayerGuid* aOutTargetGuid,
+          uint64_t* aOutInputBlockId) override;
+
+  mozilla::ipc::IPCResult
+  RecvReceiveKeyboardInputEvent(
+          const KeyboardInput& aEvent,
+          nsEventStatus* aOutStatus,
+          KeyboardInput* aOutEvent,
+          ScrollableLayerGuid* aOutTargetGuid,
+          uint64_t* aOutInputBlockId) override;
+
+  mozilla::ipc::IPCResult
+  RecvUpdateWheelTransaction(
+          const LayoutDeviceIntPoint& aRefPoint,
+          const EventMessage& aEventMessage) override;
+
+  mozilla::ipc::IPCResult
+  RecvProcessUnhandledEvent(
+          const LayoutDeviceIntPoint& aRefPoint,
+          LayoutDeviceIntPoint* aOutRefPoint,
+          ScrollableLayerGuid*  aOutTargetGuid,
+          uint64_t*             aOutFocusSequenceNumber) override;
+
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
 

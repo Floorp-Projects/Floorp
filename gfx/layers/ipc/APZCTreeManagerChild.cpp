@@ -53,118 +53,6 @@ APZCTreeManagerChild::Destroy()
   }
 }
 
-nsEventStatus
-APZCTreeManagerChild::ReceiveInputEvent(
-    InputData& aEvent,
-    ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutInputBlockId)
-{
-  switch (aEvent.mInputType) {
-  case MULTITOUCH_INPUT: {
-    MultiTouchInput& event = aEvent.AsMultiTouchInput();
-    MultiTouchInput processedEvent;
-
-    nsEventStatus res;
-    SendReceiveMultiTouchInputEvent(event,
-                                    &res,
-                                    &processedEvent,
-                                    aOutTargetGuid,
-                                    aOutInputBlockId);
-
-    event = processedEvent;
-    return res;
-  }
-  case MOUSE_INPUT: {
-    MouseInput& event = aEvent.AsMouseInput();
-    MouseInput processedEvent;
-
-    nsEventStatus res;
-    SendReceiveMouseInputEvent(event,
-                               &res,
-                               &processedEvent,
-                               aOutTargetGuid,
-                               aOutInputBlockId);
-
-    event = processedEvent;
-    return res;
-  }
-  case PANGESTURE_INPUT: {
-    PanGestureInput& event = aEvent.AsPanGestureInput();
-    PanGestureInput processedEvent;
-
-    nsEventStatus res;
-    SendReceivePanGestureInputEvent(event,
-                                    &res,
-                                    &processedEvent,
-                                    aOutTargetGuid,
-                                    aOutInputBlockId);
-
-    event = processedEvent;
-    return res;
-  }
-  case PINCHGESTURE_INPUT: {
-    PinchGestureInput& event = aEvent.AsPinchGestureInput();
-    PinchGestureInput processedEvent;
-
-    nsEventStatus res;
-    SendReceivePinchGestureInputEvent(event,
-                                      &res,
-                                      &processedEvent,
-                                      aOutTargetGuid,
-                                      aOutInputBlockId);
-
-    event = processedEvent;
-    return res;
-  }
-  case TAPGESTURE_INPUT: {
-    TapGestureInput& event = aEvent.AsTapGestureInput();
-    TapGestureInput processedEvent;
-
-    nsEventStatus res;
-    SendReceiveTapGestureInputEvent(event,
-                                    &res,
-                                    &processedEvent,
-                                    aOutTargetGuid,
-                                    aOutInputBlockId);
-
-    event = processedEvent;
-    return res;
-  }
-  case SCROLLWHEEL_INPUT: {
-    ScrollWheelInput& event = aEvent.AsScrollWheelInput();
-    ScrollWheelInput processedEvent;
-
-    nsEventStatus res;
-    SendReceiveScrollWheelInputEvent(event,
-                                     &res,
-                                     &processedEvent,
-                                     aOutTargetGuid,
-                                     aOutInputBlockId);
-
-    event = processedEvent;
-    return res;
-  }
-  case KEYBOARD_INPUT: {
-    KeyboardInput& event = aEvent.AsKeyboardInput();
-    KeyboardInput processedEvent;
-
-    nsEventStatus res;
-    SendReceiveKeyboardInputEvent(event,
-                                  &res,
-                                  &processedEvent,
-                                  aOutTargetGuid,
-                                  aOutInputBlockId);
-
-    event = processedEvent;
-    return res;
-  }
-  default: {
-    MOZ_ASSERT_UNREACHABLE("Invalid InputData type.");
-    return nsEventStatus_eConsumeNoDefault;
-  }
-  }
-}
-
 void
 APZCTreeManagerChild::SetKeyboardMap(const KeyboardMap& aKeyboardMap)
 {
@@ -246,29 +134,13 @@ APZCTreeManagerChild::SetLongTapEnabled(bool aTapGestureEnabled)
   SendSetLongTapEnabled(aTapGestureEnabled);
 }
 
-void
-APZCTreeManagerChild::UpdateWheelTransaction(
-    LayoutDeviceIntPoint aRefPoint,
-    EventMessage aEventMessage)
-{
-  SendUpdateWheelTransaction(aRefPoint, aEventMessage);
-}
-
-void APZCTreeManagerChild::ProcessUnhandledEvent(
-    LayoutDeviceIntPoint* aRefPoint,
-    ScrollableLayerGuid*  aOutTargetGuid,
-    uint64_t*             aOutFocusSequenceNumber)
-{
-  SendProcessUnhandledEvent(*aRefPoint,
-                            aRefPoint,
-                            aOutTargetGuid,
-                            aOutFocusSequenceNumber);
-}
-
 APZInputBridge*
 APZCTreeManagerChild::InputBridge()
 {
-  return this;
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(mInputBridge);
+
+  return mInputBridge.get();
 }
 
 mozilla::ipc::IPCResult
