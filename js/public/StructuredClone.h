@@ -428,7 +428,18 @@ JS_PUBLIC_API(bool)
 JS_StructuredClone(JSContext* cx, JS::HandleValue v, JS::MutableHandleValue vp,
                    const JSStructuredCloneCallbacks* optionalCallbacks, void* closure);
 
-/** RAII sugar for JS_WriteStructuredClone. */
+/**
+ * The C-style API calls to read and write structured clones are fragile --
+ * they rely on the caller to properly handle ownership of the clone data, and
+ * the handling of the input data as well as the interpretation of the contents
+ * of the clone buffer are dependent on the callbacks passed in. If you
+ * serialize and deserialize with different callbacks, the results are
+ * questionable.
+ *
+ * JSAutoStructuredCloneBuffer wraps things up in an RAII class for data
+ * management, and uses the same callbacks for both writing and reading
+ * (serializing and deserializing).
+ */
 class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     const JS::StructuredCloneScope scope_;
     JSStructuredCloneData data_;
