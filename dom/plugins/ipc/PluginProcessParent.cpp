@@ -76,8 +76,7 @@ PluginProcessParent::Launch(mozilla::UniquePtr<LaunchCompleteTask> aLaunchComple
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
     if (aSandboxLevel > 0) {
-        args.push_back("-flashSandboxLevel");
-        args.push_back(std::to_string(aSandboxLevel));
+        args.push_back("-flashSandbox");
         if (aIsSandboxLoggingEnabled) {
             args.push_back("-flashSandboxLogging");
         }

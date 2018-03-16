@@ -14,7 +14,6 @@
 #include "nsDebugImpl.h"
 #include "nsThreadManager.h"
 #include "ClearOnShutdown.h"
-#include "mozilla/SandboxSettings.h"
 
 #if defined(XP_MACOSX)
 #include "nsCocoaFeatures.h"
@@ -95,19 +94,12 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
     pluginFilename = UnmungePluginDsoPath(values[1]);
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-    int level;
-    if (values.size() >= 4 && values[2] == "-flashSandboxLevel" &&
-        (level = std::stoi(values[3], nullptr)) > 0) {
-
-      level = ClampFlashSandboxLevel(level);
-      MOZ_ASSERT(level > 0);
-
+    if (values.size() >= 3 && values[2] == "-flashSandbox") {
       bool enableLogging = false;
-      if (values.size() >= 5 && values[4] == "-flashSandboxLogging") {
+      if (values.size() >= 4 && values[3] == "-flashSandboxLogging") {
         enableLogging = true;
       }
-
-      mPlugin.EnableFlashSandbox(level, enableLogging);
+      mPlugin.EnableFlashSandbox(enableLogging);
     }
 #endif
 
