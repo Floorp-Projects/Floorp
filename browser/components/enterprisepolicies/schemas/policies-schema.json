@@ -114,6 +114,13 @@
       "type": "boolean"
     },
 
+    "DisableFeedbackCommands": {
+      "description": "Prevents ability to send feedback from the help menu (\"Submit Feedback\" and \"Report Deceptive Site\").",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableFirefoxAccounts": {
       "description": "Disables Firefox Account based services, including Sync.",
       "first_available": "60.0",
