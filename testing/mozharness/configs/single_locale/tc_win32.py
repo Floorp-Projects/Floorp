@@ -26,6 +26,6 @@ config = {
         'UPLOAD_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
 
-    "tooltool_url": 'http://relengapi/tooltool/',
+    "tooltool_url": 'https://tooltool.mozilla-releng.net/',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win32/releng.manifest",
 }
