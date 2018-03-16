@@ -130,7 +130,7 @@ static void
 ConvertTexttoAsterisks(AccessibleWrap* accWrap, nsAString& aString)
 {
   // convert each char to "*" when it's "password text"
-  if (accWrap->NativeRole() == roles::PASSWORD_TEXT) {
+  if (accWrap->IsPassword()) {
     DOMtoATK::ConvertTexttoAsterisks(aString);
   }
 }
@@ -148,7 +148,7 @@ getTextCB(AtkText *aText, gint aStartOffset, gint aEndOffset)
       return nullptr;
 
     return DOMtoATK::NewATKString(text, aStartOffset, aEndOffset,
-         accWrap->NativeRole() == roles::PASSWORD_TEXT ?
+         accWrap->IsPassword() ?
            DOMtoATK::AtkStringConvertFlags::ConvertTextToAsterisks :
            DOMtoATK::AtkStringConvertFlags::None);
 

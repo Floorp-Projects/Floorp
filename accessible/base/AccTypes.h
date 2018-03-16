@@ -39,6 +39,7 @@ enum AccType {
   eHTMLTableCellType,
   eHTMLTableRowType,
   eHTMLTextFieldType,
+  eHTMLTextPasswordFieldType,
   eHyperTextType,
   eImageType,
   eOuterDocType,
