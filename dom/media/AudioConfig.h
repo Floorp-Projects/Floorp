@@ -47,9 +47,12 @@ public:
   class ChannelLayout
   {
   public:
+    // The maximum number of channels a channel map can represent.
+    static constexpr uint32_t MAX_CHANNELS = 32;
+
     typedef uint32_t ChannelMap;
 
-    ChannelLayout() : mChannelMap(0), mValid(false) { }
+    ChannelLayout() : mChannelMap(UNKNOWN_MAP), mValid(false) { }
     explicit ChannelLayout(uint32_t aChannels)
       : ChannelLayout(aChannels, DefaultLayoutForChannels(aChannels))
     {
@@ -58,7 +61,6 @@ public:
       : ChannelLayout()
     {
       if (aChannels == 0 || !aConfig) {
-        mValid = false;
         return;
       }
       mChannels.AppendElements(aConfig, aChannels);
@@ -78,6 +80,7 @@ public:
     }
     const Channel& operator[](uint32_t aIndex) const
     {
+      MOZ_ASSERT(mChannels.Length() > aIndex);
       return mChannels[aIndex];
     }
     uint32_t Count() const
@@ -180,7 +183,7 @@ public:
   private:
     void UpdateChannelMap();
     const Channel* DefaultLayoutForChannels(uint32_t aChannels) const;
-    AutoTArray<Channel, MAX_AUDIO_CHANNELS> mChannels;
+    AutoTArray<Channel, MAX_CHANNELS> mChannels;
     ChannelMap mChannelMap;
     bool mValid;
   };
