@@ -14,7 +14,7 @@ add_task(async function() {
   scope.OS.File.read = () => triedToRead = true;
   blocklist._loadBlocklist();
   Assert.ok(blocklist.isLoaded);
-  await blocklist.loadBlocklistAsync();
+  await blocklist._preloadBlocklist();
   Assert.ok(!triedToRead);
   scope.OS.File.read = read;
   blocklist._clear();
@@ -22,7 +22,7 @@ add_task(async function() {
   info("sync -> async complete");
 
   // async first. Check that once we preload the content, that is sufficient.
-  await blocklist.loadBlocklistAsync();
+  await blocklist._preloadBlocklist();
   Assert.ok(blocklist.isLoaded);
   // Calling _loadBlocklist now would just re-load the list sync.
 
@@ -40,7 +40,7 @@ add_task(async function() {
     });
   };
 
-  await blocklist.loadBlocklistAsync();
+  await blocklist._preloadBlocklist();
   // We're mostly just checking this doesn't error out.
   Assert.ok(blocklist.isLoaded);
   info("mixed async/sync test complete");
