@@ -70,6 +70,7 @@
                 android:src="@drawable/ic_delete"
                 app:backgroundTint="@color/colorErase"
                 app:rippleColor="@color/colorErasePressed"
+                android:visibility="gone"
                 app:fabSize="normal"
                 app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
                 android:contentDescription="@string/content_description_erase" />

@@ -9,6 +9,9 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.AnimationUtils;
+
+import org.mozilla.focus.R;
 
 public class FloatingEraseButton extends FloatingActionButton {
     private boolean keepHidden;
@@ -37,9 +40,17 @@ public class FloatingEraseButton extends FloatingActionButton {
 
         if (keepHidden) {
             setVisibility(View.GONE);
-        } else {
-            setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        if (!keepHidden) {
+            this.setVisibility(View.VISIBLE);
+            this.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fab_reveal));
+        }
+
+        super.onFinishInflate();
     }
 
     @Override

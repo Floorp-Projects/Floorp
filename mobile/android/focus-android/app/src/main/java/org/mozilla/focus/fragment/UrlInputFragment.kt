@@ -19,7 +19,6 @@ import android.widget.FrameLayout
 import kotlinx.android.synthetic.main.fragment_urlinput.*
 import mozilla.components.utils.ThreadUtils
 import org.mozilla.focus.R
-import org.mozilla.focus.activity.InfoActivity
 import org.mozilla.focus.autocomplete.UrlAutoCompleteFilter
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
@@ -283,8 +282,7 @@ class UrlInputFragment :
             R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
 
             R.id.help -> {
-                val helpIntent = InfoActivity.getHelpIntent(activity)
-                startActivity(helpIntent)
+                SessionManager.getInstance().createSession(Source.MENU, SupportUtils.HELP_URL)
             }
 
             else -> throw IllegalStateException("Unhandled view in onClick()")

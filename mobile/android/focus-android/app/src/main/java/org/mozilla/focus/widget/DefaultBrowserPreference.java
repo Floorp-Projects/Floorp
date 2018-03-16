@@ -5,6 +5,7 @@
 package org.mozilla.focus.widget;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +17,8 @@ import android.view.View;
 import android.widget.Switch;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.InfoActivity;
+import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.session.Source;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.SupportUtils;
 
@@ -83,7 +85,7 @@ public class DefaultBrowserPreference extends Preference {
     }
 
     private void openSumoPage(Context context) {
-        final Intent intent = InfoActivity.getIntentFor(context, SupportUtils.DEFAULT_BROWSER_URL, getTitle().toString());
-        context.startActivity(intent);
+        SessionManager.getInstance().createSession(Source.MENU, SupportUtils.DEFAULT_BROWSER_URL);
+        ((Activity) context).onBackPressed();
     }
 }

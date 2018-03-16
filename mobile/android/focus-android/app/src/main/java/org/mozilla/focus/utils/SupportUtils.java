@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import android.support.annotation.VisibleForTesting;
+
 import org.mozilla.focus.locale.Locales;
 
 import java.io.UnsupportedEncodingException;
@@ -18,6 +19,9 @@ import java.util.Locale;
 public class SupportUtils {
     public static final String HELP_URL = "https://support.mozilla.org/kb/what-firefox-focus-android";
     public static final String DEFAULT_BROWSER_URL = "https://support.mozilla.org/kb/set-firefox-focus-default-browser-android";
+
+    public static final String PRIVACY_NOTICE_URL = "https://www.mozilla.org/privacy/firefox-focus/";
+    public static final String PRIVACY_NOTICE_KLAR_URL = "https://www.mozilla.org/de/privacy/firefox-klar/";
 
     public enum SumoTopic {
         ADD_SEARCH_ENGINE("add-search-engine"),

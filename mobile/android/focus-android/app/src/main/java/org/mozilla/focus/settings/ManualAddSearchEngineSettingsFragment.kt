@@ -10,16 +10,16 @@ import android.os.Bundle
 import android.support.annotation.VisibleForTesting
 import android.support.annotation.WorkerThread
 import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.EditText
 import org.mozilla.focus.R
-import org.mozilla.focus.activity.InfoActivity
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.search.SearchEngineManager
+import org.mozilla.focus.session.SessionManager
+import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
@@ -81,11 +81,9 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         val openLearnMore = {
-            val url = SupportUtils.getSumoURLForTopic(activity, SupportUtils.SumoTopic.ADD_SEARCH_ENGINE)
-            val title = (activity as AppCompatActivity).supportActionBar?.title.toString()
-            val intent = InfoActivity.getIntentFor(activity, url, title)
-            activity.startActivity(intent)
-
+            SessionManager.getInstance().createSession(Source.MENU, SupportUtils
+                .getSumoURLForTopic(activity, SupportUtils.SumoTopic.ADD_SEARCH_ENGINE))
+            activity.finish()
             TelemetryWrapper.addSearchEngineLearnMoreEvent()
         }
 

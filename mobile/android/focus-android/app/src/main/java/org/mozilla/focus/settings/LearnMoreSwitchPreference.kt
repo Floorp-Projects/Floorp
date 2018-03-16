@@ -1,5 +1,6 @@
 package org.mozilla.focus.settings
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
 import android.preference.SwitchPreference
@@ -8,7 +9,8 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.TextView
 import org.mozilla.focus.R
-import org.mozilla.focus.activity.InfoActivity
+import org.mozilla.focus.session.SessionManager
+import org.mozilla.focus.session.Source
 
 abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?) : SwitchPreference(context, attrs) {
     init {
@@ -34,8 +36,8 @@ abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?
         learnMoreLink.setOnClickListener {
             // This is a hardcoded link: if we ever end up needing more of these links, we should
             // move the link into an xml parameter, but there's no advantage to making it configurable now.
-            val intent = InfoActivity.getIntentFor(context, getLearnMoreUrl(), title.toString())
-            context.startActivity(intent)
+            SessionManager.getInstance().createSession(Source.MENU, getLearnMoreUrl())
+            (context as Activity).finish()
         }
 
         val backgroundDrawableArray = view.context.obtainStyledAttributes(intArrayOf(R.attr.selectableItemBackground))

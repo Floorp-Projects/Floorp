@@ -4,7 +4,6 @@
 
 package org.mozilla.focus.settings;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -14,12 +13,16 @@ import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment;
+import org.mozilla.focus.browser.LocalizedContent;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
+import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.session.Source;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.AppConstants;
+import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
 import java.util.Locale;
@@ -70,17 +73,18 @@ public class SettingsFragment extends BaseSettingsFragment implements SharedPref
         // used by PreferenceScreen to create the headers (with title, back navigation), so we wrap all these
         // "preference screens" into separate activities.
         if (preference.getKey().equals(resources.getString(R.string.pref_key_about))) {
-            final Intent intent = InfoActivity.getAboutIntent(getActivity());
-            startActivity(intent);
+            SessionManager.getInstance().createSession(Source.MENU, LocalizedContent.URL_ABOUT);
+            getActivity().onBackPressed();
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_help))) {
-            Intent helpIntent = InfoActivity.getHelpIntent(getActivity());
-            startActivity(helpIntent);
+            SessionManager.getInstance().createSession(Source.MENU, SupportUtils.HELP_URL);
+            getActivity().onBackPressed();
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_rights))) {
-            final Intent intent = InfoActivity.getRightsIntent(getActivity());
-            startActivity(intent);
+            SessionManager.getInstance().createSession(Source.MENU, LocalizedContent.URL_RIGHTS);
+            getActivity().onBackPressed();
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_privacy_notice))) {
-            final Intent intent = InfoActivity.getPrivacyNoticeIntent(getActivity());
-            startActivity(intent);
+            SessionManager.getInstance().createSession(Source.MENU, AppConstants.isKlarBuild() ?
+                    SupportUtils.PRIVACY_NOTICE_KLAR_URL : SupportUtils.PRIVACY_NOTICE_URL);
+            getActivity().onBackPressed();
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_search_engine))) {
             navigateToFragment(new InstalledSearchEnginesSettingsFragment());
             TelemetryWrapper.openSearchSettingsEvent();

@@ -46,7 +46,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.InstallFirefoxActivity;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.animation.TransitionDrawableGroup;
@@ -69,6 +68,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.Features;
 import org.mozilla.focus.utils.StatusBarUtils;
+import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
@@ -980,13 +980,12 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.help:
-                Intent helpIntent = InfoActivity.getHelpIntent(getActivity());
-                startActivity(helpIntent);
+                SessionManager.getInstance().createSession(Source.MENU, SupportUtils.HELP_URL);
                 break;
 
             case R.id.help_trackers:
-                Intent trackerHelpIntent = InfoActivity.getTrackerHelpIntent(getActivity());
-                startActivity(trackerHelpIntent);
+                SessionManager.getInstance().createSession(Source.MENU,
+                        SupportUtils.getSumoURLForTopic(getContext(), SupportUtils.SumoTopic.TRACKERS));
                 break;
 
             case R.id.add_to_homescreen:

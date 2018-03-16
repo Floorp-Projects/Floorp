@@ -31,7 +31,7 @@ public class FloatingActionButtonBehavior extends CoordinatorLayout.Behavior<Flo
         super();
 
         enabled = true;
-        visible = true;
+        visible = false;
     }
 
     public void setEnabled(boolean enabled) {
