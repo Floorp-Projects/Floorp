@@ -220,11 +220,6 @@ WMFAudioMFTManager::UpdateOutputType()
     mChannelsMap = AudioConfig::ChannelLayout::UNKNOWN_MAP;
   }
 
-  AudioConfig::ChannelLayout layout(mAudioChannels);
-  if (!layout.IsValid()) {
-    return E_FAIL;
-  }
-
   return S_OK;
 }
 
