@@ -1541,12 +1541,8 @@ pref("browser.tabs.remote.desktopbehavior", true);
 
 // For speculatively warming up tabs to improve perceived
 // performance while using the async tab switcher.
-#if defined(NIGHTLY_BUILD)
-pref("browser.tabs.remote.warmup.enabled", true);
-#else
+// Disabled until bug 1397426 is fixed.
 pref("browser.tabs.remote.warmup.enabled", false);
-#endif
-
 pref("browser.tabs.remote.warmup.maxTabs", 3);
 pref("browser.tabs.remote.warmup.unloadDelayMs", 2000);
 
