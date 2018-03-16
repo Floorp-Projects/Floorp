@@ -723,10 +723,10 @@ def write_special_casing_methods(unconditional_toupper, codepoint_table, println
             println(indent, '    return {};'.format(range_test_expr))
             println(indent, '}')
 
-    def write_CanUpperCaseSpecialCasing():
+    def write_ChangesWhenUpperCasedSpecialCasing():
         """ Checks if the input has a special upper case mapping. """
         println('bool')
-        println('js::unicode::CanUpperCaseSpecialCasing(char16_t ch)')
+        println('js::unicode::ChangesWhenUpperCasedSpecialCasing(char16_t ch)')
         println('{')
 
         assert unconditional_toupper, "|unconditional_toupper| is not empty"
@@ -816,7 +816,7 @@ def write_special_casing_methods(unconditional_toupper, codepoint_table, println
 
         println('}')
 
-    write_CanUpperCaseSpecialCasing()
+    write_ChangesWhenUpperCasedSpecialCasing()
     println('')
     write_LengthUpperCaseSpecialCasing()
     println('')
