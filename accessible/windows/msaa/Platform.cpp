@@ -280,6 +280,8 @@ GetInstantiatorExecutable(const DWORD aPid, nsIFile** aOutClientExe)
   return NS_SUCCEEDED(rv);
 }
 
+#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+
 /**
  * Appends version information in the format "|a.b.c.d".
  * If there is no version information, we append nothing.
@@ -333,7 +335,7 @@ AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend)
 }
 
 static void
-AccumulateInstantiatorTelemetry(nsIFile* aClientExe, const nsAString& aValue)
+AccumulateInstantiatorTelemetry(const nsAString& aValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -342,9 +344,11 @@ AccumulateInstantiatorTelemetry(nsIFile* aClientExe, const nsAString& aValue)
     Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS,
                          aValue);
 #endif // defined(MOZ_TELEMETRY_REPORTING)
+#if defined(MOZ_CRASHREPORTER)
     CrashReporter::
       AnnotateCrashReport(NS_LITERAL_CSTRING("AccessibilityClient"),
                           NS_ConvertUTF16toUTF8(aValue));
+#endif // defined(MOZ_CRASHREPORTER)
   }
 }
 
@@ -359,11 +363,10 @@ GatherInstantiatorTelemetry(nsIFile* aClientExe)
     AppendVersionInfo(aClientExe, value);
   }
 
-  nsCOMPtr<nsIFile> ref(aClientExe);
   nsCOMPtr<nsIRunnable> runnable(
     NS_NewRunnableFunction("a11y::AccumulateInstantiatorTelemetry",
-                           [ref, value]() -> void {
-                             AccumulateInstantiatorTelemetry(ref, value);
+                           [value]() -> void {
+                             AccumulateInstantiatorTelemetry(value);
                            }));
 
   // Now that we've (possibly) obtained version info, send the resulting
@@ -371,19 +374,34 @@ GatherInstantiatorTelemetry(nsIFile* aClientExe)
   NS_DispatchToMainThread(runnable);
 }
 
+#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+
 void
 a11y::SetInstantiator(const uint32_t aPid)
 {
   nsCOMPtr<nsIFile> clientExe;
   if (!GetInstantiatorExecutable(aPid, getter_AddRefs(clientExe))) {
-#if defined(MOZ_TELEMETRY_REPORTING)
-    AccumulateInstantiatorTelemetry(nullptr, NS_LITERAL_STRING("(Failed to retrieve client image name)"));
-#endif // defined(MOZ_TELEMETRY_REPORTING)
+#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
+    AccumulateInstantiatorTelemetry(NS_LITERAL_STRING("(Failed to retrieve client image name)"));
+#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
     return;
+  }
+
+  // Only record the instantiator if it is the first instantiator, or if it does
+  // not match the previous one. Some blocked clients are repeatedly requesting
+  // a11y over and over so we don't want to be spawning countless telemetry
+  // threads.
+  if (gInstantiator) {
+    bool equal;
+    nsresult rv = gInstantiator->Equals(clientExe, &equal);
+    if (NS_SUCCEEDED(rv) && equal) {
+      return;
+    }
   }
 
   gInstantiator = clientExe;
 
+#if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
   nsCOMPtr<nsIRunnable> runnable(
     NS_NewRunnableFunction("a11y::GatherInstantiatorTelemetry",
                            [clientExe]() -> void {
@@ -391,7 +409,8 @@ a11y::SetInstantiator(const uint32_t aPid)
                            }));
 
   nsCOMPtr<nsIThread> telemetryThread;
-  NS_NewThread(getter_AddRefs(telemetryThread), runnable);
+  NS_NewNamedThread("a11y telemetry", getter_AddRefs(telemetryThread), runnable);
+#endif // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
 }
 
 bool
