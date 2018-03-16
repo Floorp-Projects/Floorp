@@ -91,6 +91,7 @@ RemoteCompositorSession::Shutdown()
   mContentController = nullptr;
   if (mAPZ) {
     mAPZ->SetCompositorSession(nullptr);
+    mAPZ->Destroy();
   }
   mCompositorBridgeChild->Destroy();
   mCompositorBridgeChild = nullptr;

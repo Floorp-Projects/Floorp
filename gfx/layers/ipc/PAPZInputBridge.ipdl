@@ -1,0 +1,28 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PGPU;
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * This protocol is used to send input events from the UI process to the
+ * GPU process for handling by APZ. There is one instance per top-level
+ * compositor, or in other words, one instance per concrete APZCTreeManager
+ * instance. The child side lives on the main thread in the UI process,
+ * and the parent side lives on the main thread in the GPU process. If there
+ * is no GPU process, then this protocol is not instantiated.
+ */
+sync protocol PAPZInputBridge
+{
+manager PGPU;
+
+parent:
+  async __delete__();
+};
+
+} // namespace gfx
+} // namespace mozilla

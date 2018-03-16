@@ -9,6 +9,7 @@
 #include "InputData.h"                  // for InputData
 #include "mozilla/dom/TabParent.h"      // for TabParent
 #include "mozilla/layers/APZCCallbackHelper.h" // for APZCCallbackHelper
+#include "mozilla/layers/APZInputBridgeChild.h" // for APZInputBridgeChild
 #include "mozilla/layers/RemoteCompositorSession.h" // for RemoteCompositorSession
 
 namespace mozilla {
@@ -19,6 +20,10 @@ APZCTreeManagerChild::APZCTreeManagerChild()
 {
 }
 
+APZCTreeManagerChild::~APZCTreeManagerChild()
+{
+}
+
 void
 APZCTreeManagerChild::SetCompositorSession(RemoteCompositorSession* aSession)
 {
@@ -26,6 +31,26 @@ APZCTreeManagerChild::SetCompositorSession(RemoteCompositorSession* aSession)
   // we're setting mCompositorSession or we're clearing it).
   MOZ_ASSERT(!mCompositorSession ^ !aSession);
   mCompositorSession = aSession;
+}
+
+void
+APZCTreeManagerChild::SetInputBridge(APZInputBridgeChild* aInputBridge)
+{
+  // The input bridge only exists from the UI process to the GPU process.
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(!mInputBridge);
+
+  mInputBridge = aInputBridge;
+}
+
+void
+APZCTreeManagerChild::Destroy()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mInputBridge) {
+    mInputBridge->Destroy();
+    mInputBridge = nullptr;
+  }
 }
 
 nsEventStatus
