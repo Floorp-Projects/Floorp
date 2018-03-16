@@ -80,7 +80,35 @@ private:
   // the frame goes away). Thus we maintain hashtables going both ways.  These
   // should always be in sync.
 
-  typedef nsTArray<nsIFrame*> FrameSet;
+  // We also associate flags alongside frames in the request-to-frames hashmap.
+  // These are used for special handling of events for requests.
+  typedef uint32_t FrameFlags;
+
+  struct FrameWithFlags {
+    FrameWithFlags(nsIFrame* aFrame)
+    : mFrame(aFrame),
+      mFlags(0)
+    {
+      MOZ_ASSERT(mFrame);
+    }
+    nsIFrame* const mFrame;
+    FrameFlags mFlags;
+  };
+
+  // A helper class to compare FrameWithFlags by comparing mFrame and
+  // ignoring mFlags.
+  class FrameOnlyComparator {
+    public:
+      bool Equals(const FrameWithFlags& aElem1,
+                  const FrameWithFlags& aElem2) const
+      { return aElem1.mFrame == aElem2.mFrame; }
+
+      bool LessThan(const FrameWithFlags& aElem1,
+                    const FrameWithFlags& aElem2) const
+      { return aElem1.mFrame < aElem2.mFrame; }
+  };
+
+  typedef nsTArray<FrameWithFlags> FrameSet;
   typedef nsTArray<nsCOMPtr<imgIRequest> > RequestSet;
   typedef nsTHashtable<nsPtrHashKey<Image> > ImageHashSet;
   typedef nsClassHashtable<nsISupportsHashKey,
