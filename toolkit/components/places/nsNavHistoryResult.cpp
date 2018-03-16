@@ -4083,13 +4083,13 @@ nsNavHistoryResult::StopObserving()
  * register ourselves.
  */
 nsresult
-nsNavHistoryResult::Init(nsINavHistoryQuery** aQueries,
+nsNavHistoryResult::Init(nsCOMArray<nsNavHistoryQuery>& aQueries,
                          uint32_t aQueryCount,
                          nsNavHistoryQueryOptions *aOptions)
 {
   nsresult rv;
   NS_ASSERTION(aOptions, "Must have valid options");
-  NS_ASSERTION(aQueries && aQueryCount > 0, "Must have >1 query in result");
+  NS_ASSERTION(aQueries.Count() == aQueryCount && aQueryCount > 0, "Must have >1 query in result");
 
   // Fill saved source queries with copies of the original (the caller might
   // change their original objects, and we always want to reflect the source
@@ -4119,7 +4119,7 @@ nsNavHistoryResult::Init(nsINavHistoryQuery** aQueries,
  * Constructs a new history result object.
  */
 nsresult // static
-nsNavHistoryResult::NewHistoryResult(nsINavHistoryQuery** aQueries,
+nsNavHistoryResult::NewHistoryResult(nsCOMArray<nsNavHistoryQuery>& aQueries,
                                      uint32_t aQueryCount,
                                      nsNavHistoryQueryOptions* aOptions,
                                      nsNavHistoryContainerResultNode* aRoot,

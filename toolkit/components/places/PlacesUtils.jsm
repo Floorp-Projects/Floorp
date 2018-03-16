@@ -1314,9 +1314,7 @@ var PlacesUtils = {
     this.history.queryStringToQueries(aNode.uri, queries, {}, options);
     options.value.excludeItems = aExcludeItems;
     options.value.expandQueries = aExpandQueries;
-    return this.history.executeQueries(queries.value,
-                                       queries.value.length,
-                                       options.value).root;
+    return this.history.executeQuery(queries.value[0], options.value).root;
   },
 
   /**

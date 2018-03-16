@@ -421,13 +421,9 @@ var DownloadHistoryList = function(publicList, place) {
   publicList.addView(this).catch(Cu.reportError);
   let queries = {}, options = {};
   PlacesUtils.history.queryStringToQueries(place, queries, {}, options);
-  if (!queries.value.length) {
-    queries.value = [PlacesUtils.history.getNewQuery()];
-  }
+  let query = queries.value.length ? queries.value[0] : PlacesUtils.history.getNewQuery();
 
-  let result = PlacesUtils.history.executeQueries(queries.value,
-                                                  queries.value.length,
-                                                  options.value);
+  let result = PlacesUtils.history.executeQuery(query, options.value);
   result.addObserver(this);
 };
 
