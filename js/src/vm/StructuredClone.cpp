@@ -2833,33 +2833,6 @@ JSAutoStructuredCloneBuffer::clear()
     version_ = 0;
 }
 
-bool
-JSAutoStructuredCloneBuffer::copy(JSContext* cx, const JSStructuredCloneData& srcData,
-                                  uint32_t version, const JSStructuredCloneCallbacks* callbacks,
-                                  void* closure)
-{
-    // transferable objects cannot be copied
-    if (StructuredCloneHasTransferObjects(srcData))
-        return false;
-
-    clear();
-
-    auto iter = srcData.Iter();
-    while (!iter.Done()) {
-        if (!data_.WriteBytes(iter.Data(), iter.RemainingInSegment()))
-            return false;
-        iter.Advance(srcData, iter.RemainingInSegment());
-    }
-
-    version_ = version;
-
-    if (!data_.refsHeld_.acquireAll(cx, srcData.refsHeld_))
-        return false;
-
-    data_.setCallbacks(callbacks, closure, OwnTransferablePolicy::NoTransferables);
-    return true;
-}
-
 void
 JSAutoStructuredCloneBuffer::adopt(JSStructuredCloneData&& data, uint32_t version,
                                    const JSStructuredCloneCallbacks* callbacks,
