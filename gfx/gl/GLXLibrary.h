@@ -12,7 +12,6 @@ typedef realGLboolean GLboolean;
 
 // stuff from glx.h
 #include "X11/Xlib.h"
-#include "X11/Xutil.h" // for XVisualInfo
 typedef struct __GLXcontextRec* GLXContext;
 typedef XID GLXPixmap;
 typedef XID GLXDrawable;
@@ -85,9 +84,6 @@ public:
 
     GLXFBConfig* fChooseFBConfig(Display* display, int screen, const int* attrib_list, int* nelements) const
         WRAP(    fChooseFBConfig(display, screen, attrib_list, nelements) )
-
-    XVisualInfo* fChooseVisual(Display* display, int screen, int* attrib_list) const
-        WRAP(    fChooseVisual(display, screen, attrib_list) )
 
     GLXFBConfig* fGetFBConfigs(Display* display, int screen, int* nelements) const
         WRAP(    fGetFBConfigs(display, screen, nelements) )
@@ -181,7 +177,6 @@ private:
         GLXContext   (GLAPIENTRY *fGetCurrentContext) ();
         void*        (GLAPIENTRY *fGetProcAddress) (const char*);
         GLXFBConfig* (GLAPIENTRY *fChooseFBConfig) (Display*, int, const int*, int*);
-        XVisualInfo* (GLAPIENTRY *fChooseVisual) (Display*, int, const int*);
         GLXFBConfig* (GLAPIENTRY *fGetFBConfigs) (Display*, int, int*);
         GLXContext   (GLAPIENTRY *fCreateNewContext) (Display*, GLXFBConfig, int,
                                                       GLXContext, Bool);
