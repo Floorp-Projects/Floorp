@@ -212,18 +212,22 @@ StyleSheet::SetComplete()
                "Can't complete a sheet that's already been forced "
                "unique.");
   SheetInfo().mComplete = true;
-  if (mDocument && !mDisabled) {
-    // Let the document know
+  if (!mDisabled) {
+    ApplicableStateChanged(true);
+  }
+}
+
+void
+StyleSheet::ApplicableStateChanged(bool aApplicable)
+{
+  if (mDocument) {
     mDocument->BeginUpdate(UPDATE_STYLE);
-    mDocument->SetStyleSheetApplicableState(this, true);
+    mDocument->SetStyleSheetApplicableState(this, aApplicable);
     mDocument->EndUpdate(UPDATE_STYLE);
   }
 
-  if (mOwningNode && !mDisabled &&
-      mOwningNode->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
-      mOwningNode->IsContent()) {
-    dom::ShadowRoot* shadowRoot = mOwningNode->AsContent()->GetContainingShadow();
-    shadowRoot->StyleSheetChanged();
+  if (dom::ShadowRoot* shadow = GetContainingShadow()) {
+    shadow->StyleSheetApplicableStateChanged(*this, aApplicable);
   }
 }
 
@@ -236,10 +240,7 @@ StyleSheet::SetEnabled(bool aEnabled)
 
   if (IsComplete() && oldDisabled != mDisabled) {
     EnabledStateChanged();
-
-    if (mDocument) {
-      mDocument->SetStyleSheetApplicableState(this, !mDisabled);
-    }
+    ApplicableStateChanged(!mDisabled);
   }
 }
 
@@ -551,11 +552,24 @@ StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex)
   return NS_OK;
 }
 
-#define NOTIFY_STYLE_SETS(function_, args_) do {          \
+dom::ShadowRoot*
+StyleSheet::GetContainingShadow() const
+{
+  if (!mOwningNode || !mOwningNode->IsContent()) {
+    return nullptr;
+  }
+
+  return mOwningNode->AsContent()->GetContainingShadow();
+}
+
+#define NOTIFY(function_, args_) do {                     \
   StyleSheet* current = this;                             \
   do {                                                    \
     for (StyleSetHandle handle : current->mStyleSets) {   \
       handle->function_ args_;                            \
+    }                                                     \
+    if (auto* shadow = current->GetContainingShadow()) {  \
+      shadow->function_ args_;                            \
     }                                                     \
     current = current->mParent;                           \
   } while (current);                                      \
@@ -566,7 +580,7 @@ StyleSheet::RuleAdded(css::Rule& aRule)
 {
   DidDirty();
   mDirtyFlags |= MODIFIED_RULES;
-  NOTIFY_STYLE_SETS(RuleAdded, (*this, aRule));
+  NOTIFY(RuleAdded, (*this, aRule));
 
   if (mDocument) {
     mDocument->StyleRuleAdded(this, &aRule);
@@ -578,7 +592,7 @@ StyleSheet::RuleRemoved(css::Rule& aRule)
 {
   DidDirty();
   mDirtyFlags |= MODIFIED_RULES;
-  NOTIFY_STYLE_SETS(RuleRemoved, (*this, aRule));
+  NOTIFY(RuleRemoved, (*this, aRule));
 
   if (mDocument) {
     mDocument->StyleRuleRemoved(this, &aRule);
@@ -590,7 +604,7 @@ StyleSheet::RuleChanged(css::Rule* aRule)
 {
   DidDirty();
   mDirtyFlags |= MODIFIED_RULES;
-  NOTIFY_STYLE_SETS(RuleChanged, (*this, aRule));
+  NOTIFY(RuleChanged, (*this, aRule));
 
   if (mDocument) {
     mDocument->StyleRuleChanged(this, aRule);
