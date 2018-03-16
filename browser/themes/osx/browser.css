@@ -452,10 +452,10 @@ html|input.urlbar-input {
   margin-inline-start: 8px;
 }
 
-/* The following elements come from editBookmarkOverlay.xul. Styling that's
+/* The following elements come from editBookmarkPanel.inc.xul. Styling that's
    specific to the editBookmarkPanel should be in browser.css. Styling that
-   should be shared by all editBookmarkOverlay.xul consumers should be in
-   editBookmarkOverlay.css. */
+   should be shared by all editBookmarkPanel.inc.xul consumers should be in
+   editBookmark.css. */
 
 #editBMPanel_newFolderBox {
   background: linear-gradient(#fff, #f2f2f2);

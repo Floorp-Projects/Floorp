@@ -13,6 +13,8 @@
 <?xml-stylesheet href="chrome://browser/skin/controlcenter/panel.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/customizableui/panelUI.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/downloads/downloads.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/tabbrowser.css" type="text/css"?>
 
@@ -223,7 +225,7 @@
           <description id="editBookmarkPanelDescription"/>
         </vbox>
       </row>
-      <vbox id="editBookmarkPanelContent" flex="1" hidden="true"/>
+#include ../../components/places/content/editBookmarkPanel.inc.xul
       <hbox id="editBookmarkPanelBottomButtons" pack="end">
 #ifndef XP_UNIX
         <button id="editBookmarkPanelDoneButton"
