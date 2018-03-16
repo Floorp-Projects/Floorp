@@ -16,26 +16,14 @@ pref-page =
            *[other] Preferences
         }
 
-# This string is currently used only in Firefox 60 and will be removed when not
-# needed for x-channel. See bug 1445686 for details.
-search-input =
-    .style = width: 15.4em
-
 # This is used to determine the width of the search field in about:preferences,
 # in order to make the entire placeholder string visible
-#
-# Please keep the placeholder string short to avoid truncation.
 #
 # Notice: The value of the `.style` attribute is a CSS string, and the `width`
 # is the name of the CSS property. It is intended only to adjust the element's width.
 # Do not translate.
-search-input-box =
+search-input =
     .style = width: 15.4em
-    .placeholder =
-        { PLATFORM() ->
-            [windows] Find in Options
-           *[other] Find in Preferences
-        }
 
 policies-notice =
     { PLATFORM() ->
@@ -76,18 +64,6 @@ should-restart-title = Restart { -brand-short-name }
 should-restart-ok = Restart { -brand-short-name } now
 cancel-no-restart-button = Cancel
 restart-later = Restart Later
-
-## Preferences UI Search Results
-
-search-results-header = Search Results
-
-search-results-sorry-message =
-    { PLATFORM() ->
-        [windows] Sorry! There are no results in Options for “{ $query }”.
-       *[other] Sorry! There are no results in Preferences for “{ $query }”.
-    }
-
-search-results-need-help = Need help? Visit <a>{ -brand-short-name } Support</a>
 
 ## General Section
 
