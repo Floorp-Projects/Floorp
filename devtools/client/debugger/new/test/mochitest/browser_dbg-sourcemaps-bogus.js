@@ -3,11 +3,10 @@
 
 // Test that an error while loading a sourcemap does not break
 // debugging.
+requestLongerTimeout(2);
 
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  requestLongerTimeout(2);
-
   const dbg = await initDebugger("doc-sourcemap-bogus.html");
   const { selectors: { getSources }, getState } = dbg;
 

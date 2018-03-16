@@ -5,13 +5,12 @@
  * This if the debugger's layout is correctly modified when the toolbox's
  * host changes.
  */
+requestLongerTimeout(2);
 
 var gDefaultHostType = Services.prefs.getCharPref("devtools.toolbox.host");
 
 add_task(async function() {
   // test is too slow on some platforms due to the number of test cases
-  requestLongerTimeout(2);
-
   const dbg = await initDebugger("doc-iframes.html");
 
   const layouts = [
