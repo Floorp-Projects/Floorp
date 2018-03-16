@@ -3957,24 +3957,25 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
     MOZ_ASSERT(!aBookmarkGuid.IsEmpty());
   }
 
-  nsCOMArray<nsNavHistoryQuery> queries;
-  nsCOMPtr<nsNavHistoryQueryOptions> options;
-  nsresult rv = QueryStringToQueryArray(aURI, &queries,
-                                        getter_AddRefs(options));
-
+  nsCOMPtr<nsINavHistoryQuery> query;
+  nsCOMPtr<nsINavHistoryQueryOptions> options;
+  nsresult rv = QueryStringToQuery(aURI, getter_AddRefs(query),
+                                   getter_AddRefs(options));
   RefPtr<nsNavHistoryResultNode> resultNode;
+  RefPtr<nsNavHistoryQuery> queryObj = do_QueryObject(query);
+  NS_ENSURE_STATE(queryObj);
+  RefPtr<nsNavHistoryQueryOptions> optionsObj = do_QueryObject(options);
+  NS_ENSURE_STATE(optionsObj);
   // If this failed the query does not parse correctly, let the error pass and
   // handle it later.
   if (NS_SUCCEEDED(rv)) {
     // Check if this is a folder shortcut, so we can take a faster path.
-    RefPtr<nsNavHistoryQuery> query = do_QueryObject(queries[0]);
-    NS_ENSURE_STATE(query);
-    int64_t targetFolderId = GetSimpleBookmarksQueryFolder(query, options);
+    int64_t targetFolderId = GetSimpleBookmarksQueryFolder(queryObj, optionsObj);
     if (targetFolderId) {
       nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
       NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
 
-      rv = bookmarks->ResultNodeForContainer(targetFolderId, options,
+      rv = bookmarks->ResultNodeForContainer(targetFolderId, optionsObj,
                                              getter_AddRefs(resultNode));
       // If this failed the shortcut is pointing to nowhere, let the error pass
       // and handle it later.
@@ -3996,7 +3997,9 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
     }
     else {
       // This is a regular query.
-      resultNode = new nsNavHistoryQueryResultNode(aTitle, aTime, queries, options);
+      nsCOMArray<nsNavHistoryQuery> queries;
+      queries.AppendObject(queryObj);
+      resultNode = new nsNavHistoryQueryResultNode(aTitle, aTime, queries, optionsObj);
       resultNode->mItemId = itemId;
       resultNode->mBookmarkGuid = aBookmarkGuid;
     }
