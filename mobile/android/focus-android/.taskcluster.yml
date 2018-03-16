@@ -74,6 +74,7 @@ tasks:
       - "secrets:get:project/focus/preview-key-store"
       - "queue:route:index.project.focus.android.preview-builds"
       - "secrets:get:project/focus/firebase"
+      - "secrets:get:project/focus/nimbledroid"
     payload:
       maxRunTime: 3600
       deadline: "{{ '2 hours' | $fromNow }}"

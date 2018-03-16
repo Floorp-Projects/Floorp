@@ -10,7 +10,6 @@
 set -ex
 
 # download the login JSON token info from taskcluster
-# (Commented out since secrets need to be added into TC in the right place)
 python tools/taskcluster/get-google-firebase-token.py
 
 # this is where the Google Testcloud project ID is set

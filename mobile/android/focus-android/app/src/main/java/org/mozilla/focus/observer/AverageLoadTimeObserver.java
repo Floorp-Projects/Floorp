@@ -8,7 +8,6 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.architecture.NonNullObserver;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
@@ -34,10 +33,6 @@ public class AverageLoadTimeObserver extends NonNullObserver<Boolean> {
                         " - page load start");
                 loadStarted = true;
 
-                // Add Nimbledroid start bookend for loading website
-                Log.i("NimbleDroidV1", "Scenario.begin " +
-                        BuildConfig.FLAVOR + "_" +
-                        session.getUrl().getValue() + "_load");
             }
         } else {
             if (loadStarted) {
@@ -48,11 +43,6 @@ public class AverageLoadTimeObserver extends NonNullObserver<Boolean> {
                 Log.i(LOG_TAG, (endTime - startLoadTime) + " - elapsed load");
                 TelemetryWrapper.addLoadToAverage(endTime - startLoadTime);
                 loadStarted = false;
-
-                // Add Nimbledroid start bookend for loading website
-                Log.i("NimbleDroidV1", "Scenario.end " +
-                        BuildConfig.FLAVOR + "_" +
-                        session.getUrl().getValue() + "_load");
             }
         }
     }
