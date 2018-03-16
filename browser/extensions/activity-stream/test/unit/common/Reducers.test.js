@@ -1,5 +1,5 @@
 import {INITIAL_STATE, insertPinned, reducers} from "common/Reducers.jsm";
-const {TopSites, App, Snippets, Prefs, Dialog, Sections} = reducers;
+const {TopSites, App, Snippets, Prefs, Dialog, Sections, PreferencesPane} = reducers;
 import {actionTypes as at} from "common/Actions.jsm";
 
 describe("Reducers", () => {
@@ -527,6 +527,21 @@ describe("Reducers", () => {
     it("should clear the blocklist on SNIPPETS_BLOCKLIST_CLEARED", () => {
       const state = Snippets({blockList: [1, 2]}, {type: at.SNIPPETS_BLOCKLIST_CLEARED});
       assert.deepEqual(state.blockList, []);
+    });
+  });
+  describe("PreferencesPane", () => {
+    it("should return INITIAL_STATE by default", () => {
+      assert.equal(INITIAL_STATE.PreferencesPane, PreferencesPane(undefined, {type: "non_existent"}));
+    });
+    it("should toggle visible to true on SETTINGS_OPEN", () => {
+      const action = {type: at.SETTINGS_OPEN};
+      const nextState = PreferencesPane(INITIAL_STATE.PreferencesPane, action);
+      assert.isTrue(nextState.visible);
+    });
+    it("should toggle visible to false on SETTINGS_CLOSE", () => {
+      const action = {type: at.SETTINGS_CLOSE};
+      const nextState = PreferencesPane(INITIAL_STATE.PreferencesPane, action);
+      assert.isFalse(nextState.visible);
     });
   });
 });
