@@ -613,8 +613,8 @@ def make_non_bmp_file(version,
         non_bmp_file.write(warning_message)
         non_bmp_file.write(unicode_version_message.format(version))
         non_bmp_file.write("""
-#ifndef vm_UnicodeNonBMP_h
-#define vm_UnicodeNonBMP_h
+#ifndef util_UnicodeNonBMP_h
+#define util_UnicodeNonBMP_h
 
 // |macro| receives the following arguments
 //   macro(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF)
@@ -637,7 +637,7 @@ def make_non_bmp_file(version,
         make_non_bmp_convert_macro(non_bmp_file, 'REV_CASE_FOLDING', non_bmp_rev_folding_map, codepoint_table)
 
         non_bmp_file.write("""
-#endif /* vm_UnicodeNonBMP_h */
+#endif /* util_UnicodeNonBMP_h */
 """)
 
 def write_special_casing_methods(unconditional_toupper, codepoint_table, println):
@@ -882,7 +882,7 @@ def make_bmp_mapping_test(version, codepoint_table, unconditional_tolower, uncon
     def unicodeEsc(n):
         return '\u{:04X}'.format(n)
 
-    file_name = '../tests/ecma_5/String/string-upper-lower-mapping.js'
+    file_name = '../tests/non262/String/string-upper-lower-mapping.js'
     with io.open(file_name, mode='wb') as output:
         write = partial(print, file=output, sep='', end='')
         println = partial(print, file=output, sep='', end='\n')
@@ -919,7 +919,7 @@ if (typeof reportCompare === "function")
 """)
 
 def make_non_bmp_mapping_test(version, non_bmp_upper_map, non_bmp_lower_map, codepoint_table):
-    file_name = '../tests/ecma_6/String/string-code-point-upper-lower-mapping.js'
+    file_name = '../tests/non262/String/string-code-point-upper-lower-mapping.js'
     with io.open(file_name, mode='wb') as test_non_bmp_mapping:
         test_non_bmp_mapping.write(warning_message)
         test_non_bmp_mapping.write(unicode_version_message.format(version))
@@ -946,7 +946,7 @@ def make_space_test(version, test_space_table, codepoint_table):
     def hex_and_name(c):
         return '    0x{:04X} /* {} */'.format(c, codepoint_table.name(c))
 
-    file_name = '../tests/ecma_5/String/string-space-trim.js'
+    file_name = '../tests/non262/String/string-space-trim.js'
     with io.open(file_name, mode='wb') as test_space:
         test_space.write(warning_message)
         test_space.write(unicode_version_message.format(version))
@@ -968,7 +968,7 @@ def make_regexp_space_test(version, test_space_table, codepoint_table):
     def hex_and_name(c):
         return '    0x{:04X} /* {} */'.format(c, codepoint_table.name(c))
 
-    file_name = '../tests/ecma_6/RegExp/character-class-escape-s.js'
+    file_name = '../tests/non262/RegExp/character-class-escape-s.js'
     with io.open(file_name, mode='wb') as test_space:
         test_space.write(warning_message)
         test_space.write(unicode_version_message.format(version))
@@ -1002,7 +1002,7 @@ def make_icase_test(version, folding_tests, codepoint_table):
     def char_hex(c):
         return '0x{:04X}'.format(c)
 
-    file_name = '../tests/ecma_6/RegExp/unicode-ignoreCase.js'
+    file_name = '../tests/non262/RegExp/unicode-ignoreCase.js'
     with io.open(file_name, mode='wb') as test_icase:
         test_icase.write(warning_message)
         test_icase.write(unicode_version_message.format(version))
@@ -1179,7 +1179,7 @@ def make_unicode_file(version,
         write(warning_message)
         write(unicode_version_message.format(version))
         write(public_domain)
-        println('#include "vm/Unicode.h"')
+        println('#include "util/Unicode.h"')
         println('')
         println('using namespace js;')
         println('using namespace js::unicode;')
@@ -1577,9 +1577,9 @@ def update_unicode(args):
 if __name__ == '__main__':
     import argparse
 
-    # This script must be run from js/src/vm to work correctly.
-    if '/'.join(os.path.normpath(os.getcwd()).split(os.sep)[-3:]) != 'js/src/vm':
-        raise RuntimeError('%s must be run from js/src/vm' % sys.argv[0])
+    # This script must be run from js/src/util to work correctly.
+    if '/'.join(os.path.normpath(os.getcwd()).split(os.sep)[-3:]) != 'js/src/util':
+        raise RuntimeError('%s must be run from js/src/util' % sys.argv[0])
 
     parser = argparse.ArgumentParser(description='Update Unicode data.')
 
