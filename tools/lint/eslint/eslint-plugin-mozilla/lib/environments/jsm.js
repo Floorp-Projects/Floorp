@@ -60,7 +60,6 @@ module.exports = {
     "MatchGlob": false,
     "MatchPattern": false,
     "MatchPatternSet": false,
-    "MessageChannel": false,
     "MessageEvent": false,
     "MessagePort": false,
     "PrecompiledScript": false,
