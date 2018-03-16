@@ -242,8 +242,6 @@ namespace PlacesFolderConversion {
   }
 } // namespace PlacesFolderConversion
 
-//    From C++ places code, you should use QueryStringToQueryArray, this is
-//    the harder-to-use XPCOM version.
 
 NS_IMETHODIMP
 nsNavHistory::QueryStringToQuery(const nsACString& aQueryString,
@@ -253,61 +251,23 @@ nsNavHistory::QueryStringToQuery(const nsACString& aQueryString,
   NS_ENSURE_ARG_POINTER(_query);
   NS_ENSURE_ARG_POINTER(_options);
 
-  nsCOMPtr<nsNavHistoryQueryOptions> options;
-  nsCOMArray<nsNavHistoryQuery> queries;
-  nsresult rv = QueryStringToQueryArray(aQueryString, &queries,
-                                        getter_AddRefs(options));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsINavHistoryQuery> query;
-  if (queries.Count() == 0) {
-    NS_WARNING("Invalid Places query: ");
-    NS_WARNING(PromiseFlatCString(aQueryString).get());
-    query = new nsNavHistoryQuery();
-    options = new nsNavHistoryQueryOptions();
-  } else {
-    query = do_QueryInterface(queries[0]);
-  }
-  MOZ_ASSERT(query);
-  query.forget(_query);
-  options.forget(_options);
-  return NS_OK;
-}
-
-
-// nsNavHistory::QueryStringToQueryArray
-//
-//    An internal version of QueryStringToQueries that fills a COM array for
-//    ease-of-use.
-
-nsresult
-nsNavHistory::QueryStringToQueryArray(const nsACString& aQueryString,
-                                      nsCOMArray<nsNavHistoryQuery>* aQueries,
-                                      nsNavHistoryQueryOptions** aOptions)
-{
-  nsresult rv;
-  aQueries->Clear();
-  *aOptions = nullptr;
-
-  RefPtr<nsNavHistoryQueryOptions> options(new nsNavHistoryQueryOptions());
-  if (! options)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   nsTArray<QueryKeyValuePair> tokens;
-  rv = TokenizeQueryString(aQueryString, &tokens);
+  nsresult rv = TokenizeQueryString(aQueryString, &tokens);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = TokensToQueries(tokens, aQueries, options);
+  RefPtr<nsNavHistoryQueryOptions> options = new nsNavHistoryQueryOptions();
+  RefPtr<nsNavHistoryQuery> query = new nsNavHistoryQuery();
+  rv = TokensToQuery(tokens, query, options);
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "The query string should be valid");
   if (NS_FAILED(rv)) {
     NS_WARNING("Unable to parse the query string: ");
     NS_WARNING(PromiseFlatCString(aQueryString).get());
-    return rv;
   }
 
-  options.forget(aOptions);
+  options.forget(_options);
+  query.forget(_query);
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
@@ -596,23 +556,15 @@ TokenizeQueryString(const nsACString& aQuery,
   return NS_OK;
 }
 
-// nsNavHistory::TokensToQueries
-
 nsresult
-nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
-                              nsCOMArray<nsNavHistoryQuery>* aQueries,
-                              nsNavHistoryQueryOptions* aOptions)
+nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
+                            nsNavHistoryQuery* aQuery,
+                            nsNavHistoryQueryOptions* aOptions)
 {
   nsresult rv;
 
-  nsCOMPtr<nsNavHistoryQuery> query(new nsNavHistoryQuery());
-  if (! query)
-    return NS_ERROR_OUT_OF_MEMORY;
-  if (! aQueries->AppendObject(query))
-    return NS_ERROR_OUT_OF_MEMORY;
-
   if (aTokens.Length() == 0)
-    return NS_OK; // nothing to do
+    return NS_OK;
 
   nsTArray<int64_t> folders;
   nsTArray<nsString> tags;
@@ -622,32 +574,32 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // begin time
     if (kvp.key.EqualsLiteral(QUERYKEY_BEGIN_TIME)) {
-      SetQueryKeyInt64(kvp.value, query, &nsINavHistoryQuery::SetBeginTime);
+      SetQueryKeyInt64(kvp.value, aQuery, &nsINavHistoryQuery::SetBeginTime);
 
     // begin time reference
     } else if (kvp.key.EqualsLiteral(QUERYKEY_BEGIN_TIME_REFERENCE)) {
-      SetQueryKeyUint32(kvp.value, query, &nsINavHistoryQuery::SetBeginTimeReference);
+      SetQueryKeyUint32(kvp.value, aQuery, &nsINavHistoryQuery::SetBeginTimeReference);
 
     // end time
     } else if (kvp.key.EqualsLiteral(QUERYKEY_END_TIME)) {
-      SetQueryKeyInt64(kvp.value, query, &nsINavHistoryQuery::SetEndTime);
+      SetQueryKeyInt64(kvp.value, aQuery, &nsINavHistoryQuery::SetEndTime);
 
     // end time reference
     } else if (kvp.key.EqualsLiteral(QUERYKEY_END_TIME_REFERENCE)) {
-      SetQueryKeyUint32(kvp.value, query, &nsINavHistoryQuery::SetEndTimeReference);
+      SetQueryKeyUint32(kvp.value, aQuery, &nsINavHistoryQuery::SetEndTimeReference);
 
     // search terms
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SEARCH_TERMS)) {
       nsCString unescapedTerms = kvp.value;
       NS_UnescapeURL(unescapedTerms); // modifies input
-      rv = query->SetSearchTerms(NS_ConvertUTF8toUTF16(unescapedTerms));
+      rv = aQuery->SetSearchTerms(NS_ConvertUTF8toUTF16(unescapedTerms));
       NS_ENSURE_SUCCESS(rv, rv);
 
     // min visits
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MIN_VISITS)) {
       int32_t visits = kvp.value.ToInteger(&rv);
       if (NS_SUCCEEDED(rv))
-        query->SetMinVisits(visits);
+        aQuery->SetMinVisits(visits);
       else
         NS_WARNING("Bad number for minVisits in query");
 
@@ -655,23 +607,23 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_VISITS)) {
       int32_t visits = kvp.value.ToInteger(&rv);
       if (NS_SUCCEEDED(rv))
-        query->SetMaxVisits(visits);
+        aQuery->SetMaxVisits(visits);
       else
         NS_WARNING("Bad number for maxVisits in query");
 
     // onlyBookmarked flag
     } else if (kvp.key.EqualsLiteral(QUERYKEY_ONLY_BOOKMARKED)) {
-      SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetOnlyBookmarked);
+      SetQueryKeyBool(kvp.value, aQuery, &nsINavHistoryQuery::SetOnlyBookmarked);
 
     // domainIsHost flag
     } else if (kvp.key.EqualsLiteral(QUERYKEY_DOMAIN_IS_HOST)) {
-      SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetDomainIsHost);
+      SetQueryKeyBool(kvp.value, aQuery, &nsINavHistoryQuery::SetDomainIsHost);
 
     // domain string
     } else if (kvp.key.EqualsLiteral(QUERYKEY_DOMAIN)) {
       nsAutoCString unescapedDomain(kvp.value);
       NS_UnescapeURL(unescapedDomain); // modifies input
-      rv = query->SetDomain(unescapedDomain);
+      rv = aQuery->SetDomain(unescapedDomain);
       NS_ENSURE_SUCCESS(rv, rv);
 
     // folders
@@ -696,22 +648,22 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
       if (NS_FAILED(rv)) {
         NS_WARNING("Unable to parse URI");
       }
-      rv = query->SetUri(uri);
+      rv = aQuery->SetUri(uri);
       NS_ENSURE_SUCCESS(rv, rv);
 
     // not annotation
     } else if (kvp.key.EqualsLiteral(QUERYKEY_NOTANNOTATION)) {
       nsAutoCString unescaped(kvp.value);
       NS_UnescapeURL(unescaped); // modifies input
-      query->SetAnnotationIsNot(true);
-      query->SetAnnotation(unescaped);
+      aQuery->SetAnnotationIsNot(true);
+      aQuery->SetAnnotation(unescaped);
 
     // annotation
     } else if (kvp.key.EqualsLiteral(QUERYKEY_ANNOTATION)) {
       nsAutoCString unescaped(kvp.value);
       NS_UnescapeURL(unescaped); // modifies input
-      query->SetAnnotationIsNot(false);
-      query->SetAnnotation(unescaped);
+      aQuery->SetAnnotationIsNot(false);
+      aQuery->SetAnnotation(unescaped);
 
     // tag
     } else if (kvp.key.EqualsLiteral(QUERYKEY_TAG)) {
@@ -724,7 +676,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // not tags
     } else if (kvp.key.EqualsLiteral(QUERYKEY_NOTTAGS)) {
-      SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetTagsAreNot);
+      SetQueryKeyBool(kvp.value, aQuery, &nsINavHistoryQuery::SetTagsAreNot);
 
     // transition
     } else if (kvp.key.EqualsLiteral(QUERYKEY_TRANSITION)) {
@@ -796,15 +748,15 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
   }
 
   if (folders.Length() != 0)
-    query->SetFolders(folders.Elements(), folders.Length());
+    aQuery->SetFolders(folders.Elements(), folders.Length());
 
   if (tags.Length() > 0) {
-    rv = query->SetTags(tags);
+    rv = aQuery->SetTags(tags);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (transitions.Length() > 0) {
-    rv = query->SetTransitions(transitions);
+    rv = aQuery->SetTransitions(transitions);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

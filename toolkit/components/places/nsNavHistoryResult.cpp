@@ -2004,10 +2004,16 @@ nsNavHistoryQueryResultNode::VerifyQueriesParsed()
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = history->QueryStringToQueryArray(mURI, &mQueries,
-                                                 getter_AddRefs(mOptions));
+  nsCOMPtr<nsINavHistoryQuery> query;
+  nsCOMPtr<nsINavHistoryQueryOptions> options;
+  nsresult rv = history->QueryStringToQuery(mURI, getter_AddRefs(query),
+                                            getter_AddRefs(options));
   NS_ENSURE_SUCCESS(rv, rv);
-
+  mOptions = do_QueryObject(options);
+  NS_ENSURE_STATE(mOptions);
+  RefPtr<nsNavHistoryQuery> queryObj = do_QueryObject(query);
+  NS_ENSURE_STATE(queryObj);
+  mQueries.AppendObject(queryObj);
   mLiveUpdate = history->GetUpdateRequirements(mQueries, mOptions,
                                                &mHasSearchTerms);
   return NS_OK;
