@@ -38,6 +38,8 @@ class GeckoViewContentModule {
         if (aMsg.data.module == this.moduleName) {
           this.settings = aMsg.data.settings;
           this.register();
+          this.messageManager.sendAsyncMessage(
+            "GeckoView:ContentRegistered", { module: this.moduleName });
         }
       }
     );
