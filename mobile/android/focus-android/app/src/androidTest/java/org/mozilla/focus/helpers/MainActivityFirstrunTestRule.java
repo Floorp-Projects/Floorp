@@ -12,7 +12,8 @@ import android.support.test.rule.ActivityTestRule;
 
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.session.SessionManager;
-import org.mozilla.focus.utils.ThreadUtils;
+
+import mozilla.components.utils.ThreadUtils;
 
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
@@ -46,7 +47,7 @@ public class MainActivityFirstrunTestRule extends ActivityTestRule<MainActivity>
 
         getActivity().finishAndRemoveTask();
 
-        ThreadUtils.postToMainThread(new Runnable() {
+        ThreadUtils.INSTANCE.postToMainThread(new Runnable() {
             @Override
             public void run() {
                 SessionManager.getInstance().removeAllSessions();
