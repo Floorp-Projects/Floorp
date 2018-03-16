@@ -1,8 +1,6 @@
 component {66354bc9-7ed1-4692-ae1d-8da97d6b205e} nsBlocklistService.js process=main
 contract @mozilla.org/extensions/blocklist;1 {66354bc9-7ed1-4692-ae1d-8da97d6b205e} process=main
-#ifndef MOZ_BUILD_APP_IS_BROWSER
-category profile-after-change nsBlocklistService @mozilla.org/extensions/blocklist;1 process=main
-#endif
+category profile-after-change nsBlocklistService @mozilla.org/extensions/blocklist;1  process=main
 
 category update-timer nsBlocklistService @mozilla.org/extensions/blocklist;1,getService,blocklist-background-update-timer,extensions.blocklist.interval,86400
 component {4399533d-08d1-458c-a87a-235f74451cfa} addonManager.js
