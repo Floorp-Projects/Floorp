@@ -29,6 +29,8 @@ const SEC_IN_A_DAY           = 24 * 60 * 60;
 // How long to wait after a user enabled EME before attempting to download CDMs.
 const GMP_CHECK_DELAY        = 10 * 1000; // milliseconds
 
+const XHTML = "http://www.w3.org/1999/xhtml";
+
 const NS_GRE_DIR             = "GreD";
 const CLEARKEY_PLUGIN_ID     = "gmp-clearkey";
 const CLEARKEY_VERSION       = "0.1";
@@ -95,8 +97,9 @@ function configureLogging() {
  * The GMPWrapper provides the info for the various GMP plugins to public
  * callers through the API.
  */
-function GMPWrapper(aPluginInfo) {
+function GMPWrapper(aPluginInfo, aRawPluginInfo) {
   this._plugin = aPluginInfo;
+  this._rawPlugin = aRawPluginInfo;
   this._log =
     Log.repository.getLoggerWithMessagePrefix("Toolkit.GMP",
                                               "GMPWrapper(" +
@@ -140,7 +143,31 @@ GMPWrapper.prototype = {
   get homepageURL() { return this._plugin.homepageURL; },
 
   get description() { return this._plugin.description; },
-  get fullDescription() { return this._plugin.fullDescription; },
+  get fullDescription() { return null; },
+
+  getFullDescription(doc) {
+    let plugin = this._rawPlugin;
+
+    let frag = doc.createDocumentFragment();
+    for (let [urlProp, labelId] of [["learnMoreURL", GMP_LEARN_MORE],
+                                    ["licenseURL", this.id == WIDEVINE_ID ?
+                                     GMP_PRIVACY_INFO : GMP_LICENSE_INFO]]) {
+      if (plugin[urlProp]) {
+        let a = doc.createElementNS(XHTML, "a");
+        a.href = plugin[urlProp];
+        a.target = "_blank";
+        a.textContent = pluginsBundle.GetStringFromName(labelId);
+
+        if (frag.childElementCount) {
+          frag.append(doc.createElementNS(XHTML, "br"),
+                      doc.createElementNS(XHTML, "br"));
+        }
+        frag.append(a);
+      }
+    }
+
+    return frag;
+  },
 
   get version() {
     return GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_VERSION, null, this._plugin.id);
@@ -633,19 +660,6 @@ var GMPProvider = {
     return GMPPrefs.getBool(GMPPrefs.KEY_PROVIDER_ENABLED, false);
   },
 
-  generateFullDescription(aPlugin) {
-    let rv = [];
-    for (let [urlProp, labelId] of [["learnMoreURL", GMP_LEARN_MORE],
-                                    ["licenseURL", aPlugin.id == WIDEVINE_ID ?
-                                     GMP_PRIVACY_INFO : GMP_LICENSE_INFO]]) {
-      if (aPlugin[urlProp]) {
-        let label = pluginsBundle.GetStringFromName(labelId);
-        rv.push(`<xhtml:a href="${aPlugin[urlProp]}" target="_blank">${label}</xhtml:a>.`);
-      }
-    }
-    return rv.length ? rv.join("<xhtml:br /><xhtml:br />") : undefined;
-  },
-
   buildPluginList() {
     this._plugins = new Map();
     for (let aPlugin of GMP_PLUGINS) {
@@ -658,8 +672,7 @@ var GMPProvider = {
         wrapper: null,
         isEME: aPlugin.isEME,
       };
-      plugin.fullDescription = this.generateFullDescription(aPlugin);
-      plugin.wrapper = new GMPWrapper(plugin);
+      plugin.wrapper = new GMPWrapper(plugin, aPlugin);
       this._plugins.set(plugin.id, plugin);
     }
   },
