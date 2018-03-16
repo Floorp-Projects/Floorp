@@ -633,9 +633,7 @@ impl VertexUsageHint {
 pub struct UniformLocation(gl::GLint);
 
 impl UniformLocation {
-    pub fn invalid() -> UniformLocation {
-        UniformLocation(-1)
-    }
+    pub const INVALID: Self = UniformLocation(-1);
 }
 
 pub struct Capabilities {
@@ -656,6 +654,7 @@ pub struct Device {
     bound_vao: gl::GLuint,
     bound_read_fbo: FBOId,
     bound_draw_fbo: FBOId,
+    program_mode_id: UniformLocation,
     default_read_fbo: gl::GLuint,
     default_draw_fbo: gl::GLuint,
 
@@ -718,6 +717,7 @@ impl Device {
             bound_vao: 0,
             bound_read_fbo: FBOId(0),
             bound_draw_fbo: FBOId(0),
+            program_mode_id: UniformLocation::INVALID,
             default_read_fbo: 0,
             default_draw_fbo: 0,
 
@@ -801,6 +801,7 @@ impl Device {
 
         // Shader state
         self.bound_program = 0;
+        self.program_mode_id = UniformLocation::INVALID;
         self.gl.use_program(0);
 
         // Vertex state
@@ -926,6 +927,7 @@ impl Device {
         if self.bound_program != program.id {
             self.gl.use_program(program.id);
             self.bound_program = program.id;
+            self.program_mode_id = UniformLocation(program.u_mode);
         }
     }
 
@@ -1469,25 +1471,21 @@ impl Device {
         UniformLocation(self.gl.get_uniform_location(program.id, name))
     }
 
-    pub fn set_uniform_2f(&self, uniform: UniformLocation, x: f32, y: f32) {
-        debug_assert!(self.inside_frame);
-        let UniformLocation(location) = uniform;
-        self.gl.uniform_2f(location, x, y);
-    }
-
     pub fn set_uniforms(
         &self,
         program: &Program,
         transform: &Transform3D<f32>,
-        mode: i32,
     ) {
         debug_assert!(self.inside_frame);
         self.gl
             .uniform_matrix_4fv(program.u_transform, false, &transform.to_row_major_array());
         self.gl
             .uniform_1f(program.u_device_pixel_ratio, self.device_pixel_ratio);
-        self.gl
-            .uniform_1i(program.u_mode, mode);
+    }
+
+    pub fn switch_mode(&self, mode: i32) {
+        debug_assert!(self.inside_frame);
+        self.gl.uniform_1i(self.program_mode_id.0, mode);
     }
 
     pub fn create_pbo(&mut self) -> PBO {

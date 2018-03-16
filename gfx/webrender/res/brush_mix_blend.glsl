@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 1
+#define VECS_PER_SPECIFIC_BRUSH 2
 
 #include shared,prim_shared,brush
 
@@ -37,12 +37,6 @@ void brush_vs(
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-float gauss(float x, float sigma) {
-    if (sigma == 0.0)
-        return 1.0;
-    return (1.0 / sqrt(6.283185307179586 * sigma * sigma)) * exp(-(x * x) / (2.0 * sigma * sigma));
-}
-
 vec3 Multiply(vec3 Cb, vec3 Cs) {
     return Cb * Cs;
 }

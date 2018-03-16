@@ -665,10 +665,7 @@ impl YamlFrameWriter {
             let mut v = new_table();
             rect_node(&mut v, "bounds", &base.rect());
 
-            rect_node(&mut v, "clip-rect", base.local_clip().clip_rect());
-            if let &LocalClip::RoundedRect(_, ref region) = base.local_clip() {
-                yaml_node(&mut v, "complex-clip", self.make_complex_clip_node(region));
-            }
+            rect_node(&mut v, "clip-rect", base.clip_rect());
 
             let clip_and_scroll_yaml = match clip_id_mapper.map_info(&base.clip_and_scroll()) {
                 (scroll_id, Some(clip_id)) => {
@@ -1034,7 +1031,7 @@ impl YamlFrameWriter {
                     str_node(&mut v, "type", "scroll-frame");
                     usize_node(&mut v, "id", clip_id_mapper.add_id(item.scroll_frame_id));
                     size_node(&mut v, "content-size", &base.rect().size);
-                    rect_node(&mut v, "bounds", &base.local_clip().clip_rect());
+                    rect_node(&mut v, "bounds", &base.clip_rect());
 
                     let (complex_clips, complex_clip_count) = base.complex_clip();
                     if let Some(complex) = self.make_complex_clips_node(
@@ -1052,7 +1049,7 @@ impl YamlFrameWriter {
                 StickyFrame(item) => {
                     str_node(&mut v, "type", "sticky-frame");
                     usize_node(&mut v, "id", clip_id_mapper.add_id(item.id));
-                    rect_node(&mut v, "bounds", &base.local_clip().clip_rect());
+                    rect_node(&mut v, "bounds", &base.clip_rect());
 
                     if let Some(margin) = item.margins.top {
                         f32_node(&mut v, "margin-top", margin);
