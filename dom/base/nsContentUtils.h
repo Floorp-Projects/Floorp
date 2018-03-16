@@ -2407,15 +2407,6 @@ public:
   }
 
   /**
-   * Returns true if the DOM Animations API should report a pending animation
-   * using the separate 'pending' member instead of the 'playState' member.
-   */
-  static bool AnimationsAPIPendingMemberEnabled()
-  {
-    return sAnimationsAPIPendingMemberEnabled;
-  }
-
-  /**
    * Returns true if the getBoxQuads API should be enabled.
    */
   static bool GetBoxQuadsEnabled()
@@ -2838,6 +2829,7 @@ public:
   static nsresult IPCTransferableToTransferable(const mozilla::dom::IPCDataTransfer& aDataTransfer,
                                                 const bool& aIsPrivateData,
                                                 nsIPrincipal* aRequestingPrincipal,
+                                                const nsContentPolicyType& aContentPolicyType,
                                                 nsITransferable* aTransferable,
                                                 mozilla::dom::nsIContentParent* aContentParent,
                                                 mozilla::dom::TabChild* aTabChild);
@@ -3451,7 +3443,6 @@ private:
   static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;
   static bool sAnimationsAPIElementAnimateEnabled;
-  static bool sAnimationsAPIPendingMemberEnabled;
   static bool sGetBoxQuadsEnabled;
   static bool sSkipCursorMoveForSameValueSet;
   static bool sRequestIdleCallbackEnabled;

@@ -50,6 +50,7 @@ overrider.set({
   fetch() {},
   // eslint-disable-next-line object-shorthand
   Image: function() {}, // NB: This is a function/constructor
+  PluralForm: {get() {}},
   Preferences: FakePrefs,
   Services: {
     locale: {

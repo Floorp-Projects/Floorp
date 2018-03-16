@@ -100,7 +100,7 @@ Performance::Now()
 
   const double maxResolutionMs = 0.020;
   DOMHighResTimeStamp minimallyClamped = floor(rawTime / maxResolutionMs) * maxResolutionMs;
-  return nsRFPService::ReduceTimePrecisionAsMSecs(minimallyClamped);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(minimallyClamped, GetRandomTimelineSeed());
 }
 
 DOMHighResTimeStamp
@@ -123,7 +123,8 @@ Performance::TimeOrigin()
     return rawTimeOrigin;
   }
 
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawTimeOrigin);
+  // Time Origin is an absolute timestamp, so we supply a 0 context mix-in
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawTimeOrigin, 0);
 }
 
 JSObject*

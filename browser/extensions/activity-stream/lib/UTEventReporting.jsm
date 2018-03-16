@@ -16,6 +16,8 @@ const EXTRAS_FIELD_NAMES = ["addon_version", "session_id", "page", "user_prefs",
 this.UTEventReporting = class UTEventReporting {
   constructor() {
     Services.telemetry.setEventRecordingEnabled("activity_stream", true);
+    this.sendUserEvent = this.sendUserEvent.bind(this);
+    this.sendSessionEndEvent = this.sendSessionEndEvent.bind(this);
   }
 
   _createExtras(data) {

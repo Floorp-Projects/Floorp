@@ -1987,7 +1987,6 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
   }
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
-  nsCOMPtr<nsIContent> leftCite, rightCite;
   nsCOMPtr<nsINode> selNode;
   nsCOMPtr<Element> citeNode;
   int32_t selOffset;
@@ -2035,6 +2034,9 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
     // important, since when serializing the cite to plain text, the span which
     // caused the visual break is discarded.  So the added <br> will guarantee
     // that the serializer will insert a break where the user saw one.
+    // FYI: splitCiteNodeResult grabs the previous node with nsCOMPtr.
+    //      So, it's safe to access previousNodeOfSplitPoint even after
+    //      changing the DOM tree and/or selection even though it's raw pointer.
     nsIContent* previousNodeOfSplitPoint =
       splitCiteNodeResult.GetPreviousNode();
     if (previousNodeOfSplitPoint &&
@@ -2103,13 +2105,14 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
 
     // delete any empty cites
     bool bEmptyCite = false;
-    if (leftCite) {
-      rv = htmlEditor->IsEmptyNode(leftCite, &bEmptyCite, true, false);
+    if (previousNodeOfSplitPoint) {
+      rv = htmlEditor->IsEmptyNode(previousNodeOfSplitPoint, &bEmptyCite,
+                                   true, false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       if (bEmptyCite) {
-        rv = htmlEditor->DeleteNode(leftCite);
+        rv = htmlEditor->DeleteNode(previousNodeOfSplitPoint);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }

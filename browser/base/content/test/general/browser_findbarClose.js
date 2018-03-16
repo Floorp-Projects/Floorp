@@ -16,6 +16,7 @@ add_task(async function findbar_test() {
     "browser/base/content/test/general/test_bug628179.html");
   await promise;
 
+  await gFindBarPromise;
   gFindBar.open();
 
   await new ContentTask.spawn(newTab.linkedBrowser, null, async function() {

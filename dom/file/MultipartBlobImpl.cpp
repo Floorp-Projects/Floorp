@@ -269,7 +269,8 @@ MultipartBlobImpl::SetLengthAndModifiedDate(ErrorResult& aRv)
     //   x.getTime() < f.dateModified.getTime()
     // could fail.
     mLastModificationDate = nsRFPService::ReduceTimePrecisionAsUSecs(
-      lastModifiedSet ? lastModified * PR_USEC_PER_MSEC : JS_Now());
+      lastModifiedSet ? lastModified * PR_USEC_PER_MSEC : JS_Now(), 0);
+    // mLastModificationDate is an absolute timestamp so we supply a zero context mix-in
   }
 }
 

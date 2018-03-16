@@ -64,7 +64,8 @@ BaseBlobImpl::GetLastModified(ErrorResult& aRv)
 {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
   if (IsDateUnknown()) {
-    mLastModificationDate = nsRFPService::ReduceTimePrecisionAsUSecs(PR_Now());
+    mLastModificationDate = nsRFPService::ReduceTimePrecisionAsUSecs(PR_Now(), 0);
+    // mLastModificationDate is an absolute timestamp so we supply a zero context mix-in
   }
 
   return mLastModificationDate / PR_USEC_PER_MSEC;

@@ -22,16 +22,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "gExternalProtocolService",
 XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
                                    "@mozilla.org/mime;1",
                                    "nsIMIMEService");
+XPCOMUtils.defineLazyServiceGetter(this, "gHandlerService",
+                                  "@mozilla.org/uriloader/handler-service;1",
+                                  "nsIHandlerService");
 
 var HandlerServiceTestUtils = {
-  /**
-   * This has to be initialized to the nsIHandlerService instance under testing.
-   *
-   * When support for migration from the RDF to the JSON back-end is removed,
-   * this can be replaced by a lazy getter for the default implementation.
-   */
-  handlerService: null,
-
   /**
    * Retrieves the names of all the MIME types and protocols configured in the
    * handler service instance currently under testing.
@@ -41,7 +36,7 @@ var HandlerServiceTestUtils = {
    */
   getAllHandlerInfoTypes() {
     let handlerInfoTypes = [];
-    let handlerInfoEnumerator = this.handlerService.enumerate();
+    let handlerInfoEnumerator = gHandlerService.enumerate();
     while (handlerInfoEnumerator.hasMoreElements()) {
       let handlerInfo = handlerInfoEnumerator.getNext()
                                              .QueryInterface(Ci.nsIHandlerInfo);
@@ -97,8 +92,8 @@ var HandlerServiceTestUtils = {
       }
       handlerInfo.setFileExtensions("");
       // Populate the object from the handler service instance under testing.
-      if (this.handlerService.exists(handlerInfo)) {
-        this.handlerService.fillHandlerInfo(handlerInfo, "");
+      if (gHandlerService.exists(handlerInfo)) {
+        gHandlerService.fillHandlerInfo(handlerInfo, "");
       }
       return handlerInfo;
     }
@@ -109,8 +104,8 @@ var HandlerServiceTestUtils = {
     let osDefaultHandlerFound = {};
     let handlerInfo = gExternalProtocolService.getProtocolHandlerInfoFromOS(
                                                   type, osDefaultHandlerFound);
-    if (this.handlerService.exists(handlerInfo)) {
-      this.handlerService.fillHandlerInfo(handlerInfo, "");
+    if (gHandlerService.exists(handlerInfo)) {
+      gHandlerService.fillHandlerInfo(handlerInfo, "");
     } else {
       gExternalProtocolService.setProtocolHandlerDefaults(
                                   handlerInfo, osDefaultHandlerFound.value);

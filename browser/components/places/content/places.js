@@ -6,6 +6,8 @@
 /* import-globals-from editBookmarkOverlay.js */
 // Via downloadsViewOverlay.xul -> allDownloadsViewOverlay.xul
 /* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
+/* import-globals-from ../PlacesUIUtils.jsm */
+/* import-globals-from ../../../../toolkit/components/places/PlacesUtils.jsm */
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
