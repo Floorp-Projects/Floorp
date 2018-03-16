@@ -1025,13 +1025,12 @@ window._gBrowser = {
 
     // If the new tab is busy, and our current state is not busy, then
     // we need to fire a start to all progress listeners.
-    const nsIWebProgressListener = Ci.nsIWebProgressListener;
     if (newTab.hasAttribute("busy") && !this.mIsBusy) {
       this.mIsBusy = true;
       this._callProgressListeners(null, "onStateChange",
                                   [webProgress, null,
-                                  nsIWebProgressListener.STATE_START |
-                                  nsIWebProgressListener.STATE_IS_NETWORK, 0],
+                                   Ci.nsIWebProgressListener.STATE_START |
+                                   Ci.nsIWebProgressListener.STATE_IS_NETWORK, 0],
                                   true, false);
     }
 
@@ -1041,8 +1040,8 @@ window._gBrowser = {
       this.mIsBusy = false;
       this._callProgressListeners(null, "onStateChange",
                                   [webProgress, null,
-                                  nsIWebProgressListener.STATE_STOP |
-                                  nsIWebProgressListener.STATE_IS_NETWORK, 0],
+                                   Ci.nsIWebProgressListener.STATE_STOP |
+                                   Ci.nsIWebProgressListener.STATE_IS_NETWORK, 0],
                                   true, false);
     }
 
@@ -3957,13 +3956,10 @@ window._gBrowser = {
         this._tabListeners.delete(tab);
       }
     }
-    const nsIEventListenerService =
-      Ci.nsIEventListenerService;
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-      .getService(nsIEventListenerService);
-    els.removeSystemEventListener(document, "keydown", this, false);
+
+    Services.els.removeSystemEventListener(document, "keydown", this, false);
     if (AppConstants.platform == "macosx") {
-      els.removeSystemEventListener(document, "keypress", this, false);
+      Services.els.removeSystemEventListener(document, "keypress", this, false);
     }
     window.removeEventListener("sizemodechange", this);
     window.removeEventListener("occlusionstatechange", this);
@@ -4251,8 +4247,7 @@ class TabProgressListener {
 
     // If the state has STATE_STOP, and no requests were in flight, then this
     // must be the initial "stop" for the initial about:blank document.
-    const nsIWebProgressListener = Ci.nsIWebProgressListener;
-    if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         this.mRequestCount == 0 &&
         !aLocation) {
       return true;
@@ -4290,11 +4285,9 @@ class TabProgressListener {
     if (!aRequest)
       return;
 
-    const nsIWebProgressListener = Ci.nsIWebProgressListener;
-    const nsIChannel = Ci.nsIChannel;
     let location, originalLocation;
     try {
-      aRequest.QueryInterface(nsIChannel);
+      aRequest.QueryInterface(Ci.nsIChannel);
       location = aRequest.URI;
       originalLocation = aRequest.originalURI;
     } catch (ex) {}
@@ -4307,15 +4300,15 @@ class TabProgressListener {
     // from here forward. Similarly, if we conclude that this state change
     // is one that we shouldn't be ignoring, then stop ignoring.
     if ((ignoreBlank &&
-        aStateFlags & nsIWebProgressListener.STATE_STOP &&
-        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) ||
+         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) ||
         !ignoreBlank && this.mBlank) {
       this.mBlank = false;
     }
 
-    if (aStateFlags & nsIWebProgressListener.STATE_START) {
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
       this.mRequestCount++;
-    } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
+    } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
       const NS_ERROR_UNKNOWN_HOST = 2152398878;
       if (--this.mRequestCount > 0 && aStatus == NS_ERROR_UNKNOWN_HOST) {
         // to prevent bug 235825: wait for the request handled
@@ -4327,8 +4320,8 @@ class TabProgressListener {
       this.mRequestCount = 0;
     }
 
-    if (aStateFlags & nsIWebProgressListener.STATE_START &&
-        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aWebProgress.isTopLevel) {
         // Need to use originalLocation rather than location because things
         // like about:home and about:privatebrowsing arrive with nsIRequest
@@ -4356,7 +4349,7 @@ class TabProgressListener {
       }
 
       if (this._shouldShowProgress(aRequest)) {
-        if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING) &&
+        if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) &&
             aWebProgress && aWebProgress.isTopLevel) {
           this.mTab.setAttribute("busy", "true");
           this.mTab._notselectedsinceload = !this.mTab.selected;
@@ -4393,8 +4386,8 @@ class TabProgressListener {
           gBrowser.mIsBusy = true;
         }
       }
-    } else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
-               aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+    } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+               aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
 
       if (this.mTab.hasAttribute("busy")) {
         this.mTab.removeAttribute("busy");
@@ -4478,8 +4471,9 @@ class TabProgressListener {
                                 [aWebProgress, aRequest, aStateFlags, aStatus],
                                 false);
 
-    if (aStateFlags & (nsIWebProgressListener.STATE_START |
-        nsIWebProgressListener.STATE_STOP)) {
+    if (aStateFlags &
+        (Ci.nsIWebProgressListener.STATE_START |
+         Ci.nsIWebProgressListener.STATE_STOP)) {
       // reset cached temporary values at beginning and end
       this.mMessage = "";
       this.mTotalProgress = 0;
