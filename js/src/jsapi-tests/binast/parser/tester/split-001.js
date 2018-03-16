@@ -15,7 +15,7 @@
 
 /*
  * Since regular expressions have been part of JavaScript since 1.2, there
- * are already tests for regular expressions in the js1_2/regexp folder.
+ * are already tests for regular expressions in the non262/regexp folder.
  *
  * These new tests try to supplement the existing tests, and verify that
  * our implementation of RegExp conforms to the ECMA specification, but
@@ -26,7 +26,7 @@
  *
  * String.split cases are covered in ecma/String/15.5.4.8-*.js.
  * String.split where separator is a RegExp are in
- * js1_2/regexp/string_split.js
+ * non262/regexp/string_split.js
  *
  */
 
