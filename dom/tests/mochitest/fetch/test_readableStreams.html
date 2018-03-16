@@ -26,6 +26,10 @@ let tests = [
   function() { test_nativeStream(IFRAME_COMPARTMENT); },
   function() { workify('test_nativeStream'); },
 
+  function() { test_timeout(SAME_COMPARTMENT); },
+  function() { test_timeout(IFRAME_COMPARTMENT); },
+  function() { workify('test_timeout'); },
+
   function() { test_nonNativeStream(SAME_COMPARTMENT); },
   function() { test_nonNativeStream(IFRAME_COMPARTMENT); },
   function() { workify('test_nonNativeStream'); },
