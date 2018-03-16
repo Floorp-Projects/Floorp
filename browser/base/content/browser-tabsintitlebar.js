@@ -8,9 +8,6 @@
 
 var TabsInTitlebar = {
   init() {
-    if (this._initialized) {
-      return;
-    }
     this._readPref();
     Services.prefs.addObserver(this._prefName, this);
 
@@ -45,8 +42,7 @@ var TabsInTitlebar = {
 
     addEventListener("resolutionchange", this, false);
 
-    this._initialized = true;
-    this._update();
+    this._update(true, true);
   },
 
   allowedBy(condition, allow) {
@@ -80,6 +76,11 @@ var TabsInTitlebar = {
     }
   },
 
+  onDOMContentLoaded() {
+    this._domLoaded = true;
+    this._update(true);
+  },
+
   _onMenuMutate(aMutations) {
     for (let mutation of aMutations) {
       if (mutation.attributeName == "inactive" ||
@@ -90,17 +91,17 @@ var TabsInTitlebar = {
     }
   },
 
-  _initialized: false,
   _disallowed: {},
   _prefName: "browser.tabs.drawInTitlebar",
   _lastSizeMode: null,
+  _domLoaded: false,
 
   _readPref() {
     this.allowedBy("pref",
                    Services.prefs.getBoolPref(this._prefName));
   },
 
-  _update(aForce = false) {
+  _update(aForce = false, aFromInit = false) {
     let $ = id => document.getElementById(id);
     let rect = ele => ele.getBoundingClientRect();
     let verticalMargins = cstyle => parseFloat(cstyle.marginBottom) + parseFloat(cstyle.marginTop);
@@ -108,8 +109,11 @@ var TabsInTitlebar = {
     if (window.fullScreen)
       return;
 
-    // In some edgecases it is possible for this to fire before we've initialized.
-    if (!this._initialized) {
+    // We want to do this from initialization anyway, so that the
+    // "chromemargin" attributes are all correctly setup, but we don't want to
+    // do this before the DOM loads again, to prevent spurious reflows that
+    // will be superseded by the one on onDOMContentLoaded.
+    if (!this._domLoaded && !aFromInit) {
       return;
     }
 
@@ -269,7 +273,6 @@ var TabsInTitlebar = {
   },
 
   uninit() {
-    this._initialized = false;
     removeEventListener("resolutionchange", this);
     Services.prefs.removeObserver(this._prefName, this);
     this._menuObserver.disconnect();
