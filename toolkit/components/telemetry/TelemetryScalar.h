@@ -66,6 +66,10 @@ void SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, uint32_
 nsresult RegisterScalars(const nsACString& aCategoryName, JS::Handle<JS::Value> aScalarData,
                          bool aBuiltin, JSContext* cx);
 
+// Event Summary
+void SummarizeEvent(const nsCString& aUniqueEventName,
+                    mozilla::Telemetry::ProcessID aProcessType, bool aDynamic);
+
 // Only to be used for testing.
 void ClearScalars();
 
