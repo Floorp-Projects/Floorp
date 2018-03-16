@@ -2820,15 +2820,10 @@ JSAutoStructuredCloneBuffer::operator=(JSAutoStructuredCloneBuffer&& other)
 }
 
 void
-JSAutoStructuredCloneBuffer::clear(const JSStructuredCloneCallbacks* optionalCallbacks,
-                                   void* optionalClosure)
+JSAutoStructuredCloneBuffer::clear()
 {
     if (!data_.Size())
         return;
-
-    const JSStructuredCloneCallbacks* callbacks =
-        optionalCallbacks ?  optionalCallbacks : data_.callbacks_;
-    void* closure = optionalClosure ?  optionalClosure : data_.closure_;
 
     if (data_.ownTransferables_ == OwnTransferablePolicy::OwnsTransferablesIfAny)
         DiscardTransferables(data_, callbacks, closure);
