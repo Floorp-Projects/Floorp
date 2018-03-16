@@ -94,7 +94,7 @@ pm_canMeasureSomething(JSContext* cx, unsigned argc, Value* vp)
     if (!p)
         return false;
 
-    args.rval().setBoolean(p->canMeasureSomething());
+    args.rval().setBoolean(PerfMeasurement::canMeasureSomething());
     return true;
 }
 

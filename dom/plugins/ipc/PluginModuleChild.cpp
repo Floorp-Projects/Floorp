@@ -104,7 +104,7 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
   , mAsyncRenderSupport(false)
 #endif
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  , mEnableFlashSandbox(false)
+  , mFlashSandboxLevel(0)
   , mEnableFlashSandboxLogging(false)
 #endif
 {
@@ -201,9 +201,9 @@ PluginModuleChild::RecvDisableFlashProtectedMode()
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 void
-PluginModuleChild::EnableFlashSandbox(bool aShouldEnableLogging)
+PluginModuleChild::EnableFlashSandbox(int aLevel, bool aShouldEnableLogging)
 {
-    mEnableFlashSandbox = true;
+    mFlashSandboxLevel = aLevel;
     mEnableFlashSandboxLogging = aShouldEnableLogging;
 }
 #endif
@@ -302,11 +302,12 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-    if (mEnableFlashSandbox) {
+    if (mFlashSandboxLevel > 0) {
       MacSandboxInfo flashSandboxInfo;
       flashSandboxInfo.type = MacSandboxType_Plugin;
       flashSandboxInfo.pluginInfo.type = MacSandboxPluginType_Flash;
       flashSandboxInfo.pluginInfo.pluginBinaryPath = aPluginFilename;
+      flashSandboxInfo.level = mFlashSandboxLevel;
       flashSandboxInfo.shouldLog = mEnableFlashSandboxLogging;
 
       std::string sbError;

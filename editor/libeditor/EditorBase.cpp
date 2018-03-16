@@ -4038,32 +4038,6 @@ EditorBase::GetNodeAtRangeOffsetPoint(const RawRangeBoundary& aPoint)
   return aPoint.GetChildAtOffset();
 }
 
-/**
- * GetStartNodeAndOffset() returns whatever the start parent & offset is of
- * the first range in the selection.
- */
-nsresult
-EditorBase::GetStartNodeAndOffset(Selection* aSelection,
-                                  nsINode** aStartContainer,
-                                  int32_t* aStartOffset)
-{
-  MOZ_ASSERT(aSelection);
-  MOZ_ASSERT(aStartContainer);
-  MOZ_ASSERT(aStartOffset);
-
-  *aStartContainer = nullptr;
-  *aStartOffset = 0;
-
-  EditorRawDOMPoint point = EditorBase::GetStartPoint(aSelection);
-  if (!point.IsSet()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_ADDREF(*aStartContainer = point.GetContainer());
-  *aStartOffset = point.Offset();
-  return NS_OK;
-}
-
 // static
 EditorRawDOMPoint
 EditorBase::GetStartPoint(Selection* aSelection)
@@ -4081,32 +4055,6 @@ EditorBase::GetStartPoint(Selection* aSelection)
   }
 
   return EditorRawDOMPoint(range->StartRef());
-}
-
-/**
- * GetEndNodeAndOffset() returns whatever the end parent & offset is of
- * the first range in the selection.
- */
-nsresult
-EditorBase::GetEndNodeAndOffset(Selection* aSelection,
-                                nsINode** aEndContainer,
-                                int32_t* aEndOffset)
-{
-  MOZ_ASSERT(aSelection);
-  MOZ_ASSERT(aEndContainer);
-  MOZ_ASSERT(aEndOffset);
-
-  *aEndContainer = nullptr;
-  *aEndOffset = 0;
-
-  EditorRawDOMPoint point = EditorBase::GetEndPoint(aSelection);
-  if (!point.IsSet()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_ADDREF(*aEndContainer = point.GetContainer());
-  *aEndOffset = point.Offset();
-  return NS_OK;
 }
 
 // static

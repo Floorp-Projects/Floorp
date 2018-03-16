@@ -1335,7 +1335,7 @@ var gBrowserInit = {
 
     if (!gMultiProcessBrowser) {
       // There is a Content:Click message manually sent from content.
-      Services.els.addSystemEventListener(gBrowser.mPanelContainer, "click",
+      Services.els.addSystemEventListener(gBrowser.tabpanels, "click",
         contentAreaClick, true);
     }
 

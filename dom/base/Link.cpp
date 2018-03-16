@@ -184,7 +184,7 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
     nsCOMPtr<nsIURI> uri(GetURI());
     if (uri && mElement->OwnerDoc()) {
       mElement->OwnerDoc()->MaybePreconnect(uri,
-        mElement->AttrValueToCORSMode(mElement->GetParsedAttr(nsGkAtoms::crossorigin)));
+        Element::AttrValueToCORSMode(mElement->GetParsedAttr(nsGkAtoms::crossorigin)));
       return;
     }
   }

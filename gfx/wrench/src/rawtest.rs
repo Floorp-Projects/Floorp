@@ -602,13 +602,6 @@ impl<'a> RawtestHarness<'a> {
             )
         };
 
-        // Add a rounded 100x100 rectangle at 200,0.
-        let rect = LayoutRect::new(LayoutPoint::new(200., 0.), LayoutSize::new(100., 100.));
-        let mut info = LayoutPrimitiveInfo::with_clip(
-            rect, LocalClip::RoundedRect(rect, make_rounded_complex_clip(&rect, 20.)));
-        info.tag = Some((0, 3));
-        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
-
 
         // Add a rectangle that is clipped by a rounded rect clip item.
         let rect = LayoutRect::new(LayoutPoint::new(100., 100.), LayoutSize::new(100., 100.));
@@ -687,7 +680,6 @@ impl<'a> RawtestHarness<'a> {
             assert_hit_test(bottom_right, vec![(0, 1)]);
         };
 
-        test_rounded_rectangle(WorldPoint::new(200., 0.), WorldSize::new(100., 100.), (0, 3));
         test_rounded_rectangle(WorldPoint::new(100., 100.), WorldSize::new(100., 100.), (0, 4));
         test_rounded_rectangle(WorldPoint::new(200., 100.), WorldSize::new(100., 100.), (0, 5));
     }

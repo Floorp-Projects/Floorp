@@ -6,7 +6,7 @@
 
 # Default extra components to build config
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('devtools/**'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools')
@@ -15,19 +15,19 @@ with Files('mach/**'):
     BUG_COMPONENT = ('Core', 'mach')
 
 with Files('mozboot/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'Bootstrap Configuration')
 
 with Files('mozbuild/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('mozlint/**'):
     BUG_COMPONENT = ('Testing', 'Lint')
 
 with Files('mozversioncontrol/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('l10n/**'):
-    BUG_COMPONENT = ('Core', 'Localization')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('mozrelease/**'):
     BUG_COMPONENT = ('Release Engineering', 'Release Automation')

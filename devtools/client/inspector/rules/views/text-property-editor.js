@@ -1043,7 +1043,7 @@ TextPropertyEditor.prototype = {
    * @param {String} point
    *        The point to highlight.
    */
-  _onHoverShapePoint: function(event, point) {
+  _onHoverShapePoint: function(point) {
     // If there is no shape toggle, or it is not active, return.
     let shapeToggle = this.valueSpan.querySelector(".ruleview-shapeswatch.active");
     if (!shapeToggle) {
