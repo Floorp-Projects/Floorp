@@ -449,6 +449,54 @@ class ADBAndroid(ADBDevice):
                                 wait=wait, fail_if_running=fail_if_running,
                                 timeout=timeout)
 
+    def launch_geckoview_example(self, app_name, intent="android.intent.action.Main",
+                                 moz_env=None, extra_args=None, url=None, e10s=False,
+                                 wait=True, fail_if_running=True, timeout=None):
+        """Convenience method to launch geckoview_example on Android with various
+        debugging arguments
+
+        :param str app_name: Name of application (e.g.
+            `org.mozilla.geckoview_example`)
+        :param str intent: Intent to launch application.
+        :type moz_env: str or None
+        :param extra_args: Extra arguments to be parsed by fennec.
+        :type extra_args: str or None
+        :param url: URL to open
+        :type url: str or None
+        :param bool e10s: If True, run in multiprocess mode.
+        :param bool wait: If True, wait for application to start before
+            returning.
+        :param bool fail_if_running: Raise an exception if instance of
+            application is already running.
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADB constructor is used.
+        :type timeout: integer or None
+        :raises: * ADBTimeoutError
+                 * ADBError
+        """
+        extras = {}
+
+        if moz_env:
+            # moz_env is expected to be a dictionary of environment variables:
+            # geckoview_example itself will set them when launched
+            for (env_count, (env_key, env_val)) in enumerate(moz_env.iteritems()):
+                extras["env" + str(env_count)] = env_key + "=" + env_val
+
+        # Additional command line arguments that geckoview_example will read and use (e.g.
+        # with a custom profile)
+        if extra_args:
+            extras['args'] = " ".join(extra_args)
+        extras['use_multiprocess'] = e10s
+        self.launch_application(app_name,
+                                "%s.GeckoViewActivity" % app_name,
+                                intent, url=url, extras=extras,
+                                wait=wait, fail_if_running=fail_if_running,
+                                timeout=timeout)
+
     def stop_application(self, app_name, timeout=None, root=False):
         """Stops the specified application
 
