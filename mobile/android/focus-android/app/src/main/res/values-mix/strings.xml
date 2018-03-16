@@ -185,4 +185,8 @@
   <string name="gv_prompt_username_hint">Sivìi</string>
   <string name="gv_prompt_password_hint">Tu\'un seè</string>
   <string name="gv_prompt_clear">Stòo</string>
+  <string name="security_popup_secure_connection">Mani\'ku Chitai\'ña</string>
+  <string name="security_popup_insecure_connection">Ma kuu Chitai\'ña</string>
+  <string name="security_popup_security_verified">Verificado por: %1$s</string>
+  <string name="site_security_icon_content_description">Vaa sitio yoo</string>
 </resources>

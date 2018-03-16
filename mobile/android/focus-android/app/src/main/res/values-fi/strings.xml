@@ -8,6 +8,8 @@
   <string name="feedback_erase">Selaushistoria tyhjennetty.</string>
   <string name="search_hint">Hae %1$s</string>
   <string name="menu_share">Jaa…</string>
+  <string name="menu_open_with_default_browser2">Avaa sovelluksella %1$s</string>
+  <string name="menu_open_with_a_browser2">Avaa sovelluksella…</string>
   <string name="menu_add_to_home_screen">Lisää linkki kotinäkymään</string>
   <string name="menu_whats_new">Mitä uutta</string>
   <string name="menu_settings">Asetukset</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">Ohje</string>
   <string name="menu_rights">Oikeutesi</string>
   <string name="menu_trackers_blocked_title">Seuraimia estetty</string>
+  <string name="menu_custom_tab_branding">Toiminnon tarjoaa %1$s</string>
   <string name="share_dialog_title">Jaa palvelulla</string>
   <string name="notification_erase_text">Tyhjennä selaushistoria</string>
   <string name="notification_action_open">Avaa</string>
@@ -181,4 +184,11 @@
   <string name="your_rights_content3"><![CDATA["Sinulle ei anneta minkään muotoisia tavaramerkki- tai lisenssioikeuksia Mozilla-säätiön tai muun tahon tavaramerkkeihin, joihin lukeutuu Mozilla, Firefox tai %1$s -nimi tai -logo. Voit lukea tarkempia lisätietoja tavaramerkeistä "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">t&#228;&#228;lt&#228;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Muita osia %1$sin lähdekoodista on saatavilla erinäisten vapaiden ja avointen lähdekoodin "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisenssien</a>" ehtojen mukaisesti."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s käyttää myös Disconnect, Inc.:n toimittamia estolistoja, jotka ovat erillisiä ja itsenäisiä "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>"-lisenssin mukaisia töitä ja ne ovat saatavilla "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">t&#228;&#228;lt&#228;</a>.]]></string>
+  <string name="gv_prompt_username_hint">Käyttäjätunnus</string>
+  <string name="gv_prompt_password_hint">Salasana</string>
+  <string name="gv_prompt_clear">Tyhjennä</string>
+  <string name="security_popup_secure_connection">Suojattu yhteys</string>
+  <string name="security_popup_insecure_connection">Suojaamaton yhteys</string>
+  <string name="security_popup_security_verified">Todentaja: %1$s</string>
+  <string name="site_security_icon_content_description">Sivuston tietoturva</string>
 </resources>

@@ -8,6 +8,8 @@
   <string name="feedback_erase">Сезнең гизү тарихыгыз бетерелде.</string>
   <string name="search_hint">%1$s эзләү</string>
   <string name="menu_share">Уртаклашу…</string>
+  <string name="menu_open_with_default_browser2">%1$s белән ачу</string>
+  <string name="menu_open_with_a_browser2">... ярдәмендә ачу</string>
   <string name="menu_add_to_home_screen">Өй экранына кую</string>
   <string name="menu_whats_new">Яңалыклар</string>
   <string name="menu_settings">Көйләүләр</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">Ярдәм</string>
   <string name="menu_rights">Хокукларыгыз</string>
   <string name="menu_trackers_blocked_title">Блокланган трекерләр</string>
+  <string name="menu_custom_tab_branding">%1$s нигезендә</string>
   <string name="share_dialog_title">Аша уртаклашу</string>
   <string name="notification_erase_text">Гизү тарихын бетерү</string>
   <string name="notification_action_open">Ачу</string>
@@ -160,6 +163,7 @@
   <string name="firstrun_search_text">Башка берәр нәрсә эзлисезме? Көйләүләр менюсына кереп, стандарт итеп башка бер эзләү системасын сайлый аласыз.</string>
   <string name="firstrun_shortcut_title">Өй экранына ярлыклар өстәгез</string>
   <string name="firstrun_privacy_title">Хосусыйлыкны гадәткә кертү</string>
+  <string name="firstrun_privacy_text">%1$s\'ны төп гизгечегез итеп сайлап, башка кулланмалардан сайтларны ачканда да яшерен гизү мөмкинлегеннән файда күрегез.</string>
   <string name="firstrun_close_button">Яхшы, аңладым!</string>
   <string name="firstrun_skip_button">Кичү</string>
   <string name="firstrun_next_button">Киләсе</string>
@@ -167,6 +171,7 @@
   <string name="dialog_addtohomescreen_title">Өй экранына кую</string>
   <string name="dialog_addtohomescreen_action_add">Өстәү</string>
   <string name="dialog_addtohomescreen_action_cancel">Баш тарту</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Ярлык Күзәтүчеләрдән Саклау режимы сүндерелгән килеш ачылачак</string>
   <string name="dialog_opentab_title">Сылтаманы сайланган табта ачу</string>
   <string name="dialog_opentab_action_open">Ачу</string>
   <string name="notification_browsing_session_channel_name">Яшерен гизү утырышы</string>
@@ -179,4 +184,8 @@
   <string name="gv_prompt_username_hint">Кулланучы исеме</string>
   <string name="gv_prompt_password_hint">Серсүз</string>
   <string name="gv_prompt_clear">Чистарту</string>
+  <string name="security_popup_secure_connection">Хәвефсез бәйләнеш</string>
+  <string name="security_popup_insecure_connection">Хәвефсез булмаган бәйләнеш</string>
+  <string name="security_popup_security_verified">Расланган: %1$s</string>
+  <string name="site_security_icon_content_description">Сайт хәвефсезлеге</string>
 </resources>

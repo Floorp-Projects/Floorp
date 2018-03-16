@@ -8,6 +8,8 @@
   <string name="feedback_erase">Riwayat penjelajahan Anda sudah dihapus.</string>
   <string name="search_hint">Cari %1$s</string>
   <string name="menu_share">Bagikan…</string>
+  <string name="menu_open_with_default_browser2">Buka di %1$s</string>
+  <string name="menu_open_with_a_browser2">Buka di…</string>
   <string name="menu_add_to_home_screen">Tambahkan ke Beranda</string>
   <string name="menu_whats_new">Yang Baru</string>
   <string name="menu_settings">Setelan</string>
@@ -182,6 +184,9 @@
   <string name="your_rights_content3"><![CDATA["Anda tidak diberi izin atau lisensi apa pun atas merek dagang Mozilla Foundation atau pihak mana pun, termasuk nama atau logo Mozilla, Firefox, atau %1$s. Informasi lebih lanjut bisa ditemukan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">di sini</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Kode sumber tambahan untuk %1$s tersedia dengan berbagai "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisensi</a>" bebas dan sumber terbuka lainnya."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s juga menggunakan daftar blokir yang disediakan oleh Disconnect, Inc. sebagai pekerjaan terpisah dan independen di bawah "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dan tersedia "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">di sini</a>.]]></string>
+  <string name="gv_prompt_username_hint">Nama pengguna</string>
+  <string name="gv_prompt_password_hint">Sandi</string>
+  <string name="gv_prompt_clear">Bersihkan</string>
   <string name="security_popup_secure_connection">Sambungan Aman</string>
   <string name="security_popup_insecure_connection">Sambungan Tidak Aman</string>
   <string name="security_popup_security_verified">Diverifikasi oleh: %1$s</string>
