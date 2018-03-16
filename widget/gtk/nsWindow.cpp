@@ -116,7 +116,6 @@ using namespace mozilla::widget;
 #include "mozilla/layers/CompositorThread.h"
 
 #ifdef MOZ_X11
-#include "GLContextGLX.h" // for GLContextGLX::FindVisual()
 #include "GtkCompositorWidget.h"
 #include "gfxXlibSurface.h"
 #include "WindowSurfaceX11Image.h"
@@ -140,7 +139,6 @@ using namespace mozilla::gfx;
 using namespace mozilla::widget;
 using namespace mozilla::layers;
 using mozilla::gl::GLContext;
-using mozilla::gl::GLContextGLX;
 
 // Don't put more than this many rects in the dirty region, just fluff
 // out to the bounding-box if there are more
@@ -3642,29 +3640,11 @@ nsWindow::Create(nsIWidget* aParent,
         if (Preferences::GetBool("mozilla.widget.use-argb-visuals", false))
             useAlphaVisual = true;
 
-        bool useWebRender = gfx::gfxVars::UseWebRender() &&
-            AllowWebRenderForThisWindow();
-
-        // If using WebRender on X11, we need to select a visual with a depth buffer,
-        // as well as an alpha channel if transparency is requested. This must be done
-        // before the widget is realized.
-        if (mIsX11Display && useWebRender) {
-            auto display =
-                GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
-            auto screen = gtk_widget_get_screen(mShell);
-            int screenNumber = GDK_SCREEN_XNUMBER(screen);
-            int visualId = 0;
-
-            if (GLContextGLX::FindVisual(display, screenNumber,
-                                         useWebRender, useAlphaVisual,
-                                         &visualId)) {
-                // If we're using CSD, rendering will go through mContainer, but
-                // it will inherit this visual as it is a child of mShell.
-                gtk_widget_set_visual(mShell,
-                                      gdk_x11_screen_lookup_visual(screen,
-                                                                   visualId));
-            }
-        } else if (useAlphaVisual) {
+        // We need to select an ARGB visual here instead of in
+        // SetTransparencyMode() because it has to be done before the
+        // widget is realized.  An ARGB visual is only useful if we
+        // are on a compositing window manager.
+        if (useAlphaVisual) {
             GdkScreen *screen = gtk_widget_get_screen(mShell);
             if (gdk_screen_is_composited(screen)) {
                 GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
@@ -3779,7 +3759,7 @@ nsWindow::Create(nsIWidget* aParent,
         // it explicitly now.
         gtk_widget_realize(mShell);
 
-        /* There are several cases here:
+        /* There are two cases here:
          *
          * 1) We're running on Gtk+ without client side decorations.
          *    Content is rendered to mShell window and we listen
