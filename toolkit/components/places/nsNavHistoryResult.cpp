@@ -1955,20 +1955,14 @@ nsNavHistoryQueryResultNode::GetTargetFolderGuid(nsACString& aGuid) {
 }
 
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::GetQueries(uint32_t* queryCount,
-                                        nsINavHistoryQuery*** queries)
+nsNavHistoryQueryResultNode::GetQuery(nsINavHistoryQuery** _query)
 {
   nsresult rv = VerifyQueriesParsed();
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(mQueries.Count() > 0, "Must have >= 1 query");
 
-  *queries = static_cast<nsINavHistoryQuery**>
-                        (moz_xmalloc(mQueries.Count() * sizeof(nsINavHistoryQuery*)));
-  NS_ENSURE_TRUE(*queries, NS_ERROR_OUT_OF_MEMORY);
-
-  for (int32_t i = 0; i < mQueries.Count(); ++i)
-    NS_ADDREF((*queries)[i] = mQueries[i]);
-  *queryCount = mQueries.Count();
+  nsCOMPtr<nsINavHistoryQuery> query = mQueries[0];
+  query.forget(_query);
   return NS_OK;
 }
 
@@ -3097,19 +3091,16 @@ nsNavHistoryFolderResultNode::GetUri(nsACString& aURI)
     return NS_OK;
   }
 
-  uint32_t queryCount;
-  nsINavHistoryQuery** queries;
-  nsresult rv = GetQueries(&queryCount, &queries);
+  nsCOMPtr<nsINavHistoryQuery> query;
+  nsresult rv = GetQuery(getter_AddRefs(query));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // make array of our 1 query
+  nsCOMArray<nsINavHistoryQuery> queries;
+  queries.AppendObject(query);
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = history->QueriesToQueryString(queries, queryCount, mOriginalOptions, mURI);
-  for (uint32_t queryIndex = 0; queryIndex < queryCount; ++queryIndex) {
-    NS_RELEASE(queries[queryIndex]);
-  }
-  free(queries);
+  rv = history->QueriesToQueryString(queries.Elements(), 1, mOriginalOptions, mURI);
   NS_ENSURE_SUCCESS(rv, rv);
   aURI = mURI;
   return NS_OK;
@@ -3120,8 +3111,7 @@ nsNavHistoryFolderResultNode::GetUri(nsACString& aURI)
  * @return the queries that give you this bookmarks folder
  */
 NS_IMETHODIMP
-nsNavHistoryFolderResultNode::GetQueries(uint32_t* queryCount,
-                                         nsINavHistoryQuery*** queries)
+nsNavHistoryFolderResultNode::GetQuery(nsINavHistoryQuery** _query)
 {
   // get the query object
   nsCOMPtr<nsINavHistoryQuery> query;
@@ -3134,13 +3124,7 @@ nsNavHistoryFolderResultNode::GetQueries(uint32_t* queryCount,
   rv = query->SetFolders(&mTargetFolderItemId, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // make array of our 1 query
-  *queries = static_cast<nsINavHistoryQuery**>
-                        (moz_xmalloc(sizeof(nsINavHistoryQuery*)));
-  if (!*queries)
-    return NS_ERROR_OUT_OF_MEMORY;
-  (*queries)[0] = query.forget().take();
-  *queryCount = 1;
+  query.forget(_query);
   return NS_OK;
 }
 

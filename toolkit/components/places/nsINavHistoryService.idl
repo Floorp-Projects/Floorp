@@ -328,11 +328,10 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
 interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
 {
   /**
-   * Get the queries which build this node's children.
+   * Get the query which builds this node's children.
    * Only valid for RESULT_TYPE_QUERY nodes.
    */
-  void getQueries([optional] out unsigned long queryCount,
-                  [retval,array,size_is(queryCount)] out nsINavHistoryQuery queries);
+  readonly attribute nsINavHistoryQuery query;
 
   /**
    * Get the options which group this node's children.
