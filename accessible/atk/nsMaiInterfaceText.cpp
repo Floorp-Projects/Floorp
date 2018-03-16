@@ -160,11 +160,44 @@ getTextCB(AtkText *aText, gint aStartOffset, gint aEndOffset)
   return nullptr;
 }
 
+static gint getCharacterCountCB(AtkText* aText);
+
+// Note: this does not support magic offsets, which is fine for its callers
+// which do not implement any.
+static gchar*
+getCharTextAtOffset(AtkText* aText, gint aOffset,
+                    gint* aStartOffset, gint* aEndOffset)
+{
+  gint end = aOffset + 1;
+  gint count = getCharacterCountCB(aText);
+
+  if (aOffset > count) {
+    aOffset = count;
+  }
+  if (end > count) {
+    end = count;
+  }
+  if (aOffset < 0) {
+    aOffset = 0;
+  }
+  if (end < 0) {
+    end = 0;
+  }
+  *aStartOffset = aOffset;
+  *aEndOffset = end;
+
+  return getTextCB(aText, aOffset, end);
+}
+
 static gchar*
 getTextAfterOffsetCB(AtkText *aText, gint aOffset,
                      AtkTextBoundary aBoundaryType,
                      gint *aStartOffset, gint *aEndOffset)
 {
+  if (aBoundaryType == ATK_TEXT_BOUNDARY_CHAR) {
+    return getCharTextAtOffset(aText, aOffset + 1, aStartOffset, aEndOffset);
+  }
+
     nsAutoString autoStr;
   int32_t startOffset = 0, endOffset = 0;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
@@ -192,6 +225,10 @@ getTextAtOffsetCB(AtkText *aText, gint aOffset,
                   AtkTextBoundary aBoundaryType,
                   gint *aStartOffset, gint *aEndOffset)
 {
+  if (aBoundaryType == ATK_TEXT_BOUNDARY_CHAR) {
+    return getCharTextAtOffset(aText, aOffset, aStartOffset, aEndOffset);
+  }
+
   nsAutoString autoStr;
   int32_t startOffset = 0, endOffset = 0;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
@@ -238,6 +275,10 @@ getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
                       AtkTextBoundary aBoundaryType,
                       gint *aStartOffset, gint *aEndOffset)
 {
+  if (aBoundaryType == ATK_TEXT_BOUNDARY_CHAR) {
+    return getCharTextAtOffset(aText, aOffset - 1, aStartOffset, aEndOffset);
+  }
+
   nsAutoString autoStr;
   int32_t startOffset = 0, endOffset = 0;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
