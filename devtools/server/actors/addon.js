@@ -217,7 +217,7 @@ BrowserAddonActor.prototype = {
     }
 
     if (global instanceof Ci.nsIDOMWindow) {
-      return global.document.nodePrincipal.addonId;
+      return global.document.nodePrincipal.addonId == this.id;
     }
 
     return false;

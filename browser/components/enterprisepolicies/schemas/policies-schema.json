@@ -107,8 +107,22 @@
       "type": "boolean"
     },
 
+    "DisableBuiltinPDFViewer": {
+      "description": "Disables PDF.js, which displays PDFs within Firefox.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableDeveloperTools": {
       "description": "Prevents access to developer tools.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
+    "DisableFeedbackCommands": {
+      "description": "Prevents ability to send feedback from the help menu (\"Submit Feedback\" and \"Report Deceptive Site\").",
       "first_available": "60.0",
 
       "type": "boolean"
@@ -151,6 +165,13 @@
 
     "DisablePrivateBrowsing": {
       "description": "Disables private browsing.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
+    "DisableSafeMode": {
+      "description": "Prevents ability to restart in safe mode.",
       "first_available": "60.0",
 
       "type": "boolean"
