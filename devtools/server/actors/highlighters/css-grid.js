@@ -1141,11 +1141,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         The grid line breadth value.
    * @param  {String} dimensionType
    *         The grid dimension type which is either the constant COLUMNS or ROWS.
-   * @param  {Number||undefined} stackedLineIndex
-   *         The line index position of the stacked line.
+   * @param  {Boolean||undefined} isStackedLine
+   *         Boolean indicating if the line is stacked.
    */
   renderGridLineNumber(lineNumber, linePos, startPos, breadth, dimensionType,
-    stackedLineIndex) {
+    isStackedLine) {
     let displayPixelRatio = getDisplayPixelRatio(this.win);
     let { devicePixelRatio } = this.win;
     let offset = (displayPixelRatio / 2) % 1;
@@ -1206,7 +1206,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     [x, y] = apply(this.currentMatrix, [x, y]);
 
-    if (stackedLineIndex) {
+    if (isStackedLine) {
       // Offset the stacked line number by half of the box's width/height.
       const xOffset = boxWidth / 4;
       const yOffset = boxHeight / 4;
@@ -1354,7 +1354,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
     this.ctx.fillStyle = "black";
-    const numberText = stackedLineIndex ? "" : lineNumber;
+    const numberText = isStackedLine ? "" : lineNumber;
     this.ctx.fillText(numberText, x, y);
     this.ctx.restore();
   }
@@ -1472,8 +1472,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    */
   renderLineNumbers(gridDimension, dimensionType, startPos) {
     const { lines, tracks } = gridDimension;
-    // Keep track of the number of collapsed lines per line position.
-    let stackedLines = [];
 
     for (let i = 0, line; (line = lines[i++]);) {
       // If you place something using negative numbers, you can trigger some implicit
@@ -1489,21 +1487,17 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         continue;
       }
 
-      // Check for overlapping lines. We render a second box beneath the last overlapping
+      // Check for overlapping lines by measuring the track width between them.
+      // We render a second box beneath the last overlapping
       // line number to indicate there are lines beneath it.
-      const gridLine = tracks[line.number - 1];
+      const gridTrack = tracks[i - 1];
 
-      if (gridLine) {
-        const { breadth }  = gridLine;
+      if (gridTrack) {
+        const { breadth }  = gridTrack;
 
         if (breadth === 0) {
-          stackedLines.push(lines[i].number);
-
-          if (stackedLines.length > 0) {
-            this.renderGridLineNumber(line.number, line.start, startPos, line.breadth,
-              dimensionType, 1);
-          }
-
+          this.renderGridLineNumber(line.number, line.start, startPos, line.breadth,
+            dimensionType, true);
           continue;
         }
       }
@@ -1527,8 +1521,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    */
   renderNegativeLineNumbers(gridDimension, dimensionType, startPos) {
     const { lines, tracks } = gridDimension;
-    // Keep track of the number of collapsed lines per line position.
-    let stackedLines = [];
 
     for (let i = 0, line; (line = lines[i++]);) {
       let linePos = line.start;
@@ -1539,30 +1531,19 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         break;
       }
 
-      // Check for overlapping lines. We render a second box beneath the last overlapping
+      // Check for overlapping lines by measuring the track width between them.
+      // We render a second box beneath the last overlapping
       // line number to indicate there are lines beneath it.
-      const gridLine = tracks[line.number - 1];
+      const gridTrack = tracks[i - 1];
+      if (gridTrack) {
+        const { breadth } = gridTrack;
 
-      if (gridLine) {
-        const { breadth }  = gridLine;
-
-        if (breadth === 0) {
-          stackedLines.push(negativeLineNumber);
-
-          if (stackedLines.length > 0) {
-            this.renderGridLineNumber(negativeLineNumber, linePos, startPos,
-              line.breadth, dimensionType, 1);
-          }
-
+        // Ensure "-1" is always visible, since it is always the largest number.
+        if (breadth === 0 && negativeLineNumber != -1) {
+          this.renderGridLineNumber(negativeLineNumber, linePos, startPos,
+            line.breadth, dimensionType, true);
           continue;
         }
-      }
-
-      // For negative line numbers, we want to display the smallest
-      // value at the front of the stack.
-      if (stackedLines.length) {
-        negativeLineNumber = stackedLines[0];
-        stackedLines = [];
       }
 
       this.renderGridLineNumber(negativeLineNumber, linePos, startPos, line.breadth,
