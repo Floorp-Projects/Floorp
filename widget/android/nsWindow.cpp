@@ -15,6 +15,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/WheelHandlingHelper.h"    // for WheelDeltaAdjustmentStrategy
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
@@ -488,7 +489,13 @@ public:
                                ScrollWheelInput::SCROLLDELTA_PIXEL,
                                origin,
                                aHScroll, aVScroll,
-                               false);
+                               false,
+                               // XXX Do we need to support auto-dir scrolling
+                               // for Android widgets with a wheel device?
+                               // Currently, I just leave it unimplemented. If
+                               // we need to implement it, what's the extra work
+                               // to do?
+                               WheelDeltaAdjustmentStrategy::eNone);
 
         ScrollableLayerGuid guid;
         uint64_t blockId;
