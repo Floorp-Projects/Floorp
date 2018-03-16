@@ -186,12 +186,8 @@
         <setter>
           <![CDATA[
             if (val != this._eventNode) {
-              const nsIEventListenerService =
-                Ci.nsIEventListenerService;
-              let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                          .getService(nsIEventListenerService);
-              els.addSystemEventListener(val, "keydown", this, false);
-              els.removeSystemEventListener(this._eventNode, "keydown", this, false);
+              Services.els.addSystemEventListener(val, "keydown", this, false);
+              Services.els.removeSystemEventListener(this._eventNode, "keydown", this, false);
               this._eventNode = val;
             }
             return val;
@@ -205,15 +201,11 @@
           case "window": this._eventNode = window; break;
           case "document": this._eventNode = document; break;
         }
-        let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                    .getService(Ci.nsIEventListenerService);
-        els.addSystemEventListener(this._eventNode, "keydown", this, false);
+        Services.els.addSystemEventListener(this._eventNode, "keydown", this, false);
       </constructor>
 
       <destructor>
-        let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                    .getService(Ci.nsIEventListenerService);
-        els.removeSystemEventListener(this._eventNode, "keydown", this, false);
+        Services.els.removeSystemEventListener(this._eventNode, "keydown", this, false);
       </destructor>
     </implementation>
   </binding>
