@@ -31,6 +31,9 @@ public:
             IPC::Channel* aChannel);
   void NotifyDeviceReset();
 
+  PAPZInputBridgeParent* AllocPAPZInputBridgeParent(const uint64_t& aLayersId) override;
+  bool DeallocPAPZInputBridgeParent(PAPZInputBridgeParent* aActor) override;
+
   mozilla::ipc::IPCResult RecvInit(nsTArray<GfxPrefSetting>&& prefs,
                                    nsTArray<GfxVarUpdate>&& vars,
                                    const DevicePrefs& devicePrefs,

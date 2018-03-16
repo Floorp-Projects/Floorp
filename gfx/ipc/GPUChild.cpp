@@ -17,6 +17,7 @@
 # include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 #include "mozilla/ipc/CrashReporterHost.h"
+#include "mozilla/layers/APZInputBridgeChild.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/Unused.h"
 #include "mozilla/HangDetails.h"
@@ -106,6 +107,22 @@ GPUChild::EnsureGPUReady()
   gfxPlatform::GetPlatform()->ImportGPUDeviceData(data);
   Telemetry::AccumulateTimeDelta(Telemetry::GPU_PROCESS_LAUNCH_TIME_MS_2, mHost->GetLaunchTime());
   mGPUReady = true;
+  return true;
+}
+
+PAPZInputBridgeChild*
+GPUChild::AllocPAPZInputBridgeChild(const uint64_t& aLayersId)
+{
+  APZInputBridgeChild* child = new APZInputBridgeChild();
+  child->AddRef();
+  return child;
+}
+
+bool
+GPUChild::DeallocPAPZInputBridgeChild(PAPZInputBridgeChild* aActor)
+{
+  APZInputBridgeChild* child = static_cast<APZInputBridgeChild*>(aActor);
+  child->Release();
   return true;
 }
 
