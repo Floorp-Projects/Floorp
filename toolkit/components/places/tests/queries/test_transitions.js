@@ -129,12 +129,10 @@ add_task(async function test_transitions() {
   var query = {};
   var options = {};
   PlacesUtils.history.
-    queryStringToQueries("place:transition=" +
+    queryStringToQuery("place:transition=" +
                          Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-                         query, {}, options);
-  query = (query.value)[0];
-  options = PlacesUtils.history.getNewQueryOptions();
-  var result = PlacesUtils.history.executeQuery(query, options);
+                         query, options);
+  var result = PlacesUtils.history.executeQuery(query.value, options.value);
   var root = result.root;
   root.containerOpen = true;
   Assert.equal(testDataDownload.length, root.childCount);
@@ -153,10 +151,8 @@ add_task(async function test_transitions() {
 function compareQueryToTestData(queryStr, data) {
   var query = {};
   var options = {};
-  PlacesUtils.history.queryStringToQueries(queryStr, query, {}, options);
-  query = query.value[0];
-  options = options.value;
-  var result = PlacesUtils.history.executeQuery(query, options);
+  PlacesUtils.history.queryStringToQuery(queryStr, query, options);
+  var result = PlacesUtils.history.executeQuery(query.value, options.value);
   var root = result.root;
   for (var i = 0; i < data.length; i++) {
     data[i] = testData[data[i]];

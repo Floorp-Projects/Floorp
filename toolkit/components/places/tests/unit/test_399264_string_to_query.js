@@ -13,11 +13,9 @@
  */
 function folder_id(aQuery) {
   info("Checking query '" + aQuery + "'\n");
-  var options = { };
-  var queries = { };
-  var size = { };
-  PlacesUtils.history.queryStringToQueries(aQuery, queries, size, options);
-  var result = PlacesUtils.history.executeQuery(queries.value, options.value);
+  let query = {}, options = {};
+  PlacesUtils.history.queryStringToQuery(aQuery, query, options);
+  var result = PlacesUtils.history.executeQuery(query.value, options.value);
   var root = result.root;
   root.containerOpen = true;
   Assert.ok(root.hasChildren);

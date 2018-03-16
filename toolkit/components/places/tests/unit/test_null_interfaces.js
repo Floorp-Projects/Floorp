@@ -11,7 +11,7 @@
 var testServices = [
   ["browser/nav-history-service;1",
     ["nsINavHistoryService"],
-    ["queryStringToQueries", "removePagesByTimeframe", "removePagesFromHost", "getObservers"]
+    ["queryStringToQuery", "removePagesByTimeframe", "removePagesFromHost", "getObservers"]
   ],
   ["browser/nav-bookmarks-service;1",
     ["nsINavBookmarksService", "nsINavHistoryObserver"],

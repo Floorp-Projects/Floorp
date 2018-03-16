@@ -25,15 +25,12 @@ add_task(async function test_queryMultipleFolders() {
     }
   }
 
-  // using queryStringToQueries
-  let query = {};
-  let options = {};
+  // using queryStringToQuery
+  let query = {}, options = {};
   let maxResults = 20;
-  let queryString = "place:" + folderIds.map((id) => {
-    return "folder=" + id;
-  }).join("&") + "&sort=5&maxResults=" + maxResults;
-  PlacesUtils.history.queryStringToQueries(queryString, query, {}, options);
-  let rootNode = PlacesUtils.history.executeQuery(query.value[0], options.value).root;
+  let queryString = `place:${folderIds.map((id) => "folder=" + id).join("&")}&sort=5&maxResults=${maxResults}`;
+  PlacesUtils.history.queryStringToQuery(queryString, query, options);
+  let rootNode = PlacesUtils.history.executeQuery(query.value, options.value).root;
   rootNode.containerOpen = true;
   let resultLength = rootNode.childCount;
   Assert.equal(resultLength, maxResults);

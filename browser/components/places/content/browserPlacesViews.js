@@ -53,10 +53,9 @@ PlacesViewBase.prototype = {
     this._place = val;
 
     let history = PlacesUtils.history;
-    let queries = { }, options = { };
-    history.queryStringToQueries(val, queries, { }, options);
-    let query = queries.value.length ? queries.value[0] : history.getNewQuery();
-    let result = history.executeQuery(query, options.value);
+    let query = {}, options = {};
+    history.queryStringToQuery(val, query, options);
+    let result = history.executeQuery(query.value, options.value);
     result.addObserver(this);
     return val;
   },

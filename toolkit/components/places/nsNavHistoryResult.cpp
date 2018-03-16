@@ -2023,18 +2023,10 @@ nsNavHistoryQueryResultNode::VerifyQueriesSerialized()
   MOZ_ASSERT(mQueries.Count() > 0 && mOptions,
              "Query nodes must have either a URI or query/options");
 
-  nsTArray<nsINavHistoryQuery*> flatQueries;
-  flatQueries.SetCapacity(mQueries.Count());
-  for (int32_t i = 0; i < mQueries.Count(); ++i)
-    flatQueries.AppendElement(static_cast<nsINavHistoryQuery*>
-                                         (mQueries.ObjectAt(i)));
-
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = history->QueriesToQueryString(flatQueries.Elements(),
-                                              flatQueries.Length(),
-                                              mOriginalOptions, mURI);
+  nsCOMPtr<nsINavHistoryQuery> query = do_QueryInterface(mQueries[0]);
+  nsresult rv = history->QueryToQueryString(query, mOriginalOptions, mURI);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_STATE(!mURI.IsEmpty());
   return NS_OK;
@@ -3096,11 +3088,9 @@ nsNavHistoryFolderResultNode::GetUri(nsACString& aURI)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // make array of our 1 query
-  nsCOMArray<nsINavHistoryQuery> queries;
-  queries.AppendObject(query);
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  rv = history->QueriesToQueryString(queries.Elements(), 1, mOriginalOptions, mURI);
+  rv = history->QueryToQueryString(query, mOriginalOptions, mURI);
   NS_ENSURE_SUCCESS(rv, rv);
   aURI = mURI;
   return NS_OK;
