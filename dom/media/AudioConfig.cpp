@@ -327,6 +327,19 @@ AudioConfig::AudioConfig(const ChannelLayout& aChannelLayout, uint32_t aRate,
 {
 }
 
+AudioConfig::AudioConfig(const ChannelLayout& aChannelLayout,
+                         uint32_t aChannels,
+                         uint32_t aRate,
+                         AudioConfig::SampleFormat aFormat,
+                         bool aInterleaved)
+  : mChannelLayout(aChannelLayout)
+  , mChannels(aChannels)
+  , mRate(aRate)
+  , mFormat(aFormat)
+  , mInterleaved(aInterleaved)
+{
+}
+
 AudioConfig::AudioConfig(uint32_t aChannels,
                          uint32_t aRate,
                          AudioConfig::SampleFormat aFormat,
