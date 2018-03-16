@@ -100,7 +100,7 @@ testBuiltin(Array, 15);
 testBuiltin(Array, 3.0);
 testBuiltin(Array, "non-length one-arg");
 testBuiltin(Array, 5, 10, 15, "these are elements");
-// More Promise subclassing tests can be found in ecma_6/Promise/promise-subclassing.js
+// More Promise subclassing tests can be found in non262/Promise/promise-subclassing.js
 testBuiltin(Promise, _=>{});
 
 if (this.SharedArrayBuffer)

@@ -27,11 +27,11 @@ var ClassToMethodMap =
               "toLocaleString", "valueOf", "hasOwnProperty",
               /*
                * "isPrototypeOf" has special |this| handling already tested in
-               * ecma_5/Object/isPrototypeOf.js.
+               * non262/Object/isPrototypeOf.js.
                */
               /*
                * "isPrototypeOf" has special |this| handling already tested in
-               * ecma_5/Object/propertyIsEnumerable.js.
+               * non262/Object/propertyIsEnumerable.js.
                */],
     // Function methods often don't ToObject(this) as their very first step,
     // and they're already stepwise well-tested such that manual tests here
@@ -46,7 +46,7 @@ var ClassToMethodMap =
               "toLocaleLowerCase", "toUpperCase", "toLocaleUpperCase", "trim",
               /*
                * "trimLeft" and "trimRight" are non-standard and thus are tested
-               * in ecma_5/extensions/trim-extensions.js.
+               * in non262/extensions/trim-extensions.js.
                */
               ],
     Boolean: ["toString", "valueOf"],

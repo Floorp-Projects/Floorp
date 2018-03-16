@@ -26,7 +26,7 @@
  *  So the regexp consists of 2 characters: <any-character>, <'\t'>.
  *  There is no match between the regexp and the string.
  *
- *  See the testcase ecma_3/RegExp/octal-002.js for an elaboration.
+ *  See the testcase non262/RegExp/octal-002.js for an elaboration.
  *
  */
 var SECTION = "RegExp/octal-003.js";

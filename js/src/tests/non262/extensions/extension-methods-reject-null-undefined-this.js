@@ -16,7 +16,7 @@ print(BUGNUMBER + ": " + summary);
  **************/
 
 // This test fills out for the non-standard methods which
-// ecma_5/misc/builtin-methods-reject-null-undefined-this.js declines to test.
+// non262/misc/builtin-methods-reject-null-undefined-this.js declines to test.
 
 var ClassToMethodMap =
   {

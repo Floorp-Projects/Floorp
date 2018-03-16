@@ -77,7 +77,7 @@ for patch in \
 done
 
 topsrcdir=`dirname $0`/../
-python ${topsrcdir}/js/src/tests/ecma_6/String/make-normalize-generateddata-input.py $topsrcdir
+python ${topsrcdir}/js/src/tests/non262/String/make-normalize-generateddata-input.py $topsrcdir
 
 # Update our moz.build files in config/external/icu, and
 # build a new ICU data file.
