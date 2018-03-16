@@ -381,8 +381,7 @@ public:
 
   bool IsValid() const override
   {
-    return mChannels > 0 && mChannels <= MAX_AUDIO_CHANNELS &&
-           mRate > 0 && mRate <= MAX_RATE;
+    return mChannels > 0 && mRate > 0 && mRate <= MAX_RATE;
   }
 
   AudioInfo* GetAsAudioInfo() override
