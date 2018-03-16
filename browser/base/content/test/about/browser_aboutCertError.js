@@ -6,150 +6,104 @@
 // This is testing the aboutCertError page (Bug 1207107).
 
 const GOOD_PAGE = "https://example.com/";
-const GOOD_PAGE_2 = "https://example.org/";
-const DUMMY_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", GOOD_PAGE) + "dummy_page.html";
 const BAD_CERT = "https://expired.example.com/";
 const UNKNOWN_ISSUER = "https://self-signed.example.com ";
 const BAD_STS_CERT = "https://badchain.include-subdomains.pinning.example.com:443";
 const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
-function injectErrorPageFrame(tab, src) {
-  return ContentTask.spawn(tab.linkedBrowser, {frameSrc: src}, async function({frameSrc}) {
-    let loaded = ContentTaskUtils.waitForEvent(content.wrappedJSObject, "DOMFrameContentLoaded");
-    let iframe = content.document.createElement("iframe");
-    iframe.src = frameSrc;
-    content.document.body.appendChild(iframe);
-    await loaded;
-    // We will have race conditions when accessing the frame content after setting a src,
-    // so we can't wait for AboutNetErrorLoad. Let's wait for the certerror class to
-    // appear instead (which should happen at the same time as AboutNetErrorLoad).
-    await ContentTaskUtils.waitForCondition(() =>
-      iframe.contentDocument.body.classList.contains("certerror"));
-  });
-}
-
-async function openErrorPage(src, useFrame) {
-  let tab;
-  if (useFrame) {
-    info("Loading cert error page in an iframe");
-    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE);
-    await injectErrorPageFrame(tab, src);
-  } else {
-    let certErrorLoaded;
-    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, src);
-      let browser = gBrowser.selectedBrowser;
-      certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
-    }, false);
-    info("Loading and waiting for the cert error");
-    await certErrorLoaded;
-  }
-
-  return tab;
-}
-
 add_task(async function checkReturnToAboutHome() {
   info("Loading a bad cert page directly and making sure 'return to previous page' goes to about:home");
-  for (let useFrame of [false, true]) {
-    let tab = await openErrorPage(BAD_CERT, useFrame);
-    let browser = tab.linkedBrowser;
+  let browser;
+  let certErrorLoaded;
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, BAD_CERT);
+    browser = gBrowser.selectedBrowser;
+    certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  }, false);
 
-    is(browser.webNavigation.canGoBack, false, "!webNavigation.canGoBack");
-    is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
+  info("Loading and waiting for the cert error");
+  await certErrorLoaded;
 
-    // Populate the shistory entries manually, since it happens asynchronously
-    // and the following tests will be too soon otherwise.
-    await TabStateFlusher.flush(browser);
-    let {entries} = JSON.parse(ss.getTabState(tab));
-    is(entries.length, 1, "there is one shistory entry");
+  is(browser.webNavigation.canGoBack, false, "!webNavigation.canGoBack");
+  is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
 
-    info("Clicking the go back button on about:certerror");
-    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+  // Populate the shistory entries manually, since it happens asynchronously
+  // and the following tests will be too soon otherwise.
+  await TabStateFlusher.flush(browser);
+  let {entries} = JSON.parse(ss.getTabState(tab));
+  is(entries.length, 1, "there is one shistory entry");
 
-      let returnButton = doc.getElementById("returnButton");
-      if (!frame) {
-        is(returnButton.getAttribute("autofocus"), "true", "returnButton has autofocus");
-      }
-      returnButton.click();
+  info("Clicking the go back button on about:certerror");
+  await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    let returnButton = doc.getElementById("returnButton");
+    is(returnButton.getAttribute("autofocus"), "true", "returnButton has autofocus");
+    returnButton.click();
 
-      await ContentTaskUtils.waitForEvent(this, "pageshow", true);
-    });
+    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
+  });
 
-    is(browser.webNavigation.canGoBack, true, "webNavigation.canGoBack");
-    is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
-    is(gBrowser.currentURI.spec, "about:home", "Went back");
+  is(browser.webNavigation.canGoBack, true, "webNavigation.canGoBack");
+  is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
+  is(gBrowser.currentURI.spec, "about:home", "Went back");
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function checkReturnToPreviousPage() {
   info("Loading a bad cert page and making sure 'return to previous page' goes back");
-  for (let useFrame of [false, true]) {
-    let tab;
-    let browser;
-    if (useFrame) {
-      tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
-      browser = tab.linkedBrowser;
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
+  let browser = gBrowser.selectedBrowser;
 
-      BrowserTestUtils.loadURI(browser, GOOD_PAGE_2);
-      await BrowserTestUtils.browserLoaded(browser, false, GOOD_PAGE_2);
-      await injectErrorPageFrame(tab, BAD_CERT);
-    } else {
-      tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
-      browser = gBrowser.selectedBrowser;
+  info("Loading and waiting for the cert error");
+  let certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  BrowserTestUtils.loadURI(browser, BAD_CERT);
+  await certErrorLoaded;
 
-      info("Loading and waiting for the cert error");
-      let certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
-      BrowserTestUtils.loadURI(browser, BAD_CERT);
-      await certErrorLoaded;
-    }
+  is(browser.webNavigation.canGoBack, true, "webNavigation.canGoBack");
+  is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
 
-    is(browser.webNavigation.canGoBack, true, "webNavigation.canGoBack");
-    is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
+  // Populate the shistory entries manually, since it happens asynchronously
+  // and the following tests will be too soon otherwise.
+  await TabStateFlusher.flush(browser);
+  let {entries} = JSON.parse(ss.getTabState(tab));
+  is(entries.length, 2, "there are two shistory entries");
 
-    // Populate the shistory entries manually, since it happens asynchronously
-    // and the following tests will be too soon otherwise.
-    await TabStateFlusher.flush(browser);
-    let {entries} = JSON.parse(ss.getTabState(tab));
-    is(entries.length, 2, "there are two shistory entries");
+  info("Clicking the go back button on about:certerror");
+  await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    let returnButton = doc.getElementById("returnButton");
+    returnButton.click();
 
-    info("Clicking the go back button on about:certerror");
-    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
-      let returnButton = doc.getElementById("returnButton");
-      returnButton.click();
+    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
+  });
 
-      await ContentTaskUtils.waitForEvent(this, "pageshow", true);
-    });
+  is(browser.webNavigation.canGoBack, false, "!webNavigation.canGoBack");
+  is(browser.webNavigation.canGoForward, true, "webNavigation.canGoForward");
+  is(gBrowser.currentURI.spec, GOOD_PAGE, "Went back");
 
-    is(browser.webNavigation.canGoBack, false, "!webNavigation.canGoBack");
-    is(browser.webNavigation.canGoForward, true, "webNavigation.canGoForward");
-    is(gBrowser.currentURI.spec, GOOD_PAGE, "Went back");
-
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function checkBadStsCert() {
   info("Loading a badStsCert and making sure exception button doesn't show up");
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
+  let browser = gBrowser.selectedBrowser;
 
-  for (let useFrame of [false, true]) {
-    let tab = await openErrorPage(BAD_STS_CERT, useFrame);
-    let browser = tab.linkedBrowser;
+  info("Loading and waiting for the cert error");
+  let certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  BrowserTestUtils.loadURI(browser, BAD_STS_CERT);
+  await certErrorLoaded;
 
-    let exceptionButtonHidden = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
-      let exceptionButton = doc.getElementById("exceptionDialogButton");
-      return exceptionButton.hidden;
-    });
+  let exceptionButtonHidden = await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    let exceptionButton = doc.getElementById("exceptionDialogButton");
+    return exceptionButton.hidden;
+  });
+  ok(exceptionButtonHidden, "Exception button is hidden");
 
-    ok(exceptionButtonHidden, "Exception button is hidden");
-
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // This checks that the appinfo.appBuildID starts with a date string,
@@ -267,142 +221,155 @@ add_task(async function checkWrongSystemTimeWarning() {
 
 add_task(async function checkAdvancedDetails() {
   info("Loading a bad cert page and verifying the main error and advanced details section");
-  for (let useFrame of [false, true]) {
-    let tab = await openErrorPage(BAD_CERT, useFrame);
-    let browser = tab.linkedBrowser;
+  let browser;
+  let certErrorLoaded;
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, BAD_CERT);
+    browser = gBrowser.selectedBrowser;
+    certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  }, false);
 
-    let message = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+  info("Loading and waiting for the cert error");
+  await certErrorLoaded;
 
-      let shortDescText = doc.getElementById("errorShortDescText");
-      info("Main error text: " + shortDescText.textContent);
-      ok(shortDescText.textContent.includes("expired.example.com"),
-         "Should list hostname in error message.");
+  let message = await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    let shortDescText = doc.getElementById("errorShortDescText");
+    info("Main error text: " + shortDescText.textContent);
+    ok(shortDescText.textContent.includes("expired.example.com"),
+       "Should list hostname in error message.");
 
-      let advancedButton = doc.getElementById("advancedButton");
-      advancedButton.click();
-      let el = doc.getElementById("errorCode");
-      return { textContent: el.textContent, tagName: el.tagName };
-    });
-    is(message.textContent, "SEC_ERROR_EXPIRED_CERTIFICATE",
-       "Correct error message found");
-    is(message.tagName, "a", "Error message is a link");
+    let advancedButton = doc.getElementById("advancedButton");
+    advancedButton.click();
+    let el = doc.getElementById("errorCode");
+    return { textContent: el.textContent, tagName: el.tagName };
+  });
+  is(message.textContent, "SEC_ERROR_EXPIRED_CERTIFICATE",
+     "Correct error message found");
+  is(message.tagName, "a", "Error message is a link");
 
-    message = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+  message = await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    let errorCode = doc.getElementById("errorCode");
+    errorCode.click();
+    let div = doc.getElementById("certificateErrorDebugInformation");
+    let text = doc.getElementById("certificateErrorText");
 
-      let errorCode = doc.getElementById("errorCode");
-      errorCode.click();
-      let div = doc.getElementById("certificateErrorDebugInformation");
-      let text = doc.getElementById("certificateErrorText");
+    let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                     .getService(Ci.nsISerializationHelper);
+    let serializable =  docShell.failedChannel.securityInfo
+                                .QueryInterface(Ci.nsITransportSecurityInfo)
+                                .QueryInterface(Ci.nsISerializable);
+    let serializedSecurityInfo = serhelper.serializeToString(serializable);
+    return {
+      divDisplay: content.getComputedStyle(div).display,
+      text: text.textContent,
+      securityInfoAsString: serializedSecurityInfo
+    };
+  });
+  isnot(message.divDisplay, "none", "Debug information is visible");
+  ok(message.text.includes(BAD_CERT), "Correct URL found");
+  ok(message.text.includes("Certificate has expired"),
+     "Correct error message found");
+  ok(message.text.includes("HTTP Strict Transport Security: false"),
+     "Correct HSTS value found");
+  ok(message.text.includes("HTTP Public Key Pinning: false"),
+     "Correct HPKP value found");
+  let certChain = getCertChain(message.securityInfoAsString);
+  ok(message.text.includes(certChain), "Found certificate chain");
 
-      let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-                       .getService(Ci.nsISerializationHelper);
-      let serializable =  doc.docShell.failedChannel.securityInfo
-                                      .QueryInterface(Ci.nsITransportSecurityInfo)
-                                      .QueryInterface(Ci.nsISerializable);
-      let serializedSecurityInfo = serhelper.serializeToString(serializable);
-      return {
-        divDisplay: content.getComputedStyle(div).display,
-        text: text.textContent,
-        securityInfoAsString: serializedSecurityInfo
-      };
-    });
-    isnot(message.divDisplay, "none", "Debug information is visible");
-    ok(message.text.includes(BAD_CERT), "Correct URL found");
-    ok(message.text.includes("Certificate has expired"),
-       "Correct error message found");
-    ok(message.text.includes("HTTP Strict Transport Security: false"),
-       "Correct HSTS value found");
-    ok(message.text.includes("HTTP Public Key Pinning: false"),
-       "Correct HPKP value found");
-    let certChain = getCertChain(message.securityInfoAsString);
-    ok(message.text.includes(certChain), "Found certificate chain");
-
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function checkAdvancedDetailsForHSTS() {
   info("Loading a bad STS cert page and verifying the advanced details section");
-  for (let useFrame of [false, true]) {
-    let tab = await openErrorPage(BAD_STS_CERT, useFrame);
-    let browser = tab.linkedBrowser;
+  let browser;
+  let certErrorLoaded;
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, BAD_STS_CERT);
+    browser = gBrowser.selectedBrowser;
+    certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  }, false);
 
-    let message = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+  info("Loading and waiting for the cert error");
+  await certErrorLoaded;
 
-      let advancedButton = doc.getElementById("advancedButton");
-      advancedButton.click();
-      let ec = doc.getElementById("errorCode");
-      let cdl = doc.getElementById("cert_domain_link");
-      return {
-        ecTextContent: ec.textContent,
-        ecTagName: ec.tagName,
-        cdlTextContent: cdl.textContent,
-        cdlTagName: cdl.tagName
-      };
-    });
+  let message = await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    let advancedButton = doc.getElementById("advancedButton");
+    advancedButton.click();
+    let ec = doc.getElementById("errorCode");
+    let cdl = doc.getElementById("cert_domain_link");
+    return {
+      ecTextContent: ec.textContent,
+      ecTagName: ec.tagName,
+      cdlTextContent: cdl.textContent,
+      cdlTagName: cdl.tagName
+    };
+  });
 
-    const badStsUri = Services.io.newURI(BAD_STS_CERT);
-    is(message.ecTextContent, "SSL_ERROR_BAD_CERT_DOMAIN",
-       "Correct error message found");
-    is(message.ecTagName, "a", "Error message is a link");
-    const url = badStsUri.prePath.slice(badStsUri.prePath.indexOf(".") + 1);
-    is(message.cdlTextContent, url,
-       "Correct cert_domain_link contents found");
-    is(message.cdlTagName, "a", "cert_domain_link is a link");
+  const badStsUri = Services.io.newURI(BAD_STS_CERT);
+  is(message.ecTextContent, "SSL_ERROR_BAD_CERT_DOMAIN",
+     "Correct error message found");
+  is(message.ecTagName, "a", "Error message is a link");
+  const url = badStsUri.prePath.slice(badStsUri.prePath.indexOf(".") + 1);
+  is(message.cdlTextContent, url,
+     "Correct cert_domain_link contents found");
+  is(message.cdlTagName, "a", "cert_domain_link is a link");
 
-    message = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+  message = await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    let errorCode = doc.getElementById("errorCode");
+    errorCode.click();
+    let div = doc.getElementById("certificateErrorDebugInformation");
+    let text = doc.getElementById("certificateErrorText");
 
-      let errorCode = doc.getElementById("errorCode");
-      errorCode.click();
-      let div = doc.getElementById("certificateErrorDebugInformation");
-      let text = doc.getElementById("certificateErrorText");
+    let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                     .getService(Ci.nsISerializationHelper);
+    let serializable =  docShell.failedChannel.securityInfo
+                                .QueryInterface(Ci.nsITransportSecurityInfo)
+                                .QueryInterface(Ci.nsISerializable);
+    let serializedSecurityInfo = serhelper.serializeToString(serializable);
+    return {
+      divDisplay: content.getComputedStyle(div).display,
+      text: text.textContent,
+      securityInfoAsString: serializedSecurityInfo
+    };
+  });
+  isnot(message.divDisplay, "none", "Debug information is visible");
+  ok(message.text.includes(badStsUri.spec), "Correct URL found");
+  ok(message.text.includes("requested domain name does not match the server\u2019s certificate"),
+     "Correct error message found");
+  ok(message.text.includes("HTTP Strict Transport Security: false"),
+     "Correct HSTS value found");
+  ok(message.text.includes("HTTP Public Key Pinning: true"),
+     "Correct HPKP value found");
+  let certChain = getCertChain(message.securityInfoAsString);
+  ok(message.text.includes(certChain), "Found certificate chain");
 
-      let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-                       .getService(Ci.nsISerializationHelper);
-      let serializable =  doc.docShell.failedChannel.securityInfo
-                                      .QueryInterface(Ci.nsITransportSecurityInfo)
-                                      .QueryInterface(Ci.nsISerializable);
-      let serializedSecurityInfo = serhelper.serializeToString(serializable);
-      return {
-        divDisplay: content.getComputedStyle(div).display,
-        text: text.textContent,
-        securityInfoAsString: serializedSecurityInfo
-      };
-    });
-    isnot(message.divDisplay, "none", "Debug information is visible");
-    ok(message.text.includes(badStsUri.spec), "Correct URL found");
-    ok(message.text.includes("requested domain name does not match the server\u2019s certificate"),
-       "Correct error message found");
-    ok(message.text.includes("HTTP Strict Transport Security: false"),
-       "Correct HSTS value found");
-    ok(message.text.includes("HTTP Public Key Pinning: true"),
-       "Correct HPKP value found");
-    let certChain = getCertChain(message.securityInfoAsString);
-    ok(message.text.includes(certChain), "Found certificate chain");
-
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function checkUnknownIssuerLearnMoreLink() {
   info("Loading a cert error for self-signed pages and checking the correct link is shown");
-  for (let useFrame of [false, true]) {
-    let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
-    let browser = tab.linkedBrowser;
+  let browser;
+  let certErrorLoaded;
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, UNKNOWN_ISSUER);
+    browser = gBrowser.selectedBrowser;
+    certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  }, false);
 
-    let href = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
-      let learnMoreLink = doc.getElementById("learnMoreLink");
-      return learnMoreLink.href;
-    });
-    ok(href.endsWith("security-error"), "security-error in the Learn More URL");
+  info("Loading and waiting for the cert error");
+  await certErrorLoaded;
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
+  let href = await ContentTask.spawn(browser, null, async function() {
+    let learnMoreLink = content.document.getElementById("learnMoreLink");
+    return learnMoreLink.href;
+  });
+  ok(href.endsWith("security-error"), "security-error in the Learn More URL");
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 function getCertChain(securityInfoAsString) {
