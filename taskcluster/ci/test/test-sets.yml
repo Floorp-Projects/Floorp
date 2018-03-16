@@ -222,6 +222,7 @@ windows-talos:
     - talos-tp5o
     - talos-xperf
     - talos-speedometer
+    - talos-tp6
 
 macosx64-tests:
     - cppunit
