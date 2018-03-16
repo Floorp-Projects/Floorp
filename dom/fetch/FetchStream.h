@@ -90,6 +90,9 @@ private:
   // Common methods
 
   enum State {
+    // This is the beginning state before any reading operation.
+    eInitializing,
+
     // RequestDataCallback has not been called yet. We haven't started to read
     // data from the stream yet.
     eWaiting,

@@ -179,7 +179,8 @@ FetchStream::RequestDataCallback(JSContext* aCx,
 
   RefPtr<FetchStream> stream = static_cast<FetchStream*>(aUnderlyingSource);
 
-  MOZ_DIAGNOSTIC_ASSERT(stream->mState == eWaiting ||
+  MOZ_DIAGNOSTIC_ASSERT(stream->mState == eInitializing ||
+                        stream->mState == eWaiting ||
                         stream->mState == eChecking ||
                         stream->mState == eReading);
 
@@ -194,6 +195,11 @@ FetchStream::RequestDataCallback(JSContext* aCx,
     MOZ_ASSERT(stream->mInputStream);
     stream->mState = eReading;
     return;
+  }
+
+  if (stream->mState == eInitializing) {
+    // The stream has been used for the first time.
+    stream->mStreamHolder->MarkAsRead();
   }
 
   stream->mState = eReading;
@@ -287,6 +293,11 @@ FetchStream::CancelCallback(JSContext* aCx, JS::HandleObject aStream,
   // is finalized.
   FetchStream* stream = static_cast<FetchStream*>(aUnderlyingSource);
 
+  if (stream->mState == eInitializing) {
+    // The stream has been used for the first time.
+    stream->mStreamHolder->MarkAsRead();
+  }
+
   if (stream->mInputStream) {
     stream->mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
   }
@@ -317,6 +328,11 @@ FetchStream::ErroredCallback(JSContext* aCx, JS::HandleObject aStream,
   // is finalized.
   FetchStream* stream = static_cast<FetchStream*>(aUnderlyingSource);
 
+  if (stream->mState == eInitializing) {
+    // The stream has been used for the first time.
+    stream->mStreamHolder->MarkAsRead();
+  }
+
   if (stream->mInputStream) {
     stream->mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
   }
@@ -342,7 +358,7 @@ FetchStream::FinalizeCallback(void* aUnderlyingSource, uint8_t aFlags)
 FetchStream::FetchStream(nsIGlobalObject* aGlobal,
                          FetchStreamHolder* aStreamHolder,
                          nsIInputStream* aInputStream)
-  : mState(eWaiting)
+  : mState(eInitializing)
   , mGlobal(aGlobal)
   , mStreamHolder(aStreamHolder)
   , mOwningEventTarget(aGlobal->EventTargetFor(TaskCategory::Other))
