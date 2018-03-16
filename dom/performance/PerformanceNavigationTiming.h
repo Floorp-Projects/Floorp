@@ -43,7 +43,8 @@ public:
     if (mPerformance->IsSystemPrincipal()) {
       return rawDuration;
     }
-    return nsRFPService::ReduceTimePrecisionAsMSecs(rawDuration);
+    return nsRFPService::ReduceTimePrecisionAsMSecs(rawDuration,
+      mPerformance->GetRandomTimelineSeed());
   }
 
   DOMHighResTimeStamp StartTime() const override

@@ -176,6 +176,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
   }
 
   function testBasicCardSimpleResponse() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
     gScript.sendAsyncMessage("set-simple-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
@@ -196,11 +198,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
       }).catch( e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 
   function testBasicCardDetailedResponse() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
     gScript.sendAsyncMessage("set-detailed-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
@@ -233,7 +237,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
       }).catch( e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 

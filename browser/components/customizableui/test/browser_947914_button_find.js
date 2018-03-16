@@ -17,7 +17,11 @@ add_task(async function() {
   let findButton = document.getElementById("find-button");
   ok(findButton, "Find button exists in Panel Menu");
 
+  let findBarPromise = gBrowser.isFindBarInitialized() ?
+    null : BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabFindInitialized");
+
   findButton.click();
+  await findBarPromise;
   ok(!gFindBar.hasAttribute("hidden"), "Findbar opened successfully");
 
   // close find bar

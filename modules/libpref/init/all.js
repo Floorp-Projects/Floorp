@@ -2652,11 +2652,7 @@ pref("security.mixed_content.block_display_content", false);
 pref("security.mixed_content.upgrade_display_content", false);
 
 // Block sub requests that happen within an object
-#ifdef EARLY_BETA_OR_EARLIER
-pref("security.mixed_content.block_object_subrequest", true);
-#else
 pref("security.mixed_content.block_object_subrequest", false);
-#endif
 
 // Sub-resource integrity
 pref("security.sri.enable", true);
@@ -3239,10 +3235,6 @@ pref("dom.animations-api.core.enabled", true);
 // Note that if dom.animations-api.core.enabled is true, this preference is
 // ignored.
 pref("dom.animations-api.element-animate.enabled", true);
-
-// Is the pending state reported using a separate 'pending' member of the
-// Animation interface as opposed to the 'playState' member?
-pref("dom.animations-api.pending-member.enabled", true);
 
 // Pref to throttle offsreen animations
 pref("dom.animations.offscreen-throttling", true);

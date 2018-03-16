@@ -64,8 +64,8 @@ void cleanupJitter(bool jitterWasEnabled) {
 }
 
 void process(double clock, nsRFPService::TimeScale clockUnits, double precision) {
-  double reduced1 = nsRFPService::ReduceTimePrecisionImpl(clock, clockUnits, precision, TimerPrecisionType::All);
-  double reduced2 = nsRFPService::ReduceTimePrecisionImpl(reduced1, clockUnits, precision, TimerPrecisionType::All);
+  double reduced1 = nsRFPService::ReduceTimePrecisionImpl(clock, clockUnits, precision, -1, TimerPrecisionType::All);
+  double reduced2 = nsRFPService::ReduceTimePrecisionImpl(reduced1, clockUnits, precision, -1, TimerPrecisionType::All);
   ASSERT_EQ(reduced1, reduced2);
 }
 
@@ -115,17 +115,17 @@ TEST(ResistFingerprinting, ReducePrecision_Edge) {
 TEST(ResistFingerprinting, ReducePrecision_Expectations) {
   bool jitterEnabled = setupJitter(false);
   double result;
-  result = nsRFPService::ReduceTimePrecisionImpl(2611.14, nsRFPService::TimeScale::MilliSeconds, 20, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(2611.14, nsRFPService::TimeScale::MilliSeconds, 20, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 2611.14);
-  result = nsRFPService::ReduceTimePrecisionImpl(2611.145, nsRFPService::TimeScale::MilliSeconds, 20, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(2611.145, nsRFPService::TimeScale::MilliSeconds, 20, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 2611.14);
-  result = nsRFPService::ReduceTimePrecisionImpl(2611.141, nsRFPService::TimeScale::MilliSeconds, 20, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(2611.141, nsRFPService::TimeScale::MilliSeconds, 20, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 2611.14);
-  result = nsRFPService::ReduceTimePrecisionImpl(2611.15999, nsRFPService::TimeScale::MilliSeconds, 20, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(2611.15999, nsRFPService::TimeScale::MilliSeconds, 20, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 2611.14);
-  result = nsRFPService::ReduceTimePrecisionImpl(2611.15, nsRFPService::TimeScale::MilliSeconds, 20, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(2611.15, nsRFPService::TimeScale::MilliSeconds, 20, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 2611.14);
-  result = nsRFPService::ReduceTimePrecisionImpl(2611.13, nsRFPService::TimeScale::MilliSeconds, 20, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(2611.13, nsRFPService::TimeScale::MilliSeconds, 20, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 2611.12);
   cleanupJitter(jitterEnabled);
 }
@@ -134,16 +134,16 @@ TEST(ResistFingerprinting, ReducePrecision_ExpectedLossOfPrecision) {
   bool jitterEnabled = setupJitter(false);
   double result;
   // We lose integer precision at 9007199254740992 - let's confirm that.
-  result = nsRFPService::ReduceTimePrecisionImpl(9007199254740992.0, nsRFPService::TimeScale::MicroSeconds, 5, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(9007199254740992.0, nsRFPService::TimeScale::MicroSeconds, 5, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 9007199254740990.0);
   // 9007199254740995 is approximated to 9007199254740996
-  result = nsRFPService::ReduceTimePrecisionImpl(9007199254740995.0, nsRFPService::TimeScale::MicroSeconds, 5, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(9007199254740995.0, nsRFPService::TimeScale::MicroSeconds, 5, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 9007199254740996);
   // 9007199254740999 is approximated as 9007199254741000
-  result = nsRFPService::ReduceTimePrecisionImpl(9007199254740999.0, nsRFPService::TimeScale::MicroSeconds, 5, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(9007199254740999.0, nsRFPService::TimeScale::MicroSeconds, 5, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 9007199254741000.0);
   // 9007199254743568 can be represented exactly, but will be clamped to 9007199254743564
-  result = nsRFPService::ReduceTimePrecisionImpl(9007199254743568.0, nsRFPService::TimeScale::MicroSeconds, 5, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(9007199254743568.0, nsRFPService::TimeScale::MicroSeconds, 5, -1, TimerPrecisionType::All);
   ASSERT_EQ(result, 9007199254743564.0);
   cleanupJitter(jitterEnabled);
 }
@@ -222,23 +222,24 @@ TEST(ResistFingerprinting, ReducePrecision_JitterTestVectors) {
    *  Per-Hash  Buckets: [0, 4000], [4000, 8000], ...
    *
    * The first two hash values should be
-   *    0:    SHA-256(0x000102030405060708 || 0x101112131415161718 || 0x0000000000000000)
-   *          32ca0459 bdb518be c72096dc 2667cd7a a76f94e4 c33fa679 9a1bd499 bfa4ec57
-   *    4000: SHA-256(0x000102030405060708 || 0x101112131415161718 || 0xa00f000000000000)
-   *          bd0bf282 120fd8c2 459c4d05 0170179c 25136f6f 70db5c82 5807558d 148c7745
+   *    0:    SHA-256(0x0001020304050607 || 0x1011121314151617 || 0xa00f000000000000 || 0x0000000000000000)
+   *          78d2d811 804fcaa4 7d472a1e 9fe043d2 dd77b3df 06c1c4f2 9f35f28a e3afbec0
+   *    4000: SHA-256(0x0001020304050607 || 0x1011121314151617 || 0xa00f000000000000 || 0xa00f000000000000)
+   *          1571bf19 92a89cd0 829259d5 b260a4a6 b8da8ad5 2e3ae33c 5571bb8d 8f69cca6
    *
-   * The midpoints are:
-   *   0   : 32ca0459 % 500 = 130
-   *   500 : bdb518be % 500 = 429
-   *   1500: c72096dc % 500 = 311
-   *   2000: 2667cd7a % 500 = 138
-   *   2500: a76f94e4 % 500 = 159
-   *   3000: c33fa679 % 500 = 435
-   *   3500: 9a1bd499 % 500 = 246
-   *   4000: bfa4ec57 % 500 = 463
-   *   4500: bd0bf282 % 500 = 297
-   *   5000: 120fd8c2 % 500 = 38
-   *   5500: 459c4d05 % 500 = 357
+   * The midpoints are (if you're doing this manually, you need to correct endian-ness):
+   *   0   : 78d2d811 % 500 = 328
+   *   500 : 804fcaa4 % 500 = 48
+   *   1000: 7d472a1e % 500 = 293
+   *   1500: 9fe043d2 % 500 = 275
+   *   2000: dd77b3df % 500 = 297
+   *   2500: 06c1c4f2 % 500 = 242
+   *   3000: 9f35f28a % 500 = 247
+   *   3500: e3afbec0 % 500 = 339
+   *   4000: 1571bf19 % 500 = 225
+   *   4500: 92a89cd0 % 500 = 198
+   *   5000: 829259d5 % 500 = 218
+   *   5500: b260a4a6 % 500 = 14
    */
 
   // Set the secret
@@ -247,59 +248,59 @@ TEST(ResistFingerprinting, ReducePrecision_JitterTestVectors) {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17 };
 
-  nsRFPService::RandomMidpoint(0, 500, &throwAway, hardcodedSecret);
+  nsRFPService::RandomMidpoint(0, 500, -1, &throwAway, hardcodedSecret);
 
   // Run the test vectors
   double result;
 
-  result = nsRFPService::ReduceTimePrecisionImpl(1, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(1, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 0);
-  result = nsRFPService::ReduceTimePrecisionImpl(129, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(327, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 0);
-  result = nsRFPService::ReduceTimePrecisionImpl(130, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(328, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 500);
-  result = nsRFPService::ReduceTimePrecisionImpl(131, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(329, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 500);
-  result = nsRFPService::ReduceTimePrecisionImpl(499, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(499, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 500);
 
-  result = nsRFPService::ReduceTimePrecisionImpl(500, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(500, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 500);
-  result = nsRFPService::ReduceTimePrecisionImpl(600, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(540, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 500);
-  result = nsRFPService::ReduceTimePrecisionImpl(928, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(547, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 500);
-  result = nsRFPService::ReduceTimePrecisionImpl(929, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(548, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 1000);
-  result = nsRFPService::ReduceTimePrecisionImpl(930, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(930, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 1000);
-  result = nsRFPService::ReduceTimePrecisionImpl(1255, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(1255, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 1000);
 
-  result = nsRFPService::ReduceTimePrecisionImpl(4000, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4000, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 4000);
-  result = nsRFPService::ReduceTimePrecisionImpl(4295, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4220, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 4000);
-  result = nsRFPService::ReduceTimePrecisionImpl(4296, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4224, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 4000);
-  result = nsRFPService::ReduceTimePrecisionImpl(4297, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4225, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 4500);
-  result = nsRFPService::ReduceTimePrecisionImpl(4298, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4340, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 4500);
-  result = nsRFPService::ReduceTimePrecisionImpl(4499, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4499, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 4500);
 
-  result = nsRFPService::ReduceTimePrecisionImpl(4500, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4500, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 4500);
-  result = nsRFPService::ReduceTimePrecisionImpl(4536, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4536, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 4500);
-  result = nsRFPService::ReduceTimePrecisionImpl(4537, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4695, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 4500);
-  result = nsRFPService::ReduceTimePrecisionImpl(4538, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4698, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 5000);
-  result = nsRFPService::ReduceTimePrecisionImpl(4539, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(4726, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 5000);
-  result = nsRFPService::ReduceTimePrecisionImpl(5106, nsRFPService::TimeScale::MicroSeconds, 500, TimerPrecisionType::All);
+  result = nsRFPService::ReduceTimePrecisionImpl(5106, nsRFPService::TimeScale::MicroSeconds, 500, 4000, TimerPrecisionType::All);
   ASSERT_EQ(result, 5000);
 
   cleanupJitter(jitterEnabled);

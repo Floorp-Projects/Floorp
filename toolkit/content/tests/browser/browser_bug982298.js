@@ -20,6 +20,7 @@ add_task(async function() {
       info("about to add results listener, open find bar, and send 'F' string");
       browser.finder.addResultListener(listener);
     });
+    await gFindBarPromise;
     gFindBar.onFindCommand();
     EventUtils.sendString("F");
     info("added result listener and sent string 'F'");

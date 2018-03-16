@@ -15,7 +15,7 @@ async function ifTestingSupported() {
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   let thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([recordingFinished, callListPopulated, thumbnailsDisplayed]);
+  await Promise.all([recordingFinished, callListPopulated, thumbnailsDisplayed]);
 
   let firstSnapshot = SnapshotsListView.getItemAtIndex(0);
   let firstSnapshotOverview = await firstSnapshot.attachment.actor.getOverview();
@@ -79,9 +79,9 @@ async function ifTestingSupported() {
 }
 
 function waitForMozSetImageElement(panel) {
-  let deferred = defer();
-  panel._onMozSetImageElement = deferred.resolve;
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    panel._onMozSetImageElement = resolve;
+  });
 }
 
 function sameArray(a, b) {

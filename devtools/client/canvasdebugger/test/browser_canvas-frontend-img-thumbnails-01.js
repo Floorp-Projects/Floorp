@@ -15,7 +15,7 @@ async function ifTestingSupported() {
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   let thumbnailsDisplayed = once(window, EVENTS.THUMBNAILS_DISPLAYED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([recordingFinished, callListPopulated, thumbnailsDisplayed]);
+  await Promise.all([recordingFinished, callListPopulated, thumbnailsDisplayed]);
 
   is($all(".filmstrip-thumbnail").length, 4,
     "There should be 4 thumbnails displayed in the UI.");

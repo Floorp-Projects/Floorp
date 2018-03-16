@@ -181,8 +181,8 @@ const CustomizableWidgets = [
     tooltiptext: "find-button.tooltiptext3",
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
-      if (win.gFindBar) {
-        win.gFindBar.onFindCommand();
+      if (win.gLazyFindCommand) {
+        win.gLazyFindCommand("onFindCommand");
       }
     }
   }, {
