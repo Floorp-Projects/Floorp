@@ -261,7 +261,7 @@ DomNodePreview.prototype = {
     }
   },
 
-  onMarkupMutations: function(mutations) {
+  onMarkupMutations: function(e, mutations) {
     if (!this.nodeFront) {
       return;
     }
