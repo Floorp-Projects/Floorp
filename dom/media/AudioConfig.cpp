@@ -246,19 +246,22 @@ AudioConfig::ChannelLayout::SMPTEDefault(ChannelMap aMap)
 
 bool
 AudioConfig::ChannelLayout::MappingTable(const ChannelLayout& aOther,
-                                         uint8_t* aMap) const
+                                         nsTArray<uint8_t>* aMap) const
 {
-  if (!IsValid() || !aOther.IsValid() ||
-      Map() != aOther.Map()) {
+  if (!IsValid() || !aOther.IsValid() || Map() != aOther.Map()) {
+    if (aMap) {
+      aMap->SetLength(0);
+    }
     return false;
   }
   if (!aMap) {
     return true;
   }
+  aMap->SetLength(Count());
   for (uint32_t i = 0; i < Count(); i++) {
     for (uint32_t j = 0; j < Count(); j++) {
       if (aOther[j] == mChannels[i]) {
-        aMap[j] = i;
+        (*aMap)[j] = i;
         break;
       }
     }
