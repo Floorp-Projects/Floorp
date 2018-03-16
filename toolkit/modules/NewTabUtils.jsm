@@ -2138,6 +2138,7 @@ var NewTabUtils = {
   allPages: AllPages,
   pinnedLinks: PinnedLinks,
   blockedLinks: BlockedLinks,
+  placesProvider: PlacesProvider,
   activityStreamLinks: ActivityStreamLinks,
   activityStreamProvider: ActivityStreamProvider
 };

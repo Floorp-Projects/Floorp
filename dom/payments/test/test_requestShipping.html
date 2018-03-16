@@ -122,12 +122,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1436903
     gScript.sendAsyncMessage("set-normal-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+
       payRequest.addEventListener("shippingaddresschange", event => {
         event.updateWith(updateWithShippingAddress());
       });
       payRequest.addEventListener("shippingoptionchange", event => {
         event.updateWith(updateWithShippingOption());
       });
+
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
       payRequest.show().then(response => {
         response.complete("success").then(() =>{
           resolve();
@@ -138,7 +141,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1436903
       }).catch( e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 

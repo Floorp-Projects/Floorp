@@ -8,6 +8,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/PaymentResponse.h"
+#include "mozilla/EventStateManager.h"
 #include "nsContentUtils.h"
 #include "nsIURLParser.h"
 #include "nsNetCID.h"
@@ -684,6 +685,11 @@ PaymentRequest::Show(ErrorResult& aRv)
 {
   if (mState != eCreated) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  if (!EventStateManager::IsHandlingUserInput()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 

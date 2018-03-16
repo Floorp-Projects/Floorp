@@ -18,14 +18,7 @@ http://eslint.org/docs/user-guide/configuring#specifying-environments
 browser-window
 --------------
 
-Defines the environment for scripts that are in the main browser.xul scope (
-note: includes the places-overlay environment).
-
-places-overlay
---------------
-
-Defines the environment for scripts that are in a scope where placesOverlay.xul
-is included.
+Defines the environment for scripts that are in the main browser.xul scope.
 
 chrome-worker
 -------------

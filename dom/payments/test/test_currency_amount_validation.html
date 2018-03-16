@@ -199,6 +199,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
   }
 
   function testUpdateWithInvalidCurrency() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
     info("testUpdateWithInvalidCurrency");
     gScript.sendAsyncMessage("set-update-with-invalid-details-ui-service");
     return new Promise((resolve, reject) => {
@@ -218,11 +220,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
       }).catch(e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 
   function testUpdateWithInvalidAmount() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+
     info("testUpdateWithInvalidAmount");
     gScript.sendAsyncMessage("set-update-with-invalid-details-ui-service");
     return new Promise((resolve, reject) => {
@@ -242,7 +246,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
       }).catch(e => {
         ok(false, "Unexpected error: " + e.name);
         resolve();
-      });
+      }).finally(handler.destruct);
     });
   }
 

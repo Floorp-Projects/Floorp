@@ -49,6 +49,11 @@ public:
     return mDOMTiming;
   }
 
+  virtual uint64_t GetRandomTimelineSeed() override
+  {
+    return GetDOMTiming()->GetRandomTimelineSeed();
+  }
+
   virtual nsITimedChannel* GetChannel() const override
   {
     return mChannel;

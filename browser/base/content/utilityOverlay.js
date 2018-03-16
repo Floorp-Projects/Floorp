@@ -7,7 +7,9 @@
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "RecentWindow",
                                "resource:///modules/RecentWindow.jsm");
