@@ -68,7 +68,8 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : P
 
     fun validateEngineNameAndShowError(engineName: String): Boolean {
         val errorMessage = when {
-            TextUtils.isEmpty(engineName) || !engineNameIsUnique(engineName) -> context.getString(R.string.search_add_error_empty_name)
+            TextUtils.isEmpty(engineName) -> context.getString(R.string.search_add_error_empty_name)
+            !engineNameIsUnique(engineName) -> context.getString(R.string.search_add_error_duplicate_name)
             else -> null
         }
 
