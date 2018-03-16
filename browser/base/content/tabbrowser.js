@@ -613,7 +613,7 @@ window._gBrowser = {
           anim instanceof CSSAnimation &&
           (anim.animationName === "tab-throbber-animation" ||
             anim.animationName === "tab-throbber-animation-rtl") &&
-          (anim.playState === "running" || anim.playState === "pending"));
+          anim.playState === "running");
 
       // Synchronize with the oldest running animation, if any.
       const firstStartTime = Math.min(
