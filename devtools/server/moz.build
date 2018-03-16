@@ -22,7 +22,6 @@ DevToolsModules(
     'css-logic.js',
     'event-parsers.js',
     'main.js',
-    'primitive.js',
     'service-worker-child.js',
     'websocket-server.js',
     'worker.js'
