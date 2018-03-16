@@ -34,6 +34,7 @@
 #include "mozilla/dom/PushEventBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/WorkerDebugger.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/Unused.h"
@@ -1072,15 +1073,15 @@ namespace {
 class AllowWindowInteractionHandler final : public ExtendableEventCallback
                                           , public nsITimerCallback
                                           , public nsINamed
-                                          , public WorkerHolder
 {
   nsCOMPtr<nsITimer> mTimer;
+  RefPtr<StrongWorkerRef> mWorkerRef;
 
   ~AllowWindowInteractionHandler()
   {
     // We must either fail to initialize or call ClearWindowAllowed.
     MOZ_DIAGNOSTIC_ASSERT(!mTimer);
-    MOZ_DIAGNOSTIC_ASSERT(!mWorkerPrivate);
+    MOZ_DIAGNOSTIC_ASSERT(!mWorkerRef);
   }
 
   void
@@ -1105,7 +1106,7 @@ class AllowWindowInteractionHandler final : public ExtendableEventCallback
     mTimer->Cancel();
     mTimer = nullptr;
 
-    ReleaseWorker();
+    mWorkerRef = nullptr;
   }
 
   void
@@ -1121,7 +1122,19 @@ class AllowWindowInteractionHandler final : public ExtendableEventCallback
       return;
     }
 
-    if (!HoldWorker(aWorkerPrivate, Closing)) {
+    MOZ_ASSERT(!mWorkerRef);
+    RefPtr<AllowWindowInteractionHandler> self = this;
+    mWorkerRef =
+      StrongWorkerRef::Create(aWorkerPrivate,
+                              "AllowWindowInteractionHandler",
+                              [self]() {
+        // We could try to hold the worker alive until the timer fires, but
+        // other APIs are not likely to work in this partially shutdown state.
+        // We might as well let the worker thread exit.
+        self->ClearWindowAllowed(self->mWorkerRef->Private());
+      });
+
+    if (!mWorkerRef) {
       return;
     }
 
@@ -1147,7 +1160,8 @@ class AllowWindowInteractionHandler final : public ExtendableEventCallback
   Notify(nsITimer* aTimer) override
   {
     MOZ_DIAGNOSTIC_ASSERT(mTimer == aTimer);
-    ClearWindowAllowed(mWorkerPrivate);
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    ClearWindowAllowed(workerPrivate);
     return NS_OK;
   }
 
@@ -1159,22 +1173,10 @@ class AllowWindowInteractionHandler final : public ExtendableEventCallback
     return NS_OK;
   }
 
-  // WorkerHolder virtual methods
-  bool
-  Notify(WorkerStatus aStatus) override
-  {
-    // We could try to hold the worker alive until the timer fires, but other
-    // APIs are not likely to work in this partially shutdown state.  We might
-    // as well let the worker thread exit.
-    ClearWindowAllowed(mWorkerPrivate);
-    return true;
-  }
-
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   explicit AllowWindowInteractionHandler(WorkerPrivate* aWorkerPrivate)
-    : WorkerHolder("AllowWindowInteractionHandler")
   {
     StartClearWindowTimer(aWorkerPrivate);
   }
