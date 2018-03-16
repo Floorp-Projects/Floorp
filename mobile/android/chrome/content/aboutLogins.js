@@ -437,6 +437,7 @@ var Logins = {
     loginItem.className = "login-item list-item";
 
     loginItem.addEventListener("click", this, true);
+    loginItem.addEventListener("contextmenu", this, true);
 
     // Create item icon.
     let img = document.createElement("div");
@@ -479,6 +480,7 @@ var Logins = {
         this._onPopState(event);
         break;
       }
+      case "contextmenu":
       case "click": {
         this._onLoginClick(event);
         break;
