@@ -24,11 +24,11 @@ using namespace dom;
 
 // Test for distance between caret and text that will be deleted
 nsresult
-TextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
-                                         nsINode* aSelNode,
-                                         int32_t aSelOffset,
-                                         nsIEditor::EDirection aAction,
-                                         bool* aCancel)
+TextEditRules::CheckBidiLevelForDeletion(
+                 Selection* aSelection,
+                 const EditorRawDOMPoint& aSelectionPoint,
+                 nsIEditor::EDirection aAction,
+                 bool* aCancel)
 {
   NS_ENSURE_ARG_POINTER(aCancel);
   *aCancel = false;
@@ -43,10 +43,9 @@ TextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
     return NS_OK;
   }
 
-  if (!aSelNode || !aSelNode->IsContent()) {
+  if (!aSelectionPoint.GetContainerAsContent()) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsCOMPtr<nsIContent> content = aSelNode->AsContent();
 
   nsBidiLevel levelBefore;
   nsBidiLevel levelAfter;
@@ -55,7 +54,8 @@ TextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
   NS_ENSURE_TRUE(frameSelection, NS_ERROR_NULL_POINTER);
 
   nsPrevNextBidiLevels levels = frameSelection->
-    GetPrevNextBidiLevels(content, aSelOffset, true);
+    GetPrevNextBidiLevels(aSelectionPoint.GetContainerAsContent(),
+                          aSelectionPoint.Offset(), true);
 
   levelBefore = levels.mLevelBefore;
   levelAfter = levels.mLevelAfter;

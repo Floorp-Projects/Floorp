@@ -168,7 +168,7 @@ impl FrameBuilder {
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
-        if self.prim_store.cpu_pictures.is_empty() {
+        if self.prim_store.pictures.is_empty() {
             return None
         }
 
@@ -203,7 +203,7 @@ impl FrameBuilder {
         let pic_context = PictureContext {
             pipeline_id: root_clip_scroll_node.pipeline_id,
             perform_culling: true,
-            prim_runs: mem::replace(&mut self.prim_store.cpu_pictures[0].runs, Vec::new()),
+            prim_runs: mem::replace(&mut self.prim_store.pictures[0].runs, Vec::new()),
             original_reference_frame_index: None,
             display_list,
             draw_text_transformed: true,
@@ -220,7 +220,7 @@ impl FrameBuilder {
             &mut frame_state,
         );
 
-        let pic = &mut self.prim_store.cpu_pictures[0];
+        let pic = &mut self.prim_store.pictures[0];
         pic.runs = pic_context.prim_runs;
 
         let root_render_task = RenderTask::new_picture(
@@ -298,7 +298,7 @@ impl FrameBuilder {
 
         let mut node_data = Vec::with_capacity(clip_scroll_tree.nodes.len());
         let total_prim_runs =
-            self.prim_store.cpu_pictures.iter().fold(1, |count, ref pic| count + pic.runs.len());
+            self.prim_store.pictures.iter().fold(1, |count, ref pic| count + pic.runs.len());
         let mut clip_chain_local_clip_rects = Vec::with_capacity(total_prim_runs);
         clip_chain_local_clip_rects.push(LayerRect::max_rect());
 

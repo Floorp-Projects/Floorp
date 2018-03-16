@@ -41,20 +41,12 @@ impl Example for App {
     ) {
         // Create a 200x200 stacking context with an animated transform property.
         let bounds = (0, 0).to(200, 200);
-        let complex_clip = ComplexClipRegion {
-            rect: bounds,
-            radii: BorderRadius::uniform(50.0),
-            mode: ClipMode::Clip,
-        };
-        let info = LayoutPrimitiveInfo {
-            local_clip: LocalClip::RoundedRect(bounds, complex_clip),
-            .. LayoutPrimitiveInfo::new(bounds)
-        };
 
         let filters = vec![
             FilterOp::Opacity(PropertyBinding::Binding(self.opacity_key), self.opacity),
         ];
 
+        let info = LayoutPrimitiveInfo::new(bounds);
         builder.push_stacking_context(
             &info,
             ScrollPolicy::Scrollable,
@@ -65,8 +57,18 @@ impl Example for App {
             filters,
         );
 
+        let complex_clip = ComplexClipRegion {
+            rect: bounds,
+            radii: BorderRadius::uniform(50.0),
+            mode: ClipMode::Clip,
+        };
+        let clip_id = builder.define_clip(bounds, vec![complex_clip], None);
+        builder.push_clip_id(clip_id);
+
         // Fill it with a white rect
         builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
+
+        builder.pop_clip_id();
 
         builder.pop_stacking_context();
     }

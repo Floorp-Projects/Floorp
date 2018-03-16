@@ -66,12 +66,7 @@ var WebrtcUI = {
     } else if (aTopic === "PeerConnection:request") {
       this.handlePCRequest(aSubject, aTopic, aData);
     } else if (aTopic === "recording-device-events") {
-      switch (aData) {
-        case "shutdown":
-        case "starting":
-          this.notify();
-          break;
-      }
+      this.notify();
     } else if (aTopic === "VideoCapture:Paused") {
       if (this._notificationId) {
         Notifications.cancel(this._notificationId);

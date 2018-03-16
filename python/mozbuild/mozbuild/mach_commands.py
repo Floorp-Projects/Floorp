@@ -62,8 +62,8 @@ not enough available memory to perform the build. It's also possible some
 other system activity during the build is to blame.
 
 If you feel this message is not appropriate for your machine configuration,
-please file a Core :: Build Config bug at
-https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Build%20Config
+please file a Firefox Build System :: General bug at
+https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20Build%20System&component=General
 and tell us about your machine and build configuration so we can adjust the
 warning heuristic.
 ===================

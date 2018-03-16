@@ -49,4 +49,4 @@ with Files("update*"):
     BUG_COMPONENT = ("Core", "JavaScript: Internationalization API")
 
 with Files("icu_sources_data.py"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")

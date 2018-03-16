@@ -1,11 +1,11 @@
 with Files('moz.build'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('aom/**'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 
 with Files('rust/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('webkit/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')

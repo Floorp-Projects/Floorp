@@ -16,7 +16,7 @@ const require = window.windowRequire = BrowserLoader({
   window,
 }).require;
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
 const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
@@ -119,7 +119,7 @@ window.Netmonitor = {
    * Support for `devtools.network.onRequestFinished`. A hook for
    * every finished HTTP request used by WebExtensions API.
    */
-  onRequestAdded(event, requestId) {
+  onRequestAdded(requestId) {
     let listeners = this.toolbox.getRequestFinishedListeners();
     if (!listeners.size) {
       return;

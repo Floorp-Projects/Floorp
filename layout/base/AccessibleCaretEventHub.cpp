@@ -53,10 +53,10 @@ public:
     nsEventStatus rv = nsEventStatus_eIgnore;
 
     if (NS_SUCCEEDED(aContext->mManager->PressCaret(aPoint, aEventClass))) {
-      aContext->SetState(aContext->PressCaretState());
+      aContext->SetState(AccessibleCaretEventHub::PressCaretState());
       rv = nsEventStatus_eConsumeNoDefault;
     } else {
-      aContext->SetState(aContext->PressNoCaretState());
+      aContext->SetState(AccessibleCaretEventHub::PressNoCaretState());
     }
 
     aContext->mPressPoint = aPoint;
@@ -69,7 +69,7 @@ public:
   void OnScrollStart(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollStart();
-    aContext->SetState(aContext->ScrollState());
+    aContext->SetState(AccessibleCaretEventHub::ScrollState());
   }
 
   MOZ_CAN_RUN_SCRIPT
@@ -122,7 +122,7 @@ public:
   {
     if (aContext->MoveDistanceIsLarge(aPoint)) {
       if (NS_SUCCEEDED(aContext->mManager->DragCaret(aPoint))) {
-        aContext->SetState(aContext->DragCaretState());
+        aContext->SetState(AccessibleCaretEventHub::DragCaretState());
       }
     }
 
@@ -134,7 +134,7 @@ public:
   {
     aContext->mManager->ReleaseCaret();
     aContext->mManager->TapCaret(aContext->mPressPoint);
-    aContext->SetState(aContext->NoActionState());
+    aContext->SetState(AccessibleCaretEventHub::NoActionState());
 
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -168,7 +168,7 @@ public:
   nsEventStatus OnRelease(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->ReleaseCaret();
-    aContext->SetState(aContext->NoActionState());
+    aContext->SetState(AccessibleCaretEventHub::NoActionState());
 
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -187,7 +187,7 @@ public:
                        const nsPoint& aPoint) override
   {
     if (aContext->MoveDistanceIsLarge(aPoint)) {
-      aContext->SetState(aContext->NoActionState());
+      aContext->SetState(AccessibleCaretEventHub::NoActionState());
     }
 
     return nsEventStatus_eIgnore;
@@ -195,7 +195,7 @@ public:
 
   nsEventStatus OnRelease(AccessibleCaretEventHub* aContext) override
   {
-    aContext->SetState(aContext->NoActionState());
+    aContext->SetState(AccessibleCaretEventHub::NoActionState());
 
     return nsEventStatus_eIgnore;
   }
@@ -204,7 +204,7 @@ public:
   nsEventStatus OnLongTap(AccessibleCaretEventHub* aContext,
                           const nsPoint& aPoint) override
   {
-    aContext->SetState(aContext->LongTapState());
+    aContext->SetState(AccessibleCaretEventHub::LongTapState());
 
     return aContext->GetState()->OnLongTap(aContext, aPoint);
   }
@@ -213,7 +213,7 @@ public:
   void OnScrollStart(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollStart();
-    aContext->SetState(aContext->ScrollState());
+    aContext->SetState(AccessibleCaretEventHub::ScrollState());
   }
 
   MOZ_CAN_RUN_SCRIPT
@@ -222,7 +222,7 @@ public:
   {
     aContext->mManager->OnBlur();
     if (aIsLeavingDocument) {
-      aContext->SetState(aContext->NoActionState());
+      aContext->SetState(AccessibleCaretEventHub::NoActionState());
     }
   }
 
@@ -265,7 +265,7 @@ public:
   void OnScrollEnd(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollEnd();
-    aContext->SetState(aContext->NoActionState());
+    aContext->SetState(AccessibleCaretEventHub::NoActionState());
   }
 
   MOZ_CAN_RUN_SCRIPT
@@ -280,7 +280,7 @@ public:
   {
     aContext->mManager->OnBlur();
     if (aIsLeavingDocument) {
-      aContext->SetState(aContext->NoActionState());
+      aContext->SetState(AccessibleCaretEventHub::NoActionState());
     }
   }
 };
@@ -308,7 +308,7 @@ public:
 
   nsEventStatus OnRelease(AccessibleCaretEventHub* aContext) override
   {
-    aContext->SetState(aContext->NoActionState());
+    aContext->SetState(AccessibleCaretEventHub::NoActionState());
 
     // Do not consume the release since the press is not consumed in
     // PressNoCaretState either.
@@ -319,7 +319,7 @@ public:
   void OnScrollStart(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollStart();
-    aContext->SetState(aContext->ScrollState());
+    aContext->SetState(AccessibleCaretEventHub::ScrollState());
   }
 
   MOZ_CAN_RUN_SCRIPT

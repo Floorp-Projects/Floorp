@@ -9965,7 +9965,7 @@ SerializeStructuredCloneFiles(
     MOZ_ASSERT(fileId > 0);
 
     nsCOMPtr<nsIFile> nativeFile =
-      fileManager->GetCheckedFileForId(directory, fileId);
+      mozilla::dom::indexedDB::FileManager::GetCheckedFileForId(directory, fileId);
     if (NS_WARN_IF(!nativeFile)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -11507,7 +11507,7 @@ UpdateRefcountFunction::Reset()
         }
       }
 
-      nsCOMPtr<nsIFile> file = aFileManager->GetFileForId(mDirectory, aId);
+      nsCOMPtr<nsIFile> file = FileManager::GetFileForId(mDirectory, aId);
       if (NS_WARN_IF(!file)) {
         return NS_ERROR_FAILURE;
       }
@@ -11537,7 +11537,7 @@ UpdateRefcountFunction::Reset()
                                              fileSize);
       }
 
-      file = aFileManager->GetFileForId(mJournalDirectory, aId);
+      file = FileManager::GetFileForId(mJournalDirectory, aId);
       if (NS_WARN_IF(!file)) {
         return NS_ERROR_FAILURE;
       }
@@ -11665,7 +11665,7 @@ UpdateRefcountFunction::CreateJournals()
     int64_t id = mJournalsToCreateBeforeCommit[i];
 
     nsCOMPtr<nsIFile> file =
-      mFileManager->GetFileForId(journalDirectory, id);
+      FileManager::GetFileForId(journalDirectory, id);
     if (NS_WARN_IF(!file)) {
       return NS_ERROR_FAILURE;
     }
@@ -11698,7 +11698,7 @@ UpdateRefcountFunction::RemoveJournals(const nsTArray<int64_t>& aJournals)
 
   for (uint32_t index = 0; index < aJournals.Length(); index++) {
     nsCOMPtr<nsIFile> file =
-      mFileManager->GetFileForId(journalDirectory, aJournals[index]);
+      FileManager::GetFileForId(journalDirectory, aJournals[index]);
     if (NS_WARN_IF(!file)) {
       return NS_ERROR_FAILURE;
     }
