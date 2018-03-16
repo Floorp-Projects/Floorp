@@ -180,10 +180,14 @@ this.windows = class extends ExtensionAPI {
 
           return new Promise(resolve => {
             window.addEventListener("load", function() {
+              if (["maximized", "normal"].includes(createData.state)) {
+                window.document.documentElement.setAttribute("sizemode", createData.state);
+              }
               resolve(promiseObserved("browser-delayed-startup-finished", win => win == window));
             }, {once: true});
           }).then(() => {
-            if (["minimized", "fullscreen", "docked", "normal", "maximized"].includes(createData.state)) {
+            // Some states only work after delayed-startup-finished
+            if (["minimized", "fullscreen", "docked"].includes(createData.state)) {
               win.state = createData.state;
             }
             if (allowScriptsToClose) {
