@@ -3236,10 +3236,6 @@ pref("dom.animations-api.core.enabled", true);
 // ignored.
 pref("dom.animations-api.element-animate.enabled", true);
 
-// Is the pending state reported using a separate 'pending' member of the
-// Animation interface as opposed to the 'playState' member?
-pref("dom.animations-api.pending-member.enabled", true);
-
 // Pref to throttle offsreen animations
 pref("dom.animations.offscreen-throttling", true);
 
