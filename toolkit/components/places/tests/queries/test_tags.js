@@ -469,45 +469,6 @@ add_task(async function ORed_queries() {
       PlacesUtils.tagging.tagURI(nsiuri, tags);
   }
 
-  info("Query for /1 OR query for /2 should match both /1 and /2");
-  var [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  var [query2] = makeQuery(urisAndTags["http://example.com/2"]);
-  var root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
-  queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
-
-  info("Query for /1 OR query on bogus tag should match only /1");
-  [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  [query2] = makeQuery(["bogus"]);
-  root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
-  queryResultsAre(root, ["http://example.com/1"]);
-
-  info("Query for /1 OR query for /1 should match only /1");
-  [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  [query2] = makeQuery(urisAndTags["http://example.com/1"]);
-  root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
-  queryResultsAre(root, ["http://example.com/1"]);
-
-  info("Query for /1 with tagsAreNot OR query for /2 with tagsAreNot " +
-       "should match both /1 and /2");
-  [query1, opts] = makeQuery(urisAndTags["http://example.com/1"], true);
-  [query2] = makeQuery(urisAndTags["http://example.com/2"], true);
-  root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
-  queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
-
-  info("Query for /1 OR query for /2 with tagsAreNot should match " +
-       "only /1");
-  [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  [query2] = makeQuery(urisAndTags["http://example.com/2"], true);
-  root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
-  queryResultsAre(root, ["http://example.com/1"]);
-
-  info("Query for /1 OR query for /1 with tagsAreNot should match " +
-       "both URIs");
-  [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  [query2] = makeQuery(urisAndTags["http://example.com/1"], true);
-  root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
-  queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
-
   // Clean up.
   for (let [pURI, tags] of Object.entries(urisAndTags)) {
     let nsiuri = uri(pURI);
