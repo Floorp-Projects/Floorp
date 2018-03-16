@@ -522,22 +522,23 @@
 }
 
 .ruleview-fontswatch {
-  background-color: var(--grey-40);
-  background-size: 1em;
-  color: white;
-  cursor: pointer;
-
-  font-size: .8em;
   position: absolute;
-  right: 2em;
-  bottom: .5em;
-  padding: .1em .2em;
+  width: 1.45em;
+  height: 1em;
+  right: 1.5em;
+  bottom: 0.5em;
+  font-size: 1em;
 
+  background: url("chrome://devtools/skin/images/font-swatch.svg");
+  -moz-context-properties: fill;
+  fill: var(--grey-40);
+  background-size: contain;
+  cursor: pointer;
   -moz-user-select: none;
 }
 
 .ruleview-fontswatch.active {
-  background-color: var(--blue-50);
+  fill: var(--blue-50);
 }
 
 .ruleview-shapeswatch {
