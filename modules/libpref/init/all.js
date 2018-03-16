@@ -2962,6 +2962,14 @@ pref("layout.css.visited_links_enabled", true);
 // Pref to control whether @-moz-document rules are enabled in content pages.
 pref("layout.css.moz-document.content.enabled",  false);
 
+// Pref to control whether @-moz-document url-prefix() is parsed in content
+// pages. Only effective when layout.css.moz-document.content.enabled is false.
+#ifdef EARLY_BETA_OR_EARLIER
+pref("layout.css.moz-document.url-prefix-hack.enabled", false);
+#else
+pref("layout.css.moz-document.url-prefix-hack.enabled", true);
+#endif
+
 // Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
 // A value of 0 means use the system DPI. A positive value is used as the DPI.
 // This sets the physical size of a device pixel and thus controls the

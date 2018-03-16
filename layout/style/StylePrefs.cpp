@@ -20,6 +20,7 @@ bool StylePrefs::sFramesTimingFunctionEnabled;
 bool StylePrefs::sUnprefixedFullscreenApiEnabled;
 bool StylePrefs::sVisitedLinksEnabled;
 bool StylePrefs::sMozDocumentEnabledInContent;
+bool StylePrefs::sMozDocumentURLPrefixHackEnabled;
 bool StylePrefs::sGridTemplateSubgridValueEnabled;
 bool StylePrefs::sFontVariationsEnabled;
 bool StylePrefs::sEmulateMozBoxWithFlex;
@@ -47,6 +48,8 @@ StylePrefs::Init()
                                "layout.css.visited_links_enabled");
   Preferences::AddBoolVarCache(&sMozDocumentEnabledInContent,
                                "layout.css.moz-document.content.enabled");
+  Preferences::AddBoolVarCache(&sMozDocumentURLPrefixHackEnabled,
+                               "layout.css.moz-document.url-prefix-hack.enabled");
   Preferences::AddBoolVarCache(&sGridTemplateSubgridValueEnabled,
                                "layout.css.grid-template-subgrid-value.enabled");
   Preferences::AddBoolVarCache(&sFontVariationsEnabled,
