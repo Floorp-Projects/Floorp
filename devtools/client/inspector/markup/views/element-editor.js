@@ -547,7 +547,7 @@ ElementEditor.prototype = {
       .filter(el => el.style.display != "none");
     let attributeIndex = activeAttrs.indexOf(attrNode);
 
-    let onMutations = this._editedAttributeObserver = mutations => {
+    let onMutations = this._editedAttributeObserver = (e, mutations) => {
       let isDeletedAttribute = false;
       let isNewAttribute = false;
 

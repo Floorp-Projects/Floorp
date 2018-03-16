@@ -319,7 +319,7 @@ add_task(function* () {
     // event or possibly in multiples.
     let seenMutations = 0;
     let promise = new Promise(resolve => {
-      inspector.on("markupmutation", function onmutation(mutations) {
+      inspector.on("markupmutation", function onmutation(e, mutations) {
         seenMutations += mutations.length;
         info("Receieved " + seenMutations +
              " mutations, expecting at least " + numMutations);
