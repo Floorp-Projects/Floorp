@@ -487,6 +487,17 @@ public:
     mScrollableRect = aScrollableRect;
   }
 
+  // If the frame is in vertical-RTL writing mode(E.g. "writing-mode:
+  // vertical-rl" in CSS), or if it's in horizontal-RTL writing-mode(E.g.
+  // "writing-mode: horizontal-tb; direction: rtl;" in CSS), then this function
+  // returns true. From the representation perspective, frames whose horizontal
+  // contents start at rightside also cause their horizontal scrollbars, if any,
+  // initially start at rightside. So we can also learn about the initial side
+  // of the horizontal scrollbar for the frame by calling this function.
+  bool IsHorizontalContentRightToLeft() {
+    return mScrollableRect.x < 0;
+  }
+
   void SetPaintRequestTime(const TimeStamp& aTime) {
     mPaintRequestTime = aTime;
   }

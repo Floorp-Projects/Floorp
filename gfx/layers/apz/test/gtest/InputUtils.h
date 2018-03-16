@@ -249,7 +249,7 @@ Wheel(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
 {
   ScrollWheelInput input(MillisecondsSinceStartup(aTime), aTime, 0,
       ScrollWheelInput::SCROLLMODE_INSTANT, ScrollWheelInput::SCROLLDELTA_PIXEL,
-      aPoint, aDelta.x, aDelta.y, false);
+      aPoint, aDelta.x, aDelta.y, false, WheelDeltaAdjustmentStrategy::eNone);
   return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
 }
 
@@ -260,7 +260,7 @@ SmoothWheel(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
 {
   ScrollWheelInput input(MillisecondsSinceStartup(aTime), aTime, 0,
       ScrollWheelInput::SCROLLMODE_SMOOTH, ScrollWheelInput::SCROLLDELTA_LINE,
-      aPoint, aDelta.x, aDelta.y, false);
+      aPoint, aDelta.x, aDelta.y, false, WheelDeltaAdjustmentStrategy::eNone);
   return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
 }
 

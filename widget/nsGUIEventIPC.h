@@ -14,6 +14,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/WheelHandlingHelper.h"    // for WheelDeltaAdjustmentStrategy
 #include "mozilla/dom/Selection.h"
 #include "InputData.h"
 
@@ -1353,6 +1354,14 @@ struct ParamTraits<mozilla::ScrollWheelInput::ScrollMode>
 {};
 
 template<>
+struct ParamTraits<mozilla::WheelDeltaAdjustmentStrategy> :
+  public ContiguousEnumSerializer<
+           mozilla::WheelDeltaAdjustmentStrategy,
+           mozilla::WheelDeltaAdjustmentStrategy(0),
+           mozilla::WheelDeltaAdjustmentStrategy::eSentinel>
+{};
+
+template<>
 struct ParamTraits<mozilla::ScrollWheelInput>
 {
   typedef mozilla::ScrollWheelInput paramType;
@@ -1375,6 +1384,7 @@ struct ParamTraits<mozilla::ScrollWheelInput>
     WriteParam(aMsg, aParam.mMayHaveMomentum);
     WriteParam(aMsg, aParam.mIsMomentum);
     WriteParam(aMsg, aParam.mAllowToOverrideSystemScrollSpeed);
+    WriteParam(aMsg, aParam.mWheelDeltaAdjustmentStrategy);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -1394,7 +1404,9 @@ struct ParamTraits<mozilla::ScrollWheelInput>
            ReadParam(aMsg, aIter, &aResult->mUserDeltaMultiplierY) &&
            ReadParam(aMsg, aIter, &aResult->mMayHaveMomentum) &&
            ReadParam(aMsg, aIter, &aResult->mIsMomentum) &&
-           ReadParam(aMsg, aIter, &aResult->mAllowToOverrideSystemScrollSpeed);
+           ReadParam(aMsg, aIter,
+                     &aResult->mAllowToOverrideSystemScrollSpeed) &&
+           ReadParam(aMsg, aIter, &aResult->mWheelDeltaAdjustmentStrategy);
   }
 };
 
