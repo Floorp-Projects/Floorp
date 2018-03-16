@@ -314,13 +314,13 @@ public: // called by PluginInstanceChild
     }
 
 #if defined(OS_MACOSX) && defined(MOZ_SANDBOX)
-    void EnableFlashSandbox(int aLevel, bool aShouldEnableLogging);
+    void EnableFlashSandbox(bool aShouldEnableLogging);
 #endif
 
 private:
 
 #if defined(OS_MACOSX) && defined(MOZ_SANDBOX)
-    int mFlashSandboxLevel;
+    bool mEnableFlashSandbox;
     bool mEnableFlashSandboxLogging;
 #endif
 

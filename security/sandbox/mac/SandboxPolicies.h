@@ -385,10 +385,9 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
 
   ; Parameters
   (define shouldLog (param "SHOULD_LOG"))
-  (define sandbox-level-1 (param "SANDBOX_LEVEL_1"))
-  (define sandbox-level-2 (param "SANDBOX_LEVEL_2"))
   (define macosMinorVersion (string->number (param "MAC_OS_MINOR")))
   (define homeDir (param "HOME_PATH"))
+  (define cacheDir (param "DARWIN_USER_CACHE_DIR"))
   (define tempDir (param "DARWIN_USER_TEMP_DIR"))
   (define pluginPath (param "PLUGIN_BINARY_PATH"))
 
@@ -484,32 +483,17 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (allow sysctl-read)
       (allow sysctl-read
         (sysctl-name
-          "hw.activecpu"
           "hw.availcpu"
+          "hw.physicalcpu_max"
+          "hw.ncpu"
+          "hw.model"
           "hw.busfrequency_max"
           "hw.cpu64bit_capable"
-          "hw.cputype"
-          "hw.physicalcpu_max"
-          "hw.logicalcpu_max"
-          "hw.machine"
-          "hw.model"
-          "hw.ncpu"
-          "hw.optional.avx1_0"
-          "hw.optional.avx2_0"
-          "hw.optional.sse2"
-          "hw.optional.sse3"
-          "hw.optional.sse4_1"
-          "hw.optional.sse4_2"
           "hw.optional.x86_64"
-          "kern.hostname"
-          "kern.maxfilesperproc"
           "kern.memorystatus_level"
           "kern.osrelease"
-          "kern.ostype"
-          "kern.osvariant_status"
-          "kern.osversion"
-          "kern.safeboot"
-          "kern.version"
+          "kern.hostname"
+          "kern.maxfilesperproc"
           "vm.footprint_suspend")))
 
   ; Utilities for allowing access to home subdirectories
@@ -536,10 +520,6 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
            home-library-preferences-relative-literal)
       (literal (string-append home-library-prefs-path
                 home-library-preferences-relative-literal)))
-
-  ; Utility for allowing access to a temp dir subdirectory
-  (define (tempDir-regex tempDir-relative-regex)
-    (regex (string-append "^" (regex-quote tempDir)) tempDir-relative-regex))
 
   ; Read-only paths
   (allow file-read*
@@ -629,26 +609,6 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
     ; API calls.
     (extension "com.apple.app-sandbox.read"))
 
-  (if (string=? sandbox-level-1 "TRUE") (begin
-    ; Open file dialogs
-    (allow mach-lookup
-	; needed for the dialog sidebar
-	(global-name "com.apple.coreservices.sharedfilelistd.xpc")
-	; bird(8) -- "Documents in the Cloud"
-	; needed to avoid iCloud error dialogs and to display iCloud files
-	(global-name "com.apple.bird")
-	(global-name "com.apple.bird.token")
-	; needed for icons in the file dialog
-	(global-name "com.apple.iconservices"))
-    ; Needed for read access to files selected by the user with the
-    ; file dialog. The extensions are granted when the dialog is
-    ; displayed. Unfortunately (testing revealed) that displaying
-    ; the file dialog grants access to all files within the directory
-    ; displayed by the file dialog--a small improvement compared
-    ; to global read access.
-    (allow file-read*
-	(extension "com.apple.app-sandbox.read-write"))))
-
   (allow ipc-posix-shm*
       (ipc-posix-name-regex #"^AudioIO")
       (ipc-posix-name-regex #"^CFPBS:"))
@@ -674,9 +634,6 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (literal "/private/var/run/cupsd"))
   (allow user-preference-read
       (preference-domain "org.cups.PrintingPrefs"))
-  ; Temporary files read/written here during printing
-  (allow file-read* file-write-create file-write-data
-      (tempDir-regex "/FlashTmp"))
 
   ; Camera/Mic
   (allow device-camera)
@@ -684,6 +641,8 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
 
   ; Path to the plugin binary, user cache dir, and user temp dir
   (allow file-read* (subpath pluginPath))
+  (allow file-read* file-write* (subpath cacheDir))
+  (allow file-read* file-write* (subpath tempDir))
 
   ; Per Adobe, needed for Flash LocalConnection functionality
   (allow ipc-posix-sem
@@ -694,11 +653,15 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (home-literal "/mm.cfg")
       (home-literal "/mms.cfg"))
 
+  (deny file-read-xattr
+      (home-library-literal "/Caches")
+      (home-library-preferences-literal "/"))
+
   (allow file-read* file-write-create file-write-mode file-write-owner
       (home-library-literal "/Caches/Adobe")
       (home-library-preferences-literal "/Macromedia"))
 
-  (allow file-read* file-write-create file-write-data
+  (allow file-read* file-write*
       (literal "/Library/Application Support/Macromedia/mms.cfg")
       (home-library-literal "/Application Support/Macromedia/mms.cfg")
       (home-library-subpath "/Caches/Adobe/Flash Player")
