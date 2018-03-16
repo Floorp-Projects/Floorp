@@ -403,9 +403,9 @@ AudioSink::NotifyAudioNeeded()
         mOutputChannels == data->mChannels
           ? inputLayout
           : AudioConfig::ChannelLayout(mOutputChannels);
-      mConverter =
-        MakeUnique<AudioConverter>(AudioConfig(inputLayout, data->mRate),
-                                   AudioConfig(outputLayout, mOutputRate));
+      mConverter = MakeUnique<AudioConverter>(
+        AudioConfig(inputLayout, data->mChannels, data->mRate),
+        AudioConfig(outputLayout, mOutputChannels, mOutputRate));
     }
 
     // See if there's a gap in the audio. If there is, push silence into the
