@@ -240,6 +240,12 @@ void APZCTreeManagerChild::ProcessUnhandledEvent(
                             aOutFocusSequenceNumber);
 }
 
+APZInputBridge*
+APZCTreeManagerChild::InputBridge()
+{
+  return this;
+}
+
 mozilla::ipc::IPCResult
 APZCTreeManagerChild::RecvHandleTap(const TapType& aType,
                                     const LayoutDevicePoint& aPoint,

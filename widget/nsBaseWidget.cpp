@@ -57,6 +57,7 @@
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/APZEventState.h"
+#include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/ChromeProcessController.h"
 #include "mozilla/layers/CompositorOptions.h"
@@ -1164,7 +1165,7 @@ public:
 
   NS_IMETHOD Run() override
   {
-    nsEventStatus result = mAPZC->ReceiveInputEvent(mWheelInput, &mGuid, &mInputBlockId);
+    nsEventStatus result = mAPZC->InputBridge()->ReceiveInputEvent(mWheelInput, &mGuid, &mInputBlockId);
     if (result == nsEventStatus_eConsumeNoDefault) {
       return NS_OK;
     }
@@ -1191,7 +1192,7 @@ nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput)
     uint64_t inputBlockId = 0;
     ScrollableLayerGuid guid;
 
-    nsEventStatus result = mAPZC->ReceiveInputEvent(aInput, &guid, &inputBlockId);
+    nsEventStatus result = mAPZC->InputBridge()->ReceiveInputEvent(aInput, &guid, &inputBlockId);
     if (result == nsEventStatus_eConsumeNoDefault) {
       return;
     }
@@ -1216,7 +1217,7 @@ nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
       ScrollableLayerGuid guid;
 
       nsEventStatus result =
-        mAPZC->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
+        mAPZC->InputBridge()->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
       if (result == nsEventStatus_eConsumeNoDefault) {
         return result;
       }
@@ -1246,7 +1247,7 @@ nsBaseWidget::DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent)
     MOZ_ASSERT(APZThreadUtils::IsControllerThread());
     uint64_t inputBlockId = 0;
     ScrollableLayerGuid guid;
-    mAPZC->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
+    mAPZC->InputBridge()->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
   }
 }
 
