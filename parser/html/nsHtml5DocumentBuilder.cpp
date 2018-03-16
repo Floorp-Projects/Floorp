@@ -6,13 +6,14 @@
 
 #include "nsHtml5DocumentBuilder.h"
 
-#include "nsIStyleSheetLinkingElement.h"
-#include "nsStyleLinkElement.h"
-#include "nsIHTMLDocument.h"
-#include "nsNameSpaceManager.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "nsIHTMLDocument.h"
+#include "nsIStyleSheetLinkingElement.h"
+#include "nsNameSpaceManager.h"
+#include "nsStyleLinkElement.h"
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHtml5DocumentBuilder, nsContentSink,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHtml5DocumentBuilder,
+                                   nsContentSink,
                                    mOwnedElements)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHtml5DocumentBuilder)
@@ -30,16 +31,14 @@ nsHtml5DocumentBuilder::nsHtml5DocumentBuilder(bool aRunsToCompletion)
 
 nsresult
 nsHtml5DocumentBuilder::Init(nsIDocument* aDoc,
-                            nsIURI* aURI,
-                            nsISupports* aContainer,
-                            nsIChannel* aChannel)
+                             nsIURI* aURI,
+                             nsISupports* aContainer,
+                             nsIChannel* aChannel)
 {
   return nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
 }
 
-nsHtml5DocumentBuilder::~nsHtml5DocumentBuilder()
-{
-}
+nsHtml5DocumentBuilder::~nsHtml5DocumentBuilder() {}
 
 nsresult
 nsHtml5DocumentBuilder::MarkAsBroken(nsresult aReason)
@@ -49,8 +48,9 @@ nsHtml5DocumentBuilder::MarkAsBroken(nsresult aReason)
 }
 
 void
-nsHtml5DocumentBuilder::SetDocumentCharsetAndSource(NotNull<const Encoding*> aEncoding,
-                                                    int32_t aCharsetSource)
+nsHtml5DocumentBuilder::SetDocumentCharsetAndSource(
+  NotNull<const Encoding*> aEncoding,
+  int32_t aCharsetSource)
 {
   if (mDocument) {
     mDocument->SetDocumentCharacterSetSource(aCharsetSource);
@@ -63,7 +63,8 @@ nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement)
 {
   nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aElement));
   if (!ssle) {
-    MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to style, but SVG wasn't disabled.");
+    MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled,
+               "Node didn't QI to style, but SVG wasn't disabled.");
     return;
   }
 
@@ -80,9 +81,8 @@ nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement)
 
   bool willNotify;
   bool isAlternate;
-  nsresult rv = ssle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this,
-                                       &willNotify,
-                                       &isAlternate);
+  nsresult rv = ssle->UpdateStyleSheet(
+    mRunsToCompletion ? nullptr : this, &willNotify, &isAlternate);
   if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
     ++mPendingSheetCount;
     mScriptLoader->AddParserBlockingScriptExecutionBlocker();

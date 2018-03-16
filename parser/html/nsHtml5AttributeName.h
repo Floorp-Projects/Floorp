@@ -58,12 +58,15 @@ class nsHtml5AttributeName
 {
 public:
   static int32_t* ALL_NO_NS;
+
 private:
   static int32_t* XMLNS_NS;
   static int32_t* XML_NS;
   static int32_t* XLINK_NS;
+
 public:
   static nsAtom** ALL_NO_PREFIX;
+
 private:
   static nsAtom** XMLNS_PREFIX;
   static nsAtom** XLINK_PREFIX;
@@ -71,6 +74,7 @@ private:
   static nsAtom** SVG_DIFFERENT(nsAtom* name, nsAtom* camel);
   static nsAtom** MATH_DIFFERENT(nsAtom* name, nsAtom* camel);
   static nsAtom** COLONIFIED_LOCAL(nsAtom* name, nsAtom* suffix);
+
 public:
   static nsAtom** SAME_LOCAL(nsAtom* name);
   inline static int32_t levelOrderBinarySearch(jArray<int32_t, int32_t> data,
@@ -158,6 +162,7 @@ private:
   nsAtom** prefix;
   bool custom;
   nsHtml5AttributeName(int32_t* uri, nsAtom** local, nsAtom** prefix);
+
 public:
   nsHtml5AttributeName();
   inline bool isInterned() { return !custom; }
@@ -669,9 +674,11 @@ public:
   static nsHtml5AttributeName* ATTR_FY;
   static nsHtml5AttributeName* ATTR_RY;
   static nsHtml5AttributeName* ATTR_REFY;
+
 private:
   static nsHtml5AttributeName** ATTRIBUTE_NAMES;
   static staticJArray<int32_t, int32_t> ATTRIBUTE_HASHES;
+
 public:
   static void initializeStatics();
   static void releaseStatics();

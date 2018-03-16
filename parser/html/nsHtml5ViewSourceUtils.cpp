@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "nsHtml5ViewSourceUtils.h"
-#include "nsHtml5AttributeName.h"
 #include "mozilla/Preferences.h"
+#include "nsHtml5AttributeName.h"
 #include "nsHtml5String.h"
 
 // static
@@ -62,7 +61,8 @@ nsHtml5ViewSourceUtils::NewMetaViewportAttributes()
   nsHtml5HtmlAttributes* metaVpAttrs = new nsHtml5HtmlAttributes(0);
   nsHtml5String name = nsHtml5Portability::newStringFromLiteral("viewport");
   metaVpAttrs->addAttribute(nsHtml5AttributeName::ATTR_NAME, name, -1);
-  nsHtml5String content = nsHtml5Portability::newStringFromLiteral("width=device-width");
+  nsHtml5String content =
+    nsHtml5Portability::newStringFromLiteral("width=device-width");
   metaVpAttrs->addAttribute(nsHtml5AttributeName::ATTR_CONTENT, content, -1);
   return metaVpAttrs;
 }
