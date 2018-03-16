@@ -2893,25 +2893,21 @@ nsNavHistory::GetConnectionShutdownClient(nsIAsyncShutdownClient **_shutdownClie
 }
 
 NS_IMETHODIMP
-nsNavHistory::AsyncExecuteLegacyQueries(nsINavHistoryQuery** aQueries,
-                                        uint32_t aQueryCount,
-                                        nsINavHistoryQueryOptions* aOptions,
-                                        mozIStorageStatementCallback* aCallback,
-                                        mozIStoragePendingStatement** _stmt)
+nsNavHistory::AsyncExecuteLegacyQuery(nsINavHistoryQuery* aQuery,
+                                      nsINavHistoryQueryOptions* aOptions,
+                                      mozIStorageStatementCallback* aCallback,
+                                      mozIStoragePendingStatement** _stmt)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aQueries);
+  NS_ENSURE_ARG(aQuery);
   NS_ENSURE_ARG(aOptions);
   NS_ENSURE_ARG(aCallback);
   NS_ENSURE_ARG_POINTER(_stmt);
 
+  nsCOMPtr<nsNavHistoryQuery> query = do_QueryObject(aQuery);
+  NS_ENSURE_STATE(query);
   nsCOMArray<nsNavHistoryQuery> queries;
-  for (uint32_t i = 0; i < aQueryCount; i ++) {
-    nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface(aQueries[i]);
-    NS_ENSURE_STATE(query);
-    queries.AppendElement(query.forget());
-  }
-  NS_ENSURE_ARG_MIN(queries.Count(), 1);
+  queries.AppendObject(query);
 
   nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions);
   NS_ENSURE_ARG(options);
