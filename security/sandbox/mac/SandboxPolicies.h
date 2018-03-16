@@ -387,7 +387,6 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
   (define shouldLog (param "SHOULD_LOG"))
   (define macosMinorVersion (string->number (param "MAC_OS_MINOR")))
   (define homeDir (param "HOME_PATH"))
-  (define cacheDir (param "DARWIN_USER_CACHE_DIR"))
   (define tempDir (param "DARWIN_USER_TEMP_DIR"))
   (define pluginPath (param "PLUGIN_BINARY_PATH"))
 
@@ -521,6 +520,10 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (literal (string-append home-library-prefs-path
                 home-library-preferences-relative-literal)))
 
+  ; Utility for allowing access to a temp dir subdirectory
+  (define (tempDir-regex tempDir-relative-regex)
+    (regex (string-append "^" (regex-quote tempDir)) tempDir-relative-regex))
+
   ; Read-only paths
   (allow file-read*
       (literal "/")
@@ -634,6 +637,9 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (literal "/private/var/run/cupsd"))
   (allow user-preference-read
       (preference-domain "org.cups.PrintingPrefs"))
+  ; Temporary files read/written here during printing
+  (allow file-read* file-write-create file-write-data
+      (tempDir-regex "/FlashTmp"))
 
   ; Camera/Mic
   (allow device-camera)
@@ -641,8 +647,6 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
 
   ; Path to the plugin binary, user cache dir, and user temp dir
   (allow file-read* (subpath pluginPath))
-  (allow file-read* file-write* (subpath cacheDir))
-  (allow file-read* file-write* (subpath tempDir))
 
   ; Per Adobe, needed for Flash LocalConnection functionality
   (allow ipc-posix-sem
@@ -653,15 +657,11 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (home-literal "/mm.cfg")
       (home-literal "/mms.cfg"))
 
-  (deny file-read-xattr
-      (home-library-literal "/Caches")
-      (home-library-preferences-literal "/"))
-
   (allow file-read* file-write-create file-write-mode file-write-owner
       (home-library-literal "/Caches/Adobe")
       (home-library-preferences-literal "/Macromedia"))
 
-  (allow file-read* file-write*
+  (allow file-read* file-write-create file-write-data
       (literal "/Library/Application Support/Macromedia/mms.cfg")
       (home-library-literal "/Application Support/Macromedia/mms.cfg")
       (home-library-subpath "/Caches/Adobe/Flash Player")
