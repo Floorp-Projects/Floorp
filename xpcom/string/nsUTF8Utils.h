@@ -56,30 +56,6 @@ public:
   {
     return (aChar & 0xFE) == 0xFC;
   }
-  // return the number of bytes in a sequence beginning with aChar
-  static int bytes(char aChar)
-  {
-    if (isASCII(aChar)) {
-      return 1;
-    }
-    if (is2byte(aChar)) {
-      return 2;
-    }
-    if (is3byte(aChar)) {
-      return 3;
-    }
-    if (is4byte(aChar)) {
-      return 4;
-    }
-    if (is5byte(aChar)) {
-      return 5;
-    }
-    if (is6byte(aChar)) {
-      return 6;
-    }
-    MOZ_ASSERT_UNREACHABLE("should not be used for in-sequence characters");
-    return 1;
-  }
 };
 
 /**
