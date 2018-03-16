@@ -51,10 +51,6 @@ window._gBrowser = {
       messageManager.addMessageListener("DOMWindowClose", this);
       window.messageManager.addMessageListener("contextmenu", this);
       messageManager.addMessageListener("Browser:Init", this);
-
-      // If this window has remote tabs, switch to our tabpanels fork
-      // which does asynchronous tab switching.
-      this.tabpanels.classList.add("tabbrowser-tabpanels");
     } else {
       this._outerWindowIDBrowserMap.set(this.selectedBrowser.outerWindowID,
         this.selectedBrowser);
@@ -4184,6 +4180,18 @@ window._gBrowser = {
   },
 
   _setupEventListeners() {
+    this.tabpanels.addEventListener("select", event => {
+      if (event.target == this.tabpanels) {
+        this.updateCurrentBrowser();
+      }
+    });
+
+    this.tabpanels.addEventListener("preselect", event => {
+      if (gMultiProcessBrowser) {
+        this._getSwitcher().requestTab(event.detail);
+      }
+    });
+
     this.addEventListener("DOMWindowClose", (event) => {
       if (!event.isTrusted)
         return;
