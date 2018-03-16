@@ -101,8 +101,6 @@ DEFAULTS = dict(
         'network.proxy.type': 1,
         # Bug 1383896 - reduces noise in tests
         'idle.lastDailyNotification': int(time.time()),
-        # Bug 1445243 - reduces precision of tests
-        'privacy.reduceTimerPrecision' : False,
         'places.database.lastMaintenance': FAR_IN_FUTURE,
         'security.enable_java': False,
         'security.fileuri.strict_origin_policy': False,
