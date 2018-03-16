@@ -8,6 +8,7 @@
 
 #include "Layers.h"
 #include "LayersLogging.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/Unused.h"
 #include "nsDisplayList.h"

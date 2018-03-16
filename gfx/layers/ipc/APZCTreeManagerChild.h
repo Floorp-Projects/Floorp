@@ -14,6 +14,7 @@
 namespace mozilla {
 namespace layers {
 
+class APZInputBridgeChild;
 class RemoteCompositorSession;
 
 class APZCTreeManagerChild
@@ -25,6 +26,8 @@ public:
   APZCTreeManagerChild();
 
   void SetCompositorSession(RemoteCompositorSession* aSession);
+  void SetInputBridge(APZInputBridgeChild* aInputBridge);
+  void Destroy();
 
   nsEventStatus
   ReceiveInputEvent(
@@ -108,11 +111,11 @@ protected:
 
   mozilla::ipc::IPCResult RecvCancelAutoscroll(const FrameMetrics::ViewID& aScrollId) override;
 
-  virtual
-  ~APZCTreeManagerChild() { }
+  virtual ~APZCTreeManagerChild();
 
 private:
   MOZ_NON_OWNING_REF RemoteCompositorSession* mCompositorSession;
+  RefPtr<APZInputBridgeChild> mInputBridge;
 };
 
 } // namespace layers
