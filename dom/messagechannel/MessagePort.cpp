@@ -33,7 +33,6 @@
 
 #include "nsIBFCacheEntry.h"
 #include "nsIDocument.h"
-#include "nsIDOMFileList.h"
 #include "nsIPresShell.h"
 #include "nsISupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"

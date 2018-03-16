@@ -25,7 +25,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "mozilla/EventStates.h"
-#include "nsIDOMFileList.h"
 #include "nsTextNode.h"
 
 using namespace mozilla;
@@ -342,7 +341,7 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(nsIDOMFileList* aFileList,
+nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(FileList* aFileList,
                                                                BlobImpl** aBlobImpl)
 {
   *aBlobImpl = nullptr;
@@ -360,12 +359,11 @@ nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(nsIDOMFileList* a
     return NS_ERROR_FAILURE;
   }
 
-  FileList* files = static_cast<FileList*>(aFileList);
   // webkitdirectory doesn't care about the length of the file list but
   // only about the first item on it.
-  uint32_t len = files->Length();
+  uint32_t len = aFileList->Length();
   if (len) {
-    File* file = files->Item(0);
+    File* file = aFileList->Item(0);
     if (file) {
       BlobImpl* impl = file->Impl();
       if (impl && impl->IsDirectory()) {
@@ -406,7 +404,7 @@ nsFileControlFrame::DnDListener::CanDropTheseFiles(DataTransfer* aDataTransfer,
 
   uint32_t listLength = 0;
   if (fileList) {
-    fileList->GetLength(&listLength);
+    listLength = fileList->Length();
   }
   return listLength <= 1 || aSupportsMultiple;
 }

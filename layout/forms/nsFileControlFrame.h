@@ -14,9 +14,9 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
 
-class nsIDOMFileList;
 namespace mozilla {
 namespace dom {
+class FileList;
 class BlobImpl;
 class DataTransfer;
 } // namespace dom
@@ -119,7 +119,7 @@ protected:
 
     NS_DECL_NSIDOMEVENTLISTENER
 
-    nsresult GetBlobImplForWebkitDirectory(nsIDOMFileList* aFileList,
+    nsresult GetBlobImplForWebkitDirectory(mozilla::dom::FileList* aFileList,
                                            mozilla::dom::BlobImpl** aBlobImpl);
 
     bool IsValidDropData(mozilla::dom::DataTransfer* aDataTransfer);

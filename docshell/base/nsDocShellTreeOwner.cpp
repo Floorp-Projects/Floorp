@@ -32,7 +32,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGTitleElement.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMFileList.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIFormControl.h"
 #include "nsIImageLoadingContent.h"
