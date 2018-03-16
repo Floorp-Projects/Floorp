@@ -255,8 +255,9 @@ IsSpaceOrBOM2(char16_t ch)
 }
 
 /*
- * Returns the simple upper case mapping (see CanUpperCaseSpecialCasing for
- * details) of the given UTF-16 code unit.
+ * Returns the simple upper case mapping (possibly the identity mapping; see
+ * ChangesWhenUpperCasedSpecialCasing for details) of the given UTF-16 code
+ * unit.
  */
 inline char16_t
 ToUpperCase(char16_t ch)
@@ -273,8 +274,9 @@ ToUpperCase(char16_t ch)
 }
 
 /*
- * Returns the simple lower case mapping (see CanUpperCaseSpecialCasing for
- * details) of the given UTF-16 code unit.
+ * Returns the simple lower case mapping (possibly the identity mapping; see
+ * ChangesWhenUpperCasedSpecialCasing for details) of the given UTF-16 code
+ * unit.
  */
 inline char16_t
 ToLowerCase(char16_t ch)
@@ -290,32 +292,46 @@ ToLowerCase(char16_t ch)
     return uint16_t(ch) + info.lowerCase;
 }
 
-// Returns true iff ToUpperCase(ch) != ch.
+/**
+ * Returns true iff ToUpperCase(ch) != ch.
+ *
+ * This function isn't guaranteed to correctly handle code points for which
+ * |ChangesWhenUpperCasedSpecialCasing| returns true, so it is *not* always the
+ * same as the value of the Changes_When_Uppercased Unicode property value for
+ * the code point.
+ */
 inline bool
-CanUpperCase(char16_t ch)
+ChangesWhenUpperCased(char16_t ch)
 {
     if (ch < 128)
         return ch >= 'a' && ch <= 'z';
     return CharInfo(ch).upperCase != 0;
 }
 
-// Returns true iff ToUpperCase(ch) != ch.
+/**
+ * Returns true iff ToUpperCase(ch) != ch.
+ *
+ * This function isn't guaranteed to correctly handle code points for which
+ * |ChangesWhenUpperCasedSpecialCasing| returns true, so it is *not* always the
+ * same as the value of the Changes_When_Uppercased Unicode property value for
+ * the code point.
+ */
 inline bool
-CanUpperCase(JS::Latin1Char ch)
+ChangesWhenUpperCased(JS::Latin1Char ch)
 {
     if (MOZ_LIKELY(ch < 128))
         return ch >= 'a' && ch <= 'z';
 
     // U+00B5 and U+00E0 to U+00FF, except U+00F7, have an uppercase form.
-    bool canUpper = ch == MICRO_SIGN ||
+    bool hasUpper = ch == MICRO_SIGN ||
                     (((ch & ~0x1F) == LATIN_SMALL_LETTER_A_WITH_GRAVE) && ch != DIVISION_SIGN);
-    MOZ_ASSERT(canUpper == CanUpperCase(char16_t(ch)));
-    return canUpper;
+    MOZ_ASSERT(hasUpper == ChangesWhenUpperCased(char16_t(ch)));
+    return hasUpper;
 }
 
 // Returns true iff ToLowerCase(ch) != ch.
 inline bool
-CanLowerCase(char16_t ch)
+ChangesWhenLowerCased(char16_t ch)
 {
     if (ch < 128)
         return ch >= 'A' && ch <= 'Z';
@@ -324,16 +340,16 @@ CanLowerCase(char16_t ch)
 
 // Returns true iff ToLowerCase(ch) != ch.
 inline bool
-CanLowerCase(JS::Latin1Char ch)
+ChangesWhenLowerCased(JS::Latin1Char ch)
 {
     if (MOZ_LIKELY(ch < 128))
         return ch >= 'A' && ch <= 'Z';
 
     // U+00C0 to U+00DE, except U+00D7, have a lowercase form.
-    bool canLower = ((ch & ~0x1F) == LATIN_CAPITAL_LETTER_A_WITH_GRAVE) &&
+    bool hasLower = ((ch & ~0x1F) == LATIN_CAPITAL_LETTER_A_WITH_GRAVE) &&
                     ((ch & MULTIPLICATION_SIGN) != MULTIPLICATION_SIGN);
-    MOZ_ASSERT(canLower == CanLowerCase(char16_t(ch)));
-    return canLower;
+    MOZ_ASSERT(hasLower == ChangesWhenLowerCased(char16_t(ch)));
+    return hasLower;
 }
 
 #define CHECK_RANGE(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
@@ -341,14 +357,14 @@ CanLowerCase(JS::Latin1Char ch)
         return true;
 
 inline bool
-CanUpperCaseNonBMP(char16_t lead, char16_t trail)
+ChangesWhenUpperCasedNonBMP(char16_t lead, char16_t trail)
 {
     FOR_EACH_NON_BMP_UPPERCASE(CHECK_RANGE)
     return false;
 }
 
 inline bool
-CanLowerCaseNonBMP(char16_t lead, char16_t trail)
+ChangesWhenLowerCasedNonBMP(char16_t lead, char16_t trail)
 {
     FOR_EACH_NON_BMP_LOWERCASE(CHECK_RANGE)
     return false;
@@ -381,24 +397,36 @@ ToLowerCaseNonBMPTrail(char16_t lead, char16_t trail)
 }
 
 /*
- * Returns true if the given UTF-16 code unit has a language-independent,
- * unconditional or conditional special upper case mapping.
+ * Returns true if, independent of language/locale, the given UTF-16 code unit
+ * has a special upper case mapping.
  *
  * Unicode defines two case mapping modes:
- * 1. "simple case mappings" for one-to-one mappings which are independent of
- *    context and language (defined in UnicodeData.txt).
- * 2. "special case mappings" for mappings which can increase or decrease the
- *    string length; or are dependent on context or locale (defined in
- *    SpecialCasing.txt).
  *
- * The CanUpperCase() method defined above only supports simple case mappings.
- * In order to support the full case mappings of all Unicode characters,
- * callers need to check this method in addition to CanUpperCase().
+ *   1. "simple case mappings" (defined in UnicodeData.txt) for one-to-one
+ *      mappings that are always the same regardless of locale or context
+ *      within a string (e.g. "a"→"A").
+ *   2. "special case mappings" (defined in SpecialCasing.txt) for mappings
+ *      that alter string length (e.g. uppercasing "ß"→"SS") or where different
+ *      mappings occur depending on language/locale (e.g. uppercasing "i"→"I"
+ *      usually but "i"→"İ" in Turkish) or context within the string (e.g.
+ *      lowercasing "Σ" U+03A3 GREEK CAPITAL LETTER SIGMA to "ς" U+03C2 GREEK
+ *      SMALL LETTER FINAL SIGMA when the sigma appears [roughly speaking] at
+ *      the end of a word but "ς" U+03C3 GREEK SMALL LETTER SIGMA anywhere
+ *      else).
  *
- * NOTE: All special upper case mappings are unconditional in Unicode 9.
+ * The ChangesWhenUpperCased*() functions defined above will return true for
+ * code points that have simple case mappings, but they may not return the
+ * right result for code points that have special case mappings.  To correctly
+ * support full case mappings for all code points, callers must determine
+ * whether this function returns true or false for the code point, then use
+ * AppendUpperCaseSpecialCasing in the former case and ToUpperCase in the
+ * latter.
+ *
+ * NOTE: All special upper case mappings are unconditional (that is, they don't
+ *       depend on language/locale or context within the string) in Unicode 10.
  */
 bool
-CanUpperCaseSpecialCasing(char16_t ch);
+ChangesWhenUpperCasedSpecialCasing(char16_t ch);
 
 /*
  * Returns the length of the upper case mapping of |ch|.

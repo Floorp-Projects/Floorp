@@ -2679,7 +2679,7 @@ js::unicode::IsIdentifierPartNonBMP(uint32_t codePoint)
 }
 
 bool
-js::unicode::CanUpperCaseSpecialCasing(char16_t ch)
+js::unicode::ChangesWhenUpperCasedSpecialCasing(char16_t ch)
 {
     if (ch < 0x00DF || ch > 0xFB17)
         return false;
