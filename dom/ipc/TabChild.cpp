@@ -1724,7 +1724,7 @@ TabChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
 
   InputAPZContext context(aGuid, aInputBlockId, nsEventStatus_eIgnore);
   if (pendingLayerization) {
-    context.SetPendingLayerization();
+    InputAPZContext::SetPendingLayerization();
   }
 
   WidgetMouseEvent localEvent(aEvent);
