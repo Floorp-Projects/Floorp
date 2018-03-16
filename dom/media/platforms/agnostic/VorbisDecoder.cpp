@@ -235,14 +235,9 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
     if (!mAudioConverter) {
       const AudioConfig::ChannelLayout layout =
         AudioConfig::ChannelLayout(channels, VorbisLayout(channels));
-      AudioConfig in(layout, rate);
-      AudioConfig out(AudioConfig::ChannelLayout::SMPTEDefault(layout), rate);
-      if (!in.IsValid() || !out.IsValid()) {
-        return DecodePromise::CreateAndReject(
-          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                      RESULT_DETAIL("Invalid channel layout:%u", channels)),
-          __func__);
-      }
+      AudioConfig in(layout, channels, rate);
+      AudioConfig out(
+        AudioConfig::ChannelLayout::SMPTEDefault(layout), channels, rate);
       mAudioConverter = MakeUnique<AudioConverter>(in, out);
     }
     MOZ_ASSERT(mAudioConverter->CanWorkInPlace());
