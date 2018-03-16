@@ -91,10 +91,11 @@ var EventsHandler = {
   initialize: function () {
     this._onHostChanged = this._onHostChanged.bind(this);
     this._onTabNavigated = this._onTabNavigated.bind(this);
+    this._onTabWillNavigate = this._onTabWillNavigate.bind(this);
     this._onProgramLinked = this._onProgramLinked.bind(this);
     this._onProgramsAdded = this._onProgramsAdded.bind(this);
     gToolbox.on("host-changed", this._onHostChanged);
-    gTarget.on("will-navigate", this._onTabNavigated);
+    gTarget.on("will-navigate", this._onTabWillNavigate);
     gTarget.on("navigate", this._onTabNavigated);
     gFront.on("program-linked", this._onProgramLinked);
     this.reloadButton = $("#requests-menu-reload-notice-button");
@@ -106,7 +107,7 @@ var EventsHandler = {
    */
   destroy: function () {
     gToolbox.off("host-changed", this._onHostChanged);
-    gTarget.off("will-navigate", this._onTabNavigated);
+    gTarget.off("will-navigate", this._onTabWillNavigate);
     gTarget.off("navigate", this._onTabNavigated);
     gFront.off("program-linked", this._onProgramLinked);
     this.reloadButton.removeEventListener("command", this._onReloadCommand);
@@ -128,43 +129,37 @@ var EventsHandler = {
     }
   },
 
+  _onTabWillNavigate: function({isFrameSwitching}) {
+    // Make sure the backend is prepared to handle WebGL contexts.
+    if (!isFrameSwitching) {
+      gFront.setup({ reload: false });
+    }
+
+    // Reset UI.
+    ShadersListView.empty();
+    // When switching to an iframe, ensure displaying the reload button.
+    // As the document has already been loaded without being hooked.
+    if (isFrameSwitching) {
+      $("#reload-notice").hidden = false;
+      $("#waiting-notice").hidden = true;
+    } else {
+      $("#reload-notice").hidden = true;
+      $("#waiting-notice").hidden = false;
+    }
+
+    $("#content").hidden = true;
+    window.emit(EVENTS.UI_RESET);
+  },
+
   /**
    * Called for each location change in the debugged tab.
    */
-  _onTabNavigated: function (event, {isFrameSwitching}) {
-    switch (event) {
-      case "will-navigate": {
-        // Make sure the backend is prepared to handle WebGL contexts.
-        if (!isFrameSwitching) {
-          gFront.setup({ reload: false });
-        }
-
-        // Reset UI.
-        ShadersListView.empty();
-        // When switching to an iframe, ensure displaying the reload button.
-        // As the document has already been loaded without being hooked.
-        if (isFrameSwitching) {
-          $("#reload-notice").hidden = false;
-          $("#waiting-notice").hidden = true;
-        } else {
-          $("#reload-notice").hidden = true;
-          $("#waiting-notice").hidden = false;
-        }
-
-        $("#content").hidden = true;
-        window.emit(EVENTS.UI_RESET);
-
-        break;
-      }
-      case "navigate": {
-        // Manually retrieve the list of program actors known to the server,
-        // because the backend won't emit "program-linked" notifications
-        // in the case of a bfcache navigation (since no new programs are
-        // actually linked).
-        gFront.getPrograms().then(this._onProgramsAdded);
-        break;
-      }
-    }
+  _onTabNavigated: function () {
+    // Manually retrieve the list of program actors known to the server,
+    // because the backend won't emit "program-linked" notifications
+    // in the case of a bfcache navigation (since no new programs are
+    // actually linked).
+    gFront.getPrograms().then(this._onProgramsAdded);
   },
 
   /**
