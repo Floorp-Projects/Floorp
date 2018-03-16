@@ -19,7 +19,6 @@ module.exports = {
 
     // Rules from the mozilla plugin
     "mozilla/no-aArgs": "error",
-    "mozilla/no-cpows-in-tests": "error",
     "mozilla/no-single-arg-cu-import": "error",
     // See bug 1224289.
     "mozilla/reject-importGlobalProperties": "error",
