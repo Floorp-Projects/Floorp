@@ -493,6 +493,8 @@ AsyncCubebTask::Run()
       LOG(LogLevel::Debug,
           ("AsyncCubebOperation::INIT driver=%p", mDriver.get()));
       if (!mDriver->Init()) {
+        LOG(LogLevel::Warning,
+            ("AsyncCubebOperation::INIT failed for driver=%p", mDriver.get()));
         return NS_ERROR_FAILURE;
       }
       mDriver->CompleteAudioContextOperations(mOperation);

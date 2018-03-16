@@ -1181,6 +1181,7 @@ public:
   Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
+    LOG(("GetUserMediaStreamRunnable::Run()"));
     nsGlobalWindowInner* globalWindow = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
     nsPIDOMWindowInner* window = globalWindow ? globalWindow->AsInner() : nullptr;
 
@@ -1432,6 +1433,8 @@ public:
       [manager = mManager, domStream, callback,
        windowListener = mWindowListener]()
       {
+        LOG(("GetUserMediaStreamRunnable::Run: starting success callback "
+             "following InitializeAsync()"));
         // Initiating and starting devices succeeded.
         // onTracksAvailableCallback must be added to domStream on main thread.
         domStream->OnTracksAvailable(callback->release());
@@ -1440,6 +1443,8 @@ public:
       },[manager = mManager, windowID = mWindowID,
          onFailure = Move(mOnFailure)](const RefPtr<MediaMgrError>& error)
       {
+        LOG(("GetUserMediaStreamRunnable::Run: starting failure callback "
+             "following InitializeAsync()"));
         // Initiating and starting devices failed.
 
         // Only run if the window is still active for our window listener.
@@ -1480,16 +1485,19 @@ private:
 // Source getter returning full list
 
 static void
-GetSources(MediaEngine *engine,
+GetSources(MediaEngine *aEngine,
            uint64_t aWindowId,
            MediaSourceEnum aSrcType,
            nsTArray<RefPtr<MediaDevice>>& aResult,
-           const char* media_device_name = nullptr)
+           const char* aMediaDeviceName = nullptr)
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
 
+  LOG(("%s: aEngine=%p, aWindowId=%" PRIu64 ", aSrcType=%" PRIu8 ", aMediaDeviceName=%s",
+       __func__, aEngine, aWindowId, static_cast<uint8_t>(aSrcType),
+       aMediaDeviceName ? aMediaDeviceName : "null"));
   nsTArray<RefPtr<MediaEngineSource>> sources;
-  engine->EnumerateDevices(aWindowId, aSrcType, &sources);
+  aEngine->EnumerateDevices(aWindowId, aSrcType, &sources);
 
   /*
    * We're allowing multiple tabs to access the same camera for parity
@@ -1497,14 +1505,15 @@ GetSources(MediaEngine *engine,
    * this decision.  To disallow, we'd filter by IsAvailable() as we used
    * to.
    */
-  if (media_device_name && *media_device_name)  {
+  if (aMediaDeviceName && *aMediaDeviceName)  {
     for (auto& source : sources) {
       nsString deviceName = source->GetName();
-      if (deviceName.EqualsASCII(media_device_name)) {
+      if (deviceName.EqualsASCII(aMediaDeviceName)) {
         aResult.AppendElement(MakeRefPtr<MediaDevice>(
               source,
               source->GetName(),
               NS_ConvertUTF8toUTF16(source->GetUUID())));
+        LOG(("%s: found aMediaDeviceName=%s", __func__, aMediaDeviceName));
         break;
       }
     }
@@ -1514,6 +1523,8 @@ GetSources(MediaEngine *engine,
             source,
             source->GetName(),
             NS_ConvertUTF8toUTF16(source->GetUUID())));
+      LOG(("%s: appending device=%s", __func__,
+           NS_ConvertUTF16toUTF8(source->GetName()).get()));
     }
   }
 }
@@ -1659,6 +1670,7 @@ public:
     MOZ_ASSERT(mOnSuccess);
     MOZ_ASSERT(mOnFailure);
     MOZ_ASSERT(mDeviceChosen);
+    LOG(("GetUserMediaTask::Run()"));
 
     // Allocate a video or audio device and return a MediaStream via
     // a GetUserMediaStreamRunnable.
@@ -2728,11 +2740,14 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   p->Then([self, onSuccess, onFailure, windowID, c, windowListener,
            sourceListener, askPermission, prefs, isHTTPS, isHandlingUserInput,
            callID, principalInfo, isChrome, resistFingerprinting](SourceSet*& aDevices) mutable {
+    LOG(("GetUserMedia: post enumeration pledge success callback starting"));
     // grab result
     auto devices = MakeRefPtr<Refcountable<UniquePtr<SourceSet>>>(aDevices);
 
     // Ensure that our windowID is still good.
     if (!nsGlobalWindowInner::GetInnerWindowWithId(windowID)) {
+      LOG(("GetUserMedia: bad windowID found in post enumeration pledge "
+           " success callback! Bailing out!"));
       return;
     }
 
@@ -2744,6 +2759,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
               isHandlingUserInput, callID, principalInfo, isChrome, devices,
               resistFingerprinting
              ](const char*& badConstraint) mutable {
+      LOG(("GetUserMedia: starting post enumeration pledge2 success "
+           "callback!"));
 
       // Ensure that the captured 'this' pointer and our windowID are still good.
       auto* globalWindow = nsGlobalWindowInner::GetInnerWindowWithId(windowID);
@@ -2754,6 +2771,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       }
 
       if (badConstraint) {
+        LOG(("GetUserMedia: bad constraint found in post enumeration pledge2 "
+             "success callback! Calling error handler!"));
         nsString constraint;
         constraint.AssignASCII(badConstraint);
         RefPtr<MediaStreamError> error =
@@ -2765,6 +2784,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
         return;
       }
       if (!(*devices)->Length()) {
+        LOG(("GetUserMedia: no devices found in post enumeration pledge2 "
+             "success callback! Calling error handler!"));
         RefPtr<MediaStreamError> error =
             new MediaStreamError(
                 window,
@@ -2829,9 +2850,11 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       EnableWebRtcLog();
 #endif
     }, [onFailure](MediaStreamError*& reason) mutable {
+      LOG(("GetUserMedia: post enumeration pledge2 failure callback called!"));
       onFailure->OnError(reason);
     });
   }, [onFailure](MediaStreamError*& reason) mutable {
+    LOG(("GetUserMedia: post enumeration pledge failure callback called!"));
     onFailure->OnError(reason);
   });
   return NS_OK;
