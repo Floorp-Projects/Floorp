@@ -9,10 +9,10 @@ add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
 
   await selectSource(dbg, "long");
-  dbg.win.cm.scrollTo(0, 284);
+  getCM(dbg).scrollTo(0, 284);
 
   pressKey(dbg, "inspector");
   pressKey(dbg, "debugger");
 
-  is(dbg.win.cm.getScrollInfo().top, 284);
+  is(getCM(dbg).getScrollInfo().top, 284);
 });

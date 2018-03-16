@@ -1,417 +1,5 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-menu {
-  display: inline;
-  padding: 0;
-}
-
-menu > menuitem::after {
-  content: "\25BA";
-  float: right;
-  padding-left: 5px;
-}
-
-menu > menupopup {
-  display: none;
-}
-
-menu > menuitem:hover + menupopup,
-menu > menupopup:hover {
-  display: block;
-}
-
-menupopup {
-  position: fixed;
-  z-index: 10000;
-  background: white;
-  border: 1px solid #cccccc;
-  padding: 5px 0;
-  background: #f2f2f2;
-  border-radius: 5px;
-  color: #585858;
-  box-shadow: 0 0 4px 0 rgba(190, 190, 190, 0.8);
-  min-width: 130px;
-}
-
-menuitem {
-  display: block;
-  padding: 0 20px;
-  line-height: 20px;
-  font-weight: 500;
-  font-size: 13px;
-  -moz-user-select: none;
-  user-select: none;
-}
-
-menuitem:hover {
-  background: #3780fb;
-  color: white;
-  cursor: pointer;
-}
-
-menuitem[disabled=true] {
-  color: #cccccc;
-}
-
-menuitem[disabled=true]:hover {
-  background-color: transparent;
-  cursor: default;
-}
-
-menuitem[type=checkbox]::before {
-  content: "";
-  width: 10px;
-  display: inline-block;
-}
-
-menuitem[type=checkbox][checked=true]::before {
-  content: "\2713";
-  left: -8px;
-  position: relative;
-}
-
-menuseparator {
-  border-bottom: 1px solid #cacdd3;
-  width: 100%;
-  height: 5px;
-  display: block;
-  margin-bottom: 5px;
-}
-
-#contextmenu-mask.show {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 999;
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-:root.theme-light,
-:root .theme-light {
-  --theme-search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
-
-#mount {
-  display: flex;
-  height: 100%;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-  background: transparent;
-}
-
-::-webkit-scrollbar-track {
-  border-radius: 8px;
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  border-radius: 8px;
-  background: rgba(113, 113, 113, 0.5);
-}
-
-:root.theme-dark .CodeMirror-scrollbar-filler {
-  background: transparent;
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-.landing-page {
-  flex: 1;
-  display: flex;
-  width: 100vw;
-  height: 100vh;
-  flex-direction: row;
-  align-items: stretch;
-  /* Customs properties */
-  --title-font-size: 24px;
-  --ui-element-font-size: 16px;
-  --primary-line-height: 22px;
-  --secondary-line-height: 25px;
-  --base-spacing: 20px;
-  --base-transition: all 0.25s ease;
-}
-
-.landing-popup {
-  min-width: 0;
-}
-
-.landing-page .panel {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.landing-page .panel header {
-  display: flex;
-  align-items: baseline;
-  margin: calc(2 * var(--base-spacing)) 0 0;
-  padding-bottom: var(--base-spacing);
-}
-
-.landing-page .panel header input[type="search"] {
-  flex: 1;
-  background-color: var(--theme-tab-toolbar-background);
-  color: var(--theme-comment);
-  font-size: var(--ui-element-font-size);
-  border: 1px solid var(--theme-splitter-color);
-  padding: calc(var(--base-spacing) / 2);
-  margin: 0 var(--base-spacing);
-  transition: var(--base-transition);
-}
-
-.landing-page .panel .hero {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.landing-page button {
-  background-color: var(--theme-tab-toolbar-background);
-  color: var(--theme-comment);
-  font-size: var(--ui-element-font-size);
-  border: 1px solid var(--theme-splitter-color);
-  padding: calc(var(--base-spacing) / 2);
-  margin: 0 var(--base-spacing);
-  transition: var(--base-transition);
-  cursor: pointer;
-}
-
-.landing-page .panel header h1 {
-  color: var(--theme-body-color);
-  font-size: var(--title-font-size);
-  margin: 0;
-  line-height: var(--primary-line-height);
-  font-weight: normal;
-  padding-left: calc(2 * var(--base-spacing));
-}
-
-.landing-page .panel h3 {
-  padding-left: calc(2 * var(--base-spacing));
-}
-
-.landing-page .panel header input::placeholder {
-  color: var(--theme-body-color-inactive);
-}
-
-.landing-page .panel header input:focus {
-  border: 1px solid var(--theme-selection-background);
-}
-
-.landing-page .panel .center-message {
-  font-size: var(--ui-element-font-size);
-  line-height: var(--secondary-line-height);
-  padding: calc(var(--base-spacing) / 2);
-}
-
-.landing-page .center a {
-  color: var(--theme-highlight-bluegrey);
-  text-decoration: none;
-}
-
-.landing-page .panel .footer-note {
-  padding: var(--base-spacing) 0;
-  text-align: center;
-  font-size: 14px;
-  color: var(--theme-comment);
-}
-
-.landing-page .panel .launch-action-container {
-  text-align: center;
-}
-
-.landing-page .panel .under-construction {
-  display: flex;
-  width: 417px;
-  color: var(--theme-comment);
-  font-size: calc(var(--ui-element-font-size) / 1);
-  margin: var(--base-spacing) auto;
-  max-width: 350px;
-
-  line-height: 1.4em;
-}
-
-.landing-page .panel .under-construction .github-link {
-  display: block;
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-.landing-page .tab-group {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.landing-page .tab-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.landing-page .tab {
-  border-bottom: 1px solid var(--theme-splitter-color);
-  padding: calc(var(--base-spacing) / 2) var(--base-spacing);
-  font-family: sans-serif;
-  cursor: pointer;
-}
-
-.landing-page .tab-sides {
-  display: flex;
-  justify-content: space-between;
-  margin: 0 calc(var(--base-spacing) * 2);
-}
-
-.landing-page .tab-title {
-  line-height: var(--secondary-line-height);
-  font-size: var(--ui-element-font-size);
-  color: var(--theme-highlight-bluegrey);
-  word-break: break-all;
-}
-
-.landing-page .tab-url {
-  color: var(--theme-comment);
-  word-break: break-all;
-}
-
-.landing-page .tab-value {
-  color: var(--theme-comment);
-  line-height: var(--secondary-line-height);
-  font-size: var(--ui-element-font-size);
-}
-
-.landing-page .tab:focus,
-.landing-page .tab.active {
-  background: var(--theme-selection-background);
-  color: var(--theme-selection-color);
-  transition: var(--base-transition);
-}
-
-.landing-page .tab:focus .tab-title,
-.landing-page .tab.active .tab-title {
-  color: inherit;
-}
-
-.landing-page .tab:focus .tab-url,
-.landing-page .tab.active .tab-url {
-  color: var(--theme-highlight-gray);
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-.landing-page .sidebar {
-  --sidebar-width: 200px;
-  display: flex;
-  background-color: var(--theme-tab-toolbar-background);
-  width: var(--sidebar-width);
-  flex-direction: column;
-  border-right: 1px solid var(--theme-splitter-color);
-}
-
-.landing-page .sidebar h1 {
-  color: var(--theme-body-color);
-  font-size: var(--title-font-size);
-  margin: 0;
-  line-height: var(--primary-line-height);
-  font-weight: bold;
-  padding: var(--base-spacing) var(--base-spacing);
-}
-
-.landing-page .sidebar ul {
-  list-style: none;
-  padding: 0;
-  line-height: var(--primary-line-height);
-  font-size: var(--ui-element-font-size);
-}
-
-.landing-page .sidebar li {
-  padding: calc(var(--base-spacing) / 4) var(--base-spacing);
-}
-
-.landing-page .sidebar li a {
-  color: var(--theme-body-color);
-}
-
-.landing-page .sidebar li.selected {
-  background: var(--theme-highlight-bluegrey);
-  color: var(--theme-selection-color);
-  transition: var(--base-transition);
-}
-
-.landing-page .sidebar li.selected a {
-  color: inherit;
-}
-
-.landing-page .sidebar li:hover,
-.landing-page .sidebar li:focus {
-  background: var(--theme-selection-background);
-  color: var(--theme-selection-color);
-  cursor: pointer;
-}
-
-.landing-page .sidebar li:hover a,
-.landing-page .sidebar li:focus a {
-  color: inherit;
-}
-
-.landing-page .sidebar li:last-child {
-  border-top: 2px solid var(--theme-splitter-color);
-  margin: 2px;
-}
-
-.landing-page .sidebar .title-wrapper .launchpad-container {
-  padding-left: var(--base-spacing);
-}
-
-.landing-page
-  .sidebar
-  .title-wrapper
-  .launchpad-container
-  .launchpad-container-icon {
-  display: inline-block;
-}
-
-.landing-page .sidebar .title-wrapper .launchpad-container .rocket svg {
-  width: 18px;
-  height: 18px;
-}
-
-.landing-page
-  .sidebar
-  .title-wrapper
-  .launchpad-container
-  .launchpad-container-title {
-  display: inline;
-  padding-left: 3px;
-  font-weight: normal;
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .modal-wrapper {
@@ -470,6 +58,7 @@ body {
   -moz-column-width: 250px;
   -webkit-column-width: 250px;
   column-width: 250px;
+  cursor: default;
 }
 
 .shortcuts-content h2 {
@@ -613,6 +202,51 @@ button:focus {
 
 .min-width-0 {
   min-width: 0;
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root.theme-light,
+:root .theme-light {
+  --theme-search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#mount {
+  display: flex;
+  height: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgba(113, 113, 113, 0.5);
+}
+
+:root.theme-dark .CodeMirror-scrollbar-filler {
+  background: transparent;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1781,6 +1415,96 @@ html[dir="rtl"] .arrow svg,
 .function-signature .comma {
   color: var(--object-color);
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+menu {
+  display: inline;
+  padding: 0;
+}
+
+menu > menuitem::after {
+  content: "\25BA";
+  float: right;
+  padding-left: 5px;
+}
+
+menu > menupopup {
+  display: none;
+}
+
+menu > menuitem:hover + menupopup,
+menu > menupopup:hover {
+  display: block;
+}
+
+menupopup {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  border: 1px solid #cccccc;
+  padding: 5px 0;
+  background: #f2f2f2;
+  border-radius: 5px;
+  color: #585858;
+  box-shadow: 0 0 4px 0 rgba(190, 190, 190, 0.8);
+  min-width: 130px;
+}
+
+menuitem {
+  display: block;
+  padding: 0 20px;
+  line-height: 20px;
+  font-weight: 500;
+  font-size: 13px;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+menuitem:hover {
+  background: #3780fb;
+  color: white;
+  cursor: pointer;
+}
+
+menuitem[disabled=true] {
+  color: #cccccc;
+}
+
+menuitem[disabled=true]:hover {
+  background-color: transparent;
+  cursor: default;
+}
+
+menuitem[type=checkbox]::before {
+  content: "";
+  width: 10px;
+  display: inline-block;
+}
+
+menuitem[type=checkbox][checked=true]::before {
+  content: "\2713";
+  left: -8px;
+  position: relative;
+}
+
+menuseparator {
+  border-bottom: 1px solid #cacdd3;
+  width: 100%;
+  height: 5px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+#contextmenu-mask.show {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+}
 .command-bar-button {
   appearance: none;
   background: transparent;
@@ -2787,7 +2511,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 /* set the linenumber white when there is a breakpoint */
-.new-breakpoint .CodeMirror-gutter-wrapper .CodeMirror-linenumber {
+.cm-s-mozilla .new-breakpoint .CodeMirror-gutter-wrapper .CodeMirror-linenumber {
   color: white;
 }
 
