@@ -798,8 +798,7 @@ var PlacesUtils = {
     else if (PlacesUtils.nodeIsTagQuery(aNode)) {
       // RESULTS_AS_TAG_CONTENTS queries are similar to folder shortcuts
       // so we can still get the concrete itemId for them.
-      var queries = aNode.getQueries();
-      var folders = queries[0].getFolders();
+      let folders = aNode.query.getFolders();
       return folders[0];
     }
     return aNode.itemId;
