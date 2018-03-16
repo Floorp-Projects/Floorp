@@ -100,7 +100,9 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : P
     }
 
     private fun engineNameIsUnique(engineName: String): Boolean {
-        val sharedPreferences = context.getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES, Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES,
+                Context.MODE_PRIVATE)
+
         return sharedPreferences.contains(engineName)
     }
 

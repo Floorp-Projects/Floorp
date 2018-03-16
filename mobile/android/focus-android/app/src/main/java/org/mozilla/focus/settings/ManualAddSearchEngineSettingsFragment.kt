@@ -89,7 +89,7 @@ class ManualAddSearchEngineSettingsFragment : SettingsFragment() {
             val engineName = view.findViewById<EditText>(R.id.edit_engine_name).text.toString()
             val searchQuery = view.findViewById<EditText>(R.id.edit_search_string).text.toString()
 
-            val pref = findPreference(getString(R.string.pref_key_manual_add_search_engine)) as ManualAddSearchEnginePreference
+            val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
             val engineValid = pref.validateEngineNameAndShowError(engineName)
             val searchValid = pref.validateSearchQueryAndShowError(searchQuery)
             val isPartialSuccess = engineValid && searchValid
@@ -118,20 +118,25 @@ class ManualAddSearchEngineSettingsFragment : SettingsFragment() {
     }
 
     private fun setUiIsValidatingAsync(isValidating: Boolean, saveMenuItem: MenuItem?) {
-        val pref = findPreference(getString(R.string.pref_key_manual_add_search_engine)) as ManualAddSearchEnginePreference
+        val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
         pref.setProgressViewShown(isValidating)
 
         saveMenuItem!!.isEnabled = !isValidating
     }
 
+    private fun findManualAddSearchEnginePreference(id: Int): ManualAddSearchEnginePreference {
+        return findPreference(getString(id)) as ManualAddSearchEnginePreference
+    }
+
     companion object {
         private val LOGTAG = "ManualAddSearchEngine"
         private val SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS = 4000
+        private val VALID_RESPONSE_CODE_UPPER_BOUND = 300
 
         @SuppressWarnings("DE_MIGHT_IGNORE")
         @WorkerThread
         @VisibleForTesting private fun isValidSearchQueryURL(query: String): Boolean {
-            // TODO: we should share the code to substitute and normalize the search string (see SearchEngine.buildSearchUrl).
+            // we should share the code to substitute and normalize the search string (see SearchEngine.buildSearchUrl).
             val encodedTestQuery = Uri.encode("testSearchEngineValidation")
 
             val normalizedHttpsSearchURLStr = UrlUtils.normalize(query)
@@ -148,20 +153,23 @@ class ManualAddSearchEngineSettingsFragment : SettingsFragment() {
             connection.readTimeout = SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS
 
             return try {
-                connection.responseCode < 300
+                connection.responseCode < VALID_RESPONSE_CODE_UPPER_BOUND
             } catch (e: IOException) {
                 Log.d(LOGTAG, "Failure to get response code from server: returning invalid search query")
                 false
             } finally {
-                try { connection.inputStream.close() } catch (_: IOException) { }
+                try { connection.inputStream.close() }
+                catch (_: IOException) { Log.d(LOGTAG, "connection.inputStream failed to close") }
+
                 connection.disconnect()
             }
         }
     }
 
-    private class ValidateSearchEngineAsyncTask constructor(that: ManualAddSearchEngineSettingsFragment,
-                                                                    private val engineName: String,
-                                                                    private val query: String) : AsyncTask<Void, Void, Boolean>() {
+    private class ValidateSearchEngineAsyncTask
+        constructor(that: ManualAddSearchEngineSettingsFragment,
+                    private val engineName: String, private val query: String) : AsyncTask<Void, Void, Boolean>() {
+
         private val thatWeakReference: WeakReference<ManualAddSearchEngineSettingsFragment> = WeakReference(that)
 
         override fun doInBackground(vararg p0: Void?): Boolean {
@@ -180,7 +188,8 @@ class ManualAddSearchEngineSettingsFragment : SettingsFragment() {
 
             val that = thatWeakReference.get()
             if (that == null) {
-                Log.d(LOGTAG, "Fragment or menu item no longer exists when search query validation async task returned.")
+                Log.d(LOGTAG, "Fragment or menu item no longer exists when search query " +
+                        "validation async task returned.")
                 return
             }
 
@@ -199,7 +208,7 @@ class ManualAddSearchEngineSettingsFragment : SettingsFragment() {
         }
 
         private fun showServerError(that: ManualAddSearchEngineSettingsFragment) {
-            val pref = that.findPreference(that.getString(R.string.pref_key_manual_add_search_engine)) as ManualAddSearchEnginePreference
+            val pref = that.findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
             pref.setSearchQueryErrorText(that.getString(R.string.pref_key_manual_add_search_engine))
         }
     }
