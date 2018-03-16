@@ -106,11 +106,13 @@
 
 :root.theme-light,
 :root .theme-light {
+  --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
   --popup-shadow-color: #d0d0d0;
 }
 
 :root.theme-dark,
 :root .theme-dark {
+  --search-overlays-semitransparent: rgba(42, 46, 56, 0.66);
   --popup-shadow-color: #5c667b;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1136,11 +1138,58 @@ html[dir="rtl"] .arrow svg,
   user-select: none;
 }
 
+.sources-clear-root {
+  padding: 4px 3px 4px 3px;
+  width: 100%;
+  text-align: start;
+  white-space: nowrap;
+  color: inherit;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.sources-clear-root i {
+  margin-right: 5px;
+  position: relative;
+}
+
+.sources-clear-root svg {
+  width: 13px;
+  height: 13px;
+}
+
+.theme-dark .sources-clear-root svg {
+  fill: var(--theme-body-color);
+}
+
+.sources-clear-root .home {
+  opacity: 0.5;
+}
+
+.sources-clear-root .breadcrumb svg {
+  width: 5px;
+  top: 2px;
+  position: absolute;
+  margin-right: 5px;
+}
+
+.sources-clear-root-label {
+  margin-left: 5px;
+}
+
+.sources-pane {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
 .sources-list {
   flex: 1;
   display: flex;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 
 .sources-list .tree:focus {
@@ -1288,6 +1337,31 @@ html[dir="rtl"] .arrow svg,
   .tree-indent:last-of-type {
   margin-inline-end: 4px;
 }
+
+/*
+  Custom root styles
+*/
+.sources-pane.sources-list-custom-root {
+  display: block;
+  position: relative;
+}
+
+.sources-list-custom-root .sources-pane {
+  display: block;
+}
+
+.sources-list-custom-root .sources-list {
+  position: absolute;
+  top: 26px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* Removes start margin when a custom root is used */
+.sources-list-custom-root .tree > .tree-node[data-expandable="false"][aria-level="0"] {
+  padding-inline-start: 4px;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -1386,6 +1460,10 @@ html[dir="rtl"] .arrow svg,
   height: 25px;
   box-sizing: border-box;
   display: flex;
+}
+
+.theme-dark .outline-footer button {
+    color: var(--theme-body-color);
 }
 
 .outline-footer button.active {
@@ -3863,8 +3941,18 @@ html .welcomebox .toggle-button-end.collapsed {
   color: white;
 }
 
-.result-list.big li.selected .title {
-  color: var(--theme-body-color);
+.result-list.big li.selected {
+  background-color: var(--theme-selection-background);
+  color: white;
+}
+
+.result-list.big li.selected .subtitle {
+  color: white;
+}
+
+.result-list.big li.selected .subtitle .highlight {
+  color: white;
+  font-weight: bold;
 }
 
 .result-list.big li .subtitle {
@@ -3874,6 +3962,10 @@ html .welcomebox .toggle-button-end.collapsed {
 
 .result-list.big li .subtitle {
   line-height: 1.5em;
+}
+
+.theme-dark .result-list.big li.selected .subtitle {
+  color: white;
 }
 
 .theme-dark .result-list.big li .subtitle {
@@ -3893,11 +3985,13 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 .result-item .title .highlight {
   font-weight: bold;
+  background-color: transparent;
 }
 
 .result-item .subtitle .highlight {
   color: var(--grey-90);
   font-weight: 500;
+  background-color: transparent;
 }
 
 .theme-dark .result-item .title .highlight,
