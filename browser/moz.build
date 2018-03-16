@@ -65,34 +65,34 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
 
 with Files("Makefile.in"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("*.mk"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("**/moz.build"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("moz.configure"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("app.mozbuild"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("moz.build"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("confvars.sh"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("LICENSE"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("branding/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
 with Files("config/**"):
-    BUG_COMPONENT = ("Core", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("docs/**"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")

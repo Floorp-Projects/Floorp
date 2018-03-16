@@ -1117,6 +1117,23 @@ class Interface(object):
                                             self._namespace_offset,
                                             self._descriptor_offset))
 
+    def encodeflags(self):
+        """
+        Encode the flags of this Interface object, return a byte
+        suitable for writing to a typelib file.
+
+        """
+        flags = 0
+        if self.scriptable:
+            flags |= 0x80
+        if self.function:
+            flags |= 0x40
+        if self.builtinclass:
+            flags |= 0x20
+        if self.main_process_scriptable_only:
+            flags |= 0x10
+        return flags
+
     def write(self, typelib, file, data_pool_offset):
         """
         Write an InterfaceDescriptor to |file|, which is assumed
@@ -1137,16 +1154,7 @@ class Interface(object):
         file.write(struct.pack(">H", len(self.constants)))
         for c in self.constants:
             c.write(typelib, file)
-        flags = 0
-        if self.scriptable:
-            flags |= 0x80
-        if self.function:
-            flags |= 0x40
-        if self.builtinclass:
-            flags |= 0x20
-        if self.main_process_scriptable_only:
-            flags |= 0x10
-        file.write(struct.pack(">B", flags))
+        file.write(struct.pack(">B", self.encodeflags()))
 
     def write_names(self, string_writer):
         """

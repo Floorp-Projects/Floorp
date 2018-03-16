@@ -1368,7 +1368,7 @@ AddInterFrameSpacingToSize(ReflowOutput&    aDesiredSize,
                                   parent, aFrame);
     // add our own italic correction
     nscoord leftCorrection = 0, italicCorrection = 0;
-    aFrame->GetItalicCorrection(aDesiredSize.mBoundingMetrics,
+    nsMathMLContainerFrame::GetItalicCorrection(aDesiredSize.mBoundingMetrics,
                                 leftCorrection, italicCorrection);
     gap += leftCorrection;
     if (gap) {

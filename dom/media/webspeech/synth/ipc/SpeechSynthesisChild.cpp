@@ -117,7 +117,7 @@ SpeechSynthesisRequestChild::RecvOnEnd(const bool& aIsError,
     mTask->DispatchEndImpl(aElapsedTime, aCharIndex);
   }
 
-  actor->Send__delete__(actor);
+  SpeechSynthesisRequestChild::Send__delete__(actor);
 
   return IPC_OK();
 }

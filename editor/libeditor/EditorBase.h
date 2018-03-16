@@ -1121,13 +1121,7 @@ public:
   }
   static nsIContent* GetNodeAtRangeOffsetPoint(const RawRangeBoundary& aPoint);
 
-  static nsresult GetStartNodeAndOffset(Selection* aSelection,
-                                        nsINode** aStartContainer,
-                                        int32_t* aStartOffset);
   static EditorRawDOMPoint GetStartPoint(Selection* aSelection);
-  static nsresult GetEndNodeAndOffset(Selection* aSelection,
-                                      nsINode** aEndContainer,
-                                      int32_t* aEndOffset);
   static EditorRawDOMPoint GetEndPoint(Selection* aSelection);
 
   static nsresult GetEndChildNode(Selection* aSelection,

@@ -501,7 +501,8 @@ const INITIAL_STATE = {
     visible: false,
     data: {}
   },
-  Sections: []
+  Sections: [],
+  PreferencesPane: { visible: false }
 };
 /* unused harmony export INITIAL_STATE */
 
@@ -796,7 +797,18 @@ function Snippets(prevState = INITIAL_STATE.Snippets, action) {
   }
 }
 
-var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections };
+function PreferencesPane(prevState = INITIAL_STATE.PreferencesPane, action) {
+  switch (action.type) {
+    case Actions["b" /* actionTypes */].SETTINGS_OPEN:
+      return Object.assign({}, prevState, { visible: true });
+    case Actions["b" /* actionTypes */].SETTINGS_CLOSE:
+      return Object.assign({}, prevState, { visible: false });
+    default:
+      return prevState;
+  }
+}
+
+var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections, PreferencesPane };
 
 /***/ }),
 /* 7 */
@@ -2856,6 +2868,205 @@ class ManualMigration__ManualMigration extends external__React__default.a.PureCo
 }
 
 const ManualMigration = Object(external__ReactRedux_["connect"])()(ManualMigration__ManualMigration);
+// CONCATENATED MODULE: ./system-addon/content-src/components/PreferencesPane/PreferencesPane.jsx
+
+
+
+
+
+const getFormattedMessage = message => typeof message === "string" ? external__React__default.a.createElement(
+  "span",
+  null,
+  message
+) : external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], message);
+
+const PreferencesInput = props => external__React__default.a.createElement(
+  "section",
+  null,
+  external__React__default.a.createElement("input", { type: "checkbox", id: props.prefName, name: props.prefName, checked: props.value, disabled: props.disabled, onChange: props.onChange, className: props.className }),
+  external__React__default.a.createElement(
+    "label",
+    { htmlFor: props.prefName, className: props.labelClassName },
+    getFormattedMessage(props.titleString)
+  ),
+  props.descString && external__React__default.a.createElement(
+    "p",
+    { className: "prefs-input-description" },
+    getFormattedMessage(props.descString)
+  ),
+  external__React__default.a.Children.map(props.children, child => external__React__default.a.createElement(
+    "div",
+    { className: `options${child.props.disabled ? " disabled" : ""}` },
+    child
+  ))
+);
+
+class PreferencesPane__PreferencesPane extends external__React__default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.handlePrefChange = this.handlePrefChange.bind(this);
+    this.handleSectionChange = this.handleSectionChange.bind(this);
+    this.togglePane = this.togglePane.bind(this);
+    this.onWrapperMount = this.onWrapperMount.bind(this);
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.PreferencesPane.visible !== this.props.PreferencesPane.visible) {
+      // While the sidebar is open, listen for all document clicks.
+      if (this.isSidebarOpen()) {
+        document.addEventListener("click", this.handleClickOutside);
+      } else {
+        document.removeEventListener("click", this.handleClickOutside);
+      }
+    }
+  }
+
+  isSidebarOpen() {
+    return this.props.PreferencesPane.visible;
+  }
+
+  handleClickOutside(event) {
+    // if we are showing the sidebar and there is a click outside, close it.
+    if (this.isSidebarOpen() && !this.wrapper.contains(event.target)) {
+      this.togglePane();
+    }
+  }
+
+  handlePrefChange({ target: { name, checked } }) {
+    let value = checked;
+    if (name === "topSitesRows") {
+      value = checked ? 2 : 1;
+    }
+    this.props.dispatch(Actions["a" /* actionCreators */].SetPref(name, value));
+  }
+
+  handleSectionChange({ target }) {
+    const id = target.name;
+    const type = target.checked ? Actions["b" /* actionTypes */].SECTION_ENABLE : Actions["b" /* actionTypes */].SECTION_DISABLE;
+    this.props.dispatch(Actions["a" /* actionCreators */].AlsoToMain({ type, data: id }));
+  }
+
+  togglePane() {
+    if (this.isSidebarOpen()) {
+      this.props.dispatch({ type: Actions["b" /* actionTypes */].SETTINGS_CLOSE });
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "CLOSE_NEWTAB_PREFS" }));
+    } else {
+      this.props.dispatch({ type: Actions["b" /* actionTypes */].SETTINGS_OPEN });
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
+    }
+  }
+
+  onWrapperMount(wrapper) {
+    this.wrapper = wrapper;
+  }
+
+  render() {
+    const { props } = this;
+    const prefs = props.Prefs.values;
+    const sections = props.Sections;
+    const isVisible = this.isSidebarOpen();
+    return external__React__default.a.createElement(
+      "div",
+      { className: "prefs-pane-wrapper", ref: this.onWrapperMount },
+      external__React__default.a.createElement(
+        "div",
+        { className: "prefs-pane-button" },
+        external__React__default.a.createElement("button", {
+          className: `prefs-button icon ${isVisible ? "icon-dismiss" : "icon-settings"}`,
+          title: props.intl.formatMessage({ id: isVisible ? "settings_pane_done_button" : "settings_pane_button_label" }),
+          onClick: this.togglePane })
+      ),
+      external__React__default.a.createElement(
+        "div",
+        { className: "prefs-pane" },
+        external__React__default.a.createElement(
+          "div",
+          { className: `sidebar ${isVisible ? "" : "hidden"}` },
+          external__React__default.a.createElement(
+            "div",
+            { className: "prefs-modal-inner-wrapper" },
+            external__React__default.a.createElement(
+              "h1",
+              null,
+              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "settings_pane_header" })
+            ),
+            external__React__default.a.createElement(
+              "p",
+              null,
+              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "settings_pane_body2" })
+            ),
+            external__React__default.a.createElement(PreferencesInput, {
+              className: "showSearch",
+              prefName: "showSearch",
+              value: prefs.showSearch,
+              onChange: this.handlePrefChange,
+              titleString: { id: "settings_pane_search_header" },
+              descString: { id: "settings_pane_search_body" } }),
+            external__React__default.a.createElement("hr", null),
+            external__React__default.a.createElement(
+              PreferencesInput,
+              {
+                className: "showTopSites",
+                prefName: "showTopSites",
+                value: prefs.showTopSites,
+                onChange: this.handlePrefChange,
+                titleString: { id: "settings_pane_topsites_header" },
+                descString: { id: "settings_pane_topsites_body" } },
+              external__React__default.a.createElement(PreferencesInput, {
+                className: "showMoreTopSites",
+                prefName: "topSitesRows",
+                disabled: !prefs.showTopSites,
+                value: prefs.topSitesRows === 2,
+                onChange: this.handlePrefChange,
+                titleString: { id: "settings_pane_topsites_options_showmore" },
+                labelClassName: "icon icon-topsites" })
+            ),
+            sections.filter(section => !section.shouldHidePref).map(({ id, title, enabled, pref }) => external__React__default.a.createElement(
+              PreferencesInput,
+              {
+                key: id,
+                className: "showSection",
+                prefName: pref && pref.feed || id,
+                value: enabled,
+                onChange: pref && pref.feed ? this.handlePrefChange : this.handleSectionChange,
+                titleString: pref && pref.titleString || title,
+                descString: pref && pref.descString },
+              pref && pref.nestedPrefs && pref.nestedPrefs.map(nestedPref => external__React__default.a.createElement(PreferencesInput, {
+                key: nestedPref.name,
+                prefName: nestedPref.name,
+                disabled: !enabled,
+                value: prefs[nestedPref.name],
+                onChange: this.handlePrefChange,
+                titleString: nestedPref.titleString,
+                labelClassName: `icon ${nestedPref.icon}` }))
+            )),
+            !prefs.disableSnippets && external__React__default.a.createElement("hr", null),
+            !prefs.disableSnippets && external__React__default.a.createElement(PreferencesInput, { className: "showSnippets", prefName: "feeds.snippets",
+              value: prefs["feeds.snippets"], onChange: this.handlePrefChange,
+              titleString: { id: "settings_pane_snippets_header" },
+              descString: { id: "settings_pane_snippets_body" } })
+          ),
+          external__React__default.a.createElement(
+            "section",
+            { className: "actions" },
+            external__React__default.a.createElement(
+              "button",
+              { className: "done", onClick: this.togglePane },
+              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "settings_pane_done_button" })
+            )
+          )
+        )
+      )
+    );
+  }
+}
+
+const PreferencesPane = Object(external__ReactRedux_["connect"])(state => ({
+  Prefs: state.Prefs,
+  PreferencesPane: state.PreferencesPane,
+  Sections: state.Sections
+}))(Object(external__ReactIntl_["injectIntl"])(PreferencesPane__PreferencesPane));
 // CONCATENATED MODULE: ./system-addon/common/PrerenderData.jsm
 class _PrerenderData {
   constructor(options) {
@@ -3062,11 +3273,6 @@ var Sections = __webpack_require__(18);
 
 
 
-const PrefsButton = Object(external__ReactIntl_["injectIntl"])(props => external__React__default.a.createElement(
-  "div",
-  { className: "prefs-button" },
-  external__React__default.a.createElement("button", { className: "icon icon-settings", onClick: props.onClick, title: props.intl.formatMessage({ id: "settings_pane_button_label" }) })
-));
 
 // Add the locale data for pluralization and relative-time formatting for now,
 // this just uses english locale data. We can make this more sophisticated if
@@ -3130,16 +3336,6 @@ class Base__Base extends external__React__default.a.PureComponent {
 
 
 class Base_BaseContent extends external__React__default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.openPreferences = this.openPreferences.bind(this);
-  }
-
-  openPreferences() {
-    this.props.dispatch(Actions["a" /* actionCreators */].OnlyToMain({ type: Actions["b" /* actionTypes */].SETTINGS_OPEN }));
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
-  }
-
   render() {
     const { props } = this;
     const { App } = props;
@@ -3173,10 +3369,20 @@ class Base_BaseContent extends external__React__default.a.PureComponent {
             { className: "non-collapsible-section" },
             external__React__default.a.createElement(ManualMigration, null)
           ),
-          external__React__default.a.createElement(Sections["a" /* Sections */], null),
-          external__React__default.a.createElement(PrefsButton, { onClick: this.openPreferences })
+          external__React__default.a.createElement(Sections["a" /* Sections */], null)
         ),
         external__React__default.a.createElement(ConfirmDialog, null)
+      ),
+      initialized && external__React__default.a.createElement(
+        "div",
+        { className: "prefs-pane" },
+        external__React__default.a.createElement(
+          ErrorBoundary["a" /* ErrorBoundary */],
+          { className: "sidebar" },
+          " ",
+          external__React__default.a.createElement(PreferencesPane, null),
+          " "
+        )
       )
     );
   }
@@ -3495,7 +3701,7 @@ const cardContextTypes = {
   },
   pocket: {
     intlID: "type_label_pocket",
-    icon: "pocket"
+    icon: "pocket-small"
   }
 };
 // EXTERNAL MODULE: external "ReactIntl"
@@ -3806,7 +4012,7 @@ const SectionMenuOptions = {
   ManageSection: section => ({
     id: "section_menu_action_manage_section",
     icon: "settings",
-    action: Actions["a" /* actionCreators */].OnlyToMain({ type: Actions["b" /* actionTypes */].SETTINGS_OPEN }),
+    action: { type: Actions["b" /* actionTypes */].SETTINGS_OPEN },
     userEvent: "SECTION_MENU_MANAGE"
   }),
   AddTopSite: section => ({

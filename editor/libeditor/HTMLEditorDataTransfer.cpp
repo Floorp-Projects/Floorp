@@ -194,7 +194,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                     const nsAString& aInfoStr,
                                     const nsAString& aFlavor,
                                     nsIDOMDocument* aSourceDoc,
-                                    nsIDOMNode* aDestNode,
+                                    nsIDOMNode* aDestDOMNode,
                                     int32_t aDestOffset,
                                     bool aDeleteSelection,
                                     bool aTrustedInput,
@@ -227,39 +227,40 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                            aTrustedInput);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsINode> targetNode;
-  int32_t targetOffset=0;
-
-  if (!aDestNode) {
+  EditorDOMPoint targetPoint;
+  if (!aDestDOMNode) {
     // if caller didn't provide the destination/target node,
     // fetch the paste insertion point from our selection
-    rv = GetStartNodeAndOffset(selection, getter_AddRefs(targetNode), &targetOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!targetNode || !IsEditable(targetNode)) {
+    targetPoint = EditorBase::GetStartPoint(selection);
+    if (NS_WARN_IF(!targetPoint.IsSet()) ||
+        !IsEditable(targetPoint.GetContainer())) {
       return NS_ERROR_FAILURE;
     }
   } else {
-    targetNode = do_QueryInterface(aDestNode);
-    targetOffset = aDestOffset;
+    nsCOMPtr<nsINode> destNode = do_QueryInterface(aDestDOMNode);
+    targetPoint.Set(destNode, aDestOffset);
   }
 
   // if we have a destination / target node, we want to insert there
   // rather than in place of the selection
-  // ignore aDeleteSelection here if no aDestNode since deletion will
+  // ignore aDeleteSelection here if no aDestDOMNode since deletion will
   // also occur later; this block is intended to cover the various
   // scenarios where we are dropping in an editor (and may want to delete
   // the selection before collapsing the selection in the new destination)
-  if (aDestNode) {
+  if (aDestDOMNode) {
     if (aDeleteSelection) {
       // Use an auto tracker so that our drop point is correctly
       // positioned after the delete.
-      AutoTrackDOMPoint tracker(mRangeUpdater, &targetNode, &targetOffset);
+      AutoTrackDOMPoint tracker(mRangeUpdater, &targetPoint);
       rv = DeleteSelection(eNone, eStrip);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = selection->Collapse(targetNode, targetOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    selection->Collapse(targetPoint, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
   }
 
   // we need to recalculate various things based on potentially new offsets
@@ -347,8 +348,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     // if there are any invisible br's after our insertion point, remove them.
     // this is because if there is a br at end of what we paste, it will make
     // the invisible br visible.
-    WSRunObject wsObj(this, pointToInsert.GetContainer(),
-                      pointToInsert.Offset());
+    WSRunObject wsObj(this, pointToInsert);
     if (wsObj.mEndReasonNode &&
         TextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
         !IsVisibleBRElement(wsObj.mEndReasonNode)) {
@@ -624,8 +624,8 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       nsCOMPtr<nsINode> visNode;
       int32_t outVisOffset=0;
       WSType visType;
-      wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
-                                &outVisOffset, &visType);
+      wsRunObj.PriorVisibleNode(EditorRawDOMPoint(selNode, selOffset),
+                                address_of(visNode), &outVisOffset, &visType);
       if (visType == WSType::br) {
         // we are after a break.  Is it visible?  Despite the name,
         // PriorVisibleNode does not make that determination for breaks.
@@ -639,7 +639,8 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
           selOffset = atStartReasonNode.Offset();
           // we want to be inside any inline style prior to break
           WSRunObject wsRunObj(this, selNode, selOffset);
-          wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
+          wsRunObj.PriorVisibleNode(EditorRawDOMPoint(selNode, selOffset),
+                                    address_of(visNode),
                                     &outVisOffset, &visType);
           if (visType == WSType::text || visType == WSType::normalWS) {
             selNode = visNode;

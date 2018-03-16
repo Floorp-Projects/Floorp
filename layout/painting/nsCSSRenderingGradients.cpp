@@ -873,8 +873,8 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
   // Use a pattern transform to take account of source and dest rects
   matrix.PreTranslate(gfxPoint(mPresContext->CSSPixelsToDevPixels(aSrc.x),
                                mPresContext->CSSPixelsToDevPixels(aSrc.y)));
-  matrix.PreScale(gfxFloat(mPresContext->CSSPixelsToAppUnits(aSrc.width))/aDest.width,
-                  gfxFloat(mPresContext->CSSPixelsToAppUnits(aSrc.height))/aDest.height);
+  matrix.PreScale(gfxFloat(nsPresContext::CSSPixelsToAppUnits(aSrc.width))/aDest.width,
+                  gfxFloat(nsPresContext::CSSPixelsToAppUnits(aSrc.height))/aDest.height);
   gradientPattern->SetMatrix(matrix);
 
   if (stopDelta == 0.0) {
@@ -1062,10 +1062,10 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
   LayoutDeviceSize tileSpacing = tileRepeat - firstTileBounds.Size();
 
   // srcTransform is used for scaling the gradient to match aSrc
-  LayoutDeviceRect srcTransform = LayoutDeviceRect(mPresContext->CSSPixelsToAppUnits(aSrc.x),
-                                                   mPresContext->CSSPixelsToAppUnits(aSrc.y),
-                                                   aDest.width / ((float)mPresContext->CSSPixelsToAppUnits(aSrc.width)),
-                                                   aDest.height / ((float)mPresContext->CSSPixelsToAppUnits(aSrc.height)));
+  LayoutDeviceRect srcTransform = LayoutDeviceRect(nsPresContext::CSSPixelsToAppUnits(aSrc.x),
+                                                   nsPresContext::CSSPixelsToAppUnits(aSrc.y),
+                                                   aDest.width / ((float)nsPresContext::CSSPixelsToAppUnits(aSrc.width)),
+                                                   aDest.height / ((float)nsPresContext::CSSPixelsToAppUnits(aSrc.height)));
 
   lineStart.x = (lineStart.x - srcTransform.x) * srcTransform.width;
   lineStart.y = (lineStart.y - srcTransform.y) * srcTransform.height;

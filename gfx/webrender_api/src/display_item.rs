@@ -64,7 +64,7 @@ pub type DisplayItem = GenericDisplayItem<SpecificDisplayItem>;
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct PrimitiveInfo<T> {
     pub rect: TypedRect<f32, T>,
-    pub local_clip: LocalClip,
+    pub clip_rect: TypedRect<f32, T>,
     pub is_backface_visible: bool,
     pub tag: Option<ItemTag>,
 }
@@ -78,13 +78,9 @@ impl LayerPrimitiveInfo {
         rect: TypedRect<f32, LayerPixel>,
         clip_rect: TypedRect<f32, LayerPixel>,
     ) -> Self {
-        Self::with_clip(rect, LocalClip::from(clip_rect))
-    }
-
-    pub fn with_clip(rect: TypedRect<f32, LayerPixel>, clip: LocalClip) -> Self {
         PrimitiveInfo {
-            rect: rect,
-            local_clip: clip,
+            rect,
+            clip_rect,
             is_backface_visible: true,
             tag: None,
         }

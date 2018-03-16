@@ -11,7 +11,7 @@ use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId};
 use ellipse::Ellipse;
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
-use gpu_types::ClipScrollNodeIndex;
+use gpu_types::{BoxShadowStretchMode, ClipScrollNodeIndex};
 use prim_store::{ClipData, ImageMaskData};
 use render_task::to_cache_size;
 use resource_cache::{CacheItem, ImageRequest, ResourceCache};
@@ -181,8 +181,12 @@ impl ClipSource {
         // primitive shadow rect, just blur the entire rect and draw that
         // as a simple blit. This is necessary for correctness, since the
         // blur of one corner may affect the blur in another corner.
-        minimal_shadow_rect.size.width = minimal_shadow_rect.size.width.min(shadow_rect.size.width);
-        minimal_shadow_rect.size.height = minimal_shadow_rect.size.height.min(shadow_rect.size.height);
+        let mut stretch_mode = BoxShadowStretchMode::Stretch;
+        if shadow_rect.size.width < minimal_shadow_rect.size.width ||
+           shadow_rect.size.height < minimal_shadow_rect.size.height {
+            minimal_shadow_rect.size = shadow_rect.size;
+            stretch_mode = BoxShadowStretchMode::Simple;
+        }
 
         // Expand the shadow rect by enough room for the blur to take effect.
         let shadow_rect_alloc_size = LayerSize::new(
@@ -196,6 +200,7 @@ impl ClipSource {
             prim_shadow_rect,
             blur_radius,
             clip_mode,
+            stretch_mode,
             cache_item: CacheItem::invalid(),
             cache_key: None,
             clip_data_handle: GpuCacheHandle::new(),
@@ -312,7 +317,7 @@ impl ClipSources {
                             info.shadow_rect_alloc_size.width,
                             info.shadow_rect_alloc_size.height,
                             info.clip_mode as i32 as f32,
-                            0.0,
+                            info.stretch_mode as i32 as f32,
                         ]);
                         request.push(info.prim_shadow_rect);
                     }
@@ -421,32 +426,11 @@ impl From<LayerRect> for Geometry {
     }
 }
 
-pub trait Contains {
-    fn contains(&self, point: &LayoutPoint) -> bool;
-}
-
-impl Contains for LocalClip {
-    fn contains(&self, point: &LayoutPoint) -> bool {
-        if !self.clip_rect().contains(point) {
-            return false;
-        }
-        match self {
-            &LocalClip::Rect(..) => true,
-            &LocalClip::RoundedRect(_, complex_clip) => complex_clip.contains(point),
-        }
-    }
-}
-
-impl Contains for ComplexClipRegion {
-    fn contains(&self, point: &LayoutPoint) -> bool {
-        rounded_rectangle_contains_point(point, &self.rect, &self.radii)
-    }
-}
-
-pub fn rounded_rectangle_contains_point(point: &LayoutPoint,
-                                        rect: &LayerRect,
-                                        radii: &BorderRadius)
-                                        -> bool {
+pub fn rounded_rectangle_contains_point(
+    point: &LayoutPoint,
+    rect: &LayerRect,
+    radii: &BorderRadius
+) -> bool {
     if !rect.contains(point) {
         return false;
     }

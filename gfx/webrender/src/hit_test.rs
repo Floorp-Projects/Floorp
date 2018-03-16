@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag, LayerPoint};
-use api::{LayerPrimitiveInfo, LayerRect, LocalClip, PipelineId, WorldPoint};
-use clip::{ClipSource, ClipStore, Contains, rounded_rectangle_contains_point};
+use api::{LayerPrimitiveInfo, LayerRect, PipelineId, WorldPoint};
+use clip::{ClipSource, ClipStore, rounded_rectangle_contains_point};
 use clip_scroll_node::{ClipScrollNode, NodeType};
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, ClipScrollTree};
 use internal_types::FastHashMap;
@@ -55,7 +55,7 @@ impl HitTestClipChainDescriptor {
 #[derive(Clone)]
 pub struct HitTestingItem {
     rect: LayerRect,
-    clip: LocalClip,
+    clip_rect: LayerRect,
     tag: ItemTag,
 }
 
@@ -63,7 +63,7 @@ impl HitTestingItem {
     pub fn new(tag: ItemTag, info: &LayerPrimitiveInfo) -> HitTestingItem {
         HitTestingItem {
             rect: info.rect,
-            clip: info.local_clip,
+            clip_rect: info.clip_rect,
             tag: tag,
         }
     }
@@ -239,7 +239,8 @@ impl HitTester {
 
             let mut clipped_in = false;
             for item in items.iter().rev() {
-                if !item.rect.contains(&point_in_layer) || !item.clip.contains(&point_in_layer) {
+                if !item.rect.contains(&point_in_layer) ||
+                    !item.clip_rect.contains(&point_in_layer) {
                     continue;
                 }
 
