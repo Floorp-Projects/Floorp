@@ -15,6 +15,7 @@
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "mozilla/dom/GridBinding.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h" // for PodZero
 #include "mozilla/Poison.h"
@@ -429,6 +430,12 @@ struct nsGridContainerFrame::LineRange
     }
     return mEnd - mStart;
   }
+
+  /**
+   * Return an object suitable for iterating this range.
+   */
+  auto Range() const { return IntegerRange<uint32_t>(mStart, mEnd); }
+
   /**
    * Resolve this auto range to start at aStart, making it definite.
    * Precondition: this range IsAuto()
@@ -1252,9 +1259,7 @@ struct nsGridContainerFrame::Tracks
   {
     MOZ_ASSERT(aAvailableSpace > 0, "why call me?");
     nscoord space = aAvailableSpace - mGridGap * (aRange.Extent() - 1);
-    const uint32_t start = aRange.mStart;
-    const uint32_t end = aRange.mEnd;
-    for (uint32_t i = start; i < end; ++i) {
+    for (auto i : aRange.Range()) {
       const TrackSize& sz = mSizes[i];
       space -= StartSizeInDistribution<phase>(sz);
       if (space <= 0) {
@@ -3869,9 +3874,7 @@ nsGridContainerFrame::Tracks::StateBitsForRange(const LineRange& aRange) const
 {
   MOZ_ASSERT(!aRange.IsAuto(), "must have a definite range");
   TrackSize::StateBits state = TrackSize::StateBits(0);
-  const uint32_t start = aRange.mStart;
-  const uint32_t end = aRange.mEnd;
-  for (uint32_t i = start; i < end; ++i) {
+  for (auto i : aRange.Range()) {
     state |= mSizes[i].mState;
   }
   return state;
@@ -4270,8 +4273,8 @@ nsGridContainerFrame::Tracks::GrowSizeForSpanningItems(
       continue;
     }
     if (isMaxSizingPhase) {
-      for (auto j = item.mLineRange.mStart, end = item.mLineRange.mEnd; j < end; ++j) {
-        aPlan[j].mState |= TrackSize::eModified;
+      for (auto i : item.mLineRange.Range()) {
+        aPlan[i].mState |= TrackSize::eModified;
       }
     }
     nscoord space = item.SizeContributionForPhase<phase>();
@@ -4372,7 +4375,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
                       (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize);
         if (needed && TrackSize::IsDefiniteMaxSizing(state)) {
           nscoord minSizeClamp = 0;
-          for (auto i = lineRange.mStart, end = lineRange.mEnd; i < end; ++i) {
+          for (auto i : lineRange.Range()) {
             auto maxCoord = aFunctions.MaxSizingFor(i);
             minSizeClamp += maxCoord.ComputeCoordPercentCalc(aPercentageBasis);
           }
@@ -4521,7 +4524,7 @@ nsGridContainerFrame::Tracks::FindFrUnitSize(
   MOZ_ASSERT(aSpaceToFill > 0 && !aFlexTracks.IsEmpty());
   float flexFactorSum = 0.0f;
   nscoord leftOverSpace = aSpaceToFill;
-  for (uint32_t i = aRange.mStart, end = aRange.mEnd; i < end; ++i) {
+  for (auto i : aRange.Range()) {
     const TrackSize& sz = mSizes[i];
     if (sz.mState & TrackSize::eFlexMaxSizing) {
       flexFactorSum += aFunctions.MaxSizingFor(i).GetFlexFractionValue();
@@ -4613,7 +4616,7 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
       }
       // ... and all its spanned tracks as input.
       nsTArray<uint32_t> itemFlexTracks;
-      for (uint32_t i = range.mStart, end = range.mEnd; i < end; ++i) {
+      for (auto i : range.Range()) {
         if (mSizes[i].mState & TrackSize::eFlexMaxSizing) {
           itemFlexTracks.AppendElement(i);
         }
