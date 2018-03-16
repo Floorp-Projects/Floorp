@@ -13,9 +13,6 @@
 
 namespace mozilla {
 
-  // Maximum channel number we can currently handle (7.1)
-#define MAX_AUDIO_CHANNELS 8
-
 class AudioConfig
 {
 public:
@@ -214,6 +211,11 @@ public:
   };
 
   AudioConfig(const ChannelLayout& aChannelLayout,
+              uint32_t aRate,
+              AudioConfig::SampleFormat aFormat = FORMAT_DEFAULT,
+              bool aInterleaved = true);
+  AudioConfig(const ChannelLayout& aChannelLayout,
+              uint32_t aChannels,
               uint32_t aRate,
               AudioConfig::SampleFormat aFormat = FORMAT_DEFAULT,
               bool aInterleaved = true);
