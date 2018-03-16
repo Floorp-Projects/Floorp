@@ -14,11 +14,8 @@
 #include "nsIAccessibleTypes.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
-#include "nsUTF8Utils.h"
 
 #include "mozilla/Likely.h"
-
-#include "DOMtoATK.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -131,7 +128,8 @@ ConvertTexttoAsterisks(AccessibleWrap* accWrap, nsAString& aString)
 {
   // convert each char to "*" when it's "password text"
   if (accWrap->NativeRole() == roles::PASSWORD_TEXT) {
-    DOMtoATK::ConvertTexttoAsterisks(aString);
+    for (uint32_t i = 0; i < aString.Length(); i++)
+      aString.ReplaceLiteral(i, 1, u"*");
   }
 }
 
@@ -144,20 +142,20 @@ getTextCB(AtkText *aText, gint aStartOffset, gint aEndOffset)
   nsAutoString autoStr;
   if (accWrap) {
     HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole() || text->IsDefunct())
+    if (!text || !text->IsTextRole())
       return nullptr;
 
-    return DOMtoATK::NewATKString(text, aStartOffset, aEndOffset,
-         accWrap->NativeRole() == roles::PASSWORD_TEXT ?
-           DOMtoATK::AtkStringConvertFlags::ConvertTextToAsterisks :
-           DOMtoATK::AtkStringConvertFlags::None);
+    text->TextSubstring(aStartOffset, aEndOffset, autoStr);
 
+    ConvertTexttoAsterisks(accWrap, autoStr);
   } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    return DOMtoATK::NewATKString(proxy, aStartOffset, aEndOffset,
-         DOMtoATK::AtkStringConvertFlags::None);
+    proxy->TextSubstring(aStartOffset, aEndOffset, autoStr);
   }
 
-  return nullptr;
+  NS_ConvertUTF16toUTF8 cautoStr(autoStr);
+
+  //copy and return, libspi will free it.
+  return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
 
 static gchar*
@@ -183,8 +181,8 @@ getTextAfterOffsetCB(AtkText *aText, gint aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  // libspi will free it.
-  return DOMtoATK::Convert(autoStr);
+  NS_ConvertUTF16toUTF8 cautoStr(autoStr);
+  return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
 
 static gchar*
@@ -210,8 +208,8 @@ getTextAtOffsetCB(AtkText *aText, gint aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  // libspi will free it.
-  return DOMtoATK::Convert(autoStr);
+  NS_ConvertUTF16toUTF8 cautoStr(autoStr);
+  return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
 
 static gunichar
@@ -223,11 +221,13 @@ getCharacterAtOffsetCB(AtkText* aText, gint aOffset)
     if (!text || !text->IsTextRole()) {
       return 0;
     }
-    return DOMtoATK::ATKCharacter(text, aOffset);
+
+    // char16_t is unsigned short in Mozilla, gnuichar is guint32 in glib.
+    return static_cast<gunichar>(text->CharAt(aOffset));
   }
 
   if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    return DOMtoATK::ATKCharacter(proxy, aOffset);
+    return static_cast<gunichar>(proxy->CharAt(aOffset));
   }
 
   return 0;
@@ -257,8 +257,8 @@ getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  // libspi will free it.
-  return DOMtoATK::Convert(autoStr);
+  NS_ConvertUTF16toUTF8 cautoStr(autoStr);
+  return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
 
 static gint
