@@ -5,6 +5,7 @@
 
 var {CrashStore, CrashManager} = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", {});
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 
 ChromeUtils.import("resource://testing-common/CrashManagerTest.jsm", this);
@@ -612,3 +613,44 @@ add_task(async function test_setRemoteCrashID() {
   await m.setRemoteCrashID("main-crash", "bp-1");
   Assert.equal((await m.getCrashes())[0].remoteID, "bp-1");
 });
+
+add_task(async function test_telemetryHistogram() {
+  let Telemetry = Services.telemetry;
+  let h = Telemetry.getKeyedHistogramById("PROCESS_CRASH_SUBMIT_ATTEMPT");
+  h.clear();
+  Telemetry.clearScalars();
+
+  let m = await getManager();
+  let processTypes = [];
+  let crashTypes = [];
+
+  // Gather all process and crash types
+  for (let field in m) {
+    if (field.startsWith("PROCESS_TYPE_")) {
+      processTypes.push(m[field]);
+    } else if (field.startsWith("CRASH_TYPE_")) {
+      crashTypes.push(m[field]);
+    }
+  }
+
+  let keysCount = 0;
+  let keys = [];
+
+  for (let processType of processTypes) {
+    for (let crashType of crashTypes) {
+      let key = processType + "-" + crashType;
+
+      keys.push(key);
+      h.add(key, 1);
+      keysCount++;
+    }
+  }
+
+  // Check that we have the expected keys.
+  let snap = h.snapshot();
+  Assert.equal(Object.keys(snap).length, keysCount,
+    "Some crash types have not been recorded, see the list in Histograms.json");
+  Assert.deepEqual(Object.keys(snap).sort(), keys.sort(),
+    "Some crash types do not match");
+});
+
