@@ -71,36 +71,6 @@ public:
         spew("; %s", msg);
     }
 
-    MOZ_MUST_USE JmpSrc
-    twoByteNop()
-    {
-        spew("nop (2 byte)");
-        JmpSrc r(m_formatter.size());
-        m_formatter.prefix(PRE_OPERAND_SIZE);
-        m_formatter.oneByteOp(OP_NOP);
-        return r;
-    }
-
-    static void patchTwoByteNopToJump(uint8_t* jump, uint8_t* target)
-    {
-        // Note: the offset is relative to the address of the instruction after
-        // the jump which is two bytes.
-        ptrdiff_t rel8 = target - jump - 2;
-        MOZ_RELEASE_ASSERT(rel8 >= INT8_MIN && rel8 <= INT8_MAX);
-        MOZ_RELEASE_ASSERT(jump[0] == PRE_OPERAND_SIZE);
-        MOZ_RELEASE_ASSERT(jump[1] == OP_NOP);
-        jump[0] = OP_JMP_rel8;
-        jump[1] = rel8;
-    }
-
-    static void patchJumpToTwoByteNop(uint8_t* jump)
-    {
-        // See twoByteNop.
-        MOZ_RELEASE_ASSERT(jump[0] == OP_JMP_rel8);
-        jump[0] = PRE_OPERAND_SIZE;
-        jump[1] = OP_NOP;
-    }
-
     static void patchFiveByteNopToCall(uint8_t* callsite, uint8_t* target)
     {
         // Note: the offset is relative to the address of the instruction after
