@@ -127,7 +127,7 @@ window._gBrowser = {
   _browserBindingProperties: [
     "canGoBack", "canGoForward", "goBack", "goForward", "permitUnload",
     "reload", "reloadWithFlags", "stop", "loadURI", "loadURIWithFlags",
-    "goHome", "homePage", "gotoIndex", "currentURI", "documentURI",
+    "gotoIndex", "currentURI", "documentURI",
     "preferences", "imageDocument", "isRemoteBrowser", "messageManager",
     "getTabBrowser", "finder", "fastFind", "sessionHistory", "contentTitle",
     "characterSet", "fullZoom", "textZoom", "webProgress",
@@ -368,21 +368,8 @@ window._gBrowser = {
     return this.selectedBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData);
   },
 
-  goHome() {
-    return this.selectedBrowser.goHome();
-  },
-
   gotoIndex(aIndex) {
     return this.selectedBrowser.gotoIndex(aIndex);
-  },
-
-  set homePage(val) {
-    this.selectedBrowser.homePage = val;
-    return val;
-  },
-
-  get homePage() {
-    return this.selectedBrowser.homePage;
   },
 
   get currentURI() {
