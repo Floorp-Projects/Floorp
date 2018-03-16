@@ -113,13 +113,6 @@ window._gBrowser = {
    */
   _tabForBrowser: new WeakMap(),
 
-  /**
-   * Holds a unique ID for the tab change that's currently being timed.
-   * Used to make sure that multiple, rapid tab switches do not try to
-   * create overlapping timers.
-   */
-  _tabSwitchID: null,
-
   _preloadedBrowser: null,
 
   /**
@@ -484,20 +477,54 @@ window._gBrowser = {
     return (aTab || this.selectedTab)._findBar != undefined;
   },
 
-  getFindBar(aTab) {
-    if (!aTab)
-      aTab = this.selectedTab;
+  /**
+   * Get the already constructed findbar
+   */
+  getCachedFindBar(aTab = this.selectedTab) {
+    return aTab._findBar;
+  },
 
-    if (aTab._findBar)
-      return aTab._findBar;
+  /**
+   * Get the findbar, and create it if it doesn't exist.
+   * @return the find bar (or null if the window or tab is closed/closing in the interim).
+   */
+  async getFindBar(aTab = this.selectedTab) {
+    let findBar = this.getCachedFindBar(aTab);
+    if (findBar) {
+      return findBar;
+    }
 
+    // Avoid re-entrancy by caching the promise we're about to return.
+    if (!aTab._pendingFindBar) {
+      aTab._pendingFindBar = this._createFindBar(aTab);
+    }
+    return aTab._pendingFindBar;
+  },
+
+  /**
+   * Create a findbar instance.
+   * @param aTab the tab to create the find bar for.
+   * @param aForce Whether to force a sync flush to trigger XBL construction immediately.
+   * @return the created findbar, or null if the window or tab is closed/closing.
+   */
+  async _createFindBar(aTab, aForce = false) {
     let findBar = document.createElementNS(this._XUL_NS, "findbar");
     let browser = this.getBrowserForTab(aTab);
     let browserContainer = this.getBrowserContainer(browser);
     browserContainer.appendChild(findBar);
 
-    // Force a style flush to ensure that our binding is attached.
-    findBar.clientTop;
+    if (aForce) {
+      // Force a style flush to ensure that our binding is attached.
+      // Remove after bug 1371523 makes more of this async.
+      findBar.clientTop;
+    } else {
+      await new Promise(r => requestAnimationFrame(r));
+      if (window.closed || aTab.closing) {
+        delete aTab._pendingFindBar;
+        return null;
+      }
+    }
+    delete aTab._pendingFindBar;
 
     findBar.browser = browser;
     findBar._findField.value = this._lastFindValue;
@@ -586,7 +613,7 @@ window._gBrowser = {
           anim instanceof CSSAnimation &&
           (anim.animationName === "tab-throbber-animation" ||
             anim.animationName === "tab-throbber-animation-rtl") &&
-          (anim.playState === "running" || anim.playState === "pending"));
+          anim.playState === "running");
 
       // Synchronize with the oldest running animation, if any.
       const firstStartTime = Math.min(
@@ -905,29 +932,6 @@ window._gBrowser = {
       document.commandDispatcher.lock();
 
       TelemetryStopwatch.start("FX_TAB_SWITCH_UPDATE_MS");
-      if (!gMultiProcessBrowser) {
-        // old way of measuring tab paint which is not valid with e10s.
-        // Waiting until the next MozAfterPaint ensures that we capture
-        // the time it takes to paint, upload the textures to the compositor,
-        // and then composite.
-        if (this._tabSwitchID) {
-          TelemetryStopwatch.cancel("FX_TAB_SWITCH_TOTAL_MS");
-        }
-
-        let tabSwitchID = Symbol();
-
-        TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_MS");
-        this._tabSwitchID = tabSwitchID;
-
-        let onMozAfterPaint = () => {
-          if (this._tabSwitchID === tabSwitchID) {
-            TelemetryStopwatch.finish("FX_TAB_SWITCH_TOTAL_MS");
-            this._tabSwitchID = null;
-          }
-          window.removeEventListener("MozAfterPaint", onMozAfterPaint);
-        };
-        window.addEventListener("MozAfterPaint", onMozAfterPaint);
-      }
     }
 
     let oldTab = this.selectedTab;
@@ -1127,7 +1131,7 @@ window._gBrowser = {
     oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
 
     if (this.isFindBarInitialized(oldTab)) {
-      let findBar = this.getFindBar(oldTab);
+      let findBar = this.getCachedFindBar(oldTab);
       oldTab._findBarFocused = (!findBar.hidden &&
         findBar._findField.getAttribute("focused") == "true");
     }
@@ -1702,7 +1706,7 @@ window._gBrowser = {
 
     // If the findbar has been initialised, reset its browser reference.
     if (this.isFindBarInitialized(tab)) {
-      this.getFindBar(tab).browser = aBrowser;
+      this.getCachedFindBar(tab).browser = aBrowser;
     }
 
     evt = document.createEvent("Events");
@@ -3111,10 +3115,17 @@ window._gBrowser = {
     let otherFindBar = aOtherTab._findBar;
     if (otherFindBar &&
         otherFindBar.findMode == otherFindBar.FIND_NORMAL) {
-      let ourFindBar = this.getFindBar(aOurTab);
-      ourFindBar._findField.value = otherFindBar._findField.value;
-      if (!otherFindBar.hidden)
-        ourFindBar.onFindCommand();
+      let oldValue = otherFindBar._findField.value;
+      let wasHidden = otherFindBar.hidden;
+      let ourFindBarPromise = this.getFindBar(aOurTab);
+      ourFindBarPromise.then(ourFindBar => {
+        if (!ourFindBar) {
+          return;
+        }
+        ourFindBar._findField.value = oldValue;
+        if (!wasHidden)
+          ourFindBar.onFindCommand();
+      });
     }
 
     // Finish tearing down the tab that's going away.
@@ -3821,7 +3832,13 @@ window._gBrowser = {
           }
           if (shouldFastFind) {
             // Make sure we return the result.
-            return this.getFindBar(tab).receiveMessage(aMessage);
+            // This needs sync initialization of the find bar, unfortunately.
+            // bug 1371523 tracks removing all of this.
+
+            // This returns a promise, so don't use the result...
+            this._createFindBar(tab, true);
+            // ... just grab the 'cached' version now we know it exists.
+            this.getCachedFindBar().receiveMessage(aMessage);
           }
         }
         break;
@@ -4519,7 +4536,7 @@ class TabProgressListener {
       }
 
       if (gBrowser.isFindBarInitialized(this.mTab)) {
-        let findBar = gBrowser.getFindBar(this.mTab);
+        let findBar = gBrowser.getCachedFindBar(this.mTab);
 
         // Close the Find toolbar if we're in old-style TAF mode
         if (findBar.findMode != findBar.FIND_NORMAL) {

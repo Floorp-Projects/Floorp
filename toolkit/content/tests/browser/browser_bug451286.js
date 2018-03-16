@@ -135,6 +135,7 @@ function findAgainAndWait() {
 }
 
 async function openFindBarAndWait() {
+  await gFindBarPromise;
   let awaitTransitionEnd = BrowserTestUtils.waitForEvent(gFindBar, "transitionend");
   gFindBar.open();
   await awaitTransitionEnd;

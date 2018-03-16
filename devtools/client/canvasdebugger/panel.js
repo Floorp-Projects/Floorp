@@ -6,7 +6,6 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { CanvasFront } = require("devtools/shared/fronts/canvas");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -35,7 +34,7 @@ CanvasDebuggerPanel.prototype = {
     if (!this.target.isRemote) {
       targetPromise = this.target.makeRemote();
     } else {
-      targetPromise = promise.resolve(this.target);
+      targetPromise = Promise.resolve(this.target);
     }
 
     return targetPromise

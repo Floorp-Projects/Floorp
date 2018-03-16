@@ -5931,16 +5931,6 @@
     "n_buckets": 20,
     "description": "Firefox: Time in ms spent updating UI in response to a tab switch"
   },
-  "FX_TAB_SWITCH_TOTAL_MS": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["mconley@mozilla.com"],
-    "expires_in_version": "57",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 20,
-    "releaseChannelCollection": "opt-out",
-    "description": "Firefox: Time in ms till a tab switch is complete including the first paint for non-e10s windows"
-  },
   "FX_TAB_SWITCH_TOTAL_E10S_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["mconley@mozilla.com"],

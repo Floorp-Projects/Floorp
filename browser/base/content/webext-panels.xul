@@ -7,7 +7,6 @@
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/usercontext/usercontext.css" type="text/css"?>
-<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 <!DOCTYPE page [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
@@ -23,6 +22,23 @@
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
   <script type="application/javascript" src="chrome://browser/content/webext-panels.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"><![CDATA[
+    ChromeUtils.defineModuleGetter(window,
+      "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
+    ChromeUtils.defineModuleGetter(window,
+      "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
+    ChromeUtils.defineModuleGetter(window,
+      "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
+
+    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+    XPCOMUtils.defineLazyScriptGetter(window, "PlacesTreeView",
+      "chrome://browser/content/places/treeView.js");
+    XPCOMUtils.defineLazyScriptGetter(window,
+      ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
+       "chrome://browser/content/places/controller.js");
+  ]]></script>
 
   <broadcasterset id="mainBroadcasterSet">
     <broadcaster id="isFrameImage"/>

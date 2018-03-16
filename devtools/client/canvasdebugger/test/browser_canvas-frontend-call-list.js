@@ -15,7 +15,7 @@ async function ifTestingSupported() {
   let recordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([recordingFinished, callListPopulated]);
+  await Promise.all([recordingFinished, callListPopulated]);
 
   is(CallsListView.itemCount, 8,
     "All the function calls should now be displayed in the UI.");

@@ -32,6 +32,9 @@ void WebRenderCommandBuilder::Destroy()
 {
   mLastCanvasDatas.Clear();
   RemoveUnusedAndResetWebRenderUserData();
+  // UserDatas should only be in the used state during a call to WebRenderCommandBuilder::BuildWebRenderCommands
+  // The should always be false upon return from BuildWebRenderCommands().
+  MOZ_RELEASE_ASSERT(mWebRenderUserDatas.Count() == 0);
 }
 
 void

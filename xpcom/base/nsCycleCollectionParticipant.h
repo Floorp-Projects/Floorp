@@ -308,10 +308,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
     if (LowWordEquals(aIID, NS_GET_IID(nsCycleCollectionISupports))) {         \
       *aInstancePtr = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);     \
       return NS_OK;                                                            \
-    } else {                                                                   \
-      /* Avoid warnings about foundInterface being left uninitialized. */      \
-      foundInterface = nullptr;                                                \
     }                                                                          \
+    /* Avoid warnings about foundInterface being left uninitialized. */        \
+    foundInterface = nullptr;                                                  \
   } else
 
 #define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(_class)                        \

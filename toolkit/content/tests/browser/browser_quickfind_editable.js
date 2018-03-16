@@ -3,7 +3,7 @@ const DESIGNMODE_PAGE = "data:text/html,<body onload='document.designMode=\"on\"
 const HOTKEYS = ["/", "'"];
 
 async function test_hotkeys(browser, expected) {
-  let findbar = gBrowser.getFindBar();
+  let findbar = await gBrowser.getFindBar();
   for (let key of HOTKEYS) {
     is(findbar.hidden, true, "findbar is hidden");
     await BrowserTestUtils.sendChar(key, gBrowser.selectedBrowser);

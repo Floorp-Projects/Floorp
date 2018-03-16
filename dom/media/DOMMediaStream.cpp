@@ -572,8 +572,12 @@ DOMMediaStream::CurrentTime()
   if (!mPlaybackStream) {
     return 0.0;
   }
+  // The value of a MediaStream's CurrentTime will always advance forward; it will never
+  // reset (even if one rewinds a video.) Therefore we can use a single Random Seed
+  // initialized at the same time as the object.
   return nsRFPService::ReduceTimePrecisionAsSecs(mPlaybackStream->
-    StreamTimeToSeconds(mPlaybackStream->GetCurrentTime() - mLogicalStreamStartTime));
+    StreamTimeToSeconds(mPlaybackStream->GetCurrentTime() - mLogicalStreamStartTime),
+    GetRandomTimelineSeed());
 }
 
 already_AddRefed<Promise>

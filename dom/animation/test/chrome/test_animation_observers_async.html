@@ -578,12 +578,5 @@ promise_test(t => {
   });
 }, "tree_ordering: subtree");
 
-// Run the tests.
-setup({explicit_done: true});
-
-SpecialPowers.pushPrefEnv(
-  { set: [["dom.animations-api.pending-member.enabled", true]] }
-).then(runTest).then(() => {
-  done();
-});
+runTest();
 </script>

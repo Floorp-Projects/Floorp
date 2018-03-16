@@ -113,6 +113,7 @@ add_task(async function() {
     if (child.id == "paneGeneral"
       || child.id == "startupGroup"
       || child.id == "homepageGroup"
+      || child.id == "homeContentsGroup"
       || child.id == "languagesGroup"
       || child.id == "fontsGroup"
       || child.id == "downloadsGroup"
@@ -131,7 +132,7 @@ add_task(async function() {
       || child.id == "networkProxyCategory") {
       is_element_visible(child, "Should be in general tab");
     } else if (child.id) {
-      is_element_hidden(child, "Should not be in general tab");
+      is_element_hidden(child, `Should not be in general tab: ${child.id}`);
     }
   }
 

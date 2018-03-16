@@ -54,7 +54,6 @@ public:
   };
 
   virtual UserDataType GetType() = 0;
-  bool IsDataValid(WebRenderLayerManager* aManager);
   bool IsUsed() { return mUsed; }
   void SetUsed(bool aUsed) { mUsed = aUsed; }
   nsIFrame* GetFrame() { return mFrame; }
