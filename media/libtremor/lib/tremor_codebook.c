@@ -258,7 +258,7 @@ long vorbis_book_decodevs_add(codebook *book,ogg_int32_t *a,
 	t[i] = book->valuelist+entry[i]*book->dim;
       }
       for(i=0,o=0;i<book->dim;i++,o+=step)
-	for (j=0;j<step;j++)
+	for (j=0;o+j<n && j<step;j++)
 	  a[o+j]+=t[j][i]>>shift;
     }else{
       for (i = 0; i < step; i++) {
@@ -267,7 +267,7 @@ long vorbis_book_decodevs_add(codebook *book,ogg_int32_t *a,
 	t[i] = book->valuelist+entry[i]*book->dim;
       }
       for(i=0,o=0;i<book->dim;i++,o+=step)
-	for (j=0;j<step;j++)
+	for (j=0;o+j<n && j<step;j++)
 	  a[o+j]+=t[j][i]<<-shift;
     }
   }
@@ -287,7 +287,7 @@ long vorbis_book_decodev_add(codebook *book,ogg_int32_t *a,
 	entry = decode_packed_entry_number(book,b);
 	if(entry==-1)return(-1);
 	t     = book->valuelist+entry*book->dim;
-	for (j=0;j<book->dim;)
+	for (j=0;i<n && j<book->dim;)
 	  a[i++]+=t[j++]>>shift;
       }
     }else{
@@ -295,7 +295,7 @@ long vorbis_book_decodev_add(codebook *book,ogg_int32_t *a,
 	entry = decode_packed_entry_number(book,b);
 	if(entry==-1)return(-1);
 	t     = book->valuelist+entry*book->dim;
-	for (j=0;j<book->dim;)
+	for (j=0;i<n && j<book->dim;)
 	  a[i++]+=t[j++]<<-shift;
       }
     }
@@ -352,15 +352,15 @@ long vorbis_book_decodevv_add(codebook *book,ogg_int32_t **a,\
     long i,j,entry;
     int chptr=0;
     int shift=point-book->binarypoint;
-    
+    int m=offset+n;
     if(shift>=0){
       
-      for(i=offset;i<offset+n;){
+      for(i=offset;i<m;){
 	entry = decode_packed_entry_number(book,b);
 	if(entry==-1)return(-1);
 	{
 	  const ogg_int32_t *t = book->valuelist+entry*book->dim;
-	  for (j=0;j<book->dim;j++){
+	  for (j=0;i<m && j<book->dim;j++){
 	    a[chptr++][i]+=t[j]>>shift;
 	    if(chptr==ch){
 	      chptr=0;
@@ -371,12 +371,12 @@ long vorbis_book_decodevv_add(codebook *book,ogg_int32_t **a,\
       }
     }else{
       
-      for(i=offset;i<offset+n;){
+      for(i=offset;i<m;){
 	entry = decode_packed_entry_number(book,b);
 	if(entry==-1)return(-1);
 	{
 	  const ogg_int32_t *t = book->valuelist+entry*book->dim;
-	  for (j=0;j<book->dim;j++){
+	  for (j=0;i<m && j<book->dim;j++){
 	    a[chptr++][i]+=t[j]<<-shift;
 	    if(chptr==ch){
 	      chptr=0;
