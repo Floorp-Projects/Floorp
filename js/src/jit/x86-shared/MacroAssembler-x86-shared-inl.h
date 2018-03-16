@@ -1119,7 +1119,7 @@ MacroAssembler::spectreZeroRegister(Condition cond, Register scratch, Register d
 }
 
 void
-MacroAssembler::boundsCheck32ForLoad(Register index, Register length, Register scratch,
+MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register scratch,
                                      Label* failure)
 {
     MOZ_ASSERT(index != length);
@@ -1137,7 +1137,7 @@ MacroAssembler::boundsCheck32ForLoad(Register index, Register length, Register s
 }
 
 void
-MacroAssembler::boundsCheck32ForLoad(Register index, const Address& length, Register scratch,
+MacroAssembler::spectreBoundsCheck32(Register index, const Address& length, Register scratch,
                                      Label* failure)
 {
     MOZ_ASSERT(index != length.base);
