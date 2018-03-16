@@ -11,7 +11,7 @@
 class nsHtml5TreeBuilder;
 
 /**
- * A pass-by-value type that can represent 
+ * A pass-by-value type that can represent
  *  * nullptr
  *  * empty string
  *  * Non-empty string as exactly-sized (capacity is length) `nsStringBuffer*`
@@ -23,12 +23,12 @@ class nsHtml5TreeBuilder;
 class nsHtml5String final
 {
 private:
-
   static const uintptr_t kKindMask = uintptr_t(3);
 
   static const uintptr_t kPtrMask = ~kKindMask;
 
-  enum Kind : uintptr_t {
+  enum Kind : uintptr_t
+  {
     eNull = 0,
     eEmpty = 1,
     eStringBuffer = 2,
@@ -82,7 +82,7 @@ public:
   {
     switch (GetKind()) {
       case eStringBuffer:
-        return (AsStringBuffer()->StorageSize()/sizeof(char16_t) - 1);
+        return (AsStringBuffer()->StorageSize() / sizeof(char16_t) - 1);
       case eAtom:
         return AsAtom()->GetLength();
       default:
@@ -136,11 +136,11 @@ public:
   static nsHtml5String EmptyString();
 
 private:
-
   /**
    * Constructor from raw bits.
    */
-  explicit nsHtml5String(uintptr_t aBits) : mBits(aBits) {};
+  explicit nsHtml5String(uintptr_t aBits)
+    : mBits(aBits){};
 
   /**
    * Zero if null, one if empty, otherwise tagged pointer

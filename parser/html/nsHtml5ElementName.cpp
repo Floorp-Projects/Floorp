@@ -452,8 +452,8 @@ nsHtml5ElementName::initializeStatics()
     NS_NewHTMLElement,
     NS_NewSVGUnknownElement,
     nsHtml5TreeBuilder::RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
-  ELT_SET = new nsHtml5ElementName(nsGkAtoms::set_,
-                                   nsGkAtoms::set_,
+  ELT_SET = new nsHtml5ElementName(nsGkAtoms::set,
+                                   nsGkAtoms::set,
                                    NS_NewHTMLUnknownElement,
                                    NS_NewSVGSetElement,
                                    nsHtml5TreeBuilder::OTHER);

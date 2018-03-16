@@ -9,16 +9,18 @@
 using namespace mozilla;
 
 nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(char16_t* aBuffer)
-  : nsHtml5UTF16Buffer(aBuffer, 0),
-    next(nullptr),
-    key(nullptr)
-{}
+  : nsHtml5UTF16Buffer(aBuffer, 0)
+  , next(nullptr)
+  , key(nullptr)
+{
+}
 
 nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(void* aKey)
-  : nsHtml5UTF16Buffer(nullptr, 0),
-    next(nullptr),
-    key(aKey)
-{}
+  : nsHtml5UTF16Buffer(nullptr, 0)
+  , next(nullptr)
+  , key(aKey)
+{
+}
 
 nsHtml5OwningUTF16Buffer::~nsHtml5OwningUTF16Buffer()
 {

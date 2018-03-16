@@ -28,16 +28,19 @@
 #include "nsDebug.h"
 
 template<class T, class L>
-struct staticJArray {
+struct staticJArray
+{
   const T* arr;
   const L length;
   operator T*() { return arr; }
-  T& operator[] (L const index) {
+  T& operator[](L const index)
+  {
     MOZ_ASSERT(index >= 0, "Array access with negative index.");
     MOZ_ASSERT(index < length, "Array index out of bounds.");
     return ((T*)arr)[index];
   }
-  L binarySearch(T const elem) {
+  L binarySearch(T const elem)
+  {
     size_t idx;
     bool found = mozilla::BinarySearch(arr, 0, length, elem, &idx);
     return found ? idx : -1;
@@ -45,76 +48,84 @@ struct staticJArray {
 };
 
 template<class T, class L>
-struct jArray {
+struct jArray
+{
   T* arr;
   L length;
-  static jArray<T,L> newJArray(L const len) {
+  static jArray<T, L> newJArray(L const len)
+  {
     MOZ_ASSERT(len >= 0, "Negative length.");
-    jArray<T,L> newArray = { new T[size_t(len)], len };
+    jArray<T, L> newArray = { new T[size_t(len)], len };
     return newArray;
   }
-  static jArray<T,L> newFallibleJArray(L const len) {
+  static jArray<T, L> newFallibleJArray(L const len)
+  {
     MOZ_ASSERT(len >= 0, "Negative length.");
     T* a = new (mozilla::fallible) T[size_t(len)];
-    jArray<T,L> newArray = { a, a ? len : 0 };
+    jArray<T, L> newArray = { a, a ? len : 0 };
     return newArray;
   }
   operator T*() { return arr; }
-  T& operator[] (L const index) {
+  T& operator[](L const index)
+  {
     MOZ_ASSERT(index >= 0, "Array access with negative index.");
     MOZ_ASSERT(index < length, "Array index out of bounds.");
     return arr[index];
   }
-  void operator=(staticJArray<T,L>& other) {
+  void operator=(staticJArray<T, L>& other)
+  {
     arr = (T*)other.arr;
     length = other.length;
   }
 };
 
 template<class T, class L>
-class autoJArray {
-  private:
-    T* arr;
-  public:
-    L length;
-    autoJArray()
-     : arr(0)
-     , length(0)
-    {
-    }
-    MOZ_IMPLICIT autoJArray(const jArray<T,L>& other)
-     : arr(other.arr)
-     , length(other.length)
-    {
-    }
-    ~autoJArray()
-    {
-      delete[] arr;
-    }
-    operator T*() { return arr; }
-    T& operator[] (L const index) {
-      MOZ_ASSERT(index >= 0, "Array access with negative index.");
-      MOZ_ASSERT(index < length, "Array index out of bounds.");
-      return arr[index];
-    }
-    operator jArray<T,L>() {
-      // WARNING! This makes it possible to goof with buffer ownership!
-      // This is needed for the getStack and getListOfActiveFormattingElements
-      // methods to work sensibly.
-      jArray<T,L> newArray = { arr, length };
-      return newArray;
-    }
-    void operator=(const jArray<T,L>& other) {
-      delete[] arr;
-      arr = other.arr;
-      length = other.length;
-    }
-    void operator=(decltype(nullptr)) {
-      // Make assigning null to an array in Java delete the buffer in C++
-      delete[] arr;
-      arr = nullptr;
-      length = 0;
-    }
+class autoJArray
+{
+private:
+  T* arr;
+
+public:
+  L length;
+  autoJArray()
+    : arr(0)
+    , length(0)
+  {
+  }
+  MOZ_IMPLICIT autoJArray(const jArray<T, L>& other)
+    : arr(other.arr)
+    , length(other.length)
+  {
+  }
+  ~autoJArray() { delete[] arr; }
+  operator T*() { return arr; }
+  T& operator[](L const index)
+  {
+    MOZ_ASSERT(index >= 0, "Array access with negative index.");
+    MOZ_ASSERT(index < length, "Array index out of bounds.");
+    return arr[index];
+  }
+  operator jArray<T, L>()
+  {
+    // WARNING! This makes it possible to goof with buffer ownership!
+    // This is needed for the getStack and getListOfActiveFormattingElements
+    // methods to work sensibly.
+    jArray<T, L> newArray = { arr, length };
+    return newArray;
+  }
+  void operator=(const jArray<T, L>& other)
+  {
+    delete[] arr;
+    arr = other.arr;
+    length = other.length;
+  }
+  void operator=(decltype(nullptr))
+  {
+    // Make assigning null to an array in Java delete the buffer in C++
+    delete[] arr;
+    arr = nullptr;
+    length = 0;
+  }
 };
 
 #endif // jArray_h
