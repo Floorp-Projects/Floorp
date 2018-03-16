@@ -32,6 +32,8 @@
 <script class="testbody" type="text/javascript">
 const kStrictKeyPressEvents =
   SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
+const kStrictKeyDownKeyUpEvents =
+  SpecialPowers.getBoolPref("dom.keyboardevent.dispatch_during_composition");
 
 info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
 function starttest() {
@@ -40,14 +42,17 @@ function starttest() {
       SimpleTest.waitForExplicitFinish();
       var startTime = new Date();
       var check = false;
-      
+      function doCheck() {
+        check = true;
+      }
+
       /* test send* functions */
-      $("testMouseEvent").addEventListener("click", function() { check=true; });
+      $("testMouseEvent").addEventListener("click", doCheck, {once: true});
       sendMouseEvent({type:'click'}, "testMouseEvent");
       is(check, true, 'sendMouseEvent should dispatch click event');
       
       check = false;
-      $("testKeyEvent").addEventListener("keypress", function() { check = true; }, {once: true});
+      $("testKeyEvent").addEventListener("keypress", doCheck, {once: true});
       $("testKeyEvent").focus();
       sendChar("x");
       is($("testKeyEvent").value, "x", "sendChar should work");
@@ -110,7 +115,7 @@ function starttest() {
     
       /* test synthesizeKey* */
       check = false;
-      $("testKeyEvent").addEventListener("keypress", function() { check = true; });
+      $("testKeyEvent").addEventListener("keypress", doCheck, {once:true});
       $("testKeyEvent").focus();
       sendString("a");
       is($("testKeyEvent").value, "a", "synthesizeKey should work");
@@ -118,25 +123,72 @@ function starttest() {
       $("testKeyEvent").value = "";
     
       check = false;
+      $("testKeyEvent").addEventListener("keypress", doCheck, {once:true});
       synthesizeKeyExpectEvent("a", {}, $("testKeyEvent"), "keypress");
       is($("testKeyEvent").value, "a", "synthesizeKey should work");
       is(check, true, "synthesizeKey should dispatch keyPress");
       $("testKeyEvent").value = "";
     
       /* test synthesizeComposition */
-      $("textBoxB").focus();
-      check = false;
-      window.addEventListener("compositionstart", function() { check = true; });
-      synthesizeComposition({ type: "compositionstart" });
-      is(check, true, 'synthesizeComposition() should dispatch compositionstart');
-    
-      check = false;
-      window.addEventListener("compositionupdate", function() { check = true; });
-      synthesizeComposition({ type: "compositionupdate", data: "a" });
-      is(check, false, 'synthesizeComposition() should not dispatch compositionupdate without error');
+      var description = "";
+      var keydownEvent = null;
+      var keyupEvent = null;
+      function onKeyDown(aEvent) {
+        ok(!keydownEvent, description + "keydown should be fired only once" + (keydownEvent ? keydownEvent.key : "") + ", " + (keyupEvent ? keyupEvent.key : ""));
+        keydownEvent = aEvent;
+      }
+      function onKeyUp(aEvent) {
+        ok(!keyupEvent, description + "keyup should be fired only once");
+        keyupEvent = aEvent;
+      }
+      function resetKeyDownAndKeyUp(aDescription) {
+        description = aDescription + ": ";
+        keydownEvent = null;
+        keyupEvent = null;
+        check = false;
+      }
+      function checkKeyDownAndKeyUp(aKeyDown, aKeyUp) {
+        if (aKeyDown && (!aKeyDown.inComposition || kStrictKeyDownKeyUpEvents)) {
+          is(keydownEvent.keyCode, aKeyDown.keyCode,
+             description + "keydown event should be dispatched (checking keyCode)");
+          is(keydownEvent.key, aKeyDown.key,
+             description + "keydown event should be dispatched (checking key)");
+        } else {
+          is(keydownEvent, null,
+             description + "keydown event shouldn't be fired");
+        }
+        if (aKeyUp && (!aKeyUp.inComposition || kStrictKeyDownKeyUpEvents)) {
+          is(keyupEvent.keyCode, aKeyUp.keyCode,
+             description + "keyup event should be dispatched (checking keyCode)");
+          is(keyupEvent.key, aKeyUp.key,
+             description + "keyup event should be dispatched (checking key)");
+        } else {
+          is(keyupEvent, null,
+             description + "keyup event shouldn't be fired");
+        }
+      }
+      $("textBoxB").addEventListener("keydown", onKeyDown);
+      $("textBoxB").addEventListener("keyup", onKeyUp);
 
-      check = false;
-      window.addEventListener("text", function() { check = true; });
+      $("textBoxB").focus();
+
+      // If key event is not specified, fake keydown and keyup events which are
+      // marked as "processed by IME" should be fired.
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart without specifying keyboard event");
+      window.addEventListener("compositionstart", doCheck, {once: true});
+      synthesizeComposition({type: "compositionstart"});
+      ok(check, description + "synthesizeComposition() should dispatch compositionstart");
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("trying to synthesize eCompositionUpdate directly without specifying keyboard event");
+      window.addEventListener("compositionupdate", doCheck, {once: true});
+      synthesizeComposition({type: "compositionupdate", data: "a"});
+      ok(!check, description + "synthesizeComposition() should not dispatch compositionupdate without error");
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange without specifying keyboard event");
+      window.addEventListener("text", doCheck, {once: true});
       synthesizeCompositionChange(
         { "composition":
           { "string": "a",
@@ -148,8 +200,11 @@ function starttest() {
           "caret": { "start": 1, "length": 0 }
         }
       );
-      is(check, true, "synthesizeCompositionChange should cause dispatching a DOM text event");
+      ok(check, description + "synthesizeCompositionChange should cause dispatching a DOM text event");
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
 
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange for removing clauses without specifying keyboard event");
       synthesizeCompositionChange(
         { "composition":
           { "string": "a",
@@ -161,14 +216,20 @@ function starttest() {
           "caret": { "start": 1, "length": 0 }
         }
       );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
 
-      check = false;
-      window.addEventListener("compositionend", function() { check = true; });
-      synthesizeComposition({ type: "compositionend", data: "a" });
-      is(check, false, 'synthesizeComposition() should not dispatch compositionend');
+      resetKeyDownAndKeyUp("trying to synthesize eCompositionEnd directly without specifying keyboard event");
+      window.addEventListener("compositionend", doCheck, {once: true});
+      synthesizeComposition({type: "compositionend", data: "a"});
+      ok(!check, description + "synthesizeComposition() should not dispatch compositionend");
+      checkKeyDownAndKeyUp(null, null);
 
-      synthesizeComposition({ type: "compositioncommit", data: "a" });
-      is(check, true, 'synthesizeComposition() should dispatch compositionend');
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit without specifying keyboard event");
+      synthesizeComposition({type: "compositioncommit", data: "a"});
+      ok(check, description + "synthesizeComposition() should dispatch compositionend");
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
 
       var querySelectedText = synthesizeQuerySelectedText();
       ok(querySelectedText, "query selected text event result is null");
@@ -188,6 +249,202 @@ function starttest() {
          "query selected text event returns wrong selected text");
       var endTime = new Date();
       info("\nProfile::EventUtilsRunTime: " + (endTime-startTime) + "\n");
+
+      // In most cases, automated tests shouldn't try to synthesize
+      // compositionstart manually.  Let's check if synthesizeCompositionChange()
+      // dispatches compositionstart automatically.
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange without specifying keyboard event when there is no composition");
+      window.addEventListener("compositionstart", doCheck, {once: true});
+      synthesizeCompositionChange(
+        { "composition":
+          { "string": "a",
+            "clauses":
+            [
+              { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+            ]
+          },
+          "caret": { "start": 1, "length": 0 }
+        }
+      );
+      ok(check, description + "synthesizeCompositionChange should dispatch \"compositionstart\" automatically if there is no composition");
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommitAsIs without specifying keyboard event");
+      synthesizeComposition({type: "compositioncommitasis"});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      // If key event is specified, keydown event which is marked as "processed
+      // by IME" should be fired and keyup event which is NOT marked as so
+      // should be fired too.
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event");
+      synthesizeComposition({type: "compositionstart", key: {key: "a"}});
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_A, key: "a"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b"},
+        }
+      );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_B, key: "b"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter"}});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_RETURN, key: "Enter"});
+
+      // keyup shouldn't be dispatched automatically if type is specified as keydown
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event whose type is keydown");
+      synthesizeComposition({type: "compositionstart", key: {key: "a", type: "keydown"}});
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event whose type is keydown");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b", type: "keydown"},
+        }
+      );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event whose type is keydown");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter", type: "keydown"}});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           null);
+
+      // keydown shouldn't be dispatched automatically if type is specified as keyup
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event whose type is keyup");
+      synthesizeComposition({type: "compositionstart", key: {key: "a", type: "keyup"}});
+      checkKeyDownAndKeyUp(null,
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_A, key: "a"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event whose type is keyup");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b", type: "keyup"},
+        }
+      );
+      checkKeyDownAndKeyUp(null,
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_B, key: "b"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event whose type is keyup");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter", type: "keyup"}});
+      checkKeyDownAndKeyUp(null,
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_RETURN, key: "Enter"});
+
+      // keydown event shouldn't be marked as "processed by IME" if doNotMarkKeydownAsProcessed is true
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event whose doNotMarkKeydownAsProcessed is true");
+      synthesizeComposition({type: "compositionstart", key: {key: "a", doNotMarkKeydownAsProcessed: true}});
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_A, key: "a"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_A, key: "a"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event whose doNotMarkKeydownAsProcessed is true");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b", doNotMarkKeydownAsProcessed: true},
+        }
+      );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_B, key: "b"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_B, key: "b"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event whose doNotMarkKeydownAsProcessed is true");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter", doNotMarkKeydownAsProcessed: true}});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_RETURN, key: "Enter"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_RETURN, key: "Enter"});
+
+      // keyup event should be marked as "processed by IME" if markKeyupAsProcessed is true
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event whose markKeyupAsProcessed is true");
+      synthesizeComposition({type: "compositionstart", key: {key: "a", markKeyupAsProcessed: true}});
+      checkKeyDownAndKeyUp({inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event whose markKeyupAsProcessed is true");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {key: "b", markKeyupAsProcessed: true},
+        }
+      );
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event whose markKeyupAsProcessed is true");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {key: "KEY_Enter", markKeyupAsProcessed: true}});
+      checkKeyDownAndKeyUp({inComposition: true, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"},
+                           {inComposition: false, keyCode: KeyboardEvent.DOM_VK_PROCESSKEY, key: "Process"});
+
+      // If key event is explicitly declared with null, keyboard events shouldn't
+      // be fired for emulating text inputs without keyboard such as voice input or something.
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event as null");
+      synthesizeComposition({type: "compositionstart", key: null});
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event as null");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": null,
+        }
+      );
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event as null");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: null});
+      checkKeyDownAndKeyUp(null, null);
+
+      // If key event is explicitly declared with empty object, keyboard events
+      // shouldn't be fired for emulating text inputs without keyboard such as
+      // voice input or something.
+      resetKeyDownAndKeyUp("synthesizing eCompositionStart with specifying keyboard event as empty");
+      synthesizeComposition({type: "compositionstart", key: {}});
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionChange with specifying keyboard event as empty");
+      synthesizeCompositionChange(
+        {"composition":
+          {"string": "b", "clauses": [
+             {"length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE}
+           ]},
+          "caret": {"start": 1, "length": 0},
+          "key": {},
+        }
+      );
+      checkKeyDownAndKeyUp(null, null);
+
+      resetKeyDownAndKeyUp("synthesizing eCompositionCommit with specifying keyboard event as empty");
+      synthesizeComposition({type: "compositioncommit", data: "c", key: {}});
+      checkKeyDownAndKeyUp(null, null);
+
+      $("textBoxB").removeEventListener("keydown", onKeyDown);
+      $("textBoxB").removeEventListener("keyup", onKeyUp);
+
       SimpleTest.finish();
     }
   );

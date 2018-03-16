@@ -36,8 +36,8 @@ SimpleTest.waitForFocus(function() {
   is(t.selectionEnd, 3, "Correct end of selection");
 
   // Compose an IME string
-  synthesizeComposition({ type: "compositionstart" });
   var composingString = "\u306B";
+  // FYI: "compositionstart" will be dispatched automatically.
   synthesizeCompositionChange(
     { "composition":
       { "string": composingString,
