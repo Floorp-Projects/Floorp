@@ -2311,12 +2311,12 @@
       <field name="tabModalPromptBox">null</field>
 
       <!-- throws exception for unknown schemes -->
-      <method name="loadURIWithFlags">
+      <method name="loadURI">
         <parameter name="aURI"/>
         <parameter name="aParams"/>
         <body>
           <![CDATA[
-            _loadURIWithFlags(this, aURI, aParams);
+            _loadURI(this, aURI, aParams);
           ]]>
         </body>
       </method>
@@ -2329,12 +2329,12 @@
       <field name="tabModalPromptBox">null</field>
 
       <!-- throws exception for unknown schemes -->
-      <method name="loadURIWithFlags">
+      <method name="loadURI">
         <parameter name="aURI"/>
         <parameter name="aParams"/>
         <body>
           <![CDATA[
-            _loadURIWithFlags(this, aURI, aParams);
+            _loadURI(this, aURI, aParams);
           ]]>
         </body>
       </method>
