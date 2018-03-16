@@ -87,12 +87,13 @@ OpusDataDecoder::Init()
       __func__);
   }
 
+  MOZ_ASSERT(mMappingTable.Length() >= uint32_t(mOpusParser->mChannels));
   int r;
   mOpusDecoder = opus_multistream_decoder_create(mOpusParser->mRate,
                                                  mOpusParser->mChannels,
                                                  mOpusParser->mStreams,
                                                  mOpusParser->mCoupledStreams,
-                                                 mMappingTable,
+                                                 mMappingTable.Elements(),
                                                  &r);
   mSkip = mOpusParser->mPreSkip;
   mPaddingDiscarded = false;
@@ -131,31 +132,32 @@ OpusDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
   }
   int channels = mOpusParser->mChannels;
 
+  mMappingTable.SetLength(channels);
   AudioConfig::ChannelLayout vorbisLayout(
     channels, VorbisDataDecoder::VorbisLayout(channels));
-  if (!vorbisLayout.IsValid()) {
-    OPUS_DEBUG("Invalid channel mapping. Source is %d channels", channels);
-    return NS_ERROR_FAILURE;
-  }
-  mChannelMap = vorbisLayout.Map();
+  if (vorbisLayout.IsValid()) {
+    mChannelMap = vorbisLayout.Map();
 
-  AudioConfig::ChannelLayout smpteLayout(
-    AudioConfig::ChannelLayout::SMPTEDefault(vorbisLayout));
+    AudioConfig::ChannelLayout smpteLayout(
+      AudioConfig::ChannelLayout::SMPTEDefault(vorbisLayout));
 
-  static_assert(sizeof(mOpusParser->mMappingTable) /
-                sizeof(mOpusParser->mMappingTable[0]) >=
-                MAX_AUDIO_CHANNELS,
-                "Invalid size set");
-  uint8_t map[sizeof(mOpusParser->mMappingTable) /
-              sizeof(mOpusParser->mMappingTable[0])];
-  if (vorbisLayout.MappingTable(smpteLayout, map)) {
-    for (int i = 0; i < channels; i++) {
-      mMappingTable[i] = mOpusParser->mMappingTable[map[i]];
+    AutoTArray<uint8_t, 8> map;
+    map.SetLength(channels);
+    if (vorbisLayout.MappingTable(smpteLayout, &map)) {
+      for (int i = 0; i < channels; i++) {
+        mMappingTable[i] = mOpusParser->mMappingTable[map[i]];
+      }
+    } else {
+      // Should never get here as vorbis layout is always convertible to SMPTE
+      // default layout.
+      PodCopy(mMappingTable.Elements(), mOpusParser->mMappingTable, channels);
     }
   } else {
-    // Should never get here as vorbis layout is always convertible to SMPTE
-    // default layout.
-    PodCopy(mMappingTable, mOpusParser->mMappingTable, MAX_AUDIO_CHANNELS);
+    // Create a dummy mapping table so that channel ordering stay the same
+    // during decoding.
+    for (int i = 0; i < channels; i++) {
+      mMappingTable[i] = i;
+    }
   }
 
   return NS_OK;
