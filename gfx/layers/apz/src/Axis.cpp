@@ -545,6 +545,19 @@ const char* AxisX::Name() const
   return "X";
 }
 
+bool AxisX::CanScrollTo(Side aSide) const
+{
+  switch (aSide) {
+    case eSideLeft:
+      return CanScroll(-COORDINATE_EPSILON * 2);
+    case eSideRight:
+      return CanScroll(COORDINATE_EPSILON * 2);
+    default:
+      MOZ_ASSERT_UNREACHABLE("aSide is out of valid values");
+      return false;
+  }
+}
+
 OverscrollBehavior AxisX::GetOverscrollBehavior() const
 {
   return GetScrollMetadata().GetOverscrollBehavior().mBehaviorX;
@@ -584,6 +597,19 @@ ScreenPoint AxisY::MakePoint(ScreenCoord aCoord) const
 const char* AxisY::Name() const
 {
   return "Y";
+}
+
+bool AxisY::CanScrollTo(Side aSide) const
+{
+  switch (aSide) {
+    case eSideTop:
+      return CanScroll(-COORDINATE_EPSILON * 2);
+    case eSideBottom:
+      return CanScroll(COORDINATE_EPSILON * 2);
+    default:
+      MOZ_ASSERT_UNREACHABLE("aSide is out of valid values");
+      return false;
+  }
 }
 
 OverscrollBehavior AxisY::GetOverscrollBehavior() const

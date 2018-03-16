@@ -258,6 +258,9 @@ enum class WheelDeltaAdjustmentStrategy : uint8_t
   // listener or a plugin, delta values are never going to be adjusted.
   eAutoDir,
   eAutoDirWithRootHonour,
+  // Not an actual strategy. This is just used as an upper bound for
+  // ContiguousEnumSerializer.
+  eSentinel,
 };
 
 /**
