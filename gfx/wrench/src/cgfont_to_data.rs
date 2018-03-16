@@ -29,7 +29,7 @@ fn calc_table_checksum<D: Read>(mut data: D) -> u32 {
 fn max_pow_2_less_than(a: u16) -> u16 {
     let x = 1;
     let mut shift = 0;
-    while (x << (shift + 1)) < a {
+    while a > (x << (shift + 1)) {
         shift += 1;
     }
     shift

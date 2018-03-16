@@ -11,19 +11,24 @@ flat varying float vLayer;
 flat varying vec4 vEdge;
 flat varying vec4 vUvBounds_NoClamp;
 flat varying float vClipMode;
+flat varying int vStretchMode;
+
+#define MODE_STRETCH        0
+#define MODE_SIMPLE         1
 
 #ifdef WR_VERTEX_SHADER
 
 struct BoxShadowData {
     vec2 src_rect_size;
     float clip_mode;
+    int stretch_mode;
     RectWithSize dest_rect;
 };
 
 BoxShadowData fetch_data(ivec2 address) {
     vec4 data[2] = fetch_from_resource_cache_2_direct(address);
     RectWithSize dest_rect = RectWithSize(data[1].xy, data[1].zw);
-    BoxShadowData bs_data = BoxShadowData(data[0].xy, data[0].z, dest_rect);
+    BoxShadowData bs_data = BoxShadowData(data[0].xy, data[0].z, int(data[0].w), dest_rect);
     return bs_data;
 }
 
@@ -41,6 +46,7 @@ void main(void) {
     vLayer = res.layer;
     vPos = vi.local_pos;
     vClipMode = bs_data.clip_mode;
+    vStretchMode = bs_data.stretch_mode;
 
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
@@ -48,9 +54,20 @@ void main(void) {
     vec2 texture_size = vec2(textureSize(sColor0, 0));
     vec2 local_pos = vPos.xy / vPos.z;
 
-    vEdge.xy = vec2(0.5);
-    vEdge.zw = (bs_data.dest_rect.size / bs_data.src_rect_size) - vec2(0.5);
-    vUv = (local_pos - bs_data.dest_rect.p0) / bs_data.src_rect_size;
+    switch (bs_data.stretch_mode) {
+        case MODE_STRETCH: {
+            vEdge.xy = vec2(0.5);
+            vEdge.zw = (bs_data.dest_rect.size / bs_data.src_rect_size) - vec2(0.5);
+            vUv = (local_pos - bs_data.dest_rect.p0) / bs_data.src_rect_size;
+            break;
+        }
+        case MODE_SIMPLE:
+        default: {
+            vec2 f = (local_pos - bs_data.dest_rect.p0) / bs_data.dest_rect.size;
+            vUv = mix(uv0, uv1, f) / texture_size;
+            break;
+        }
+    }
 
     vUvBounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) / texture_size.xyxy;
     vUvBounds_NoClamp = vec4(uv0, uv1) / texture_size.xyxy;
@@ -60,11 +77,22 @@ void main(void) {
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
     vec2 local_pos = vPos.xy / vPos.z;
+    vec2 uv;
 
-    vec2 uv = clamp(vUv.xy, vec2(0.0), vEdge.xy);
-    uv += max(vec2(0.0), vUv.xy - vEdge.zw);
+    switch (vStretchMode) {
+        case MODE_STRETCH: {
+            uv = clamp(vUv.xy, vec2(0.0), vEdge.xy);
+            uv += max(vec2(0.0), vUv.xy - vEdge.zw);
+            uv = mix(vUvBounds_NoClamp.xy, vUvBounds_NoClamp.zw, uv);
+            break;
+        }
+        case MODE_SIMPLE:
+        default: {
+            uv = vUv.xy;
+            break;
+        }
+    }
 
-    uv = mix(vUvBounds_NoClamp.xy, vUvBounds_NoClamp.zw, uv);
     uv = clamp(uv, vUvBounds.xy, vUvBounds.zw);
 
     float in_shadow_rect = point_inside_rect(
