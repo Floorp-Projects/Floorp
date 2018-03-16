@@ -92,6 +92,7 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla.layers += [
     'AnimationHelper.h',
     'AnimationInfo.h',
+    'apz/public/APZInputBridge.h',
     'apz/public/APZSampler.h',
     'apz/public/CompositorController.h',
     'apz/public/GeckoContentController.h',
@@ -292,8 +293,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
 UNIFIED_SOURCES += [
     'AnimationHelper.cpp',
     'AnimationInfo.cpp',
-    'apz/public/IAPZCTreeManager.cpp',
     'apz/src/APZCTreeManager.cpp',
+    'apz/src/APZInputBridge.cpp',
     'apz/src/APZSampler.cpp',
     'apz/src/APZUtils.cpp',
     'apz/src/AsyncPanZoomController.cpp',

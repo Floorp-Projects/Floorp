@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/IAPZCTreeManager.h"
+#include "mozilla/layers/APZInputBridge.h"
 
 #include "gfxPrefs.h"                       // for gfxPrefs
-#include "InputData.h"                      // for InputData, etc
-#include "mozilla/EventStateManager.h"      // for WheelPrefs
+#include "InputData.h"                      // for MouseInput, etc
+#include "mozilla/EventStateManager.h"      // for EventStateManager
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
 #include "mozilla/MouseEvents.h"            // for WidgetMouseEvent
 #include "mozilla/TextEvents.h"             // for WidgetKeyboardEvent
@@ -29,7 +29,7 @@ WillHandleMouseEvent(const WidgetMouseEventBase& aEvent)
 }
 
 /* static */ bool
-IAPZCTreeManager::WillHandleWheelEvent(WidgetWheelEvent* aEvent)
+APZInputBridge::WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
          (aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
@@ -38,7 +38,7 @@ IAPZCTreeManager::WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 }
 
 nsEventStatus
-IAPZCTreeManager::ReceiveInputEvent(
+APZInputBridge::ReceiveInputEvent(
     WidgetInputEvent& aEvent,
     ScrollableLayerGuid* aOutTargetGuid,
     uint64_t* aOutInputBlockId)
