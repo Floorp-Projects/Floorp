@@ -31,7 +31,6 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/Scheduler.h"
 #include "nsZipArchive.h"
-#include "nsIDOMFileList.h"
 #include "nsWindowMemoryReporter.h"
 #include "nsDOMClassInfo.h"
 #include "ShimInterfaceInfo.h"

@@ -11,7 +11,6 @@ DIRS += ['ipc']
 
 XPIDL_SOURCES += [
     'nsIDOMBlob.idl',
-    'nsIDOMFileList.idl',
 ]
 
 XPIDL_MODULE = 'dom_file'

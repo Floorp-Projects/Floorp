@@ -16,8 +16,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileList, mFiles, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFileList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFileList)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FileList)
@@ -27,22 +26,6 @@ JSObject*
 FileList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return mozilla::dom::FileListBinding::Wrap(aCx, this, aGivenProto);
-}
-
-NS_IMETHODIMP
-FileList::GetLength(uint32_t* aLength)
-{
-  *aLength = Length();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FileList::Item(uint32_t aIndex, nsISupports** aValue)
-{
-  nsCOMPtr<nsIDOMBlob> file = Item(aIndex);
-  file.forget(aValue);
-  return NS_OK;
 }
 
 File*
