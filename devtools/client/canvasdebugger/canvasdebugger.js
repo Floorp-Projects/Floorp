@@ -6,7 +6,6 @@
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
-const promise = require("promise");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
@@ -103,7 +102,7 @@ var gToolbox, gTarget, gFront;
  * Initializes the canvas debugger controller and views.
  */
 function startupCanvasDebugger() {
-  return promise.all([
+  return Promise.all([
     EventsHandler.initialize(),
     SnapshotsListView.initialize(),
     CallsListView.initialize()
@@ -114,7 +113,7 @@ function startupCanvasDebugger() {
  * Destroys the canvas debugger controller and views.
  */
 function shutdownCanvasDebugger() {
-  return promise.all([
+  return Promise.all([
     EventsHandler.destroy(),
     SnapshotsListView.destroy(),
     CallsListView.destroy()

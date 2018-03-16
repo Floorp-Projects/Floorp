@@ -25,7 +25,8 @@ function compareLists(list1, list2, kind) {
   is(String(list1), String(list2), `${kind} URLs correct`);
 }
 
-function promiseOpenFindbar(findbar) {
+async function promiseOpenFindbar(findbar) {
+  await gBrowser.getFindBar();
   findbar.onFindCommand();
   return gFindBar._startFindDeferred && gFindBar._startFindDeferred.promise;
 }

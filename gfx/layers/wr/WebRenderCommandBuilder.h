@@ -123,7 +123,7 @@ public:
     }
 
     RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(aItem->GetPerFrameKey());
-    if (!data || (data->GetType() != T::Type()) || !data->IsDataValid(mManager)) {
+    if (!data || (data->GetType() != T::Type())) {
       // To recreate a new user data, we should remove the data from the table first.
       if (data) {
         data->RemoveFromTable();
@@ -159,7 +159,7 @@ public:
     }
 
     RefPtr<WebRenderUserData> data = userDataTable->Get(aPerFrameKey);
-    if (data && (data->GetType() == T::Type()) && data->IsDataValid(mManager)) {
+    if (data && (data->GetType() == T::Type())) {
       RefPtr<T> result = static_cast<T*>(data.get());
       return result.forget();
     }

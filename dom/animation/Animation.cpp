@@ -471,10 +471,6 @@ Animation::UpdatePlaybackRate(double aPlaybackRate)
 AnimationPlayState
 Animation::PlayState() const
 {
-  if (!nsContentUtils::AnimationsAPIPendingMemberEnabled() && Pending()) {
-    return AnimationPlayState::Pending;
-  }
-
   Nullable<TimeDuration> currentTime = GetCurrentTime();
   if (currentTime.IsNull() && !Pending()) {
     return AnimationPlayState::Idle;

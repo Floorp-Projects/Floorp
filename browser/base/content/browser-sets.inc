@@ -44,16 +44,16 @@
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
     <command id="View:ReaderView" oncommand="ReaderParent.toggleReaderMode(event);"/>
     <command id="cmd_find"
-             oncommand="gFindBar.onFindCommand();"
+             oncommand="gLazyFindCommand('onFindCommand')"
              observes="isImage"/>
     <command id="cmd_findAgain"
-             oncommand="gFindBar.onFindAgainCommand(false);"
+             oncommand="gLazyFindCommand('onFindAgainCommand', false)"
              observes="isImage"/>
     <command id="cmd_findPrevious"
-             oncommand="gFindBar.onFindAgainCommand(true);"
+             oncommand="gLazyFindCommand('onFindAgainCommand', true)"
              observes="isImage"/>
 #ifdef XP_MACOSX
-    <command id="cmd_findSelection" oncommand="gFindBar.onFindSelectionCommand();"/>
+    <command id="cmd_findSelection" oncommand="gLazyFindCommand('onFindSelectionCommand')"/>
 #endif
     <!-- work-around bug 392512 -->
     <command id="Browser:AddBookmarkAs"
@@ -116,12 +116,7 @@
 #endif
   </commandset>
 
-  <commandset id="placesCommands">
-    <command id="Browser:ShowAllBookmarks"
-             oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"/>
-    <command id="Browser:ShowAllHistory"
-             oncommand="PlacesCommandHook.showPlacesOrganizer('History');"/>
-  </commandset>
+#include ../../components/places/content/placesCommands.inc.xul
 
   <broadcasterset id="mainBroadcasterSet">
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"

@@ -96,7 +96,7 @@ if (!build_with_chromium) {
       "../../system_wrappers",
     ]
 
-    if (is_linux) {
+    if (is_linux || is_bsd) {
       sources = [
         "linux/device_info_linux.cc",
         "linux/device_info_linux.h",

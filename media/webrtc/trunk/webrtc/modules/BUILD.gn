@@ -11,7 +11,7 @@ import("audio_coding/audio_coding.gni")
 
 declare_args() {
   # Desktop capturer is supported only on Windows, OSX and Linux.
-  rtc_desktop_capture_supported = is_win || is_mac || is_linux
+  rtc_desktop_capture_supported = is_win || is_mac || is_linux || is_bsd
 }
 
 group("modules") {
