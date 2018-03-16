@@ -163,21 +163,22 @@ StorageActors.defaults = function(typeName, observationTopics) {
       }
 
       switch (location.protocol) {
+        case "about:":
+          return `${location.protocol}${location.pathname}`;
+        case "chrome:":
+          // chrome: URLs do not support storage of any type.
+          return null;
         case "data:":
           // data: URLs do not support storage of any type.
           return null;
-        case "about:":
-          return location.protocol + location.pathname;
-        case "chrome:":
-          return location.protocol + location.pathname;
         case "file:":
           return `${location.protocol}//${location.pathname}`;
-        case "resource:":
-          return location.origin + location.pathname;
-        case "moz-extension:":
-          return location.origin;
         case "javascript:":
           return location.href;
+        case "moz-extension:":
+          return location.origin;
+        case "resource:":
+          return `${location.origin}${location.pathname}`;
         default:
           // http: or unknown protocol.
           return `${location.protocol}//${location.host}`;
