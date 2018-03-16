@@ -28,9 +28,9 @@ FTP_PLATFORMS_PER_BOUNCER_PLATFORM = {
 }
 
 # :lang is interpolated by bouncer at runtime
-CANDIDATES_PATH_TEMPLATE = '/{ftp_product}/candidates/{version}-candidates/build{build_number}/\
+CANDIDATES_PATH_TEMPLATE = '/{product}/candidates/{version}-candidates/build{build_number}/\
 {update_folder}{ftp_platform}/:lang/{file}'
-RELEASES_PATH_TEMPLATE = '/{ftp_product}/releases/{version}/{update_folder}{ftp_platform}/:lang/{file}'
+RELEASES_PATH_TEMPLATE = '/{product}/releases/{version}/{update_folder}{ftp_platform}/:lang/{file}'
 
 
 CONFIG_PER_BOUNCER_PRODUCT = {
@@ -167,6 +167,8 @@ def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms
                                      current_build_number, previous_version=None):
     paths_per_bouncer_platform = {}
     for bouncer_platform in bouncer_platforms:
+        ftp_platform = FTP_PLATFORMS_PER_BOUNCER_PLATFORM[bouncer_platform]
+
         file_names_per_platform = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product]['file_names']
         file_name_template = file_names_per_platform.get(
             bouncer_platform, file_names_per_platform.get('default', None)
@@ -180,34 +182,24 @@ def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms
             version=current_version, previous_version=strip_build_data(previous_version)
         )
 
+        # We currently have a sole win32 stub installer that is to be used
+        # in both windows platforms to toggle between full installers
+        if 'Installer.exe' in file_name and ftp_platform == 'win64':
+            ftp_platform = 'win32'
+
         path_template = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product]['path_template']
         file_relative_location = path_template.format(
-            ftp_product=_craft_ftp_product(product),
+            product=product.lower(),
             version=current_version,
             build_number=current_build_number,
             update_folder='update/' if '-mar' in bouncer_product else '',
-            ftp_platform=_craft_ftp_platform(bouncer_platform, file_name),
+            ftp_platform=ftp_platform,
             file=file_name,
         )
 
         paths_per_bouncer_platform[bouncer_platform] = file_relative_location
 
     return paths_per_bouncer_platform
-
-
-def _craft_ftp_product(product):
-    return 'mobile' if product == 'fennec' else product.lower()
-
-
-def _craft_ftp_platform(bouncer_platform, file_name):
-    ftp_platform = FTP_PLATFORMS_PER_BOUNCER_PLATFORM[bouncer_platform]
-    # We currently have a sole win32 stub installer that is to be used
-    # in both windows platforms to toggle between full installers
-    if 'Installer.exe' in file_name and ftp_platform == 'win64':
-        return 'win32'
-
-    return ftp_platform
-
 
 
 def craft_bouncer_product_name(product, bouncer_product, current_version,
