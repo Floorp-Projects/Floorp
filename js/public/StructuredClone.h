@@ -463,11 +463,6 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
 
     void clear();
 
-    /** Copy some memory. It will be automatically freed by the destructor. */
-    bool copy(JSContext* cx, const JSStructuredCloneData& data,
-              uint32_t version=JS_STRUCTURED_CLONE_VERSION,
-              const JSStructuredCloneCallbacks* callbacks=nullptr, void* closure=nullptr);
-
     /**
      * Adopt some memory. It will be automatically freed by the destructor.
      * data must have been allocated by the JS engine (e.g., extracted via
