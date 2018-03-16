@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
 ChromeUtils.import("resource:///modules/BrowserErrorReporter.jsm", this);
 
 /* global sinon */
@@ -403,6 +404,48 @@ add_task(async function testFetchArguments() {
     );
   });
 
+  reporter.uninit();
+  resetConsole();
+});
+
+add_task(async function testAddonIDMangle() {
+  const fetchSpy = sinon.spy();
+  // Passing false here disables category checks on errors, which would
+  // otherwise block errors directly from extensions.
+  const reporter = new BrowserErrorReporter(fetchSpy, false);
+  await SpecialPowers.pushPrefEnv({set: [
+    [PREF_ENABLED, true],
+    [PREF_SAMPLE_RATE, "1.0"],
+  ]});
+  reporter.init();
+
+  // Create and install test add-on
+  const id = "browsererrorcollection@example.com";
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: { id },
+      },
+    },
+    background() {
+      throw new Error("testAddonIDMangle error");
+    },
+  });
+  await extension.startup();
+
+  // Just in case the error hasn't been thrown before add-on startup.
+  const call = await TestUtils.waitForCondition(
+    () => fetchCallForMessage(fetchSpy, "testAddonIDMangle error"),
+    `Wait for error from ${id} to be logged`,
+  );
+  const body = JSON.parse(call.args[1].body);
+  const stackFrame = body.exception.values[0].stacktrace.frames[0];
+  ok(
+    stackFrame.module.startsWith(`moz-extension://${id}/`),
+    "Stack frame filenames use the proper add-on ID instead of internal UUIDs.",
+  );
+
+  await extension.unload();
   reporter.uninit();
   resetConsole();
 });
