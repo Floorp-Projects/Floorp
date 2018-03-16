@@ -250,8 +250,6 @@ RuleEditor.prototype = {
         class: "ruleview-fontswatch"
       });
 
-      // TODO: replace with tool icon and use this as visually hidden a11y text.
-      this.fontSwatch.textContent = "Aa";
       this.fontSwatch.addEventListener("click", this._onFontSwatchClick);
     }
   },
