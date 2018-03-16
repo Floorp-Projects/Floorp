@@ -1289,6 +1289,8 @@ function watchExtensionProxyContextLoad({extension, viewType, browser}, onExtens
 // Manages icon details for toolbar buttons in the |pageAction| and
 // |browserAction| APIs.
 let IconDetails = {
+  DEFAULT_ICON: "chrome://browser/content/extension.svg",
+
   // WeakMap<Extension -> Map<url-string -> Map<iconType-string -> object>>>
   iconCache: new DefaultWeakMap(() => {
     return new DefaultMap(() => new DefaultMap(() => new Map()));
@@ -1361,7 +1363,7 @@ let IconDetails = {
             // to load them. This will throw an error if it's not allowed.
             this._checkURL(url, extension);
           }
-          result[size] = url;
+          result[size] = url || this.DEFAULT_ICON;
         }
       }
 
