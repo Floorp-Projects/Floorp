@@ -15,6 +15,7 @@
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/layers/APZInputBridge.h" // for APZInputBridge
 #include "mozilla/layers/APZTestData.h" // for APZTestData
 #include "mozilla/layers/IAPZCTreeManager.h" // for IAPZCTreeManager
 #include "mozilla/layers/KeyboardMap.h" // for KeyboardMap
@@ -99,7 +100,8 @@ struct ScrollThumbData;
  *
  * Behaviour of APZ is controlled by a number of preferences shown \ref APZCPrefs "here".
  */
-class APZCTreeManager : public IAPZCTreeManager {
+class APZCTreeManager : public IAPZCTreeManager
+                      , public APZInputBridge {
 
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
   typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
@@ -472,6 +474,8 @@ public:
    * as a long tap. This allows tests to disable long tap gesture detection.
    */
   void SetLongTapEnabled(bool aTapGestureEnabled) override;
+
+  APZInputBridge* InputBridge() override { return this; }
 
   // Methods to help process WidgetInputEvents (or manage conversion to/from InputData)
 

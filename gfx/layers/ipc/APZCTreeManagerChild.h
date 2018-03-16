@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_APZCTreeManagerChild_h
 #define mozilla_layers_APZCTreeManagerChild_h
 
+#include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/PAPZCTreeManagerChild.h"
 
@@ -17,6 +18,7 @@ class RemoteCompositorSession;
 
 class APZCTreeManagerChild
   : public IAPZCTreeManager
+  , public APZInputBridge
   , public PAPZCTreeManagerChild
 {
 public:
@@ -88,6 +90,9 @@ public:
   UpdateWheelTransaction(
           LayoutDeviceIntPoint aRefPoint,
           EventMessage aEventMessage) override;
+
+  APZInputBridge*
+  InputBridge() override;
 
 protected:
   mozilla::ipc::IPCResult RecvHandleTap(const TapType& aType,
