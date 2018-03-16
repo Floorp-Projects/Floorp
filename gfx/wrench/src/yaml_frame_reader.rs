@@ -1257,14 +1257,12 @@ impl YamlFrameReader {
         dl.push_iframe(&info, pipeline_id);
     }
 
-    pub fn get_local_clip_for_item(&mut self, yaml: &Yaml, full_clip: LayoutRect) -> LocalClip {
-        let rect = yaml["clip-rect"].as_rect().unwrap_or(full_clip);
+    pub fn get_complex_clip_for_item(&mut self, yaml: &Yaml) -> Option<ComplexClipRegion> {
         let complex_clip = &yaml["complex-clip"];
-        if !complex_clip.is_badvalue() {
-            LocalClip::RoundedRect(rect, self.to_complex_clip_region(complex_clip))
-        } else {
-            LocalClip::from(rect)
+        if complex_clip.is_badvalue() {
+            return None;
         }
+        Some(self.to_complex_clip_region(complex_clip))
     }
 
     pub fn add_display_list_items_from_yaml(
@@ -1317,8 +1315,23 @@ impl YamlFrameReader {
             if let Some(clip_scroll_info) = clip_scroll_info {
                 dl.push_clip_and_scroll_info(clip_scroll_info);
             }
-            let local_clip = self.get_local_clip_for_item(item, full_clip);
-            let mut info = LayoutPrimitiveInfo::with_clip(LayoutRect::zero(), local_clip);
+
+            let complex_clip = self.get_complex_clip_for_item(item);
+            let clip_rect = item["clip-rect"].as_rect().unwrap_or(full_clip);
+
+            let mut pushed_clip = false;
+            if let Some(complex_clip) = complex_clip {
+                match item_type {
+                    "clip" | "clip-chain" | "scroll-frame" => {},
+                    _ => {
+                        let id = dl.define_clip(clip_rect, vec![complex_clip], None);
+                        dl.push_clip_id(id);
+                        pushed_clip = true;
+                    }
+                }
+            }
+
+            let mut info = LayoutPrimitiveInfo::with_clip_rect(LayoutRect::zero(), clip_rect);
             info.is_backface_visible = item["backface-visible"].as_bool().unwrap_or(true);;
             match item_type {
                 "rect" => self.handle_rect(dl, item, &mut info),
@@ -1344,9 +1357,15 @@ impl YamlFrameReader {
                 _ => println!("Skipping unknown item type: {:?}", item),
             }
 
+            if pushed_clip {
+                dl.pop_clip_id();
+
+            }
+
             if clip_scroll_info.is_some() {
                 dl.pop_clip_id();
             }
+
         }
     }
 
@@ -1435,7 +1454,7 @@ impl YamlFrameReader {
             .as_rect()
             .expect("Text shadows require bounds");
         info.rect = rect;
-        info.local_clip = LocalClip::from(rect);
+        info.clip_rect = rect;
         let blur_radius = yaml["blur-radius"].as_f32().unwrap_or(0.0);
         let offset = yaml["offset"].as_vector().unwrap_or(LayoutVector2D::zero());
         let color = yaml["color"].as_colorf().unwrap_or(*BLACK_COLOR);
@@ -1555,7 +1574,7 @@ impl YamlFrameReader {
 
         let filters = yaml["filters"].as_vec_filter_op().unwrap_or(vec![]);
         info.rect = bounds;
-        info.local_clip = LocalClip::from(bounds);
+        info.clip_rect = bounds;
 
         dl.push_stacking_context(
             &info,

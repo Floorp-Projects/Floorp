@@ -19,8 +19,8 @@ use {ColorF, ComplexClipRegion, DisplayItem, ExtendMode, ExternalScrollId, Filte
 use {FontInstanceKey, GlyphInstance, GlyphOptions, Gradient, GradientDisplayItem, GradientStop};
 use {IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, ImageRendering, LayerPrimitiveInfo};
 use {LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
-use {LineDisplayItem, LineOrientation, LineStyle, LocalClip, MixBlendMode, PipelineId};
-use {PropertyBinding, PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
+use {LineDisplayItem, LineOrientation, LineStyle, MixBlendMode, PipelineId, PropertyBinding};
+use {PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
 use {RectangleDisplayItem, ScrollFrameDisplayItem, ScrollPolicy, ScrollSensitivity, Shadow};
 use {SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, StickyOffsetBounds};
 use {TextDisplayItem, TransformStyle, YuvColorSpace, YuvData, YuvImageDisplayItem};
@@ -336,14 +336,14 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
         let info = self.iter.cur_item.info;
         LayerPrimitiveInfo {
             rect: info.rect.translate(&offset),
-            local_clip: info.local_clip.create_with_offset(offset),
+            clip_rect: info.clip_rect.translate(&offset),
             is_backface_visible: info.is_backface_visible,
             tag: info.tag,
         }
     }
 
-    pub fn local_clip(&self) -> &LocalClip {
-        &self.iter.cur_item.info.local_clip
+    pub fn clip_rect(&self) -> &LayoutRect {
+        &self.iter.cur_item.info.clip_rect
     }
 
     pub fn clip_and_scroll(&self) -> ClipAndScrollInfo {

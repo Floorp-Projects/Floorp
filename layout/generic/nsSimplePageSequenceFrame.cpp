@@ -196,7 +196,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*     aPresContext,
 
     nsIntMargin marginTwips;
     mPageData->mPrintSettings->GetMarginInTwips(marginTwips);
-    mMargin = aPresContext->CSSTwipsToAppUnits(marginTwips + unwriteableTwips);
+    mMargin = nsPresContext::CSSTwipsToAppUnits(marginTwips + unwriteableTwips);
 
     int16_t printType;
     mPageData->mPrintSettings->GetPrintRange(&printType);
@@ -213,7 +213,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*     aPresContext,
     edgeTwips.right  = clamped(edgeTwips.right,  0, inchInTwips);
 
     mPageData->mEdgePaperMargin =
-      aPresContext->CSSTwipsToAppUnits(edgeTwips + unwriteableTwips);
+      nsPresContext::CSSTwipsToAppUnits(edgeTwips + unwriteableTwips);
   }
 
   // *** Special Override ***

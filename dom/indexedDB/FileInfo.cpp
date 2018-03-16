@@ -263,7 +263,7 @@ FileInfo::GetFileForFileInfo(FileInfo* aFileInfo)
     return nullptr;
   }
 
-  nsCOMPtr<nsIFile> file = fileManager->GetFileForId(directory,
+  nsCOMPtr<nsIFile> file = FileManager::GetFileForId(directory,
                                                      aFileInfo->Id());
   if (NS_WARN_IF(!file)) {
     return nullptr;

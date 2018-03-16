@@ -736,7 +736,7 @@ class MinidumpWriter {
       dso_count++;
     }
 
-    MDRVA linkmap_rva = minidump_writer_.kInvalidMDRVA;
+    MDRVA linkmap_rva = MinidumpFileWriter::kInvalidMDRVA;
     if (dso_count > 0) {
       // If we have at least one DSO, create an array of MDRawLinkMap
       // entries in the minidump file.

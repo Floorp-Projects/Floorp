@@ -39,11 +39,11 @@ using namespace dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(TypeInState)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TypeInState)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastSelectionContainer)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastSelectionPoint)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TypeInState)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastSelectionContainer)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastSelectionPoint)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(TypeInState, AddRef)
@@ -51,7 +51,6 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TypeInState, Release)
 
 TypeInState::TypeInState()
   : mRelativeFontSize(0)
-  , mLastSelectionOffset(0)
 {
   Reset();
 }
@@ -67,15 +66,22 @@ TypeInState::~TypeInState()
 nsresult
 TypeInState::UpdateSelState(Selection* aSelection)
 {
-  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aSelection)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   if (!aSelection->Collapsed()) {
     return NS_OK;
   }
 
-  return EditorBase::GetStartNodeAndOffset(
-                       aSelection, getter_AddRefs(mLastSelectionContainer),
-                       &mLastSelectionOffset);
+  mLastSelectionPoint = EditorBase::GetStartPoint(aSelection);
+  if (!mLastSelectionPoint.IsSet()) {
+    return NS_ERROR_FAILURE;
+  }
+  // We need to store only offset because referring child may be removed by
+  // we'll check the point later.
+  AutoEditorDOMPointChildInvalidator saveOnlyOffset(mLastSelectionPoint);
+  return NS_OK;
 }
 
 void
@@ -92,28 +98,23 @@ TypeInState::OnSelectionChange(Selection& aSelection)
   // XXX: the same location clears the type-in-state.
 
   if (aSelection.IsCollapsed() && aSelection.RangeCount()) {
-    nsCOMPtr<nsINode> selNode;
-    int32_t selOffset = 0;
-
-    nsresult rv =
-      EditorBase::GetStartNodeAndOffset(&aSelection, getter_AddRefs(selNode),
-                                        &selOffset);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    EditorRawDOMPoint selectionStartPoint(
+                        EditorBase::GetStartPoint(&aSelection));
+    if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
       return;
     }
 
-    if (selNode &&
-        selNode == mLastSelectionContainer &&
-        selOffset == mLastSelectionOffset) {
+    if (mLastSelectionPoint == selectionStartPoint) {
       // We got a bogus selection changed notification!
       return;
     }
 
-    mLastSelectionContainer = selNode;
-    mLastSelectionOffset = selOffset;
+    mLastSelectionPoint = selectionStartPoint;
+    // We need to store only offset because referring child may be removed by
+    // we'll check the point later.
+    AutoEditorDOMPointChildInvalidator saveOnlyOffset(mLastSelectionPoint);
   } else {
-    mLastSelectionContainer = nullptr;
-    mLastSelectionOffset = 0;
+    mLastSelectionPoint.Clear();
   }
 
   Reset();

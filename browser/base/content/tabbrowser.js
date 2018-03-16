@@ -28,9 +28,9 @@ window._gBrowser = {
     this._setupInitialBrowserAndTab();
 
     if (Services.prefs.getBoolPref("browser.display.use_system_colors")) {
-      this.mPanelContainer.style.backgroundColor = "-moz-default-background-color";
+      this.tabpanels.style.backgroundColor = "-moz-default-background-color";
     } else if (Services.prefs.getIntPref("browser.display.document_color_use") == 2) {
-      this.mPanelContainer.style.backgroundColor =
+      this.tabpanels.style.backgroundColor =
         Services.prefs.getCharPref("browser.display.background_color");
     }
 
@@ -43,7 +43,7 @@ window._gBrowser = {
 
       // If this window has remote tabs, switch to our tabpanels fork
       // which does asynchronous tab switching.
-      this.mPanelContainer.classList.add("tabbrowser-tabpanels");
+      this.tabpanels.classList.add("tabbrowser-tabpanels");
     } else {
       this._outerWindowIDBrowserMap.set(this.selectedBrowser.outerWindowID,
         this.selectedBrowser);
@@ -199,24 +199,24 @@ window._gBrowser = {
     return this.tabbox = document.getElementById("tabbrowser-tabbox");
   },
 
-  get mPanelContainer() {
-    delete this.mPanelContainer;
-    return this.mPanelContainer = document.getElementById("tabbrowser-tabpanels");
+  get tabpanels() {
+    delete this.tabpanels;
+    return this.tabpanels = document.getElementById("tabbrowser-tabpanels");
   },
 
   get addEventListener() {
     delete this.addEventListener;
-    return this.addEventListener = this.mPanelContainer.addEventListener.bind(this.mPanelContainer);
+    return this.addEventListener = this.tabpanels.addEventListener.bind(this.tabpanels);
   },
 
   get removeEventListener() {
     delete this.removeEventListener;
-    return this.removeEventListener = this.mPanelContainer.removeEventListener.bind(this.mPanelContainer);
+    return this.removeEventListener = this.tabpanels.removeEventListener.bind(this.tabpanels);
   },
 
   get dispatchEvent() {
     delete this.dispatchEvent;
-    return this.dispatchEvent = this.mPanelContainer.dispatchEvent.bind(this.mPanelContainer);
+    return this.dispatchEvent = this.tabpanels.dispatchEvent.bind(this.tabpanels);
   },
 
   get visibleTabs() {
@@ -299,7 +299,7 @@ window._gBrowser = {
     this._selectedTab = tab;
 
     let uniqueId = this._generateUniquePanelID();
-    this.mPanelContainer.childNodes[0].id = uniqueId;
+    this.tabpanels.childNodes[0].id = uniqueId;
     tab.linkedPanel = uniqueId;
     tab.permanentKey = browser.permanentKey;
     tab._tPos = 0;
@@ -1025,13 +1025,12 @@ window._gBrowser = {
 
     // If the new tab is busy, and our current state is not busy, then
     // we need to fire a start to all progress listeners.
-    const nsIWebProgressListener = Ci.nsIWebProgressListener;
     if (newTab.hasAttribute("busy") && !this.mIsBusy) {
       this.mIsBusy = true;
       this._callProgressListeners(null, "onStateChange",
                                   [webProgress, null,
-                                  nsIWebProgressListener.STATE_START |
-                                  nsIWebProgressListener.STATE_IS_NETWORK, 0],
+                                   Ci.nsIWebProgressListener.STATE_START |
+                                   Ci.nsIWebProgressListener.STATE_IS_NETWORK, 0],
                                   true, false);
     }
 
@@ -1041,8 +1040,8 @@ window._gBrowser = {
       this.mIsBusy = false;
       this._callProgressListeners(null, "onStateChange",
                                   [webProgress, null,
-                                  nsIWebProgressListener.STATE_STOP |
-                                  nsIWebProgressListener.STATE_IS_NETWORK, 0],
+                                   Ci.nsIWebProgressListener.STATE_STOP |
+                                   Ci.nsIWebProgressListener.STATE_IS_NETWORK, 0],
                                   true, false);
     }
 
@@ -1800,7 +1799,7 @@ window._gBrowser = {
     this._preloadedBrowser = browser;
 
     let notificationbox = this.getNotificationBox(browser);
-    this.mPanelContainer.appendChild(notificationbox);
+    this.tabpanels.appendChild(notificationbox);
 
     if (remoteType != E10SUtils.NOT_REMOTE) {
       // For remote browsers, we need to make sure that the webProgress is
@@ -2055,7 +2054,7 @@ window._gBrowser = {
       // of those notifications can cause code to run that inspects our
       // state, so it is important that the tab element is fully
       // initialized by this point.
-      this.mPanelContainer.appendChild(notificationbox);
+      this.tabpanels.appendChild(notificationbox);
     }
 
     // wire up a progress listener for the new browser object.
@@ -2146,7 +2145,7 @@ window._gBrowser = {
     aBrowser.destroy();
 
     let notificationbox = this.getNotificationBox(aBrowser);
-    this.mPanelContainer.removeChild(notificationbox);
+    this.tabpanels.removeChild(notificationbox);
     tab.removeAttribute("linkedpanel");
 
     this._createLazyBrowser(tab);
@@ -3957,13 +3956,10 @@ window._gBrowser = {
         this._tabListeners.delete(tab);
       }
     }
-    const nsIEventListenerService =
-      Ci.nsIEventListenerService;
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-      .getService(nsIEventListenerService);
-    els.removeSystemEventListener(document, "keydown", this, false);
+
+    Services.els.removeSystemEventListener(document, "keydown", this, false);
     if (AppConstants.platform == "macosx") {
-      els.removeSystemEventListener(document, "keypress", this, false);
+      Services.els.removeSystemEventListener(document, "keypress", this, false);
     }
     window.removeEventListener("sizemodechange", this);
     window.removeEventListener("occlusionstatechange", this);
@@ -4251,8 +4247,7 @@ class TabProgressListener {
 
     // If the state has STATE_STOP, and no requests were in flight, then this
     // must be the initial "stop" for the initial about:blank document.
-    const nsIWebProgressListener = Ci.nsIWebProgressListener;
-    if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         this.mRequestCount == 0 &&
         !aLocation) {
       return true;
@@ -4290,11 +4285,9 @@ class TabProgressListener {
     if (!aRequest)
       return;
 
-    const nsIWebProgressListener = Ci.nsIWebProgressListener;
-    const nsIChannel = Ci.nsIChannel;
     let location, originalLocation;
     try {
-      aRequest.QueryInterface(nsIChannel);
+      aRequest.QueryInterface(Ci.nsIChannel);
       location = aRequest.URI;
       originalLocation = aRequest.originalURI;
     } catch (ex) {}
@@ -4307,15 +4300,15 @@ class TabProgressListener {
     // from here forward. Similarly, if we conclude that this state change
     // is one that we shouldn't be ignoring, then stop ignoring.
     if ((ignoreBlank &&
-        aStateFlags & nsIWebProgressListener.STATE_STOP &&
-        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) ||
+         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) ||
         !ignoreBlank && this.mBlank) {
       this.mBlank = false;
     }
 
-    if (aStateFlags & nsIWebProgressListener.STATE_START) {
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
       this.mRequestCount++;
-    } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
+    } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
       const NS_ERROR_UNKNOWN_HOST = 2152398878;
       if (--this.mRequestCount > 0 && aStatus == NS_ERROR_UNKNOWN_HOST) {
         // to prevent bug 235825: wait for the request handled
@@ -4327,8 +4320,8 @@ class TabProgressListener {
       this.mRequestCount = 0;
     }
 
-    if (aStateFlags & nsIWebProgressListener.STATE_START &&
-        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aWebProgress.isTopLevel) {
         // Need to use originalLocation rather than location because things
         // like about:home and about:privatebrowsing arrive with nsIRequest
@@ -4356,7 +4349,7 @@ class TabProgressListener {
       }
 
       if (this._shouldShowProgress(aRequest)) {
-        if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING) &&
+        if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) &&
             aWebProgress && aWebProgress.isTopLevel) {
           this.mTab.setAttribute("busy", "true");
           this.mTab._notselectedsinceload = !this.mTab.selected;
@@ -4393,8 +4386,8 @@ class TabProgressListener {
           gBrowser.mIsBusy = true;
         }
       }
-    } else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
-               aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+    } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+               aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
 
       if (this.mTab.hasAttribute("busy")) {
         this.mTab.removeAttribute("busy");
@@ -4478,8 +4471,9 @@ class TabProgressListener {
                                 [aWebProgress, aRequest, aStateFlags, aStatus],
                                 false);
 
-    if (aStateFlags & (nsIWebProgressListener.STATE_START |
-        nsIWebProgressListener.STATE_STOP)) {
+    if (aStateFlags &
+        (Ci.nsIWebProgressListener.STATE_START |
+         Ci.nsIWebProgressListener.STATE_STOP)) {
       // reset cached temporary values at beginning and end
       this.mMessage = "";
       this.mTotalProgress = 0;

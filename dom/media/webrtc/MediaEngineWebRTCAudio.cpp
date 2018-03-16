@@ -14,6 +14,7 @@
 #include "MediaStreamGraphImpl.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/ErrorNames.h"
 #include "mtransport/runnable_utils.h"
 #include "nsAutoPtr.h"
 
@@ -232,8 +233,22 @@ MediaEngineWebRTCMicrophoneSource::Reconfigure(const RefPtr<AllocationHandle>& a
   LOG(("Mic source %p allocation %p Reconfigure()", this, aHandle.get()));
 
   NormalizedConstraints constraints(aConstraints);
-  return ReevaluateAllocation(aHandle, &constraints, aPrefs, aDeviceId,
-                              aOutBadConstraint);
+  nsresult rv = ReevaluateAllocation(aHandle, &constraints, aPrefs, aDeviceId,
+                                     aOutBadConstraint);
+  if (NS_FAILED(rv)) {
+    if (aOutBadConstraint) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    nsAutoCString name;
+    GetErrorName(rv, name);
+    LOG(("Mic source %p Reconfigure() failed unexpectedly. rv=%s",
+         this, name.Data()));
+    Stop(aHandle);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
 }
 
 bool operator == (const MediaEnginePrefs& a, const MediaEnginePrefs& b)
@@ -520,7 +535,7 @@ MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs)
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> graph;
   for (const Allocation& allocation : mAllocations) {
-    if (allocation.mStream) {
+    if (allocation.mStream && allocation.mStream->GraphImpl()) {
       graph = allocation.mStream->GraphImpl();
       break;
     }
@@ -1027,6 +1042,14 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
         continue;
       }
 
+      if (!allocation.mStream->GraphImpl()) {
+        // The DOMMediaStream that owns allocation.mStream has been cleaned up
+        // and MediaStream::DestroyImpl() has run in the MSG. This is fine and
+        // can happen before the MediaManager thread gets to stop capture for
+        // this allocation.
+        continue;
+      }
+
       if (!allocation.mEnabled) {
         continue;
       }
@@ -1091,6 +1114,14 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
 
   for (Allocation& allocation : mAllocations) {
     if (!allocation.mStream) {
+      continue;
+    }
+
+    if (!allocation.mStream->GraphImpl()) {
+      // The DOMMediaStream that owns allocation.mStream has been cleaned up
+      // and MediaStream::DestroyImpl() has run in the MSG. This is fine and
+      // can happen before the MediaManager thread gets to stop capture for
+      // this allocation.
       continue;
     }
 

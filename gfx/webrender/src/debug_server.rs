@@ -10,7 +10,7 @@ use std::sync::mpsc::Sender;
 use std::thread;
 use ws;
 use base64::encode;
-use image;
+use image_loader;
 
 // Messages that are sent from the render backend to the renderer
 // debug command queue. These are sent in a separate queue so
@@ -279,8 +279,8 @@ impl Screenshot {
     pub fn new(width: u32, height: u32, data: Vec<u8>) -> Self {
         let mut output = Vec::with_capacity((width * height) as usize);
         {
-            let encoder = image::png::PNGEncoder::new(&mut output);
-            encoder.encode(&data, width, height, image::ColorType::RGBA(8)).unwrap();
+            let encoder = image_loader::png::PNGEncoder::new(&mut output);
+            encoder.encode(&data, width, height, image_loader::ColorType::RGBA(8)).unwrap();
         }
 
         let data = encode(&output);

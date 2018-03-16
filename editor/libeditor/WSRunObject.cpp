@@ -34,6 +34,34 @@ using namespace dom;
 
 const char16_t kNBSP = 160;
 
+template WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
+                                  const EditorDOMPoint& aPoint);
+template WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
+                                  const EditorRawDOMPoint& aPoint);
+template void WSRunObject::PriorVisibleNode(const EditorDOMPoint& aPoint,
+                                            nsCOMPtr<nsINode>* outVisNode,
+                                            int32_t* outVisOffset,
+                                            WSType* outType);
+template void WSRunObject::PriorVisibleNode(const EditorRawDOMPoint& aPoint,
+                                            nsCOMPtr<nsINode>* outVisNode,
+                                            int32_t* outVisOffset,
+                                            WSType* outType);
+template void WSRunObject::NextVisibleNode(const EditorDOMPoint& aPoint,
+                                           nsCOMPtr<nsINode>* outVisNode,
+                                           int32_t* outVisOffset,
+                                           WSType* outType);
+template void WSRunObject::NextVisibleNode(const EditorRawDOMPoint& aPoint,
+                                           nsCOMPtr<nsINode>* outVisNode,
+                                           int32_t* outVisOffset,
+                                           WSType* outType);
+
+template<typename PT, typename CT>
+WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
+                         const EditorDOMPointBase<PT, CT>& aPoint)
+  : WSRunObject(aHTMLEditor, aPoint.GetContainer(), aPoint.Offset())
+{
+}
+
 WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
                          nsINode* aNode,
                          int32_t aOffset)
@@ -504,9 +532,9 @@ WSRunObject::DeleteWSForward()
   return NS_OK;
 }
 
+template<typename PT, typename CT>
 void
-WSRunObject::PriorVisibleNode(nsINode* aNode,
-                              int32_t aOffset,
+WSRunObject::PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
                               nsCOMPtr<nsINode>* outVisNode,
                               int32_t* outVisOffset,
                               WSType* outType)
@@ -514,14 +542,14 @@ WSRunObject::PriorVisibleNode(nsINode* aNode,
   // Find first visible thing before the point.  Position
   // outVisNode/outVisOffset just _after_ that thing.  If we don't find
   // anything return start of ws.
-  MOZ_ASSERT(aNode && outVisNode && outVisOffset && outType);
+  MOZ_ASSERT(aPoint.IsSet() && outVisNode && outVisOffset && outType);
 
-  WSFragment* run = FindNearestRun(EditorRawDOMPoint(aNode, aOffset), false);
+  WSFragment* run = FindNearestRun(aPoint, false);
 
   // Is there a visible run there or earlier?
   for (; run; run = run->mLeft) {
     if (run->mType == WSType::normalWS) {
-      WSPoint point = GetPreviousCharPoint(EditorRawDOMPoint(aNode, aOffset));
+      WSPoint point = GetPreviousCharPoint(aPoint);
       // When it's a non-empty text node, return it.
       if (point.mTextNode && point.mTextNode->Length()) {
         *outVisNode = point.mTextNode;
@@ -544,10 +572,9 @@ WSRunObject::PriorVisibleNode(nsINode* aNode,
   *outType = mStartReason;
 }
 
-
+template<typename PT, typename CT>
 void
-WSRunObject::NextVisibleNode(nsINode* aNode,
-                             int32_t aOffset,
+WSRunObject::NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
                              nsCOMPtr<nsINode>* outVisNode,
                              int32_t* outVisOffset,
                              WSType* outType)
@@ -555,14 +582,14 @@ WSRunObject::NextVisibleNode(nsINode* aNode,
   // Find first visible thing after the point.  Position
   // outVisNode/outVisOffset just _before_ that thing.  If we don't find
   // anything return end of ws.
-  MOZ_ASSERT(aNode && outVisNode && outVisOffset && outType);
+  MOZ_ASSERT(aPoint.IsSet() && outVisNode && outVisOffset && outType);
 
-  WSFragment* run = FindNearestRun(EditorRawDOMPoint(aNode, aOffset), true);
+  WSFragment* run = FindNearestRun(aPoint, true);
 
   // Is there a visible run there or later?
   for (; run; run = run->mRight) {
     if (run->mType == WSType::normalWS) {
-      WSPoint point = GetNextCharPoint(EditorRawDOMPoint(aNode, aOffset));
+      WSPoint point = GetNextCharPoint(aPoint);
       // When it's a non-empty text node, return it.
       if (point.mTextNode && point.mTextNode->Length()) {
         *outVisNode = point.mTextNode;
@@ -1387,8 +1414,9 @@ WSRunObject::DeleteRange(const EditorRawDOMPoint& aStartPoint,
   return NS_OK;
 }
 
+template<typename PT, typename CT>
 WSRunObject::WSPoint
-WSRunObject::GetNextCharPoint(const EditorRawDOMPoint& aPoint)
+WSRunObject::GetNextCharPoint(const EditorDOMPointBase<PT, CT>& aPoint)
 {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
@@ -1401,8 +1429,9 @@ WSRunObject::GetNextCharPoint(const EditorRawDOMPoint& aPoint)
   return GetNextCharPoint(WSPoint(mNodeArray[idx], aPoint.Offset(), 0));
 }
 
+template<typename PT, typename CT>
 WSRunObject::WSPoint
-WSRunObject::GetPreviousCharPoint(const EditorRawDOMPoint& aPoint)
+WSRunObject::GetPreviousCharPoint(const EditorDOMPointBase<PT, CT>& aPoint)
 {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
@@ -1592,8 +1621,9 @@ WSRunObject::GetASCIIWhitespacesBounds(int16_t aDir,
   *outEndOffset = endOffset;
 }
 
+template<typename PT, typename CT>
 WSRunObject::WSFragment*
-WSRunObject::FindNearestRun(const EditorRawDOMPoint& aPoint,
+WSRunObject::FindNearestRun(const EditorDOMPointBase<PT, CT>& aPoint,
                             bool aForward)
 {
   MOZ_ASSERT(aPoint.IsSetAndValid());
@@ -1645,8 +1675,9 @@ WSRunObject::GetCharAt(Text* aTextNode,
   return aTextNode->GetText()->CharAt(aOffset);
 }
 
+template<typename PT, typename CT>
 WSRunObject::WSPoint
-WSRunObject::GetNextCharPointInternal(const EditorRawDOMPoint& aPoint)
+WSRunObject::GetNextCharPointInternal(const EditorDOMPointBase<PT, CT>& aPoint)
 {
   // Note: only to be called if aPoint.GetContainer() is not a ws node.
 
@@ -1693,8 +1724,10 @@ WSRunObject::GetNextCharPointInternal(const EditorRawDOMPoint& aPoint)
   return GetNextCharPoint(point);
 }
 
+template<typename PT, typename CT>
 WSRunObject::WSPoint
-WSRunObject::GetPreviousCharPointInternal(const EditorRawDOMPoint& aPoint)
+WSRunObject::GetPreviousCharPointInternal(
+               const EditorDOMPointBase<PT, CT>& aPoint)
 {
   // Note: only to be called if aNode is not a ws node.
 

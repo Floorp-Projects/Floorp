@@ -26,7 +26,7 @@ if CONFIG['MOZ_UPDATER']:
     LOCALIZED_FILES['..'] += ['!updater.ini']
 
 with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Build Config")
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("all-locales"):
     BUG_COMPONENT = ("Core", "Localization")

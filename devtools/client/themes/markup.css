@@ -244,11 +244,11 @@ ul.children + .tag-line::before {
 }
 
 .newattr {
-  display: inline-block;
-  width: 1em;
-  height: 1ex;
-  margin-right: -1em;
-  padding: 1px 0;
+  margin-right: -13px;
+}
+
+.newattr:before {
+  content: "\00a0\00a0";
 }
 
 .attr-value .link {

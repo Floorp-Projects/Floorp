@@ -25,13 +25,15 @@ add_task(async function test_support_toolbar_property() {
     },
   });
 
-  await extension.startup();
-
   let toolbox = document.querySelector("#navigator-toolbox");
   let toolbars = [...toolbox.querySelectorAll("toolbar:not(#TabsToolbar)")].filter(toolbar => {
     let bounds = toolbar.getBoundingClientRect();
     return bounds.width > 0 && bounds.height > 0;
   });
+
+  let transitionPromise = waitForTransition(toolbars[0], "background-color");
+  await extension.startup();
+  await transitionPromise;
 
   info(`Checking toolbar colors for ${toolbars.length} toolbars.`);
   for (let toolbar of toolbars) {

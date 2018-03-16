@@ -179,7 +179,6 @@ pub struct PictureTask {
 pub struct BlurTask {
     pub blur_std_deviation: f32,
     pub target_kind: RenderTargetKind,
-    pub color: PremultipliedColorF,
     pub uv_rect_handle: GpuCacheHandle,
 }
 
@@ -375,7 +374,6 @@ impl RenderTask {
                                     render_tasks,
                                     RenderTargetKind::Alpha,
                                     ClearMode::Zero,
-                                    PremultipliedColorF::TRANSPARENT,
                                 );
 
                                 let root_task_id = render_tasks.add(blur_render_task);
@@ -445,7 +443,6 @@ impl RenderTask {
         render_tasks: &mut RenderTaskTree,
         target_kind: RenderTargetKind,
         clear_mode: ClearMode,
-        color: PremultipliedColorF,
     ) -> Self {
         // Adjust large std deviation value.
         let mut adjusted_blur_std_deviation = blur_std_deviation;
@@ -475,7 +472,6 @@ impl RenderTask {
             kind: RenderTaskKind::VerticalBlur(BlurTask {
                 blur_std_deviation: adjusted_blur_std_deviation,
                 target_kind,
-                color,
                 uv_rect_handle: GpuCacheHandle::new(),
             }),
             clear_mode,
@@ -490,7 +486,6 @@ impl RenderTask {
             kind: RenderTaskKind::HorizontalBlur(BlurTask {
                 blur_std_deviation: adjusted_blur_std_deviation,
                 target_kind,
-                color,
                 uv_rect_handle: GpuCacheHandle::new(),
             }),
             clear_mode,
@@ -577,7 +572,7 @@ impl RenderTask {
                         0.0,
                         0.0,
                     ],
-                    task.color.to_array()
+                    [0.0; 4],
                 )
             }
             RenderTaskKind::Readback(..) |
@@ -727,13 +722,13 @@ impl RenderTask {
     ) {
         let (target_rect, target_index) = self.get_target_rect();
 
-        let (cache_handle, color) = match self.kind {
+        let cache_handle = match self.kind {
             RenderTaskKind::HorizontalBlur(ref mut info) |
             RenderTaskKind::VerticalBlur(ref mut info) => {
-                (&mut info.uv_rect_handle, info.color)
+                &mut info.uv_rect_handle
             }
             RenderTaskKind::Picture(ref mut info) => {
-                (&mut info.uv_rect_handle, info.color)
+                &mut info.uv_rect_handle
             }
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
@@ -748,7 +743,6 @@ impl RenderTask {
             let image_source = ImageSource {
                 p0: target_rect.origin.to_f32(),
                 p1: target_rect.bottom_right().to_f32(),
-                color,
                 texture_layer: target_index.0 as f32,
                 user_data: [0.0; 3],
             };

@@ -69,6 +69,8 @@ add_task(async function test_dynamic_theme_updates() {
   let defaultStyle = window.getComputedStyle(window.document.documentElement);
   await extension.startup();
 
+  let docEl = window.document.documentElement;
+  let transitionPromise = waitForTransition(docEl, "background-color");
   extension.sendMessage("update-theme", {
     "images": {
       "headerURL": "image1.png",
@@ -80,9 +82,11 @@ add_task(async function test_dynamic_theme_updates() {
   });
 
   await extension.awaitMessage("theme-updated");
+  await transitionPromise;
 
   validateTheme("image1.png", ACCENT_COLOR_1, TEXT_COLOR_1, true);
 
+  transitionPromise = waitForTransition(docEl, "background-color");
   extension.sendMessage("update-theme", {
     "images": {
       "headerURL": "image2.png",
@@ -94,6 +98,7 @@ add_task(async function test_dynamic_theme_updates() {
   });
 
   await extension.awaitMessage("theme-updated");
+  await transitionPromise;
 
   validateTheme("image2.png", ACCENT_COLOR_2, TEXT_COLOR_2, true);
 
@@ -106,7 +111,6 @@ add_task(async function test_dynamic_theme_updates() {
 
   await extension.unload();
 
-  let docEl = window.document.documentElement;
   Assert.ok(!docEl.hasAttribute("lwtheme"), "LWT attribute should not be set");
 });
 
@@ -133,6 +137,8 @@ add_task(async function test_dynamic_theme_updates_with_data_url() {
   let defaultStyle = window.getComputedStyle(window.document.documentElement);
   await extension.startup();
 
+  let docEl = window.document.documentElement;
+  let transitionPromise = waitForTransition(docEl, "background-color");
   extension.sendMessage("update-theme", {
     "images": {
       "headerURL": BACKGROUND_1,
@@ -144,9 +150,11 @@ add_task(async function test_dynamic_theme_updates_with_data_url() {
   });
 
   await extension.awaitMessage("theme-updated");
+  await transitionPromise;
 
   validateTheme(BACKGROUND_1, ACCENT_COLOR_1, TEXT_COLOR_1, true);
 
+  transitionPromise = waitForTransition(docEl, "background-color");
   extension.sendMessage("update-theme", {
     "images": {
       "headerURL": BACKGROUND_2,
@@ -158,6 +166,7 @@ add_task(async function test_dynamic_theme_updates_with_data_url() {
   });
 
   await extension.awaitMessage("theme-updated");
+  await transitionPromise;
 
   validateTheme(BACKGROUND_2, ACCENT_COLOR_2, TEXT_COLOR_2, true);
 
@@ -170,6 +179,5 @@ add_task(async function test_dynamic_theme_updates_with_data_url() {
 
   await extension.unload();
 
-  let docEl = window.document.documentElement;
   Assert.ok(!docEl.hasAttribute("lwtheme"), "LWT attribute should not be set");
 });

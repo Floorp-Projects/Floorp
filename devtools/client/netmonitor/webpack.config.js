@@ -84,7 +84,7 @@ let webpackConfig = {
 
       "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
 
-      "devtools/shared/old-event-emitter": "devtools-modules/src/utils/event-emitter",
+      "devtools/shared/event-emitter": "devtools-modules/src/utils/event-emitter",
       "devtools/shared/fronts/timeline": path.join(__dirname, "../../client/shared/webpack/shims/fronts-timeline-shim"),
       "devtools/shared/platform/clipboard": path.join(__dirname, "../../client/shared/webpack/shims/platform-clipboard-stub"),
       "devtools/client/netmonitor/src/utils/firefox/open-request-in-tab": path.join(__dirname, "src/utils/open-request-in-tab"),
