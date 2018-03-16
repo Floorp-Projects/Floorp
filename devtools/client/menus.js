@@ -101,7 +101,9 @@ exports.menuitems = [
     l10nKey: "responsiveDesignMode",
     oncommand(event) {
       let window = event.target.ownerDocument.defaultView;
-      ResponsiveUIManager.toggle(window, window.gBrowser.selectedTab);
+      ResponsiveUIManager.toggle(window, window.gBrowser.selectedTab, {
+        trigger: "menu"
+      });
     },
     keyId: "responsiveDesignMode",
     checkbox: true

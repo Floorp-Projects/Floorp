@@ -285,6 +285,7 @@ void
 PerformanceMainThread::EnsureDocEntry()
 {
   if (!mDocEntry && nsContentUtils::IsPerformanceNavigationTimingEnabled()) {
+
     UniquePtr<PerformanceTimingData> timing(
       new PerformanceTimingData(mChannel, nullptr, 0));
 

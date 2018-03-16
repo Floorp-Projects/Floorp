@@ -21,6 +21,8 @@ loader.lazyRequireGetter(this, "showNotification", "devtools/client/responsive.h
 loader.lazyRequireGetter(this, "l10n", "devtools/client/responsive.html/utils/l10n");
 loader.lazyRequireGetter(this, "EmulationFront", "devtools/shared/fronts/emulation", true);
 loader.lazyRequireGetter(this, "PriorityLevels", "devtools/client/shared/components/NotificationBox", true);
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
 const RELOAD_NOTIFICATION_PREF = "devtools.responsive.reloadNotification.enabled";
@@ -45,13 +47,16 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    *        The browser tab.
    * @param options
    *        Other options associated with toggling.  Currently includes:
-   *        - `command`: Whether initiated via GCLI command bar or toolbox button
+   *        - `trigger`: String denoting the UI entry point, such as:
+   *          - `command`:  GCLI command bar or toolbox button
+   *          - `menu`:     Web Developer menu item
+   *          - `shortcut`: Keyboard shortcut
    * @return Promise
    *         Resolved when the toggling has completed.  If the UI has opened,
    *         it is resolved to the ResponsiveUI instance for this tab.  If the
    *         the UI has closed, there is no resolution value.
    */
-  toggle(window, tab, options) {
+  toggle(window, tab, options = {}) {
     let action = this.isActiveForTab(tab) ? "close" : "open";
     let completed = this[action + "IfNeeded"](window, tab, options);
     completed.catch(console.error);
@@ -67,12 +72,15 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    *        The browser tab.
    * @param options
    *        Other options associated with opening.  Currently includes:
-   *        - `command`: Whether initiated via GCLI command bar or toolbox button
+   *        - `trigger`: String denoting the UI entry point, such as:
+   *          - `command`:  GCLI command bar or toolbox button
+   *          - `menu`:     Web Developer menu item
+   *          - `shortcut`: Keyboard shortcut
    * @return Promise
    *         Resolved to the ResponsiveUI instance for this tab when opening is
    *         complete.
    */
-  async openIfNeeded(window, tab, options) {
+  async openIfNeeded(window, tab, options = {}) {
     if (!tab.linkedBrowser.isRemoteBrowser) {
       this.showRemoteOnlyNotification(window, tab, options);
       return promise.reject(new Error("RDM only available for remote tabs."));
@@ -84,6 +92,19 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     }
     if (!this.isActiveForTab(tab)) {
       this.initMenuCheckListenerFor(window);
+
+      // Track whether a toolbox was opened before RDM was opened.
+      let hasToolbox = !!gDevTools.getToolbox(TargetFactory.forTab(tab));
+      if (hasToolbox) {
+        Services.telemetry.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
+      }
+
+      // Track opens keyed by the UI entry point used.
+      let { trigger } = options;
+      if (!trigger) {
+        trigger = "unknown";
+      }
+      Services.telemetry.keyedScalarAdd("devtools.responsive.open_trigger", trigger, 1);
 
       let ui = new ResponsiveUI(window, tab);
       this.activeTabs.set(tab, ui);
@@ -104,12 +125,15 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    *        The browser tab.
    * @param options
    *        Other options associated with closing.  Currently includes:
-   *        - `command`: Whether initiated via GCLI command bar or toolbox button
+   *        - `trigger`: String denoting the UI entry point, such as:
+   *          - `command`:  GCLI command bar or toolbox button
+   *          - `menu`:     Web Developer menu item
+   *          - `shortcut`: Keyboard shortcut
    *        - `reason`: String detailing the specific cause for closing
    * @return Promise
    *         Resolved (with no value) when closing is complete.
    */
-  async closeIfNeeded(window, tab, options) {
+  async closeIfNeeded(window, tab, options = {}) {
     if (this.isActiveForTab(tab)) {
       let ui = this.activeTabs.get(tab);
       let destroyed = await ui.destroy(options);
@@ -177,17 +201,17 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     let completed;
     switch (command) {
       case "resize to":
-        completed = this.openIfNeeded(window, tab, { command: true });
+        completed = this.openIfNeeded(window, tab, { trigger: "command" });
         this.activeTabs.get(tab).setViewportSize(args);
         break;
       case "resize on":
-        completed = this.openIfNeeded(window, tab, { command: true });
+        completed = this.openIfNeeded(window, tab, { trigger: "command" });
         break;
       case "resize off":
-        completed = this.closeIfNeeded(window, tab, { command: true });
+        completed = this.closeIfNeeded(window, tab, { trigger: "command" });
         break;
       case "resize toggle":
-        completed = this.toggle(window, tab, { command: true });
+        completed = this.toggle(window, tab, { trigger: "command" });
         break;
       default:
     }
@@ -219,17 +243,17 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     }
   },
 
-  showRemoteOnlyNotification(window, tab, { command } = {}) {
+  showRemoteOnlyNotification(window, tab, { trigger } = {}) {
     showNotification(window, tab, {
-      command,
+      command: trigger == "command",
       msg: l10n.getStr("responsive.remoteOnly"),
       priority: PriorityLevels.PRIORITY_CRITICAL_MEDIUM,
     });
   },
 
-  showNoContainerTabsNotification(window, tab, { command } = {}) {
+  showNoContainerTabsNotification(window, tab, { trigger } = {}) {
     showNotification(window, tab, {
-      command,
+      command: trigger == "command",
       msg: l10n.getStr("responsive.noContainerTabs"),
       priority: PriorityLevels.PRIORITY_CRITICAL_MEDIUM,
     });

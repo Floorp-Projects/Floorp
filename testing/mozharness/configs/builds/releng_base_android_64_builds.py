@@ -51,7 +51,6 @@ config = {
     ],
     'vcs_share_base': '/builds/hg-shared',
     'objdir': 'obj-firefox',
-    'enable_count_ctors': False,
     'multi_locale': True,
     #########################################################################
 

@@ -5864,6 +5864,14 @@ JS_NewUCString(JSContext* cx, char16_t* chars, size_t length)
 }
 
 JS_PUBLIC_API(JSString*)
+JS_NewUCStringDontDeflate(JSContext* cx, char16_t* chars, size_t length)
+{
+    AssertHeapIsIdle();
+    CHECK_REQUEST(cx);
+    return NewStringDontDeflate<CanGC>(cx, chars, length);
+}
+
+JS_PUBLIC_API(JSString*)
 JS_NewUCStringCopyN(JSContext* cx, const char16_t* s, size_t n)
 {
     AssertHeapIsIdle();

@@ -15,7 +15,7 @@ async function ifTestingSupported() {
   let firstRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
   let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
   SnapshotsListView._onRecordButtonClick();
-  await promise.all([firstRecordingFinished, callListPopulated]);
+  await Promise.all([firstRecordingFinished, callListPopulated]);
 
   is(searchbox.value, "",
     "The searchbox should be initially empty.");

@@ -37,7 +37,6 @@
 <!ENTITY % clearSiteDataDTD SYSTEM
   "chrome://browser/locale/preferences/clearSiteData.dtd" >
 <!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
-<!ENTITY % searchDTD SYSTEM "chrome://browser/locale/preferences/search.dtd">
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences/sync.dtd">
 <!ENTITY % securityDTD SYSTEM
@@ -68,7 +67,6 @@
 %siteDataSettingsDTD;
 %clearSiteDataDTD;
 %privacyDTD;
-%searchDTD;
 %syncBrandDTD;
 %syncDTD;
 %securityDTD;
@@ -210,7 +208,7 @@
           </hbox>
           <textbox
             type="search" id="searchInput"
-            data-l10n-id="search-input"
+            data-l10n-id="search-input-box"
             data-l10n-attrs="style"
             hidden="true" clickSelectsAll="true"/>
         </hbox>

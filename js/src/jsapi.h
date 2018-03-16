@@ -4714,6 +4714,9 @@ extern JS_PUBLIC_API(JSString*)
 JS_NewUCString(JSContext* cx, char16_t* chars, size_t length);
 
 extern JS_PUBLIC_API(JSString*)
+JS_NewUCStringDontDeflate(JSContext* cx, char16_t* chars, size_t length);
+
+extern JS_PUBLIC_API(JSString*)
 JS_NewUCStringCopyN(JSContext* cx, const char16_t* s, size_t n);
 
 extern JS_PUBLIC_API(JSString*)

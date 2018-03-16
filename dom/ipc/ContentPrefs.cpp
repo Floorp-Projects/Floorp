@@ -54,7 +54,6 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "dom.allow_cut_copy",
   "dom.animations-api.core.enabled",
   "dom.animations-api.element-animate.enabled",
-  "dom.animations-api.pending-member.enabled",
   "dom.enable_frame_timing",
   "dom.enable_performance",
   "dom.enable_performance_navigation_timing",

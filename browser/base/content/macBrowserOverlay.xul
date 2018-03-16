@@ -10,8 +10,6 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
 
-<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
-
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
 #include browser-doctype.inc
@@ -40,6 +38,20 @@
 
   addEventListener("load",   function() { gBrowserInit.nonBrowserWindowStartup()  }, false);
   addEventListener("unload", function() { gBrowserInit.nonBrowserWindowShutdown() }, false);
+
+  ChromeUtils.defineModuleGetter(window,
+    "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
+  ChromeUtils.defineModuleGetter(window,
+    "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
+  ChromeUtils.defineModuleGetter(window,
+    "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
+
+  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+  XPCOMUtils.defineLazyScriptGetter(window, "PlacesTreeView",
+    "chrome://browser/content/places/treeView.js");
+  XPCOMUtils.defineLazyScriptGetter(window,
+    ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
+     "chrome://browser/content/places/controller.js");
 </script>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
