@@ -29,7 +29,7 @@ add_task(async function test_execute() {
   Assert.equal(root.hasChildren, true);
 
   // now check via the saved search path
-  var queryURI = histsvc.queriesToQueryString([query], 1, options);
+  var queryURI = histsvc.queryToQueryString(query, options);
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "test query",

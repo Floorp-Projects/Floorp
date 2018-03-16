@@ -1309,11 +1309,11 @@ var PlacesUtils = {
       return aNode;
 
     // Otherwise, get contents manually.
-    var queries = {}, options = {};
-    this.history.queryStringToQueries(aNode.uri, queries, {}, options);
+    var query = {}, options = {};
+    this.history.queryStringToQuery(aNode.uri, query, options);
     options.value.excludeItems = aExcludeItems;
     options.value.expandQueries = aExpandQueries;
-    return this.history.executeQuery(queries.value[0], options.value).root;
+    return this.history.executeQuery(query.value, options.value).root;
   },
 
   /**

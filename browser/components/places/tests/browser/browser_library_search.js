@@ -66,13 +66,13 @@ async function search(aFolderGuid, aSearchStr) {
   let searchBox = doc.getElementById("searchFilter");
   searchBox.value = aSearchStr;
   gLibrary.PlacesSearchBox.search(searchBox.value);
-  let queries = {};
-  PlacesUtils.history.queryStringToQueries(contentTree.result.root.uri, queries, {}, {});
+  let query = {};
+  PlacesUtils.history.queryStringToQuery(contentTree.result.root.uri, query, {});
   if (aSearchStr) {
-    Assert.equal(queries.value[0].searchTerms, aSearchStr,
+    Assert.equal(query.value.searchTerms, aSearchStr,
       "Content tree's searchTerms should be text in search box");
   } else {
-    Assert.equal(queries.value[0].hasSearchTerms, false,
+    Assert.equal(query.value.hasSearchTerms, false,
       "Content tree's searchTerms should not exist after search reset");
   }
 }

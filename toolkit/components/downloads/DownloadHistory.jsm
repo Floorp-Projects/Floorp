@@ -419,11 +419,9 @@ var DownloadHistoryList = function(publicList, place) {
 
   // Start the asynchronous queries to retrieve history and session downloads.
   publicList.addView(this).catch(Cu.reportError);
-  let queries = {}, options = {};
-  PlacesUtils.history.queryStringToQueries(place, queries, {}, options);
-  let query = queries.value.length ? queries.value[0] : PlacesUtils.history.getNewQuery();
-
-  let result = PlacesUtils.history.executeQuery(query, options.value);
+  let query = {}, options = {};
+  PlacesUtils.history.queryStringToQuery(place, query, options);
+  let result = PlacesUtils.history.executeQuery(query.value, options.value);
   result.addObserver(this);
 };
 

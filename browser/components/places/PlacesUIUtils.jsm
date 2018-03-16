@@ -821,23 +821,18 @@ var PlacesUIUtils = {
   isFolderShortcutQueryString(queryString) {
     // Based on GetSimpleBookmarksQueryFolder in nsNavHistory.cpp.
 
-    let queriesParam = { }, optionsParam = { };
-    PlacesUtils.history.queryStringToQueries(queryString,
-                                             queriesParam,
-                                             { },
-                                             optionsParam);
-    let queries = queries.value;
-    if (queries.length == 0)
-      throw new Error(`Invalid place: uri: ${queryString}`);
-    return queries.length == 1 &&
-           queries[0].folderCount == 1 &&
-           !queries[0].hasBeginTime &&
-           !queries[0].hasEndTime &&
-           !queries[0].hasDomain &&
-           !queries[0].hasURI &&
-           !queries[0].hasSearchTerms &&
-           !queries[0].tags.length == 0 &&
-           optionsParam.value.maxResults == 0;
+    let query = {}, options = {};
+    PlacesUtils.history.queryStringToQuery(queryString, query, options);
+    query = query.value;
+    options = options.value;
+    return query.folderCount == 1 &&
+           !query.hasBeginTime &&
+           !query.hasEndTime &&
+           !query.hasDomain &&
+           !query.hasURI &&
+           !query.hasSearchTerms &&
+           !query.tags.length == 0 &&
+           options.maxResults == 0;
   },
 
   /**
