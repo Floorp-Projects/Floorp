@@ -1242,8 +1242,7 @@
         <tabbox id="tabbrowser-tabbox"
                 flex="1" eventnode="document" tabcontainer="tabbrowser-tabs">
           <tabpanels id="tabbrowser-tabpanels"
-                     flex="1" class="plain" selectedIndex="0"
-                     onselect="if (event.target == this) gBrowser.updateCurrentBrowser();">
+                     flex="1" class="plain" selectedIndex="0">
             <notificationbox flex="1" notificationside="top">
               <!-- Set large flex to allow the devtools toolbox to set a flex attribute.
                    We don't want the toolbox to actually take up free space, but we do want it to collapse when the window shrinks, and with flex=0 it can't.
