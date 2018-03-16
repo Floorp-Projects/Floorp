@@ -30,7 +30,8 @@ FTP_PLATFORMS_PER_BOUNCER_PLATFORM = {
 # :lang is interpolated by bouncer at runtime
 CANDIDATES_PATH_TEMPLATE = '/{ftp_product}/candidates/{version}-candidates/build{build_number}/\
 {update_folder}{ftp_platform}/:lang/{file}'
-RELEASES_PATH_TEMPLATE = '/{ftp_product}/releases/{version}/{update_folder}{ftp_platform}/:lang/{file}'
+RELEASES_PATH_TEMPLATE = '/{ftp_product}/releases/{version}/\
+{update_folder}{ftp_platform}/:lang/{file}'
 
 
 CONFIG_PER_BOUNCER_PRODUCT = {
@@ -207,7 +208,6 @@ def _craft_ftp_platform(bouncer_platform, file_name):
         return 'win32'
 
     return ftp_platform
-
 
 
 def craft_bouncer_product_name(product, bouncer_product, current_version,
