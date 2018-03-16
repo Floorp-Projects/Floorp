@@ -2084,8 +2084,9 @@ bool
 AsyncPanZoomController::IsContentOfHonouredTargetRightToLeft(
                           bool aHonoursRoot) const
 {
-  // TODO The current implementation only honours the scrolling target, the
-  // functionality of honouring root is going to be added in the next commit.
+  if (aHonoursRoot) {
+    return mScrollMetadata.IsAutoDirRootContentRTL();
+  }
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   return mFrameMetrics.IsHorizontalContentRightToLeft();
 }
@@ -4093,6 +4094,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     // has no business using it.
     mScrollMetadata.SetScrollClip(Nothing());
     mScrollMetadata.SetIsLayersIdRoot(aScrollMetadata.IsLayersIdRoot());
+    mScrollMetadata.SetIsAutoDirRootContentRTL(
+                      aScrollMetadata.IsAutoDirRootContentRTL());
     mScrollMetadata.SetUsesContainerScrolling(aScrollMetadata.UsesContainerScrolling());
     mFrameMetrics.SetIsScrollInfoLayer(aLayerMetrics.IsScrollInfoLayer());
     mScrollMetadata.SetForceDisableApz(aScrollMetadata.IsApzForceDisabled());
