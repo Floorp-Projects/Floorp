@@ -176,7 +176,7 @@ class DevToolsPage extends HiddenExtensionPage {
       },
     });
 
-    this.browser.loadURIWithFlags(this.url, {
+    this.browser.loadURI(this.url, {
       triggeringPrincipal: this.extension.principal,
     });
 
