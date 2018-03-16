@@ -9705,7 +9705,8 @@ class MSpectreMaskIndex
     MSpectreMaskIndex(MDefinition* index, MDefinition* length)
       : MBinaryInstruction(classOpcode, index, length)
     {
-        setGuard();
+        // Note: this instruction does not need setGuard(): if there are no uses
+        // it's fine for DCE to eliminate this instruction.
         setMovable();
         MOZ_ASSERT(index->type() == MIRType::Int32);
         MOZ_ASSERT(length->type() == MIRType::Int32);

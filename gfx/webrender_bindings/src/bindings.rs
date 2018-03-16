@@ -312,8 +312,8 @@ struct WrExternalImage {
     size: usize,
 }
 
-type LockExternalImageCallback = fn(*mut c_void, WrExternalImageId, u8) -> WrExternalImage;
-type UnlockExternalImageCallback = fn(*mut c_void, WrExternalImageId, u8);
+type LockExternalImageCallback = unsafe extern "C" fn(*mut c_void, WrExternalImageId, u8) -> WrExternalImage;
+type UnlockExternalImageCallback = unsafe extern "C" fn(*mut c_void, WrExternalImageId, u8);
 
 #[repr(C)]
 pub struct WrExternalImageHandler {
@@ -327,7 +327,8 @@ impl ExternalImageHandler for WrExternalImageHandler {
             id: ExternalImageId,
             channel_index: u8)
             -> ExternalImage {
-        let image = (self.lock_func)(self.external_image_obj, id.into(), channel_index);
+
+        let image = unsafe { (self.lock_func)(self.external_image_obj, id.into(), channel_index) };
         ExternalImage {
             uv: TexelRect::new(image.u0, image.v0, image.u1, image.v1),
             source: match image.image_type {
@@ -341,7 +342,9 @@ impl ExternalImageHandler for WrExternalImageHandler {
     fn unlock(&mut self,
               id: ExternalImageId,
               channel_index: u8) {
-        (self.unlock_func)(self.external_image_obj, id.into(), channel_index);
+        unsafe {
+            (self.unlock_func)(self.external_image_obj, id.into(), channel_index);
+        }
     }
 }
 

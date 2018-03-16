@@ -1711,7 +1711,7 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output, Re
 
     // Check if the index is contained in the leftChild.
     // Todo: Handle index in the rightChild.
-    boundsCheck32ForLoad(index, Address(output, JSString::offsetOfLength()), scratch, fail);
+    spectreBoundsCheck32(index, Address(output, JSString::offsetOfLength()), scratch, fail);
 
     // If the left side is another rope, give up.
     branchIfRope(output, fail);
