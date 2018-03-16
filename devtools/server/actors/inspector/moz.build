@@ -6,6 +6,7 @@
 
 DevToolsModules(
   'document-walker.js',
+  'event-parsers.js',
   'inspector.js',
   'node.js',
   'utils.js',

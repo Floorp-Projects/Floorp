@@ -20,7 +20,6 @@ DevToolsModules(
     'content-process-debugger-server.js',
     'content-server.jsm',
     'css-logic.js',
-    'event-parsers.js',
     'main.js',
     'service-worker-child.js',
     'websocket-server.js',
