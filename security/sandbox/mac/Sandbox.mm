@@ -132,7 +132,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
 
   // Used for the Flash sandbox. Declared here so that they
   // stay in scope until sandbox_init_with_parameters is called.
-  std::string flashCacheDir, flashTempDir, flashPath;
+  std::string flashTempDir, flashPath;
 
   if (aInfo.type == MacSandboxType_Plugin &&
       aInfo.pluginInfo.type == MacSandboxPluginType_Flash) {
@@ -153,18 +153,6 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
       return false;
     }
     params.push_back(flashPath.c_str());
-
-    // User cache dir
-    params.push_back("DARWIN_USER_CACHE_DIR");
-    char cacheDir[PATH_MAX];
-    if (!confstr(_CS_DARWIN_USER_CACHE_DIR, cacheDir, sizeof(cacheDir))) {
-      return false;
-    }
-    flashCacheDir = realpath(cacheDir, nullptr);
-    if (flashCacheDir.empty()) {
-      return false;
-    }
-    params.push_back(flashCacheDir.c_str());
 
     // User temp dir
     params.push_back("DARWIN_USER_TEMP_DIR");
