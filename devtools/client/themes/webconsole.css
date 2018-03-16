@@ -652,6 +652,7 @@ a.learn-more-link.webconsole-learn-more-link {
   filter: var(--theme-icon-checked-filter) brightness(0.9);
 }
 
+
 /* Old console frontend filters */
 .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
   -moz-appearance: none;
@@ -1103,10 +1104,7 @@ a.learn-more-link.webconsole-learn-more-link {
  * console since its style is already defined in reps.css .
  */
 .webconsole-output-wrapper .open-inspector {
-  background: unset;
-  padding-left: unset;
-  margin-left: unset;
-  cursor: unset;
+  background-image: unset;
 }
 
 /* Stacktraces */
@@ -1220,14 +1218,12 @@ body #output-container {
  * Make the arrow the same color and approximately the same size of the twisty icon.
  * Should be properly fixed in https://bugzilla.mozilla.org/show_bug.cgi?id=1307937.
  */
-.webconsole-output-wrapper .object-inspector.tree .tree-node .arrow svg {
-  width: 8px;
-  fill: #AFA8AB;
-  margin-inline-start: 1px;
+.webconsole-output-wrapper .object-inspector.tree .tree-node .arrow {
+  background-color: #AFA8AB;
 }
 
-.theme-dark .webconsole-output-wrapper .object-inspector.tree .tree-node .arrow svg {
-  fill: #7F7E81;
+.theme-dark .webconsole-output-wrapper .object-inspector.tree .tree-node .arrow {
+  background-color: #7F7E81;
 }
 
 /* Sidebar */
