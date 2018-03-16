@@ -48,6 +48,7 @@ static const HTMLElement gHTMLElements[] = {
   ELEM(b,           ____, true)
   ELEM(base,        ____, ____)
   ELEM(basefont,    ____, ____)
+  ELEM(bdi,         ____, true)
   ELEM(bdo,         ____, true)
   ELEM(bgsound,     ____, ____)
   ELEM(big,         ____, true)
