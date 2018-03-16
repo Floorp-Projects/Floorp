@@ -94,29 +94,16 @@ struct WrapToSignedHelper
  * happening.
  */
 template<typename UnsignedType>
-inline constexpr typename detail::WrapToSignedHelper<UnsignedType>::SignedType
+constexpr typename detail::WrapToSignedHelper<UnsignedType>::SignedType
 WrapToSigned(UnsignedType aValue)
 {
   return detail::WrapToSignedHelper<UnsignedType>::compute(aValue);
 }
 
-// The |mozilla::Wrapping*| functions aren't constexpr because MSVC warns about
-// well-defined unsigned integer overflows that may occur within the constexpr
-// math.  If/when MSVC fix this bug, we should make them all constexpr.
-//
-//   https://msdn.microsoft.com/en-us/library/4kze989h.aspx (C4307)
-//   https://developercommunity.visualstudio.com/content/problem/211134/unsigned-integer-overflows-in-constexpr-functionsa.html (bug report)
-//
-// For now there's no practical, readable way to avoid such overflows in pure
-// C++.  And we can't add narrow #pragmas where overflow can occur to disable
-// the warnings, because constexpr apparently causes the warning to be emitted
-// at the outermost call *sites* (so every user of |mozilla::Wrapping*| would
-// have to add them).
-
 namespace detail {
 
 template<typename T>
-inline constexpr T
+constexpr T
 ToResult(typename MakeUnsigned<T>::Type aUnsigned)
 {
   // We could *always* return WrapToSigned and rely on unsigned conversion to
@@ -132,7 +119,7 @@ private:
 
 public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
-  static T compute(T aX, T aY)
+  static constexpr T compute(T aX, T aY)
   {
     return ToResult<T>(static_cast<UnsignedT>(aX) + static_cast<UnsignedT>(aY));
   }
@@ -165,7 +152,7 @@ public:
  * permissibly -- triggers different behavior.
  */
 template<typename T>
-inline T
+constexpr T
 WrappingAdd(T aX, T aY)
 {
   return detail::WrappingAddHelper<T>::compute(aX, aY);
@@ -181,7 +168,7 @@ private:
 
 public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
-  static T compute(T aX, T aY)
+  static constexpr T compute(T aX, T aY)
   {
     return ToResult<T>(static_cast<UnsignedT>(aX) - static_cast<UnsignedT>(aY));
   }
@@ -215,7 +202,7 @@ public:
  * permissibly -- triggers different behavior.
  */
 template<typename T>
-inline T
+constexpr T
 WrappingSubtract(T aX, T aY)
 {
   return detail::WrappingSubtractHelper<T>::compute(aX, aY);
@@ -231,7 +218,7 @@ private:
 
 public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
-  static T compute(T aX, T aY)
+  static constexpr T compute(T aX, T aY)
   {
     // Begin with |1U| to ensure the overall operation chain is never promoted
     // to signed integer operations that might have *signed* integer overflow.
@@ -277,11 +264,35 @@ public:
  * or similar -- quite permissibly -- triggers different behavior.
  */
 template<typename T>
-inline T
+constexpr T
 WrappingMultiply(T aX, T aY)
 {
   return detail::WrappingMultiplyHelper<T>::compute(aX, aY);
 }
+
+// The |mozilla::Wrapping*| functions are constexpr. Unfortunately, MSVC warns
+// about well-defined unsigned integer overflows that may occur within the
+// constexpr math.
+//
+//   https://msdn.microsoft.com/en-us/library/4kze989h.aspx (C4307)
+//   https://developercommunity.visualstudio.com/content/problem/211134/unsigned-integer-overflows-in-constexpr-functionsa.html (bug report)
+//
+// So we need a way to suppress these warnings. Unfortunately, the warnings are
+// issued at the very top of the `constexpr` chain, which is often some
+// distance from the triggering Wrapping*() operation. So we can't suppress
+// them within this file. Instead, callers have to do it with these macros.
+//
+// If/when MSVC fix this bug, we should remove these macros.
+#ifdef _MSC_VER
+#define MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
+  __pragma(warning(push)) \
+  __pragma(warning(disable:4307))
+#define MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
+  __pragma(warning(pop))
+#else
+#define MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+#define MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+#endif
 
 } /* namespace mozilla */
 

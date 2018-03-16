@@ -135,6 +135,14 @@ var Policies = {
     }
   },
 
+  "DisableBuiltinPDFViewer": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("PDF.js");
+      }
+    }
+  },
+
   "DisableDeveloperTools": {
     onBeforeAddons(manager, param) {
       if (param) {
@@ -145,6 +153,14 @@ var Policies = {
         manager.disallowFeature("about:devtools");
         manager.disallowFeature("about:debugging");
         manager.disallowFeature("about:devtools-toolbox");
+      }
+    }
+  },
+
+  "DisableFeedbackCommands": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("feedbackCommands");
       }
     }
   },
@@ -195,6 +211,14 @@ var Policies = {
         manager.disallowFeature("privatebrowsing");
         manager.disallowFeature("about:privatebrowsing", true);
         setAndLockPref("browser.privatebrowsing.autostart", false);
+      }
+    }
+  },
+
+  "DisableSafeMode": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("safeMode");
       }
     }
   },

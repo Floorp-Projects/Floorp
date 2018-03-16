@@ -22,16 +22,16 @@ add_task(async function() {
     let frame = frames[i], previousFrame = frames[i - 1];
     let rects = compareFrames(frame, previousFrame);
 
-    // The first screenshot we get in OSX / Windows shows an unfocused browser
-    // window for some reason. See bug 1445161.
-    //
+    // The first screenshot we get shows an unfocused browser window for some
+    // reason. This is likely due to the test harness, so we want to ignore it.
     // We'll assume the changes we are seeing are due to this focus change if
     // there are at least 5 areas that changed near the top of the screen, but
     // will only ignore this once (hence the alreadyFocused variable).
     if (!alreadyFocused && rects.length > 5 && rects.every(r => r.y2 < 100)) {
       alreadyFocused = true;
+      // This is likely an issue caused by the test harness, but log it anyway.
       todo(false,
-           "bug 1445161 - the window should be focused at first paint, " + rects.toSource());
+           "the window should be focused at first paint, " + rects.toSource());
       continue;
     }
 

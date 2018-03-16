@@ -2778,17 +2778,12 @@ var gDetailView = {
     desc.textContent = aAddon.description;
 
     var fullDesc = document.getElementById("detail-fulldesc");
-    if (aAddon.fullDescription) {
-      // The following is part of an awful hack to include the licenses for GMP
-      // plugins without having bug 624602 fixed yet, and intentionally ignores
-      // localisation.
-      if (aAddon.isGMPlugin) {
-        // eslint-disable-next-line no-unsanitized/property
-        fullDesc.unsafeSetInnerHTML(aAddon.fullDescription);
-      } else {
-        fullDesc.textContent = aAddon.fullDescription;
-      }
-
+    if (aAddon.getFullDescription) {
+      fullDesc.textContent = "";
+      fullDesc.append(aAddon.getFullDescription(document));
+      fullDesc.hidden = false;
+    } else if (aAddon.fullDescription) {
+      fullDesc.textContent = aAddon.fullDescription;
       fullDesc.hidden = false;
     } else {
       fullDesc.hidden = true;
