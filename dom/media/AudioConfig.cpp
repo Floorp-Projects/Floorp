@@ -39,8 +39,8 @@ typedef AudioConfig::ChannelLayout ChannelLayout;
 void
 AudioConfig::ChannelLayout::UpdateChannelMap()
 {
-  mValid = mChannels.Length() <= MAX_AUDIO_CHANNELS;
-  mChannelMap = 0;
+  mValid = mChannels.Length() <= MAX_CHANNELS;
+  mChannelMap = UNKNOWN_MAP;
   if (mValid) {
     mChannelMap = Map();
     mValid = mChannelMap > 0;
@@ -50,15 +50,21 @@ AudioConfig::ChannelLayout::UpdateChannelMap()
 auto
 AudioConfig::ChannelLayout::Map() const -> ChannelMap
 {
-  if (mChannelMap) {
+  if (mChannelMap != UNKNOWN_MAP) {
     return mChannelMap;
   }
+  if (mChannels.Length() > MAX_CHANNELS) {
+    return UNKNOWN_MAP;
+  }
   ChannelMap map = UNKNOWN_MAP;
-  for (size_t i = 0; i < mChannels.Length() && i <= MAX_AUDIO_CHANNELS; i++) {
-    uint32_t mask = 1 << mChannels[i];
+  for (size_t i = 0; i < mChannels.Length(); i++) {
+    if (uint32_t(mChannels[i]) > sizeof(ChannelMap) * 8) {
+      return UNKNOWN_MAP;
+    }
+    ChannelMap mask = 1 << mChannels[i];
     if (mChannels[i] == CHANNEL_INVALID || (mChannelMap & mask)) {
       // Invalid configuration.
-      return 0;
+      return UNKNOWN_MAP;
     }
     map |= mask;
   }
@@ -217,17 +223,20 @@ AudioConfig::ChannelLayout::SMPTEDefault(ChannelMap aMap)
     default:
       break;
   }
-  AutoTArray<Channel, MAX_AUDIO_CHANNELS> layout;
+
+  static_assert(MAX_CHANNELS <= sizeof(ChannelMap) * 8,
+                "Must be able to fit channels on bit mask");
+  AutoTArray<Channel, MAX_CHANNELS> layout;
   uint32_t channels = 0;
 
   uint32_t i = 0;
   while (aMap) {
     if (aMap & 1) {
-      layout.AppendElement(static_cast<Channel>(i));
       channels++;
-      if (channels > MAX_AUDIO_CHANNELS) {
+      if (channels > MAX_CHANNELS) {
         return ChannelLayout();
       }
+      layout.AppendElement(static_cast<Channel>(i));
     }
     aMap >>= 1;
     i++;
