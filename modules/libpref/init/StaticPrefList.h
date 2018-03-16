@@ -113,6 +113,128 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Enables the predictive service.
+VARCACHE_PREF(
+  "network.predictor.enabled",
+   network_predictor_enabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  "network.predictor.enable-hover-on-ssl",
+   network_predictor_enable_hover_on_ssl,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "network.predictor.enable-prefetch",
+   network_predictor_enable_prefetch,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "network.predictor.page-degradation.day",
+   network_predictor_page_degradation_day,
+  int32_t, 0
+)
+VARCACHE_PREF(
+  "network.predictor.page-degradation.week",
+   network_predictor_page_degradation_week,
+  int32_t, 5
+)
+VARCACHE_PREF(
+  "network.predictor.page-degradation.month",
+   network_predictor_page_degradation_month,
+  int32_t, 10
+)
+VARCACHE_PREF(
+  "network.predictor.page-degradation.year",
+   network_predictor_page_degradation_year,
+  int32_t, 25
+)
+VARCACHE_PREF(
+  "network.predictor.page-degradation.max",
+   network_predictor_page_degradation_max,
+  int32_t, 50
+)
+
+VARCACHE_PREF(
+  "network.predictor.subresource-degradation.day",
+   network_predictor_subresource_degradation_day,
+  int32_t, 1
+)
+VARCACHE_PREF(
+  "network.predictor.subresource-degradation.week",
+   network_predictor_subresource_degradation_week,
+  int32_t, 10
+)
+VARCACHE_PREF(
+  "network.predictor.subresource-degradation.month",
+   network_predictor_subresource_degradation_month,
+  int32_t, 25
+)
+VARCACHE_PREF(
+  "network.predictor.subresource-degradation.year",
+   network_predictor_subresource_degradation_year,
+  int32_t, 50
+)
+VARCACHE_PREF(
+  "network.predictor.subresource-degradation.max",
+   network_predictor_subresource_degradation_max,
+  int32_t, 100
+)
+
+VARCACHE_PREF(
+  "network.predictor.prefetch-rolling-load-count",
+   network_predictor_prefetch_rolling_load_count,
+  int32_t, 10
+)
+
+VARCACHE_PREF(
+  "network.predictor.prefetch-min-confidence",
+   network_predictor_prefetch_min_confidence,
+  int32_t, 100
+)
+VARCACHE_PREF(
+  "network.predictor.preconnect-min-confidence",
+   network_predictor_preconnect_min_confidence,
+  int32_t, 90
+)
+VARCACHE_PREF(
+  "network.predictor.preresolve-min-confidence",
+   network_predictor_preresolve_min_confidence,
+  int32_t, 60
+)
+
+VARCACHE_PREF(
+  "network.predictor.prefetch-force-valid-for",
+   network_predictor_prefetch_force_valid_for,
+  int32_t, 10
+)
+
+VARCACHE_PREF(
+  "network.predictor.max-resources-per-entry",
+   network_predictor_max_resources_per_entry,
+  int32_t, 100
+)
+
+// This is selected in concert with max-resources-per-entry to keep memory
+// usage low-ish. The default of the combo of the two is ~50k.
+VARCACHE_PREF(
+  "network.predictor.max-uri-length",
+   network_predictor_max_uri_length,
+  uint32_t, 500
+)
+
+PREF("network.predictor.cleaned-up", bool, false)
+
+// A testing flag.
+VARCACHE_PREF(
+  "network.predictor.doing-tests",
+   network_predictor_doing_tests,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Preferences prefs
 //---------------------------------------------------------------------------
