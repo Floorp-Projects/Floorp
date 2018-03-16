@@ -2405,8 +2405,8 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
       for (;;) {
         if (!eltPos) {
           MOZ_ASSERT(fragment,
-                     "We can get this close to the root of the stack "
-                     "in foreign content only in the fragment case.");
+                     "We can get this close to the root of the stack in "
+                     "foreign content only in the fragment case.");
           NS_HTML5_BREAK(endtagloop);
         }
         if (stack[eltPos]->name == name) {

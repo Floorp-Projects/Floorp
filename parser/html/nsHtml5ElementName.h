@@ -200,6 +200,7 @@ public:
 
   static nsHtml5ElementName* ELT_ANNOTATION_XML;
   static nsHtml5ElementName* ELT_BIG;
+  static nsHtml5ElementName* ELT_BDI;
   static nsHtml5ElementName* ELT_BDO;
   static nsHtml5ElementName* ELT_COL;
   static nsHtml5ElementName* ELT_DEL;

@@ -20,6 +20,7 @@ function testInDocument(doc, documentID) {
     HTML_TAG("b", "Span")
     HTML_TAG("base", "Shared")
     HTML_TAG("basefont", "Span")
+    HTML_TAG("bdi", "")
     HTML_TAG("bdo", "Span")
     HTML_TAG("bgsound", "Span")
     HTML_TAG("big", "Span")
