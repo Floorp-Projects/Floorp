@@ -254,6 +254,12 @@ interface nsISocketTransport : nsITransport
     const unsigned long REFRESH_CACHE = (1 << 9);
 
     /**
+     * If this flag is set then it means that if connecting the preferred ip
+     * family has failed, retry with the oppsite one once more.
+     */
+    const unsigned long RETRY_WITH_DIFFERENT_IP_FAMILY = (1 << 10);
+
+    /**
      * An opaque flags for non-standard behavior of the TLS system.
      * It is unlikely this will need to be set outside of telemetry studies
      * relating to the TLS implementation.
@@ -289,4 +295,11 @@ interface nsISocketTransport : nsITransport
     [noscript] void setFastOpenCallback(in TCPFastOpenPtr aFastOpen);
 
     readonly attribute nsresult firstRetryError;
+
+    /**
+     * If true, this socket transport has found out the prefered family
+     * according it's connection flags could not be used to establish
+     * connections any more.  Hence, the preference should be reset.
+     */
+    readonly attribute boolean resetIPFamilyPreference;
 };

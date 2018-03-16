@@ -101,6 +101,7 @@ public:
     uint32_t       PhishyUserPassLength()    { return mPhishyUserPassLength; }
     uint8_t        GetQoSBits()              { return mQoSBits; }
     uint16_t       GetIdleSynTimeout()       { return mIdleSynTimeout; }
+    uint16_t       GetFallbackSynTimeout()   { return mFallbackSynTimeout; }
     bool           FastFallbackToIPv4()      { return mFastFallbackToIPv4; }
     uint32_t       MaxSocketCount();
     bool           EnforceAssocReq()         { return mEnforceAssocReq; }
@@ -484,6 +485,7 @@ private:
     uint16_t mMaxRequestAttempts;
     uint16_t mMaxRequestDelay;
     uint16_t mIdleSynTimeout;
+    uint16_t mFallbackSynTimeout; // seconds
 
     bool     mH2MandatorySuiteEnabled;
     uint16_t mMaxUrgentExcessiveConns;
