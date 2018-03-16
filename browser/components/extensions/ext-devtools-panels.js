@@ -278,7 +278,7 @@ class ParentDevToolsPanel {
       },
     });
 
-    browser.loadURIWithFlags(url, {
+    browser.loadURI(url, {
       triggeringPrincipal: extension.principal,
     });
   }
