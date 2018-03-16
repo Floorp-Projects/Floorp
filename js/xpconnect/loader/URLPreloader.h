@@ -126,7 +126,7 @@ protected:
 
             MonitorAutoLock mal(reader.mMonitor);
 
-            while (!reader.mReaderInitialized && reader.sInitialized) {
+            while (!reader.mReaderInitialized && URLPreloader::sInitialized) {
                 mal.Wait();
             }
         }

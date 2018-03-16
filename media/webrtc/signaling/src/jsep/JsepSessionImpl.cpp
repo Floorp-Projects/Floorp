@@ -201,7 +201,7 @@ JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
   JsepTrack& recvTrack(transceiver.mRecvTrack);
 
   SdpMediaSection::Protocol protocol(
-      mSdpHelper.GetProtocolForMediaType(sendTrack.GetMediaType()));
+      SdpHelper::GetProtocolForMediaType(sendTrack.GetMediaType()));
 
   const Sdp* answer(GetAnswer());
   const SdpMediaSection* lastAnswerMsection = nullptr;
@@ -230,7 +230,7 @@ JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
   }
 
   if (transceiver.IsStopped()) {
-    mSdpHelper.DisableMsection(local, msection);
+    SdpHelper::DisableMsection(local, msection);
     return NS_OK;
   }
 
@@ -602,7 +602,7 @@ JsepSessionImpl::CreateAnswerMsection(const JsepAnswerOptions& options,
   if (mSdpHelper.MsectionIsDisabled(remoteMsection) ||
       // JS might have stopped this
       transceiver.IsStopped()) {
-    mSdpHelper.DisableMsection(sdp, &msection);
+    SdpHelper::DisableMsection(sdp, &msection);
     return NS_OK;
   }
 
@@ -624,7 +624,7 @@ JsepSessionImpl::CreateAnswerMsection(const JsepAnswerOptions& options,
 
   if (msection.GetFormats().empty()) {
     // Could not negotiate anything. Disable m-section.
-    mSdpHelper.DisableMsection(sdp, &msection);
+    SdpHelper::DisableMsection(sdp, &msection);
   }
 
   return NS_OK;

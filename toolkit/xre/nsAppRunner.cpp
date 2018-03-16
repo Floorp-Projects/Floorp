@@ -3372,7 +3372,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
       NS_SUCCEEDED(
         CrashReporter::SetExceptionHandler(xreBinDirectory))) {
     nsCOMPtr<nsIFile> file;
-    rv = mDirProvider.GetUserAppDataDirectory(getter_AddRefs(file));
+    rv = nsXREDirProvider::GetUserAppDataDirectory(getter_AddRefs(file));
     if (NS_SUCCEEDED(rv)) {
       CrashReporter::SetUserAppDataDirectory(file);
     }
