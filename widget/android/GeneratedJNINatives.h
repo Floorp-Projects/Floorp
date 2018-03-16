@@ -327,6 +327,41 @@ const JNINativeMethod ScreenManagerHelper::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class SpeechSynthesisService::Natives : public mozilla::jni::NativeImpl<SpeechSynthesisService, Impl>
+{
+public:
+    static const JNINativeMethod methods[6];
+};
+
+template<class Impl>
+const JNINativeMethod SpeechSynthesisService::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<SpeechSynthesisService::DispatchBoundary_t>(
+            mozilla::jni::NativeStub<SpeechSynthesisService::DispatchBoundary_t, Impl>
+            ::template Wrap<&Impl::DispatchBoundary>),
+
+    mozilla::jni::MakeNativeMethod<SpeechSynthesisService::DispatchEnd_t>(
+            mozilla::jni::NativeStub<SpeechSynthesisService::DispatchEnd_t, Impl>
+            ::template Wrap<&Impl::DispatchEnd>),
+
+    mozilla::jni::MakeNativeMethod<SpeechSynthesisService::DispatchError_t>(
+            mozilla::jni::NativeStub<SpeechSynthesisService::DispatchError_t, Impl>
+            ::template Wrap<&Impl::DispatchError>),
+
+    mozilla::jni::MakeNativeMethod<SpeechSynthesisService::DispatchStart_t>(
+            mozilla::jni::NativeStub<SpeechSynthesisService::DispatchStart_t, Impl>
+            ::template Wrap<&Impl::DispatchStart>),
+
+    mozilla::jni::MakeNativeMethod<SpeechSynthesisService::DoneRegisteringVoices_t>(
+            mozilla::jni::NativeStub<SpeechSynthesisService::DoneRegisteringVoices_t, Impl>
+            ::template Wrap<&Impl::DoneRegisteringVoices>),
+
+    mozilla::jni::MakeNativeMethod<SpeechSynthesisService::RegisterVoice_t>(
+            mozilla::jni::NativeStub<SpeechSynthesisService::RegisterVoice_t, Impl>
+            ::template Wrap<&Impl::RegisterVoice>)
+};
+
+template<class Impl>
 class SurfaceTextureListener::Natives : public mozilla::jni::NativeImpl<SurfaceTextureListener, Impl>
 {
 public:
