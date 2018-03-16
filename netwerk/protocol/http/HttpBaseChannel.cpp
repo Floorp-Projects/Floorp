@@ -2206,6 +2206,7 @@ HttpBaseChannel::RedirectTo(nsIURI *targetURI)
   nsAutoCString spec;
   targetURI->GetAsciiSpec(spec);
   LOG(("HttpBaseChannel::RedirectTo [this=%p, uri=%s]", this, spec.get()));
+  LogCallingScriptLocation(this);
 
   // We cannot redirect after OnStartRequest of the listener
   // has been called, since to redirect we have to switch channels
