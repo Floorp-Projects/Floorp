@@ -145,7 +145,7 @@ function waitForTimelineMarkers(monitor) {
   return new Promise(resolve => {
     let markers = [];
 
-    function handleTimelineEvent(_, marker) {
+    function handleTimelineEvent(marker) {
       info(`Got marker: ${marker.name}`);
       markers.push(marker);
       if (markers.length == 2) {
@@ -184,14 +184,14 @@ function waitForAllRequestsFinished(monitor) {
     // Key is the request id, value is a boolean - is request finished or not?
     let requests = new Map();
 
-    function onRequest(_, id) {
+    function onRequest(id) {
       let networkInfo = getNetworkRequest(id);
       let { url } = networkInfo.request;
       info(`Request ${id} for ${url} not yet done, keep waiting...`);
       requests.set(id, false);
     }
 
-    function onTimings(_, id) {
+    function onTimings(id) {
       let networkInfo = getNetworkRequest(id);
       let { url } = networkInfo.request;
       info(`Request ${id} for ${url} done`);
@@ -242,13 +242,13 @@ let updatedTypes = [
 // Start collecting all networkEventUpdate event when panel is opened.
 // removeTab() should be called once all corresponded RECEIVED_* events finished.
 function startNetworkEventUpdateObserver(panelWin) {
-  updatingTypes.forEach((type) => panelWin.on(type, (event, actor) => {
-    let key = actor + "-" + updatedTypes[updatingTypes.indexOf(event)];
+  updatingTypes.forEach((type) => panelWin.on(type, actor => {
+    let key = actor + "-" + updatedTypes[updatingTypes.indexOf(type)];
     finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] + 1 : 1;
   }));
 
-  updatedTypes.forEach((type) => panelWin.on(type, (event, actor) => {
-    let key = actor + "-" + event;
+  updatedTypes.forEach((type) => panelWin.on(type, actor => {
+    let key = actor + "-" + type;
     finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] - 1 : -1;
   }));
 }
@@ -353,7 +353,7 @@ function waitForNetworkEvents(monitor, getRequests) {
     let networkEvent = 0;
     let payloadReady = 0;
 
-    function onNetworkEvent(event, actor) {
+    function onNetworkEvent(actor) {
       let networkInfo = getNetworkRequest(actor);
       if (!networkInfo) {
         // Must have been related to reloading document to disable cache.
@@ -361,10 +361,10 @@ function waitForNetworkEvents(monitor, getRequests) {
         return;
       }
       networkEvent++;
-      maybeResolve(event, actor, networkInfo);
+      maybeResolve(EVENTS.NETWORK_EVENT, actor, networkInfo);
     }
 
-    function onPayloadReady(event, actor) {
+    function onPayloadReady(actor) {
       let networkInfo = getNetworkRequest(actor);
       if (!networkInfo) {
         // Must have been related to reloading document to disable cache.
@@ -372,7 +372,7 @@ function waitForNetworkEvents(monitor, getRequests) {
         return;
       }
       payloadReady++;
-      maybeResolve(event, actor, networkInfo);
+      maybeResolve(EVENTS.PAYLOAD_READY, actor, networkInfo);
     }
 
     function maybeResolve(event, actor, networkInfo) {

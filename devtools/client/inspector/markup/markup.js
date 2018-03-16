@@ -9,7 +9,7 @@ const Services = require("Services");
 const {Task} = require("devtools/shared/task");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const {PluralForm} = require("devtools/shared/plural-form");
 const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
@@ -1441,7 +1441,7 @@ MarkupView.prototype = {
         this.htmlEditor = new HTMLEditor(this.doc);
       }
       this.htmlEditor.show(container.tagLine, oldValue);
-      this.htmlEditor.once("popuphidden", (e, commit, value) => {
+      this.htmlEditor.once("popuphidden", (commit, value) => {
         // Need to focus the <html> element instead of the frame / window
         // in order to give keyboard focus back to doc (from editor).
         this.doc.documentElement.focus();

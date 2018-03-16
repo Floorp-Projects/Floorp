@@ -14,35 +14,35 @@ with Files('LEGAL'):
     BUG_COMPONENT = ('mozilla.org', 'Licensing')
 
 with Files('aclocal.m4'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('Cargo.*'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('client.*'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('CLOBBER'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('*configure*'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('mach'):
     BUG_COMPONENT = ('Core', 'mach')
 
 with Files('*moz*'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('GNUmakefile'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('*gradle*'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
     SCHEDULES.exclusive = ['android']
 
 with Files('*.json'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('**/l10n.toml'):
     BUG_COMPONENT = ('Core', 'Localization')
@@ -55,7 +55,7 @@ with Files("nsprpub/**"):
     BUG_COMPONENT = ("NSPR", "NSPR")
 
 with Files('**/Makefile.in'):
-    BUG_COMPONENT = ('Core', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
     FINAL = True
 
 with Files("**/*.js"):

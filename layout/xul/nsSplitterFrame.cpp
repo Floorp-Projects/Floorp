@@ -696,9 +696,9 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         nsSize maxSize = nsBox::BoundsCheckMinMax(minSize, childBox->GetXULMaxSize(state));
         prefSize = nsBox::BoundsCheck(minSize, prefSize, maxSize);
 
-        mOuter->AddMargin(childBox, minSize);
-        mOuter->AddMargin(childBox, prefSize);
-        mOuter->AddMargin(childBox, maxSize);
+        nsSplitterFrame::AddMargin(childBox, minSize);
+        nsSplitterFrame::AddMargin(childBox, prefSize);
+        nsSplitterFrame::AddMargin(childBox, maxSize);
 
         nscoord flex = childBox->GetXULFlex();
 

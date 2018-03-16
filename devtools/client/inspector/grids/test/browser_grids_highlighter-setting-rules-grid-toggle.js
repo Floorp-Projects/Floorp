@@ -48,7 +48,7 @@ add_task(function* () {
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown",
-    (event, nodeFront, options) => {
+    (nodeFront, options) => {
       info("Checking the grid highlighter display settings.");
       let {
         color,

@@ -46,7 +46,7 @@ add_task(function* () {
 
   info("Hovering over grid cell A in the grid outline.");
   let onCellAHighlight = highlighters.once("grid-highlighter-shown",
-    (event, nodeFront, options) => {
+    (nodeFront, options) => {
       info("Checking show grid cell options are correct.");
       const { showGridCell } = options;
       const { gridFragmentIndex, rowNumber, columnNumber } = showGridCell;

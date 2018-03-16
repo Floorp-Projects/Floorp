@@ -241,7 +241,7 @@ with Files('browser-*.js'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
 with Files('buildconfig.html'):
-    BUG_COMPONENT = ('Toolkit', 'Build Config')
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('contentAreaUtils.js'):
     BUG_COMPONENT = ('Toolkit', 'General')

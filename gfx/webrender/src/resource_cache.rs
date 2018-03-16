@@ -392,6 +392,8 @@ impl ResourceCache {
     pub fn delete_font_template(&mut self, font_key: FontKey) {
         self.glyph_rasterizer.delete_font(font_key);
         self.resources.font_templates.remove(&font_key);
+        self.cached_glyphs
+            .clear_fonts(|font| font.font_key == font_key);
         if let Some(ref mut r) = self.blob_image_renderer {
             r.delete_font(font_key);
         }
@@ -956,13 +958,19 @@ impl ResourceCache {
             .image_templates
             .images
             .retain(|key, _| key.0 != namespace);
+        self.cached_images
+            .clear_keys(|request| request.key.0 == namespace);
 
+        self.resources.font_instances
+            .write()
+            .unwrap()
+            .retain(|key, _| key.0 != namespace);
+        for &key in self.resources.font_templates.keys().filter(|key| key.0 == namespace) {
+            self.glyph_rasterizer.delete_font(key);
+        }
         self.resources
             .font_templates
             .retain(|key, _| key.0 != namespace);
-
-        self.cached_images
-            .clear_keys(|request| request.key.0 == namespace);
         self.cached_glyphs
             .clear_fonts(|font| font.font_key.0 == namespace);
     }
