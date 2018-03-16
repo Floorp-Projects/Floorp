@@ -3154,6 +3154,40 @@ public:
 #endif
 };
 
+#ifdef XP_WIN
+namespace {
+
+bool PolicyHasRegValue(HKEY aKey, LPCTSTR aName, DWORD* aValue)
+{
+  HKEY hkey = NULL;
+  LONG ret = RegOpenKeyExW(aKey,
+    L"SOFTWARE\\Policies\\Mozilla\\Firefox", 0, KEY_READ, &hkey);
+  if (ret != ERROR_SUCCESS) {
+     return false;
+  }
+  nsAutoRegKey key(hkey);
+  DWORD len = sizeof(aValue);
+  ret = RegQueryValueExW(hkey, aName, 0, NULL, (LPBYTE)aValue, &len);
+  RegCloseKey(key);
+  return ret == ERROR_SUCCESS;
+}
+
+bool SafeModeBlockedByPolicy()
+{
+  LPCTSTR policyName = L"DisableSafeMode";
+  DWORD value;
+  if (PolicyHasRegValue(HKEY_LOCAL_MACHINE, policyName, &value)) {
+    return value == 1;
+  }
+  if (PolicyHasRegValue(HKEY_CURRENT_USER, policyName, &value)) {
+    return value == 1;
+  }
+  return false;
+}
+
+} // anonymous namespace
+#endif // XP_WIN
+
 /*
  * XRE_mainInit - Initial setup and command line parameter processing.
  * Main() will exit early if either return value != 0 or if aExitFlag is
@@ -3490,12 +3524,6 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   gRestartArgv[gRestartArgc] = nullptr;
 
 
-  if (EnvHasValue("MOZ_SAFE_MODE_RESTART")) {
-    gSafeMode = true;
-    // unset the env variable
-    SaveToEnv("MOZ_SAFE_MODE_RESTART=");
-  }
-
   ar = CheckArg("safe-mode", true);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument --safe-mode is invalid when argument --osint is specified\n");
@@ -3524,6 +3552,20 @@ XREMain::XRE_mainInit(bool* aExitFlag)
       !EnvHasValue("MOZ_DISABLE_SAFE_MODE_KEY"))
     gSafeMode = true;
 #endif
+
+#ifdef XP_WIN
+if (gSafeMode && SafeModeBlockedByPolicy()) {
+    gSafeMode = false;
+  }
+#endif
+
+  // The Safe Mode Policy should not be enforced for the env var case
+  // (used by updater and crash-recovery).
+  if (EnvHasValue("MOZ_SAFE_MODE_RESTART")) {
+    gSafeMode = true;
+    // unset the env variable
+    SaveToEnv("MOZ_SAFE_MODE_RESTART=");
+  }
 
 #ifdef XP_WIN
   {
