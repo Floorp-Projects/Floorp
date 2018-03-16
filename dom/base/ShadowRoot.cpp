@@ -251,6 +251,10 @@ ShadowRoot::StyleSheetChanged()
   // the rule map, instead of this...
   mStyleRuleMap.reset(nullptr);
 
+  if (!IsComposedDocParticipant()) {
+    return;
+  }
+
   nsIDocument* doc = OwnerDoc();
   if (nsIPresShell* shell = doc->GetShell()) {
     doc->BeginUpdate(UPDATE_STYLE);
@@ -258,7 +262,6 @@ ShadowRoot::StyleSheetChanged()
     doc->EndUpdate(UPDATE_STYLE);
   }
 }
-
 
 void
 ShadowRoot::InsertSheet(StyleSheet* aSheet, nsIContent* aLinkingContent)
