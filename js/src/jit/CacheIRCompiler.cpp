@@ -1896,7 +1896,7 @@ CacheIRCompiler::emitLoadStringCharResult()
         return false;
 
     // Bounds check, load string char.
-    masm.boundsCheck32ForLoad(index, Address(str, JSString::offsetOfLength()), scratch1,
+    masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()), scratch1,
                               failure->label());
     masm.loadStringChar(str, index, scratch1, scratch2, failure->label());
 
@@ -1934,7 +1934,7 @@ CacheIRCompiler::emitLoadArgumentsObjectArgResult()
 
     // Bounds check.
     masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch1);
-    masm.boundsCheck32ForLoad(index, scratch1, scratch2, failure->label());
+    masm.spectreBoundsCheck32(index, scratch1, scratch2, failure->label());
 
     // Load ArgumentsData.
     masm.loadPrivate(Address(obj, ArgumentsObject::getDataSlotOffset()), scratch1);
@@ -1970,7 +1970,7 @@ CacheIRCompiler::emitLoadDenseElementResult()
 
     // Bounds check.
     Address initLength(scratch1, ObjectElements::offsetOfInitializedLength());
-    masm.boundsCheck32ForLoad(index, initLength, scratch2, failure->label());
+    masm.spectreBoundsCheck32(index, initLength, scratch2, failure->label());
 
     // Hole check.
     BaseObjectElementIndex element(scratch1, index);
@@ -2041,7 +2041,7 @@ CacheIRCompiler::emitLoadDenseElementHoleResult()
     // Guard on the initialized length.
     Label hole;
     Address initLength(scratch1, ObjectElements::offsetOfInitializedLength());
-    masm.boundsCheck32ForLoad(index, initLength, scratch2, &hole);
+    masm.spectreBoundsCheck32(index, initLength, scratch2, &hole);
 
     // Load the value.
     Label done;
@@ -2225,7 +2225,7 @@ CacheIRCompiler::emitLoadTypedElementResult()
 
     // Bounds check.
     LoadTypedThingLength(masm, layout, obj, scratch1);
-    masm.boundsCheck32ForLoad(index, scratch1, scratch2, failure->label());
+    masm.spectreBoundsCheck32(index, scratch1, scratch2, failure->label());
 
     // Load the elements vector.
     LoadTypedThingData(masm, layout, obj, scratch1);
