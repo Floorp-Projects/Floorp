@@ -55,7 +55,7 @@ add_task(function* () {
 
   info("Hovering over grid cell A in the grid outline.");
   let onCellAHighlight = highlighters.once("grid-highlighter-shown",
-    (event, nodeFront, options) => {
+    (nodeFront, options) => {
       info("Checking the grid highlighter options for the show grid area" +
       "and cell parameters.");
       const { showGridCell, showGridArea } = options;

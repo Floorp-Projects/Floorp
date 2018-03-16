@@ -6,7 +6,7 @@ use api::{AlphaType, BorderRadius, BoxShadowClipMode, BuiltDisplayList, ClipMode
 use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode, FontRenderMode};
 use api::{GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag};
 use api::{LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LayerVector2D, LineOrientation};
-use api::{LineStyle, PremultipliedColorF, YuvColorSpace, YuvFormat};
+use api::{LineStyle, PipelineId, PremultipliedColorF, Shadow, YuvColorSpace, YuvFormat};
 use border::{BorderCornerInstance, BorderEdgeKind};
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, CoordinateSystemId};
 use clip_scroll_node::ClipScrollNode;
@@ -18,7 +18,7 @@ use glyph_rasterizer::{FontInstance, FontTransform};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
 use gpu_types::{ClipChainRectIndex};
-use picture::{PictureKind, PicturePrimitive};
+use picture::{PictureCompositeMode, PictureKind, PicturePrimitive};
 use render_task::{BlitSource, RenderTask, RenderTaskCacheKey, RenderTaskCacheKeyKind};
 use render_task::RenderTaskId;
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
@@ -134,12 +134,16 @@ pub struct SpecificPrimitiveIndex(pub usize);
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveIndex(pub usize);
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PictureIndex(pub usize);
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum PrimitiveKind {
     TextRun,
     Image,
     Border,
-    Picture,
     Brush,
 }
 
@@ -200,7 +204,9 @@ pub enum BrushKind {
         style: LineStyle,
         orientation: LineOrientation,
     },
-    Picture,
+    Picture {
+        pic_index: PictureIndex,
+    },
     Image {
         request: ImageRequest,
         current_epoch: Epoch,
@@ -237,7 +243,7 @@ impl BrushKind {
     fn supports_segments(&self) -> bool {
         match *self {
             BrushKind::Solid { .. } |
-            BrushKind::Picture |
+            BrushKind::Picture { .. } |
             BrushKind::Image { .. } |
             BrushKind::YuvImage { .. } |
             BrushKind::RadialGradient { .. } |
@@ -318,14 +324,30 @@ impl BrushPrimitive {
         }
     }
 
-    fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
+    pub fn new_picture(pic_index: PictureIndex) -> BrushPrimitive {
+        BrushPrimitive {
+            kind: BrushKind::Picture {
+                pic_index,
+            },
+            segment_desc: None,
+        }
+    }
+
+    fn write_gpu_blocks(
+        &self,
+        request: &mut GpuDataRequest,
+        pictures: &[PicturePrimitive],
+    ) {
         // has to match VECS_PER_SPECIFIC_BRUSH
         match self.kind {
-            BrushKind::Picture |
+            BrushKind::Picture { pic_index } => {
+                pictures[pic_index.0].write_gpu_blocks(request);
+            }
             BrushKind::YuvImage { .. } => {
             }
             BrushKind::Image { .. } => {
                 request.push([0.0; 4]);
+                request.push(PremultipliedColorF::WHITE);
             }
             BrushKind::Solid { color } => {
                 request.push(color.premultiplied());
@@ -895,7 +917,6 @@ pub enum PrimitiveContainer {
     TextRun(TextRunPrimitiveCpu),
     Image(ImagePrimitiveCpu),
     Border(BorderPrimitiveCpu),
-    Picture(PicturePrimitive),
     Brush(BrushPrimitive),
 }
 
@@ -903,10 +924,11 @@ pub struct PrimitiveStore {
     /// CPU side information only.
     pub cpu_brushes: Vec<BrushPrimitive>,
     pub cpu_text_runs: Vec<TextRunPrimitiveCpu>,
-    pub cpu_pictures: Vec<PicturePrimitive>,
     pub cpu_images: Vec<ImagePrimitiveCpu>,
     pub cpu_metadata: Vec<PrimitiveMetadata>,
     pub cpu_borders: Vec<BorderPrimitiveCpu>,
+
+    pub pictures: Vec<PicturePrimitive>,
 }
 
 impl PrimitiveStore {
@@ -915,9 +937,10 @@ impl PrimitiveStore {
             cpu_metadata: Vec::new(),
             cpu_brushes: Vec::new(),
             cpu_text_runs: Vec::new(),
-            cpu_pictures: Vec::new(),
             cpu_images: Vec::new(),
             cpu_borders: Vec::new(),
+
+            pictures: Vec::new(),
         }
     }
 
@@ -926,10 +949,49 @@ impl PrimitiveStore {
             cpu_metadata: recycle_vec(self.cpu_metadata),
             cpu_brushes: recycle_vec(self.cpu_brushes),
             cpu_text_runs: recycle_vec(self.cpu_text_runs),
-            cpu_pictures: recycle_vec(self.cpu_pictures),
             cpu_images: recycle_vec(self.cpu_images),
             cpu_borders: recycle_vec(self.cpu_borders),
+
+            pictures: recycle_vec(self.pictures),
         }
+    }
+
+    pub fn add_image_picture(
+        &mut self,
+        composite_mode: Option<PictureCompositeMode>,
+        is_in_3d_context: bool,
+        pipeline_id: PipelineId,
+        reference_frame_index: ClipScrollNodeIndex,
+        frame_output_pipeline_id: Option<PipelineId>,
+    ) -> PictureIndex {
+        let pic = PicturePrimitive::new_image(
+            composite_mode,
+            is_in_3d_context,
+            pipeline_id,
+            reference_frame_index,
+            frame_output_pipeline_id,
+        );
+
+        let pic_index = PictureIndex(self.pictures.len());
+        self.pictures.push(pic);
+
+        pic_index
+    }
+
+    pub fn add_shadow_picture(
+        &mut self,
+        shadow: Shadow,
+        pipeline_id: PipelineId,
+    ) -> PictureIndex {
+        let pic = PicturePrimitive::new_text_shadow(
+            shadow,
+            pipeline_id,
+        );
+
+        let pic_index = PictureIndex(self.pictures.len());
+        self.pictures.push(pic);
+
+        pic_index
     }
 
     pub fn add_primitive(
@@ -968,11 +1030,7 @@ impl PrimitiveStore {
                     BrushKind::YuvImage { .. } => PrimitiveOpacity::opaque(),
                     BrushKind::RadialGradient { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::LinearGradient { .. } => PrimitiveOpacity::translucent(),
-                    BrushKind::Picture => {
-                        // TODO(gw): This is not currently used. In the future
-                        //           we should detect opaque pictures.
-                        unreachable!();
-                    }
+                    BrushKind::Picture { .. } => PrimitiveOpacity::translucent(),
                 };
 
                 let metadata = PrimitiveMetadata {
@@ -995,17 +1053,6 @@ impl PrimitiveStore {
                 };
 
                 self.cpu_text_runs.push(text_cpu);
-                metadata
-            }
-            PrimitiveContainer::Picture(picture) => {
-                let metadata = PrimitiveMetadata {
-                    opacity: PrimitiveOpacity::translucent(),
-                    prim_kind: PrimitiveKind::Picture,
-                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_pictures.len()),
-                    ..base_metadata
-                };
-
-                self.cpu_pictures.push(picture);
                 metadata
             }
             PrimitiveContainer::Image(image_cpu) => {
@@ -1058,20 +1105,6 @@ impl PrimitiveStore {
         let metadata = &mut self.cpu_metadata[prim_index.0];
         match metadata.prim_kind {
             PrimitiveKind::Border => {}
-            PrimitiveKind::Picture => {
-                self.cpu_pictures[metadata.cpu_prim_index.0]
-                    .prepare_for_render(
-                        prim_index,
-                        &metadata.screen_rect
-                            .expect("bug: trying to draw an off-screen picture!?")
-                            .clipped,
-                        &metadata.local_rect,
-                        pic_state_for_children,
-                        pic_state,
-                        frame_context,
-                        frame_state,
-                    );
-            }
             PrimitiveKind::TextRun => {
                 let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
                 // The transform only makes sense for screen space rasterization
@@ -1260,10 +1293,20 @@ impl PrimitiveStore {
                             );
                         }
                     }
+                    BrushKind::Picture { pic_index } => {
+                        self.pictures[pic_index.0]
+                            .prepare_for_render(
+                                prim_index,
+                                metadata,
+                                pic_state_for_children,
+                                pic_state,
+                                frame_context,
+                                frame_state,
+                            );
+                    }
                     BrushKind::Solid { .. } |
                     BrushKind::Clear |
-                    BrushKind::Line { .. } |
-                    BrushKind::Picture { .. } => {}
+                    BrushKind::Line { .. } => {}
                 }
             }
         }
@@ -1287,27 +1330,9 @@ impl PrimitiveStore {
                     let text = &self.cpu_text_runs[metadata.cpu_prim_index.0];
                     text.write_gpu_blocks(&mut request);
                 }
-                PrimitiveKind::Picture => {
-                    let pic = &self.cpu_pictures[metadata.cpu_prim_index.0];
-                    pic.write_gpu_blocks(&mut request);
-
-                    let brush = &pic.brush;
-                    brush.write_gpu_blocks(&mut request);
-                    match brush.segment_desc {
-                        Some(ref segment_desc) => {
-                            for segment in &segment_desc.segments {
-                                // has to match VECS_PER_SEGMENT
-                                request.write_segment(segment.local_rect);
-                            }
-                        }
-                        None => {
-                            request.write_segment(metadata.local_rect);
-                        }
-                    }
-                }
                 PrimitiveKind::Brush => {
                     let brush = &self.cpu_brushes[metadata.cpu_prim_index.0];
-                    brush.write_gpu_blocks(&mut request);
+                    brush.write_gpu_blocks(&mut request, &self.pictures);
                     match brush.segment_desc {
                         Some(ref segment_desc) => {
                             for segment in &segment_desc.segments {
@@ -1484,9 +1509,6 @@ impl PrimitiveStore {
         let brush = match metadata.prim_kind {
             PrimitiveKind::Brush => {
                 &mut self.cpu_brushes[metadata.cpu_prim_index.0]
-            }
-            PrimitiveKind::Picture => {
-                &mut self.cpu_pictures[metadata.cpu_prim_index.0].brush
             }
             _ => {
                 return false;
@@ -1708,59 +1730,61 @@ impl PrimitiveStore {
         // For example, scrolling may affect the location of an item in
         // local space, which may force us to render this item on a larger
         // picture target, if being composited.
-        if let PrimitiveKind::Picture = prim_kind {
-            let pic_context_for_children = {
-                let pic = &mut self.cpu_pictures[cpu_prim_index.0];
+        if let PrimitiveKind::Brush = prim_kind {
+            if let BrushKind::Picture { pic_index } = self.cpu_brushes[cpu_prim_index.0].kind {
+                let pic_context_for_children = {
+                    let pic = &mut self.pictures[pic_index.0];
 
-                if !pic.resolve_scene_properties(frame_context.scene_properties) {
-                    return None;
-                }
-
-                let (draw_text_transformed, original_reference_frame_index) = match pic.kind {
-                    PictureKind::Image { reference_frame_index, composite_mode, .. } => {
-                        may_need_clip_mask = composite_mode.is_some();
-                        (true, Some(reference_frame_index))
+                    if !pic.resolve_scene_properties(frame_context.scene_properties) {
+                        return None;
                     }
-                    PictureKind::TextShadow { .. } => {
-                        (false, None)
+
+                    let (draw_text_transformed, original_reference_frame_index) = match pic.kind {
+                        PictureKind::Image { reference_frame_index, composite_mode, .. } => {
+                            may_need_clip_mask = composite_mode.is_some();
+                            (true, Some(reference_frame_index))
+                        }
+                        PictureKind::TextShadow { .. } => {
+                            (false, None)
+                        }
+                    };
+
+                    let display_list = &frame_context
+                        .pipelines
+                        .get(&pic.pipeline_id)
+                        .expect("No display list?")
+                        .display_list;
+
+                    let inv_world_transform = prim_run_context
+                        .scroll_node
+                        .world_content_transform
+                        .inverse();
+
+                    PictureContext {
+                        pipeline_id: pic.pipeline_id,
+                        perform_culling: pic.cull_children,
+                        prim_runs: mem::replace(&mut pic.runs, Vec::new()),
+                        original_reference_frame_index,
+                        display_list,
+                        draw_text_transformed,
+                        inv_world_transform,
                     }
                 };
 
-                let display_list = &frame_context
-                    .pipelines
-                    .get(&pic.pipeline_id)
-                    .expect("No display list?")
-                    .display_list;
+                let result = self.prepare_prim_runs(
+                    &pic_context_for_children,
+                    &mut pic_state_for_children,
+                    frame_context,
+                    frame_state,
+                );
 
-                let inv_world_transform = prim_run_context
-                    .scroll_node
-                    .world_content_transform
-                    .inverse();
+                // Restore the dependencies (borrow check dance)
+                let pic = &mut self.pictures[pic_index.0];
+                pic.runs = pic_context_for_children.prim_runs;
 
-                PictureContext {
-                    pipeline_id: pic.pipeline_id,
-                    perform_culling: pic.cull_children,
-                    prim_runs: mem::replace(&mut pic.runs, Vec::new()),
-                    original_reference_frame_index,
-                    display_list,
-                    draw_text_transformed,
-                    inv_world_transform,
-                }
-            };
-
-            let result = self.prepare_prim_runs(
-                &pic_context_for_children,
-                &mut pic_state_for_children,
-                frame_context,
-                frame_state,
-            );
-
-            // Restore the dependencies (borrow check dance)
-            let pic = &mut self.cpu_pictures[cpu_prim_index.0];
-            pic.runs = pic_context_for_children.prim_runs;
-
-            let metadata = &mut self.cpu_metadata[prim_index.0];
-            metadata.local_rect = pic.update_local_rect(result);
+                let metadata = &mut self.cpu_metadata[prim_index.0];
+                metadata.local_rect = pic.update_local_rect(result);
+            }
         }
 
         let (local_rect, unclipped_device_rect) = {

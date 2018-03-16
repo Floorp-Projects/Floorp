@@ -24,9 +24,11 @@ add_task(async function test_support_LWT_properties() {
     },
   });
 
-  await extension.startup();
-
   let docEl = window.document.documentElement;
+  let transitionPromise = waitForTransition(docEl, "background-color");
+  await extension.startup();
+  await transitionPromise;
+
   let style = window.getComputedStyle(docEl);
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");

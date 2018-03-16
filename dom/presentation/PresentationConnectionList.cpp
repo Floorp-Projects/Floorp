@@ -93,7 +93,7 @@ PresentationConnectionList::FindConnectionById(
     }
   }
 
-  return mConnections.NoIndex;
+  return ConnectionArray::NoIndex;
 }
 
 void
@@ -106,7 +106,7 @@ PresentationConnectionList::NotifyStateChange(const nsAString& aSessionId,
   }
 
   bool connectionFound =
-    FindConnectionById(aSessionId) != mConnections.NoIndex ? true : false;
+    FindConnectionById(aSessionId) != ConnectionArray::NoIndex ? true : false;
 
   PresentationConnectionListBinding::ClearCachedConnectionsValue(this);
   switch (aConnection->State()) {

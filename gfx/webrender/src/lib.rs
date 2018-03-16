@@ -78,6 +78,7 @@ mod glyph_rasterizer;
 mod gpu_cache;
 mod gpu_types;
 mod hit_test;
+mod image;
 mod internal_types;
 mod picture;
 mod prim_store;
@@ -92,6 +93,7 @@ mod resource_cache;
 mod scene;
 mod scene_builder;
 mod segment;
+mod shade;
 mod spring;
 mod texture_allocator;
 mod texture_cache;
@@ -157,7 +159,7 @@ extern crate time;
 #[cfg(feature = "debugger")]
 extern crate ws;
 #[cfg(feature = "debugger")]
-extern crate image;
+extern crate image as image_loader;
 #[cfg(feature = "debugger")]
 extern crate base64;
 #[cfg(all(feature = "capture", feature = "png"))]
