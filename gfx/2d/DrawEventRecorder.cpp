@@ -96,11 +96,24 @@ DrawEventRecorderMemory::Flush()
 void
 DrawEventRecorderMemory::FlushItem(IntRect aRect)
 {
+  MOZ_RELEASE_ASSERT(!aRect.IsEmpty());
+  // Detatching our existing resources will add some
+  // destruction events to our stream so we need to do that
+  // first.
   DetatchResources();
+
   WriteElement(mIndex, mOutputStream.mLength);
+
+  // write out the fonts into the extra data section
   mSerializeCallback(mOutputStream, mUnscaledFonts);
   WriteElement(mIndex, mOutputStream.mLength);
+
+  WriteElement(mIndex, aRect.x);
+  WriteElement(mIndex, aRect.y);
+  WriteElement(mIndex, aRect.XMost());
+  WriteElement(mIndex, aRect.YMost());
   ClearResources();
+  WriteHeader(mOutputStream);
 }
 
 void

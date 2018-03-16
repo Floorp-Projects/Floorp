@@ -1456,6 +1456,18 @@ public:
   }
 
   /**
+   * Mark the end of an Item in a DrawTargetRecording. These markers
+   * are used for merging recordings together.
+   *
+   * This should only be called on the 'root' DrawTargetRecording.
+   * Calling it on a child DrawTargetRecordings will cause confusion.
+   *
+   * Note: this is a bit of a hack. It might be better to just recreate
+   * the DrawTargetRecording.
+   */
+  virtual void FlushItem(const IntRect &aBounds) {}
+
+  /**
    * Ensures that no snapshot is still pointing to this DrawTarget's surface data.
    *
    * This can be useful if the DrawTarget is wrapped around data that it does not
