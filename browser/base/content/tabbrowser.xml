@@ -2098,45 +2098,6 @@
     </handlers>
   </binding>
 
-  <binding id="tabbrowser-tabpanels"
-           extends="chrome://global/content/bindings/tabbox.xml#tabpanels">
-    <implementation>
-      <field name="_selectedIndex">0</field>
-
-      <property name="selectedIndex">
-        <getter>
-        <![CDATA[
-          return this._selectedIndex;
-        ]]>
-        </getter>
-
-        <setter>
-        <![CDATA[
-          if (val < 0 || val >= this.childNodes.length)
-            return val;
-
-          let toTab = this.getRelatedElement(this.childNodes[val]);
-
-          gBrowser._getSwitcher().requestTab(toTab);
-
-          var panel = this._selectedPanel;
-          var newPanel = this.childNodes[val];
-          this._selectedPanel = newPanel;
-          if (this._selectedPanel != panel) {
-            var event = document.createEvent("Events");
-            event.initEvent("select", true, true);
-            this.dispatchEvent(event);
-
-            this._selectedIndex = val;
-          }
-
-          return val;
-        ]]>
-        </setter>
-      </property>
-    </implementation>
-  </binding>
-
   <binding id="tabbrowser-browser"
            extends="chrome://global/content/bindings/browser.xml#browser">
     <implementation>
