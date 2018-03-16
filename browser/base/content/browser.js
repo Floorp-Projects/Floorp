@@ -1231,7 +1231,6 @@ var gBrowserInit = {
     }
 
     TabsInTitlebar.init();
-    TabsInTitlebar.updateAppearance();
   },
 
   onDOMContentLoaded() {

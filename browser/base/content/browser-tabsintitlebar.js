@@ -46,12 +46,7 @@ var TabsInTitlebar = {
     addEventListener("resolutionchange", this, false);
 
     this._initialized = true;
-    if (this._updateOnInit) {
-      // We don't need to call this with 'true', even if original calls
-      // (before init()) did, because this will be the first call and so
-      // we will update anyway.
-      this._update();
-    }
+    this._update();
   },
 
   allowedBy(condition, allow) {
@@ -96,7 +91,6 @@ var TabsInTitlebar = {
   },
 
   _initialized: false,
-  _updateOnInit: false,
   _disallowed: {},
   _prefName: "browser.tabs.drawInTitlebar",
   _lastSizeMode: null,
@@ -115,9 +109,7 @@ var TabsInTitlebar = {
       return;
 
     // In some edgecases it is possible for this to fire before we've initialized.
-    // Don't run now, but don't forget to run it when we do initialize.
     if (!this._initialized) {
-      this._updateOnInit = true;
       return;
     }
 
