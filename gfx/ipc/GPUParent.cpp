@@ -126,7 +126,7 @@ GPUParent::Init(base::ProcessId aParentPid,
   CompositorThreadHolder::Start();
   // TODO: Bug 1406327, Start VRListenerThreadHolder when loading VR content.
   VRListenerThreadHolder::Start();
-  APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
+  APZThreadUtils::SetControllerThread(MessageLoop::current());
   apz::InitializeGlobalState();
   LayerTreeOwnerTracker::Initialize();
   mozilla::ipc::SetThisProcessName("GPU Process");

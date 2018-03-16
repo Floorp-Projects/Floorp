@@ -16,6 +16,7 @@ class InputData;
 
 namespace layers {
 
+class APZInputBridgeParent;
 struct ScrollableLayerGuid;
 
 /**
@@ -98,6 +99,7 @@ public:
   static bool WillHandleWheelEvent(WidgetWheelEvent* aEvent);
 
 protected:
+  friend class APZInputBridgeParent;
 
   // Methods to help process WidgetInputEvents (or manage conversion to/from InputData)
 
