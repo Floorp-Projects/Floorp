@@ -287,15 +287,9 @@
         <setter><![CDATA[
           this.setAttribute("place", val);
 
-          var queriesRef = { };
-          var queryCountRef = { };
-          var optionsRef = { };
-          PlacesUtils.history.queryStringToQueries(val, queriesRef, queryCountRef, optionsRef);
-          if (!optionsRef.value)
-            optionsRef.value = PlacesUtils.history.getNewQueryOptions();
-          let query = queriesRef.value.length ? queriesRef.value[0] : PlacesUtils.history.getNewQuery();
-
-          this.load(query, optionsRef.value);
+          let query = {}, options = {};
+          PlacesUtils.history.queryStringToQuery(val, query, options);
+          this.load(query.value, options.value);
 
           return val;
         ]]></setter>

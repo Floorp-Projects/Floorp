@@ -1339,24 +1339,18 @@ interface nsINavHistoryService : nsISupports
                                    in nsINavHistoryQueryOptions options);
 
   /**
-   * Converts a query URI-like string to an array of actual query objects.
-   * The output query array may be empty if there is
-   * no information. However, there will always be an options structure returned
-   * (if nothing is defined, it will just have the default values).
+   * Converts a query URI-like string to a query object.
    */
-  void queryStringToQueries(in AUTF8String aQueryString,
-    [array, size_is(aResultCount)] out nsINavHistoryQuery aQueries,
-    out unsigned long aResultCount,
-    out nsINavHistoryQueryOptions options);
+  void queryStringToQuery(in AUTF8String aQueryString,
+                          out nsINavHistoryQuery aQuery,
+                          out nsINavHistoryQueryOptions options);
 
   /**
    * Converts a query into an equivalent string that can be persisted. Inverse
-   * of queryStringToQueries()
+   * of queryStringToQuery()
    */
-  AUTF8String queriesToQueryString(
-    [array, size_is(aQueryCount)] in nsINavHistoryQuery aQueries,
-    in unsigned long aQueryCount,
-    in nsINavHistoryQueryOptions options);
+  AUTF8String queryToQueryString(in nsINavHistoryQuery aQuery,
+                                 in nsINavHistoryQueryOptions options);
 
   /**
    * Adds a history observer. If ownsWeak is false, the history service will

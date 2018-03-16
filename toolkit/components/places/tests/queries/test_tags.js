@@ -628,7 +628,7 @@ async function task_doWithVisit(aTags, aCallback) {
 }
 
 /**
- * queriesToQueryString() encodes every character in the query URI that doesn't
+ * queryToQueryString() encodes every character in the query URI that doesn't
  * match /[a-zA-Z]/.  There's no simple JavaScript function that does the same,
  * but encodeURIComponent() comes close, only missing some punctuation.  This
  * function takes care of all of that.
@@ -733,7 +733,7 @@ function queryResultsAre(aResultRoot, aExpectedURIs) {
  * @return The query's URI
  */
 function queryURI(aQuery, aQueryOpts) {
-  return PlacesUtils.history.queriesToQueryString([aQuery], 1, aQueryOpts);
+  return PlacesUtils.history.queryToQueryString(aQuery, aQueryOpts);
 }
 
 /**
