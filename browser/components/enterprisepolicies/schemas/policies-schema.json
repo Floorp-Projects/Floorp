@@ -207,6 +207,22 @@
       "type": "boolean"
     },
 
+    "EnableTrackingProtection": {
+      "description": "Enables or disables tracking protection and optionally locks it.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "Value": {
+          "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      },
+      "required": ["Value"]
+    },
+
     "FlashPlugin": {
       "description": "Allow or deny flash plugin usage.",
       "first_available": "60.0",
