@@ -77,9 +77,10 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
     });
 
   // Add these to the sets, but only if they're not already there.
-  uint32_t i = frameSet->IndexOfFirstElementGt(aFrame);
-  if (i == 0 || aFrame != frameSet->ElementAt(i-1)) {
-    frameSet->InsertElementAt(i, aFrame);
+  FrameWithFlags fwf(aFrame);
+  uint32_t i = frameSet->IndexOfFirstElementGt(fwf, FrameOnlyComparator());
+  if (i == 0 || aFrame != frameSet->ElementAt(i-1).mFrame) {
+    frameSet->InsertElementAt(i, fwf);
   }
   i = requestSet->IndexOfFirstElementGt(aRequest);
   if (i == 0 || aRequest != requestSet->ElementAt(i-1)) {
@@ -139,7 +140,8 @@ ImageLoader::RemoveRequestToFrameMapping(imgIRequest* aRequest,
   if (auto entry = mRequestToFrameMap.Lookup(aRequest)) {
     FrameSet* frameSet = entry.Data();
     MOZ_ASSERT(frameSet, "This should never be null");
-    frameSet->RemoveElementSorted(aFrame);
+    frameSet->RemoveElementSorted(FrameWithFlags(aFrame),
+                                  FrameOnlyComparator());
     if (frameSet->IsEmpty()) {
       nsPresContext* presContext = GetPresContext();
       if (presContext) {
@@ -362,7 +364,8 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet, bool aForcePaint)
   NS_ASSERTION(aFrameSet, "Must have a frame set");
   NS_ASSERTION(mDocument, "Should have returned earlier!");
 
-  for (nsIFrame* frame : *aFrameSet) {
+  for (FrameWithFlags& fwf : *aFrameSet) {
+    nsIFrame* frame = fwf.mFrame;
     if (frame->StyleVisibility()->IsVisible()) {
       if (frame->IsFrameOfType(nsIFrame::eTablePart)) {
         // Tables don't necessarily build border/background display items
@@ -454,7 +457,8 @@ ImageLoader::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
     return NS_OK;
   }
 
-  for (nsIFrame* frame : *frameSet) {
+  for (FrameWithFlags& fwf : *frameSet) {
+    nsIFrame* frame = fwf.mFrame;
     if (frame->StyleVisibility()->IsVisible()) {
       frame->MarkNeedsDisplayItemRebuild();
     }
