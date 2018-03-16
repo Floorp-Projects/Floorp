@@ -568,6 +568,11 @@ FetchBodyConsumer<Derived>::ContinueConsumeBody(nsresult aStatus,
 {
   AssertIsOnTargetThread();
 
+  // This makes sure that we free the data correctly.
+  auto autoFree = mozilla::MakeScopeExit([&] {
+    free(aResult);
+  });
+
   if (mBodyConsumed) {
     return;
   }
@@ -583,7 +588,6 @@ FetchBodyConsumer<Derived>::ContinueConsumeBody(nsresult aStatus,
   RefPtr<FetchBodyConsumer<Derived>> self = this;
   auto autoReleaseObject = mozilla::MakeScopeExit([&] {
     self->ReleaseObject();
-    free(aResult);
   });
 
   if (aShuttingDown) {
@@ -750,6 +754,7 @@ void
 FetchBodyConsumer<Derived>::Abort()
 {
   AssertIsOnTargetThread();
+  ShutDownMainThreadConsuming();
   ContinueConsumeBody(NS_ERROR_DOM_ABORT_ERR, 0, nullptr);
 }
 
