@@ -1207,9 +1207,6 @@ function populateActionBox() {
     $("safe-mode-box").style.display = "block";
     $("action-box").style.display = "block";
   }
-  if (!Services.policies.isAllowed("safeMode")) {
-    $("restart-in-safe-mode-button").setAttribute("disabled", "true");
-  }
 }
 
 // Prompt user to restart the browser in safe mode
