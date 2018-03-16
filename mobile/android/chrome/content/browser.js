@@ -1172,7 +1172,12 @@ var BrowserApp = {
     }
 
     try {
-      aBrowser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
+      aBrowser.loadURIWithFlags(aURI, {
+        flags,
+        referrerURI,
+        charset,
+        postData,
+      });
     } catch(e) {
       if (tab) {
         let message = {
@@ -3775,7 +3780,12 @@ Tab.prototype = {
       this.isSearch = "isSearch" in aParams ? aParams.isSearch : false;
 
       try {
-        this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
+        this.browser.loadURIWithFlags(aURL, {
+          flags,
+          referrerURI,
+          charset,
+          postData,
+        });
       } catch(e) {
         let message = {
           type: "Content:LoadError",
