@@ -1019,7 +1019,7 @@ add_task(async function test_keyed_keys() {
 
   // Check that we have the expected keys.
   let snap = h.snapshot();
-  Assert.ok(Object.keys(snap).length, 2, "Only 2 keys must be recorded.");
+  Assert.equal(Object.keys(snap).length, 2, "Only 2 keys must be recorded.");
   Assert.ok("testkey" in snap, "'testkey' must be recorded.");
   Assert.ok("thirdKey" in snap, "'thirdKey' must be recorded.");
   Assert.deepEqual(snap.testkey.counts, [0, 1, 0],
