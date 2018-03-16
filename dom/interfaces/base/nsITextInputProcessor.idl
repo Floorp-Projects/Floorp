@@ -305,6 +305,10 @@ interface nsITextInputProcessor : nsISupports
    *                        If its type value is "keydown", this method
    *                        dispatches only keydown event first.  Otherwise,
    *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
    * @param aKeyFlags       See KEY_* constants.
    * @return                Returns true if composition starts normally.
    *                        Otherwise, returns false because it might be
@@ -393,6 +397,10 @@ interface nsITextInputProcessor : nsISupports
    *                        If its type value is "keydown", this method
    *                        dispatches only keydown event first.  Otherwise,
    *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
    * @param aKeyFlags       See KEY_* constants.
    * @return                Returns true if there is a composition already or
    *                        starting composition automatically.
@@ -413,6 +421,10 @@ interface nsITextInputProcessor : nsISupports
    *                        If its type value is "keydown", this method
    *                        dispatches only keydown event first.  Otherwise,
    *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
    * @param aKeyFlags       See KEY_* constants.
    */
   [optional_argc]
@@ -429,6 +441,10 @@ interface nsITextInputProcessor : nsISupports
    *                        If its type value is "keydown", this method
    *                        dispatches only keydown event first.  Otherwise,
    *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
    * @param aKeyFlags       See KEY_* constants.
    * @return                Returns true if there is a composition already or
    *                        starting composition automatically.
@@ -454,6 +470,10 @@ interface nsITextInputProcessor : nsISupports
    *                        If its type value is "keydown", this method
    *                        dispatches only keydown event first.  Otherwise,
    *                        dispatches keydown first and keyup at last.
+   *                        key value and keyCode values of keydown event
+   *                        are set to "Process" and DOM_VK_PROCESSKEY
+   *                        automatically.  You can prevent this behavior
+   *                        with KEY_DONT_MARK_KEYDOWN_AS_PROCESSED.
    * @param aKeyFlags       See KEY_* constants.
    */
   [optional_argc]
@@ -488,6 +508,12 @@ interface nsITextInputProcessor : nsISupports
   // without dispatching key events.  This is useful for testing odd behavior
   // or emulating legacy API behavior.
   const unsigned long KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT         = 0x00000020;
+  // If KEY_DONT_MARK_KEYDOWN_AS_PROCESSED is specified, key value and keyCode
+  // value of keydown event are not changed to "Process" and DOM_VK_PROCESSKEY.
+  const unsigned long KEY_DONT_MARK_KEYDOWN_AS_PROCESSED           = 0x00000040;
+  // If KEY_MARK_KEYUP_AS_PROCESSED is specified, key value and keyCode value
+  // of keyup event are changed to "Process" and DOM_VK_PROCESSKEY.
+  const unsigned long KEY_MARK_KEYUP_AS_PROCESSED                  = 0x00000080;
 
   // These values can be used to do bitwise operation with the return value of
   // the keydown() method.
