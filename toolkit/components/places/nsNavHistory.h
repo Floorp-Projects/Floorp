@@ -321,11 +321,6 @@ public:
   // Current active transaction for a batch.
   mozStorageTransaction* mBatchDBTransaction;
 
-  // better alternative to QueryStringToQueries (in nsNavHistoryQuery.cpp)
-  nsresult QueryStringToQueryArray(const nsACString& aQueryString,
-                                   nsCOMArray<nsNavHistoryQuery>* aQueries,
-                                   nsNavHistoryQueryOptions** aOptions);
-
   typedef nsDataHashtable<nsCStringHashKey, nsCString> StringHash;
 
   /**
@@ -645,9 +640,9 @@ protected:
   int32_t mReloadVisitBonus;
 
   // in nsNavHistoryQuery.cpp
-  nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
-                           nsCOMArray<nsNavHistoryQuery>* aQueries,
-                           nsNavHistoryQueryOptions* aOptions);
+  nsresult TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
+                         nsNavHistoryQuery* aQuery,
+                         nsNavHistoryQueryOptions* aOptions);
 
   int64_t mTagsFolder;
 
