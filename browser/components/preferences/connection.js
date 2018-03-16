@@ -8,6 +8,10 @@
 /* import-globals-from in-content/extensionControlled.js */
 
 Preferences.addAll([
+  // Add network.proxy.autoconfig_url before network.proxy.type so they're
+  // both initialized when network.proxy.type initialization triggers a call to
+  // gConnectionsDialog.updateReloadButton().
+  { id: "network.proxy.autoconfig_url", type: "string" },
   { id: "network.proxy.type", type: "int" },
   { id: "network.proxy.http", type: "string" },
   { id: "network.proxy.http_port", type: "int" },
@@ -20,7 +24,6 @@ Preferences.addAll([
   { id: "network.proxy.socks_version", type: "int" },
   { id: "network.proxy.socks_remote_dns", type: "bool" },
   { id: "network.proxy.no_proxies_on", type: "string" },
-  { id: "network.proxy.autoconfig_url", type: "string" },
   { id: "network.proxy.share_proxy_settings", type: "bool" },
   { id: "signon.autologin.proxy", type: "bool" },
   { id: "pref.advanced.proxies.disable_button.reload", type: "bool" },
