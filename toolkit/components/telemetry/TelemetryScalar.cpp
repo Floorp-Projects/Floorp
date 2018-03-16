@@ -2514,6 +2514,39 @@ TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
 }
 
 /**
+ * Count in Scalars how many of which events were recorded. See bug 1440673
+ *
+ * Event Telemetry unfortunately cannot use vanilla ScalarAdd because it needs
+ * to summarize events recorded in different processes to the
+ * telemetry.event_counts of the same process. Including "dynamic".
+ *
+ * @param aUniqueEventName - expected to be category#object#method
+ * @param aProcessType - the process of the event being summarized
+ * @param aDynamic - whether the event being summarized was dynamic
+ */
+void
+TelemetryScalar::SummarizeEvent(const nsCString& aUniqueEventName,
+                                ProcessID aProcessType, bool aDynamic)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only summarize events in the parent process");
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  StaticMutexAutoLock lock(gTelemetryScalarsMutex);
+  ScalarKey scalarKey{static_cast<uint32_t>(ScalarID::TELEMETRY_EVENT_COUNTS), aDynamic};
+  KeyedScalar* scalar = nullptr;
+  nsresult rv = internal_GetKeyedScalarByEnum(lock, scalarKey, aProcessType, &scalar);
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("NS_FAILED getting keyed scalar telemetry.event_counts. Wut.");
+    return;
+  }
+
+  scalar->AddValue(NS_ConvertASCIItoUTF16(aUniqueEventName), 1);
+}
+
+/**
  * Resets all the stored scalars. This is intended to be only used in tests.
  */
 void
