@@ -29,8 +29,7 @@ nsHtml5MetaScanner::tryCharset(nsHtml5String charset)
   if (!encoding) {
     return false;
   }
-  if (encoding == UTF_16BE_ENCODING ||
-      encoding == UTF_16LE_ENCODING) {
+  if (encoding == UTF_16BE_ENCODING || encoding == UTF_16LE_ENCODING) {
     mEncoding = UTF_8_ENCODING;
     return true;
   }

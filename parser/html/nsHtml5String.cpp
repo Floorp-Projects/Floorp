@@ -4,8 +4,8 @@
 
 #include "nsHtml5String.h"
 #include "nsCharTraits.h"
-#include "nsUTF8Utils.h"
 #include "nsHtml5TreeBuilder.h"
+#include "nsUTF8Utils.h"
 
 void
 nsHtml5String::ToString(nsAString& aString)
@@ -79,8 +79,7 @@ nsHtml5String::Equals(nsHtml5String aOther) const
   if (Length() != aOther.Length()) {
     return false;
   }
-  return !memcmp(
-    AsPtr(), aOther.AsPtr(), Length() * sizeof(char16_t));
+  return !memcmp(AsPtr(), aOther.AsPtr(), Length() * sizeof(char16_t));
 }
 
 nsHtml5String
@@ -143,12 +142,14 @@ nsHtml5String::FromBuffer(char16_t* aBuffer,
     char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
     data[0] = 0xFFFD;
     data[1] = 0;
-    return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
+    return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
+                         eStringBuffer);
   }
   char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
   memcpy(data, aBuffer, aLength * sizeof(char16_t));
   data[aLength] = 0;
-  return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
+  return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
+                       eStringBuffer);
 }
 
 // static
@@ -172,7 +173,8 @@ nsHtml5String::FromLiteral(const char* aLiteral)
   LossyConvertEncoding8to16 converter(data);
   converter.write(aLiteral, length);
   data[length] = 0;
-  return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
+  return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
+                       eStringBuffer);
 }
 
 // static
@@ -184,8 +186,9 @@ nsHtml5String::FromString(const nsAString& aString)
     return nsHtml5String(eEmpty);
   }
   RefPtr<nsStringBuffer> buffer = nsStringBuffer::FromString(aString);
-  if (buffer && (length == buffer->StorageSize()/sizeof(char16_t) - 1)) {
-    return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
+  if (buffer && (length == buffer->StorageSize() / sizeof(char16_t) - 1)) {
+    return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
+                         eStringBuffer);
   }
   buffer = nsStringBuffer::Alloc((length + 1) * sizeof(char16_t));
   if (!buffer) {
@@ -194,7 +197,8 @@ nsHtml5String::FromString(const nsAString& aString)
   char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
   memcpy(data, aString.BeginReading(), length * sizeof(char16_t));
   data[length] = 0;
-  return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) | eStringBuffer);
+  return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
+                       eStringBuffer);
 }
 
 // static

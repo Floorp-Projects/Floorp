@@ -66,9 +66,11 @@ public:
   int32_t ns;
   nsIContentHandle* node;
   nsHtml5HtmlAttributes* attributes;
+
 private:
   int32_t refcount;
   mozilla::dom::HTMLContentCreatorFunction htmlCreator;
+
 public:
   inline int32_t getFlags() { return flags; }
 
@@ -104,6 +106,7 @@ public:
 private:
   static int32_t prepareSvgFlags(int32_t flags);
   static int32_t prepareMathFlags(int32_t flags, bool markAsIntegrationPoint);
+
 public:
   ~nsHtml5StackNode();
   void dropAttributes();

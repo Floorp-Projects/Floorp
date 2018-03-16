@@ -10,12 +10,13 @@
 
 class nsHtml5SVGLoadDispatcher : public mozilla::Runnable
 {
-  private:
-    nsCOMPtr<nsIContent> mElement;
-    nsCOMPtr<nsIDocument> mDocument;
-  public:
-    explicit nsHtml5SVGLoadDispatcher(nsIContent* aElement);
-    NS_IMETHOD Run() override;
+private:
+  nsCOMPtr<nsIContent> mElement;
+  nsCOMPtr<nsIDocument> mDocument;
+
+public:
+  explicit nsHtml5SVGLoadDispatcher(nsIContent* aElement);
+  NS_IMETHOD Run() override;
 };
 
 #endif // nsHtml5SVGLoadDispatcher_h
