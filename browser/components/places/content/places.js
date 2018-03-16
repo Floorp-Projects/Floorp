@@ -395,13 +395,6 @@ var PlacesOrganizer = {
     return PlacesUtils.asQuery(ContentArea.currentView.result.root).queryOptions;
   },
 
-  /**
-   * Returns the queries associated with the query currently loaded in the
-   * main places pane.
-   */
-  getCurrentQueries: function PO_getCurrentQueries() {
-    return PlacesUtils.asQuery(ContentArea.currentView.result.root).getQueries();
-  },
 
   /**
    * Show the migration wizard for importing passwords,
