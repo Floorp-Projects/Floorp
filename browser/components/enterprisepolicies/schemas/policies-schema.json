@@ -170,6 +170,13 @@
       "type": "boolean"
     },
 
+    "DisableSafeMode": {
+      "description": "Prevents ability to restart in safe mode.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableSysAddonUpdate": {
       "description": "Prevent the browser from installing and updating system addons.",
       "first_available": "60.0",

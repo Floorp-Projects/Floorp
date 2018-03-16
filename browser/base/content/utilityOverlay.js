@@ -832,6 +832,9 @@ function buildHelpMenu() {
   document.getElementById("feedbackPage")
           .disabled = !Services.policies.isAllowed("feedbackCommands");
 
+  document.getElementById("helpSafeMode")
+          .disabled = !Services.policies.isAllowed("safeMode");
+
   // Enable/disable the "Report Web Forgery" menu item.
   if (typeof gSafeBrowsing != "undefined") {
     gSafeBrowsing.setReportPhishingMenu();
