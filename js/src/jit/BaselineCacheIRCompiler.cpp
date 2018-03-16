@@ -942,7 +942,7 @@ BaselineCacheIRCompiler::emitLoadFrameArgumentResult()
 
     // Bounds check.
     masm.loadPtr(Address(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs()), scratch1);
-    masm.boundsCheck32ForLoad(index, scratch1, scratch2, failure->label());
+    masm.spectreBoundsCheck32(index, scratch1, scratch2, failure->label());
 
     // Load the argument.
     masm.loadValue(BaseValueIndex(BaselineFrameReg, index, BaselineFrame::offsetOfArg(0)),
