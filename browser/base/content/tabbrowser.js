@@ -126,8 +126,8 @@ window._gBrowser = {
    */
   _browserBindingProperties: [
     "canGoBack", "canGoForward", "goBack", "goForward", "permitUnload",
-    "reload", "reloadWithFlags", "stop", "loadURI", "loadURIWithFlags",
-    "gotoIndex", "currentURI", "documentURI",
+    "reload", "reloadWithFlags", "stop", "loadURI",
+    "goHome", "homePage", "gotoIndex", "currentURI", "documentURI",
     "preferences", "imageDocument", "isRemoteBrowser", "messageManager",
     "getTabBrowser", "finder", "fastFind", "sessionHistory", "contentTitle",
     "characterSet", "fullZoom", "textZoom", "webProgress",
@@ -359,12 +359,30 @@ window._gBrowser = {
   /**
    * throws exception for unknown schemes
    */
-  loadURIWithFlags(aURI, aParams) {
-    return this.mCurrentBrowser.loadURIWithFlags(aURI, aParams);
+  loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData) {
+    // Note - the callee understands both:
+    // (a) loadURIWithFlags(aURI, aFlags, ...)
+    // (b) loadURIWithFlags(aURI, { flags: aFlags, ... })
+    // Forwarding it as (a) here actually supports both (a) and (b),
+    // so you can call us either way too.
+    return this.selectedBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData);
+  },
+
+  goHome() {
+    return this.selectedBrowser.goHome();
   },
 
   gotoIndex(aIndex) {
     return this.selectedBrowser.gotoIndex(aIndex);
+  },
+
+  set homePage(val) {
+    this.selectedBrowser.homePage = val;
+    return val;
+  },
+
+  get homePage() {
+    return this.selectedBrowser.homePage;
   },
 
   get currentURI() {

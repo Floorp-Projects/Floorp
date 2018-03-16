@@ -2901,7 +2901,7 @@ var SessionStoreInternal = {
     // a flash of the about:tabcrashed page after selecting
     // the revived tab.
     aTab.removeAttribute("crashed");
-    browser.loadURI("about:blank", null, null);
+    browser.loadURI("about:blank");
 
     let data = TabState.collect(aTab);
     this.restoreTab(aTab, data, {
