@@ -10,7 +10,7 @@
 
 const Services = require("Services");
 const promise = require("promise");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 const {Task} = require("devtools/shared/task");
 const {PrefObserver} = require("devtools/client/shared/prefs");
@@ -123,6 +123,7 @@ function Inspector(toolbox) {
   this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
+  this._clearSearchResultsLabel = this._clearSearchResultsLabel.bind(this);
 
   this.onDetached = this.onDetached.bind(this);
   this.onMarkupLoaded = this.onMarkupLoaded.bind(this);
@@ -383,7 +384,7 @@ Inspector.prototype = {
     this.searchResultsLabel = this.panelDoc.getElementById("inspector-searchlabel");
 
     this.search = new InspectorSearch(this, this.searchBox, this.searchClearButton);
-    this.search.on("search-cleared", this._updateSearchResultsLabel);
+    this.search.on("search-cleared", this._clearSearchResultsLabel);
     this.search.on("search-result", this._updateSearchResultsLabel);
 
     let shortcuts = new KeyShortcuts({
@@ -405,9 +406,13 @@ Inspector.prototype = {
     return this.search.autocompleter;
   },
 
-  _updateSearchResultsLabel: function(event, result) {
+  _clearSearchResultsLabel: function(result) {
+    return this._updateSearchResultsLabel(result, true);
+  },
+
+  _updateSearchResultsLabel: function(result, clear = false) {
     let str = "";
-    if (event !== "search-cleared") {
+    if (!clear) {
       if (result) {
         str = INSPECTOR_L10N.getFormatStr(
           "inspector.searchResultsCount2", result.resultsIndex + 1, result.resultsLength);
@@ -559,7 +564,7 @@ Inspector.prototype = {
     this.toolbox.emit("inspector-sidebar-resized", { width, height });
   },
 
-  onSidebarSelect: function(event, toolId) {
+  onSidebarSelect: function(toolId) {
     // Save the currently selected sidebar panel
     Services.prefs.setCharPref("devtools.inspector.activeSidebar", toolId);
 

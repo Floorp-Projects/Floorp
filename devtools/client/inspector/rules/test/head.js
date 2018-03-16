@@ -478,7 +478,7 @@ function* sendKeysAndWaitForFocus(view, element, keys) {
  */
 function waitForStyleModification(inspector) {
   return new Promise(function(resolve) {
-    function checkForStyleModification(name, mutations) {
+    function checkForStyleModification(mutations) {
       for (let mutation of mutations) {
         if (mutation.type === "attributes" && mutation.attributeName === "style") {
           inspector.off("markupmutation", checkForStyleModification);
