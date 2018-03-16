@@ -101,6 +101,10 @@ android {
             dimension "abi"
         }
 
+        aarch64 {
+            dimension "abi"
+        }
+
         universal {
             dimension "abi"
         }
@@ -187,6 +191,11 @@ android {
             res.srcDir 'src/klarRelease/res'
         }
 
+        klarGeckoAarch64Release {
+            java.srcDir 'src/klarRelease/java'
+            res.srcDir 'src/klarRelease/res'
+        }
+
         focusGeckoArmRelease {
             java.srcDir 'src/focusRelease/java'
             manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
@@ -194,6 +203,12 @@ android {
         }
 
         focusGeckoX86Release {
+            java.srcDir 'src/focusRelease/java'
+            manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
+            res.srcDir 'src/focusRelease/res'
+        }
+
+        focusGeckoAarch64Release {
             java.srcDir 'src/focusRelease/java'
             manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
             res.srcDir 'src/focusRelease/res'
@@ -209,11 +224,19 @@ android {
             res.srcDir 'src/focusBeta/res'
         }
 
+        focusGeckoAarch64Beta {
+            res.srcDir 'src/focusBeta/res'
+        }
+
         klarGeckoArmBeta {
             res.srcDir 'src/klarBeta/res'
         }
 
         klarGeckoX86Beta {
+            res.srcDir 'src/klarBeta/res'
+        }
+
+        klarGeckoAarch64Beta {
             res.srcDir 'src/klarBeta/res'
         }
 
@@ -227,11 +250,19 @@ android {
             res.srcDir 'src/focusDebug/res'
         }
 
+        focusGeckoAarch64Debug {
+            res.srcDir 'src/focusDebug/res'
+        }
+
         klarGeckoArmDebug {
             res.srcDir 'src/klarDebug/res'
         }
 
         klarGeckoX86Debug {
+            res.srcDir 'src/klarDebug/res'
+        }
+
+        klarGeckoAarch64Debug {
             res.srcDir 'src/klarDebug/res'
         }
     }
@@ -261,11 +292,15 @@ repositories {
         //   https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
 
         // ARM GeckoView builds
-        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.2018.03.07.latest.mobile.android-api-16-opt/artifacts/public/android/maven"
+        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoview_nightly_version}.latest.mobile.android-api-16-opt/artifacts/public/android/maven"
     }
     maven {
         // x86 GeckoView builds
-        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.2018.03.07.latest.mobile.android-x86-opt/artifacts/public/android/maven"
+        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoview_nightly_version}.latest.mobile.android-x86-opt/artifacts/public/android/maven"
+    }
+    maven {
+        // aarch64 builds
+        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoview_nightly_version}.latest.mobile.android-aarch64-opt/artifacts/public/android/maven"
     }
 }
 
@@ -300,6 +335,7 @@ dependencies {
     // WebView + (ARM / x86) flavor combinations this should be good enough for now.
     armCompile "org.mozilla:geckoview-nightly-armeabi-v7a:60.0a1"
     x86Compile "org.mozilla:geckoview-nightly-x86:60.0a1"
+    aarch64Compile "org.mozilla:geckoview-nightly-arm64-v8a:60.0a1"
 
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.7.1"
@@ -343,6 +379,8 @@ android.applicationVariants.all { variant ->
         def multiplier = 100000000
 
         if (variant.flavorName.contains("X86")) {
+            versionCode = versionCode + (3 * multiplier)
+        } else if (variant.flavorName.contains("Aarch64")) {
             versionCode = versionCode + (2 * multiplier)
         } else if (variant.flavorName.contains("Arm")) {
             versionCode = versionCode + (1 * multiplier)
