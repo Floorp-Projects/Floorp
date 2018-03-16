@@ -28,7 +28,6 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : P
     private var savedSearchEngineName: String? = null
     private var savedSearchQuery: String? = null
 
-
     override fun onCreateView(parent: ViewGroup?): View {
         val view = super.onCreateView(parent)
 
@@ -106,7 +105,7 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : P
     }
 
     private fun buildTextWatcherForErrorLayout(errorLayout: TextInputLayout): TextWatcher {
-        return object: TextWatcher {
+        return object : TextWatcher {
             override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
 
             override fun onTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {
