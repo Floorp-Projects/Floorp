@@ -103,24 +103,6 @@
       <!-- throws exception for unknown schemes -->
       <method name="loadURI">
         <parameter name="aURI"/>
-        <parameter name="aReferrerURI"/>
-        <parameter name="aCharset"/>
-        <body>
-          <![CDATA[
-            this._wrapURIChangeCall(() =>
-              this.loadURIWithFlags(aURI, {
-                flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                referrerURI: aReferrerURI,
-                charset: aCharset,
-              })
-            );
-          ]]>
-        </body>
-      </method>
-
-      <!-- throws exception for unknown schemes -->
-      <method name="loadURIWithFlags">
-        <parameter name="aURI"/>
         <parameter name="aParams"/>
         <body>
           <![CDATA[
@@ -129,12 +111,12 @@
             }
 
             let {
-              flags,
+              flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
               referrerURI,
               referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
               triggeringPrincipal,
               postData,
-            } = aParams;
+            } = aParams || {};
 
             this._wrapURIChangeCall(() =>
               this.webNavigation.loadURIWithOptions(

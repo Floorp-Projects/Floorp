@@ -448,7 +448,7 @@ function openLinkIn(url, where, params) {
       targetBrowser.createAboutBlankContentViewer(aPrincipal);
     }
 
-    targetBrowser.loadURIWithFlags(url, {
+    targetBrowser.loadURI(url, {
       triggeringPrincipal: aTriggeringPrincipal,
       flags,
       referrerURI: aNoReferrer ? null : aReferrerURI,

@@ -316,7 +316,7 @@ class BasePopup {
         stylesheets: this.STYLESHEETS,
       });
 
-      browser.loadURIWithFlags(popupURL, {triggeringPrincipal: this.extension.principal});
+      browser.loadURI(popupURL, {triggeringPrincipal: this.extension.principal});
     });
   }
 
