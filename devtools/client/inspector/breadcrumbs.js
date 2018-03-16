@@ -15,7 +15,7 @@ const MAX_LABEL_LENGTH = 40;
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const SCROLL_REPEAT_MS = 100;
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 // Some margin may be required for visible element detection.
@@ -401,11 +401,12 @@ HTMLBreadcrumbs.prototype = {
     this.breadcrumbsWidgetItemId = 0;
 
     this.update = this.update.bind(this);
+    this.updateWithMutations = this.updateWithMutations.bind(this);
     this.updateSelectors = this.updateSelectors.bind(this);
     this.selection.on("new-node-front", this.update);
     this.selection.on("pseudoclass", this.updateSelectors);
     this.selection.on("attribute-changed", this.updateSelectors);
-    this.inspector.on("markupmutation", this.update);
+    this.inspector.on("markupmutation", this.updateWithMutations);
     this.update();
   },
 
@@ -612,7 +613,7 @@ HTMLBreadcrumbs.prototype = {
     this.selection.off("new-node-front", this.update);
     this.selection.off("pseudoclass", this.updateSelectors);
     this.selection.off("attribute-changed", this.updateSelectors);
-    this.inspector.off("markupmutation", this.update);
+    this.inspector.off("markupmutation", this.updateWithMutations);
 
     this.container.removeEventListener("click", this, true);
     this.container.removeEventListener("mouseover", this, true);
@@ -827,6 +828,16 @@ HTMLBreadcrumbs.prototype = {
     // Catch all return in case the mutations array was empty, or in case none
     // of the changes iterated above were interesting.
     return false;
+  },
+
+  /**
+   * Update the breadcrumbs display when a new node is selected and there are
+   * mutations.
+   * @param {Array} mutations An array of mutations in case this was called as
+   * the "markupmutation" event listener.
+   */
+  updateWithMutations(mutations) {
+    return this.update("markupmutation", mutations);
   },
 
   /**
