@@ -2356,6 +2356,8 @@ HttpChannelChild::Cancel(nsresult status)
 {
   LOG(("HttpChannelChild::Cancel [this=%p, status=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(status)));
+  LogCallingScriptLocation(this);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mCanceled) {
@@ -2467,18 +2469,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
              "security flags in loadInfo but asyncOpen2() not called");
 
   LOG(("HttpChannelChild::AsyncOpen [this=%p uri=%s]\n", this, mSpec.get()));
-
-  if (LOG4_ENABLED()) {
-    JSContext* cx = nsContentUtils::GetCurrentJSContext();
-    if (cx) {
-      nsAutoCString fileNameString;
-      uint32_t line = 0, col = 0;
-      if (nsJSUtils::GetCallingLocation(cx, fileNameString, &line, &col)) {
-        LOG(("HttpChannelChild %p source script=%s:%u:%u",
-             this, fileNameString.get(), line, col));
-      }
-    }
-  }
+  LogCallingScriptLocation(this);
 
 #ifdef DEBUG
   AssertPrivateBrowsingId();
