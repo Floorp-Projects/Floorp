@@ -4309,7 +4309,13 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   // http://dev.w3.org/csswg/css-grid/#algo-content
   // We're also setting eIsFlexing on the item state here to speed up
   // FindUsedFlexFraction later.
-  AutoTArray<TrackSize::StateBits, 16> stateBitsPerSpan;
+  struct PerSpanData {
+    PerSpanData() : mItemCountWithSameSpan(0)
+                  , mStateBits(TrackSize::StateBits(0)) {}
+    uint32_t mItemCountWithSameSpan;
+    TrackSize::StateBits mStateBits;
+  };
+  AutoTArray<PerSpanData, 16> perSpanData;
   nsTArray<Step2ItemData> step2Items;
   CSSOrderAwareFrameIterator& iter = aState.mIter;
   gfxContext* rc = &aState.mRenderingContext;
@@ -4354,14 +4360,11 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           !(state & TrackSize::eFlexMaxSizing)) {
         // Collect data for Step 2.
         maxSpan = std::max(maxSpan, span);
-        if (span >= stateBitsPerSpan.Length()) {
-          uint32_t len = 2 * span;
-          stateBitsPerSpan.SetCapacity(len);
-          for (uint32_t i = stateBitsPerSpan.Length(); i < len; ++i) {
-            stateBitsPerSpan.AppendElement(TrackSize::StateBits(0));
-          }
+        if (span >= perSpanData.Length()) {
+          perSpanData.SetLength(2 * span);
         }
-        stateBitsPerSpan[span] |= state;
+        perSpanData[span].mItemCountWithSameSpan++;
+        perSpanData[span].mStateBits |= state;
         CachedIntrinsicSizes cache;
         // Calculate data for "Automatic Minimum Size" clamping, if needed.
         bool needed = ((state & TrackSize::eIntrinsicMinSizing) ||
@@ -4441,15 +4444,12 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     auto spanGroupEnd = spanGroupStart;
     const auto end = step2Items.end();
     for (; spanGroupStart != end; spanGroupStart = spanGroupEnd) {
-      while (spanGroupEnd != end &&
-             !Step2ItemData::IsSpanLessThan(*spanGroupStart, *spanGroupEnd)) {
-        ++spanGroupEnd;
-      }
-
       const uint32_t span = spanGroupStart->mSpan;
+      spanGroupEnd = spanGroupStart + perSpanData[span].mItemCountWithSameSpan;
+      TrackSize::StateBits stateBitsForSpan = perSpanData[span].mStateBits;
       bool updatedBase = false; // Did we update any mBase in step 2.1 - 2.3?
       TrackSize::StateBits selector(TrackSize::eIntrinsicMinSizing);
-      if (stateBitsPerSpan[span] & selector) {
+      if (stateBitsForSpan & selector) {
         // Step 2.1 MinSize to intrinsic min-sizing.
         updatedBase =
           GrowSizeForSpanningItems<TrackSizingPhase::eIntrinsicMinimums>(
@@ -4457,7 +4457,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       }
 
       selector = contentBasedMinSelector;
-      if (stateBitsPerSpan[span] & selector) {
+      if (stateBitsForSpan & selector) {
         // Step 2.2 MinContentContribution to min-/max-content (and 'auto' when
         // sizing under a min-content constraint) min-sizing.
         updatedBase |=
@@ -4466,7 +4466,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       }
 
       selector = maxContentMinSelector;
-      if (stateBitsPerSpan[span] & selector) {
+      if (stateBitsForSpan & selector) {
         // Step 2.3 MaxContentContribution to max-content (and 'auto' when
         // sizing under a max-content constraint) min-sizing.
         updatedBase |=
@@ -4484,9 +4484,9 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       }
 
       selector = TrackSize::eIntrinsicMaxSizing;
-      if (stateBitsPerSpan[span] & selector) {
+      if (stateBitsForSpan & selector) {
         const bool willRunStep2_6 =
-          stateBitsPerSpan[span] & TrackSize::eAutoOrMaxContentMaxSizing;
+          stateBitsForSpan & TrackSize::eAutoOrMaxContentMaxSizing;
         // Step 2.5 MinSize to intrinsic max-sizing.
         GrowSizeForSpanningItems<TrackSizingPhase::eIntrinsicMaximums>(
           spanGroupStart, spanGroupEnd, tracks, plan, itemPlan, selector,
