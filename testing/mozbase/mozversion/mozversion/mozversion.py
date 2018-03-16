@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import argparse
 import os
 import re
-from six import StringIO
 from six.moves import configparser
 import sys
 import tempfile
@@ -184,71 +183,7 @@ class LocalB2GVersion(B2GVersion):
             self._logger.warning('Error pulling gaia file')
 
 
-class RemoteB2GVersion(B2GVersion):
-
-    def __init__(self, sources=None, host=None,
-                 device_serial=None, adb_host=None, adb_port=None,
-                 **kwargs):
-        B2GVersion.__init__(self, sources, **kwargs)
-
-        try:
-            import mozdevice
-        except ImportError:
-            self._logger.critical("mozdevice is required to get the version"
-                                  " of a remote device")
-            raise
-
-        dm = mozdevice.DeviceManagerADB(deviceSerial=device_serial,
-                                        serverHost=adb_host,
-                                        serverPort=adb_port)
-
-        if not sources:
-            path = 'system/sources.xml'
-            if dm.fileExists(path):
-                sources = StringIO(dm.pullFile(path))
-            else:
-                self._logger.info('Unable to find %s' % path)
-
-        tempdir = tempfile.mkdtemp()
-        for ini in ('application', 'platform'):
-            with open(os.path.join(tempdir, '%s.ini' % ini), 'w') as f:
-                f.write(dm.pullFile('/system/b2g/%s.ini' % ini))
-                f.flush()
-        self.get_gecko_info(tempdir)
-        mozfile.remove(tempdir)
-
-        for path in ['/system/b2g', '/data/local']:
-            path += '/webapps/settings.gaiamobile.org/application.zip'
-            if dm.fileExists(path):
-                with tempfile.NamedTemporaryFile() as f:
-                    dm.getFile(path, f.name)
-                    self.get_gaia_info(f)
-                break
-        else:
-            self._logger.warning('Error pulling gaia file')
-
-        build_props = dm.pullFile('/system/build.prop')
-        desired_props = {
-            'ro.build.version.incremental': 'device_firmware_version_incremental',
-            'ro.build.version.release': 'device_firmware_version_release',
-            'ro.build.date.utc': 'device_firmware_date',
-            'ro.product.device': 'device_id'}
-        for line in build_props.split('\n'):
-            if not line.strip().startswith('#') and '=' in line:
-                key, value = [s.strip() for s in line.split('=', 1)]
-                if key in desired_props.keys():
-                    self._info[desired_props[key]] = value
-
-        if self._info.get('device_id', '').lower() == 'flame':
-            for prop in ['ro.boot.bootloader', 't2m.sw.version']:
-                value = dm.shellCheckOutput(['getprop', prop])
-                if value:
-                    self._info['device_firmware_version_base'] = value
-                    break
-
-
-def get_version(binary=None, sources=None, host=None,
-                device_serial=None, adb_host=None, adb_port=None):
+def get_version(binary=None, sources=None):
     """
     Returns the application version information as a dict. You can specify
     a path to the binary of the application or an Android APK file (to get
@@ -259,28 +194,14 @@ def get_version(binary=None, sources=None, host=None,
 
     :param binary: Path to the binary for the application or Android APK file
     :param sources: Path to the sources.xml file (Firefox OS)
-    :param host: Host address of remote Firefox OS instance (not used with ADB)
-    :param device_serial: Serial identifier of Firefox OS device (ADB)
-    :param adb_host: Host address of ADB server
-    :param adb_port: Port of ADB server
     """
-    try:
-        if binary and zipfile.is_zipfile(binary) and 'AndroidManifest.xml' in \
-           zipfile.ZipFile(binary, 'r').namelist():
-            version = LocalFennecVersion(binary)
-        else:
-            version = LocalVersion(binary)
-            if version._info.get('application_name') == 'B2G':
-                version = LocalB2GVersion(binary, sources=sources)
-    except errors.LocalAppNotFoundError:
-        if binary:
-            # we had a binary argument, do not search for remote B2G
-            raise
-        version = RemoteB2GVersion(sources=sources,
-                                   host=host,
-                                   adb_host=adb_host,
-                                   adb_port=adb_port,
-                                   device_serial=device_serial)
+    if binary and zipfile.is_zipfile(binary) and 'AndroidManifest.xml' in \
+       zipfile.ZipFile(binary, 'r').namelist():
+        version = LocalFennecVersion(binary)
+    else:
+        version = LocalVersion(binary)
+        if version._info.get('application_name') == 'B2G':
+            version = LocalB2GVersion(binary, sources=sources)
 
     for (key, value) in sorted(version._info.items()):
         if value:
@@ -299,32 +220,18 @@ def cli(args=sys.argv[1:]):
     fxos.add_argument(
         '--sources',
         help='path to sources.xml')
-    fxos.add_argument(
-        '--device',
-        help='serial identifier of device to target')
-    fxos.add_argument(
-        '--adb-host',
-        help='host running adb')
-    fxos.add_argument(
-        '--adb-port',
-        help='port running adb')
     mozlog.commandline.add_logging_group(
         parser,
         include_formatters=mozlog.commandline.TEXT_FORMATTERS
     )
 
     args = parser.parse_args()
-    host = os.environ.get('TEST_DEVICE')
 
     mozlog.commandline.setup_logging(
         'mozversion', args, {'mach': sys.stdout})
 
     get_version(binary=args.binary,
-                sources=args.sources,
-                host=host,
-                device_serial=args.device,
-                adb_host=args.adb_host,
-                adb_port=args.adb_port)
+                sources=args.sources)
 
 
 if __name__ == '__main__':
