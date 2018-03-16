@@ -141,6 +141,11 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
 
+    params.push_back("SANDBOX_LEVEL_1");
+    params.push_back(aInfo.level == 1 ? "TRUE" : "FALSE");
+    params.push_back("SANDBOX_LEVEL_2");
+    params.push_back(aInfo.level == 2 ? "TRUE" : "FALSE");
+
     params.push_back("MAC_OS_MINOR");
     params.push_back(macOSMinor.c_str());
 

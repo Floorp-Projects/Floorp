@@ -385,6 +385,8 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
 
   ; Parameters
   (define shouldLog (param "SHOULD_LOG"))
+  (define sandbox-level-1 (param "SANDBOX_LEVEL_1"))
+  (define sandbox-level-2 (param "SANDBOX_LEVEL_2"))
   (define macosMinorVersion (string->number (param "MAC_OS_MINOR")))
   (define homeDir (param "HOME_PATH"))
   (define tempDir (param "DARWIN_USER_TEMP_DIR"))
@@ -626,6 +628,26 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
     ; automatically issued by the font server in response to font
     ; API calls.
     (extension "com.apple.app-sandbox.read"))
+
+  (if (string=? sandbox-level-1 "TRUE") (begin
+    ; Open file dialogs
+    (allow mach-lookup
+	; needed for the dialog sidebar
+	(global-name "com.apple.coreservices.sharedfilelistd.xpc")
+	; bird(8) -- "Documents in the Cloud"
+	; needed to avoid iCloud error dialogs and to display iCloud files
+	(global-name "com.apple.bird")
+	(global-name "com.apple.bird.token")
+	; needed for icons in the file dialog
+	(global-name "com.apple.iconservices"))
+    ; Needed for read access to files selected by the user with the
+    ; file dialog. The extensions are granted when the dialog is
+    ; displayed. Unfortunately (testing revealed) that displaying
+    ; the file dialog grants access to all files within the directory
+    ; displayed by the file dialog--a small improvement compared
+    ; to global read access.
+    (allow file-read*
+	(extension "com.apple.app-sandbox.read-write"))))
 
   (allow ipc-posix-shm*
       (ipc-posix-name-regex #"^AudioIO")
