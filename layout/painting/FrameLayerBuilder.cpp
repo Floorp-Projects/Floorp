@@ -1795,7 +1795,7 @@ public:
 
   already_AddRefed<ImageContainer> CreateImageAndImageContainer()
   {
-    RefPtr<ImageContainer> container = mLayerManager->CreateImageContainer();
+    RefPtr<ImageContainer> container = LayerManager::CreateImageContainer();
     RefPtr<Image> image = CreateImage();
 
     if (!image) {

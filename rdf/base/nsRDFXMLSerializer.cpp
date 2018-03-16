@@ -1018,7 +1018,7 @@ nsresult
 QNameCollector::Visit(nsIRDFNode* aSubject, nsIRDFResource* aPredicate,
                       nsIRDFNode* aObject, bool aTruthValue)
 {
-    if (aPredicate == mParent->kRDF_type) {
+    if (aPredicate == nsRDFXMLSerializer::kRDF_type) {
         // try to get a type QName for aObject, should be a resource
         nsCOMPtr<nsIRDFResource> resType = do_QueryInterface(aObject);
         if (!resType) {
@@ -1035,11 +1035,11 @@ QNameCollector::Visit(nsIRDFNode* aSubject, nsIRDFResource* aPredicate,
     if (mParent->mQNames.Get(aPredicate, nullptr)) {
         return NS_OK;
     }
-    if (aPredicate == mParent->kRDF_instanceOf ||
-        aPredicate == mParent->kRDF_nextVal)
+    if (aPredicate == nsRDFXMLSerializer::kRDF_instanceOf ||
+        aPredicate == nsRDFXMLSerializer::kRDF_nextVal)
         return NS_OK;
     bool isOrdinal = false;
-    mParent->gRDFC->IsOrdinalProperty(aPredicate, &isOrdinal);
+    nsRDFXMLSerializer::gRDFC->IsOrdinalProperty(aPredicate, &isOrdinal);
     if (isOrdinal)
         return NS_OK;
 

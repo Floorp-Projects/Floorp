@@ -74,22 +74,22 @@ public:
   ~CamerasSingleton();
 
   static OffTheBooksMutex& Mutex() {
-    return gTheInstance.get()->mCamerasMutex;
+    return Singleton<mozilla::camera::CamerasSingleton>::get()->mCamerasMutex;
   }
 
   static CamerasChild*& Child() {
     Mutex().AssertCurrentThreadOwns();
-    return gTheInstance.get()->mCameras;
+    return Singleton<mozilla::camera::CamerasSingleton>::get()->mCameras;
   }
 
   static nsCOMPtr<nsIThread>& Thread() {
     Mutex().AssertCurrentThreadOwns();
-    return gTheInstance.get()->mCamerasChildThread;
+    return Singleton<mozilla::camera::CamerasSingleton>::get()->mCamerasChildThread;
   }
 
   static nsCOMPtr<nsIThread>& FakeDeviceChangeEventThread() {
     Mutex().AssertCurrentThreadOwns();
-    return gTheInstance.get()->mFakeDeviceChangeEventThread;
+    return Singleton<mozilla::camera::CamerasSingleton>::get()->mFakeDeviceChangeEventThread;
   }
 
   static bool InShutdown() {

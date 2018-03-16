@@ -39,7 +39,7 @@ xpcAccessibilityService::AddRef(void)
 {
   MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(xpcAccessibilityService)
   MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
-  if (!mRefCnt.isThreadSafe)
+  if (!nsAutoRefCnt::isThreadSafe)
     NS_ASSERT_OWNINGTHREAD(xpcAccessibilityService);
   nsrefcnt count = ++mRefCnt;
   NS_LOG_ADDREF(this, count, "xpcAccessibilityService", sizeof(*this));
@@ -63,7 +63,7 @@ xpcAccessibilityService::Release(void)
 {
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
 
-  if (!mRefCnt.isThreadSafe) {
+  if (!nsAutoRefCnt::isThreadSafe) {
     NS_ASSERT_OWNINGTHREAD(xpcAccessibilityService);
   }
 
@@ -71,7 +71,7 @@ xpcAccessibilityService::Release(void)
   NS_LOG_RELEASE(this, count, "xpcAccessibilityService");
 
   if (count == 0) {
-    if (!mRefCnt.isThreadSafe) {
+    if (!nsAutoRefCnt::isThreadSafe) {
       NS_ASSERT_OWNINGTHREAD(xpcAccessibilityService);
     }
 

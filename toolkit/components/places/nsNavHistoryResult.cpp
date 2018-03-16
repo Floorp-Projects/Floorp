@@ -4155,7 +4155,7 @@ nsNavHistoryResult::AddHistoryObserver(nsNavHistoryQueryResultNode* aNode)
   // Don't add duplicate observers.  In some case we don't unregister when
   // children are cleared (see ClearChildren) and the next FillChildren call
   // will try to add the observer again.
-  if (mHistoryObservers.IndexOf(aNode) == mHistoryObservers.NoIndex) {
+  if (mHistoryObservers.IndexOf(aNode) == QueryObserverList::NoIndex) {
     mHistoryObservers.AppendElement(aNode);
   }
 }
@@ -4176,7 +4176,7 @@ nsNavHistoryResult::AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
   // Don't add duplicate observers.  In some case we don't unregister when
   // children are cleared (see ClearChildren) and the next FillChildren call
   // will try to add the observer again.
-  if (mAllBookmarksObservers.IndexOf(aNode) == mAllBookmarksObservers.NoIndex) {
+  if (mAllBookmarksObservers.IndexOf(aNode) == QueryObserverList::NoIndex) {
     mAllBookmarksObservers.AppendElement(aNode);
   }
 }
@@ -4217,7 +4217,7 @@ nsNavHistoryResult::AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNod
   // children are cleared (see ClearChildren) and the next FillChildren call
   // will try to add the observer again.
   FolderObserverList* list = BookmarkFolderObserversForId(aFolder, true);
-  if (list->IndexOf(aNode) == list->NoIndex) {
+  if (list->IndexOf(aNode) == FolderObserverList::NoIndex) {
     list->AppendElement(aNode);
   }
 }
@@ -4390,7 +4390,7 @@ void
 nsNavHistoryResult::requestRefresh(nsNavHistoryContainerResultNode* aContainer)
 {
   // Don't add twice the same container.
-  if (mRefreshParticipants.IndexOf(aContainer) == mRefreshParticipants.NoIndex)
+  if (mRefreshParticipants.IndexOf(aContainer) == ContainerObserverList::NoIndex)
     mRefreshParticipants.AppendElement(aContainer);
 }
 
