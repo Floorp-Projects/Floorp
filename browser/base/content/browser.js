@@ -1297,6 +1297,9 @@ var gBrowserInit = {
     });
 
     this._setInitialFocus();
+
+    gBrowser.tabContainer.updateVisibility();
+    TabsInTitlebar.onDOMContentLoaded();
   },
 
   onLoad() {
