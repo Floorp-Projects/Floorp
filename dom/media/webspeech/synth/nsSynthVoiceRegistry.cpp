@@ -175,8 +175,7 @@ nsSynthVoiceRegistry::GetInstance()
     ClearOnShutdown(&gSynthVoiceRegistry);
     if (XRE_IsParentProcess()) {
       // Start up all speech synth services.
-      NS_CreateServicesFromCategory(NS_SPEECH_SYNTH_STARTED, nullptr,
-        NS_SPEECH_SYNTH_STARTED);
+      NS_CreateServicesFromCategory(NS_SPEECH_SYNTH_STARTED, nullptr, nullptr);
     }
   }
 
