@@ -62,6 +62,15 @@ class ADBError(Exception):
     pass
 
 
+class ADBProcessError(ADBError):
+    """ADBProcessError is raised when an associated ADBProcess is
+    available and relevant.
+    """
+    def __init__(self, adb_process):
+        ADBError.__init__(self, str(adb_process))
+        self.adb_process = adb_process
+
+
 class ADBListDevicesError(ADBError):
     """ADBListDevicesError is raised when errors are found listing the
     devices, typically not any permissions.
@@ -280,7 +289,7 @@ class ADBCommand(object):
             if adb_process.timedout:
                 raise ADBTimeoutError("%s" % adb_process)
             elif adb_process.exitcode:
-                raise ADBError("%s" % adb_process)
+                raise ADBProcessError(adb_process)
             output = adb_process.stdout_file.read().rstrip()
             if self._verbose:
                 self._logger.debug('command_output: %s, '
@@ -1138,7 +1147,7 @@ class ADBDevice(ADBCommand):
             if adb_process.timedout:
                 raise ADBTimeoutError("%s" % adb_process)
             elif adb_process.exitcode:
-                raise ADBError("%s" % adb_process)
+                raise ADBProcessError(adb_process)
             output = adb_process.stdout_file.read().rstrip()
             if self._verbose:
                 self._logger.debug('shell_output: %s, '
@@ -1916,7 +1925,7 @@ class ADBDevice(ADBCommand):
             if adb_process.timedout:
                 raise ADBTimeoutError("%s" % adb_process)
             elif adb_process.exitcode:
-                raise ADBError("%s" % adb_process)
+                raise ADBProcessError(adb_process)
             # first line is the headers
             header = adb_process.stdout_file.readline()
             pid_i = -1
