@@ -19,7 +19,6 @@ class LIRGeneratorMIPS64 : public LIRGeneratorMIPSShared
       : LIRGeneratorMIPSShared(gen, graph, lirGraph)
     { }
 
-  protected:
     void lowerInt64PhiInput(MPhi*, uint32_t, LBlock*, size_t);
     void defineInt64Phi(MPhi*, size_t);
 
@@ -41,14 +40,6 @@ class LIRGeneratorMIPS64 : public LIRGeneratorMIPSShared
     void lowerModI64(MMod* mod);
     void lowerUDivI64(MDiv* div);
     void lowerUModI64(MMod* mod);
-
-  public:
-    void visitBox(MBox* box);
-    void visitUnbox(MUnbox* unbox);
-    void visitReturn(MReturn* ret);
-    void visitRandom(MRandom* ins);
-    void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
-    void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
 };
 
 typedef LIRGeneratorMIPS64 LIRGeneratorSpecific;

@@ -1542,13 +1542,6 @@ FragmentOrElement::MarkNodeChildren(nsINode* aNode)
   if (elm) {
     elm->MarkForCC();
   }
-
-  if (aNode->HasProperties()) {
-    nsIDocument* ownerDoc = aNode->OwnerDoc();
-    ownerDoc->PropertyTable(DOM_USER_DATA)->
-      Enumerate(aNode, FragmentOrElement::MarkUserData,
-                &nsCCUncollectableMarker::sGeneration);
-  }
 }
 
 nsINode*

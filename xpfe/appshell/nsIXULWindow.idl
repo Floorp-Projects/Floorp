@@ -67,6 +67,13 @@ interface nsIXULWindow : nsISupports
   void addChildWindow(in nsIXULWindow aChild);
 
   /**
+   * Returns the difference between the inner window size (client size) and the
+   * outer window size, in CSS pixels.
+   */
+  [noscript,notxpcom] uint32_t getOuterToInnerHeightDifferenceInCSSPixels();
+  [noscript,notxpcom] uint32_t getOuterToInnerWidthDifferenceInCSSPixels();
+
+  /**
    * Tell this window that it has lost a child XUL window
    * @param aChild the child window being removed
    */

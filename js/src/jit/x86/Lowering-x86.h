@@ -14,12 +14,11 @@ namespace jit {
 
 class LIRGeneratorX86 : public LIRGeneratorX86Shared
 {
-  public:
+  protected:
     LIRGeneratorX86(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
       : LIRGeneratorX86Shared(gen, graph, lirGraph)
     { }
 
-  protected:
     // Returns a box allocation with type set to reg1 and payload set to reg2.
     LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
                                bool useAtStart = false);
@@ -55,35 +54,12 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     void lowerUDivI64(MDiv* div);
     void lowerUModI64(MMod* mod);
 
-  public:
-    void visitBox(MBox* box);
-    void visitUnbox(MUnbox* unbox);
-    void visitReturn(MReturn* ret);
-    void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
-    void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
-    void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
-    void visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins);
-    void visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins);
-    void visitAsmJSLoadHeap(MAsmJSLoadHeap* ins);
-    void visitAsmJSStoreHeap(MAsmJSStoreHeap* ins);
-    void visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins);
-    void visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins);
-    void visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins);
-    void visitWasmLoad(MWasmLoad* ins);
-    void visitWasmStore(MWasmStore* ins);
-    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
-    void visitSubstr(MSubstr* ins);
-    void visitRandom(MRandom* ins);
-    void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
-    void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
-    void visitExtendInt32ToInt64(MExtendInt32ToInt64* ins);
-    void visitSignExtendInt64(MSignExtendInt64* ins);
     void lowerPhi(MPhi* phi);
 
+  public:
     static bool allowTypedElementHoleCheck() {
         return true;
     }
-
     static bool allowStaticTypedArrayAccesses() {
         return true;
     }

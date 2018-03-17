@@ -432,10 +432,25 @@ struct nsCallbackEventRequest
 };
 
 // ----------------------------------------------------------------------------
+//
+// NOTE(emilio): It'd be nice for this to assert that our document isn't in the
+// bfcache, but font pref changes don't care about that, and maybe / probably
+// shouldn't.
+#ifdef DEBUG
 #define ASSERT_REFLOW_SCHEDULED_STATE()                                       \
-  NS_ASSERTION(ObservingLayoutFlushes() ==                                    \
-                 GetPresContext()->RefreshDriver()->                          \
-                   IsLayoutFlushObserver(this), "Unexpected state")
+{                                                                             \
+  if (ObservingLayoutFlushes()) {                                             \
+    MOZ_ASSERT(mDocument->GetBFCacheEntry() ||                                \
+               mPresContext->RefreshDriver()->IsLayoutFlushObserver(this),    \
+               "Unexpected state");                                           \
+  } else {                                                                    \
+    MOZ_ASSERT(!mPresContext->RefreshDriver()->IsLayoutFlushObserver(this),   \
+               "Unexpected state");                                           \
+  }                                                                           \
+}
+#else
+#define ASSERT_REFLOW_SCHEDULED_STATE() /* nothing */
+#endif
 
 class nsAutoCauseReflowNotifier
 {
@@ -797,6 +812,7 @@ nsIPresShell::nsIPresShell()
     , mNeedStyleFlush(true)
     , mObservingStyleFlushes(false)
     , mObservingLayoutFlushes(false)
+    , mResizeEventPending(false)
     , mNeedThrottledAnimationFlush(true)
     , mPresShellId(0)
     , mFontSizeInflationEmPerLine(0)
@@ -834,7 +850,6 @@ PresShell::PresShell()
   , mNoDelayedMouseEvents(false)
   , mNoDelayedKeyEvents(false)
   , mShouldUnsuppressPainting(false)
-  , mResizeEventPending(false)
   , mApproximateFrameVisibilityVisited(false)
   , mNextPaintCompressed(false)
   , mHasCSSBackgroundColor(false)
@@ -1368,10 +1383,7 @@ PresShell::Destroy()
   // Revoke any pending events.  We need to do this and cancel pending reflows
   // before we destroy the frame manager, since apparently frame destruction
   // sometimes spins the event queue when plug-ins are involved(!).
-  if (mResizeEventPending) {
-    rd->RemoveResizeEventFlushObserver(this);
-  }
-  rd->RemoveLayoutFlushObserver(this);
+  StopObservingRefreshDriver();
 
   if (rd->GetPresContext() == GetPresContext()) {
     rd->RevokeViewManagerFlush();
@@ -1412,6 +1424,36 @@ PresShell::Destroy()
   mHaveShutDown = true;
 
   mTouchManager.Destroy();
+}
+
+void
+nsIPresShell::StopObservingRefreshDriver()
+{
+  nsRefreshDriver* rd = mPresContext->RefreshDriver();
+  if (mResizeEventPending) {
+    rd->RemoveResizeEventFlushObserver(this);
+  }
+  if (mObservingLayoutFlushes) {
+    rd->RemoveLayoutFlushObserver(this);
+  }
+  if (mObservingStyleFlushes) {
+    rd->RemoveStyleFlushObserver(this);
+  }
+}
+
+void
+nsIPresShell::StartObservingRefreshDriver()
+{
+  nsRefreshDriver* rd = mPresContext->RefreshDriver();
+  if (mResizeEventPending) {
+    rd->AddResizeEventFlushObserver(this);
+  }
+  if (mObservingLayoutFlushes) {
+    rd->AddLayoutFlushObserver(this);
+  }
+  if (mObservingStyleFlushes) {
+    rd->AddStyleFlushObserver(this);
+  }
 }
 
 nsRefreshDriver*
@@ -2055,7 +2097,9 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
 
   if (!mIsDestroying && !mResizeEventPending) {
     mResizeEventPending = true;
-    GetPresContext()->RefreshDriver()->AddResizeEventFlushObserver(this);
+    if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
+      mPresContext->RefreshDriver()->AddResizeEventFlushObserver(this);
+    }
   }
 
   return NS_OK; //XXX this needs to be real. MMP
@@ -9212,16 +9256,22 @@ void
 nsIPresShell::DoObserveStyleFlushes()
 {
   MOZ_ASSERT(!ObservingStyleFlushes());
-  mObservingStyleFlushes =
+  mObservingStyleFlushes = true;
+
+  if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
     mPresContext->RefreshDriver()->AddStyleFlushObserver(this);
+  }
 }
 
 void
 nsIPresShell::DoObserveLayoutFlushes()
 {
   MOZ_ASSERT(!ObservingLayoutFlushes());
-  mObservingLayoutFlushes =
+  mObservingLayoutFlushes = true;
+
+  if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
     mPresContext->RefreshDriver()->AddLayoutFlushObserver(this);
+  }
 }
 
 //------------------------------------------------------

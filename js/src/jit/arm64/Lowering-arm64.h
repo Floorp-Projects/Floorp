@@ -14,12 +14,11 @@ namespace jit {
 
 class LIRGeneratorARM64 : public LIRGeneratorShared
 {
-  public:
+  protected:
     LIRGeneratorARM64(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
       : LIRGeneratorShared(gen, graph, lirGraph)
     { }
 
-  protected:
     // Returns a box allocation. reg2 is ignored on 64-bit platforms.
     LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
                                bool useAtStart = false);
@@ -87,40 +86,13 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
     void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
     void lowerUDiv(MDiv* div);
     void lowerUMod(MMod* mod);
-    void visitPowHalf(MPowHalf* ins);
-    void visitWasmNeg(MWasmNeg* ins);
-    void visitWasmSelect(MWasmSelect* ins);
 
     LTableSwitchV* newLTableSwitchV(MTableSwitch* ins);
     LTableSwitch* newLTableSwitch(const LAllocation& in,
                                   const LDefinition& inputCopy,
                                   MTableSwitch* ins);
 
-  public:
-    void visitBox(MBox* box);
-    void visitUnbox(MUnbox* unbox);
-    void visitReturn(MReturn* ret);
     void lowerPhi(MPhi* phi);
-    void visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins);
-    void visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins);
-    void visitAsmJSLoadHeap(MAsmJSLoadHeap* ins);
-    void visitAsmJSStoreHeap(MAsmJSStoreHeap* ins);
-    void visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins);
-    void visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins);
-    void visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins);
-    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
-    void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
-    void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
-    void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
-    void visitSubstr(MSubstr* ins);
-    void visitRandom(MRandom* ins);
-    void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
-    void visitWasmLoad(MWasmLoad* ins);
-    void visitWasmStore(MWasmStore* ins);
-    void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
-    void visitCopySign(MCopySign* ins);
-    void visitExtendInt32ToInt64(MExtendInt32ToInt64* ins);
-    void visitSignExtendInt64(MSignExtendInt64* ins);
 };
 
 typedef LIRGeneratorARM64 LIRGeneratorSpecific;
