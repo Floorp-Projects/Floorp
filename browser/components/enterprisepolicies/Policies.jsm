@@ -311,6 +311,14 @@ var Policies = {
     }
   },
 
+  "NoDefaultBookmarks": {
+    onProfileAfterChange(manager, param) {
+      if (param) {
+        manager.disallowFeature("defaultBookmarks");
+      }
+    }
+  },
+
   "Popups": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("popup", param.Allow, null);
