@@ -27,7 +27,7 @@ LIRGeneratorMIPS::useBoxFixed(MDefinition* mir, Register reg1, Register reg2, bo
 }
 
 void
-LIRGeneratorMIPS::visitBox(MBox* box)
+LIRGenerator::visitBox(MBox* box)
 {
     MDefinition* inner = box->getOperand(0);
 
@@ -67,7 +67,7 @@ LIRGeneratorMIPS::visitBox(MBox* box)
 }
 
 void
-LIRGeneratorMIPS::visitUnbox(MUnbox* unbox)
+LIRGenerator::visitUnbox(MUnbox* unbox)
 {
     MDefinition* inner = unbox->getOperand(0);
 
@@ -112,7 +112,7 @@ LIRGeneratorMIPS::visitUnbox(MUnbox* unbox)
 }
 
 void
-LIRGeneratorMIPS::visitReturn(MReturn* ret)
+LIRGenerator::visitReturn(MReturn* ret)
 {
     MDefinition* opd = ret->getOperand(0);
     MOZ_ASSERT(opd->type() == MIRType::Value);
@@ -247,7 +247,7 @@ LIRGeneratorMIPS::lowerUModI64(MMod* mod)
 }
 
 void
-LIRGeneratorMIPS::visitRandom(MRandom* ins)
+LIRGenerator::visitRandom(MRandom* ins)
 {
     LRandom *lir = new(alloc()) LRandom(temp(),
                                         temp(),
@@ -259,7 +259,7 @@ LIRGeneratorMIPS::visitRandom(MRandom* ins)
 
 
 void
-LIRGeneratorMIPS::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
+LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 {
     MDefinition* opd = ins->input();
     MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
@@ -268,7 +268,7 @@ LIRGeneratorMIPS::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 }
 
 void
-LIRGeneratorMIPS::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
+LIRGenerator::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
     MDefinition* opd = ins->input();
     MOZ_ASSERT(opd->type() == MIRType::Int64);
