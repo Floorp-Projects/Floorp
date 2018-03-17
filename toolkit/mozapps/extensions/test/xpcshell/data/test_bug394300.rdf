@@ -15,7 +15,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>2</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -29,7 +29,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -44,7 +44,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -56,7 +56,7 @@
             <em:targetApplication>
               <RDF:Description>
                 <em:id>xpcshell@tests.mozilla.org</em:id>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -70,7 +70,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>2</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -91,7 +91,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>2</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -105,7 +105,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>1.9</em:minVersion>
                 <em:maxVersion>1.9</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -120,7 +120,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>1.9</em:minVersion>
                 <em:maxVersion>1.9</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -132,7 +132,7 @@
             <em:targetApplication>
               <RDF:Description>
                 <em:id>toolkit@mozilla.org</em:id>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -146,7 +146,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>2</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>

@@ -8,12 +8,13 @@ ChromeUtils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
 
 ChromeUtils.import("resource://testing-common/httpd.js");
 
-var testserver = createHttpServer(4444);
+var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+
 testserver.registerDirectory("/data/", do_get_file("data"));
 
 function checkUpdates(aId, aUpdateFile) {
   return new Promise((resolve, reject) => {
-    AddonUpdateChecker.checkForUpdates(aId, `http://localhost:4444/data/${aUpdateFile}`, {
+    AddonUpdateChecker.checkForUpdates(aId, `http://example.com/data/${aUpdateFile}`, {
       onUpdateCheckComplete: resolve,
 
       onUpdateCheckError(status) {
