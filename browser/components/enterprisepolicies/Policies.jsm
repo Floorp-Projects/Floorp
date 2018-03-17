@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gXulStore",
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
-  ProxyPolicies: "resource:///modules/policies/ProxyPolicies.jsm",
 });
 
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
@@ -323,17 +322,6 @@ var Policies = {
   "Popups": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("popup", param.Allow, null);
-    }
-  },
-
-  "Proxy": {
-    onBeforeAddons(manager, param) {
-      if (param.Locked) {
-        manager.disallowFeature("changeProxySettings");
-        ProxyPolicies.configureProxySettings(param, setAndLockPref);
-      } else {
-        ProxyPolicies.configureProxySettings(param, setDefaultPref);
-      }
     }
   },
 

@@ -9,5 +9,4 @@ with Files("**"):
 
 EXTRA_JS_MODULES.policies += [
     'BookmarksPolicies.jsm',
-    'ProxyPolicies.jsm',
 ]
