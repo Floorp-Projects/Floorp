@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+requestLongerTimeout(2);
 
 function assertBpInGutter(dbg, lineNumber) {
   const el = findElement(dbg, "breakpoint");
@@ -17,8 +18,6 @@ function assertBpInGutter(dbg, lineNumber) {
 // This source map does not have source contents, so it's fetched separately
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  requestLongerTimeout(2);
-
   const dbg = await initDebugger("doc-sourcemaps2.html");
   const { selectors: { getBreakpoint, getBreakpoints }, getState } = dbg;
 

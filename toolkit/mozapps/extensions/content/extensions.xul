@@ -188,7 +188,7 @@
             <spacer class="alert-spacer-after"/>
           </vbox>
           <browser id="discover-browser" type="content" flex="1"
-                     disablehistory="true" homepage="about:blank"/>
+                   disablehistory="true"/>
         </deck>
 
         <!-- container for views with the search/tools header -->

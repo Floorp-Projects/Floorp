@@ -88,7 +88,6 @@ function focusInChild() {
     content.document.getElementById(message.data.id)[message.data.type]();
   });
 
-  /* eslint-disable mozilla/no-cpows-in-tests */
   addMessageListener("Browser:GetFocusedElement", function getFocusedElement(message) {
     var focusedWindow = {};
     var node = Services.focus.getFocusedElementForWindow(content, false, focusedWindow);
@@ -126,7 +125,6 @@ function focusElementInChild(elementid, type) {
     browser.contentDocument.getElementById(elementid)[type]();
   }
 }
-/* eslint-enable mozilla/no-cpows-in-tests */
 
 add_task(async function() {
   tab1 = BrowserTestUtils.addTab(gBrowser);

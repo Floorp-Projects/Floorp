@@ -41,7 +41,6 @@ using mozilla::DefaultXDisplay;
 #include "nsAttrName.h"
 #include "nsIFocusManager.h"
 #include "nsFocusManager.h"
-#include "nsIDOMDragEvent.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDocShell.h"
@@ -52,6 +51,7 @@ using mozilla::DefaultXDisplay;
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/TabChild.h"
@@ -1762,7 +1762,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
     return DispatchCompositionToPlugin(aEvent);
   }
 
-  nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
+  DragEvent* dragEvent = aEvent->InternalDOMEvent()->AsDragEvent();
   if (dragEvent && mInstance) {
     WidgetEvent* ievent = aEvent->WidgetEventPtr();
     if (ievent && ievent->IsTrusted() &&

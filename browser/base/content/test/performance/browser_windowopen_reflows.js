@@ -24,8 +24,8 @@ if (Services.appinfo.OS == "WINNT") {
       stack: [
         "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
         "_update@chrome://browser/content/browser-tabsintitlebar.js",
-        "init@chrome://browser/content/browser-tabsintitlebar.js",
-        "handleEvent@chrome://browser/content/tabbrowser.xml",
+        "onDOMContentLoaded@chrome://browser/content/browser-tabsintitlebar.js",
+        "onDOMContentLoaded@chrome://browser/content/browser.js",
       ],
       maxCount: 2, // This number should only ever go down - never up.
     },
@@ -38,8 +38,8 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
       stack: [
         "rect@chrome://browser/content/browser-tabsintitlebar.js",
         "_update@chrome://browser/content/browser-tabsintitlebar.js",
-        "init@chrome://browser/content/browser-tabsintitlebar.js",
-        "handleEvent@chrome://browser/content/tabbrowser.xml",
+        "onDOMContentLoaded@chrome://browser/content/browser-tabsintitlebar.js",
+        "onDOMContentLoaded@chrome://browser/content/browser.js",
       ],
       // These numbers should only ever go down - never up.
       maxCount: Services.appinfo.OS == "WINNT" ? 5 : 4,
@@ -62,12 +62,8 @@ add_task(async function() {
   let win = OpenBrowserWindow();
 
   await withReflowObserver(async function() {
-    let resizeEvent = BrowserTestUtils.waitForEvent(win, "resize");
-    let delayedStartup =
-      TestUtils.topicObserved("browser-delayed-startup-finished",
-                              subject => subject == win);
-    await resizeEvent;
-    await delayedStartup;
+    await TestUtils.topicObserved("browser-delayed-startup-finished",
+                                  subject => subject == win);
   }, EXPECTED_REFLOWS, win);
 
   await BrowserTestUtils.closeWindow(win);

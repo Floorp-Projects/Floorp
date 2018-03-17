@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsIPrincipal.idl"
 
-interface nsIDOMDragEvent;
+interface nsIDOMEvent;
 
 [scriptable, uuid(69E14F91-2E09-4CA6-A511-A715C99A2804)]
 interface nsIDroppedLinkItem : nsISupports
@@ -37,8 +37,10 @@ interface nsIDroppedLinkHandler : nsISupports
    * of the source of the drag is different from the destination. This check
    * includes any parent, sibling and child frames in the same content tree.
    * If true, the source is not checked.
+   *
+   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  boolean canDropLink(in nsIDOMDragEvent aEvent, in boolean aAllowSameDocument);
+  boolean canDropLink(in nsIDOMEvent aEvent, in boolean aAllowSameDocument);
 
   /**
    * Given a drop event aEvent, determines the link being dragged and returns
@@ -56,8 +58,10 @@ interface nsIDroppedLinkHandler : nsISupports
    *
    * aName is filled in with the link title if it exists, or an empty string
    * otherwise.
+   *
+   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  AString dropLink(in nsIDOMDragEvent aEvent, out AString aName,
+  AString dropLink(in nsIDOMEvent aEvent, out AString aName,
                    [optional] in boolean aDisallowInherit);
 
   /**
@@ -73,8 +77,10 @@ interface nsIDroppedLinkHandler : nsISupports
    *    the user into a dragging a chrome url, for example.
    *  - aDisallowInherit is true, and the URI being dropped would inherit the
    *    current document's security context (URI_INHERITS_SECURITY_CONTEXT).
+   *
+   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  void dropLinks(in nsIDOMDragEvent aEvent,
+  void dropLinks(in nsIDOMEvent aEvent,
                  [optional] in boolean aDisallowInherit,
                  [optional] out unsigned long aCount,
                  [retval, array, size_is(aCount)] out nsIDroppedLinkItem aLinks);
@@ -83,8 +89,10 @@ interface nsIDroppedLinkHandler : nsISupports
    * Given a drop event aEvent, validate the extra URIs for the event,
    * this is used when the caller extracts yet another URIs from the dropped
    * text, like home button that splits the text with "|".
+   *
+   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  void validateURIsForDrop(in nsIDOMDragEvent aEvent,
+  void validateURIsForDrop(in nsIDOMEvent aEvent,
                            in unsigned long aURIsCount,
                            [array, size_is(aURIsCount)] in wstring aURIs,
                            [optional] in boolean aDisallowInherit);
@@ -104,6 +112,8 @@ interface nsIDroppedLinkHandler : nsISupports
   /**
    * Given a drop event aEvent, determines the triggering principal for the
    * event and returns it.
+   *
+   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  nsIPrincipal getTriggeringPrincipal(in nsIDOMDragEvent aEvent);
+  nsIPrincipal getTriggeringPrincipal(in nsIDOMEvent aEvent);
 };

@@ -80,6 +80,7 @@ private:
   nsAtom* camelCaseName;
   mozilla::dom::HTMLContentCreatorFunction htmlCreator;
   mozilla::dom::SVGContentCreatorFunction svgCreator;
+
 public:
   int32_t flags;
   inline nsAtom* getName() { return name; }
@@ -199,6 +200,7 @@ public:
 
   static nsHtml5ElementName* ELT_ANNOTATION_XML;
   static nsHtml5ElementName* ELT_BIG;
+  static nsHtml5ElementName* ELT_BDI;
   static nsHtml5ElementName* ELT_BDO;
   static nsHtml5ElementName* ELT_COL;
   static nsHtml5ElementName* ELT_DEL;
@@ -404,9 +406,11 @@ public:
   static nsHtml5ElementName* ELT_RUBY;
   static nsHtml5ElementName* ELT_SUMMARY;
   static nsHtml5ElementName* ELT_TBODY;
+
 private:
   static nsHtml5ElementName** ELEMENT_NAMES;
   static staticJArray<int32_t, int32_t> ELEMENT_HASHES;
+
 public:
   static void initializeStatics();
   static void releaseStatics();

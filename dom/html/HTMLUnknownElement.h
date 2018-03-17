@@ -27,9 +27,6 @@ public:
   explicit HTMLUnknownElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
-    if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
-      AddStatesSilently(NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO);
-    }
   }
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,

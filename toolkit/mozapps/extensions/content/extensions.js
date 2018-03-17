@@ -2110,7 +2110,6 @@ var gDiscoverView = {
         return;
       }
 
-      this._browser.homePage = this.homepageURL.spec;
       this._browser.addProgressListener(this);
 
       if (this.loaded)
@@ -2169,7 +2168,7 @@ var gDiscoverView = {
     // and the error page is not visible then there is nothing else to do
     if (this.loaded && this.node.selectedPanel != this._error &&
         (!aIsRefresh || (this._browser.currentURI &&
-         this._browser.currentURI.spec == this._browser.homePage))) {
+         this._browser.currentURI.spec == this.homepageURL.spec))) {
       gViewController.notifyViewChanged();
       return;
     }
@@ -2189,7 +2188,7 @@ var gDiscoverView = {
 
   canRefresh() {
     if (this._browser.currentURI &&
-        this._browser.currentURI.spec == this._browser.homePage)
+        this._browser.currentURI.spec == this.homepageURL.spec)
       return false;
     return true;
   },

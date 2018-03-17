@@ -39,7 +39,6 @@ function test() {
       tab.linkedBrowser.removeEventListener("load", load, true);
 
       // Observe page setup
-      // eslint-disable-next-line mozilla/no-cpows-in-tests
       let doc = gBrowser.contentDocumentAsCPOW;
       gMutationObserver = new MutationObserver(function(mutations) {
         for (let mutation of mutations) {
