@@ -1656,7 +1656,9 @@ BrowserGlue.prototype = {
         if (bookmarksUrl) {
           // Import from bookmarks.html file.
           try {
-            await BookmarkHTMLUtils.importFromURL(bookmarksUrl, true);
+            if (Services.policies.isAllowed("defaultBookmarks")) {
+              await BookmarkHTMLUtils.importFromURL(bookmarksUrl, true);
+            }
           } catch (e) {
             Cu.reportError("Bookmarks.html file could be corrupt. " + e);
           }
@@ -2494,6 +2496,7 @@ BrowserGlue.prototype = {
 
     // If version is current, or smart bookmarks are disabled, bail out.
     if (smartBookmarksCurrentVersion == -1 ||
+        !Services.policies.isAllowed("defaultBookmarks") ||
         smartBookmarksCurrentVersion >= SMART_BOOKMARKS_VERSION) {
       return;
     }
