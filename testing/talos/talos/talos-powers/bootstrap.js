@@ -8,29 +8,32 @@ ChromeUtils.defineModuleGetter(this, "Services",
 ChromeUtils.defineModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 
+const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
 const FRAME_SCRIPT = "chrome://talos-powers/content/talos-powers-content.js";
 
 function TalosPowersService() {
   this.wrappedJSObject = this;
+
+  this.init();
 }
 
 TalosPowersService.prototype = {
+  factory: XPCOMUtils._getFactory(TalosPowersService),
   classDescription: "Talos Powers",
   classID: Components.ID("{f5d53443-d58d-4a2f-8df0-98525d4f91ad}"),
   contractID: "@mozilla.org/talos/talos-powers-service;1",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: XPCOMUtils.generateQI([]),
 
-  observe(subject, topic, data) {
-    switch (topic) {
-      case "profile-after-change":
-        // Note that this observation is registered in the chrome.manifest
-        // for this add-on.
-        this.init();
-        break;
-      case "xpcom-shutdown":
-        this.uninit();
-        break;
-    }
+  register() {
+    Cm.registerFactory(this.classID, this.classDescription,
+                       this.contractID, this.factory);
+
+    void Cc[this.contractID].getService();
+  },
+
+  unregister() {
+    Cm.unregisterFactory(this.classID, this.factory);
   },
 
   init() {
@@ -40,11 +43,6 @@ TalosPowersService.prototype = {
     Services.mm.addMessageListener("TalosPowersContent:ForceCCAndGC", this);
     Services.mm.addMessageListener("TalosPowersContent:GetStartupInfo", this);
     Services.mm.addMessageListener("TalosPowers:ParentExec:QueryMsg", this);
-    Services.obs.addObserver(this, "xpcom-shutdown");
-  },
-
-  uninit() {
-    Services.obs.removeObserver(this, "xpcom-shutdown");
   },
 
   receiveMessage(message) {
@@ -327,4 +325,12 @@ TalosPowersService.prototype = {
 
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TalosPowersService]);
+function startup(data, reason) {
+  TalosPowersService.prototype.register();
+}
+
+function shutdown(data, reason) {
+  TalosPowersService.prototype.unregister();
+}
+function install(data, reason) {}
+function uninstall(data, reason) {}
