@@ -10,8 +10,6 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FontPreview = createFactory(require("./FontPreview"));
 
-loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
-
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
@@ -32,7 +30,6 @@ class Font extends PureComponent {
     };
 
     this.onFontFaceRuleToggle = this.onFontFaceRuleToggle.bind(this);
-    this.onCopyURL = this.onCopyURL.bind(this);
   }
 
   componentWillReceiveProps(newProps) {
@@ -43,10 +40,6 @@ class Font extends PureComponent {
     this.setState({
       isFontFaceRuleExpanded: false,
     });
-  }
-
-  onCopyURL() {
-    clipboardHelper.copyString(this.props.font.URI);
   }
 
   onFontFaceRuleToggle(event) {
@@ -88,11 +81,11 @@ class Font extends PureComponent {
     );
   }
 
-  renderFontOrigin(url) {
+  renderFontTypeAndURL(url, format) {
     if (!url) {
       return dom.p(
         {
-          className: "font-origin system"
+          className: "font-format-url"
         },
         getStr("fontinspector.system")
       );
@@ -100,21 +93,15 @@ class Font extends PureComponent {
 
     return dom.p(
       {
-        className: "font-origin remote",
+        className: "font-format-url"
       },
-      dom.span(
+      getStr("fontinspector.remote"),
+      dom.a(
         {
-          className: "url",
-          title: url
+          className: "font-url",
+          href: url
         },
-        url
-      ),
-      dom.button(
-        {
-          className: "copy-icon",
-          onClick: this.onCopyURL,
-          title: getStr("fontinspector.copyURL"),
-        }
+        format
       )
     );
   }
@@ -152,6 +139,7 @@ class Font extends PureComponent {
     let { previewText } = fontOptions;
 
     let {
+      format,
       name,
       previewUrl,
       rule,
@@ -165,7 +153,7 @@ class Font extends PureComponent {
       },
       this.renderFontName(name),
       FontPreview({ previewText, previewUrl, onPreviewFonts }),
-      this.renderFontOrigin(URI),
+      this.renderFontTypeAndURL(URI, format),
       this.renderFontCSSCode(rule, ruleText)
     );
   }

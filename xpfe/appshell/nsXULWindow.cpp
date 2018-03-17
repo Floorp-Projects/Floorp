@@ -339,6 +339,39 @@ nsXULWindow::GetPrimaryTabParent(nsITabParent** aTab)
   return NS_OK;
 }
 
+static LayoutDeviceIntSize
+GetOuterToInnerSizeDifference(nsIWidget* aWindow)
+{
+  if (!aWindow) {
+    return LayoutDeviceIntSize();
+  }
+  LayoutDeviceIntSize baseSize(200, 200);
+  LayoutDeviceIntSize windowSize = aWindow->ClientToWindowSize(baseSize);
+  return windowSize - baseSize;
+}
+
+static CSSIntSize
+GetOuterToInnerSizeDifferenceInCSSPixels(nsIWidget* aWindow)
+{
+  if (!aWindow) {
+    return { };
+  }
+  LayoutDeviceIntSize devPixelSize = GetOuterToInnerSizeDifference(aWindow);
+  return RoundedToInt(devPixelSize / aWindow->GetDefaultScale());
+}
+
+uint32_t
+nsXULWindow::GetOuterToInnerHeightDifferenceInCSSPixels()
+{
+  return GetOuterToInnerSizeDifferenceInCSSPixels(mWindow).height;
+}
+
+uint32_t
+nsXULWindow::GetOuterToInnerWidthDifferenceInCSSPixels()
+{
+  return GetOuterToInnerSizeDifferenceInCSSPixels(mWindow).width;
+}
+
 nsTArray<RefPtr<mozilla::LiveResizeListener>>
 nsXULWindow::GetLiveResizeListeners()
 {
@@ -1065,17 +1098,6 @@ NS_IMETHODIMP nsXULWindow::ForceRoundedDimensions()
   return NS_OK;
 }
 
-static LayoutDeviceIntSize
-GetWindowOuterInnerDiff(nsIWidget* aWindow)
-{
-  if (!aWindow) {
-    return LayoutDeviceIntSize();
-  }
-  LayoutDeviceIntSize baseSize(200, 200);
-  LayoutDeviceIntSize windowSize = aWindow->ClientToWindowSize(baseSize);
-  return windowSize - baseSize;
-}
-
 void nsXULWindow::OnChromeLoaded()
 {
   nsresult rv = EnsureContentTreeOwner();
@@ -1600,10 +1622,10 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   char                        sizeBuf[10];
   nsAutoString                sizeString;
   nsAutoString                windowElementId;
-  RefPtr<dom::XULDocument>    ownerXULDoc;
 
   // fetch docShellElement's ID and XUL owner document
-  ownerXULDoc = docShellElement->OwnerDoc()->AsXULDocument();
+  RefPtr<dom::XULDocument> ownerXULDoc =
+    docShellElement->OwnerDoc()->AsXULDocument();
   if (docShellElement->IsXULElement()) {
     docShellElement->GetId(windowElementId);
   }
@@ -1633,10 +1655,9 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   }
 
   if ((mPersistentAttributesDirty & PAD_SIZE) && gotRestoredBounds) {
-    LayoutDeviceIntSize winDiff = GetWindowOuterInnerDiff(mWindow);
+    LayoutDeviceIntRect innerRect = rect - GetOuterToInnerSizeDifference(mWindow);
     if (persistString.Find("width") >= 0) {
-      auto width = rect.Width() - winDiff.width;
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(width / sizeScale.scale));
+      SprintfLiteral(sizeBuf, "%d", NSToIntRound(innerRect.Width() / sizeScale.scale));
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
@@ -1645,8 +1666,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       }
     }
     if (persistString.Find("height") >= 0) {
-      auto height = rect.Height() - winDiff.height;
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(height / sizeScale.scale));
+      SprintfLiteral(sizeBuf, "%d", NSToIntRound(innerRect.Height() / sizeScale.scale));
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
@@ -2255,10 +2275,7 @@ nsXULWindow::SizeShell()
 
   GetHasPrimaryContent(&isContent);
 
-  CSSIntSize windowDiff = mWindow
-    ? RoundedToInt(GetWindowOuterInnerDiff(mWindow) /
-                   mWindow->GetDefaultScale())
-    : CSSIntSize();
+  CSSIntSize windowDiff = GetOuterToInnerSizeDifferenceInCSSPixels(mWindow);
 
   // If this window has a primary content and fingerprinting resistance is
   // enabled, we enforce this window to rounded dimensions.

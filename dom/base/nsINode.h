@@ -273,10 +273,6 @@ private:
   virtual void AddSizeOfExcludingThis(nsWindowSizes& aSizes, \
                                       size_t* aNodeSize) const override;
 
-// Categories of node properties
-// 0 is global.
-#define DOM_USER_DATA         1
-
 // IID for the nsINode interface
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_INODE_IID \
@@ -844,26 +840,7 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  void* GetProperty(nsAtom *aPropertyName,
-                    nsresult *aStatus = nullptr) const
-  {
-    return GetProperty(0, aPropertyName, aStatus);
-  }
-
-  /**
-   * Get a property associated with this node.
-   *
-   * @param aCategory      category of property to get.
-   * @param aPropertyName  name of property to get.
-   * @param aStatus        out parameter for storing resulting status.
-   *                       Set to NS_PROPTABLE_PROP_NOT_THERE if the property
-   *                       is not set.
-   * @return               the property. Null if the property is not set
-   *                       (though a null return value does not imply the
-   *                       property was not set, i.e. it can be set to null).
-   */
-  void* GetProperty(uint16_t aCategory, nsAtom *aPropertyName,
-                    nsresult *aStatus = nullptr) const;
+  void* GetProperty(nsAtom* aPropertyName, nsresult* aStatus = nullptr) const;
 
   /**
    * Set a property to be associated with this node. This will overwrite an
@@ -882,43 +859,16 @@ public:
    *                                       was already set
    * @throws NS_ERROR_OUT_OF_MEMORY if that occurs
    */
-  nsresult SetProperty(nsAtom *aPropertyName, void *aValue,
+  nsresult SetProperty(nsAtom* aPropertyName,
+                       void* aValue,
                        NSPropertyDtorFunc aDtor = nullptr,
-                       bool aTransfer = false)
-  {
-    return SetProperty(0, aPropertyName, aValue, aDtor, aTransfer);
-  }
-
-  /**
-   * Set a property to be associated with this node. This will overwrite an
-   * existing value if one exists. The existing value is destroyed using the
-   * destructor function given when that value was set.
-   *
-   * @param aCategory       category of property to set.
-   * @param aPropertyName   name of property to set.
-   * @param aValue          new value of property.
-   * @param aDtor           destructor function to be used when this property
-   *                        is destroyed.
-   * @param aTransfer       if true the property will not be deleted when the
-   *                        ownerDocument of the node changes, if false it
-   *                        will be deleted.
-   * @param aOldValue [out] previous value of property.
-   *
-   * @return NS_PROPTABLE_PROP_OVERWRITTEN (success value) if the property
-   *                                       was already set
-   * @throws NS_ERROR_OUT_OF_MEMORY if that occurs
-   */
-  nsresult SetProperty(uint16_t aCategory,
-                       nsAtom *aPropertyName, void *aValue,
-                       NSPropertyDtorFunc aDtor = nullptr,
-                       bool aTransfer = false,
-                       void **aOldValue = nullptr);
+                       bool aTransfer = false);
 
   /**
    * A generic destructor for property values allocated with new.
    */
   template<class T>
-  static void DeleteProperty(void *, nsAtom *, void *aPropertyValue, void *)
+  static void DeleteProperty(void*, nsAtom*, void* aPropertyValue, void*)
   {
     delete static_cast<T *>(aPropertyValue);
   }
@@ -929,19 +879,7 @@ public:
    *
    * @param aPropertyName  name of property to destroy.
    */
-  void DeleteProperty(nsAtom *aPropertyName)
-  {
-    DeleteProperty(0, aPropertyName);
-  }
-
-  /**
-   * Destroys a property associated with this node. The value is destroyed
-   * using the destruction function given when that value was set.
-   *
-   * @param aCategory      category of property to destroy.
-   * @param aPropertyName  name of property to destroy.
-   */
-  void DeleteProperty(uint16_t aCategory, nsAtom *aPropertyName);
+  void DeleteProperty(nsAtom* aPropertyName);
 
   /**
    * Unset a property associated with this node. The value will not be
@@ -956,28 +894,7 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  void* UnsetProperty(nsAtom  *aPropertyName,
-                      nsresult *aStatus = nullptr)
-  {
-    return UnsetProperty(0, aPropertyName, aStatus);
-  }
-
-  /**
-   * Unset a property associated with this node. The value will not be
-   * destroyed but rather returned. It is the caller's responsibility to
-   * destroy the value after that point.
-   *
-   * @param aCategory      category of property to unset.
-   * @param aPropertyName  name of property to unset.
-   * @param aStatus        out parameter for storing resulting status.
-   *                       Set to NS_PROPTABLE_PROP_NOT_THERE if the property
-   *                       is not set.
-   * @return               the property. Null if the property is not set
-   *                       (though a null return value does not imply the
-   *                       property was not set, i.e. it can be set to null).
-   */
-  void* UnsetProperty(uint16_t aCategory, nsAtom *aPropertyName,
-                      nsresult *aStatus = nullptr);
+  void* UnsetProperty(nsAtom* aPropertyName, nsresult* aStatus = nullptr);
 
   bool HasProperties() const
   {
@@ -1451,31 +1368,6 @@ protected:
   // should really only be called for elements and document fragments.
   mozilla::dom::Element* GetElementById(const nsAString& aId);
 
-  /**
-   * Associate an object aData to aKey on this node. If aData is null any
-   * previously registered object associated to aKey on this node will
-   * be removed.
-   * Should only be used to implement the DOM Level 3 UserData API.
-   *
-   * @param aKey the key to associate the object to
-   * @param aData the object to associate to aKey on this node (may be null)
-   * @param aResult [out] the previously registered object for aKey on this
-   *                      node, if any
-   * @return whether adding the object succeeded
-   */
-  nsresult SetUserData(const nsAString& aKey, nsIVariant* aData,
-                       nsIVariant** aResult);
-
-  /**
-   * Get the UserData object registered for a Key on this node, if any.
-   * Should only be used to implement the DOM Level 3 UserData API.
-   *
-   * @param aKey the key to get UserData for
-   * @return aResult the previously registered object for aKey on this node, if
-   *                 any
-   */
-  nsIVariant* GetUserData(const nsAString& aKey);
-
 public:
   void LookupPrefix(const nsAString& aNamespace, nsAString& aResult);
   bool IsDefaultNamespace(const nsAString& aNamespaceURI)
@@ -1944,13 +1836,6 @@ public:
   }
 
   nsDOMAttributeMap* GetAttributes();
-  void SetUserData(JSContext* aCx, const nsAString& aKey,
-                   JS::Handle<JS::Value> aData,
-                   JS::MutableHandle<JS::Value> aRetval,
-                   mozilla::ErrorResult& aError);
-  void GetUserData(JSContext* aCx, const nsAString& aKey,
-                   JS::MutableHandle<JS::Value> aRetval,
-                   mozilla::ErrorResult& aError);
 
   // Helper method to remove this node from its parent. This is not exposed
   // through WebIDL.

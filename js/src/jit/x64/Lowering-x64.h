@@ -14,12 +14,11 @@ namespace jit {
 
 class LIRGeneratorX64 : public LIRGeneratorX86Shared
 {
-  public:
+  protected:
     LIRGeneratorX64(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
       : LIRGeneratorX86Shared(gen, graph, lirGraph)
     { }
 
-  protected:
     void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
     void defineUntypedPhi(MPhi* phi, size_t lirIndex);
     void lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
@@ -47,30 +46,6 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void lowerModI64(MMod* mod);
     void lowerUDivI64(MDiv* div);
     void lowerUModI64(MMod* mod);
-
-  public:
-    void visitBox(MBox* box);
-    void visitUnbox(MUnbox* unbox);
-    void visitReturn(MReturn* ret);
-    void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
-    void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
-    void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
-    void visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins);
-    void visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins);
-    void visitAsmJSLoadHeap(MAsmJSLoadHeap* ins);
-    void visitAsmJSStoreHeap(MAsmJSStoreHeap* ins);
-    void visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins);
-    void visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins);
-    void visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins);
-    void visitWasmLoad(MWasmLoad* ins);
-    void visitWasmStore(MWasmStore* ins);
-    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
-    void visitSubstr(MSubstr* ins);
-    void visitRandom(MRandom* ins);
-    void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
-    void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
-    void visitExtendInt32ToInt64(MExtendInt32ToInt64* ins);
-    void visitSignExtendInt64(MSignExtendInt64* ins);
 };
 
 typedef LIRGeneratorX64 LIRGeneratorSpecific;

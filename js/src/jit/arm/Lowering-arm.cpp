@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jit/arm/Lowering-arm.h"
+
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/arm/Assembler-arm.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
-
 #include "jit/shared/Lowering-shared-inl.h"
 
 using namespace js;
@@ -53,7 +54,7 @@ LIRGeneratorARM::tempByteOpRegister()
 }
 
 void
-LIRGeneratorARM::visitBox(MBox* box)
+LIRGenerator::visitBox(MBox* box)
 {
     MDefinition* inner = box->getOperand(0);
 
@@ -93,7 +94,7 @@ LIRGeneratorARM::visitBox(MBox* box)
 }
 
 void
-LIRGeneratorARM::visitUnbox(MUnbox* unbox)
+LIRGenerator::visitUnbox(MUnbox* unbox)
 {
     MDefinition* inner = unbox->getOperand(0);
 
@@ -137,7 +138,7 @@ LIRGeneratorARM::visitUnbox(MUnbox* unbox)
 }
 
 void
-LIRGeneratorARM::visitReturn(MReturn* ret)
+LIRGenerator::visitReturn(MReturn* ret)
 {
     MDefinition* opd = ret->getOperand(0);
     MOZ_ASSERT(opd->type() == MIRType::Value);
@@ -458,7 +459,7 @@ LIRGeneratorARM::lowerUModI64(MMod* mod)
 }
 
 void
-LIRGeneratorARM::visitPowHalf(MPowHalf* ins)
+LIRGenerator::visitPowHalf(MPowHalf* ins)
 {
     MDefinition* input = ins->input();
     MOZ_ASSERT(input->type() == MIRType::Double);
@@ -494,7 +495,7 @@ LIRGeneratorARM::lowerUrshD(MUrsh* mir)
 }
 
 void
-LIRGeneratorARM::visitWasmSelect(MWasmSelect* ins)
+LIRGenerator::visitWasmSelect(MWasmSelect* ins)
 {
     if (ins->type() == MIRType::Int64) {
         auto* lir = new(alloc()) LWasmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
@@ -513,7 +514,7 @@ LIRGeneratorARM::visitWasmSelect(MWasmSelect* ins)
 }
 
 void
-LIRGeneratorARM::visitWasmNeg(MWasmNeg* ins)
+LIRGenerator::visitWasmNeg(MWasmNeg* ins)
 {
     if (ins->type() == MIRType::Int32) {
         define(new(alloc()) LNegI(useRegisterAtStart(ins->input())), ins);
@@ -576,7 +577,7 @@ LIRGeneratorARM::lowerUMod(MMod* mod)
 }
 
 void
-LIRGeneratorARM::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins)
+LIRGenerator::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
     LWasmUint32ToDouble* lir = new(alloc()) LWasmUint32ToDouble(useRegisterAtStart(ins->input()));
@@ -584,7 +585,7 @@ LIRGeneratorARM::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins)
 }
 
 void
-LIRGeneratorARM::visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins)
+LIRGenerator::visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
     LWasmUint32ToFloat32* lir = new(alloc()) LWasmUint32ToFloat32(useRegisterAtStart(ins->input()));
@@ -592,7 +593,7 @@ LIRGeneratorARM::visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins)
 }
 
 void
-LIRGeneratorARM::visitWasmLoad(MWasmLoad* ins)
+LIRGenerator::visitWasmLoad(MWasmLoad* ins)
 {
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -650,7 +651,7 @@ LIRGeneratorARM::visitWasmLoad(MWasmLoad* ins)
 }
 
 void
-LIRGeneratorARM::visitWasmStore(MWasmStore* ins)
+LIRGenerator::visitWasmStore(MWasmStore* ins)
 {
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -711,7 +712,7 @@ LIRGeneratorARM::visitWasmStore(MWasmStore* ins)
 }
 
 void
-LIRGeneratorARM::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
+LIRGenerator::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
     MOZ_ASSERT(ins->offset() == 0);
 
@@ -739,7 +740,7 @@ LIRGeneratorARM::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 }
 
 void
-LIRGeneratorARM::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
+LIRGenerator::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 {
     MOZ_ASSERT(ins->offset() == 0);
 
@@ -784,13 +785,13 @@ LIRGeneratorARM::lowerTruncateFToInt32(MTruncateToInt32* ins)
 }
 
 void
-LIRGeneratorARM::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins)
+LIRGenerator::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-LIRGeneratorARM::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
+LIRGenerator::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
 {
     MOZ_ASSERT(HasLDSTREXBHD());
     MOZ_ASSERT(ins->arrayType() <= Scalar::Uint32);
@@ -818,7 +819,7 @@ LIRGeneratorARM::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayE
 }
 
 void
-LIRGeneratorARM::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
+LIRGenerator::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
 {
     MOZ_ASSERT(ins->arrayType() != Scalar::Uint8Clamped);
     MOZ_ASSERT(ins->arrayType() != Scalar::Float32);
@@ -860,7 +861,7 @@ LIRGeneratorARM::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop
 }
 
 void
-LIRGeneratorARM::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
+LIRGenerator::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
 {
     MOZ_ASSERT(ins->arrayType() != Scalar::Float32);
     MOZ_ASSERT(ins->arrayType() != Scalar::Float64);
@@ -891,7 +892,7 @@ LIRGeneratorARM::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArra
 }
 
 void
-LIRGeneratorARM::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
+LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
 {
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -919,7 +920,7 @@ LIRGeneratorARM::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
 }
 
 void
-LIRGeneratorARM::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
+LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
 {
     MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
 
@@ -943,7 +944,7 @@ LIRGeneratorARM::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
 }
 
 void
-LIRGeneratorARM::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
+LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 {
     if (ins->access().type() == Scalar::Int64) {
         auto* lir = new(alloc()) LWasmAtomicBinopI64(useRegister(ins->base()),
@@ -981,7 +982,7 @@ LIRGeneratorARM::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 }
 
 void
-LIRGeneratorARM::visitSubstr(MSubstr* ins)
+LIRGenerator::visitSubstr(MSubstr* ins)
 {
     LSubstr* lir = new (alloc()) LSubstr(useRegister(ins->string()),
                                          useRegister(ins->begin()),
@@ -994,7 +995,7 @@ LIRGeneratorARM::visitSubstr(MSubstr* ins)
 }
 
 void
-LIRGeneratorARM::visitRandom(MRandom* ins)
+LIRGenerator::visitRandom(MRandom* ins)
 {
     LRandom *lir = new(alloc()) LRandom(temp(),
                                         temp(),
@@ -1005,7 +1006,7 @@ LIRGeneratorARM::visitRandom(MRandom* ins)
 }
 
 void
-LIRGeneratorARM::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
+LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 {
     MDefinition* opd = ins->input();
     MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
@@ -1014,7 +1015,7 @@ LIRGeneratorARM::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 }
 
 void
-LIRGeneratorARM::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
+LIRGenerator::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType::Double || ins->type() == MIRType::Float32);
 
@@ -1024,7 +1025,7 @@ LIRGeneratorARM::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 }
 
 void
-LIRGeneratorARM::visitCopySign(MCopySign* ins)
+LIRGenerator::visitCopySign(MCopySign* ins)
 {
     MDefinition* lhs = ins->lhs();
     MDefinition* rhs = ins->rhs();
@@ -1046,7 +1047,7 @@ LIRGeneratorARM::visitCopySign(MCopySign* ins)
 }
 
 void
-LIRGeneratorARM::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
+LIRGenerator::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
 {
     auto* lir = new(alloc()) LExtendInt32ToInt64(useRegisterAtStart(ins->input()));
     defineInt64(lir, ins);
@@ -1059,7 +1060,67 @@ LIRGeneratorARM::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
 }
 
 void
-LIRGeneratorARM::visitSignExtendInt64(MSignExtendInt64* ins)
+LIRGenerator::visitSignExtendInt64(MSignExtendInt64* ins)
 {
     defineInt64(new(alloc()) LSignExtendInt64(useInt64RegisterAtStart(ins->input())), ins);
+}
+
+void
+LIRGenerator::visitSimdInsertElement(MSimdInsertElement*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdExtractElement(MSimdExtractElement*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdSelect(MSimdSelect*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdSplat(MSimdSplat*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdValueX4(MSimdValueX4*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdBinarySaturating(MSimdBinarySaturating*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdSwizzle(MSimdSwizzle*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdShuffle(MSimdShuffle*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdGeneralShuffle(MSimdGeneralShuffle*)
+{
+    MOZ_CRASH("NYI");
 }

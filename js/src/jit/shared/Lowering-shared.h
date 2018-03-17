@@ -33,7 +33,6 @@ class LIRGeneratorShared
     LRecoverInfo* cachedRecoverInfo_;
     LOsiPoint* osiPoint_;
 
-  public:
     LIRGeneratorShared(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
       : gen(gen),
         graph(graph),
@@ -62,8 +61,6 @@ class LIRGeneratorShared
         auto reason_ = gen->abort(r);
         gen->setOffThreadStatus(reason_);
     }
-
-  protected:
 
     static void ReorderCommutative(MDefinition** lhsp, MDefinition** rhsp, MInstruction* ins);
     static bool ShouldReorderCommutative(MDefinition* lhs, MDefinition* rhs, MInstruction* ins);
@@ -281,7 +278,6 @@ class LIRGeneratorShared
     void assignSafepoint(LInstruction* ins, MInstruction* mir,
                          BailoutKind kind = Bailout_DuringVMCall);
 
-  public:
     void lowerConstantDouble(double d, MInstruction* mir) {
         define(new(alloc()) LDouble(d), mir);
     }
@@ -289,9 +285,7 @@ class LIRGeneratorShared
         define(new(alloc()) LFloat32(f), mir);
     }
 
-    void visitConstant(MConstant* ins);
-    void visitWasmFloatConstant(MWasmFloatConstant* ins);
-
+  public:
     // Whether to generate typed reads for element accesses with hole checks.
     static bool allowTypedElementHoleCheck() {
         return false;
@@ -301,22 +295,6 @@ class LIRGeneratorShared
     static bool allowStaticTypedArrayAccesses() {
         return false;
     }
-
-    // Provide NYI default implementations of the SIMD visitor functions.
-    // Many targets don't implement SIMD at all, and we don't want to duplicate
-    // these stubs in the specific sub-classes.
-    // Some SIMD visitors are implemented in LIRGenerator in Lowering.cpp. These
-    // shared implementations are not included here.
-    void visitSimdInsertElement(MSimdInsertElement*) { MOZ_CRASH("NYI"); }
-    void visitSimdExtractElement(MSimdExtractElement*) { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryArith(MSimdBinaryArith*) { MOZ_CRASH("NYI"); }
-    void visitSimdSelect(MSimdSelect*) { MOZ_CRASH("NYI"); }
-    void visitSimdSplat(MSimdSplat*) { MOZ_CRASH("NYI"); }
-    void visitSimdValueX4(MSimdValueX4*) { MOZ_CRASH("NYI"); }
-    void visitSimdBinarySaturating(MSimdBinarySaturating*) { MOZ_CRASH("NYI"); }
-    void visitSimdSwizzle(MSimdSwizzle*) { MOZ_CRASH("NYI"); }
-    void visitSimdShuffle(MSimdShuffle*) { MOZ_CRASH("NYI"); }
-    void visitSimdGeneralShuffle(MSimdGeneralShuffle*) { MOZ_CRASH("NYI"); }
 };
 
 } // namespace jit

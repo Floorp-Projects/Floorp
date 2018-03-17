@@ -86,15 +86,6 @@ nsCCUncollectableMarker::Init()
 }
 
 static void
-MarkUserData(void* aNode, nsAtom* aKey, void* aValue, void* aData)
-{
-  nsIDocument* d = static_cast<nsINode*>(aNode)->GetUncomposedDoc();
-  if (d && nsCCUncollectableMarker::InGeneration(d->GetMarkedCCGeneration())) {
-    Element::MarkUserData(aNode, aKey, aValue, aData);
-  }
-}
-
-static void
 MarkChildMessageManagers(nsIMessageBroadcaster* aMM)
 {
   aMM->MarkForCC();
@@ -190,8 +181,7 @@ MarkMessageManagers()
 }
 
 void
-MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
-                  bool aPrepareForCC)
+MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS)
 {
   if (!aViewer) {
     return;
@@ -215,11 +205,6 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
         static_cast<nsGlobalWindowInner*>(win.get())->AsInner()->
           TimeoutManager().UnmarkGrayTimers();
       }
-    } else if (aPrepareForCC) {
-      // Unfortunately we need to still mark user data just before running CC so
-      // that it has the right generation.
-      doc->PropertyTable(DOM_USER_DATA)->
-        EnumerateAll(MarkUserData, &nsCCUncollectableMarker::sGeneration);
     }
   }
   if (doc) {
@@ -232,11 +217,10 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
   }
 }
 
-void MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS,
-                  bool aPrepareForCC);
+void MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS);
 
 void
-MarkSHEntry(nsISHEntry* aSHEntry, bool aCleanupJS, bool aPrepareForCC)
+MarkSHEntry(nsISHEntry* aSHEntry, bool aCleanupJS)
 {
   if (!aSHEntry) {
     return;
@@ -244,13 +228,13 @@ MarkSHEntry(nsISHEntry* aSHEntry, bool aCleanupJS, bool aPrepareForCC)
 
   nsCOMPtr<nsIContentViewer> cview;
   aSHEntry->GetContentViewer(getter_AddRefs(cview));
-  MarkContentViewer(cview, aCleanupJS, aPrepareForCC);
+  MarkContentViewer(cview, aCleanupJS);
 
   nsCOMPtr<nsIDocShellTreeItem> child;
   int32_t i = 0;
   while (NS_SUCCEEDED(aSHEntry->ChildShellAt(i++, getter_AddRefs(child))) &&
          child) {
-    MarkDocShell(child, aCleanupJS, aPrepareForCC);
+    MarkDocShell(child, aCleanupJS);
   }
 
   nsCOMPtr<nsISHContainer> shCont = do_QueryInterface(aSHEntry);
@@ -259,13 +243,13 @@ MarkSHEntry(nsISHEntry* aSHEntry, bool aCleanupJS, bool aPrepareForCC)
   for (i = 0; i < count; ++i) {
     nsCOMPtr<nsISHEntry> childEntry;
     shCont->GetChildAt(i, getter_AddRefs(childEntry));
-    MarkSHEntry(childEntry, aCleanupJS, aPrepareForCC);
+    MarkSHEntry(childEntry, aCleanupJS);
   }
 
 }
 
 void
-MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS, bool aPrepareForCC)
+MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS)
 {
   nsCOMPtr<nsIDocShell> shell = do_QueryInterface(aNode);
   if (!shell) {
@@ -274,7 +258,7 @@ MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS, bool aPrepareForCC)
 
   nsCOMPtr<nsIContentViewer> cview;
   shell->GetContentViewer(getter_AddRefs(cview));
-  MarkContentViewer(cview, aCleanupJS, aPrepareForCC);
+  MarkContentViewer(cview, aCleanupJS);
 
   nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(shell);
   nsCOMPtr<nsISHistory> history;
@@ -286,7 +270,7 @@ MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS, bool aPrepareForCC)
       nsCOMPtr<nsISHEntry> shEntry;
       history->GetEntryAtIndex(i, false, getter_AddRefs(shEntry));
 
-      MarkSHEntry(shEntry, aCleanupJS, aPrepareForCC);
+      MarkSHEntry(shEntry, aCleanupJS);
     }
   }
 
@@ -295,13 +279,12 @@ MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS, bool aPrepareForCC)
   for (i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> child;
     aNode->GetChildAt(i, getter_AddRefs(child));
-    MarkDocShell(child, aCleanupJS, aPrepareForCC);
+    MarkDocShell(child, aCleanupJS);
   }
 }
 
 void
-MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS,
-               bool aPrepareForCC)
+MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS)
 {
   nsCOMPtr<nsISupports> iter;
   while (NS_SUCCEEDED(aWindowList->GetNext(getter_AddRefs(iter))) &&
@@ -309,7 +292,7 @@ MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS,
     if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(iter)) {
       nsCOMPtr<nsIDocShell> rootDocShell = window->GetDocShell();
 
-      MarkDocShell(rootDocShell, aCleanupJS, aPrepareForCC);
+      MarkDocShell(rootDocShell, aCleanupJS);
 
       nsCOMPtr<nsITabChild> tabChild =
         rootDocShell ? rootDocShell->GetTabChild() : nullptr;
@@ -352,11 +335,11 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
                !strcmp(aTopic, "cycle-collector-forget-skippable"), "wrong topic");
 
   // JS cleanup can be slow. Do it only if there has been a GC.
-  bool cleanupJS =
+  const bool cleanupJS =
     nsJSContext::CleanupsSinceLastGC() == 0 &&
     !strcmp(aTopic, "cycle-collector-forget-skippable");
 
-  bool prepareForCC = !strcmp(aTopic, "cycle-collector-begin");
+  const bool prepareForCC = !strcmp(aTopic, "cycle-collector-begin");
   if (prepareForCC) {
     Element::ClearContentUnbinder();
   }
@@ -378,7 +361,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
     rv = med->GetEnumerator(nullptr, getter_AddRefs(windowList));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MarkWindowList(windowList, cleanupJS, prepareForCC);
+    MarkWindowList(windowList, cleanupJS);
   }
 
   nsCOMPtr<nsIWindowWatcher> ww =
@@ -387,7 +370,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
     rv = ww->GetWindowEnumerator(getter_AddRefs(windowList));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MarkWindowList(windowList, cleanupJS, prepareForCC);
+    MarkWindowList(windowList, cleanupJS);
   }
 
   nsCOMPtr<nsIAppShellService> appShell =
@@ -398,7 +381,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
     if (hw) {
       nsCOMPtr<nsIDocShell> shell;
       hw->GetDocShell(getter_AddRefs(shell));
-      MarkDocShell(shell, cleanupJS, prepareForCC);
+      MarkDocShell(shell, cleanupJS);
     }
     bool hasHiddenPrivateWindow = false;
     appShell->GetHasHiddenPrivateWindow(&hasHiddenPrivateWindow);
@@ -407,7 +390,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
       if (hw) {
         nsCOMPtr<nsIDocShell> shell;
         hw->GetDocShell(getter_AddRefs(shell));
-        MarkDocShell(shell, cleanupJS, prepareForCC);
+        MarkDocShell(shell, cleanupJS);
       }
     }
   }

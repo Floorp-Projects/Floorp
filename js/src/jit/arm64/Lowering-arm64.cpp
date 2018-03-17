@@ -4,12 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/MathAlgorithms.h"
+#include "jit/arm64/Lowering-arm64.h"
 
 #include "jit/arm64/Assembler-arm64.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
-
 #include "jit/shared/Lowering-shared-inl.h"
 
 using namespace js;
@@ -42,19 +41,19 @@ LIRGeneratorARM64::useByteOpRegisterOrNonDoubleConstant(MDefinition* mir)
 }
 
 void
-LIRGeneratorARM64::visitBox(MBox* box)
+LIRGenerator::visitBox(MBox* box)
 {
     MOZ_CRASH("visitBox");
 }
 
 void
-LIRGeneratorARM64::visitUnbox(MUnbox* unbox)
+LIRGenerator::visitUnbox(MUnbox* unbox)
 {
     MOZ_CRASH("visitUnbox");
 }
 
 void
-LIRGeneratorARM64::visitReturn(MReturn* ret)
+LIRGenerator::visitReturn(MReturn* ret)
 {
     MOZ_CRASH("visitReturn");
 }
@@ -179,7 +178,7 @@ LIRGeneratorARM64::lowerModI64(MMod* mod)
 }
 
 void
-LIRGeneratorARM64::visitPowHalf(MPowHalf* ins)
+LIRGenerator::visitPowHalf(MPowHalf* ins)
 {
     MOZ_CRASH("visitPowHalf");
 }
@@ -204,13 +203,13 @@ LIRGeneratorARM64::lowerUrshD(MUrsh* mir)
 }
 
 void
-LIRGeneratorARM64::visitWasmNeg(MWasmNeg* ins)
+LIRGenerator::visitWasmNeg(MWasmNeg* ins)
 {
     MOZ_CRASH("visitWasmNeg");
 }
 
 void
-LIRGeneratorARM64::visitWasmSelect(MWasmSelect* ins)
+LIRGenerator::visitWasmSelect(MWasmSelect* ins)
 {
     MOZ_CRASH("visitWasmSelect");
 }
@@ -228,43 +227,43 @@ LIRGeneratorARM64::lowerUMod(MMod* mod)
 }
 
 void
-LIRGeneratorARM64::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins)
+LIRGenerator::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins)
 {
     MOZ_CRASH("visitWasmUnsignedToDouble");
 }
 
 void
-LIRGeneratorARM64::visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins)
+LIRGenerator::visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins)
 {
     MOZ_CRASH("visitWasmUnsignedToFloat32");
 }
 
 void
-LIRGeneratorARM64::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
+LIRGenerator::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
     MOZ_CRASH("visitAsmJSLoadHeap");
 }
 
 void
-LIRGeneratorARM64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
+LIRGenerator::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 {
     MOZ_CRASH("visitAsmJSStoreHeap");
 }
 
 void
-LIRGeneratorARM64::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
+LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
 {
     MOZ_CRASH("visitWasmCompareExchangeHeap");
 }
 
 void
-LIRGeneratorARM64::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
+LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
 {
     MOZ_CRASH("visitWasmAtomicExchangeHeap");
 }
 
 void
-LIRGeneratorARM64::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
+LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 {
     MOZ_CRASH("visitWasmAtomicBinopHeap");
 }
@@ -282,37 +281,37 @@ LIRGeneratorARM64::lowerTruncateFToInt32(MTruncateToInt32* ins)
 }
 
 void
-LIRGeneratorARM64::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins)
+LIRGenerator::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-LIRGeneratorARM64::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
+LIRGenerator::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-LIRGeneratorARM64::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
+LIRGenerator::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-LIRGeneratorARM64::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
+LIRGenerator::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-LIRGeneratorARM64::visitSubstr(MSubstr* ins)
+LIRGenerator::visitSubstr(MSubstr* ins)
 {
     MOZ_CRASH("visitSubstr");
 }
 
 void
-LIRGeneratorARM64::visitRandom(MRandom* ins)
+LIRGenerator::visitRandom(MRandom* ins)
 {
     LRandom *lir = new(alloc()) LRandom(temp(),
                                         temp(),
@@ -321,43 +320,103 @@ LIRGeneratorARM64::visitRandom(MRandom* ins)
 }
 
 void
-LIRGeneratorARM64::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
-{
-    MOZ_CRASH("NY");
-}
-
-void
-LIRGeneratorARM64::visitWasmLoad(MWasmLoad* ins)
-{
-    MOZ_CRASH("NY");
-}
-
-void
-LIRGeneratorARM64::visitWasmStore(MWasmStore* ins)
-{
-    MOZ_CRASH("NY");
-}
-
-void
-LIRGeneratorARM64::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
-{
-    MOZ_CRASH("NY");
-}
-
-void
-LIRGeneratorARM64::visitCopySign(MCopySign* ins)
-{
-    MOZ_CRASH("NY");
-}
-
-void
-LIRGeneratorARM64::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
+LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-LIRGeneratorARM64::visitSignExtendInt64(MSignExtendInt64* ins)
+LIRGenerator::visitWasmLoad(MWasmLoad* ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitWasmStore(MWasmStore* ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitCopySign(MCopySign* ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSignExtendInt64(MSignExtendInt64* ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdInsertElement(MSimdInsertElement*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdExtractElement(MSimdExtractElement*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdSelect(MSimdSelect*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdSplat(MSimdSplat*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdValueX4(MSimdValueX4*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdBinarySaturating(MSimdBinarySaturating*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdSwizzle(MSimdSwizzle*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdShuffle(MSimdShuffle*)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGenerator::visitSimdGeneralShuffle(MSimdGeneralShuffle*)
 {
     MOZ_CRASH("NYI");
 }

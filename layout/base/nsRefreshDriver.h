@@ -159,8 +159,8 @@ public:
    */
   void AddResizeEventFlushObserver(nsIPresShell* aShell)
   {
-    NS_ASSERTION(!mResizeEventFlushObservers.Contains(aShell),
-                 "Double-adding resize event flush observer");
+    MOZ_DIAGNOSTIC_ASSERT(!mResizeEventFlushObservers.Contains(aShell),
+                          "Double-adding resize event flush observer");
     mResizeEventFlushObservers.AppendElement(aShell);
     EnsureTimerStarted();
   }
@@ -173,28 +173,32 @@ public:
   /**
    * Add / remove presshells that we should flush style and layout on
    */
-  bool AddStyleFlushObserver(nsIPresShell* aShell) {
-    NS_ASSERTION(!mStyleFlushObservers.Contains(aShell),
-                 "Double-adding style flush observer");
-    bool appended = mStyleFlushObservers.AppendElement(aShell) != nullptr;
+  void AddStyleFlushObserver(nsIPresShell* aShell)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(!mStyleFlushObservers.Contains(aShell),
+                          "Double-adding style flush observer");
+    mStyleFlushObservers.AppendElement(aShell);
     EnsureTimerStarted();
-
-    return appended;
   }
-  void RemoveStyleFlushObserver(nsIPresShell* aShell) {
+
+  void RemoveStyleFlushObserver(nsIPresShell* aShell)
+  {
     mStyleFlushObservers.RemoveElement(aShell);
   }
-  bool AddLayoutFlushObserver(nsIPresShell* aShell) {
-    NS_ASSERTION(!IsLayoutFlushObserver(aShell),
-                 "Double-adding layout flush observer");
-    bool appended = mLayoutFlushObservers.AppendElement(aShell) != nullptr;
+  void AddLayoutFlushObserver(nsIPresShell* aShell)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(!IsLayoutFlushObserver(aShell),
+                          "Double-adding layout flush observer");
+    mLayoutFlushObservers.AppendElement(aShell);
     EnsureTimerStarted();
-    return appended;
   }
-  void RemoveLayoutFlushObserver(nsIPresShell* aShell) {
+  void RemoveLayoutFlushObserver(nsIPresShell* aShell)
+  {
     mLayoutFlushObservers.RemoveElement(aShell);
   }
-  bool IsLayoutFlushObserver(nsIPresShell* aShell) {
+
+  bool IsLayoutFlushObserver(nsIPresShell* aShell)
+  {
     return mLayoutFlushObservers.Contains(aShell);
   }
 

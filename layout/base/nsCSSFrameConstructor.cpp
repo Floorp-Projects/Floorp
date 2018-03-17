@@ -8943,14 +8943,6 @@ nsCSSFrameConstructor::WillDestroyFrameTree()
   // Prevent frame tree destruction from being O(N^2)
   mQuoteList.Clear();
   mCounterManager.Clear();
-
-  // Remove our presshell as a style flush observer.  But leave
-  // RestyleManager::mObservingRefreshDriver true so we don't readd to
-  // it even if someone tries to post restyle events on us from this
-  // point on for some reason.
-  mPresShell->GetPresContext()->RefreshDriver()->
-    RemoveStyleFlushObserver(mPresShell);
-
   nsFrameManager::Destroy();
 }
 
