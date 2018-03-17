@@ -1523,14 +1523,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(FragmentOrElement)
 
 void
-FragmentOrElement::MarkUserData(void* aObject, nsAtom* aKey, void* aChild,
-                               void* aData)
-{
-  uint32_t* gen = static_cast<uint32_t*>(aData);
-  xpc_MarkInCCGeneration(static_cast<nsISupports*>(aChild), *gen);
-}
-
-void
 FragmentOrElement::MarkNodeChildren(nsINode* aNode)
 {
   JSObject* o = GetJSObjectChild(aNode);
