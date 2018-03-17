@@ -45,7 +45,6 @@
 #include "PLDHashTable.h"
 #include "nsDOMAttributeMap.h"
 #include "imgIRequest.h"
-#include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PendingAnimationTracker.h"
@@ -74,7 +73,6 @@ class nsIRadioVisitor;
 class nsIFormControl;
 struct nsRadioGroupStruct;
 class nsOnloadBlocker;
-class nsUnblockOnloadEvent;
 class nsDOMNavigationTiming;
 class nsWindowSizes;
 class nsHtml5TreeOpExecutor;
@@ -150,12 +148,6 @@ public:
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
-  virtual void Reset(nsIChannel *aChannel, nsILoadGroup *aLoadGroup) override;
-  virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
-                          nsIPrincipal* aPrincipal) override;
-
-  already_AddRefed<nsIPrincipal> MaybeDowngradePrincipal(nsIPrincipal* aPrincipal);
-
   // StartDocumentLoad is pure virtual so that subclasses must override it.
   // The nsDocument StartDocumentLoad does some setup, but does NOT set
   // *aDocListener; this is the job of subclasses.
@@ -169,31 +161,10 @@ public:
 
   virtual void StopDocumentLoad() override;
 
-  /**
-   * Set the Content-Type of this document.
-   */
-  virtual void SetContentType(const nsAString& aContentType) override;
-
-  /**
-   * Set the document's character encoding. This will
-   * trigger a startDocumentLoad if necessary to answer the question.
-   */
-  virtual void
-    SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) override;
-
   static bool CallerIsTrustedAboutPage(JSContext* aCx, JSObject* aObject);
   static bool IsElementAnimateEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(mozilla::dom::CallerType aCallerType);
-
-  virtual nsIChannel* GetFailedChannel() const override {
-    return mFailedChannel;
-  }
-  virtual void SetFailedChannel(nsIChannel* aChannel) override {
-    mFailedChannel = aChannel;
-  }
-
-  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) override;
 
   virtual void EndUpdate(nsUpdateType aUpdateType) override;
   virtual void BeginLoad() override;
@@ -227,28 +198,10 @@ public:
   nsRadioGroupStruct* GetRadioGroup(const nsAString& aName) const;
   nsRadioGroupStruct* GetOrCreateRadioGroup(const nsAString& aName);
 
-  enum class UseCounterReportKind {
-    // Flush the document's use counters only; the use counters for any
-    // external resource documents will be flushed when the external
-    // resource documents themselves are destroyed.
-    eDefault,
-
-    // Flush use counters for the document and for its external resource
-    // documents. (Should only be necessary for tests, where we need
-    // flushing to happen synchronously and deterministically.)
-    eIncludeExternalResources,
-  };
-
-  void ReportUseCounters(UseCounterReportKind aKind = UseCounterReportKind::eDefault);
-
-  bool IsSynthesized();
-
   // Check whether shadow DOM is enabled for the global of aObject.
   static bool IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject);
   // Check whether shadow DOM is enabled for the document this node belongs to.
   static bool IsShadowDOMEnabled(const nsINode* aNode);
-private:
-  void SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages);
 
 public:
   // nsIDOMDocument
@@ -275,12 +228,6 @@ public:
 
   virtual nsresult Init();
 
-  virtual already_AddRefed<Element> CreateElem(const nsAString& aName,
-                                               nsAtom* aPrefix,
-                                               int32_t aNamespaceID,
-                                               const nsAString* aIs = nullptr) override;
-
-
   virtual void Destroy() override;
   virtual void RemovedFromDocShell() override;
 
@@ -298,38 +245,8 @@ public:
 
   nsresult CloneDocHelper(nsDocument* clone, bool aPreallocateChildren) const;
 
-  void MaybeEndOutermostXBLUpdate();
-
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
-
-  // Returns the size of the mBlockedTrackingNodes array. (nsIDocument.h)
-  //
-  // This array contains nodes that have been blocked to prevent
-  // user tracking. They most likely have had their nsIChannel
-  // canceled by the URL classifier (Safebrowsing).
-  //
-  // A script can subsequently use GetBlockedTrackingNodes()
-  // to get a list of references to these nodes.
-  //
-  // Note:
-  // This expresses how many tracking nodes have been blocked for this
-  // document since its beginning, not how many of them are still around
-  // in the DOM tree. Weak references to blocked nodes are added in the
-  // mBlockedTrackingNodesArray but they are not removed when those nodes
-  // are removed from the tree or even garbage collected.
-  long BlockedTrackingNodeCount() const;
-
-  //
-  // Returns strong references to mBlockedTrackingNodes. (nsIDocument.h)
-  //
-  // This array contains nodes that have been blocked to prevent
-  // user tracking. They most likely have had their nsIChannel
-  // canceled by the URL classifier (Safebrowsing).
-  //
-  already_AddRefed<nsSimpleContentList> BlockedTrackingNodes() const;
-
-  static void UnlockPointer(nsIDocument* aDoc = nullptr);
 
   virtual void DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from nsIDocument.
@@ -366,8 +283,6 @@ protected:
   explicit nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
-  void EnsureOnloadBlocker();
-
 public:
   // FIXME(emilio): This needs to be here instead of in nsIDocument because Rust
   // can't represent alignas(8) values on 32-bit architectures, which would
@@ -377,23 +292,9 @@ public:
   // include https://github.com/rust-lang-nursery/rust-bindgen/pull/1271.
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
-  RefPtr<mozilla::EventListenerManager> mListenerManager;
-
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
-  // Parser aborted. True if the parser of this document was forcibly
-  // terminated instead of letting it finish at its own pace.
-  bool mParserAborted:1;
-
   friend class nsCallRequestFullScreen;
-
-  // Whether we have reported use counters for this document with Telemetry yet.
-  // Normally this is only done at document destruction time, but for image
-  // documents (SVG documents) that are not guaranteed to be destroyed, we
-  // report use counters when the image cache no longer has any imgRequestProxys
-  // pointing to them.  We track whether we ever reported use counters so
-  // that we only report them once for the document.
-  bool mReportedUseCounters:1;
 
   // The application cache that this document is associated with, if
   // any.  This can change during the lifetime of the document.
@@ -403,29 +304,9 @@ public:
 private:
   friend class nsUnblockOnloadEvent;
 
-  void PostUnblockOnloadEvent();
-  void DoUnblockOnload();
-
-  nsresult InitCSP(nsIChannel* aChannel);
-
-  void ClearAllBoxObjects();
-
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
-
-  // Currently active onload blockers
-  uint32_t mOnloadBlockCount;
-  // Onload blockers which haven't been activated yet
-  uint32_t mAsyncOnloadBlockCount;
-  nsCOMPtr<nsIRequest> mOnloadBlocker;
-
-  nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
-
-#ifdef DEBUG
-public:
-  bool mWillReparent;
-#endif
 };
 
 class nsDocumentOnStack

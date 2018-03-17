@@ -5195,6 +5195,61 @@ LIRGenerator::visitGetPrototypeOf(MGetPrototypeOf* ins)
     assignSafepoint(lir, ins);
 }
 
+void
+LIRGenerator::visitConstant(MConstant* ins)
+{
+    if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
+        emitAtUses(ins);
+        return;
+    }
+
+    switch (ins->type()) {
+      case MIRType::Double:
+        define(new(alloc()) LDouble(ins->toDouble()), ins);
+        break;
+      case MIRType::Float32:
+        define(new(alloc()) LFloat32(ins->toFloat32()), ins);
+        break;
+      case MIRType::Boolean:
+        define(new(alloc()) LInteger(ins->toBoolean()), ins);
+        break;
+      case MIRType::Int32:
+        define(new(alloc()) LInteger(ins->toInt32()), ins);
+        break;
+      case MIRType::Int64:
+        defineInt64(new(alloc()) LInteger64(ins->toInt64()), ins);
+        break;
+      case MIRType::String:
+        define(new(alloc()) LPointer(ins->toString()), ins);
+        break;
+      case MIRType::Symbol:
+        define(new(alloc()) LPointer(ins->toSymbol()), ins);
+        break;
+      case MIRType::Object:
+        define(new(alloc()) LPointer(&ins->toObject()), ins);
+        break;
+      default:
+        // Constants of special types (undefined, null) should never flow into
+        // here directly. Operations blindly consuming them require a Box.
+        MOZ_CRASH("unexpected constant type");
+    }
+}
+
+void
+LIRGenerator::visitWasmFloatConstant(MWasmFloatConstant* ins)
+{
+    switch (ins->type()) {
+      case MIRType::Double:
+        define(new(alloc()) LDouble(ins->toDouble()), ins);
+        break;
+      case MIRType::Float32:
+        define(new(alloc()) LFloat32(ins->toFloat32()), ins);
+        break;
+      default:
+        MOZ_CRASH("unexpected constant type");
+    }
+}
+
 #ifdef JS_JITSPEW
 static void
 SpewResumePoint(MBasicBlock* block, MInstruction* ins, MResumePoint* resumePoint)
@@ -5228,13 +5283,19 @@ SpewResumePoint(MBasicBlock* block, MInstruction* ins, MResumePoint* resumePoint
 void
 LIRGenerator::visitInstructionDispatch(MInstruction* ins)
 {
+#ifdef JS_CODEGEN_NONE
+    // Don't compile the switch-statement below so that we don't have to define
+    // the platform-specific visit* methods for the none-backend.
+    MOZ_CRASH();
+#else
     switch (ins->op()) {
-#define MIR_OP(op) case MDefinition::Opcode::op: visit##op(ins->to##op()); break;
+# define MIR_OP(op) case MDefinition::Opcode::op: visit##op(ins->to##op()); break;
     MIR_OPCODE_LIST(MIR_OP)
-#undef MIR_OP
+# undef MIR_OP
       default:
         MOZ_CRASH("Invalid instruction");
     }
+#endif
 }
 
 void
