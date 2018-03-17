@@ -21,7 +21,7 @@ function allow_blocked(installInfo) {
   return false;
 }
 
-function confirm_install(window) {
+function confirm_install(panel) {
   ok(false, "Should not see the install dialog");
   return false;
 }
