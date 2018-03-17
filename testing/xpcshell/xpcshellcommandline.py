@@ -137,19 +137,17 @@ def add_common_arguments(parser):
 
 
 def add_remote_arguments(parser):
-    parser.add_argument("--deviceIP", action="store", type=str, dest="deviceIP",
-                        help="ip address of remote device to test")
-
-    parser.add_argument("--devicePort", action="store", type=str, dest="devicePort",
-                        default=20701, help="port of remote device to test")
-
     parser.add_argument("--objdir", action="store", type=str, dest="objdir",
                         help="local objdir, containing xpcshell binaries")
 
     parser.add_argument("--apk", action="store", type=str, dest="localAPK",
                         help="local path to Fennec APK")
 
+    parser.add_argument("--deviceSerial", action="store", type=str, dest="deviceSerial",
+                        help="serial ID of device")
+
     parser.add_argument("--adbPath", action="store", type=str, dest="adbPath",
+                        default="adb",
                         help="Path to adb")
 
     parser.add_argument("--noSetup", action="store_false", dest="setup", default=True,

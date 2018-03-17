@@ -144,18 +144,6 @@ class XPCShellRunner(MozbuildObject):
 
 
 class AndroidXPCShellRunner(MozbuildObject):
-    """Get specified DeviceManager"""
-    def get_devicemanager(self, ip, port, remote_test_root, adb_path):
-        import mozdevice
-        dm = None
-        if ip:
-            dm = mozdevice.DroidADB(ip, port, packageName=None, deviceRoot=remote_test_root,
-                                    adbPath=adb_path)
-        else:
-            dm = mozdevice.DroidADB(packageName=None, deviceRoot=remote_test_root,
-                                    adbPath=adb_path)
-        return dm
-
     """Run Android xpcshell tests."""
     def run_test(self, **kwargs):
         # TODO Bug 794506 remove once mach integrates with virtualenv.
@@ -164,9 +152,6 @@ class AndroidXPCShellRunner(MozbuildObject):
             sys.path.append(build_path)
 
         import remotexpcshelltests
-
-        dm = self.get_devicemanager(kwargs["deviceIP"], kwargs["devicePort"],
-                                    kwargs["remoteTestRoot"], kwargs["adbPath"])
 
         log = kwargs.pop("log")
         self.log_manager.enable_unstructured()
@@ -207,7 +192,7 @@ class AndroidXPCShellRunner(MozbuildObject):
         if not kwargs["sequential"]:
             kwargs["sequential"] = True
 
-        xpcshell = remotexpcshelltests.XPCShellRemote(dm, kwargs, log)
+        xpcshell = remotexpcshelltests.XPCShellRemote(kwargs, log)
 
         result = xpcshell.runTests(kwargs, testClass=remotexpcshelltests.RemoteXPCShellTestThread,
                                    mobileArgs=xpcshell.mobileArgs)
