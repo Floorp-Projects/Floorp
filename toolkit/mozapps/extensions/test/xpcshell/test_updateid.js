@@ -31,7 +31,7 @@ function promiseInstallUpdate(install) {
 }
 
 // Create and configure the HTTP server.
-let testserver = createHttpServer(4444);
+let testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 testserver.registerDirectory("/data/", do_get_file("data"));
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 

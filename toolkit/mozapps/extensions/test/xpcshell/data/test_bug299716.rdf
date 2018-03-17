@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE RDF:RDF [
   <!ENTITY bug299716 "urn:mozilla:extension:bug299716">
-  <!ENTITY addons_prefix "http://localhost:4444/addons/test_bug299716">
+  <!ENTITY addons_prefix "http://example.com/addons/test_bug299716">
   <!ENTITY v0.2 "<em:version>0.2</em:version>">
 
   <!ENTITY xpcshell.app "

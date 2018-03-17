@@ -4,7 +4,7 @@
 <Description about="urn:mozilla:install-manifest">
   <em:id>addon1@tests.mozilla.org</em:id>
   <em:version>1.0</em:version>
-  <em:updateURL>http://localhost:4444/data/test_updateid.rdf</em:updateURL>
+  <em:updateURL>http://example.com/data/test_updateid.rdf</em:updateURL>
   <em:bootstrap>true</em:bootstrap>
   <em:name>Test Addon 1</em:name>
 <em:targetApplication><Description>
