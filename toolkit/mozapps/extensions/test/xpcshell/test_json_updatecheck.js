@@ -61,7 +61,7 @@ function checkUpdates(aData) {
 
 
   return new Promise((resolve, reject) => {
-    AddonUpdateChecker.checkForUpdates(aData.id, aData.updateKey, updateUrl, {
+    AddonUpdateChecker.checkForUpdates(aData.id, updateUrl, {
       onUpdateCheckComplete: resolve,
 
       onUpdateCheckError(status) {
@@ -272,28 +272,6 @@ add_task(async function test_update_url_security() {
 
   messages = messages.filter(msg => /http:\/\/localhost.*\/updates\/.*may not load or link to chrome:/.test(msg.message));
   equal(messages.length, 1, "privileged upate URL generated the expected console message");
-});
-
-
-add_task(async function test_no_update_key() {
-  // Checks that updates fail when an update key has been specified.
-
-  let { messages } = await promiseConsoleOutput(async function() {
-    await Assert.rejects(
-      checkUpdates({
-        id: "updatecheck-updatekey@tests.mozilla.org",
-        version: "0.1",
-        updateKey: "ayzzx=",
-        updates: [
-          { version: "0.2" },
-          { version: "0.3" },
-        ]
-      }),
-      null, "updated expected to fail");
-  });
-
-  messages = messages.filter(msg => /Update keys are not supported for JSON update manifests/.test(msg.message));
-  equal(messages.length, 1, "got expected update-key-unsupported error");
 });
 
 

@@ -87,8 +87,7 @@ function run_update_tests(callback) {
                 mainURL;
     }
 
-    AddonUpdateChecker.checkForUpdates("addon1@tests.mozilla.org",
-                                       null, url, {
+    AddonUpdateChecker.checkForUpdates("addon1@tests.mozilla.org", url, {
       onUpdateCheckComplete(updates) {
         is(updates.length, 1, "Should be the right number of results");
         is(SUCCESS, expectedStatus, message);
