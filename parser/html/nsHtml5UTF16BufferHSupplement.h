@@ -3,15 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 protected:
-  nsHtml5UTF16Buffer(char16_t* aBuffer, int32_t aEnd);
-  ~nsHtml5UTF16Buffer();
+nsHtml5UTF16Buffer(char16_t* aBuffer, int32_t aEnd);
+~nsHtml5UTF16Buffer();
 
-  /**
-   * For working around the privacy of |buffer| in the generated code.
-   */
-  void DeleteBuffer();
+/**
+ * For working around the privacy of |buffer| in the generated code.
+ */
+void
+DeleteBuffer();
 
-  /**
-   * For working around the privacy of |buffer| in the generated code.
-   */
-  void Swap(nsHtml5UTF16Buffer* aOther);
+/**
+ * For working around the privacy of |buffer| in the generated code.
+ */
+void
+Swap(nsHtml5UTF16Buffer* aOther);

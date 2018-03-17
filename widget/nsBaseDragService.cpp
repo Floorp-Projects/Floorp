@@ -19,7 +19,6 @@
 #include "nsIPresShell.h"
 #include "nsViewManager.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMDragEvent.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsPresContext.h"
@@ -34,8 +33,10 @@
 #include "SVGImageContext.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/DragEvent.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Unused.h"
 #include "nsFrameLoader.h"
@@ -279,7 +280,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
                                               uint32_t aActionType,
                                               nsIDOMNode* aImage,
                                               int32_t aImageX, int32_t aImageY,
-                                              nsIDOMDragEvent* aDragEvent,
+                                              nsIDOMEvent* aDragEvent,
                                               DataTransfer* aDataTransfer)
 {
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
@@ -293,9 +294,14 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
   mImage = aImage;
   mImageOffset = CSSIntPoint(aImageX, aImageY);
 
-  aDragEvent->GetScreenX(&mScreenPosition.x);
-  aDragEvent->GetScreenY(&mScreenPosition.y);
-  aDragEvent->GetMozInputSource(&mInputSource);
+  DragEvent* dragEvent = aDragEvent->InternalDOMEvent()->AsDragEvent();
+  if (NS_WARN_IF(!dragEvent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mScreenPosition.x = dragEvent->ScreenX(CallerType::System);
+  mScreenPosition.y = dragEvent->ScreenY(CallerType::System);
+  mInputSource = dragEvent->MozInputSource();
 
   nsresult rv = InvokeDragSession(aDOMNode, aPrincipalURISpec,
                                   aTransferableArray,
@@ -316,7 +322,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
                                                   const nsACString& aPrincipalURISpec,
                                                   nsIArray* aTransferableArray,
                                                   uint32_t aActionType,
-                                                  nsIDOMDragEvent* aDragEvent,
+                                                  nsIDOMEvent* aDragEvent,
                                                   DataTransfer* aDataTransfer)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
@@ -330,9 +336,14 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   mImage = nullptr;
   mImageOffset = CSSIntPoint();
 
-  aDragEvent->GetScreenX(&mScreenPosition.x);
-  aDragEvent->GetScreenY(&mScreenPosition.y);
-  aDragEvent->GetMozInputSource(&mInputSource);
+  DragEvent* dragEvent = aDragEvent->InternalDOMEvent()->AsDragEvent();
+  if (NS_WARN_IF(!dragEvent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mScreenPosition.x = dragEvent->ScreenX(CallerType::System);
+  mScreenPosition.y = dragEvent->ScreenY(CallerType::System);
+  mInputSource = dragEvent->MozInputSource();
 
   // just get the focused node from the selection
   // XXXndeakin this should actually be the deepest node that contains both

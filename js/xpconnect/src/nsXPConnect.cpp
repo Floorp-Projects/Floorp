@@ -120,6 +120,12 @@ nsXPConnect::~nsXPConnect()
 void
 nsXPConnect::InitStatics()
 {
+#ifdef NS_BUILD_REFCNT_LOGGING
+    // These functions are used for reporting leaks, so we register them as early
+    // as possible to avoid missing any classes' creations.
+    js::SetLogCtorDtorFunctions(NS_LogCtor, NS_LogDtor);
+#endif
+
     gSelf = new nsXPConnect();
     gOnceAliveNowDead = false;
 

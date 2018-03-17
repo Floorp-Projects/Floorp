@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-inline nsHtml5HtmlAttributes* GetAttributes()
+inline nsHtml5HtmlAttributes*
+GetAttributes()
 {
   return attributes;
 }
@@ -15,7 +16,8 @@ inline nsHtml5HtmlAttributes* GetAttributes()
  *                next call to this method.
  * @return true if successful; false if out of memory
  */
-bool EnsureBufferSpace(int32_t aLength);
+bool
+EnsureBufferSpace(int32_t aLength);
 
 nsAutoPtr<nsHtml5Highlighter> mViewSource;
 
@@ -23,126 +25,188 @@ nsAutoPtr<nsHtml5Highlighter> mViewSource;
  * Starts handling text/plain. This is a one-way initialization. There is
  * no corresponding EndPlainText() call.
  */
-void StartPlainText();
+void
+StartPlainText();
 
-void EnableViewSource(nsHtml5Highlighter* aHighlighter);
+void
+EnableViewSource(nsHtml5Highlighter* aHighlighter);
 
-bool FlushViewSource();
+bool
+FlushViewSource();
 
-void StartViewSource(const nsAutoString& aTitle);
+void
+StartViewSource(const nsAutoString& aTitle);
 
-void EndViewSource();
+void
+EndViewSource();
 
-void errGarbageAfterLtSlash();
+void
+errGarbageAfterLtSlash();
 
-void errLtSlashGt();
+void
+errLtSlashGt();
 
-void errWarnLtSlashInRcdata();
+void
+errWarnLtSlashInRcdata();
 
-void errCharRefLacksSemicolon();
+void
+errCharRefLacksSemicolon();
 
-void errNoDigitsInNCR();
+void
+errNoDigitsInNCR();
 
-void errGtInSystemId();
+void
+errGtInSystemId();
 
-void errGtInPublicId();
+void
+errGtInPublicId();
 
-void errNamelessDoctype();
+void
+errNamelessDoctype();
 
-void errConsecutiveHyphens();
+void
+errConsecutiveHyphens();
 
-void errPrematureEndOfComment();
+void
+errPrematureEndOfComment();
 
-void errBogusComment();
+void
+errBogusComment();
 
-void errUnquotedAttributeValOrNull(char16_t c);
+void
+errUnquotedAttributeValOrNull(char16_t c);
 
-void errSlashNotFollowedByGt();
+void
+errSlashNotFollowedByGt();
 
-void errNoSpaceBetweenAttributes();
+void
+errNoSpaceBetweenAttributes();
 
-void errLtOrEqualsOrGraveInUnquotedAttributeOrNull(char16_t c);
+void
+errLtOrEqualsOrGraveInUnquotedAttributeOrNull(char16_t c);
 
-void errAttributeValueMissing();
+void
+errAttributeValueMissing();
 
-void errBadCharBeforeAttributeNameOrNull(char16_t c);
+void
+errBadCharBeforeAttributeNameOrNull(char16_t c);
 
-void errEqualsSignBeforeAttributeName();
+void
+errEqualsSignBeforeAttributeName();
 
-void errBadCharAfterLt(char16_t c);
+void
+errBadCharAfterLt(char16_t c);
 
-void errLtGt();
+void
+errLtGt();
 
-void errProcessingInstruction();
+void
+errProcessingInstruction();
 
-void errUnescapedAmpersandInterpretedAsCharacterReference();
+void
+errUnescapedAmpersandInterpretedAsCharacterReference();
 
-void errNotSemicolonTerminated();
+void
+errNotSemicolonTerminated();
 
-void errNoNamedCharacterMatch();
+void
+errNoNamedCharacterMatch();
 
-void errQuoteBeforeAttributeName(char16_t c);
+void
+errQuoteBeforeAttributeName(char16_t c);
 
-void errQuoteOrLtInAttributeNameOrNull(char16_t c);
+void
+errQuoteOrLtInAttributeNameOrNull(char16_t c);
 
-void errExpectedPublicId();
+void
+errExpectedPublicId();
 
-void errBogusDoctype();
+void
+errBogusDoctype();
 
-void maybeErrAttributesOnEndTag(nsHtml5HtmlAttributes* attrs);
+void
+maybeErrAttributesOnEndTag(nsHtml5HtmlAttributes* attrs);
 
-void maybeErrSlashInEndTag(bool selfClosing);
+void
+maybeErrSlashInEndTag(bool selfClosing);
 
-char16_t errNcrNonCharacter(char16_t ch);
+char16_t
+errNcrNonCharacter(char16_t ch);
 
-void errAstralNonCharacter(int32_t ch);
+void
+errAstralNonCharacter(int32_t ch);
 
-void errNcrSurrogate();
+void
+errNcrSurrogate();
 
-char16_t errNcrControlChar(char16_t ch);
+char16_t
+errNcrControlChar(char16_t ch);
 
-void errNcrCr();
+void
+errNcrCr();
 
-void errNcrInC1Range();
+void
+errNcrInC1Range();
 
-void errEofInPublicId();
+void
+errEofInPublicId();
 
-void errEofInComment();
+void
+errEofInComment();
 
-void errEofInDoctype();
+void
+errEofInDoctype();
 
-void errEofInAttributeValue();
+void
+errEofInAttributeValue();
 
-void errEofInAttributeName();
+void
+errEofInAttributeName();
 
-void errEofWithoutGt();
+void
+errEofWithoutGt();
 
-void errEofInTagName();
+void
+errEofInTagName();
 
-void errEofInEndTag();
+void
+errEofInEndTag();
 
-void errEofAfterLt();
+void
+errEofAfterLt();
 
-void errNcrOutOfRange();
+void
+errNcrOutOfRange();
 
-void errNcrUnassigned();
+void
+errNcrUnassigned();
 
-void errDuplicateAttribute();
+void
+errDuplicateAttribute();
 
-void errEofInSystemId();
+void
+errEofInSystemId();
 
-void errExpectedSystemId();
+void
+errExpectedSystemId();
 
-void errMissingSpaceBeforeDoctypeName();
+void
+errMissingSpaceBeforeDoctypeName();
 
-void errHyphenHyphenBang();
+void
+errHyphenHyphenBang();
 
-void errNcrControlChar();
+void
+errNcrControlChar();
 
-void errNcrZero();
+void
+errNcrZero();
 
-void errNoSpaceBetweenDoctypeSystemKeywordAndQuote();
+void
+errNoSpaceBetweenDoctypeSystemKeywordAndQuote();
 
-void errNoSpaceBetweenPublicAndSystemIds();
+void
+errNoSpaceBetweenPublicAndSystemIds();
 
-void errNoSpaceBetweenDoctypePublicKeywordAndQuote();
+void
+errNoSpaceBetweenDoctypePublicKeywordAndQuote();

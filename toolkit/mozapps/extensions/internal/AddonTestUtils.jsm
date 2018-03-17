@@ -1357,7 +1357,10 @@ var AddonTestUtils = {
     Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
     aomStartup.initializeURLPreloader();
 
-    let file = FileUtils.getFile("TmpD", "override.txt");
+    let file = this.tempDir.clone();
+    file.append("override.txt");
+    this.tempXPIs.push(file);
+
     let manifest = Services.io.newFileURI(file);
     await OS.File.writeAtomic(file.path,
       new TextEncoder().encode(JSON.stringify(data)));

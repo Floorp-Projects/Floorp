@@ -9,8 +9,8 @@
 
 class nsHtml5PlainTextUtils
 {
-  public:
-    static nsHtml5HtmlAttributes* NewLinkAttributes();
+public:
+  static nsHtml5HtmlAttributes* NewLinkAttributes();
 };
 
 #endif // nsHtml5PlainTextUtils_h

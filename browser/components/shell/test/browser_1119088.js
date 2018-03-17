@@ -32,7 +32,6 @@ function onPageLoad() {
   let shell = Cc["@mozilla.org/browser/shell-service;1"].
               getService(Ci.nsIShellService);
 
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let image = gBrowser.contentDocumentAsCPOW.images[0];
   shell.setDesktopBackground(image, 0, "logo.png");
 

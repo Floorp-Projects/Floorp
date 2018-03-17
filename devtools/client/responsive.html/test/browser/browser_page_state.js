@@ -46,7 +46,6 @@ add_task(async function() {
 
   // Check color inside the viewport
   let color = await spawnViewportTask(ui, {}, function() {
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
     return content.getComputedStyle(content.document.body)
                   .getPropertyValue("background-color");
   });
@@ -57,7 +56,6 @@ add_task(async function() {
 
   // Check color back in the browser tab
   color = await ContentTask.spawn(browser, {}, async function() {
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
     return content.getComputedStyle(content.document.body)
                   .getPropertyValue("background-color");
   });

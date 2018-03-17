@@ -2,49 +2,49 @@
  * Copyright (c) 2007 Henri Sivonen
  * Copyright (c) 2008-2017 Mozilla Foundation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 
 #define nsHtml5HtmlAttributes_cpp__
 
-#include "nsAtom.h"
-#include "nsHtml5AtomTable.h"
-#include "nsHtml5String.h"
-#include "nsNameSpaceManager.h"
-#include "nsIContent.h"
-#include "nsTraceRefcnt.h"
 #include "jArray.h"
-#include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
+#include "nsAtom.h"
+#include "nsHtml5ArrayCopy.h"
+#include "nsHtml5AtomTable.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsHtml5Macros.h"
+#include "nsHtml5String.h"
+#include "nsIContent.h"
 #include "nsIContentHandle.h"
+#include "nsNameSpaceManager.h"
+#include "nsTraceRefcnt.h"
 
-#include "nsHtml5Tokenizer.h"
-#include "nsHtml5TreeBuilder.h"
-#include "nsHtml5MetaScanner.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
-#include "nsHtml5StackNode.h"
-#include "nsHtml5UTF16Buffer.h"
-#include "nsHtml5StateSnapshot.h"
+#include "nsHtml5MetaScanner.h"
 #include "nsHtml5Portability.h"
+#include "nsHtml5StackNode.h"
+#include "nsHtml5StateSnapshot.h"
+#include "nsHtml5Tokenizer.h"
+#include "nsHtml5TreeBuilder.h"
+#include "nsHtml5UTF16Buffer.h"
 
 #include "nsHtml5HtmlAttributes.h"
 
@@ -55,7 +55,6 @@ nsHtml5HtmlAttributes::nsHtml5HtmlAttributes(int32_t aMode)
 {
   MOZ_COUNT_CTOR(nsHtml5HtmlAttributes);
 }
-
 
 nsHtml5HtmlAttributes::~nsHtml5HtmlAttributes()
 {
@@ -87,7 +86,7 @@ nsHtml5HtmlAttributes::getValue(nsHtml5AttributeName* aName)
   }
 }
 
-int32_t 
+int32_t
 nsHtml5HtmlAttributes::getLength()
 {
   return mStorage.Length();
@@ -170,7 +169,7 @@ nsHtml5HtmlAttributes::releaseValue(int32_t aIndex)
   mStorage[aIndex].ReleaseValue();
 }
 
-void 
+void
 nsHtml5HtmlAttributes::clearWithoutReleasingContents()
 {
   mStorage.TruncateLength(0);
@@ -188,13 +187,13 @@ nsHtml5HtmlAttributes::contains(nsHtml5AttributeName* aName)
   return false;
 }
 
-void 
+void
 nsHtml5HtmlAttributes::adjustForMath()
 {
   mMode = nsHtml5AttributeName::MATHML;
 }
 
-void 
+void
 nsHtml5HtmlAttributes::adjustForSvg()
 {
   mMode = nsHtml5AttributeName::SVG;
@@ -255,5 +254,3 @@ nsHtml5HtmlAttributes::releaseStatics()
 {
   delete EMPTY_ATTRIBUTES;
 }
-
-

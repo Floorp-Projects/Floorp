@@ -1637,7 +1637,7 @@ protected:
     bool ValidateAttribPointer(bool integerMode, GLuint index, GLint size, GLenum type,
                                WebGLboolean normalized, GLsizei stride,
                                WebGLintptr byteOffset, const char* info);
-    bool ValidateStencilParamsForDrawCall();
+    bool ValidateStencilParamsForDrawCall(const char* funcName) const;
 
     bool ValidateCopyTexImage(TexInternalFormat srcFormat, TexInternalFormat dstformat,
                               WebGLTexImageFunc func, WebGLTexDimensions dims);

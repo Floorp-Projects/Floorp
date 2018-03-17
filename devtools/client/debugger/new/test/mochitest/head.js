@@ -40,6 +40,7 @@ Services.scriptloader.loadSubScript(
 
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { Task } = require("devtools/shared/task");
+
 const sourceUtils = {
   isLoaded: source => source.get("loadedState") === "loaded"
 };
@@ -781,7 +782,7 @@ function invokeInTab(fnc, ...args) {
     fnc,
     args
   }) {
-    content.wrappedJSObject[fnc](...args); // eslint-disable-line mozilla/no-cpows-in-tests, max-len
+    content.wrappedJSObject[fnc](...args);
   });
 }
 

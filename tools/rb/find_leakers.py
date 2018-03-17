@@ -12,6 +12,7 @@
 
 import sys
 
+
 def print_output(allocation, obj_to_class):
     '''Formats and prints output.'''
     items = []
@@ -25,6 +26,7 @@ def print_output(allocation, obj_to_class):
         print "{obj} ({count}) @ {class_name}".format(obj=obj,
                                                       count=count,
                                                       class_name=obj_to_class[obj])
+
 
 def process_log(log_lines):
     '''Process through the log lines, and print out the result.
@@ -49,7 +51,7 @@ def process_log(log_lines):
         # for Ctor/Dtor it's the size.
 
         if ((operation == 'AddRef' and count == '1') or
-           operation == 'Ctor'):
+                operation == 'Ctor'):
             # Examples:
             #     <nsStringBuffer> 0x01AFD3B8 1 AddRef 1
             #     <PStreamNotifyParent> 0x08880BD0 8 Ctor (20)
@@ -58,7 +60,7 @@ def process_log(log_lines):
             obj_to_class[obj] = class_name
 
         elif ((operation == 'Release' and count == '0') or
-             operation == 'Dtor'):
+              operation == 'Dtor'):
             # Examples:
             #     <nsStringBuffer> 0x01AFD3B8 1 Release 0
             #     <PStreamNotifyParent> 0x08880BD0 8 Dtor (20)
@@ -81,6 +83,7 @@ def print_usage():
     print "Else, it will read the stdin as the input log."
     print
 
+
 def main():
     '''Main method of the script.'''
     if len(sys.argv) == 1:
@@ -95,6 +98,6 @@ def main():
         print 'ERROR: Invalid number of arguments'
         print_usage()
 
+
 if __name__ == '__main__':
     main()
-

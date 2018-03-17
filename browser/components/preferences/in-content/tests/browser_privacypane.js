@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-disable mozilla/no-cpows-in-tests */
-
 // Test the initial value of Browser Error collection checkbox
 add_task(async function testBrowserErrorInitialValue() {
   // Skip if non-Nightly since the checkbox will be missing.

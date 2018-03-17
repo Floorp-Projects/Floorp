@@ -111,7 +111,6 @@ add_task(async function() {
   let doc = gBrowser.selectedBrowser.contentDocument;
 
   let showBtn = doc.getElementById("showUpdateHistory");
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let dialogOverlay = content.gSubDialog._preloadDialog._overlay;
 
   // XXX: For unknown reasons, this mock cannot be loaded by

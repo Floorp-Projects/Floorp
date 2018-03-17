@@ -15,13 +15,11 @@ NS_INTERFACE_MAP_BEGIN(nsHtml5StreamListener)
 NS_INTERFACE_MAP_END
 
 nsHtml5StreamListener::nsHtml5StreamListener(nsHtml5StreamParser* aDelegate)
- : mDelegate(aDelegate)
+  : mDelegate(aDelegate)
 {
 }
 
-nsHtml5StreamListener::~nsHtml5StreamListener()
-{
-}
+nsHtml5StreamListener::~nsHtml5StreamListener() {}
 
 void
 nsHtml5StreamListener::DropDelegate()
@@ -58,9 +56,7 @@ nsHtml5StreamListener::OnStopRequest(nsIRequest* aRequest,
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnStopRequest(aRequest,
-                                  aContext,
-                                  aStatus);
+  return mDelegate->OnStopRequest(aRequest, aContext, aStatus);
 }
 
 NS_IMETHODIMP
@@ -73,10 +69,6 @@ nsHtml5StreamListener::OnDataAvailable(nsIRequest* aRequest,
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnDataAvailable(aRequest,
-                                    aContext,
-                                    aInStream,
-                                    aSourceOffset,
-                                    aLength);
+  return mDelegate->OnDataAvailable(
+    aRequest, aContext, aInStream, aSourceOffset, aLength);
 }
-

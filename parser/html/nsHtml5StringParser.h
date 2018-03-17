@@ -16,73 +16,70 @@ class nsIDocument;
 
 class nsHtml5StringParser : public nsParserBase
 {
-  public:
+public:
+  NS_DECL_ISUPPORTS
 
-    NS_DECL_ISUPPORTS
+  /**
+   * Constructor for use ONLY by nsContentUtils. Others, please call the
+   * nsContentUtils statics that wrap this.
+   */
+  nsHtml5StringParser();
 
-    /**
-     * Constructor for use ONLY by nsContentUtils. Others, please call the
-     * nsContentUtils statics that wrap this.
-     */
-    nsHtml5StringParser();
+  /**
+   * Invoke the fragment parsing algorithm (innerHTML).
+   * DO NOT CALL from outside nsContentUtils.cpp.
+   *
+   * @param aSourceBuffer the string being set as innerHTML
+   * @param aTargetNode the target container
+   * @param aContextLocalName local name of context node
+   * @param aContextNamespace namespace of context node
+   * @param aQuirks true to make <table> not close <p>
+   * @param aPreventScriptExecution true to prevent scripts from executing;
+   * don't set to false when parsing into a target node that has been bound
+   * to tree.
+   */
+  nsresult ParseFragment(const nsAString& aSourceBuffer,
+                         nsIContent* aTargetNode,
+                         nsAtom* aContextLocalName,
+                         int32_t aContextNamespace,
+                         bool aQuirks,
+                         bool aPreventScriptExecution);
 
-    /**
-     * Invoke the fragment parsing algorithm (innerHTML).
-     * DO NOT CALL from outside nsContentUtils.cpp.
-     *
-     * @param aSourceBuffer the string being set as innerHTML
-     * @param aTargetNode the target container
-     * @param aContextLocalName local name of context node
-     * @param aContextNamespace namespace of context node
-     * @param aQuirks true to make <table> not close <p>
-     * @param aPreventScriptExecution true to prevent scripts from executing;
-     * don't set to false when parsing into a target node that has been bound
-     * to tree.
-     */
-    nsresult ParseFragment(const nsAString& aSourceBuffer,
-                           nsIContent* aTargetNode,
-                           nsAtom* aContextLocalName,
-                           int32_t aContextNamespace,
-                           bool aQuirks,
-                           bool aPreventScriptExecution);
+  /**
+   * Parse an entire HTML document from a source string.
+   * DO NOT CALL from outside nsContentUtils.cpp.
+   *
+   */
+  nsresult ParseDocument(const nsAString& aSourceBuffer,
+                         nsIDocument* aTargetDoc,
+                         bool aScriptingEnabledForNoscriptParsing);
 
-    /**
-     * Parse an entire HTML document from a source string.
-     * DO NOT CALL from outside nsContentUtils.cpp.
-     *
-     */
-    nsresult ParseDocument(const nsAString& aSourceBuffer,
-                           nsIDocument* aTargetDoc,
-                           bool aScriptingEnabledForNoscriptParsing);
+private:
+  virtual ~nsHtml5StringParser();
 
-  private:
+  nsresult Tokenize(const nsAString& aSourceBuffer,
+                    nsIDocument* aDocument,
+                    bool aScriptingEnabledForNoscriptParsing);
 
-    virtual ~nsHtml5StringParser();
+  /**
+   * The tree operation executor
+   */
+  RefPtr<nsHtml5OplessBuilder> mBuilder;
 
-    nsresult Tokenize(const nsAString& aSourceBuffer,
-                      nsIDocument* aDocument,
-                      bool aScriptingEnabledForNoscriptParsing);
+  /**
+   * The HTML5 tree builder
+   */
+  const nsAutoPtr<nsHtml5TreeBuilder> mTreeBuilder;
 
-    /**
-     * The tree operation executor
-     */
-    RefPtr<nsHtml5OplessBuilder>      mBuilder;
+  /**
+   * The HTML5 tokenizer
+   */
+  const nsAutoPtr<nsHtml5Tokenizer> mTokenizer;
 
-    /**
-     * The HTML5 tree builder
-     */
-    const nsAutoPtr<nsHtml5TreeBuilder> mTreeBuilder;
-
-    /**
-     * The HTML5 tokenizer
-     */
-    const nsAutoPtr<nsHtml5Tokenizer>   mTokenizer;
-
-    /**
-     * The scoped atom table
-     */
-    nsHtml5AtomTable                    mAtomTable;
-
+  /**
+   * The scoped atom table
+   */
+  nsHtml5AtomTable mAtomTable;
 };
 
 #endif // nsHtml5StringParser_h

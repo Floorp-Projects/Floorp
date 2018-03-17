@@ -6,19 +6,18 @@
 #define nsAHtml5TreeOpSink_h
 
 /**
- * The purpose of this interface is to connect a tree op executor 
+ * The purpose of this interface is to connect a tree op executor
  * (main-thread case), a tree op stage (non-speculative off-the-main-thread
  * case) or a speculation (speculative case).
  */
-class nsAHtml5TreeOpSink {
-  public:
-  
-    /**
-     * Flush the operations from the tree operations from the argument
-     * queue into this sink unconditionally.
-     */
-    virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) = 0;
-    
+class nsAHtml5TreeOpSink
+{
+public:
+  /**
+   * Flush the operations from the tree operations from the argument
+   * queue into this sink unconditionally.
+   */
+  virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) = 0;
 };
 
 #endif /* nsAHtml5TreeOpSink_h */

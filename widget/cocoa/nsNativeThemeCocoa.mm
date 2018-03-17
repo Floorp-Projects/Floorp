@@ -33,6 +33,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
+#include "mozilla/layers/StackingContextHelper.h"
 #include "nsLookAndFeel.h"
 #include "VibrancyManager.h"
 

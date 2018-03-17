@@ -64,6 +64,31 @@ async function test_nativeStream_continue(r, that) {
   that.next();
 }
 
+async function test_timeout(compartment) {
+  info("test_timeout");
+
+  let blob = new Blob([""]);
+  let r = await fetch(URL.createObjectURL(blob));
+
+  apply_compartment(compartment,
+                    { func: "test_timeout_continue",
+                      args: r });
+}
+
+async function test_timeout_continue(r, that) {
+  await r.body.getReader().read();
+
+  setTimeout(() => {
+    r.blob().then(b => {
+      that.ok(false, "We cannot have a blob here!");
+    }, () => {
+      that.ok(true, "We cannot have a blob here!");
+    }).then(() => {
+      that.next();
+    });
+  }, 0);
+}
+
 async function test_nonNativeStream(compartment) {
   info("test_nonNativeStream");
 

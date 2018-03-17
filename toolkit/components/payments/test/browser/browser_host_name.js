@@ -10,7 +10,6 @@ async function withBasicRequestDialogForOrigin(origin, dialogTaskFn) {
   });
 }
 
-/* eslint-disable mozilla/no-cpows-in-tests */
 add_task(async function test_host() {
   await withBasicRequestDialogForOrigin("https://example.com", () => {
     is(content.document.querySelector("#host-name").textContent, "example.com",

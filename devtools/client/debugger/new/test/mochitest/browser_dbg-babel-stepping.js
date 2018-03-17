@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests for stepping through Babel's compile output.
+requestLongerTimeout(4);
 
 async function breakpointSteps(dbg, fixture, { line, column }, steps) {
   const { selectors: { getBreakpoint, getBreakpoints }, getState } = dbg;
@@ -161,8 +162,6 @@ function testStepOverRegeneratorAwait(dbg) {
 }
 
 add_task(async function() {
-  requestLongerTimeout(4);
-
   const dbg = await initDebugger("doc-babel.html");
 
   await testStepOverForOf(dbg);

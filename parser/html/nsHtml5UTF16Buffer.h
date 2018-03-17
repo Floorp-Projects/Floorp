@@ -60,6 +60,7 @@ private:
   char16_t* buffer;
   int32_t start;
   int32_t end;
+
 public:
   int32_t getStart();
   void setStart(int32_t start);

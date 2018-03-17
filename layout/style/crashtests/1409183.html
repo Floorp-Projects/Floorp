@@ -1,0 +1,15 @@
+<script>
+function jsfuzzer() {
+try { htmlvar00043.defaultChecked = true; } catch(e) { }
+try { svgvar00002.appendChild(htmlvar00040); } catch(e) { }
+}
+</script>
+<body onload=jsfuzzer()>
+<table>
+<svg id="svgvar00001">
+<title id="svgvar00002">Title</title>
+</table>
+<svg>
+<use xlink:href="#svgvar00001"><body xmlns="">
+<label id="htmlvar00040">
+<input id="htmlvar00043" name="x" type="radio">

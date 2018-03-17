@@ -47,6 +47,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureWrapperImage.h"
+#include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/Unused.h"
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
@@ -2120,12 +2121,8 @@ FrameLayerBuilder::HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey
       return true;
     }
   }
-  if (auto userDataTable =
-       aFrame->GetProperty(nsIFrame::WebRenderUserDataProperty())) {
-    RefPtr<WebRenderUserData> data = userDataTable->Get(aDisplayItemKey);
-    if (data) {
-      return true;
-    }
+  if (RefPtr<WebRenderUserData> data = GetWebRenderUserData<WebRenderFallbackData>(aFrame, aDisplayItemKey)) {
+    return true;
   }
   return false;
 }
@@ -6310,11 +6307,8 @@ FrameLayerBuilder::GetMostRecentGeometry(nsDisplayItem* aItem)
       return data->GetGeometry();
     }
   }
-  if (auto userDataTable =
-       aItem->Frame()->GetProperty(nsIFrame::WebRenderUserDataProperty())) {
-    if (RefPtr<WebRenderUserData> data = userDataTable->Get(itemPerFrameKey)) {
-      return data->GetGeometry();
-    }
+  if (RefPtr<WebRenderFallbackData> data = GetWebRenderUserData<WebRenderFallbackData>(aItem->Frame(), itemPerFrameKey)) {
+    return data->GetGeometry();
   }
 
   return nullptr;
