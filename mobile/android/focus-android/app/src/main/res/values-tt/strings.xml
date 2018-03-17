@@ -162,6 +162,7 @@
   <string name="firstrun_search_title">Сезнең эзләү, Сезнең кагыйдәләр</string>
   <string name="firstrun_search_text">Башка берәр нәрсә эзлисезме? Көйләүләр менюсына кереп, стандарт итеп башка бер эзләү системасын сайлый аласыз.</string>
   <string name="firstrun_shortcut_title">Өй экранына ярлыклар өстәгез</string>
+  <string name="firstrun_shortcut_text">%1$s эчендә иң яраткан сайтларыгызга тиз генә кире кайта аласыз. %1$s менюсыннан \"Өй экранына кушуны\" сайлау гына кирәк.</string>
   <string name="firstrun_privacy_title">Хосусыйлыкны гадәткә кертү</string>
   <string name="firstrun_privacy_text">%1$s\'ны төп гизгечегез итеп сайлап, башка кулланмалардан сайтларны ачканда да яшерен гизү мөмкинлегеннән файда күрегез.</string>
   <string name="firstrun_close_button">Яхшы, аңладым!</string>
@@ -180,7 +181,9 @@
   <string name="download_firefox">Firefox\'ны йөкләп алу</string>
   <string name="your_rights_content1">%1$s — Mozilla һәм башка катнашучылар ясаган ирекле һәм ачык чыганаклы программа.</string>
   <string name="your_rights_content2"><![CDATA["%1$s "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" һәм башка ачык чыганак лицензияләренең шартлары белән тәкъдим ителә."]]></string>
+  <string name="your_rights_content3"><![CDATA["Сезгә Mozilla Foundation\'ның яисә башка тарафларның һичбер теркәлгән сәүдә билгеләренә, шул исәптән Mozilla, Firefox яисә %1$s исемнәре яки логотипларына бернинди дә хокуклар я лицензияләр бирелми. Өстәмә мәгълүматны "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1084;&#1086;&#1085;&#1076;&#1072;</a>" табып була."]]></string>
   <string name="your_rights_content4"><![CDATA["%1$s өчен өстәмә чыганак кодлары берничә башка ирекле һәм ачык чыганак "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1079;&#1080;&#1103;&#1083;&#1241;&#1088;&#1077;</a>" белән тәкъдим ителә."]]></string>
+  <string name="your_rights_content5"><![CDATA["Моннан тыш, %1$s Disconnect, Inc. тәэмин иткән блоклау исемлекләрен куллана, аларны "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" шартлары илә һәм түләүсез "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1084;&#1086;&#1085;&#1076;&#1072;</a>" алып була."]]></string>
   <string name="gv_prompt_username_hint">Кулланучы исеме</string>
   <string name="gv_prompt_password_hint">Серсүз</string>
   <string name="gv_prompt_clear">Чистарту</string>

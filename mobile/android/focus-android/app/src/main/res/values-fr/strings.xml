@@ -17,6 +17,7 @@
   <string name="menu_help">Aide</string>
   <string name="menu_rights">Droits de l’utilisateur</string>
   <string name="menu_trackers_blocked_title">Traqueurs bloqués</string>
+  <string name="menu_custom_tab_branding">Fonctionne grâce à %1$s</string>
   <string name="share_dialog_title">Partager avec</string>
   <string name="notification_erase_text">Effacer l’historique de navigation</string>
   <string name="notification_action_open">Ouvrir</string>

@@ -16,7 +16,7 @@
   <string name="menu_about">Informazioni su</string>
   <string name="menu_help">Aiuto</string>
   <string name="menu_rights">I tuoi diritti</string>
-  <string name="menu_trackers_blocked_title">Elementi traccianti bloccati</string>
+  <string name="menu_trackers_blocked_title">Traccianti bloccati</string>
   <string name="menu_custom_tab_branding">Con tecnologia %1$s</string>
   <string name="share_dialog_title">Condividi con</string>
   <string name="notification_erase_text">Elimina cronologia di navigazione</string>
@@ -34,7 +34,7 @@
   <string name="preference_switch_autocomplete">Completamento automatico</string>
   <string name="preference_category_autocomplete_preinstalled">Elenco indirizzi predefinito</string>
   <string name="preference_autocomplete_preinstalled_summary">Attiva per completare automaticamente oltre 450 domini nella barra degli indirizzi di %1$s.</string>
-  <string name="preference_category_autocomplete_custom">Indirizzo personalizzato</string>
+  <string name="preference_category_autocomplete_custom">Indirizzi personalizzati</string>
   <string name="preference_autocomplete_subitem_customlist">Indirizzi personalizzati</string>
   <string name="preference_autocomplete_action_add">+ Aggiungi indirizzo personalizzato</string>
   <string name="preference_autocomplete_title_add">Nuovo indirizzo pers.</string>

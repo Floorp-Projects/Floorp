@@ -16,7 +16,7 @@
   <string name="menu_about">Rreth</string>
   <string name="menu_help">Ndihmë</string>
   <string name="menu_rights">Të drejtat Tuaja</string>
-  <string name="menu_trackers_blocked_title">U bllokuan gjurmues</string>
+  <string name="menu_trackers_blocked_title">Gjurmues të bllokuar</string>
   <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">Ndajeni përmes</string>
   <string name="notification_erase_text">Fshini historik shfletimesh</string>
@@ -139,7 +139,7 @@
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sajti mund t&#235; jet&#235; p&#235;rkoh&#235;sisht jasht&#235; funksionimit ose shum&#235; i z&#235;n&#235;. Riprovoni pas pak &#231;astesh.</li>"\n        "<li>N&#235;se s&#8217;jeni n&#235; gjendje t&#235; ngarkoni asnj&#235; faqe, kontrolloni lidhjen data ose Wi-Fi t&#235; pajisjes suaj celulare.</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">Lidhjes i mbaroi koha</string>
   <string name="error_hostLookup_title">S’u gjet shërbyes</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrolloni adres&#235;n p&#235;r gabime shkrimi, t&#235; tilla si\n          "<strong>ww</strong>".example.com, n&#235; vend se\n          "<strong>www</strong>.example.com</li>"\n        "<li>If you are unable to load any pages, check your device&#8217;s data or Wi-Fi connection.</li>"\n      "</ul>]]></string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrolloni adres&#235;n p&#235;r gabime shkrimi, t&#235; tilla si\n          "<strong>ww</strong>".example.com, n&#235; vend se\n          "<strong>www</strong>.example.com</li>"\n        "<li>N&#235;se s&#8217;jeni n&#235; gjendje t&#235; ngarkoni asnj&#235; faqe, kontrolloni lidhjen data ose Wi-Fi t&#235; pajisjes suaj celulare.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">Adresa s’është e vlefshme</string>
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Adresat Web zakonisht shkruhen si "<strong>http://www.example.com/</strong></li>"\n  "<li>"Sigurohuni q&#235; po p&#235;rdorni pjerr&#235;se djathtas (d.m.th. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">Faqja s’ridrejton si duhet</string>

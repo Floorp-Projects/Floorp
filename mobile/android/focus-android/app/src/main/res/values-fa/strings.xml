@@ -8,6 +8,8 @@
   <string name="feedback_erase">تاریخچه مرور شما حذف شد.</string>
   <string name="search_hint">جست‌وجو برای %1$s</string>
   <string name="menu_share">اشتراک‌گذاری…</string>
+  <string name="menu_open_with_default_browser2">بازکردن در %1$s</string>
+  <string name="menu_open_with_a_browser2">بازکردن…</string>
   <string name="menu_add_to_home_screen">افزودن به صفحه‌ی خانه</string>
   <string name="menu_whats_new">امکانات جدید</string>
   <string name="menu_settings">تنظیمات</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">راهنما</string>
   <string name="menu_rights">حقوق شما</string>
   <string name="menu_trackers_blocked_title">دنبال کننده‌های مسدود شده</string>
+  <string name="menu_custom_tab_branding">نیرو گرفته توسط%1$s</string>
   <string name="share_dialog_title">اشتراک‌گذاری از طریق</string>
   <string name="notification_erase_text">پاک کردن تاریخچهٔ مرورگر</string>
   <string name="notification_action_open">باز کردن</string>
@@ -181,4 +184,11 @@
   <string name="your_rights_content3"><![CDATA["به شما هیچ گونه اجازه یا گواهی‌ای برای علامت‌های تجاری بنیاد موزیلا یا هر شخص ثالثی، شامل موزیلا، فایرفاکس یا نام‌ها یا نشان‌های %1$s اعطا نشده است. اطّلاعات بیشتر ممکن است در "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1575;&#1740;&#1606;&#1580;&#1575;</a>" یافت شوند."]]></string>
   <string name="your_rights_content4"><![CDATA["کد منبع بیشتری برای %1$s تحت تعداد دیگری از "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" &#1711;&#1608;&#1575;&#1607;&#1740;&#1606;&#1575;&#1605;&#1607;&#8204;&#1607;&#1575;&#1740;"</a>" آزاد و متن باز در دسترس است."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s همچنین از فهرست‌های مسدودی فراهم شده توسط Disconnect استفاده می‌کند. به عنوان کارهای جدا و مستقل تحت "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1711;&#1608;&#1575;&#1607;&#1740;&#1606;&#1575;&#1605;&#1607; &#1593;&#1605;&#1608;&#1605;&#1740; GNU &#1606;&#1587;&#1582;&#1607;3</a>"،‌ و "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1575;&#1740;&#1606;&#1580;&#1575;</a>" در دسترس است."]]></string>
+  <string name="gv_prompt_username_hint">نام کاربری</string>
+  <string name="gv_prompt_password_hint">کلمه عبور</string>
+  <string name="gv_prompt_clear">پاک کردن</string>
+  <string name="security_popup_secure_connection">اتصال امن</string>
+  <string name="security_popup_insecure_connection">اتصال ناامن</string>
+  <string name="security_popup_security_verified">تایید شده توسط:%1$s</string>
+  <string name="site_security_icon_content_description">امنیت پایگاه اینترنتی</string>
 </resources>
