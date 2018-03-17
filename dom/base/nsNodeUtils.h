@@ -225,15 +225,6 @@ public:
   }
 
   /**
-   * Helper for the cycle collector to traverse the DOM UserData for aNode.
-   *
-   * @param aNode the node to traverse UserData for
-   * @param aCb the cycle collection callback
-   */
-  static void TraverseUserData(nsINode* aNode,
-                               nsCycleCollectionTraversalCallback &aCb);
-
-  /**
    * A basic implementation of the DOM cloneNode method. Calls nsINode::Clone to
    * do the actual cloning of the node.
    *
@@ -245,13 +236,6 @@ public:
    */
   static already_AddRefed<nsINode> CloneNodeImpl(nsINode *aNode, bool aDeep,
                                                  mozilla::ErrorResult& aError);
-
-  /**
-   * Release the UserData for aNode.
-   *
-   * @param aNode the node to release the UserData for
-   */
-  static void UnlinkUserData(nsINode *aNode);
 
   /**
    * Returns a true if the node is a HTMLTemplate element.
