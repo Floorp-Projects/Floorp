@@ -1127,7 +1127,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "5591743696e1"
+        "revision": "abb641a8653a"
     }, 
     "pt-PT": {
         "platforms": [
@@ -1367,7 +1367,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "eaf118689168"
+        "revision": "d7fbff8e06eb"
     }, 
     "ur": {
         "platforms": [
