@@ -860,6 +860,11 @@ WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
   memset(buttons.Elements(), 0, gamepad->numButtons * sizeof(bool));
 
   for (unsigned i = 0; i < usageLength; i++) {
+    // The button index in usages may be larger than what we detected when
+    // enumerating gamepads. If so, warn and continue.
+    if (NS_WARN_IF((usages[i] - 1) >= buttons.Length())) {
+      continue;
+    }
     buttons[usages[i] - 1] = true;
   }
 
