@@ -167,7 +167,7 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  tab.linkedBrowser.loadURI(TOP_URL);
+  tab.linkedBrowser.loadURI(TOP_URL, null, null);
 
   await waitForNetworkEvents(monitor, REQUEST_COUNT);
 

@@ -126,7 +126,7 @@ window._gBrowser = {
    */
   _browserBindingProperties: [
     "canGoBack", "canGoForward", "goBack", "goForward", "permitUnload",
-    "reload", "reloadWithFlags", "stop", "loadURI",
+    "reload", "reloadWithFlags", "stop", "loadURI", "loadURIWithFlags",
     "gotoIndex", "currentURI", "documentURI",
     "preferences", "imageDocument", "isRemoteBrowser", "messageManager",
     "getTabBrowser", "finder", "fastFind", "sessionHistory", "contentTitle",
@@ -352,8 +352,20 @@ window._gBrowser = {
   /**
    * throws exception for unknown schemes
    */
-  loadURI(aURI, aParams) {
-    return this.selectedBrowser.loadURI(aURI, aParams);
+  loadURI(aURI, aReferrerURI, aCharset) {
+    return this.selectedBrowser.loadURI(aURI, aReferrerURI, aCharset);
+  },
+
+  /**
+   * throws exception for unknown schemes
+   */
+  loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData) {
+    // Note - the callee understands both:
+    // (a) loadURIWithFlags(aURI, aFlags, ...)
+    // (b) loadURIWithFlags(aURI, { flags: aFlags, ... })
+    // Forwarding it as (a) here actually supports both (a) and (b),
+    // so you can call us either way too.
+    return this.selectedBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData);
   },
 
   gotoIndex(aIndex) {
@@ -1492,7 +1504,7 @@ window._gBrowser = {
           Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
       }
       try {
-        browser.loadURI(aURIs[0], {
+        browser.loadURIWithFlags(aURIs[0], {
           flags,
           postData: aPostDatas[0],
           triggeringPrincipal: aTriggeringPrincipal,
@@ -2425,7 +2437,7 @@ window._gBrowser = {
       if (aDisallowInheritPrincipal)
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
       try {
-        b.loadURI(aURI, {
+        b.loadURIWithFlags(aURI, {
           flags,
           triggeringPrincipal: aTriggeringPrincipal,
           referrerURI: aNoReferrer ? null : aReferrerURI,
@@ -4710,3 +4722,4 @@ var StatusPanel = {
     }
   }
 };
+
