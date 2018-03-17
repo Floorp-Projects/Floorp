@@ -20,6 +20,12 @@ ChromeUtils.defineModuleGetter(this, "formAutofillParent",
 ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "resProto",
+                                   "@mozilla.org/network/protocol;1?name=resource",
+                                   "nsISubstitutingProtocolHandler");
+
+const RESOURCE_HOST = "formautofill";
+
 function insertStyleSheet(domWindow, url) {
   let doc = domWindow.document;
   let styleSheetAttr = `href="${url}" type="text/css"`;
@@ -80,6 +86,9 @@ function startup(data) {
     return;
   }
 
+  resProto.setSubstitution(RESOURCE_HOST,
+                           Services.io.newURI("chrome/res/", null, data.resourceURI));
+
   if (data.hasOwnProperty("instanceID") && data.instanceID) {
     if (AddonManagerPrivate.isDBLoaded()) {
       addUpgradeListener(data.instanceID);
@@ -121,6 +130,8 @@ function startup(data) {
 }
 
 function shutdown() {
+  resProto.setSubstitution(RESOURCE_HOST, null);
+
   Services.mm.removeMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
 
   let enumerator = Services.wm.getEnumerator("navigator:browser");

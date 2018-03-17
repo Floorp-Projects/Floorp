@@ -39,7 +39,6 @@ EXTRA_PP_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'AddonManager.jsm',
-    'ChromeManifestParser.jsm',
     'LightweightThemeManager.jsm',
 ]
 
