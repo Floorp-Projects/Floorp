@@ -294,10 +294,7 @@ function setText(id, value) {
   if (element.localName == "textbox" || element.localName == "label")
     element.value = value;
   else {
-    if (element.hasChildNodes())
-      element.firstChild.remove();
-    var textNode = document.createTextNode(value);
-    element.appendChild(textNode);
+    element.textContent = value;
   }
 }
 
