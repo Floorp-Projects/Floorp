@@ -14,6 +14,12 @@ LOCAL_INCLUDES += [
   '/media/webrtc/signaling/src/peerconnection',
 ]
 
+if CONFIG['FUZZING']:
+    if CONFIG['LIBFUZZER']:
+        # Add trace-pc coverage and trace-cmp for LibFuzzer
+        CFLAGS += ['-fsanitize-coverage=trace-pc-guard', '-fsanitize-coverage=trace-cmp']
+        CXXFLAGS += ['-fsanitize-coverage=trace-pc-guard', '-fsanitize-coverage=trace-cmp']
+
 SOURCES += [
     'sdp_parser_libfuzz.cpp',
 ]
