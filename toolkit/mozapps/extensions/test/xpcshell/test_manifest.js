@@ -415,10 +415,10 @@ function run_test() {
 
     Assert.notEqual(a4, null);
     Assert.equal(a4.id, "addon4@tests.mozilla.org");
-    Assert.ok(a4.isActive);
+    Assert.ok(!a4.isActive);
     Assert.ok(!a4.userDisabled);
-    Assert.ok(!a4.appDisabled);
-    Assert.ok(a4.providesUpdatesSecurely);
+    Assert.ok(a4.appDisabled);
+    Assert.ok(!a4.providesUpdatesSecurely);
 
     Assert.notEqual(a5, null);
     Assert.ok(a5.isActive);

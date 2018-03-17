@@ -4776,8 +4776,7 @@ AddonInternal.prototype = {
   },
 
   get providesUpdatesSecurely() {
-    return !!(this.updateKey || !this.updateURL ||
-              this.updateURL.substring(0, 6) == "https:");
+    return !this.updateURL || this.updateURL.startsWith("https:");
   },
 
   get isCorrectlySigned() {
