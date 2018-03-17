@@ -226,7 +226,6 @@ class RobocopTestRunner(MochitestDesktop):
 
         self.options.extensionsToExclude.extend([
             'mochikit@mozilla.org',
-            'worker-test@mozilla.org.xpi',
             'workerbootstrap-test@mozilla.org.xpi',
             'indexedDB-test@mozilla.org.xpi',
         ])
