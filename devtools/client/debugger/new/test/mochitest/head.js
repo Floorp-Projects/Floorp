@@ -177,10 +177,11 @@ function waitForState(dbg, predicate, msg) {
     }
 
     const unsubscribe = dbg.store.subscribe(() => {
-      if (predicate(dbg.store.getState())) {
+      const result = predicate(dbg.store.getState())
+      if (result) {
         info(`Finished waiting for state change: ${msg || ""}`);
         unsubscribe();
-        resolve();
+        resolve(result);
       }
     });
   });
@@ -230,7 +231,7 @@ function waitForSource(dbg, url) {
   return waitForState(dbg, state => {
     const sources = dbg.selectors.getSources(state);
     return sources.find(s => (s.get("url") || "").includes(url));
-  });
+  }, `source exists`);
 }
 
 async function waitForElement(dbg, name) {
@@ -592,9 +593,10 @@ function waitForLoadedSources(dbg) {
  * @return {Promise}
  * @static
  */
-function selectSource(dbg, url, line) {
+async function selectSource(dbg, url, line) {
   const source = findSource(dbg, url);
-  return dbg.actions.selectLocation({ sourceId: source.id, line });
+  await dbg.actions.selectLocation({ sourceId: source.id, line });
+  return waitForSelectedSource(dbg, url);
 }
 
 function closeTab(dbg, url) {

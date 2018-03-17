@@ -370,24 +370,6 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   FragmentOrElement::RemoveBlackMarkedNode(aNode);
 }
 
-static void
-NoteUserData(void *aObject, nsAtom *aKey, void *aXPCOMChild, void *aData)
-{
-  nsCycleCollectionTraversalCallback* cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aData);
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "[user data]");
-  cb->NoteXPCOMChild(static_cast<nsISupports*>(aXPCOMChild));
-}
-
-/* static */
-void
-nsNodeUtils::TraverseUserData(nsINode* aNode,
-                              nsCycleCollectionTraversalCallback &aCb)
-{
-  nsIDocument* ownerDoc = aNode->OwnerDoc();
-  ownerDoc->PropertyTable(DOM_USER_DATA)->Enumerate(aNode, NoteUserData, &aCb);
-}
-
 /* static */
 already_AddRefed<nsINode>
 nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep, ErrorResult& aError)
@@ -714,19 +696,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
   }
 
   return clone.forget();
-}
-
-
-/* static */
-void
-nsNodeUtils::UnlinkUserData(nsINode *aNode)
-{
-  NS_ASSERTION(aNode->HasProperties(), "Call to UnlinkUserData not needed.");
-
-  // Strong reference to the document so that deleting properties can't
-  // delete the document.
-  nsCOMPtr<nsIDocument> document = aNode->OwnerDoc();
-  document->PropertyTable(DOM_USER_DATA)->DeleteAllPropertiesFor(aNode);
 }
 
 bool

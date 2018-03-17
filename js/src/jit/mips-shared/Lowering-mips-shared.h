@@ -19,7 +19,6 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
       : LIRGeneratorShared(gen, graph, lirGraph)
     { }
 
-  protected:
     // x86 has constraints on what registers can be formatted for 1-byte
     // stores and loads; on MIPS all registers are okay.
     LAllocation useByteOpRegister(MDefinition* mir);
@@ -69,34 +68,12 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
     void lowerUDiv(MDiv* div);
     void lowerUMod(MMod* mod);
-    void visitPowHalf(MPowHalf* ins);
-    void visitWasmNeg(MWasmNeg* ins);
-    void visitWasmLoad(MWasmLoad* ins);
-    void visitWasmStore(MWasmStore* ins);
-    void visitWasmSelect(MWasmSelect* ins);
 
     LTableSwitch* newLTableSwitch(const LAllocation& in, const LDefinition& inputCopy,
                                   MTableSwitch* ins);
     LTableSwitchV* newLTableSwitchV(MTableSwitch* ins);
 
-  public:
     void lowerPhi(MPhi* phi);
-    void visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins);
-    void visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins);
-    void visitAsmJSLoadHeap(MAsmJSLoadHeap* ins);
-    void visitAsmJSStoreHeap(MAsmJSStoreHeap* ins);
-    void visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins);
-    void visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins);
-    void visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins);
-    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
-    void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
-    void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
-    void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
-    void visitSubstr(MSubstr* ins);
-    void visitCopySign(MCopySign* ins);
-    void visitExtendInt32ToInt64(MExtendInt32ToInt64* ins);
-    void visitSignExtendInt64(MSignExtendInt64* ins);
-
 };
 
 } // namespace jit
