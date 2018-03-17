@@ -1510,8 +1510,15 @@ nsIDocument::nsIDocument()
     mValidMaxScale(false),
     mScaleStrEmpty(false),
     mWidthStrEmpty(false),
+    mParserAborted(false),
+    mReportedUseCounters(false),
+#ifdef DEBUG
+    mWillReparent(false),
+#endif
     mPendingFullscreenRequests(0),
     mXMLDeclarationBits(0),
+    mOnloadBlockCount(0),
+    mAsyncOnloadBlockCount(0),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
     mStyleBackendType(StyleBackendType::None),
@@ -1565,13 +1572,6 @@ nsIDocument::nsIDocument()
 
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
-  , mParserAborted(false)
-  , mReportedUseCounters(false)
-  , mOnloadBlockCount(0)
-  , mAsyncOnloadBlockCount(0)
-#ifdef DEBUG
-  , mWillReparent(false)
-#endif
 {
   SetContentTypeInternal(nsDependentCString(aContentType));
 
@@ -1588,7 +1588,7 @@ nsDocument::nsDocument(const char* aContentType)
 }
 
 void
-nsDocument::ClearAllBoxObjects()
+nsIDocument::ClearAllBoxObjects()
 {
   if (mBoxObjectTable) {
     for (auto iter = mBoxObjectTable->Iter(); !iter.Done(); iter.Next()) {
@@ -2207,27 +2207,13 @@ nsDocument::Init()
 void
 nsIDocument::DeleteAllProperties()
 {
-  for (uint32_t i = 0; i < GetPropertyTableCount(); ++i) {
-    PropertyTable(i)->DeleteAllProperties();
-  }
+  PropertyTable().DeleteAllProperties();
 }
 
 void
 nsIDocument::DeleteAllPropertiesFor(nsINode* aNode)
 {
-  for (uint32_t i = 0; i < GetPropertyTableCount(); ++i) {
-    PropertyTable(i)->DeleteAllPropertiesFor(aNode);
-  }
-}
-
-nsPropertyTable*
-nsIDocument::GetExtraPropertyTable(uint16_t aCategory)
-{
-  NS_ASSERTION(aCategory > 0, "Category 0 should have already been handled");
-  while (aCategory >= mExtraPropertyTables.Length() + 1) {
-    mExtraPropertyTables.AppendElement(new nsPropertyTable());
-  }
-  return mExtraPropertyTables[aCategory - 1];
+  PropertyTable().DeleteAllPropertiesFor(aNode);
 }
 
 bool
@@ -2244,7 +2230,7 @@ nsIDocument::IsVisibleConsideringAncestors() const
       }
 
 void
-nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
+nsIDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIPrincipal> principal;
@@ -2297,8 +2283,9 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 }
 
 void
-nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
-                       nsIPrincipal* aPrincipal)
+nsIDocument::ResetToURI(nsIURI* aURI,
+                        nsILoadGroup* aLoadGroup,
+                        nsIPrincipal* aPrincipal)
 {
   NS_PRECONDITION(aURI, "Null URI passed to ResetToURI");
 
@@ -2447,7 +2434,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 }
 
 already_AddRefed<nsIPrincipal>
-nsDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
+nsIDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
 {
   if (!aPrincipal) {
     return nullptr;
@@ -2686,7 +2673,7 @@ WarnIfSandboxIneffective(nsIDocShell* aDocShell,
 }
 
 bool
-nsDocument::IsSynthesized() {
+nsIDocument::IsSynthesized() {
   nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(mChannel);
   bool synthesized = false;
   if (internalChan) {
@@ -2864,7 +2851,7 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 }
 
 void
-nsDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
+nsIDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
 {
   for (uint32_t i = 0; i < aMessages.Length(); ++i) {
     nsAutoString messageTag;
@@ -2940,7 +2927,7 @@ nsIDocument::ApplySettingsFromCSP(bool aSpeculative)
 }
 
 nsresult
-nsDocument::InitCSP(nsIChannel* aChannel)
+nsIDocument::InitCSP(nsIChannel* aChannel)
 {
   MOZ_ASSERT(!mScriptGlobalObject,
              "CSP must be initialized before mScriptGlobalObject is set!");
@@ -3008,7 +2995,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   MOZ_LOG(gCspPRLog, LogLevel::Debug, ("Document is an add-on or CSP header specified %p", this));
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->EnsureCSP(this, getter_AddRefs(csp));
+  rv = principal->EnsureCSP(static_cast<nsDocument*>(this), getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ----- if the doc is an addon, apply its CSP.
@@ -3362,7 +3349,7 @@ nsIDocument::GetContentType(nsAString& aContentType)
 }
 
 void
-nsDocument::SetContentType(const nsAString& aContentType)
+nsIDocument::SetContentType(const nsAString& aContentType)
 {
   SetContentTypeInternal(NS_ConvertUTF16toUTF8(aContentType));
 }
@@ -3745,7 +3732,7 @@ nsIDocument::DefaultStyleAttrURLData()
 }
 
 void
-nsDocument::SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding)
+nsIDocument::SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding)
 {
   if (mCharacterSet != aEncoding) {
     mCharacterSet = aEncoding;
@@ -4071,6 +4058,21 @@ nsIDocument::DeleteShell()
     ClearStaleServoData();
     AssertNoStaleServoDataIn(static_cast<nsINode&>(*this));
   }
+}
+
+void
+nsIDocument::SetBFCacheEntry(nsIBFCacheEntry* aEntry)
+{
+  MOZ_ASSERT(IsBFCachingAllowed() || !aEntry, "You should have checked!");
+
+  if (mPresShell) {
+    if (aEntry) {
+      mPresShell->StopObservingRefreshDriver();
+    } else if (mBFCacheEntry) {
+      mPresShell->StartObservingRefreshDriver();
+    }
+  }
+  mBFCacheEntry = aEntry;
 }
 
 static void
@@ -4856,7 +4858,7 @@ nsIDocument::GetContainer() const
 }
 
 void
-nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
+nsIDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 {
   MOZ_ASSERT(aScriptGlobalObject || !mAnimationController ||
              mAnimationController->IsPausedByType(
@@ -5108,7 +5110,7 @@ nsIDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 }
 
 void
-nsDocument::MaybeEndOutermostXBLUpdate()
+nsIDocument::MaybeEndOutermostXBLUpdate()
 {
   // Only call BindingManager()->EndOutermostUpdate() when
   // we're not in an update and it is safe to run scripts.
@@ -5950,14 +5952,8 @@ nsIDocument::ResolveScheduledSVGPresAttrs()
   mLazySVGPresElements.Clear();
 }
 
-long
-nsDocument::BlockedTrackingNodeCount() const
-{
-  return mBlockedTrackingNodes.Length();
-}
-
 already_AddRefed<nsSimpleContentList>
-nsDocument::BlockedTrackingNodes() const
+nsIDocument::BlockedTrackingNodes() const
 {
   RefPtr<nsSimpleContentList> list = new nsSimpleContentList(nullptr);
 
@@ -7293,28 +7289,20 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
     nsDOMAttributeMap::BlastSubtreeToPieces(adoptedNode);
 
     if (!sameDocument && oldDocument) {
-      uint32_t count = nodesWithProperties.Count();
-      for (uint32_t j = 0; j < oldDocument->GetPropertyTableCount(); ++j) {
-        for (uint32_t i = 0; i < count; ++i) {
-          // Remove all properties.
-          oldDocument->PropertyTable(j)->
-            DeleteAllPropertiesFor(nodesWithProperties[i]);
-        }
+      for (nsINode* node : nodesWithProperties) {
+        // Remove all properties.
+        oldDocument->PropertyTable().DeleteAllPropertiesFor(node);
       }
     }
 
     return nullptr;
   }
 
-  uint32_t count = nodesWithProperties.Count();
   if (!sameDocument && oldDocument) {
-    for (uint32_t j = 0; j < oldDocument->GetPropertyTableCount(); ++j) {
-      nsPropertyTable *oldTable = oldDocument->PropertyTable(j);
-      nsPropertyTable *newTable = PropertyTable(j);
-      for (uint32_t i = 0; i < count; ++i) {
-        rv = oldTable->TransferOrDeleteAllPropertiesFor(nodesWithProperties[i],
-                                                        newTable);
-      }
+    nsPropertyTable& oldTable = oldDocument->PropertyTable();
+    nsPropertyTable& newTable = PropertyTable();
+    for (nsINode* node : nodesWithProperties) {
+      rv = oldTable.TransferOrDeleteAllPropertiesFor(node, newTable);
     }
 
     if (rv.Failed()) {
@@ -8037,8 +8025,8 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 }
 
 already_AddRefed<Element>
-nsDocument::CreateElem(const nsAString& aName, nsAtom *aPrefix,
-                       int32_t aNamespaceID, const nsAString* aIs)
+nsIDocument::CreateElem(const nsAString& aName, nsAtom *aPrefix,
+                        int32_t aNamespaceID, const nsAString* aIs)
 {
 #ifdef DEBUG
   nsAutoString qName;
@@ -8363,7 +8351,7 @@ nsIDocument::GetLayoutHistoryState() const
 }
 
 void
-nsDocument::EnsureOnloadBlocker()
+nsIDocument::EnsureOnloadBlocker()
 {
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
   // -- it's not ours.
@@ -8473,7 +8461,7 @@ nsDocument::UnblockOnload(bool aFireSync)
 
 class nsUnblockOnloadEvent : public Runnable {
 public:
-  explicit nsUnblockOnloadEvent(nsDocument* aDoc)
+  explicit nsUnblockOnloadEvent(nsIDocument* aDoc)
     : mozilla::Runnable("nsUnblockOnloadEvent")
     , mDoc(aDoc)
   {
@@ -8483,11 +8471,11 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<nsDocument> mDoc;
+  RefPtr<nsIDocument> mDoc;
 };
 
 void
-nsDocument::PostUnblockOnloadEvent()
+nsIDocument::PostUnblockOnloadEvent()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> evt = new nsUnblockOnloadEvent(this);
@@ -8502,7 +8490,7 @@ nsDocument::PostUnblockOnloadEvent()
 }
 
 void
-nsDocument::DoUnblockOnload()
+nsIDocument::DoUnblockOnload()
 {
   NS_PRECONDITION(!mDisplayDocument,
                   "Shouldn't get here for resource document");
@@ -9945,7 +9933,7 @@ nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
   // Don't count deprecated operations for about pages since those pages
   // are almost in our control, and we always need to remove uses there
   // before we remove the operation itself anyway.
-  if (!static_cast<const nsDocument*>(this)->IsAboutPage()) {
+  if (!IsAboutPage()) {
     const_cast<nsIDocument*>(this)->
       SetDocumentAndPageUseCounter(OperationToUseCounter(aOperation));
   }
@@ -11780,7 +11768,7 @@ nsIDocument::SetPointerLock(Element* aElement, int aCursorStyle)
 }
 
 void
-nsDocument::UnlockPointer(nsIDocument* aDoc)
+nsIDocument::UnlockPointer(nsIDocument* aDoc)
 {
   if (!EventStateManager::sIsPointerLocked) {
     return;
@@ -11791,26 +11779,19 @@ nsDocument::UnlockPointer(nsIDocument* aDoc)
   if (!pointerLockedDoc || (aDoc && aDoc != pointerLockedDoc)) {
     return;
   }
-  nsDocument* doc = static_cast<nsDocument*>(pointerLockedDoc.get());
-  if (!doc->SetPointerLock(nullptr, NS_STYLE_CURSOR_AUTO)) {
+  if (!pointerLockedDoc->SetPointerLock(nullptr, NS_STYLE_CURSOR_AUTO)) {
     return;
   }
 
   nsCOMPtr<Element> pointerLockedElement =
     do_QueryReferent(EventStateManager::sPointerLockedElement);
-  ChangePointerLockedElement(nullptr, doc, pointerLockedElement);
+  ChangePointerLockedElement(nullptr, pointerLockedDoc, pointerLockedElement);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(pointerLockedElement,
                              NS_LITERAL_STRING("MozDOMPointerLock:Exited"),
                              true, true);
   asyncDispatcher->RunDOMEventWhenSafe();
-}
-
-void
-nsIDocument::UnlockPointer(nsIDocument* aDoc)
-{
-  nsDocument::UnlockPointer(aDoc);
 }
 
 void
@@ -11880,11 +11861,6 @@ nsIDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aSizes) const
 
   aSizes.mPropertyTablesSize +=
     mPropertyTable.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
-  for (uint32_t i = 0, count = mExtraPropertyTables.Length();
-       i < count; ++i) {
-    aSizes.mPropertyTablesSize +=
-      mExtraPropertyTables[i]->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
-  }
 
   if (EventListenerManager* elm = GetExistingListenerManager()) {
     aSizes.mDOMEventListenersCount += elm->ListenerCount();
@@ -12247,7 +12223,7 @@ ReportExternalResourceUseCounters(nsIDocument* aDocument, void* aData)
 }
 
 void
-nsDocument::ReportUseCounters(UseCounterReportKind aKind)
+nsIDocument::ReportUseCounters(UseCounterReportKind aKind)
 {
   static const bool sDebugUseCounters = false;
   if (mReportedUseCounters) {

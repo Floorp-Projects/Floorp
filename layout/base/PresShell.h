@@ -855,8 +855,6 @@ private:
   // have been processed.
   bool mShouldUnsuppressPainting : 1;
 
-  bool mResizeEventPending : 1;
-
   bool mApproximateFrameVisibilityVisited : 1;
 
   bool mNextPaintCompressed : 1;

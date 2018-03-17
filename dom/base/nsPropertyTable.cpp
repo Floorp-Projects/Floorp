@@ -80,7 +80,7 @@ nsPropertyTable::DeleteAllPropertiesFor(nsPropertyOwner aObject)
 
 nsresult
 nsPropertyTable::TransferOrDeleteAllPropertiesFor(nsPropertyOwner aObject,
-                                                  nsPropertyTable *aOtherTable)
+                                                  nsPropertyTable& aOtherTable)
 {
   nsresult rv = NS_OK;
   for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
@@ -88,20 +88,18 @@ nsPropertyTable::TransferOrDeleteAllPropertiesFor(nsPropertyOwner aObject,
       auto entry = static_cast<PropertyListMapEntry*>
                               (prop->mObjectValueMap.Search(aObject));
       if (entry) {
-        rv = aOtherTable->SetProperty(aObject, prop->mName,
-                                      entry->value, prop->mDtorFunc,
-                                      prop->mDtorData, prop->mTransfer);
+        rv = aOtherTable.SetProperty(aObject, prop->mName,
+                                     entry->value, prop->mDtorFunc,
+                                     prop->mDtorData, prop->mTransfer);
         if (NS_FAILED(rv)) {
           DeleteAllPropertiesFor(aObject);
-          aOtherTable->DeleteAllPropertiesFor(aObject);
-
+          aOtherTable.DeleteAllPropertiesFor(aObject);
           break;
         }
 
         prop->mObjectValueMap.RemoveEntry(entry);
       }
-    }
-    else {
+    } else {
       prop->DeletePropertyFor(aObject);
     }
   }
@@ -138,9 +136,9 @@ nsPropertyTable::EnumerateAll(NSPropertyFunc aCallBack, void* aData)
 
 void*
 nsPropertyTable::GetPropertyInternal(nsPropertyOwner aObject,
-                                     nsAtom    *aPropertyName,
-                                     bool        aRemove,
-                                     nsresult   *aResult)
+                                     nsAtom* aPropertyName,
+                                     bool aRemove,
+                                     nsresult* aResult)
 {
   NS_PRECONDITION(aPropertyName && aObject, "unexpected null param");
   nsresult rv = NS_PROPTABLE_PROP_NOT_THERE;
@@ -167,13 +165,12 @@ nsPropertyTable::GetPropertyInternal(nsPropertyOwner aObject,
 }
 
 nsresult
-nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
-                                     nsAtom            *aPropertyName,
-                                     void               *aPropertyValue,
-                                     NSPropertyDtorFunc  aPropDtorFunc,
-                                     void               *aPropDtorData,
-                                     bool                aTransfer,
-                                     void              **aOldValue)
+nsPropertyTable::SetPropertyInternal(nsPropertyOwner aObject,
+                                     nsAtom* aPropertyName,
+                                     void* aPropertyValue,
+                                     NSPropertyDtorFunc aPropDtorFunc,
+                                     void* aPropDtorData,
+                                     bool aTransfer)
 {
   NS_PRECONDITION(aPropertyName && aObject, "unexpected null param");
 
@@ -205,15 +202,11 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
   // A nullptr entry->key is the sign that the entry has just been allocated
   // for us.  If it's non-nullptr then we have an existing entry.
   if (entry->key) {
-    if (aOldValue)
-      *aOldValue = entry->value;
-    else if (propertyList->mDtorFunc)
+    if (propertyList->mDtorFunc) {
       propertyList->mDtorFunc(const_cast<void*>(entry->key), aPropertyName,
                               entry->value, propertyList->mDtorData);
+    }
     result = NS_PROPTABLE_PROP_OVERWRITTEN;
-  }
-  else if (aOldValue) {
-    *aOldValue = nullptr;
   }
   entry->key = aObject;
   entry->value = aPropertyValue;
@@ -223,7 +216,7 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
 
 nsresult
 nsPropertyTable::DeleteProperty(nsPropertyOwner aObject,
-                                nsAtom    *aPropertyName)
+                                nsAtom* aPropertyName)
 {
   NS_PRECONDITION(aPropertyName && aObject, "unexpected null param");
 

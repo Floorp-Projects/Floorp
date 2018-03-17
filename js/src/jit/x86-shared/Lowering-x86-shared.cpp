@@ -8,6 +8,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 
+#include "jit/Lowering.h"
 #include "jit/MIR.h"
 
 #include "jit/shared/Lowering-shared-inl.h"
@@ -34,7 +35,7 @@ LIRGeneratorX86Shared::newLTableSwitchV(MTableSwitch* tableswitch)
 }
 
 void
-LIRGeneratorX86Shared::visitPowHalf(MPowHalf* ins)
+LIRGenerator::visitPowHalf(MPowHalf* ins)
 {
     MDefinition* input = ins->input();
     MOZ_ASSERT(input->type() == MIRType::Double);
@@ -266,7 +267,7 @@ LIRGeneratorX86Shared::lowerModI(MMod* mod)
 }
 
 void
-LIRGeneratorX86Shared::visitWasmSelect(MWasmSelect* ins)
+LIRGenerator::visitWasmSelect(MWasmSelect* ins)
 {
     if (ins->type() == MIRType::Int64) {
         auto* lir = new(alloc()) LWasmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
@@ -285,7 +286,7 @@ LIRGeneratorX86Shared::visitWasmSelect(MWasmSelect* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitWasmNeg(MWasmNeg* ins)
+LIRGenerator::visitWasmNeg(MWasmNeg* ins)
 {
     switch (ins->type()) {
       case MIRType::Int32:
@@ -610,7 +611,7 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
 }
 
 void
-LIRGeneratorX86Shared::visitSimdInsertElement(MSimdInsertElement* ins)
+LIRGenerator::visitSimdInsertElement(MSimdInsertElement* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
 
@@ -643,7 +644,7 @@ LIRGeneratorX86Shared::visitSimdInsertElement(MSimdInsertElement* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdExtractElement(MSimdExtractElement* ins)
+LIRGenerator::visitSimdExtractElement(MSimdExtractElement* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->input()->type()));
     MOZ_ASSERT(!IsSimdType(ins->type()));
@@ -695,7 +696,7 @@ LIRGeneratorX86Shared::visitSimdExtractElement(MSimdExtractElement* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith* ins)
+LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
     MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
@@ -749,7 +750,7 @@ LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdBinarySaturating(MSimdBinarySaturating* ins)
+LIRGenerator::visitSimdBinarySaturating(MSimdBinarySaturating* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
     MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
@@ -766,7 +767,7 @@ LIRGeneratorX86Shared::visitSimdBinarySaturating(MSimdBinarySaturating* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdSelect(MSimdSelect* ins)
+LIRGenerator::visitSimdSelect(MSimdSelect* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
 
@@ -784,7 +785,7 @@ LIRGeneratorX86Shared::visitSimdSelect(MSimdSelect* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdSplat(MSimdSplat* ins)
+LIRGenerator::visitSimdSplat(MSimdSplat* ins)
 {
     LAllocation x = useRegisterAtStart(ins->getOperand(0));
 
@@ -815,7 +816,7 @@ LIRGeneratorX86Shared::visitSimdSplat(MSimdSplat* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdValueX4(MSimdValueX4* ins)
+LIRGenerator::visitSimdValueX4(MSimdValueX4* ins)
 {
     switch (ins->type()) {
       case MIRType::Float32x4: {
@@ -846,7 +847,7 @@ LIRGeneratorX86Shared::visitSimdValueX4(MSimdValueX4* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdSwizzle(MSimdSwizzle* ins)
+LIRGenerator::visitSimdSwizzle(MSimdSwizzle* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->input()->type()));
     MOZ_ASSERT(IsSimdType(ins->type()));
@@ -877,7 +878,7 @@ LIRGeneratorX86Shared::visitSimdSwizzle(MSimdSwizzle* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdShuffle(MSimdShuffle* ins)
+LIRGenerator::visitSimdShuffle(MSimdShuffle* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
     MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
@@ -916,7 +917,7 @@ LIRGeneratorX86Shared::visitSimdShuffle(MSimdShuffle* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdGeneralShuffle(MSimdGeneralShuffle* ins)
+LIRGenerator::visitSimdGeneralShuffle(MSimdGeneralShuffle* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
 
@@ -962,7 +963,7 @@ LIRGeneratorX86Shared::visitSimdGeneralShuffle(MSimdGeneralShuffle* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitCopySign(MCopySign* ins)
+LIRGenerator::visitCopySign(MCopySign* ins)
 {
     MDefinition* lhs = ins->lhs();
     MDefinition* rhs = ins->rhs();

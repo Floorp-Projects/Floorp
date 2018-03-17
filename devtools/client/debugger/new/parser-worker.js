@@ -1353,6 +1353,7 @@ exports.isFunction = isFunction;
 exports.isAwaitExpression = isAwaitExpression;
 exports.isYieldExpression = isYieldExpression;
 exports.isVariable = isVariable;
+exports.isComputedExpression = isComputedExpression;
 exports.getMemberExpression = getMemberExpression;
 exports.getVariables = getVariables;
 
@@ -1381,6 +1382,11 @@ function isYieldExpression(path) {
 function isVariable(path) {
   const node = path.node;
   return t.isVariableDeclaration(node) || isFunction(path) && path.node.params != null && path.node.params.length || t.isObjectProperty(node) && !isFunction(path.node.value);
+}
+
+function isComputedExpression(expression) {
+  return (/^\[/m.test(expression)
+  );
 }
 
 function getMemberExpression(root) {
@@ -1586,7 +1592,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 exports.clearSymbols = clearSymbols;
-exports.default = getSymbols;
+exports.getSymbols = getSymbols;
 
 var _flatten = __webpack_require__(706);
 
@@ -1848,10 +1854,11 @@ function extendSnippet(name, expression, path = null, prevPath = null) {
   const prevComputed = prevPath && prevPath.node.computed;
   const prevArray = t.isArrayExpression(prevPath);
   const array = t.isArrayExpression(path);
+  const value = path && path.node.property && path.node.property.extra && path.node.property.extra.raw || "";
 
   if (expression === "") {
     if (computed) {
-      return `[${name}]`;
+      return name === undefined ? `[${value}]` : `[${name}]`;
     }
     return name;
   }
@@ -1860,10 +1867,14 @@ function extendSnippet(name, expression, path = null, prevPath = null) {
     if (prevComputed || prevArray) {
       return `[${name}]${expression}`;
     }
-    return `[${name}].${expression}`;
+    return `[${name === undefined ? value : name}].${expression}`;
   }
 
   if (prevComputed || prevArray) {
+    return `${name}${expression}`;
+  }
+
+  if ((0, _helpers.isComputedExpression)(expression) && name !== undefined) {
     return `${name}${expression}`;
   }
 
@@ -1873,8 +1884,8 @@ function extendSnippet(name, expression, path = null, prevPath = null) {
 function getMemberSnippet(node, expression = "") {
   if (t.isMemberExpression(node)) {
     const name = node.property.name;
-
-    return getMemberSnippet(node.object, extendSnippet(name, expression));
+    const snippet = getMemberSnippet(node.object, extendSnippet(name, expression, { node }));
+    return snippet;
   }
 
   if (t.isCallExpression(node)) {
@@ -1886,6 +1897,9 @@ function getMemberSnippet(node, expression = "") {
   }
 
   if (t.isIdentifier(node)) {
+    if ((0, _helpers.isComputedExpression)(expression)) {
+      return `${node.name}${expression}`;
+    }
     return `${node.name}.${expression}`;
   }
 
@@ -2053,8 +2067,6 @@ var _closest = __webpack_require__(1455);
 
 var _getSymbols = __webpack_require__(1457);
 
-var _getSymbols2 = _interopRequireDefault(_getSymbols);
-
 var _ast = __webpack_require__(1375);
 
 var _getScopes = __webpack_require__(2413);
@@ -2092,7 +2104,7 @@ const { workerHandler } = _devtoolsUtils.workerUtils;
 self.onmessage = workerHandler({
   getClosestExpression: _closest.getClosestExpression,
   findOutOfScopeLocations: _findOutOfScopeLocations2.default,
-  getSymbols: _getSymbols2.default,
+  getSymbols: _getSymbols.getSymbols,
   getScopes: _getScopes2.default,
   clearSymbols: _getSymbols.clearSymbols,
   clearScopes: _getScopes.clearScopes,
@@ -2327,12 +2339,10 @@ var _contains = __webpack_require__(1456);
 
 var _getSymbols = __webpack_require__(1457);
 
-var _getSymbols2 = _interopRequireDefault(_getSymbols);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function findSymbols(source) {
-  const { functions, comments } = (0, _getSymbols2.default)(source);
+  const { functions, comments } = (0, _getSymbols.getSymbols)(source);
   return { functions, comments };
 }
 
@@ -2685,12 +2695,8 @@ exports.getFramework = getFramework;
 
 var _getSymbols = __webpack_require__(1457);
 
-var _getSymbols2 = _interopRequireDefault(_getSymbols);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function getFramework(sourceId) {
-  const sourceSymbols = (0, _getSymbols2.default)(sourceId);
+  const sourceSymbols = (0, _getSymbols.getSymbols)(sourceId);
 
   if (isReactComponent(sourceSymbols)) {
     return "React";
