@@ -1160,6 +1160,41 @@ XULDocument::Persist(const nsAString& aID,
     aRv = Persist(element, nameSpaceID, tag);
 }
 
+enum class ConversionDirection {
+    InnerToOuter,
+    OuterToInner,
+};
+
+static void
+ConvertWindowSize(nsIXULWindow* aWin,
+                  nsAtom* aAttr,
+                  ConversionDirection aDirection,
+                  nsAString& aInOutString)
+{
+    MOZ_ASSERT(aWin);
+    MOZ_ASSERT(aAttr == nsGkAtoms::width || aAttr == nsGkAtoms::height);
+
+    nsresult rv;
+    int32_t size = aInOutString.ToInteger(&rv);
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    int32_t sizeDiff = aAttr == nsGkAtoms::width
+        ? aWin->GetOuterToInnerWidthDifferenceInCSSPixels()
+        : aWin->GetOuterToInnerHeightDifferenceInCSSPixels();
+
+    if (!sizeDiff) {
+        return;
+    }
+
+    int32_t multiplier =
+        aDirection == ConversionDirection::InnerToOuter ? 1 : - 1;
+
+    CopyASCIItoUTF16(nsPrintfCString("%d", size + multiplier * sizeDiff),
+                     aInOutString);
+}
+
 nsresult
 XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
                      nsAtom* aAttribute)
@@ -1198,9 +1233,21 @@ XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
 
     if (hasAttr && valuestr.IsEmpty()) {
         return mLocalStore->RemoveValue(uri, id, attrstr);
-    } else {
-        return mLocalStore->SetValue(uri, id, attrstr, valuestr);
     }
+
+    // Make sure we store the <window> attributes as outer window size, see
+    // bug 1444525 & co.
+    if (aElement->IsXULElement(nsGkAtoms::window) &&
+        (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
+        if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
+            ConvertWindowSize(win,
+                              aAttribute,
+                              ConversionDirection::InnerToOuter,
+                              valuestr);
+        }
+    }
+
+    return mLocalStore->SetValue(uri, id, attrstr, valuestr);
 }
 
 
@@ -1748,7 +1795,6 @@ XULDocument::ApplyPersistentAttributesInternal()
     return NS_OK;
 }
 
-
 nsresult
 XULDocument::ApplyPersistentAttributesToElements(const nsAString &aID,
                                                  nsCOMArray<Element>& aElements)
@@ -1789,11 +1835,27 @@ XULDocument::ApplyPersistentAttributesToElements(const nsAString &aID,
         }
 
         uint32_t cnt = aElements.Count();
-
         for (int32_t i = int32_t(cnt) - 1; i >= 0; --i) {
             RefPtr<Element> element = aElements.SafeObjectAt(i);
             if (!element) {
                  continue;
+            }
+
+            // Convert attributes from outer size to inner size for top-level
+            // windows, see bug 1444525 & co.
+            if (element->IsXULElement(nsGkAtoms::window) &&
+                (attr == nsGkAtoms::width || attr == nsGkAtoms::height)) {
+                if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
+                    nsAutoString maybeConvertedValue = value;
+                    ConvertWindowSize(win,
+                                      attr,
+                                      ConversionDirection::OuterToInner,
+                                      maybeConvertedValue);
+                    Unused <<
+                        element->SetAttr(kNameSpaceID_None, attr, maybeConvertedValue, true);
+
+                    continue;
+                }
             }
 
             Unused << element->SetAttr(kNameSpaceID_None, attr, value, true);
@@ -2630,6 +2692,27 @@ XULDocument::ResumeWalk()
     return rv;
 }
 
+already_AddRefed<nsIXULWindow>
+XULDocument::GetXULWindowIfToplevelChrome() const
+{
+    nsCOMPtr<nsIDocShellTreeItem> item = GetDocShell();
+    if (!item) {
+        return nullptr;
+    }
+    nsCOMPtr<nsIDocShellTreeOwner> owner;
+    item->GetTreeOwner(getter_AddRefs(owner));
+    nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(owner);
+    if (!xulWin) {
+        return nullptr;
+    }
+    nsCOMPtr<nsIDocShell> xulWinShell;
+    xulWin->GetDocShell(getter_AddRefs(xulWinShell));
+    if (!SameCOMIdentity(xulWinShell, item)) {
+        return nullptr;
+    }
+    return xulWin.forget();
+}
+
 nsresult
 XULDocument::DoneWalking()
 {
@@ -2671,17 +2754,9 @@ XULDocument::DoneWalking()
         // Before starting layout, check whether we're a toplevel chrome
         // window.  If we are, setup some state so that we don't have to restyle
         // the whole tree after StartLayout.
-        if (nsCOMPtr<nsIDocShellTreeItem> item = GetDocShell()) {
-            nsCOMPtr<nsIDocShellTreeOwner> owner;
-            item->GetTreeOwner(getter_AddRefs(owner));
-            if (nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(owner)) {
-                nsCOMPtr<nsIDocShell> xulWinShell;
-                xulWin->GetDocShell(getter_AddRefs(xulWinShell));
-                if (SameCOMIdentity(xulWinShell, item)) {
-                    // We're the chrome document!
-                    xulWin->BeforeStartLayout();
-                }
-            }
+        if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
+            // We're the chrome document!
+            win->BeforeStartLayout();
         }
 
         StartLayout();

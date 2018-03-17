@@ -60,23 +60,6 @@ testAdoptFromDOMNodeRemoved(elem1, elem1, content);
 
 content.appendChild(elem1);
 
-var thrown = false;
-
-function changeOwnerDocument()
-{
-  SpecialPowers.wrap(elem1).setUserData("foo", null, null);
-  otherDoc.adoptNode(elem1);
-}
-SpecialPowers.wrap(elem1).setUserData("foo", "bar", changeOwnerDocument);
-try {
-  document.adoptNode(elem1);
-}
-catch (e) {
-  thrown = true;
-}
-
-ok(!thrown, "adoptNode while adopting should not throw");
-
 </script>
 </pre>
 </body>

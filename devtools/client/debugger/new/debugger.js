@@ -3598,6 +3598,7 @@ function getTextPropsFromAction(action) {
   } else if (action.status === "error") {
     return { id: sourceId, error: action.error, loadedState: "loaded" };
   }
+
   return {
     text: value.text,
     id: sourceId,
@@ -3619,12 +3620,14 @@ function updateSource(state, source) {
   if (!source.id) {
     return state;
   }
+
   const existingSource = state.getIn(["sources", source.id]);
 
   if (existingSource) {
     const updatedSource = existingSource.merge(source);
     return state.setIn(["sources", source.id], updatedSource);
   }
+
   return state.setIn(["sources", source.id], new SourceRecordClass(source));
 }
 
@@ -4536,290 +4539,6 @@ exports.default = SearchInput;
 
 /***/ }),
 
-/***/ 1380:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-exports.getLibraryFromUrl = getLibraryFromUrl;
-exports.annotateFrames = annotateFrames;
-exports.simplifyDisplayName = simplifyDisplayName;
-exports.formatDisplayName = formatDisplayName;
-exports.formatCopyName = formatCopyName;
-exports.collapseFrames = collapseFrames;
-
-var _utils = __webpack_require__(1366);
-
-var _source = __webpack_require__(1356);
-
-var _lodash = __webpack_require__(2);
-
-function getFrameUrl(frame) {
-  return (0, _lodash.get)(frame, "source.url", "") || "";
-}
-
-const libraryMap = [{
-  label: "Backbone",
-  pattern: /backbone/i
-}, {
-  label: "jQuery",
-  pattern: /jquery/i
-}, {
-  label: "Preact",
-  pattern: /preact/i
-}, {
-  label: "React",
-  pattern: /react/i
-}, {
-  label: "Immutable",
-  pattern: /immutable/i
-}, {
-  label: "Webpack",
-  pattern: /webpack\/bootstrap/i
-}, {
-  label: "Node",
-  pattern: /(^internal\/|^[^.\/]+\.js)/
-}, {
-  label: "Express",
-  pattern: /node_modules\/express/
-}, {
-  label: "Pug",
-  pattern: /node_modules\/pug/
-}, {
-  label: "ExtJS",
-  pattern: /\/ext-all[\.\-]/
-}, {
-  label: "MobX",
-  pattern: /mobx/i
-}, {
-  label: "Underscore",
-  pattern: /underscore/i
-}, {
-  label: "Lodash",
-  pattern: /lodash/i
-}, {
-  label: "Ember",
-  pattern: /ember/i
-}, {
-  label: "Choo",
-  pattern: /choo/i
-}, {
-  label: "VueJS",
-  pattern: /vue\.js/i
-}, {
-  label: "RxJS",
-  pattern: /rxjs/i
-}, {
-  label: "Angular",
-  pattern: /angular/i
-}, {
-  label: "Redux",
-  pattern: /redux/i
-}, {
-  label: "Dojo",
-  pattern: /dojo/i
-}, {
-  label: "Marko",
-  pattern: /marko/i
-}, {
-  label: "NuxtJS",
-  pattern: /[\._]nuxt/i
-}, {
-  label: "Aframe",
-  pattern: /aframe/i
-}, {
-  label: "NextJS",
-  pattern: /[\._]next/i
-}];
-
-function getLibraryFromUrl(frame) {
-  // @TODO each of these fns calls getFrameUrl, just call it once
-  // (assuming there's not more complex logic to identify a lib)
-  const frameUrl = getFrameUrl(frame);
-  const match = (0, _lodash.find)(libraryMap, o => frameUrl.match(o.pattern));
-  return match && match.label;
-}
-
-const displayNameMap = {
-  Babel: {
-    tryCatch: "Async"
-  },
-  Backbone: {
-    "extend/child": "Create Class",
-    ".create": "Create Model"
-  },
-  jQuery: {
-    "jQuery.event.dispatch": "Dispatch Event"
-  },
-  React: {
-    // eslint-disable-next-line max-len
-    "ReactCompositeComponent._renderValidatedComponentWithoutOwnerOrContext/renderedElement<": "Render",
-    _renderValidatedComponentWithoutOwnerOrContext: "Render"
-  },
-  VueJS: {
-    "renderMixin/Vue.prototype._render": "Render"
-  },
-  Webpack: {
-    // eslint-disable-next-line camelcase
-    __webpack_require__: "Bootstrap"
-  }
-};
-
-function mapDisplayNames(frame, library) {
-  const { displayName } = frame;
-  return displayNameMap[library] && displayNameMap[library][displayName] || displayName;
-}
-
-function annotateFrames(frames) {
-  const annotatedFrames = frames.map(annotateFrame);
-  return annotateBabelAsyncFrames(annotatedFrames);
-}
-
-function annotateFrame(frame) {
-  const library = getLibraryFromUrl(frame);
-  if (library) {
-    return _extends({}, frame, { library });
-  }
-
-  return frame;
-}
-
-function annotateBabelAsyncFrames(frames) {
-  const babelFrameIndexes = getBabelFrameIndexes(frames);
-  const isBabelFrame = frameIndex => babelFrameIndexes.includes(frameIndex);
-
-  return frames.map((frame, frameIndex) => isBabelFrame(frameIndex) ? _extends({}, frame, { library: "Babel" }) : frame);
-}
-
-// Receives an array of frames and looks for babel async
-// call stack groups.
-function getBabelFrameIndexes(frames) {
-  const startIndexes = getFrameIndices(frames, (displayName, url) => url.match(/regenerator-runtime/i) && displayName === "tryCatch");
-
-  const endIndexes = getFrameIndices(frames, (displayName, url) => displayName === "_asyncToGenerator/<" || url.match(/_microtask/i) && displayName === "flush");
-
-  if (startIndexes.length != endIndexes.length || startIndexes.length === 0) {
-    return frames;
-  }
-
-  // Receives an array of start and end index tuples and returns
-  // an array of async call stack index ranges.
-  // e.g. [[1,3], [5,7]] => [[1,2,3], [5,6,7]]
-  return (0, _lodash.flatMap)((0, _lodash.zip)(startIndexes, endIndexes), ([startIndex, endIndex]) => (0, _lodash.range)(startIndex, endIndex + 1));
-}
-
-function getFrameIndices(frames, predicate) {
-  return frames.reduce((accumulator, frame, index) => predicate(frame.displayName, getFrameUrl(frame)) ? [...accumulator, index] : accumulator, []);
-}
-
-// Decodes an anonymous naming scheme that
-// spider monkey implements based on "Naming Anonymous JavaScript Functions"
-// http://johnjbarton.github.io/nonymous/index.html
-const objectProperty = /([\w\d]+)$/;
-const arrayProperty = /\[(.*?)\]$/;
-const functionProperty = /([\w\d]+)[\/\.<]*?$/;
-const annonymousProperty = /([\w\d]+)\(\^\)$/;
-
-function simplifyDisplayName(displayName) {
-  // if the display name has a space it has already been mapped
-  if (/\s/.exec(displayName)) {
-    return displayName;
-  }
-
-  const scenarios = [objectProperty, arrayProperty, functionProperty, annonymousProperty];
-
-  for (const reg of scenarios) {
-    const match = reg.exec(displayName);
-    if (match) {
-      return match[1];
-    }
-  }
-
-  return displayName;
-}
-
-function formatDisplayName(frame, { shouldMapDisplayName = true } = {}) {
-  let { displayName, library } = frame;
-  if (library && shouldMapDisplayName) {
-    displayName = mapDisplayNames(frame, library);
-  }
-
-  displayName = simplifyDisplayName(displayName);
-  return (0, _utils.endTruncateStr)(displayName, 25);
-}
-
-function formatCopyName(frame) {
-  const displayName = formatDisplayName(frame);
-  const fileName = (0, _source.getFilename)(frame.source);
-  const frameLocation = frame.location.line;
-
-  return `${displayName} (${fileName}#${frameLocation})`;
-}
-
-function collapseFrames(frames) {
-  // We collapse groups of one so that user frames
-  // are not in a group of one
-  function addGroupToList(group, list) {
-    if (!group) {
-      return list;
-    }
-
-    if (group.length > 1) {
-      list.push(group);
-    } else {
-      list = list.concat(group);
-    }
-
-    return list;
-  }
-  const { newFrames, lastGroup } = collapseLastFrames(frames);
-  frames = newFrames;
-  let items = [];
-  let currentGroup = null;
-  let prevItem = null;
-  for (const frame of frames) {
-    const prevLibrary = (0, _lodash.get)(prevItem, "library");
-
-    if (!currentGroup) {
-      currentGroup = [frame];
-    } else if (prevLibrary && prevLibrary == frame.library) {
-      currentGroup.push(frame);
-    } else {
-      items = addGroupToList(currentGroup, items);
-      currentGroup = [frame];
-    }
-
-    prevItem = frame;
-  }
-
-  items = addGroupToList(currentGroup, items);
-  items = addGroupToList(lastGroup, items);
-  return items;
-}
-
-function collapseLastFrames(frames) {
-  const index = (0, _lodash.findIndex)(frames, frame => getFrameUrl(frame).match(/webpack\/bootstrap/i));
-
-  if (index == -1) {
-    return { newFrames: frames, lastGroup: [] };
-  }
-
-  const newFrames = frames.slice(0, index);
-  const lastGroup = frames.slice(index);
-  return { newFrames, lastGroup };
-}
-
-/***/ }),
-
 /***/ 1381:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -5061,6 +4780,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 exports.initialASTState = initialASTState;
 exports.getSymbols = getSymbols;
 exports.hasSymbols = hasSymbols;
+exports.isSymbolsLoading = isSymbolsLoading;
 exports.isEmptyLineInSource = isEmptyLineInSource;
 exports.getEmptyLines = getEmptyLines;
 exports.getOutOfScopeLocations = getOutOfScopeLocations;
@@ -5096,10 +4816,12 @@ function update(state = initialASTState(), action) {
   switch (action.type) {
     case "SET_SYMBOLS":
       {
-        const { source, symbols } = action;
-        return state.setIn(["symbols", source.id], symbols);
+        const { source } = action;
+        if (action.status === "start") {
+          return state.setIn(["symbols", source.id], { loading: true });
+        }
+        return state.setIn(["symbols", source.id], action.value);
       }
-
     case "SET_EMPTY_LINES":
       {
         const { source, emptyLines } = action;
@@ -5160,24 +4882,31 @@ function update(state = initialASTState(), action) {
 
 // NOTE: we'd like to have the app state fully typed
 // https://github.com/devtools-html/debugger.html/blob/master/src/reducers/sources.js#L179-L185
-
-
-const emptySymbols = { variables: [], functions: [] };
 function getSymbols(state, source) {
   if (!source) {
-    return emptySymbols;
+    return null;
   }
 
-  const symbols = state.ast.getIn(["symbols", source.id]);
-  return symbols || emptySymbols;
+  return state.ast.getIn(["symbols", source.id]) || null;
 }
 
 function hasSymbols(state, source) {
-  if (!source) {
+  const symbols = getSymbols(state, source);
+
+  if (!symbols) {
     return false;
   }
 
-  return !!state.ast.getIn(["symbols", source.id]);
+  return !symbols.loading;
+}
+
+function isSymbolsLoading(state, source) {
+  const symbols = getSymbols(state, source);
+  if (!symbols) {
+    return false;
+  }
+
+  return !!symbols.loading;
 }
 
 function isEmptyLineInSource(state, line, selectedSource) {
@@ -6608,6 +6337,12 @@ var _setInScopeLines = __webpack_require__(1781);
 
 var _parser = __webpack_require__(1365);
 
+var _promise = __webpack_require__(1653);
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function setSourceMetaData(sourceId) {
   return async ({ dispatch, getState }) => {
     const sourceRecord = (0, _selectors.getSource)(getState(), sourceId);
@@ -6629,9 +6364,7 @@ function setSourceMetaData(sourceId) {
       }
     });
   };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 function setSymbols(sourceId) {
   return async ({ dispatch, getState }) => {
@@ -6645,8 +6378,12 @@ function setSymbols(sourceId) {
       return;
     }
 
-    const symbols = await (0, _parser.getSymbols)(source.id);
-    dispatch({ type: "SET_SYMBOLS", source, symbols });
+    await dispatch({
+      type: "SET_SYMBOLS",
+      source,
+      [_promise.PROMISE]: (0, _parser.getSymbols)(source.id)
+    });
+
     dispatch(setEmptyLines(sourceId));
     dispatch(setSourceMetaData(sourceId));
   };
@@ -8032,7 +7769,7 @@ function findClosestScope(functions, location) {
 }
 
 function getASTLocation(source, symbols, location) {
-  if (source.isWasm) {
+  if (source.isWasm || !symbols || symbols.loading) {
     return { name: undefined, offset: location };
   }
 
@@ -9562,20 +9299,21 @@ async function loadSource(source, { sourceMaps, client }) {
  */
 function loadSourceText(source) {
   return async ({ dispatch, getState, client, sourceMaps }) => {
-    const telemetryStart = performance.now();
-    const deferred = (0, _defer2.default)();
+    const id = source.get("id");
 
     // Fetch the source text only once.
-    if ((0, _source.isLoaded)(source)) {
-      return Promise.resolve(source);
-    }
-
-    const id = source.get("id");
-    if ((0, _source.isLoading)(source) || requests.has(id)) {
+    if (requests.has(id)) {
       return requests.get(id);
     }
 
+    if ((0, _source.isLoaded)(source)) {
+      return Promise.resolve();
+    }
+
+    const telemetryStart = performance.now();
+    const deferred = (0, _defer2.default)();
     requests.set(id, deferred.promise);
+
     try {
       await dispatch({
         type: "LOAD_SOURCE_TEXT",
@@ -10436,7 +10174,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _lodash = __webpack_require__(2);
 
-var _frame = __webpack_require__(1380);
+var _frames = __webpack_require__(3605);
 
 __webpack_require__(1320);
 
@@ -10448,7 +10186,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function getFunctionName(func) {
   const name = func.userDisplayName || func.displayName || func.name;
-  return (0, _frame.simplifyDisplayName)(name);
+  return (0, _frames.simplifyDisplayName)(name);
 }
 
 class PreviewFunction extends _react.Component {
@@ -11312,7 +11050,7 @@ var _Svg = __webpack_require__(1359);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-var _frame = __webpack_require__(1380);
+var _frames = __webpack_require__(3605);
 
 var _source = __webpack_require__(1356);
 
@@ -11327,7 +11065,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function FrameTitle({ frame, options }) {
-  const displayName = (0, _frame.formatDisplayName)(frame, options);
+  const displayName = (0, _frames.formatDisplayName)(frame, options);
   return _react2.default.createElement(
     "div",
     { className: "title" },
@@ -15527,6 +15265,7 @@ const svg = {
   babel: __webpack_require__(3595),
   backbone: __webpack_require__(997),
   blackBox: __webpack_require__(349),
+  breadcrumb: __webpack_require__(3603),
   breakpoint: __webpack_require__(350),
   "column-breakpoint": __webpack_require__(998),
   "case-match": __webpack_require__(351),
@@ -15538,6 +15277,7 @@ const svg = {
   file: __webpack_require__(354),
   folder: __webpack_require__(355),
   globe: __webpack_require__(356),
+  home: __webpack_require__(3604),
   javascript: __webpack_require__(2251),
   jquery: __webpack_require__(999),
   underscore: __webpack_require__(1117),
@@ -16948,6 +16688,14 @@ class Outline extends _react.Component {
     );
   }
 
+  renderLoading() {
+    return _react2.default.createElement(
+      "div",
+      { className: "outline-pane-info" },
+      L10N.getStr("loadingText")
+    );
+  }
+
   renderFunction(func) {
     const { name, location, parameterNames } = func;
 
@@ -17046,9 +16794,10 @@ class Outline extends _react.Component {
 
   render() {
     const { symbols } = this.props;
-
+    if (!symbols || symbols.loading) {
+      return this.renderLoading();
+    }
     const symbolsToDisplay = symbols.functions.filter(func => func.name != "anonymous");
-
     return _react2.default.createElement(
       "div",
       { className: "outline" },
@@ -17195,7 +16944,7 @@ class SourcesTree extends _react.Component {
   }
 
   render() {
-    const expanded = this.props.expanded;
+    const { expanded, projectRoot } = this.props;
     const {
       focusedItem,
       highlightItems,
@@ -17212,6 +16961,32 @@ class SourcesTree extends _react.Component {
       this.props.setExpandedState(expandedState);
     };
 
+    const isCustomRoot = projectRoot !== "";
+    let roots = () => sourceTree.contents;
+
+    let clearProjectRootButton = null;
+
+    // The "sourceTree.contents[0]" check ensures that there are contents
+    // A custom root with no existing sources will be ignored
+    if (isCustomRoot && sourceTree.contents[0]) {
+      clearProjectRootButton = _react2.default.createElement(
+        "button",
+        {
+          className: "sources-clear-root",
+          onClick: () => this.props.clearProjectDirectoryRoot(),
+          title: L10N.getStr("removeDirectoryRoot.label")
+        },
+        _react2.default.createElement(_Svg2.default, { name: "home" }),
+        _react2.default.createElement(_Svg2.default, { name: "breadcrumb", "class": true }),
+        _react2.default.createElement(
+          "span",
+          { className: "sources-clear-root-label" },
+          sourceTree.contents[0].name
+        )
+      );
+      roots = () => sourceTree.contents[0].contents;
+    }
+
     const isEmpty = sourceTree.contents.length === 0;
     const treeProps = {
       autoExpandAll: false,
@@ -17220,7 +16995,7 @@ class SourcesTree extends _react.Component {
       getChildren: item => (0, _sourcesTree.nodeHasChildren)(item) ? item.contents : [],
       getParent: item => parentMap.get(item),
       getPath: this.getPath,
-      getRoots: () => sourceTree.contents,
+      getRoots: roots,
       highlightItems,
       itemHeight: 21,
       key: isEmpty ? "empty" : "full",
@@ -17249,8 +17024,21 @@ class SourcesTree extends _react.Component {
 
     return _react2.default.createElement(
       "div",
-      { className: "sources-list", onKeyDown: onKeyDown },
-      tree
+      {
+        className: (0, _classnames2.default)("sources-pane", {
+          "sources-list-custom-root": isCustomRoot
+        })
+      },
+      isCustomRoot ? _react2.default.createElement(
+        "div",
+        { className: "sources-clear-root-container" },
+        clearProjectRootButton
+      ) : null,
+      _react2.default.createElement(
+        "div",
+        { className: "sources-list", onKeyDown: onKeyDown },
+        tree
+      )
     );
   }
 }
@@ -17282,7 +17070,7 @@ var _initialiseProps = function () {
   };
 
   this.getIcon = (sources, item, depth) => {
-    const { debuggeeUrl } = this.props;
+    const { debuggeeUrl, projectRoot } = this.props;
 
     if (item.path === "/Webpack") {
       return _react2.default.createElement(_Svg2.default, { name: "webpack" });
@@ -17291,7 +17079,7 @@ var _initialiseProps = function () {
       return _react2.default.createElement(_Svg2.default, { name: "angular" });
     }
 
-    if (depth === 0) {
+    if (depth === 0 && projectRoot === "") {
       return _react2.default.createElement("img", {
         className: (0, _classnames2.default)("domain", {
           debuggee: debuggeeUrl && debuggeeUrl.includes(item.name)
@@ -17373,6 +17161,7 @@ var _initialiseProps = function () {
         expanded: expanded
       })
     }) : _react2.default.createElement("i", { className: "no-arrow" });
+
     const { sources } = this.props;
     const icon = this.getIcon(sources, item, depth);
 
@@ -24050,7 +23839,7 @@ var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
 
-var _frame = __webpack_require__(1380);
+var _frames = __webpack_require__(3605);
 
 var _clipboard = __webpack_require__(1388);
 
@@ -24077,7 +23866,7 @@ class Frames extends _react.Component {
 
     this.copyStackTrace = () => {
       const { frames } = this.props;
-      const framesToCopy = frames.map(f => (0, _frame.formatCopyName)(f)).join("\n");
+      const framesToCopy = frames.map(f => (0, _frames.formatCopyName)(f)).join("\n");
       (0, _clipboard.copyToTheClipboard)(framesToCopy);
     };
 
@@ -24103,7 +23892,7 @@ class Frames extends _react.Component {
       return frames;
     }
 
-    return (0, _frame.collapseFrames)(frames);
+    return (0, _frames.collapseFrames)(frames);
   }
 
   truncateFrames(frames) {
@@ -24224,7 +24013,7 @@ var _Svg = __webpack_require__(1359);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-var _frame = __webpack_require__(1380);
+var _frames = __webpack_require__(3605);
 
 var _FrameMenu = __webpack_require__(1454);
 
@@ -24247,7 +24036,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function FrameLocation({ frame }) {
-  const library = frame.library || (0, _frame.getLibraryFromUrl)(frame);
+  const library = frame.library || (0, _frames.getLibraryFromUrl)(frame);
   if (!library) {
     return null;
   }
@@ -24322,7 +24111,7 @@ class Group extends _react.Component {
 
   renderDescription() {
     const frame = this.props.group[0];
-    const displayName = (0, _frame.formatDisplayName)(frame);
+    const displayName = (0, _frames.formatDisplayName)(frame);
     return _react2.default.createElement(
       "li",
       {
@@ -27059,7 +26848,13 @@ function hasAwait(source, pauseLocation) {
     return false;
   }
 
-  const snippet = source.text.split("\n")[line - 1].slice(column - 50, column + 50);
+  const lineText = source.text.split("\n")[line - 1];
+
+  if (!lineText) {
+    return false;
+  }
+
+  const snippet = lineText.slice(column - 50, column + 50);
 
   return !!snippet.match(/(yield|await)/);
 }
@@ -27079,7 +26874,7 @@ function astCommand(stepType) {
     if (stepType == "stepOver") {
       // This type definition is ambiguous:
       const frame = (0, _selectors.getTopFrame)(getState());
-      const source = (0, _selectors.getSelectedSource)(getState()).toJS();
+      const source = (0, _selectors.getSource)(getState(), frame.location.sourceId);
 
       if (source && hasAwait(source, frame.location)) {
         const nextLocation = await (0, _parser.getNextStep)(source.id, frame.location);
@@ -27110,7 +26905,7 @@ exports.findBestMatchExpression = findBestMatchExpression;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function findBestMatchExpression(symbols, tokenPos, token) {
+function findBestMatchExpression(symbols, tokenPos) {
   const { memberExpressions, identifiers } = symbols;
   const { line, column } = tokenPos;
   return identifiers.concat(memberExpressions).reduce((found, expression) => {
@@ -28081,8 +27876,13 @@ class QuickOpenModal extends _react.Component {
     this.isSourceSearch = () => this.isSourcesQuery() || this.isGotoSourceQuery();
 
     this.renderHighlight = (candidateString, query, name) => {
-      const html = _fuzzaldrinPlus2.default.wrap(candidateString, query);
-
+      const options = {
+        wrap: {
+          tagOpen: '<mark class="highlight">',
+          tagClose: "</mark>"
+        }
+      };
+      const html = _fuzzaldrinPlus2.default.wrap(candidateString, query, options);
       return _react2.default.createElement("div", { dangerouslySetInnerHTML: { __html: html } });
     };
 
@@ -30650,7 +30450,7 @@ var _sources = __webpack_require__(1369);
 
 var _pause = __webpack_require__(1394);
 
-var _frame = __webpack_require__(1380);
+var _frames = __webpack_require__(3605);
 
 var _devtoolsSourceMap = __webpack_require__(1360);
 
@@ -30682,7 +30482,7 @@ function formatCallStackFrames(frames, sources, selectedSource) {
 
   const formattedFrames = frames.filter(frame => getSourceForFrame(sources, frame)).map(frame => appendSource(sources, frame, selectedSource)).filter(frame => !(0, _lodash.get)(frame, "source.isBlackBoxed"));
 
-  return (0, _frame.annotateFrames)(formattedFrames);
+  return (0, _frames.annotateFrames)(formattedFrames);
 }
 
 const getCallStackFrames = exports.getCallStackFrames = (0, _reselect.createSelector)(_pause.getFrames, _sources.getSources, _sources.getSelectedSource, formatCallStackFrames);
@@ -30807,16 +30607,16 @@ function getOutOfScopeLines(outOfScopeLocations) {
 
 function setInScopeLines() {
   return ({ dispatch, getState }) => {
-    const source = (0, _selectors.getSelectedSource)(getState());
+    const sourceRecord = (0, _selectors.getSelectedSource)(getState());
     const outOfScopeLocations = (0, _selectors.getOutOfScopeLocations)(getState());
 
-    if (!source || !source.get("text")) {
+    if (!sourceRecord || !sourceRecord.text) {
       return;
     }
 
-    const linesOutOfScope = getOutOfScopeLines(outOfScopeLocations, source.toJS());
+    const linesOutOfScope = getOutOfScopeLines(outOfScopeLocations);
 
-    const sourceNumLines = (0, _source.getSourceLineCount)(source.toJS());
+    const sourceNumLines = (0, _source.getSourceLineCount)(sourceRecord);
     const sourceLines = (0, _lodash.range)(1, sourceNumLines + 1);
 
     const inScopeLines = !linesOutOfScope ? sourceLines : (0, _lodash.without)(sourceLines, ...linesOutOfScope);
@@ -30946,7 +30746,6 @@ function isInvalidTarget(target) {
 
 function updatePreview(target, editor) {
   return ({ dispatch, getState, client, sourceMaps }) => {
-    const tokenText = target.innerText ? target.innerText.trim() : "";
     const tokenPos = (0, _editor.getTokenLocation)(editor.codeMirror, target);
     const cursorPos = target.getBoundingClientRect();
     const preview = (0, _selectors.getPreview)(getState());
@@ -30980,10 +30779,10 @@ function updatePreview(target, editor) {
     const symbols = (0, _selectors.getSymbols)(getState(), source.toJS());
 
     let match;
-    if (!symbols || symbols.identifiers.length > 0) {
-      match = (0, _ast.findBestMatchExpression)(symbols, tokenPos, tokenText);
-    } else {
+    if (!symbols || symbols.loading) {
       match = (0, _getExpression.getExpressionFromCoords)(editor.codeMirror, tokenPos);
+    } else {
+      match = (0, _ast.findBestMatchExpression)(symbols, tokenPos);
     }
 
     if (!match || !match.expression) {
@@ -31290,7 +31089,7 @@ var _getVariables = __webpack_require__(1765);
 
 var _utils = __webpack_require__(1766);
 
-var _frame = __webpack_require__(1380);
+var _frames = __webpack_require__(3605);
 
 function getScopeTitle(type, scope) {
   if (type === "block" && scope.block && scope.block.displayName) {
@@ -31298,7 +31097,7 @@ function getScopeTitle(type, scope) {
   }
 
   if (type === "function" && scope.function) {
-    return scope.function.displayName ? (0, _frame.simplifyDisplayName)(scope.function.displayName) : L10N.getStr("anonymous");
+    return scope.function.displayName ? (0, _frames.simplifyDisplayName)(scope.function.displayName) : L10N.getStr("anonymous");
   }
   return L10N.getStr("scopes.block");
 }
@@ -31889,10 +31688,12 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
  * @module actions/sources
  */
 
-
-exports.loadSourceMap = loadSourceMap;
 exports.newSource = newSource;
 exports.newSources = newSources;
+
+var _devtoolsSourceMap = __webpack_require__(1360);
+
+var _lodash = __webpack_require__(2);
 
 var _blackbox = __webpack_require__(1802);
 
@@ -31919,35 +31720,43 @@ function createOriginalSource(originalUrl, generatedSource, sourceMaps) {
   };
 }
 
+function loadSourceMaps(sources) {
+  return async function ({ dispatch, getState, sourceMaps }) {
+    const originalSources = await Promise.all(sources.map(source => dispatch(loadSourceMap(source.id))));
+
+    await dispatch(newSources((0, _lodash.flatten)(originalSources)));
+  };
+}
+
 /**
  * @memberof actions/sources
  * @static
  */
-function loadSourceMap(generatedSource) {
+function loadSourceMap(sourceId) {
   return async function ({ dispatch, getState, sourceMaps }) {
-    let urls;
+    const source = (0, _selectors.getSource)(getState(), sourceId).toJS();
+
+    if (!(0, _devtoolsSourceMap.isGeneratedId)(sourceId) || !source.sourceMapURL) {
+      return;
+    }
+
+    let urls = null;
     try {
-      urls = await sourceMaps.getOriginalURLs(generatedSource);
+      urls = await sourceMaps.getOriginalURLs(source);
     } catch (e) {
       console.error(e);
-      urls = null;
     }
+
     if (!urls) {
       // If this source doesn't have a sourcemap, enable it for pretty printing
       dispatch({
         type: "UPDATE_SOURCE",
-        source: _extends({}, generatedSource, { sourceMapURL: "" })
+        source: _extends({}, source, { sourceMapURL: "" })
       });
       return;
     }
 
-    const originalSources = urls.map(url => createOriginalSource(url, generatedSource, sourceMaps));
-
-    // TODO: check if this line is really needed, it introduces
-    // a lot of lag to the application.
-    const generatedSourceRecord = (0, _selectors.getSource)(getState(), generatedSource.id);
-    await dispatch((0, _loadSourceText.loadSourceText)(generatedSourceRecord));
-    dispatch(newSources(originalSources));
+    return urls.map(url => createOriginalSource(url, source, sourceMaps));
   };
 }
 
@@ -32024,7 +31833,7 @@ function newSource(source) {
 
 function newSources(sources) {
   return async ({ dispatch, getState }) => {
-    const filteredSources = sources.filter(source => !(0, _selectors.getSource)(getState(), source.id));
+    const filteredSources = sources.filter(source => source && !(0, _selectors.getSource)(getState(), source.id));
 
     if (filteredSources.length == 0) {
       return;
@@ -32040,10 +31849,11 @@ function newSources(sources) {
       dispatch(checkPendingBreakpoints(source.id));
     }
 
-    await Promise.all(filteredSources.map(source => dispatch(loadSourceMap(source))));
+    await dispatch(loadSourceMaps(filteredSources));
+
     // We would like to restore the blackboxed state
     // after loading all states to make sure the correctness.
-    dispatch(restoreBlackBoxedSources(filteredSources));
+    await dispatch(restoreBlackBoxedSources(filteredSources));
   };
 }
 
@@ -34684,26 +34494,27 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 exports.initialState = initialState;
 exports.getHistory = getHistory;
 exports.getHistoryFrame = getHistoryFrame;
 exports.getHistoryPosition = getHistoryPosition;
-function initialState() {
-  return {
-    history: [],
-    position: -1
-  };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+var _prefs = __webpack_require__(226);
 
 /**
  * Breakpoints reducer
  * @module reducers/replay
  */
-
+function initialState() {
+  return {
+    history: [],
+    position: -1
+  };
+}
 
 const defaultFrameScopes = {
   original: {},
@@ -34711,6 +34522,10 @@ const defaultFrameScopes = {
 };
 
 function update(state = initialState(), action) {
+  if (!_prefs.features.replay) {
+    return state;
+  }
+
   switch (action.type) {
     case "TRAVEL_TO":
       {
@@ -34750,6 +34565,11 @@ function addScopes(state, action) {
   const { frame, status, value } = action;
   const selectedFrameId = frame.id;
   const instance = state.history[state.position];
+
+  if (!instance) {
+    return state;
+  }
+
   const pausedInst = instance.paused;
 
   const generated = _extends({}, pausedInst.frameScopes.generated, {
@@ -34774,6 +34594,11 @@ function mapScopes(state, action) {
   const { frame, status, value } = action;
   const selectedFrameId = frame.id;
   const instance = state.history[state.position];
+
+  if (!instance) {
+    return state;
+  }
+
   const pausedInst = instance.paused;
 
   const original = _extends({}, pausedInst.frameScopes.original, {
@@ -34800,6 +34625,7 @@ function evaluateExpression(state, action) {
   if (!instance) {
     return state;
   }
+
   const prevExpressions = instance.expressions || [];
   const expression = { input, value };
   const expressions = [...prevExpressions, expression];
@@ -37579,10 +37405,459 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 
 /***/ }),
 
+/***/ 3603:
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><defs><linearGradient id=\"b\"><stop offset=\"0\" stop-color=\"#9a9aba\"></stop><stop offset=\"1\" stop-color=\"#a6a6c2\"></stop></linearGradient><linearGradient id=\"a\"><stop offset=\"0\" stop-color=\"#8e8eb2\"></stop><stop offset=\"1\" stop-color=\"#9a9aba\"></stop></linearGradient><linearGradient x1=\"3.616\" y1=\"3.893\" x2=\"1.285\" y2=\"-.757\" id=\"d\" xlink:href=\"#a\" gradientUnits=\"userSpaceOnUse\" gradientTransform=\"matrix(1 0 0 .8684 0 1046.257)\"></linearGradient><linearGradient x1=\"2.232\" y1=\"4.162\" x2=\".629\" y2=\".966\" id=\"c\" xlink:href=\"#b\" gradientUnits=\"userSpaceOnUse\" gradientTransform=\"matrix(1 0 0 .8684 0 1046.257)\"></linearGradient></defs><path d=\"M.2 1045.562l4.6 3.3-4.6 3.3 2-3.3z\" fill=\"url(#c)\" stroke=\"url(#d)\" stroke-width=\".4\" stroke-linejoin=\"round\" transform=\"translate(0 -1045.362)\"></path></svg>"
+
+/***/ }),
+
+/***/ 3604:
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"><path d=\"M15.7 7.3l-7-7c-.4-.4-1-.4-1.4 0l-7 7c-.4.4-.4 1 0 1.4.4.4 1 .4 1.4 0l.3-.3V13c0 1.7 1.3 3 3 3h6c1.7 0 3-1.3 3-3V8.4l.3.3c.2.2.4.3.7.3.3 0 .5-.1.7-.3.4-.4.4-1 0-1.4zM8 11.5c0-.3.2-.5.5-.5s.5.2.5.5-.2.5-.5.5-.5-.2-.5-.5zm4 1.5c0 .6-.4 1-1 1h-1V9c0-.6-.4-1-1-1H7c-.6 0-1 .4-1 1v5H5c-.6 0-1-.4-1-1V6.4l4-4 4 4V13z\"></path></svg>"
+
+/***/ }),
+
+/***/ 3605:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _annotateFrames = __webpack_require__(3608);
+
+Object.keys(_annotateFrames).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _annotateFrames[key];
+    }
+  });
+});
+
+var _collapseFrames = __webpack_require__(3609);
+
+Object.keys(_collapseFrames).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _collapseFrames[key];
+    }
+  });
+});
+
+var _displayName = __webpack_require__(3610);
+
+Object.keys(_displayName).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _displayName[key];
+    }
+  });
+});
+
+var _getFrameUrl = __webpack_require__(3606);
+
+Object.keys(_getFrameUrl).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _getFrameUrl[key];
+    }
+  });
+});
+
+var _getLibraryFromUrl = __webpack_require__(3607);
+
+Object.keys(_getLibraryFromUrl).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _getLibraryFromUrl[key];
+    }
+  });
+});
+
+/***/ }),
+
+/***/ 3606:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getFrameUrl = getFrameUrl;
+
+var _lodash = __webpack_require__(2);
+
+function getFrameUrl(frame) {
+  return (0, _lodash.get)(frame, "source.url", "") || "";
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/***/ }),
+
+/***/ 3607:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getLibraryFromUrl = getLibraryFromUrl;
+
+var _lodash = __webpack_require__(2);
+
+var _getFrameUrl = __webpack_require__(3606);
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const libraryMap = [{
+  label: "Backbone",
+  pattern: /backbone/i
+}, {
+  label: "jQuery",
+  pattern: /jquery/i
+}, {
+  label: "Preact",
+  pattern: /preact/i
+}, {
+  label: "React",
+  pattern: /react/i
+}, {
+  label: "Immutable",
+  pattern: /immutable/i
+}, {
+  label: "Webpack",
+  pattern: /webpack\/bootstrap/i
+}, {
+  label: "Node",
+  pattern: /(^internal\/|^[^.\/]+\.js)/
+}, {
+  label: "Express",
+  pattern: /node_modules\/express/
+}, {
+  label: "Pug",
+  pattern: /node_modules\/pug/
+}, {
+  label: "ExtJS",
+  pattern: /\/ext-all[\.\-]/
+}, {
+  label: "MobX",
+  pattern: /mobx/i
+}, {
+  label: "Underscore",
+  pattern: /underscore/i
+}, {
+  label: "Lodash",
+  pattern: /lodash/i
+}, {
+  label: "Ember",
+  pattern: /ember/i
+}, {
+  label: "Choo",
+  pattern: /choo/i
+}, {
+  label: "VueJS",
+  pattern: /vue\.js/i
+}, {
+  label: "RxJS",
+  pattern: /rxjs/i
+}, {
+  label: "Angular",
+  pattern: /angular/i
+}, {
+  label: "Redux",
+  pattern: /redux/i
+}, {
+  label: "Dojo",
+  pattern: /dojo/i
+}, {
+  label: "Marko",
+  pattern: /marko/i
+}, {
+  label: "NuxtJS",
+  pattern: /[\._]nuxt/i
+}, {
+  label: "Aframe",
+  pattern: /aframe/i
+}, {
+  label: "NextJS",
+  pattern: /[\._]next/i
+}];
+
+function getLibraryFromUrl(frame) {
+  // @TODO each of these fns calls getFrameUrl, just call it once
+  // (assuming there's not more complex logic to identify a lib)
+  const frameUrl = (0, _getFrameUrl.getFrameUrl)(frame);
+  const match = (0, _lodash.find)(libraryMap, o => frameUrl.match(o.pattern));
+  return match && match.label;
+}
+
+/***/ }),
+
+/***/ 3608:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+exports.annotateFrames = annotateFrames;
+
+var _lodash = __webpack_require__(2);
+
+var _getFrameUrl = __webpack_require__(3606);
+
+var _getLibraryFromUrl = __webpack_require__(3607);
+
+function annotateFrames(frames) {
+  const annotatedFrames = frames.map(annotateFrame);
+  return annotateBabelAsyncFrames(annotatedFrames);
+}
+
+function annotateFrame(frame) {
+  const library = (0, _getLibraryFromUrl.getLibraryFromUrl)(frame);
+  if (library) {
+    return _extends({}, frame, { library });
+  }
+
+  return frame;
+}
+
+function annotateBabelAsyncFrames(frames) {
+  const babelFrameIndexes = getBabelFrameIndexes(frames);
+  const isBabelFrame = frameIndex => babelFrameIndexes.includes(frameIndex);
+
+  return frames.map((frame, frameIndex) => isBabelFrame(frameIndex) ? _extends({}, frame, { library: "Babel" }) : frame);
+}
+
+// Receives an array of frames and looks for babel async
+// call stack groups.
+function getBabelFrameIndexes(frames) {
+  const startIndexes = getFrameIndices(frames, (displayName, url) => url.match(/regenerator-runtime/i) && displayName === "tryCatch");
+
+  const endIndexes = getFrameIndices(frames, (displayName, url) => displayName === "_asyncToGenerator/<" || url.match(/_microtask/i) && displayName === "flush");
+
+  if (startIndexes.length != endIndexes.length || startIndexes.length === 0) {
+    return frames;
+  }
+
+  // Receives an array of start and end index tuples and returns
+  // an array of async call stack index ranges.
+  // e.g. [[1,3], [5,7]] => [[1,2,3], [5,6,7]]
+  return (0, _lodash.flatMap)((0, _lodash.zip)(startIndexes, endIndexes), ([startIndex, endIndex]) => (0, _lodash.range)(startIndex, endIndex + 1));
+}
+
+function getFrameIndices(frames, predicate) {
+  return frames.reduce((accumulator, frame, index) => predicate(frame.displayName, (0, _getFrameUrl.getFrameUrl)(frame)) ? [...accumulator, index] : accumulator, []);
+}
+
+/***/ }),
+
+/***/ 3609:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.collapseFrames = collapseFrames;
+
+var _lodash = __webpack_require__(2);
+
+var _getFrameUrl = __webpack_require__(3606);
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function collapseLastFrames(frames) {
+  const index = (0, _lodash.findIndex)(frames, frame => (0, _getFrameUrl.getFrameUrl)(frame).match(/webpack\/bootstrap/i));
+
+  if (index == -1) {
+    return { newFrames: frames, lastGroup: [] };
+  }
+
+  const newFrames = frames.slice(0, index);
+  const lastGroup = frames.slice(index);
+  return { newFrames, lastGroup };
+}
+
+// eslint-disable-next-line max-len
+function collapseFrames(frames) {
+  // We collapse groups of one so that user frames
+  // are not in a group of one
+  function addGroupToList(group, list) {
+    if (!group) {
+      return list;
+    }
+
+    if (group.length > 1) {
+      list.push(group);
+    } else {
+      list = list.concat(group);
+    }
+
+    return list;
+  }
+  const { newFrames, lastGroup } = collapseLastFrames(frames);
+  frames = newFrames;
+  let items = [];
+  let currentGroup = null;
+  let prevItem = null;
+  for (const frame of frames) {
+    const prevLibrary = (0, _lodash.get)(prevItem, "library");
+
+    if (!currentGroup) {
+      currentGroup = [frame];
+    } else if (prevLibrary && prevLibrary == frame.library) {
+      currentGroup.push(frame);
+    } else {
+      items = addGroupToList(currentGroup, items);
+      currentGroup = [frame];
+    }
+
+    prevItem = frame;
+  }
+
+  items = addGroupToList(currentGroup, items);
+  items = addGroupToList(lastGroup, items);
+  return items;
+}
+
+/***/ }),
+
 /***/ 361:
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M4.525 13.21h-.472c-.574 0-.987-.154-1.24-.463-.253-.31-.38-.882-.38-1.719v-.573c0-.746-.097-1.265-.292-1.557-.196-.293-.51-.44-.945-.44v-.974c.435 0 .75-.146.945-.44.195-.292.293-.811.293-1.556v-.58c0-.833.126-1.404.379-1.712.253-.31.666-.464 1.24-.464h.472v.783h-.179c-.37 0-.628.08-.774.24-.145.159-.218.54-.218 1.141v.383c0 .824-.096 1.432-.287 1.823-.191.39-.516.679-.974.866.458.191.783.482.974.873.191.39.287.998.287 1.823v.382c0 .602.073.982.218 1.142.146.16.404.239.774.239h.18v.783zm9.502-4.752c-.43 0-.744.147-.942.44-.197.292-.296.811-.296 1.557v.573c0 .837-.125 1.41-.376 1.719-.251.309-.664.463-1.237.463h-.478v-.783h.185c.37 0 .628-.08.774-.24.145-.159.218-.539.218-1.14v-.383c0-.825.096-1.433.287-1.823.191-.39.516-.682.974-.873-.458-.187-.783-.476-.974-.866-.191-.391-.287-.999-.287-1.823v-.383c0-.602-.073-.982-.218-1.142-.146-.159-.404-.239-.774-.239h-.185v-.783h.478c.573 0 .986.155 1.237.464.25.308.376.88.376 1.712v.58c0 .673.088 1.174.263 1.503.176.329.5.493.975.493v.974z\" fill-rule=\"evenodd\"></path></svg>"
+
+/***/ }),
+
+/***/ 3610:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.simplifyDisplayName = simplifyDisplayName;
+exports.formatDisplayName = formatDisplayName;
+exports.formatCopyName = formatCopyName;
+
+var _source = __webpack_require__(1356);
+
+var _utils = __webpack_require__(1366);
+
+// Decodes an anonymous naming scheme that
+// spider monkey implements based on "Naming Anonymous JavaScript Functions"
+// http://johnjbarton.github.io/nonymous/index.html
+const objectProperty = /([\w\d]+)$/; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                      * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                      * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// eslint-disable-next-line max-len
+
+const arrayProperty = /\[(.*?)\]$/;
+const functionProperty = /([\w\d]+)[\/\.<]*?$/;
+const annonymousProperty = /([\w\d]+)\(\^\)$/;
+
+function simplifyDisplayName(displayName) {
+  // if the display name has a space it has already been mapped
+  if (/\s/.exec(displayName)) {
+    return displayName;
+  }
+
+  const scenarios = [objectProperty, arrayProperty, functionProperty, annonymousProperty];
+
+  for (const reg of scenarios) {
+    const match = reg.exec(displayName);
+    if (match) {
+      return match[1];
+    }
+  }
+
+  return displayName;
+}
+
+const displayNameMap = {
+  Babel: {
+    tryCatch: "Async"
+  },
+  Backbone: {
+    "extend/child": "Create Class",
+    ".create": "Create Model"
+  },
+  jQuery: {
+    "jQuery.event.dispatch": "Dispatch Event"
+  },
+  React: {
+    // eslint-disable-next-line max-len
+    "ReactCompositeComponent._renderValidatedComponentWithoutOwnerOrContext/renderedElement<": "Render",
+    _renderValidatedComponentWithoutOwnerOrContext: "Render"
+  },
+  VueJS: {
+    "renderMixin/Vue.prototype._render": "Render"
+  },
+  Webpack: {
+    // eslint-disable-next-line camelcase
+    __webpack_require__: "Bootstrap"
+  }
+};
+
+function mapDisplayNames(frame, library) {
+  const { displayName } = frame;
+  return displayNameMap[library] && displayNameMap[library][displayName] || displayName;
+}
+
+function formatDisplayName(frame, { shouldMapDisplayName = true } = {}) {
+  let { displayName, library } = frame;
+  if (library && shouldMapDisplayName) {
+    displayName = mapDisplayNames(frame, library);
+  }
+
+  displayName = simplifyDisplayName(displayName);
+  return (0, _utils.endTruncateStr)(displayName, 25);
+}
+
+function formatCopyName(frame) {
+  const displayName = formatDisplayName(frame);
+  const fileName = (0, _source.getFilename)(frame.source);
+  const frameLocation = frame.location.line;
+
+  return `${displayName} (${fileName}#${frameLocation})`;
+}
 
 /***/ }),
 

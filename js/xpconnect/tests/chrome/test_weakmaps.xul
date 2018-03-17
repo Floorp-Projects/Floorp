@@ -49,7 +49,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
     let map = new WeakMap;
     let div = document.createElement("div");
     let key = {};
-    div.setUserData("entrain", {m:map, k:key}, null);
+    let obj = {m:map, k:key};
+    div.addEventListener("foo", function() {
+      // The code below doesn't matter (it won't run). Just pull a
+      // reference to obj.
+      obj.k = 1;
+      obj.m = "bar";
+    });
     //div.entrain = {m:map, k:key};  This is not sufficient to cause a leak in Fx9
     map.set(key, div);
     return make_weak_ref(map);
@@ -74,8 +80,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
 
     // put the live/dead maps/keys into the appropriate DOM elements
     live_dom.basic_unit_tests = {m:live_map, k:live_key};
-    dead_dom.setUserData("hook", {m:dead_map, k:dead_key}, null);
+
+    let obj = {m:dead_map, k:dead_key};
     // dead_dom.hook = {m:dead_map, k:dead_key};
+    dead_dom.addEventListener("foo", function() {
+      // The code below doesn't matter (it won't run). Just pull a
+      // reference to obj.
+      obj.m = 1;
+      obj.k = "2";
+    });
 
     // Create a dead value, and a weak ref to it.
     // The loop keeps dead_dom alive unless the CC is smart enough to kill it.
