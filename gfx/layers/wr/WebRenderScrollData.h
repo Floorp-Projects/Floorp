@@ -30,6 +30,7 @@ struct ActiveScrolledRoot;
 namespace layers {
 
 class Layer;
+class WebRenderLayerManager;
 class WebRenderScrollData;
 
 // Data needed by APZ, per layer. One instance of this class is created for

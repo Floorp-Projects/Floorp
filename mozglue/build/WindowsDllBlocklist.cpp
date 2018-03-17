@@ -29,6 +29,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Vector.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
 #include "WindowsDllBlocklist.h"
@@ -803,12 +804,26 @@ continue_loading:
   return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
 }
 
+#if defined(NIGHTLY_BUILD)
+// Map of specific thread proc addresses we should block. In particular,
+// LoadLibrary* APIs which indicate DLL injection
+static mozilla::Vector<void*, 4>* gStartAddressesToBlock;
+#endif
+
 static bool
 ShouldBlockThread(void* aStartAddress)
 {
   // Allows crashfirefox.exe to continue to work. Also if your threadproc is null, this crash is intentional.
   if (aStartAddress == 0)
     return false;
+
+#if defined(NIGHTLY_BUILD)
+  for (auto p : *gStartAddressesToBlock) {
+    if (p == aStartAddress) {
+      return true;
+    }
+  }
+#endif
 
   bool shouldBlock = false;
   MEMORY_BASIC_INFORMATION startAddressInfo = {0};
@@ -850,6 +865,7 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
   }
   sInitFlags = aInitFlags;
   sBlocklistInitAttempted = true;
+  gStartAddressesToBlock = new mozilla::Vector<void*, 4>;
 
   // In order to be effective against AppInit DLLs, the blocklist must be
   // initialized before user32.dll is loaded into the process (bug 932100).
@@ -905,6 +921,34 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
 #endif
     }
   }
+
+#if defined(NIGHTLY_BUILD)
+  // Populate a list of thread start addresses to block.
+  HMODULE hKernel = GetModuleHandleW(L"kernel32.dll");
+  if (hKernel) {
+    void* pProc;
+
+    pProc = (void*)GetProcAddress(hKernel, "LoadLibraryA");
+    if (pProc) {
+      gStartAddressesToBlock->append(pProc);
+    }
+
+    pProc = (void*)GetProcAddress(hKernel, "LoadLibraryW");
+    if (pProc) {
+      gStartAddressesToBlock->append(pProc);
+    }
+
+    pProc = (void*)GetProcAddress(hKernel, "LoadLibraryExA");
+    if (pProc) {
+      gStartAddressesToBlock->append(pProc);
+    }
+
+    pProc = (void*)GetProcAddress(hKernel, "LoadLibraryExW");
+    if (pProc) {
+      gStartAddressesToBlock->append(pProc);
+    }
+  }
+#endif
 }
 
 MFBT_API void

@@ -382,10 +382,6 @@ private:
 
   // Used to enable and disable the observer notifications.
   bool mCanNotify;
-
-  // Tracks whether we are in batch mode.
-  // Note: this is only tracking bookmarks batches, not history ones.
-  bool mBatching;
 };
 
 #endif // nsNavBookmarks_h_

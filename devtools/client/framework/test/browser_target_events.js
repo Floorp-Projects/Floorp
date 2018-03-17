@@ -31,19 +31,20 @@ function onHidden() {
 function onVisible() {
   ok(true, "Visible event received");
   target.once("will-navigate", onWillNavigate);
-  let mm = loadFrameScriptUtils();
-  mm.sendAsyncMessage("devtools:test:navigate", { location: "data:text/html,<meta charset='utf8'/>test navigation" });
+
+  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+    content.location = "data:text/html,<meta charset='utf8'/>test navigation";
+  });
 }
 
-function onWillNavigate(event, request) {
+async function onWillNavigate() {
   ok(true, "will-navigate event received");
-  // Wait for navigation handling to complete before removing the tab, in order
-  // to avoid triggering assertions.
-  target.once("navigate", executeSoon.bind(null, onNavigate));
+  target.on("navigate", onNavigate);
 }
 
 function onNavigate() {
   ok(true, "navigate event received");
+  target.off("navigate", onNavigate);
   target.once("close", onClose);
   gBrowser.removeCurrentTab();
 }

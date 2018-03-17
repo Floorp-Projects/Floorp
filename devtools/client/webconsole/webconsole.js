@@ -1873,26 +1873,35 @@ WebConsoleFrame.prototype = {
   /**
    * Handler for the tabNavigated notification.
    *
-   * @param string event
-   *        Event name.
    * @param object packet
    *        Notification packet received from the server.
    */
-  handleTabNavigated: function (event, packet) {
-    if (event == "will-navigate") {
-      if (this.persistLog) {
-        let marker = new Messages.NavigationMarker(packet, Date.now());
-        this.output.addMessage(marker);
-      } else {
-        this.jsterm.clearOutput();
-      }
-    }
+  handleTabNavigated: function (packet) {
     if (packet.url) {
       this.onLocationChange(packet.url, packet.title);
     }
 
-    if (event == "navigate" && !packet.nativeConsoleAPI) {
+    if (!packet.nativeConsoleAPI) {
       this.logWarningAboutReplacedAPI();
+    }
+  },
+
+  /**
+   * Handler for the tabNavigated notification.
+   *
+   * @param object packet
+   *        Notification packet received from the server.
+   */
+  handleTabWillNavigate: function (packet) {
+    if (this.persistLog) {
+      let marker = new Messages.NavigationMarker(packet, Date.now());
+      this.output.addMessage(marker);
+    } else {
+      this.jsterm.clearOutput();
+    }
+
+    if (packet.url) {
+      this.onLocationChange(packet.url, packet.title);
     }
   },
 

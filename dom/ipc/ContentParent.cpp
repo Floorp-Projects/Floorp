@@ -1523,7 +1523,7 @@ ContentParent::OnChannelError()
 void
 ContentParent::OnChannelConnected(int32_t pid)
 {
-  SetOtherProcessId(pid);
+  MOZ_ASSERT(NS_IsMainThread());
 
 #if defined(ANDROID) || defined(LINUX)
   // Check nice preference
@@ -1547,6 +1547,11 @@ ContentParent::OnChannelConnected(int32_t pid)
       setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
     }
   }
+#endif
+
+#ifdef MOZ_CODE_COVERAGE
+  Unused << SendShareCodeCoverageMutex(
+              CodeCoverageHandler::Get()->GetMutexHandle(pid));
 #endif
 }
 
@@ -2056,19 +2061,14 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     extraArgs.push_back("-safeMode");
   }
 
-  if (!mSubprocess->LaunchAndWaitForProcessHandle(extraArgs)) {
+  SetOtherProcessId(kInvalidProcessId, ProcessIdState::ePending);
+  if (!mSubprocess->Launch(extraArgs)) {
     NS_ERROR("failed to launch child in the parent");
     MarkAsDead();
     return false;
   }
 
-  base::ProcessId procId = base::GetProcId(mSubprocess->GetChildProcessHandle());
-
-  Open(mSubprocess->GetChannel(), procId);
-
-#ifdef MOZ_CODE_COVERAGE
-  Unused << SendShareCodeCoverageMutex(CodeCoverageHandler::Get()->GetMutexHandle(procId));
-#endif
+  OpenWithAsyncPid(mSubprocess->GetChannel());
 
   InitInternal(aInitialPriority);
 
@@ -2079,6 +2079,8 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   // Set a reply timeout for CPOWs.
   SetReplyTimeoutMs(Preferences::GetInt("dom.ipc.cpow.timeout", 0));
 
+  // TODO: If OtherPid() is not called between mSubprocess->Launch() and this,
+  // then we're not really measuring how long it took to spawn the process.
   Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_TIME_MS,
                         static_cast<uint32_t>((TimeStamp::Now() - mLaunchTS)
                                               .ToMilliseconds()));
@@ -2140,7 +2142,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   bool isFile = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
-  mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, isFile);
+  mSubprocess = new ContentProcessHost(this, isFile);
 }
 
 ContentParent::~ContentParent()

@@ -41,19 +41,19 @@ function runTests1(tab) {
   let events = {};
 
   // Check events on the gDevTools and toolbox objects.
-  gDevTools.once(toolId1 + "-init", (event, toolbox, iframe) => {
+  gDevTools.once(toolId1 + "-init", (toolbox, iframe) => {
     ok(iframe, "iframe argument available");
 
-    toolbox.once(toolId1 + "-init", (innerEvent, innerIframe) => {
+    toolbox.once(toolId1 + "-init", innerIframe => {
       ok(innerIframe, "innerIframe argument available");
       events.init = true;
     });
   });
 
-  gDevTools.once(toolId1 + "-ready", (event, toolbox, panel) => {
+  gDevTools.once(toolId1 + "-ready", (toolbox, panel) => {
     ok(panel, "panel argument available");
 
-    toolbox.once(toolId1 + "-ready", (innerEvent, innerPanel) => {
+    toolbox.once(toolId1 + "-ready", innerPanel => {
       ok(innerPanel, "innerPanel argument available");
       events.ready = true;
     });
@@ -100,28 +100,28 @@ function runTests2() {
   let events = {};
 
   // Check events on the gDevTools and toolbox objects.
-  gDevTools.once(toolId2 + "-init", (event, toolbox, iframe) => {
+  gDevTools.once(toolId2 + "-init", (toolbox, iframe) => {
     ok(iframe, "iframe argument available");
 
-    toolbox.once(toolId2 + "-init", (innerEvent, innerIframe) => {
+    toolbox.once(toolId2 + "-init", innerIframe => {
       ok(innerIframe, "innerIframe argument available");
       events.init = true;
     });
   });
 
-  gDevTools.once(toolId2 + "-build", (event, toolbox, panel, iframe) => {
+  gDevTools.once(toolId2 + "-build", (toolbox, panel, iframe) => {
     ok(panel, "panel argument available");
 
-    toolbox.once(toolId2 + "-build", (innerEvent, innerPanel, innerIframe) => {
+    toolbox.once(toolId2 + "-build", (innerPanel, innerIframe) => {
       ok(innerPanel, "innerPanel argument available");
       events.build = true;
     });
   });
 
-  gDevTools.once(toolId2 + "-ready", (event, toolbox, panel) => {
+  gDevTools.once(toolId2 + "-ready", (toolbox, panel) => {
     ok(panel, "panel argument available");
 
-    toolbox.once(toolId2 + "-ready", (innerEvent, innerPanel) => {
+    toolbox.once(toolId2 + "-ready", innerPanel => {
       ok(innerPanel, "innerPanel argument available");
       events.ready = true;
     });
@@ -152,7 +152,7 @@ var continueTests = async function (toolbox, panel) {
   info("Testing toolbox tool-unregistered event");
   let toolSelected = toolbox.once("select");
   let unregisteredTool = await new Promise(resolve => {
-    toolbox.once("tool-unregistered", (e, id) => resolve(id));
+    toolbox.once("tool-unregistered", id => resolve(id));
     gDevTools.unregisterTool(toolId2);
   });
   await toolSelected;
@@ -165,7 +165,7 @@ var continueTests = async function (toolbox, panel) {
 
   info("Testing toolbox tool-registered event");
   let registeredTool = await new Promise(resolve => {
-    toolbox.once("tool-registered", (e, id) => resolve(id));
+    toolbox.once("tool-registered", id => resolve(id));
     gDevTools.registerTool(toolDefinition);
   });
 

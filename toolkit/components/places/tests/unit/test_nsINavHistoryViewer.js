@@ -123,21 +123,6 @@ add_test(function check_history_query() {
         PlacesUtils.history.clear().then(() => {
           Assert.equal(root.uri, resultObserver.invalidatedContainer.uri);
 
-          // nsINavHistoryResultObserver.batching
-          Assert.ok(!resultObserver.inBatchMode);
-          PlacesUtils.history.runInBatchMode({
-            runBatched(aUserData) {
-              Assert.ok(resultObserver.inBatchMode);
-            }
-          }, null);
-          Assert.ok(!resultObserver.inBatchMode);
-          PlacesUtils.bookmarks.runInBatchMode({
-            runBatched(aUserData) {
-              Assert.ok(resultObserver.inBatchMode);
-            }
-          }, null);
-          Assert.ok(!resultObserver.inBatchMode);
-
           root.containerOpen = false;
           Assert.equal(resultObserver.closedContainer, resultObserver.openedContainer);
           result.removeObserver(resultObserver);
@@ -208,21 +193,6 @@ add_task(async function check_bookmarks_query() {
   Assert.equal(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
   Assert.equal(resultObserver.invalidatedContainer, result.root);
 
-  // nsINavHistoryResultObserver.batching
-  Assert.ok(!resultObserver.inBatchMode);
-  PlacesUtils.history.runInBatchMode({
-    runBatched(aUserData) {
-      Assert.ok(resultObserver.inBatchMode);
-    }
-  }, null);
-  Assert.ok(!resultObserver.inBatchMode);
-  PlacesUtils.bookmarks.runInBatchMode({
-    runBatched(aUserData) {
-      Assert.ok(resultObserver.inBatchMode);
-    }
-  }, null);
-  Assert.ok(!resultObserver.inBatchMode);
-
   root.containerOpen = false;
   Assert.equal(resultObserver.closedContainer, resultObserver.openedContainer);
   result.removeObserver(resultObserver);
@@ -240,21 +210,6 @@ add_test(function check_mixed_query() {
   root.containerOpen = true;
 
   Assert.notEqual(resultObserver.openedContainer, null);
-
-  // nsINavHistoryResultObserver.batching
-  Assert.ok(!resultObserver.inBatchMode);
-  PlacesUtils.history.runInBatchMode({
-    runBatched(aUserData) {
-      Assert.ok(resultObserver.inBatchMode);
-    }
-  }, null);
-  Assert.ok(!resultObserver.inBatchMode);
-  PlacesUtils.bookmarks.runInBatchMode({
-    runBatched(aUserData) {
-      Assert.ok(resultObserver.inBatchMode);
-    }
-  }, null);
-  Assert.ok(!resultObserver.inBatchMode);
 
   root.containerOpen = false;
   Assert.equal(resultObserver.closedContainer, resultObserver.openedContainer);

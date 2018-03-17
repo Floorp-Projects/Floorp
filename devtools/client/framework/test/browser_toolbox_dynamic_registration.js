@@ -29,7 +29,7 @@ function testRegister(aToolbox)
   });
 }
 
-function toolRegistered(event, toolId)
+function toolRegistered(toolId)
 {
   is(toolId, "test-tool", "tool-registered event handler sent tool id");
 
@@ -68,7 +68,7 @@ function testUnregister()
   gDevTools.unregisterTool("test-tool");
 }
 
-function toolUnregistered(event, toolId)
+function toolUnregistered(toolId)
 {
   is(toolId, "test-tool", "tool-unregistered event handler sent tool id");
 

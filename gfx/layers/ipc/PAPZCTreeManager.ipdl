@@ -6,14 +6,11 @@
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 include "ipc/nsGUIEventIPC.h";
-include "mozilla/dom/TabMessageUtils.h"; // Needed for IPC::ParamTraits<nsEventStatus>.
 
 include protocol PCompositorBridge;
 
-using CSSPoint from "Units.h";
 using CSSRect from "Units.h";
 using LayoutDeviceCoord from "Units.h";
-using LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using ScreenPoint from "Units.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
@@ -24,23 +21,8 @@ using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h"
 using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
 using class mozilla::layers::KeyboardMap from "mozilla/layers/KeyboardMap.h";
 
-using nsEventStatus from "mozilla/EventForwards.h";
-using EventMessage from "mozilla/EventForwards.h";
 using mozilla::Modifiers from "mozilla/EventForwards.h";
-using class mozilla::WidgetInputEvent from "mozilla/BasicEvents.h";
-using class mozilla::WidgetMouseEventBase from "mozilla/MouseEvents.h";
-using mozilla::WidgetMouseEvent::Reason from "mozilla/MouseEvents.h";
-using class mozilla::WidgetTouchEvent from "mozilla/TouchEvents.h";
-using class mozilla::WidgetWheelEvent from "mozilla/MouseEvents.h";
-using class mozilla::InputData from "InputData.h";
-using class mozilla::MultiTouchInput from "InputData.h";
-using class mozilla::MouseInput from "InputData.h";
-using class mozilla::PanGestureInput from "InputData.h";
-using class mozilla::PinchGestureInput from "InputData.h";
 using mozilla::PinchGestureInput::PinchGestureType from "InputData.h";
-using class mozilla::TapGestureInput from "InputData.h";
-using class mozilla::ScrollWheelInput from "InputData.h";
-using class mozilla::KeyboardInput from "InputData.h";
 
 namespace mozilla {
 namespace layers {
@@ -54,7 +36,7 @@ namespace layers {
  * lives in the main thread of the main or the content process. APZCTreeManagerParent
  * and APZCTreeManagerChild implement this protocol.
  */
-sync protocol PAPZCTreeManager
+protocol PAPZCTreeManager
 {
 manager PCompositorBridge;
 
@@ -84,58 +66,6 @@ parent:
   async StopAutoscroll(ScrollableLayerGuid aGuid);
 
   async SetLongTapEnabled(bool aTapGestureEnabled);
-
-  // The following messages are used to
-  // implement the ReceiveInputEvent methods
-
-  sync ReceiveMultiTouchInputEvent(MultiTouchInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             MultiTouchInput     aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
-
-  sync ReceiveMouseInputEvent(MouseInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             MouseInput          aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
-
-  sync ReceivePanGestureInputEvent(PanGestureInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             PanGestureInput     aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
-
-  sync ReceivePinchGestureInputEvent(PinchGestureInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             PinchGestureInput   aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
-
-  sync ReceiveTapGestureInputEvent(TapGestureInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             TapGestureInput     aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
-
-  sync ReceiveScrollWheelInputEvent(ScrollWheelInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             ScrollWheelInput    aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
-
-  sync ReceiveKeyboardInputEvent(KeyboardInput aEvent)
-    returns (nsEventStatus       aOutStatus,
-             KeyboardInput       aOutEvent,
-             ScrollableLayerGuid aOutTargetGuid,
-             uint64_t            aOutInputBlockId);
-
-  async UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint, EventMessage aEventMessage);
-
-  sync ProcessUnhandledEvent(LayoutDeviceIntPoint aRefPoint)
-    returns (LayoutDeviceIntPoint   aOutRefPoint,
-             ScrollableLayerGuid    aOutTargetGuid,
-             uint64_t               aOutFocusSequenceNumber);
 
   async __delete__();
 

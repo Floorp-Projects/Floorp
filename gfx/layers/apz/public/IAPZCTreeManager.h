@@ -10,17 +10,15 @@
 #include <stdint.h>                     // for uint64_t, uint32_t
 
 #include "FrameMetrics.h"               // for FrameMetrics, etc
-#include "mozilla/EventForwards.h"      // for WidgetInputEvent, nsEventStatus
-#include "mozilla/layers/LayersTypes.h"    // for TouchBehaviorFlags
+#include "mozilla/layers/LayersTypes.h" // for TouchBehaviorFlags
 #include "nsTArrayForwardDeclare.h"     // for nsTArray, nsTArray_Impl, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
-#include "Units.h"                      // for CSSPoint, CSSRect, etc
+#include "Units.h"                      // for CSSRect, etc
 
 namespace mozilla {
-class InputData;
-
 namespace layers {
 
+class APZInputBridge;
 class KeyboardMap;
 
 enum AllowedTouchBehavior {
@@ -45,67 +43,6 @@ class IAPZCTreeManager {
   NS_INLINE_DECL_THREADSAFE_VIRTUAL_REFCOUNTING(IAPZCTreeManager)
 
 public:
-
-  /**
-   * General handler for incoming input events. Manipulates the frame metrics
-   * based on what type of input it is. For example, a PinchGestureEvent will
-   * cause scaling. This should only be called externally to this class, and
-   * must be called on the controller thread.
-   *
-   * This function transforms |aEvent| to have its coordinates in DOM space.
-   * This is so that the event can be passed through the DOM and content can
-   * handle them. The event may need to be converted to a WidgetInputEvent
-   * by the caller if it wants to do this.
-   *
-   * The following values may be returned by this function:
-   * nsEventStatus_eConsumeNoDefault is returned to indicate the
-   *   APZ is consuming this event and the caller should discard the event with
-   *   extreme prejudice. The exact scenarios under which this is returned is
-   *   implementation-dependent and may vary.
-   * nsEventStatus_eIgnore is returned to indicate that the APZ code didn't
-   *   use this event. This might be because it was directed at a point on
-   *   the screen where there was no APZ, or because the thing the user was
-   *   trying to do was not allowed. (For example, attempting to pan a
-   *   non-pannable document).
-   * nsEventStatus_eConsumeDoDefault is returned to indicate that the APZ
-   *   code may have used this event to do some user-visible thing. Note that
-   *   in some cases CONSUMED is returned even if the event was NOT used. This
-   *   is because we cannot always know at the time of event delivery whether
-   *   the event will be used or not. So we err on the side of sending
-   *   CONSUMED when we are uncertain.
-   *
-   * @param aEvent input event object; is modified in-place
-   * @param aOutTargetGuid returns the guid of the apzc this event was
-   * delivered to. May be null.
-   * @param aOutInputBlockId returns the id of the input block that this event
-   * was added to, if that was the case. May be null.
-   */
-  virtual nsEventStatus ReceiveInputEvent(
-      InputData& aEvent,
-      ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId) = 0;
-
-  /**
-   * WidgetInputEvent handler. Transforms |aEvent| (which is assumed to be an
-   * already-existing instance of an WidgetInputEvent which may be an
-   * WidgetTouchEvent) to have its coordinates in DOM space. This is so that the
-   * event can be passed through the DOM and content can handle them.
-   *
-   * NOTE: Be careful of invoking the WidgetInputEvent variant. This can only be
-   * called on the main thread. See widget/InputData.h for more information on
-   * why we have InputData and WidgetInputEvent separated. If this function is
-   * used, the controller thread must be the main thread, or undefined behaviour
-   * may occur.
-   * NOTE: On unix, mouse events are treated as touch and are forwarded
-   * to the appropriate apz as such.
-   *
-   * See documentation for other ReceiveInputEvent above.
-   */
-  nsEventStatus ReceiveInputEvent(
-      WidgetInputEvent& aEvent,
-      ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId);
-
   /**
    * Set the keyboard shortcuts to use for translating keyboard events.
    */
@@ -190,27 +127,16 @@ public:
    */
   virtual void SetLongTapEnabled(bool aTapGestureEnabled) = 0;
 
-
-  // Returns whether or not a wheel event action will be (or was) performed by
-  // APZ. If this returns true, the event must not perform a synchronous
-  // scroll.
-  //
-  // Even if this returns false, all wheel events in APZ-aware widgets must
-  // be sent through APZ so they are transformed correctly for TabParent.
-  static bool WillHandleWheelEvent(WidgetWheelEvent* aEvent);
+  /**
+   * Returns an APZInputBridge interface that can be used to send input
+   * events to APZ in a synchronous manner. This will always be non-null, and
+   * the returned object's lifetime will match the lifetime of this
+   * IAPZCTreeManager implementation.
+   * It is only valid to call this function in the UI process.
+   */
+  virtual APZInputBridge* InputBridge() = 0;
 
 protected:
-
-  // Methods to help process WidgetInputEvents (or manage conversion to/from InputData)
-
-  virtual void ProcessUnhandledEvent(
-      LayoutDeviceIntPoint* aRefPoint,
-      ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutFocusSequenceNumber) = 0;
-
-  virtual void UpdateWheelTransaction(
-      LayoutDeviceIntPoint aRefPoint,
-      EventMessage aEventMessage) = 0;
 
   // Discourage destruction outside of decref
 

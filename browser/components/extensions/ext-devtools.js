@@ -237,7 +237,7 @@ class DevToolsPageDefinition {
     this.devtoolsPageForTarget = new Map();
   }
 
-  onThemeChanged(evt, themeName) {
+  onThemeChanged(themeName) {
     Services.ppmm.broadcastAsyncMessage("Extension:DevToolsThemeChanged", {themeName});
   }
 
@@ -304,7 +304,7 @@ initDevTools = function() {
   /* eslint-disable mozilla/balanced-listeners */
   // Create a devtools page context for a new opened toolbox,
   // based on the registered devtools_page definitions.
-  DevToolsShim.on("toolbox-created", (evt, toolbox) => {
+  DevToolsShim.on("toolbox-created", toolbox => {
     if (!toolbox.target.isLocalTab) {
       // Only local tabs are currently supported (See Bug 1304378 for additional details
       // related to remote targets support).
@@ -325,7 +325,7 @@ initDevTools = function() {
 
   // Destroy a devtools page context for a destroyed toolbox,
   // based on the registered devtools_page definitions.
-  DevToolsShim.on("toolbox-destroy", (evt, target) => {
+  DevToolsShim.on("toolbox-destroy", target => {
     if (!target.isLocalTab) {
       // Only local tabs are currently supported (See Bug 1304378 for additional details
       // related to remote targets support).

@@ -148,14 +148,10 @@ async function task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark) {
  * Decay the adaptive entries by sending the daily idle topic.
  */
 function doAdaptiveDecay() {
-  PlacesUtils.history.runInBatchMode({
-    runBatched() {
-      for (let i = 0; i < 10; i++) {
-        PlacesUtils.history.QueryInterface(Ci.nsIObserver)
-                           .observe(null, "idle-daily", null);
-      }
-    }
-  }, this);
+  for (let i = 0; i < 10; i++) {
+    PlacesUtils.history.QueryInterface(Ci.nsIObserver)
+                       .observe(null, "idle-daily", null);
+  }
 }
 
 var uri1 = uri("http://site.tld/1");

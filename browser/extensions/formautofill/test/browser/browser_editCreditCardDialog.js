@@ -129,7 +129,7 @@ add_task(async function test_addInvalidCreditCard() {
 
       EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey("test", {}, win);
-      win.document.querySelector("#save").click();
+      EventUtils.synthesizeMouseAtCenter(win.document.querySelector("#save"), {}, win);
 
       is(win.document.querySelector("form").checkValidity(), false, "cc-number is invalid");
       SimpleTest.requestFlakyTimeout("Ensure the window remains open after save attempt");

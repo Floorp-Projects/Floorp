@@ -28,11 +28,7 @@ async function testViewSource(hud, toolbox, text) {
   let frameLinkNode = messageNode.querySelector(".message-location .frame-link");
   ok(frameLinkNode, "The message does have a location link");
 
-  let onStyleEditorSelected = new Promise((resolve) => {
-    toolbox.once("styleeditor-selected", (event, panel) => {
-      resolve(panel);
-    });
-  });
+  let onStyleEditorSelected = toolbox.once("styleeditor-selected");
 
   EventUtils.sendMouseEvent({ type: "click" },
     messageNode.querySelector(".frame-link-filename"));

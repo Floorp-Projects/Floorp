@@ -1393,19 +1393,6 @@ interface nsINavHistoryService : nsISupports
                     [retval, array, size_is(count)] out nsINavHistoryObserver observers);
 
   /**
-   * Runs the passed callback in batch mode. Use this when a lot of things
-   * are about to change. Calls can be nested, observers will only be
-   * notified when all batches begin/end.
-   *
-   * @param aCallback
-   *        nsINavHistoryBatchCallback interface to call.
-   * @param aUserData
-   *        Opaque parameter passed to nsINavBookmarksBatchCallback
-   */
-  void runInBatchMode(in nsINavHistoryBatchCallback aCallback,
-                      in nsISupports aClosure);
-
-  /**
    * True if history is disabled. currently,
    * history is disabled if the places.history.enabled pref is false.
    */
@@ -1432,12 +1419,4 @@ interface nsINavHistoryService : nsISupports
    *        The hash mode: `""` (default), `"prefix_lo"`, or `"prefix_hi"`.
    */
   unsigned long long hashURL(in ACString aSpec, [optional] in ACString aMode);
-};
-
-/**
- * @see runInBatchMode of nsINavHistoryService/nsINavBookmarksService
- */
-[scriptable, function, uuid(5a5a9154-95ac-4e3d-90df-558816297407)]
-interface nsINavHistoryBatchCallback : nsISupports {
-  void runBatched(in nsISupports aUserData);
 };

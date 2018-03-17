@@ -70,7 +70,7 @@ function OptionsPanel(iframeWindow, toolbox) {
 
   this._addListeners();
 
-  const EventEmitter = require("devtools/shared/old-event-emitter");
+  const EventEmitter = require("devtools/shared/event-emitter");
   EventEmitter.decorate(this);
 }
 
@@ -126,11 +126,11 @@ OptionsPanel.prototype = {
     }
   },
 
-  _themeRegistered: function(event, themeId) {
+  _themeRegistered: function(themeId) {
     this.setupThemeList();
   },
 
-  _themeUnregistered: function(event, theme) {
+  _themeUnregistered: function(theme) {
     let themeBox = this.panelDoc.getElementById("devtools-theme-box");
     let themeInput = themeBox.querySelector(`[value=${theme.id}]`);
 

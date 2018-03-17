@@ -134,27 +134,21 @@ var EventsHandler = {
     // globals.
     gFront.setup({ reload: false });
 
-    this._onTabNavigated = this._onTabNavigated.bind(this);
-    gTarget.on("will-navigate", this._onTabNavigated);
-    gTarget.on("navigate", this._onTabNavigated);
+    this._onTabWillNavigate = this._onTabWillNavigate.bind(this);
+    gTarget.on("will-navigate", this._onTabWillNavigate);
   },
 
   /**
    * Remove events emitted by the current tab target.
    */
   destroy: function () {
-    gTarget.off("will-navigate", this._onTabNavigated);
-    gTarget.off("navigate", this._onTabNavigated);
+    gTarget.off("will-navigate", this._onTabWillNavigate);
   },
 
   /**
    * Called for each location change in the debugged tab.
    */
-  _onTabNavigated: function (event) {
-    if (event != "will-navigate") {
-      return;
-    }
-
+  _onTabWillNavigate: function () {
     // Reset UI.
     SnapshotsListView.empty();
     CallsListView.empty();

@@ -1635,7 +1635,7 @@ function RuleViewTool(inspector, window) {
   this.onViewRefreshed = this.onViewRefreshed.bind(this);
 
   this.view.on("ruleview-refreshed", this.onViewRefreshed);
-  this.inspector.selection.on("detached-front", this.onSelected);
+  this.inspector.selection.on("detached-front", this.onDetachedFront);
   this.inspector.selection.on("new-node-front", this.onSelected);
   this.inspector.selection.on("pseudoclass", this.refresh);
   this.inspector.target.on("navigate", this.clearUserProperties);
@@ -1658,7 +1658,11 @@ RuleViewTool.prototype = {
       true : this.inspector.sidebar.getCurrentTabID() == "ruleview";
   },
 
-  onSelected: function(event) {
+  onDetachedFront: function() {
+    this.onSelected(false);
+  },
+
+  onSelected: function(selectElement = true) {
     // Ignore the event if the view has been destroyed, or if it's inactive.
     // But only if the current selection isn't null. If it's been set to null,
     // let the update go through as this is needed to empty the view on
@@ -1681,7 +1685,7 @@ RuleViewTool.prototype = {
       return;
     }
 
-    if (!event || event == "new-node-front") {
+    if (selectElement) {
       let done = this.inspector.updating("rule-view");
       this.view.selectElement(this.inspector.selection.nodeFront)
         .then(done, done);
@@ -1737,7 +1741,7 @@ RuleViewTool.prototype = {
   destroy: function() {
     this.inspector.walker.off("mutations", this.onMutations);
     this.inspector.walker.off("resize", this.onResized);
-    this.inspector.selection.off("detached-front", this.onSelected);
+    this.inspector.selection.off("detached-front", this.onDetachedFront);
     this.inspector.selection.off("pseudoclass", this.refresh);
     this.inspector.selection.off("new-node-front", this.onSelected);
     this.inspector.target.off("navigate", this.clearUserProperties);

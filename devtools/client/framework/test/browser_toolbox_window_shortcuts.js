@@ -68,7 +68,7 @@ function testShortcuts(aToolbox, aIndex) {
   EventUtils.synthesizeKey(key, modifiers, toolbox.win.parent);
 }
 
-function selectCB(event, id) {
+function selectCB(id) {
   info("toolbox-select event from " + id);
 
   is(toolIDs.indexOf(id), idIndex,

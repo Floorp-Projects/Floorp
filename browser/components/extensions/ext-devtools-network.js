@@ -15,7 +15,7 @@ this.devtools_network = class extends ExtensionAPI {
       devtools: {
         network: {
           onNavigated: new EventManager(context, "devtools.onNavigated", fire => {
-            let listener = (event, data) => {
+            let listener = data => {
               fire.async(data.url);
             };
 
