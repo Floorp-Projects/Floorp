@@ -98,7 +98,23 @@ inline void abort_noreturn() { MOZ_CRASH(); }
 #define DOUBLE_CONVERSION_UNUSED
 #endif
 
+#if defined(_WIN32) && !defined(__MINGW32__)
+
+typedef signed char int8_t;
+typedef unsigned char uint8_t;
+typedef short int16_t;  // NOLINT
+typedef unsigned short uint16_t;  // NOLINT
+typedef int int32_t;
+typedef unsigned int uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+// intptr_t and friends are defined in crtdefs.h through stdio.h.
+
+#else
+
 #include <stdint.h>
+
+#endif
 
 typedef uint16_t uc16;
 
@@ -120,8 +136,8 @@ typedef uint16_t uc16;
 
 // A macro to disallow the evil copy constructor and operator= functions
 // This should be used in the private: declarations for a class
-#ifndef DISALLOW_COPY_AND_ASSIGN
-#define DISALLOW_COPY_AND_ASSIGN(TypeName)      \
+#ifndef DC_DISALLOW_COPY_AND_ASSIGN
+#define DC_DISALLOW_COPY_AND_ASSIGN(TypeName)      \
   TypeName(const TypeName&);                    \
   void operator=(const TypeName&)
 #endif
@@ -132,10 +148,10 @@ typedef uint16_t uc16;
 // This should be used in the private: declarations for a class
 // that wants to prevent anyone from instantiating it. This is
 // especially useful for classes containing only static methods.
-#ifndef DISALLOW_IMPLICIT_CONSTRUCTORS
-#define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
+#ifndef DC_DISALLOW_IMPLICIT_CONSTRUCTORS
+#define DC_DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
   TypeName();                                    \
-  DISALLOW_COPY_AND_ASSIGN(TypeName)
+  DC_DISALLOW_COPY_AND_ASSIGN(TypeName)
 #endif
 
 namespace double_conversion {
@@ -277,7 +293,7 @@ class StringBuilder {
 
   bool is_finalized() const { return position_ < 0; }
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(StringBuilder);
+  DC_DISALLOW_IMPLICIT_CONSTRUCTORS(StringBuilder);
 };
 
 // The type-based aliasing rule allows the compiler to assume that pointers of

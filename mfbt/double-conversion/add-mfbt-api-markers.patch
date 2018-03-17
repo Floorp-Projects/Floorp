@@ -107,14 +107,14 @@ diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt
 -  static const int kBase10MaximalLength = 17;
 +  static const MFBT_DATA int kBase10MaximalLength = 17;
  
-   // Converts the given double 'v' to ascii. 'v' must not be NaN, +Infinity, or
-   // -Infinity. In SHORTEST_SINGLE-mode this restriction also applies to 'v'
-   // after it has been casted to a single-precision float. That is, in this
-   // mode static_cast<float>(v) must not be NaN, +Infinity or -Infinity.
+   // Converts the given double 'v' to digit characters. 'v' must not be NaN,
+   // +Infinity, or -Infinity. In SHORTEST_SINGLE-mode this restriction also
+   // applies to 'v' after it has been casted to a single-precision float. That
+   // is, in this mode static_cast<float>(v) must not be NaN, +Infinity or
+   // -Infinity.
    //
    // The result should be interpreted as buffer * 10^(point-length).
-   //
-@@ -327,44 +328,44 @@ class DoubleToStringConverter {
+@@ -332,44 +333,44 @@ class DoubleToStringConverter {
    // DoubleToAscii expects the given buffer to be big enough to hold all
    // digits and a terminating null-character. In SHORTEST-mode it expects a
    // buffer of at least kBase10MaximalLength + 1. In all other modes the
