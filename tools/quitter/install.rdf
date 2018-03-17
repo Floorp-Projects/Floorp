@@ -5,8 +5,9 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>quitter@mozilla.org</em:id>
-    <em:version>2016.03.10</em:version>
+    <em:version>2018.03.19</em:version>
     <em:type>2</em:type>
+    <em:bootstrap>true</em:bootstrap>
 
     <!-- Target Application this extension can install into,
          with minimum and maximum supported versions. -->
