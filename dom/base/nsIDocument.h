@@ -2289,13 +2289,10 @@ public:
   void DeleteAllProperties();
   void DeleteAllPropertiesFor(nsINode* aNode);
 
-  nsPropertyTable* PropertyTable(uint16_t aCategory) {
-    if (aCategory == 0)
-      return &mPropertyTable;
-    return GetExtraPropertyTable(aCategory);
+  nsPropertyTable& PropertyTable()
+  {
+    return mPropertyTable;
   }
-  uint32_t GetPropertyTableCount()
-  { return mExtraPropertyTables.Length() + 1; }
 
   /**
    * Sets the ID used to identify this part of the multipart document
@@ -3807,7 +3804,6 @@ protected:
   }
 
   ~nsIDocument();
-  nsPropertyTable* GetExtraPropertyTable(uint16_t aCategory);
 
   // Never ever call this. Only call GetWindow!
   nsPIDOMWindowOuter* GetWindowInternal() const;
@@ -3949,7 +3945,6 @@ protected:
 
   // Table of element properties for this document.
   nsPropertyTable mPropertyTable;
-  nsTArray<nsAutoPtr<nsPropertyTable> > mExtraPropertyTables;
 
   // Our cached .children collection
   nsCOMPtr<nsIHTMLCollection> mChildrenCollection;
