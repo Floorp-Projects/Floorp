@@ -10,7 +10,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMFileList.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
@@ -19,14 +18,12 @@ namespace dom {
 class BlobImpls;
 class File;
 
-class FileList final : public nsIDOMFileList,
+class FileList final : public nsISupports,
                        public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileList)
-
-  NS_DECL_NSIDOMFILELIST
 
   explicit FileList(nsISupports* aParent)
     : mParent(aParent)

@@ -3547,7 +3547,7 @@ var SessionStoreInternal = {
    *        a tab to speculatively connect on mouse hover.
    */
   speculativeConnectOnTabHover(tab) {
-    if (this._restore_on_demand && !tab.__SS_connectionPrepared && tab.hasAttribute("pending")) {
+    if (tab.__SS_lazyData && !tab.__SS_connectionPrepared) {
       let url = this.getLazyTabValue(tab, "url");
       let prepared = this.prepareConnectionToHost(url);
       // This is used to test if a connection has been made beforehand.
