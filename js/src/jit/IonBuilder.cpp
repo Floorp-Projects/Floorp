@@ -6519,7 +6519,7 @@ IonBuilder::jsop_initprop(PropertyName* name)
             }
         }
     }
-    MInstruction* last = *current->rbegin();
+    MInstructionReverseIterator last = current->rbegin();
 
     if (useFastPath && !forceInlineCaches()) {
         // This is definitely initializing an 'own' property of the object, treat
@@ -6541,7 +6541,7 @@ IonBuilder::jsop_initprop(PropertyName* name)
     // and check the most recent resume point to see if it needs updating too.
     current->pop();
     current->push(obj);
-    for (MInstructionReverseIterator riter = current->rbegin(); *riter != last; riter++) {
+    for (MInstructionReverseIterator riter = current->rbegin(); riter != last; riter++) {
         if (MResumePoint* resumePoint = riter->resumePoint()) {
             MOZ_ASSERT(resumePoint->pc() == pc);
             if (resumePoint->mode() == MResumePoint::ResumeAfter) {
