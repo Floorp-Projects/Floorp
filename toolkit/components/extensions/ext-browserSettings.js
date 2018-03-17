@@ -310,11 +310,6 @@ this.browserSettings = class extends ExtensionAPI {
                   "proxyConfig is not supported on android.");
               }
 
-              if (!Services.policies.isAllowed("changeProxySettings")) {
-                throw new ExtensionError(
-                  "Proxy settings are being managed by the Policies manager.");
-              }
-
               let value = details.value;
 
               if (!PROXY_TYPES_MAP.has(value.proxyType)) {
