@@ -181,7 +181,7 @@ MarkupView.prototype = {
     this.imagePreviewTooltip.stopTogglingOnHover();
   },
 
-  _onToolboxPickerHover: function(event, nodeFront) {
+  _onToolboxPickerHover: function(nodeFront) {
     this.showNode(nodeFront).then(() => {
       this._showContainerAsHovered(nodeFront);
     }, console.error);

@@ -22,7 +22,7 @@ let gProcess = undefined;
 function initChromeDebugger() {
   info("Initializing a chrome debugger process.");
   return new Promise(resolve => {
-    BrowserToolboxProcess.init(onClose, (event, _process) => {
+    BrowserToolboxProcess.init(onClose, _process => {
       info("Browser toolbox process started successfully.");
       resolve(_process);
     });

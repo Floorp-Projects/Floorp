@@ -201,8 +201,7 @@ var StarUI = {
     }
   },
 
-  _overlayLoaded: false,
-  _overlayLoading: false,
+  _bookmarkPopupInitialized: false,
   async showEditBookmarkPopup(aNode, aAnchorElement, aPosition, aIsNewBookmark, aUrl) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
@@ -214,32 +213,19 @@ var StarUI = {
     this._isNewBookmark = aIsNewBookmark;
     this._itemGuids = null;
 
-    // Performance: load the overlay the first time the panel is opened
-    // (see bug 392443).
-    if (this._overlayLoading)
-      return;
-
-    if (this._overlayLoaded) {
+    if (this._bookmarkPopupInitialized) {
       await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl);
       return;
     }
+    this._bookmarkPopupInitialized = true;
+    // Move the header (star, title, button) into the grid,
+    // so that it aligns nicely with the other items (bug 484022).
+    let header = this._element("editBookmarkPanelHeader");
+    let rows = this._element("editBookmarkPanelGrid").lastChild;
+    rows.insertBefore(header, rows.firstChild);
+    header.hidden = false;
 
-    this._overlayLoading = true;
-    document.loadOverlay(
-      "chrome://browser/content/places/editBookmarkOverlay.xul",
-      (aSubject, aTopic, aData) => {
-        // Move the header (star, title, button) into the grid,
-        // so that it aligns nicely with the other items (bug 484022).
-        let header = this._element("editBookmarkPanelHeader");
-        let rows = this._element("editBookmarkPanelGrid").lastChild;
-        rows.insertBefore(header, rows.firstChild);
-        header.hidden = false;
-
-        this._overlayLoading = false;
-        this._overlayLoaded = true;
-        this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl);
-      }
-    );
+    await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl);
   },
 
   async _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl) {

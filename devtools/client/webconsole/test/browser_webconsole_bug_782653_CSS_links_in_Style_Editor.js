@@ -46,7 +46,7 @@ function testViewSource() {
 
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);
-    toolbox.once("styleeditor-selected", (event, panel) => {
+    toolbox.once("styleeditor-selected", panel => {
       StyleEditorUI = panel.UI;
       deferred.resolve(panel);
     });
@@ -65,9 +65,7 @@ function onStyleEditorReady(panel) {
   ok(StyleEditorUI, "Style Editor UI is defined");
 
   function fireEvent(toolbox, href, line) {
-    toolbox.once("styleeditor-selected", function (evt) {
-      info(evt + " event fired");
-
+    toolbox.once("styleeditor-selected", function () {
       checkStyleEditorForSheetAndLine(href, line - 1).then(deferred.resolve);
     });
 

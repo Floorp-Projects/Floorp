@@ -315,32 +315,34 @@ NewWebConsoleFrame.prototype = {
    * @param object packet
    *        Notification packet received from the server.
    */
-  handleTabNavigated: async function(event, packet) {
-    if (event == "will-navigate") {
-      if (this.persistLog) {
-        // Add a _type to hit convertCachedPacket.
-        packet._type = true;
-        this.newConsoleOutput.dispatchMessageAdd(packet);
-      } else {
-        this.jsterm.clearOutput(false);
-      }
+  handleTabNavigated: async function(packet) {
+    if (packet.url) {
+      this.onLocationChange(packet.url, packet.title);
+    }
+
+    if (!packet.nativeConsoleAPI) {
+      this.logWarningAboutReplacedAPI();
+    }
+
+    // Wait for completion of any async dispatch before notifying that the console
+    // is fully updated after a page reload
+    await this.newConsoleOutput.waitAsyncDispatches();
+    this.emit("reloaded");
+  },
+
+  handleTabWillNavigate: function(packet) {
+    if (this.persistLog) {
+      // Add a _type to hit convertCachedPacket.
+      packet._type = true;
+      this.newConsoleOutput.dispatchMessageAdd(packet);
+    } else {
+      this.jsterm.clearOutput(false);
     }
 
     if (packet.url) {
       this.onLocationChange(packet.url, packet.title);
     }
-
-    if (event == "navigate" && !packet.nativeConsoleAPI) {
-      this.logWarningAboutReplacedAPI();
-    }
-
-    if (event == "navigate") {
-      // Wait for completion of any async dispatch before notifying that the console
-      // is fully updated after a page reload
-      await this.newConsoleOutput.waitAsyncDispatches();
-      this.emit("reloaded");
-    }
-  },
+  }
 };
 
 exports.NewWebConsoleFrame = NewWebConsoleFrame;

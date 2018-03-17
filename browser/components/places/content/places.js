@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from editBookmarkOverlay.js */
-// Via downloadsViewOverlay.xul -> allDownloadsViewOverlay.xul
+/* import-globals-from editBookmark.js */
+// Via allDownloadsViewOverlay.xul
 /* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
 /* import-globals-from ../PlacesUIUtils.jsm */
 /* import-globals-from ../../../../toolkit/components/places/PlacesUtils.jsm */
+/* import-globals-from ../../downloads/content/allDownloadsViewOverlay.js */
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -28,7 +29,7 @@ const HISTORY_LIBRARY_SEARCH_TELEMETRY = "PLACES_HISTORY_LIBRARY_SEARCH_TIME_MS"
 var PlacesOrganizer = {
   _places: null,
 
-  // IDs of fields from editBookmarkOverlay that should be hidden when infoBox
+  // IDs of fields from editBookmark that should be hidden when infoBox
   // is minimal. IDs should be kept in sync with the IDs of the elements
   // observing additionalInfoBroadcaster.
   _additionalInfoFields: [
@@ -134,6 +135,17 @@ var PlacesOrganizer = {
   },
 
   init: function PO_init() {
+    // Register the downloads view.
+    const DOWNLOADS_QUERY = "place:transition=" +
+      Ci.nsINavHistoryService.TRANSITION_DOWNLOAD +
+      "&sort=" +
+      Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+
+    ContentArea.setContentViewForQueryString(DOWNLOADS_QUERY,
+      () => new DownloadsPlacesView(document.getElementById("downloadsRichListBox"), false),
+      { showDetailsPane: false,
+        toolbarSet: "back-button, forward-button, organizeButton, clearDownloadsButton, libraryToolbarSpacer, searchFilter" });
+
     ContentArea.init();
 
     this._places = document.getElementById("placesList");

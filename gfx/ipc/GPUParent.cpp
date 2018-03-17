@@ -21,6 +21,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/layers/APZInputBridgeParent.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/APZUtils.h"    // for apz::InitializeGlobalState
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -125,7 +126,7 @@ GPUParent::Init(base::ProcessId aParentPid,
   CompositorThreadHolder::Start();
   // TODO: Bug 1406327, Start VRListenerThreadHolder when loading VR content.
   VRListenerThreadHolder::Start();
-  APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
+  APZThreadUtils::SetControllerThread(MessageLoop::current());
   apz::InitializeGlobalState();
   LayerTreeOwnerTracker::Initialize();
   mozilla::ipc::SetThisProcessName("GPU Process");
@@ -160,6 +161,22 @@ GPUParent::NotifyDeviceReset()
   GPUDeviceData data;
   RecvGetDeviceStatus(&data);
   Unused << SendNotifyDeviceReset(data);
+}
+
+PAPZInputBridgeParent*
+GPUParent::AllocPAPZInputBridgeParent(const uint64_t& aLayersId)
+{
+  APZInputBridgeParent* parent = new APZInputBridgeParent(aLayersId);
+  parent->AddRef();
+  return parent;
+}
+
+bool
+GPUParent::DeallocPAPZInputBridgeParent(PAPZInputBridgeParent* aActor)
+{
+  APZInputBridgeParent* parent = static_cast<APZInputBridgeParent*>(aActor);
+  parent->Release();
+  return true;
 }
 
 mozilla::ipc::IPCResult

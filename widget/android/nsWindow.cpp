@@ -57,6 +57,7 @@ using mozilla::Unused;
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/APZEventState.h"
+#include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "GLContext.h"
@@ -490,7 +491,7 @@ public:
 
         ScrollableLayerGuid guid;
         uint64_t blockId;
-        nsEventStatus status = controller->ReceiveInputEvent(input, &guid, &blockId);
+        nsEventStatus status = controller->InputBridge()->ReceiveInputEvent(input, &guid, &blockId);
 
         if (status == nsEventStatus_eConsumeNoDefault) {
             return true;
@@ -604,7 +605,7 @@ public:
 
         ScrollableLayerGuid guid;
         uint64_t blockId;
-        nsEventStatus status = controller->ReceiveInputEvent(input, &guid, &blockId);
+        nsEventStatus status = controller->InputBridge()->ReceiveInputEvent(input, &guid, &blockId);
 
         if (status == nsEventStatus_eConsumeNoDefault) {
             return true;
@@ -726,7 +727,7 @@ public:
         ScrollableLayerGuid guid;
         uint64_t blockId;
         nsEventStatus status =
-            controller->ReceiveInputEvent(input, &guid, &blockId);
+            controller->InputBridge()->ReceiveInputEvent(input, &guid, &blockId);
 
         if (status == nsEventStatus_eConsumeNoDefault) {
             return true;

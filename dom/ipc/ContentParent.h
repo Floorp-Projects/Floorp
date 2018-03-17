@@ -11,7 +11,6 @@
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
 #include "mozilla/gfx/GPUProcessListener.h"
-#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/HalTypes.h"
@@ -21,6 +20,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
+#include "ContentProcessHost.h"
 #include "nsDataHashtable.h"
 #include "nsPluginTags.h"
 #include "nsFrameMessageManager.h"
@@ -114,7 +114,6 @@ class ContentParent final : public PContentParent
                           , public gfx::GPUProcessListener
                           , public mozilla::MemoryReportingProcess
 {
-  typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
   typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
   typedef mozilla::ipc::PFileDescriptorSetParent PFileDescriptorSetParent;
   typedef mozilla::ipc::TestShellParent TestShellParent;
@@ -122,6 +121,7 @@ class ContentParent final : public PContentParent
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
+  friend class ContentProcessHost;
   friend class mozilla::PreallocatedProcessManagerImpl;
 
 public:
@@ -375,7 +375,7 @@ public:
     return mJSPluginID != nsFakePluginTag::NOT_JSPLUGIN;
   }
 
-  GeckoChildProcessHost* Process() const
+  ContentProcessHost* Process() const
   {
     return mSubprocess;
   }
@@ -1232,7 +1232,7 @@ private:
   // release these objects in ShutDownProcess.  See the comment there for more
   // details.
 
-  GeckoChildProcessHost* mSubprocess;
+  ContentProcessHost* mSubprocess;
   const TimeStamp mLaunchTS; // used to calculate time to start content process
   TimeStamp mActivateTS;
   ContentParent* mOpener;

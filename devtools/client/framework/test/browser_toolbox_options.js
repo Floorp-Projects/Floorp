@@ -268,7 +268,7 @@ async function toggleTool(node) {
   await deferred.promise;
 }
 
-function checkUnregistered(toolId, deferred, event, data) {
+function checkUnregistered(toolId, deferred, data) {
   if (data == toolId) {
     ok(true, "Correct tool removed");
     // checking tab on the toolbox
@@ -280,7 +280,7 @@ function checkUnregistered(toolId, deferred, event, data) {
   deferred.resolve();
 }
 
-function checkRegistered(toolId, deferred, event, data) {
+function checkRegistered(toolId, deferred, data) {
   if (data == toolId) {
     ok(true, "Correct tool added back");
     // checking tab on the toolbox

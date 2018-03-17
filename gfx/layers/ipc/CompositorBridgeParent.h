@@ -481,6 +481,13 @@ public:
 
   static CompositorBridgeParent* GetCompositorBridgeParentFromLayersId(const uint64_t& aLayersId);
 
+  /**
+   * This returns a reference to the IAPZCTreeManager "controller subinterface"
+   * to which pan/zoom-related events can be sent. The controller subinterface
+   * doesn't expose any sampler-thread APZCTreeManager methods.
+   */
+  static already_AddRefed<IAPZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
+
 #if defined(MOZ_WIDGET_ANDROID)
   gfx::IntSize GetEGLSurfaceSize() {
     return mEGLSurfaceSize;
@@ -495,13 +502,6 @@ private:
    * Called during destruction in order to release resources as early as possible.
    */
   void StopAndClearResources();
-
-  /**
-   * This returns a reference to the IAPZCTreeManager "controller subinterface"
-   * to which pan/zoom-related events can be sent. The controller subinterface
-   * doesn't expose any sampler-thread APZCTreeManager methods.
-   */
-  static already_AddRefed<IAPZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
 
   /**
    * Release compositor-thread resources referred to by |aID|.
