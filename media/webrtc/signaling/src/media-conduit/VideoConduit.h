@@ -311,7 +311,9 @@ public:
   uint64_t MozVideoLatencyAvg();
 
 private:
-  DISALLOW_COPY_AND_ASSIGN(WebrtcVideoConduit);
+  // Don't allow copying/assigning.
+  WebrtcVideoConduit(const WebrtcVideoConduit&) = delete;
+  void operator=(const WebrtcVideoConduit&) = delete;
 
   /** Shared statistics for receive and transmit video streams
    */
