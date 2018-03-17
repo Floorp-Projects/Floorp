@@ -26,7 +26,6 @@
   border-width: 0 1px 1px 0;
   display: grid;
   grid-template-columns: 1fr auto;
-  grid-column-gap: 10px;
   padding: 10px 20px;
 }
 
@@ -109,42 +108,33 @@
   vertical-align: middle;
 }
 
-.font-origin {
+.font-format-url {
+  text-transform: capitalize;
   margin-top: .2em;
   color: var(--grey-50);
-  justify-self: start;
 }
 
-.font-origin.system {
-  text-transform: capitalize;
-}
-
-.font-origin.remote {
-  display: grid;
-  grid-template-columns: 1fr 20px;
-}
-
-.font-origin.remote .url {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.font-origin .copy-icon {
-  border: 0;
-  padding: 0;
-  position: relative;
+.font-url {
+  margin-inline-start: .5em;
+  text-decoration: underline;
+  color: var(--theme-highlight-blue);
+  background: transparent;
+  border: none;
   cursor: pointer;
-  width: 12px;
-  height: 12px;
-  place-self: center;
+}
 
-  background: url(chrome://devtools/skin/images/copy.svg) no-repeat;
-  background-size: 12px;
-  background-position-x: -1px;
+.font-url::after {
+  content: "";
+  display: inline-block;
+  height: 13px;
+  width: 13px;
+  margin: -.3rem .15rem 0 0.25rem;
+  vertical-align: middle;
+  background-image: url(chrome://devtools-shim/content/aboutdevtools/images/external-link.svg);
+  background-repeat: no-repeat;
+  background-size: 13px 13px;
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-color);
-
+  fill: var(--blue-60);
 }
 
 #font-container .devtools-sidepanel-no-result + .accordion {
