@@ -614,7 +614,7 @@ this.tabs = class extends ExtensionAPI {
                       : Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
               triggeringPrincipal: context.principal,
             };
-            nativeTab.linkedBrowser.loadURI(url, options);
+            nativeTab.linkedBrowser.loadURIWithFlags(url, options);
           }
 
           if (updateProperties.active !== null) {
