@@ -725,10 +725,6 @@ private:
 class PrefEntry : public PLDHashEntryHdr
 {
 public:
-#ifdef DEBUG
-  // This field is before mPref to minimize sizeof(PrefEntry) on 64-bit.
-  uint32_t mAccessCount;
-#endif
   Pref* mPref; // Note: this is never null in a live entry.
 
   static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
@@ -744,9 +740,6 @@ public:
     auto entry = static_cast<PrefEntry*>(aEntry);
     auto prefName = static_cast<const char*>(aKey);
 
-#ifdef DEBUG
-    entry->mAccessCount = 0;
-#endif
     entry->mPref = new Pref(prefName);
   }
 
@@ -948,15 +941,7 @@ static Pref*
 pref_HashTableLookup(const char* aPrefName)
 {
   PrefEntry* entry = pref_HashTableLookupInner(aPrefName);
-  if (!entry) {
-    return nullptr;
-  }
-
-#ifdef DEBUG
-  entry->mAccessCount += 1;
-#endif
-
-  return entry->mPref;
+  return entry ? entry->mPref : nullptr;
 }
 
 static nsresult
@@ -3628,34 +3613,6 @@ Preferences::GetDefaultBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
 
   prefBranch.forget(aRetVal);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-Preferences::ReadStats(nsIPrefStatsCallback* aCallback)
-{
-#ifdef DEBUG
-  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    PrefEntry* entry = static_cast<PrefEntry*>(iter.Get());
-    aCallback->Visit(entry->mPref->Name(), entry->mAccessCount);
-  }
-
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-NS_IMETHODIMP
-Preferences::ResetStats()
-{
-#ifdef DEBUG
-  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    static_cast<PrefEntry*>(iter.Get())->mAccessCount = 0;
-  }
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 NS_IMETHODIMP
