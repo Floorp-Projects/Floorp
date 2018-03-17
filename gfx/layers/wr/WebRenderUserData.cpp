@@ -23,17 +23,12 @@ namespace layers {
 /* static */ bool
 WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame)
 {
-  if (!aFrame ||
-      !aFrame->HasProperty(nsIFrame::WebRenderUserDataProperty())) {
+  if (!aFrame) {
     return false;
   }
-  RefPtr<WebRenderUserData> data;
-  nsIFrame::WebRenderUserDataTable* userDataTable =
-    aFrame->GetProperty(nsIFrame::WebRenderUserDataProperty());
-
-  userDataTable->Get(static_cast<uint32_t>(DisplayItemType::TYPE_VIDEO), getter_AddRefs(data));
-  if (data && data->AsImageData()) {
-    return data->AsImageData()->IsAsync();
+  RefPtr<WebRenderImageData> data = GetWebRenderUserData<WebRenderImageData>(aFrame, static_cast<uint32_t>(DisplayItemType::TYPE_VIDEO));
+  if (data) {
+    return data->IsAsync();
   }
 
   return false;
@@ -360,6 +355,16 @@ WebRenderCanvasData::CreateCanvasRenderer()
   mCanvasRenderer = MakeUnique<WebRenderCanvasRendererAsync>(mWRManager);
   return mCanvasRenderer.get();
 }
+
+void
+DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable)
+{
+  for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
+    iter.UserData()->RemoveFromTable();
+  }
+  delete aTable;
+}
+
 
 } // namespace layers
 } // namespace mozilla

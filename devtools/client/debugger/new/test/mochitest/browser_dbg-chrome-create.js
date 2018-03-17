@@ -13,6 +13,8 @@ const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTe
 PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
 PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_FAILURE/);
 
+requestLongerTimeout(5);
+
 const { BrowserToolboxProcess } = ChromeUtils.import(
   "resource://devtools/client/framework/ToolboxProcess.jsm",
   {}
@@ -49,7 +51,6 @@ registerCleanupFunction(function() {
 
 add_task(async function() {
   // Windows XP and 8.1 test slaves are terribly slow at this test.
-  requestLongerTimeout(5);
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.debugger.remote-enabled", true);
 

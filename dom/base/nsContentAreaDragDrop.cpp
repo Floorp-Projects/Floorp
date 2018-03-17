@@ -20,7 +20,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMDragEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMRange.h"
 #include "nsIFormControl.h"

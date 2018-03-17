@@ -8,8 +8,7 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/SVGElementFactory.h"
 
-union nsHtml5ContentCreatorFunction
-{
+union nsHtml5ContentCreatorFunction {
   mozilla::dom::HTMLContentCreatorFunction html;
   mozilla::dom::SVGContentCreatorFunction svg;
 };

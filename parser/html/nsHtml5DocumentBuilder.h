@@ -14,16 +14,19 @@
 
 typedef nsIContent* nsIContentPtr;
 
-enum eHtml5FlushState {
-  eNotFlushing = 0,  // not flushing
-  eInFlush = 1,      // the Flush() method is on the call stack
-  eInDocUpdate = 2,  // inside an update batch on the document
+enum eHtml5FlushState
+{
+  eNotFlushing = 0, // not flushing
+  eInFlush = 1,     // the Flush() method is on the call stack
+  eInDocUpdate = 2, // inside an update batch on the document
 };
 
 class nsHtml5DocumentBuilder : public nsContentSink
 {
   using Encoding = mozilla::Encoding;
-  template <typename T> using NotNull = mozilla::NotNull<T>;
+  template<typename T>
+  using NotNull = mozilla::NotNull<T>;
+
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHtml5DocumentBuilder,
                                            nsContentSink)
@@ -35,19 +38,15 @@ public:
     *(mOwnedElements.AppendElement()) = aContent;
   }
 
-  nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
-                nsISupports* aContainer, nsIChannel* aChannel);
+  nsresult Init(nsIDocument* aDoc,
+                nsIURI* aURI,
+                nsISupports* aContainer,
+                nsIChannel* aChannel);
 
   // Getters and setters for fields from nsContentSink
-  nsIDocument* GetDocument()
-  {
-    return mDocument;
-  }
+  nsIDocument* GetDocument() { return mDocument; }
 
-  nsNodeInfoManager* GetNodeInfoManager()
-  {
-    return mNodeInfoManager;
-  }
+  nsNodeInfoManager* GetNodeInfoManager() { return mNodeInfoManager; }
 
   /**
    * Marks this parser as broken and tells the stream parser (if any) to
@@ -61,15 +60,9 @@ public:
    * Checks if this parser is broken. Returns a non-NS_OK (i.e. non-0)
    * value if broken.
    */
-  inline nsresult IsBroken()
-  {
-    return mBroken;
-  }
+  inline nsresult IsBroken() { return mBroken; }
 
-  inline bool IsComplete()
-  {
-    return !mParser;
-  }
+  inline bool IsComplete() { return !mParser; }
 
   inline void BeginDocUpdate()
   {
@@ -125,7 +118,6 @@ public:
   virtual nsresult FlushTags() override;
 
 protected:
-
   explicit nsHtml5DocumentBuilder(bool aRunsToCompletion);
   virtual ~nsHtml5DocumentBuilder();
 
@@ -139,8 +131,8 @@ protected:
    * and parsing more input could lead to a DOM where pieces of HTML source
    * that weren't supposed to become scripts become scripts.
    */
-  nsresult                             mBroken;
-  eHtml5FlushState                     mFlushState;
+  nsresult mBroken;
+  eHtml5FlushState mFlushState;
 };
 
 #endif // nsHtml5DocumentBuilder_h

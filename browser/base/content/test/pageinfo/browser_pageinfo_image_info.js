@@ -25,7 +25,6 @@ function test() {
   let uriToWaitFor = URI.replace(/ /g, "%20");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
                                  uriToWaitFor).then(function() {
-    // eslint-disable-next-line mozilla/no-cpows-in-tests
     var doc = gBrowser.contentDocumentAsCPOW;
     var testImg = doc.getElementById("test-image");
     var pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,

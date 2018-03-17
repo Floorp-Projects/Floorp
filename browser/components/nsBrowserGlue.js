@@ -1656,10 +1656,12 @@ BrowserGlue.prototype = {
         if (bookmarksUrl) {
           // Import from bookmarks.html file.
           try {
-            await BookmarkHTMLUtils.importFromURL(bookmarksUrl, {
-              replace: true,
-              source: PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP,
-            });
+            if (Services.policies.isAllowed("defaultBookmarks")) {
+              await BookmarkHTMLUtils.importFromURL(bookmarksUrl, {
+                replace: true,
+                source: PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP,
+              });
+            }
           } catch (e) {
             Cu.reportError("Bookmarks.html file could be corrupt. " + e);
           }
@@ -2313,6 +2315,7 @@ BrowserGlue.prototype = {
 
     // If version is current, or smart bookmarks are disabled, bail out.
     if (smartBookmarksCurrentVersion == -1 ||
+        !Services.policies.isAllowed("defaultBookmarks") ||
         smartBookmarksCurrentVersion >= SMART_BOOKMARKS_VERSION) {
       return;
     }

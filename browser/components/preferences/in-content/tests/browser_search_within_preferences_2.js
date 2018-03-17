@@ -3,8 +3,6 @@
  * This file contains tests for the Preferences search bar.
  */
 
-/* eslint-disable mozilla/no-cpows-in-tests */
-
 /**
  * Enabling searching functionality. Will display search bar from this testcase forward.
  */

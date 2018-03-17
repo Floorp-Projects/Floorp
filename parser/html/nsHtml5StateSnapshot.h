@@ -68,6 +68,7 @@ private:
   bool framesetOk;
   bool needToDropLF;
   bool quirks;
+
 public:
   nsHtml5StateSnapshot(
     jArray<nsHtml5StackNode*, int32_t> stack,

@@ -50,6 +50,7 @@
 
 #include <stdlib.h>
 #include <algorithm>
+#include <unordered_set>
 
 class gfxContext;
 class nsIContent;

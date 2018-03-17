@@ -11,7 +11,7 @@
 #include "nsIContentPolicy.idl"
 
 interface nsIDOMNode;
-interface nsIDOMDragEvent;
+interface nsIDOMEvent;
 interface nsISelection;
 
 %{C++
@@ -86,6 +86,8 @@ interface nsIDragService : nsISupports
    *
    * The aDragEvent must be supplied as the current screen coordinates of the
    * event are needed to calculate the image location.
+   *
+   * aDragEvent should be a DragEvent.  See bug 1444991.
    */
   [noscript]
   void invokeDragSessionWithImage(in nsIDOMNode aDOMNode,
@@ -96,7 +98,7 @@ interface nsIDragService : nsISupports
                                   in nsIDOMNode aImage,
                                   in long aImageX,
                                   in long aImageY,
-                                  in nsIDOMDragEvent aDragEvent,
+                                  in nsIDOMEvent aDragEvent,
                                   in DataTransferPtr aDataTransfer);
 
   /**
@@ -105,12 +107,14 @@ interface nsIDragService : nsISupports
    * event are needed to calculate the image location.
    *
    * Note: This method is deprecated for non-native code.
+   *
+   * aDragEvent should be a DragEvent.  See bug 1444991.
    */
   void invokeDragSessionWithSelection(in nsISelection aSelection,
                                       in AUTF8String aPrincipalURISpec,
                                       in nsIArray aTransferableArray,
                                       in unsigned long aActionType,
-                                      in nsIDOMDragEvent aDragEvent,
+                                      in nsIDOMEvent aDragEvent,
                                       in DataTransferPtr aDataTransfer);
 
   /**

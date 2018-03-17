@@ -5,7 +5,6 @@ module.exports = {
     "plugin:mozilla/mochitest-test"
   ],
   "rules": {
-    "mozilla/no-cpows-in-tests": "error",
     "mozilla/reject-importGlobalProperties": "error",
 
     // XXX These are rules that are enabled in the recommended configuration, but

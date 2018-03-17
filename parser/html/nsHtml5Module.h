@@ -10,19 +10,24 @@
 
 class nsHtml5Module
 {
-  public:
-    static void InitializeStatics();
-    static void ReleaseStatics();
-    static already_AddRefed<nsIParser> NewHtml5Parser();
-    static nsresult Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer, nsIChannel* aChannel);
-    static nsIThread* GetStreamParserThread();
-    static bool sOffMainThread;
-  private:
+public:
+  static void InitializeStatics();
+  static void ReleaseStatics();
+  static already_AddRefed<nsIParser> NewHtml5Parser();
+  static nsresult Initialize(nsIParser* aParser,
+                             nsIDocument* aDoc,
+                             nsIURI* aURI,
+                             nsISupports* aContainer,
+                             nsIChannel* aChannel);
+  static nsIThread* GetStreamParserThread();
+  static bool sOffMainThread;
+
+private:
 #ifdef DEBUG
-    static bool sNsHtml5ModuleInitialized;
+  static bool sNsHtml5ModuleInitialized;
 #endif
-    static nsIThread* sStreamParserThread;
-    static nsIThread* sMainThread;
+  static nsIThread* sStreamParserThread;
+  static nsIThread* sMainThread;
 };
 
 #endif // nsHtml5Module_h

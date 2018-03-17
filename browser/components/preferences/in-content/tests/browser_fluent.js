@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-cpows-in-tests */
 
 function whenMainPaneLoadedFinished() {
   return new Promise(function(resolve, reject) {

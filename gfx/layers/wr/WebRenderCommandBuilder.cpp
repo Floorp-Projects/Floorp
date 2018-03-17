@@ -728,17 +728,17 @@ WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData()
     if (!data->IsUsed()) {
       nsIFrame* frame = data->GetFrame();
 
-      MOZ_ASSERT(frame->HasProperty(nsIFrame::WebRenderUserDataProperty()));
+      MOZ_ASSERT(frame->HasProperty(WebRenderUserDataProperty::Key()));
 
-      nsIFrame::WebRenderUserDataTable* userDataTable =
-        frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
+      WebRenderUserDataTable* userDataTable =
+        frame->GetProperty(WebRenderUserDataProperty::Key());
 
       MOZ_ASSERT(userDataTable->Count());
 
-      userDataTable->Remove(data->GetDisplayItemKey());
+      userDataTable->Remove(WebRenderUserDataKey(data->GetDisplayItemKey(), data->GetType()));
 
       if (!userDataTable->Count()) {
-        frame->RemoveProperty(nsIFrame::WebRenderUserDataProperty());
+        frame->RemoveProperty(WebRenderUserDataProperty::Key());
       }
 
       if (data->GetType() == WebRenderUserData::UserDataType::eCanvas) {

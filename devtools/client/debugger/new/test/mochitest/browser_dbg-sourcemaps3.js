@@ -3,11 +3,11 @@
 
 // Tests loading sourcemapped sources, setting breakpoints, and
 // inspecting restored scopes.
+requestLongerTimeout(2);
 
 // This source map does not have source contents, so it's fetched separately
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  requestLongerTimeout(2);
   await pushPref("devtools.debugger.features.map-scopes", true);
 
   const dbg = await initDebugger("doc-sourcemaps3.html");

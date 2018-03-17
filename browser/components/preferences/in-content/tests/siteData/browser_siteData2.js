@@ -1,7 +1,5 @@
 "use strict";
 
-/* eslint-disable mozilla/no-cpows-in-tests */
-
 function promiseSettingsDialogClose() {
   return new Promise(resolve => {
     let win = gBrowser.selectedBrowser.contentWindow;

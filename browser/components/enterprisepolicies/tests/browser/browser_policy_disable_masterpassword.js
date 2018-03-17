@@ -37,7 +37,6 @@ async function checkDeviceManager({buttonIsDisabled}) {
 
 async function checkAboutPreferences({checkboxIsDisabled}) {
   await BrowserTestUtils.withNewTab("about:preferences#privacy", async browser => {
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   is(browser.contentDocument.getElementById("useMasterPassword").disabled, checkboxIsDisabled,
     "Master Password checkbox is in the correct state: " + checkboxIsDisabled);
 });

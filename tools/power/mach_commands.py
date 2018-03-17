@@ -11,10 +11,7 @@ from mach.decorators import (
     CommandArgument,
     CommandProvider,
 )
-from mozbuild.base import (
-    MachCommandBase,
-    MachCommandConditions as conditions,
-)
+from mozbuild.base import MachCommandBase
 
 
 def is_osx_10_10_or_greater(cls):
@@ -28,16 +25,17 @@ class MachCommands(MachCommandBase):
     '''
     Get system power consumption and related measurements.
     '''
+
     def __init__(self, context):
         MachCommandBase.__init__(self, context)
 
     @Command('power', category='misc',
-        conditions=[is_osx_10_10_or_greater],
-        description='Get system power consumption and related measurements for '
-        'all running browsers. Available only on Mac OS X 10.10 and above. '
-        'Requires root access.')
+             conditions=[is_osx_10_10_or_greater],
+             description='Get system power consumption and related measurements for '
+             'all running browsers. Available only on Mac OS X 10.10 and above. '
+             'Requires root access.')
     @CommandArgument('-i', '--interval', type=int, default=30000,
-        help='The sample period, measured in milliseconds. Defaults to 30000.')
+                     help='The sample period, measured in milliseconds. Defaults to 30000.')
     def power(self, interval):
         import os
         import re
@@ -53,7 +51,7 @@ class MachCommands(MachCommandBase):
         # password to be entered.
         try:
             subprocess.check_call(['sudo', 'true'])
-        except:
+        except Exception:
             print('\nsudo failed; aborting')
             return 1
 
@@ -136,7 +134,7 @@ class MachCommands(MachCommandBase):
             #
             # - 'kernel' is for the kernel.
             #
-            if re.search(r'(^Name|firefox|plugin-container|Safari\b|WebKit|Chrome|Terminal|WindowServer|kernel)', line):
+            if re.search(r'(^Name|firefox|plugin-container|Safari\b|WebKit|Chrome|Terminal|WindowServer|kernel)', line):  # NOQA: E501
                 print(line)
 
         return 0

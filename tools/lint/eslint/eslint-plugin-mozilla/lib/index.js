@@ -44,7 +44,6 @@ module.exports = {
     "no-aArgs": require("../lib/rules/no-aArgs"),
     "no-arbitrary-setTimeout": require("../lib/rules/no-arbitrary-setTimeout"),
     "no-compare-against-boolean-literals": require("../lib/rules/no-compare-against-boolean-literals"),
-    "no-cpows-in-tests": require("../lib/rules/no-cpows-in-tests"),
     "no-define-cc-etc": require("../lib/rules/no-define-cc-etc"),
     "no-single-arg-cu-import": require("../lib/rules/no-single-arg-cu-import"),
     "no-import-into-var-and-global":
