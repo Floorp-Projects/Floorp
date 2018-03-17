@@ -603,8 +603,6 @@ function run_test_real() {
 
   Services.prefs.setBoolPref("network.predictor.enabled", true);
   Services.prefs.setBoolPref("network.predictor.cleaned-up", true);
-  Services.prefs.setBoolPref("browser.cache.use_new_backend_temp", true);
-  Services.prefs.setIntPref("browser.cache.use_new_backend", 1);
   Services.prefs.setBoolPref("network.predictor.doing-tests", true);
 
   predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
@@ -615,8 +613,6 @@ function run_test_real() {
     Services.prefs.clearUserPref("network.predictor.preconnect-min-confidence");
     Services.prefs.clearUserPref("network.predictor.enabled");
     Services.prefs.clearUserPref("network.predictor.cleaned-up");
-    Services.prefs.clearUserPref("browser.cache.use_new_backend_temp");
-    Services.prefs.clearUserPref("browser.cache.use_new_backend");
     Services.prefs.clearUserPref("network.predictor.preresolve-min-confidence");
     Services.prefs.clearUserPref("network.predictor.enable-prefetch");
     Services.prefs.clearUserPref("network.predictor.prefetch-rolling-load-count");

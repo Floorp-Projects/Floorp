@@ -185,7 +185,6 @@ add_task(async function check_reopening_dialog() {
 add_task(async function check_opening_while_closing() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
   info("closing");
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   content.window.gSubDialog._topDialog.close();
   info("reopening immediately after calling .close()");
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);

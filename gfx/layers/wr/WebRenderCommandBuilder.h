@@ -114,15 +114,15 @@ public:
       *aOutIsRecycled = true;
     }
 
-    nsIFrame::WebRenderUserDataTable* userDataTable =
-      frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
+    WebRenderUserDataTable* userDataTable =
+      frame->GetProperty(WebRenderUserDataProperty::Key());
 
     if (!userDataTable) {
-      userDataTable = new nsIFrame::WebRenderUserDataTable();
-      frame->AddProperty(nsIFrame::WebRenderUserDataProperty(), userDataTable);
+      userDataTable = new WebRenderUserDataTable();
+      frame->AddProperty(WebRenderUserDataProperty::Key(), userDataTable);
     }
 
-    RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(aItem->GetPerFrameKey());
+    RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(WebRenderUserDataKey(aItem->GetPerFrameKey(), T::Type()));
     if (!data || (data->GetType() != T::Type())) {
       // To recreate a new user data, we should remove the data from the table first.
       if (data) {
@@ -146,25 +146,6 @@ public:
     }
     RefPtr<T> res = static_cast<T*>(data.get());
     return res.forget();
-  }
-
-  template<class T> already_AddRefed<T>
-  GetWebRenderUserData(nsIFrame* aFrame, uint32_t aPerFrameKey)
-  {
-    MOZ_ASSERT(aFrame);
-    nsIFrame::WebRenderUserDataTable* userDataTable =
-      aFrame->GetProperty(nsIFrame::WebRenderUserDataProperty());
-    if (!userDataTable) {
-      return nullptr;
-    }
-
-    RefPtr<WebRenderUserData> data = userDataTable->Get(aPerFrameKey);
-    if (data && (data->GetType() == T::Type())) {
-      RefPtr<T> result = static_cast<T*>(data.get());
-      return result.forget();
-    }
-
-    return nullptr;
   }
 
 private:

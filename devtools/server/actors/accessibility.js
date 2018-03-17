@@ -111,6 +111,12 @@ register("XULWindowAccessibleHighlighter", "xul-accessible");
  *         True if accessible object is defunct, false otherwise.
  */
 function isDefunct(accessible) {
+  // If accessibility is disabled, safely assume that the accessible object is
+  // now dead.
+  if (!Services.appinfo.accessibilityEnabled) {
+    return true;
+  }
+
   let defunct = false;
 
   try {
@@ -402,11 +408,13 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     if (this.refMap.size > 0) {
       try {
         if (this.rootDoc) {
-          this.purgeSubtree(this.a11yService.getAccessibleFor(this.rootDoc),
+          this.purgeSubtree(this.getRawAccessibleFor(this.rootDoc),
                             this.rootDoc);
         }
       } catch (e) {
         // Accessibility service might be already destroyed.
+      } finally {
+        this.refMap.clear();
       }
     }
 
@@ -446,10 +454,14 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   /**
    * Clean up accessible actors cache for a given accessible's subtree.
    *
-   * @param  {nsIAccessible} rawAccessible
+   * @param  {null|nsIAccessible} rawAccessible
    * @param  {null|Object}   rawNode
    */
   purgeSubtree(rawAccessible, rawNode) {
+    if (!rawAccessible) {
+      return;
+    }
+
     let actor = this.getRef(rawAccessible);
     if (actor && rawAccessible && !actor.isDefunct) {
       for (let child = rawAccessible.firstChild; child; child = child.nextSibling) {
@@ -490,11 +502,11 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     }
 
     if (isXUL(this.rootWin)) {
-      let doc = this.addRef(this.a11yService.getAccessibleFor(this.rootDoc));
+      let doc = this.addRef(this.getRawAccessibleFor(this.rootDoc));
       return Promise.resolve(doc);
     }
 
-    let doc = this.a11yService.getAccessibleFor(this.rootDoc);
+    let doc = this.getRawAccessibleFor(this.rootDoc);
     let state = {};
     doc.getState(state, {});
     if (state.value & Ci.nsIAccessibleStates.STATE_BUSY) {
@@ -504,10 +516,34 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     return Promise.resolve(this.addRef(doc));
   },
 
+  /**
+   * Get an accessible actor for a domnode actor.
+   * @param  {Object} domNode
+   *         domnode actor for which accessible actor is being created.
+   * @return {Promse}
+   *         A promise that resolves when accessible actor is created for a
+   *         domnode actor.
+   */
   getAccessibleFor(domNode) {
     // We need to make sure that the document is loaded processed by a11y first.
     return this.getDocument().then(() =>
-      this.addRef(this.a11yService.getAccessibleFor(domNode.rawNode)));
+      this.addRef(this.getRawAccessibleFor(domNode.rawNode)));
+  },
+
+  /**
+   * Get a raw accessible object for a raw node.
+   * @param  {DOMNode} rawNode
+   *         Raw node for which accessible object is being retrieved.
+   * @return {nsIAccessible}
+   *         Accessible object for a given DOMNode.
+   */
+  getRawAccessibleFor(rawNode) {
+    // Accessible can only be retrieved iff accessibility service is enabled.
+    if (!Services.appinfo.accessibilityEnabled) {
+      return null;
+    }
+
+    return this.a11yService.getAccessibleFor(rawNode);
   },
 
   async getAncestry(accessible) {
@@ -831,7 +867,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     // (for example, a <DIV> element that is used as a container for other
     // things) thus we need to find one that does.
     while (!rawAccessible && target) {
-      rawAccessible = this.a11yService.getAccessibleFor(target);
+      rawAccessible = this.getRawAccessibleFor(target);
       target = target.parentNode;
     }
     // If raw accessible object is defunct or detached, no need to cache it and

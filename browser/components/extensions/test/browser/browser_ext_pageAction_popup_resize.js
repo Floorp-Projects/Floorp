@@ -51,13 +51,11 @@ add_task(async function testPageActionPopupResize() {
        "Panel body should be wide enough to fit its contents");
   }
 
-  /* eslint-disable mozilla/no-cpows-in-tests */
   function setSize(size) {
     let elem = content.document.body.firstChild;
     elem.style.height = `${size}px`;
     elem.style.width = `${size}px`;
   }
-  /* eslint-enable mozilla/no-cpows-in-tests */
 
   let sizes = [
     200,
@@ -124,11 +122,9 @@ add_task(async function testPageActionPopupReflow() {
 
   browser = await awaitExtensionPanel(extension);
 
-  /* eslint-disable mozilla/no-cpows-in-tests */
   function setSize(size) {
     content.document.body.style.fontSize = `${size}px`;
   }
-  /* eslint-enable mozilla/no-cpows-in-tests */
 
   let dims = await alterContent(browser, setSize, 18);
 

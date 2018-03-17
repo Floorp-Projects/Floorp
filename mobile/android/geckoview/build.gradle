@@ -5,6 +5,12 @@ apply plugin: 'kotlin-android'
 
 apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
 
+// Non-official versions are like "61.0a1", where "a1" is the milestone.
+// This simply strips that off, leaving "61.0" in this example.
+def getAppVersionWithoutMilestone() {
+    return mozconfig.substs.MOZ_APP_VERSION.replaceFirst(/a[0-9]/, "")
+}
+
 // This converts MOZ_APP_VERSION into an integer
 // version code.
 //
@@ -12,18 +18,12 @@ apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
 // This gives us 3 digits for the major number, and 2 digits
 // each for the minor and build number. Beta and Release
 def computeVersionCode() {
-    String appVersion = mozconfig.substs.MOZ_APP_VERSION
+    String appVersion = getAppVersionWithoutMilestone()
 
     // Split on the dot delimiter, e.g. 58.1.1a1 -> ["58, "1", "1a1"]
     String[] parts = appVersion.split('\\.')
 
     assert parts.size() == 2 || parts.size() == 3
-
-    // Strip out any milestone string ('a1' in the above example)
-    // Present in Nightly (or local) builds only.
-    parts.eachWithIndex { ver, index ->
-        parts[index] = ver.replaceFirst(/[a-zA-Z].*/, "")
-    }
 
     // Major
     int code = Integer.parseInt(parts[0]) * 100000
@@ -37,6 +37,11 @@ def computeVersionCode() {
     }
 
     return code;
+}
+
+// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+def getBuildId() {
+    return file("${topobjdir}/buildid.h").getText('utf-8').split()[2]
 }
 
 android {
@@ -61,9 +66,7 @@ android {
         // For the benefit of future archaeologists:
         // GRE_BUILDID is exactly the same as MOZ_APP_BUILDID unless you're running
         // on XULRunner, which is never the case on Android.
-        // 
-        // Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
-        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${file("${topobjdir}/buildid.h").getText('utf-8').split()[2]}\"";
+        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${getBuildId()}\"";
         buildConfigField 'String', "MOZ_APP_ID", "\"${mozconfig.substs.MOZ_APP_ID}\"";
         buildConfigField 'String', "MOZ_APP_NAME", "\"${mozconfig.substs.MOZ_APP_NAME}\"";
         buildConfigField 'String', "MOZ_APP_VENDOR", "\"${mozconfig.substs.MOZ_APP_VENDOR}\"";
@@ -227,7 +230,13 @@ uploadArchives {
     repositories.mavenDeployer {
         pom.groupId = 'org.mozilla'
         pom.artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
-        pom.version = mozconfig.substs.MOZ_APP_VERSION
+
+        if (mozconfig.substs.RELEASE_OR_BETA == 'true') {
+            pom.version = mozconfig.substs.MOZ_APP_VERSION
+        } else {
+            pom.version = getAppVersionWithoutMilestone() + "." + getBuildId()
+        }
+
         pom.project {
             licenses {
                 license {

@@ -19,7 +19,7 @@ printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 // NOTE: White space and line terminators are now tested in
-// ecma_6/RegExp/character-class-escape-s.js.
+// non262/RegExp/character-class-escape-s.js.
 
 var non_space_chars = [ "\u200b", "\u200c", "\u200d" ];
 

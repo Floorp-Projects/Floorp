@@ -746,10 +746,10 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
              */
             chars = cx->pod_malloc<char16_t>(length);
             if (!chars)
-                return fail(JS::TranscodeResult_Throw);
+                return xdr->fail(JS::TranscodeResult_Throw);
         }
 
-        MOZ_ALWAYS_TRUE(xdr->codeChars(chars, length));
+        MOZ_TRY(xdr->codeChars(chars, length));
         atom = AtomizeChars(cx, chars, length);
         if (chars != stackChars)
             js_free(chars);

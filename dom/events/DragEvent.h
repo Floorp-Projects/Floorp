@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_DragEvent_h_
 #define mozilla_dom_DragEvent_h_
 
-#include "nsIDOMDragEvent.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/DragEventBinding.h"
 #include "mozilla/EventForwards.h"
@@ -17,22 +16,14 @@ namespace dom {
 
 class DataTransfer;
 
-class DragEvent : public MouseEvent,
-                  public nsIDOMDragEvent
+class DragEvent : public MouseEvent
 {
 public:
   DragEvent(EventTarget* aOwner,
             nsPresContext* aPresContext,
             WidgetDragEvent* aEvent);
 
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_DECL_NSIDOMDRAGEVENT
-
-  NS_FORWARD_TO_MOUSEEVENT
-  // And now pull in some things we just shadowed.
-  using UIEvent::GetRangeParent;
-  using UIEvent::RangeOffset;
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(DragEvent, MouseEvent)
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {

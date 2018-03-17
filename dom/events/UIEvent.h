@@ -125,6 +125,8 @@ protected:
   NS_FORWARD_NSIDOMUIEVENT(UIEvent::)                       \
   NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION       \
   using Event::GetCurrentTarget;  /* Forwarding shadows */  \
+  using UIEvent::GetRangeParent;                            \
+  using UIEvent::RangeOffset;                               \
   NS_IMETHOD DuplicatePrivateData() override                \
   {                                                         \
     return UIEvent::DuplicatePrivateData();                 \
