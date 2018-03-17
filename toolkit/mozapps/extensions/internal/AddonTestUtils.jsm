@@ -744,7 +744,7 @@ var AddonTestUtils = {
 
     rdf += '<Description about="urn:mozilla:install-manifest">\n';
 
-    let props = ["id", "version", "type", "internalName", "updateURL", "updateKey",
+    let props = ["id", "version", "type", "internalName", "updateURL",
                  "optionsURL", "optionsType", "aboutURL", "iconURL", "icon64URL",
                  "skinnable", "bootstrap", "unpack", "strictCompatibility",
                  "hasEmbeddedWebExtension"];
