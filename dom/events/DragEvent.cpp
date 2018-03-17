@@ -30,13 +30,6 @@ DragEvent::DragEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(DragEvent, MouseEvent)
-NS_IMPL_RELEASE_INHERITED(DragEvent, MouseEvent)
-
-NS_INTERFACE_MAP_BEGIN(DragEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDragEvent)
-NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
-
 void
 DragEvent::InitDragEvent(const nsAString& aType,
                          bool aCanBubble,
