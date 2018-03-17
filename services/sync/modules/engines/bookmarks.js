@@ -520,11 +520,10 @@ BookmarksEngine.prototype = {
         guidMap[parentName] = {};
 
       // If the entry already exists, remember that there are explicit dupes.
-
-      // Changes below need to be processed in bug 1295510 that's why eslint is ignored
-      // eslint-disable-next-line no-new-wrappers
-      let entry = new String(guid);
-      entry.hasDupe = guidMap[parentName][key] != null;
+      let entry = {
+        guid,
+        hasDupe: guidMap[parentName][key] != null,
+      };
 
       // Remember this item's GUID for its parent-name/key pair.
       guidMap[parentName][key] = entry;
@@ -581,14 +580,14 @@ BookmarksEngine.prototype = {
     let dupe = parent[key];
 
     if (dupe) {
-      this._log.trace("Mapped dupe: " + dupe);
+      this._log.trace("Mapped dupe", dupe);
       return dupe;
     }
 
     if (altKey) {
       dupe = parent[altKey];
       if (dupe) {
-        this._log.trace("Mapped dupe using altKey " + altKey + ": " + dupe);
+        this._log.trace("Mapped dupe using altKey " + altKey, dupe);
         return dupe;
       }
     }
@@ -717,10 +716,8 @@ BookmarksEngine.prototype = {
       return null;
     }
     let mapped = await this._mapDupe(item);
-    this._log.debug(item.id + " mapped to " + mapped);
-    // We must return a string, not an object, and the entries in the GUIDMap
-    // are created via "new String()" making them an object.
-    return mapped ? mapped.toString() : mapped;
+    this._log.debug(item.id + " mapped to", mapped);
+    return mapped ? mapped.guid : null;
   },
 
   // Called when _findDupe returns a dupe item and the engine has decided to

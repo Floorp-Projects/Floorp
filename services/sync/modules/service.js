@@ -751,7 +751,7 @@ Sync11Service.prototype = {
     // Now verify that info/collections shows them!
     this._log.debug("Verifying server collection records.");
     let info = await this._fetchInfo();
-    this._log.debug("info/collections is: " + info);
+    this._log.debug("info/collections is: " + info.data);
 
     if (info.status != 200) {
       this._log.warn("Non-200 info/collections response. Aborting.");
