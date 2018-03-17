@@ -99,7 +99,7 @@ bool
 TRRService::Enabled()
 {
   if (mConfirmationState == CONFIRM_INIT &&
-      (!mWaitForCaptive || mCaptiveIsPassed)) {
+      (!mWaitForCaptive || mCaptiveIsPassed || (mMode == MODE_TRRONLY))) {
     LOG(("TRRService::Enabled => CONFIRM_TRYING\n"));
     mConfirmationState = CONFIRM_TRYING;
   }
