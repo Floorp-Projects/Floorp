@@ -6,7 +6,6 @@
 // Disables security checking our updates which haven't been signed
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-ChromeUtils.import("resource://testing-common/httpd.js");
 var server;
 
 // nsIAddonUpdateCheckListener implementation
@@ -23,7 +22,7 @@ var updateListener = {
 
   onUpdateFinished: function onUpdateFinished() {
     if (++this._count == 2)
-      server.stop(do_test_finished);
+      do_test_finished();
   },
 };
 
@@ -44,9 +43,8 @@ function run_test() {
       Assert.notEqual(updates[0], null);
       Assert.notEqual(updates[1], null);
 
-      server = new HttpServer();
+      server = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
       server.registerDirectory("/", do_get_file("data"));
-      server.start(4444);
 
       updates[0].findUpdates(updateListener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
       updates[1].findUpdates(updateListener, AddonManager.UPDATE_WHEN_USER_REQUESTED);

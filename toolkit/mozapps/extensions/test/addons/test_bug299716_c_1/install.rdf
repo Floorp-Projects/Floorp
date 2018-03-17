@@ -25,6 +25,6 @@
     </em:targetApplication>
 
     <em:name>Bug 299716 test C</em:name>
-    <em:updateURL>http://localhost:4444/data/test_bug299716.rdf</em:updateURL>
+    <em:updateURL>http://example.com/data/test_bug299716.rdf</em:updateURL>
   </Description>
 </RDF>

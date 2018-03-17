@@ -26,7 +26,6 @@ const checkListener = {
 };
 
 // Get the HTTP server.
-ChromeUtils.import("resource://testing-common/httpd.js");
 var testserver;
 
 var ADDONS = [
@@ -127,18 +126,17 @@ function run_test() {
   Assert.ok(xpiFile.exists());
 
   // Create and configure the HTTP server.
-  testserver = new HttpServer();
+  testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
   testserver.registerDirectory("/addons/", addonsDir);
   testserver.registerDirectory("/data/", dataDir);
-  testserver.start(4444);
 
   // Make sure we can fetch the files over HTTP.
   const xhr = new XMLHttpRequest();
-  xhr.open("GET", "http://localhost:4444/addons/test_bug299716_a_2.xpi", false);
+  xhr.open("GET", "http://example.com/addons/test_bug299716_a_2.xpi", false);
   xhr.send(null);
   Assert.ok(xhr.status == 200);
 
-  xhr.open("GET", "http://localhost:4444/data/test_bug299716.rdf", false);
+  xhr.open("GET", "http://example.com/data/test_bug299716.rdf", false);
   xhr.send(null);
   Assert.ok(xhr.status == 200);
 
@@ -201,6 +199,6 @@ function run_test_pt4() {
       do_check_item(item, "0.2", ADDONS[i]);
     }
 
-    testserver.stop(do_test_finished);
+    do_test_finished();
   });
 }
