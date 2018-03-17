@@ -2207,27 +2207,13 @@ nsDocument::Init()
 void
 nsIDocument::DeleteAllProperties()
 {
-  for (uint32_t i = 0; i < GetPropertyTableCount(); ++i) {
-    PropertyTable(i)->DeleteAllProperties();
-  }
+  PropertyTable().DeleteAllProperties();
 }
 
 void
 nsIDocument::DeleteAllPropertiesFor(nsINode* aNode)
 {
-  for (uint32_t i = 0; i < GetPropertyTableCount(); ++i) {
-    PropertyTable(i)->DeleteAllPropertiesFor(aNode);
-  }
-}
-
-nsPropertyTable*
-nsIDocument::GetExtraPropertyTable(uint16_t aCategory)
-{
-  NS_ASSERTION(aCategory > 0, "Category 0 should have already been handled");
-  while (aCategory >= mExtraPropertyTables.Length() + 1) {
-    mExtraPropertyTables.AppendElement(new nsPropertyTable());
-  }
-  return mExtraPropertyTables[aCategory - 1];
+  PropertyTable().DeleteAllPropertiesFor(aNode);
 }
 
 bool
@@ -7303,28 +7289,20 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
     nsDOMAttributeMap::BlastSubtreeToPieces(adoptedNode);
 
     if (!sameDocument && oldDocument) {
-      uint32_t count = nodesWithProperties.Count();
-      for (uint32_t j = 0; j < oldDocument->GetPropertyTableCount(); ++j) {
-        for (uint32_t i = 0; i < count; ++i) {
-          // Remove all properties.
-          oldDocument->PropertyTable(j)->
-            DeleteAllPropertiesFor(nodesWithProperties[i]);
-        }
+      for (nsINode* node : nodesWithProperties) {
+        // Remove all properties.
+        oldDocument->PropertyTable().DeleteAllPropertiesFor(node);
       }
     }
 
     return nullptr;
   }
 
-  uint32_t count = nodesWithProperties.Count();
   if (!sameDocument && oldDocument) {
-    for (uint32_t j = 0; j < oldDocument->GetPropertyTableCount(); ++j) {
-      nsPropertyTable *oldTable = oldDocument->PropertyTable(j);
-      nsPropertyTable *newTable = PropertyTable(j);
-      for (uint32_t i = 0; i < count; ++i) {
-        rv = oldTable->TransferOrDeleteAllPropertiesFor(nodesWithProperties[i],
-                                                        newTable);
-      }
+    nsPropertyTable& oldTable = oldDocument->PropertyTable();
+    nsPropertyTable& newTable = PropertyTable();
+    for (nsINode* node : nodesWithProperties) {
+      rv = oldTable.TransferOrDeleteAllPropertiesFor(node, newTable);
     }
 
     if (rv.Failed()) {
@@ -11883,11 +11861,6 @@ nsIDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aSizes) const
 
   aSizes.mPropertyTablesSize +=
     mPropertyTable.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
-  for (uint32_t i = 0, count = mExtraPropertyTables.Length();
-       i < count; ++i) {
-    aSizes.mPropertyTablesSize +=
-      mExtraPropertyTables[i]->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
-  }
 
   if (EventListenerManager* elm = GetExistingListenerManager()) {
     aSizes.mDOMEventListenersCount += elm->ListenerCount();
