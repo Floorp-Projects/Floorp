@@ -82,7 +82,6 @@ FINAL_LIBRARY = 'xul'
 
 TEST_DIRS += [
     'test/extensions/bootstrap',
-    'test/extensions/traditional',
 ]
 
 MOCHITEST_MANIFESTS += [
