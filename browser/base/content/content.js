@@ -234,30 +234,35 @@ var AboutNetAndCertErrorListener = {
     chromeGlobal.addEventListener("AboutNetErrorResetPreferences", this, false, true);
   },
 
-  get isAboutNetError() {
-    return content.document.documentURI.startsWith("about:neterror");
+  isAboutNetError(doc) {
+    return doc.documentURI.startsWith("about:neterror");
   },
 
-  get isAboutCertError() {
-    return content.document.documentURI.startsWith("about:certerror");
+  isAboutCertError(doc) {
+    return doc.documentURI.startsWith("about:certerror");
   },
 
   receiveMessage(msg) {
-    if (!this.isAboutCertError) {
-      return;
-    }
+    if (msg.name == "CertErrorDetails") {
+      let frameDocShell = WebNavigationFrames.findDocShell(msg.data.frameId, docShell);
+      // We need nsIWebNavigation to access docShell.document.
+      frameDocShell && frameDocShell.QueryInterface(Ci.nsIWebNavigation);
+      if (!frameDocShell || !this.isAboutCertError(frameDocShell.document)) {
+        return;
+      }
 
-    switch (msg.name) {
-      case "CertErrorDetails":
-        this.onCertErrorDetails(msg);
-        break;
-      case "Browser:CaptivePortalFreed":
-        this.onCaptivePortalFreed(msg);
-        break;
+      this.onCertErrorDetails(msg, frameDocShell);
+    } else if (msg.name == "Browser:CaptivePortalFreed") {
+      // TODO: This check is not correct for frames.
+      if (!this.isAboutCertError(content.document)) {
+        return;
+      }
+
+      this.onCaptivePortalFreed(msg);
     }
   },
 
-  _getCertValidityRange() {
+  _getCertValidityRange(docShell) {
     let {securityInfo} = docShell.failedChannel;
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
     let certs = securityInfo.failedCertChain.getEnumerator();
@@ -275,10 +280,12 @@ var AboutNetAndCertErrorListener = {
     return {notBefore, notAfter};
   },
 
-  onCertErrorDetails(msg) {
-    let div = content.document.getElementById("certificateErrorText");
+  onCertErrorDetails(msg, docShell) {
+    let doc = docShell.document;
+
+    let div = doc.getElementById("certificateErrorText");
     div.textContent = msg.data.info;
-    let learnMoreLink = content.document.getElementById("learnMoreLink");
+    let learnMoreLink = doc.getElementById("learnMoreLink");
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
 
     switch (msg.data.code) {
@@ -301,7 +308,7 @@ var AboutNetAndCertErrorListener = {
         let lastFetched = Services.prefs.getIntPref(PREF_BLOCKLIST_LAST_FETCHED, 0) * 1000;
 
         let now = Date.now();
-        let certRange = this._getCertValidityRange();
+        let certRange = this._getCertValidityRange(docShell);
 
         let approximateDate = now - difference * 1000;
         // If the difference is more than a day, we last fetched the date in the last 5 days,
@@ -315,17 +322,12 @@ var AboutNetAndCertErrorListener = {
           // negative difference means local time is behind server time
           approximateDate = formatter.format(new Date(approximateDate));
 
-          content.document.getElementById("wrongSystemTime_URL")
-            .textContent = content.document.location.hostname;
-          content.document.getElementById("wrongSystemTime_systemDate")
-            .textContent = systemDate;
-          content.document.getElementById("wrongSystemTime_actualDate")
-            .textContent = approximateDate;
+          doc.getElementById("wrongSystemTime_URL").textContent = doc.location.hostname;
+          doc.getElementById("wrongSystemTime_systemDate").textContent = systemDate;
+          doc.getElementById("wrongSystemTime_actualDate").textContent = approximateDate;
 
-          content.document.getElementById("errorShortDesc")
-            .style.display = "none";
-          content.document.getElementById("wrongSystemTimePanel")
-            .style.display = "block";
+          doc.getElementById("errorShortDesc").style.display = "none";
+          doc.getElementById("wrongSystemTimePanel").style.display = "block";
 
         // If there is no clock skew with Kinto servers, check against the build date.
         // (The Kinto ping could have happened when the time was still right, or not at all)
@@ -348,15 +350,13 @@ var AboutNetAndCertErrorListener = {
               dateStyle: "short"
             });
 
-            content.document.getElementById("wrongSystemTimeWithoutReference_URL")
-              .textContent = content.document.location.hostname;
-            content.document.getElementById("wrongSystemTimeWithoutReference_systemDate")
+            doc.getElementById("wrongSystemTimeWithoutReference_URL")
+              .textContent = doc.location.hostname;
+            doc.getElementById("wrongSystemTimeWithoutReference_systemDate")
               .textContent = formatter.format(systemDate);
 
-            content.document.getElementById("errorShortDesc")
-              .style.display = "none";
-            content.document.getElementById("wrongSystemTimeWithoutReferencePanel")
-              .style.display = "block";
+            doc.getElementById("errorShortDesc").style.display = "none";
+            doc.getElementById("wrongSystemTimeWithoutReferencePanel").style.display = "block";
           }
         }
         learnMoreLink.href = baseURL + "time-errors";
@@ -369,13 +369,20 @@ var AboutNetAndCertErrorListener = {
   },
 
   handleEvent(aEvent) {
-    if (!this.isAboutNetError && !this.isAboutCertError) {
+    let doc;
+    if (aEvent.originalTarget instanceof Ci.nsIDOMDocument) {
+      doc = aEvent.originalTarget;
+    } else {
+      doc = aEvent.originalTarget.ownerDocument;
+    }
+
+    if (!this.isAboutNetError(doc) && !this.isAboutCertError(doc)) {
       return;
     }
 
     switch (aEvent.type) {
     case "AboutNetErrorLoad":
-      this.onPageLoad(aEvent);
+      this.onPageLoad(aEvent.originalTarget, doc.defaultView);
       break;
     case "AboutNetErrorOpenCaptivePortal":
       this.openCaptivePortalPage(aEvent);
@@ -402,18 +409,16 @@ var AboutNetAndCertErrorListener = {
     return false;
   },
 
-  onPageLoad(evt) {
+  onPageLoad(originalTarget, win) {
     // Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
     const TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN = 0;
 
-    if (this.isAboutCertError) {
-      let originalTarget = evt.originalTarget;
-      let ownerDoc = originalTarget.ownerDocument;
-      ClickEventHandler.onCertError(originalTarget, ownerDoc);
+    if (this.isAboutCertError(win.document)) {
+      ClickEventHandler.onCertError(originalTarget, win);
     }
 
     let automatic = Services.prefs.getBoolPref("security.ssl.errorReporting.automatic");
-    content.dispatchEvent(new content.CustomEvent("AboutNetErrorOptions", {
+    win.dispatchEvent(new win.CustomEvent("AboutNetErrorOptions", {
       detail: JSON.stringify({
         enabled: Services.prefs.getBoolPref("security.ssl.errorReporting.enabled"),
         changedCertPrefs: this.changedCertPrefs(),
@@ -442,9 +447,7 @@ var AboutNetAndCertErrorListener = {
     // If we're enabling reports, send a report for this failure.
     if (evt.detail) {
       let win = evt.originalTarget.ownerGlobal;
-      let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell);
+      let docShell = win.document.docShell;
 
       let {securityInfo} = docShell.failedChannel;
       securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
@@ -478,13 +481,13 @@ var ClickEventHandler = {
 
     // Handle click events from about pages
     if (event.button == 0) {
-      if (ownerDoc.documentURI.startsWith("about:certerror")) {
-        this.onCertError(originalTarget, ownerDoc);
+      if (AboutNetAndCertErrorListener.isAboutCertError(ownerDoc)) {
+        this.onCertError(originalTarget, ownerDoc.defaultView);
         return;
       } else if (ownerDoc.documentURI.startsWith("about:blocked")) {
         this.onAboutBlocked(originalTarget, ownerDoc);
         return;
-      } else if (ownerDoc.documentURI.startsWith("about:neterror")) {
+      } else if (AboutNetAndCertErrorListener.isAboutNetError(ownerDoc)) {
         this.onAboutNetError(event, ownerDoc.documentURI);
         return;
       }
@@ -538,9 +541,7 @@ var ClickEventHandler = {
       // Only when the owner doc has |mixedContentChannel| and the same origin
       // should we allow mixed content.
       json.allowMixedContent = false;
-      let docshell = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIWebNavigation)
-                             .QueryInterface(Ci.nsIDocShell);
+      let docshell = ownerDoc.docShell;
       if (docShell.mixedContentChannel) {
         const sm = Services.scriptSecurityManager;
         try {
@@ -562,14 +563,13 @@ var ClickEventHandler = {
     }
   },
 
-  onCertError(targetElement, ownerDoc) {
-    let docShell = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsIWebNavigation)
-                                       .QueryInterface(Ci.nsIDocShell);
+  onCertError(targetElement, win) {
+    let docShell = win.document.docShell;
     sendAsyncMessage("Browser:CertExceptionError", {
-      location: ownerDoc.location.href,
+      frameId: WebNavigationFrames.getFrameId(win),
+      location: win.document.location.href,
       elementId: targetElement.getAttribute("id"),
-      isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView),
+      isTopFrame: (win.parent === win),
       securityInfoAsString: getSerializedSecurityInfo(docShell),
     });
   },

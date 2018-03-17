@@ -131,6 +131,7 @@ def run_process(config, cmd):
         proc.wait()
     except KeyboardInterrupt:
         proc.kill()
+        return 1
 
 
 def setup(root):
@@ -163,6 +164,7 @@ def lint(paths, config, **lintargs):
             cmd.extend(['--append-config={}'.format(c) for c in configs])
 
         cmd.extend(paths)
-        run_process(config, cmd)
+        if run_process(config, cmd):
+            break
 
     return results

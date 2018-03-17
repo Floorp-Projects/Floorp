@@ -1771,8 +1771,8 @@ DebuggerServer.ObjectActorPreviewers.Object = [
         obj.class != "StyleSheetList" &&
         obj.class != "CSSValueList" &&
         obj.class != "NamedNodeMap" &&
-        !(rawObj instanceof Ci.nsIDOMFileList ||
-          rawObj instanceof Ci.nsIDOMNodeList)) {
+        obj.class != "FileList" &&
+        obj.class != "NodeList") {
       return false;
     }
 

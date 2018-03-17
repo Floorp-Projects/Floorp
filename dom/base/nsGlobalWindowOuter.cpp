@@ -144,7 +144,6 @@
 #include "nsQueryObject.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
-#include "nsIDOMFileList.h"
 #include "nsIURIFixup.h"
 #include "nsIURIMutator.h"
 #ifndef DEBUG

@@ -17,7 +17,6 @@
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
-#include "nsIDOMFileList.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
