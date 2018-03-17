@@ -207,6 +207,22 @@
       "type": "boolean"
     },
 
+    "EnableTrackingProtection": {
+      "description": "Enables or disables tracking protection and optionally locks it.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "Value": {
+          "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      },
+      "required": ["Value"]
+    },
+
     "FlashPlugin": {
       "description": "Allow or deny flash plugin usage.",
       "first_available": "60.0",
@@ -265,6 +281,14 @@
           }
         }
       }
+    },
+
+    "NoDefaultBookmarks": {
+      "description": "Don't create the default bookmarks bundled with Firefox, nor the Smart Bookmarks (Most Visited, Recent Tags). Note: this policy is only effective if used before the first run of the profile.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
     },
 
     "Popups": {

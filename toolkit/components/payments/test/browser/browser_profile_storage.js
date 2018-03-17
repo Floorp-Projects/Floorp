@@ -1,8 +1,5 @@
 "use strict";
 
-// Disable CPOW checks because they have false-positives from use of ContentTask in a helper.
-/* eslint-disable mozilla/no-cpows-in-tests */
-
 const methodData = [PTU.MethodData.basicCard];
 const details = PTU.Details.total60USD;
 

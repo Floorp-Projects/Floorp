@@ -25,6 +25,7 @@
 #include "mozilla/layers/TextureClient.h" // for TextureClient
 #include "mozilla/layers/TextureClientPool.h" // for TextureClientPool
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/SyncObject.h" // for SyncObjectClient
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"

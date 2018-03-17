@@ -15,61 +15,49 @@
 
 class nsHtml5Speculation final : public nsAHtml5TreeOpSink
 {
-  public:
-    nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,
-                       int32_t aStart, 
-                       int32_t aStartLineNumber, 
-                       nsAHtml5TreeBuilderState* aSnapshot);
-    
-    ~nsHtml5Speculation();
+public:
+  nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,
+                     int32_t aStart,
+                     int32_t aStartLineNumber,
+                     nsAHtml5TreeBuilderState* aSnapshot);
 
-    nsHtml5OwningUTF16Buffer* GetBuffer()
-    {
-      return mBuffer;
-    }
-    
-    int32_t GetStart()
-    {
-      return mStart;
-    }
+  ~nsHtml5Speculation();
 
-    int32_t GetStartLineNumber()
-    {
-      return mStartLineNumber;
-    }
-    
-    nsAHtml5TreeBuilderState* GetSnapshot()
-    {
-      return mSnapshot;
-    }
+  nsHtml5OwningUTF16Buffer* GetBuffer() { return mBuffer; }
 
-    /**
-     * Flush the operations from the tree operations from the argument
-     * queue unconditionally.
-     */
-    virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) override;
+  int32_t GetStart() { return mStart; }
 
-    void FlushToSink(nsAHtml5TreeOpSink* aSink);
+  int32_t GetStartLineNumber() { return mStartLineNumber; }
 
-  private:
-    /**
-     * The first buffer in the pending UTF-16 buffer queue
-     */
-    RefPtr<nsHtml5OwningUTF16Buffer>  mBuffer;
-    
-    /**
-     * The start index of this speculation in the first buffer
-     */
-    int32_t                             mStart;
+  nsAHtml5TreeBuilderState* GetSnapshot() { return mSnapshot; }
 
-    /**
-     * The current line number at the start of the speculation
-     */
-    int32_t                             mStartLineNumber;
-    
-    nsAutoPtr<nsAHtml5TreeBuilderState> mSnapshot;
+  /**
+   * Flush the operations from the tree operations from the argument
+   * queue unconditionally.
+   */
+  virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) override;
 
-    nsTArray<nsHtml5TreeOperation>      mOpQueue;
+  void FlushToSink(nsAHtml5TreeOpSink* aSink);
+
+private:
+  /**
+   * The first buffer in the pending UTF-16 buffer queue
+   */
+  RefPtr<nsHtml5OwningUTF16Buffer> mBuffer;
+
+  /**
+   * The start index of this speculation in the first buffer
+   */
+  int32_t mStart;
+
+  /**
+   * The current line number at the start of the speculation
+   */
+  int32_t mStartLineNumber;
+
+  nsAutoPtr<nsAHtml5TreeBuilderState> mSnapshot;
+
+  nsTArray<nsHtml5TreeOperation> mOpQueue;
 };
 
 #endif // nsHtml5Speculation_h

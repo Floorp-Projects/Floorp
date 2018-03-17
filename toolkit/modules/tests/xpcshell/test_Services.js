@@ -24,7 +24,6 @@ function run_test() {
   checkService("appShell", Ci.nsIAppShellService);
   checkService("appinfo", Ci.nsIXULRuntime);
   checkService("blocklist", Ci.nsIBlocklistService);
-  checkService("cache", Ci.nsICacheService);
   checkService("cache2", Ci.nsICacheStorageService);
   checkService("clipboard", Ci.nsIClipboard);
   checkService("console", Ci.nsIConsoleService);

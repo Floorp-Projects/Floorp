@@ -31,9 +31,7 @@ nsHtml5AtomTable::nsHtml5AtomTable()
 #endif
 }
 
-nsHtml5AtomTable::~nsHtml5AtomTable()
-{
-}
+nsHtml5AtomTable::~nsHtml5AtomTable() {}
 
 nsAtom*
 nsHtml5AtomTable::GetAtom(const nsAString& aKey)

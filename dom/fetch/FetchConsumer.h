@@ -19,14 +19,13 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
-class WorkerHolder;
-class WorkerPrivate;
+class ThreadSafeWorkerRef;
 
 template <class Derived> class FetchBody;
 
-// FetchBody is not thread-safe but we need to move it around threads.
-// In order to keep it alive all the time, we use a WorkerHolder, if created on
-// workers, plus a this consumer.
+// FetchBody is not thread-safe but we need to move it around threads.  In order
+// to keep it alive all the time, we use a ThreadSafeWorkerRef, if created on
+// workers.
 template <class Derived>
 class FetchBodyConsumer final : public nsIObserver
                               , public nsSupportsWeakReference
@@ -48,7 +47,7 @@ public:
   ReleaseObject();
 
   void
-  BeginConsumeBodyMainThread();
+  BeginConsumeBodyMainThread(ThreadSafeWorkerRef* aWorkerRef);
 
   void
   ContinueConsumeBody(nsresult aStatus, uint32_t aLength, uint8_t* aResult,
@@ -59,12 +58,6 @@ public:
 
   void
   ShutDownMainThreadConsuming();
-
-  WorkerPrivate*
-  GetWorkerPrivate() const
-  {
-    return mWorkerPrivate;
-  }
 
   void
   NullifyConsumeBodyPump()
@@ -79,7 +72,6 @@ public:
 private:
   FetchBodyConsumer(nsIEventTarget* aMainThreadEventTarget,
                     nsIGlobalObject* aGlobalObject,
-                    WorkerPrivate* aWorkerPrivate,
                     FetchBody<Derived>* aBody,
                     nsIInputStream* aBodyStream,
                     Promise* aPromise,
@@ -89,9 +81,6 @@ private:
 
   void
   AssertIsOnTargetThread() const;
-
-  bool
-  RegisterWorkerHolder();
 
   nsCOMPtr<nsIThread> mTargetThread;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
@@ -107,15 +96,7 @@ private:
   MutableBlobStorage::MutableBlobStorageType mBlobStorageType;
   nsCString mBodyMimeType;
 
-  // Set when consuming the body is attempted on a worker.
-  // Unset when consumption is done/aborted.
-  // This WorkerHolder keeps alive the consumer via a cycle.
-  UniquePtr<WorkerHolder> mWorkerHolder;
-
   nsCOMPtr<nsIGlobalObject> mGlobal;
-
-  // Always set whenever the FetchBodyConsumer is created on the worker thread.
-  WorkerPrivate* mWorkerPrivate;
 
   // Touched on the main-thread only.
   nsCOMPtr<nsIInputStreamPump> mConsumeBodyPump;

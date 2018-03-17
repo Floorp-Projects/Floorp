@@ -2,14 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAtom.h"
-#include "nsString.h"
-#include "jArray.h"
 #include "nsHtml5Portability.h"
+#include "jArray.h"
+#include "nsAtom.h"
 #include "nsHtml5TreeBuilder.h"
+#include "nsString.h"
 
 nsAtom*
-nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf, int32_t length, nsHtml5AtomTable* interner)
+nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf,
+                                           int32_t length,
+                                           nsHtml5AtomTable* interner)
 {
   NS_ASSERTION(interner, "Didn't get an atom service.");
   return interner->GetAtom(nsDependentSubstring(buf, buf + length));
@@ -36,8 +38,10 @@ nsHtml5Portability::newStringFromBuffer(char16_t* buf,
   if (!length) {
     return nsHtml5String::EmptyString();
   }
-  if (maybeAtomize && !ContainsWhiteSpace(mozilla::MakeSpan(buf + offset, length))) {
-    return nsHtml5String::FromAtom(NS_AtomizeMainThread(nsDependentSubstring(buf + offset, length)));
+  if (maybeAtomize &&
+      !ContainsWhiteSpace(mozilla::MakeSpan(buf + offset, length))) {
+    return nsHtml5String::FromAtom(
+      NS_AtomizeMainThread(nsDependentSubstring(buf + offset, length)));
   }
   return nsHtml5String::FromBuffer(buf + offset, length, treeBuilder);
 }
@@ -60,13 +64,13 @@ nsHtml5Portability::newStringFromString(nsHtml5String string)
   return string.Clone();
 }
 
-jArray<char16_t,int32_t>
+jArray<char16_t, int32_t>
 nsHtml5Portability::newCharArrayFromLocal(nsAtom* local)
 {
   nsAutoString temp;
   local->ToString(temp);
   int32_t len = temp.Length();
-  jArray<char16_t,int32_t> arr = jArray<char16_t,int32_t>::newJArray(len);
+  jArray<char16_t, int32_t> arr = jArray<char16_t, int32_t>::newJArray(len);
   memcpy(arr, temp.BeginReading(), len * sizeof(char16_t));
   return arr;
 }
@@ -77,7 +81,7 @@ nsHtml5Portability::newCharArrayFromString(nsHtml5String string)
   MOZ_RELEASE_ASSERT(string);
   uint32_t len = string.Length();
   MOZ_RELEASE_ASSERT(len < INT32_MAX);
-  jArray<char16_t,int32_t> arr = jArray<char16_t,int32_t>::newJArray(len);
+  jArray<char16_t, int32_t> arr = jArray<char16_t, int32_t>::newJArray(len);
   string.CopyToBuffer(arr);
   return arr;
 }
@@ -96,7 +100,9 @@ nsHtml5Portability::newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner)
 }
 
 bool
-nsHtml5Portability::localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t length)
+nsHtml5Portability::localEqualsBuffer(nsAtom* local,
+                                      char16_t* buf,
+                                      int32_t length)
 {
   return local->Equals(buf, length);
 }

@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-[Pref="dom.dialog_element.enabled"]
+[Pref="dom.dialog_element.enabled", HTMLConstructor]
 interface HTMLDialogElement : HTMLElement {
   [CEReactions, SetterThrows]
   attribute boolean open;

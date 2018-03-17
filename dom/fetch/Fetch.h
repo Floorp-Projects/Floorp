@@ -102,6 +102,9 @@ public:
   virtual void
   NullifyStream() = 0;
 
+  virtual void
+  MarkAsRead() = 0;
+
   virtual JSObject*
   ReadableStreamBody() = 0;
 };
@@ -238,6 +241,12 @@ public:
   {
     MOZ_ASSERT(mReadableStreamBody);
     return mReadableStreamBody;
+  }
+
+  void
+  MarkAsRead() override
+  {
+    mBodyUsed = true;
   }
 
   virtual AbortSignal*

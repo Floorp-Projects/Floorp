@@ -1306,7 +1306,7 @@ private:
   RunCurrentSyncLoop();
 
   bool
-  DestroySyncLoop(uint32_t aLoopIndex, nsIThreadInternal* aThread = nullptr);
+  DestroySyncLoop(uint32_t aLoopIndex);
 
   void
   InitializeGCTimers();

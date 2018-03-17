@@ -7,13 +7,11 @@
 using namespace mozilla;
 
 nsHtml5TreeOpStage::nsHtml5TreeOpStage()
- : mMutex("nsHtml5TreeOpStage mutex")
+  : mMutex("nsHtml5TreeOpStage mutex")
 {
 }
-    
-nsHtml5TreeOpStage::~nsHtml5TreeOpStage()
-{
-}
+
+nsHtml5TreeOpStage::~nsHtml5TreeOpStage() {}
 
 void
 nsHtml5TreeOpStage::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
@@ -21,10 +19,11 @@ nsHtml5TreeOpStage::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
   mozilla::MutexAutoLock autoLock(mMutex);
   mOpQueue.AppendElements(Move(aOpQueue));
 }
-    
+
 void
-nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(nsTArray<nsHtml5TreeOperation>& aOpQueue,
-    nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue)
+nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(
+  nsTArray<nsHtml5TreeOperation>& aOpQueue,
+  nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue)
 {
   mozilla::MutexAutoLock autoLock(mMutex);
   aOpQueue.AppendElements(Move(mOpQueue));
@@ -32,14 +31,16 @@ nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(nsTArray<nsHtml5TreeOperation>&
 }
 
 void
-nsHtml5TreeOpStage::MoveSpeculativeLoadsFrom(nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue)
+nsHtml5TreeOpStage::MoveSpeculativeLoadsFrom(
+  nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue)
 {
   mozilla::MutexAutoLock autoLock(mMutex);
   mSpeculativeLoadQueue.AppendElements(Move(aSpeculativeLoadQueue));
 }
 
 void
-nsHtml5TreeOpStage::MoveSpeculativeLoadsTo(nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue)
+nsHtml5TreeOpStage::MoveSpeculativeLoadsTo(
+  nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue)
 {
   mozilla::MutexAutoLock autoLock(mMutex);
   aSpeculativeLoadQueue.AppendElements(Move(mSpeculativeLoadQueue));

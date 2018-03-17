@@ -493,8 +493,8 @@ HTMLEditUtils::SupportsAlignAttr(nsINode& aNode)
 // rt, rtc, ruby, samp, strong, var
 #define GROUP_PHRASE           (1 << 4)
 
-// a, applet, basefont, bdo, br, font, iframe, img, map, meter, object, output,
-// picture, progress, q, script, span, sub, sup
+// a, applet, basefont, bdi, bdo, br, font, iframe, img, map, meter, object,
+// output, picture, progress, q, script, span, sub, sup
 #define GROUP_SPECIAL          (1 << 5)
 
 // button, form, input, label, select, textarea
@@ -604,6 +604,7 @@ static const ElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(b, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
   ELEM(base, false, false, GROUP_HEAD_CONTENT, GROUP_NONE),
   ELEM(basefont, false, false, GROUP_SPECIAL, GROUP_NONE),
+  ELEM(bdi, true, true, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
   ELEM(bdo, true, true, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
   ELEM(bgsound, false, false, GROUP_NONE, GROUP_NONE),
   ELEM(big, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),

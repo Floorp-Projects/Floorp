@@ -36,7 +36,7 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=225061. This in turn
  * can be passed to the JS shell by the test driver's -o option, as in:
  *
- * perl jsDriver.pl -e smdebug -fTEST.html -o "-S 100" -l js1_5/Regress
+ * perl jsDriver.pl -e smdebug -fTEST.html -o "-S 100" -l non262/Regress
  *
  */
 //-----------------------------------------------------------------------------
