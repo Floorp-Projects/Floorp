@@ -6,13 +6,16 @@ from __future__ import absolute_import
 
 import os
 import platform
+import signal
+import subprocess
 import sys
+import time
 
 import mozunit
 import pytest
 
 from mozlint import ResultContainer
-from mozlint.errors import LintersNotConfigured, LintException
+from mozlint.errors import LintersNotConfigured
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -29,8 +32,10 @@ def test_roll_no_linters_configured(lint, files):
 def test_roll_successful(lint, linters, files):
     lint.read(linters)
 
+    assert lint.results is None
     result = lint.roll(files)
     assert len(result) == 1
+    assert lint.results == result
     assert lint.failed == set([])
 
     path = result.keys()[0]
@@ -45,15 +50,12 @@ def test_roll_successful(lint, linters, files):
     assert container.rule == 'no-foobar'
 
 
-def test_roll_catch_exception(lint, lintdir, files):
+def test_roll_catch_exception(lint, lintdir, files, capfd):
     lint.read(os.path.join(lintdir, 'raises.yml'))
 
-    # suppress printed traceback from test output
-    old_stderr = sys.stderr
-    sys.stderr = open(os.devnull, 'w')
-    with pytest.raises(LintException):
-        lint.roll(files)
-    sys.stderr = old_stderr
+    lint.roll(files)  # assert not raises
+    out, err = capfd.readouterr()
+    assert 'LintException' in err
 
 
 def test_roll_with_excluded_path(lint, linters, files):
@@ -76,13 +78,13 @@ def test_roll_with_invalid_extension(lint, lintdir, filedir):
 def test_roll_with_failure_code(lint, lintdir, files):
     lint.read(os.path.join(lintdir, 'badreturncode.yml'))
 
-    assert lint.failed == set([])
+    assert lint.failed is None
     result = lint.roll(files, num_procs=1)
     assert len(result) == 0
     assert lint.failed == set(['BadReturnCodeLinter'])
 
 
-def fake_run_linters(config, paths, **lintargs):
+def fake_run_worker(config, paths, **lintargs):
     return {'count': [1]}, []
 
 
@@ -90,7 +92,7 @@ def fake_run_linters(config, paths, **lintargs):
                     reason="monkeypatch issues with multiprocessing on Windows")
 @pytest.mark.parametrize('num_procs', [1, 4, 8, 16])
 def test_number_of_jobs(monkeypatch, lint, linters, files, num_procs):
-    monkeypatch.setattr(sys.modules[lint.__module__], '_run_linters', fake_run_linters)
+    monkeypatch.setattr(sys.modules[lint.__module__], '_run_worker', fake_run_worker)
 
     lint.read(linters)
     num_jobs = len(lint.roll(files, num_procs=num_procs)['count'])
@@ -105,7 +107,7 @@ def test_number_of_jobs(monkeypatch, lint, linters, files, num_procs):
                     reason="monkeypatch issues with multiprocessing on Windows")
 @pytest.mark.parametrize('max_paths,expected_jobs', [(1, 12), (4, 6), (16, 6)])
 def test_max_paths_per_job(monkeypatch, lint, linters, files, max_paths, expected_jobs):
-    monkeypatch.setattr(sys.modules[lint.__module__], '_run_linters', fake_run_linters)
+    monkeypatch.setattr(sys.modules[lint.__module__], '_run_worker', fake_run_worker)
 
     files = files[:4]
     assert len(files) == 4
@@ -117,6 +119,23 @@ def test_max_paths_per_job(monkeypatch, lint, linters, files, max_paths, expecte
     lint.read(linters)
     num_jobs = len(lint.roll(files, num_procs=2)['count'])
     assert num_jobs == expected_jobs
+
+
+@pytest.mark.skipif(platform.system() == 'Windows',
+                    reason="signal.CTRL_C_EVENT isn't causing a KeyboardInterrupt on Windows")
+def test_keyboard_interrupt():
+    # We use two linters so we'll have two jobs. One (string.yml) will complete
+    # quickly. The other (slow.yml) will run slowly.  This way the first worker
+    # will be be stuck blocking on the ProcessPoolExecutor._call_queue when the
+    # signal arrives and the other still be doing work.
+    cmd = [sys.executable, 'runcli.py', '-l=string', '-l=slow']
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=here)
+    time.sleep(1)
+    proc.send_signal(signal.SIGINT)
+
+    out = proc.communicate()[0]
+    assert 'warning: not all files were linted' in out
+    assert 'Traceback' not in out
 
 
 linters = ('setup.yml', 'setupfailed.yml', 'setupraised.yml')
@@ -133,7 +152,7 @@ def test_setup(lint, linters, filedir, capfd):
     assert 'setup failed' in out
     assert 'setup raised' in out
     assert 'error: problem with lint setup, skipping' in out
-    assert lint.failed == set(['SetupFailedLinter', 'SetupRaisedLinter'])
+    assert lint.failed_setup == set(['SetupFailedLinter', 'SetupRaisedLinter'])
 
 
 if __name__ == '__main__':

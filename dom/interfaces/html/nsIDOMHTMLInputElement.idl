@@ -5,9 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIControllers;
-interface nsIDOMFileList;
-
  /**
   * The nsIDOMHTMLInputElement interface is the interface to a [X]HTML
   * input element.
