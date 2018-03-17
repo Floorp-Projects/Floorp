@@ -865,7 +865,9 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
   }
   sInitFlags = aInitFlags;
   sBlocklistInitAttempted = true;
+#if defined(NIGHTLY_BUILD)
   gStartAddressesToBlock = new mozilla::Vector<void*, 4>;
+#endif
 
   // In order to be effective against AppInit DLLs, the blocklist must be
   // initialized before user32.dll is loaded into the process (bug 932100).
