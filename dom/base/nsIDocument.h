@@ -2263,13 +2263,19 @@ public:
    * Get the channel that failed to load and resulted in an error page, if it
    * exists. This is only relevant to error pages.
    */
-  virtual nsIChannel* GetFailedChannel() const = 0;
+  nsIChannel* GetFailedChannel() const
+  {
+    return mFailedChannel;
+  }
 
   /**
    * Set the channel that failed to load and resulted in an error page.
    * This is only relevant to error pages.
    */
-  virtual void SetFailedChannel(nsIChannel* aChannel) = 0;
+  void SetFailedChannel(nsIChannel* aChannel)
+  {
+    mFailedChannel = aChannel;
+  }
 
   /**
    * Returns the default namespace ID used for elements created in this
