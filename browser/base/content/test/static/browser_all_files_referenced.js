@@ -530,11 +530,11 @@ add_task(async function checkAllTheFiles() {
   // Parse and remove all manifests from the list.
   // NOTE that this must be done before filtering out devtools paths
   // so that all chrome paths can be recorded.
-  let manifestPromises = [];
+  let manifestURIs = [];
   uris = uris.filter(uri => {
     let path = uri.pathQueryRef;
     if (path.endsWith(".manifest")) {
-      manifestPromises.push(parseManifest(uri));
+      manifestURIs.push(uri);
       return false;
     }
 
@@ -542,7 +542,7 @@ add_task(async function checkAllTheFiles() {
   });
 
   // Wait for all manifest to be parsed
-  await Promise.all(manifestPromises);
+  await throttledMapPromises(manifestURIs, parseManifest);
 
   // We build a list of promises that get resolved when their respective
   // files have loaded and produced no errors.
@@ -551,13 +551,13 @@ add_task(async function checkAllTheFiles() {
   for (let uri of uris) {
     let path = uri.pathQueryRef;
     if (path.endsWith(".css"))
-      allPromises.push(parseCSSFile(uri));
+      allPromises.push([parseCSSFile, uri]);
     else if (kCodeExtensions.some(ext => path.endsWith(ext)))
-      allPromises.push(parseCodeFile(uri));
+      allPromises.push([parseCodeFile, uri]);
   }
 
   // Wait for all the files to have actually loaded:
-  await Promise.all(allPromises);
+  await throttledMapPromises(allPromises, ([task, uri]) => task(uri));
 
   // Keep only chrome:// files, and filter out either the devtools paths or
   // the non-devtools paths:
