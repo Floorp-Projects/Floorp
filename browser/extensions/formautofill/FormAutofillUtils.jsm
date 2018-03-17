@@ -828,16 +828,42 @@ this.FormAutofillUtils = {
   },
 
   /**
-   * Localize elements with "data-localization" attribute
-   * @param   {string} bundleURI
-   * @param   {DOMElement} root
+   * Localize "data-localization" or "data-localization-region" attributes.
+   * @param {Element} element
+   * @param {string} attributeName
    */
-  localizeMarkup(bundleURI, root) {
-    const bundle = Services.strings.createBundle(bundleURI);
+  localizeAttributeForElement(element, attributeName) {
+    let bundle = null;
+    switch (attributeName) {
+      case "data-localization": {
+        bundle = this.stringBundle;
+        break;
+      }
+      case "data-localization-region": {
+        bundle = this.regionsBundle;
+        break;
+      }
+      default:
+        throw new Error("Unexpected attributeName");
+    }
+
+    element.textContent = bundle.GetStringFromName(element.getAttribute(attributeName));
+    element.removeAttribute(attributeName);
+  },
+
+  /**
+   * Localize elements with "data-localization" or "data-localization-region" attributes.
+   * @param {Element} root
+   */
+  localizeMarkup(root) {
     let elements = root.querySelectorAll("[data-localization]");
     for (let element of elements) {
-      element.textContent = bundle.GetStringFromName(element.getAttribute("data-localization"));
-      element.removeAttribute("data-localization");
+      this.localizeAttributeForElement(element, "data-localization");
+    }
+
+    elements = root.querySelectorAll("[data-localization-region]");
+    for (let element of elements) {
+      this.localizeAttributeForElement(element, "data-localization-region");
     }
   },
 };
@@ -847,6 +873,10 @@ this.FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
   return Services.strings.createBundle("chrome://formautofill/locale/formautofill.properties");
+});
+
+XPCOMUtils.defineLazyGetter(FormAutofillUtils, "regionsBundle", function() {
+  return Services.strings.createBundle("chrome://global/locale/regionNames.properties");
 });
 
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "brandBundle", function() {

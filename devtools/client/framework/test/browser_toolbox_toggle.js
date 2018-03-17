@@ -49,13 +49,13 @@ async function testToggleDockedToolbox(tab, key, modifiers) {
     "Toolbox is docked in the main window");
 
   info("verify docked toolbox is destroyed when using toggle key");
-  let onToolboxDestroyed = once(gDevTools, "toolbox-destroyed");
+  let onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   EventUtils.synthesizeKey(key, modifiers);
   await onToolboxDestroyed;
   ok(true, "Docked toolbox is destroyed when using a toggle key");
 
   info("verify new toolbox is created when using toggle key");
-  let onToolboxReady = once(gDevTools, "toolbox-ready");
+  let onToolboxReady = gDevTools.once("toolbox-ready");
   EventUtils.synthesizeKey(key, modifiers);
   await onToolboxReady;
   ok(true, "Toolbox is created by using when toggle key");
@@ -91,7 +91,7 @@ async function testToggleDetachedToolbox(tab, key, modifiers) {
   info("Verify windowed toolbox is destroyed when using toggle key from its " +
     "own window");
 
-  let onToolboxDestroyed = once(gDevTools, "toolbox-destroyed");
+  let onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   EventUtils.synthesizeKey(key, modifiers, toolboxWindow);
   await onToolboxDestroyed;
   ok(true, "Toolbox destroyed");
@@ -102,7 +102,6 @@ function getToolboxForTab(tab) {
 }
 
 function cleanup() {
-  Services.prefs.setCharPref("devtools.toolbox.host",
-    Toolbox.HostType.BOTTOM);
+  Services.prefs.setCharPref("devtools.toolbox.host", Toolbox.HostType.BOTTOM);
   gBrowser.removeCurrentTab();
 }

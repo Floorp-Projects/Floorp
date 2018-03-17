@@ -827,6 +827,12 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
       return nullptr;
     }
     apz = static_cast<APZCTreeManagerChild*>(papz);
+
+    PAPZInputBridgeChild* pinput = mGPUChild->SendPAPZInputBridgeConstructor(aRootLayerTreeId);
+    if (!pinput) {
+      return nullptr;
+    }
+    apz->SetInputBridge(static_cast<APZInputBridgeChild*>(pinput));
   }
 
   RefPtr<RemoteCompositorSession> session =

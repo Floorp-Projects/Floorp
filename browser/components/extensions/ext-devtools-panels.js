@@ -169,7 +169,7 @@ class ParentDevToolsPanel {
     }
   }
 
-  async onToolboxPanelSelect(what, id) {
+  async onToolboxPanelSelect(id) {
     if (!this.waitTopLevelContext || !this.panelAdded) {
       return;
     }
@@ -350,7 +350,7 @@ class DevToolsSelectionObserver extends EventEmitter {
     this.destroyed = true;
   }
 
-  onSelected(event) {
+  onSelected() {
     this.emit("selectionChanged");
   }
 }
@@ -423,7 +423,7 @@ class ParentDevToolsInspectorSidebar {
     this.destroyed = true;
   }
 
-  onSidebarCreated(evt, sidebar) {
+  onSidebarCreated(sidebar) {
     this.extensionSidebar = sidebar;
 
     const {_lazySidebarInit} = this;
@@ -434,7 +434,7 @@ class ParentDevToolsInspectorSidebar {
     }
   }
 
-  onSidebarSelect(what, id) {
+  onSidebarSelect(id) {
     if (!this.extensionSidebar) {
       return;
     }

@@ -196,13 +196,13 @@ append_remove_instructions() {
 # Pass a variable name and it will be filled as an array.
 list_files() {
   count=0
-  tmpfile="$(mktemp)"
+  tmpfile="$(mktemp temp-filelist.XXXXXX)"
   find . -type f \
     ! -name "update.manifest" \
     ! -name "updatev2.manifest" \
     ! -name "updatev3.manifest" \
-    ! -name "temp-dirlist" \
-    ! -name "temp-filelist" \
+    ! -name "temp-dirlist.*" \
+    ! -name "temp-filelist.*" \
     | sed 's/\.\/\(.*\)/\1/' \
     | sort -r > "${tmpfile}"
   while read -r file; do
@@ -215,7 +215,7 @@ list_files() {
 # List all directories in the current directory, stripping leading "./"
 list_dirs() {
   count=0
-  tmpfile="$(mktemp)"
+  tmpfile="$(mktemp temp-dirlist.XXXXXX)"
 
   find . -type d \
     ! -name "." \

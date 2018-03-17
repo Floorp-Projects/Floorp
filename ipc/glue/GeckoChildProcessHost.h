@@ -74,6 +74,8 @@ public:
 
   virtual bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector());
 
+  virtual void OnProcessHandleReady(ProcessHandle aProcessHandle);
+  virtual void OnProcessLaunchError();
   virtual void OnChannelConnected(int32_t peer_pid) override;
   virtual void OnMessageReceived(IPC::Message&& aMsg) override;
   virtual void OnChannelError() override;

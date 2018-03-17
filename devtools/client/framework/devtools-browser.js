@@ -742,7 +742,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 gDevTools.getToolDefinitionArray()
          .forEach(def => gDevToolsBrowser._addToolToWindows(def));
 // and the new ones.
-gDevTools.on("tool-registered", function(ev, toolId) {
+gDevTools.on("tool-registered", function(toolId) {
   let toolDefinition = gDevTools._tools.get(toolId);
   // If the tool has been registered globally, add to all the
   // available windows.
@@ -751,7 +751,7 @@ gDevTools.on("tool-registered", function(ev, toolId) {
   }
 });
 
-gDevTools.on("tool-unregistered", function(ev, toolId) {
+gDevTools.on("tool-unregistered", function(toolId) {
   gDevToolsBrowser._removeToolFromWindows(toolId);
 });
 

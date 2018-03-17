@@ -70,7 +70,7 @@ SourceMapURLService.prototype._getLoadingPromise = function () {
       // Ignore errors.  Register the sources we got; we can't rely on
       // an event to arrive if the source actor already existed.
       for (let source of sources) {
-        this._onSourceUpdated(null, {source});
+        this._onSourceUpdated({source});
       }
     }, e => {
       // Also ignore any protocol-based errors.
@@ -110,7 +110,7 @@ SourceMapURLService.prototype.destroy = function () {
 /**
  * A helper function that is called when a new source is available.
  */
-SourceMapURLService.prototype._onSourceUpdated = function (_, sourceEvent) {
+SourceMapURLService.prototype._onSourceUpdated = function (sourceEvent) {
   // Maybe we were shut down while waiting.
   if (!this._urls) {
     return;

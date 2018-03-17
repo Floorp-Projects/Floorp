@@ -39,20 +39,20 @@ function runTests(aTab) {
     let panel = toolbox.getPanel(toolDefinition.id);
     ok(panel, "Tool open");
 
-    gDevTools.once("toolbox-destroy", (event, toolbox, iframe) => {
-      collectedEvents.push(event);
+    gDevTools.once("toolbox-destroy", (toolbox, iframe) => {
+      collectedEvents.push("toolbox-destroy");
     });
 
-    gDevTools.once(toolDefinition.id + "-destroy", (event, toolbox, iframe) => {
-      collectedEvents.push("gDevTools-" + event);
+    gDevTools.once(toolDefinition.id + "-destroy", (toolbox, iframe) => {
+      collectedEvents.push("gDevTools-" + toolDefinition.id + "-destroy");
     });
 
-    toolbox.once("destroy", (event) => {
-      collectedEvents.push(event);
+    toolbox.once("destroy", () => {
+      collectedEvents.push("destroy");
     });
 
-    toolbox.once(toolDefinition.id + "-destroy", (event) => {
-      collectedEvents.push("toolbox-" + event);
+    toolbox.once(toolDefinition.id + "-destroy", () => {
+      collectedEvents.push("toolbox-" + toolDefinition.id + "-destroy");
     });
 
     toolbox.destroy().then(function () {
