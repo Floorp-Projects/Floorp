@@ -104,8 +104,6 @@ interface Node : EventTarget {
   [ChromeOnly]
   readonly attribute URI? baseURIObject;
   [ChromeOnly]
-  sequence<MutationObserver> getBoundMutationObservers();
-  [ChromeOnly]
   DOMString generateXPath();
 
   /**
