@@ -113,15 +113,12 @@ add_task(async function checkAllTheJS() {
 
   // We create an array of promises so we can parallelize all our parsing
   // and file loading activity:
-  let allPromises = [];
-  for (let uri of uris) {
+  await throttledMapPromises(uris, uri => {
     if (uriIsWhiteListed(uri)) {
       info("Not checking whitelisted " + uri.spec);
-      continue;
+      return undefined;
     }
-    allPromises.push(parsePromise(uri.spec));
-  }
-
-  let promiseResults = await Promise.all(allPromises);
-  is(promiseResults.filter((x) => !x).length, 0, "There should be 0 parsing errors");
+    return parsePromise(uri.spec);
+  });
+  ok(true, "All files parsed");
 });
