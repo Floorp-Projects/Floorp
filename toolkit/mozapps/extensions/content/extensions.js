@@ -2217,7 +2217,7 @@ var gDiscoverView = {
     if (!aKeepHistory)
       flags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
 
-    this._browser.loadURI(aURL, { flags });
+    this._browser.loadURIWithFlags(aURL, flags);
   },
 
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {

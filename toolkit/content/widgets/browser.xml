@@ -103,25 +103,52 @@
       <!-- throws exception for unknown schemes -->
       <method name="loadURI">
         <parameter name="aURI"/>
-        <parameter name="aParams"/>
+        <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
         <body>
           <![CDATA[
-            if (!aURI) {
-              aURI = "about:blank";
-            }
+            const nsIWebNavigation = Ci.nsIWebNavigation;
+            const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
+            this._wrapURIChangeCall(() =>
+              this.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset));
+          ]]>
+        </body>
+      </method>
 
-            let {
-              flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-              referrerURI,
-              referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-              triggeringPrincipal,
-              postData,
-            } = aParams || {};
+      <!-- throws exception for unknown schemes -->
+      <method name="loadURIWithFlags">
+        <parameter name="aURI"/>
+        <parameter name="aFlags"/>
+        <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
+        <parameter name="aPostData"/>
+        <body>
+          <![CDATA[
+            if (!aURI)
+              aURI = "about:blank";
+
+            var aReferrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
+            var aTriggeringPrincipal;
+
+            // Check for loadURIWithFlags(uri, { ... });
+            var params = arguments[1];
+            if (params && typeof(params) == "object") {
+              aFlags = params.flags;
+              aReferrerURI = params.referrerURI;
+              if ("referrerPolicy" in params) {
+                aReferrerPolicy = params.referrerPolicy;
+              }
+              if ("triggeringPrincipal" in params) {
+                aTriggeringPrincipal = params.triggeringPrincipal;
+              }
+              aCharset = params.charset;
+              aPostData = params.postData;
+            }
 
             this._wrapURIChangeCall(() =>
               this.webNavigation.loadURIWithOptions(
-                  aURI, flags, referrerURI, referrerPolicy,
-                  postData, null, null, triggeringPrincipal));
+                  aURI, aFlags, aReferrerURI, aReferrerPolicy,
+                  aPostData, null, null, aTriggeringPrincipal));
           ]]>
         </body>
       </method>
