@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMCustomEvent.idl',
-    'nsIDOMDragEvent.idl',
     'nsIDOMEvent.idl',
     'nsIDOMEventListener.idl',
     'nsIDOMEventTarget.idl',

@@ -153,38 +153,6 @@
         </body>
       </method>
 
-      <method name="goHome">
-        <body>
-          <![CDATA[
-            try {
-              this.loadURI(this.homePage);
-            } catch (e) {
-            }
-          ]]>
-        </body>
-      </method>
-
-      <property name="homePage">
-        <getter>
-          <![CDATA[
-            var uri;
-
-            if (this.hasAttribute("homepage"))
-              uri = this.getAttribute("homepage");
-            else
-              uri = "http://www.mozilla.org/"; // widget pride
-
-            return uri;
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            this.setAttribute("homepage", val);
-            return val;
-          ]]>
-        </setter>
-      </property>
-
       <method name="gotoIndex">
         <parameter name="aIndex"/>
         <body>

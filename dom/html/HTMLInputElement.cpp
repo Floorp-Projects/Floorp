@@ -3211,6 +3211,10 @@ HTMLInputElement::GetRadioGroupContainer() const
     return mForm;
   }
 
+  if (IsInAnonymousSubtree()) {
+    return nullptr;
+  }
+
   //XXXsmaug It isn't clear how this should work in Shadow DOM.
   return static_cast<nsDocument*>(GetUncomposedDoc());
 }
@@ -6678,7 +6682,7 @@ HTMLInputElement::AddedToRadioGroup()
 {
   // If the element is neither in a form nor a document, there is no group so we
   // should just stop here.
-  if (!mForm && !IsInUncomposedDoc()) {
+  if (!mForm && (!IsInUncomposedDoc() || IsInAnonymousSubtree())) {
     return;
   }
 

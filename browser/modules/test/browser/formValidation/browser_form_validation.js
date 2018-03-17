@@ -346,7 +346,6 @@ add_task(async function() {
     Services.obs.addObserver(gObserver, "invalidformsubmit");
 
     executeSoon(function() {
-      // eslint-disable-next-line mozilla/no-cpows-in-tests
       browser.contentDocument.getElementById("s").click();
     });
   });
@@ -392,7 +391,6 @@ add_task(async function() {
   checkPopupShow();
   await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let inputPromise = BrowserTestUtils.waitForEvent(gBrowser.contentDocument.getElementById("i"), "input");
   EventUtils.sendString("f");
   await inputPromise;

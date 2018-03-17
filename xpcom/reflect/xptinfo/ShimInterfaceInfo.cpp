@@ -18,7 +18,6 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIDOMDragEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
@@ -64,7 +63,6 @@
 #include "mozilla/dom/DOMRequestBinding.h"
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/DocumentFragmentBinding.h"
-#include "mozilla/dom/DragEventBinding.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
@@ -173,7 +171,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(DOMRequest),
   DEFINE_SHIM(Document),
   DEFINE_SHIM(DocumentFragment),
-  DEFINE_SHIM(DragEvent),
   DEFINE_SHIM(Element),
   DEFINE_SHIM(Event),
   DEFINE_SHIM(EventTarget),

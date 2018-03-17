@@ -8,7 +8,6 @@ add_task(async function setup() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
   info("Preferences page opened on the general pane.");
 
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   await gBrowser.selectedBrowser.contentWindow.promiseLoadHandlersList;
   info("Apps list loaded.");
 
@@ -18,7 +17,6 @@ add_task(async function setup() {
 });
 
 add_task(async function getFeedItem() {
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   win = gBrowser.selectedBrowser.contentWindow;
 
   container = win.document.getElementById("handlersView");
@@ -84,7 +82,6 @@ add_task(async function reselectInternalOptionForFeed() {
 });
 
 add_task(async function sortingCheck() {
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   win = gBrowser.selectedBrowser.contentWindow;
 
   const handlerView = win.document.getElementById("handlersView");

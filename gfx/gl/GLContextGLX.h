@@ -11,6 +11,8 @@
 #include "GLXLibrary.h"
 #include "mozilla/X11Util.h"
 
+class gfxXlibSurface;
+
 namespace mozilla {
 namespace gl {
 
@@ -27,6 +29,10 @@ public:
                     GLXFBConfig cfg,
                     bool deleteDrawable,
                     gfxXlibSurface* pixmap);
+
+    static bool
+    FindVisual(Display* display, int screen, bool useWebRender,
+               bool useAlpha, int* const out_visualId);
 
     // Finds a GLXFBConfig compatible with the provided window.
     static bool

@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests pending breakpoints when reloading
+requestLongerTimeout(3);
 
 // Utilities for interacting with the editor
 function clickGutter(dbg, line) {
@@ -24,8 +25,6 @@ function assertEditorBreakpoint(dbg, line) {
 }
 
 add_task(async function() {
-  requestLongerTimeout(3);
-
   const dbg = await initDebugger("doc-scripts.html");
   const { selectors: { getBreakpoints, getBreakpoint }, getState } = dbg;
   const source = findSource(dbg, "simple1.js");

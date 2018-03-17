@@ -4,7 +4,7 @@
  */
 
 /* These tests are not checking whether an exception is thrown or not for
- * proxies:  those tests should already exist in js/src/tests/ecma_6/Proxy .
+ * proxies:  those tests should already exist in js/src/tests/non262/Proxy .
  * We expect TypeErrors to be thrown in these tests, with a stringification
  * of the error message showing whatever property name the error is being
  * reported for.

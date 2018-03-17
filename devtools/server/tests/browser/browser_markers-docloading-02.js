@@ -11,7 +11,6 @@ const MARKER_NAMES = ["document::DOMContentLoaded", "document::Load"];
 
 add_task(async function() {
   let browser = await addTab(MAIN_DOMAIN + "doc_innerHTML.html");
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = browser.contentDocumentAsCPOW;
 
   initDebuggerServer();
