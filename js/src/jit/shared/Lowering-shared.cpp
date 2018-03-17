@@ -7,6 +7,7 @@
 #include "jit/shared/Lowering-shared-inl.h"
 
 #include "jit/LIR.h"
+#include "jit/Lowering.h"
 #include "jit/MIR.h"
 
 #include "vm/SymbolType.h"
@@ -68,61 +69,6 @@ LIRGeneratorShared::ReorderCommutative(MDefinition** lhsp, MDefinition** rhsp, M
     if (ShouldReorderCommutative(lhs, rhs, ins)) {
         *rhsp = lhs;
         *lhsp = rhs;
-    }
-}
-
-void
-LIRGeneratorShared::visitConstant(MConstant* ins)
-{
-    if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
-        emitAtUses(ins);
-        return;
-    }
-
-    switch (ins->type()) {
-      case MIRType::Double:
-        define(new(alloc()) LDouble(ins->toDouble()), ins);
-        break;
-      case MIRType::Float32:
-        define(new(alloc()) LFloat32(ins->toFloat32()), ins);
-        break;
-      case MIRType::Boolean:
-        define(new(alloc()) LInteger(ins->toBoolean()), ins);
-        break;
-      case MIRType::Int32:
-        define(new(alloc()) LInteger(ins->toInt32()), ins);
-        break;
-      case MIRType::Int64:
-        defineInt64(new(alloc()) LInteger64(ins->toInt64()), ins);
-        break;
-      case MIRType::String:
-        define(new(alloc()) LPointer(ins->toString()), ins);
-        break;
-      case MIRType::Symbol:
-        define(new(alloc()) LPointer(ins->toSymbol()), ins);
-        break;
-      case MIRType::Object:
-        define(new(alloc()) LPointer(&ins->toObject()), ins);
-        break;
-      default:
-        // Constants of special types (undefined, null) should never flow into
-        // here directly. Operations blindly consuming them require a Box.
-        MOZ_CRASH("unexpected constant type");
-    }
-}
-
-void
-LIRGeneratorShared::visitWasmFloatConstant(MWasmFloatConstant* ins)
-{
-    switch (ins->type()) {
-      case MIRType::Double:
-        define(new(alloc()) LDouble(ins->toDouble()), ins);
-        break;
-      case MIRType::Float32:
-        define(new(alloc()) LFloat32(ins->toFloat32()), ins);
-        break;
-      default:
-        MOZ_CRASH("unexpected constant type");
     }
 }
 
