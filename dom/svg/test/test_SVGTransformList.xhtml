@@ -86,10 +86,10 @@ function testConsolidateMatrix(g)
      "Unexpected type of cached first item in list after consolidating");
   cmpMatrix(first_item.matrix, [1, 0, 0, 1, 50, 90],
      "Unexpected value for cached first item in list after consolidating");
-  // b) should still be useable
+  // b) should still be usable
   first_item.setScale(2, 3);
   is(first_item.type, SVGTransform.SVG_TRANSFORM_SCALE,
-     "Cached first item in list not useable after consolidating");
+     "Cached first item in list not usable after consolidating");
 
   // Check consolidated is live
   // a) Changes to 'consolidated' affect list

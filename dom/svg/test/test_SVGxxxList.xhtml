@@ -70,7 +70,7 @@ To have the battery of generic tests run for a new list attribute, add an elemen
     if it exists, and if the element has a property is of this type (as
     opposed to the element interface inheriting it).
   list_type
-    The name of the SVGXxxList inteface implemented by the baseVal and
+    The name of the SVGXxxList interface implemented by the baseVal and
     animVal objects.
   item_type
     The name of the SVGXxx interface implemented by the list items.
@@ -316,7 +316,7 @@ The third animation has additive="sum", with fewer items than the lower priority
 
 At t=0s and t=1s we test the effect of an attribute value changes in the absence and presence of SMIL animation respectively.
 
-At t=10s we programatically remove the fill="freeze" from animation 1.
+At t=10s we programmatically remove the fill="freeze" from animation 1.
 */
 function create_animate_elements(test)
 {
@@ -1203,7 +1203,7 @@ function run_animation_timeline_tests()
        t.animVal.getItem(4) === t.old_animVal_items[4],
        'When an animation repeats, the list items that are at a given '+
        'index in the '+t.list_type+' for '+t.av_path+' should be the exact '+
-       'same objects as were at that index before the repeat occured.');
+       'same objects as were at that index before the repeat occurred.');
 
 
     /********************    t = 6s    ********************/
@@ -1219,7 +1219,7 @@ function run_animation_timeline_tests()
        t.animVal.getItem(4) === t.old_animVal_items[4],
        'When an animation repeats, the list items that are at a given '+
        'index in the '+t.list_type+' for '+t.av_path+' should be the exact '+
-       'same objects as were at that index before the repeat occured.');
+       'same objects as were at that index before the repeat occurred.');
 
 
     /********************    t = 7s    ********************/
@@ -1302,7 +1302,7 @@ function run_animation_timeline_tests()
        'Even after an animation finishes and is un-frozen, the list items '+
        'that are at a given index in the '+t.list_type+' for '+t.av_path+
        ' should be the exact same objects as were at that index before the '+
-       'end and unfreezing of the animation occured.');
+       'end and unfreezing of the animation occurred.');
    }
 }
 
