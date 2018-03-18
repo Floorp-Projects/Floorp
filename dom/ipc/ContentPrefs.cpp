@@ -320,7 +320,6 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "svg.display-lists.hit-testing.enabled",
   "svg.display-lists.painting.enabled",
   "svg.new-getBBox.enabled",
-  "svg.path-caching.enabled",
   "svg.transform-box.enabled",
   "toolkit.asyncshutdown.crash_timeout",
   "toolkit.asyncshutdown.log",

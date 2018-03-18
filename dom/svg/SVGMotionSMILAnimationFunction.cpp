@@ -150,7 +150,7 @@ SVGMotionSMILAnimationFunction::
 {
   MOZ_ASSERT(!HasAttr(nsGkAtoms::path),
              "Should be using |path| attr if we have it");
-  MOZ_ASSERT(!mPath, "regenerating when we aleady have path");
+  MOZ_ASSERT(!mPath, "regenerating when we already have path");
   MOZ_ASSERT(mPathVertices.IsEmpty(),
              "regenerating when we already have vertices");
 
