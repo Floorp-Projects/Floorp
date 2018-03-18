@@ -60,13 +60,10 @@ imply_option('--enable-replace-malloc', dmd)
 option('--enable-jack', env='MOZ_JACK',
        help='Enable JACK audio backend.')
 
-@depends('--enable-jack')
-def jack(value):
-    if value:
-        return True
+jack = pkg_check_modules('MOZ_JACK', 'jack', when='--enable-jack')
 
-set_config('MOZ_JACK', jack)
-set_define('MOZ_JACK', jack)
+set_config('MOZ_JACK', depends_if(jack)(lambda _: True))
+set_define('MOZ_JACK', depends_if(jack)(lambda _: True))
 
 # Javascript engine
 # ==============================================================
