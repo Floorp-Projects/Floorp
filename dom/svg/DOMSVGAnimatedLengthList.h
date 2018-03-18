@@ -80,7 +80,7 @@ class DOMSVGLengthList;
  *
  * Having all the objects keep a reference directly to their element like this
  * would reduce the number of dereferences that they need to make to get their
- * internal counterpart. Hovewer, this design does not meet the "same object"
+ * internal counterpart. However, this design does not meet the "same object"
  * requirement of the SVG specification. If script keeps a reference to a
  * DOMSVGLength or DOMSVGLengthList object, but not to that object's
  * DOMSVGAnimatedLengthList, then the DOMSVGAnimatedLengthList may be garbage

@@ -240,7 +240,7 @@ public:
   static float
   AngleBisect(float a1, float a2);
 
-  /* Generate a viewbox to viewport tranformation matrix */
+  /* Generate a viewbox to viewport transformation matrix */
 
   static Matrix
   GetViewBoxTransform(float aViewportWidth, float aViewportHeight,

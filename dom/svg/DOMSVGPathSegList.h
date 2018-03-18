@@ -201,7 +201,7 @@ private:
   SVGAnimatedPathSegList& InternalAList() const;
 
   /// Creates an instance of the appropriate DOMSVGPathSeg sub-class for
-  // aIndex, if it doesn't already exist, and then returs it.
+  // aIndex, if it doesn't already exist, and then returns it.
   already_AddRefed<DOMSVGPathSeg> GetItemAt(uint32_t aIndex);
 
   void MaybeInsertNullInAnimValListAt(uint32_t aIndex,
