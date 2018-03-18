@@ -2358,7 +2358,7 @@ var NativeWindow = {
       options.uuid = uuidgen.generateUUID().toString();
 
       GlobalEventDispatcher.sendRequest(options);
-      this._callbacks[this._menuId] = options.callback;
+      this._callbacks[options.uuid] = options.callback;
       this._menuId++;
       return options.uuid;
     },

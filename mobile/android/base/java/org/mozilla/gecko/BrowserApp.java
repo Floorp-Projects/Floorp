@@ -3251,7 +3251,7 @@ public class BrowserApp extends GeckoApp
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 final GeckoBundle data = new GeckoBundle(1);
-                data.putInt("item", info.id - ADDON_MENU_OFFSET);
+                data.putString("item", info.uuid);
                 EventDispatcher.getInstance().dispatch("Menu:Clicked", data);
                 return true;
             }
