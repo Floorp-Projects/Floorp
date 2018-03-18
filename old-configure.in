@@ -2599,24 +2599,6 @@ MOZ_WEBM_ENCODER=1
 AC_DEFINE(MOZ_WEBM_ENCODER)
 AC_SUBST(MOZ_WEBM_ENCODER)
 
-dnl ==================================
-dnl = Check alsa availability on Linux
-dnl ==================================
-
-MOZ_ARG_ENABLE_BOOL(alsa,
-[  --enable-alsa          Enable Alsa support],
-   MOZ_ALSA=1,
-   MOZ_ALSA=)
-
-if test -n "$MOZ_ALSA"; then
-    AC_DEFINE(MOZ_ALSA)
-    PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
-         [echo "$MOZ_ALSA_PKG_ERRORS"
-          AC_MSG_ERROR([Need alsa for audio output on Linux. (On Ubuntu, you might try installing the package libasound2-dev.)])])
-fi
-
-AC_SUBST(MOZ_ALSA)
-
 dnl ========================================================
 dnl = Disable PulseAudio
 dnl ========================================================
