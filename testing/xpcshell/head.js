@@ -35,13 +35,15 @@ var _XPCSHELL_PROCESS;
 
 // Register the testing-common resource protocol early, to have access to its
 // modules.
-var _Services = ChromeUtils.import("resource://gre/modules/Services.jsm", {}).Services;
+var _Services = ChromeUtils.import("resource://gre/modules/Services.jsm", null).Services;
 _register_modules_protocol_handler();
 
-var _PromiseTestUtils = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", {}).PromiseTestUtils;
-var _Task = ChromeUtils.import("resource://gre/modules/Task.jsm", {}).Task;
+var _PromiseTestUtils = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", null).PromiseTestUtils;
+var _Task = ChromeUtils.import("resource://gre/modules/Task.jsm", null).Task;
 
-let _NetUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {}).NetUtil;
+let _NetUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", null).NetUtil;
+
+let _XPCOMUtils = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", null).XPCOMUtils;
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
@@ -131,13 +133,7 @@ try {
   }
 
   let listener = {
-    QueryInterface(iid) {
-      if (!iid.equals(Ci.nsISupports) &&
-          !iid.equals(Ci.nsIConsoleListener)) {
-        throw Cr.NS_NOINTERFACE;
-      }
-      return this;
-    },
+    QueryInterface: _XPCOMUtils.generateQI(["nsIConsoleListener"]),
     observe(msg) {
       if (typeof info === "function")
         info("CONSOLE_MESSAGE: (" + levelNames[msg.logLevel] + ") " + msg.toString());
@@ -178,13 +174,7 @@ function _Timer(func, delay) {
   _pendingTimers.push(timer);
 }
 _Timer.prototype = {
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsITimerCallback) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: _XPCOMUtils.generateQI(["nsITimerCallback"]),
 
   notify(timer) {
     _pendingTimers.splice(_pendingTimers.indexOf(timer), 1);
@@ -279,20 +269,14 @@ var _fakeIdleService = {
     // nsIFactory
     createInstance(aOuter, aIID) {
       if (aOuter) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
+        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
       }
       return _fakeIdleService.QueryInterface(aIID);
     },
     lockFactory(aLock) {
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
     },
-    QueryInterface(aIID) {
-      if (aIID.equals(Ci.nsIFactory) ||
-          aIID.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
+    QueryInterface: _XPCOMUtils.generateQI(["nsIFactory"]),
   },
 
   // nsIIdleService
@@ -311,7 +295,7 @@ var _fakeIdleService = {
         aIID.equals(Ci.nsISupports)) {
       return this;
     }
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   }
 };
 
@@ -544,7 +528,7 @@ function _execute_test() {
     // possible that this will mask an NS_ERROR_ABORT that happens after a
     // do_check failure though.
 
-    if (!_quit || e != Cr.NS_ERROR_ABORT) {
+    if (!_quit || e.result != Cr.NS_ERROR_ABORT) {
       let extra = {};
       if (e.fileName) {
         extra.source_file = e.fileName;
@@ -689,7 +673,7 @@ function executeSoon(callback, aName) {
         // has already been logged so there is no need to log it again. It's
         // possible that this will mask an NS_ERROR_ABORT that happens after a
         // do_check failure though.
-        if (!_quit || e != Cr.NS_ERROR_ABORT) {
+        if (!_quit || e.result != Cr.NS_ERROR_ABORT) {
           let stack = e.stack ? _format_stack(e.stack) : null;
           _testLogger.testStatus(_TEST_NAME,
                                  funcName,
@@ -736,7 +720,7 @@ function _abort_failed_test() {
   // Called to abort the test run after all failures are logged.
   _passed = false;
   _do_quit();
-  throw Cr.NS_ERROR_ABORT;
+  throw Components.Exception("", Cr.NS_ERROR_ABORT);
 }
 
 function _format_stack(stack) {
@@ -787,7 +771,7 @@ function do_report_unexpected_exception(ex, text) {
                       stack: _format_stack(ex.stack)
                     });
   _do_quit();
-  throw Cr.NS_ERROR_ABORT;
+  throw Components.Exception("", Cr.NS_ERROR_ABORT);
 }
 
 function do_note_exception(ex, text) {
@@ -1118,13 +1102,7 @@ function do_get_profile(notifyProfileAfterChange = false) {
       }
       return null;
     },
-    QueryInterface(iid) {
-      if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
+    QueryInterface: _XPCOMUtils.generateQI(["nsIDirectoryServiceProvider"]),
   };
   _Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
            .registerProvider(provider);
