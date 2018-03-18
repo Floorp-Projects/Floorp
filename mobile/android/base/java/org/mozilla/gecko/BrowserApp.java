@@ -217,6 +217,7 @@ public class BrowserApp extends GeckoApp
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_ADDON_MENU_ITEM_CACHE = "menuitems_cache";
     private static final String STATE_BROWSER_ACTION_ITEM_CACHE = "browseractions_cache";
+    private static final String STATE_ADDON_MENU_NEXT_ID = "menuitems_nextId";
 
     private static final String BROWSER_SEARCH_TAG = "browser_search";
 
@@ -264,7 +265,6 @@ public class BrowserApp extends GeckoApp
     // When changing this, make sure to adjust NativeWindow.toolsMenuID in browser.js, too.
     private static final String GECKO_TOOLS_MENU_UUID = "{115b9308-2023-44f1-a4e9-3e2197669f07}";
     private static final int ADDON_MENU_OFFSET = 1000;
-    private static final int BROWSER_ACTION_MENU_OFFSET = 10000;
     public static final String TAB_HISTORY_FRAGMENT_TAG = "tabHistoryFragment";
 
     // When the static action bar is shown, only the real toolbar chrome should be
@@ -339,6 +339,7 @@ public class BrowserApp extends GeckoApp
 
     private ArrayList<MenuItemInfo> mAddonMenuItemsCache;
     private ArrayList<MenuItemInfo> mBrowserActionItemsCache;
+    private int mAddonMenuNextID = ADDON_MENU_OFFSET;
     private PropertyAnimator mMainLayoutAnimator;
 
     private static final Interpolator sTabsInterpolator = new Interpolator() {
@@ -751,6 +752,7 @@ public class BrowserApp extends GeckoApp
         if (savedInstanceState != null && mIsRestoringActivity) {
             mAddonMenuItemsCache = savedInstanceState.getParcelableArrayList(STATE_ADDON_MENU_ITEM_CACHE);
             mBrowserActionItemsCache = savedInstanceState.getParcelableArrayList(STATE_BROWSER_ACTION_ITEM_CACHE);
+            mAddonMenuNextID = savedInstanceState.getInt(STATE_ADDON_MENU_NEXT_ID);
         }
 
         app.getLightweightTheme().addListener(this);
@@ -1869,7 +1871,7 @@ public class BrowserApp extends GeckoApp
                     Log.e(LOGTAG, "Invalid menu item name");
                     return;
                 }
-                info.id = message.getInt("id") + ADDON_MENU_OFFSET;
+                info.id = mAddonMenuNextID++;
                 info.uuid = message.getString("uuid");
                 info.checked = message.getBoolean("checked", false);
                 info.enabled = message.getBoolean("enabled", true);
@@ -1900,7 +1902,7 @@ public class BrowserApp extends GeckoApp
                     Log.e(LOGTAG, "Invalid browser action name");
                     return;
                 }
-                browserAction.id = message.getInt("id") + BROWSER_ACTION_MENU_OFFSET;
+                browserAction.id = mAddonMenuNextID++;
                 browserAction.uuid = message.getString("uuid");
                 addBrowserActionMenuItem(browserAction);
                 break;
@@ -2444,6 +2446,7 @@ public class BrowserApp extends GeckoApp
         // created while Gecko keeps running throughout, and leave the full solution to bug 1414084.
         outState.putParcelableArrayList(STATE_ADDON_MENU_ITEM_CACHE, mAddonMenuItemsCache);
         outState.putParcelableArrayList(STATE_BROWSER_ACTION_ITEM_CACHE, mBrowserActionItemsCache);
+        outState.putInt(STATE_ADDON_MENU_NEXT_ID, mAddonMenuNextID);
     }
 
     /**
