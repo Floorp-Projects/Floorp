@@ -75,6 +75,20 @@ jack = pkg_check_modules('MOZ_JACK', 'jack', when='--enable-jack')
 set_config('MOZ_JACK', depends_if(jack)(lambda _: True))
 set_define('MOZ_JACK', depends_if(jack)(lambda _: True))
 
+# PulseAudio cubeb backend
+# ==============================================================
+@depends(target)
+def pulseaudio_default(target):
+    return target.os not in ('WINNT', 'OSX', 'iOS', 'Android', 'OpenBSD')
+
+option('--enable-pulseaudio', env='MOZ_PULSEAUDIO', default=pulseaudio_default,
+       help='Enable PulseAudio audio backend.')
+
+pulseaudio = pkg_check_modules('MOZ_PULSEAUDIO', 'libpulse', when='--enable-pulseaudio')
+
+set_config('MOZ_PULSEAUDIO', depends_if(pulseaudio)(lambda _: True))
+set_define('MOZ_PULSEAUDIO', depends_if(pulseaudio)(lambda _: True))
+
 # Javascript engine
 # ==============================================================
 include('../js/moz.configure')
