@@ -149,8 +149,7 @@ public class PageActionLayout extends ThemedLinearLayout
 
         final String id = message.getString("id");
 
-        boolean alreadyAdded = isPwaAdded(id);
-        if (alreadyAdded) {
+        if (isPageActionAlreadyAdded(id)) {
             return;
         }
 
@@ -206,7 +205,7 @@ public class PageActionLayout extends ThemedLinearLayout
         }
     }
 
-    private boolean isPwaAdded(String id) {
+    private boolean isPageActionAlreadyAdded(String id) {
         for (PageAction pageAction : mPageActionList) {
             if (pageAction.getID() != null && pageAction.getID().equals(id)) {
                 return true;
