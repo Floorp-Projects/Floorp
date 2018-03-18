@@ -94,7 +94,7 @@ nsSVGFilterInstance::ComputeBounds()
     nsSVGUtils::GetRelativeRect(filterUnits, XYWH, mTargetBBox, mMetrics);
 
   // Transform the user space bounds to filter space, so we
-  // can align them with the pixel boundries of the offscreen surface.
+  // can align them with the pixel boundaries of the offscreen surface.
   // The offscreen surface has the same scale as filter space.
   gfxRect filterSpaceBounds = UserSpaceToFilterSpace(userSpaceBounds);
   filterSpaceBounds.RoundOut();

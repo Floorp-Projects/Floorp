@@ -1774,7 +1774,7 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext)
           PrependLocalTransformsTo(gfxMatrix(), eUserSpaceToParent);
   }
 
-  // SVG-in-OpenType is not allowed to paint exteral resources, so we can
+  // SVG-in-OpenType is not allowed to paint external resources, so we can
   // just pass a dummy params into PatintSVG.
   imgDrawingParams dummy;
   svgFrame->PaintSVG(*aContext, m, dummy);
