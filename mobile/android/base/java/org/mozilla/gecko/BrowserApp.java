@@ -1856,11 +1856,6 @@ public class BrowserApp extends GeckoApp
                 openOptionsMenu();
                 break;
 
-            case "Menu:Update":
-                updateAddonMenuItem(message.getString("uuid"),
-                                    message.getBundle("options"));
-                break;
-
             case "Menu:Add":
                 final MenuItemInfo info = new MenuItemInfo();
                 info.label = message.getString("name");
@@ -1892,6 +1887,11 @@ public class BrowserApp extends GeckoApp
                 removeAddonMenuItem(message.getString("uuid"));
                 break;
 
+            case "Menu:Update":
+                updateAddonMenuItem(message.getString("uuid"),
+                                    message.getBundle("options"));
+                break;
+
             case "Menu:AddBrowserAction":
                 final MenuItemInfo browserAction = new MenuItemInfo();
                 browserAction.label = message.getString("name");
@@ -1901,16 +1901,16 @@ public class BrowserApp extends GeckoApp
                 }
                 browserAction.id = mAddonMenuNextID++;
                 browserAction.uuid = message.getString("uuid");
-                addBrowserActionMenuItem(browserAction);
+                addAddonMenuItem(browserAction);
                 break;
 
             case "Menu:RemoveBrowserAction":
-                removeBrowserActionMenuItem(message.getString("uuid"));
+                removeAddonMenuItem(message.getString("uuid"));
                 break;
 
             case "Menu:UpdateBrowserAction":
-                updateBrowserActionMenuItem(message.getString("uuid"),
-                                            message.getBundle("options"));
+                updateAddonMenuItem(message.getString("uuid"),
+                                    message.getBundle("options"));
                 break;
 
             case "LightweightTheme:Update":
@@ -3262,9 +3262,12 @@ public class BrowserApp extends GeckoApp
         item.setVisible(info.visible);
     }
 
+    /**
+     * Adds an addon menu item/webextension browser action to the menu.
+     */
     private void addAddonMenuItem(final MenuItemInfo info) {
         if (mAddonMenuItemsCache == null) {
-            mAddonMenuItemsCache = new ArrayList<MenuItemInfo>();
+            mAddonMenuItemsCache = new ArrayList<>();
         }
 
         // Always cache so we can rebuild after a locale switch.
@@ -3277,6 +3280,9 @@ public class BrowserApp extends GeckoApp
         addAddonMenuItemToMenu(mMenu, info);
     }
 
+    /**
+     * Removes an addon menu item/webextension browser action from the menu by its UUID.
+     */
     private void removeAddonMenuItem(String uuid) {
         int id = -1;
 
@@ -3301,6 +3307,9 @@ public class BrowserApp extends GeckoApp
         }
     }
 
+    /**
+     * Updates the addon menu/webextension browser action with the specified UUID.
+     */
     private void updateAddonMenuItem(String uuid, final GeckoBundle options) {
         int id = -1;
 
@@ -3330,101 +3339,6 @@ public class BrowserApp extends GeckoApp
             menuItem.setChecked(options.getBoolean("checked", menuItem.isChecked()));
             menuItem.setEnabled(options.getBoolean("enabled", menuItem.isEnabled()));
             menuItem.setVisible(options.getBoolean("visible", menuItem.isVisible()));
-        }
-    }
-
-    /**
-     * Add the provided item to the provided menu, which should be
-     * the root (mMenu).
-     */
-    private void addBrowserActionMenuItemToMenu(final Menu menu, final MenuItemInfo info) {
-        final MenuItem item = menu.add(Menu.NONE, info.id, Menu.NONE, info.label);
-
-        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                final GeckoBundle data = new GeckoBundle(1);
-                data.putString("item", info.uuid);
-                EventDispatcher.getInstance().dispatch("Menu:Clicked", data);
-                return true;
-            }
-        });
-
-        item.setCheckable(info.checkable);
-        item.setChecked(info.checked);
-        item.setEnabled(info.enabled);
-        item.setVisible(info.visible);
-    }
-
-    /**
-     * Adds a WebExtension browser action to the menu.
-     */
-    private void addBrowserActionMenuItem(final MenuItemInfo info) {
-        if (mAddonMenuItemsCache == null) {
-            mAddonMenuItemsCache = new ArrayList<>();
-        }
-
-        // Always cache so we can rebuild after a locale switch.
-        mAddonMenuItemsCache.add(info);
-
-        if (mMenu == null) {
-            return;
-        }
-
-        addBrowserActionMenuItemToMenu(mMenu, info);
-    }
-
-    /**
-     * Removes a WebExtension browser action from the menu by its UUID.
-     */
-    private void removeBrowserActionMenuItem(String uuid) {
-        int id = -1;
-
-        // Remove browser action menu item from cache, if available.
-        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mAddonMenuItemsCache) {
-                if (item.uuid.equals(uuid)) {
-                    id = item.id;
-                    mAddonMenuItemsCache.remove(item);
-                    break;
-                }
-            }
-        }
-
-        if (mMenu == null || id == -1) {
-            return;
-        }
-
-        final MenuItem menuItem = mMenu.findItem(id);
-        if (menuItem != null) {
-            mMenu.removeItem(id);
-        }
-    }
-
-    /**
-     * Updates the WebExtension browser action with the specified UUID.
-     */
-    private void updateBrowserActionMenuItem(String uuid, final GeckoBundle options) {
-        int id = -1;
-
-        // Set attribute for the menu item in cache, if available
-        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mAddonMenuItemsCache) {
-                if (item.uuid.equals(uuid)) {
-                    id = item.id;
-                    item.label = options.getString("name", item.label);
-                    break;
-                }
-            }
-        }
-
-        if (mMenu == null || id == -1) {
-            return;
-        }
-
-        final MenuItem menuItem = mMenu.findItem(id);
-        if (menuItem != null) {
-            menuItem.setTitle(options.getString("name", menuItem.getTitle().toString()));
         }
     }
 
