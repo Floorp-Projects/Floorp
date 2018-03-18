@@ -94,7 +94,7 @@ SVGMotionSMILPathUtils::PathGenerator::
   ParseCoordinatePair(const nsAString& aCoordPairStr,
                       float& aXVal, float& aYVal)
 {
-  nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
     tokenizer(aCoordPairStr, ',',
               nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
