@@ -26,8 +26,6 @@ var EXPORTED_SYMBOLS = ["Utils", "Logger", "PivotContext", "PrefCache"]; // jshi
 
 var Utils = { // jshint ignore:line
   _buildAppMap: {
-    "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}": "b2g",
-    "{d1bfe7d9-c01e-4237-998b-7b5f960a4314}": "graphene",
     "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}": "browser",
     "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "mobile/android",
     "{a23983c0-fd0e-11dc-95ff-0800200c9a66}": "mobile/xul"
@@ -133,8 +131,6 @@ var Utils = { // jshint ignore:line
         return this.win.BrowserApp;
       case "browser":
         return this.win.gBrowser;
-      case "b2g":
-        return this.win.shell;
       default:
         return null;
     }
@@ -143,9 +139,6 @@ var Utils = { // jshint ignore:line
   get CurrentBrowser() {
     if (!this.BrowserApp) {
       return null;
-    }
-    if (this.MozBuildApp == "b2g") {
-      return this.BrowserApp.contentBrowser;
     }
     return this.BrowserApp.selectedBrowser;
   },
@@ -175,13 +168,6 @@ var Utils = { // jshint ignore:line
     let document = this.CurrentContentDoc;
 
     if (document) {
-      if (document.location.host === "b2g") {
-        // The document is a b2g app chrome (ie. Mulet).
-        let contentBrowser = this.win.content.shell.contentBrowser;
-        messageManagers.add(this.getMessageManager(contentBrowser));
-        document = contentBrowser.contentDocument;
-      }
-
       let remoteframes = document.querySelectorAll("iframe");
 
       for (let i = 0; i < remoteframes.length; ++i) {
