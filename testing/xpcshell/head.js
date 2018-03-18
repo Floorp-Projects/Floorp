@@ -571,16 +571,16 @@ function _execute_test() {
   };
 
   let complete = _cleanupFunctions.length == 0;
-  _Task.spawn(function* () {
+  (async () => {
     for (let func of _cleanupFunctions.reverse()) {
       try {
-        yield func();
+        await func();
       } catch (ex) {
         reportCleanupError(ex);
       }
     }
     _cleanupFunctions = [];
-  }).catch(reportCleanupError).then(() => complete = true);
+  })().catch(reportCleanupError).then(() => complete = true);
   _Services.tm.spinEventLoopUntil(() => complete);
 
   // Restore idle service to avoid leaks.
@@ -1403,7 +1403,7 @@ function run_next_test() {
 
       if (_properties.isTask) {
         _gTaskRunning = true;
-        _Task.spawn(_gRunningTest).then(() => {
+        (async () => _gRunningTest())().then(() => {
           _gTaskRunning = false;
           run_next_test();
         }, ex => {

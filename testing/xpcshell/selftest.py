@@ -187,8 +187,8 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
 
-add_task(function* test_failing() {
-  yield Promise.reject(new Error("I fail."));
+add_task(async function test_failing() {
+  await Promise.reject(new Error("I fail."));
 });
 '''
 
@@ -197,8 +197,8 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
 
-add_task(function* test() {
-  let result = yield Promise.resolve(false);
+add_task(async function test() {
+  let result = await Promise.resolve(false);
 
   Assert.ok(result);
 });
@@ -219,9 +219,9 @@ Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 function run_test() { run_next_test(); }
 
-add_task(function* this_test_will_fail() {
+add_task(async function this_test_will_fail() {
   for (let i = 0; i < 10; ++i) {
-    yield Promise.resolve();
+    await Promise.resolve();
   }
   Assert.ok(false);
 });
@@ -348,8 +348,8 @@ function run_test() {
     checkpoints.push(5);
   });
 
-  registerCleanupFunction(function* async_cleanup_3() {
-    yield undefined;
+  registerCleanupFunction(async function async_cleanup_3() {
+    await undefined;
     checkpoints.push(4);
   });
 
