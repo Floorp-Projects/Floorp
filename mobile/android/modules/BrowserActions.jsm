@@ -14,8 +14,6 @@ var BrowserActions = {
 
   _initialized: false,
 
-  _nextMenuId: 0,
-
   /**
    * Registers the listeners only if they have not been initialized
    * already and there is at least one browser action.
@@ -44,7 +42,7 @@ var BrowserActions = {
    *    be "Menu:BrowserActionClicked".
    * @param {Object} data An object containing information about the
    *    browser action, which in this case should contain an `item`
-   *    property which is browser action's ID.
+   *    property which is browser action's UUID.
    */
   onEvent(event, data) {
     if (event !== "Menu:BrowserActionClicked") {
@@ -53,7 +51,7 @@ var BrowserActions = {
 
     let browserAction = this._browserActions[data.item];
     if (!browserAction) {
-      throw new Error(`No browser action found with id ${data.item}`);
+      throw new Error(`No browser action found with UUID ${data.item}`);
     }
     browserAction.onClicked();
   },
@@ -65,7 +63,6 @@ var BrowserActions = {
   register(browserAction) {
     EventDispatcher.instance.sendRequest({
       type: "Menu:AddBrowserAction",
-      id: this._nextMenuId++,
       uuid: browserAction.uuid,
       name: browserAction.defaults.name,
     });
@@ -125,7 +122,7 @@ var BrowserActions = {
   },
 
   /**
-   * Unregisters the browser action with the specified ID.
+   * Unregisters the browser action with the specified UUID.
    * @param {string} uuid The UUID of the browser action.
    */
   unregister(uuid) {
