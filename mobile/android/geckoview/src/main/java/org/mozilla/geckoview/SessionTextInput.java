@@ -6,9 +6,7 @@
 package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.GeckoEditable;
 import org.mozilla.gecko.GeckoEditableChild;
-import org.mozilla.gecko.GeckoInputConnection;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.NativeQueue;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -31,8 +29,8 @@ import android.view.inputmethod.InputConnection;
  */
 public final class SessionTextInput {
 
-    // Interface to access GeckoInputConnection from TextInputController.
-    public interface Delegate {
+    // Interface to access GeckoInputConnection from SessionTextInput.
+    /* package */ interface Delegate {
         View getView();
         Handler getHandler(Handler defHandler);
         InputConnection onCreateInputConnection(EditorInfo attrs);
@@ -45,7 +43,7 @@ public final class SessionTextInput {
     }
 
     // Interface to access GeckoEditable from GeckoInputConnection.
-    public interface EditableClient {
+    /* package */ interface EditableClient {
         // The following value is used by requestCursorUpdates
         // ONE_SHOT calls updateCompositionRects() after getting current composing
         // character rects.
@@ -66,7 +64,7 @@ public final class SessionTextInput {
     }
 
     // Interface to access GeckoInputConnection from GeckoEditable.
-    public interface EditableListener {
+    /* package */ interface EditableListener {
         // IME notification type for notifyIME(), corresponding to NotificationToIME enum.
         @WrapForJNI final int NOTIFY_IME_OF_TOKEN = -3;
         @WrapForJNI final int NOTIFY_IME_OPEN_VKB = -2;
