@@ -1089,7 +1089,9 @@ const shutdownPromises = new Map();
 class BootstrapScope {
   install(data, reason) {}
   uninstall(data, reason) {
-    Management.emit("uninstall", {id: data.id});
+    AsyncShutdown.profileChangeTeardown.addBlocker(
+      `Uninstalling add-on: ${data.id}`,
+      Management.emit("uninstall", {id: data.id}));
   }
 
   update(data, reason) {
