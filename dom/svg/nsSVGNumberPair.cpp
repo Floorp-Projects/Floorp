@@ -23,7 +23,7 @@ static nsresult
 ParseNumberOptionalNumber(const nsAString& aValue,
                           float aValues[2])
 {
-  nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
     tokenizer(aValue, ',',
               nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
   if (tokenizer.whitespaceBeforeFirstToken()) {

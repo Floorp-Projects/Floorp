@@ -207,8 +207,6 @@ public:
   static void RemoveBlackMarkedNode(nsINode* aNode);
   static void MarkNodeChildren(nsINode* aNode);
   static void InitCCCallbacks();
-  static void MarkUserData(void* aObject, nsAtom* aKey, void* aChild,
-                           void *aData);
 
   /**
    * Is the HTML local name a void element?
