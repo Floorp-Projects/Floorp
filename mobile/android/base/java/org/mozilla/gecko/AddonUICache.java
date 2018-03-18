@@ -16,8 +16,8 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * For certain UI items added by add-ons or other JS/Gecko code, Gecko notifies us whenever an item
@@ -55,7 +55,7 @@ public class AddonUICache implements BundleEventListener {
 
     private static final AddonUICache instance = new AddonUICache();
 
-    private final List<MenuItemInfo> mAddonMenuItemsCache = new ArrayList<>();
+    private final Map<String, MenuItemInfo> mAddonMenuItemsCache = new LinkedHashMap<>();
     private int mAddonMenuNextID = ADDON_MENU_OFFSET;
     private Menu mMenu;
 
@@ -101,11 +101,9 @@ public class AddonUICache implements BundleEventListener {
                 if (GECKO_TOOLS_MENU_UUID.equals(parentUUID)) {
                     info.parent = GECKO_TOOLS_MENU_ID;
                 } else if (!TextUtils.isEmpty(parentUUID)) {
-                    for (MenuItemInfo item : mAddonMenuItemsCache) {
-                        if (item.uuid.equals(parentUUID)) {
-                            info.parent = item.id;
-                            break;
-                        }
+                    MenuItemInfo parent = mAddonMenuItemsCache.get(parentUUID);
+                    if (parent != null) {
+                        info.parent = parent.id;
                     }
                 }
                 addAddonMenuItem(info);
@@ -131,7 +129,7 @@ public class AddonUICache implements BundleEventListener {
 
         // Add add-on menu items, if any exist.
         if (mMenu != null) {
-            for (MenuItemInfo item : mAddonMenuItemsCache) {
+            for (MenuItemInfo item : mAddonMenuItemsCache.values()) {
                 addAddonMenuItemToMenu(mMenu, item);
             }
         }
@@ -150,7 +148,7 @@ public class AddonUICache implements BundleEventListener {
      * Adds an addon menu item/webextension browser action to the menu.
      */
     private void addAddonMenuItem(final MenuItemInfo info) {
-        mAddonMenuItemsCache.add(info);
+        mAddonMenuItemsCache.put(info.uuid, info);
 
         if (mMenu == null) {
             return;
@@ -163,24 +161,16 @@ public class AddonUICache implements BundleEventListener {
      * Removes an addon menu item/webextension browser action from the menu by its UUID.
      */
     private void removeAddonMenuItem(String uuid) {
-        int id = -1;
-
         // Remove add-on menu item from cache, if available.
-        for (MenuItemInfo item : mAddonMenuItemsCache) {
-            if (item.uuid.equals(uuid)) {
-                id = item.id;
-                mAddonMenuItemsCache.remove(item);
-                break;
-            }
-        }
+        final MenuItemInfo item = mAddonMenuItemsCache.remove(uuid);
 
-        if (mMenu == null || id == -1) {
+        if (mMenu == null || item == null) {
             return;
         }
 
-        final MenuItem menuItem = mMenu.findItem(id);
+        final MenuItem menuItem = mMenu.findItem(item.id);
         if (menuItem != null) {
-            mMenu.removeItem(id);
+            mMenu.removeItem(item.id);
         }
     }
 
@@ -188,26 +178,21 @@ public class AddonUICache implements BundleEventListener {
      * Updates the addon menu/webextension browser action with the specified UUID.
      */
     private void updateAddonMenuItem(String uuid, final GeckoBundle options) {
-        int id = -1;
-
         // Set attribute for the menu item in cache, if available
-        for (MenuItemInfo item : mAddonMenuItemsCache) {
-            if (item.uuid.equals(uuid)) {
-                id = item.id;
-                item.label = options.getString("name", item.label);
-                item.checkable = options.getBoolean("checkable", item.checkable);
-                item.checked = options.getBoolean("checked", item.checked);
-                item.enabled = options.getBoolean("enabled", item.enabled);
-                item.visible = options.getBoolean("visible", item.visible);
-                break;
-            }
+        final MenuItemInfo item = mAddonMenuItemsCache.get(uuid);
+        if (item != null) {
+            item.label = options.getString("name", item.label);
+            item.checkable = options.getBoolean("checkable", item.checkable);
+            item.checked = options.getBoolean("checked", item.checked);
+            item.enabled = options.getBoolean("enabled", item.enabled);
+            item.visible = options.getBoolean("visible", item.visible);
         }
 
-        if (mMenu == null || id == -1) {
+        if (mMenu == null || item == null) {
             return;
         }
 
-        final MenuItem menuItem = mMenu.findItem(id);
+        final MenuItem menuItem = mMenu.findItem(item.id);
         if (menuItem != null) {
             menuItem.setTitle(options.getString("name", menuItem.getTitle().toString()));
             menuItem.setCheckable(options.getBoolean("checkable", menuItem.isCheckable()));
