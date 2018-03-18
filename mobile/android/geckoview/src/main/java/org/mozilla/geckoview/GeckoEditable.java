@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.geckoview;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.GeckoEditableChild;
+import org.mozilla.gecko.IGeckoEditableChild;
+import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
-import org.mozilla.geckoview.TextInputController;
 
 import android.graphics.RectF;
 import android.os.Handler;
@@ -25,7 +25,6 @@ import android.os.Looper;
 import android.os.RemoteException;
 import android.text.Editable;
 import android.text.InputFilter;
-import android.text.NoCopySpan;
 import android.text.Selection;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -43,7 +42,7 @@ import android.view.KeyEvent;
  * The field mText contains the actual underlying
  * SpannableStringBuilder/Editable that contains our text.
  */
-public final class GeckoEditable
+/* package */ final class GeckoEditable
     extends IGeckoEditableParent.Stub
     implements InvocationHandler,
                Editable,
