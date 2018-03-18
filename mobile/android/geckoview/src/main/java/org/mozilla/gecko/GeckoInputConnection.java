@@ -90,11 +90,70 @@ public class GeckoInputConnection
             final GeckoSession session,
             final View targetView,
             final TextInputController.EditableClient editable) {
+        TextInputController.Delegate ic = new GeckoInputConnection(session, targetView, editable);
         if (DEBUG) {
-            return DebugGeckoInputConnection.create(session, targetView, editable);
-        } else {
-            return new GeckoInputConnection(session, targetView, editable);
+            ic = wrapForDebug(ic);
         }
+        return ic;
+    }
+
+    private static TextInputController.Delegate wrapForDebug(final TextInputController.Delegate ic) {
+        final InvocationHandler handler = new InvocationHandler() {
+            private final StringBuilder mCallLevel = new StringBuilder();
+
+            @Override
+            public Object invoke(final Object proxy, final Method method,
+                                 final Object[] args) throws Throwable {
+                final StringBuilder log = new StringBuilder(mCallLevel);
+                log.append("> ").append(method.getName()).append("(");
+                if (args != null) {
+                    for (int i = 0; i < args.length; i++) {
+                        final Object arg = args[i];
+                        // translate argument values to constant names
+                        if ("notifyIME".equals(method.getName()) && i == 0) {
+                            log.append(GeckoEditable.getConstantName(
+                                    TextInputController.EditableListener.class,
+                                    "NOTIFY_IME_", arg));
+                        } else if ("notifyIMEContext".equals(method.getName()) && i == 0) {
+                            log.append(GeckoEditable.getConstantName(
+                                    TextInputController.EditableListener.class,
+                                    "IME_STATE_", arg));
+                        } else {
+                            GeckoEditable.debugAppend(log, arg);
+                        }
+                        log.append(", ");
+                    }
+                    if (args.length > 0) {
+                        log.setLength(log.length() - 2);
+                    }
+                }
+                log.append(")");
+                Log.d(LOGTAG, log.toString());
+
+                mCallLevel.append(' ');
+                Object ret = method.invoke(ic, args);
+                if (ret == ic) {
+                    ret = proxy;
+                }
+                mCallLevel.setLength(Math.max(0, mCallLevel.length() - 1));
+
+                log.setLength(mCallLevel.length());
+                log.append("< ").append(method.getName());
+                if (!method.getReturnType().equals(Void.TYPE)) {
+                    GeckoEditable.debugAppend(log.append(": "), ret);
+                }
+                Log.d(LOGTAG, log.toString());
+                return ret;
+            }
+        };
+
+        return (TextInputController.Delegate) Proxy.newProxyInstance(
+                GeckoInputConnection.class.getClassLoader(),
+                new Class<?>[] {
+                        InputConnection.class,
+                        TextInputController.Delegate.class,
+                        TextInputController.EditableListener.class
+                }, handler);
     }
 
     protected GeckoInputConnection(final GeckoSession session,
@@ -1034,78 +1093,5 @@ public class GeckoInputConnection
         if (mIMEState == IME_STATE_DISABLED || mFocused) {
             restartInput();
         }
-    }
-}
-
-final class DebugGeckoInputConnection
-        extends GeckoInputConnection
-        implements InvocationHandler {
-
-    private InputConnection mProxy;
-    private final StringBuilder mCallLevel;
-
-    private DebugGeckoInputConnection(final GeckoSession session,
-                                      final View targetView,
-                                      final TextInputController.EditableClient editable) {
-        super(session, targetView, editable);
-        mCallLevel = new StringBuilder();
-    }
-
-    public static TextInputController.Delegate create(
-            final GeckoSession session,
-            final View targetView,
-            final TextInputController.EditableClient editable) {
-        final Class<?>[] PROXY_INTERFACES = { InputConnection.class,
-                TextInputController.Delegate.class,
-                TextInputController.EditableListener.class };
-        DebugGeckoInputConnection dgic =
-                new DebugGeckoInputConnection(session, targetView, editable);
-        dgic.mProxy = (InputConnection) Proxy.newProxyInstance(
-                GeckoInputConnection.class.getClassLoader(),
-                PROXY_INTERFACES, dgic);
-        return (TextInputController.Delegate) dgic.mProxy;
-    }
-
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args)
-            throws Throwable {
-
-        StringBuilder log = new StringBuilder(mCallLevel);
-        log.append("> ").append(method.getName()).append("(");
-        if (args != null) {
-            for (Object arg : args) {
-                // translate argument values to constant names
-                if ("notifyIME".equals(method.getName()) && arg == args[0]) {
-                    log.append(GeckoEditable.getConstantName(
-                        TextInputController.EditableListener.class, "NOTIFY_IME_", arg));
-                } else if ("notifyIMEContext".equals(method.getName()) && arg == args[0]) {
-                    log.append(GeckoEditable.getConstantName(
-                        TextInputController.EditableListener.class, "IME_STATE_", arg));
-                } else {
-                    GeckoEditable.debugAppend(log, arg);
-                }
-                log.append(", ");
-            }
-            if (args.length > 0) {
-                log.setLength(log.length() - 2);
-            }
-        }
-        log.append(")");
-        Log.d(LOGTAG, log.toString());
-
-        mCallLevel.append(' ');
-        Object ret = method.invoke(this, args);
-        if (ret == this) {
-            ret = mProxy;
-        }
-        mCallLevel.setLength(Math.max(0, mCallLevel.length() - 1));
-
-        log.setLength(mCallLevel.length());
-        log.append("< ").append(method.getName());
-        if (!method.getReturnType().equals(Void.TYPE)) {
-            GeckoEditable.debugAppend(log.append(": "), ret);
-        }
-        Log.d(LOGTAG, log.toString());
-        return ret;
     }
 }
