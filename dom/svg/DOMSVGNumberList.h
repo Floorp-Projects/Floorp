@@ -64,7 +64,7 @@ public:
     // aInternalList must be passed in explicitly because we can't use
     // InternalList() here. (Because it depends on IsAnimValList, which depends
     // on this object having been assigned to aAList's mBaseVal or mAnimVal,
-    // which hasn't happend yet.)
+    // which hasn't happened yet.)
 
     InternalListLengthWillChange(aInternalList.Length()); // Sync mItems
   }
@@ -87,7 +87,7 @@ public:
     return mItems.Length();
   }
 
-  /// Called to notify us to syncronize our length and detach excess items.
+  /// Called to notify us to synchronize our length and detach excess items.
   void InternalListLengthWillChange(uint32_t aNewLength);
 
   /**

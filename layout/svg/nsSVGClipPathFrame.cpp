@@ -305,7 +305,7 @@ nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
   // that case the other clip path further clips away the element that is being
   // clipped by the original clipPath. If this clipPath is being clipped by a
   // different clip path we need to check if it prevents the original element
-  // from recieving events at aPoint:
+  // from receiving events at aPoint:
   nsSVGClipPathFrame *clipPathFrame =
     SVGObserverUtils::GetEffectProperties(this).GetClipPathFrame();
   if (clipPathFrame &&

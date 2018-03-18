@@ -63,16 +63,9 @@ using namespace mozilla::dom::SVGUnitTypesBinding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-static bool sSVGPathCachingEnabled;
 static bool sSVGDisplayListHitTestingEnabled;
 static bool sSVGDisplayListPaintingEnabled;
 static bool sSVGNewGetBBoxEnabled;
-
-bool
-NS_SVGPathCachingEnabled()
-{
-  return sSVGPathCachingEnabled;
-}
 
 bool
 NS_SVGDisplayListHitTestingEnabled()
@@ -138,9 +131,6 @@ SVGAutoRenderState::IsPaintingToWindow(DrawTarget* aDrawTarget)
 void
 nsSVGUtils::Init()
 {
-  Preferences::AddBoolVarCache(&sSVGPathCachingEnabled,
-                               "svg.path-caching.enabled");
-
   Preferences::AddBoolVarCache(&sSVGDisplayListHitTestingEnabled,
                                "svg.display-lists.hit-testing.enabled");
 
@@ -1784,7 +1774,7 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext)
           PrependLocalTransformsTo(gfxMatrix(), eUserSpaceToParent);
   }
 
-  // SVG-in-OpenType is not allowed to paint exteral resources, so we can
+  // SVG-in-OpenType is not allowed to paint external resources, so we can
   // just pass a dummy params into PatintSVG.
   imgDrawingParams dummy;
   svgFrame->PaintSVG(*aContext, m, dummy);
