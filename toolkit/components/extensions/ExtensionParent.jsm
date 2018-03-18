@@ -102,7 +102,7 @@ let apiManager = new class extends SchemaAPIManager {
       let modules = this.eventModules.get("uninstall");
       return Promise.all(Array.from(modules).map(async apiName => {
         let module = await this.asyncLoadModule(apiName);
-        module.onUninstall(id);
+        return module.onUninstall(id);
       }));
     });
     /* eslint-enable mozilla/balanced-listeners */

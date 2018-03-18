@@ -82,14 +82,16 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
   }
 
   static removeSearchSettings(id) {
-    this.processDefaultSearchSetting("removeSetting", id);
-    this.removeEngine(id);
+    return Promise.all([
+      this.processDefaultSearchSetting("removeSetting", id),
+      this.removeEngine(id),
+    ]);
   }
 
   static onUninstall(id) {
     // Note: We do not have to deal with homepage here as it is managed by
     // the ExtensionPreferencesManager.
-    this.removeSearchSettings(id);
+    return this.removeSearchSettings(id);
   }
 
   static onUpdate(id, manifest) {
