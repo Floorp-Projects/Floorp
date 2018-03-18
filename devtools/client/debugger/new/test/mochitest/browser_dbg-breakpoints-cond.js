@@ -49,6 +49,7 @@ async function setConditionalBreakpoint(dbg, index, condition) {
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
   await selectSource(dbg, "simple2");
+  await waitForSelectedSource(dbg, "simple2");
 
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
