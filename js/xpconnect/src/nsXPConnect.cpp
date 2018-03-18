@@ -401,21 +401,6 @@ nsXPConnect::GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info)
 }
 
 void
-xpc_MarkInCCGeneration(nsISupports* aVariant, uint32_t aGeneration)
-{
-    nsCOMPtr<XPCVariant> variant = do_QueryInterface(aVariant);
-    if (variant) {
-        variant->SetCCGeneration(aGeneration);
-        variant->GetJSVal(); // Unmarks gray JSObject.
-        XPCVariant* weak = variant.get();
-        variant = nullptr;
-        if (weak->IsPurple()) {
-          weak->RemovePurple();
-        }
-    }
-}
-
-void
 xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS)
 {
     // QIing to nsIXPConnectWrappedJSUnmarkGray may have side effects!

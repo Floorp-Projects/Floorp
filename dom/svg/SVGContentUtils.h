@@ -68,20 +68,6 @@ enum SVGTransformTypes {
    eChildToUserSpace
 };
 
-inline bool
-IsSVGWhitespace(char aChar)
-{
-  return aChar == '\x20' || aChar == '\x9' ||
-         aChar == '\xD'  || aChar == '\xA';
-}
-
-inline bool
-IsSVGWhitespace(char16_t aChar)
-{
-  return aChar == char16_t('\x20') || aChar == char16_t('\x9') ||
-         aChar == char16_t('\xD')  || aChar == char16_t('\xA');
-}
-
 /**
  * Functions generally used by SVG Content classes. Functions here
  * should not generally depend on layout methods/classes e.g. nsSVGUtils

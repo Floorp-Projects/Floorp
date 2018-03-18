@@ -270,7 +270,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
   float* aVars,
   int32_t aNVars)
 {
-  nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
     tokenizer(aSpec, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
   int numArgsFound = 0;
