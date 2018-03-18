@@ -856,9 +856,6 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "Menu:Add",
             "Menu:Remove",
-            "Menu:AddBrowserAction",
-            "Menu:RemoveBrowserAction",
-            "Menu:UpdateBrowserAction",
             "LightweightTheme:Update",
             "Tab:Added",
             "Video:Play",
@@ -1595,9 +1592,6 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "Menu:Add",
             "Menu:Remove",
-            "Menu:AddBrowserAction",
-            "Menu:RemoveBrowserAction",
-            "Menu:UpdateBrowserAction",
             "LightweightTheme:Update",
             "Tab:Added",
             "Video:Play",
@@ -1859,7 +1853,7 @@ public class BrowserApp extends GeckoApp
             case "Menu:Add":
                 final MenuItemInfo info = new MenuItemInfo();
                 info.label = message.getString("name");
-                if (info.label == null) {
+                if (TextUtils.isEmpty(info.label)) {
                     Log.e(LOGTAG, "Invalid menu item name");
                     return;
                 }
@@ -1888,27 +1882,6 @@ public class BrowserApp extends GeckoApp
                 break;
 
             case "Menu:Update":
-                updateAddonMenuItem(message.getString("uuid"),
-                                    message.getBundle("options"));
-                break;
-
-            case "Menu:AddBrowserAction":
-                final MenuItemInfo browserAction = new MenuItemInfo();
-                browserAction.label = message.getString("name");
-                if (TextUtils.isEmpty(browserAction.label)) {
-                    Log.e(LOGTAG, "Invalid browser action name");
-                    return;
-                }
-                browserAction.id = mAddonMenuNextID++;
-                browserAction.uuid = message.getString("uuid");
-                addAddonMenuItem(browserAction);
-                break;
-
-            case "Menu:RemoveBrowserAction":
-                removeAddonMenuItem(message.getString("uuid"));
-                break;
-
-            case "Menu:UpdateBrowserAction":
                 updateAddonMenuItem(message.getString("uuid"),
                                     message.getBundle("options"));
                 break;
