@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.geckoview.SessionTextInput;
 
 import android.graphics.RectF;
 import android.os.IBinder;
@@ -26,6 +25,8 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
 
     private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoEditableChild";
+
+    private static final int NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
 
     private final class RemoteChild extends IGeckoEditableChild.Stub {
         @Override // IGeckoEditableChild
@@ -132,11 +133,9 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
     private void notifyIME(final int type) {
         if (DEBUG) {
             ThreadUtils.assertOnGeckoThread();
-            Log.d(LOGTAG, "notifyIME(" + GeckoEditable.getConstantName(
-                          SessionTextInput.EditableListener.class,
-                          "NOTIFY_IME_", type) + ")");
+            Log.d(LOGTAG, "notifyIME(" + type + ")");
         }
-        if (type == SessionTextInput.EditableListener.NOTIFY_IME_TO_CANCEL_COMPOSITION) {
+        if (type == NOTIFY_IME_TO_CANCEL_COMPOSITION) {
             // Composition should have been canceled on the parent side through text
             // update notifications. We cannot verify that here because we don't
             // keep track of spans on the child side, but it's simple to add the
@@ -158,9 +157,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
                                   final int flags) {
         if (DEBUG) {
             ThreadUtils.assertOnGeckoThread();
-            Log.d(LOGTAG, "notifyIMEContext(" + GeckoEditable.getConstantName(
-                          SessionTextInput.EditableListener.class,
-                          "IME_STATE_", state) + ", \"" +
+            Log.d(LOGTAG, "notifyIMEContext(" + state + ", \"" +
                           typeHint + "\", \"" + modeHint + "\", \"" + actionHint +
                           "\", 0x" + Integer.toHexString(flags) + ")");
         }
@@ -195,12 +192,8 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
             throws RemoteException {
         if (DEBUG) {
             ThreadUtils.assertOnGeckoThread();
-            StringBuilder sb = new StringBuilder("onTextChange(");
-            GeckoEditable.debugAppend(sb, text);
-            sb.append(", ").append(start).append(", ")
-                .append(unboundedOldEnd).append(", ")
-                .append(unboundedNewEnd).append(")");
-            Log.d(LOGTAG, sb.toString());
+            Log.d(LOGTAG, "onTextChange(" + text + ", " + start + ", " +
+                          unboundedOldEnd + ", " + unboundedNewEnd + ")");
         }
 
         if (start < 0 || start > unboundedOldEnd) {
