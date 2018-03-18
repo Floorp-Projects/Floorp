@@ -55,7 +55,7 @@ public class AddonUICache implements BundleEventListener {
 
     private static final AddonUICache instance = new AddonUICache();
 
-    private List<MenuItemInfo> mAddonMenuItemsCache;
+    private final List<MenuItemInfo> mAddonMenuItemsCache = new ArrayList<>();
     private int mAddonMenuNextID = ADDON_MENU_OFFSET;
     private Menu mMenu;
 
@@ -130,7 +130,7 @@ public class AddonUICache implements BundleEventListener {
         mMenu = menu;
 
         // Add add-on menu items, if any exist.
-        if (mMenu != null && mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
+        if (mMenu != null) {
             for (MenuItemInfo item : mAddonMenuItemsCache) {
                 addAddonMenuItemToMenu(mMenu, item);
             }
@@ -150,10 +150,6 @@ public class AddonUICache implements BundleEventListener {
      * Adds an addon menu item/webextension browser action to the menu.
      */
     private void addAddonMenuItem(final MenuItemInfo info) {
-        if (mAddonMenuItemsCache == null) {
-            mAddonMenuItemsCache = new ArrayList<>();
-        }
-
         mAddonMenuItemsCache.add(info);
 
         if (mMenu == null) {
@@ -170,13 +166,11 @@ public class AddonUICache implements BundleEventListener {
         int id = -1;
 
         // Remove add-on menu item from cache, if available.
-        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mAddonMenuItemsCache) {
-                if (item.uuid.equals(uuid)) {
-                    id = item.id;
-                    mAddonMenuItemsCache.remove(item);
-                    break;
-                }
+        for (MenuItemInfo item : mAddonMenuItemsCache) {
+            if (item.uuid.equals(uuid)) {
+                id = item.id;
+                mAddonMenuItemsCache.remove(item);
+                break;
             }
         }
 
@@ -197,17 +191,15 @@ public class AddonUICache implements BundleEventListener {
         int id = -1;
 
         // Set attribute for the menu item in cache, if available
-        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mAddonMenuItemsCache) {
-                if (item.uuid.equals(uuid)) {
-                    id = item.id;
-                    item.label = options.getString("name", item.label);
-                    item.checkable = options.getBoolean("checkable", item.checkable);
-                    item.checked = options.getBoolean("checked", item.checked);
-                    item.enabled = options.getBoolean("enabled", item.enabled);
-                    item.visible = options.getBoolean("visible", item.visible);
-                    break;
-                }
+        for (MenuItemInfo item : mAddonMenuItemsCache) {
+            if (item.uuid.equals(uuid)) {
+                id = item.id;
+                item.label = options.getString("name", item.label);
+                item.checkable = options.getBoolean("checkable", item.checkable);
+                item.checked = options.getBoolean("checked", item.checked);
+                item.enabled = options.getBoolean("enabled", item.enabled);
+                item.visible = options.getBoolean("visible", item.visible);
+                break;
             }
         }
 
