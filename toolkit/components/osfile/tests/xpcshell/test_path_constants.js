@@ -22,6 +22,13 @@ function compare_paths(ospath, key) {
   }
 }
 
+// Test simple paths
+add_task(async function test_simple_paths() {
+  Assert.ok(!!OS.Constants.Path.tmpDir);
+  compare_paths(OS.Constants.Path.tmpDir, "TmpD");
+
+});
+
 // Some path constants aren't set up until the profile is available. This
 // test verifies that behavior.
 add_task(async function test_before_after_profile() {
@@ -42,13 +49,6 @@ add_task(async function test_before_after_profile() {
   Assert.ok(!!OS.Constants.Path.userApplicationDataDir);
 
   // FUTURE: verify AppData too (bug 964291).
-});
-
-// Test simple paths
-add_task(async function test_simple_paths() {
-  Assert.ok(!!OS.Constants.Path.tmpDir);
-  compare_paths(OS.Constants.Path.tmpDir, "TmpD");
-
 });
 
 // Test presence of paths that only exist on Desktop platforms
