@@ -4350,15 +4350,15 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
                                        aMouseEvent,
                                        isPointer ? ePointerEnter : eMouseEnter);
 
+  if (!isPointer) {
+    SetContentState(aContent, NS_EVENT_STATE_HOVER);
+  }
+
   NotifyMouseOut(aMouseEvent, aContent);
 
   // Store the first mouseOver event we fire and don't refire mouseOver
   // to that element while the first mouseOver is still ongoing.
   wrapper->mFirstOverEventElement = aContent;
-
-  if (!isPointer) {
-    SetContentState(aContent, NS_EVENT_STATE_HOVER);
-  }
 
   // Fire mouseover
   wrapper->mLastOverFrame =
