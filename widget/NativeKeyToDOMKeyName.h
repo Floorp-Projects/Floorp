@@ -25,12 +25,8 @@
 #define KEY_MAP_COCOA(aCPPKeyName, aNativeKey)
 // GTK
 #define KEY_MAP_GTK(aCPPKeyName, aNativeKey)
-// Android and B2G
-#define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey)
 // Only for Android
-#define KEY_MAP_ANDROID_EXCEPT_B2G(aCPPKeyName, aNativeKey)
-// Only for B2G
-#define KEY_MAP_B2G(aCPPKeyName, aNativeKey)
+#define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey)
 
 #if defined(XP_WIN)
 #if defined(NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX)
@@ -79,9 +75,6 @@
 #elif defined(ANDROID)
 #undef KEY_MAP_ANDROID
 #define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey) \
-  NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
-#undef KEY_MAP_ANDROID_EXCEPT_B2G
-#define KEY_MAP_ANDROID_EXCEPT_B2G(aCPPKeyName, aNativeKey) \
   NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
 #endif
 
@@ -1056,7 +1049,7 @@ KEY_MAP_ANDROID (Call, AKEYCODE_CALL)
 KEY_MAP_ANDROID (Camera, AKEYCODE_CAMERA)
 
 // CameraFocus
-KEY_MAP_ANDROID_EXCEPT_B2G(CameraFocus, AKEYCODE_FOCUS)
+KEY_MAP_ANDROID(CameraFocus, AKEYCODE_FOCUS)
 
 // EndCall
 KEY_MAP_ANDROID (EndCall, AKEYCODE_ENDCALL)
@@ -1065,8 +1058,7 @@ KEY_MAP_ANDROID (EndCall, AKEYCODE_ENDCALL)
 KEY_MAP_ANDROID (GoBack, AKEYCODE_BACK)
 
 // GoHome
-KEY_MAP_ANDROID_EXCEPT_B2G(GoHome,     AKEYCODE_HOME)
-KEY_MAP_B2G               (HomeScreen, AKEYCODE_HOME)
+KEY_MAP_ANDROID(GoHome,     AKEYCODE_HOME)
 
 // HeadsetHook
 KEY_MAP_ANDROID (HeadsetHook, AKEYCODE_HEADSETHOOK)
@@ -1288,5 +1280,3 @@ KEY_MAP_ANDROID (SoftRight, AKEYCODE_SOFT_RIGHT)
 #undef KEY_MAP_COCOA
 #undef KEY_MAP_GTK
 #undef KEY_MAP_ANDROID
-#undef KEY_MAP_ANDROID_EXCEPT_B2G
-#undef KEY_MAP_B2G
