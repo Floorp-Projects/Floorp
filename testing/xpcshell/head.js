@@ -784,7 +784,9 @@ function do_note_exception(ex, text) {
 }
 
 function do_report_result(passed, text, stack, todo) {
-  while (stack.filename.includes("head.js") && stack.caller) {
+  // Match names like head.js, head_foo.js, and foo_head.js, but not
+  // test_headache.js
+  while (/(\/head(_.+)?|head)\.js$/.test(stack.filename) && stack.caller) {
     stack = stack.caller;
   }
 
