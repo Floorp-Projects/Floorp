@@ -226,11 +226,6 @@ xpc_FastGetCachedWrapper(JSContext* cx, nsWrapperCache* cache, JS::MutableHandle
     return nullptr;
 }
 
-// If aVariant is an XPCVariant, this marks the object to be in aGeneration.
-// This also unmarks the gray JSObject.
-extern void
-xpc_MarkInCCGeneration(nsISupports* aVariant, uint32_t aGeneration);
-
 // If aWrappedJS is a JS wrapper, unmark its JSObject.
 extern void
 xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS);
