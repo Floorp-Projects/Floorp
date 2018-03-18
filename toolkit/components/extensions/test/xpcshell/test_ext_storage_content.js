@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
-
 PromiseTestUtils.whitelistRejectionsGlobally(/WebExtension context not found/);
 
 const server = createHttpServer({hosts: ["example.com"]});
