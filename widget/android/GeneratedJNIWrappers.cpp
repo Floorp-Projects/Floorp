@@ -2582,14 +2582,14 @@ auto GeckoSession::Window::OnReady(mozilla::jni::Object::Param a0) const -> void
 constexpr char GeckoSession::Window::Open_t::name[];
 constexpr char GeckoSession::Window::Open_t::signature[];
 
-const char TextInputController::name[] =
-        "org/mozilla/geckoview/TextInputController";
+const char SessionTextInput::name[] =
+        "org/mozilla/geckoview/SessionTextInput";
 
-const char TextInputController::EditableClient::name[] =
-        "org/mozilla/geckoview/TextInputController$EditableClient";
+const char SessionTextInput::EditableClient::name[] =
+        "org/mozilla/geckoview/SessionTextInput$EditableClient";
 
-const char TextInputController::EditableListener::name[] =
-        "org/mozilla/geckoview/TextInputController$EditableListener";
+const char SessionTextInput::EditableListener::name[] =
+        "org/mozilla/geckoview/SessionTextInput$EditableListener";
 
 } /* java */
 } /* mozilla */
