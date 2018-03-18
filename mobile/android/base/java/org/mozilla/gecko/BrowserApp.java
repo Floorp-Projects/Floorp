@@ -3349,7 +3349,7 @@ public class BrowserApp extends GeckoApp
             public boolean onMenuItemClick(MenuItem item) {
                 final GeckoBundle data = new GeckoBundle(1);
                 data.putString("item", info.uuid);
-                EventDispatcher.getInstance().dispatch("Menu:BrowserActionClicked", data);
+                EventDispatcher.getInstance().dispatch("Menu:Clicked", data);
                 return true;
             }
         });
