@@ -234,7 +234,7 @@ SVGPathData::GetPathSegAtLength(float aDistance) const
  * making it a small percentage of the stroke width of the path. This should
  * hopefully allow us to make the line as long as possible (to avoid rounding
  * issues in the backend resulting in the backend seeing it as having zero
- * length) while still avoiding the small rectangle being noticably different
+ * length) while still avoiding the small rectangle being noticeably different
  * from a square.
  *
  * Note that this function inserts a subpath into the current gfx path that
