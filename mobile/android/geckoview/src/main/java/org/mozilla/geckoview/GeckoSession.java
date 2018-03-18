@@ -86,7 +86,7 @@ public class GeckoSession extends LayerSession
     private final EventDispatcher mEventDispatcher =
         new EventDispatcher(mNativeQueue);
 
-    private final TextInputController mTextInput = new TextInputController(this, mNativeQueue);
+    private final SessionTextInput mTextInput = new SessionTextInput(this, mNativeQueue);
 
     private String mId = UUID.randomUUID().toString().replace("-", "");
     /* package */ String getId() { return mId; }
@@ -785,11 +785,11 @@ public class GeckoSession extends LayerSession
     }
 
     /**
-     * Get the TextInputController instance for this session.
+     * Get the SessionTextInput instance for this session. May be called on any thread.
      *
-     * @return TextInputController instance.
+     * @return SessionTextInput instance.
      */
-    public @NonNull TextInputController getTextInputController() {
+    public @NonNull SessionTextInput getTextInput() {
         // May be called on any thread.
         return mTextInput;
     }

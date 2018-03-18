@@ -24,12 +24,12 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
 /**
- * TextInputController handles text input for GeckoSession through key events or input
+ * SessionTextInput handles text input for GeckoSession through key events or input
  * methods. It is typically used to implement certain methods in View such as {@code
  * onCreateInputConnection()}, by forwarding such calls to corresponding methods in
- * TextInputController.
+ * SessionTextInput.
  */
-public final class TextInputController {
+public final class SessionTextInput {
 
     // Interface to access GeckoInputConnection from TextInputController.
     public interface Delegate {
@@ -100,8 +100,8 @@ public final class TextInputController {
     private final GeckoEditableChild mEditableChild = new GeckoEditableChild(mEditable);
     private Delegate mInputConnection;
 
-    /* package */ TextInputController(final @NonNull GeckoSession session,
-                                      final @NonNull NativeQueue queue) {
+    /* package */ SessionTextInput(final @NonNull GeckoSession session,
+                                   final @NonNull NativeQueue queue) {
         mSession = session;
         mQueue = queue;
         mEditable.setDefaultEditableChild(mEditableChild);
@@ -129,7 +129,7 @@ public final class TextInputController {
      *     if (Build.VERSION.SDK_INT &gt;= 24) {
      *         return super.getHandler();
      *     }
-     *     return getSession().getTextInputController().getHandler(super.getHandler());
+     *     return getSession().getTextInput().getHandler(super.getHandler());
      * }</pre>
      *
      * @param defHandler Handler returned by the system {@code getHandler} implementation.

@@ -47,7 +47,7 @@ public final class GeckoEditable
     extends IGeckoEditableParent.Stub
     implements InvocationHandler,
                Editable,
-               TextInputController.EditableClient {
+               SessionTextInput.EditableClient {
 
     private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoEditable";
@@ -71,7 +71,7 @@ public final class GeckoEditable
     // Parent or content process child that has the focus.
     /* package */ IGeckoEditableChild mFocusedChild; // Used by IC thread.
     /* package */ IBinder mFocusedToken; // Used by Gecko/binder thread.
-    /* package */ TextInputController.EditableListener mListener;
+    /* package */ SessionTextInput.EditableListener mListener;
 
     /* package */ boolean mInBatchMode; // Used by IC thread
     /* package */ boolean mNeedSync; // Used by IC thread
@@ -278,7 +278,7 @@ public final class GeckoEditable
         }
 
         public synchronized void syncShadowText(
-                final TextInputController.EditableListener listener) {
+                final SessionTextInput.EditableListener listener) {
             if (DEBUG) {
                 assertOnIcThread();
             }
@@ -603,7 +603,7 @@ public final class GeckoEditable
 
     public GeckoEditable() {
         if (DEBUG) {
-            // Called by TextInputController.
+            // Called by SessionTextInput.
             ThreadUtils.assertOnUiThread();
         }
 
@@ -619,16 +619,16 @@ public final class GeckoEditable
 
     public void setDefaultEditableChild(final IGeckoEditableChild child) {
         if (DEBUG) {
-            // Called by TextInputController.
+            // Called by SessionTextInput.
             ThreadUtils.assertOnUiThread();
             Log.d(LOGTAG, "setDefaultEditableChild " + child);
         }
         mDefaultChild = child;
     }
 
-    public void setListener(final TextInputController.EditableListener newListener) {
+    public void setListener(final SessionTextInput.EditableListener newListener) {
         if (DEBUG) {
-            // Called by TextInputController.
+            // Called by SessionTextInput.
             ThreadUtils.assertOnUiThread();
             Log.d(LOGTAG, "setListener " + newListener);
         }
@@ -685,7 +685,7 @@ public final class GeckoEditable
         final boolean notifyGecko = (flags & SEND_COMPOSITION_NOTIFY_GECKO) != 0;
         final boolean keepCurrent = (flags & SEND_COMPOSITION_KEEP_CURRENT) != 0;
         final int updateFlags = keepCurrent ?
-                GeckoEditableChild.FLAG_KEEP_CURRENT_COMPOSITION : 0;
+                                GeckoEditableChild.FLAG_KEEP_CURRENT_COMPOSITION : 0;
 
         if (!keepCurrent) {
             // If keepCurrent is true, the composition may not actually be updated;
@@ -846,7 +846,7 @@ public final class GeckoEditable
         } while (rangeStart < composingEnd);
     }
 
-    @Override // TextInputController.EditableClient
+    @Override // SessionTextInput.EditableClient
     public void sendKeyEvent(final KeyEvent event, int action, int metaState) {
         if (DEBUG) {
             assertOnIcThread();
@@ -880,7 +880,7 @@ public final class GeckoEditable
         }
     }
 
-    @Override // TextInputController.EditableClient
+    @Override // SessionTextInput.EditableClient
     public Editable getEditable() {
         if (!onIcThread()) {
             // Android may be holding an old InputConnection; ignore
@@ -896,7 +896,7 @@ public final class GeckoEditable
         return mProxy;
     }
 
-    @Override // TextInputController.EditableClient
+    @Override // SessionTextInput.EditableClient
     public void setBatchMode(boolean inBatchMode) {
         if (!onIcThread()) {
             // Android may be holding an old InputConnection; ignore
@@ -928,7 +928,7 @@ public final class GeckoEditable
         mText.syncShadowText(mListener);
     }
 
-    @Override // TextInputController.EditableClient
+    @Override // SessionTextInput.EditableClient
     public void setSuppressKeyUp(boolean suppress) {
         if (DEBUG) {
             assertOnIcThread();
@@ -938,7 +938,7 @@ public final class GeckoEditable
         mSuppressKeyUp = suppress;
     }
 
-    @Override // TextInputController.EditableClient
+    @Override // SessionTextInput.EditableClient
     public Handler setInputConnectionHandler(final Handler handler) {
         if (handler == mIcRunHandler) {
             return mIcRunHandler;
@@ -978,12 +978,12 @@ public final class GeckoEditable
         return handler;
     }
 
-    @Override // TextInputController.EditableClient
+    @Override // SessionTextInput.EditableClient
     public void postToInputConnection(final Runnable runnable) {
         mIcPostHandler.post(runnable);
     }
 
-    @Override // TextInputController.EditableClient
+    @Override // SessionTextInput.EditableClient
     public void requestCursorUpdates(int requestMode) {
         try {
             if (mFocusedChild != null) {
@@ -1061,16 +1061,16 @@ public final class GeckoEditable
         // On Gecko or binder thread.
         if (DEBUG) {
             // NOTIFY_IME_REPLY_EVENT is logged separately, inside geckoActionReply()
-            if (type != TextInputController.EditableListener.NOTIFY_IME_REPLY_EVENT) {
+            if (type != SessionTextInput.EditableListener.NOTIFY_IME_REPLY_EVENT) {
                 Log.d(LOGTAG, "notifyIME(" +
-                              getConstantName(TextInputController.EditableListener.class,
+                              getConstantName(SessionTextInput.EditableListener.class,
                                               "NOTIFY_IME_", type) +
                               ")");
             }
         }
 
         final IBinder token = child.asBinder();
-        if (type == TextInputController.EditableListener.NOTIFY_IME_OF_TOKEN) {
+        if (type == SessionTextInput.EditableListener.NOTIFY_IME_OF_TOKEN) {
             synchronized (this) {
                 if (mFocusedToken != null && mFocusedToken != token &&
                         mFocusedToken.pingBinder()) {
@@ -1081,20 +1081,20 @@ public final class GeckoEditable
                 mFocusedToken = token;
                 return;
             }
-        } else if (type == TextInputController.EditableListener.NOTIFY_IME_OPEN_VKB) {
+        } else if (type == SessionTextInput.EditableListener.NOTIFY_IME_OPEN_VKB) {
             // Always from parent process.
             ThreadUtils.assertOnGeckoThread();
         } else if (!binderCheckToken(token, /* allowNull */ false)) {
             return;
         }
 
-        if (type == TextInputController.EditableListener.NOTIFY_IME_OF_BLUR) {
+        if (type == SessionTextInput.EditableListener.NOTIFY_IME_OF_BLUR) {
             synchronized (this) {
                 onTextChange(token, "", 0, Integer.MAX_VALUE);
                 mActions.clear();
                 mFocusedToken = null;
             }
-        } else if (type == TextInputController.EditableListener.NOTIFY_IME_REPLY_EVENT) {
+        } else if (type == SessionTextInput.EditableListener.NOTIFY_IME_REPLY_EVENT) {
             geckoActionReply(mActions.poll());
             if (!mActions.isEmpty()) {
                 // Only post to IC thread below when the queue is empty.
@@ -1105,19 +1105,19 @@ public final class GeckoEditable
         mIcPostHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (type == TextInputController.EditableListener.NOTIFY_IME_REPLY_EVENT) {
+                if (type == SessionTextInput.EditableListener.NOTIFY_IME_REPLY_EVENT) {
                     if (mNeedSync) {
                         icSyncShadowText();
                     }
                     return;
                 }
 
-                if (type == TextInputController.EditableListener.NOTIFY_IME_OF_FOCUS &&
+                if (type == SessionTextInput.EditableListener.NOTIFY_IME_OF_FOCUS &&
                         mListener != null) {
                     mFocusedChild = child;
                     mNeedSync = false;
                     mText.syncShadowText(/* listener */ null);
-                } else if (type == TextInputController.EditableListener.NOTIFY_IME_OF_BLUR) {
+                } else if (type == SessionTextInput.EditableListener.NOTIFY_IME_OF_BLUR) {
                     mFocusedChild = null;
                 }
 
@@ -1135,7 +1135,7 @@ public final class GeckoEditable
         // On Gecko or binder thread.
         if (DEBUG) {
             Log.d(LOGTAG, "notifyIMEContext(" +
-                          getConstantName(TextInputController.EditableListener.class,
+                          getConstantName(SessionTextInput.EditableListener.class,
                                           "IME_STATE_", state) +
                           ", \"" + typeHint + "\", \"" + modeHint + "\", \"" + actionHint +
                           "\", 0x" + Integer.toHexString(flags) + ")");
