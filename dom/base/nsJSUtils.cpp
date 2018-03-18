@@ -25,6 +25,7 @@
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
+#include "nsXBLPrototypeBinding.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Date.h"
@@ -462,23 +463,60 @@ nsJSUtils::ModuleEvaluate(JSContext* aCx, JS::Handle<JSObject*> aModule)
   return NS_OK;
 }
 
+static bool
+AddScopeChainItem(JSContext* aCx,
+                  nsINode* aNode,
+                  JS::AutoObjectVector& aScopeChain)
+{
+  JS::RootedValue val(aCx);
+  if (!GetOrCreateDOMReflector(aCx, aNode, &val)) {
+    return false;
+  }
+
+  if (!aScopeChain.append(&val.toObject())) {
+    return false;
+  }
+
+  return true;
+}
+
 /* static */
 bool
 nsJSUtils::GetScopeChainForElement(JSContext* aCx,
-                                   mozilla::dom::Element* aElement,
+                                   Element* aElement,
                                    JS::AutoObjectVector& aScopeChain)
 {
   for (nsINode* cur = aElement; cur; cur = cur->GetScopeChainParent()) {
-    JS::RootedValue val(aCx);
-    if (!GetOrCreateDOMReflector(aCx, cur, &val)) {
-      return false;
-    }
-
-    if (!aScopeChain.append(&val.toObject())) {
+    if (!AddScopeChainItem(aCx, cur, aScopeChain)) {
       return false;
     }
   }
 
+  return true;
+}
+
+/* static */
+bool
+nsJSUtils::GetScopeChainForXBL(JSContext* aCx,
+                               Element* aElement,
+                               const nsXBLPrototypeBinding& aProtoBinding,
+                               JS::AutoObjectVector& aScopeChain)
+{
+  if (!aElement) {
+    return true;
+  }
+
+  if (!aProtoBinding.SimpleScopeChain()) {
+    return GetScopeChainForElement(aCx, aElement, aScopeChain);
+  }
+
+  if (!AddScopeChainItem(aCx, aElement, aScopeChain)) {
+    return false;
+  }
+
+  if (!AddScopeChainItem(aCx, aElement->OwnerDoc(), aScopeChain)) {
+    return false;
+  }
   return true;
 }
 
