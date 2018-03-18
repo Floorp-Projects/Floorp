@@ -7440,12 +7440,12 @@ public:
     template<class Impl> class Natives;
 };
 
-class TextInputController : public mozilla::jni::ObjectBase<TextInputController>
+class SessionTextInput : public mozilla::jni::ObjectBase<SessionTextInput>
 {
 public:
     static const char name[];
 
-    explicit TextInputController(const Context& ctx) : ObjectBase<TextInputController>(ctx) {}
+    explicit SessionTextInput(const Context& ctx) : ObjectBase<SessionTextInput>(ctx) {}
 
     class EditableClient;
     class EditableListener;
@@ -7455,7 +7455,7 @@ public:
 
 };
 
-class TextInputController::EditableClient : public mozilla::jni::ObjectBase<EditableClient>
+class SessionTextInput::EditableClient : public mozilla::jni::ObjectBase<EditableClient>
 {
 public:
     static const char name[];
@@ -7473,7 +7473,7 @@ public:
 
 };
 
-class TextInputController::EditableListener : public mozilla::jni::ObjectBase<EditableListener>
+class SessionTextInput::EditableListener : public mozilla::jni::ObjectBase<EditableListener>
 {
 public:
     static const char name[];

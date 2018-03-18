@@ -8,7 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.geckoview.TextInputController;
+import org.mozilla.geckoview.SessionTextInput;
 
 import android.graphics.RectF;
 import android.os.IBinder;
@@ -133,10 +133,10 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
         if (DEBUG) {
             ThreadUtils.assertOnGeckoThread();
             Log.d(LOGTAG, "notifyIME(" + GeckoEditable.getConstantName(
-                          TextInputController.EditableListener.class,
+                          SessionTextInput.EditableListener.class,
                           "NOTIFY_IME_", type) + ")");
         }
-        if (type == TextInputController.EditableListener.NOTIFY_IME_TO_CANCEL_COMPOSITION) {
+        if (type == SessionTextInput.EditableListener.NOTIFY_IME_TO_CANCEL_COMPOSITION) {
             // Composition should have been canceled on the parent side through text
             // update notifications. We cannot verify that here because we don't
             // keep track of spans on the child side, but it's simple to add the
@@ -159,7 +159,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
         if (DEBUG) {
             ThreadUtils.assertOnGeckoThread();
             Log.d(LOGTAG, "notifyIMEContext(" + GeckoEditable.getConstantName(
-                          TextInputController.EditableListener.class,
+                          SessionTextInput.EditableListener.class,
                           "IME_STATE_", state) + ", \"" +
                           typeHint + "\", \"" + modeHint + "\", \"" + actionHint +
                           "\", 0x" + Integer.toHexString(flags) + ")");
