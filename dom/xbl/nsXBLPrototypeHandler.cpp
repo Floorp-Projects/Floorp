@@ -365,7 +365,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   // Build a scope chain in the XBL scope.
   RefPtr<Element> targetElement = do_QueryObject(scriptTarget);
   JS::AutoObjectVector scopeChain(cx);
-  ok = nsJSUtils::GetScopeChainForElement(cx, targetElement, scopeChain);
+  ok = nsJSUtils::GetScopeChainForXBL(cx, targetElement, *mPrototypeBinding, scopeChain);
   NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
   // Next, clone the generic handler with our desired scope chain.
