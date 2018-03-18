@@ -283,7 +283,6 @@ public class BrowserApp extends GeckoApp
         public boolean enabled = true;
         public boolean visible = true;
         public int parent;
-        public boolean added;   // So we can re-add after a locale change.
 
         @Override
         public int describeContents() {
@@ -299,7 +298,6 @@ public class BrowserApp extends GeckoApp
             dest.writeInt(enabled ? 1 : 0);
             dest.writeInt(visible ? 1 : 0);
             dest.writeInt(parent);
-            dest.writeInt(added ? 1 : 0);
         }
 
         public static final Parcelable.Creator<MenuItemInfo> CREATOR
@@ -323,7 +321,6 @@ public class BrowserApp extends GeckoApp
             enabled = source.readInt() != 0;
             visible = source.readInt() != 0;
             parent = source.readInt();
-            added = source.readInt() != 0;
         }
 
         public MenuItemInfo() { }
@@ -3237,8 +3234,6 @@ public class BrowserApp extends GeckoApp
      * the root (mMenu).
      */
     private void addAddonMenuItemToMenu(final Menu menu, final MenuItemInfo info) {
-        info.added = true;
-
         final Menu destination;
         if (info.parent == 0) {
             destination = menu;
@@ -3288,9 +3283,6 @@ public class BrowserApp extends GeckoApp
             mAddonMenuItemsCache = new ArrayList<MenuItemInfo>();
         }
 
-        // Mark it as added if the menu was ready.
-        info.added = (mMenu != null);
-
         // Always cache so we can rebuild after a locale switch.
         mAddonMenuItemsCache.add(info);
 
@@ -3332,7 +3324,6 @@ public class BrowserApp extends GeckoApp
                     item.checked = options.getBoolean("checked", item.checked);
                     item.enabled = options.getBoolean("enabled", item.enabled);
                     item.visible = options.getBoolean("visible", item.visible);
-                    item.added = (mMenu != null);
                     break;
                 }
             }
@@ -3357,8 +3348,6 @@ public class BrowserApp extends GeckoApp
      * the root (mMenu).
      */
     private void addBrowserActionMenuItemToMenu(final Menu menu, final BrowserActionItemInfo info) {
-        info.added = true;
-
         final MenuItem item = menu.add(Menu.NONE, info.id, Menu.NONE, info.label);
 
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
@@ -3384,9 +3373,6 @@ public class BrowserApp extends GeckoApp
         if (mBrowserActionItemsCache == null) {
             mBrowserActionItemsCache = new ArrayList<BrowserActionItemInfo>();
         }
-
-        // Mark it as added if the menu was ready.
-        info.added = (mMenu != null);
 
         // Always cache so we can rebuild after a locale switch.
         mBrowserActionItemsCache.add(info);
