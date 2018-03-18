@@ -114,8 +114,8 @@ SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
     return mValue * GetAbsUnitsPerAbsUnit(aUnit, mUnit);
   }
 
-  // Otherwise we do a two step convertion via user units. This can only
-  // succeed if aElement is non-null (although that's not sufficent to
+  // Otherwise we do a two step conversion via user units. This can only
+  // succeed if aElement is non-null (although that's not sufficient to
   // guarantee success).
 
   float userUnitsPerCurrentUnit = GetUserUnitsPerUnit(aElement, aAxis);
