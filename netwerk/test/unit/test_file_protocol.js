@@ -13,7 +13,7 @@ const special_type = "application/x-our-special-type";
   test_upload_file,
   test_load_replace,
   do_test_finished
-].forEach(add_test);
+].forEach(f => add_test(f));
 
 function getFile(key) {
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"]

@@ -94,4 +94,4 @@ function test_guid_on_background() {
 [
   test_guid_invariants,
   test_guid_on_background,
-].forEach(add_test);
+].forEach(fn => add_test(fn));
