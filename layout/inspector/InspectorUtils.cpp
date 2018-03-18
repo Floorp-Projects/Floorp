@@ -591,18 +591,13 @@ InspectorUtils::CssPropertyIsShorthand(GlobalObject& aGlobalObject,
                                        const nsAString& aProperty,
                                        ErrorResult& aRv)
 {
-  nsCSSPropertyID propertyID =
-    nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eForAllContent);
-  if (propertyID == eCSSProperty_UNKNOWN) {
+  NS_ConvertUTF16toUTF8 prop(aProperty);
+  bool found;
+  bool isShorthand = Servo_Property_IsShorthand(&prop, &found);
+  if (!found) {
     aRv.Throw(NS_ERROR_FAILURE);
-    return false;
   }
-
-  if (propertyID == eCSSPropertyExtra_variable) {
-    return false;
-  }
-
-  return nsCSSProps::IsShorthand(propertyID);
+  return isShorthand;
 }
 
 // A helper function that determines whether the given property
