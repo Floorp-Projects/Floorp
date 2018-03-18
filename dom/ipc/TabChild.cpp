@@ -2584,6 +2584,10 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverE
     }
   });
 
+  if (aEnabled) {
+    ProcessHangMonitor::MaybeStartForcePaint();
+  }
+
   if (mCompositorOptions) {
     MOZ_ASSERT(mPuppetWidget);
     RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();

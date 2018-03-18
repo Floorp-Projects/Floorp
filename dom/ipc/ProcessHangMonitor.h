@@ -49,6 +49,7 @@ class ProcessHangMonitor final
                          dom::TabParent* aTab,
                          uint64_t aLayerObserverEpoch);
   static void ClearForcePaint(uint64_t aLayerObserverEpoch);
+  static void MaybeStartForcePaint();
 
   enum SlowScriptAction {
     Continue,
