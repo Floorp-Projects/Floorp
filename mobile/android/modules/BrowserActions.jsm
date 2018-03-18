@@ -63,7 +63,7 @@ var BrowserActions = {
    */
   register(browserAction) {
     EventDispatcher.instance.sendRequest({
-      type: "Menu:AddBrowserAction",
+      type: "Menu:Add",
       uuid: browserAction.uuid,
       name: browserAction.defaults.name,
     });
@@ -82,7 +82,7 @@ var BrowserActions = {
   update(uuid, options) {
     if (options.name) {
       EventDispatcher.instance.sendRequest({
-        type: "Menu:UpdateBrowserAction",
+        type: "Menu:Update",
         uuid,
         options,
       });
@@ -132,7 +132,7 @@ var BrowserActions = {
       throw new Error(`No BrowserAction with UUID ${uuid} was found`);
     }
     EventDispatcher.instance.sendRequest({
-      type: "Menu:RemoveBrowserAction",
+      type: "Menu:Remove",
       uuid,
     });
     delete this._browserActions[uuid];
