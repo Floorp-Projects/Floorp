@@ -889,7 +889,9 @@ nsHostResolver::ResolveHost(const char             *host,
                                     if (!rec->addr_info) {
                                         rec->addr_info = new AddrInfo(
                                             unspecRec->addr_info->mHostName,
-                                            unspecRec->addr_info->mCanonicalName);
+                                            unspecRec->addr_info->mCanonicalName,
+                                            unspecRec->addr_info->IsTRR()
+                                          );
                                         rec->CopyExpirationTimesAndFlagsFrom(unspecRec);
                                     }
                                     rec->addr_info->AddAddress(
