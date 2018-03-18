@@ -1393,6 +1393,18 @@ class AddonInstall {
   }
 
   /**
+   * Called during XPIProvider shutdown so that we can do any necessary
+   * pre-shutdown cleanup.
+   */
+  onShutdown() {
+    switch (this.state) {
+    case AddonManager.STATE_POSTPONED:
+      this.removeTemporaryFile();
+      break;
+    }
+  }
+
+  /**
    * Cancels installation of this add-on.
    *
    * Note this method is overridden to handle additional state in
@@ -1677,6 +1689,7 @@ class AddonInstall {
     if (!AddonManagerPrivate.callInstallListeners("onInstallStarted",
                                                   this.listeners, this.wrapper)) {
       this.state = AddonManager.STATE_DOWNLOADED;
+      this.removeTemporaryFile();
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onInstallCancelled",
                                                this.listeners, this.wrapper);

@@ -2326,6 +2326,12 @@ var XPIProvider = {
     this.activeAddons.clear();
     this.allAppGlobal = true;
 
+    for (let install of this.installs) {
+      if (install.onShutdown()) {
+        install.onShutdown();
+      }
+    }
+
     // If there are pending operations then we must update the list of active
     // add-ons
     if (Services.prefs.getBoolPref(PREF_PENDING_OPERATIONS, false)) {

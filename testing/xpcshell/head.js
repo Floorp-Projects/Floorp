@@ -1109,6 +1109,16 @@ function do_get_profile(notifyProfileAfterChange = false) {
   _Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
            .registerProvider(provider);
 
+  try {
+    _Services.dirsvc.undefine("TmpD");
+  } catch (e) {
+    // This throws if the key is not already registered, but that
+    // doesn't matter.
+    if (e.result != Cr.NS_ERROR_FAILURE) {
+      throw e;
+    }
+  }
+
   // We need to update the crash events directory when the profile changes.
   if (runningInParent &&
       "@mozilla.org/toolkit/crash-reporter;1" in Cc) {
