@@ -56,7 +56,7 @@ public:
   // set (either by animation, or by taking on the base value which has been
   // explicitly set by markup or a DOM call), false otherwise.
   // If this returns false, the animated value is still valid, that is,
-  // useable, and represents the default base value of the attribute.
+  // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
 
