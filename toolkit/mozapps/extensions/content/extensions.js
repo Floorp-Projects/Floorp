@@ -1807,10 +1807,10 @@ var gCategories = {
 
     AddonManager.addTypeListener(this);
 
-    // eslint-disable-next-line mozilla/use-default-preference-values
-    try {
-      this.node.value = Services.prefs.getCharPref(PREF_UI_LASTCATEGORY);
-    } catch (e) { }
+    // Set this to the default value first, or setting it to a nonexistent value
+    // from the pref will leave the old value in place.
+    this.node.value = gViewDefault;
+    this.node.value = Services.prefs.getStringPref(PREF_UI_LASTCATEGORY, "");
 
     // If there was no last view or no existing category matched the last view
     // then switch to the default category

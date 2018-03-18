@@ -37,6 +37,8 @@ var ExtensionsUI = {
   sideloadListener: null,
   histogram: null,
 
+  pendingNotifications: new WeakMap(),
+
   async init() {
     this.histogram = Services.telemetry.getHistogramById("EXTENSION_INSTALL_PROMPT_RESULT");
 
@@ -321,44 +323,57 @@ var ExtensionsUI = {
     return strings;
   },
 
-  showPermissionsPrompt(browser, strings, icon, histkey) {
-    function eventCallback(topic) {
-      let doc = this.browser.ownerDocument;
-      if (topic == "showing") {
-        let textEl = doc.getElementById("addon-webext-perm-text");
-        textEl.textContent = strings.text;
-        textEl.hidden = !strings.text;
+  async showPermissionsPrompt(browser, strings, icon, histkey) {
+    let win = browser.ownerGlobal;
 
-        let listIntroEl = doc.getElementById("addon-webext-perm-intro");
-        listIntroEl.textContent = strings.listIntro;
-        listIntroEl.hidden = (strings.msgs.length == 0);
-
-        let list = doc.getElementById("addon-webext-perm-list");
-        while (list.firstChild) {
-          list.firstChild.remove();
-        }
-
-        for (let msg of strings.msgs) {
-          let item = doc.createElementNS(HTML_NS, "li");
-          item.textContent = msg;
-          list.appendChild(item);
-        }
-      } else if (topic == "swapping") {
-        return true;
-      }
-      return false;
+    // Wait for any pending prompts in this window to complete before
+    // showing the next one.
+    let pending;
+    while ((pending = this.pendingNotifications.get(win))) {
+      await pending;
     }
 
-    let popupOptions = {
-      hideClose: true,
-      popupIconURL: icon || DEFAULT_EXTENSION_ICON,
-      persistent: true,
-      eventCallback,
-      name: strings.addonName,
-    };
+    let promise = new Promise(resolve => {
+      function eventCallback(topic) {
+        let doc = this.browser.ownerDocument;
+        if (topic == "showing") {
+          let textEl = doc.getElementById("addon-webext-perm-text");
+          textEl.textContent = strings.text;
+          textEl.hidden = !strings.text;
 
-    let win = browser.ownerGlobal;
-    return new Promise(resolve => {
+          let listIntroEl = doc.getElementById("addon-webext-perm-intro");
+          listIntroEl.textContent = strings.listIntro;
+          listIntroEl.hidden = (strings.msgs.length == 0);
+
+          let list = doc.getElementById("addon-webext-perm-list");
+          while (list.firstChild) {
+            list.firstChild.remove();
+          }
+
+          for (let msg of strings.msgs) {
+            let item = doc.createElementNS(HTML_NS, "li");
+            item.textContent = msg;
+            list.appendChild(item);
+          }
+        } else if (topic == "swapping") {
+          return true;
+        }
+        if (topic == "removed") {
+          Services.tm.dispatchToMainThread(() => {
+            resolve(false);
+          });
+        }
+        return false;
+      }
+
+      let popupOptions = {
+        hideClose: true,
+        popupIconURL: icon || DEFAULT_EXTENSION_ICON,
+        persistent: true,
+        eventCallback,
+        name: strings.addonName,
+      };
+
       let action = {
         label: strings.acceptText,
         accessKey: strings.acceptKey,
@@ -386,6 +401,10 @@ var ExtensionsUI = {
                                   "addons-notification-icon", action,
                                   secondaryActions, popupOptions);
     });
+
+    this.pendingNotifications.set(win, promise);
+    promise.finally(() => this.pendingNotifications.delete(win));
+    return promise;
   },
 
   showDefaultSearchPrompt(browser, strings, icon) {
