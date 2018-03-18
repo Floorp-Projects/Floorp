@@ -41,7 +41,6 @@ class Collection(unittest.TestCase):
         c1 = TestContext('host1')
         c2 = TestContext('host2')
         c3 = TestContext('host2')
-        c3.os = 'B2G'
         c4 = TestContext('host1')
 
         t1 = TestResult('t1', context=c1)
