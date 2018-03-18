@@ -97,6 +97,12 @@ class HangMonitorChild
   void ClearHangAsync();
   void ClearForcePaint(uint64_t aLayerObserverEpoch);
 
+  // MaybeStartForcePaint will notify the background hang monitor of activity
+  // if this is the first time calling it since ClearForcePaint. It should be
+  // callable from any thread, but you must be holding mMonitor if using it off
+  // the main thread, since it could race with ClearForcePaint.
+  void MaybeStartForcePaint();
+
   mozilla::ipc::IPCResult RecvTerminateScript(const bool& aTerminateGlobal) override;
   mozilla::ipc::IPCResult RecvBeginStartingDebugger() override;
   mozilla::ipc::IPCResult RecvEndStartingDebugger() override;
@@ -141,6 +147,10 @@ class HangMonitorChild
 
   // This field is only accessed on the hang thread.
   bool mIPCOpen;
+
+  // Allows us to ensure we NotifyActivity only once, allowing
+  // either thread to do so.
+  Atomic<bool> mBHRMonitorActive;
 };
 
 Atomic<HangMonitorChild*> HangMonitorChild::sInstance;
@@ -430,7 +440,7 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
     if (mForcePaintEpoch >= aLayerObserverEpoch) {
       return IPC_OK();
     }
-    mForcePaintMonitor->NotifyActivity();
+    MaybeStartForcePaint();
     mForcePaint = true;
     mForcePaintTab = aTabId;
     mForcePaintEpoch = aLayerObserverEpoch;
@@ -439,6 +449,18 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
   JS_RequestInterruptCallback(mContext);
 
   return IPC_OK();
+}
+
+void
+HangMonitorChild::MaybeStartForcePaint()
+{
+  if (!NS_IsMainThread()) {
+    mMonitor.AssertCurrentThreadOwns();
+  }
+
+  if (!mBHRMonitorActive.exchange(true)) {
+    mForcePaintMonitor->NotifyActivity();
+  }
 }
 
 void
@@ -457,6 +479,11 @@ HangMonitorChild::ClearForcePaint(uint64_t aLayerObserverEpoch)
       mForcePaintEpoch = aLayerObserverEpoch;
     }
     mForcePaintMonitor->NotifyWait();
+
+    // ClearForcePaint must be called on the main thread, and the
+    // hang monitor thread only sets this with mMonitor held, so there
+    // should be no risk of missing NotifyActivity calls here.
+    mBHRMonitorActive = false;
   }
 }
 
@@ -1379,5 +1406,16 @@ ProcessHangMonitor::ClearForcePaint(uint64_t aLayerObserverEpoch)
 
   if (HangMonitorChild* child = HangMonitorChild::Get()) {
     child->ClearForcePaint(aLayerObserverEpoch);
+  }
+}
+
+/* static */ void
+ProcessHangMonitor::MaybeStartForcePaint()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
+
+  if (HangMonitorChild* child = HangMonitorChild::Get()) {
+    child->MaybeStartForcePaint();
   }
 }
