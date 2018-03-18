@@ -850,7 +850,11 @@ PopupNotifications.prototype = {
            if (n.options.displayURI instanceof Ci.nsIFileURL) {
             uri = n.options.displayURI.pathQueryRef;
           } else {
-            uri = n.options.displayURI.hostPort;
+            try {
+              uri = n.options.displayURI.hostPort;
+            } catch (e) {
+              uri = n.options.displayURI.spec;
+            }
           }
           popupnotification.setAttribute("origin", uri);
         } catch (e) {

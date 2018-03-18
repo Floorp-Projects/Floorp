@@ -9,84 +9,78 @@ MockFilePicker.init(window);
 
 var gManagerWindow;
 
-function checkInstallConfirmation(...urls) {
+/**
+ * Wait for the given PopupNotification to display
+ *
+ * @param {string} name
+ *        The name of the notification to wait for.
+ *
+ * @returns {Promise}
+ *          Resolves with the notification window.
+ */
+function promisePopupNotificationShown(name) {
   return new Promise(resolve => {
-    let nurls = urls.length;
+    function popupshown() {
+      let notification = PopupNotifications.getNotification(name);
+      if (!notification) { return; }
 
-    let notificationCount = 0;
-    let observer = {
-      observe(aSubject, aTopic, aData) {
-        var installInfo = aSubject.wrappedJSObject;
-        isnot(installInfo.browser, null, "Notification should have non-null browser");
-        notificationCount++;
-      }
-    };
-    Services.obs.addObserver(observer, "addon-install-started");
+      ok(notification, `${name} notification shown`);
+      ok(PopupNotifications.isPanelOpen, "notification panel open");
 
-    let windows = new Set();
-
-    function handleDialog(window) {
-      let list = window.document.getElementById("itemList");
-      is(list.childNodes.length, 1, "Should be 1 install");
-      let idx = urls.indexOf(list.children[0].url);
-      isnot(idx, -1, "Install target is an expected url");
-      urls.splice(idx, 1);
-
-      window.document.documentElement.cancelDialog();
+      PopupNotifications.panel.removeEventListener("popupshown", popupshown);
+      resolve(PopupNotifications.panel.firstChild);
     }
 
-    let listener = {
-      handleEvent(event) {
-        let window = event.currentTarget;
-        is(window.document.location.href, INSTALL_URI, "Should have opened the correct window");
-
-        executeSoon(() => handleDialog(window));
-      },
-
-      onOpenWindow(window) {
-        windows.add(window);
-        let domwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindow);
-        domwindow.addEventListener("load", this, false, {once: true});
-      },
-
-      onCloseWindow(window) {
-        if (!windows.has(window)) {
-          return;
-        }
-        windows.delete(window);
-
-        if (windows.size > 0) {
-          return;
-        }
-
-        is(urls.length, 0, "Saw install dialogs for all expected urls");
-
-        Services.wm.removeListener(listener);
-
-        is(notificationCount, nurls, `Saw ${nurls} addon-install-started notifications`);
-        Services.obs.removeObserver(observer, "addon-install-started");
-
-        resolve();
-      }
-    };
-
-    Services.wm.addListener(listener);
+    PopupNotifications.panel.addEventListener("popupshown", popupshown);
   });
+}
+
+async function checkInstallConfirmation(...names) {
+  let notificationCount = 0;
+  let observer = {
+    observe(aSubject, aTopic, aData) {
+      var installInfo = aSubject.wrappedJSObject;
+      isnot(installInfo.browser, null, "Notification should have non-null browser");
+      notificationCount++;
+    }
+  };
+  Services.obs.addObserver(observer, "addon-install-started");
+
+  let results = [];
+
+  let promise = promisePopupNotificationShown("addon-webext-permissions");
+  for (let i = 0; i < names.length; i++) {
+    let panel = await promise;
+    let name = panel.getAttribute("name");
+    results.push(name);
+
+    info(`Saw install for ${name}`);
+    if (results.length < names.length) {
+      info(`Waiting for installs for ${names.filter(n => !results.includes(n))}`);
+
+      promise = promisePopupNotificationShown("addon-webext-permissions");
+    }
+    panel.secondaryButton.click();
+  }
+
+  Assert.deepEqual(results.sort(), names.sort(), "Got expected installs");
+
+  is(notificationCount, names.length, `Saw ${names.length} addon-install-started notification`);
+  Services.obs.removeObserver(observer, "addon-install-started");
 }
 
 add_task(async function test_install_from_file() {
   gManagerWindow = await open_manager("addons://list/extension");
 
   var filePaths = [
-                   get_addon_file_url("browser_bug567127_1.xpi"),
-                   get_addon_file_url("browser_bug567127_2.xpi")
+                   get_addon_file_url("browser_dragdrop1.xpi"),
+                   get_addon_file_url("browser_dragdrop2.xpi")
                   ];
   MockFilePicker.setFiles(filePaths.map(aPath => aPath.file));
 
   // Set handler that executes the core test after the window opens,
   // and resolves the promise when the window closes
-  let pInstallURIClosed = checkInstallConfirmation(...filePaths.map(path => path.spec));
+  let pInstallURIClosed = checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
 
   gManagerWindow.gViewController.doCommand("cmd_installFromFile");
 
