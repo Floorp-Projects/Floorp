@@ -232,8 +232,6 @@ protected:
     return parent && parent->IsElement() ? parent->AsElement() : nullptr;
   }
 
-  nsresult SplitText(uint32_t aOffset, nsIDOMText** aReturn);
-
   nsresult GetWholeText(nsAString& aWholeText);
 
   nsresult SetTextInternal(uint32_t aOffset, uint32_t aCount,
