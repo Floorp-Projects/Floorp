@@ -17,7 +17,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMText.h"
 #include "nsError.h"
 #include "nsIContentIterator.h"
 #include "nsINodeList.h"
@@ -3109,20 +3108,23 @@ nsRange::ToString(nsAString& aReturn)
 
   // effeciency hack for simple case
   if (mStart.Container() == mEnd.Container()) {
-    nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(mStart.Container());
+    Text* textNode = mStart.Container() ? mStart.Container()->GetAsText() : nullptr;
 
     if (textNode)
     {
 #ifdef DEBUG_range
       // If debug, dump it:
-      nsCOMPtr<nsIContent> cN = do_QueryInterface(mStart.Container());
-      if (cN) cN->List(stdout);
+      textNode->List(stdout);
       printf("End Range dump: -----------------------\n");
 #endif /* DEBUG */
 
       // grab the text
-      if (NS_FAILED(textNode->SubstringData(mStart.Offset(),mEnd.Offset()-mStart.Offset(),aReturn)))
+      IgnoredErrorResult rv;
+      textNode->SubstringData(mStart.Offset(), mEnd.Offset() - mStart.Offset(),
+                              aReturn, rv);
+      if (rv.Failed()) {
         return NS_ERROR_UNEXPECTED;
+      }
       return NS_OK;
     }
   }
@@ -3147,16 +3149,16 @@ nsRange::ToString(nsAString& aReturn)
     // If debug, dump it:
     n->List(stdout);
 #endif /* DEBUG */
-    nsCOMPtr<nsIDOMText> textNode(do_QueryInterface(n));
+    Text* textNode = n->GetAsText();
     if (textNode) // if it's a text node, get the text
     {
       if (n == mStart.Container()) { // only include text past start offset
-        uint32_t strLength;
-        textNode->GetLength(&strLength);
-        textNode->SubstringData(mStart.Offset(),strLength-mStart.Offset(),tempString);
+        uint32_t strLength = textNode->Length();
+        textNode->SubstringData(mStart.Offset(), strLength-mStart.Offset(),
+                                tempString, IgnoreErrors());
         aReturn += tempString;
       } else if (n == mEnd.Container()) { // only include text before end offset
-        textNode->SubstringData(0,mEnd.Offset(),tempString);
+        textNode->SubstringData(0, mEnd.Offset(), tempString, IgnoreErrors());
         aReturn += tempString;
       } else { // grab the whole kit-n-kaboodle
         textNode->GetData(tempString);
