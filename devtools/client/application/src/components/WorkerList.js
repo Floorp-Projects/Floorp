@@ -25,7 +25,7 @@ class WorkerList extends Component {
 
   render() {
     const { workers, client, serviceContainer } = this.props;
-    const { openAboutDebugging } = serviceContainer;
+    const { openTrustedLink } = serviceContainer;
 
     return [
       ul({ className: "application-workers-container" },
@@ -40,7 +40,10 @@ class WorkerList extends Component {
       ),
       div({ className: "application-aboutdebugging-plug" },
         "See about:debugging for Service Workers from other domains",
-        a({ onClick: () => openAboutDebugging() }, "Open about:debugging")
+        a(
+          { onClick: () => openTrustedLink("about:debugging#workers") },
+          "Open about:debugging"
+        )
       )
     ];
   }
