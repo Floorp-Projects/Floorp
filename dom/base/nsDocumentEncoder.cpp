@@ -43,6 +43,7 @@
 #include "nsTArray.h"
 #include "nsIFrame.h"
 #include "nsStringBuffer.h"
+#include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -423,7 +424,7 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
     }
     case nsINode::COMMENT_NODE:
     {
-      mSerializer->AppendComment(static_cast<nsIContent*>(node),
+      mSerializer->AppendComment(static_cast<Comment*>(node),
                                  aStartOffset, aEndOffset, aStr);
       break;
     }
