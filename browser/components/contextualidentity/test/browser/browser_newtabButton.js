@@ -31,7 +31,7 @@ add_task(async function test_menu_with_timeout() {
     let tab = await waitForTabPromise;
 
     is(tab.getAttribute("usercontextid"), i, `New tab has UCI equal ${i}`);
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 });
 
@@ -78,7 +78,7 @@ add_task(async function test_menu_without_timeout() {
     } else {
       ok(!tab.hasAttribute("usercontextid"), `New tab has no UCI`);
     }
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 });
 

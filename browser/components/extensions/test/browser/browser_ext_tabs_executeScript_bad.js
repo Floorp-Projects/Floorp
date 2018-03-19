@@ -198,8 +198,8 @@ add_task(async function testBadPermissions() {
     },
   });
 
-  await BrowserTestUtils.removeTab(tab2);
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
 });
 
 add_task(async function testMatchDataURI() {
@@ -279,7 +279,7 @@ add_task(async function testMatchDataURI() {
   scripts.sendMessage("execute");
   await scripts.awaitMessage("done");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await scripts.unload();
   await target.unload();
 });

@@ -35,7 +35,7 @@ async function allow_play_for_played_video() {
   await ContentTask.spawn(tab.linkedBrowser, null, play_video_again);
 
   info("- remove tab -");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function start_test() {

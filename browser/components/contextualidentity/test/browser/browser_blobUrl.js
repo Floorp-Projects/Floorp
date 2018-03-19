@@ -69,7 +69,7 @@ add_task(async function test() {
     is(status, "SendSucceeded", "Using a blob URI within a single user context id should work");
   });
 
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
-  await BrowserTestUtils.removeTab(tab3);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab3);
 });

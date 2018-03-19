@@ -23,5 +23,5 @@ add_task(async function test_about_config() {
        "Policy Engine should report about:config as not allowed");
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -35,7 +35,7 @@ add_task(async function test_press_enter_on_footer() {
     info(`expecting tab: about:preferences#privacy opened`);
     const prefTab = await prefTabPromise;
     info(`expecting tab: about:preferences#privacy removed`);
-    await BrowserTestUtils.removeTab(prefTab);
+    BrowserTestUtils.removeTab(prefTab);
     ok(true, "Tab: preferences#privacy was successfully opened by pressing enter on the footer");
 
     await closePopup(browser);
@@ -56,7 +56,7 @@ add_task(async function test_click_on_footer() {
     info(`expecting tab: about:preferences#privacy opened`);
     const prefTab = await prefTabPromise;
     info(`expecting tab: about:preferences#privacy removed`);
-    await BrowserTestUtils.removeTab(prefTab);
+    BrowserTestUtils.removeTab(prefTab);
     ok(true, "Tab: preferences#privacy was successfully opened by clicking on the footer");
 
     await closePopup(browser);

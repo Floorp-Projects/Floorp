@@ -89,8 +89,8 @@ add_task(async function test() {
 
   // Close the tabs we used to register the service workers.  These are not
   // controlled.
-  await BrowserTestUtils.removeTab(containerTab1);
-  await BrowserTestUtils.removeTab(containerTab2);
+  BrowserTestUtils.removeTab(containerTab1);
+  BrowserTestUtils.removeTab(containerTab2);
 
   // Open a controlled tab in each container.
   containerTab1 = BrowserTestUtils.addTab(gBrowser, SCOPE, { userContextId: 1 });
@@ -105,7 +105,7 @@ add_task(async function test() {
   await checkControlled(containerBrowser2);
 
   // Remove the first container's controlled tab
-  await BrowserTestUtils.removeTab(containerTab1);
+  BrowserTestUtils.removeTab(containerTab1);
 
   // Create a new uncontrolled tab for the first container and use it to
   // unregister the service worker.
@@ -118,7 +118,7 @@ add_task(async function test() {
   await checkControlled(containerBrowser2);
 
   // Remove the second container's controlled tab
-  await BrowserTestUtils.removeTab(containerTab2);
+  BrowserTestUtils.removeTab(containerTab2);
 
   // Create a new uncontrolled tab for the second container and use it to
   // unregister the service worker.
@@ -131,6 +131,6 @@ add_task(async function test() {
   await checkUncontrolled(containerBrowser2);
 
   // Close the two tabs we used to unregister the service worker.
-  await BrowserTestUtils.removeTab(containerTab1);
-  await BrowserTestUtils.removeTab(containerTab2);
+  BrowserTestUtils.removeTab(containerTab1);
+  BrowserTestUtils.removeTab(containerTab2);
 });

@@ -40,5 +40,5 @@ add_task(async function mixed_content_block_for_target_top_test() {
   ok (!gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
       "Mixed Content Doorhanger did not appear when trying to navigate top");
 
-  await BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
 });

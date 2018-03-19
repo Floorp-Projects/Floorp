@@ -93,5 +93,5 @@ async function testLink(aLinkIndexOrFunction, pinTab, expectNewTab, testSubFrame
   info(`Waiting on load of ${href}`);
   let loaded = await promise;
   is(loaded, href, "loaded the right document");
-  await BrowserTestUtils.removeTab(appTab);
+  BrowserTestUtils.removeTab(appTab);
 }

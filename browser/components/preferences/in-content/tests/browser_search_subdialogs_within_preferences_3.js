@@ -16,7 +16,7 @@ add_task(async function() {
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   await evaluateSearchResults("allowed to install add-ons", "permissionsGroup");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -25,5 +25,5 @@ add_task(async function() {
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   await evaluateSearchResults("identify these certificate authorities", "certSelection");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -108,7 +108,7 @@ add_task(async function test_tabs_update() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 
@@ -139,5 +139,5 @@ add_task(async function test_tabs_disable() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

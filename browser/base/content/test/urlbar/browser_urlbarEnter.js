@@ -19,7 +19,7 @@ add_task(async function() {
   is(gBrowser.selectedTab, tab, "New URL was loaded in the current tab");
 
   // Cleanup.
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function() {
@@ -40,6 +40,6 @@ add_task(async function() {
   isnot(gBrowser.selectedTab, tab, "New URL was loaded in a new tab");
 
   // Cleanup.
-  await BrowserTestUtils.removeTab(tab);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

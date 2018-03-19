@@ -39,7 +39,7 @@ add_task(async function() {
   ok(!firstTab.closing, "First tab should not be closing");
   ok(firstTab.linkedBrowser, "First tab's browser should be alive");
   info("closing first tab");
-  await BrowserTestUtils.removeTab(firstTab);
+  BrowserTestUtils.removeTab(firstTab);
 
   ok(firstTab.closing, "First tab should be marked as closing");
   ok(!firstTab.linkedBrowser, "First tab's browser should be dead");

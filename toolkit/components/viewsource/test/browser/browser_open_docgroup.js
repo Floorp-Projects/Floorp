@@ -30,7 +30,7 @@ add_task(async function test_view_source_in_tab() {
                    "View source mode enabled");
     });
 
-    await BrowserTestUtils.removeTab(sourceTab);
+    BrowserTestUtils.removeTab(sourceTab);
   });
 
   await SpecialPowers.popPrefEnv();

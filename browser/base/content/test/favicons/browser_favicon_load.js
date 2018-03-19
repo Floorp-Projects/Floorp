@@ -130,7 +130,7 @@ async function doTest(aTestPage, aFaviconURL, aTailingEnabled) {
   await promiseWaitOnFaviconLoaded;
 
   // Close the tab.
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 async function setupTailingPreference(aTailingEnabled) {

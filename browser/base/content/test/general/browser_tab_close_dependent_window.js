@@ -7,7 +7,7 @@ add_task(async function closing_tab_with_dependents_should_close_window() {
   info("Opening tab with data URI");
   let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, `data:text/html,<html%20onclick="W=window.open()"><body%20onbeforeunload="W.close()">`);
   info("Closing original tab in this window.");
-  await BrowserTestUtils.removeTab(win.gBrowser.tabs[0]);
+  BrowserTestUtils.removeTab(win.gBrowser.tabs[0]);
   info("Clicking into the window");
   let depTabOpened = BrowserTestUtils.waitForEvent(win.gBrowser.tabContainer, "TabOpen");
   await BrowserTestUtils.synthesizeMouse("html", 0, 0, {}, tab.linkedBrowser);

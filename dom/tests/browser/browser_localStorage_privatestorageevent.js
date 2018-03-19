@@ -66,9 +66,9 @@ add_task(async function() {
 
   ok(!privSaw, "privWin shouldn't be able to see pubWin's storage events");
 
-  await BrowserTestUtils.removeTab(privTab);
+  BrowserTestUtils.removeTab(privTab);
   await BrowserTestUtils.closeWindow(privWin);
 
-  await BrowserTestUtils.removeTab(pubTab);
+  BrowserTestUtils.removeTab(pubTab);
   await BrowserTestUtils.closeWindow(pubWin);
 });

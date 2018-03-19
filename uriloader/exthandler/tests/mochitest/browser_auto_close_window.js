@@ -122,7 +122,7 @@ add_task(async function nested_window_opens() {
     await testNewTab(nestedBrowser);
 
     isnot(secondTab.linkedBrowser, null, "the page that triggered the download is still open");
-    await BrowserTestUtils.removeTab(secondTab);
+    BrowserTestUtils.removeTab(secondTab);
   });
 });
 

@@ -44,5 +44,5 @@ add_task(async function() {
     ]
   });
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

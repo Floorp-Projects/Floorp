@@ -19,5 +19,5 @@ add_task(async function test() {
     return true;
   });
   is(done, true, "need to check something");
-  await BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
 });

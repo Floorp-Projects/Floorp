@@ -240,7 +240,7 @@ add_task(async function testGoodPermissions() {
     },
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(forceGC);

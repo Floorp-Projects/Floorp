@@ -75,7 +75,9 @@ add_task(async function test_open_folder_in_tabs() {
 
   Assert.ok(true, "Expected tabs were loaded");
 
-  await Promise.all(tabs.map(tab => BrowserTestUtils.removeTab(tab)));
+  for (let tab of tabs) {
+    BrowserTestUtils.removeTab(tab);
+  }
 });
 
 function mouseEventOnCell(aTree, aRowIndex, aColumnIndex, aEventDetails) {

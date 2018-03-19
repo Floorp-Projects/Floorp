@@ -78,6 +78,6 @@ add_task(async function block_autoplay_media() {
                           check_audio_suspended);
 
   info("- remove tabs -");
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 });

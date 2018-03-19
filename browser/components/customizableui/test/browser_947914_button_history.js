@@ -9,7 +9,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/conte
 add_task(async function() {
   info("Check history button existence and functionality");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PATH + "dummy_history_item.html");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PATH); // will 404, but we don't care.
 
@@ -41,6 +41,6 @@ add_task(async function() {
   is(gBrowser.currentURI.spec, TEST_PATH + "dummy_history_item.html", "Should have expected page load");
 
   await panelHiddenPromise;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   info("Menu panel was closed");
 });

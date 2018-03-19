@@ -38,6 +38,6 @@ add_task(async function test_contextmenu_openlink_after_tabnavigated() {
   });
   is(newTabURL, "http://example.com/", "Got the expected URL loaded in the new tab");
 
-  await BrowserTestUtils.removeTab(newTab);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(tab);
 });

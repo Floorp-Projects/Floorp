@@ -19,7 +19,7 @@ add_task(async function clearURLBarAfterParentProcessURL() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "The browser should have no recorded userTypedValue");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -39,7 +39,7 @@ add_task(async function clearURLBarAfterParentProcessURLInExistingTab() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "The browser should have no recorded userTypedValue");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -63,7 +63,7 @@ add_task(async function clearURLBarAfterManuallyLoadingAboutHome() {
 
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "userTypedValue should be null");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**

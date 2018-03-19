@@ -33,5 +33,5 @@ add_task(async function block_web_audio() {
   await waitForTabPlayingEvent(tab, true);
 
   info("- remove tab -");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

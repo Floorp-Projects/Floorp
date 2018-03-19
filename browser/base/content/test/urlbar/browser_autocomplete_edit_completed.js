@@ -8,7 +8,7 @@ add_task(async function() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     await PlacesUtils.history.clear();
   });
 

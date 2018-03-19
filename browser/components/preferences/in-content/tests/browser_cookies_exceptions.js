@@ -271,7 +271,7 @@ async function runTest(test, observances) {
 
   await test(params, observeAllPromise, () => btnApplyChanges.doCommand());
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
 
 function createObserveAllPromise(observances) {

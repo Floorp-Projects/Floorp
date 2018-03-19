@@ -135,7 +135,7 @@ add_task(async function() {
     testDefaultToolbars(toolbars);
 
     // Cleanup
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
 
     // Now let's open a window with toolbars hidden
     let winPromise = BrowserTestUtils.waitForNewWindow();

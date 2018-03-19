@@ -35,6 +35,6 @@ add_task(async function checkFlashBlockLists() {
                                      "unknown",
                                      classifierTester.ASK_TO_ACTIVATE_PREF_VALUE);
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 });
