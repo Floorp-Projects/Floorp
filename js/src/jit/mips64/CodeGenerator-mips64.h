@@ -15,6 +15,10 @@ namespace jit {
 class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
 {
   protected:
+    CodeGeneratorMIPS64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
+      : CodeGeneratorMIPSShared(gen, graph, masm)
+    { }
+
     void testNullEmitBranch(Assembler::Condition cond, const ValueOperand& value,
                             MBasicBlock* ifTrue, MBasicBlock* ifFalse)
     {
@@ -43,51 +47,11 @@ class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
     template <typename T>
     void emitWasmStoreI64(T* ins);
 
-  public:
-    void visitCompareB(LCompareB* lir);
-    void visitCompareBAndBranch(LCompareBAndBranch* lir);
-    void visitCompareBitwise(LCompareBitwise* lir);
-    void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir);
-    void visitCompareI64(LCompareI64* lir);
-    void visitCompareI64AndBranch(LCompareI64AndBranch* lir);
-    void visitDivOrModI64(LDivOrModI64* lir);
-    void visitUDivOrModI64(LUDivOrModI64* lir);
-    void visitWasmLoadI64(LWasmLoadI64* lir);
-    void visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir);
-    void visitWasmStoreI64(LWasmStoreI64* ins);
-    void visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* ins);
-    void visitWasmSelectI64(LWasmSelectI64* ins);
-    void visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir);
-    void visitWasmReinterpretToI64(LWasmReinterpretToI64* lir);
-    void visitExtendInt32ToInt64(LExtendInt32ToInt64* lir);
-    void visitWrapInt64ToInt32(LWrapInt64ToInt32* lir);
-    void visitSignExtendInt64(LSignExtendInt64* ins);
-    void visitClzI64(LClzI64* lir);
-    void visitCtzI64(LCtzI64* lir);
-    void visitNotI64(LNotI64* lir);
-    void visitWasmTruncateToInt64(LWasmTruncateToInt64* lir);
-    void visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir);
-    void visitTestI64AndBranch(LTestI64AndBranch* lir);
-
-    // Out of line visitors.
-    void visitOutOfLineBailout(OutOfLineBailout* ool);
-  protected:
     ValueOperand ToValue(LInstruction* ins, size_t pos);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
     // Functions for LTestVAndBranch.
     void splitTagForTest(const ValueOperand& value, ScratchTagScope& tag);
-
-  public:
-    CodeGeneratorMIPS64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
-      : CodeGeneratorMIPSShared(gen, graph, masm)
-    { }
-
-  public:
-    void visitBox(LBox* box);
-    void visitUnbox(LUnbox* unbox);
-
-    void setReturnDoubleRegs(LiveRegisterSet* regs);
 };
 
 typedef CodeGeneratorMIPS64 CodeGeneratorSpecific;

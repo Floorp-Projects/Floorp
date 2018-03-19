@@ -28,6 +28,7 @@
 #include "vm/JSScript.h"
 #include "vm/SavedFrame.h"
 #include "wasm/WasmFrameIter.h"
+#include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmTypes.h"
 
 namespace JS {
@@ -1657,6 +1658,10 @@ class JitActivation : public Activation
     static_assert(sizeof(mozilla::Atomic<void*, mozilla::Relaxed>) == sizeof(void*),
                   "Atomic should have same memory format as underlying type.");
 
+    // When wasm traps, the signal handler records some data for unwinding
+    // purposes. Wasm code can't trap reentrantly.
+    mozilla::Maybe<wasm::TrapData> wasmTrapData_;
+
     void clearRematerializedFrames();
 
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -1807,10 +1812,8 @@ class JitActivation : public Activation
 
     void startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset, const wasm::RegisterState& state);
     void finishWasmTrap();
-    bool isWasmTrapping() const;
-    void* wasmTrapResumePC() const;
-    void* wasmTrapUnwoundPC() const;
-    uint32_t wasmTrapBytecodeOffset() const;
+    bool isWasmTrapping() const { return !!wasmTrapData_; }
+    const wasm::TrapData& wasmTrapData() { return *wasmTrapData_; }
 };
 
 // A filtering of the ActivationIterator to only stop at JitActivations.

@@ -9,6 +9,9 @@
 #include "nsQuoteList.h"
 #include "nsReadableUtils.h"
 #include "nsIContent.h"
+#include "mozilla/ErrorResult.h"
+
+using namespace mozilla;
 
 bool
 nsQuoteNode::InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,
@@ -79,7 +82,7 @@ nsQuoteList::RecalcAll()
     Calc(node);
 
     if (node->mDepthBefore != oldDepth && node->mText && node->IsRealQuote())
-      node->mText->SetData(*node->Text());
+      node->mText->SetData(*node->Text(), IgnoreErrors());
   }
 }
 
