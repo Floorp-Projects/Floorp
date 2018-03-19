@@ -51,7 +51,6 @@
 #include "nsIComboboxControlFrame.h"
 #include "nsComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
-#include "nsIDOMCharacterData.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsIFormControl.h"

@@ -68,10 +68,6 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsAttrName.h"
 
-#ifdef DEBUG
-#include "nsIDOMCharacterData.h"
-#endif
-
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ErrorResult.h"

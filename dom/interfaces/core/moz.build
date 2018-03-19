@@ -8,7 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 XPIDL_SOURCES += [
-    'nsIDOMCharacterData.idl',
     'nsIDOMDocument.idl',
     'nsIDOMDocumentFragment.idl',
     'nsIDOMDOMException.idl',

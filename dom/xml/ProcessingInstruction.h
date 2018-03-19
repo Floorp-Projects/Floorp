@@ -9,14 +9,14 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CharacterData.h"
-#include "nsIDOMCharacterData.h"
+#include "nsIDOMNode.h"
 #include "nsAString.h"
 
 namespace mozilla {
 namespace dom {
 
 class ProcessingInstruction : public CharacterData,
-                              public nsIDOMCharacterData
+                              public nsIDOMNode
 {
 public:
   ProcessingInstruction(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -24,9 +24,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMCharacterData
-  NS_FORWARD_NSIDOMCHARACTERDATA(CharacterData::)
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
