@@ -6,6 +6,12 @@
 
 /* global addEventListener, addMessageListener, removeMessageListener, sendAsyncMessage */
 
+/*
+ * Frame script that listens for requests to start a `DebuggerServer` for a frame in a
+ * content process.  Loaded into content process frames by the main process during
+ * `DebuggerServer.connectToFrame`.
+ */
+
 try {
   var chromeGlobal = this;
 
@@ -128,5 +134,5 @@ try {
     });
   })();
 } catch (e) {
-  dump(`Exception in app child process: ${e}\n`);
+  dump(`Exception in DevTools frame startup: ${e}\n`);
 }
