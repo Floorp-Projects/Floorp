@@ -23,7 +23,8 @@ def format_seconds(total):
 class MachFormatter(base.BaseFormatter):
 
     def __init__(self, start_time=None, write_interval=False, write_times=True,
-                 terminal=None, disable_colors=False, summary_on_shutdown=False, **kwargs):
+                 terminal=None, disable_colors=False, summary_on_shutdown=False,
+                 verbose=False, **kwargs):
         super(MachFormatter, self).__init__(**kwargs)
 
         if start_time is None:
@@ -36,7 +37,7 @@ class MachFormatter(base.BaseFormatter):
         self.has_unexpected = {}
         self.last_time = None
         self.term = Terminal(disable_styling=disable_colors)
-        self.verbose = False
+        self.verbose = verbose
         self._known_pids = set()
 
         self.summary = SummaryHandler()
