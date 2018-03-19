@@ -2493,17 +2493,6 @@ CodeGenerator::visitMemoryBarrier(LMemoryBarrier* ins)
 }
 
 void
-CodeGeneratorARM::setReturnDoubleRegs(LiveRegisterSet* regs)
-{
-    MOZ_ASSERT(ReturnFloat32Reg.code_ == FloatRegisters::s0);
-    MOZ_ASSERT(ReturnDoubleReg.code_ == FloatRegisters::s0);
-    FloatRegister s1 = {FloatRegisters::s1, VFPRegister::Single};
-    regs->add(ReturnFloat32Reg);
-    regs->add(s1);
-    regs->add(ReturnDoubleReg);
-}
-
-void
 CodeGenerator::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
 {
     auto input = ToFloatRegister(lir->input());

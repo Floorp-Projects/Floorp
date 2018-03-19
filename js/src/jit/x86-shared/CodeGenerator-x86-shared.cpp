@@ -4324,17 +4324,6 @@ CodeGenerator::visitMemoryBarrier(LMemoryBarrier* ins)
 }
 
 void
-CodeGeneratorX86Shared::setReturnDoubleRegs(LiveRegisterSet* regs)
-{
-    MOZ_ASSERT(ReturnFloat32Reg.encoding() == X86Encoding::xmm0);
-    MOZ_ASSERT(ReturnDoubleReg.encoding() == X86Encoding::xmm0);
-    MOZ_ASSERT(ReturnSimd128Reg.encoding() == X86Encoding::xmm0);
-    regs->add(ReturnFloat32Reg);
-    regs->add(ReturnDoubleReg);
-    regs->add(ReturnSimd128Reg);
-}
-
-void
 CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool)
 {
     FloatRegister input = ool->input();

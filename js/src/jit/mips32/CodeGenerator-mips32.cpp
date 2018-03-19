@@ -578,14 +578,6 @@ CodeGenerator::visitTestI64AndBranch(LTestI64AndBranch* lir)
 }
 
 void
-CodeGeneratorMIPS::setReturnDoubleRegs(LiveRegisterSet* regs)
-{
-    MOZ_ASSERT(ReturnFloat32Reg.code_ == ReturnDoubleReg.code_);
-    regs->add(ReturnFloat32Reg);
-    regs->add(ReturnDoubleReg);
-}
-
-void
 CodeGenerator::visitWasmAtomicLoadI64(LWasmAtomicLoadI64* lir)
 {
     Register ptr = ToRegister(lir->ptr());

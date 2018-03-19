@@ -183,8 +183,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     void generateInvalidateEpilogue();
 
-    void setReturnDoubleRegs(LiveRegisterSet* regs);
-
     void canonicalizeIfDeterministic(Scalar::Type type, const LAllocation* value);
 
   public:
