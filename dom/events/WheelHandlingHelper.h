@@ -229,6 +229,7 @@ public:
    */
   explicit AutoWheelDeltaAdjuster(WidgetWheelEvent& aWheelEvent);
   ~AutoWheelDeltaAdjuster();
+  void CancelAdjustment();
 
 private:
   WidgetWheelEvent& mWheelEvent;

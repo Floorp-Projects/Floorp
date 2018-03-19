@@ -243,9 +243,9 @@ const kTests = [
             ]
           },
           "caret": { "start": 1, "length": 0 },
-          "key": { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A },
+          "key": { key: "a" },
         });
-        synthesizeComposition({ type: "compositioncommitasis" });
+        synthesizeComposition({ type: "compositioncommitasis", key: {} });
         setAndObserveCompositionPref(null, runNextTest);
       });
       return true;
@@ -268,10 +268,11 @@ const kTests = [
               { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
             ]
           },
-          "caret": { "start": 1, "length": 0 }
+          "caret": { "start": 1, "length": 0 },
+          "key": {},
         });
         synthesizeComposition({ type: "compositioncommitasis",
-          key: { key: "KEY_Enter", code: "Enter" } });
+          key: { key: "KEY_Enter" } });
         setAndObserveCompositionPref(null, runNextTest);
       });
       return true;
@@ -333,7 +334,7 @@ const kTests = [
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      synthesizeComposition({ type: "compositioncommit", data: "\u306D" });
+      synthesizeComposition({ type: "compositioncommit", data: "\u306D", key: { key: "," } });
     },
     canRun: function () {
       return true;
@@ -345,7 +346,7 @@ const kTests = [
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      synthesizeComposition({ type: "compositioncommit", data: "\u30E9\u30FC\u30E1\u30F3" });
+      synthesizeComposition({ type: "compositioncommit", data: "\u30E9\u30FC\u30E1\u30F3", key: { key: "KEY_Enter" } });
     },
     canRun: function () {
       return true;
@@ -379,7 +380,8 @@ const kTests = [
             { "length": 4, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
           ]
         },
-        "caret": { "start": 4, "length": 0 }
+        "caret": { "start": 4, "length": 0 },
+        "key": { key: "y" },
       });
     },
     canRun: function () {
@@ -390,7 +392,7 @@ const kTests = [
   { description: "InternalEditorInputEvent (input at committing)",
     targetID: "input-text", eventType: "input",
     dispatchEvent: function () {
-      synthesizeComposition({ type: "compositioncommitasis" });
+      synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
     },
     canRun: function () {
       return true;

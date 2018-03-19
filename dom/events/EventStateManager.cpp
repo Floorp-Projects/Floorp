@@ -3379,6 +3379,8 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       nsPluginFrame* pluginFrame = do_QueryFrame(frameToScroll);
       if (pluginFrame) {
         MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
+        // Plugins should receive original values instead of adjusted values.
+        adjuster.CancelAdjustment();
         action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
       }
 
