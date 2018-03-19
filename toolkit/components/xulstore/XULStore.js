@@ -221,6 +221,20 @@ XULStore.prototype = {
     }
   },
 
+  removeDocument(docURI) {
+    this.log("remove store values for doc=" + docURI);
+
+    if (!this._saveAllowed) {
+      Services.console.logStringMessage("XULStore: Changes after profile-before-change are ignored!");
+      return;
+    }
+
+    if (this._data[docURI]) {
+      delete this._data[docURI];
+      this.markAsChanged();
+    }
+  },
+
   getIDsEnumerator(docURI) {
     this.log("Getting ID enumerator for doc=" + docURI);
 
