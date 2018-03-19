@@ -30,7 +30,7 @@ public:
   already_AddRefed<Text> SplitText(uint32_t aOffset, ErrorResult& rv);
   void GetWholeText(nsAString& aWholeText, ErrorResult& rv)
   {
-    rv = GetWholeText(aWholeText);
+    nsGenericDOMDataNode::GetWholeText(aWholeText, rv);
   }
 
   static already_AddRefed<Text>
