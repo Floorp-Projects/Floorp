@@ -161,7 +161,9 @@ DeleteTextTransaction::UndoTransaction()
   if (NS_WARN_IF(!mCharData)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  return mCharData->InsertData(mOffset, mDeletedText);
+  ErrorResult rv;
+  mCharData->InsertData(mOffset, mDeletedText, rv);
+  return rv.StealNSResult();
 }
 
 } // namespace mozilla

@@ -2595,7 +2595,7 @@ DeleteUnselectedNodes(nsIDocument* aOrigDoc, nsIDocument* aDoc)
       // text node then add ellipsis.
       Text* text = endNode->GetAsText();
       if (!ellipsisOffset && text && endOffset && endOffset < text->Length()) {
-        text->InsertData(endOffset, kEllipsis);
+        text->InsertData(endOffset, kEllipsis, IgnoreErrors());
         ellipsisOffset += kEllipsis.Length();
       }
     }
@@ -2613,7 +2613,7 @@ DeleteUnselectedNodes(nsIDocument* aOrigDoc, nsIDocument* aDoc)
     // If the next node will start mid text node then add ellipsis.
     Text* text = startNode ? startNode->GetAsText() : nullptr;
     if (text && startOffset && startOffset < text->Length()) {
-      text->InsertData(startOffset, kEllipsis);
+      text->InsertData(startOffset, kEllipsis, IgnoreErrors());
       startOffset += kEllipsis.Length();
       ellipsisOffset += kEllipsis.Length();
     }
