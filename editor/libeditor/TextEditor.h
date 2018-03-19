@@ -17,7 +17,6 @@
 
 class nsIContent;
 class nsIDOMDocument;
-class nsIDOMElement;
 class nsIDOMEvent;
 class nsIDOMNode;
 class nsIDocumentEncoder;

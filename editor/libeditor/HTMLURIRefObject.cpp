@@ -49,7 +49,6 @@
 #include "nsDOMAttributeMap.h"
 #include "nsError.h"
 #include "nsID.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"

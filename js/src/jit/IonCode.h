@@ -525,7 +525,7 @@ struct IonScript
     void copySafepointIndices(const SafepointIndex* firstSafepointIndex);
     void copyOsiIndices(const OsiIndex* firstOsiIndex);
     void copyRuntimeData(const uint8_t* data);
-    void copyICEntries(const uint32_t* caches, MacroAssembler& masm);
+    void copyICEntries(const uint32_t* caches);
     void copySafepoints(const SafepointWriter* writer);
     void copyPatchableBackedges(JSContext* cx, JitCode* code,
                                 PatchableBackedgeInfo* backedges,

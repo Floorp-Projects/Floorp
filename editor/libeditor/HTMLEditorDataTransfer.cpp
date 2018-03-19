@@ -38,7 +38,6 @@
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
@@ -2009,8 +2008,7 @@ nsresult FindTargetNode(nsINode *aStart, nsCOMPtr<nsINode> &aResult)
     // Is this child the magical cookie?
     if (child->IsNodeOfType(nsINode::eCOMMENT)) {
       nsAutoString data;
-      nsresult rv = static_cast<Comment*>(child.get())->GetData(data);
-      NS_ENSURE_SUCCESS(rv, rv);
+      static_cast<Comment*>(child.get())->GetData(data);
 
       if (data.EqualsLiteral(kInsertCookie)) {
         // Yes it is! Return an error so we bubble out and short-circuit the

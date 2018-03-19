@@ -406,8 +406,7 @@ public:
     eHTML_FORM_CONTROL   = 1 << 6,
     /** document fragments */
     eDOCUMENT_FRAGMENT   = 1 << 7,
-    /** data nodes (comments, PIs, text). Nodes of this type always
-     returns a non-null value for nsIContent::GetText() */
+    /** character data nodes (comments, PIs, text). */
     eDATA_NODE           = 1 << 8,
     /** HTMLMediaElement */
     eMEDIA               = 1 << 9,
@@ -499,12 +498,43 @@ public:
     return const_cast<nsINode*>(this)->AsContent();
   }
 
+  /*
+   * Return whether the node is a Text node (which might be an actual
+   * textnode, or might be a CDATA section).
+   */
+  bool IsText() const
+  {
+    uint32_t nodeType = NodeType();
+    return nodeType == TEXT_NODE || nodeType == CDATA_SECTION_NODE;
+  }
+
   /**
    * Return this node as Text if it is one, otherwise null.  This is defined
    * inline in Text.h.
    */
   mozilla::dom::Text* GetAsText();
   const mozilla::dom::Text* GetAsText() const;
+
+  /*
+   * Return whether the node is a ProcessingInstruction node.
+   */
+  bool IsProcessingInstruction() const
+  {
+    return NodeType() == PROCESSING_INSTRUCTION_NODE;
+  }
+
+  /*
+   * Return whether the node is a CharacterData node (text, cdata,
+   * comment, processing instruction)
+   */
+  bool IsCharacterData() const
+  {
+    uint32_t nodeType = NodeType();
+    return nodeType == TEXT_NODE ||
+           nodeType == CDATA_SECTION_NODE ||
+           nodeType == PROCESSING_INSTRUCTION_NODE ||
+           nodeType == COMMENT_NODE;
+  }
 
   virtual nsIDOMNode* AsDOMNode() = 0;
 
@@ -1751,7 +1781,6 @@ public:
   // aObject alive anymore.
   void UnbindObject(nsISupports* aObject);
 
-  void GetBoundMutationObservers(nsTArray<RefPtr<nsDOMMutationObserver> >& aResult);
   void GenerateXPath(nsAString& aResult);
 
   already_AddRefed<mozilla::dom::Promise>

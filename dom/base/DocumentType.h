@@ -12,10 +12,10 @@
 #define DocumentType_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/CharacterData.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
-#include "nsGenericDOMDataNode.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -26,7 +26,7 @@ namespace dom {
 // data. This is done simply for convenience and should be changed if
 // this restricts what should be done for character data.
 
-class DocumentType final : public nsGenericDOMDataNode,
+class DocumentType final : public CharacterData,
                            public nsIDOMNode
 {
 public:
@@ -55,8 +55,9 @@ public:
   // nsIContent overrides
   virtual const nsTextFragment* GetText() override;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const override;
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                  bool aCloneText) const override;
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 

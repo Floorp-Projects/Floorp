@@ -13,7 +13,6 @@
 #include "nsIAttribute.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMCharacterData.h"
 #include "nsBindingManager.h"
 #include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
@@ -1205,8 +1204,7 @@ inDOMView::AppendKidsToArray(nsINodeList* aKids,
            nodeType == nsINode::COMMENT_NODE) &&
           !mShowWhitespaceNodes) {
         nsCOMPtr<nsIContent> content = do_QueryInterface(kid);
-        auto data = static_cast<nsGenericDOMDataNode*>(content.get());
-        NS_ASSERTION(data, "Does not implement nsIDOMCharacterData!");
+        auto data = static_cast<dom::CharacterData*>(content.get());
         if (InspectorUtils::IsIgnorableWhitespace(*data)) {
           continue;
         }
