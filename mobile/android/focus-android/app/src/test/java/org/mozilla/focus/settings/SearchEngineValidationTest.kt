@@ -12,7 +12,7 @@ import org.robolectric.RobolectricTestRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment.isValidSearchQueryURL
+import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment.Companion.isValidSearchQueryURL
 
 @RunWith(RobolectricTestRunner::class)
 // This unit test is not running on an Android device. Allow me to use spaces in function names.

@@ -135,7 +135,8 @@ class ManualAddSearchEngineSettingsFragment : SettingsFragment() {
 
         @SuppressWarnings("DE_MIGHT_IGNORE")
         @WorkerThread
-        @VisibleForTesting private fun isValidSearchQueryURL(query: String): Boolean {
+        @JvmStatic
+        @VisibleForTesting fun isValidSearchQueryURL(query: String): Boolean {
             // we should share the code to substitute and normalize the search string (see SearchEngine.buildSearchUrl).
             val encodedTestQuery = Uri.encode("testSearchEngineValidation")
 
@@ -158,8 +159,9 @@ class ManualAddSearchEngineSettingsFragment : SettingsFragment() {
                 Log.d(LOGTAG, "Failure to get response code from server: returning invalid search query")
                 false
             } finally {
-                try { connection.inputStream.close() }
-                catch (_: IOException) { Log.d(LOGTAG, "connection.inputStream failed to close") }
+                try { connection.inputStream.close() } catch (_: IOException) {
+                    Log.d(LOGTAG, "connection.inputStream failed to close")
+                }
 
                 connection.disconnect()
             }
