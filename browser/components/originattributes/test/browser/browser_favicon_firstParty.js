@@ -234,8 +234,10 @@ async function doTest(aTestPage, aExpectedCookies, aFaviconURL) {
   // Waiting until favicon loaded.
   await promiseFaviconLoaded;
 
-  // Close the tab.
-  await BrowserTestUtils.removeTab(tabInfo.tab);
+  BrowserTestUtils.removeTab(tabInfo.tab);
+  // FIXME: We need to wait for the next event tick here to avoid observing
+  //        the previous tab info in the next step (bug 1446725).
+  await new Promise(executeSoon);
 
   // Start to observe the favicon requests earlier in case we miss it.
   promiseObserveFavicon = observeFavicon(FIRST_PARTY_TWO, aExpectedCookies[1], secondPageURI);
