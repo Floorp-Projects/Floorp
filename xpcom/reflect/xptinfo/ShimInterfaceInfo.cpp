@@ -31,7 +31,6 @@
 #include "nsIDOMParser.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMScreen.h"
-#include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMWheelEvent.h"
@@ -83,7 +82,6 @@
 #endif
 #include "mozilla/dom/ScreenBinding.h"
 #include "mozilla/dom/SelectionBinding.h"
-#include "mozilla/dom/ScrollAreaEventBinding.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StyleSheetBinding.h"
 #include "mozilla/dom/StyleSheetListBinding.h"
@@ -179,7 +177,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMDataChannel, RTCDataChannel),
 #endif
   DEFINE_SHIM(Screen),
-  DEFINE_SHIM(ScrollAreaEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
   DEFINE_SHIM(UIEvent),
