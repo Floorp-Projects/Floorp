@@ -1621,7 +1621,8 @@ TextEditRules::HideLastPWInput()
   nsCOMPtr<nsINode> selNode = GetTextNode(selection);
   NS_ENSURE_TRUE(selNode, NS_OK);
 
-  selNode->GetAsText()->ReplaceData(mLastStart, mLastLength, hiddenText);
+  selNode->GetAsText()->ReplaceData(mLastStart, mLastLength, hiddenText,
+                                    IgnoreErrors());
   // XXXbz Selection::Collapse/Extend take int32_t, but there are tons of
   // callsites... Converting all that is a battle for another day.
   selection->Collapse(selNode, start);
