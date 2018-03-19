@@ -229,7 +229,8 @@ protected:
     return parent && parent->IsElement() ? parent->AsElement() : nullptr;
   }
 
-  nsresult GetWholeText(nsAString& aWholeText);
+  void GetWholeText(nsAString& aWholeText,
+                    mozilla::ErrorResult& aRv);
 
   nsresult SetTextInternal(uint32_t aOffset, uint32_t aCount,
                            const char16_t* aBuffer, uint32_t aLength,
