@@ -7,7 +7,7 @@
 var Services = require("Services");
 var promise = require("promise");
 var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-var EventEmitter = require("devtools/shared/old-event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 
 var {StyleEditorUI} = require("resource://devtools/client/styleeditor/StyleEditorUI.jsm");
 var {getString} = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
@@ -67,12 +67,10 @@ StyleEditorPanel.prototype = {
    * Show an error message from the style editor in the toolbox
    * notification box.
    *
-   * @param  {string} event
-   *         Type of event
    * @param  {string} data
    *         The parameters to customize the error message
    */
-  _showError: function(event, data) {
+  _showError: function(data) {
     if (!this._toolbox) {
       // could get an async error after we've been destroyed
       return;
