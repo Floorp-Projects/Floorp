@@ -15,7 +15,7 @@ CDATASection::~CDATASection()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(CDATASection, nsGenericDOMDataNode, nsIDOMNode,
+NS_IMPL_ISUPPORTS_INHERITED(CDATASection, CharacterData, nsIDOMNode,
                             nsIDOMCharacterData)
 
 JSObject*
@@ -30,7 +30,7 @@ CDATASection::IsNodeOfType(uint32_t aFlags) const
   return !(aFlags & ~(eTEXT | eDATA_NODE));
 }
 
-nsGenericDOMDataNode*
+CharacterData*
 CDATASection::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;

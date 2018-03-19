@@ -1205,7 +1205,7 @@ inDOMView::AppendKidsToArray(nsINodeList* aKids,
            nodeType == nsINode::COMMENT_NODE) &&
           !mShowWhitespaceNodes) {
         nsCOMPtr<nsIContent> content = do_QueryInterface(kid);
-        auto data = static_cast<nsGenericDOMDataNode*>(content.get());
+        auto data = static_cast<dom::CharacterData*>(content.get());
         NS_ASSERTION(data, "Does not implement nsIDOMCharacterData!");
         if (InspectorUtils::IsIgnorableWhitespace(*data)) {
           continue;

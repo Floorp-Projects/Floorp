@@ -406,8 +406,7 @@ public:
     eHTML_FORM_CONTROL   = 1 << 6,
     /** document fragments */
     eDOCUMENT_FRAGMENT   = 1 << 7,
-    /** data nodes (comments, PIs, text). Nodes of this type always
-     returns a non-null value for nsIContent::GetText() */
+    /** character data nodes (comments, PIs, text). */
     eDATA_NODE           = 1 << 8,
     /** HTMLMediaElement */
     eMEDIA               = 1 << 9,

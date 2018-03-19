@@ -2793,8 +2793,8 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         if (startNode->GetAsText() &&
             startNode->Length() > static_cast<uint32_t>(startOffset)) {
           // Delete to last character
-          OwningNonNull<nsGenericDOMDataNode> dataNode =
-            *static_cast<nsGenericDOMDataNode*>(startNode.get());
+          OwningNonNull<CharacterData> dataNode =
+            *static_cast<CharacterData*>(startNode.get());
           NS_ENSURE_STATE(mHTMLEditor);
           rv = mHTMLEditor->DeleteText(dataNode, startOffset,
                                        startNode->Length() - startOffset);
@@ -2803,8 +2803,8 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         if (endNode->GetAsText() && endOffset) {
           // Delete to first character
           NS_ENSURE_STATE(mHTMLEditor);
-          OwningNonNull<nsGenericDOMDataNode> dataNode =
-            *static_cast<nsGenericDOMDataNode*>(endNode.get());
+          OwningNonNull<CharacterData> dataNode =
+            *static_cast<CharacterData*>(endNode.get());
           rv = mHTMLEditor->DeleteText(dataNode, 0, endOffset);
           NS_ENSURE_SUCCESS(rv, rv);
         }

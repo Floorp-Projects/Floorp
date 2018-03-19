@@ -110,7 +110,7 @@ InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
 }
 
 bool
-InspectorUtils::IsIgnorableWhitespace(nsGenericDOMDataNode& aDataNode)
+InspectorUtils::IsIgnorableWhitespace(CharacterData& aDataNode)
 {
   if (!aDataNode.TextIsOnlyWhitespace()) {
     return false;

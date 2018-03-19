@@ -38,7 +38,7 @@ GetFrameForNode(nsINode* aNode, GeometryNodeType aType)
   if (aType == GEOMETRY_NODE_TEXT) {
     if (nsIPresShell* shell = doc->GetShell()) {
       shell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
-          static_cast<nsGenericDOMDataNode*>(aNode));
+          static_cast<CharacterData*>(aNode));
     }
   }
   doc->FlushPendingNotifications(FlushType::Layout);

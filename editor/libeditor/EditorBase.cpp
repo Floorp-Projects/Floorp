@@ -3098,7 +3098,7 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
 }
 
 nsresult
-EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
+EditorBase::DeleteText(CharacterData& aCharData,
                        uint32_t aOffset,
                        uint32_t aLength)
 {
@@ -4681,8 +4681,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     // there is a priorNode, so delete its last child (if chardata, delete the
     // last char). if it has no children, delete it
     if (priorNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      RefPtr<nsGenericDOMDataNode> priorNodeAsCharData =
-        static_cast<nsGenericDOMDataNode*>(priorNode.get());
+      RefPtr<CharacterData> priorNodeAsCharData =
+        static_cast<CharacterData*>(priorNode.get());
       uint32_t length = priorNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4721,8 +4721,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     // there is a nextNode, so delete its first child (if chardata, delete the
     // first char). if it has no children, delete it
     if (nextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      RefPtr<nsGenericDOMDataNode> nextNodeAsCharData =
-        static_cast<nsGenericDOMDataNode*>(nextNode.get());
+      RefPtr<CharacterData> nextNodeAsCharData =
+        static_cast<CharacterData*>(nextNode.get());
       uint32_t length = nextNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4754,8 +4754,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
-    RefPtr<nsGenericDOMDataNode> nodeAsCharData =
-      static_cast<nsGenericDOMDataNode*>(node.get());
+    RefPtr<CharacterData> nodeAsCharData =
+      static_cast<CharacterData*>(node.get());
     // We have chardata, so delete a char at the proper offset
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
       aAction == ePrevious ?
@@ -4801,8 +4801,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
-    RefPtr<nsGenericDOMDataNode> selectedNodeAsCharData =
-      static_cast<nsGenericDOMDataNode*>(selectedNode.get());
+    RefPtr<CharacterData> selectedNodeAsCharData =
+      static_cast<CharacterData*>(selectedNode.get());
     // we are deleting from a chardata node, so do a character deletion
     uint32_t position = 0;
     if (aAction == ePrevious) {

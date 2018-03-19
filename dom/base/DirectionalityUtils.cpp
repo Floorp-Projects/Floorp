@@ -200,7 +200,7 @@
   == Implemention Notes ==
   When a new node gets bound to the tree, the BindToTree function gets called.
   The reverse case is UnbindFromTree.
-  When the contents of a text node change, nsGenericDOMDataNode::SetTextInternal
+  When the contents of a text node change, CharacterData::SetTextInternal
   gets called.
   */
 
