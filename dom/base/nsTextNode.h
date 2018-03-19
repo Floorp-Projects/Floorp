@@ -50,8 +50,9 @@ public:
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  virtual CharacterData* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                       bool aCloneText) const override;
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                  bool aCloneText) const override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
