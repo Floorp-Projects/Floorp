@@ -439,12 +439,16 @@ bool SkImageShader::onAppendStages(const StageRec& rec) const {
     };
 
     if (quality == kLow_SkFilterQuality            &&
-        info.colorType() == kRGBA_8888_SkColorType &&
+        (info.colorType() == kRGBA_8888_SkColorType ||
+         info.colorType() == kBGRA_8888_SkColorType) &&
         fTileModeX == SkShader::kClamp_TileMode    &&
         fTileModeY == SkShader::kClamp_TileMode    &&
         !is_srgb) {
 
         p->append(SkRasterPipeline::bilerp_clamp_8888, gather);
+        if (info.colorType() == kBGRA_8888_SkColorType) {
+            p->append(SkRasterPipeline::swap_rb);
+        }
         return append_misc();
     }
 
