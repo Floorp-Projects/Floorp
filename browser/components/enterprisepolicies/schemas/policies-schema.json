@@ -306,6 +306,64 @@
       }
     },
 
+    "Proxy": {
+      "description": "Configure Proxy settings.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "Mode": {
+          "type": "string",
+          "enum": ["none", "system", "manual", "autoDetect", "autoConfig"]
+        },
+
+        "Locked": {
+          "type": "boolean"
+        },
+
+        "AutoConfigURL": {
+          "type": "URLorEmpty"
+        },
+
+        "FTPProxy": {
+          "type": "string"
+        },
+
+        "HTTPProxy": {
+          "type": "string"
+        },
+
+        "SSLProxy": {
+          "type": "string"
+        },
+
+        "SOCKSProxy": {
+          "type": "string"
+        },
+
+        "SOCKSVersion": {
+          "type": "number",
+          "enum": [4, 5]
+        },
+
+        "UseHTTPProxyForAllProtocols": {
+          "type": "boolean"
+        },
+
+        "Passthrough": {
+          "type": "string"
+        },
+
+        "UseProxyForDNS": {
+          "type": "boolean"
+        },
+
+        "AutoLogin": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "RememberPasswords": {
       "description": "Enforces the setting to allow Firefox to remember saved logins and passwords. Both true and false values are accepted.",
       "first_available": "60.0",
