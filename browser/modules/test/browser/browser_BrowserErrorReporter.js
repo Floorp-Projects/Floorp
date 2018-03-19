@@ -406,3 +406,46 @@ add_task(async function testAddonIDMangle() {
   await extension.unload();
   reporter.uninit();
 });
+
+add_task(async function testExtensionTag() {
+  const fetchSpy = sinon.spy();
+  // Passing false here disables category checks on errors, which would
+  // otherwise block errors directly from extensions.
+  const reporter = new BrowserErrorReporter({fetch: fetchSpy, chromeOnly: false});
+  await SpecialPowers.pushPrefEnv({set: [
+    [PREF_ENABLED, true],
+    [PREF_SAMPLE_RATE, "1.0"],
+  ]});
+  resetConsole();
+  reporter.init();
+
+  // Create and install test add-on
+  const id = "browsererrorcollection@example.com";
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: { id },
+      },
+    },
+    background() {
+      throw new Error("testExtensionTag error");
+    },
+  });
+  await extension.startup();
+
+  // Just in case the error hasn't been thrown before add-on startup.
+  let call = await TestUtils.waitForCondition(
+    () => fetchCallForMessage(fetchSpy, "testExtensionTag error"),
+    `Wait for error from ${id} to be logged`,
+  );
+  let body = JSON.parse(call.args[1].body);
+  ok(body.tags.isExtensionError, "Errors from extensions have an isExtensionError tag.");
+
+  await extension.unload();
+  reporter.uninit();
+
+  await reporter.observe(createScriptError({message: "testExtensionTag not from extension"}));
+  call = fetchCallForMessage(fetchSpy, "testExtensionTag not from extension");
+  body = JSON.parse(call.args[1].body);
+  is(body.tags.isExtensionError, undefined, "Normal errors do not have an isExtensionError tag.");
+});
