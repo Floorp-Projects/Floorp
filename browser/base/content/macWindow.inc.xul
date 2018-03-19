@@ -1,0 +1,70 @@
+# -*- Mode: HTML -*-
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#define MAC_NON_BROWSER_WINDOW
+
+# This include file should only contain things that are needed to support MacOS
+# specific features that are needed for all top level windows. If the feature is
+# also needed in browser.xul, it should go in one of the various include files
+# below that are shared with browser.xul. When including this file,
+# browser-doctype.inc must also be included.
+
+# All JS files which are needed by browser.xul and other top level windows to
+# support MacOS specific features *must* go into the global-scripts.inc file so
+# that they can be shared with browser.xul.
+#include global-scripts.inc
+
+<script type="application/javascript">
+  function OpenBrowserWindowFromDockMenu(options) {
+    let win = OpenBrowserWindow(options);
+    win.addEventListener("load", function listener() {
+      win.removeEventListener("load", listener);
+      let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
+        .getService(Ci.nsIMacDockSupport);
+      dockSupport.activateApplication(true);
+    });
+
+    return win;
+  }
+
+  addEventListener("load",   function() { gBrowserInit.nonBrowserWindowStartup()  }, false);
+  addEventListener("unload", function() { gBrowserInit.nonBrowserWindowShutdown() }, false);
+
+  ChromeUtils.defineModuleGetter(window,
+    "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
+  ChromeUtils.defineModuleGetter(window,
+    "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
+  ChromeUtils.defineModuleGetter(window,
+    "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
+
+  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+  XPCOMUtils.defineLazyScriptGetter(window, "PlacesTreeView",
+    "chrome://browser/content/places/treeView.js");
+  XPCOMUtils.defineLazyScriptGetter(window,
+    ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
+     "chrome://browser/content/places/controller.js");
+</script>
+
+# All sets except for popupsets (commands, keys, stringbundles and broadcasters)
+# *must* go into the browser-sets.inc file so that they can be shared with
+# browser.xul
+#include browser-sets.inc
+
+# The entire main menubar is placed into browser-menubar.inc, so that it can be
+# shared with browser.xul.
+#include browser-menubar.inc
+
+<!-- Dock menu -->
+<popupset>
+  <menupopup id="menu_mac_dockmenu">
+    <!-- The command cannot be cmd_newNavigator because we need to activate
+         the application. -->
+    <menuitem label="&newNavigatorCmd.label;" oncommand="OpenBrowserWindowFromDockMenu();"
+              id="macDockMenuNewWindow" />
+    <menuitem label="&newPrivateWindow.label;" oncommand="OpenBrowserWindowFromDockMenu({private: true});"
+              id="macDockMenuNewPrivateWindow" />
+  </menupopup>
+</popupset>

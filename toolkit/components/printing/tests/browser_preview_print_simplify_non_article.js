@@ -65,7 +65,8 @@ add_task(async function switch_print_preview_browsers() {
 
   // Assert that we are showing recovery content on simplified print preview browser
   await ContentTask.spawn(simplifiedPPBrowser, null, async function() {
-    is(content.document.title, "Failed to load article from page", "Should have recovery content.");
+    await ContentTaskUtils.waitForCondition(() => content.document.title === "Failed to load article from page",
+      "Simplified document title should be updated with recovery title.");
   });
 
   // Assert that we are selecting simplified print preview browser, and not default one
