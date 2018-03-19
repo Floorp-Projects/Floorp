@@ -164,8 +164,8 @@ async function generateCookies(aHost) {
     content.document.cookie = value;
   });
 
-  await BrowserTestUtils.removeTab(tabInfoA.tab);
-  await BrowserTestUtils.removeTab(tabInfoB.tab);
+  BrowserTestUtils.removeTab(tabInfoA.tab);
+  BrowserTestUtils.removeTab(tabInfoB.tab);
 
   return cookies;
 }
@@ -192,7 +192,10 @@ async function doTest(aTestPage, aFaviconHost, aFaviconURL) {
   await promiseWaitOnFaviconLoaded;
 
   // Close the tab.
-  await BrowserTestUtils.removeTab(tabInfo.tab);
+  BrowserTestUtils.removeTab(tabInfo.tab);
+  // FIXME: We need to wait for the next event tick here to avoid observing
+  //        the previous tab info in the next step (bug 1446725).
+  await new Promise(executeSoon);
 
   // Reset the observer for observing requests for the work container.
   observer.reset(USER_CONTEXT_ID_WORK, cookies[1], pageURI, aFaviconURL);
@@ -203,7 +206,7 @@ async function doTest(aTestPage, aFaviconHost, aFaviconURL) {
 
   Services.obs.removeObserver(observer, "http-on-modify-request");
 
-  await BrowserTestUtils.removeTab(tabInfo.tab);
+  BrowserTestUtils.removeTab(tabInfo.tab);
 }
 
 async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
@@ -251,7 +254,10 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
   Services.obs.removeObserver(observer, "http-on-modify-request");
 
   // Close the tab.
-  await BrowserTestUtils.removeTab(tabInfo.tab);
+  BrowserTestUtils.removeTab(tabInfo.tab);
+  // FIXME: We need to wait for the next event tick here to avoid observing
+  //        the previous tab info in the next step (bug 1446725).
+  await new Promise(executeSoon);
 
   // Open the tab under the work container and wait until the favicon is loaded.
   promiseWaitOnFaviconLoaded = waitOnFaviconLoaded(aFaviconURL);
@@ -281,7 +287,7 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
   Services.obs.removeObserver(observer, "http-on-modify-request");
 
   // Close the tab.
-  await BrowserTestUtils.removeTab(tabInfo.tab);
+  BrowserTestUtils.removeTab(tabInfo.tab);
 
   // Reset the 'overflow' attribute to make the allTabs button hidden again.
   tabBrowser.removeAttribute("overflow");

@@ -86,7 +86,10 @@ var gTests = [
     is(webrtcUI.getActiveStreams(true, true, true).length, 2, "2 active streams");
 
     info("removing the second tab");
-    await BrowserTestUtils.removeTab(tab);
+    // FIXME: This should wait for indicator update instead (bug 1444007).
+    let sessionStorePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
+    BrowserTestUtils.removeTab(tab);
+    await sessionStorePromise;
 
     // Check that we still show the sharing indicators for the first tab's stream.
     await TestUtils.waitForCondition(() => !webrtcUI.showCameraIndicator);
@@ -189,7 +192,10 @@ var gTests = [
     is(webrtcUI.getActiveStreams(true, true, true).length, 2, "2 active streams");
 
     info("removing the second tab");
-    await BrowserTestUtils.removeTab(tab);
+    // FIXME: This should wait for indicator update instead (bug 1444007).
+    let sessionStorePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
+    BrowserTestUtils.removeTab(tab);
+    await sessionStorePromise;
 
     // Check that we still show the sharing indicators for the first tab's stream.
     await TestUtils.waitForCondition(() => webrtcUI.showCameraIndicator);
@@ -304,7 +310,7 @@ var gTests = [
     is(webrtcUI.getActiveStreams(true, true, true).length, 2, "2 active streams");
 
     info("removing the second tab");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
 
     // When both tabs use the same content process, the frame script for the
     // first tab receives observer notifications for things happening in the
