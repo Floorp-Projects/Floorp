@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jit/CodeGenerator.h"
 #include "jit/CompactBuffer.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitSpewer.h"
@@ -1551,7 +1552,25 @@ CodeGeneratorShared::emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck)
 }
 
 void
-CodeGeneratorShared::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
+CodeGenerator::visitWasmCall(LWasmCall* ins)
+{
+    emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
+}
+
+void
+CodeGenerator::visitWasmCallVoid(LWasmCallVoid* ins)
+{
+    emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
+}
+
+void
+CodeGenerator::visitWasmCallI64(LWasmCallI64* ins)
+{
+    emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
+}
+
+void
+CodeGenerator::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 {
     MWasmLoadGlobalVar* mir = ins->mir();
 
@@ -1589,7 +1608,7 @@ CodeGeneratorShared::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 }
 
 void
-CodeGeneratorShared::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
+CodeGenerator::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 {
     MWasmStoreGlobalVar* mir = ins->mir();
 
@@ -1627,7 +1646,7 @@ CodeGeneratorShared::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 }
 
 void
-CodeGeneratorShared::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
+CodeGenerator::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
 {
     MWasmLoadGlobalVar* mir = ins->mir();
     MOZ_ASSERT(mir->type() == MIRType::Int64);
@@ -1640,7 +1659,7 @@ CodeGeneratorShared::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
 }
 
 void
-CodeGeneratorShared::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
+CodeGenerator::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
 {
     MWasmStoreGlobalVar* mir = ins->mir();
     MOZ_ASSERT(mir->value()->type() == MIRType::Int64);
