@@ -221,6 +221,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
     template <class OrderedHashTable>
     void emitLoadIteratorValues(Register result, Register temp, Register front);
 
+    void emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck);
+
     IonScriptCounts* maybeCreateScriptCounts();
 
     // This function behaves like testValueTruthy with the exception that it can

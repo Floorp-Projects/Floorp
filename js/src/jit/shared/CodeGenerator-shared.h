@@ -348,8 +348,6 @@ class CodeGeneratorShared : public LElementVisitor
     void emitTruncateDouble(FloatRegister src, Register dest, MTruncateToInt32* mir);
     void emitTruncateFloat32(FloatRegister src, Register dest, MTruncateToInt32* mir);
 
-    void emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck);
-
     void emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment);
     void emitPreBarrier(Address address);
 
