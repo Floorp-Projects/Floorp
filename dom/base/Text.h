@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_Text_h
 #define mozilla_dom_Text_h
 
-#include "nsGenericDOMDataNode.h"
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/ErrorResult.h"
 
 namespace mozilla {

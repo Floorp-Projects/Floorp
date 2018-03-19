@@ -7,9 +7,9 @@
 #define DeleteTextTransaction_h
 
 #include "mozilla/EditTransactionBase.h"
+#include "mozilla/dom/CharacterData.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsGenericDOMDataNode.h"
 #include "nsID.h"
 #include "nsString.h"
 #include "nscore.h"

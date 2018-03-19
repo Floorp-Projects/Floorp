@@ -12,10 +12,10 @@
 #define DocumentType_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/CharacterData.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
-#include "nsGenericDOMDataNode.h"
 #include "nsString.h"
 
 namespace mozilla {

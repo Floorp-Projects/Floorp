@@ -8,8 +8,8 @@
 #define mozilla_dom_ProcessingInstruction_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/CharacterData.h"
 #include "nsIDOMCharacterData.h"
-#include "nsGenericDOMDataNode.h"
 #include "nsAString.h"
 
 namespace mozilla {
