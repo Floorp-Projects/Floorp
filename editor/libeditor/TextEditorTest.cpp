@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
-#include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"

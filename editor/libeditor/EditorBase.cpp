@@ -47,6 +47,7 @@
 #include "mozilla/TextInputListener.h"  // for TextInputListener
 #include "mozilla/TextServicesDocument.h" // for TextServicesDocument
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/CharacterData.h"  // for CharacterData
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/Text.h"
@@ -69,7 +70,6 @@
 #include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
 #include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                 // for nsIContent
-#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
@@ -2915,9 +2915,8 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidInsertText(
-        static_cast<nsIDOMCharacterData*>(insertedTextNode->AsDOMNode()),
-        insertedOffset, aStringToInsert, rv);
+      listener->DidInsertText(insertedTextNode, insertedOffset,
+                              aStringToInsert, rv);
     }
   }
 
@@ -3043,8 +3042,7 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
   if (!mActionListeners.IsEmpty() && length) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->WillDeleteText(
-        static_cast<nsIDOMCharacterData*>(aCharData.AsDOMNode()), 0, length);
+      listener->WillDeleteText(&aCharData, 0, length);
     }
   }
 
@@ -3084,14 +3082,10 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       if (length) {
-        listener->DidDeleteText(
-          static_cast<nsIDOMCharacterData*>(aCharData.AsDOMNode()), 0,
-          length, rv);
+        listener->DidDeleteText(&aCharData, 0, length, rv);
       }
       if (!aString.IsEmpty()) {
-        listener->DidInsertText(
-          static_cast<nsIDOMCharacterData*>(aCharData.AsDOMNode()), 0,
-          aString, rv);
+        listener->DidInsertText(&aCharData, 0, aString, rv);
       }
     }
   }
@@ -3117,9 +3111,7 @@ EditorBase::DeleteText(CharacterData& aCharData,
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->WillDeleteText(
-          static_cast<nsIDOMCharacterData*>(GetAsDOMNode(&aCharData)), aOffset,
-          aLength);
+      listener->WillDeleteText(&aCharData, aOffset, aLength);
     }
   }
 
@@ -3134,9 +3126,7 @@ EditorBase::DeleteText(CharacterData& aCharData,
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidDeleteText(
-          static_cast<nsIDOMCharacterData*>(GetAsDOMNode(&aCharData)), aOffset,
-          aLength, rv);
+      listener->DidDeleteText(&aCharData, aOffset, aLength, rv);
     }
   }
 
@@ -4361,7 +4351,8 @@ EditorBase::DeleteSelectionImpl(EDirection aAction,
     }
   }
 
-  nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
+  RefPtr<CharacterData> deleteCharData =
+    CharacterData::FromContentOrNull(deleteNode);
   AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
 
   if (mRules && mRules->AsHTMLEditRules()) {
