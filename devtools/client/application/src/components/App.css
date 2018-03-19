@@ -23,6 +23,10 @@
   flex-direction: column;
 }
 
+.application.empty {
+  background-color: var(--grey-30);
+}
+
 h1 {
   font-size: 22px;
   font-weight: normal;

@@ -5,6 +5,7 @@
 @import "resource://devtools/client/application/src/components/App.css";
 @import "resource://devtools/client/application/src/components/Worker.css";
 @import "resource://devtools/client/application/src/components/WorkerList.css";
+@import "resource://devtools/client/application/src/components/WorkerListEmpty.css";
 
 * {
   box-sizing: border-box;

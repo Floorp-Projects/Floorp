@@ -36,9 +36,18 @@ window.Application = {
     this.actions = bindActionCreators(actions, this.store.dispatch);
 
     const serviceContainer = {
-      openAboutDebugging() {
+      openWebLink(url) {
         let win = toolbox.doc.defaultView.top;
-        win.openUILinkIn("about:debugging#workers", "tab", { relatedToCurrent: true });
+        win.openWebLinkIn(url, "tab", { relatedToCurrent: true });
+      },
+
+      openTrustedLink(url) {
+        let win = toolbox.doc.defaultView.top;
+        win.openTrustedLinkIn(url, "tab", { relatedToCurrent: true });
+      },
+
+      selectTool(toolId) {
+        return toolbox.selectTool(toolId);
       }
     };
 

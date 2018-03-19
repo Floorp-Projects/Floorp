@@ -9,4 +9,6 @@ DevToolsModules(
     'Worker.js',
     'WorkerList.css',
     'WorkerList.js',
+    'WorkerListEmpty.css',
+    'WorkerListEmpty.js',
 )
