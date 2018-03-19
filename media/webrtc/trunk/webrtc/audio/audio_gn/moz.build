@@ -13,7 +13,6 @@ AllowCompilerWarnings()
 DEFINES["CHROMIUM_BUILD"] = True
 DEFINES["EXPAT_RELATIVE_PATH"] = True
 DEFINES["V8_DEPRECATION_WARNINGS"] = True
-DEFINES["WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE"] = True
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
 DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
 
@@ -70,8 +69,7 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__GNU_SOURCE"] = "1"
 
     OS_LIBS += [
-        "log",
-        "OpenSLES"
+        "log"
     ]
 
 if CONFIG["OS_TARGET"] == "Darwin":
@@ -83,10 +81,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
 
     OS_LIBS += [
-        "-framework ApplicationServices",
-        "-framework AudioToolbox",
-        "-framework CoreAudio",
-        "-framework CoreGraphics",
         "-framework CoreVideo"
     ]
 
@@ -116,7 +110,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     OS_LIBS += [
-        "dl",
         "m",
         "rt"
     ]
@@ -163,11 +156,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["__STD_C"] = True
 
     OS_LIBS += [
-        "amstrmid",
-        "dmoguids",
-        "msdmo",
-        "winmm",
-        "wmcodecdspuuid"
+        "winmm"
     ]
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
