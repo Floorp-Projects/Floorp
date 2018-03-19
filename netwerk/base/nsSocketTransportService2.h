@@ -171,9 +171,19 @@ private:
         PRIntervalTime    mPollStartEpoch;  // time we started to poll this socket
 
     public:
+        // Returns true iff the socket has not been signalled longer than
+        // the desired timeout (mHandler->mPollTimeout).
         bool IsTimedOut(PRIntervalTime now) const;
-        void StartTimeout();
-        void StopTimeout();
+        // Engages the timeout by marking the epoch we start polling this socket.
+        // If epoch is already marked this does nothing, hence, this method can be
+        // called everytime we put this socket to poll() list with in-flags set.
+        void EnsureTimeout(PRIntervalTime now);
+        // Called after an event on a socket has been signalled to turn of the
+        // timeout calculation.
+        void DisengageTimeout();
+        // Returns the number of intervals this socket is about to timeout in,
+        // or 0 (zero) when it has already timed out.  Returns NS_SOCKET_POLL_TIMEOUT
+        // when there is no timeout set on the socket.
         PRIntervalTime TimeoutIn(PRIntervalTime now) const;
     };
 
@@ -213,7 +223,7 @@ private:
     PRIntervalTime PollTimeout(PRIntervalTime now); // computes ideal poll timeout
     nsresult       DoPollIteration(TimeDuration *pollDuration);
                                              // perfoms a single poll iteration
-    int32_t        Poll(TimeDuration *pollDuration);
+    int32_t        Poll(TimeDuration *pollDuration, PRIntervalTime now);
                                              // calls PR_Poll.  the out param
                                              // interval indicates the poll
                                              // duration in seconds.
