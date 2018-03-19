@@ -36,6 +36,6 @@ add_task(async function test_clickInsecureFieldWarning() {
     EventUtils.synthesizeMouseAtCenter(warningItem, {});
     let supportTab = await supportTabPromise;
     ok(supportTab, "Support tab opened");
-    await BrowserTestUtils.removeTab(supportTab);
+    BrowserTestUtils.removeTab(supportTab);
   });
 });

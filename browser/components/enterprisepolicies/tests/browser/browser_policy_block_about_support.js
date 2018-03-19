@@ -25,5 +25,5 @@ add_task(async function test_about_support() {
        "Policy Engine should report about:support as not allowed");
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

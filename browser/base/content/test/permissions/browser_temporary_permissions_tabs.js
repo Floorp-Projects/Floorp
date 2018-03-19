@@ -60,7 +60,7 @@ add_task(async function testTempPermissionMultipleTabs() {
   Assert.equal(geoIcon.boxObject.width, 0, "geo anchor should not be visible");
 
   SitePermissions.remove(uri, id, tab2.linkedBrowser);
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 });
 

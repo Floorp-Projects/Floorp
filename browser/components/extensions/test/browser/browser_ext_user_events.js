@@ -67,7 +67,7 @@ add_task(async function testSources() {
   EventUtils.synthesizeMouseAtCenter(items[0], {});
   await check("context menu click");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
 

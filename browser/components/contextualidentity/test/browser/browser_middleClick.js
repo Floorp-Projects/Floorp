@@ -35,6 +35,9 @@ add_task(async function() {
 
   is(newTab.getAttribute("usercontextid"), 1, "Correct UserContextId?");
 
-  await BrowserTestUtils.removeTab(tab);
-  await BrowserTestUtils.removeTab(newTab);
+  // newTab shouldn't be closed in the same event tick as TabOpen.
+  await TestUtils.waitForTick();
+
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(newTab);
 });

@@ -22,7 +22,7 @@ registerCleanupFunction(function() {
 add_task(async function setup() {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 });
 

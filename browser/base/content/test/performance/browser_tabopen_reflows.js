@@ -39,6 +39,6 @@ add_task(async function() {
   }, EXPECTED_REFLOWS);
 
   let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await switchDone;
 });

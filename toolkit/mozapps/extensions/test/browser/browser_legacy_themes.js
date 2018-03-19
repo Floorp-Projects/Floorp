@@ -73,7 +73,7 @@ add_task(async function() {
   button.click();
   let tab = await tabPromise;
   ok(true, "Find a replacement button opened SUMO page");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await close_manager(mgrWin);
 });

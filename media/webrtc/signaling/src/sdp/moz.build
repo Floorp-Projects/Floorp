@@ -19,6 +19,11 @@ else:
         'sipcc/sdp_services_unix.c',
     ]
 
+if CONFIG['FUZZING']:
+    if CONFIG['LIBFUZZER']:
+        # Add trace-pc coverage and trace-cmp for LibFuzzer
+        CFLAGS += ['-fsanitize-coverage=trace-pc-guard', '-fsanitize-coverage=trace-cmp']
+        CXXFLAGS += ['-fsanitize-coverage=trace-pc-guard', '-fsanitize-coverage=trace-cmp']
 
 LOCAL_INCLUDES += [
     '/media/mtransport',

@@ -26,7 +26,7 @@ add_task(async function test_large_content() {
   info(JSON.stringify(state, null, "\t"));
   Assert.equal(state.storage, null, "We have no storage for the tab");
   Assert.equal(state.entries[0].title, OUTER_VALUE);
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   Services.prefs.clearUserPref("browser.sessionstore.dom_storage_limit");
 });

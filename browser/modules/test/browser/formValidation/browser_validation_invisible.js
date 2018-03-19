@@ -29,7 +29,7 @@ add_task(async function test_display_none() {
   await BrowserTestUtils.synthesizeMouse("#s", 0, 0, {}, gBrowser.selectedBrowser);
 
   checkPopupHide();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -44,6 +44,6 @@ add_task(async function test_visibility_hidden() {
   await BrowserTestUtils.synthesizeMouse("#s", 0, 0, {}, gBrowser.selectedBrowser);
 
   checkPopupHide();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 

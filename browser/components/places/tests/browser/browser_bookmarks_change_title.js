@@ -49,7 +49,7 @@ add_task(async function test_change_title_from_BookmarkStar() {
   });
 
   registerCleanupFunction(async () => {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 
   let bookmarkPanel = document.getElementById("editBookmarkPanel");

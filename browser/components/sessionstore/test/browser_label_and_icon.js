@@ -27,7 +27,7 @@ add_task(async function test_label_and_icon() {
   // Retrieve the tab state.
   await TabStateFlusher.flush(browser);
   let state = ss.getTabState(tab);
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
   browser = null;
 
   // Open a new tab to restore into.
@@ -47,5 +47,5 @@ add_task(async function test_label_and_icon() {
   is(iconLoadingPrincipal.origin, "about:robots", "correct loadingPrincipal used");
 
   // Cleanup.
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

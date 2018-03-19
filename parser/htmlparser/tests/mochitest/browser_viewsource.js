@@ -17,6 +17,6 @@ add_task(async function() {
 
   let results = await Promise.all([viewSourceContentPromise, xhrPromise]);
   is(results[0], results[1], "Sources should match");
-  await BrowserTestUtils.removeTab(viewSourceTab);
+  BrowserTestUtils.removeTab(viewSourceTab);
 });
 

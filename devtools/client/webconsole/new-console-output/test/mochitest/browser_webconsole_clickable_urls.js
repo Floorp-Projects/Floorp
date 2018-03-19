@@ -32,5 +32,5 @@ add_task(async function() {
   // We only need to check that newTab is truthy since
   // BrowserTestUtils.waitForNewTab checks the URL.
   ok(newTab, "The expected tab was opened.");
-  await BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
 });

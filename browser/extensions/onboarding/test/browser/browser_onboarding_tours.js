@@ -49,7 +49,7 @@ add_task(async function test_set_right_tour_completed_style_on_overlay() {
     for (let j = 0; j < tourIds.length; ++j) {
       await assertTourCompleted(tourIds[j], j % 2 == 0, tab.linkedBrowser);
     }
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 });
 
@@ -85,7 +85,7 @@ add_task(async function test_click_action_button_to_set_tour_completed() {
     for (let id of tourIds) {
       await assertTourCompleted(id, id == completedTourId, tab.linkedBrowser);
     }
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 });
 
@@ -110,6 +110,6 @@ add_task(async function test_set_watermark_after_all_tour_completed() {
 
   for (let tab of tabs) {
     await assertWatermarkIconDisplayed(tab.linkedBrowser);
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 });

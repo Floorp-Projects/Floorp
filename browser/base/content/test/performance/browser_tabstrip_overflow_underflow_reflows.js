@@ -66,7 +66,7 @@ add_task(async function() {
 
   await withReflowObserver(async function(dirtyFrame) {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab, { animate: true });
+    BrowserTestUtils.removeTab(gBrowser.selectedTab, { animate: true });
     await switchDone;
   }, [], window);
 
@@ -92,7 +92,7 @@ add_task(async function() {
 
   // Okay, now close the last tab. The tabstrip should stay overflowed, but removing
   // one more after that should underflow it.
-  await BrowserTestUtils.removeTab(lastTab);
+  BrowserTestUtils.removeTab(lastTab);
 
   Assert.ok(gBrowser.tabContainer.hasAttribute("overflow"),
             "Tabs should still be overflowed.");
@@ -110,7 +110,7 @@ add_task(async function() {
     // the overflowed state.
     await withReflowObserver(async function() {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-      await BrowserTestUtils.removeTab(lastTab, { animate: true });
+      BrowserTestUtils.removeTab(lastTab, { animate: true });
       await switchDone;
       await BrowserTestUtils.waitForCondition(() => !lastTab.isConnected);
     }, EXPECTED_UNDERFLOW_REFLOWS, window);

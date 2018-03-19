@@ -219,7 +219,7 @@ async function doSelectTests(contentType, content) {
   is(selectPopup.lastChild.previousSibling.label, "Seven", "Spaces collapsed");
   is(selectPopup.lastChild.label, "\xA0\xA0Eight\xA0\xA0", "Non-breaking spaces not collapsed");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function setup() {
@@ -281,7 +281,7 @@ add_task(async function() {
   await openSelectPopup(selectPopup, "click", "#one");
 
   popupHiddenPromise = BrowserTestUtils.waitForEvent(selectPopup, "popuphidden");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   await popupHiddenPromise;
 
   ok(true, "Popup hidden when tab is closed");
@@ -348,7 +348,7 @@ add_task(async function() {
     await hideSelectPopup(selectPopup);
   }
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Test that we get the right events when a select popup is changed.
@@ -585,7 +585,7 @@ add_task(async function test_large_popup() {
 
   await performLargePopupTests(window);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // This test checks the same as the previous test but in a new smaller window.
@@ -671,7 +671,7 @@ add_task(async function test_select_search() {
 
   await performSelectSearchTests(window);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await SpecialPowers.popPrefEnv();
 });
@@ -711,7 +711,7 @@ add_task(async function test_mousemove_correcttarget() {
     await popupHiddenPromise;
   }
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // This test checks when a <select> element has some options with altered display values.
@@ -741,7 +741,7 @@ add_task(async function test_somehidden() {
   }
 
   await hideSelectPopup(selectPopup, "escape");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // This test checks that the popup is closed when the select element is blurred.
@@ -773,5 +773,5 @@ add_task(async function test_blur_hides_popup() {
 
   ok(true, "Blur closed popup");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

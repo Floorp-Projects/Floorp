@@ -27,7 +27,7 @@ add_task(async function test_show_tour_notifications_in_order() {
   await assertWatermarkIconDisplayed(tab.linkedBrowser);
   let tourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   ok(!tourId, "Should not prompt each tour for more than 2 chances.");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   async function loopTourNotificationQueueOnceInOrder() {
     for (let i = 0; i < tourIds.length; ++i) {
@@ -58,5 +58,5 @@ add_task(async function test_open_target_tour_from_notification() {
 
   is(targetTourId, activeNavItemId, "Should navigate to the target tour item.");
   is(`${targetTourId}-page`, activePageId, "Should display the target tour page.");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

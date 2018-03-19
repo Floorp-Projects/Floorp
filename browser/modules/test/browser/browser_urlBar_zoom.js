@@ -35,7 +35,7 @@ async function testZoomButtonAppearsAndDisappearsBasedOnZoomChanges(zoomEventTyp
   is(pageZoomLevel, expectedZoomLevel, "Clicking zoom button successfully resets browser zoom to 100%");
   is(zoomResetButton.hidden, true, "Zoom reset button returns to being hidden");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function() {

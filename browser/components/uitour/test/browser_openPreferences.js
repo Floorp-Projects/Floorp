@@ -10,7 +10,7 @@ add_UITour_task(async function test_openPreferences() {
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences");
   await gContentAPI.openPreferences();
   let tab = await promiseTabOpened;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_UITour_task(async function test_openInvalidPreferences() {
@@ -30,7 +30,7 @@ add_UITour_task(async function test_openPrivacyPreferences() {
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy");
   await gContentAPI.openPreferences("privacy");
   let tab = await promiseTabOpened;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_UITour_task(async function test_openPrivacyReports() {
@@ -47,5 +47,5 @@ add_UITour_task(async function test_openPrivacyReports() {
   await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"),
     "Wait for the reports section is spotlighted.");
   is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports", "The reports section is spotlighted.");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

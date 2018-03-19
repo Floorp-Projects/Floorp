@@ -180,7 +180,7 @@ add_task(async function refresh_menus_with_tab() {
       await closeTabContextMenu();
     },
   });
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function refresh_menus_with_tools_menu() {
@@ -206,7 +206,7 @@ add_task(async function refresh_menus_with_page() {
       await closeExtensionContextMenu();
     },
   });
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function refresh_without_menus_at_onShown() {
@@ -243,7 +243,7 @@ add_task(async function refresh_without_menus_at_onShown() {
   await doCloseMenu();
 
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function refresh_menus_with_browser_action() {
@@ -344,5 +344,5 @@ add_task(async function refresh_menus_during_navigation() {
 
   await closeActionContextMenu();
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

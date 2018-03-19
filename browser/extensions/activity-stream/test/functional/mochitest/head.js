@@ -154,7 +154,7 @@ function test_newtab(testInfo) { // eslint-disable-line no-unused-vars
     } finally {
       // Clean up for next tests
       await scopedPopPrefs();
-      await BrowserTestUtils.removeTab(tab);
+      BrowserTestUtils.removeTab(tab);
     }
   };
 

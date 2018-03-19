@@ -124,7 +124,7 @@ add_task(async function test_plainQuery() {
     URLBAR_SELECTED_RESULT_METHODS.enter,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Performs a search using the first result, a one-off button, and the Return
@@ -167,7 +167,7 @@ add_task(async function test_oneOff_enter() {
     URLBAR_SELECTED_RESULT_METHODS.enter,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Performs a search using the second result, a one-off button, and the Return
@@ -210,7 +210,7 @@ add_task(async function test_oneOff_enterSelection() {
 
   Services.search.currentEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Performs a search using a click on a one-off button.  This only tests the
@@ -235,7 +235,7 @@ add_task(async function test_oneOff_click() {
     URLBAR_SELECTED_RESULT_METHODS.click,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Clicks the first suggestion offered by the test search engine.
@@ -291,7 +291,7 @@ add_task(async function test_suggestion_click() {
 
   Services.search.currentEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Selects and presses the Return (Enter) key on the first suggestion offered by
@@ -333,5 +333,5 @@ add_task(async function test_suggestion_enterSelection() {
 
   Services.search.currentEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

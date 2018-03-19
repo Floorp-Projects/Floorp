@@ -20,7 +20,7 @@ add_task(async function() {
   contextMenu.hidePopup();
   await popupHiddenPromise;
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 function checkItems(menuitem, arr) {

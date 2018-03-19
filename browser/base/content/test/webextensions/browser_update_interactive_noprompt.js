@@ -47,7 +47,7 @@ async function testUpdateNoPrompt(filename, id,
   ok(!sawPopup, "Should not have seen a permission notification");
   PopupNotifications.panel.removeEventListener("popupshown", popupListener);
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   addon.uninstall();
 }
 

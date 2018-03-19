@@ -119,7 +119,7 @@ add_task(async function test_theme_name_no_panel() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_devtools_page_panels_create() {
@@ -329,7 +329,7 @@ add_task(async function test_devtools_page_panels_create() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_devtools_page_panels_switch_toolbox_host() {
@@ -453,7 +453,7 @@ add_task(async function test_devtools_page_panels_switch_toolbox_host() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_devtools_page_invalid_panel_urls() {
@@ -601,5 +601,5 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

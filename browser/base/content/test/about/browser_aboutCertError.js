@@ -81,7 +81,7 @@ add_task(async function checkReturnToAboutHome() {
     is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
     is(gBrowser.currentURI.spec, "about:home", "Went back");
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
 
@@ -129,7 +129,7 @@ add_task(async function checkReturnToPreviousPage() {
     is(browser.webNavigation.canGoForward, true, "webNavigation.canGoForward");
     is(gBrowser.currentURI.spec, GOOD_PAGE, "Went back");
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
 
@@ -148,7 +148,7 @@ add_task(async function checkBadStsCert() {
 
     ok(exceptionButtonHidden, "Exception button is hidden");
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
 
@@ -220,7 +220,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   ok(message.actualDate.includes(serverDateFmt), "correct server date displayed");
   ok(message.learnMoreLink.includes("time-errors"), "time-errors in the Learn More URL");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // pretend we have a negatively skewed (behind) system time
   serverDate = new Date();
@@ -240,7 +240,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   ok(message.systemDate.includes(localDateFmt), "correct local date displayed");
   ok(message.actualDate.includes(serverDateFmt), "correct server date displayed");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // pretend we only have a slightly skewed system time, four hours
   skew = 60 * 60 * 4;
@@ -251,7 +251,7 @@ add_task(async function checkWrongSystemTimeWarning() {
 
   is(message.divDisplay, "none", "Wrong time message information is not visible");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // now pretend we have no skewed system time
   skew = 0;
@@ -262,7 +262,7 @@ add_task(async function checkWrongSystemTimeWarning() {
 
   is(message.divDisplay, "none", "Wrong time message information is not visible");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }).skip(); // Skipping because of bug 1414804.
 
 add_task(async function checkAdvancedDetails() {
@@ -319,7 +319,7 @@ add_task(async function checkAdvancedDetails() {
     let certChain = getCertChain(message.securityInfoAsString);
     ok(message.text.includes(certChain), "Found certificate chain");
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
 
@@ -384,7 +384,7 @@ add_task(async function checkAdvancedDetailsForHSTS() {
     let certChain = getCertChain(message.securityInfoAsString);
     ok(message.text.includes(certChain), "Found certificate chain");
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
 
@@ -401,7 +401,7 @@ add_task(async function checkUnknownIssuerLearnMoreLink() {
     });
     ok(href.endsWith("security-error"), "security-error in the Learn More URL");
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
 

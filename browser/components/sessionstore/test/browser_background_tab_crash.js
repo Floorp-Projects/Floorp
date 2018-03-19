@@ -61,8 +61,8 @@ async function setupBackgroundTabs(testFn) {
 
   await testFn([tab1, tab2]);
 
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 }
 
 /**

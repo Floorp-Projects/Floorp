@@ -24,5 +24,5 @@ add_task(async function test_update_preferences_ui() {
        "Update choice should be set to \"manual\" when app update is disabled by policy");
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

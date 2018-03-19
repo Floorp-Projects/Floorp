@@ -352,7 +352,7 @@ async function testInstallMethod(installFn, telemetryBase) {
       addon.uninstall();
     }
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 
   // A few different tests for each installation method:
@@ -470,7 +470,7 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
 
   await checkPromise;
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   addon.uninstall();
   await SpecialPowers.popPrefEnv();
 }
