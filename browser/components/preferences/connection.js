@@ -264,7 +264,7 @@ var gConnectionsDialog = {
       for (let element of gConnectionsDialog.getProxyControls()) {
         element.disabled = disabled;
       }
-      if (!isControlled) {
+      if (!isLocked) {
         gConnectionsDialog.proxyTypeChanged();
       }
     }
