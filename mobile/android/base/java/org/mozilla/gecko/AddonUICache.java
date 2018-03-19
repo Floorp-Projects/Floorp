@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko;
 
+import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -79,6 +80,13 @@ public class AddonUICache implements BundleEventListener {
             null);
 
         mInitialized = true;
+    }
+
+    @VisibleForTesting
+    /* package, intended private */ void reset() {
+        mAddonMenuItemsCache.clear();
+        mAddonMenuNextID = ADDON_MENU_OFFSET;
+        mMenu = null;
     }
 
     @Override
