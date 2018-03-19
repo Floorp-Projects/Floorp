@@ -23,7 +23,7 @@ Comment::~Comment()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(Comment, nsGenericDOMDataNode, nsIDOMNode,
+NS_IMPL_ISUPPORTS_INHERITED(Comment, CharacterData, nsIDOMNode,
                             nsIDOMCharacterData)
 
 bool
@@ -32,7 +32,7 @@ Comment::IsNodeOfType(uint32_t aFlags) const
   return !(aFlags & ~(eCOMMENT | eDATA_NODE));
 }
 
-nsGenericDOMDataNode*
+CharacterData*
 Comment::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;

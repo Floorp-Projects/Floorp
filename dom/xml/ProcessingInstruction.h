@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class ProcessingInstruction : public nsGenericDOMDataNode,
+class ProcessingInstruction : public CharacterData,
                               public nsIDOMCharacterData
 {
 public:
@@ -26,14 +26,15 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMCharacterData
-  NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
-  using nsGenericDOMDataNode::SetData; // Prevent hiding overloaded virtual function.
+  NS_FORWARD_NSIDOMCHARACTERDATA(CharacterData::)
+  using CharacterData::SetData; // Prevent hiding overloaded virtual function.
+  using CharacterData::GetData;
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const override;
+  virtual CharacterData* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                                       bool aCloneText) const override;
 
 #ifdef DEBUG
   virtual void List(FILE* out, int32_t aIndent) const override;

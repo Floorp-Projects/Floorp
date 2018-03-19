@@ -386,7 +386,7 @@ public:
                                  EStripWrappers aStripWrappers) override;
   nsresult DeleteNode(nsINode* aNode);
   NS_IMETHOD DeleteNode(nsIDOMNode* aNode) override;
-  nsresult DeleteText(nsGenericDOMDataNode& aTextNode, uint32_t aOffset,
+  nsresult DeleteText(dom::CharacterData& aTextNode, uint32_t aOffset,
                       uint32_t aLength);
   virtual nsresult
   InsertTextImpl(nsIDocument& aDocument,
