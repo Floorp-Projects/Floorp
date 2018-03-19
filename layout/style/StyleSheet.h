@@ -33,6 +33,7 @@ namespace dom {
 class CSSImportRule;
 class CSSRuleList;
 class MediaList;
+class ShadowRoot;
 class SRIMetadata;
 } // namespace dom
 
@@ -278,6 +279,8 @@ public:
   }
 
 private:
+  dom::ShadowRoot* GetContainingShadow() const;
+
   // Get a handle to the various stylesheet bits which live on the 'inner' for
   // gecko stylesheets and live on the StyleSheet for Servo stylesheets.
   inline StyleSheetInfo& SheetInfo();
@@ -296,6 +299,8 @@ protected:
 
   // Called when a rule is added to the sheet from CSSOM.
   void RuleRemoved(css::Rule&);
+
+  void ApplicableStateChanged(bool aApplicable);
 
   // Called from SetEnabled when the enabled state changed.
   void EnabledStateChanged();

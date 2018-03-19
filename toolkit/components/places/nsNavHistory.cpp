@@ -1957,35 +1957,34 @@ PlacesSQLQueryBuilder::SelectAsRoots()
   nsAutoCString unfiledTitle;
 
   history->GetStringFromName("BookmarksToolbarFolderTitle", toolbarTitle);
+  mAddParams.Put(NS_LITERAL_CSTRING("BookmarksToolbarFolderTitle"), toolbarTitle);
   history->GetStringFromName("BookmarksMenuFolderTitle", menuTitle);
+  mAddParams.Put(NS_LITERAL_CSTRING("BookmarksMenuFolderTitle"), menuTitle);
   history->GetStringFromName("OtherBookmarksFolderTitle", unfiledTitle);
+  mAddParams.Put(NS_LITERAL_CSTRING("OtherBookmarksFolderTitle"), unfiledTitle);
 
   nsAutoCString mobileString;
 
   if (Preferences::GetBool(MOBILE_BOOKMARKS_PREF, false)) {
     nsAutoCString mobileTitle;
     history->GetStringFromName("MobileBookmarksFolderTitle", mobileTitle);
+    mAddParams.Put(NS_LITERAL_CSTRING("MobileBookmarksFolderTitle"), mobileTitle);
 
-    mobileString = nsPrintfCString(","
-      "(null, 'place:folder=MOBILE_BOOKMARKS', '%s', null, null, null, "
-       "null, null, 0, 0, null, null, null, null, '" MOBILE_BOOKMARKS_VIRTUAL_GUID "', null) ",
-      mobileTitle.get());
+    mobileString = NS_LITERAL_CSTRING(","
+      "(null, 'place:folder=MOBILE_BOOKMARKS', :MobileBookmarksFolderTitle, null, null, null, "
+       "null, null, 0, 0, null, null, null, null, '" MOBILE_BOOKMARKS_VIRTUAL_GUID "', null) ");
   }
 
-  mQueryString = nsPrintfCString(
+  mQueryString = NS_LITERAL_CSTRING(
     "SELECT * FROM ("
-        "VALUES(null, 'place:folder=TOOLBAR', '%s', null, null, null, "
+        "VALUES(null, 'place:folder=TOOLBAR', :BookmarksToolbarFolderTitle, null, null, null, "
                "null, null, 0, 0, null, null, null, null, 'toolbar____v', null), "
-              "(null, 'place:folder=BOOKMARKS_MENU', '%s', null, null, null, "
+              "(null, 'place:folder=BOOKMARKS_MENU', :BookmarksMenuFolderTitle, null, null, null, "
                "null, null, 0, 0, null, null, null, null, 'menu_______v', null), "
-              "(null, 'place:folder=UNFILED_BOOKMARKS', '%s', null, null, null, "
-               "null, null, 0, 0, null, null, null, null, 'unfiled___v', null) "
-              " %s "
-    ")",
-    toolbarTitle.get(),
-    menuTitle.get(),
-    unfiledTitle.get(),
-    mobileString.get());
+              "(null, 'place:folder=UNFILED_BOOKMARKS', :OtherBookmarksFolderTitle, null, null, null, "
+               "null, null, 0, 0, null, null, null, null, 'unfiled___v', null) ") +
+    mobileString + NS_LITERAL_CSTRING(")");
+
   return NS_OK;
 }
 
@@ -2001,33 +2000,33 @@ PlacesSQLQueryBuilder::SelectAsLeftPane()
   nsAutoCString allBookmarksTitle;
 
   history->GetStringFromName("OrganizerQueryHistory", historyTitle);
+  mAddParams.Put(NS_LITERAL_CSTRING("OrganizerQueryHistory"), historyTitle);
   history->GetStringFromName("OrganizerQueryDownloads", downloadsTitle);
+  mAddParams.Put(NS_LITERAL_CSTRING("OrganizerQueryDownloads"), downloadsTitle);
   history->GetStringFromName("TagsFolderTitle", tagsTitle);
+  mAddParams.Put(NS_LITERAL_CSTRING("TagsFolderTitle"), tagsTitle);
   history->GetStringFromName("OrganizerQueryAllBookmarks", allBookmarksTitle);
+  mAddParams.Put(NS_LITERAL_CSTRING("OrganizerQueryAllBookmarks"), allBookmarksTitle);
 
   mQueryString = nsPrintfCString(
     "SELECT * FROM ("
         "VALUES"
-              "(null, 'place:type=%d&sort=%d', '%s', null, null, null, "
+              "(null, 'place:type=%d&sort=%d', :OrganizerQueryHistory, null, null, null, "
                "null, null, 0, 0, null, null, null, null, 'history____v', null), "
-              "(null, 'place:transition=%d&sort=%d', '%s', null, null, null, "
+              "(null, 'place:transition=%d&sort=%d', :OrganizerQueryDownloads, null, null, null, "
                "null, null, 0, 0, null, null, null, null, 'downloads__v', null), "
-              "(null, 'place:type=%d&sort=%d', '%s', null, null, null, "
+              "(null, 'place:type=%d&sort=%d', :TagsFolderTitle, null, null, null, "
                "null, null, 0, 0, null, null, null, null, 'tags_______v', null), "
-              "(null, 'place:type=%d', '%s', null, null, null, "
+              "(null, 'place:type=%d', :OrganizerQueryAllBookmarks, null, null, null, "
                "null, null, 0, 0, null, null, null, null, 'allbms_____v', null) "
     ")",
     nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY,
     nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING,
-    historyTitle.get(),
     nsINavHistoryService::TRANSITION_DOWNLOAD,
     nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING,
-    downloadsTitle.get(),
     nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY,
     nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING,
-    tagsTitle.get(),
-    nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY,
-    allBookmarksTitle.get());
+    nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY);
   return NS_OK;
 }
 

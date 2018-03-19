@@ -52,3 +52,7 @@ job-template:
         only-if-dependencies-run: null
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/gecko-symbol-upload
+    run-on-projects:
+        by-build-platform:
+            .*devedition.*: ['mozilla-beta', 'maple']
+            default: ['all']

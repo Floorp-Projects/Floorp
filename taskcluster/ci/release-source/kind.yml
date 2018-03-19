@@ -11,8 +11,9 @@ transforms:
    - taskgraph.transforms.build:transforms
    - taskgraph.transforms.build_attrs:transforms
    - taskgraph.transforms.build_lints:transforms
-   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.use_toolchains:transforms
    - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
 jobs-from:
@@ -20,3 +21,27 @@ jobs-from:
 
 job-defaults:
    shipping-phase: promote
+   treeherder:
+      symbol: Src
+   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker:
+      max-run-time: 3600
+      env:
+         TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+         PKG_SRCPACK_BASENAME: source
+   run:
+      using: mozharness
+      actions: [package-source]
+      script: "mozharness/scripts/fx_desktop_build.py"
+      config:
+         - builds/releng_sub_linux_configs/64_source.py
+         - disable_signing.py
+      options: []
+      tooltool-downloads: public
+      need-xvfb: false
+   run-on-projects: []
+   toolchains:
+      - linux64-clang
+      - linux64-gcc
+      - linux64-rust
+      - linux64-sccache

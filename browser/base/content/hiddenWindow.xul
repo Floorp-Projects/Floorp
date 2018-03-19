@@ -6,19 +6,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifdef XP_MACOSX
-<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
 <?xml-stylesheet href="chrome://browser/skin/webRTC-indicator.css" type="text/css"?>
 
 <!DOCTYPE window [
-<!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
-%baseMenuOverlayDTD;
+#include browser-doctype.inc
 ]>
 
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-#include browserMountPoints.inc
+#include macWindow.inc.xul
 
 </window>
 

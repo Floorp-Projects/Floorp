@@ -123,6 +123,7 @@ devtools.jar:
     skin/images/pseudo-class.svg (themes/images/pseudo-class.svg)
     skin/images/controls.png (themes/images/controls.png)
     skin/images/controls@2x.png (themes/images/controls@2x.png)
+    skin/images/copy.svg (themes/images/copy.svg)
     skin/images/animation-fast-track.svg (themes/images/animation-fast-track.svg)
     skin/images/performance-details-waterfall.svg (themes/images/performance-details-waterfall.svg)
     skin/images/performance-details-call-tree.svg (themes/images/performance-details-call-tree.svg)
