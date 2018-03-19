@@ -610,7 +610,7 @@ AutoWheelDeltaAdjuster::AutoWheelDeltaAdjuster(WidgetWheelEvent& aWheelEvent)
   }
 }
 
-AutoWheelDeltaAdjuster::~AutoWheelDeltaAdjuster()
+void AutoWheelDeltaAdjuster::CancelAdjustment()
 {
   if (mTreatedVerticalWheelAsHorizontalScroll &&
       mWheelEvent.mDeltaValuesAdjustedForDefaultHandler) {
@@ -622,7 +622,13 @@ AutoWheelDeltaAdjuster::~AutoWheelDeltaAdjuster()
     mWheelEvent.mLineOrPageDeltaY = mWheelEvent.mLineOrPageDeltaX;
     mWheelEvent.mLineOrPageDeltaX = mOldLineOrPageDeltaX;
     mWheelEvent.mDeltaValuesAdjustedForDefaultHandler = false;
+    mTreatedVerticalWheelAsHorizontalScroll = false;
   }
+}
+
+AutoWheelDeltaAdjuster::~AutoWheelDeltaAdjuster()
+{
+  CancelAdjustment();
 }
 
 } // namespace mozilla

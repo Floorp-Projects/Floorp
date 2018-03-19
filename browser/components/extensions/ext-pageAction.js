@@ -190,9 +190,8 @@ this.pageAction = class extends ExtensionAPI {
   // Does pattern matching if necessary, and caches the result as a tab-specific value.
   // @param {XULElement} tab
   //        The tab to be checked
-  // @param [optional] {boolean} ignoreCache
-  //        If true, forces pattern matching to be reevaluated, even if there is a cached value.
-  isShown(tab, ignoreCache = false) {
+  // @return boolean
+  isShown(tab) {
     let tabData = this.tabContext.get(tab);
 
     // If there is a "show" value, return it. Can be due to show(), hide() or empty show_matches.
@@ -201,7 +200,7 @@ this.pageAction = class extends ExtensionAPI {
     }
 
     // Otherwise pattern matching must have been configured. Do it, caching the result.
-    if (ignoreCache || tabData.patternMatching === undefined) {
+    if (tabData.patternMatching === undefined) {
       let uri = tab.linkedBrowser.currentURI;
       tabData.patternMatching = tabData.showMatches.matches(uri) && !tabData.hideMatches.matches(uri);
     }
@@ -284,19 +283,38 @@ this.pageAction = class extends ExtensionAPI {
     }
   }
 
+  /**
+   * Updates the `tabData` for any location change, however it only updates the button
+   * when the selected tab has a location change, or the selected tab has changed.
+   *
+   * @param {string} eventType
+   *        The type of the event, should be "location-change".
+   * @param {XULElement} tab
+   *        The tab whose location changed, or which has become selected.
+   * @param {boolean} [fromBrowse]
+   *        - `true` if navigation occurred in `tab`.
+   *        - `false` if the location changed but no navigation occurred, e.g. due to
+               a hash change or `history.pushState`.
+   *        - Omitted if TabSelect has occurred, tabData does not need to be updated.
+   */
   handleLocationChange(eventType, tab, fromBrowse) {
-    // fromBrowse can have three values:
-    // - true: navigation occurred in the active tab
-    // - false: the location changed in the active tab but no navigation occurred
-    // - undefined: an inactive tab has become active
     if (fromBrowse === true) {
+      // Clear tab data on navigation.
       this.tabContext.clear(tab);
+    } else if (fromBrowse === false) {
+      // Clear pattern matching cache when URL changes.
+      let tabData = this.tabContext.get(tab);
+      if (tabData.patternMatching !== undefined) {
+        tabData.patternMatching = undefined;
+      }
     }
 
-    // isShown will do pattern matching (if necessary) and store the result
-    // so that updateButton knows whether the page action should be shown.
-    this.isShown(tab, fromBrowse !== undefined);
-    this.updateButton(tab.ownerGlobal);
+    if (tab.selected) {
+      // isShown will do pattern matching (if necessary) and store the result
+      // so that updateButton knows whether the page action should be shown.
+      this.isShown(tab);
+      this.updateButton(tab.ownerGlobal);
+    }
   }
 
   getAPI(context) {
