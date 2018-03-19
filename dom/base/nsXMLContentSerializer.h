@@ -50,7 +50,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                                 int32_t aStartOffset, int32_t aEndOffset,
                                 nsAString& aStr) override;
 
-  NS_IMETHOD AppendProcessingInstruction(nsIContent* aPI,
+  NS_IMETHOD AppendProcessingInstruction(mozilla::dom::ProcessingInstruction* aPI,
                                          int32_t aStartOffset,
                                          int32_t aEndOffset,
                                          nsAString& aStr) override;
