@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1050"/>
+  <title>Sanity check for double-tap zooming</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+function getResolution() {
+  let resolution = { value: -1 }; // bogus value in case DWU fails us
+  SpecialPowers.getDOMWindowUtils(window).getResolution(resolution);
+  return resolution.value;
+}
+
+function* test(testDriver) {
+  var initial_resolution = getResolution();
+  ok(initial_resolution > 0,
+      'The initial_resolution is ' + initial_resolution + ', which is some sane value');
+
+  // This listener will trigger the test to continue once APZ is done with
+  // processing the scroll.
+  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
+
+  synthesizeNativeTap(document.getElementById('target'), 10, 10);
+  synthesizeNativeTap(document.getElementById('target'), 10, 10);
+
+  // Wait for the APZ:TransformEnd to fire
+  yield true;
+
+  // We get here once the APZ:TransformEnd has fired, so we don't need that
+  // observer any more.
+  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
+
+  // Flush state and get the resolution we're at now
+  yield flushApzRepaints(testDriver);
+  let final_resolution = getResolution();
+  ok(final_resolution > initial_resolution, 'The final resolution (' + final_resolution + ') is greater after zooming in');
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+  <style type="text/css">
+    .box {
+        width: 800px;
+        height: 200px;
+        margin: 0 auto;
+    }
+</style>
+</head>
+<body>
+<div class="box">Text before the div.</div>
+<div id="target" style="width:400px; height: 2000px; background-image: linear-gradient(blue,red)">
+</div>
+</body>
+</html>

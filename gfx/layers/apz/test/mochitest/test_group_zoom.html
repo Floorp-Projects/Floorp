@@ -25,9 +25,16 @@ var prefs = [
   ["apz.displayport_expiry_ms", 0],
 ];
 
+// Increase the tap timeouts so the double-tap is still detected in case of
+// random delays during testing.
+var doubletap_prefs = prefs.slice(); // make a copy
+doubletap_prefs.push(["ui.click_hold_context_menus.delay", 10000]);
+doubletap_prefs.push(["apz.max_tap_time", 10000]);
+
 var subtests = [
   {'file': 'helper_bug1280013.html', 'prefs': prefs},
   {'file': 'helper_basic_zoom.html', 'prefs': prefs},
+  {'file': 'helper_basic_doubletap_zoom.html', 'prefs': doubletap_prefs},
 ];
 
 if (isApzEnabled()) {
