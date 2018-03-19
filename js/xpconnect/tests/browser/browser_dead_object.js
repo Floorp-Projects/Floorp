@@ -22,5 +22,5 @@ add_task(async function test() {
     return Cu.isDeadWrapper(doc);
   });
   is(contentDocDead, true, "wrapper is dead");
-  await BrowserTestUtils.removeTab(newTab); 
+  BrowserTestUtils.removeTab(newTab); 
 });

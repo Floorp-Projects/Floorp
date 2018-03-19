@@ -50,5 +50,5 @@ add_task(async function() {
   ok(button.disabled, "master password button should now be disabled");
   ok(!checkbox.checked, "master password checkbox should now be unchecked");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

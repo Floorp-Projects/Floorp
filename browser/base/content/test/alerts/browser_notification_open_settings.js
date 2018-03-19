@@ -19,7 +19,7 @@ add_task(async function test_settingsOpen_observer() {
     let tab = await tabPromise;
     ok(tab, "The notification settings tab opened");
     await syncPaneLoadedPromise;
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });
 
@@ -55,6 +55,6 @@ add_task(async function test_settingsOpen_button() {
 
     await syncPaneLoadedPromise;
     await closePromise;
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });

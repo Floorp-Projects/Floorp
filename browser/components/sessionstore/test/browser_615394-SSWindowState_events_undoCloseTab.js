@@ -53,5 +53,5 @@ add_task(async function test_undoCloseTab() {
   window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
   window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
 
-  await BrowserTestUtils.removeTab(reopenedTab);
+  BrowserTestUtils.removeTab(reopenedTab);
 });

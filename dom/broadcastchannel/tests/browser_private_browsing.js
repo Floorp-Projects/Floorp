@@ -64,9 +64,9 @@ add_task(async function() {
   var what2 = await p2;
   ok(what1, 'hello world from non private browsing', 'No messages received from the other window.');
 
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
   await BrowserTestUtils.closeWindow(win1);
 
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab2);
   await BrowserTestUtils.closeWindow(win2);
 });

@@ -104,11 +104,11 @@ add_task(async function test_pageAction_default_show_tabs() {
       await BrowserTestUtils.switchTab(gBrowser, tab);
       await check(extension, tab, expected, msg + " (switched)");
 
-      await BrowserTestUtils.removeTab(tab);
+      BrowserTestUtils.removeTab(tab);
     }
     await extension.unload();
   }
-  await BrowserTestUtils.removeTab(switchTab);
+  BrowserTestUtils.removeTab(switchTab);
 });
 
 add_task(async function test_pageAction_default_show_install() {
@@ -129,8 +129,8 @@ add_task(async function test_pageAction_default_show_install() {
       // action should be shown in it. Check that pageAction.isShown works anyways.
       await sendMessage(extension, "isShown", {tabId: getId(initialTab)}, expected, msg + " (inactive)");
 
-      await BrowserTestUtils.removeTab(initialTab);
-      await BrowserTestUtils.removeTab(installTab);
+      BrowserTestUtils.removeTab(initialTab);
+      BrowserTestUtils.removeTab(installTab);
       await extension.unload();
     }
   }
@@ -160,7 +160,7 @@ add_task(async function test_pageAction_history() {
   await historyPushState(tab, url1);
   await check(extension, tab, false, "hide() has more precedence than pattern matching");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   await extension.unload();
 });
 

@@ -23,7 +23,7 @@ add_task(async function test_not_show_notification_for_completed_tour() {
   await promiseTourNotificationOpened(tab.linkedBrowser);
   let targetTourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   is(targetTourId, lastTourId, "Should not show notification for completed tour");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_skip_notification_for_completed_tour() {
@@ -48,7 +48,7 @@ add_task(async function test_skip_notification_for_completed_tour() {
   await promiseTourNotificationOpened(tab.linkedBrowser);
   targetTourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   is(targetTourId, tourIds[2], "Should skip notification for the completed 2nd tour");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_mute_notification_on_1st_session() {
@@ -76,5 +76,5 @@ add_task(async function test_mute_notification_on_1st_session() {
   await promiseTourNotificationOpened(tab.linkedBrowser);
   promptCount = Preferences.get("browser.onboarding.notification.prompt-count", 0);
   is(1, promptCount, "Should prompt tour notification after the mute duration on the 1st session");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

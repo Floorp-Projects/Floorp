@@ -12,7 +12,7 @@ add_task(async function test_remove_bookmark_with_tag_via_edit_bookmark() {
 
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.eraseEverything();
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     await PlacesUtils.history.clear();
   });
 

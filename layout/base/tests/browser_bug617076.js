@@ -40,7 +40,7 @@ add_task(async function test() {
   }
 
   // cleanup
-  await BrowserTestUtils.removeTab(testTab);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(testTab);
+  BrowserTestUtils.removeTab(tab2);
   ok(true, "pass if no assertions");
 });

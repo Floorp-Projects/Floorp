@@ -142,7 +142,7 @@ add_task(async function test_appid() {
     });
 
   // Close tab.
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(function test_cleanup() {

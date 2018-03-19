@@ -108,7 +108,7 @@ add_task(async function() {
   assertAllSitesNotListed(win);
 
   await mockSiteDataManager.unregister();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function removeAllSitesOneByOne() {
     frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
@@ -219,7 +219,7 @@ add_task(async function() {
   assertSitesListed(doc, fakeHosts.slice(2));
 
   await mockSiteDataManager.unregister();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function removeSelectedSite(hosts) {
     frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
@@ -294,7 +294,7 @@ add_task(async function() {
   assertSitesListed(doc, fakeHosts.filter(host => !host.includes("xyz")));
 
   await mockSiteDataManager.unregister();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test dynamically clearing all site data
@@ -351,5 +351,5 @@ add_task(async function() {
   assertAllSitesNotListed(win);
 
   await mockSiteDataManager.unregister();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -24,7 +24,7 @@ add_task(async function test_skip_onboarding_tours() {
   await Promise.all(expectedPrefUpdates);
   await assertWatermarkIconDisplayed(tab.linkedBrowser);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_hide_skip_button_via_perf() {
@@ -38,5 +38,5 @@ add_task(async function test_hide_skip_button_via_perf() {
 
   ok(!gBrowser.contentDocumentAsCPOW.querySelector("#onboarding-skip-tour-button"), "should not render the skip button");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -294,7 +294,7 @@ async function testSelectColors(select, itemCount, options) {
 
   if (!options.leaveOpen) {
     await hideSelectPopup(selectPopup, "escape");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 }
 
@@ -483,7 +483,7 @@ add_task(async function test_select_with_transition_doesnt_lose_scroll_position(
     "The popup should be scrolled to the bottom of the list (where the selected item is)");
 
   await hideSelectPopup(selectPopup, "escape");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_select_inherited_colors_on_options_dont_get_unique_rules_if_rule_set_on_select() {
@@ -528,5 +528,5 @@ add_task(async function test_select_inherited_colors_on_options_dont_get_unique_
   let selectPopup = menulist.menupopup;
 
   await hideSelectPopup(selectPopup, "escape");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

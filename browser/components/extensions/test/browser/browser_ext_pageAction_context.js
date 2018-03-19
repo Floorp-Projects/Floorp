@@ -287,7 +287,7 @@ add_task(async function testNavigationClearsData() {
   await expectTabSpecificData("history.pushState() does not clear tab-specific data");
 
   for (let tab of tabs) {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
   await extension.unload();
 });

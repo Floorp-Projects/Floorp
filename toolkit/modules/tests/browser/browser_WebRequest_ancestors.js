@@ -19,7 +19,7 @@ add_task(async function test_ancestors_exist() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/test/");
   await deferred.promise;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   WebRequest.onBeforeRequest.removeListener(onBeforeRequest);
 });

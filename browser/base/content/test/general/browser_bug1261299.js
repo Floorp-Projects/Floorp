@@ -30,7 +30,7 @@ add_task(async function test_content_and_chrome_selection() {
   selectedText = DOMWindowUtils.GetSelectionAsPlaintext();
   is(selectedText, "test.mozilla.org", "The macOS services got the selected chrome text");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Test switching active selection.
@@ -66,6 +66,6 @@ add_task(async function test_active_selection_switches_properly() {
   selectedText = DOMWindowUtils.GetSelectionAsPlaintext();
   is(selectedText, "Nothing available", "The macOS services got the selected content text");
 
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 });

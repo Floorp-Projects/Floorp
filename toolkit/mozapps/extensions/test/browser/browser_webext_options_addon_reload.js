@@ -99,7 +99,7 @@ add_task(async function test_options_on_addon_reload() {
     Assert.equal(optionsBrowsers.length, 1, "Got a single XUL browser for the addon options_ui page");
   }
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await extension.unload();
 });

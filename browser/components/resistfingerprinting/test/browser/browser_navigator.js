@@ -79,7 +79,7 @@ async function testNavigator() {
   is(result.vendor, CONST_VENDOR, "Navigator.vendor reports correct constant value.");
   is(result.vendorSub, CONST_VENDORSUB, "Navigator.vendorSub reports correct constant value.");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 async function testWorkerNavigator() {
@@ -110,7 +110,7 @@ async function testWorkerNavigator() {
   is(result.appCodeName, CONST_APPCODENAME, "Navigator.appCodeName reports correct constant value.");
   is(result.product, CONST_PRODUCT, "Navigator.product reports correct constant value.");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function setup() {

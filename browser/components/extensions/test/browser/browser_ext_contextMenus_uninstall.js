@@ -81,5 +81,5 @@ add_task(async function() {
 
   await closeContextMenu();
 
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 });

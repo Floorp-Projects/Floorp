@@ -58,7 +58,7 @@ async function testPref(aIsPrefEnabled) {
   await ContentTask.spawn(browser, null, async function() {
     this.openedWindow.close();
   });
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   // Reset cookies
   Services.cookies.removeAll();

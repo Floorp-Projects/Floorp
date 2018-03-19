@@ -34,7 +34,7 @@ async function calcMaximumAvailSize(aChromeWidth, aChromeHeight) {
     chromeUIWidth = win.outerWidth - contentSize.width;
     chromeUIHeight = win.outerHeight - contentSize.height;
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     await BrowserTestUtils.closeWindow(win);
   } else {
     chromeUIWidth = aChromeWidth;
@@ -91,7 +91,7 @@ async function calcPopUpWindowChromeUISize() {
     return res;
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   return result;
 }
@@ -283,7 +283,7 @@ class RoundedWindowTest {
       await this.doTest(test, testOuter);
     }
 
-    await BrowserTestUtils.removeTab(this.tab);
+    BrowserTestUtils.removeTab(this.tab);
   }
 
   async doTest() {

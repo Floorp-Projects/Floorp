@@ -35,7 +35,7 @@ async function runTest(browser, accDoc) {
   // Accessibles in background tab should have offscreen state and no
   // invisible state.
   testStates(getAcc("div"), STATE_OFFSCREEN, 0, STATE_INVISIBLE);
-  await BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
 }
 
 addAccessibleTask(`

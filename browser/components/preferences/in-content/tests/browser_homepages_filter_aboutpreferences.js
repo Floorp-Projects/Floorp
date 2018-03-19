@@ -15,6 +15,6 @@ add_task(async function testSetHomepageUseCurrent() {
      "about:blank and about:home should be the only homepages set");
 
   Services.prefs.setCharPref("browser.startup.homepage", oldHomepagePref);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -10,7 +10,7 @@ const DRAG_WORD_URL = "http://example.com/?q=Firefox";
 
 registerCleanupFunction(async function cleanup() {
   while (gBrowser.tabs.length > 1) {
-    await BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
   }
   Services.search.currentEngine = originalEngine;
   let engine = Services.search.getEngineByName("MozSearch");

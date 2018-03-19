@@ -63,7 +63,7 @@ async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected)
   extension.sendMessage("start", tabsUpdateURL, isErrorExpected);
   await extension.awaitMessage("done");
 
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
   await extension.unload();
 }
 
