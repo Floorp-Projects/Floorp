@@ -16,7 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "nsIDocumentInlines.h"         // for nsIDocument and HTMLBodyElement
 #include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsITextControlElement.h"
@@ -724,8 +724,32 @@ ESMAutoDirWheelDeltaAdjuster::ESMAutoDirWheelDeltaAdjuster(
   mScrollTargetFrame = aScrollFrame.GetScrollTargetFrame();
   MOZ_ASSERT(mScrollTargetFrame);
 
-  // TODO Currently, the honoured target is always the current scrolling frame.
-  nsIFrame* honouredFrame = &aScrollFrame;
+  nsIFrame* honouredFrame = nullptr;
+  if (aHonoursRoot) {
+    // If we are going to honour root, first try to get the frame for <body> as
+    // the honoured root, because <body> is in preference to <html> if the
+    // current document is an HTML document.
+    nsIDocument* document = aScrollFrame.PresShell()->GetDocument();
+    if (document) {
+      Element* bodyElement = document->GetBodyElement();
+      if (bodyElement) {
+        honouredFrame = bodyElement->GetPrimaryFrame();
+      }
+    }
+
+    if (!honouredFrame) {
+      // If there is no <body> frame, fall back to the real root frame.
+      honouredFrame = aScrollFrame.PresShell()->GetRootScrollFrame();
+    }
+
+    if (!honouredFrame) {
+      // If there is no root scroll frame, fall back to the current scrolling
+      // frame.
+      honouredFrame = &aScrollFrame;
+    }
+  } else {
+    honouredFrame = &aScrollFrame;
+  }
 
   WritingMode writingMode = honouredFrame->GetWritingMode();
   WritingMode::BlockDir blockDir = writingMode.GetBlockDir();
