@@ -22,7 +22,6 @@
 #include "nsIDOMGeoPositionError.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNotifyPaintEvent.h"
@@ -68,7 +67,6 @@
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/dom/MouseScrollEventBinding.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NotifyPaintEventBinding.h"
@@ -163,7 +161,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLInputElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIListBoxObject, ListBoxObject),
   DEFINE_SHIM(MouseEvent),
-  DEFINE_SHIM(MouseScrollEvent),
   DEFINE_SHIM(NodeList),
   DEFINE_SHIM(Node),
   DEFINE_SHIM(NotifyPaintEvent),
