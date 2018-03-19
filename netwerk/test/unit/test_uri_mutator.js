@@ -21,3 +21,22 @@ add_task(async function test_simple_setter_chaining() {
               .finalize();
   equal(uri.spec, "ftp://example.com/?hello#bla");
 });
+
+add_task(async function test_qi_behaviour() {
+  let uri = standardMutator()
+              .setSpec("http://example.com/")
+              .QueryInterface(Ci.nsIURI);
+  equal(uri.spec, "http://example.com/");
+
+  Assert.throws(() => { uri = standardMutator().QueryInterface(Ci.nsIURI); },
+                /NS_NOINTERFACE/,
+                "mutator doesn't QI if it holds no URI");
+
+  let mutator = standardMutator()
+                  .setSpec("http://example.com/path");
+  uri = mutator.QueryInterface(Ci.nsIURI);
+  equal(uri.spec, "http://example.com/path");
+  Assert.throws(() => { uri = mutator.QueryInterface(Ci.nsIURI); },
+                /NS_NOINTERFACE/,
+                "Second QueryInterface should fail");
+});
