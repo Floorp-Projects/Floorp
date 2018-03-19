@@ -70,7 +70,6 @@ for (let [key, val] of Object.entries({
     contentGfxInfo: null,
     focusFilterMode: "all",
     compareRetainedDisplayLists: false,
-    compareStyloToGecko: false,
 
     browser: undefined,
     // Are we testing web content loaded in a separate process?
