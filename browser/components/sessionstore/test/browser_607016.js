@@ -77,7 +77,7 @@ add_task(async function() {
        "(creating) new data is stored in extData where there was none");
 
     while (gBrowser.tabs.length > 1) {
-      await promiseRemoveTab(gBrowser.tabs[1]);
+      BrowserTestUtils.removeTab(gBrowser.tabs[1]);
     }
   }
 

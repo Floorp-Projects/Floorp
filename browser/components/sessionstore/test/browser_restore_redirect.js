@@ -26,7 +26,7 @@ add_task(async function check_http_redirect() {
   ok(!("__SS_data" in browser), "Temporary restore data should have been cleared");
 
   // Cleanup.
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -65,5 +65,5 @@ add_task(async function check_js_redirect() {
   ok(!("__SS_data" in browser), "Temporary restore data should have been cleared");
 
   // Cleanup.
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

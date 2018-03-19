@@ -8,7 +8,7 @@ add_task(async function() {
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   // Remove the tab.
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
 
   // Check the title.
   let [{state: {entries}}] = JSON.parse(ss.getClosedTabData(window));
@@ -37,7 +37,7 @@ add_task(async function() {
   });
 
   // Remove the tab.
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
 
   // Check the title.
   let [{state: {entries}}] = JSON.parse(ss.getClosedTabData(window));

@@ -48,7 +48,7 @@ add_task(async function test_frametree() {
   is(await countNonDynamicFrames(browser), 0, "we still have a single root frame");
 
   // Cleanup.
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -98,7 +98,7 @@ add_task(async function test_frametree_dynamic() {
   is(await enumerateIndexes(browser), "1", "correct index 1");
 
   // Cleanup.
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 async function countNonDynamicFrames(browser) {

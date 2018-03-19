@@ -15,7 +15,7 @@ add_task(async function() {
   let r = `rand-${Math.random()}`;
   ss.setTabValue(tab, "foobar", r);
 
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   let closedTabData = ss.getClosedTabData(window);
   ok(!closedTabData.includes(r), "tab not stored in _closedTabs");
 });
