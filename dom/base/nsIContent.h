@@ -1009,19 +1009,19 @@ inline nsIContent* nsINode::AsContent()
 }
 
 #define NS_IMPL_FROMCONTENT_HELPER(_class, _check)                             \
-  static _class* FromContent(nsIContent* aContent)                             \
+  static _class* FromContent(nsINode* aContent)                                \
   {                                                                            \
     return aContent->_check ? static_cast<_class*>(aContent) : nullptr;        \
   }                                                                            \
-  static const _class* FromContent(const nsIContent* aContent)                 \
+  static const _class* FromContent(const nsINode* aContent)                    \
   {                                                                            \
     return aContent->_check ? static_cast<const _class*>(aContent) : nullptr;  \
   }                                                                            \
-  static _class* FromContentOrNull(nsIContent* aContent)                       \
+  static _class* FromContentOrNull(nsINode* aContent)                          \
   {                                                                            \
     return aContent ? FromContent(aContent) : nullptr;                         \
   }                                                                            \
-  static const _class* FromContentOrNull(const nsIContent* aContent)           \
+  static const _class* FromContentOrNull(const nsINode* aContent)              \
   {                                                                            \
     return aContent ? FromContent(aContent) : nullptr;                         \
   }

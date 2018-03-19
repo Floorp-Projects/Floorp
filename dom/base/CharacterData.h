@@ -89,14 +89,14 @@ public:
     SetFlags(NS_MAYBE_MODIFIED_FREQUENTLY);
   }
 
+  NS_IMPL_FROMCONTENT_HELPER(CharacterData, IsCharacterData())
+
   virtual void GetNodeValueInternal(nsAString& aNodeValue) override;
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
                                     ErrorResult& aError) override;
 
   // Implementation for nsIDOMCharacterData
   nsresult GetLength(uint32_t* aLength);
-  nsresult SubstringData(uint32_t aOffset, uint32_t aCount,
-                         nsAString& aReturn);
   nsresult AppendData(const nsAString& aArg);
   nsresult InsertData(uint32_t aOffset, const nsAString& aArg);
   nsresult DeleteData(uint32_t aOffset, uint32_t aCount);
