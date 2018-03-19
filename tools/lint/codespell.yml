@@ -6,6 +6,7 @@ codespell:
         - browser/experiments/docs
         - build/docs
         - mobile/android/docs
+        - python/docs
         - python/mozlint
         - taskcluster/docs
         - testing/mozbase/docs
