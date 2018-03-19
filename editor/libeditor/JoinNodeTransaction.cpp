@@ -6,11 +6,11 @@
 #include "JoinNodeTransaction.h"
 
 #include "mozilla/EditorBase.h"         // for EditorBase
+#include "mozilla/dom/Text.h"
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, etc.
 #include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc.
 #include "nsIContent.h"                 // for nsIContent
-#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
 #include "nsIEditor.h"                  // for EditorBase::IsModifiableNode
 #include "nsISupportsImpl.h"            // for QueryInterface, etc.
 
