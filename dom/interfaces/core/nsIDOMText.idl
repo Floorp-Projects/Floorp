@@ -16,11 +16,4 @@
 [uuid(67273994-6aff-4091-9de9-b788a249f783)]
 interface nsIDOMText : nsIDOMCharacterData
 {
-  /**
-   * The concatenation of all logically adjacent text nodes with this text
-   * node, where "logically adjacent" consists of all text nodes which can be
-   * reached by traversing the document tree in either direction without
-   * passing an element, comment, or processing-instruction boundary.  
-   */
-  readonly attribute DOMString wholeText;
 };
