@@ -29,7 +29,6 @@
 #include "nsFrameLoader.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIContent.h"
-#include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"

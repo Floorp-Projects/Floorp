@@ -1871,7 +1871,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       preview.value = hooks.createValueGrip(rawObj.value);
     } else if (obj.class == "Text" ||
                obj.class == "CDATASection" ||
-               rawObj instanceof Ci.nsIDOMComment) {
+               obj.class == "Comment") {
       preview.textContent = hooks.createValueGrip(rawObj.textContent);
     }
 

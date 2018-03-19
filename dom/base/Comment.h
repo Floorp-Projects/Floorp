@@ -8,14 +8,14 @@
 #define mozilla_dom_Comment_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMComment.h"
+#include "nsIDOMCharacterData.h"
 #include "nsGenericDOMDataNode.h"
 
 namespace mozilla {
 namespace dom {
 
 class Comment final : public nsGenericDOMDataNode,
-                      public nsIDOMComment
+                      public nsIDOMCharacterData
 {
 private:
   void Init()
@@ -45,9 +45,6 @@ public:
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
   using nsGenericDOMDataNode::SetData; // Prevent hiding overloaded virtual function.
-
-  // nsIDOMComment
-  // Empty interface
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;

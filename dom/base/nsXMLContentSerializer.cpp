@@ -14,7 +14,6 @@
 
 #include "nsGkAtoms.h"
 #include "nsIDOMProcessingInstruction.h"
-#include "nsIDOMComment.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
