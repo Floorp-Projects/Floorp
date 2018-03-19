@@ -17,6 +17,7 @@
   <string name="menu_help">Hjelp</string>
   <string name="menu_rights">Dine rettigheter</string>
   <string name="menu_trackers_blocked_title">Sporere blokkert</string>
+  <string name="menu_custom_tab_branding">Drevet av %1$s</string>
   <string name="share_dialog_title">Del via</string>
   <string name="notification_erase_text">Slett nettleserhistorikk</string>
   <string name="notification_action_open">Åpne</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Brukernavn</string>
   <string name="gv_prompt_password_hint">Passord</string>
   <string name="gv_prompt_clear">Tøm</string>
+  <string name="security_popup_secure_connection">Sikker tilkobling</string>
+  <string name="security_popup_insecure_connection">Usikker tilkobling</string>
+  <string name="security_popup_security_verified">Bekreftet av: %1$s</string>
+  <string name="site_security_icon_content_description">Nettstedssikkerhet</string>
 </resources>

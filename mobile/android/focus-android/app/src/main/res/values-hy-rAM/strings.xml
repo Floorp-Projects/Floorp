@@ -17,6 +17,7 @@
   <string name="menu_help">Օգնություն</string>
   <string name="menu_rights">Ձեր իրավունքները</string>
   <string name="menu_trackers_blocked_title">Արգել. հետագծումներ</string>
+  <string name="menu_custom_tab_branding">%1$s-ի կողմից</string>
   <string name="share_dialog_title">Համօգտագործել՝</string>
   <string name="notification_erase_text">Ջնջել դիտարկումների պատմությունը</string>
   <string name="notification_action_open">Բացել</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Օգտվողի անուն</string>
   <string name="gv_prompt_password_hint">Գաղտնաբառ</string>
   <string name="gv_prompt_clear">Մաքրել</string>
+  <string name="security_popup_secure_connection">Անվտանգ կապակցում</string>
+  <string name="security_popup_insecure_connection">Ոչ անվտանգ կապակցում</string>
+  <string name="security_popup_security_verified">Ստուգված է՝ %1$s</string>
+  <string name="site_security_icon_content_description">Կայքի անվտանգությունը</string>
 </resources>

@@ -143,7 +143,7 @@
   <string name="error_malformedURI_title">It adres is net jildich</string>
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webadressen wurde trochgeans skreaun as "<strong>http://www.example.com/</strong></li>"\n  "<li>"Let derop dat jo foar&#250;tgeande slashes br&#251;ke (d.y. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">De side ferwiist net op in krekte wize troch</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit probleem kin soms feroarsake wurde troch it &#250;tskeakeljen of wegerjen fan cookies</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit probleem kin somtiden feroarsake wurde troch it &#250;tskeakeljen of wegerjen fan cookies</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">It adres waard net begrepen</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Miskien moatte jo oare software ynstallearje om dit adres te iepenjen.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Befeilige ferbining mislearre</string>

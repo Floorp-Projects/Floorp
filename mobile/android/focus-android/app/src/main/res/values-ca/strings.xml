@@ -8,6 +8,8 @@
   <string name="feedback_erase">S\'ha esborrat l\'historial de navegació.</string>
   <string name="search_hint">Cerca %1$s</string>
   <string name="menu_share">Comparteix…</string>
+  <string name="menu_open_with_default_browser2">Obre amb el %1$s</string>
+  <string name="menu_open_with_a_browser2">Obre amb…</string>
   <string name="menu_add_to_home_screen">Afegeix a la pantalla d\'inici</string>
   <string name="menu_whats_new">Novetats</string>
   <string name="menu_settings">Paràmetres</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">Ajuda</string>
   <string name="menu_rights">Els vostres drets</string>
   <string name="menu_trackers_blocked_title">Elements blocats</string>
+  <string name="menu_custom_tab_branding">Funciona amb el %1$s</string>
   <string name="share_dialog_title">Comparteix mitjançant</string>
   <string name="notification_erase_text">Esborra l\'historial de navegació</string>
   <string name="notification_action_open">Obre</string>
@@ -27,14 +30,14 @@
   <string name="preference_search_engine_default">Per defecte</string>
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Desactivat</string>
-  <string name="preference_subitem_autocomplete">URL Autocompletar</string>
+  <string name="preference_subitem_autocomplete">Emplenament automàtic d\'URL</string>
   <string name="preference_switch_autocomplete">Emplenament automàtic</string>
   <string name="preference_category_autocomplete_preinstalled">Llista d\'URL per defecte</string>
   <string name="preference_autocomplete_preinstalled_summary">Activeu-lo per fer permetre que el %1$s empleni automàticament més de 450 URL populars a la barra d\'adreces.</string>
   <string name="preference_category_autocomplete_custom">URL personalitzat</string>
   <string name="preference_autocomplete_subitem_customlist">URL personalitzats</string>
-  <string name="preference_autocomplete_action_add">+ Afegeix URL personalitzat</string>
-  <string name="preference_autocomplete_title_add">Afegeix URL personalitzat</string>
+  <string name="preference_autocomplete_action_add">+ Afegeix un URL personalitzat</string>
+  <string name="preference_autocomplete_title_add">URL personalitzat nou</string>
   <string name="preference_autocomplete_title_remove">Elimina URL personalitzats</string>
   <string name="preference_autocomplete_learn_more">Més informació</string>
   <string name="preference_autocomplete_custom_summary">Afegiu i gestioneu els URL d\'emplenament automàtic personalitzats.</string>
@@ -77,9 +80,17 @@
   <string name="preference_search_remove_title">Elimina motors de cerca</string>
   <string name="preference_search_remove">Elimina</string>
   <string name="tutorial_search_manually_add">Afegeix manualment</string>
-  <string name="tutorial_search_title">Afegeix un motor de cerca</string>
+  <string name="tutorial_search_title">Motor de cerca nou</string>
+  <string name="tutorial_search_step1">1. Aneu a la pàgina d\'inici del motor de cerca.</string>
+  <string name="tutorial_search_step2">2. Toqueu el camp de cerca del motor de cerca.</string>
+  <string name="tutorial_search_step2_alternative">2. Manteniu premut el camp de cerca del motor de cerca.</string>
+  <string name="tutorial_search_step3">3. Toqueu la icona de lupa sobre el teclat per afegir el motor de cerca.</string>
   <string name="action_option_add_search_engine">Afegeix un motor de cerca</string>
+  <string name="tutorial_search_step3_alternative">3. Toqueu «%1$s»</string>
+  <string name="tutorial_search_step4">4. Si no veieu la lupa, proveu d\'afegir un motor de cerca manualment.</string>
+  <string name="tutorial_search_step4_alternative">4. Si no veieu «%1$s», proveu d\'afegir un motor de cerca manualment.</string>
   <string name="tutorial_search_finish">PRIMERS PASSOS</string>
+  <string name="search_add_hint">Toqueu la icona de lupa sobre el teclat per afegir aquest motor de cerca.</string>
   <string name="search_add_manually_name">Nom per mostrar</string>
   <string name="search_add_manually_name_hint">Nom del motor de cerca</string>
   <string name="search_add_manually_string">Cadena de cerca que s\'utilitzarà</string>
@@ -89,7 +100,9 @@
   <string name="accessibility_announcement_search">Afegeix un motor de cerca</string>
   <string name="search_add_confirmation">S\'ha afegit un motor de cerca nou.</string>
   <string name="search_add_error_empty_name">Escriviu el nom del motor de cerca</string>
+  <string name="search_add_error_duplicate_name">Ja hi ha un motor de cerca instal·lat amb aquest nom.</string>
   <string name="search_add_error_empty_search">Escriviu una cadena de cerca</string>
+  <string name="search_add_error_format">Comproveu que la cadena de cerca coincideixi amb el format d\'exemple</string>
   <string name="content_description_clear_input">Esborra l\'entrada</string>
   <string name="content_description_dismiss_input">Descarta</string>
   <string name="content_description_erase">Esborra l\'historial de navegació</string>
@@ -169,4 +182,13 @@
   <string name="your_rights_content1">El %1$s és programari lliure i de codi obert creat per Mozilla i altres col·laboradors.</string>
   <string name="your_rights_content2"><![CDATA["El %1$s és a la vostra disposició sota els termes de la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License (Llic&#232;ncia P&#250;blica de Mozilla)</a>" i altres llicències lliures."]]></string>
   <string name="your_rights_content3"><![CDATA["No se us atorga cap dret ni llicència sobre les marques registrades de la Fundació Mozilla, o de cap altra part, inclosos els noms o els logotips de Mozilla, Firefox o %1$s. Podeu trobar més informació "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Hi ha codi font addicional del %1$s que està disponible sota diverses altres  "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">llic&#232;ncies</a>" lliures i de codi obert."]]></string>
+  <string name="your_rights_content5"><![CDATA["El %1$s també utilitza llistes de bloquejos proporcionades per Disconnect, Inc. que es mantenen de forma independentment i separada sota la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Llic&#232;ncia P&#250;blica General de GNU v3</a>" i que estan disponibles "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
+  <string name="gv_prompt_username_hint">Nom d\'usuari</string>
+  <string name="gv_prompt_password_hint">Contrasenya</string>
+  <string name="gv_prompt_clear">Esborra</string>
+  <string name="security_popup_secure_connection">Connexió segura</string>
+  <string name="security_popup_insecure_connection">Connexió insegura</string>
+  <string name="security_popup_security_verified">Verificat per: %1$s</string>
+  <string name="site_security_icon_content_description">Seguretat del lloc</string>
 </resources>

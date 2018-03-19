@@ -17,6 +17,7 @@
   <string name="menu_help">Nápověda</string>
   <string name="menu_rights">Vaše práva</string>
   <string name="menu_trackers_blocked_title">Zablokováno sledujících prvků</string>
+  <string name="menu_custom_tab_branding">Pohání %1$s</string>
   <string name="share_dialog_title">Sdílet přes</string>
   <string name="notification_erase_text">Vymazat historii prohlížení</string>
   <string name="notification_action_open">Otevřít</string>
@@ -186,4 +187,8 @@
   <string name="gv_prompt_username_hint">Uživatelské jméno</string>
   <string name="gv_prompt_password_hint">Heslo</string>
   <string name="gv_prompt_clear">Vymazat</string>
+  <string name="security_popup_secure_connection">Zabezpečené připojení</string>
+  <string name="security_popup_insecure_connection">Nezabezpečené připojení</string>
+  <string name="security_popup_security_verified">Ověřil: %1$s</string>
+  <string name="site_security_icon_content_description">Zabezpečení stránky</string>
 </resources>
