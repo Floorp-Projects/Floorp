@@ -4,18 +4,38 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/**
+ * This interface is supported by command events, which are dispatched to
+ * XUL elements as a result of mouse or keyboard activation.
+ */
 [Func="IsChromeOrXBL"]
 interface XULCommandEvent : UIEvent
 {
+  /**
+   * Command events support the same set of modifier keys as mouse and key
+   * events.
+   */
   readonly attribute boolean ctrlKey;
   readonly attribute boolean shiftKey;
   readonly attribute boolean altKey;
   readonly attribute boolean metaKey;
 
+  /**
+   * The input source, if this event was triggered by a mouse event.
+   */
   readonly attribute unsigned short inputSource;
 
+  /**
+   * If the command event was redispatched because of a command= attribute
+   * on the original target, sourceEvent will be set to the original DOM Event.
+   * Otherwise, sourceEvent is null.
+   */
   readonly attribute Event? sourceEvent;
 
+  /**
+   * Creates a new command event with the given attributes.
+   */
+  [Throws]
   void initCommandEvent(DOMString type,
                         optional boolean canBubble = false,
                         optional boolean cancelable = false,

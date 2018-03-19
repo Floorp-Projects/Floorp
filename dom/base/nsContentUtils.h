@@ -2113,7 +2113,7 @@ public:
 
   /**
    * This method creates and dispatches "command" event, which implements
-   * nsIDOMXULCommandEvent.
+   * XULCommandEvent.
    * If aShell is not null, dispatching goes via
    * nsIPresShell::HandleDOMEventWithTarget.
    */
