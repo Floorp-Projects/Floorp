@@ -49,13 +49,16 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
     // signal handler in the runtime.
 
     if (activation->isWasmTrapping()) {
-        code_ = &fp_->tls->instance->code();
-        MOZ_ASSERT(code_ == LookupCode(activation->wasmTrapUnwoundPC()));
+        const TrapData& trapData = activation->wasmTrapData();
+        void* unwoundPC = trapData.unwoundPC;
 
-        codeRange_ = code_->lookupFuncRange(activation->wasmTrapUnwoundPC());
+        code_ = &fp_->tls->instance->code();
+        MOZ_ASSERT(code_ == LookupCode(unwoundPC));
+
+        codeRange_ = code_->lookupFuncRange(unwoundPC);
         MOZ_ASSERT(codeRange_);
 
-        lineOrBytecode_ = activation->wasmTrapBytecodeOffset();
+        lineOrBytecode_ = trapData.bytecodeOffset;
 
         MOZ_ASSERT(!done());
         return;
