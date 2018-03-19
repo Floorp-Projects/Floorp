@@ -143,7 +143,7 @@ add_task(async function test_tabs_showhide() {
   // Test closing the last visible tab, the next tab which is hidden should become
   // the selectedTab and will be visible.
   ok(!otherwin.gBrowser.selectedTab.hidden, "selected tab is not hidden");
-  await BrowserTestUtils.removeTab(otherwin.gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(otherwin.gBrowser.selectedTab);
   ok(!otherwin.gBrowser.selectedTab.hidden, "tab was unhidden");
 
   // Showall will unhide any remaining hidden tabs.
@@ -219,6 +219,6 @@ add_task(async function test_tabs_shutdown() {
   await extension.unload();
 
   Assert.ok(!tabs[0].hidden, "Tab is not hidden after unloading extension");
-  await BrowserTestUtils.removeTab(tabs[0]);
-  await BrowserTestUtils.removeTab(tabs[1]);
+  BrowserTestUtils.removeTab(tabs[0]);
+  BrowserTestUtils.removeTab(tabs[1]);
 });

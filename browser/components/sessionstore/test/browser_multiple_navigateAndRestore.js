@@ -32,5 +32,5 @@ add_task(async function() {
        "Content should have PAGE_2 as the browser currentURI");
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

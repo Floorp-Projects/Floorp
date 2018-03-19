@@ -79,6 +79,6 @@ add_task(async function() {
      "(" + left(scrollbox) + " <= " + firstScrollableLeft + ")");
 
   while (tabs.length > 1) {
-    await BrowserTestUtils.removeTab(gBrowser.tabs[0]);
+    BrowserTestUtils.removeTab(gBrowser.tabs[0]);
   }
 });

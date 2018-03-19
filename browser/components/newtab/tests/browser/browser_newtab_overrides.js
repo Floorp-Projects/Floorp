@@ -79,7 +79,7 @@ add_task(async function override_loads_in_browser() {
       Assert.equal(content.location.href, args.url.trim(), "Got right URL");
       Assert.equal(content.document.location.href, args.url.trim(), "Got right URL");
     }); // jshint ignore:line
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
 
@@ -111,7 +111,7 @@ add_task(async function override_blank_loads_in_browser() {
       Assert.equal(content.location.href, "about:blank", "Got right URL");
       Assert.equal(content.document.location.href, "about:blank", "Got right URL");
     }); // jshint ignore:line
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
 

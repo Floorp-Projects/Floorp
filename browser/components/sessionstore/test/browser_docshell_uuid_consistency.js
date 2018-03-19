@@ -23,8 +23,8 @@ add_task(async function duplicateTab() {
     is(shEntry.docshellID.toString(), docshell.historyID.toString());
   });
 
-  await BrowserTestUtils.removeTab(tab);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
 });
 
 // Second test - open a tab and navigate across processes, which triggers sessionrestore to persist history.
@@ -61,5 +61,5 @@ add_task(async function contentToChromeNavigate() {
   is(sh.getEntryAtIndex(0, false).docshellID.toString(), docShell.historyID.toString());
   is(sh.getEntryAtIndex(1, false).docshellID.toString(), docShell.historyID.toString());
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

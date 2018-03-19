@@ -63,7 +63,7 @@ add_task(async function test_discarded() {
   await extension.awaitFinish("test-finished");
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 });
 

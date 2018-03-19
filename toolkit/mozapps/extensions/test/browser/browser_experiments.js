@@ -157,7 +157,7 @@ add_task(async function testExperimentLearnMore() {
   await loadPromise;
 
   Services.prefs.clearUserPref("toolkit.telemetry.infoURL");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testOpenPreferences() {

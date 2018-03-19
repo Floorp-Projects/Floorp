@@ -121,7 +121,7 @@ add_task(async function test_openPopup_requires_user_interaction() {
   await BrowserTestUtils.synthesizeMouseAtCenter("#closeSidebarAction", {}, gBrowser.selectedBrowser);
   await BrowserTestUtils.waitForCondition(() => !SidebarUI.isOpen);
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await extension.unload();
 
   extensionData.manifest.permissions = ["activeTab"];
@@ -134,6 +134,6 @@ add_task(async function test_openPopup_requires_user_interaction() {
   closeBrowserAction(extension);
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await extension.unload();
 });

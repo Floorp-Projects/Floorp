@@ -28,5 +28,5 @@ add_task(async function checkTitleNotificationForNavigation() {
   });
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXPECTED_URL.spec);
   await promiseTitleChanged;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

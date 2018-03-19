@@ -116,7 +116,7 @@ add_task(async function test_sessions_restore() {
   // Open and close a tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
   await TabStateFlusher.flush(tab.linkedBrowser);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   await assertNotificationCount(6);
 
   // Restore the most recently closed item.
@@ -130,7 +130,7 @@ add_task(async function test_sessions_restore() {
 
   // Close the tab again.
   let realTab = tabTracker.getTab(tab.id);
-  await BrowserTestUtils.removeTab(realTab);
+  BrowserTestUtils.removeTab(realTab);
   await assertNotificationCount(8);
 
   // Restore the tab using the sessionId.
@@ -146,7 +146,7 @@ add_task(async function test_sessions_restore() {
 
   // Close the tab again.
   realTab = tabTracker.getTab(tab.id);
-  await BrowserTestUtils.removeTab(realTab);
+  BrowserTestUtils.removeTab(realTab);
   await assertNotificationCount(10);
 
   // Try to restore something with an invalid sessionId.

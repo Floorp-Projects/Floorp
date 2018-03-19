@@ -8,7 +8,7 @@ add_task(async function() {
     }
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, page);
     ok(!gURLBar.value, "The URL bar should be empty if we load a plain " + page + " page.");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 });
 
@@ -30,6 +30,6 @@ add_task(async function() {
     content.location.reload();
   });
   ok(!!gURLBar.value, "URL bar should not be blank.");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   SimpleTest.expectUncaughtException(false);
 });

@@ -90,7 +90,7 @@ add_task(async function test_tab_options_modals() {
   Assert.equal(stack.querySelectorAll("tabmodalprompt").length, 0,
                "Expect the tab modal to be closed");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await extension.unload();
 });

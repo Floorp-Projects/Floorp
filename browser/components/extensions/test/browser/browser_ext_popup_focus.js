@@ -34,7 +34,7 @@ add_task(async function testPageActionFocus() {
   await finish;
   await closePageAction(extension);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   await extension.unload();
 });
 
@@ -66,6 +66,6 @@ add_task(async function testBrowserActionFocus() {
 
   await closeBrowserAction(extension);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   await extension.unload();
 });

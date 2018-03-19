@@ -759,7 +759,7 @@ add_task(async function runTestsForEnglishContent() {
 
   gBrowser.removeEventListener("keypress", eventConsumer, true);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function runTestForSuppressModifierKeys() {
@@ -819,6 +819,6 @@ add_task(async function runTestForSuppressModifierKeys() {
 
   gBrowser.removeEventListener("keydown", eventConsumer, true);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 

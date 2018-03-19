@@ -23,7 +23,7 @@ add_task(async function getthemes_link_visible_on_appearance_when_pref_set() {
 
   is(gBrowser.currentURI.spec, Services.urlFormatter.formatURLPref(PREF_GETTHEMESURL), "Theme discovery URL should match");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await close_manager(aManager);
 });
 

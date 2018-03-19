@@ -72,7 +72,7 @@ add_task(async function test_trackingPages() {
     is(gBrowser.tabs.length, tabCount + 1, "Tour step 2 tab opened");
     await panelHiddenPromise;
     ok(true, "Panel hid when the button was clicked");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 
   info("Open another tracking page and make sure we don't show the panel again");

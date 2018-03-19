@@ -146,3 +146,20 @@ function fetchFile(uri) {
     xhr.send(null);
   });
 }
+
+async function throttledMapPromises(iterable, task, limit = 64) {
+  let promises = new Set();
+  for (let data of iterable) {
+    while (promises.size >= limit) {
+      await Promise.race(promises);
+    }
+
+    let promise = task(data);
+    if (promise) {
+      promise.finally(() => promises.delete(promise));
+      promises.add(promise);
+    }
+  }
+
+  await Promise.all(promises);
+}

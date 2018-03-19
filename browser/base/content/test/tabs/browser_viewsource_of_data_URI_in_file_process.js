@@ -33,7 +33,7 @@ add_task(async function() {
     BrowserViewSource(fileBrowser);
     let viewSourceTab = await promiseTab;
     registerCleanupFunction(async function() {
-      await BrowserTestUtils.removeTab(viewSourceTab);
+      BrowserTestUtils.removeTab(viewSourceTab);
     });
     await ContentTask.spawn(viewSourceTab.linkedBrowser, DATA_URI_SOURCE, uri => {
       is(content.document.documentURI, uri,

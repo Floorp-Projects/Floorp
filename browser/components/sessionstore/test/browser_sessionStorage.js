@@ -94,8 +94,8 @@ add_task(async function session_storage() {
   ok(!state.hasOwnProperty("storage"), "storage data was discarded");
 
   // Clean up.
-  await promiseRemoveTab(tab);
-  await promiseRemoveTab(tab2);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
 });
 
 /**
@@ -119,7 +119,7 @@ add_task(async function purge_domain() {
   is(storage["http://example.com"].test, INNER_VALUE,
     "sessionStorage data for example.com has been preserved");
 
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -129,7 +129,7 @@ add_task(async function purge_domain() {
 add_task(async function respect_privacy_level() {
   let tab = BrowserTestUtils.addTab(gBrowser, URL + "&secure");
   await promiseBrowserLoaded(tab.linkedBrowser);
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
 
   let [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
   is(storage["http://mochi.test:8888"].test, OUTER_VALUE,
@@ -142,7 +142,7 @@ add_task(async function respect_privacy_level() {
 
   tab = BrowserTestUtils.addTab(gBrowser, URL + "&secure");
   await promiseBrowserLoaded(tab.linkedBrowser);
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
 
   [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
   is(storage["http://mochi.test:8888"].test, OUTER_VALUE,
@@ -158,7 +158,7 @@ add_task(async function respect_privacy_level() {
   await promiseBrowserLoaded(tab.linkedBrowser);
   let tab2 = gBrowser.duplicateTab(tab);
   await promiseTabRestored(tab2);
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
 
   // With privacy_level=2 the |tab| shouldn't have any sessionStorage data.
   [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
@@ -173,7 +173,7 @@ add_task(async function respect_privacy_level() {
 
   // Restore the default privacy level and close the duplicated tab.
   Services.prefs.clearUserPref("browser.sessionstore.privacy_level");
-  await promiseRemoveTab(tab2);
+  await promiseRemoveTabAndSessionState(tab2);
 
   // With privacy_level=0 the duplicated |tab2| should persist all data.
   [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));

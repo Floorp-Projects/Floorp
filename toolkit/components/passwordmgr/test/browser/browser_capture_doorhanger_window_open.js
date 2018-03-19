@@ -102,7 +102,7 @@ add_task(async function test_saveChromeVisibleSameWindow() {
     ok(popup, "got notification popup");
     await checkDoorhangerUsernamePassword("notifyu2", "notifyp2");
     clickDoorhangerButton(popup, REMEMBER_BUTTON);
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 
   // Check result of clicking Remember
@@ -123,7 +123,7 @@ add_task(async function test_changeChromeVisibleSameWindow() {
     ok(popup, "got notification popup");
     await checkDoorhangerUsernamePassword("notifyu2", "pass2");
     clickDoorhangerButton(popup, CHANGE_BUTTON);
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 
   // Check to make sure we updated the password, timestamps and use count for

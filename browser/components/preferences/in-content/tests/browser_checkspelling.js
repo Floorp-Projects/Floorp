@@ -20,5 +20,5 @@ add_task(async function() {
      "checkbox should represent pref value after clicking on checkbox");
   ok(!checkbox.checked, "checkbox should not be checked after clicking on checkbox");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

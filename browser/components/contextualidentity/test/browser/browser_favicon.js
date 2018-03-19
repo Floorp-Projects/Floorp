@@ -131,6 +131,6 @@ add_task(async function test() {
         tabInfo.browser.contentPrincipal);
     });
 
-    await BrowserTestUtils.removeTab(tabInfo.tab);
+    BrowserTestUtils.removeTab(tabInfo.tab);
   }
 });

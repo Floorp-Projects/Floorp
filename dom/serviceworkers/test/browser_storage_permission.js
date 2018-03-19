@@ -39,7 +39,7 @@ add_task(async function setup() {
     }
   );
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_allow_permission() {
@@ -56,7 +56,7 @@ add_task(async function test_allow_permission() {
 
   ok(!!controller, "page should be controlled with storage allowed");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_deny_permission() {
@@ -73,7 +73,7 @@ add_task(async function test_deny_permission() {
 
   is(controller, null, "page should be not controlled with storage denied");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
 });
 
@@ -91,7 +91,7 @@ add_task(async function test_session_permission() {
 
   is(controller, null, "page should be not controlled with session storage");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
 });
 
@@ -134,7 +134,7 @@ add_task(async function test_block_storage_before_blank_iframe() {
   ok(!!controller3, "page should be controlled with storage allowed");
 
   await SpecialPowers.popPrefEnv();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Test to verify a blob URL iframe successfully inherits the
@@ -182,7 +182,7 @@ add_task(async function test_block_storage_before_blob_iframe() {
   ok(!!controller3, "page should be controlled with storage allowed");
 
   await SpecialPowers.popPrefEnv();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Test to verify a blob worker script does not hit our service
@@ -234,7 +234,7 @@ add_task(async function test_block_storage_before_blob_worker() {
   ok(scriptURL2.startsWith("blob:"), "blob URL worker should run");
 
   await SpecialPowers.popPrefEnv();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function cleanup() {
@@ -262,5 +262,5 @@ add_task(async function cleanup() {
     });
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

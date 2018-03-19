@@ -85,7 +85,7 @@ async function testOpenedAndDraggedXPI(aBrowser) {
     await BrowserTestUtils.switchTab(gBrowser, newTab);
   }
   await newTabInstallNotification;
-  await BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
   await CheckBrowserInPid(aBrowser, browserPid,
                           "Check that browser has not switched process.");
 }

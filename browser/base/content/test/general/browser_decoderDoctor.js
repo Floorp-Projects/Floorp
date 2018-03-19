@@ -71,7 +71,7 @@ async function test_decoder_doctor_notification(data, notificationMessage,
     button.click();
     let openedTab = await awaitNewTab;
     tabChecker(openedTab);
-    await BrowserTestUtils.removeTab(openedTab);
+    BrowserTestUtils.removeTab(openedTab);
   });
 }
 

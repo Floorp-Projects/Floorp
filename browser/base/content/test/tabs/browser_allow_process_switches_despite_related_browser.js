@@ -9,14 +9,14 @@ const DATA_URI_SOURCE = "view-source:" + DATA_URI;
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, DATA_URI);
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 
   let promiseTab = BrowserTestUtils.waitForNewTab(gBrowser, DATA_URI_SOURCE);
   BrowserViewSource(tab.linkedBrowser);
   let viewSourceTab = await promiseTab;
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(viewSourceTab);
+    BrowserTestUtils.removeTab(viewSourceTab);
   });
 
   let dummyPage = getChromeDir(getResolvedURI(gTestPath));

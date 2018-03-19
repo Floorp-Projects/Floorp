@@ -58,8 +58,8 @@ add_task(async function test_scroll() {
   await checkScroll(tab, null, "no scroll stored");
 
   // Cleanup.
-  await promiseRemoveTab(tab);
-  await promiseRemoveTab(tab2);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
 });
 
 /**
@@ -102,8 +102,8 @@ add_task(async function test_scroll_nested() {
   await checkScroll(tab, null, "no scroll stored");
 
   // Cleanup.
-  await promiseRemoveTab(tab);
-  await promiseRemoveTab(tab2);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
 });
 
 /**

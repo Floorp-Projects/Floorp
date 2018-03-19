@@ -20,7 +20,7 @@ add_task(async function checkDontShowStopOnNewTab() {
   let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
                                                         opening: "about:robots",
                                                         waitForStateStop: true});
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   Assert.ok(true, "Test finished: stop-reload does not animate when navigating to local URI on new tab");
   stopReloadContainerObserver.disconnect();
@@ -36,7 +36,7 @@ add_task(async function checkDontShowStopFromLocalURI() {
   await waitForNoAnimation(stopReloadContainer);
   stopReloadContainerObserver.observe(stopReloadContainer, { attributeFilter: ["animate"]});
   await BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   Assert.ok(true, "Test finished: stop-reload does not animate when navigating between local URIs");
   stopReloadContainerObserver.disconnect();
@@ -52,7 +52,7 @@ add_task(async function checkDontShowStopFromNonLocalURI() {
   await waitForNoAnimation(stopReloadContainer);
   stopReloadContainerObserver.observe(stopReloadContainer, { attributeFilter: ["animate"]});
   await BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   Assert.ok(true, "Test finished: stop-reload does not animate when navigating to local URI from non-local URI");
   stopReloadContainerObserver.disconnect();
@@ -70,7 +70,7 @@ add_task(async function checkDoShowStopOnNewTab() {
                                                         waitForStateStop: true});
   await stopPromise;
   await waitForNoAnimation(stopReloadContainer);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   info("Test finished: stop-reload shows stop when navigating to non-local URI during tab opening");
 });
@@ -88,7 +88,7 @@ add_task(async function checkAnimateStopOnTabAfterTabFinishesOpening() {
   let animatePromise = getAnimatePromise(stopReloadContainer);
   await BrowserTestUtils.loadURI(tab.linkedBrowser, "https://example.com");
   await animatePromise;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   info("Test finished: stop-reload animates when navigating to non-local URI on new tab after tab has opened");
 });
@@ -108,7 +108,7 @@ add_task(async function checkDoShowStopFromLocalURI() {
   await BrowserTestUtils.loadURI(tab.linkedBrowser, "https://example.com");
   await animatePromise;
   await waitForNoAnimation(stopReloadContainer);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   info("Test finished: stop-reload animates when navigating to non-local URI from local URI");
 });

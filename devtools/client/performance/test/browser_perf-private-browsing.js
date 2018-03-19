@@ -19,7 +19,7 @@ add_task(async function() {
   await testPrivateWindow();
   await testRecordingFailingInWindow(0);
   await testRecordingFailingInWindow(1);
-  await teardownPerfInWindow(1, { shouldCloseWindow: true, dontWaitForTabClose: true });
+  await teardownPerfInWindow(1, { shouldCloseWindow: true });
   await testRecordingSucceedingInWindow(0);
   await teardownPerfInWindow(0, { shouldCloseWindow: false });
 
@@ -106,7 +106,7 @@ async function testRecordingSucceedingInWindow(index) {
 
 async function teardownPerfInWindow(index, options) {
   let { panel, win } = gPanelWinTuples[index];
-  await teardownToolboxAndRemoveTab(panel, options);
+  await teardownToolboxAndRemoveTab(panel);
 
   if (options.shouldCloseWindow) {
     win.close();

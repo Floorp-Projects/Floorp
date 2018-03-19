@@ -43,8 +43,8 @@ add_task(async function() {
     Assert.equal(content.document.referrer, "", "referrer should be empty");
   });
 
-  await BrowserTestUtils.removeTab(tab);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
 });
 
 /**
@@ -88,8 +88,8 @@ add_task(async function() {
     Assert.equal(content.document.referrer, "", "referrer should be empty");
   });
 
-  await BrowserTestUtils.removeTab(tab);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
 });
 
 /**
@@ -125,6 +125,6 @@ add_task(async function() {
     Assert.equal(content.document.referrer, "", "referrer should be empty");
   });
 
-  await BrowserTestUtils.removeTab(tab);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
 });

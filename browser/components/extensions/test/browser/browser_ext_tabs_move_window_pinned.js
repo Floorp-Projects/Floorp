@@ -36,7 +36,7 @@ add_task(async function() {
   await extension.unload();
 
   for (let tab of window.gBrowser.tabs) {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
   await BrowserTestUtils.closeWindow(window1);
 });

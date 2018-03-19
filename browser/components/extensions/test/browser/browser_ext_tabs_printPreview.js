@@ -39,5 +39,5 @@ add_task(async function testPrintPreview() {
   PrintUtils.exitPrintPreview();
   await BrowserTestUtils.waitForCondition(() => !window.gInPrintPreviewMode);
 
-  await BrowserTestUtils.removeTab(gBrowser.tabs[1]);
+  BrowserTestUtils.removeTab(gBrowser.tabs[1]);
 });

@@ -40,7 +40,7 @@ add_task(async function setup() {
   const URL = ROOT + "discovery.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });
 

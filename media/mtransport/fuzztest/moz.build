@@ -22,6 +22,12 @@ LOCAL_INCLUDES += [
   '/media/mtransport/third_party/nrappkit/src/util/libekr',
 ]
 
+if CONFIG['FUZZING']:
+    if CONFIG['LIBFUZZER']:
+        # Add trace-pc coverage for LibFuzzer
+        CFLAGS += ['-fsanitize-coverage=trace-pc-guard']
+        CXXFLAGS += ['-fsanitize-coverage=trace-pc-guard']
+
 SOURCES += [
     'stun_parser_libfuzz.cpp',
 ]

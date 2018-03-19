@@ -12,7 +12,7 @@ add_task(async function test_keyword_bookmarklet() {
   });
 
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     await PlacesUtils.bookmarks.remove(bm);
   });
 

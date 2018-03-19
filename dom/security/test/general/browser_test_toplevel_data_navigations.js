@@ -27,7 +27,7 @@ add_task(async function test_nav_data_uri_redirect() {
   });
   let tab = BrowserTestUtils.addTab(gBrowser, kRedirectURI);
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
   // wait to make sure data: URI did not load before checking that it got blocked
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -43,7 +43,7 @@ add_task(async function test_nav_data_uri_meta_redirect() {
   });
   let tab = BrowserTestUtils.addTab(gBrowser, kMetaRedirectURI);
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
   // wait to make sure data: URI did not load before checking that it got blocked
   await new Promise(resolve => setTimeout(resolve, 500));

@@ -32,6 +32,6 @@ add_task(async function test_back_forward_buttons() {
   ok(!backButton.hasAttribute("disabled"), "Back button shouldn't be disabled after customize mode");
   ok(!forwardButton.hasAttribute("disabled"), "Forward button shouldn't be disabled after customize mode");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 

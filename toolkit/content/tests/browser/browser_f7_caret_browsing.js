@@ -143,7 +143,7 @@ add_task(async function checkTogglingCaretBrowsing() {
   Services.prefs.setBoolPref(kPrefWarnOnEnable, true);
   Services.prefs.setBoolPref(kPrefCaretBrowsingOn, false);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function toggleCheckboxNoCaretBrowsing() {
@@ -179,7 +179,7 @@ add_task(async function toggleCheckboxNoCaretBrowsing() {
   Services.prefs.setBoolPref(kPrefWarnOnEnable, true);
   Services.prefs.setBoolPref(kPrefCaretBrowsingOn, false);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 
@@ -217,7 +217,7 @@ add_task(async function toggleCheckboxWantCaretBrowsing() {
   Services.prefs.setBoolPref(kPrefWarnOnEnable, true);
   Services.prefs.setBoolPref(kPrefCaretBrowsingOn, false);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 

@@ -18,5 +18,5 @@ add_task(async function() {
   is(!checkbox.checked,
      Services.prefs.getBoolPref("layers.acceleration.disabled"),
      "checkbox should represent inverted pref value after clicking on checkbox");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

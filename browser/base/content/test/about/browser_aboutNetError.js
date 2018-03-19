@@ -43,5 +43,5 @@ add_task(async function checkReturnToPreviousPage() {
     is(content.document.documentURI, LOW_TLS_VERSION_, "Should not be showing page");
   });
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

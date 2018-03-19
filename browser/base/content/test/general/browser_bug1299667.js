@@ -45,7 +45,7 @@ add_task(async function() {
   info("Hidden popup");
 
   let onClose = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabClose");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await onClose;
   info("Tab closed");
 });

@@ -80,5 +80,5 @@ add_task(async function testAutocompletePopup() {
   await new Promise(resolve => setTimeout(resolve, 0));
 
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -7,9 +7,7 @@ add_task(async function() {
   var tab = gBrowser.selectedTab;
   Services.prefs.setBoolPref("browser.tabs.closeWindowWithLastTab", false);
 
-  let tabClosedPromise = BrowserTestUtils.tabRemoved(tab);
   EventUtils.synthesizeKey("w", { accelKey: true });
-  await tabClosedPromise;
 
   is(tab.parentNode, null, "ctrl+w removes the tab");
   is(gBrowser.tabs.length, 1, "a new tab has been opened");

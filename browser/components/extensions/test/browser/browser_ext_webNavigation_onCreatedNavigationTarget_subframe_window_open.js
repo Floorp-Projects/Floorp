@@ -91,7 +91,7 @@ add_task(async function test_window_open_from_subframe() {
 
   assertNoPendingCreatedNavigationTargetData();
 
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 
   await extension.unload();
 });
@@ -157,7 +157,7 @@ add_task(async function test_window_open_close_from_browserAction_popup() {
 
   assertNoPendingCreatedNavigationTargetData();
 
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 
   await extension.unload();
 });

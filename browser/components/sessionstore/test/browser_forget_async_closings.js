@@ -34,7 +34,7 @@ let forgetTabHelper = async function(forgetFn) {
   await TabStateFlusher.flush(browser);
 
   // Now close the tab, and immediately choose to forget it.
-  let promise = BrowserTestUtils.removeTab(tab);
+  let promise = promiseRemoveTabAndSessionState(tab);
 
   // At this point, the tab will have closed, but the final update
   // to SessionStore hasn't come up yet. Now do the operation that

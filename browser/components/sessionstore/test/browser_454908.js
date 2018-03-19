@@ -24,7 +24,7 @@ add_task(async function test_dont_save_passwords() {
   await setInputValue(browser, {id: "passwd", value: PASS});
 
   // Close and restore the tab.
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   tab = ss.undoCloseTab(window, 0);
   browser = tab.linkedBrowser;
   await promiseTabRestored(tab);

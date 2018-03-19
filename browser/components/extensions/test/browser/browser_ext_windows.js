@@ -246,7 +246,7 @@ add_task(async function testWindowTitlePermissions() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function testInvalidWindowId() {

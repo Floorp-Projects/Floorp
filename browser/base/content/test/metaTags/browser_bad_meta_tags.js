@@ -19,7 +19,7 @@ add_task(async function test_bad_meta_tags() {
   is(pageInfo.description, "description", "did not collect a og:description because meta tag was malformed");
   is(pageInfo.previewImageURL.href, "http://test.com/twitter-image.jpg", "did not collect og:image because of invalid loading principal");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   await PlacesUtils.history.clear();
 });
 

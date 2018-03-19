@@ -33,7 +33,7 @@ add_task(async function() {
   await promise;
 
   info("Close then un-close page, 4 loads should take place");
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   let newTab = ss.undoCloseTab(window, 0);
   await waitForLoadsInBrowser(newTab.linkedBrowser, 4);
 
@@ -78,7 +78,7 @@ add_task(async function() {
   await promise;
 
   info("iframe: Close then un-close page, 5 loads should take place");
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   let newTab = ss.undoCloseTab(window, 0);
   await waitForLoadsInBrowser(newTab.linkedBrowser, 5);
 

@@ -79,7 +79,7 @@ async function testReturnStatus(expectedStatus) {
 
   saveDir.remove(true);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function testSaveAsPDF_saved() {

@@ -169,7 +169,7 @@ async function assignCookies(aBrowser, aURL, aCookieValue) {
     content.document.cookie = value;
   });
 
-  await BrowserTestUtils.removeTab(tabInfo.tab);
+  BrowserTestUtils.removeTab(tabInfo.tab);
 }
 
 async function openTab(aBrowser, aURL) {
@@ -228,7 +228,10 @@ add_task(async function test_favicon_privateBrowsing() {
   await promiseObserveFavicon;
 
   // Close the tab.
-  await BrowserTestUtils.removeTab(tabInfo.tab);
+  BrowserTestUtils.removeTab(tabInfo.tab);
+  // FIXME: We need to wait for the next event tick here to avoid observing
+  //        the previous tab info in the next step (bug 1446725).
+  await new Promise(executeSoon);
 
   // Add the observer earlier in case we don't capture events in time.
   promiseObserveFavicon = observeFavicon(false, cookies[1], pageURI);
@@ -240,7 +243,7 @@ add_task(async function test_favicon_privateBrowsing() {
   await promiseObserveFavicon;
 
   // Close the tab.
-  await BrowserTestUtils.removeTab(tabInfo.tab);
+  BrowserTestUtils.removeTab(tabInfo.tab);
   await BrowserTestUtils.closeWindow(privateWindow);
 });
 
@@ -281,7 +284,7 @@ add_task(async function test_favicon_cache_privateBrowsing() {
   is(response.topic, "http-on-examine-response", "The favicon image should be loaded through the network again.");
   is(response.privateBrowsingId, 1, "We should observe the network response for the private tab.");
 
-  await BrowserTestUtils.removeTab(tabInfoPrivate.tab);
-  await BrowserTestUtils.removeTab(tabInfoNonPrivate.tab);
+  BrowserTestUtils.removeTab(tabInfoPrivate.tab);
+  BrowserTestUtils.removeTab(tabInfoNonPrivate.tab);
   await BrowserTestUtils.closeWindow(privateWindow);
 });

@@ -166,5 +166,5 @@ add_task(async function homepage_test_locked() {
     is(content.document.getElementById("restoreDefaultHomePage").disabled, true,
        "\"Restore to Default\" button should be disabled");
   });
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

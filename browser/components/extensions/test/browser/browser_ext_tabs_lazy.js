@@ -39,5 +39,5 @@ add_task(async function() {
   is(tab.getAttribute("pending"), "true", "The tab is still pending restore");
   is(tab.linkedBrowser.isConnected, false, "The tab is still lazy");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

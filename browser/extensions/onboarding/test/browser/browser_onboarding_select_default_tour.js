@@ -28,7 +28,7 @@ add_task(async function test_default_tour_open_the_right_page() {
   is(`#${activeNavItemId}`, PRIVATE_BROWSING_TOUR_ID, "default tour is active");
   is(activePageId, "onboarding-tour-private-browsing-page", "default tour page is shown");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_select_first_uncomplete_tour() {
@@ -51,7 +51,7 @@ add_task(async function test_select_first_uncomplete_tour() {
   is(`#${activeNavItemId}`, ADDONS_TOUR_ID, "default tour is active");
   is(activePageId, "onboarding-tour-addons-page", "default tour page is shown");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_select_first_tour_when_all_tours_are_complete() {
@@ -76,5 +76,5 @@ add_task(async function test_select_first_tour_when_all_tours_are_complete() {
   is(`#${activeNavItemId}`, PRIVATE_BROWSING_TOUR_ID, "default tour is active");
   is(activePageId, "onboarding-tour-private-browsing-page", "default tour page is shown");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -97,8 +97,8 @@ add_task(async function reallyRunTests() {
 
   await testFinished.promise;
 
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
   otherWindow = null;
 });
 

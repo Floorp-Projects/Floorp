@@ -54,5 +54,5 @@ async function waitForMessageAndViewSource(hud, message) {
   locationNode.click();
   let newTab = await onTabOpen;
   ok(true, "The view source tab was opened in response to clicking the link");
-  await BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
 }

@@ -108,7 +108,7 @@ var BrowserTestUtils = {
       // We shouldn't remove the newly opened tab in the same tick.
       // Wait for the next tick here.
       await TestUtils.waitForTick();
-      await BrowserTestUtils.removeTab(tab);
+      BrowserTestUtils.removeTab(tab);
     } else {
       Services.console.logStringMessage(
         "BrowserTestUtils.withNewTab: Tab was already closed before " +
@@ -737,6 +737,29 @@ var BrowserTestUtils = {
   },
 
   /**
+   * Returns a Promise that resolves once the SessionStore information for the
+   * given tab is updated and all listeners are called.
+   *
+   * @param (tab) tab
+   *        The tab that will be removed.
+   * @returns (Promise)
+   * @resolves When the SessionStore information is updated.
+   */
+  waitForSessionStoreUpdate(tab) {
+    return new Promise(resolve => {
+      let {messageManager: mm, frameLoader} = tab.linkedBrowser;
+      mm.addMessageListener("SessionStore:update", function onMessage(msg) {
+        if (msg.targetFrameLoader == frameLoader && msg.data.isFinal) {
+          mm.removeMessageListener("SessionStore:update", onMessage);
+          // Wait for the next event tick to make sure other listeners are
+          // called.
+          TestUtils.executeSoon(() => resolve());
+        }
+      }, true);
+    });
+  },
+
+  /**
    * Waits for an event to be fired on a specified element.
    *
    * Usage:
@@ -1102,45 +1125,28 @@ var BrowserTestUtils = {
   },
 
   /**
-   * Removes the given tab from its parent tabbrowser and
-   * waits until its final message has reached the parent.
+   * Removes the given tab from its parent tabbrowser.
+   * This method doesn't SessionStore etc.
    *
    * @param (tab) tab
    *        The tab to remove.
    * @param (Object) options
    *        Extra options to pass to tabbrowser's removeTab method.
-   * @returns (Promise)
-   * @resolves When the tab is removed. Does not get passed a value.
    */
   removeTab(tab, options = {}) {
-    let tabRemoved = BrowserTestUtils.tabRemoved(tab);
-    if (!tab.closing) {
-      tab.ownerGlobal.gBrowser.removeTab(tab, options);
-    }
-    return tabRemoved;
+    tab.ownerGlobal.gBrowser.removeTab(tab, options);
   },
 
   /**
-   * Returns a Promise that resolves once a tab has been removed.
+   * Returns a Promise that resolves once the tab starts closing.
    *
    * @param (tab) tab
    *        The tab that will be removed.
    * @returns (Promise)
-   * @resolves When the tab is removed. Does not get passed a value.
+   * @resolves When the tab starts closing. Does not get passed a value.
    */
-  tabRemoved(tab) {
-    return new Promise(resolve => {
-      let {messageManager: mm, frameLoader} = tab.linkedBrowser;
-      // FIXME! We shouldn't use "SessionStore:update" to know the tab was
-      // removed.  It will be processed before other "SessionStore:update"
-      // listeners hasn't been processed.
-      mm.addMessageListener("SessionStore:update", function onMessage(msg) {
-        if (msg.targetFrameLoader == frameLoader && msg.data.isFinal) {
-          mm.removeMessageListener("SessionStore:update", onMessage);
-          TestUtils.executeSoon(() => resolve());
-        }
-      }, true);
-    });
+  waitForTabClosing(tab) {
+    return this.waitForEvent(tab, "TabClose");
   },
 
   /**

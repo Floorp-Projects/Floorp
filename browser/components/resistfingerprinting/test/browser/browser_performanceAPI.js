@@ -122,7 +122,7 @@ add_task(async function runRPTests() {
   await setupTest(tab, true, false, 13, runTests);
   await setupTest(tab, true, false, .13, runTests);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // ================================================================================================
@@ -170,7 +170,7 @@ add_task(async function runRTPTests() {
   await setupTest(tab, false, true, 13, runTests);
   await setupTest(tab, false, true, .13, runTests);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // ================================================================================================
@@ -204,7 +204,7 @@ add_task(async function runRPTestsForWorker() {
   await setupTest(tab, true, false, 13, runWorkerTest, "runRPTests");
   await setupTest(tab, true, true, .13, runWorkerTest, "runRPTests");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   });
 
 add_task(async function runRTPTestsForWorker() {
@@ -215,5 +215,5 @@ add_task(async function runRTPTestsForWorker() {
   await setupTest(tab, false, true, 13, runWorkerTest, "runRTPTests");
   await setupTest(tab, false, true, .13, runWorkerTest, "runRTPTests");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

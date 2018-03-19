@@ -94,7 +94,7 @@ add_task(async function dont_save_empty_tabs() {
   let {tab, r} = await createTabWithRandomValue("about:blank");
 
   // Remove the tab before the update arrives.
-  let promise = promiseRemoveTab(tab);
+  let promise = promiseRemoveTabAndSessionState(tab);
 
   // No tab state worth saving.
   ok(!isValueInClosedData(r), "closed tab not saved");
@@ -109,7 +109,7 @@ add_task(async function save_worthy_tabs_remote() {
   ok(tab.linkedBrowser.isRemoteBrowser, "browser is remote");
 
   // Remove the tab before the update arrives.
-  let promise = promiseRemoveTab(tab);
+  let promise = promiseRemoveTabAndSessionState(tab);
 
   // Tab state deemed worth saving.
   ok(isValueInClosedData(r), "closed tab saved");
@@ -124,7 +124,7 @@ add_task(async function save_worthy_tabs_nonremote() {
   ok(!tab.linkedBrowser.isRemoteBrowser, "browser is not remote");
 
   // Remove the tab before the update arrives.
-  let promise = promiseRemoveTab(tab);
+  let promise = promiseRemoveTabAndSessionState(tab);
 
   // Tab state deemed worth saving.
   ok(isValueInClosedData(r), "closed tab saved");
@@ -149,7 +149,7 @@ add_task(async function save_worthy_tabs_remote_final() {
   ok(browser.isRemoteBrowser, "browser is still remote");
 
   // Remove the tab before the update arrives.
-  let promise = promiseRemoveTab(tab);
+  let promise = promiseRemoveTabAndSessionState(tab);
 
   // No tab state worth saving (that we know about yet).
   ok(!isValueInClosedData(r), "closed tab not saved");
@@ -172,7 +172,7 @@ add_task(async function save_worthy_tabs_nonremote_final() {
   await promiseHistoryEntryReplacedNonRemote(browser);
 
   // Remove the tab before the update arrives.
-  let promise = promiseRemoveTab(tab);
+  let promise = promiseRemoveTabAndSessionState(tab);
 
   // No tab state worth saving (that we know about yet).
   ok(!isValueInClosedData(r), "closed tab not saved");
@@ -191,7 +191,7 @@ add_task(async function dont_save_empty_tabs_final() {
   await promiseNewLocationAndHistoryEntryReplaced(browser, snippet);
 
   // Remove the tab before the update arrives.
-  let promise = promiseRemoveTab(tab);
+  let promise = promiseRemoveTabAndSessionState(tab);
 
   // Tab state deemed worth saving (yet).
   ok(isValueInClosedData(r), "closed tab saved");
@@ -206,7 +206,7 @@ add_task(async function undo_worthy_tabs() {
   ok(tab.linkedBrowser.isRemoteBrowser, "browser is remote");
 
   // Remove the tab before the update arrives.
-  let promise = promiseRemoveTab(tab);
+  let promise = promiseRemoveTabAndSessionState(tab);
 
   // Tab state deemed worth saving.
   ok(isValueInClosedData(r), "closed tab saved");
@@ -221,7 +221,7 @@ add_task(async function undo_worthy_tabs() {
   ok(!isValueInClosedData(r), "tab no longer closed");
 
   // Cleanup.
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function forget_worthy_tabs_remote() {
@@ -229,7 +229,7 @@ add_task(async function forget_worthy_tabs_remote() {
   ok(tab.linkedBrowser.isRemoteBrowser, "browser is remote");
 
   // Remove the tab before the update arrives.
-  let promise = promiseRemoveTab(tab);
+  let promise = promiseRemoveTabAndSessionState(tab);
 
   // Tab state deemed worth saving.
   ok(isValueInClosedData(r), "closed tab saved");

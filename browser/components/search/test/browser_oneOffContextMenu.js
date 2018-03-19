@@ -82,7 +82,7 @@ async function doTest() {
                "http://mochi.test:8888/browser/browser/components/search/test/",
                "Expected search tab should have loaded");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   // Move the cursor out of the panel area to avoid messing with other tests.
   await EventUtils.synthesizeNativeMouseMove(searchbar);
