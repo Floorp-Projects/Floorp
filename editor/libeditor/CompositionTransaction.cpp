@@ -104,9 +104,10 @@ CompositionTransaction::DoTransaction()
 
   // Advance caret: This requires the presentation shell to get the selection.
   if (mReplaceLength == 0) {
-    nsresult rv = mTextNode->InsertData(mOffset, mStringToInsert);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    ErrorResult rv;
+    mTextNode->InsertData(mOffset, mStringToInsert, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
     mEditorBase->RangeUpdaterRef().
                    SelAdjInsertText(*mTextNode, mOffset, mStringToInsert);
