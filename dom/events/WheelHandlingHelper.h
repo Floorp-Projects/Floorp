@@ -382,6 +382,74 @@ private:
   bool mShouldBeAdjusted;
 };
 
+/**
+ * This is the implementation of AutoDirWheelDeltaAdjuster for EventStateManager
+ *
+ * Detailed comments about some member functions are given in the base class
+ * AutoDirWheelDeltaAdjuster.
+ */
+class MOZ_STACK_CLASS ESMAutoDirWheelDeltaAdjuster final
+                        : public AutoDirWheelDeltaAdjuster
+{
+public:
+  /**
+   * @param aEvent             The auto-dir wheel scroll event.
+   * @param aScrollFrame       The scroll target for the event.
+   * @param aHonoursRoot       If set to true, the honoured frame is the root
+   *                           frame in the same document where the target is;
+   *                           If false, the honoured frame is the scroll
+   *                           target. For the concept of an honoured target,
+   *                           @see mozilla::WheelDeltaAdjustmentStrategy
+   */
+  ESMAutoDirWheelDeltaAdjuster(WidgetWheelEvent& aEvent,
+                               nsIFrame& aScrollFrame,
+                               bool aHonoursRoot);
+
+private:
+  virtual void OnAdjusted() override;
+  virtual bool CanScrollAlongXAxis() const override;
+  virtual bool CanScrollAlongYAxis() const override;
+  virtual bool CanScrollUpwards() const override;
+  virtual bool CanScrollDownwards() const override;
+  virtual bool CanScrollLeftwards() const override;
+  virtual bool CanScrollRightwards() const override;
+  virtual bool IsHorizontalContentRightToLeft() const override;
+
+  nsIScrollableFrame* mScrollTargetFrame;
+  bool mIsHorizontalContentRightToLeft;
+
+  int32_t& mLineOrPageDeltaX;
+  int32_t& mLineOrPageDeltaY;
+  double& mOverflowDeltaX;
+  double& mOverflowDeltaY;
+};
+
+/**
+ * This class is used for restoring the delta in an auto-dir wheel.
+ *
+ * An instance of this calss monitors auto-dir adjustment which may happen
+ * during its lifetime. If the delta values is adjusted during its lifetime, the
+ * instance will restore the adjusted delta when it's being destrcuted.
+ */
+class MOZ_STACK_CLASS ESMAutoDirWheelDeltaRestorer final
+{
+public:
+  /**
+   * @param aEvent             The wheel scroll event to be monitored.
+   */
+  explicit ESMAutoDirWheelDeltaRestorer(WidgetWheelEvent& aEvent);
+  ~ESMAutoDirWheelDeltaRestorer();
+
+private:
+  WidgetWheelEvent& mEvent;
+  double mOldDeltaX;
+  double mOldDeltaY;
+  int32_t mOldLineOrPageDeltaX;
+  int32_t mOldLineOrPageDeltaY;
+  double mOldOverflowDeltaX;
+  double mOldOverflowDeltaY;
+};
+
 } // namespace mozilla
 
 #endif // mozilla_WheelHandlingHelper_h_
