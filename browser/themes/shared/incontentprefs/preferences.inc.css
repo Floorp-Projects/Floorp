@@ -839,7 +839,7 @@ button > hbox > label {
 }
 
 .visually-hidden {
-  visibility: hidden;
+  visibility: collapse;
 }
 
 menulist {
