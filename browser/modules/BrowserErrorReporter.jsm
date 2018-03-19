@@ -172,16 +172,6 @@ class BrowserErrorReporter {
     }
 
     const exceptionValue = {};
-    const transforms = [
-      addErrorMessage,
-      addStacktrace,
-      addModule,
-      mangleExtensionUrls,
-    ];
-    for (const transform of transforms) {
-      await transform(message, exceptionValue);
-    }
-
     const requestBody = {
       ...this.requestBodyTemplate,
       timestamp: new Date().toISOString().slice(0, -1), // Remove trailing "Z"
@@ -189,7 +179,19 @@ class BrowserErrorReporter {
       exception: {
         values: [exceptionValue],
       },
+      tags: {},
     };
+
+    const transforms = [
+      addErrorMessage,
+      addStacktrace,
+      addModule,
+      mangleExtensionUrls,
+      tagExtensionErrors,
+    ];
+    for (const transform of transforms) {
+      await transform(message, exceptionValue, requestBody);
+    }
 
     const url = new URL(Services.prefs.getCharPref(PREF_SUBMIT_URL));
     url.searchParams.set("sentry_client", `${SDK_NAME}/${SDK_VERSION}`);
@@ -314,5 +316,11 @@ function mangleExtensionUrls(message, exceptionValue) {
   exceptionValue.module = mangleExtURL(exceptionValue.module);
   for (const frame of exceptionValue.stacktrace.frames) {
     frame.module = mangleExtURL(frame.module);
+  }
+}
+
+function tagExtensionErrors(message, exceptionValue, requestBody) {
+  if (exceptionValue.module && exceptionValue.module.startsWith("moz-extension://")) {
+    requestBody.tags.isExtensionError = true;
   }
 }
