@@ -35,9 +35,6 @@ fails css-values/attr-*.html
       css-values/attr-*-invalid-fallback.html
       css-values/attr-invalid-type-???.html
 
-# Bug 1256575
-fails-if(!stylo||styloVsGecko) css-values/calc-in-media-queries-???.html
-
 # because of dynamic change
 skip css-values/vh_not_refreshing_on_chrome.html
 skip css-values/vh_not_refreshing_on_chrome_iframe.html

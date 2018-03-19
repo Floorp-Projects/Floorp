@@ -20,7 +20,7 @@ skip-if(Android) == webgl-clear-test.html?depth&stencil wrapper.html?green.png
 skip-if(Android) == webgl-resize-test.html  wrapper.html?green.png
 
 # Check that captureStream() displays in a local video element
-skip-if(Android) skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&styloVsGecko) == webgl-capturestream-test.html?preserve wrapper.html?green.png
+skip-if(Android) == webgl-capturestream-test.html?preserve wrapper.html?green.png
 
 # Some of the failure conditions are a little crazy. I'm (jgilbert) setting these based on
 # failures encountered when running on Try, and then targetting the Try config by
@@ -141,7 +141,7 @@ fuzzy(9,40000) skip pref(webgl.prefer-16bpp,true)                               
 fuzzy(9,40000) skip pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&premult&alpha  wrapper.html?colors-premult.png
 
 # Force native GL (Windows):
-skip-if(!winWidget) skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&styloVsGecko) pref(webgl.disable-angle,true) == webgl-color-test.html?native-gl  wrapper.html?colors-no-alpha.png
+skip-if(!winWidget) pref(webgl.disable-angle,true) == webgl-color-test.html?native-gl  wrapper.html?colors-no-alpha.png
 
 
 # Non-WebGL Reftests!
