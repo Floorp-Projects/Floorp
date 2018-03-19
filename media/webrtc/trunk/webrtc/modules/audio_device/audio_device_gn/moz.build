@@ -13,7 +13,7 @@ AllowCompilerWarnings()
 DEFINES["CHROMIUM_BUILD"] = True
 DEFINES["EXPAT_RELATIVE_PATH"] = True
 DEFINES["V8_DEPRECATION_WARNINGS"] = True
-DEFINES["WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE"] = True
+DEFINES["WEBRTC_DUMMY_AUDIO_BUILD"] = True
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
 DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
 
@@ -36,7 +36,6 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += [
     "/media/webrtc/trunk/webrtc/modules/audio_device/audio_device_buffer.cc",
     "/media/webrtc/trunk/webrtc/modules/audio_device/audio_device_generic.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_device/audio_device_impl.cc",
     "/media/webrtc/trunk/webrtc/modules/audio_device/dummy/audio_device_dummy.cc",
     "/media/webrtc/trunk/webrtc/modules/audio_device/dummy/file_audio_device.cc",
     "/media/webrtc/trunk/webrtc/modules/audio_device/dummy/file_audio_device_factory.cc",
@@ -72,28 +71,11 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__GNU_SOURCE"] = "1"
 
     LOCAL_INCLUDES += [
-        "/config/external/nspr/",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/android/",
-        "/nsprpub/lib/ds/",
-        "/nsprpub/pr/include/"
+        "/media/webrtc/trunk/webrtc/modules/audio_device/android/"
     ]
 
     OS_LIBS += [
-        "log",
-        "OpenSLES"
-    ]
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_device/android/audio_manager.cc",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/android/audio_record_jni.cc",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/android/audio_track_jni.cc",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/android/opensles_player.cc"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_device/android/build_info.cc",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/android/opensles_common.cc",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/android/opensles_recorder.cc"
+        "log"
     ]
 
 if CONFIG["OS_TARGET"] == "Darwin":
@@ -106,18 +88,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
 
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_device/mac/"
-    ]
-
-    OS_LIBS += [
-        "-framework ApplicationServices",
-        "-framework AudioToolbox",
-        "-framework CoreAudio",
-        "-framework CoreGraphics"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_device/mac/audio_device_mac.cc",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/mac/audio_mixer_manager_mac.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "DragonFly":
@@ -138,7 +108,6 @@ if CONFIG["OS_TARGET"] == "FreeBSD":
 
 if CONFIG["OS_TARGET"] == "Linux":
 
-    DEFINES["LINUX_PULSE"] = True
     DEFINES["USE_NSS_CERTS"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
@@ -151,19 +120,8 @@ if CONFIG["OS_TARGET"] == "Linux":
     ]
 
     OS_LIBS += [
-        "dl",
         "m",
         "rt"
-    ]
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_device/linux/audio_device_pulse_linux.cc",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_device/linux/latebindingsymboltable_linux.cc",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/linux/pulseaudiosymboltable_linux.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "NetBSD":
@@ -212,20 +170,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     ]
 
     OS_LIBS += [
-        "amstrmid",
-        "dmoguids",
-        "msdmo",
-        "winmm",
-        "wmcodecdspuuid"
-    ]
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_device/win/audio_device_core_win.cc"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_device/win/audio_device_wave_win.cc",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/win/audio_mixer_manager_win.cc"
+        "winmm"
     ]
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":

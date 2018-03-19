@@ -56,7 +56,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -94,7 +93,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -105,7 +103,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -151,7 +149,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -189,7 +186,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -205,7 +201,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -251,7 +247,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -289,7 +284,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -298,7 +292,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -344,7 +338,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -382,7 +375,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -395,7 +387,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -448,7 +440,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -486,7 +477,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -499,7 +489,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -546,7 +536,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -584,7 +573,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -609,7 +597,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -620,11 +608,7 @@
                 "//webrtc/modules/include/"
             ],
             "libs": [
-                "winmm.lib",
-                "dmoguids.lib",
-                "wmcodecdspuuid.lib",
-                "amstrmid.lib",
-                "msdmo.lib"
+                "winmm.lib"
             ],
             "sources": [
                 "//webrtc/audio/audio_receive_stream.cc",
@@ -678,7 +662,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -716,7 +699,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -725,7 +707,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -771,7 +753,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -809,7 +790,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -818,7 +798,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -951,7 +931,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -989,7 +968,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -1000,7 +978,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1048,7 +1026,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -1086,7 +1063,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -1097,7 +1073,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1149,7 +1125,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -1187,7 +1162,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -1208,14 +1182,10 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
-                "winmm.lib",
-                "dmoguids.lib",
-                "wmcodecdspuuid.lib",
-                "amstrmid.lib",
-                "msdmo.lib"
+                "winmm.lib"
             ],
             "sources": [
                 "//webrtc/call/bitrate_allocator.cc",
@@ -1263,7 +1233,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -1301,7 +1270,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -1310,7 +1278,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1362,7 +1330,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -1400,7 +1367,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -1413,7 +1379,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -1504,7 +1470,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -1542,7 +1507,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -1551,7 +1515,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -1652,7 +1616,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -1690,7 +1653,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -1699,7 +1661,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1746,7 +1708,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -1784,7 +1745,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -1800,7 +1760,7 @@
                 "//webrtc/modules/interface/",
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -1876,7 +1836,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -1914,7 +1873,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -1923,7 +1881,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1969,7 +1927,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2007,7 +1964,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2021,7 +1977,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -2072,7 +2028,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2110,7 +2065,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2119,7 +2073,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2171,7 +2125,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2211,7 +2164,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2237,7 +2189,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/",
                 "//",
@@ -2311,7 +2263,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2349,7 +2300,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2363,7 +2313,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2409,7 +2359,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2447,7 +2396,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2459,7 +2407,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2508,7 +2456,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2546,7 +2493,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2558,7 +2504,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2605,7 +2551,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2643,7 +2588,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2654,7 +2598,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2701,7 +2645,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2739,7 +2682,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2752,7 +2694,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2799,7 +2741,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2837,7 +2778,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2851,7 +2791,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -2921,7 +2861,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -2961,7 +2900,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -2980,7 +2918,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -3039,7 +2977,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -3077,7 +3014,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -3091,7 +3027,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3147,7 +3083,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -3185,7 +3120,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -3200,7 +3134,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/g711/include/"
             ],
@@ -3251,7 +3185,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -3289,7 +3222,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -3300,7 +3232,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3349,7 +3281,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -3387,7 +3318,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -3402,7 +3332,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/g722/include/"
             ],
@@ -3453,7 +3383,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -3491,7 +3420,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -3502,7 +3430,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3552,7 +3480,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -3590,7 +3517,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -3604,7 +3530,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/"
             ],
@@ -3655,7 +3581,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -3693,7 +3618,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -3707,7 +3631,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3811,7 +3735,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -3849,7 +3772,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -3861,7 +3783,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3910,7 +3832,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -3948,7 +3869,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -3964,7 +3884,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/fix/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -4018,7 +3938,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -4056,7 +3975,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -4073,7 +3991,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/fix/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -4171,7 +4089,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -4212,7 +4129,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -4239,7 +4155,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -4372,7 +4288,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -4410,7 +4325,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -4426,7 +4340,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/pcm16b/include/",
                 "//",
@@ -4479,7 +4393,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -4517,7 +4430,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -4528,7 +4440,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/pcm16b/include/"
             ],
@@ -4577,7 +4489,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -4617,7 +4528,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -4636,7 +4546,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -4697,7 +4607,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -4736,7 +4645,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -4756,7 +4664,7 @@
             "include_dirs": [
                 "/include/opus/",
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -4810,7 +4718,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -4848,7 +4755,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -4861,7 +4767,7 @@
             "include_dirs": [
                 "/media/libopus/include/",
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -4909,7 +4815,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -4947,7 +4852,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -4962,7 +4866,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_conference_mixer/include/",
                 "//webrtc/modules/include/"
             ],
@@ -5021,7 +4925,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -5033,6 +4936,7 @@
                 "/MT"
             ],
             "defines": [
+                "WEBRTC_DUMMY_AUDIO_BUILD",
                 "V8_DEPRECATION_WARNINGS",
                 "NO_TCMALLOC",
                 "CHROMIUM_BUILD",
@@ -5059,7 +4963,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -5076,7 +4979,7 @@
             "include_dirs": [
                 "//webrtc/modules/audio_device/win/",
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/include/",
                 "//webrtc/modules/audio_device/include/",
                 "//webrtc/modules/audio_device/dummy/",
@@ -5085,10 +4988,6 @@
                 "//webrtc/common_audio/vad/include/"
             ],
             "libs": [
-                "dmoguids.lib",
-                "wmcodecdspuuid.lib",
-                "amstrmid.lib",
-                "msdmo.lib",
                 "winmm.lib"
             ],
             "sources": [
@@ -5107,14 +5006,6 @@
                 "//webrtc/modules/audio_device/include/audio_device_defines.h",
                 "//webrtc/modules/audio_device/opensl/single_rw_fifo.cc",
                 "//webrtc/modules/audio_device/opensl/single_rw_fifo.h",
-                "//webrtc/modules/audio_device/audio_device_impl.cc",
-                "//webrtc/modules/audio_device/audio_device_impl.h",
-                "//webrtc/modules/audio_device/win/audio_device_core_win.cc",
-                "//webrtc/modules/audio_device/win/audio_device_core_win.h",
-                "//webrtc/modules/audio_device/win/audio_device_wave_win.cc",
-                "//webrtc/modules/audio_device/win/audio_device_wave_win.h",
-                "//webrtc/modules/audio_device/win/audio_mixer_manager_win.cc",
-                "//webrtc/modules/audio_device/win/audio_mixer_manager_win.h",
                 "//webrtc/modules/audio_device/dummy/file_audio_device_factory.cc",
                 "//webrtc/modules/audio_device/dummy/file_audio_device_factory.h"
             ],
@@ -5158,7 +5049,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -5196,7 +5086,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -5208,7 +5097,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -5255,7 +5144,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -5293,7 +5181,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -5310,7 +5197,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -5362,7 +5249,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -5403,7 +5289,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -5422,7 +5307,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -5624,7 +5509,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -5662,7 +5546,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -5676,7 +5559,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -5737,7 +5620,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -5776,7 +5658,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -5785,7 +5666,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -5833,7 +5714,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -5872,7 +5752,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -5885,7 +5764,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -5937,7 +5816,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -5976,7 +5854,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -5995,7 +5872,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -6058,7 +5935,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -6097,7 +5973,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -6113,7 +5988,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "d3d11.lib",
@@ -6226,7 +6101,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -6264,7 +6138,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -6273,7 +6146,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -6320,7 +6193,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -6358,7 +6230,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -6369,7 +6240,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -6425,7 +6296,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -6463,7 +6333,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -6477,7 +6346,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -6533,7 +6402,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -6571,7 +6439,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -6585,7 +6452,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -6640,7 +6507,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -6679,7 +6545,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -6692,7 +6557,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -6760,7 +6625,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -6799,7 +6663,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -6819,7 +6682,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7017,7 +6880,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -7055,7 +6917,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -7075,7 +6936,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -7131,7 +6992,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -7169,7 +7029,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -7182,7 +7041,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "Strmiids.lib",
@@ -7247,7 +7106,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -7285,7 +7143,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -7300,7 +7157,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7359,7 +7216,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -7397,7 +7253,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -7420,7 +7275,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7535,7 +7390,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -7573,7 +7427,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -7588,7 +7441,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7653,7 +7506,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -7691,7 +7543,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -7704,7 +7555,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -7753,7 +7604,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -7791,7 +7641,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -7805,7 +7654,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7856,7 +7705,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -7894,7 +7742,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -7910,7 +7757,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7973,7 +7820,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -8011,7 +7857,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -8025,7 +7870,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -8081,7 +7926,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -8119,7 +7963,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -8136,7 +7979,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -8198,7 +8041,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -8236,7 +8078,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -8248,7 +8089,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -8297,7 +8138,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -8335,7 +8175,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -8344,7 +8183,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -8391,7 +8230,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -8429,7 +8267,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -8438,7 +8275,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -8486,7 +8323,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -8524,7 +8360,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -8536,7 +8371,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "winmm.lib"
@@ -8629,7 +8464,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -8667,7 +8501,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -8694,18 +8527,14 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/"
             ],
             "libs": [
-                "winmm.lib",
-                "dmoguids.lib",
-                "wmcodecdspuuid.lib",
-                "amstrmid.lib",
-                "msdmo.lib"
+                "winmm.lib"
             ],
             "sources": [
                 "//webrtc/video/call_stats.cc",
@@ -8787,7 +8616,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -8825,7 +8653,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -8836,7 +8663,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -8884,7 +8711,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -8922,7 +8748,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -8937,7 +8762,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/"
             ],
@@ -8988,7 +8813,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -9026,7 +8850,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -9041,7 +8864,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -9093,7 +8916,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -9131,7 +8953,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -9147,7 +8968,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -9199,7 +9020,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -9237,7 +9057,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -9250,7 +9069,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -9303,7 +9122,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -9342,7 +9160,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -9377,7 +9194,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -9390,11 +9207,7 @@
                 "//webrtc/modules/audio_device/dummy/"
             ],
             "libs": [
-                "winmm.lib",
-                "dmoguids.lib",
-                "wmcodecdspuuid.lib",
-                "amstrmid.lib",
-                "msdmo.lib"
+                "winmm.lib"
             ],
             "sources": [
                 "//webrtc/voice_engine/channel.cc",
@@ -9493,7 +9306,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -9531,7 +9343,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -9559,7 +9370,7 @@
             ],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/",
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -9575,10 +9386,6 @@
             ],
             "libs": [
                 "winmm.lib",
-                "dmoguids.lib",
-                "wmcodecdspuuid.lib",
-                "amstrmid.lib",
-                "msdmo.lib",
                 "d3d11.lib",
                 "dxgi.lib",
                 "Strmiids.lib"
@@ -9628,7 +9435,6 @@
                 "/wd4458",
                 "/wd4459",
                 "/wd4267",
-                "/wd4702",
                 "/O1",
                 "/Ob2",
                 "/Oy-",
@@ -9666,7 +9472,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_WIN",
@@ -9675,7 +9480,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "c:/mozilla-source/mozilla-central/obj-i686-pc-mingw32/gn-output/gen/"
+                "c:/src/firefox/obj-i686-pc-mingw32/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
