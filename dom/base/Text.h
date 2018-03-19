@@ -43,14 +43,14 @@ public:
 
 inline mozilla::dom::Text* nsINode::GetAsText()
 {
-  return IsNodeOfType(eTEXT) ? static_cast<mozilla::dom::Text*>(this)
-                             : nullptr;
+  return IsText()  ? static_cast<mozilla::dom::Text*>(this)
+                   : nullptr;
 }
 
 inline const mozilla::dom::Text* nsINode::GetAsText() const
 {
-  return IsNodeOfType(eTEXT) ? static_cast<const mozilla::dom::Text*>(this)
-                             : nullptr;
+  return IsText() ? static_cast<const mozilla::dom::Text*>(this)
+                  : nullptr;
 }
 
 #endif // mozilla_dom_Text_h
