@@ -6,57 +6,42 @@ import urlparse
 import zipfile
 import StringIO
 
+import mozhttpd
 import mozunit
 
-import mozcrash
-import mozhttpd
 
-from testcase import CrashTestCase
+def test_symbols_path_not_present(check_for_crashes, minidump_files):
+    """Test that no symbols path let mozcrash try to find the symbols."""
+    assert 1 == check_for_crashes(symbols_path=None)
 
 
-class TestCrash(CrashTestCase):
+def test_symbols_path_url(check_for_crashes, minidump_files):
+    """Test that passing a URL as symbols_path correctly fetches the URL."""
+    data = {"retrieved": False}
 
-    def test_symbol_path_not_present(self):
-        """Test that no symbols path doesn't process the minidump."""
-        self.create_minidump("test")
+    def make_zipfile():
+        data = StringIO.StringIO()
+        z = zipfile.ZipFile(data, 'w')
+        z.writestr("symbols.txt", "abc/xyz")
+        z.close()
+        return data.getvalue()
 
-        self.assertEqual(1, mozcrash.check_for_crashes(self.tempdir,
-                                                       symbols_path=None,
-                                                       stackwalk_binary=self.stackwalk,
-                                                       quiet=True))
+    def get_symbols(req):
+        data["retrieved"] = True
 
-    def test_symbol_path_url(self):
-        """Test that passing a URL as symbols_path correctly fetches the URL."""
-        self.create_minidump("test")
+        headers = {}
+        return (200, headers, make_zipfile())
 
-        data = {"retrieved": False}
+    httpd = mozhttpd.MozHttpd(port=0,
+                              urlhandlers=[{'method': 'GET',
+                                            'path': '/symbols',
+                                            'function': get_symbols}])
+    httpd.start()
+    symbol_url = urlparse.urlunsplit(('http', '%s:%d' % httpd.httpd.server_address,
+                                      '/symbols', '', ''))
 
-        def make_zipfile():
-            data = StringIO.StringIO()
-            z = zipfile.ZipFile(data, 'w')
-            z.writestr("symbols.txt", "abc/xyz")
-            z.close()
-            return data.getvalue()
-
-        def get_symbols(req):
-            data["retrieved"] = True
-
-            headers = {}
-            return (200, headers, make_zipfile())
-
-        httpd = mozhttpd.MozHttpd(port=0,
-                                  urlhandlers=[{'method': 'GET',
-                                                'path': '/symbols',
-                                                'function': get_symbols}])
-        httpd.start()
-        symbol_url = urlparse.urlunsplit(('http', '%s:%d' % httpd.httpd.server_address,
-                                          '/symbols', '', ''))
-
-        self.assertEqual(1, mozcrash.check_for_crashes(self.tempdir,
-                                                       symbols_path=symbol_url,
-                                                       stackwalk_binary=self.stackwalk,
-                                                       quiet=True))
-        self.assertTrue(data["retrieved"])
+    assert 1 == check_for_crashes(symbols_path=symbol_url)
+    assert data["retrieved"]
 
 
 if __name__ == '__main__':
