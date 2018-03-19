@@ -23,7 +23,7 @@ using namespace dom;
 // static
 already_AddRefed<DeleteTextTransaction>
 DeleteTextTransaction::MaybeCreate(EditorBase& aEditorBase,
-                                   nsGenericDOMDataNode& aCharData,
+                                   CharacterData& aCharData,
                                    uint32_t aOffset,
                                    uint32_t aLengthToDelete)
 {
@@ -36,7 +36,7 @@ DeleteTextTransaction::MaybeCreate(EditorBase& aEditorBase,
 already_AddRefed<DeleteTextTransaction>
 DeleteTextTransaction::MaybeCreateForPreviousCharacter(
                          EditorBase& aEditorBase,
-                         nsGenericDOMDataNode& aCharData,
+                         CharacterData& aCharData,
                          uint32_t aOffset)
 {
   if (NS_WARN_IF(!aOffset)) {
@@ -65,7 +65,7 @@ DeleteTextTransaction::MaybeCreateForPreviousCharacter(
 already_AddRefed<DeleteTextTransaction>
 DeleteTextTransaction::MaybeCreateForNextCharacter(
                          EditorBase& aEditorBase,
-                         nsGenericDOMDataNode& aCharData,
+                         CharacterData& aCharData,
                          uint32_t aOffset)
 {
   nsAutoString data;
@@ -87,7 +87,7 @@ DeleteTextTransaction::MaybeCreateForNextCharacter(
 
 DeleteTextTransaction::DeleteTextTransaction(
                          EditorBase& aEditorBase,
-                         nsGenericDOMDataNode& aCharData,
+                         CharacterData& aCharData,
                          uint32_t aOffset,
                          uint32_t aLengthToDelete)
   : mEditorBase(&aEditorBase)
@@ -123,12 +123,15 @@ DeleteTextTransaction::DoTransaction()
   }
 
   // Get the text that we're about to delete
-  nsresult rv = mCharData->SubstringData(mOffset, mLengthToDelete,
-                                         mDeletedText);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  rv = mCharData->DeleteData(mOffset, mLengthToDelete);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ErrorResult err;
+  mCharData->SubstringData(mOffset, mLengthToDelete, mDeletedText, err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
+
+  mCharData->DeleteData(mOffset, mLengthToDelete, err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
   }
 
   mEditorBase->RangeUpdaterRef().
@@ -158,7 +161,9 @@ DeleteTextTransaction::UndoTransaction()
   if (NS_WARN_IF(!mCharData)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  return mCharData->InsertData(mOffset, mDeletedText);
+  ErrorResult rv;
+  mCharData->InsertData(mOffset, mDeletedText, rv);
+  return rv.StealNSResult();
 }
 
 } // namespace mozilla

@@ -7,31 +7,26 @@
 #ifndef mozilla_dom_Text_h
 #define mozilla_dom_Text_h
 
-#include "nsGenericDOMDataNode.h"
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/ErrorResult.h"
 
 namespace mozilla {
 namespace dom {
 
-class Text : public nsGenericDOMDataNode
+class Text : public CharacterData
 {
 public:
   explicit Text(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsGenericDOMDataNode(aNodeInfo)
+    : CharacterData(aNodeInfo)
   {}
 
   explicit Text(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericDOMDataNode(aNodeInfo)
+    : CharacterData(aNodeInfo)
   {}
-
-  using nsGenericDOMDataNode::GetWholeText;
 
   // WebIDL API
   already_AddRefed<Text> SplitText(uint32_t aOffset, ErrorResult& rv);
-  void GetWholeText(nsAString& aWholeText, ErrorResult& rv)
-  {
-    rv = GetWholeText(aWholeText);
-  }
+  void GetWholeText(nsAString& aWholeText, ErrorResult& rv);
 
   static already_AddRefed<Text>
   Constructor(const GlobalObject& aGlobal,
@@ -43,14 +38,14 @@ public:
 
 inline mozilla::dom::Text* nsINode::GetAsText()
 {
-  return IsNodeOfType(eTEXT) ? static_cast<mozilla::dom::Text*>(this)
-                             : nullptr;
+  return IsText()  ? static_cast<mozilla::dom::Text*>(this)
+                   : nullptr;
 }
 
 inline const mozilla::dom::Text* nsINode::GetAsText() const
 {
-  return IsNodeOfType(eTEXT) ? static_cast<const mozilla::dom::Text*>(this)
-                             : nullptr;
+  return IsText() ? static_cast<const mozilla::dom::Text*>(this)
+                  : nullptr;
 }
 
 #endif // mozilla_dom_Text_h

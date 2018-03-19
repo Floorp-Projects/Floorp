@@ -14,7 +14,6 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsNameSpaceManager.h"
 #include "nsLiteralString.h"

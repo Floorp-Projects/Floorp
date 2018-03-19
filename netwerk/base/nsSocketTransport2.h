@@ -301,6 +301,9 @@ private:
     bool mProxyTransparentResolvesHost;
     bool mHttpsProxy;
     uint32_t     mConnectionFlags;
+    // When we fail to connect using a prefered IP family, we tell the consumer to reset
+    // the IP family preference on the connection entry.
+    bool         mResetFamilyPreference;
     uint32_t     mTlsFlags;
     bool mReuseAddrPort;
 

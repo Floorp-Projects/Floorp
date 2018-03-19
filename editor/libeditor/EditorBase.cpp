@@ -47,6 +47,7 @@
 #include "mozilla/TextInputListener.h"  // for TextInputListener
 #include "mozilla/TextServicesDocument.h" // for TextServicesDocument
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/CharacterData.h"  // for CharacterData
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/Text.h"
@@ -69,7 +70,6 @@
 #include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
 #include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                 // for nsIContent
-#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
@@ -2915,9 +2915,8 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidInsertText(
-        static_cast<nsIDOMCharacterData*>(insertedTextNode->AsDOMNode()),
-        insertedOffset, aStringToInsert, rv);
+      listener->DidInsertText(insertedTextNode, insertedOffset,
+                              aStringToInsert, rv);
     }
   }
 
@@ -3043,15 +3042,16 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
   if (!mActionListeners.IsEmpty() && length) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->WillDeleteText(
-        static_cast<nsIDOMCharacterData*>(aCharData.AsDOMNode()), 0, length);
+      listener->WillDeleteText(&aCharData, 0, length);
     }
   }
 
   // We don't support undo here, so we don't really need all of the transaction
   // machinery, therefore we can run our transaction directly, breaking all of
   // the rules!
-  nsresult rv = aCharData.SetData(aString);
+  ErrorResult res;
+  aCharData.SetData(aString, res);
+  nsresult rv = res.StealNSResult();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3082,14 +3082,10 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       if (length) {
-        listener->DidDeleteText(
-          static_cast<nsIDOMCharacterData*>(aCharData.AsDOMNode()), 0,
-          length, rv);
+        listener->DidDeleteText(&aCharData, 0, length, rv);
       }
       if (!aString.IsEmpty()) {
-        listener->DidInsertText(
-          static_cast<nsIDOMCharacterData*>(aCharData.AsDOMNode()), 0,
-          aString, rv);
+        listener->DidInsertText(&aCharData, 0, aString, rv);
       }
     }
   }
@@ -3098,7 +3094,7 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
 }
 
 nsresult
-EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
+EditorBase::DeleteText(CharacterData& aCharData,
                        uint32_t aOffset,
                        uint32_t aLength)
 {
@@ -3115,9 +3111,7 @@ EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->WillDeleteText(
-          static_cast<nsIDOMCharacterData*>(GetAsDOMNode(&aCharData)), aOffset,
-          aLength);
+      listener->WillDeleteText(&aCharData, aOffset, aLength);
     }
   }
 
@@ -3132,9 +3126,7 @@ EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidDeleteText(
-          static_cast<nsIDOMCharacterData*>(GetAsDOMNode(&aCharData)), aOffset,
-          aLength, rv);
+      listener->DidDeleteText(&aCharData, aOffset, aLength, rv);
     }
   }
 
@@ -3219,10 +3211,10 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
       // Fix right node
       nsAutoString leftText;
       rightAsText->SubstringData(0, aStartOfRightNode.Offset(),
-                                 leftText);
-      rightAsText->DeleteData(0, aStartOfRightNode.Offset());
+                                 leftText, IgnoreErrors());
+      rightAsText->DeleteData(0, aStartOfRightNode.Offset(), IgnoreErrors());
       // Fix left node
-      leftAsText->GetAsText()->SetData(leftText);
+      leftAsText->GetAsText()->SetData(leftText, IgnoreErrors());
     } else {
       MOZ_DIAGNOSTIC_ASSERT(!rightAsText && !leftAsText);
       // Otherwise it's an interior node, so shuffle around the children. Go
@@ -3389,7 +3381,7 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
     aNodeToKeep->GetAsText()->GetData(rightText);
     aNodeToJoin->GetAsText()->GetData(leftText);
     leftText += rightText;
-    aNodeToKeep->GetAsText()->SetData(leftText);
+    aNodeToKeep->GetAsText()->SetData(leftText, IgnoreErrors());
   } else {
     // Otherwise it's an interior node, so shuffle around the children.
     nsCOMPtr<nsINodeList> childNodes = aNodeToJoin->ChildNodes();
@@ -4359,7 +4351,8 @@ EditorBase::DeleteSelectionImpl(EDirection aAction,
     }
   }
 
-  nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
+  RefPtr<CharacterData> deleteCharData =
+    CharacterData::FromContentOrNull(deleteNode);
   AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
 
   if (mRules && mRules->AsHTMLEditRules()) {
@@ -4681,8 +4674,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     // there is a priorNode, so delete its last child (if chardata, delete the
     // last char). if it has no children, delete it
     if (priorNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      RefPtr<nsGenericDOMDataNode> priorNodeAsCharData =
-        static_cast<nsGenericDOMDataNode*>(priorNode.get());
+      RefPtr<CharacterData> priorNodeAsCharData =
+        static_cast<CharacterData*>(priorNode.get());
       uint32_t length = priorNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4721,8 +4714,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     // there is a nextNode, so delete its first child (if chardata, delete the
     // first char). if it has no children, delete it
     if (nextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      RefPtr<nsGenericDOMDataNode> nextNodeAsCharData =
-        static_cast<nsGenericDOMDataNode*>(nextNode.get());
+      RefPtr<CharacterData> nextNodeAsCharData =
+        static_cast<CharacterData*>(nextNode.get());
       uint32_t length = nextNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4754,8 +4747,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
-    RefPtr<nsGenericDOMDataNode> nodeAsCharData =
-      static_cast<nsGenericDOMDataNode*>(node.get());
+    RefPtr<CharacterData> nodeAsCharData =
+      static_cast<CharacterData*>(node.get());
     // We have chardata, so delete a char at the proper offset
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
       aAction == ePrevious ?
@@ -4801,8 +4794,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
-    RefPtr<nsGenericDOMDataNode> selectedNodeAsCharData =
-      static_cast<nsGenericDOMDataNode*>(selectedNode.get());
+    RefPtr<CharacterData> selectedNodeAsCharData =
+      static_cast<CharacterData*>(selectedNode.get());
     // we are deleting from a chardata node, so do a character deletion
     uint32_t position = 0;
     if (aAction == ePrevious) {

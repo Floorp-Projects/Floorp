@@ -9,12 +9,13 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
+#include "nsIDOMNode.h"
 
 namespace mozilla {
 namespace dom {
 
 class CDATASection final : public Text,
-                           public nsIDOMText
+                           public nsIDOMNode
 {
 private:
   void Init()
@@ -43,18 +44,12 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMCharacterData
-  NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
-  using nsGenericDOMDataNode::SetData; // Prevent hiding overloaded virtual function.
-
-  // nsIDOMText
-  NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
-
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const override;
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                  bool aCloneText) const override;
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 #ifdef DEBUG

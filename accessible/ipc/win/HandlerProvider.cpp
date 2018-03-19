@@ -261,8 +261,11 @@ HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data)
 {
   MOZ_ASSERT(aOutIA2Data);
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTargetUnk);
   MOZ_ASSERT(IsTargetInterfaceCacheable());
+
+  if (!mTargetUnk) {
+    return;
+  }
 
   RefPtr<NEWEST_IA2_INTERFACE> target;
   HRESULT hr = mTargetUnk.get()->QueryInterface(NEWEST_IA2_IID,
@@ -467,6 +470,11 @@ HandlerProvider::MarshalAs(REFIID aIid)
 HRESULT
 HandlerProvider::DisconnectHandlerRemotes()
 {
+  // If a handlerProvider call is pending on another thread,
+  // CoDisconnectObject won't release this HandlerProvider immediately.
+  // However, the interceptor and its target (mTargetUnk) might be destroyed.
+  mTargetUnk = nullptr;
+
   IUnknown* unk = static_cast<IGeckoBackChannel*>(this);
   return ::CoDisconnectObject(unk, 0);
 }
@@ -544,6 +552,10 @@ HandlerProvider::Refresh(DynamicIA2Data* aOutData)
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
 
+  if (!mTargetUnk) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
   if (!mscom::InvokeOnMainThread("HandlerProvider::BuildDynamicIA2Data",
                                  this, &HandlerProvider::BuildDynamicIA2Data,
                                  aOutData)) {
@@ -581,7 +593,11 @@ HandlerProvider::GetAllTextInfoMainThread(BSTR* aText,
   MOZ_ASSERT(aAttribRuns);
   MOZ_ASSERT(aNAttribRuns);
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTargetUnk);
+
+  if (!mTargetUnk) {
+    *result = CO_E_OBJNOTCONNECTED;
+    return;
+  }
 
   RefPtr<IAccessibleHypertext2> ht;
   HRESULT hr = mTargetUnk->QueryInterface(IID_IAccessibleHypertext2,
@@ -657,6 +673,10 @@ HandlerProvider::get_AllTextInfo(BSTR* aText,
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
 
+  if (!mTargetUnk) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
   HRESULT hr;
   if (!mscom::InvokeOnMainThread("HandlerProvider::GetAllTextInfoMainThread",
                                  this,
@@ -677,7 +697,11 @@ HandlerProvider::GetRelationsInfoMainThread(IARelationData** aRelations,
   MOZ_ASSERT(aRelations);
   MOZ_ASSERT(aNRelations);
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTargetUnk);
+
+  if (!mTargetUnk) {
+    *hr = CO_E_OBJNOTCONNECTED;
+    return;
+  }
 
   RefPtr<NEWEST_IA2_INTERFACE> acc;
   *hr = mTargetUnk.get()->QueryInterface(NEWEST_IA2_IID,
@@ -721,6 +745,10 @@ HandlerProvider::get_RelationsInfo(IARelationData** aRelations,
                                    long* aNRelations)
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+
+  if (!mTargetUnk) {
+    return CO_E_OBJNOTCONNECTED;
+  }
 
   HRESULT hr;
   if (!mscom::InvokeOnMainThread("HandlerProvider::GetRelationsInfoMainThread",

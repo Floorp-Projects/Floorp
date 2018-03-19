@@ -39,6 +39,7 @@ class ExtendableEvent;
 class KeyboardEvent;
 class TimeEvent;
 class WantsPopupControlCheck;
+class XULCommandEvent;
 #define GENERATED_EVENT(EventClass_) class EventClass_;
 #include "mozilla/dom/GeneratedEventList.h"
 #undef GENERATED_EVENT
@@ -128,6 +129,12 @@ public:
 
   // DragEvent has a non-autogeneratable initDragEvent.
   virtual DragEvent* AsDragEvent()
+  {
+    return nullptr;
+  }
+
+  // XULCommandEvent has a non-autogeneratable initCommandEvent.
+  virtual XULCommandEvent* AsXULCommandEvent()
   {
     return nullptr;
   }

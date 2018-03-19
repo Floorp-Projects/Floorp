@@ -44,6 +44,7 @@ add_task(async function() {
   let restartedTab = await restartTab(tab);
 
   ok("muted" in get_tab_state(restartedTab), "Restored tab should still be in a muted state after restart");
+  ok(!restartedTab.linkedPanel, "Restored tab should not be inserted");
 
   BrowserTestUtils.removeTab(restartedTab);
 });

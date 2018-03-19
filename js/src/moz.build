@@ -459,6 +459,7 @@ if CONFIG['ENABLE_TRACE_LOGGING']:
     ]
 
 if not CONFIG['ENABLE_ION']:
+    LOpcodesGenerated.inputs += ['jit/none/LIR-none.h']
     UNIFIED_SOURCES += [
         'jit/none/Trampoline-none.cpp'
     ]

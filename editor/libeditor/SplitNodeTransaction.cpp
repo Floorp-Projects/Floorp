@@ -145,10 +145,10 @@ SplitNodeTransaction::RedoTransaction()
   if (mStartOfRightNode.IsInTextNode()) {
     Text* rightNodeAsText = mStartOfRightNode.GetContainerAsText();
     MOZ_DIAGNOSTIC_ASSERT(rightNodeAsText);
-    nsresult rv =
-      rightNodeAsText->DeleteData(0, mStartOfRightNode.Offset());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    ErrorResult rv;
+    rightNodeAsText->DeleteData(0, mStartOfRightNode.Offset(), rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
   } else {
     nsCOMPtr<nsIContent> child =

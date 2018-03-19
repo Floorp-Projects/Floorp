@@ -749,7 +749,7 @@ class CodeLocationLabel
         return raw_ - other.raw_;
     }
 
-    void repoint(JitCode* code, MacroAssembler* masm = nullptr);
+    void repoint(JitCode* code);
 
 #ifdef DEBUG
     bool isSet() const {

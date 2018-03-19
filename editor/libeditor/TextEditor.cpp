@@ -37,7 +37,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNode.h"
 #include "nsIDocumentEncoder.h"
@@ -1653,8 +1652,10 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
   // is doc empty?
   if (rules->DocumentIsEmpty()) {
     // get root node
-    nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
-    NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
+    Element* rootElement = GetRoot();
+    if (NS_WARN_IF(!rootElement)) {
+      return NS_ERROR_FAILURE;
+    }
 
     // if it's empty don't select entire doc - that would select the bogus node
     return aSelection->Collapse(rootElement, 0);

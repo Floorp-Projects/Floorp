@@ -3194,7 +3194,7 @@ HTMLEditor::DeleteNode(nsIDOMNode* aNode)
 }
 
 nsresult
-HTMLEditor::DeleteText(nsGenericDOMDataNode& aCharData,
+HTMLEditor::DeleteText(CharacterData& aCharData,
                        uint32_t aOffset,
                        uint32_t aLength)
 {

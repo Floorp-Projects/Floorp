@@ -50,7 +50,7 @@
 #include "vm/Stack.h"
 #include "vm/Stopwatch.h"
 #include "vm/SymbolType.h"
-#include "wasm/WasmSignalHandlers.h"
+#include "wasm/WasmTypes.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -998,10 +998,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::ActiveThreadData<js::RuntimeCaches> caches_;
   public:
     js::RuntimeCaches& caches() { return caches_.ref(); }
-
-    // When wasm traps, the signal handler records some data for unwinding
-    // purposes. Wasm code can't trap reentrantly.
-    js::ActiveThreadData<mozilla::Maybe<js::wasm::TrapData>> wasmTrapData;
 
     // List of all the live wasm::Instances in the runtime. Equal to the union
     // of all instances registered in all JSCompartments. Accessed from watchdog

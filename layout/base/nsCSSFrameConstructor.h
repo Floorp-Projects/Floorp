@@ -37,7 +37,6 @@ class nsICSSAnonBoxPseudo;
 class nsIDocument;
 class nsPageContentFrame;
 struct PendingBinding;
-class nsGenericDOMDataNode;
 
 class nsFrameConstructorState;
 
@@ -45,6 +44,7 @@ namespace mozilla {
 
 namespace dom {
 
+class CharacterData;
 class FlattenedChildIterator;
 
 } // namespace dom
@@ -328,7 +328,7 @@ public:
   // possibly have a frame at all.
   //
   // Returns whether there are chances for the frame to be unsuppressed.
-  bool EnsureFrameForTextNodeIsCreatedAfterFlush(nsGenericDOMDataNode* aContent);
+  bool EnsureFrameForTextNodeIsCreatedAfterFlush(mozilla::dom::CharacterData* aContent);
 
   // Generate the child frames and process bindings
   void GenerateChildFrames(nsContainerFrame* aFrame);

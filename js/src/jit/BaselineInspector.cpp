@@ -772,6 +772,9 @@ AddCacheIRGlobalGetter(ICCacheIR_Monitored* stub, bool innerized,
     //   <GuardShape holderId>
     //   CallNativeGetterResult globalId
 
+    if (innerized)
+        return false;
+
     CacheIRReader reader(stub->stubInfo());
 
     ObjOperandId objId = ObjOperandId(0);

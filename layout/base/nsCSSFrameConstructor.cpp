@@ -51,7 +51,6 @@
 #include "nsIComboboxControlFrame.h"
 #include "nsComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
-#include "nsIDOMCharacterData.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsIFormControl.h"
@@ -82,7 +81,7 @@
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsTArray.h"
-#include "nsGenericDOMDataNode.h"
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "nsAutoLayoutPhase.h"
@@ -8815,7 +8814,7 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
 
 bool
 nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
-  nsGenericDOMDataNode* aContent)
+  CharacterData* aContent)
 {
   if (!aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE)) {
     return false;

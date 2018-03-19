@@ -32,7 +32,6 @@
 #include "nsIWidget.h"
 #include "nsIWidgetListener.h"
 
-#include "nsIDOMCharacterData.h"
 #include "nsINodeList.h"
 
 #include "nsITimer.h"

@@ -16,7 +16,6 @@
 
 class nsIContent;
 class nsIContentIterator;
-class nsIDOMCharacterData;
 class nsIDOMDocument;
 class nsIDOMNode;
 class nsIEditor;
