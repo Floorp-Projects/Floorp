@@ -12,7 +12,8 @@
 <?xml-stylesheet href="chrome://browser/skin/places/organizer.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css"?>
 
-<?xul-overlay href="chrome://browser/content/downloads/allDownloadsViewOverlay.xul"?>
+<?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/allDownloadsView.css"?>
 
 <!DOCTYPE window [
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
@@ -75,13 +76,18 @@
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
 
-
 #ifdef XP_MACOSX
 #include ../../../base/content/macWindow.inc.xul
 #else
 #include ../../../../toolkit/content/editMenuCommands.inc.xul
 #include placesCommands.inc.xul
 #endif
+
+  <!-- This must be included after macWindow.inc.xul to override DownloadsView -->
+  <script type="application/javascript"
+          src="chrome://browser/content/downloads/allDownloadsView.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/contentAreaUtils.js"/>
 
   <commandset id="organizerCommandSet">
     <command id="OrganizerCommand_find:all"
@@ -105,7 +111,7 @@
     <command id="OrganizerCommand:Forward"
              oncommand="PlacesOrganizer.forward();"/>
   </commandset>
-  <commandset id="downloadCommands"/>
+#include ../../downloads/content/downloadsCommands.inc.xul
 
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->
@@ -162,7 +168,7 @@
     <menupopup id="placesColumnsContext"
                onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
                oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
-    <menupopup id="downloadsContextMenu"/>
+#include ../../downloads/content/downloadsContextMenu.inc.xul
   </popupset>
 
   <toolbox id="placesToolbox">
@@ -426,7 +432,7 @@
           </treecols>
           <treechildren flex="1" onclick="ContentTree.onClick(event);"/>
         </tree>
-        <richlistbox id="downloadsRichListBox"/>
+#include ../../downloads/content/downloadsRichListBox.inc.xul
       </deck>
       <deck id="detailsDeck" style="height: 11em;">
         <vbox id="itemsCountBox" align="center">
