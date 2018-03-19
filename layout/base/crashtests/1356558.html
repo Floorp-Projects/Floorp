@@ -1,0 +1,32 @@
+<html class="reftest-wait">
+<script>
+function start() {
+  o2=document.createElement('iframe');
+  o2.src="data:text/html,<div>";
+  o2.addEventListener('load', fun0,false);
+  document.body.appendChild(o2);
+}
+function fun0() {
+  o456=frames[0];
+  o457=o456.document;
+  o457.designMode='on';
+  o544=o457.createElement('audio');
+  o545=document.createElement('track');
+  o544.appendChild(o545);
+  o457.write('<div>');
+  o544.controls^=1;
+  o457.documentElement.appendChild(o544);
+  o457.defaultView.onerror=fun3;
+  setTimeout(fun2, 4);
+}
+function fun2() {
+  document.documentElement.hidden^=true;
+}
+function fun3() {
+  document.documentElement.style.display='grid';
+  document.documentElement.getBoundingClientRect();
+  document.documentElement.className = "";
+}
+</script>
+<body onload="start()"></body>
+</html>
