@@ -70,6 +70,10 @@ XPCOMUtils.defineLazyGetter(this, "MirrorLog", () =>
   Log.repository.getLogger("Sync.Engine.Bookmarks.Mirror")
 );
 
+XPCOMUtils.defineLazyGetter(this, "UserContentRootsAsSqlList", () =>
+  PlacesUtils.bookmarks.userContentRoots.map(v => `'${v}'`).join(",")
+);
+
 // These can be removed once they're exposed in a central location (bug
 // 1375896).
 const DB_URL_LENGTH_MAX = 65536;
@@ -871,8 +875,7 @@ class SyncedBookmarksMirror {
        WITH RECURSIVE
        syncedItems(id, syncChangeCounter) AS (
          SELECT b.id, b.syncChangeCounter FROM moz_bookmarks b
-         WHERE b.guid IN ('menu________', 'toolbar_____', 'unfiled_____',
-                          'mobile______')
+         WHERE b.guid IN (${UserContentRootsAsSqlList})
          UNION ALL
          SELECT b.id, b.syncChangeCounter FROM moz_bookmarks b
          JOIN syncedItems s ON b.parent = s.id
@@ -1019,7 +1022,7 @@ class SyncedBookmarksMirror {
       WITH RECURSIVE
       syncedItems(id, level) AS (
         SELECT b.id, 0 AS level FROM moz_bookmarks b
-        WHERE b.guid IN (:menuGuid, :toolbarGuid, :unfiledGuid, :mobileGuid)
+        WHERE b.guid IN (${UserContentRootsAsSqlList})
         UNION ALL
         SELECT b.id, s.level + 1 AS level FROM moz_bookmarks b
         JOIN syncedItems s ON s.id = b.parent
@@ -1048,11 +1051,7 @@ class SyncedBookmarksMirror {
       JOIN moz_bookmarks p ON p.id = b.parent
       JOIN syncedItems s ON s.id = b.id
       ORDER BY s.level, b.parent, b.position`,
-      { menuGuid: PlacesUtils.bookmarks.menuGuid,
-        toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-        unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-        mobileGuid: PlacesUtils.bookmarks.mobileGuid,
-        bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      { bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         queryKind: SyncedBookmarksMirror.KIND.QUERY,
         bookmarkKind: SyncedBookmarksMirror.KIND.BOOKMARK,
         folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -1545,7 +1544,7 @@ class SyncedBookmarksMirror {
       WITH RECURSIVE
       syncedItems(id, level) AS (
         SELECT b.id, 0 AS level FROM moz_bookmarks b
-        WHERE b.guid IN (:menuGuid, :toolbarGuid, :unfiledGuid, :mobileGuid)
+        WHERE b.guid IN (${UserContentRootsAsSqlList})
         UNION ALL
         SELECT b.id, s.level + 1 AS level FROM moz_bookmarks b
         JOIN syncedItems s ON s.id = b.parent
@@ -1596,11 +1595,7 @@ class SyncedBookmarksMirror {
       LEFT JOIN itemsToWeaklyReupload w ON w.id = b.id
       WHERE b.syncChangeCounter >= 1 OR
             w.id NOT NULL`,
-      { menuGuid: PlacesUtils.bookmarks.menuGuid,
-        toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-        unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-        mobileGuid: PlacesUtils.bookmarks.mobileGuid,
-        bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      { bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         tagsGuid: PlacesUtils.bookmarks.tagsGuid,
         descriptionAnno: PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
         sidebarAnno: PlacesSyncUtils.bookmarks.SIDEBAR_ANNO,
@@ -1987,8 +1982,7 @@ async function initializeMirrorDatabase(db) {
 
 /**
  * Sets up the syncable roots. All items in the mirror should descend from these
- * roots. If we ever add new syncable roots to Places, this function should also
- * be updated to create them in the mirror.
+ * roots.
  *
  * @param {Sqlite.OpenedConnection} db
  *        The mirror database connection.
@@ -2001,27 +1995,15 @@ async function createMirrorRoots(db) {
     parentGuid: PlacesUtils.bookmarks.rootGuid,
     position: -1,
     needsMerge: false,
-  }, {
-    guid: PlacesUtils.bookmarks.menuGuid,
-    parentGuid: PlacesUtils.bookmarks.rootGuid,
-    position: 0,
-    needsMerge: true,
-  }, {
-    guid: PlacesUtils.bookmarks.toolbarGuid,
-    parentGuid: PlacesUtils.bookmarks.rootGuid,
-    position: 1,
-    needsMerge: true,
-  }, {
-    guid: PlacesUtils.bookmarks.unfiledGuid,
-    parentGuid: PlacesUtils.bookmarks.rootGuid,
-    position: 2,
-    needsMerge: true,
-  }, {
-    guid: PlacesUtils.bookmarks.mobileGuid,
-    parentGuid: PlacesUtils.bookmarks.rootGuid,
-    position: 3,
-    needsMerge: true,
-  }];
+  }, ...PlacesUtils.bookmarks.userContentRoots.map((guid, position) => {
+    return {
+      guid,
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+      position,
+      needsMerge: true,
+    };
+  })];
+
   for (let { guid, parentGuid, position, needsMerge } of syncableRoots) {
     await db.executeCached(`
       INSERT INTO items(guid, kind, needsMerge)
