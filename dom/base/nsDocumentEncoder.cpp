@@ -21,7 +21,6 @@
 #include "mozilla/Encoding.h"
 #include "nsIOutputStream.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMNodeList.h"
 #include "nsRange.h"
 #include "nsIDOMRange.h"
@@ -45,6 +44,7 @@
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/ScopeExit.h"
@@ -417,7 +417,7 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
     }
     case nsINode::PROCESSING_INSTRUCTION_NODE:
     {
-      mSerializer->AppendProcessingInstruction(static_cast<nsIContent*>(node),
+      mSerializer->AppendProcessingInstruction(static_cast<ProcessingInstruction*>(node),
                                                aStartOffset, aEndOffset, aStr);
       break;
     }

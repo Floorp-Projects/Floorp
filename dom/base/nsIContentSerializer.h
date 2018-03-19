@@ -19,6 +19,7 @@ namespace dom {
 class Comment;
 class DocumentType;
 class Element;
+class ProcessingInstruction;
 } // namespace dom
 } // namespace mozilla
 
@@ -45,7 +46,7 @@ class nsIContentSerializer : public nsISupports {
                                 int32_t aStartOffset, int32_t aEndOffset,
                                 nsAString& aStr) = 0;
 
-  NS_IMETHOD AppendProcessingInstruction(nsIContent* aPI,
+  NS_IMETHOD AppendProcessingInstruction(mozilla::dom::ProcessingInstruction* aPI,
                                          int32_t aStartOffset,
                                          int32_t aEndOffset,
                                          nsAString& aStr) = 0;
