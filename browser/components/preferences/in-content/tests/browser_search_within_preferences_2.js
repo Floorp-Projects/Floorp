@@ -60,7 +60,7 @@ add_task(async function() {
   EventUtils.sendString(query);
   await searchCompletedPromise;
 
-  let noResultsEl = gBrowser.contentDocument.querySelector(".no-results-message");
+  let noResultsEl = gBrowser.contentDocument.querySelector("#no-results-message");
   is_element_visible(noResultsEl, "Should be reporting no results");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
