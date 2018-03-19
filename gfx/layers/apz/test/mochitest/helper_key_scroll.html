@@ -10,10 +10,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript">
-    var SimpleTest = window.opener.SimpleTest;
-
-    SimpleTest.waitForFocus(runTests, window);
-
     // --------------------------------------------------------------------
     // Async key scrolling test
     //
@@ -30,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
 
     function runTests() {
       // Sanity check
-      SimpleTest.is(checkHasAsyncKeyScrolled(false), false, "expected no async key scrolling before test");
+      is(checkHasAsyncKeyScrolled(false), false, "expected no async key scrolling before test");
 
       // Send a key to initiate a page scroll to take us to the bottom of the
       // page. This scroll is done synchronously because APZ doesn't have
@@ -58,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
       // Wait for the APZ to reach a stable state as well, before dispatching
       // the next key input or the default action won't occur.
       waitForApzFlushedRepaints(function () {
-        SimpleTest.is(checkHasAsyncKeyScrolled(false), false, "expected no async key scrolling before KEY_Home dispatch");
+        is(checkHasAsyncKeyScrolled(false), false, "expected no async key scrolling before KEY_Home dispatch");
 
         // This scroll should be asynchronous now that the focus state is up to date.
         window.addEventListener("scroll", waitForScrollTop);
@@ -75,8 +71,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
 
       // Wait for APZ to settle and then check that async scrolling happened.
       waitForApzFlushedRepaints(function () {
-        SimpleTest.is(checkHasAsyncKeyScrolled(true), true, "expected async key scrolling after test");
-        window.opener.finishTest();
+        is(checkHasAsyncKeyScrolled(true), true, "expected async key scrolling after test");
+        subtestDone();
       });
     };
 
@@ -86,7 +82,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
       var compositorTestData = utils.getCompositorAPZTestData();
 
       if (requirePaints) {
-        SimpleTest.ok(compositorTestData.paints.length > 0,
+        ok(compositorTestData.paints.length > 0,
                       "expected at least one paint in compositor test data");
       }
 
@@ -110,6 +106,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
         return false;
       }
     }
+
+    waitUntilApzStable().then(runTests);
   </script>
 </head>
 <body style="height: 500px; overflow: scroll">
