@@ -101,13 +101,6 @@ class nsNavHistoryResult final : public nsSupportsWeakReference,
                                  public nsINavHistoryObserver
 {
 public:
-  static nsresult NewHistoryResult(nsCOMArray<nsNavHistoryQuery>& aQueries,
-                                   uint32_t aQueryCount,
-                                   nsNavHistoryQueryOptions* aOptions,
-                                   nsNavHistoryContainerResultNode* aRoot,
-                                   bool aBatchInProgress,
-                                   nsNavHistoryResult** result);
-
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -133,16 +126,15 @@ public:
                    const nsAString& aLastKnownTitle);
 
 public:
-  // two-stage init, use NewHistoryResult to construct
-  explicit nsNavHistoryResult(nsNavHistoryContainerResultNode* mRoot);
-  nsresult Init(nsCOMArray<nsNavHistoryQuery>& aQueries,
-                uint32_t aQueryCount,
-                nsNavHistoryQueryOptions *aOptions);
+  explicit nsNavHistoryResult(nsNavHistoryContainerResultNode* mRoot,
+                              const RefPtr<nsNavHistoryQuery>& aQuery,
+                              const RefPtr<nsNavHistoryQueryOptions>& aOptions,
+                              bool aBatchInProgress);
 
   RefPtr<nsNavHistoryContainerResultNode> mRootNode;
 
-  nsCOMArray<nsINavHistoryQuery> mQueries;
-  nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
+  RefPtr<nsNavHistoryQuery> mQuery;
+  RefPtr<nsNavHistoryQueryOptions> mOptions;
 
   // One of nsNavHistoryQueryOptions.SORY_BY_* This is initialized to mOptions.sortingMode,
   // but may be overridden if the user clicks on one of the columns.
@@ -233,7 +225,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
 // short and we can save a virtual function call.
 //
 // (GetUri is redefined only by QueryResultNode and FolderResultNode because
-// the queries might not necessarily be parsed. The rest just return the node's
+// the query might not necessarily be parsed. The rest just return the node's
 // buffer.)
 #define NS_FORWARD_COMMON_RESULTNODE_TO_BASE \
   NS_IMPLEMENT_SIMPLE_RESULTNODE \
@@ -488,8 +480,8 @@ public:
   // the direct parent of this container node, see SetAsParentOfNode. For
   // example, if the parent has excludeItems, options will have it too, even if
   // originally this object was not defined with that option.
-  nsCOMPtr<nsNavHistoryQueryOptions> mOriginalOptions;
-  nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
+  RefPtr<nsNavHistoryQueryOptions> mOriginalOptions;
+  RefPtr<nsNavHistoryQueryOptions> mOptions;
 
   void FillStats();
   // Sets this container as parent of aNode, propagating the appropriate options.
@@ -629,11 +621,11 @@ public:
   nsNavHistoryQueryResultNode(const nsACString& aTitle,
                               const nsACString& aQueryURI);
   nsNavHistoryQueryResultNode(const nsACString& aTitle,
-                              const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                              const RefPtr<nsNavHistoryQuery>& aQuery,
                               nsNavHistoryQueryOptions* aOptions);
   nsNavHistoryQueryResultNode(const nsACString& aTitle,
                               PRTime aTime,
-                              const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                              const RefPtr<nsNavHistoryQuery>& aQuery,
                               nsNavHistoryQueryOptions* aOptions);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -663,18 +655,18 @@ public:
   virtual void OnRemoving() override;
 
 public:
-  // this constructs lazily mURI from mQueries and mOptions, call
-  // VerifyQueriesSerialized either this or mQueries/mOptions should be valid
-  nsresult VerifyQueriesSerialized();
+  // This constructs lazily mURI from mQuery and mOptions.
+  // Either this or mQuery/mOptions should be valid.
+  nsresult VerifyQuerySerialized();
 
-  // these may be constructed lazily from mURI, call VerifyQueriesParsed
-  // either this or mURI should be valid
-  nsCOMArray<nsNavHistoryQuery> mQueries;
+  // This may be constructed lazily from mURI, call VerifyQueryParsed.
+  // Either this or mURI should be valid.
+  RefPtr<nsNavHistoryQuery> mQuery;
   uint32_t mLiveUpdate; // one of QUERYUPDATE_* in nsNavHistory.h
   bool mHasSearchTerms;
-  nsresult VerifyQueriesParsed();
+  nsresult VerifyQueryParsed();
 
-  // safe options getter, ensures queries are parsed
+  // safe options getter, ensures query is parsed
   nsNavHistoryQueryOptions* Options();
 
   // this indicates whether the query contents are valid, they don't go away
@@ -694,7 +686,7 @@ public:
 
   uint32_t mBatchChanges;
 
-  // Tracks transition type filters shared by all mQueries.
+  // Tracks transition type filters.
   nsTArray<uint32_t> mTransitions;
 
 protected:
