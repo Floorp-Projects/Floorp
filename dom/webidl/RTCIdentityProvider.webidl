@@ -23,7 +23,7 @@ interface RTCIdentityProviderRegistrar {
   [ChromeOnly, Throws]
   Promise<RTCIdentityAssertionResult>
   generateAssertion(DOMString contents, DOMString origin,
-                    optional DOMString usernameHint);
+                    optional RTCIdentityProviderOptions options);
   /* Forward to idp.validateAssertion() */
   [ChromeOnly, Throws]
   Promise<RTCIdentityValidationResult>
@@ -37,7 +37,8 @@ dictionary RTCIdentityProvider {
 
 callback GenerateAssertionCallback =
   Promise<RTCIdentityAssertionResult>
-    (DOMString contents, DOMString origin, optional DOMString usernameHint);
+    (DOMString contents, DOMString origin,
+     RTCIdentityProviderOptions options);
 callback ValidateAssertionCallback =
   Promise<RTCIdentityValidationResult> (DOMString assertion, DOMString origin);
 
@@ -55,3 +56,10 @@ dictionary RTCIdentityValidationResult {
   required DOMString identity;
   required DOMString contents;
 };
+
+dictionary RTCIdentityProviderOptions {
+  DOMString protocol = "default";
+  DOMString usernameHint;
+  DOMString peerIdentity;
+};
+
