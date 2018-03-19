@@ -42,7 +42,6 @@
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsError.h"
-#include "nsIDOMProcessingInstruction.h"
 #include "nsNodeUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIHTMLDocument.h"
@@ -217,7 +216,7 @@ nsXMLContentSink::MaybePrettyPrint()
 }
 
 static void
-CheckXSLTParamPI(nsIDOMProcessingInstruction* aPi,
+CheckXSLTParamPI(ProcessingInstruction* aPi,
                  nsIDocumentTransformer* aProcessor,
                  nsIDocument* aDocument)
 {
@@ -281,8 +280,7 @@ nsXMLContentSink::DidBuildModel(bool aTerminated)
     for (nsIContent* child = mDocument->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
-      if (child->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
-        nsCOMPtr<nsIDOMProcessingInstruction> pi = do_QueryInterface(child);
+      if (auto pi = ProcessingInstruction::FromContent(child)) {
         CheckXSLTParamPI(pi, mXSLTProcessor, mDocument);
       }
       else if (child->IsElement()) {
