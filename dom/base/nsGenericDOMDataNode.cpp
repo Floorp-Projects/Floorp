@@ -718,8 +718,7 @@ nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
 // Implementation of the nsIDOMText interface
 
 nsresult
-nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn,
-                                bool aCloneAfterOriginal)
+nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn)
 {
   *aReturn = nullptr;
   nsresult rv = NS_OK;
@@ -730,8 +729,8 @@ nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn,
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  uint32_t cutStartOffset = aCloneAfterOriginal ? aOffset : 0;
-  uint32_t cutLength = aCloneAfterOriginal ? length - aOffset : aOffset;
+  uint32_t cutStartOffset = aOffset;
+  uint32_t cutLength = length - aOffset;
   rv = SubstringData(cutStartOffset, cutLength, cutText);
   if (NS_FAILED(rv)) {
     return rv;
@@ -755,17 +754,14 @@ nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn,
     CharacterDataChangeInfo::Details::eSplit, newContent
   };
   rv = SetTextInternal(cutStartOffset, cutLength, nullptr, 0, true,
-                       aCloneAfterOriginal ? &details : nullptr);
+                       &details);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsCOMPtr<nsINode> parent = GetParentNode();
   if (parent) {
-    nsCOMPtr<nsIContent> beforeNode = this;
-    if (aCloneAfterOriginal) {
-      beforeNode = beforeNode->GetNextSibling();
-    }
+    nsCOMPtr<nsIContent> beforeNode = GetNextSibling();
     parent->InsertChildBefore(newContent, beforeNode, true);
   }
 
