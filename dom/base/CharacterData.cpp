@@ -217,19 +217,19 @@ CharacterData::SubstringData(uint32_t aStart, uint32_t aCount,
 void
 CharacterData::AppendData(const nsAString& aData, ErrorResult& aRv)
 {
-  nsresult rv = SetTextInternal(mText.GetLength(), 0, aData.BeginReading(),
+  InsertData(mText.Length(), aData, aRv);
+}
+
+void
+CharacterData::InsertData(uint32_t aOffset,
+                          const nsAString& aData,
+                          ErrorResult& aRv)
+{
+  nsresult rv = SetTextInternal(aOffset, 0, aData.BeginReading(),
                                 aData.Length(), true);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
-}
-
-nsresult
-CharacterData::InsertData(uint32_t aOffset,
-                          const nsAString& aData)
-{
-  return SetTextInternal(aOffset, 0, aData.BeginReading(),
-                         aData.Length(), true);
 }
 
 nsresult
