@@ -26,9 +26,9 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 // Create and configure the HTTP server.
 let testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
-mapFile("/data/test_delay_updates_complete.rdf", testserver);
-mapFile("/data/test_delay_updates_ignore.rdf", testserver);
-mapFile("/data/test_delay_updates_defer.rdf", testserver);
+mapFile("/data/test_delay_updates_complete_legacy.json", testserver);
+mapFile("/data/test_delay_updates_ignore_legacy.json", testserver);
+mapFile("/data/test_delay_updates_defer_legacy.json", testserver);
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 
 function createIgnoreAddon() {
@@ -37,7 +37,7 @@ function createIgnoreAddon() {
     version: "1.0",
     bootstrap: true,
     unpack: true,
-    updateURL: `http://localhost:${gPort}/data/test_delay_updates_ignore.rdf`,
+    updateURL: `http://localhost:${gPort}/data/test_delay_updates_ignore_legacy.json`,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -58,7 +58,7 @@ function createCompleteAddon() {
     version: "1.0",
     bootstrap: true,
     unpack: true,
-    updateURL: `http://localhost:${gPort}/data/test_delay_updates_complete.rdf`,
+    updateURL: `http://localhost:${gPort}/data/test_delay_updates_complete_legacy.json`,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -79,7 +79,7 @@ function createDeferAddon() {
     version: "1.0",
     bootstrap: true,
     unpack: true,
-    updateURL: `http://localhost:${gPort}/data/test_delay_updates_defer.rdf`,
+    updateURL: `http://localhost:${gPort}/data/test_delay_updates_defer_legacy.json`,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",

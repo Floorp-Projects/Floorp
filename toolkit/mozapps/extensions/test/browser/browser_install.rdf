@@ -1,27 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
-
-  <Description about="urn:mozilla:extension:install1@tests.mozilla.org">
-    <em:updates>
-      <Seq>
-        <li>
-          <Description>
-            <em:version>2.0</em:version>
-            <em:targetApplication>
-              <Description>
-                <em:id>toolkit@mozilla.org</em:id>
-                <em:minVersion>0</em:minVersion>
-                <em:maxVersion>*</em:maxVersion>
-                <em:updateLink>https://example.com/browser/toolkit/mozapps/extensions/test/browser/browser_install1_3.xpi</em:updateLink>
-                <em:updateHash>sha1:4f0f4391914e3e036beca50cbac33958e5269643</em:updateHash>
-              </Description>
-            </em:targetApplication>
-          </Description>
-        </li>
-      </Seq>
-    </em:updates>
-  </Description>
-
-</RDF>
+{
+  "addons": {
+    "install1@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0",
+              "advisory_max_version": "*"
+            }
+          },
+          "version": "2.0",
+          "update_link": "https://example.com/browser/toolkit/mozapps/extensions/test/browser/browser_install1_3.xpi",
+          "update_hash": "sha1:4f0f4391914e3e036beca50cbac33958e5269643"
+        }
+      ]
+    }
+  }
+}

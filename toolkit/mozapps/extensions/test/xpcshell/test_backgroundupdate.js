@@ -15,7 +15,7 @@ const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 // register static files with server and interpolate port numbers in them
-mapFile("/data/test_backgroundupdate.rdf", testserver);
+mapFile("/data/test_backgroundupdate.json", testserver);
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -55,7 +55,7 @@ function run_test_2() {
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:" + gPort + "/data/test_backgroundupdate.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_backgroundupdate.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -67,7 +67,7 @@ function run_test_2() {
   writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:" + gPort + "/data/test_backgroundupdate.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_backgroundupdate.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -92,7 +92,7 @@ function run_test_2() {
 
   // Background update uses a different pref, if set
   Services.prefs.setCharPref("extensions.update.background.url",
-                             "http://localhost:" + gPort + "/data/test_backgroundupdate.rdf");
+                             "http://localhost:" + gPort + "/data/test_backgroundupdate.json");
 
   restartManager();
 

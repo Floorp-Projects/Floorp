@@ -82,19 +82,25 @@ function createInstall(url) {
 
 function serveUpdateRDF(leafName) {
   gServer.registerPathHandler("/update.rdf", function(request, response) {
-    let updateData = {};
-    updateData[ID] = [{
-      version: "2.0",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "4",
-        maxVersion: "6",
-        updateLink: "http://localhost:4444/" + leafName
-      }]
-    }];
-
     response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(createUpdateRDF(updateData));
+    response.write(JSON.stringify({
+      addons: {
+        [ID]: {
+          updates: [
+            {
+              version: "2.0",
+              update_link: "http://localhost:4444/" + leafName,
+              applications: {
+                gecko: {
+                  strict_min_version: "4",
+                  advisory_max_version: "6",
+                },
+              },
+            },
+          ],
+        },
+      },
+    }));
   });
 }
 
