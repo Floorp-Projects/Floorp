@@ -14,7 +14,7 @@
 window.onload = function() {
   const CC = Components.Constructor;
   const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-  const WebSocketServer = require("devtools/server/websocket-server");
+  const WebSocketServer = require("devtools/server/socket/websocket-server");
 
   const ServerSocket = CC("@mozilla.org/network/server-socket;1",
     "nsIServerSocket", "init");
