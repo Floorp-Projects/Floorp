@@ -768,8 +768,8 @@ protected:
                             DeltaDirection aDeltaDirection);
 
   /**
-   * ComputeScrollTarget() returns the scrollable frame which should be
-   * scrolled.
+   * ComputeScrollTargetAndMayAdjustWheelEvent() returns the scrollable frame
+   * which should be scrolled.
    *
    * @param aTargetFrame        The event target of the wheel event.
    * @param aEvent              The handling mouse wheel event.
@@ -777,15 +777,18 @@ protected:
    *                            Callers should use COMPUTE_*.
    * @return                    The scrollable frame which should be scrolled.
    */
-  // These flags are used in ComputeScrollTarget(). Callers should use
-  // COMPUTE_*.
+  // These flags are used in ComputeScrollTargetAndMayAdjustWheelEvent().
+  // Callers should use COMPUTE_*.
   enum
   {
     PREFER_MOUSE_WHEEL_TRANSACTION               = 0x00000001,
     PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS = 0x00000002,
     PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS = 0x00000004,
     START_FROM_PARENT                            = 0x00000008,
-    INCLUDE_PLUGIN_AS_TARGET                     = 0x00000010
+    INCLUDE_PLUGIN_AS_TARGET                     = 0x00000010,
+    // Indicates the wheel scroll event being computed is an auto-dir scroll, so
+    // its delta may be adjusted after being computed.
+    MAY_BE_ADJUSTED_BY_AUTO_DIR                  = 0x00000020,
   };
   enum ComputeScrollTargetOptions
   {
@@ -804,12 +807,22 @@ protected:
     COMPUTE_DEFAULT_ACTION_TARGET                =
       (COMPUTE_DEFAULT_ACTION_TARGET_EXCEPT_PLUGIN |
        INCLUDE_PLUGIN_AS_TARGET),
+    COMPUTE_DEFAULT_ACTION_TARGET_WITH_AUTO_DIR_EXCEPT_PLUGIN =
+      (COMPUTE_DEFAULT_ACTION_TARGET_EXCEPT_PLUGIN |
+       MAY_BE_ADJUSTED_BY_AUTO_DIR),
+    COMPUTE_DEFAULT_ACTION_TARGET_WITH_AUTO_DIR =
+      (COMPUTE_DEFAULT_ACTION_TARGET |
+       MAY_BE_ADJUSTED_BY_AUTO_DIR),
     // Look for the nearest scrollable ancestor which can be scrollable with
     // aEvent.
     COMPUTE_SCROLLABLE_ANCESTOR_ALONG_X_AXIS     =
       (PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS | START_FROM_PARENT),
     COMPUTE_SCROLLABLE_ANCESTOR_ALONG_Y_AXIS     =
-      (PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS | START_FROM_PARENT)
+      (PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS | START_FROM_PARENT),
+    COMPUTE_SCROLLABLE_ANCESTOR_ALONG_X_AXIS_WITH_AUTO_DIR =
+      (COMPUTE_SCROLLABLE_ANCESTOR_ALONG_X_AXIS | MAY_BE_ADJUSTED_BY_AUTO_DIR),
+    COMPUTE_SCROLLABLE_ANCESTOR_ALONG_Y_AXIS_WITH_AUTO_DIR =
+      (COMPUTE_SCROLLABLE_ANCESTOR_ALONG_Y_AXIS | MAY_BE_ADJUSTED_BY_AUTO_DIR),
   };
   static ComputeScrollTargetOptions RemovePluginFromTarget(
                                       ComputeScrollTargetOptions aOptions)
@@ -817,20 +830,52 @@ protected:
     switch (aOptions) {
       case COMPUTE_DEFAULT_ACTION_TARGET:
         return COMPUTE_DEFAULT_ACTION_TARGET_EXCEPT_PLUGIN;
+      case COMPUTE_DEFAULT_ACTION_TARGET_WITH_AUTO_DIR:
+        return COMPUTE_DEFAULT_ACTION_TARGET_WITH_AUTO_DIR_EXCEPT_PLUGIN;
       default:
         MOZ_ASSERT(!(aOptions & INCLUDE_PLUGIN_AS_TARGET));
         return aOptions;
     }
   }
+
+  // Compute the scroll target.
+  // The delta values in the wheel event may be changed if the event is for
+  // auto-dir scrolling. For information on auto-dir,
+  // @see mozilla::WheelDeltaAdjustmentStrategy
+  nsIFrame* ComputeScrollTargetAndMayAdjustWheelEvent(
+              nsIFrame* aTargetFrame,
+              WidgetWheelEvent* aEvent,
+              ComputeScrollTargetOptions aOptions);
+
+  nsIFrame* ComputeScrollTargetAndMayAdjustWheelEvent(
+              nsIFrame* aTargetFrame,
+              double aDirectionX,
+              double aDirectionY,
+              WidgetWheelEvent* aEvent,
+              ComputeScrollTargetOptions aOptions);
+
   nsIFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
                                 WidgetWheelEvent* aEvent,
-                                ComputeScrollTargetOptions aOptions);
+                                ComputeScrollTargetOptions aOptions)
+  {
+    MOZ_ASSERT(!(aOptions & MAY_BE_ADJUSTED_BY_AUTO_DIR),
+               "aEvent may be modified by auto-dir");
+    return ComputeScrollTargetAndMayAdjustWheelEvent(aTargetFrame, aEvent,
+                                                     aOptions);
+  }
 
   nsIFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
                                 double aDirectionX,
                                 double aDirectionY,
                                 WidgetWheelEvent* aEvent,
-                                ComputeScrollTargetOptions aOptions);
+                                ComputeScrollTargetOptions aOptions)
+  {
+    MOZ_ASSERT(!(aOptions & MAY_BE_ADJUSTED_BY_AUTO_DIR),
+               "aEvent may be modified by auto-dir");
+    return ComputeScrollTargetAndMayAdjustWheelEvent(aTargetFrame,
+                                                     aDirectionX, aDirectionY,
+                                                     aEvent, aOptions);
+  }
 
   /**
    * GetScrollAmount() returns the scroll amount in app uints of one line or
@@ -838,7 +883,8 @@ protected:
    * height.  Otherwise, returns line height for both its width and height.
    *
    * @param aScrollableFrame    A frame which will be scrolled by the event.
-   *                            The result of ComputeScrollTarget() is
+   *                            The result of
+   *                            ComputeScrollTargetAndMayAdjustWheelEvent() is
    *                            expected for this value.
    *                            This can be nullptr if there is no scrollable
    *                            frame.  Then, this method uses root frame's
