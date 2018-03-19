@@ -9,6 +9,7 @@ include('../templates.mozbuild')
 DIRS += [
     'actors',
     'performance',
+    'socket',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
@@ -21,7 +22,6 @@ DevToolsModules(
     'content-server.jsm',
     'main.js',
     'service-worker-child.js',
-    'websocket-server.js',
     'worker.js'
 )
 
