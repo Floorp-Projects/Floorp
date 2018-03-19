@@ -232,10 +232,13 @@ CharacterData::InsertData(uint32_t aOffset,
   }
 }
 
-nsresult
-CharacterData::DeleteData(uint32_t aOffset, uint32_t aCount)
+void
+CharacterData::DeleteData(uint32_t aOffset, uint32_t aCount, ErrorResult& aRv)
 {
-  return SetTextInternal(aOffset, aCount, nullptr, 0, true);
+  nsresult rv = SetTextInternal(aOffset, aCount, nullptr, 0, true);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
 
 nsresult
