@@ -8,7 +8,7 @@
 
 /* exported ObjectClient, attachConsole, attachConsoleToTab, attachConsoleToWorker,
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
-   withActiveServiceWorker, Services */
+   withActiveServiceWorker, Services, consoleAPICall */
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {DebuggerServer} = require("devtools/server/main");
@@ -129,9 +129,15 @@ var _attachConsole = async function(
 };
 
 function closeDebugger(state, callback) {
-  state.dbgClient.close().then(callback);
+  const onClose = state.dbgClient.close();
+
   state.dbgClient = null;
   state.client = null;
+
+  if (typeof callback === "function") {
+    onClose.then(callback);
+  }
+  return onClose;
 }
 
 function checkConsoleAPICalls(consoleCalls, expectedConsoleCalls) {
@@ -263,4 +269,18 @@ function withActiveServiceWorker(win, url, scope) {
       });
     });
   });
+}
+
+/**
+ *
+ * @param {DebuggerClient} debuggerClient
+ * @param {Function} consoleCall: A function which calls the consoleAPI, e.g. :
+ *                         `() => top.console.log("test")`.
+ * @returns {Promise} A promise that will be resolved with the packet sent by the server
+ *                    in response to the consoleAPI call.
+ */
+function consoleAPICall(debuggerClient, consoleCall) {
+  const onConsoleAPICall = debuggerClient.addOneTimeListener("consoleAPICall");
+  consoleCall();
+  return onConsoleAPICall;
 }
