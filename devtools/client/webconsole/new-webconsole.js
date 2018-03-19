@@ -16,7 +16,9 @@ const { JSTerm } = require("devtools/client/webconsole/jsterm");
 const { WebConsoleConnectionProxy } = require("devtools/client/webconsole/webconsole-connection-proxy");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
-const system = require("devtools/shared/system");
+
+loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm", true);
+
 const ZoomKeys = require("devtools/client/shared/zoom-keys");
 
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
@@ -240,7 +242,7 @@ NewWebConsoleFrame.prototype = {
                  });
 
     let clearShortcut;
-    if (system.constants.platform === "macosx") {
+    if (AppConstants.platform === "macosx") {
       clearShortcut = l10n.getStr("webconsole.clear.keyOSX");
     } else {
       clearShortcut = l10n.getStr("webconsole.clear.key");
@@ -254,7 +256,7 @@ NewWebConsoleFrame.prototype = {
 
       ZoomKeys.register(this.window);
 
-      if (!system.constants.MOZILLA_OFFICIAL) {
+      if (!AppConstants.MOZILLA_OFFICIAL) {
         // In local builds, inject the "quick restart" shortcut.
         // This script expects to have Services on the global and we haven't yet imported
         // it into the window, so assign it.

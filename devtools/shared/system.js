@@ -293,4 +293,3 @@ function getSetting(name) {
 exports.getSystemInfo = getSystemInfo;
 exports.getSetting = getSetting;
 exports.getScreenDimensions = getScreenDimensions;
-exports.constants = AppConstants;
