@@ -30,6 +30,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentTypeParser.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsError.h"
 #include "nsIDocument.h"
 #include "nsIPermissionManager.h"
@@ -1699,9 +1700,20 @@ MediaRecorder::NotifyOwnerDocumentActivityChanged()
   nsIDocument* doc = window->GetExtantDoc();
   NS_ENSURE_TRUE_VOID(doc);
 
-  LOG(LogLevel::Debug, ("MediaRecorder %p document IsActive %d isVisible %d\n",
-                     this, doc->IsActive(), doc->IsVisible()));
-  if (!doc->IsActive() || !doc->IsVisible()) {
+  bool inFrameSwap = false;
+  if (nsDocShell* docShell = static_cast<nsDocShell*>(doc->GetDocShell())) {
+    inFrameSwap = docShell->InFrameSwap();
+  }
+
+  LOG(LogLevel::Debug, ("MediaRecorder %p NotifyOwnerDocumentActivityChanged "
+                        "IsActive=%d, "
+                        "IsVisible=%d, "
+                        "InFrameSwap=%d",
+                        this,
+                        doc->IsActive(),
+                        doc->IsVisible(),
+                        inFrameSwap));
+  if (!doc->IsActive() || !(inFrameSwap || doc->IsVisible())) {
     // Stop the session.
     ErrorResult result;
     Stop(result);
