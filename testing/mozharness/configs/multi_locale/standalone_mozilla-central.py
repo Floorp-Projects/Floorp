@@ -1,3 +1,4 @@
+
 import os
 # The name of the directory we'll pull our source into.
 BUILD_DIR = "mozilla-central"
