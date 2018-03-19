@@ -24,7 +24,8 @@ function waitForLoginDone() {
 }
 
 function checkLogin(t, name, onLoginNeeded) {
-  t.pcLocal.setIdentityProvider('example.com', 'idp.js#login:' + name);
+  t.pcLocal.setIdentityProvider('example.com',
+                                { protocol: 'idp.js#login:' + name });
   return t.pcLocal._pc.getIdentityAssertion()
     .then(a => ok(false, 'should request login'),
           e => {
