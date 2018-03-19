@@ -14,7 +14,7 @@ const InspectorUtils = require("InspectorUtils");
 
 const {pageStyleSpec, styleRuleSpec, ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 
-loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
+loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "SharedCssLogic", "devtools/shared/inspector/css-logic");
 loader.lazyRequireGetter(this, "getDefinedGeometryProperties",
   "devtools/server/actors/highlighters/geometry-editor", true);
