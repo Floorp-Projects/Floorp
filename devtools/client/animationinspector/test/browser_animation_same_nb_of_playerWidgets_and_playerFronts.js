@@ -9,13 +9,13 @@ requestLongerTimeout(2);
 // Check that when playerFronts are updated, the same number of playerWidgets
 // are created in the panel.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel, controller} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {inspector, panel, controller} = await openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;
 
   info("Selecting the test animated node again");
-  yield selectNodeAndWaitForAnimations(".multi", inspector);
+  await selectNodeAndWaitForAnimations(".multi", inspector);
 
   is(controller.animationPlayers.length,
     timeline.animationsEl.querySelectorAll(".animation").length,

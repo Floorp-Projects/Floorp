@@ -8,22 +8,22 @@ requestLongerTimeout(2);
 
 // Test that the panel only refreshes when it is visible in the sidebar.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {inspector, panel} = yield openAnimationInspector();
-  yield testRefresh(inspector, panel);
+  let {inspector, panel} = await openAnimationInspector();
+  await testRefresh(inspector, panel);
 });
 
-function* testRefresh(inspector, panel) {
+async function testRefresh(inspector, panel) {
   info("Select a non animated node");
-  yield selectNodeAndWaitForAnimations(".still", inspector);
+  await selectNodeAndWaitForAnimations(".still", inspector);
 
   info("Switch to the rule-view panel");
   inspector.sidebar.select("ruleview");
 
   info("Select the animated node now");
-  yield selectNode(".animated", inspector);
+  await selectNode(".animated", inspector);
 
   assertAnimationsDisplayed(panel, 0,
     "The panel doesn't show the animation data while inactive");
@@ -31,8 +31,8 @@ function* testRefresh(inspector, panel) {
   info("Switch to the animation panel");
   let onRendered = waitForAnimationTimelineRendering(panel);
   inspector.sidebar.select("animationinspector");
-  yield panel.once(panel.UI_UPDATED_EVENT);
-  yield onRendered;
+  await panel.once(panel.UI_UPDATED_EVENT);
+  await onRendered;
 
   assertAnimationsDisplayed(panel, 1,
     "The panel shows the animation data after selecting it");
@@ -41,14 +41,14 @@ function* testRefresh(inspector, panel) {
   inspector.sidebar.select("ruleview");
 
   info("Select the non animated node again");
-  yield selectNode(".still", inspector);
+  await selectNode(".still", inspector);
 
   assertAnimationsDisplayed(panel, 1,
     "The panel still shows the previous animation data since it is inactive");
 
   info("Switch to the animation panel again");
   inspector.sidebar.select("animationinspector");
-  yield panel.once(panel.UI_UPDATED_EVENT);
+  await panel.once(panel.UI_UPDATED_EVENT);
 
   assertAnimationsDisplayed(panel, 0,
     "The panel is now empty after refreshing");

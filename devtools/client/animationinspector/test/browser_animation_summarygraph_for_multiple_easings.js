@@ -143,9 +143,9 @@ const TEST_CASES = {
   },
 };
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_multiple_easings.html");
-  const { panel } = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_multiple_easings.html");
+  const { panel } = await openAnimationInspector();
   getAnimationTimeBlocks(panel).forEach(timeBlock => {
     const state = timeBlock.animation.state;
     const testcase = TEST_CASES[state.name];
