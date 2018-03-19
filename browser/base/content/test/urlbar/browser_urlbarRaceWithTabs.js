@@ -50,8 +50,8 @@ add_task(async function hitEnterLoadInRightTab() {
   is(newTab.linkedBrowser.currentURI.spec, "about:newtab", "New tab still has about:newtab");
   is(oldTab.linkedBrowser.currentURI.spec, kURL, "Old tab loaded URL");
   info("Closing new tab");
-  await BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
   info("Closing old tab");
-  await BrowserTestUtils.removeTab(oldTab);
+  BrowserTestUtils.removeTab(oldTab);
   info("Finished");
 });

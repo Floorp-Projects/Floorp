@@ -131,7 +131,7 @@ async function test_cookie_cleared() {
     tabs[userContextId] = await openTabInUserContext(TEST_URL + "file_reflect_cookie_into_title.html?" + value, userContextId);
 
     // Close this tab.
-    await BrowserTestUtils.removeTab(tabs[userContextId].tab);
+    BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
   // Check that cookies have been set properly.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
@@ -199,7 +199,7 @@ async function test_image_cache_cleared() {
     // Open our tab in the given user context to cache image.
     tabs[userContextId] = await openTabInUserContext("http://localhost:" + gHttpServer.identity.primaryPort + "/loadImage.html",
                                                       userContextId);
-    await BrowserTestUtils.removeTab(tabs[userContextId].tab);
+    BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 
   let expectedHits = USER_CONTEXTS.length;
@@ -218,7 +218,7 @@ async function test_image_cache_cleared() {
     // Open our tab in the given user context to cache image.
     tabs[userContextId] = await openTabInUserContext("http://localhost:" + gHttpServer.identity.primaryPort + "/loadImage.html",
                                                       userContextId);
-    await BrowserTestUtils.removeTab(tabs[userContextId].tab);
+    BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 
   // Check that image cache was cleared and the server gets another two hits.
@@ -266,7 +266,7 @@ async function test_storage_cleared() {
     });
 
     // Close this tab.
-    await BrowserTestUtils.removeTab(tabInfo.tab);
+    BrowserTestUtils.removeTab(tabInfo.tab);
   }
 
   // Forget the site.
@@ -303,7 +303,7 @@ async function test_storage_cleared() {
     });
 
     // Close the tab.
-    await BrowserTestUtils.removeTab(tabInfo.tab);
+    BrowserTestUtils.removeTab(tabInfo.tab);
   }
 }
 

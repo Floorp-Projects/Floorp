@@ -39,7 +39,7 @@ async function runTest(input, url) {
   ok(data.inputStream instanceof Ci.nsIInputStream, "The original object was an inputStream");
   ok(dataBack.inputStream instanceof Ci.nsIInputStream, "We have an inputStream back from the content.");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function test() {

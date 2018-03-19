@@ -89,7 +89,7 @@ add_task(async function() {
 
   ok(!tab.linkedBrowser.userTypedValue, "No userTypedValue should be on the browser.");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   gBrowser.removeProgressListener(wpl);
   TestAboutPage.unregister();
 });

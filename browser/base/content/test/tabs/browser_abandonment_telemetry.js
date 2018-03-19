@@ -299,7 +299,7 @@ add_task(async function test_probes() {
   // middle of loading some resources.
   newTab.setAttribute("busy", true);
 
-  await BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
   let snapshot = histogram.snapshot();
   assertOnlyOneTypeSet(snapshot, "tabClosed");
 });

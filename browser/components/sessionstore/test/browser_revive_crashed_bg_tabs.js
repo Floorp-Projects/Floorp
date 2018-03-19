@@ -51,6 +51,6 @@ add_task(async function test_revive_bg_tabs_on_demand() {
 
   ok(browser2.isRemoteBrowser, "Restored browser should be remote");
 
-  await BrowserTestUtils.removeTab(newTab1);
-  await BrowserTestUtils.removeTab(newTab2);
+  BrowserTestUtils.removeTab(newTab1);
+  BrowserTestUtils.removeTab(newTab2);
 });

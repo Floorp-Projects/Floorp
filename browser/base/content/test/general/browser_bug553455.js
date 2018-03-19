@@ -257,7 +257,7 @@ async function test_disabledInstall() {
     ok(false, "xpinstall.enabled should be set");
   }
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   let installs = await getInstalls();
   is(installs.length, 0, "Shouldn't be any pending installs");
 },
@@ -513,7 +513,8 @@ async function test_sequential() {
   let closePromise = waitForNotificationClose();
   cancelInstallDialog(installDialog);
   await closePromise;
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 },
 
 async function test_allUnverified() {
@@ -940,7 +941,7 @@ async function test_cancel() {
   is(installs.length, 0, "Should be no pending install");
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 },
 
 async function test_failedSecurity() {

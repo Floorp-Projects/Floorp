@@ -42,7 +42,7 @@ add_task(async function test_animate() {
   await extension.awaitFinish("contentScriptAnimate");
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_KeyframeEffect() {
@@ -91,5 +91,5 @@ add_task(async function test_KeyframeEffect() {
   await extension.awaitFinish("contentScriptKeyframeEffect");
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -62,7 +62,7 @@ add_task(async function test_multiple_redirect() {
   await check_uri(INTERMEDIATE_URI_2, redirectSourceFrecency, 1);
   await check_uri(TARGET_URI, redirectTargetFrecency, 0);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function redirect_check_second_typed_visit() {
@@ -96,7 +96,7 @@ add_task(async function redirect_check_second_typed_visit() {
   await check_uri(INTERMEDIATE_URI_2, redirectSourceFrecency, 1);
   await check_uri(TARGET_URI, redirectTargetFrecency, 0);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 
@@ -129,5 +129,5 @@ add_task(async function redirect_check_subsequent_link_visit() {
   await check_uri(INTERMEDIATE_URI_2, redirectSourceFrecency, 1);
   await check_uri(TARGET_URI, redirectTargetFrecency, 0);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

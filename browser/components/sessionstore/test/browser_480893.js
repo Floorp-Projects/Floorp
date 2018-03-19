@@ -43,5 +43,5 @@ add_task(async function() {
 
   is(browser.currentURI.spec, homepage, "loaded page is the homepage");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -29,5 +29,5 @@ add_task(async function test_show_click_auto_complete_tour_in_notification() {
   let targetTourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   is("onboarding-tour-library", targetTourId, "correctly show the click-autocomplete-tour in notification");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

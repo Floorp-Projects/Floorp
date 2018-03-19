@@ -58,6 +58,6 @@ add_task(async function openKeywordBookmarkWithWindowOpen() {
   }
   is(browser.currentURI && browser.currentURI.spec, TEST_URL, "Tab with expected URL loaded.");
   info("Waiting to remove tab");
-  await Promise.all([ BrowserTestUtils.removeTab(tab),
-                      BrowserTestUtils.removeTab(moztab) ]);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(moztab);
 });

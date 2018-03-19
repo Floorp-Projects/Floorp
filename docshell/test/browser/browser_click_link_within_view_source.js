@@ -55,6 +55,6 @@ add_task(async function test_click_link_within_view_source() {
     ok(tabSpec.startsWith("view-source:file://") && tabSpec.endsWith(DUMMY_FILE),
        "loading view-source of html succeeded");
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });

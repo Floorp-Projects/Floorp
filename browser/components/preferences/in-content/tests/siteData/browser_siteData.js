@@ -14,13 +14,13 @@ function getPersistentStoragePermStatus(origin) {
 add_task(async function() {
   // Open a test site which would save into appcache
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_OFFLINE_URL);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Open a test site which would save into quota manager
   BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
   await BrowserTestUtils.waitForContentEvent(
     gBrowser.selectedBrowser, "test-indexedDB-done", false, null, true);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -49,7 +49,7 @@ add_task(async function() {
   });
 
   await SiteDataManager.removeAll();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }).skip(); // Bug 1414751
 
 // Test buttons are disabled and loading message shown while updating sites
@@ -95,7 +95,7 @@ add_task(async function() {
                           is(actual, expected, "Should show the right total site data size");
                        });
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test clearing service wroker through the settings panel
@@ -128,7 +128,7 @@ add_task(async function() {
   await updatePromise;
   await promiseServiceWorkersCleared();
   await SiteDataManager.removeAll();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test showing and removing sites with cookies.
@@ -236,5 +236,5 @@ add_task(async function() {
     is(siteItems.length, 0, "Should list no sites with cookies");
   });
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

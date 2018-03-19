@@ -77,5 +77,5 @@ add_task(async function() {
     }
   }
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

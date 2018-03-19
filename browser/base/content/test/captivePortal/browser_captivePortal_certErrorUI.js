@@ -78,5 +78,5 @@ add_task(async function checkCaptivePortalCertErrorUI() {
        "Captive portal error page UI is not visible.");
   });
 
-  await BrowserTestUtils.removeTab(errorTab);
+  BrowserTestUtils.removeTab(errorTab);
 });

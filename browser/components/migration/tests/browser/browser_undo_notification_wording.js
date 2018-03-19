@@ -45,7 +45,7 @@ add_task(async function autoMigrationUndoNotificationShows() {
       }
     }
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 });
 

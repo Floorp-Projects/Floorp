@@ -78,9 +78,9 @@ add_task(async function cross_tabs_audio_competing() {
                           play_audio_from_invisible_tab);
 
   info("- remove tabs -");
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
-  await BrowserTestUtils.removeTab(tab3);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab3);
 });
 
 add_task(async function within_one_tab_audio_competing() {
@@ -95,6 +95,6 @@ add_task(async function within_one_tab_audio_competing() {
                           play_non_autoplay_audio);
 
   info("- remove tab -");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 

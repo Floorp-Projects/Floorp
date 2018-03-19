@@ -287,7 +287,7 @@ add_task(async function test_close_tab() {
       } else {
         info(`Waiting for reload`);
         await promiseReloaded;
-        await BrowserTestUtils.removeTab(tab);
+        BrowserTestUtils.removeTab(tab);
       }
     }
   }
@@ -300,7 +300,7 @@ add_task(async function cleanup() {
 
   info("Closing tabs");
   for (let tab of gBrowser.tabs) {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 
   info("Done");

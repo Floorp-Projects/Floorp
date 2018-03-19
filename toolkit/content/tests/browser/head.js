@@ -211,7 +211,7 @@ class DateTimeTestHelper {
       this.panel.closePicker();
       await pickerClosePromise;
     }
-    await BrowserTestUtils.removeTab(this.tab);
+    BrowserTestUtils.removeTab(this.tab);
     this.tab = null;
   }
 

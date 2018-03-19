@@ -16,7 +16,7 @@ add_task(async function init() {
 
   await disableNonReleaseActions();
   registerCleanupFunction(async () => {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });
 
@@ -1317,7 +1317,7 @@ add_task(async function contextMenu() {
   EventUtils.synthesizeMouseAtCenter(menuItems[2], {});
   let values = await Promise.all([aboutAddonsPromise, contextMenuPromise]);
   let aboutAddonsTab = values[0];
-  await BrowserTestUtils.removeTab(aboutAddonsTab);
+  BrowserTestUtils.removeTab(aboutAddonsTab);
 
   // Open the context menu on the action's urlbar button.
   let urlbarButton = BrowserPageActions.urlbarButtonNodeForActionID(action.id);
@@ -1403,7 +1403,7 @@ add_task(async function contextMenu() {
   EventUtils.synthesizeMouseAtCenter(menuItems[2], {});
   values = await Promise.all([aboutAddonsPromise, contextMenuPromise]);
   aboutAddonsTab = values[0];
-  await BrowserTestUtils.removeTab(aboutAddonsTab);
+  BrowserTestUtils.removeTab(aboutAddonsTab);
 
   // Done, clean up.
   action.remove();

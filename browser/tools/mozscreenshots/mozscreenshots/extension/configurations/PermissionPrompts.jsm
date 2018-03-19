@@ -123,7 +123,7 @@ async function closeLastTab() {
   if (!lastTab) {
     return;
   }
-  await BrowserTestUtils.removeTab(lastTab);
+  BrowserTestUtils.removeTab(lastTab);
   lastTab = null;
 }
 

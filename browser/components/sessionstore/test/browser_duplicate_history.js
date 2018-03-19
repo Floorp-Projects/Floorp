@@ -17,6 +17,7 @@ add_task(async function() {
 
     isnot(before.history.entries, after.history.entries,
           "The entry objects should not be shared");
-    await BrowserTestUtils.removeTab(newTab);
+
+    BrowserTestUtils.removeTab(newTab);
   });
 });

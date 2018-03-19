@@ -121,7 +121,7 @@ async function runTest(options) {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function testCaptureVisibleTab() {

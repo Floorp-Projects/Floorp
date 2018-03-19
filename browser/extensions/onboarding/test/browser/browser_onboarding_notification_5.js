@@ -21,5 +21,5 @@ add_task(async function test_finish_tour_notifcations_after_total_max_life_time(
   await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
   await expectedPrefUpdates;
   await assertWatermarkIconDisplayed(tab.linkedBrowser);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -82,7 +82,7 @@ add_task(async function testBrowserActionClickCanceled() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function testBrowserActionDisabled() {

@@ -89,7 +89,7 @@ add_task(async function test_on_created_navigation_target_from_context_menu() {
     },
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
 });
@@ -152,7 +152,7 @@ add_task(async function test_on_created_navigation_target_from_context_menu_subf
     },
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
 });

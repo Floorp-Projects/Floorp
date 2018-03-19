@@ -25,7 +25,7 @@ add_task(async function test_remove_all_tour_notifications_through_close_button(
 
   let tourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   ok(!tourId, "Should not prompt tour notifications any more after closing all notifcations.");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   async function closeTourNotificationsOneByOne() {
     for (let i = 0; i < tourIds.length; ++i) {
@@ -64,7 +64,7 @@ add_task(async function test_remove_all_tour_notifications_through_action_button
 
   let tourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   ok(!tourId, "Should not prompt tour notifcations any more after taking actions on all notifcations.");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   async function clickTourNotificationActionButtonsOneByOne() {
     for (let i = 0; i < tourIds.length; ++i) {
