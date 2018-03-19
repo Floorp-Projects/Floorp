@@ -235,7 +235,6 @@ var FormAssistant = {
   },
 
   /**
-   * (Copied from mobile/xul/chrome/content/forms.js)
    * This function is similar to getListSuggestions from
    * components/satchel/src/nsInputListAutoComplete.js but sadly this one is
    * used by the autocomplete.xml binding which is not in used in fennec
