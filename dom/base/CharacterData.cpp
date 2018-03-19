@@ -221,11 +221,14 @@ CharacterData::SubstringData(uint32_t aStart, uint32_t aCount,
 
 //----------------------------------------------------------------------
 
-nsresult
-CharacterData::AppendData(const nsAString& aData)
+void
+CharacterData::AppendData(const nsAString& aData, ErrorResult& aRv)
 {
-  return SetTextInternal(mText.GetLength(), 0, aData.BeginReading(),
-                         aData.Length(), true);
+  nsresult rv = SetTextInternal(mText.GetLength(), 0, aData.BeginReading(),
+                                aData.Length(), true);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
 
 nsresult
