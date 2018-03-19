@@ -628,8 +628,10 @@ waitForAllPaints(() => {
     await animation.ready;
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
-    var markers = await observeStyling(20);
-    is(markers.length, 20,
+    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 20);
+
+    var markers = await observeStyling(expectedRestyleCount);
+    is(markers.length, expectedRestyleCount,
        'Finite transform animation in out-of-view element should never be ' +
        'throttled');
 
