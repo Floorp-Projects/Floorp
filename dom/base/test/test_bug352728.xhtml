@@ -75,7 +75,7 @@ function testComment(aText)
     var types = [ Comment, CharacterData, Node ];
     checkTypes(comment, "comment", types);
 
-    var interfaces = [ "nsIDOMComment", "nsIDOMCharacterData", "nsIDOMNode",
+    var interfaces = [ "nsIDOMCharacterData", "nsIDOMNode",
                        "nsIDOMEventTarget" ];
     checkInterfaces(comment, "comment", interfaces);
 

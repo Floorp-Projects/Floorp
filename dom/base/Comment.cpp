@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementations of DOM Core's nsIDOMComment node.
+ * Implementations of DOM Core's Comment node.
  */
 
 #include "nsCOMPtr.h"
@@ -24,7 +24,7 @@ Comment::~Comment()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(Comment, nsGenericDOMDataNode, nsIDOMNode,
-                            nsIDOMCharacterData, nsIDOMComment)
+                            nsIDOMCharacterData)
 
 bool
 Comment::IsNodeOfType(uint32_t aFlags) const

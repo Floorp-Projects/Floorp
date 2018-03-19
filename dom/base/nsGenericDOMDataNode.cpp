@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Base class for DOM Core's nsIDOMComment, DocumentType, Text,
+ * Base class for DOM Core's Comment, DocumentType, Text,
  * CDATASection and nsIDOMProcessingInstruction nodes.
  */
 

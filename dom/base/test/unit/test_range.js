@@ -454,7 +454,8 @@ function do_miscellaneous_tests(doc) {
   baseRange.setEnd(doc.firstChild, 2);
   var frag = baseRange.extractContents();
   Assert.equal(frag.childNodes.length, 1);
-  Assert.ok(frag.firstChild instanceof Ci.nsIDOMComment);
+  Assert.ok(ChromeUtils.getClassName(frag.firstChild) == "Comment");
+  Assert.equal(frag.firstChild.nodeType, frag.COMMENT_NODE);
   Assert.equal(frag.firstChild.nodeValue, "f");
 
   /* smaug also requested attribute tests.  Sadly, those are not yet supported
