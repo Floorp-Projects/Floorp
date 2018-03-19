@@ -432,10 +432,8 @@ ResourceReader::OnWalkAttribute(nsIDOMNode* aNode,
 static nsresult
 GetXMLStyleSheetLink(dom::ProcessingInstruction *aPI, nsAString &aHref)
 {
-    nsresult rv;
     nsAutoString data;
-    rv = aPI->GetData(data);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    aPI->GetData(data);
 
     nsContentUtils::GetPseudoAttributeValue(data, nsGkAtoms::href, aHref);
     return NS_OK;
@@ -786,11 +784,9 @@ PersistNodeFixup::FixupXMLStyleSheetLink(dom::ProcessingInstruction* aPI,
                                          const nsAString& aHref)
 {
     NS_ENSURE_ARG_POINTER(aPI);
-    nsresult rv = NS_OK;
 
     nsAutoString data;
-    rv = aPI->GetData(data);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    aPI->GetData(data);
 
     nsAutoString href;
     nsContentUtils::GetPseudoAttributeValue(data,
@@ -839,10 +835,10 @@ PersistNodeFixup::FixupXMLStyleSheetLink(dom::ProcessingInstruction* aPI,
         if (!alternate.IsEmpty()) {
             AppendXMLAttr(NS_LITERAL_STRING("alternate"), alternate, newData);
         }
-        aPI->SetData(newData);
+        aPI->SetData(newData, IgnoreErrors());
     }
 
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

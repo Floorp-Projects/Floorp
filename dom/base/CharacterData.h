@@ -94,8 +94,6 @@ public:
                                     ErrorResult& aError) override;
 
   // Implementation for nsIDOMCharacterData
-  nsresult GetData(nsAString& aData) const;
-  nsresult SetData(const nsAString& aData);
   nsresult GetLength(uint32_t* aLength);
   nsresult SubstringData(uint32_t aOffset, uint32_t aCount,
                          nsAString& aReturn);
@@ -181,11 +179,8 @@ public:
   }
 
   // WebIDL API
-  // Our XPCOM GetData is just fine for WebIDL
-  virtual void SetData(const nsAString& aData, ErrorResult& rv)
-  {
-    rv = SetData(aData);
-  }
+  void GetData(nsAString& aData) const;
+  virtual void SetData(const nsAString& aData, ErrorResult& rv);
   // nsINode::Length() returns the right thing for our length attribute
   void SubstringData(uint32_t aStart, uint32_t aCount, nsAString& aReturn,
                      ErrorResult& rv);
