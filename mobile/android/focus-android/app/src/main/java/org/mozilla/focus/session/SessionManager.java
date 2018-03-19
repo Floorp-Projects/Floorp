@@ -17,6 +17,7 @@ import org.mozilla.focus.architecture.NonNullMutableLiveData;
 import org.mozilla.focus.customtabs.CustomTabConfig;
 import org.mozilla.focus.shortcut.HomeScreen;
 import org.mozilla.focus.utils.UrlUtils;
+import org.mozilla.focus.utils.WebURLFinder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,16 +94,17 @@ public class SessionManager {
                 return;
             }
 
-            final boolean isSearch = !UrlUtils.isUrl(dataString);
+            final boolean isURL = UrlUtils.isUrl(dataString);
 
-            final String url = isSearch
-                    ? UrlUtils.createSearchUrl(context, dataString)
-                    : dataString;
-
-            if (isSearch) {
-                createSearchSession(Source.SHARE, url, dataString);
+            if (!isURL) {
+                final String bestURL = new WebURLFinder(dataString).bestWebURL();
+                if (!TextUtils.isEmpty(bestURL)) {
+                    createSession(Source.SHARE, bestURL);
+                } else {
+                    createSearchSession(Source.SHARE, UrlUtils.createSearchUrl(context, dataString), dataString);
+                }
             } else {
-                createSession(Source.SHARE, url);
+                createSession(Source.SHARE, dataString);
             }
         }
     }
