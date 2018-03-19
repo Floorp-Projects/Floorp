@@ -5,6 +5,7 @@
 
 #include "FileMediaResource.h"
 
+#include "mozilla/AbstractThread.h"
 #include "nsContentUtils.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsIFileChannel.h"
