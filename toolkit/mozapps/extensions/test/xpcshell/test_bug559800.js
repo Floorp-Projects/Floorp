@@ -20,7 +20,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",

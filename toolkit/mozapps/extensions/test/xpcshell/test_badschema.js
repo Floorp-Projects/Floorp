@@ -11,7 +11,7 @@ testserver.start(-1);
 gPort = testserver.identity.primaryPort;
 
 // register static files with server and interpolate port numbers in them
-mapFile("/data/test_corrupt.rdf", testserver);
+mapFile("/data/test_corrupt.json", testserver);
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
@@ -45,7 +45,7 @@ var addon3 = {
   id: "addon3@tests.mozilla.org",
   version: "1.0",
   name: "Test 3",
-  updateURL: "http://localhost:" + gPort + "/data/test_corrupt.rdf",
+  updateURL: "http://localhost:" + gPort + "/data/test_corrupt.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -58,7 +58,7 @@ var addon4 = {
   id: "addon4@tests.mozilla.org",
   version: "1.0",
   name: "Test 4",
-  updateURL: "http://localhost:" + gPort + "/data/test_corrupt.rdf",
+  updateURL: "http://localhost:" + gPort + "/data/test_corrupt.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
