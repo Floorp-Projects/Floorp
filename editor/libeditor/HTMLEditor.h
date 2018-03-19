@@ -21,7 +21,6 @@
 #include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsIDocumentObserver.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
@@ -39,6 +38,7 @@ class nsDocumentFragment;
 class nsITransferable;
 class nsIClipboard;
 class nsIDOMDocument;
+class nsIDOMElement;
 class nsIDOMMouseEvent;
 class nsILinkHandler;
 class nsTableWrapperFrame;
@@ -1332,7 +1332,7 @@ protected:
   void HideGrabber();
 
   ManualNACPtr CreateGrabber(nsIContent& aParentContent);
-  nsresult StartMoving(nsIDOMElement* aHandle);
+  nsresult StartMoving();
   nsresult SetFinalPosition(int32_t aX, int32_t aY);
   void AddPositioningOffset(int32_t& aX, int32_t& aY);
   void SnapToGrid(int32_t& newX, int32_t& newY);
