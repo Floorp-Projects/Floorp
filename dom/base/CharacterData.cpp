@@ -184,13 +184,6 @@ CharacterData::SetData(const nsAString& aData, ErrorResult& aRv)
   }
 }
 
-nsresult
-CharacterData::GetLength(uint32_t* aLength)
-{
-  *aLength = mText.GetLength();
-  return NS_OK;
-}
-
 void
 CharacterData::SubstringData(uint32_t aStart, uint32_t aCount,
                              nsAString& aReturn, ErrorResult& rv)

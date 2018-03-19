@@ -2334,8 +2334,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
         {
           // Delete or extract everything after startOffset.
 
-          rv = charData->GetLength(&dataLength);
-          NS_ENSURE_SUCCESS(rv, rv);
+          dataLength = charData->Length();
 
           if (dataLength >= startOffset) {
             if (retval) {
@@ -2728,20 +2727,13 @@ nsRange::CloneContents(ErrorResult& aRv)
     // XXX_kin: We need to also handle ProcessingInstruction
     // XXX_kin: according to the spec.
 
-    nsCOMPtr<nsIDOMCharacterData> charData(do_QueryInterface(clone));
-
-    if (charData)
+    if (auto charData = CharacterData::FromContent(clone))
     {
       if (node == mEnd.Container()) {
         // We only need the data before mEndOffset, so get rid of any
         // data after it.
 
-        uint32_t dataLength = 0;
-        aRv = charData->GetLength(&dataLength);
-        if (aRv.Failed()) {
-          return nullptr;
-        }
-
+        uint32_t dataLength = charData->Length();
         if (dataLength > (uint32_t)mEnd.Offset())
         {
           aRv = charData->DeleteData(mEnd.Offset(), dataLength - mEnd.Offset());
