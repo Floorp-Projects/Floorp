@@ -53,9 +53,9 @@ fuzzy-if(skiaContent,1,580) == anim-css-fill-3-from-by-rgb-ident.svg    anim-css
 # clamp *final presentation values*.
 # (Reference: SVG 1.1 Appendix F.4)
 == anim-css-fill-overflow-1-by.svg       anim-css-fill-overflow-1-ref.svg
-fails-if(!stylo) == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg # bug 515919
-fails-if(!stylo) == anim-css-stopcolor-overflow-1-from-by.svg anim-css-stopcolor-overflow-1-ref.svg # bug 515919
-fails-if(!stylo) == anim-css-floodcolor-overflow-1-from-by.svg anim-css-floodcolor-overflow-1-ref.svg # bug 515919
+== anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg # bug 515919
+== anim-css-stopcolor-overflow-1-from-by.svg anim-css-stopcolor-overflow-1-ref.svg # bug 515919
+== anim-css-floodcolor-overflow-1-from-by.svg anim-css-floodcolor-overflow-1-ref.svg # bug 515919
 
 # 'fill-opacity' property
 fuzzy-if(skiaContent,1,885) == anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg
