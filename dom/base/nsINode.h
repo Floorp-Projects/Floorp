@@ -499,6 +499,16 @@ public:
     return const_cast<nsINode*>(this)->AsContent();
   }
 
+  /*
+   * Return whether the node is a Text node (which might be an actual
+   * textnode, or might be a CDATA section).
+   */
+  bool IsText() const
+  {
+    uint32_t nodeType = NodeType();
+    return nodeType == TEXT_NODE || nodeType == CDATA_SECTION_NODE;
+  }
+
   /**
    * Return this node as Text if it is one, otherwise null.  This is defined
    * inline in Text.h.
