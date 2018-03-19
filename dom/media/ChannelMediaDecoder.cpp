@@ -10,6 +10,7 @@
 #include "MediaFormatReader.h"
 #include "BaseMediaResource.h"
 #include "MediaShutdownManager.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 
@@ -533,7 +534,7 @@ ChannelMediaDecoder::ShouldThrottleDownload(const MediaStatistics& aStats)
 
   int64_t length = aStats.mTotalBytes;
   if (length > 0 &&
-      length <= int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
+      length <= int64_t(StaticPrefs::MediaMemoryCacheMaxSize()) * 1024) {
     // Don't throttle the download of small resources. This is to speed
     // up seeking, as seeks into unbuffered ranges would require starting
     // up a new HTTP transaction, which adds latency.

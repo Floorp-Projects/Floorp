@@ -6,11 +6,11 @@
 
 #include "MP4Decoder.h"
 #include "MediaContainerType.h"
-#include "MediaPrefs.h"
 #include "MP4Demuxer.h"
 #include "nsMimeTypes.h"
 #include "VideoUtils.h"
 #include "PDMFactory.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 
@@ -168,7 +168,7 @@ MP4Decoder::IsAAC(const nsACString& aMimeType)
 bool
 MP4Decoder::IsEnabled()
 {
-  return MediaPrefs::MP4Enabled();
+  return StaticPrefs::mediaMp4Enabled();
 }
 
 } // namespace mozilla

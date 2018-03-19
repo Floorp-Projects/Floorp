@@ -38,7 +38,6 @@
 #include "FlacDemuxer.h"
 
 #include "nsPluginHost.h"
-#include "MediaPrefs.h"
 
 namespace mozilla
 {

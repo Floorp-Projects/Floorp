@@ -7,7 +7,6 @@
 #include "nsThreadUtils.h"
 
 #include "FakeSpeechRecognitionService.h"
-#include "MediaPrefs.h"
 
 #include "SpeechRecognition.h"
 #include "SpeechRecognitionAlternative.h"
@@ -15,6 +14,7 @@
 #include "SpeechRecognitionResultList.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 
@@ -67,9 +67,9 @@ FakeSpeechRecognitionService::Abort()
 NS_IMETHODIMP
 FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
-  MOZ_ASSERT(MediaPrefs::WebSpeechFakeRecognitionService(),
+  MOZ_ASSERT(StaticPrefs::MediaWebspeechTextFakeRecognitionService(),
              "Got request to fake recognition service event, but "
-             TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE " is not set");
+             "media.webspeech.test.fake_recognition_service is not set");
 
   if (!strcmp(aTopic, SPEECH_RECOGNITION_TEST_END_TOPIC)) {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
