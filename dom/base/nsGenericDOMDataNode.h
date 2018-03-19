@@ -178,9 +178,6 @@ public:
     return NS_OK;
   }
 
-  already_AddRefed<nsIContent> SplitData(uint32_t aOffset,
-                                         mozilla::ErrorResult& aRv);
-
   // WebIDL API
   // Our XPCOM GetData is just fine for WebIDL
   virtual void SetData(const nsAString& aData, mozilla::ErrorResult& rv)

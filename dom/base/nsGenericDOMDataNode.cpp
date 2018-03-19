@@ -717,58 +717,6 @@ nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
 
 // Implementation of the nsIDOMText interface
 
-already_AddRefed<nsIContent>
-nsGenericDOMDataNode::SplitData(uint32_t aOffset, ErrorResult& aRv)
-{
-  nsAutoString cutText;
-  uint32_t length = TextLength();
-
-  if (aOffset > length) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    return nullptr;
-  }
-
-  uint32_t cutStartOffset = aOffset;
-  uint32_t cutLength = length - aOffset;
-  SubstringData(cutStartOffset, cutLength, cutText, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  nsIDocument* document = GetComposedDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, true);
-
-  // Use Clone for creating the new node so that the new node is of same class
-  // as this node!
-  nsCOMPtr<nsIContent> newContent = CloneDataNode(mNodeInfo, false);
-  if (!newContent) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
-  }
-  // nsRange expects the CharacterDataChanged notification is followed
-  // by an insertion of |newContent|. If you change this code,
-  // make sure you make the appropriate changes in nsRange.
-  newContent->SetText(cutText, true); // XXX should be false?
-
-  CharacterDataChangeInfo::Details details = {
-    CharacterDataChangeInfo::Details::eSplit, newContent
-  };
-  nsresult rv = SetTextInternal(cutStartOffset, cutLength, nullptr, 0, true,
-                                &details);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsINode> parent = GetParentNode();
-  if (parent) {
-    nsCOMPtr<nsIContent> beforeNode = GetNextSibling();
-    parent->InsertChildBefore(newContent, beforeNode, true);
-  }
-
-  return newContent.forget();
-}
-
 static nsIContent*
 FirstLogicallyAdjacentTextNode(nsIContent* aNode)
 {
