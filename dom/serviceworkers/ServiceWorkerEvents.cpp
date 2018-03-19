@@ -726,7 +726,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     // the fragment, so this will never conflict with an existing fragment
     // on the response.  In the future we will have to check for a response
     // fragment and avoid overriding in that case.
-    if (!mRequestFragment.IsEmpty()) {
+    if (!mRequestFragment.IsEmpty() && !responseURL.IsEmpty()) {
       MOZ_ASSERT(!responseURL.Contains('#'));
       responseURL.Append(NS_LITERAL_CSTRING("#"));
       responseURL.Append(mRequestFragment);
