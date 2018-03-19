@@ -360,10 +360,18 @@ NS_INTERFACE_MAP_BEGIN(nsNestedAboutURI)
 NS_INTERFACE_MAP_END_INHERITING(nsSimpleNestedURI)
 
 // nsISerializable
+
 NS_IMETHODIMP
-nsNestedAboutURI::Read(nsIObjectInputStream* aStream)
+nsNestedAboutURI::Read(nsIObjectInputStream *aStream)
 {
-    nsresult rv = nsSimpleNestedURI::Read(aStream);
+    NS_NOTREACHED("Use nsIURIMutator.read() instead");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsNestedAboutURI::ReadPrivate(nsIObjectInputStream *aStream)
+{
+    nsresult rv = nsSimpleNestedURI::ReadPrivate(aStream);
     if (NS_FAILED(rv)) return rv;
 
     bool haveBase;
@@ -439,7 +447,11 @@ nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
     return url;
 }
 
-NS_IMPL_ISUPPORTS(nsNestedAboutURI::Mutator, nsIURISetters, nsIURIMutator)
+// Queries this list of interfaces. If none match, it queries mURI.
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsNestedAboutURI::Mutator,
+                                nsIURISetters,
+                                nsIURIMutator,
+                                nsISerializable)
 
 NS_IMETHODIMP
 nsNestedAboutURI::Mutate(nsIURIMutator** aMutator)

@@ -75,7 +75,7 @@ nsHostObjectURI::GetPrincipalUri(nsIURI** aUri)
 NS_IMETHODIMP
 nsHostObjectURI::Read(nsIObjectInputStream* aStream)
 {
-  nsresult rv = mozilla::net::nsSimpleURI::Read(aStream);
+  nsresult rv = mozilla::net::nsSimpleURI::ReadPrivate(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupports> supports;
@@ -230,7 +230,13 @@ nsHostObjectURI::EqualsInternal(nsIURI* aOther,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsHostObjectURI::Mutator, nsIURISetters, nsIURIMutator, nsIBlobURIMutator, nsIPrincipalURIMutator)
+// Queries this list of interfaces. If none match, it queries mURI.
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsHostObjectURI::Mutator,
+                                nsIURISetters,
+                                nsIURIMutator,
+                                nsIBlobURIMutator,
+                                nsIPrincipalURIMutator,
+                                nsISerializable)
 
 NS_IMETHODIMP
 nsHostObjectURI::Mutate(nsIURIMutator** aMutator)
