@@ -22,8 +22,8 @@ add_task(async function() {
         args.expectedId, "The docShell has the correct userContextId");
     });
 
-    await promiseRemoveTab(tab);
-    await promiseRemoveTab(tab2);
+    BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab2);
   }
 });
 
@@ -45,8 +45,8 @@ add_task(async function() {
                  "The docShell has the correct userContextId");
   });
 
-  await promiseRemoveTab(tab);
-  await promiseRemoveTab(tab2);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
 });
 
 add_task(async function() {
@@ -66,7 +66,7 @@ add_task(async function() {
                  "The docShell has the correct userContextId");
   });
 
-  await promiseRemoveTab(tab2);
+  BrowserTestUtils.removeTab(tab2);
 });
 
 // Opens "uri" in a new tab with the provided userContextId and focuses it.

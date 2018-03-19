@@ -69,5 +69,5 @@ add_task(async function test_run() {
   ok(!cookieExists("example.com", "foo", "bar"), "cookies were cleared");
 
   // Cleanup.
-  await promiseRemoveTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

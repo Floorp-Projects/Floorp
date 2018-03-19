@@ -7,7 +7,7 @@ add_task(async function() {
   await promiseTabRestored(newTab);
 
   ok(!newTab.pinned, "duplicating a pinned tab creates unpinned tab");
-  await promiseRemoveTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
 
   gBrowser.unpinTab(gBrowser.selectedTab);
 });

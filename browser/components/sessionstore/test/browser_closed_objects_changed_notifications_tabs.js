@@ -34,7 +34,7 @@ async function openTab(window, url) {
 
 async function openAndCloseTab(window, url) {
   let tab = await openTab(window, url);
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
 }
 
 function countingObserver() {
@@ -86,7 +86,7 @@ add_task(async function test_closedObjectsChangedNotifications() {
   assertNotificationCount(4);
 
   info("Closing tab again.");
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   assertNotificationCount(5);
 
   info("Purging session history.");

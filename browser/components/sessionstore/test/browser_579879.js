@@ -9,7 +9,7 @@ add_task(async function() {
   gBrowser.pinTab(tab2);
 
   is(Array.indexOf(gBrowser.tabs, tab1), 0, "pinned tab 1 is at the first position");
-  await promiseRemoveTab(tab1);
+  await promiseRemoveTabAndSessionState(tab1);
 
   tab1 = undoCloseTab();
   ok(tab1.pinned, "pinned tab 1 has been restored as a pinned tab");

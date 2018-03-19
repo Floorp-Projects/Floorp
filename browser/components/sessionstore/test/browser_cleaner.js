@@ -69,8 +69,8 @@ add_task(async function test_open_and_close() {
 
   // Now close stuff, this should add closeAt
   await BrowserTestUtils.closeWindow(newWin);
-  await promiseRemoveTab(newTab1);
-  await promiseRemoveTab(newTab2);
+  await promiseRemoveTabAndSessionState(newTab1);
+  await promiseRemoveTabAndSessionState(newTab2);
 
   state = CLOSED_STATE = JSON.parse(ss.getBrowserState());
 

@@ -39,7 +39,7 @@ add_task(async function test_undoCloseTab() {
 
   let restoredPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "SSTabRestored");
 
-  await BrowserTestUtils.removeTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   let reopenedTab = ss.undoCloseTab(window, 0);
 
   await Promise.all([restoredPromise, BrowserTestUtils.browserLoaded(reopenedTab.linkedBrowser)]);
