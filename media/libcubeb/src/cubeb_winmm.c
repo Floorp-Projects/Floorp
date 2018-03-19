@@ -1050,7 +1050,6 @@ static struct cubeb_ops const winmm_ops = {
   /*.get_max_channel_count=*/ winmm_get_max_channel_count,
   /*.get_min_latency=*/ winmm_get_min_latency,
   /*.get_preferred_sample_rate =*/ winmm_get_preferred_sample_rate,
-  /*.get_preferred_channel_layout =*/ NULL,
   /*.enumerate_devices =*/ winmm_enumerate_devices,
   /*.device_collection_destroy =*/ winmm_device_collection_destroy,
   /*.destroy =*/ winmm_destroy,
