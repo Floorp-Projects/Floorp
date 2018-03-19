@@ -4,7 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -78,11 +77,11 @@ var ClientEnvironment = {
     const environment = {};
 
     XPCOMUtils.defineLazyGetter(environment, "userId", () => {
-      let id = Preferences.get("app.normandy.user_id", "");
+      let id = Services.prefs.getCharPref("app.normandy.user_id", "");
       if (!id) {
         // generateUUID adds leading and trailing "{" and "}". strip them off.
         id = generateUUID().toString().slice(1, -1);
-        Preferences.set("app.normandy.user_id", id);
+        Services.prefs.setCharPref("app.normandy.user_id", id);
       }
       return id;
     });
@@ -98,7 +97,7 @@ var ClientEnvironment = {
     });
 
     XPCOMUtils.defineLazyGetter(environment, "distribution", () => {
-      return Preferences.get("distribution.id", "default");
+      return Services.prefs.getCharPref("distribution.id", "default");
     });
 
     XPCOMUtils.defineLazyGetter(environment, "telemetry", async function() {
@@ -145,15 +144,15 @@ var ClientEnvironment = {
     });
 
     XPCOMUtils.defineLazyGetter(environment, "syncSetup", () => {
-      return Preferences.isSet("services.sync.username");
+      return Services.prefs.prefHasUserValue("services.sync.username");
     });
 
     XPCOMUtils.defineLazyGetter(environment, "syncDesktopDevices", () => {
-      return Preferences.get("services.sync.clients.devices.desktop", 0);
+      return Services.prefs.getIntPref("services.sync.clients.devices.desktop", 0);
     });
 
     XPCOMUtils.defineLazyGetter(environment, "syncMobileDevices", () => {
-      return Preferences.get("services.sync.clients.devices.mobile", 0);
+      return Services.prefs.getIntPref("services.sync.clients.devices.mobile", 0);
     });
 
     XPCOMUtils.defineLazyGetter(environment, "syncTotalDevices", () => {
@@ -181,7 +180,7 @@ var ClientEnvironment = {
     });
 
     XPCOMUtils.defineLazyGetter(environment, "doNotTrack", () => {
-      return Preferences.get("privacy.donottrackheader.enabled", false);
+      return Services.prefs.getBoolPref("privacy.donottrackheader.enabled", false);
     });
 
     XPCOMUtils.defineLazyGetter(environment, "experiments", async () => {
@@ -205,7 +204,7 @@ var ClientEnvironment = {
     });
 
     XPCOMUtils.defineLazyGetter(environment, "isFirstRun", () => {
-      return Preferences.get("app.normandy.first_run");
+      return Services.prefs.getBoolPref("app.normandy.first_run", true);
     });
 
     return environment;
