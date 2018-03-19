@@ -176,5 +176,5 @@ async function testSearchEngine(engineDetails) {
   }
 
   engine.alias = undefined;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }

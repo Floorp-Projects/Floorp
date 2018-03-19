@@ -30,7 +30,7 @@ add_task(async function test_move_on_to_next_notification_when_reaching_max_prom
   currentTourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   isnot(previousTourId, currentTourId, "Should move on to next tour notification when reaching the max prompt count per tour");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_move_on_to_next_notification_when_reaching_max_life_time() {
@@ -51,7 +51,7 @@ add_task(async function test_move_on_to_next_notification_when_reaching_max_life
   let currentTourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   isnot(previousTourId, currentTourId, "Should move on to next tour notification when reaching the max life time per tour");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_move_on_to_next_notification_after_interacting_with_notification() {
@@ -78,5 +78,5 @@ add_task(async function test_move_on_to_next_notification_after_interacting_with
   currentTourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   isnot(previousTourId, currentTourId, "Should move on to next tour notification after clicking #onboarding-notification-action-btn");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

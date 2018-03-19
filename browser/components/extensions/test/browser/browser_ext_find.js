@@ -180,5 +180,5 @@ add_task(async function testAboutFind() {
   await extension.startup();
   await extension.awaitMessage("done");
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

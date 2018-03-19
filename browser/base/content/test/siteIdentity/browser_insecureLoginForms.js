@@ -205,6 +205,6 @@ add_task(async function test_ignoring_window_opener() {
       await hideEvent;
     }
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });

@@ -59,7 +59,7 @@ add_task(async function test_private_popup_window_opens_private_tabs() {
      "Newly opened tab should be private.");
 
   // Clean up
-  await BrowserTestUtils.removeTab(newPrivTab);
+  BrowserTestUtils.removeTab(newPrivTab);
   await BrowserTestUtils.closeWindow(popupWin);
   await BrowserTestUtils.closeWindow(privWin);
 });

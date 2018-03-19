@@ -17,7 +17,8 @@ function test() {
 }
 
 function tidyUp() {
-  BrowserTestUtils.removeTab(ourTab).then(finish);
+  BrowserTestUtils.removeTab(ourTab);
+  finish();
 }
 
 function testClosePrintPreviewWithAccessKey() {

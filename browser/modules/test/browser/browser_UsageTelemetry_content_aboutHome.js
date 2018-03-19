@@ -81,5 +81,5 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "about_home", "enter", {engine: "other-MozSearch"}]]);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

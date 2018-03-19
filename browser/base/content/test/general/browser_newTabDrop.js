@@ -1,6 +1,6 @@
 registerCleanupFunction(async function cleanup() {
   while (gBrowser.tabs.length > 1) {
-    await BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
   }
   Services.search.currentEngine = originalEngine;
   let engine = Services.search.getEngineByName("MozSearch");
@@ -153,7 +153,7 @@ async function drop(dragData, expectedTabOpenCount = 0) {
     await promiseTabsOpen;
     info("Got TabOpen event");
     for (let tab of openedTabs) {
-      await BrowserTestUtils.removeTab(tab);
+      BrowserTestUtils.removeTab(tab);
     }
   }
 

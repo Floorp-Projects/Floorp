@@ -5,5 +5,5 @@ add_task(async function() {
     Assert.ok(content.document.getElementById("your-rights"), "about:rights content loaded");
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

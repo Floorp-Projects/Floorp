@@ -55,7 +55,7 @@ add_task(async function test_slow_content_script() {
   let stopButton = notification.querySelector("[label='Stop It']");
   stopButton.click();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
 });

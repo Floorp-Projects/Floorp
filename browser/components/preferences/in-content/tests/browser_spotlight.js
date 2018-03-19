@@ -8,7 +8,7 @@ add_task(async function test_reports_section() {
     "Wait for the reports section is spotlighted.");
   is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports",
     "The reports section is spotlighted.");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_address_autofill_section() {
@@ -20,7 +20,7 @@ add_task(async function test_address_autofill_section() {
     "Wait for the ddress-autofill section is spotlighted.");
   is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "address-autofill",
     "The ddress-autofill section is spotlighted.");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_credit_card_autofill_section() {
@@ -35,5 +35,5 @@ add_task(async function test_credit_card_autofill_section() {
     "Wait for the credit-card-autofill section is spotlighted.");
   is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "credit-card-autofill",
     "The credit-card-autofill section is spotlighted.");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

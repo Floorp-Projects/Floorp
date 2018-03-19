@@ -47,7 +47,7 @@ add_task(async function test_richIcons() {
     return tabIconUri != null;
   }, "wait for icon load to finish", 100, 20);
   is(tabIconUri, EXPECTED_ICON, "should use the non-rich icon for the tab");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_maskIcons() {
@@ -65,5 +65,5 @@ add_task(async function test_maskIcons() {
     return tabIconUri != null;
   }, "wait for icon load to finish", 100, 20);
   is(tabIconUri, EXPECTED_ICON, "should ignore the mask icons and load the root favicon");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

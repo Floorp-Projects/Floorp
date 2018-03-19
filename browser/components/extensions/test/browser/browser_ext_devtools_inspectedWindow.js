@@ -127,7 +127,7 @@ add_task(async function test_devtools_inspectedWindow_tabId() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_devtools_inspectedWindow_eval() {
@@ -249,7 +249,7 @@ add_task(async function test_devtools_inspectedWindow_eval() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -367,5 +367,5 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
   await gDevTools.closeToolbox(target);
   await target.destroy();
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

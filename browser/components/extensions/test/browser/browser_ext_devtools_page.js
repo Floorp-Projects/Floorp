@@ -154,7 +154,7 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -277,5 +277,5 @@ add_task(async function test_devtools_page_and_extension_tab_messaging() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

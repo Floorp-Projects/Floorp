@@ -47,7 +47,7 @@ add_task(async function test() {
   info("Waiting right frame visit");
   await deferredRightFrameVisit.promise;
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 function getTransitionForUrl(url) {

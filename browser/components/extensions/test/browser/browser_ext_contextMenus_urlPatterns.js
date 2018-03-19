@@ -265,5 +265,5 @@ add_task(async function() {
   await closeContextMenu();
 
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 });

@@ -45,7 +45,7 @@ add_task(async function() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 });
 
 add_task(async function() {
@@ -437,7 +437,7 @@ add_task(async function() {
   await closeContextMenu();
 
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 });
 
 add_task(async function testRemoveAllWithTwoExtensions() {
@@ -511,7 +511,7 @@ add_task(async function testRemoveAllWithTwoExtensions() {
 
   await first.unload();
   await second.unload();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_bookmark_contextmenu() {

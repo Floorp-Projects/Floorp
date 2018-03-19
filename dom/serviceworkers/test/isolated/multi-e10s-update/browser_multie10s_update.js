@@ -128,6 +128,6 @@ add_task(async function test_update() {
   });
   is(count, 2, "SW should have been fetched only twice");
 
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 });

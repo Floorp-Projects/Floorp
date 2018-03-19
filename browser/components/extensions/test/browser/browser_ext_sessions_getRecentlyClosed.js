@@ -64,10 +64,10 @@ add_task(async function test_sessions_get_recently_closed() {
   is(recentlyClosed[0].window.tabs.length, 3, "most recently closed window has the expected number of tabs");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await openAndCloseWindow();
   extension.sendMessage("check-sessions");

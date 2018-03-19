@@ -42,7 +42,7 @@ add_task(async function should_not_show_sound_indicator_for_silent_video() {
   await waitForTabPlayingEvent(tab, false);
 
   info("- remove tab -");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function should_not_show_sound_indicator_for_almost_silent_video() {
@@ -63,5 +63,5 @@ add_task(async function should_not_show_sound_indicator_for_almost_silent_video(
   await waitForTabPlayingEvent(tab, false);
 
   info("- remove tab -");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

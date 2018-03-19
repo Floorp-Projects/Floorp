@@ -29,7 +29,7 @@ add_task(async function test_formdata() {
     await setInputValue(browser, {id: "txt", value: INNER_VALUE, frame: 0});
 
     // Remove the tab.
-    await promiseRemoveTab(tab);
+    await promiseRemoveTabAndSessionState(tab);
   }
 
   await createAndRemoveTab();
@@ -117,7 +117,7 @@ add_task(async function test_nested() {
   await BrowserTestUtils.synthesizeKey("m", {}, browser);
 
   // Remove the tab and check that we stored form data correctly.
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   let [{state: {formdata}}] = JSON.parse(ss.getClosedTabData(window));
   is(JSON.stringify(formdata), JSON.stringify(FORM_DATA),
     "formdata for iframe stored correctly");
@@ -154,7 +154,7 @@ add_task(async function test_design_mode() {
   await BrowserTestUtils.synthesizeKey("m", {}, browser);
 
   // Close and restore the tab.
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   tab = ss.undoCloseTab(window, 0);
   browser = tab.linkedBrowser;
   await promiseTabRestored(tab);
@@ -165,7 +165,7 @@ add_task(async function test_design_mode() {
   is(html, expected, "editable document has been restored correctly");
 
   // Close and restore the tab.
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   tab = ss.undoCloseTab(window, 0);
   browser = tab.linkedBrowser;
   await promiseTabRestored(tab);

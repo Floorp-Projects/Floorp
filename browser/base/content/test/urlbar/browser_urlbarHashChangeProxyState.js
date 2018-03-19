@@ -106,6 +106,6 @@ add_task(async function() {
      "Identity box should know we're doing SSL when the page loads from about:newtab");
   is(gURLBar.getAttribute("pageproxystate"), "valid",
      "URL bar is in valid page proxy state when SSL page with hash loads from about:newtab");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 

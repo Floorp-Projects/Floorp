@@ -19,7 +19,7 @@ add_task(async function testBrowserErrorInitialValue() {
     "Checkbox for collecting browser errors should be checked when the pref is true"
   );
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await SpecialPowers.popPrefEnv();
 });
 
@@ -43,6 +43,6 @@ add_task(async function testBrowserErrorLearnMore() {
     "Learn More link for browser error collection should have an href set by a pref"
   );
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await SpecialPowers.popPrefEnv();
 });

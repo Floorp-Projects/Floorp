@@ -19,7 +19,7 @@ add_task(async function test_add_bookmark_from_private_window() {
   let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
 
   registerCleanupFunction(async () => {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     await BrowserTestUtils.closeWindow(win);
   });
 

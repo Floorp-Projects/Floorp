@@ -11,7 +11,7 @@ async function openAndCloseTab(window, url) {
   let tab = window.gBrowser.addTab(url);
   await promiseBrowserLoaded(tab.linkedBrowser, true, url);
   await TabStateFlusher.flush(tab.linkedBrowser);
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
 }
 
 async function openWindow(url) {
@@ -71,9 +71,9 @@ add_task(async function test_undoCloseById() {
   is(tab2.linkedBrowser.currentURI.spec, "about:mozilla", "The expected tab was re-opened");
 
   // Close the two tabs we re-opened.
-  await promiseRemoveTab(tab); // closedId == initialClosedId + 3
+  await promiseRemoveTabAndSessionState(tab); // closedId == initialClosedId + 3
   is(SessionStore.lastClosedObjectType, "tab", "The last closed object is a tab");
-  await promiseRemoveTab(tab2); // closedId == initialClosedId + 4
+  await promiseRemoveTabAndSessionState(tab2); // closedId == initialClosedId + 4
   is(SessionStore.lastClosedObjectType, "tab", "The last closed object is a tab");
 
   // Open another new window.

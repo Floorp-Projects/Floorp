@@ -80,5 +80,5 @@ add_task(async function media_should_be_able_to_play_in_visible_tab() {
                           check_audio_suspended);
 
   info("- remove tab -");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

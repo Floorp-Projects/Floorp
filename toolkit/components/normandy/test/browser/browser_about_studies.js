@@ -62,7 +62,7 @@ decorate_task(
       "Clicking Update Preferences opens the privacy section of the new about:preferences.",
     );
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 );
 
