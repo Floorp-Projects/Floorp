@@ -737,6 +737,29 @@ var BrowserTestUtils = {
   },
 
   /**
+   * Returns a Promise that resolves once the SessionStore information for the
+   * given tab is updated and all listeners are called.
+   *
+   * @param (tab) tab
+   *        The tab that will be removed.
+   * @returns (Promise)
+   * @resolves When the SessionStore information is updated.
+   */
+  waitForSessionStoreUpdate(tab) {
+    return new Promise(resolve => {
+      let {messageManager: mm, frameLoader} = tab.linkedBrowser;
+      mm.addMessageListener("SessionStore:update", function onMessage(msg) {
+        if (msg.targetFrameLoader == frameLoader && msg.data.isFinal) {
+          mm.removeMessageListener("SessionStore:update", onMessage);
+          // Wait for the next event tick to make sure other listeners are
+          // called.
+          TestUtils.executeSoon(() => resolve());
+        }
+      }, true);
+    });
+  },
+
+  /**
    * Waits for an event to be fired on a specified element.
    *
    * Usage:
@@ -1141,6 +1164,18 @@ var BrowserTestUtils = {
         }
       }, true);
     });
+  },
+
+  /**
+   * Returns a Promise that resolves once the tab starts closing.
+   *
+   * @param (tab) tab
+   *        The tab that will be removed.
+   * @returns (Promise)
+   * @resolves When the tab starts closing. Does not get passed a value.
+   */
+  waitForTabClosing(tab) {
+    return this.waitForEvent(tab, "TabClose");
   },
 
   /**
