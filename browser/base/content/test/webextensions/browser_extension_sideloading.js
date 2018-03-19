@@ -155,7 +155,7 @@ add_task(async function() {
   is(addon3.userDisabled, true, "Addon 3 should still be disabled");
   is(addon4.userDisabled, true, "Addon 4 should still be disabled");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Should still have 3 entries in the hamburger menu
   await PanelUI.show();
@@ -259,5 +259,5 @@ add_task(async function() {
     addon.uninstall();
   }
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

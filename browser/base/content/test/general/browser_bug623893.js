@@ -7,12 +7,12 @@ add_task(async function test() {
     await BrowserTestUtils.browserLoaded(browser);
 
     await duplicate(0, "maintained the original index");
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
     await duplicate(-1, "went back");
     await duplicate(1, "went forward");
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 });
 

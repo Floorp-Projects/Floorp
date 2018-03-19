@@ -572,5 +572,5 @@ async function runTests(tests, options = {}) {
   }
 
   // Some tests destroy the original tab and leave a new one in its place.
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }

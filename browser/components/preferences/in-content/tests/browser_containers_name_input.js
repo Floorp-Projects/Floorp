@@ -3,7 +3,7 @@ const CONTAINERS_URL = "chrome://browser/content/preferences/containers.xul";
 add_task(async function setup() {
   await openPreferencesViaOpenPreferencesAPI("containers", { leaveOpen: true });
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 });
 

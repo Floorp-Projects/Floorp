@@ -20,7 +20,7 @@ add_task(async function() {
   const uriString = Services.io.newFileURI(disappearingPage).spec;
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uriString);
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 
   // Delete the page, simulate a click of the reload button and check that we

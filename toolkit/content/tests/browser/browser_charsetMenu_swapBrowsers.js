@@ -24,5 +24,5 @@ add_task(async function test() {
 
   ok(charsetMenuEnabled(), "should have a charset after the swap");
 
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab2);
 });

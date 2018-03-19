@@ -137,7 +137,7 @@ add_task(async function testExtensionControlledHomepage() {
   await waitForMessageShown("browserHomePageExtensionContent");
   // Do the uninstall now that the enable code has been run.
   addon.uninstall();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testPrefLockedHomepage() {
@@ -268,7 +268,7 @@ add_task(async function testPrefLockedHomepage() {
   is(controlledContent.hidden, true,
      "The extension controlled message is hidden when unlocked with no extension");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testExtensionControlledNewTab() {
@@ -315,7 +315,7 @@ add_task(async function testExtensionControlledNewTab() {
   is(controlledContent.hidden, true, "The extension controlled row is shown");
 
   // Cleanup the tab and add-on.
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   let addon = await AddonManager.getAddonByID("@set_newtab");
   addon.uninstall();
 });
@@ -411,7 +411,7 @@ add_task(async function testExtensionControlledDefaultSearch() {
 
   await originalExtension.unload();
   await updatedExtension.unload();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testExtensionControlledHomepageUninstalledAddon() {
@@ -428,7 +428,7 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
     is(homepageInut.value, "", "The homepage input is empty");
     is(controlledContent.hidden, true, "The extension controlled row is hidden");
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 
   await ExtensionSettingsStore.initialize();
@@ -612,7 +612,7 @@ add_task(async function testExtensionControlledTrackingProtection() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testExtensionControlledProxyConfig() {
@@ -814,5 +814,5 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

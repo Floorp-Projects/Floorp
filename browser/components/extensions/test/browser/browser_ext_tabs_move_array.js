@@ -78,6 +78,6 @@ add_task(async function moveMultiple() {
   await extension.unload();
 
   for (let tab of tabs) {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 });

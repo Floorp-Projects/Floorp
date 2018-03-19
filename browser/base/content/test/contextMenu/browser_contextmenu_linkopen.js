@@ -65,5 +65,5 @@ add_task(async function test_select_text_link() {
       await activateContextAndWaitFor("#" + elementID, where);
     }
   }
-  await BrowserTestUtils.removeTab(testTab);
+  BrowserTestUtils.removeTab(testTab);
 });

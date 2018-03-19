@@ -117,7 +117,7 @@ add_task(async function test_quota_clearStoragesForPrincipal() {
     await setupIndexedDB(tabs[userContextId].browser);
 
     // Close this tab.
-    await BrowserTestUtils.removeTab(tabs[userContextId].tab);
+    BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 
   // Using quota manager to clear all indexed DB for a given domain.
@@ -137,6 +137,6 @@ add_task(async function test_quota_clearStoragesForPrincipal() {
     await checkIndexedDB(tabs[userContextId].browser);
 
     // Close this tab.
-    await BrowserTestUtils.removeTab(tabs[userContextId].tab);
+    BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 });

@@ -35,7 +35,7 @@ add_task(async function test_first_time_save() {
       await clickDoorhangerButton(MAIN_BUTTON);
       let tab = await tabPromise;
       ok(tab, "Privacy panel opened");
-      await BrowserTestUtils.removeTab(tab);
+      BrowserTestUtils.removeTab(tab);
     }
   );
 
@@ -114,7 +114,7 @@ add_task(async function test_first_time_save_with_sync_account() {
       await clickDoorhangerButton(MAIN_BUTTON);
       let tab = await tabPromise;
       ok(tab, "Privacy panel opened");
-      await BrowserTestUtils.removeTab(tab);
+      BrowserTestUtils.removeTab(tab);
     }
   );
 

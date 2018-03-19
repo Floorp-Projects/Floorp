@@ -261,7 +261,7 @@ add_task(async function testHideOnLocationChange() {
   await BrowserTestUtils.loadURI(browser, url);
   await promise;
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function testHideOnClear() {

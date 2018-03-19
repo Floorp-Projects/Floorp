@@ -117,5 +117,5 @@ add_task(async function block_multiple_media() {
                                    check_all_audio_suspended);
 
   info("- remove tab -");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

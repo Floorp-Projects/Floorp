@@ -144,7 +144,7 @@ async function test_permission_propagation(testName, testSrc, layersNum) {
                             playing_video_may_success);
 
     info("- remove tab -");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 }
 

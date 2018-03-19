@@ -37,6 +37,6 @@ add_task(async function test_focus_on_search_shouldnt_close_popup() {
   is(selectPopup.state, "open", "select popup should still be open after clicking on the search field");
 
   await hideSelectPopup(selectPopup, "escape");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 

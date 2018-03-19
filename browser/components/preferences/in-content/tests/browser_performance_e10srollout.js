@@ -37,7 +37,7 @@ add_task(async function testPrefsAreDefault() {
   is(Services.prefs.getIntPref("dom.ipc.processCount"), DEFAULT_PROCESS_COUNT, "default pref should be default value");
   is(contentProcessCount.selectedItem.value, DEFAULT_PROCESS_COUNT, "selected item should be the default one");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   Services.prefs.clearUserPref("dom.ipc.processCount");
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);
@@ -67,7 +67,7 @@ add_task(async function testPrefsSetByUser() {
   is(Services.prefs.getIntPref("dom.ipc.processCount"), DEFAULT_PROCESS_COUNT,
     "process count should be default value");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   Services.prefs.clearUserPref("dom.ipc.processCount");
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);

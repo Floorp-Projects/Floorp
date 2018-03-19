@@ -12,7 +12,7 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", { leaveOpen: true });
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
   is_element_visible(searchInput, "Search box should be shown");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -60,7 +60,7 @@ add_task(async function() {
     }
   }
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -133,7 +133,7 @@ add_task(async function() {
     }
   }
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -171,7 +171,7 @@ add_task(async function() {
 
   is_element_hidden(noResultsEl, "Should not be in search results");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -207,7 +207,7 @@ add_task(async function() {
   // Checks if back to normal
   is_element_visible(generalPane, "Should be in generalPane");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -250,7 +250,7 @@ add_task(async function() {
   // Checks if back to normal
   is_element_visible(generalPane, "Should be in generalPane");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -282,5 +282,5 @@ add_task(async function() {
     }
   }
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

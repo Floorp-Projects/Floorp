@@ -65,7 +65,7 @@ add_task(async function() {
     await reg.unregister();
   });
 
-  await BrowserTestUtils.removeTab(swTab);
+  BrowserTestUtils.removeTab(swTab);
 });
 
 function countRows() {

@@ -102,7 +102,7 @@ async function do_test(test) {
   is(tooltip.getAttribute("label"), test.result, "tooltip label should match expectation");
 
   info("Closing tab");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 function createTempFile() {

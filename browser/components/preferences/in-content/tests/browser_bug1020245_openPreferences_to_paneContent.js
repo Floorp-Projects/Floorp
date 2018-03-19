@@ -25,7 +25,7 @@ add_task(async function() {
   is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
   await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"), "Wait for the reports section is spotlighted.");
   is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports", "The reports section is spotlighted.");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test opening Preferences with subcategory on an existing Preferences tab. See bug 1358475.
@@ -44,7 +44,7 @@ add_task(async function() {
   is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
   await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"), "Wait for the reports section is spotlighted.");
   is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports", "The reports section is spotlighted.");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test opening to a subcategory displays the correct values for preferences
@@ -65,7 +65,7 @@ add_task(async function() {
     "Checkbox for automatically submitting crashes should be checked when the pref is true and only Reports are requested"
   );
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await SpecialPowers.popPrefEnv();
 });
 
@@ -86,7 +86,7 @@ add_task(async function() {
     "Checkbox for automatically submitting crashes should not be checked when the pref is false only Reports are requested"
   );
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await SpecialPowers.popPrefEnv();
 });
 

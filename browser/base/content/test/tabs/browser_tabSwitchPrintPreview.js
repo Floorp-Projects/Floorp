@@ -22,6 +22,6 @@ add_task(async function() {
     await BrowserTestUtils.waitForCondition(() => !gInPrintPreviewMode, "should no longer be in print preview mode");
     await tabSwitched;
     is(gBrowser.selectedTab, originalTab, "Selected tab should be back to the original tab that we print previewed");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });

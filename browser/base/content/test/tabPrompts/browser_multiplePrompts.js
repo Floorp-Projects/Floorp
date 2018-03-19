@@ -68,5 +68,5 @@ add_task(async function() {
   let prompts = tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
   is(prompts.length, 0, "Prompts should all be dismissed.");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -113,7 +113,7 @@ add_task(async function testExecuteScript() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   // Make sure that we're not holding on to references to closed message
   // managers.
@@ -164,5 +164,5 @@ add_task(async function testInsertCSS_cleanup() {
   is(unloadedStyles[0], "rgba(0, 0, 0, 0)", "The injected CSS code has been removed as expected");
   is(unloadedStyles[1], "rgb(0, 0, 0)", "The injected CSS file has been removed as expected");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

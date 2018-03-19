@@ -29,7 +29,7 @@ add_task(async function() {
   count = await promiseSHistoryCount(tab.linkedBrowser);
   is(count, 0, "the tab was restored without any history whatsoever");
 
-  await promiseRemoveTab(tab);
+  await promiseRemoveTabAndSessionState(tab);
   is(ss.getClosedTabCount(window), 0,
      "The closed blank tab wasn't added to Recently Closed Tabs");
 });

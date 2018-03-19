@@ -6,7 +6,7 @@ add_task(async function test() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(async function() {
     Services.prefs.clearUserPref("places.frecency.decayRate");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     await PlacesUtils.history.clear();
   });
 

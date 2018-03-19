@@ -23,7 +23,7 @@ async function testLinkOpensTab({ win, tab, elementId, expectedUrl }) {
   });
   let newTab = await newTabPromise;
   ok(true, `Clicking ${elementId} opened ${expectedUrl} in a new tab.`);
-  await BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(newTab);
 }
 
 /**

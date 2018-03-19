@@ -81,7 +81,11 @@ add_task(async function(){
   }
 
   for (let i = 0; i < 3; i++) {
-    await BrowserTestUtils.removeTab(tabs[i]);
+    // FIXME: This should wait for the tab removal gets reflected to the
+    //        process count (bug 1446726).
+    let sessionStorePromise = BrowserTestUtils.waitForSessionStoreUpdate(tabs[i]);
+    BrowserTestUtils.removeTab(tabs[i]);
+    await sessionStorePromise;
   }
 
   ppmm.releaseCachedProcesses();

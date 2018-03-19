@@ -55,7 +55,7 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser, "about:about-pages-are-cool", true);
   ok(tab, "Successfully created an about: page and loaded it.");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   try {
     await BrowserTestUtils.unregisterAboutPage("about-pages-are-cool");
     ok(true, "Successfully unregistered the about page.");

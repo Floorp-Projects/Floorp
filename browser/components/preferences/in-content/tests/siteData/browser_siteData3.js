@@ -40,7 +40,7 @@ add_task(async function() {
   assertSitesListed(doc, fakeHosts.filter(host => host != "shopping.xyz.com"));
 
   await mockSiteDataManager.unregister();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test grouping and listing sites across scheme, port and origin attributes by host
@@ -97,7 +97,7 @@ add_task(async function() {
   is(columns[2].value, expected, "Should sum up usages across scheme, port, origin attributes and persistent status");
 
   await mockSiteDataManager.unregister();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test sorting
@@ -158,7 +158,7 @@ add_task(async function() {
   assertSortByCookies("descending");
 
   await mockSiteDataManager.unregister();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function assertSortByBaseDomain(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");
@@ -255,7 +255,7 @@ add_task(async function() {
   assertSortByDate("descending");
 
   await mockSiteDataManager.unregister();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function assertSortByDate(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");

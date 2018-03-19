@@ -130,7 +130,7 @@ function prepareForResult(aBrowser, aExpectation) {
         let newTab = await BrowserTestUtils.waitForNewTab(gBrowser);
         is(newTab.linkedBrowser.currentURI.spec, expectedSpec,
            "Should be at dummy.html");
-        await BrowserTestUtils.removeTab(newTab);
+        BrowserTestUtils.removeTab(newTab);
       })();
       break;
     default:

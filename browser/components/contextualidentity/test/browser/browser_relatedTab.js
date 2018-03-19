@@ -10,22 +10,22 @@ add_task(async function() {
   gBrowser.selectedTab = tab;
   let relatedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {relatedToCurrent: true});
   is(relatedTab.getAttribute("usercontextid"), 1, "Related tab (relatedToCurrent) inherits current tab's usercontextid");
-  await BrowserTestUtils.removeTab(relatedTab);
+  BrowserTestUtils.removeTab(relatedTab);
 
   gBrowser.selectedTab = tab;
   relatedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {relatedToCurrent: true, userContextId: 2});
   is(relatedTab.getAttribute("usercontextid"), 2, "Related tab (relatedToCurrent) with overridden usercontextid");
-  await BrowserTestUtils.removeTab(relatedTab);
+  BrowserTestUtils.removeTab(relatedTab);
 
   gBrowser.selectedTab = tab;
   relatedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {referrerURI: gBrowser.currentURI});
   is(relatedTab.getAttribute("usercontextid"), 1, "Related tab (referrer) inherits current tab's usercontextid");
-  await BrowserTestUtils.removeTab(relatedTab);
+  BrowserTestUtils.removeTab(relatedTab);
 
   gBrowser.selectedTab = tab;
   relatedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {referrerURI: gBrowser.currentURI, userContextId: 2});
   is(relatedTab.getAttribute("usercontextid"), 2, "Related tab (referrer) with overridden usercontextid");
-  await BrowserTestUtils.removeTab(relatedTab);
+  BrowserTestUtils.removeTab(relatedTab);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

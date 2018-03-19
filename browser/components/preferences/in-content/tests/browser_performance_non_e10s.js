@@ -59,7 +59,7 @@ add_task(async function() {
   is(performanceSettings.hidden, false, "performance settings section should be still shown");
 
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function() {
@@ -76,7 +76,7 @@ add_task(async function() {
   is(performanceSettings.hidden, false, "performance settings section should be shown");
 
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function() {
@@ -96,5 +96,5 @@ add_task(async function() {
   ok(!allowHWAccel.checked, "checkbox should not be checked");
 
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

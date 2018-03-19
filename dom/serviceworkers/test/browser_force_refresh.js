@@ -50,7 +50,7 @@ function test() {
         await swr.unregister();
       });
 
-      await BrowserTestUtils.removeTab(tab);
+      BrowserTestUtils.removeTab(tab);
       executeSoon(finish);
     }
 

@@ -32,5 +32,5 @@ add_task(async function test_exit_background_customize_mode() {
   is(gBrowser.tabs.length, 3, "Should have 3 tabs now");
 
   await endCustomizing();
-  await BrowserTestUtils.removeTab(custTab);
+  BrowserTestUtils.removeTab(custTab);
 });

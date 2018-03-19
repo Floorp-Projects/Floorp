@@ -40,7 +40,7 @@ add_task(async function() {
   state = JSON.parse(SessionStore.getTabState(tab));
   ok(!state.userTypedValue, "userTypedValue should be undefined on the tab's state");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   for (let url of gInitialPages) {
     if (url == BROWSER_NEW_TAB_URL) {
@@ -67,7 +67,7 @@ add_task(async function() {
     ok(!state.userTypedValue, "userTypedValue should be undefined on the tab's state");
 
     info("Removing tab - " + new Date());
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     info("Finished removing tab - " + new Date());
   }
   info("Removing window - " + new Date());

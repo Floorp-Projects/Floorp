@@ -118,7 +118,7 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   addon = await AddonManager.getAddonByID(id);
   is(addon.version, "1.0", "Should still be running the old version");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   // Alert badge and hamburger menu items should be gone
   is(getBadgeStatus(), "", "Addon alert badge should be gone");
@@ -163,7 +163,7 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   addon = await updatePromise;
   is(addon.version, "2.0", "Should have upgraded to the new version");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   is(getBadgeStatus(), "", "Addon alert badge should be gone");
 

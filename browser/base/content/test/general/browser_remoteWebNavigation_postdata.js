@@ -41,7 +41,7 @@ add_task(async function test_remoteWebNavigation_postdata() {
     openUILinkIn(path, "tab", null, makeInputStream(postdata));
 
   });
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await new Promise(resolve => {
     server.stop(function() { resolve(); });

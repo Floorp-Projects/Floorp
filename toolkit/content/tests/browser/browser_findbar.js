@@ -154,7 +154,7 @@ add_task(async function test_reinitialization_at_remoteness_change() {
   await promiseFindFinished("s", false);
   ok(!findbar._findStatusDesc.textContent, "Findbar status should be empty");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -196,7 +196,7 @@ add_task(async function() {
     "findbar is now focused");
   is(findBar._findField.value, "abc", "abc fully entered as find query");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 function promiseFindFinished(searchText, highlightOn) {

@@ -20,9 +20,9 @@ add_task(async function test_button_state_disabled() {
   await BrowserTestUtils.waitForEvent(BrowserPageActions.panelNode, "popupshown");
   is(isButtonDisabled(), false, "Check that button is enabled for reportable schemes on tab load");
 
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
-  await BrowserTestUtils.removeTab(tab3);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab3);
 });
 
 /* Test that the button is enabled or disabled when we expected it to be, when
@@ -39,7 +39,7 @@ add_task(async function test_button_state_in_urlbar() {
   is(isURLButtonEnabled(), true, "Check that button (in urlbar) is enabled for reportable schemes on tab load");
 
   unpinFromURLBar();
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
-  await BrowserTestUtils.removeTab(tab3);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab3);
 });

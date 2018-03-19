@@ -52,5 +52,5 @@ add_task(async function() {
 
   // clean up
   Services.cookies.removeAll();
-  await promiseRemoveTab(gBrowser.tabs[1]);
+  BrowserTestUtils.removeTab(gBrowser.tabs[1]);
 });

@@ -35,9 +35,11 @@ add_task(async function test_sessions_forget_closed_tab() {
 
   let tabUrl = "http://example.com";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
-  await BrowserTestUtils.removeTab(tab);
+  let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
+  BrowserTestUtils.removeTab(tab);
+  await sessionUpdatePromise;
 
   extension.sendMessage("check-sessions");
   let recentlyClosed = await extension.awaitMessage("recentlyClosed");

@@ -70,5 +70,5 @@ add_task(async function() {
   await extension.awaitFinish("tabRuntimeConnect.pass");
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

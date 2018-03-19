@@ -63,5 +63,5 @@ add_task(async function testExecuteScriptAtOnUpdated() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

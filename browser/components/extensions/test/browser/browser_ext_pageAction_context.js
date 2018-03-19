@@ -284,7 +284,7 @@ add_task(async function testNavigationClearsData() {
   await expectDefaultData(tab2, "Navigating clears tab-specific data, even when not selected.");
 
   for (let tab of tabs) {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
   await extension.unload();
 });

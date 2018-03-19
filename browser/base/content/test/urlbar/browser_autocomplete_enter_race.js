@@ -9,7 +9,7 @@ add_task(async function setup() {
   });
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
   await PlacesUtils.keywords.insert({ keyword: "keyword",
                                       url: "http://example.com/?q=%s" });

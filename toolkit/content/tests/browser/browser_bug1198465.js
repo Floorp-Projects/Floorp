@@ -76,5 +76,5 @@ add_task(async function() {
   // Clear the findField value to make the test  run successfully
   // for multiple runs in the same browser session.
   findBar._findField.value = "";
-  await BrowserTestUtils.removeTab(aTab);
+  BrowserTestUtils.removeTab(aTab);
 });

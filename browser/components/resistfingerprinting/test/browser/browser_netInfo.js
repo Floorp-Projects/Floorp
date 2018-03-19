@@ -18,7 +18,7 @@ async function testWindow() {
     is(content.navigator.connection.type, "unknown", "The connection type is spoofed correctly");
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 async function testWorker() {
@@ -45,7 +45,7 @@ async function testWorker() {
     });
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function runTest() {

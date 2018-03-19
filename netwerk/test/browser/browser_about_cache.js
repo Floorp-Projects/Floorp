@@ -9,7 +9,7 @@ add_task(async function() {
   const kTestPage = kRoot + "dummy.html";
   // Open the dummy page to get it cached.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, kTestPage, true);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:cache", true);
   let expectedPageCheck = function(uri) {
@@ -67,5 +67,5 @@ add_task(async function() {
     ok(content.document.querySelectorAll("th").length,
        "Should have several table headers with data.");
   });
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

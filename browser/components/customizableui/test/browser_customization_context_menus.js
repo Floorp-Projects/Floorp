@@ -74,7 +74,7 @@ add_task(async function tabstrip_context() {
   let hiddenPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   await hiddenPromise;
-  await BrowserTestUtils.removeTab(extraTab);
+  BrowserTestUtils.removeTab(extraTab);
 });
 
 // Right-click on an empty bit of extra toolbar should

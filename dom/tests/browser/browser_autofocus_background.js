@@ -31,7 +31,7 @@ add_task(async function() {
 
   // Cleaning up.
   for (let i = 1; i < tabs.length; i++) {
-    await BrowserTestUtils.removeTab(tabs[i]);
+    BrowserTestUtils.removeTab(tabs[i]);
   }
 });
 

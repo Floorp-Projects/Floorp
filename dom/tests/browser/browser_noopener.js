@@ -77,8 +77,8 @@ async function doTests(private, container) {
       }
     });
 
-    await BrowserTestUtils.removeTab(tab);
-    await BrowserTestUtils.removeTab(originalTab);
+    BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(originalTab);
   }
 
   window.close();

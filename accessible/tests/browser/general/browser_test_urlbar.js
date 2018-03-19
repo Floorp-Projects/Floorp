@@ -26,7 +26,7 @@ add_task(async function testAutocompleteRichResult() {
   let accessible = accService.getAccessibleFor(richlistbox);
   is(accessible.role, ROLE_COMBOBOX_LIST, "Right role");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 registerCleanupFunction(async function() {

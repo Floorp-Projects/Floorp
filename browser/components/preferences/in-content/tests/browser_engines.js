@@ -21,5 +21,5 @@ add_task(async function() {
   let cellKeyword = tree.view.getCellText(1, tree.columns.getNamedColumn("engineKeyword"));
   isnot(cellKeyword, "keyword", "Do not allow duplicated keywords");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -9,7 +9,7 @@ async function runTestOnPrivacyPrefPane(testFunc) {
   browser.contentWindow.gotoPref("panePrivacy");
   info("viewing privacy pane, executing testFunc");
   testFunc(browser.contentWindow);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 function controlChanged(element) {

@@ -121,7 +121,7 @@ add_task(async function() {
   // Close notification to trigger telemetry to be sent
   await closeAllNotifications(targetWindow, notificationBox);
   await telemetrySentPromise;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 
@@ -164,7 +164,7 @@ add_task(async function() {
   // Close notification to trigger telemetry to be sent
   await closeAllNotifications(targetWindow, notificationBox);
   await telemetrySentPromise;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Batch 3 - Closing the window while heartbeat is open

@@ -95,7 +95,7 @@ add_task(async function test_on_created_navigation_target_from_mouse_click() {
     },
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
 });
@@ -171,7 +171,7 @@ add_task(async function test_on_created_navigation_target_from_mouse_click_subfr
     },
   });
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
 });
