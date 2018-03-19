@@ -89,8 +89,7 @@ function pinningRemovalLoaded() {
 // Finally, we should successfully load
 // https://bad.include-subdomains.pinning-dynamic.example.com.
 function badPinningPageLoaded() {
-  BrowserTestUtils.removeTab(gBrowser.selectedTab).then(function() {
-    ok(true, "load complete");
-    finish();
-  });
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  ok(true, "load complete");
+  finish();
 }

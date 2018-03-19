@@ -179,11 +179,10 @@ async function waitForInstallDialog() {
   return null;
 }
 
-function removeTab() {
-  return Promise.all([
-    waitForNotificationClose(),
-    BrowserTestUtils.removeTab(gBrowser.selectedTab)
-  ]);
+function removeTabAndWaitForNotificationClose() {
+  let closePromise = waitForNotificationClose();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  return closePromise;
 }
 
 function acceptInstallDialog(installDialog) {
@@ -301,7 +300,7 @@ async function test_blockedInstall() {
   let installs = await getInstalls();
   is(installs.length, 1, "Should be one pending install");
   installs[0].cancel();
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_whitelistedInstall() {
@@ -340,7 +339,7 @@ async function test_whitelistedInstall() {
   installs[0].cancel();
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_failedDownload() {
@@ -362,7 +361,7 @@ async function test_failedDownload() {
      "Should have seen the right message");
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_corruptFile() {
@@ -385,7 +384,7 @@ async function test_corruptFile() {
      "Should have seen the right message");
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_incompatible() {
@@ -408,7 +407,7 @@ async function test_incompatible() {
      "Should have seen the right message");
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_restartless() {
@@ -440,10 +439,7 @@ async function test_restartless() {
   addon.uninstall();
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-
-  let closePromise = waitForNotificationClose();
-  gBrowser.removeTab(gBrowser.selectedTab);
-  await closePromise;
+  await removeTabAndWaitForNotificationClose(gBrowser.selectedTab);
 },
 
 async function test_sequential() {
@@ -561,7 +557,7 @@ async function test_allUnverified() {
   addon.uninstall();
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_url() {
@@ -587,7 +583,7 @@ async function test_url() {
   is(installs.length, 1, "Should be one pending install");
   installs[0].cancel();
 
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_localFile() {
@@ -620,7 +616,7 @@ async function test_localFile() {
      "This add-on could not be installed because it appears to be corrupt.",
      "Should have seen the right message");
 
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_tabClose() {
@@ -640,9 +636,7 @@ async function test_tabClose() {
   let installs = await getInstalls();
   is(installs.length, 1, "Should be one pending install");
 
-  let closePromise = waitForNotificationClose();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await closePromise;
+  await removeTabAndWaitForNotificationClose(gBrowser.selectedTab);
 
   installs = await getInstalls();
   is(installs.length, 0, "Should be no pending install since the tab is closed");
@@ -683,7 +677,8 @@ async function test_tabNavigate() {
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
   await loadPromise;
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_urlBar() {
@@ -713,7 +708,7 @@ async function test_urlBar() {
   is(installs.length, 1, "Should be one pending install");
   installs[0].cancel();
 
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_wrongHost() {
@@ -736,7 +731,7 @@ async function test_wrongHost() {
      "because it appears to be corrupt.",
      "Should have seen the right message");
 
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_reload() {
@@ -777,7 +772,7 @@ async function test_reload() {
   installs[0].cancel();
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_theme() {
@@ -821,7 +816,7 @@ async function test_theme() {
   addon.uninstall();
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_renotifyBlocked() {
@@ -848,9 +843,7 @@ async function test_renotifyBlocked() {
   let installs = await getInstalls();
   is(installs.length, 2, "Should be two pending installs");
 
-  closePromise = waitForNotificationClose();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await closePromise;
+  await removeTabAndWaitForNotificationClose(gBrowser.selectedTab);
 
   installs = await getInstalls();
   is(installs.length, 0, "Should have cancelled the installs");
@@ -900,7 +893,7 @@ async function test_renotifyInstalled() {
   installs[0].cancel();
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 },
 
 async function test_cancel() {
@@ -989,7 +982,7 @@ async function test_failedSecurity() {
   is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
 
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
-  await removeTab();
+  await removeTabAndWaitForNotificationClose();
 }
 ];
 

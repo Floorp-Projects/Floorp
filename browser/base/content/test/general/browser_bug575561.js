@@ -65,7 +65,8 @@ async function testLink(aLinkIndexOrFunction, pinTab, expectNewTab, testSubFrame
   if (expectNewTab) {
     promise = BrowserTestUtils.waitForNewTab(gBrowser).then(tab => {
       let loaded = tab.linkedBrowser.documentURI.spec;
-      return BrowserTestUtils.removeTab(tab).then(() => loaded);
+      BrowserTestUtils.removeTab(tab);
+      return loaded;
     });
   } else {
     promise = BrowserTestUtils.browserLoaded(browser, testSubFrame);

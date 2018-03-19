@@ -35,16 +35,10 @@ exports.addTab = function({ url, win }, options = {}) {
 /**
  * Removes a browser tab from the specified window and waits for it to close.
  */
-exports.removeTab = function(tab, options = {}) {
+exports.removeTab = function(tab) {
   dump(`Removing tab: ${tab.linkedBrowser.currentURI.spec}.\n`);
 
-  return new Promise(resolve => {
-    BrowserTestUtils.removeTab(tab).then(() => resolve(tab));
-
-    if (options.dontWaitForTabClose) {
-      resolve(tab);
-    }
-  });
+  BrowserTestUtils.removeTab(tab);
 };
 
 /**
