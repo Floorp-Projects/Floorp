@@ -47,8 +47,9 @@ public:
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  virtual CharacterData* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                       bool aCloneText) const override;
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                  bool aCloneText) const override;
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 #ifdef DEBUG

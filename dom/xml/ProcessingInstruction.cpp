@@ -85,14 +85,14 @@ ProcessingInstruction::IsNodeOfType(uint32_t aFlags) const
   return !(aFlags & ~(ePROCESSING_INSTRUCTION | eDATA_NODE));
 }
 
-CharacterData*
+already_AddRefed<CharacterData>
 ProcessingInstruction::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                                      bool aCloneText) const
 {
   nsAutoString data;
   GetData(data);
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  return new ProcessingInstruction(ni.forget(), data);
+  return do_AddRef(new ProcessingInstruction(ni.forget(), data));
 }
 
 #ifdef DEBUG

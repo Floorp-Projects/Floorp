@@ -34,9 +34,9 @@ Text::SplitText(uint32_t aOffset, ErrorResult& aRv)
 
   // Use Clone for creating the new node so that the new node is of same class
   // as this node!
-  CharacterData* clone = CloneDataNode(mNodeInfo, false);
+  RefPtr<CharacterData> clone = CloneDataNode(mNodeInfo, false);
   MOZ_ASSERT(clone && clone->IsText());
-  RefPtr<Text> newContent = static_cast<Text*>(clone);
+  RefPtr<Text> newContent = static_cast<Text*>(clone.get());
 
   // nsRange expects the CharacterDataChanged notification is followed
   // by an insertion of |newContent|. If you change this code,
