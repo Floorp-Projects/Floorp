@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'nsIDOMNode.idl',
     'nsIDOMNodeList.idl',
     'nsIDOMNSEditableElement.idl',
-    'nsIDOMProcessingInstruction.idl',
     'nsIDOMXMLDocument.idl',
 ]
 

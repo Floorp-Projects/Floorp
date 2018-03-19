@@ -63,21 +63,12 @@ ProcessingInstruction::~ProcessingInstruction()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(ProcessingInstruction, nsGenericDOMDataNode,
-                            nsIDOMNode, nsIDOMCharacterData,
-                            nsIDOMProcessingInstruction)
+                            nsIDOMNode, nsIDOMCharacterData)
 
 JSObject*
 ProcessingInstruction::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return ProcessingInstructionBinding::Wrap(aCx, this, aGivenProto);
-}
-
-NS_IMETHODIMP
-ProcessingInstruction::GetTarget(nsAString& aTarget)
-{
-  aTarget = NodeName();
-
-  return NS_OK;
 }
 
 bool

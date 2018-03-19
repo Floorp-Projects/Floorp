@@ -126,8 +126,7 @@ function testPI(aTarget, aData, aShouldSucceed, aReason)
     var types = [ ProcessingInstruction, Node ];
     checkTypes(pi, "processing instruction", types);
 
-    var interfaces = [ "nsIDOMProcessingInstruction", "nsIDOMNode",
-                       "nsIDOMEventTarget" ];
+    var interfaces = [ "nsIDOMNode", "nsIDOMEventTarget" ];
     checkInterfaces(pi, "processing instruction", interfaces);
 
     is(pi.target, aTarget, "Check target");
