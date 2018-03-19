@@ -152,6 +152,8 @@
 
 #define SK_SUPPORT_DEPRECATED_CLIPOPS
 
+#define SK_DISABLE_EXPLICIT_GPU_RESOURCE_ALLOCATION
+
 #ifndef MOZ_IMPLICIT
 #  ifdef MOZ_CLANG_PLUGIN
 #    define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
