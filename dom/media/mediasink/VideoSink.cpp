@@ -12,10 +12,10 @@
 
 #include "MediaQueue.h"
 #include "VideoSink.h"
-#include "MediaPrefs.h"
 #include "VideoUtils.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 
@@ -50,7 +50,7 @@ VideoSink::VideoSink(AbstractThread* aThread,
   , mHasVideo(false)
   , mUpdateScheduler(aThread)
   , mVideoQueueSendToCompositorSize(aVQueueSentToCompositerSize)
-  , mMinVideoQueueSize(MediaPrefs::RuinAvSync() ? 1 : 0)
+  , mMinVideoQueueSize(StaticPrefs::MediaRuinAvSyncEnabled() ? 1 : 0)
 #ifdef XP_WIN
   , mHiResTimersRequested(false)
 #endif
