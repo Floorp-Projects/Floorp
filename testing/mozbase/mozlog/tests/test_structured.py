@@ -778,8 +778,8 @@ Unexpected results: 2
   test: 2 (1 fail, 1 pass)
 """.strip(), "\n".join(self.loglines))
         self.assertNotIn("test1", self.loglines)
-        self.assertIn("  PASS expected TIMEOUT test2", self.loglines)
-        self.assertIn("  FAIL test3", self.loglines)
+        self.assertIn("UNEXPECTED-PASS test2", self.loglines)
+        self.assertIn("FAIL test3", self.loglines)
 
     def test_summary_subtests(self):
         self.logger.suite_start([])
