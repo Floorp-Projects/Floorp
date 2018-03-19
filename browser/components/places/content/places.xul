@@ -12,9 +12,6 @@
 <?xml-stylesheet href="chrome://browser/skin/places/organizer.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css"?>
 
-#ifdef XP_MACOSX
-<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
-#endif
 <?xul-overlay href="chrome://browser/content/downloads/allDownloadsViewOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -29,8 +26,7 @@
 <!ENTITY % editBookmarkOverlayDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
 %editBookmarkOverlayDTD;
 #ifdef XP_MACOSX
-<!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
-%baseMenuOverlayDTD;
+#include ../../../base/content/browser-doctype.inc
 #endif
 ]>
 
@@ -49,13 +45,15 @@
   <script type="application/javascript"
           src="chrome://browser/content/places/places.js"/>
 #ifndef XP_MACOSX
-  <!-- On Mac, these are included via macBrowserOverlay.xul -> browser.js -> defineLazyScriptGetter -->
+  <!-- On Mac, this is included via macWindow.inc.xul -> global-scripts.inc -> browser.js -> defineLazyScriptGetter -->
   <script type="application/javascript"
           src="chrome://browser/content/places/editBookmark.js"/>
+  <!-- On Mac, thes are included via macWindow.inc.xul -> global-scripts.inc -->
   <script type="application/javascript"
           src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
+  <!-- On Mac, these are included via macWindow.inc.xul -->
   <script type="application/javascript"><![CDATA[
     ChromeUtils.defineModuleGetter(window,
       "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
@@ -79,7 +77,7 @@
 
 
 #ifdef XP_MACOSX
-#include ../../../base/content/browserMountPoints.inc
+#include ../../../base/content/macWindow.inc.xul
 #else
 #include ../../../../toolkit/content/editMenuCommands.inc.xul
 #include placesCommands.inc.xul

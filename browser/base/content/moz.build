@@ -152,7 +152,7 @@ with Files("*.svg"):
 with Files("hiddenWindow.xul"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
 
-with Files("macBrowserOverlay.xul"):
+with Files("macWindow.inc.xul"):
     BUG_COMPONENT = ("Firefox", "Shell Integration")
 
 with Files("tabbrowser*"):
