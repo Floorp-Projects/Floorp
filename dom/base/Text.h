@@ -24,14 +24,9 @@ public:
     : nsGenericDOMDataNode(aNodeInfo)
   {}
 
-  using nsGenericDOMDataNode::GetWholeText;
-
   // WebIDL API
   already_AddRefed<Text> SplitText(uint32_t aOffset, ErrorResult& rv);
-  void GetWholeText(nsAString& aWholeText, ErrorResult& rv)
-  {
-    nsGenericDOMDataNode::GetWholeText(aWholeText, rv);
-  }
+  void GetWholeText(nsAString& aWholeText, ErrorResult& rv);
 
   static already_AddRefed<Text>
   Constructor(const GlobalObject& aGlobal,

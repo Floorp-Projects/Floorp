@@ -62,6 +62,73 @@ Text::SplitText(uint32_t aOffset, ErrorResult& aRv)
   return newContent.forget();
 }
 
+static nsIContent*
+FirstLogicallyAdjacentTextNode(nsIContent* aNode)
+{
+  do {
+    nsIContent* sibling = aNode->GetPreviousSibling();
+    if (!sibling || !sibling->IsText()) {
+      return aNode;
+    }
+    aNode = sibling;
+  } while (1);  // Must run out of previous siblings eventually!
+}
+
+static nsIContent*
+LastLogicallyAdjacentTextNode(nsIContent* aNode)
+{
+  do {
+    nsIContent* sibling = aNode->GetNextSibling();
+    if (!sibling || !sibling->IsText()) {
+      return aNode;
+    }
+
+    aNode = sibling;
+  } while (1); // Must run out of next siblings eventually!
+}
+
+void
+Text::GetWholeText(nsAString& aWholeText,
+                   ErrorResult& aRv)
+{
+  nsIContent* parent = GetParent();
+
+  // Handle parent-less nodes
+  if (!parent) {
+    GetData(aWholeText);
+    return;
+  }
+
+  int32_t index = parent->ComputeIndexOf(this);
+  NS_WARNING_ASSERTION(index >= 0,
+                       "Trying to use .wholeText with an anonymous"
+                       "text node child of a binding parent?");
+  if (NS_WARN_IF(index < 0)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  nsCOMPtr<nsIContent> first = FirstLogicallyAdjacentTextNode(this);
+  nsCOMPtr<nsIContent> last = LastLogicallyAdjacentTextNode(this);
+
+  aWholeText.Truncate();
+
+  nsCOMPtr<nsIDOMText> node;
+  nsAutoString tmp;
+
+  while (true) {
+    node = do_QueryInterface(first);
+    node->GetData(tmp);
+    aWholeText.Append(tmp);
+
+    if (first == last) {
+      break;
+    }
+
+    first = first->GetNextSibling();
+  }
+}
+
 /* static */ already_AddRefed<Text>
 Text::Constructor(const GlobalObject& aGlobal,
                   const nsAString& aData, ErrorResult& aRv)
