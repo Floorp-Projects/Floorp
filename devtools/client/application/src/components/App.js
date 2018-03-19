@@ -10,6 +10,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 
 const WorkerList = createFactory(require("./WorkerList"));
+const WorkerListEmpty = createFactory(require("./WorkerListEmpty"));
 
 /**
  * This is the main component for the application panel.
@@ -25,9 +26,16 @@ class App extends Component {
 
   render() {
     let { workers, client, serviceContainer } = this.props;
+    const isEmpty = workers.length == 0;
 
-    return div({className: "application"},
-      WorkerList({ workers, client, serviceContainer }));
+    return (
+      div(
+        { className: `application ${isEmpty ? "empty" : ""}` },
+        isEmpty
+          ? WorkerListEmpty({ serviceContainer })
+          : WorkerList({ workers, client, serviceContainer })
+      )
+    );
   }
 }
 

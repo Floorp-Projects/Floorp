@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.worker-list-empty {
+  width: 700px;
+  line-height: 24px;
+  left: 50%;
+  top: 50%;
+  margin-top: -100px;
+  margin-left: -350px;
+  position: absolute;
+  font-size: 13px;
+}
+
+.worker-list-empty ul {
+  list-style: unset;
+  padding: 0 40px;
+}
