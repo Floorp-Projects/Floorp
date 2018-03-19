@@ -73,7 +73,6 @@
 #include "nsITabChild.h"
 
 #include "nsRange.h"
-#include "nsIDOMComment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/NodeIterator.h"
 #include "mozilla/dom/Promise.h"

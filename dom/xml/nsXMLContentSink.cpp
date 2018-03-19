@@ -13,7 +13,6 @@
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsIDOMComment.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "mozilla/StyleSheetInlines.h"
