@@ -241,7 +241,8 @@ private:
     }
 
     void maybeGrow() {
-        if (100 * (fCount + fDeleted + 1) > fCapacity * kGrowPercent) {
+        if (100 * (int64_t(fCount + fDeleted) + 1) > int64_t(fCapacity) * kGrowPercent) {
+            SkASSERT_RELEASE(fCapacity <= std::numeric_limits<int>::max() / 2);
             this->resize(fCapacity > 0 ? fCapacity * 2 : 4);
         }
     }
@@ -253,7 +254,7 @@ private:
 
         fCount = fDeleted = 0;
         fCapacity = newCapacity;
-        fArray = (T**)sk_calloc_throw(sizeof(T*) * fCapacity);
+        fArray = (T**)sk_calloc_throw(fCapacity, sizeof(T*));
 
         for (int i = 0; i < oldCapacity; i++) {
             T* entry = oldArray[i];
