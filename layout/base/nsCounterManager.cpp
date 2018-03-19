@@ -178,7 +178,7 @@ nsCounterList::RecalcAll()
       if (useNode->mText) {
         nsAutoString text;
         useNode->GetText(text);
-        useNode->mText->SetData(text);
+        useNode->mText->SetData(text, IgnoreErrors());
       }
     }
   }

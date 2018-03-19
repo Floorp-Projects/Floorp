@@ -49,7 +49,6 @@ public:
 
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(mozilla::dom::CharacterData::)
-  using CharacterData::SetData; // Prevent hiding overloaded virtual function.
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;

@@ -259,15 +259,13 @@ nsXMLContentSerializer::AppendProcessingInstruction(ProcessingInstruction* aPI,
                                                     int32_t aEndOffset,
                                                     nsAString& aStr)
 {
-  nsresult rv;
   nsAutoString target, data, start;
 
   NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
 
   aPI->GetTarget(target);
 
-  rv = aPI->GetData(data);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  aPI->GetData(data);
 
   NS_ENSURE_TRUE(start.AppendLiteral("<?", mozilla::fallible), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(start.Append(target, mozilla::fallible), NS_ERROR_OUT_OF_MEMORY);
@@ -305,11 +303,8 @@ nsXMLContentSerializer::AppendComment(Comment* aComment,
                                       int32_t aEndOffset,
                                       nsAString& aStr)
 {
-  nsresult rv;
   nsAutoString data;
-
-  rv = aComment->GetData(data);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  aComment->GetData(data);
 
   int32_t dataLength = data.Length();
   if (aStartOffset || (aEndOffset != -1 && aEndOffset < dataLength)) {
