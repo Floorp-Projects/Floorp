@@ -1640,13 +1640,14 @@ nsNavHistoryContainerResultNode::GetChildCount(uint32_t* aChildCount)
 
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::GetChild(uint32_t aIndex,
-                                          nsINavHistoryResultNode** _retval)
+                                          nsINavHistoryResultNode** _child)
 {
   if (!mExpanded)
     return NS_ERROR_NOT_AVAILABLE;
   if (aIndex >= uint32_t(mChildren.Count()))
     return NS_ERROR_INVALID_ARG;
-  NS_ADDREF(*_retval = mChildren[aIndex]);
+  nsCOMPtr<nsINavHistoryResultNode> child = mChildren[aIndex];
+  child.forget(_child);
   return NS_OK;
 }
 
@@ -1701,66 +1702,42 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
 }
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
-    const nsACString& aTitle, const nsCOMArray<nsNavHistoryQuery>& aQueries,
+    const nsACString& aTitle, const RefPtr<nsNavHistoryQuery>& aQuery,
     nsNavHistoryQueryOptions* aOptions) :
   nsNavHistoryContainerResultNode(EmptyCString(), aTitle,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   aOptions),
-  mQueries(aQueries),
+  mQuery(aQuery),
   mContentsValid(false),
   mBatchChanges(0),
-  mTransitions(mQueries[0]->Transitions())
+  mTransitions(aQuery->Transitions())
 {
-  NS_ASSERTION(aQueries.Count() > 0, "Must have at least one query");
-
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ASSERTION(history, "History service missing");
   if (history) {
-    mLiveUpdate = history->GetUpdateRequirements(mQueries, mOptions,
+    mLiveUpdate = history->GetUpdateRequirements(mQuery, mOptions,
                                                  &mHasSearchTerms);
-  }
-
-  // Collect transitions shared by all queries.
-  for (int32_t i = 1; i < mQueries.Count(); ++i) {
-    const nsTArray<uint32_t>& queryTransitions = mQueries[i]->Transitions();
-    for (uint32_t j = 0; j < mTransitions.Length() ; ++j) {
-      uint32_t transition = mTransitions.SafeElementAt(j, 0);
-      if (transition && !queryTransitions.Contains(transition))
-        mTransitions.RemoveElement(transition);
-    }
   }
 }
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsACString& aTitle,
     PRTime aTime,
-    const nsCOMArray<nsNavHistoryQuery>& aQueries,
+    const RefPtr<nsNavHistoryQuery>& aQuery,
     nsNavHistoryQueryOptions* aOptions) :
   nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aTime,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   aOptions),
-  mQueries(aQueries),
+  mQuery(aQuery),
   mContentsValid(false),
   mBatchChanges(0),
-  mTransitions(mQueries[0]->Transitions())
+  mTransitions(aQuery->Transitions())
 {
-  NS_ASSERTION(aQueries.Count() > 0, "Must have at least one query");
-
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ASSERTION(history, "History service missing");
   if (history) {
-    mLiveUpdate = history->GetUpdateRequirements(mQueries, mOptions,
+    mLiveUpdate = history->GetUpdateRequirements(mQuery, mOptions,
                                                  &mHasSearchTerms);
-  }
-
-  // Collect transitions shared by all queries.
-  for (int32_t i = 1; i < mQueries.Count(); ++i) {
-    const nsTArray<uint32_t>& queryTransitions = mQueries[i]->Transitions();
-    for (uint32_t j = 0; j < mTransitions.Length() ; ++j) {
-      uint32_t transition = mTransitions.SafeElementAt(j, 0);
-      if (transition && !queryTransitions.Contains(transition))
-        mTransitions.RemoveElement(transition);
-    }
   }
 }
 
@@ -1934,7 +1911,7 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::GetUri(nsACString& aURI)
 {
-  nsresult rv = VerifyQueriesSerialized();
+  nsresult rv = VerifyQuerySerialized();
   NS_ENSURE_SUCCESS(rv, rv);
   aURI = mURI;
   return NS_OK;
@@ -1957,32 +1934,31 @@ nsNavHistoryQueryResultNode::GetTargetFolderGuid(nsACString& aGuid) {
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::GetQuery(nsINavHistoryQuery** _query)
 {
-  nsresult rv = VerifyQueriesParsed();
+  nsresult rv = VerifyQueryParsed();
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(mQueries.Count() > 0, "Must have >= 1 query");
 
-  nsCOMPtr<nsINavHistoryQuery> query = mQueries[0];
+  nsCOMPtr<nsINavHistoryQuery> query = do_QueryInterface(mQuery);
   query.forget(_query);
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::GetQueryOptions(
-                                      nsINavHistoryQueryOptions** aQueryOptions)
+nsNavHistoryQueryResultNode::GetQueryOptions(nsINavHistoryQueryOptions** _options)
 {
-  *aQueryOptions = Options();
-  NS_ADDREF(*aQueryOptions);
+  MOZ_ASSERT(mOptions, "Options should be valid");
+  nsCOMPtr<nsINavHistoryQueryOptions> options = do_QueryInterface(mOptions);
+  options.forget(_options);
   return NS_OK;
 }
 
 /**
- * Safe options getter, ensures queries are parsed first.
+ * Safe options getter, ensures query is parsed first.
  */
 nsNavHistoryQueryOptions*
 nsNavHistoryQueryResultNode::Options()
 {
-  nsresult rv = VerifyQueriesParsed();
+  nsresult rv = VerifyQueryParsed();
   if (NS_FAILED(rv))
     return nullptr;
   MOZ_ASSERT(mOptions, "Options invalid, cannot generate from URI");
@@ -1991,11 +1967,11 @@ nsNavHistoryQueryResultNode::Options()
 
 
 nsresult
-nsNavHistoryQueryResultNode::VerifyQueriesParsed()
+nsNavHistoryQueryResultNode::VerifyQueryParsed()
 {
-  if (mQueries.Count() > 0) {
+  if (mQuery) {
     MOZ_ASSERT(mOriginalOptions && mOptions,
-               "If a result has queries, it also needs options");
+               "A result with a parsed query must have options");
     return NS_OK;
   }
   NS_ASSERTION(!mURI.IsEmpty(),
@@ -2011,27 +1987,26 @@ nsNavHistoryQueryResultNode::VerifyQueriesParsed()
   NS_ENSURE_SUCCESS(rv, rv);
   mOptions = do_QueryObject(options);
   NS_ENSURE_STATE(mOptions);
-  RefPtr<nsNavHistoryQuery> queryObj = do_QueryObject(query);
-  NS_ENSURE_STATE(queryObj);
-  mQueries.AppendObject(queryObj);
-  mLiveUpdate = history->GetUpdateRequirements(mQueries, mOptions,
+  mQuery = do_QueryObject(query);
+  NS_ENSURE_STATE(mQuery);
+  mLiveUpdate = history->GetUpdateRequirements(mQuery, mOptions,
                                                &mHasSearchTerms);
   return NS_OK;
 }
 
 
 nsresult
-nsNavHistoryQueryResultNode::VerifyQueriesSerialized()
+nsNavHistoryQueryResultNode::VerifyQuerySerialized()
 {
   if (!mURI.IsEmpty()) {
     return NS_OK;
   }
-  MOZ_ASSERT(mQueries.Count() > 0 && mOptions,
+  MOZ_ASSERT(mQuery && mOptions,
              "Query nodes must have either a URI or query/options");
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  nsCOMPtr<nsINavHistoryQuery> query = do_QueryInterface(mQueries[0]);
+  nsCOMPtr<nsINavHistoryQuery> query = do_QueryInterface(mQuery);
   nsresult rv = history->QueryToQueryString(query, mOriginalOptions, mURI);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_STATE(!mURI.IsEmpty());
@@ -2051,9 +2026,9 @@ nsNavHistoryQueryResultNode::FillChildren()
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
   // get the results from the history service
-  nsresult rv = VerifyQueriesParsed();
+  nsresult rv = VerifyQueryParsed();
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = history->GetQueryResults(this, mQueries, mOptions, &mChildren);
+  rv = history->GetQueryResults(this, mQuery, mOptions, &mChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // it is important to call FillStats to fill in the parents on all
@@ -2372,12 +2347,8 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
     case QUERYUPDATE_HOST: {
       // For these simple yet common cases we can check the host ourselves
       // before doing the overhead of creating a new result node.
-      MOZ_ASSERT(mQueries.Count() == 1,
-                 "Host updated queries can have only one object");
-      RefPtr<nsNavHistoryQuery> query = do_QueryObject(mQueries[0]);
-
       bool hasDomain;
-      query->GetHasDomain(&hasDomain);
+      mQuery->GetHasDomain(&hasDomain);
       if (!hasDomain)
         return NS_OK;
 
@@ -2385,7 +2356,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
       if (NS_FAILED(aURI->GetAsciiHost(host)))
         return NS_OK;
 
-      if (!query->Domain().Equals(host))
+      if (!mQuery->Domain().Equals(host))
         return NS_OK;
 
       // Fall through to check the time, if the time is not present it will
@@ -2396,22 +2367,18 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
     case QUERYUPDATE_TIME: {
       // For these simple yet common cases we can check the time ourselves
       // before doing the overhead of creating a new result node.
-      MOZ_ASSERT(mQueries.Count() == 1,
-                 "Time updated queries can have only one object");
-      RefPtr<nsNavHistoryQuery> query = do_QueryObject(mQueries[0]);
-
       bool hasIt;
-      query->GetHasBeginTime(&hasIt);
+      mQuery->GetHasBeginTime(&hasIt);
       if (hasIt) {
-        PRTime beginTime = history->NormalizeTime(query->BeginTimeReference(),
-                                                  query->BeginTime());
+        PRTime beginTime = history->NormalizeTime(mQuery->BeginTimeReference(),
+                                                  mQuery->BeginTime());
         if (aTime < beginTime)
           return NS_OK; // before our time range
       }
-      query->GetHasEndTime(&hasIt);
+      mQuery->GetHasEndTime(&hasIt);
       if (hasIt) {
-        PRTime endTime = history->NormalizeTime(query->EndTimeReference(),
-                                                query->EndTime());
+        PRTime endTime = history->NormalizeTime(mQuery->EndTimeReference(),
+                                                mQuery->EndTime());
         if (aTime > endTime)
           return NS_OK; // after our time range
       }
@@ -2421,7 +2388,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
     }
 
     case QUERYUPDATE_SIMPLE: {
-      // If all of the queries are filtered by some transitions, skip the
+      // If the query is filtered by some transitions, skip the
       // update if aTransitionType doesn't match any of them.
       if (mTransitions.Length() > 0 && !mTransitions.Contains(aTransitionType))
         return NS_OK;
@@ -2437,7 +2404,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
         return NS_OK;
       }
       addition->mTransitionType = aTransitionType;
-      if (!history->EvaluateQueryForNode(mQueries, mOptions, addition))
+      if (!history->EvaluateQueryForNode(mQuery, mOptions, addition))
         return NS_OK; // don't need to include in our query
 
       if (mOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_VISIT) {
@@ -2523,7 +2490,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
     mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI ||
     mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS;
 
-  // See if our queries have any search term matching.
+  // See if our query has any search term matching.
   if (mHasSearchTerms) {
     // Find all matching URI nodes.
     nsCOMArray<nsNavHistoryResultNode> matches;
@@ -2539,7 +2506,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
       rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (history->EvaluateQueryForNode(mQueries, mOptions, node)) {
+      if (history->EvaluateQueryForNode(mQuery, mOptions, node)) {
         rv = InsertSortedChild(node);
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -2554,7 +2521,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
 
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-      if (!history->EvaluateQueryForNode(mQueries, mOptions, node)) {
+      if (!history->EvaluateQueryForNode(mQuery, mOptions, node)) {
         nsNavHistoryContainerResultNode* parent = node->mParent;
         // URI nodes should always have parents
         NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
@@ -2748,7 +2715,7 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
-    if (history->EvaluateQueryForNode(mQueries, mOptions, node)) {
+    if (history->EvaluateQueryForNode(mQuery, mOptions, node)) {
       rv = InsertSortedChild(node);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2764,7 +2731,7 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
     // It's possible now this node does not respect anymore the conditions.
     // In such a case it should be removed.
     if (mHasSearchTerms &&
-        !history->EvaluateQueryForNode(mQueries, mOptions, node)) {
+        !history->EvaluateQueryForNode(mQuery, mOptions, node)) {
       nsNavHistoryContainerResultNode* parent = node->mParent;
       // URI nodes should always have parents
       NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
@@ -3130,13 +3097,11 @@ nsNavHistoryFolderResultNode::GetQuery(nsINavHistoryQuery** _query)
  * the options for the folder with the current folder ID set.
  */
 NS_IMETHODIMP
-nsNavHistoryFolderResultNode::GetQueryOptions(
-                                      nsINavHistoryQueryOptions** aQueryOptions)
+nsNavHistoryFolderResultNode::GetQueryOptions(nsINavHistoryQueryOptions** _options)
 {
-  NS_ASSERTION(mOptions, "Options invalid");
-
-  *aQueryOptions = mOptions;
-  NS_ADDREF(*aQueryOptions);
+  MOZ_ASSERT(mOptions, "Options should be valid");
+  nsCOMPtr<nsINavHistoryQueryOptions> options = do_QueryInterface(mOptions);
+  options.forget(_options);
   return NS_OK;
 }
 
@@ -4009,18 +3974,29 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResult)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot)
-  : mRootNode(aRoot)
+nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot,
+                                       const RefPtr<nsNavHistoryQuery>& aQuery,
+                                       const RefPtr<nsNavHistoryQueryOptions>& aOptions,
+                                       bool aBatchInProgress
+) : mRootNode(aRoot)
+  , mQuery(aQuery)
+  , mOptions(aOptions)
   , mNeedsToApplySortingMode(false)
   , mIsHistoryObserver(false)
   , mIsBookmarkFolderObserver(false)
   , mIsAllBookmarksObserver(false)
   , mIsMobilePrefObserver(false)
   , mBookmarkFolderObservers(64)
-  , mBatchInProgress(false)
+  , mBatchInProgress(aBatchInProgress)
   , mSuppressNotifications(false)
 {
+  mSortingMode = aOptions->SortingMode();
+  MOZ_ALWAYS_SUCCEEDS(aOptions->GetSortingAnnotation(mSortingAnnotation));
+
   mRootNode->mResult = this;
+  MOZ_ASSERT(mRootNode->mIndentLevel == -1,
+             "Root node's indent level initialized wrong");
+  mRootNode->FillStats();
 }
 
 nsNavHistoryResult::~nsNavHistoryResult()
@@ -4057,71 +4033,6 @@ nsNavHistoryResult::StopObserving()
     }
   }
 }
-
-/**
- * @note you must call AddRef before this, since we may do things like
- * register ourselves.
- */
-nsresult
-nsNavHistoryResult::Init(nsCOMArray<nsNavHistoryQuery>& aQueries,
-                         uint32_t aQueryCount,
-                         nsNavHistoryQueryOptions *aOptions)
-{
-  nsresult rv;
-  NS_ASSERTION(aOptions, "Must have valid options");
-  NS_ASSERTION(aQueries.Count() == aQueryCount && aQueryCount > 0, "Must have >1 query in result");
-
-  // Fill saved source queries with copies of the original (the caller might
-  // change their original objects, and we always want to reflect the source
-  // parameters).
-  for (uint32_t i = 0; i < aQueryCount; ++i) {
-    nsCOMPtr<nsINavHistoryQuery> queryClone;
-    rv = aQueries[i]->Clone(getter_AddRefs(queryClone));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!mQueries.AppendObject(queryClone))
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = aOptions->Clone(getter_AddRefs(mOptions));
-  NS_ENSURE_SUCCESS(rv, rv);
-  mSortingMode = aOptions->SortingMode();
-  rv = aOptions->GetSortingAnnotation(mSortingAnnotation);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ASSERTION(mRootNode->mIndentLevel == -1,
-               "Root node's indent level initialized wrong");
-  mRootNode->FillStats();
-
-  return NS_OK;
-}
-
-
-/**
- * Constructs a new history result object.
- */
-nsresult // static
-nsNavHistoryResult::NewHistoryResult(nsCOMArray<nsNavHistoryQuery>& aQueries,
-                                     uint32_t aQueryCount,
-                                     nsNavHistoryQueryOptions* aOptions,
-                                     nsNavHistoryContainerResultNode* aRoot,
-                                     bool aBatchInProgress,
-                                     nsNavHistoryResult** result)
-{
-  *result = new nsNavHistoryResult(aRoot);
-  if (!*result)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*result); // must happen before Init
-  // Correctly set mBatchInProgress for the result based on the root node value.
-  (*result)->mBatchInProgress = aBatchInProgress;
-  nsresult rv = (*result)->Init(aQueries, aQueryCount, aOptions);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(*result);
-    *result = nullptr;
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 
 void
 nsNavHistoryResult::AddHistoryObserver(nsNavHistoryQueryResultNode* aNode)
