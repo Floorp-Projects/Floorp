@@ -32,6 +32,10 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   startupManager();
 
+
+  server = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+  server.registerDirectory("/", do_get_file("data"));
+
   installAllFiles([do_get_addon("test_bug394300_1"),
                    do_get_addon("test_bug394300_2")], function() {
 
@@ -42,9 +46,6 @@ function run_test() {
 
       Assert.notEqual(updates[0], null);
       Assert.notEqual(updates[1], null);
-
-      server = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-      server.registerDirectory("/", do_get_file("data"));
 
       updates[0].findUpdates(updateListener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
       updates[1].findUpdates(updateListener, AddonManager.UPDATE_WHEN_USER_REQUESTED);

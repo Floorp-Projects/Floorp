@@ -170,7 +170,7 @@
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
                 <em:updateLink>http://example.com/broken.xpi</em:updateLink>
-                <em:updateHash>sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
+                <em:updateHash>sha256:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -223,7 +223,7 @@
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
                 <em:updateLink>https://example.com/broken.xpi</em:updateLink>
-                <em:updateHash>sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
+                <em:updateHash>sha256:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
