@@ -119,6 +119,48 @@ var Policies = {
           }
         });
       }
+
+      if (param.Default !== undefined ||
+          param.AcceptThirdParty !== undefined ||
+          param.Locked) {
+        const ACCEPT_COOKIES = 0;
+        const REJECT_THIRD_PARTY_COOKIES = 1;
+        const REJECT_ALL_COOKIES = 2;
+        const REJECT_UNVISITED_THIRD_PARTY = 3;
+
+        let newCookieBehavior = ACCEPT_COOKIES;
+        if (param.Default !== undefined && !param.Default) {
+          newCookieBehavior = REJECT_ALL_COOKIES;
+        } else if (param.AcceptThirdParty) {
+          if (param.AcceptThirdParty == "none") {
+            newCookieBehavior = REJECT_THIRD_PARTY_COOKIES;
+          } else if (param.AcceptThirdParty == "from-visited") {
+            newCookieBehavior = REJECT_UNVISITED_THIRD_PARTY;
+          }
+        }
+
+        if (param.Locked) {
+          setAndLockPref("network.cookie.cookieBehavior", newCookieBehavior);
+        } else {
+          setDefaultPref("network.cookie.cookieBehavior", newCookieBehavior);
+        }
+      }
+
+      const KEEP_COOKIES_UNTIL_EXPIRATION = 0;
+      const KEEP_COOKIES_UNTIL_END_OF_SESSION = 2;
+
+      if (param.ExpireAtSessionEnd !== undefined || param.Locked) {
+        let newLifetimePolicy = KEEP_COOKIES_UNTIL_EXPIRATION;
+        if (param.ExpireAtSessionEnd) {
+          newLifetimePolicy = KEEP_COOKIES_UNTIL_END_OF_SESSION;
+        }
+
+        if (param.Locked) {
+          setAndLockPref("network.cookie.lifetimePolicy", newLifetimePolicy);
+        } else {
+          setDefaultPref("network.cookie.lifetimePolicy", newLifetimePolicy);
+        }
+      }
     }
   },
 
