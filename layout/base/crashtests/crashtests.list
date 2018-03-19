@@ -527,3 +527,4 @@ load 1429962.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1439016.html
 load 1442506.html
 asserts-if(!stylo,1) load 1437155.html
+load 1356558.html
