@@ -18,9 +18,7 @@
 #include "nscore.h"
 
 class nsAtom;
-class nsIDOMCharacterData;
 class nsIDOMDocument;
-class nsIDOMElement;
 class nsIDOMNode;
 class nsIEditor;
 class nsINode;

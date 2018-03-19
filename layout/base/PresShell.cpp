@@ -4120,6 +4120,34 @@ PresShell::DoFlushPendingNotifications(FlushType aType)
   FlushPendingNotifications(flush);
 }
 
+#ifdef DEBUG
+static void
+AssertFrameSubtreeIsSane(const nsIFrame& aRoot)
+{
+  if (const nsIContent* content = aRoot.GetContent()) {
+    MOZ_ASSERT(content->GetFlattenedTreeParentNodeForStyle(),
+               "Node not in the flattened tree still has a frame?");
+  }
+
+  nsIFrame::ChildListIterator childLists(&aRoot);
+  for (; !childLists.IsDone(); childLists.Next()) {
+    for (const nsIFrame* child : childLists.CurrentList()) {
+      AssertFrameSubtreeIsSane(*child);
+    }
+  }
+}
+#endif
+
+static inline void
+AssertFrameTreeIsSane(const nsIPresShell& aShell)
+{
+#ifdef DEBUG
+  if (const nsIFrame* root = aShell.GetRootFrame()) {
+    AssertFrameSubtreeIsSane(*root);
+  }
+#endif
+}
+
 void
 PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 {
@@ -4275,6 +4303,8 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       // optimization since the flag might have set in ProcessPendingRestyles().
       mNeedStyleFlush = false;
     }
+
+    AssertFrameTreeIsSane(*this);
 
     didStyleFlush = true;
 

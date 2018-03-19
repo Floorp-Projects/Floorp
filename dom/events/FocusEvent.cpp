@@ -11,8 +11,6 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS_INHERITED(FocusEvent, UIEvent, nsIDOMFocusEvent)
-
 FocusEvent::FocusEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        InternalFocusEvent* aEvent)
@@ -25,14 +23,6 @@ FocusEvent::FocusEvent(EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
   }
-}
-
-NS_IMETHODIMP
-FocusEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
-{
-  NS_ENSURE_ARG_POINTER(aRelatedTarget);
-  *aRelatedTarget = GetRelatedTarget().take();
-  return NS_OK;
 }
 
 already_AddRefed<EventTarget>

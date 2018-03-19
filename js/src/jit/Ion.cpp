@@ -1147,7 +1147,7 @@ IonScript::copyRuntimeData(const uint8_t* data)
 }
 
 void
-IonScript::copyICEntries(const uint32_t* icEntries, MacroAssembler& masm)
+IonScript::copyICEntries(const uint32_t* icEntries)
 {
     memcpy(icIndex(), icEntries, numICs() * sizeof(uint32_t));
 
@@ -1155,7 +1155,7 @@ IonScript::copyICEntries(const uint32_t* icEntries, MacroAssembler& masm)
     // code, not the absolute positions of the jumps. Update according to the
     // final code address now.
     for (size_t i = 0; i < numICs(); i++)
-        getICFromIndex(i).updateBaseAddress(method_, masm);
+        getICFromIndex(i).updateBaseAddress(method_);
 }
 
 const SafepointIndex*

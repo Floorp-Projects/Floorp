@@ -65,9 +65,10 @@ InsertTextTransaction::DoTransaction()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv = mTextNode->InsertData(mOffset, mStringToInsert);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ErrorResult rv;
+  mTextNode->InsertData(mOffset, mStringToInsert, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
   // Only set selection to insertion point if editor gives permission
@@ -92,7 +93,9 @@ InsertTextTransaction::DoTransaction()
 NS_IMETHODIMP
 InsertTextTransaction::UndoTransaction()
 {
-  return mTextNode->DeleteData(mOffset, mStringToInsert.Length());
+  ErrorResult rv;
+  mTextNode->DeleteData(mOffset, mStringToInsert.Length(), rv);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

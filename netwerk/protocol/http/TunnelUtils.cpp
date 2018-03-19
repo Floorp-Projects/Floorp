@@ -1562,6 +1562,7 @@ FWD_TS_PTR(GetTlsFlags, uint32_t);
 FWD_TS(SetTlsFlags, uint32_t);
 FWD_TS_PTR(GetRecvBufferSize, uint32_t);
 FWD_TS(SetRecvBufferSize, uint32_t);
+FWD_TS_PTR(GetResetIPFamilyPreference, bool);
 
 nsresult
 SocketTransportShim::GetOriginAttributes(mozilla::OriginAttributes* aOriginAttributes)
