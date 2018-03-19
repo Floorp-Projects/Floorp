@@ -874,8 +874,6 @@ pref("gfx.font_rendering.graphite.enabled", true);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
-pref("gfx.font_rendering.opentype_svg.enabled", true);
-
 #ifdef XP_WIN
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
@@ -2929,20 +2927,6 @@ pref("layout.selection.caret_style", 0);
 // pref to report CSS errors to the error console
 pref("layout.css.report_errors", true);
 
-// Should the :visited selector ever match (otherwise :link matches instead)?
-pref("layout.css.visited_links_enabled", true);
-
-// Pref to control whether @-moz-document rules are enabled in content pages.
-pref("layout.css.moz-document.content.enabled",  false);
-
-// Pref to control whether @-moz-document url-prefix() is parsed in content
-// pages. Only effective when layout.css.moz-document.content.enabled is false.
-#ifdef EARLY_BETA_OR_EARLIER
-pref("layout.css.moz-document.url-prefix-hack.enabled", false);
-#else
-pref("layout.css.moz-document.url-prefix-hack.enabled", true);
-#endif
-
 #ifdef NIGHTLY_BUILD
 pref("layout.css.getPropertyCSSValue.enabled", false);
 #else
@@ -3026,26 +3010,6 @@ pref("layout.css.float-logical-values.enabled", true);
 // Is support for the CSS4 image-orientation property enabled?
 pref("layout.css.image-orientation.enabled", true);
 
-// Is support for the font-display @font-face descriptor enabled?
-pref("layout.css.font-display.enabled", true);
-
-// Is support for variation fonts enabled?
-pref("layout.css.font-variations.enabled", true);
-
-// Is support for the frames() timing function enabled?
-#ifdef RELEASE_OR_BETA
-pref("layout.css.frames-timing.enabled", false);
-#else
-pref("layout.css.frames-timing.enabled", true);
-#endif
-
-// Are we emulating -moz-{inline}-box layout using CSS flexbox?
-// (This pref only takes effect in prerelease builds, so we only
-// bother specifying a default in prerelease builds as well.)
-#ifndef RELEASE_OR_BETA
-pref("layout.css.emulate-moz-box-with-flex", false);
-#endif
-
 // Is the paint-order property supported for HTML text?
 // (It is always supported for SVG.)
 pref("layout.css.paint-order.enabled", true);
@@ -3057,17 +3021,6 @@ pref("layout.css.prefixes.transitions", true);
 pref("layout.css.prefixes.animations", true);
 pref("layout.css.prefixes.box-sizing", true);
 pref("layout.css.prefixes.font-features", true);
-
-// Is -moz-prefixed gradient functions enabled?
-pref("layout.css.prefixes.gradients", true);
-
-// Are webkit-prefixed properties & property-values supported?
-pref("layout.css.prefixes.webkit", true);
-
-// Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
-// (Note: this pref has no effect if the master 'layout.css.prefixes.webkit'
-// pref is set to false.)
-pref("layout.css.prefixes.device-pixel-ratio-webkit", false);
 
 // Is support for background-blend-mode enabled?
 pref("layout.css.background-blend-mode.enabled", true);
@@ -3093,9 +3046,6 @@ pref("layout.css.all-shorthand.enabled", true);
 
 // Is support for CSS overflow-clip-box enabled for non-UA sheets?
 pref("layout.css.overflow-clip-box.enabled", false);
-
-// Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
-pref("layout.css.grid-template-subgrid-value.enabled", false);
 
 // Is support for CSS contain enabled?
 pref("layout.css.contain.enabled", false);
@@ -3136,13 +3086,6 @@ pref("layout.css.shape-outside.enabled", false);
 
 // Is support for document.fonts enabled?
 pref("layout.css.font-loading-api.enabled", true);
-
-// Should stray control characters be rendered visibly?
-#ifdef RELEASE_OR_BETA
-pref("layout.css.control-characters.visible", false);
-#else
-pref("layout.css.control-characters.visible", true);
-#endif
 
 // Is support for column-span enabled?
 pref("layout.css.column-span.enabled", false);
@@ -5128,11 +5071,6 @@ pref("alerts.useSystemBackend", true);
 
 // DOM full-screen API.
 pref("full-screen-api.enabled", false);
-#ifdef RELEASE_OR_BETA
-pref("full-screen-api.unprefix.enabled", false);
-#else
-pref("full-screen-api.unprefix.enabled", true);
-#endif
 pref("full-screen-api.allow-trusted-requests-only", true);
 // whether to prevent the top level widget from going fullscreen
 pref("full-screen-api.ignore-widgets", false);

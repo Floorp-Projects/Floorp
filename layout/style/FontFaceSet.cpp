@@ -23,6 +23,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LoadInfo.h"
 #include "nsAutoPtr.h"
@@ -50,7 +51,6 @@
 #include "nsPrintfCString.h"
 #include "nsUTF8Utils.h"
 #include "nsDOMNavigationTiming.h"
-#include "StylePrefs.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -1142,17 +1142,17 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;
             } else if (valueString.LowerCaseEqualsASCII("svg")) {
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;
-            } else if (StylePrefs::sFontVariationsEnabled &&
+            } else if (StaticPrefs::layout_css_font_variations_enabled() &&
                        valueString.LowerCaseEqualsASCII("woff-variations")) {
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF_VARIATIONS;
-            } else if (StylePrefs::sFontVariationsEnabled &&
+            } else if (StaticPrefs::layout_css_font_variations_enabled() &&
                        Preferences::GetBool(GFX_PREF_WOFF2_ENABLED) &&
                        valueString.LowerCaseEqualsASCII("woff2-variations")) {
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF2_VARIATIONS;
-            } else if (StylePrefs::sFontVariationsEnabled &&
+            } else if (StaticPrefs::layout_css_font_variations_enabled() &&
                        valueString.LowerCaseEqualsASCII("opentype-variations")) {
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE_VARIATIONS;
-            } else if (StylePrefs::sFontVariationsEnabled &&
+            } else if (StaticPrefs::layout_css_font_variations_enabled() &&
                        valueString.LowerCaseEqualsASCII("truetype-variations")) {
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_VARIATIONS;
             } else {

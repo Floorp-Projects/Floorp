@@ -78,6 +78,32 @@
 // clang-format off
 
 //---------------------------------------------------------------------------
+// Full-screen prefs
+//---------------------------------------------------------------------------
+
+#ifdef RELEASE_OR_BETA
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "full-screen-api.unprefix.enabled",
+   full_screen_api_unprefix_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+//---------------------------------------------------------------------------
+// Graphics prefs
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "gfx.font_rendering.opentype_svg.enabled",
+   gfx_font_rendering_opentype_svg_enabled,
+  bool, true
+)
+
+//---------------------------------------------------------------------------
 // HTML5 parser prefs
 //---------------------------------------------------------------------------
 
@@ -103,6 +129,115 @@ VARCACHE_PREF(
   "html5.flushtimer.subsequentdelay",
    html5_flushtimer_subsequentdelay,
   int32_t, 120
+)
+
+//---------------------------------------------------------------------------
+// Layout prefs
+//---------------------------------------------------------------------------
+
+// Is support for the font-display @font-face descriptor enabled?
+VARCACHE_PREF(
+  "layout.css.font-display.enabled",
+   layout_css_font_display_enabled,
+  bool, true
+)
+
+// Are webkit-prefixed properties & property-values supported?
+VARCACHE_PREF(
+  "layout.css.prefixes.webkit",
+   layout_css_prefixes_webkit,
+  bool, true
+)
+
+// Are "-webkit-{min|max}-device-pixel-ratio" media queries supported? (Note:
+// this pref has no effect if the master 'layout.css.prefixes.webkit' pref is
+// set to false.)
+VARCACHE_PREF(
+  "layout.css.prefixes.device-pixel-ratio-webkit",
+   layout_css_prefixes_device_pixel_ratio_webkit,
+  bool, false
+)
+
+// Is -moz-prefixed gradient functions enabled?
+VARCACHE_PREF(
+  "layout.css.prefixes.gradients",
+   layout_css_prefixes_gradients,
+  bool, true
+)
+
+// Should stray control characters be rendered visibly?
+#ifdef RELEASE_OR_BETA
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "layout.css.control-characters.visible",
+   layout_css_control_characters_visible,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Is support for the frames() timing function enabled?
+#ifdef RELEASE_OR_BETA
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "layout.css.frames-timing.enabled",
+   layout_css_frames_timing_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Should the :visited selector ever match (otherwise :link matches instead)?
+VARCACHE_PREF(
+  "layout.css.visited_links_enabled",
+   layout_css_visited_links_enabled,
+  bool, true
+)
+
+// Pref to control whether @-moz-document rules are enabled in content pages.
+VARCACHE_PREF(
+  "layout.css.moz-document.content.enabled",
+   layout_css_moz_document_content_enabled,
+  bool, false
+)
+
+// Pref to control whether @-moz-document url-prefix() is parsed in content
+// pages. Only effective when layout.css.moz-document.content.enabled is false.
+#ifdef EARLY_BETA_OR_EARLIER
+#define PREF_VALUE false
+#else
+#define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "layout.css.moz-document.url-prefix-hack.enabled",
+   layout_css_moz_document_url_prefix_hack_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
+VARCACHE_PREF(
+  "layout.css.grid-template-subgrid-value.enabled",
+   layout_css_grid_template_subgrid_value_enabled,
+  bool, false
+)
+
+// Is support for variation fonts enabled?
+VARCACHE_PREF(
+  "layout.css.font-variations.enabled",
+   layout_css_font_variations_enabled,
+  bool, true
+)
+
+// Are we emulating -moz-{inline}-box layout using CSS flexbox?
+VARCACHE_PREF(
+  "layout.css.emulate-moz-box-with-flex",
+   layout_css_emulate_moz_box_with_flex,
+  bool, false
 )
 
 //---------------------------------------------------------------------------

@@ -14,7 +14,7 @@
 #include "nsError.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StylePrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "FontFaceSet.h"
@@ -338,7 +338,7 @@ uint8_t
 nsFontFaceLoader::GetFontDisplay()
 {
   uint8_t fontDisplay = NS_FONT_DISPLAY_AUTO;
-  if (StylePrefs::sFontDisplayEnabled) {
+  if (StaticPrefs::layout_css_font_display_enabled()) {
     fontDisplay = mUserFontEntry->GetFontDisplay();
   }
   return fontDisplay;
