@@ -31,16 +31,16 @@ Comment::IsNodeOfType(uint32_t aFlags) const
   return !(aFlags & ~(eCOMMENT | eDATA_NODE));
 }
 
-CharacterData*
+already_AddRefed<CharacterData>
 Comment::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  Comment *it = new Comment(ni.forget());
-  if (it && aCloneText) {
+  RefPtr<Comment> it = new Comment(ni.forget());
+  if (aCloneText) {
     it->mText = mText;
   }
 
-  return it;
+  return it.forget();
 }
 
 #ifdef DEBUG

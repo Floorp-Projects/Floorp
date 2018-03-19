@@ -82,8 +82,9 @@ protected:
                          nsAString& aType,
                          nsAString& aMedia,
                          bool* aIsAlternate) final;
-  CharacterData* CloneDataNode(mozilla::dom::NodeInfo* aNodeInfo,
-                               bool aCloneText) const final;
+  already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo* aNodeInfo,
+                  bool aCloneText) const final;
 };
 
 } // namespace dom

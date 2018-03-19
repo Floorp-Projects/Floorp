@@ -55,19 +55,19 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  virtual CharacterData *CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                       bool aCloneText) const override
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                  bool aCloneText) const override
   {
     already_AddRefed<mozilla::dom::NodeInfo> ni =
       RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-    nsAttributeTextNode *it = new nsAttributeTextNode(ni,
-                                                      mNameSpaceID,
-                                                      mAttrName);
-    if (it && aCloneText) {
+    RefPtr<nsAttributeTextNode> it =
+      new nsAttributeTextNode(ni, mNameSpaceID, mAttrName);
+    if (aCloneText) {
       it->mText = mText;
     }
 
-    return it;
+    return it.forget();
   }
 
   // Public method for the event to run
@@ -113,16 +113,16 @@ nsTextNode::IsNodeOfType(uint32_t aFlags) const
   return !(aFlags & ~(eTEXT | eDATA_NODE));
 }
 
-CharacterData*
+already_AddRefed<CharacterData>
 nsTextNode::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
   already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  nsTextNode *it = new nsTextNode(ni);
+  RefPtr<nsTextNode> it = new nsTextNode(ni);
   if (aCloneText) {
     it->mText = mText;
   }
 
-  return it;
+  return it.forget();
 }
 
 nsresult

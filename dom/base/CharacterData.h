@@ -160,7 +160,7 @@ public:
   virtual nsresult Clone(dom::NodeInfo *aNodeInfo, nsINode **aResult,
                          bool aPreallocateChildren) const override
   {
-    nsCOMPtr<nsINode> result = CloneDataNode(aNodeInfo, true);
+    RefPtr<CharacterData> result = CloneDataNode(aNodeInfo, true);
     result.forget(aResult);
 
     if (!*aResult) {
@@ -218,8 +218,8 @@ protected:
    * @param aCloneText if true the text content will be cloned too
    * @return the clone
    */
-  virtual CharacterData *CloneDataNode(dom::NodeInfo *aNodeInfo,
-                                       bool aCloneText) const = 0;
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(dom::NodeInfo *aNodeInfo, bool aCloneText) const = 0;
 
   nsTextFragment mText;
 

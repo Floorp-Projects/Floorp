@@ -105,11 +105,11 @@ DocumentType::GetInternalSubset(nsAString& aInternalSubset) const
   aInternalSubset = mInternalSubset;
 }
 
-CharacterData*
+already_AddRefed<CharacterData>
 DocumentType::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
   already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  return new DocumentType(ni, mPublicId, mSystemId, mInternalSubset);
+  return do_AddRef(new DocumentType(ni, mPublicId, mSystemId, mInternalSubset));
 }
 
 } // namespace dom

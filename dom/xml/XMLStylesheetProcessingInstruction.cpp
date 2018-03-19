@@ -177,14 +177,14 @@ XMLStylesheetProcessingInstruction::GetStyleSheetInfo(nsAString& aTitle,
   aType.AssignLiteral("text/css");
 }
 
-CharacterData*
+already_AddRefed<CharacterData>
 XMLStylesheetProcessingInstruction::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                                                   bool aCloneText) const
 {
   nsAutoString data;
   GetData(data);
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  return new XMLStylesheetProcessingInstruction(ni.forget(), data);
+  return do_AddRef(new XMLStylesheetProcessingInstruction(ni.forget(), data));
 }
 
 } // namespace dom
