@@ -96,7 +96,6 @@ public:
                                     ErrorResult& aError) override;
 
   // Implementation for nsIDOMCharacterData
-  nsresult GetLength(uint32_t* aLength);
   nsresult InsertData(uint32_t aOffset, const nsAString& aArg);
   nsresult DeleteData(uint32_t aOffset, uint32_t aCount);
   nsresult ReplaceData(uint32_t aOffset, uint32_t aCount,

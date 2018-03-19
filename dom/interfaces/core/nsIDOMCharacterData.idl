@@ -16,7 +16,6 @@
 [uuid(4109a2d2-e7af-445d-bb72-c7c9b875f35e)]
 interface nsIDOMCharacterData : nsIDOMNode
 {
-  readonly attribute unsigned long        length;
   void                      insertData(in unsigned long offset, 
                                        in DOMString arg)
                                   raises(DOMException);

@@ -9,7 +9,6 @@
 #include "txExprResult.h"
 #include "txIXPathContext.h"
 #include "nsError.h"
-#include "nsIDOMCharacterData.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMDocument.h"
 #include "nsINode.h"
@@ -17,6 +16,7 @@
 #include "txURIUtils.h"
 #include "txXPathTreeWalker.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/dom/XPathResultBinding.h"
 
 using mozilla::Move;
@@ -126,15 +126,10 @@ XPathExpression::EvaluateWithContext(nsINode& aContextNode,
 
     if (nodeType == nsINode::TEXT_NODE ||
         nodeType == nsINode::CDATA_SECTION_NODE) {
-        nsCOMPtr<nsIDOMCharacterData> textNode =
-            do_QueryInterface(&aContextNode);
-        if (!textNode) {
-            aRv.Throw(NS_ERROR_FAILURE);
-            return nullptr;
-        }
+        Text* textNode = aContextNode.GetAsText();
+        MOZ_ASSERT(textNode);
 
-        uint32_t textLength;
-        textNode->GetLength(&textLength);
+        uint32_t textLength = textNode->Length();
         if (textLength == 0) {
             aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
             return nullptr;
