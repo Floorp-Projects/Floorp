@@ -217,7 +217,7 @@ CharacterData::SubstringData(uint32_t aStart, uint32_t aCount,
 void
 CharacterData::AppendData(const nsAString& aData, ErrorResult& aRv)
 {
-  InsertData(mText.Length(), aData, aRv);
+  InsertData(mText.GetLength(), aData, aRv);
 }
 
 void
