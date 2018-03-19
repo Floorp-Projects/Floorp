@@ -11,22 +11,22 @@ requestLongerTimeout(2);
 // animations have been paused (including inside iframes) because there's an
 // actor test in /devtools/server/tests/browser/ that does this.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {panel} = await openAnimationInspector();
 
   info("Click the toggle button");
-  yield panel.toggleAll();
-  yield checkState("paused");
+  await panel.toggleAll();
+  await checkState("paused");
 
   info("Click again the toggle button");
-  yield panel.toggleAll();
-  yield checkState("running");
+  await panel.toggleAll();
+  await checkState("running");
 });
 
-function* checkState(state) {
+async function checkState(state) {
   for (let selector of [".animated", ".multi", ".long"]) {
-    let playState = yield getAnimationPlayerState(selector);
+    let playState = await getAnimationPlayerState(selector);
     is(playState, state, "The animation on node " + selector + " is " + state);
   }
 }

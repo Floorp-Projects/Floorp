@@ -6,7 +6,6 @@
 
 "use strict";
 
-const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   createNode,
@@ -315,7 +314,7 @@ AnimationsTimeline.prototype = {
     }, TIMELINE_BACKGROUND_RESIZE_DEBOUNCE_TIMER);
   },
 
-  onAnimationSelected: Task.async(function* (animation) {
+  async onAnimationSelected(animation) {
     let index = this.animations.indexOf(animation);
     if (index === -1) {
       return;
@@ -354,12 +353,12 @@ AnimationsTimeline.prototype = {
     // Don't render if the detail displays same animation already.
     if (animation !== this.details.animation) {
       this.selectedAnimation = animation;
-      yield this.details.render(animation, this.componentsMap[animation.actorID].tracks);
+      await this.details.render(animation, this.componentsMap[animation.actorID].tracks);
       this.animationAnimationNameEl.textContent = getFormattedAnimationTitle(animation);
     }
     this.onTimelineDataChanged({ time: this.currentTime || 0 });
     this.emit("animation-selected", animation);
-  }),
+  },
 
   /**
    * When move the scrubber to the corresponding position
@@ -438,7 +437,7 @@ AnimationsTimeline.prototype = {
     return className;
   },
 
-  render: Task.async(function* (animations, documentCurrentTime) {
+  async render(animations, documentCurrentTime) {
     this.animations = animations;
 
     // Destroy components which are no longer existed in given animations.
@@ -472,7 +471,7 @@ AnimationsTimeline.prototype = {
     for (let animation of this.animations) {
       animation.on("changed", this.onAnimationStateChanged);
 
-      const tracks = yield this.getTracks(animation);
+      const tracks = await this.getTracks(animation);
       // If we're destroyed by now, just give up.
       if (this.isDestroyed) {
         return;
@@ -510,18 +509,18 @@ AnimationsTimeline.prototype = {
     if (this.animations.length === 1) {
       // Display animation's detail if there is only one animation,
       // even if the detail pane is closing.
-      yield this.onAnimationSelected(this.animations[0]);
+      await this.onAnimationSelected(this.animations[0]);
     } else if (this.animationRootEl.classList.contains("animation-detail-visible") &&
                this.animations.includes(this.selectedAnimation)) {
       // animation's detail displays in case of the previously displayed animation is
       // included in timeline list and the detail pane is not closing.
-      yield this.onAnimationSelected(this.selectedAnimation);
+      await this.onAnimationSelected(this.selectedAnimation);
     } else {
       // Otherwise, close detail pane.
       this.onDetailCloseButtonClick();
     }
     this.emit("animation-timeline-rendering-completed");
-  }),
+  },
 
   updateAnimation: function(animation, tracks, existentComponents) {
     // If keyframes (tracks) and effect timing (state) are not changed, we update the
@@ -713,7 +712,7 @@ AnimationsTimeline.prototype = {
    * @return {Object} A list of tracks, one per animated property, each
    * with a list of keyframes
    */
-  getTracks: Task.async(function* (animation) {
+  async getTracks(animation) {
     let tracks = {};
 
     /*
@@ -732,7 +731,7 @@ AnimationsTimeline.prototype = {
     if (this.serverTraits.hasGetProperties) {
       let properties = [];
       try {
-        properties = yield animation.getProperties();
+        properties = await animation.getProperties();
       } catch (e) {
         // Expected if we've already been destroyed in the meantime.
         if (!this.isDestroyed) {
@@ -754,7 +753,7 @@ AnimationsTimeline.prototype = {
     } else {
       let frames = [];
       try {
-        frames = yield animation.getFrames();
+        frames = await animation.getFrames();
       } catch (e) {
         // Expected if we've already been destroyed in the meantime.
         if (!this.isDestroyed) {
@@ -786,7 +785,7 @@ AnimationsTimeline.prototype = {
     }
 
     return tracks;
-  })
+  }
 };
 
 /**

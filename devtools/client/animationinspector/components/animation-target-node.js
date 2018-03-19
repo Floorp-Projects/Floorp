@@ -6,7 +6,6 @@
 
 "use strict";
 
-const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {DomNodePreview} = require("devtools/client/inspector/shared/dom-node-preview");
 
@@ -40,7 +39,7 @@ AnimationTargetNode.prototype = {
     this.isDestroyed = true;
   },
 
-  render: Task.async(function* (playerFront) {
+  async render(playerFront) {
     // Get the nodeFront from the cache if it was stored previously.
     let nodeFront = nodeFronts.get(playerFront);
 
@@ -52,7 +51,7 @@ AnimationTargetNode.prototype = {
     // Finally, get it from the walkerActor if it wasn't found.
     if (!nodeFront) {
       try {
-        nodeFront = yield this.inspector.walker.getNodeFromActor(
+        nodeFront = await this.inspector.walker.getNodeFromActor(
                                playerFront.actorID, ["node"]);
       } catch (e) {
         // If an error occured while getting the nodeFront and if it can't be
@@ -76,5 +75,5 @@ AnimationTargetNode.prototype = {
 
     this.previewer.render(nodeFront);
     this.emit("target-retrieved");
-  })
+  }
 };

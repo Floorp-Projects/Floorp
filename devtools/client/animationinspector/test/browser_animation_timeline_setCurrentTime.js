@@ -18,20 +18,20 @@ requestLongerTimeout(2);
 // In these tests,
 // we confirm the behavior of setCurrentTime by delay and endDelay.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_timing_combination_animation.html");
-  const { panel, controller } = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_timing_combination_animation.html");
+  const { panel, controller } = await openAnimationInspector();
 
-  yield clickTimelinePlayPauseButton(panel);
+  await clickTimelinePlayPauseButton(panel);
 
   const timeBlockComponents = getAnimationTimeBlocks(panel);
 
   // Test -5000ms.
   let time = -5000;
-  yield controller.setCurrentTimeAll(time, true);
+  await controller.setCurrentTimeAll(time, true);
   for (let i = 0; i < timeBlockComponents.length; i++) {
-    yield timeBlockComponents[i].animation.refreshState();
-    const state = yield timeBlockComponents[i].animation.state;
+    await timeBlockComponents[i].animation.refreshState();
+    const state = await timeBlockComponents[i].animation.state;
     info(`Check the state at ${ time }ms with `
          + `delay:${ state.delay } and endDelay:${ state.endDelay }`);
     is(state.currentTime, 0,
@@ -40,10 +40,10 @@ add_task(function* () {
 
   // Test 10000ms.
   time = 10000;
-  yield controller.setCurrentTimeAll(time, true);
+  await controller.setCurrentTimeAll(time, true);
   for (let i = 0; i < timeBlockComponents.length; i++) {
-    yield timeBlockComponents[i].animation.refreshState();
-    const state = yield timeBlockComponents[i].animation.state;
+    await timeBlockComponents[i].animation.refreshState();
+    const state = await timeBlockComponents[i].animation.state;
     info(`Check the state at ${ time }ms with `
          + `delay:${ state.delay } and endDelay:${ state.endDelay }`);
     const expected = state.delay < 0 ? 0 : time;
@@ -54,10 +54,10 @@ add_task(function* () {
 
   // Test 60000ms.
   time = 60000;
-  yield controller.setCurrentTimeAll(time, true);
+  await controller.setCurrentTimeAll(time, true);
   for (let i = 0; i < timeBlockComponents.length; i++) {
-    yield timeBlockComponents[i].animation.refreshState();
-    const state = yield timeBlockComponents[i].animation.state;
+    await timeBlockComponents[i].animation.refreshState();
+    const state = await timeBlockComponents[i].animation.state;
     info(`Check the state at ${ time }ms with `
          + `delay:${ state.delay } and endDelay:${ state.endDelay }`);
     const expected = state.delay < 0 ? time + state.delay : time;
@@ -68,10 +68,10 @@ add_task(function* () {
 
   // Test 150000ms.
   time = 150000;
-  yield controller.setCurrentTimeAll(time, true);
+  await controller.setCurrentTimeAll(time, true);
   for (let i = 0; i < timeBlockComponents.length; i++) {
-    yield timeBlockComponents[i].animation.refreshState();
-    const state = yield timeBlockComponents[i].animation.state;
+    await timeBlockComponents[i].animation.refreshState();
+    const state = await timeBlockComponents[i].animation.state;
     info(`Check the state at ${ time }ms with `
          + `delay:${ state.delay } and endDelay:${ state.endDelay }`);
     const currentTime = state.delay < 0 ? time + state.delay : time;
