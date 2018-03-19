@@ -39,7 +39,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsID.h"
-#include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
