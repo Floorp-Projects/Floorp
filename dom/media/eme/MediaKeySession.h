@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_MediaKeySession_h
 #define mozilla_dom_MediaKeySession_h
 
+#include "DecoderDoctorLogger.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"

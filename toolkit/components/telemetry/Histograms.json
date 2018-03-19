@@ -9496,15 +9496,6 @@
     "description": "Number of times the DevTools Paint Flashing has been opened via the toolbox button.",
     "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_TILT_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1247985],
-    "description": "Number of times the DevTools Tilt has been opened via the toolbox button.",
-    "releaseChannelCollection": "opt-out"
-  },
   "DEVTOOLS_SCRATCHPAD_OPENED_COUNT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
@@ -9619,6 +9610,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the toolbox been active (seconds)"
   },
   "DEVTOOLS_OPTIONS_TIME_ACTIVE_SECONDS": {
@@ -9627,6 +9621,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the options panel been active (seconds)"
   },
   "DEVTOOLS_WEBCONSOLE_TIME_ACTIVE_SECONDS": {
@@ -9635,6 +9632,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the web console been active (seconds)"
   },
   "DEVTOOLS_BROWSERCONSOLE_TIME_ACTIVE_SECONDS": {
@@ -9643,6 +9643,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the browser console been active (seconds)"
   },
   "DEVTOOLS_INSPECTOR_TIME_ACTIVE_SECONDS": {
@@ -9651,6 +9654,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the inspector been active (seconds)"
   },
   "DEVTOOLS_RULEVIEW_TIME_ACTIVE_SECONDS": {
@@ -9659,6 +9665,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the rule view been active (seconds)"
   },
   "DEVTOOLS_COMPUTEDVIEW_TIME_ACTIVE_SECONDS": {
@@ -9667,16 +9676,20 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the computed view been active (seconds)"
   },
   "DEVTOOLS_LAYOUTVIEW_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
-    "bug_numbers": [1347552],
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1347552, 1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the layout view been active (seconds)"
   },
   "DEVTOOLS_FONTINSPECTOR_TIME_ACTIVE_SECONDS": {
@@ -9685,6 +9698,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the font inspector been active (seconds)"
   },
   "DEVTOOLS_ANIMATIONINSPECTOR_TIME_ACTIVE_SECONDS": {
@@ -9693,6 +9709,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the animation inspector been active (seconds)"
   },
   "DEVTOOLS_JSDEBUGGER_TIME_ACTIVE_SECONDS": {
@@ -9701,6 +9720,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the JS debugger been active (seconds)"
   },
   "DEVTOOLS_JSBROWSERDEBUGGER_TIME_ACTIVE_SECONDS": {
@@ -9709,6 +9731,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the JS browser debugger been active (seconds)"
   },
   "DEVTOOLS_STYLEEDITOR_TIME_ACTIVE_SECONDS": {
@@ -9717,6 +9742,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the style editor been active (seconds)"
   },
   "DEVTOOLS_SHADEREDITOR_TIME_ACTIVE_SECONDS": {
@@ -9725,6 +9753,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the Shader Editor been active (seconds)"
   },
   "DEVTOOLS_WEBAUDIOEDITOR_TIME_ACTIVE_SECONDS": {
@@ -9733,6 +9764,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the Web Audio Editor been active (seconds)"
   },
   "DEVTOOLS_CANVASDEBUGGER_TIME_ACTIVE_SECONDS": {
@@ -9741,6 +9775,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the Canvas Debugger been active (seconds)"
   },
   "DEVTOOLS_JSPROFILER_TIME_ACTIVE_SECONDS": {
@@ -9749,6 +9786,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the JS profiler been active (seconds)"
   },
   "DEVTOOLS_MEMORY_TIME_ACTIVE_SECONDS": {
@@ -9757,6 +9797,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the Memory Tool been active (seconds)"
   },
   "DEVTOOLS_NETMONITOR_TIME_ACTIVE_SECONDS": {
@@ -9765,6 +9808,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the network monitor been active (seconds)"
   },
   "DEVTOOLS_STORAGE_TIME_ACTIVE_SECONDS": {
@@ -9773,16 +9819,20 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the storage inspector been active (seconds)"
   },
   "DEVTOOLS_DOM_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
-    "bug_numbers": [1343501],
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1343501, 1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the DOM inspector been active (seconds)"
   },
   "DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS": {
@@ -9791,15 +9841,10 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has paint flashing been active (seconds)"
-  },
-  "DEVTOOLS_TILT_TIME_ACTIVE_SECONDS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000000,
-    "n_buckets": 100,
-    "description": "How long has Tilt been active (seconds)"
   },
   "DEVTOOLS_SCRATCHPAD_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
@@ -9807,17 +9852,21 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has Scratchpad been active (seconds)"
   },
   "DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "55",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
-    "bug_numbers": [1242057],
-    "description": "How long has the responsive view been active (seconds)",
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1242057, 1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "description": "How long has the responsive view been active (seconds)"
   },
   "DEVTOOLS_DEVELOPERTOOLBAR_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
@@ -9825,15 +9874,20 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has the developer toolbar been active (seconds)"
   },
   "DEVTOOLS_ABOUTDEBUGGING_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jan@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has about:debugging been active? (seconds) (bug 1204601)"
   },
   "DEVTOOLS_WEBIDE_TIME_ACTIVE_SECONDS": {
@@ -9842,6 +9896,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has WebIDE been active (seconds)"
   },
   "DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS": {
@@ -9850,6 +9907,9 @@
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
+    "bug_numbers": [1446496],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "How long has a custom developer tool been active (seconds)"
   },
   "DEVTOOLS_WEBIDE_CONNECTION_RESULT": {

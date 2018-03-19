@@ -167,6 +167,7 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "layout.css.isolation.enabled",
   "layout.css.mix-blend-mode.enabled",
   "layout.css.moz-document.content.enabled",
+  "layout.css.moz-document.url-prefix-hack.enabled",
   "layout.css.osx-font-smoothing.enabled",
   "layout.css.overflow-clip-box.enabled",
   "layout.css.overscroll-behavior.enabled",
