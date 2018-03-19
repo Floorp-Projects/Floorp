@@ -593,10 +593,13 @@ AudioCallbackDriver::Init()
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
     NS_WARNING("Could not get cubeb context.");
+    LOG(LogLevel::Warning, ("%s: Could not get cubeb context", __func__));
     if (!mFromFallback) {
       CubebUtils::ReportCubebStreamInitFailure(true);
     }
-    return false;
+    MonitorAutoLock lock(GraphImpl()->GetMonitor());
+    FallbackToSystemClockDriver();
+    return true;
   }
 
   cubeb_stream_params output;
