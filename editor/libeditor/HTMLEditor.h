@@ -21,7 +21,6 @@
 #include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsIDocumentObserver.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
@@ -39,6 +38,7 @@ class nsDocumentFragment;
 class nsITransferable;
 class nsIClipboard;
 class nsIDOMDocument;
+class nsIDOMElement;
 class nsIDOMMouseEvent;
 class nsILinkHandler;
 class nsTableWrapperFrame;
@@ -386,7 +386,7 @@ public:
                                  EStripWrappers aStripWrappers) override;
   nsresult DeleteNode(nsINode* aNode);
   NS_IMETHOD DeleteNode(nsIDOMNode* aNode) override;
-  nsresult DeleteText(nsGenericDOMDataNode& aTextNode, uint32_t aOffset,
+  nsresult DeleteText(dom::CharacterData& aTextNode, uint32_t aOffset,
                       uint32_t aLength);
   virtual nsresult
   InsertTextImpl(nsIDocument& aDocument,
@@ -1332,7 +1332,7 @@ protected:
   void HideGrabber();
 
   ManualNACPtr CreateGrabber(nsIContent& aParentContent);
-  nsresult StartMoving(nsIDOMElement* aHandle);
+  nsresult StartMoving();
   nsresult SetFinalPosition(int32_t aX, int32_t aY);
   void AddPositioningOffset(int32_t& aX, int32_t& aY);
   void SnapToGrid(int32_t& newX, int32_t& newY);

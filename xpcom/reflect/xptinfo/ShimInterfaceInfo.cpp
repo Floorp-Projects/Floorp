@@ -7,8 +7,6 @@
 
 #include "ShimInterfaceInfo.h"
 
-#include "nsIDOMCharacterData.h"
-#include "nsIDOMComment.h"
 #include "nsIDOMCustomEvent.h"
 #ifdef MOZ_WEBRTC
 #include "nsIDOMDataChannel.h"
@@ -21,27 +19,21 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMFocusEvent.h"
 #include "nsIDOMGeoPositionError.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNotifyPaintEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMParser.h"
-#include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMScreen.h"
-#include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMSerializer.h"
-#include "nsIDOMText.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMXMLDocument.h"
-#include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
 #include "nsIListBoxObject.h"
@@ -49,8 +41,6 @@
 #include "nsITreeBoxObject.h"
 #include "nsIWebBrowserPersistable.h"
 
-#include "mozilla/dom/CharacterDataBinding.h"
-#include "mozilla/dom/CommentBinding.h"
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
 #include "mozilla/dom/CSSStyleSheetBinding.h"
@@ -66,7 +56,6 @@
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
-#include "mozilla/dom/FocusEventBinding.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
 #include "mozilla/dom/HTMLAreaElementBinding.h"
@@ -78,33 +67,28 @@
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/dom/MouseScrollEventBinding.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NotifyPaintEventBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/OfflineResourceListBinding.h"
 #include "mozilla/dom/PositionErrorBinding.h"
-#include "mozilla/dom/ProcessingInstructionBinding.h"
 #include "mozilla/dom/RangeBinding.h"
 #ifdef MOZ_WEBRTC
 #include "mozilla/dom/RTCDataChannelBinding.h"
 #endif
 #include "mozilla/dom/ScreenBinding.h"
 #include "mozilla/dom/SelectionBinding.h"
-#include "mozilla/dom/ScrollAreaEventBinding.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StyleSheetBinding.h"
 #include "mozilla/dom/StyleSheetListBinding.h"
 #include "mozilla/dom/SVGElementBinding.h"
-#include "mozilla/dom/TextBinding.h"
 #include "mozilla/dom/TimeEventBinding.h"
 #include "mozilla/dom/TreeBoxObjectBinding.h"
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/dom/XMLDocumentBinding.h"
 #include "mozilla/dom/XMLSerializerBinding.h"
-#include "mozilla/dom/XULCommandEventBinding.h"
 #include "mozilla/dom/XULDocumentBinding.h"
 #include "mozilla/dom/XULElementBinding.h"
 
@@ -163,8 +147,6 @@ struct ComponentsInterfaceShimEntry {
 
 const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 {
-  DEFINE_SHIM(CharacterData),
-  DEFINE_SHIM(Comment),
   DEFINE_SHIM(CustomEvent),
   DEFINE_SHIM(DOMCursor),
   DEFINE_SHIM(DOMException),
@@ -174,34 +156,28 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(Element),
   DEFINE_SHIM(Event),
   DEFINE_SHIM(EventTarget),
-  DEFINE_SHIM(FocusEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIFrameLoader, FrameLoader),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMGeoPositionError, PositionError),
   DEFINE_SHIM(HTMLInputElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIListBoxObject, ListBoxObject),
   DEFINE_SHIM(MouseEvent),
-  DEFINE_SHIM(MouseScrollEvent),
   DEFINE_SHIM(NodeList),
   DEFINE_SHIM(Node),
   DEFINE_SHIM(NotifyPaintEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMNSEvent, Event),
   DEFINE_SHIM(OfflineResourceList),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMParser, DOMParser),
-  DEFINE_SHIM(ProcessingInstruction),
   DEFINE_SHIM(Range),
 #ifdef MOZ_WEBRTC
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMDataChannel, RTCDataChannel),
 #endif
   DEFINE_SHIM(Screen),
-  DEFINE_SHIM(ScrollAreaEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
-  DEFINE_SHIM(Text),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
   DEFINE_SHIM(UIEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),
   DEFINE_SHIM(WheelEvent),
   DEFINE_SHIM(XMLDocument),
-  DEFINE_SHIM(XULCommandEvent),
   DEFINE_SHIM(XULElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsISelection, Selection),
 };

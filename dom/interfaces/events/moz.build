@@ -12,12 +12,9 @@ XPIDL_SOURCES += [
     'nsIDOMEvent.idl',
     'nsIDOMEventListener.idl',
     'nsIDOMEventTarget.idl',
-    'nsIDOMFocusEvent.idl',
     'nsIDOMMouseEvent.idl',
-    'nsIDOMMouseScrollEvent.idl',
     'nsIDOMNotifyPaintEvent.idl',
     'nsIDOMNSEvent.idl',
-    'nsIDOMScrollAreaEvent.idl',
     'nsIDOMUIEvent.idl',
     'nsIDOMWheelEvent.idl',
 ]

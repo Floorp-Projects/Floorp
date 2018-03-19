@@ -50,7 +50,7 @@ DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                            const nsAString& aPublicId,
                            const nsAString& aSystemId,
                            const nsAString& aInternalSubset) :
-  nsGenericDOMDataNode(aNodeInfo),
+  CharacterData(aNodeInfo),
   mPublicId(aPublicId),
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
@@ -63,15 +63,15 @@ DocumentType::~DocumentType()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(DocumentType, nsGenericDOMDataNode, nsIDOMNode)
+NS_IMPL_ISUPPORTS_INHERITED(DocumentType, CharacterData, nsIDOMNode)
 
 bool
 DocumentType::IsNodeOfType(uint32_t aFlags) const
 {
   // Don't claim to be eDATA_NODE since we're just inheriting
-  // nsGenericDOMDataNode for convinience. Doctypes aren't really
+  // CharacterData for convenience. Doctypes aren't really
   // data nodes (they have a null .nodeValue and don't implement
-  // nsIDOMCharacterData)
+  // the DOM CharacterData interface)
   return false;
 }
 
@@ -105,11 +105,11 @@ DocumentType::GetInternalSubset(nsAString& aInternalSubset) const
   aInternalSubset = mInternalSubset;
 }
 
-nsGenericDOMDataNode*
+already_AddRefed<CharacterData>
 DocumentType::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
   already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  return new DocumentType(ni, mPublicId, mSystemId, mInternalSubset);
+  return do_AddRef(new DocumentType(ni, mPublicId, mSystemId, mInternalSubset));
 }
 
 } // namespace dom

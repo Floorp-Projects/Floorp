@@ -11,7 +11,6 @@
 
 #include "nsArray.h"
 #include "nsAutoPtr.h"
-#include "nsGenericDOMDataNode.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsIStyleSheetLinkingElement.h"
@@ -20,7 +19,6 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMCharacterData.h"
 #ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
@@ -37,6 +35,7 @@
 #include "nsAtom.h"
 #include "nsRange.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
 #ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
@@ -110,7 +109,7 @@ InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
 }
 
 bool
-InspectorUtils::IsIgnorableWhitespace(nsGenericDOMDataNode& aDataNode)
+InspectorUtils::IsIgnorableWhitespace(CharacterData& aDataNode)
 {
   if (!aDataNode.TextIsOnlyWhitespace()) {
     return false;

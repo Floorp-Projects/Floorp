@@ -64,13 +64,12 @@ public:
 
   virtual void SetData(const nsAString& aData, mozilla::ErrorResult& rv) override
   {
-    nsGenericDOMDataNode::SetData(aData, rv);
+    CharacterData::SetData(aData, rv);
     if (rv.Failed()) {
       return;
     }
     UpdateStyleSheetInternal(nullptr, nullptr, true);
   }
-  using ProcessingInstruction::SetData; // Prevent hiding overloaded virtual function.
 
 protected:
   virtual ~XMLStylesheetProcessingInstruction();
@@ -83,8 +82,9 @@ protected:
                          nsAString& aType,
                          nsAString& aMedia,
                          bool* aIsAlternate) final;
-  nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo* aNodeInfo,
-                                      bool aCloneText) const final;
+  already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo* aNodeInfo,
+                  bool aCloneText) const final;
 };
 
 } // namespace dom

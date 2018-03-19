@@ -1319,10 +1319,6 @@ var Impl = {
       }
     }
 
-    if (this._childTelemetry.length) {
-      payloadObj.childPayloads = protect(() => this.getChildPayloads());
-    }
-
     return payloadObj;
   },
 

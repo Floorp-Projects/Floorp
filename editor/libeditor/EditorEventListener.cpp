@@ -31,7 +31,6 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DragEvent.h"
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
-#include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
@@ -220,14 +219,12 @@ EditorEventListener::Disconnect()
   }
   UninstallFromEditor();
 
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsCOMPtr<nsIDOMElement> domFocus;
-    fm->GetFocusedElement(getter_AddRefs(domFocus));
-    nsCOMPtr<nsINode> focusedElement = do_QueryInterface(domFocus);
+    nsIContent* focusedContent = fm->GetFocusedContent();
     mozilla::dom::Element* root = mEditorBase->GetRoot();
-    if (focusedElement && root &&
-        nsContentUtils::ContentIsDescendantOf(focusedElement, root)) {
+    if (focusedContent && root &&
+        nsContentUtils::ContentIsDescendantOf(focusedContent, root)) {
       // Reset the Selection ancestor limiter and SelectionController state
       // that EditorBase::InitializeSelection set up.
       mEditorBase->FinalizeSelection();
@@ -1102,12 +1099,11 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
     // make sure that the element is really focused in case an earlier
     // listener in the chain changed the focus.
     if (editableRoot) {
-      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+      nsFocusManager* fm = nsFocusManager::GetFocusManager();
       NS_ENSURE_TRUE(fm, NS_OK);
 
-      nsCOMPtr<nsIDOMElement> element;
-      fm->GetFocusedElement(getter_AddRefs(element));
-      if (!element) {
+      nsIContent* focusedContent = fm->GetFocusedContent();
+      if (!focusedContent) {
         return NS_OK;
       }
 
@@ -1116,11 +1112,9 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
 
       nsCOMPtr<nsIContent> originalTargetAsContent =
         do_QueryInterface(originalTarget);
-      nsCOMPtr<nsIContent> focusedElementAsContent =
-        do_QueryInterface(element);
 
       if (!SameCOMIdentity(
-            focusedElementAsContent->FindFirstNonChromeOnlyAccessContent(),
+            focusedContent->FindFirstNonChromeOnlyAccessContent(),
             originalTargetAsContent->FindFirstNonChromeOnlyAccessContent())) {
         return NS_OK;
       }
@@ -1150,12 +1144,11 @@ EditorEventListener::Blur(InternalFocusEvent* aBlurEvent)
 
   // check if something else is focused. If another element is focused, then
   // we should not change the selection.
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, NS_OK);
 
-  nsCOMPtr<nsIDOMElement> element;
-  fm->GetFocusedElement(getter_AddRefs(element));
-  if (!element) {
+  nsIContent* content = fm->GetFocusedContent();
+  if (!content || !content->IsElement()) {
     RefPtr<EditorBase> editorBase(mEditorBase);
     editorBase->FinalizeSelection();
   }

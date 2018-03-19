@@ -8,15 +8,15 @@
 #define mozilla_dom_ProcessingInstruction_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMProcessingInstruction.h"
-#include "nsGenericDOMDataNode.h"
+#include "mozilla/dom/CharacterData.h"
+#include "nsIDOMNode.h"
 #include "nsAString.h"
 
 namespace mozilla {
 namespace dom {
 
-class ProcessingInstruction : public nsGenericDOMDataNode,
-                              public nsIDOMProcessingInstruction
+class ProcessingInstruction : public CharacterData,
+                              public nsIDOMNode
 {
 public:
   ProcessingInstruction(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -25,18 +25,12 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMCharacterData
-  NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
-  using nsGenericDOMDataNode::SetData; // Prevent hiding overloaded virtual function.
-
-  // nsIDOMProcessingInstruction
-  NS_DECL_NSIDOMPROCESSINGINSTRUCTION
-
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const override;
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                  bool aCloneText) const override;
 
 #ifdef DEBUG
   virtual void List(FILE* out, int32_t aIndent) const override;
@@ -46,10 +40,13 @@ public:
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 
   // WebIDL API
-  void GetTarget(nsString& aTarget)
+  void GetTarget(nsAString& aTarget)
   {
     aTarget = NodeName();
   }
+
+  NS_IMPL_FROMCONTENT_HELPER(ProcessingInstruction, IsProcessingInstruction())
+
 protected:
   virtual ~ProcessingInstruction();
 

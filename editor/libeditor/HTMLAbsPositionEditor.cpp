@@ -313,7 +313,7 @@ HTMLEditor::ShowGrabber(Element& aElement)
 }
 
 nsresult
-HTMLEditor::StartMoving(nsIDOMElement* aHandle)
+HTMLEditor::StartMoving()
 {
   nsCOMPtr<nsIContent> parentContent = mGrabber->GetParent();
   if (NS_WARN_IF(!parentContent) || NS_WARN_IF(!mAbsolutelyPositionedObject)) {

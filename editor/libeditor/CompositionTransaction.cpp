@@ -104,18 +104,19 @@ CompositionTransaction::DoTransaction()
 
   // Advance caret: This requires the presentation shell to get the selection.
   if (mReplaceLength == 0) {
-    nsresult rv = mTextNode->InsertData(mOffset, mStringToInsert);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    ErrorResult rv;
+    mTextNode->InsertData(mOffset, mStringToInsert, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
     mEditorBase->RangeUpdaterRef().
                    SelAdjInsertText(*mTextNode, mOffset, mStringToInsert);
   } else {
     uint32_t replaceableLength = mTextNode->TextLength() - mOffset;
-    nsresult rv =
-      mTextNode->ReplaceData(mOffset, mReplaceLength, mStringToInsert);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    ErrorResult rv;
+    mTextNode->ReplaceData(mOffset, mReplaceLength, mStringToInsert, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
     mEditorBase->RangeUpdaterRef().
                    SelAdjDeleteText(mTextNode, mOffset, mReplaceLength);
@@ -131,7 +132,7 @@ CompositionTransaction::DoTransaction()
              remainLength > 0) {
         Text* text = static_cast<Text*>(node.get());
         uint32_t textLength = text->TextLength();
-        text->DeleteData(0, remainLength);
+        text->DeleteData(0, remainLength, IgnoreErrors());
         mEditorBase->RangeUpdaterRef().SelAdjDeleteText(text, 0, remainLength);
         remainLength -= textLength;
         node = node->GetNextSibling();
@@ -157,11 +158,14 @@ CompositionTransaction::UndoTransaction()
   RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv = mTextNode->DeleteData(mOffset, mStringToInsert.Length());
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult err;
+  mTextNode->DeleteData(mOffset, mStringToInsert.Length(), err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
 
   // set the selection to the insertion point where the string was removed
-  rv = selection->Collapse(mTextNode, mOffset);
+  nsresult rv = selection->Collapse(mTextNode, mOffset);
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "Selection could not be collapsed after undo of IME insert.");
   NS_ENSURE_SUCCESS(rv, rv);

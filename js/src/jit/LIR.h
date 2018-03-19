@@ -944,10 +944,6 @@ class LElementVisitor
         lastPC_(nullptr),
         lastNotInlinedPC_(nullptr)
     {}
-
-#define VISIT_INS(op) void visit##op(L##op*) { MOZ_CRASH("NYI: " #op); }
-    LIR_OPCODE_LIST(VISIT_INS)
-#undef VISIT_INS
 };
 
 typedef InlineList<LInstruction>::iterator LInstructionIterator;

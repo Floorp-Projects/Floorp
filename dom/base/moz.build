@@ -73,7 +73,6 @@ EXPORTS += [
     'nsDOMTokenList.h',
     'nsFocusManager.h',
     'nsFrameMessageManager.h',
-    'nsGenericDOMDataNode.h',
     'nsGlobalWindow.h',  # Because binding headers include it.
     'nsGlobalWindowInner.h',  # Because binding headers include it.
     'nsGlobalWindowOuter.h',  # Because binding headers include it.
@@ -153,6 +152,7 @@ EXPORTS.mozilla.dom += [
     'BarProps.h',
     'BodyUtil.h',
     'BorrowedAttrInfo.h',
+    'CharacterData.h',
     'ChildIterator.h',
     'ChromeNodeList.h',
     'ChromeUtils.h',
@@ -231,6 +231,7 @@ UNIFIED_SOURCES += [
     'BarProps.cpp',
     'BodyUtil.cpp',
     'BorrowedAttrInfo.cpp',
+    'CharacterData.cpp',
     'ChildIterator.cpp',
     'ChromeNodeList.cpp',
     'ChromeUtils.cpp',
@@ -296,7 +297,6 @@ UNIFIED_SOURCES += [
     'nsFocusManager.cpp',
     'nsFrameLoader.cpp',
     'nsGenConImageContent.cpp',
-    'nsGenericDOMDataNode.cpp',
     'nsGlobalWindowCommands.cpp',
     'nsHistory.cpp',
     'nsHTMLContentSerializer.cpp',

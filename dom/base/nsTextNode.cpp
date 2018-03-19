@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementation of DOM Core's nsIDOMText node.
+ * Implementation of DOM Core's Text node.
  */
 
 #include "nsTextNode.h"
@@ -55,19 +55,19 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  virtual nsGenericDOMDataNode *CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const override
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                  bool aCloneText) const override
   {
     already_AddRefed<mozilla::dom::NodeInfo> ni =
       RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-    nsAttributeTextNode *it = new nsAttributeTextNode(ni,
-                                                      mNameSpaceID,
-                                                      mAttrName);
-    if (it && aCloneText) {
+    RefPtr<nsAttributeTextNode> it =
+      new nsAttributeTextNode(ni, mNameSpaceID, mAttrName);
+    if (aCloneText) {
       it->mText = mText;
     }
 
-    return it;
+    return it.forget();
   }
 
   // Public method for the event to run
@@ -99,8 +99,7 @@ nsTextNode::~nsTextNode()
 
 // Use the CC variant of this, even though this class does not define
 // a new CC participant, to make QIing to the CC interfaces faster.
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsTextNode, nsGenericDOMDataNode, nsIDOMNode,
-                                             nsIDOMText, nsIDOMCharacterData)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsTextNode, CharacterData, nsIDOMNode)
 
 JSObject*
 nsTextNode::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
@@ -114,16 +113,16 @@ nsTextNode::IsNodeOfType(uint32_t aFlags) const
   return !(aFlags & ~(eTEXT | eDATA_NODE));
 }
 
-nsGenericDOMDataNode*
+already_AddRefed<CharacterData>
 nsTextNode::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
   already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  nsTextNode *it = new nsTextNode(ni);
+  RefPtr<nsTextNode> it = new nsTextNode(ni);
   if (aCloneText) {
     it->mText = mText;
   }
 
-  return it;
+  return it.forget();
 }
 
 nsresult
@@ -140,9 +139,9 @@ nsresult
 nsTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                        nsIContent* aBindingParent, bool aCompileEventHandlers)
 {
-  nsresult rv = nsGenericDOMDataNode::BindToTree(aDocument, aParent,
-                                                 aBindingParent,
-                                                 aCompileEventHandlers);
+  nsresult rv = CharacterData::BindToTree(aDocument, aParent,
+                                          aBindingParent,
+                                          aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetDirectionFromNewTextNode(this);
@@ -154,7 +153,7 @@ void nsTextNode::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   ResetDirectionSetByTextNode(this);
 
-  nsGenericDOMDataNode::UnbindFromTree(aDeep, aNullParent);
+  CharacterData::UnbindFromTree(aDeep, aNullParent);
 }
 
 bool

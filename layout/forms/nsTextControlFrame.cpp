@@ -32,7 +32,6 @@
 #include "nsINode.h"
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
 
-#include "nsIDOMText.h" //for multiline getselection
 #include "nsFocusManager.h"
 #include "nsPresState.h"
 #include "nsAttrValueInlines.h"
@@ -45,6 +44,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/MathAlgorithms.h"
 #include "nsFrameSelection.h"
 
@@ -1049,26 +1049,25 @@ nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
   NS_ASSERTION(length <= 2, "We should have one text node and one mozBR at most");
 
   nsCOMPtr<nsINode> firstNode = nodeList->Item(0);
-  nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(firstNode);
+  Text* textNode = firstNode ? firstNode->GetAsText() : nullptr;
 
   if (length == 0) {
     NS_IF_ADDREF(*aResult = rootNode);
     *aPosition = 0;
   } else if (textNode) {
-    uint32_t textLength = 0;
-    textNode->GetLength(&textLength);
+    uint32_t textLength = textNode->Length();
     if (length == 2 && aOffset == textLength) {
       // If we're at the end of the text node and we have a trailing BR node,
       // set the selection on the BR node.
-      NS_IF_ADDREF(*aResult = rootNode);
+      rootNode.forget(aResult);
       *aPosition = 1;
     } else {
       // Otherwise, set the selection on the textnode itself.
-      NS_IF_ADDREF(*aResult = firstNode);
+      firstNode.forget(aResult);
       *aPosition = std::min(aOffset, textLength);
     }
   } else {
-    NS_IF_ADDREF(*aResult = rootNode);
+    rootNode.forget(aResult);
     *aPosition = 0;
   }
 

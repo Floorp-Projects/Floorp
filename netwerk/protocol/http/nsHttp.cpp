@@ -835,5 +835,25 @@ ParsedHeaderValueListList::ParsedHeaderValueListList(const nsCString &fullHeader
     Tokenize(mFull.BeginReading(), mFull.Length(), ',', consumer);
 }
 
+void LogCallingScriptLocation(void* instance)
+{
+    if (!LOG4_ENABLED()) {
+        return;
+    }
+
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
+    if (!cx) {
+        return;
+    }
+
+    nsAutoCString fileNameString;
+    uint32_t line = 0, col = 0;
+    if (!nsJSUtils::GetCallingLocation(cx, fileNameString, &line, &col)) {
+        return;
+    }
+
+    LOG(("%p called from script: %s:%u:%u", instance, fileNameString.get(), line, col));
+}
+
 } // namespace net
 } // namespace mozilla

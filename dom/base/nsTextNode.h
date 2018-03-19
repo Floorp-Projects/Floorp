@@ -8,12 +8,12 @@
 #define nsTextNode_h
 
 /*
- * Implementation of DOM Core's nsIDOMText node.
+ * Implementation of DOM Core's Text node.
  */
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
-#include "nsIDOMText.h"
+#include "nsIDOMNode.h"
 #include "nsDebug.h"
 
 class nsNodeInfoManager;
@@ -22,7 +22,7 @@ class nsNodeInfoManager;
  * Class used to implement DOM text nodes
  */
 class nsTextNode : public mozilla::dom::Text,
-                   public nsIDOMText
+                   public nsIDOMNode
 {
 private:
   void Init()
@@ -47,18 +47,12 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMCharacterData
-  NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
-  using nsGenericDOMDataNode::SetData; // Prevent hiding overloaded virtual function.
-
-  // nsIDOMText
-  NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
-
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const override;
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                  bool aCloneText) const override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,

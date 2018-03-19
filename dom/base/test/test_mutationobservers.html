@@ -149,9 +149,6 @@ function runTest() {
       m = null;
     });
   m.observe(div, { attributes: true, attributeFilter: ["foo"] });
-  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributes, true);
-  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributeFilter.length, 1)
-  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributeFilter[0], "foo")
   div.setAttribute("foo", "bar");
 }
 
@@ -180,9 +177,6 @@ function testThisBind() {
       m = null;
     }).bind(window));
   m.observe(div, { attributes: true, attributeOldValue: true, subtree: true });
-  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributes, true)
-  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributeOldValue, true)
-  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].subtree, true)
   div.setAttribute("foo", "bar2");
   div.removeAttribute("foo");
   div.removeChild(child);
@@ -226,10 +220,6 @@ function testCharacterData() {
   m3.observe(div, { characterData: true, subtree: true });
   m3.observe(div, { characterData: true, subtree: false });
   m4.observe(div.firstChild, { characterData: true, subtree: false });
-  
-  is(SpecialPowers.wrap(div).getBoundMutationObservers().length, 3)
-  is(SpecialPowers.wrap(div).getBoundMutationObservers()[2].getObservingInfo()[0].characterData, true)
-  is(SpecialPowers.wrap(div).getBoundMutationObservers()[2].getObservingInfo()[0].subtree, false)
 
   div.firstChild.data = "bar";
 }
@@ -303,18 +293,12 @@ function testChildList4() {
     };
   m = new M(callback);
   m.observe(df, { childList: true, characterData: true, characterDataOldValue: true, subtree: true });
-  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo()[0].childList, true)
-  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo()[0].characterData, true)
-  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo()[0].characterDataOldValue, true)
-  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo()[0].subtree, true)
-  ok(SpecialPowers.compare(SpecialPowers.wrap(df).getBoundMutationObservers()[0].mutationCallback, callback))
   m.observe(div, { childList: true });
-  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo().length, 2)
-  
+
   // Make sure transient observers aren't leaked.
   var leakTest = new M(function(){});
   leakTest.observe(div, { characterData: true, subtree: true });
-  
+
   div.insertBefore(df, s2);
   s1.firstChild.data = "bar"; // This should *not* create a record.
   t1.data = "Hello the whole "; // This should create a record.
@@ -578,8 +562,6 @@ function testTakeRecords() {
       m = null;
     });
   m.observe(div, { attributes: true, attributeOldValue: true });
-  // Note, [0] points to a mutation observer which is there for a leak test!
-  ok(SpecialPowers.compare(SpecialPowers.wrap(div).getBoundMutationObservers()[1], m));
   var mutationEventCount = 0;
   div.addEventListener("DOMAttrModified", mutationListener);
   div.setAttribute("foo", "bar");

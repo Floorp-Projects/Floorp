@@ -3693,13 +3693,6 @@ nsTreeBodyFrame::PaintImage(int32_t               aRowIndex,
   return result;
 }
 
-// Disable PGO for PaintText because MSVC 2015 seems to have decided
-// that it can null out the alreadyAddRefed<nsFontMetrics> used to
-// initialize fontMet after storing fontMet on the stack in the same
-// space, overwriting fontMet's stack storage with null.
-#ifdef _MSC_VER
-# pragma optimize("g", off)
-#endif
 ImgDrawResult
 nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
                            nsTreeColumn*        aColumn,
@@ -3831,9 +3824,6 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
 
   return result;
 }
-#ifdef _MSC_VER
-# pragma optimize("", on)
-#endif
 
 ImgDrawResult
 nsTreeBodyFrame::PaintCheckbox(int32_t              aRowIndex,

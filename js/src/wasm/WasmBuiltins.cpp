@@ -147,7 +147,7 @@ void*
 wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter)
 {
     // WasmFrameIter iterates down wasm frames in the activation starting at
-    // JitActivation::wasmExitFP(). Pass Unwind::True to pop
+    // JitActivation::wasmExitFP(). Calling WasmFrameIter::startUnwinding pops
     // JitActivation::wasmExitFP() once each time WasmFrameIter is incremented,
     // ultimately leaving exit FP null when the WasmFrameIter is done().  This
     // is necessary to prevent a DebugFrame from being observed again after we
@@ -228,7 +228,7 @@ CheckInterrupt(JSContext* cx, JitActivation* activation)
     if (!CheckForInterrupt(cx))
         return nullptr;
 
-    void* resumePC = activation->wasmTrapResumePC();
+    void* resumePC = activation->wasmTrapData().resumePC;
     activation->finishWasmTrap();
     return resumePC;
 }
@@ -298,7 +298,7 @@ WasmOldReportTrap(int32_t trapIndex)
 static void*
 WasmHandleTrap()
 {
-    return HandleTrap(TlsContext.get()->runtime()->wasmTrapData->trap);
+    return HandleTrap(CallingActivation()->wasmTrapData().trap);
 }
 
 static void

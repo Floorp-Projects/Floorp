@@ -755,6 +755,10 @@ BackgroundFileSaver::NotifySaveComplete()
 
   if (mObserver) {
     (void)mObserver->OnSaveComplete(this, status);
+    // If mObserver keeps alive an enclosure that captures `this`, we'll have a
+    // cycle that won't be caught by the cycle-collector, so we need to break it
+    // when we're done here (see bug 1444265).
+    mObserver = nullptr;
   }
 
   // At this point, the worker thread will not process any more events, and we

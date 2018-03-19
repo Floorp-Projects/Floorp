@@ -23,7 +23,6 @@
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIContentPrefService2.h"     // for nsIContentPrefService2, etc
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
-#include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIEditor.h"                  // for nsIEditor
 #include "nsIHTMLEditor.h"              // for nsIHTMLEditor
@@ -737,10 +736,7 @@ EditorSpellCheck::UpdateCurrentDictionary(
   if (htmlEditor) {
     rootContent = htmlEditor->GetActiveEditingHost();
   } else {
-    nsCOMPtr<nsIDOMElement> rootElement;
-    rv = mEditor->GetRootElement(getter_AddRefs(rootElement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rootContent = do_QueryInterface(rootElement);
+    rootContent = mEditor->AsEditorBase()->GetRoot();
   }
 
   // Try to get topmost document's document element for embedded mail editor.
