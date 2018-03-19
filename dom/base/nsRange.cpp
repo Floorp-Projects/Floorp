@@ -1897,9 +1897,9 @@ RangeSubtreeIterator::Init(nsRange *aRange)
   nsCOMPtr<nsINode> node = aRange->GetStartContainer(rv);
   if (!node) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMCharacterData> startData = do_QueryInterface(node);
-  if (startData || (node->IsElement() &&
-                    node->AsElement()->GetChildCount() == aRange->GetStartOffset(rv))) {
+  if (node->IsCharacterData() ||
+      (node->IsElement() &&
+       node->AsElement()->GetChildCount() == aRange->GetStartOffset(rv))) {
     mStart = node;
   }
 
@@ -1910,8 +1910,8 @@ RangeSubtreeIterator::Init(nsRange *aRange)
   node = aRange->GetEndContainer(rv);
   if (!node) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMCharacterData> endData = do_QueryInterface(node);
-  if (endData || (node->IsElement() && aRange->GetEndOffset(rv) == 0)) {
+  if (node->IsCharacterData() ||
+      (node->IsElement() && aRange->GetEndOffset(rv) == 0)) {
     mEnd = node;
   }
 
@@ -2171,8 +2171,7 @@ ValidateCurrentNode(nsRange* aRange, RangeSubtreeIterator& aIter)
   NS_ENSURE_SUCCESS(res, false);
 
   if (before || after) {
-    nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(node);
-    if (charData) {
+    if (node->IsCharacterData()) {
       // If we're dealing with the start/end container which is a character
       // node, pretend that the node is in the range.
       if (before && node == aRange->GetStartContainer()) {
