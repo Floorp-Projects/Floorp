@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Base class for DOM Core's nsIDOMComment, DocumentType, nsIDOMText,
+ * Base class for DOM Core's nsIDOMComment, DocumentType, Text,
  * CDATASection, and nsIDOMProcessingInstruction nodes.
  */
 
@@ -24,7 +24,6 @@
 #include "mozilla/dom/ShadowRoot.h"
 
 class nsIDocument;
-class nsIDOMText;
 
 namespace mozilla {
 namespace dom {

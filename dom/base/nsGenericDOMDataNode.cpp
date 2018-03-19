@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Base class for DOM Core's nsIDOMComment, DocumentType, nsIDOMText,
+ * Base class for DOM Core's nsIDOMComment, DocumentType, Text,
  * CDATASection and nsIDOMProcessingInstruction nodes.
  */
 
@@ -23,7 +23,6 @@
 #include "mozilla/InternalMutationEvent.h"
 #include "nsIURI.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMText.h"
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
 #include "nsChangeHint.h"
