@@ -973,12 +973,13 @@ var DebuggerServer = {
   _childMessageManagers: new Set(),
 
   /**
-   * Connect to a child process.
+   * Start a DevTools server in a remote frame's process and add it as a child server for
+   * an active connection.
    *
    * @param object connection
    *        The debugger server connection to use.
    * @param nsIDOMElement frame
-   *        The browser element that holds the child process.
+   *        The frame element with remote content to connect to.
    * @param function [onDestroy]
    *        Optional function to invoke when the child process closes
    *        or the connection shuts down. (Need to forget about the
@@ -987,12 +988,12 @@ var DebuggerServer = {
    *         A promise object that is resolved once the connection is
    *         established.
    */
-  connectToChild(connection, frame, onDestroy, {addonId} = {}) {
+  connectToFrame(connection, frame, onDestroy, {addonId} = {}) {
     return new Promise(resolve => {
       // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
       // or else fallback to asking the frameLoader itself.
       let mm = frame.messageManager || frame.frameLoader.messageManager;
-      mm.loadFrameScript("resource://devtools/server/child.js", false);
+      mm.loadFrameScript("resource://devtools/server/startup/frame.js", false);
 
       let trackMessageManager = () => {
         frame.addEventListener("DevTools:BrowserSwap", onBrowserSwap);
@@ -1021,7 +1022,7 @@ var DebuggerServer = {
       // between e10s parent and child processes
       let parentModules = [];
       let onSetupInParent = function(msg) {
-        // We may have multiple connectToChild instance running for the same tab
+        // We may have multiple connectToFrame instance running for the same tab
         // and need to filter the messages.
         if (msg.json.prefix != connPrefix) {
           return false;
@@ -1067,7 +1068,7 @@ var DebuggerServer = {
 
         connection.setForwarding(prefix, childTransport);
 
-        dumpn("establishing forwarding for app with prefix " + prefix);
+        dumpn(`Start forwarding for frame with prefix ${prefix}`);
 
         actor = msg.json.actor;
         resolve(actor);
@@ -1129,14 +1130,14 @@ var DebuggerServer = {
             // Nothing to do
           }
         } else {
-          // Otherwise, the app has been closed before the actor
+          // Otherwise, the frame has been closed before the actor
           // had a chance to be created, so we are not able to create
           // the actor.
           resolve(null);
         }
         if (actor) {
           // The ContentActor within the child process doesn't necessary
-          // have time to uninitialize itself when the app is closed/killed.
+          // have time to uninitialize itself when the frame is closed/killed.
           // So ensure telling the client that the related actor is detached.
           connection.send({ from: actor.actor, type: "tabDetached" });
           actor = null;
