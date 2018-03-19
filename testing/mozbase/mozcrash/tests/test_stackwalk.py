@@ -6,20 +6,15 @@ import os
 
 import mozunit
 
-import mozcrash
-from testcase import CrashTestCase
+from conftest import fspath
 
 
-class TestStackwalk(CrashTestCase):
-
-    def test_stackwalk_envvar(self):
-        """Test that check_for_crashes uses the MINIDUMP_STACKWALK environment var."""
-        self.create_minidump("test.")
-
-        os.environ['MINIDUMP_STACKWALK'] = self.stackwalk
-        self.assertEqual(1, mozcrash.check_for_crashes(self.tempdir,
-                                                       symbols_path='symbols_path',
-                                                       quiet=True))
+def test_stackwalk_envvar(check_for_crashes, minidump_files, stackwalk):
+    """Test that check_for_crashes uses the MINIDUMP_STACKWALK environment var."""
+    os.environ['MINIDUMP_STACKWALK'] = fspath(stackwalk)
+    try:
+        assert 1 == check_for_crashes(stackwalk_binary=None)
+    finally:
         del os.environ['MINIDUMP_STACKWALK']
 
 
