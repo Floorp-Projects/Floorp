@@ -3519,6 +3519,7 @@ var pdfHandlerInfo = {
   _handlerChanged: TOPIC_PDFJS_HANDLER_CHANGED,
   _appPrefLabel: "portableDocumentFormat",
   get enabled() {
-    return !Services.prefs.getBoolPref(PREF_PDFJS_DISABLED);
+    return !Services.prefs.getBoolPref(PREF_PDFJS_DISABLED) &&
+           Services.policies.isAllowed("PDF.js");
   },
 };
