@@ -2289,9 +2289,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
     // XXX_kin: We need to also handle ProcessingInstruction
     // XXX_kin: according to the spec.
 
-    nsCOMPtr<nsIDOMCharacterData> charData(do_QueryInterface(node));
-
-    if (charData)
+    if (auto charData = CharacterData::FromContent(node))
     {
       uint32_t dataLength = 0;
 
@@ -2306,10 +2304,12 @@ nsRange::CutContents(DocumentFragment** aFragment)
           {
             if (retval) {
               nsAutoString cutValue;
-              rv = charData->SubstringData(startOffset, endOffset - startOffset,
-                                           cutValue);
-              NS_ENSURE_SUCCESS(rv, rv);
               ErrorResult err;
+              charData->SubstringData(startOffset, endOffset - startOffset,
+                                      cutValue, err);
+              if (NS_WARN_IF(err.Failed())) {
+                return err.StealNSResult();
+              }
               nsCOMPtr<nsINode> clone = node->CloneNode(false, err);
               if (NS_WARN_IF(err.Failed())) {
                 return err.StealNSResult();
@@ -2340,9 +2340,11 @@ nsRange::CutContents(DocumentFragment** aFragment)
           if (dataLength >= startOffset) {
             if (retval) {
               nsAutoString cutValue;
-              rv = charData->SubstringData(startOffset, dataLength, cutValue);
-              NS_ENSURE_SUCCESS(rv, rv);
               ErrorResult err;
+              charData->SubstringData(startOffset, dataLength, cutValue, err);
+              if (NS_WARN_IF(err.Failed())) {
+                return err.StealNSResult();
+              }
               nsCOMPtr<nsINode> clone = node->CloneNode(false, err);
               if (NS_WARN_IF(err.Failed())) {
                 return err.StealNSResult();
@@ -2369,9 +2371,11 @@ nsRange::CutContents(DocumentFragment** aFragment)
         // Delete or extract everything before endOffset.
         if (retval) {
           nsAutoString cutValue;
-          rv = charData->SubstringData(0, endOffset, cutValue);
-          NS_ENSURE_SUCCESS(rv, rv);
           ErrorResult err;
+          charData->SubstringData(0, endOffset, cutValue, err);
+          if (NS_WARN_IF(err.Failed())) {
+            return err.StealNSResult();
+          }
           nsCOMPtr<nsINode> clone = node->CloneNode(false, err);
           if (NS_WARN_IF(err.Failed())) {
             return err.StealNSResult();

@@ -191,15 +191,6 @@ CharacterData::GetLength(uint32_t* aLength)
   return NS_OK;
 }
 
-nsresult
-CharacterData::SubstringData(uint32_t aStart, uint32_t aCount,
-                             nsAString& aReturn)
-{
-  ErrorResult rv;
-  SubstringData(aStart, aCount, aReturn, rv);
-  return rv.StealNSResult();
-}
-
 void
 CharacterData::SubstringData(uint32_t aStart, uint32_t aCount,
                              nsAString& aReturn, ErrorResult& rv)
