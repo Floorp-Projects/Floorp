@@ -20,6 +20,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "nsCharTraits.h"
 #include "nsDocument.h"
@@ -128,7 +129,6 @@
 #include "DisplayListChecker.h"
 #include "TextDrawTarget.h"
 #include "nsDeckFrame.h"
-#include "mozilla/StylePrefs.h"
 #include "mozilla/dom/InspectorFontFace.h"
 
 #ifdef MOZ_XUL
@@ -10131,7 +10131,7 @@ nsLayoutUtils::ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
 /* static */ uint8_t
 nsLayoutUtils::ControlCharVisibilityDefault()
 {
-  return StylePrefs::sControlCharVisibility
+  return StaticPrefs::layout_css_control_characters_visible()
     ? NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE
     : NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
 }

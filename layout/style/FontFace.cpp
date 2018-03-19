@@ -16,11 +16,11 @@
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsCSSFontFaceRule.h"
 #include "nsCSSParser.h"
 #include "nsIDocument.h"
 #include "nsStyleUtil.h"
-#include "StylePrefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -598,7 +598,7 @@ FontFace::SetDescriptors(const nsAString& aFamily,
       !ParseDescriptor(eCSSFontDesc_FontFeatureSettings,
                        aDescriptors.mFeatureSettings,
                        mDescriptors->mFontFeatureSettings) ||
-      (StylePrefs::sFontVariationsEnabled &&
+      (StaticPrefs::layout_css_font_variations_enabled() &&
        !ParseDescriptor(eCSSFontDesc_FontVariationSettings,
                         aDescriptors.mVariationSettings,
                         mDescriptors->mFontVariationSettings)) ||
