@@ -2835,6 +2835,9 @@ NS_IMETHODIMP
 nsSocketTransport::SetTimeout(uint32_t type, uint32_t value)
 {
     NS_ENSURE_ARG_MAX(type, nsISocketTransport::TIMEOUT_READ_WRITE);
+
+    SOCKET_LOG(("nsSocketTransport::SetTimeout %p type=%u, value=%u", this, type, value));
+
     // truncate overly large timeout values.
     mTimeouts[type] = (uint16_t) std::min<uint32_t>(value, UINT16_MAX);
     PostEvent(MSG_TIMEOUT_CHANGED);
