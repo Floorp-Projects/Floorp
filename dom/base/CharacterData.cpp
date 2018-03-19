@@ -139,8 +139,7 @@ NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(CharacterDat
 void
 CharacterData::GetNodeValueInternal(nsAString& aNodeValue)
 {
-  DebugOnly<nsresult> rv = GetData(aNodeValue);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetData() failed!");
+  GetData(aNodeValue);
 }
 
 void
@@ -155,7 +154,7 @@ CharacterData::SetNodeValueInternal(const nsAString& aNodeValue,
 
 // Implementation of nsIDOMCharacterData
 
-nsresult
+void
 CharacterData::GetData(nsAString& aData) const
 {
   if (mText.Is2b()) {
@@ -173,15 +172,16 @@ CharacterData::GetData(nsAString& aData) const
       aData.Truncate();
     }
   }
-
-  return NS_OK;
 }
 
-nsresult
-CharacterData::SetData(const nsAString& aData)
+void
+CharacterData::SetData(const nsAString& aData, ErrorResult& aRv)
 {
-  return SetTextInternal(0, mText.GetLength(), aData.BeginReading(),
-                         aData.Length(), true);
+  nsresult rv = SetTextInternal(0, mText.GetLength(), aData.BeginReading(),
+                                aData.Length(), true);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
 
 nsresult

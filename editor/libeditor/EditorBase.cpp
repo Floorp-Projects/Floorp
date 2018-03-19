@@ -3051,7 +3051,9 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
   // We don't support undo here, so we don't really need all of the transaction
   // machinery, therefore we can run our transaction directly, breaking all of
   // the rules!
-  nsresult rv = aCharData.SetData(aString);
+  ErrorResult res;
+  aCharData.SetData(aString, res);
+  nsresult rv = res.StealNSResult();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3222,7 +3224,7 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
                                  leftText);
       rightAsText->DeleteData(0, aStartOfRightNode.Offset());
       // Fix left node
-      leftAsText->GetAsText()->SetData(leftText);
+      leftAsText->GetAsText()->SetData(leftText, IgnoreErrors());
     } else {
       MOZ_DIAGNOSTIC_ASSERT(!rightAsText && !leftAsText);
       // Otherwise it's an interior node, so shuffle around the children. Go
@@ -3389,7 +3391,7 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
     aNodeToKeep->GetAsText()->GetData(rightText);
     aNodeToJoin->GetAsText()->GetData(leftText);
     leftText += rightText;
-    aNodeToKeep->GetAsText()->SetData(leftText);
+    aNodeToKeep->GetAsText()->SetData(leftText, IgnoreErrors());
   } else {
     // Otherwise it's an interior node, so shuffle around the children.
     nsCOMPtr<nsINodeList> childNodes = aNodeToJoin->ChildNodes();

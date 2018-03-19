@@ -70,8 +70,6 @@ public:
     }
     UpdateStyleSheetInternal(nullptr, nullptr, true);
   }
-  using ProcessingInstruction::SetData; // Prevent hiding overloaded virtual function.
-  using ProcessingInstruction::GetData;
 
 protected:
   virtual ~XMLStylesheetProcessingInstruction();

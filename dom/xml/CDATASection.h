@@ -46,8 +46,6 @@ public:
 
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(CharacterData::)
-  using CharacterData::SetData; // Prevent hiding overloaded virtual function.
-  using CharacterData::GetData;
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;

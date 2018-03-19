@@ -16,10 +16,6 @@
 [uuid(4109a2d2-e7af-445d-bb72-c7c9b875f35e)]
 interface nsIDOMCharacterData : nsIDOMNode
 {
-           attribute DOMString            data;
-                                  // raises(DOMException) on setting
-                                  // raises(DOMException) on retrieval
-
   readonly attribute unsigned long        length;
   DOMString                 substringData(in unsigned long offset, 
                                           in unsigned long count)
