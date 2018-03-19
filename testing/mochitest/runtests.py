@@ -1427,8 +1427,6 @@ toolbar#nav-bar {
                 mozinfo.update(options.extra_mozinfo_json)
             if 'STYLO_FORCE_ENABLED' in os.environ:
                 mozinfo.update({'stylo': True})
-            if 'STYLO_FORCE_DISABLED' in os.environ:
-                mozinfo.update({'stylo': False})
 
             info = mozinfo.info
 
