@@ -87,7 +87,7 @@ webpackConfig.resolve = {
     "devtools/client/shared/vendor/redux": "redux",
     "devtools/client/shared/vendor/reselect": "reselect",
 
-    "devtools/shared/system": path.join(__dirname, "../../client/shared/webpack/shims/system-stub"),
+    "resource://gre/modules/AppConstants.jsm": path.join(__dirname, "../../client/shared/webpack/shims/app-constants-stub"),
 
     "devtools/client/framework/devtools": path.join(__dirname, "../../client/shared/webpack/shims/framework-devtools-shim"),
     "devtools/client/framework/menu": "devtools-modules/src/menu",

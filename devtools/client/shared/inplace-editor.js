@@ -27,7 +27,7 @@ const Services = require("Services");
 const focusManager = Services.focus;
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
-loader.lazyRequireGetter(this, "system", "devtools/shared/system");
+loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTENT_TYPES = {
@@ -1209,7 +1209,7 @@ InplaceEditor.prototype = {
    */
   _getIncrement: function(event) {
     const getSmallIncrementKey = (evt) => {
-      if (system.constants.platform === "macosx") {
+      if (AppConstants.platform === "macosx") {
         return evt.altKey;
       }
       return evt.ctrlKey;
