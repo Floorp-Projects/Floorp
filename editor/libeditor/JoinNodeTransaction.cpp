@@ -106,7 +106,10 @@ JoinNodeTransaction::UndoTransaction()
   // First, massage the existing node so it is in its post-split state
   ErrorResult rv;
   if (mRightNode->GetAsText()) {
-    rv = mRightNode->GetAsText()->DeleteData(0, mOffset);
+    mRightNode->GetAsText()->DeleteData(0, mOffset, rv);
+    if (rv.Failed()) {
+      return rv.StealNSResult();
+    }
   } else {
     nsCOMPtr<nsIContent> child = mRightNode->GetFirstChild();
     for (uint32_t i = 0; i < mOffset; i++) {
