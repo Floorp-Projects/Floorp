@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Base class for DOM Core's nsIDOMComment, DocumentType, nsIDOMText,
- * CDATASection, and nsIDOMProcessingInstruction nodes.
+ * Base class for DOM Core's Comment, DocumentType, Text,
+ * CDATASection, and ProcessingInstruction nodes.
  */
 
-#ifndef nsGenericDOMDataNode_h___
-#define nsGenericDOMDataNode_h___
+#ifndef mozilla_dom_CharacterData_h
+#define mozilla_dom_CharacterData_h
 
 #include "mozilla/Attributes.h"
 #include "nsIContent.h"
@@ -24,7 +24,6 @@
 #include "mozilla/dom/ShadowRoot.h"
 
 class nsIDocument;
-class nsIDOMText;
 
 namespace mozilla {
 namespace dom {
@@ -32,76 +31,69 @@ class HTMLSlotElement;
 } // namespace dom
 } // namespace mozilla
 
-#define DATA_NODE_FLAG_BIT(n_) NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
+#define CHARACTER_DATA_FLAG_BIT(n_) NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
 // Data node specific flags
 enum {
   // This bit is set to indicate that if the text node changes to
   // non-whitespace, we may need to create a frame for it. This bit must
   // not be set on nodes that already have a frame.
-  NS_CREATE_FRAME_IF_NON_WHITESPACE =     DATA_NODE_FLAG_BIT(0),
+  NS_CREATE_FRAME_IF_NON_WHITESPACE =     CHARACTER_DATA_FLAG_BIT(0),
 
   // This bit is set to indicate that if the text node changes to
   // whitespace, we may need to reframe it (or its ancestors).
-  NS_REFRAME_IF_WHITESPACE =              DATA_NODE_FLAG_BIT(1),
+  NS_REFRAME_IF_WHITESPACE =              CHARACTER_DATA_FLAG_BIT(1),
 
   // This bit is set to indicate that we have a cached
   // TextIsOnlyWhitespace value
-  NS_CACHED_TEXT_IS_ONLY_WHITESPACE =     DATA_NODE_FLAG_BIT(2),
+  NS_CACHED_TEXT_IS_ONLY_WHITESPACE =     CHARACTER_DATA_FLAG_BIT(2),
 
   // This bit is only meaningful if the NS_CACHED_TEXT_IS_ONLY_WHITESPACE
   // bit is set, and if so it indicates whether we're only whitespace or
   // not.
-  NS_TEXT_IS_ONLY_WHITESPACE =            DATA_NODE_FLAG_BIT(3),
+  NS_TEXT_IS_ONLY_WHITESPACE =            CHARACTER_DATA_FLAG_BIT(3),
 
   // This bit is set if there is a NewlineProperty attached to the node
   // (used by nsTextFrame).
-  NS_HAS_NEWLINE_PROPERTY =               DATA_NODE_FLAG_BIT(4),
+  NS_HAS_NEWLINE_PROPERTY =               CHARACTER_DATA_FLAG_BIT(4),
 
   // This bit is set if there is a FlowLengthProperty attached to the node
   // (used by nsTextFrame).
-  NS_HAS_FLOWLENGTH_PROPERTY =            DATA_NODE_FLAG_BIT(5),
+  NS_HAS_FLOWLENGTH_PROPERTY =            CHARACTER_DATA_FLAG_BIT(5),
 
   // This bit is set if the node may be modified frequently.  This is typically
   // specified if the instance is in <input> or <textarea>.
-  NS_MAYBE_MODIFIED_FREQUENTLY =          DATA_NODE_FLAG_BIT(6),
+  NS_MAYBE_MODIFIED_FREQUENTLY =          CHARACTER_DATA_FLAG_BIT(6),
 };
 
 // Make sure we have enough space for those bits
 ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 7);
 
-#undef DATA_NODE_FLAG_BIT
+#undef CHARACTER_DATA_FLAG_BIT
 
-class nsGenericDOMDataNode : public nsIContent
+namespace mozilla {
+namespace dom {
+
+class CharacterData : public nsIContent
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
-  explicit nsGenericDOMDataNode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  explicit nsGenericDOMDataNode(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  explicit CharacterData(already_AddRefed<dom::NodeInfo>& aNodeInfo);
+  explicit CharacterData(already_AddRefed<dom::NodeInfo>&& aNodeInfo);
 
   void MarkAsMaybeModifiedFrequently()
   {
     SetFlags(NS_MAYBE_MODIFIED_FREQUENTLY);
   }
 
+  NS_IMPL_FROMCONTENT_HELPER(CharacterData, IsCharacterData())
+
   virtual void GetNodeValueInternal(nsAString& aNodeValue) override;
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
-                                    mozilla::ErrorResult& aError) override;
-
-  // Implementation for nsIDOMCharacterData
-  nsresult GetData(nsAString& aData) const;
-  nsresult SetData(const nsAString& aData);
-  nsresult GetLength(uint32_t* aLength);
-  nsresult SubstringData(uint32_t aOffset, uint32_t aCount,
-                         nsAString& aReturn);
-  nsresult AppendData(const nsAString& aArg);
-  nsresult InsertData(uint32_t aOffset, const nsAString& aArg);
-  nsresult DeleteData(uint32_t aOffset, uint32_t aCount);
-  nsresult ReplaceData(uint32_t aOffset, uint32_t aCount,
-                       const nsAString& aArg);
+                                    ErrorResult& aError) override;
 
   // nsINode methods
   virtual uint32_t GetChildCount() const override;
@@ -114,13 +106,13 @@ public:
   virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) override;
   virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
   virtual void GetTextContentInternal(nsAString& aTextContent,
-                                      mozilla::OOMReporter& aError) override
+                                      OOMReporter& aError) override
   {
     GetNodeValue(aTextContent);
   }
   virtual void SetTextContentInternal(const nsAString& aTextContent,
                                       nsIPrincipal* aSubjectPrincipal,
-                                      mozilla::ErrorResult& aError) override
+                                      ErrorResult& aError) override
   {
     // Batch possible DOMSubtreeModified events.
     mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
@@ -153,7 +145,7 @@ public:
   virtual void AppendTextTo(nsAString& aResult) override;
   MOZ_MUST_USE
   virtual bool AppendTextTo(nsAString& aResult,
-                            const mozilla::fallible_t&) override;
+                            const fallible_t&) override;
   virtual void SaveSubtreeState() override;
 
 #ifdef DEBUG
@@ -165,10 +157,10 @@ public:
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
   virtual bool IsLink(nsIURI** aURI) const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+  virtual nsresult Clone(dom::NodeInfo *aNodeInfo, nsINode **aResult,
                          bool aPreallocateChildren) const override
   {
-    nsCOMPtr<nsINode> result = CloneDataNode(aNodeInfo, true);
+    RefPtr<CharacterData> result = CloneDataNode(aNodeInfo, true);
     result.forget(aResult);
 
     if (!*aResult) {
@@ -178,36 +170,17 @@ public:
     return NS_OK;
   }
 
-  nsresult SplitData(uint32_t aOffset, nsIContent** aReturn,
-                     bool aCloneAfterOriginal = true);
-
   // WebIDL API
-  // Our XPCOM GetData is just fine for WebIDL
-  virtual void SetData(const nsAString& aData, mozilla::ErrorResult& rv)
-  {
-    rv = SetData(aData);
-  }
+  void GetData(nsAString& aData) const;
+  virtual void SetData(const nsAString& aData, ErrorResult& rv);
   // nsINode::Length() returns the right thing for our length attribute
   void SubstringData(uint32_t aStart, uint32_t aCount, nsAString& aReturn,
-                     mozilla::ErrorResult& rv);
-  void AppendData(const nsAString& aData, mozilla::ErrorResult& rv)
-  {
-    rv = AppendData(aData);
-  }
-  void InsertData(uint32_t aOffset, const nsAString& aData,
-                  mozilla::ErrorResult& rv)
-  {
-    rv = InsertData(aOffset, aData);
-  }
-  void DeleteData(uint32_t aOffset, uint32_t aCount, mozilla::ErrorResult& rv)
-  {
-    rv = DeleteData(aOffset, aCount);
-  }
+                     ErrorResult& rv);
+  void AppendData(const nsAString& aData, ErrorResult& rv);
+  void InsertData(uint32_t aOffset, const nsAString& aData, ErrorResult& rv);
+  void DeleteData(uint32_t aOffset, uint32_t aCount, ErrorResult& rv);
   void ReplaceData(uint32_t aOffset, uint32_t aCount, const nsAString& aData,
-                   mozilla::ErrorResult& rv)
-  {
-    rv = ReplaceData(aOffset, aCount, aData);
-  }
+                   ErrorResult& rv);
 
   uint32_t TextDataLength() const
   {
@@ -220,21 +193,17 @@ public:
   void ToCString(nsAString& aBuf, int32_t aOffset, int32_t aLen) const;
 #endif
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsGenericDOMDataNode)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(CharacterData)
 
 protected:
-  virtual ~nsGenericDOMDataNode();
+  virtual ~CharacterData();
 
-  virtual mozilla::dom::Element* GetNameSpaceElement() override
+  virtual Element* GetNameSpaceElement() override
   {
     nsINode *parent = GetParentNode();
 
     return parent && parent->IsElement() ? parent->AsElement() : nullptr;
   }
-
-  nsresult SplitText(uint32_t aOffset, nsIDOMText** aReturn);
-
-  nsresult GetWholeText(nsAString& aWholeText);
 
   nsresult SetTextInternal(uint32_t aOffset, uint32_t aCount,
                            const char16_t* aBuffer, uint32_t aLength,
@@ -249,8 +218,8 @@ protected:
    * @param aCloneText if true the text content will be cloned too
    * @return the clone
    */
-  virtual nsGenericDOMDataNode *CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const = 0;
+  virtual already_AddRefed<CharacterData>
+    CloneDataNode(dom::NodeInfo *aNodeInfo, bool aCloneText) const = 0;
 
   nsTextFragment mText;
 
@@ -273,4 +242,7 @@ private:
   already_AddRefed<nsAtom> GetCurrentValueAtom();
 };
 
-#endif /* nsGenericDOMDataNode_h___ */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_CharacterData_h */

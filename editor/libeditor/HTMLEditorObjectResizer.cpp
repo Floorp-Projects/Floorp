@@ -823,7 +823,7 @@ HTMLEditor::OnMouseMove(nsIDOMMouseEvent* aMouseEvent)
     if (DeprecatedAbs(clientX - mOriginalX) * 2 >= xThreshold ||
         DeprecatedAbs(clientY - mOriginalY) * 2 >= yThreshold) {
       mGrabberClicked = false;
-      StartMoving(nullptr);
+      StartMoving();
     }
   }
   if (mIsMoving) {

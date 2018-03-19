@@ -14,7 +14,6 @@
 #include "nscore.h"
 
 class nsCycleCollectionTraversalCallback;
-class nsIDOMCharacterData;
 class nsRange;
 namespace mozilla {
 class RangeUpdater;
@@ -122,8 +121,6 @@ public:
                         const nsAString &aString);
   nsresult SelAdjDeleteText(nsIContent* aTextNode, int32_t aOffset,
                             int32_t aLength);
-  nsresult SelAdjDeleteText(nsIDOMCharacterData* aTextNode,
-                            int32_t aOffset, int32_t aLength);
   // the following gravity routines need will/did sandwiches, because the other
   // gravity routines will be called inside of these sandwiches, but should be
   // ignored.

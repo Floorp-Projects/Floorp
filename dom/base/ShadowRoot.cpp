@@ -276,6 +276,10 @@ ShadowRoot::ApplicableRulesChanged()
     return;
   }
 
+  if (!IsComposedDocParticipant()) {
+    return;
+  }
+
   nsIDocument* doc = OwnerDoc();
   if (nsIPresShell* shell = doc->GetShell()) {
     doc->BeginUpdate(UPDATE_STYLE);
@@ -283,7 +287,6 @@ ShadowRoot::ApplicableRulesChanged()
     doc->EndUpdate(UPDATE_STYLE);
   }
 }
-
 
 void
 ShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet)

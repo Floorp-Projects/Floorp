@@ -1798,6 +1798,13 @@ pref("network.http.connection-timeout", 90);
 // seconds.
 pref("network.http.tls-handshake-timeout", 30);
 
+// The number of seconds after which we time out a connection of a retry (fallback)
+// socket when a certain IP family is already preferred.  This shorter connection
+// timeout allows us to find out more quickly that e.g. an IPv6 host is no longer
+// available and let us try an IPv4 address, if provided for the host name.
+// Set to '0' to use the default connection timeout.
+pref("network.http.fallback-connection-timeout", 5);
+
 // The number of seconds to allow active connections to prove that they have
 // traffic before considered stalled, after a network change has been detected
 // and signalled.
@@ -2278,7 +2285,7 @@ pref("network.auth.private-browsing-sso", false);
 // Control how throttling of http responses works - number of ms that each
 // suspend and resume period lasts (prefs named appropriately)
 pref("network.http.throttle.enable", true);
-pref("network.http.throttle.version", 1);
+pref("network.http.throttle.version", 2);
 
 // V1 prefs
 pref("network.http.throttle.suspend-for", 900);

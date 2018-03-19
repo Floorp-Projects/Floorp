@@ -21,9 +21,6 @@
 #include "mozilla/Encoding.h"
 #include "nsIOutputStream.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMText.h"
-#include "nsIDOMComment.h"
-#include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMNodeList.h"
 #include "nsRange.h"
 #include "nsIDOMRange.h"
@@ -44,9 +41,12 @@
 #include "nsTArray.h"
 #include "nsIFrame.h"
 #include "nsStringBuffer.h"
+#include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/Text.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/ScopeExit.h"
 
@@ -418,13 +418,13 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
     }
     case nsINode::PROCESSING_INSTRUCTION_NODE:
     {
-      mSerializer->AppendProcessingInstruction(static_cast<nsIContent*>(node),
+      mSerializer->AppendProcessingInstruction(static_cast<ProcessingInstruction*>(node),
                                                aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsINode::COMMENT_NODE:
     {
-      mSerializer->AppendComment(static_cast<nsIContent*>(node),
+      mSerializer->AppendComment(static_cast<Comment*>(node),
                                  aStartOffset, aEndOffset, aStr);
       break;
     }
@@ -1600,7 +1600,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t 
   {
     // some special casing for text nodes
     nsCOMPtr<nsINode> t = do_QueryInterface(aNode);
-    if (IsTextNode(t))
+    if (auto nodeAsText = t->GetAsText())
     {
       // if not at beginning of text node, we are done
       if (offset >  0)
@@ -1608,9 +1608,8 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t 
         // unless everything before us in just whitespace.  NOTE: we need a more
         // general solution that truly detects all cases of non-significant
         // whitesace with no false alarms.
-        nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
         nsAutoString text;
-        nodeAsText->SubstringData(0, offset, text);
+        nodeAsText->SubstringData(0, offset, text, IgnoreErrors());
         text.CompressWhitespace();
         if (!text.IsEmpty())
           return NS_OK;
@@ -1676,7 +1675,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t 
   {
     // some special casing for text nodes
     nsCOMPtr<nsINode> n = do_QueryInterface(aNode);
-    if (IsTextNode(n))
+    if (auto nodeAsText = n->GetAsText())
     {
       // if not at end of text node, we are done
       uint32_t len = n->Length();
@@ -1685,9 +1684,8 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t 
         // unless everything after us in just whitespace.  NOTE: we need a more
         // general solution that truly detects all cases of non-significant
         // whitespace with no false alarms.
-        nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
         nsAutoString text;
-        nodeAsText->SubstringData(offset, len-offset, text);
+        nodeAsText->SubstringData(offset, len-offset, text, IgnoreErrors());
         text.CompressWhitespace();
         if (!text.IsEmpty())
           return NS_OK;

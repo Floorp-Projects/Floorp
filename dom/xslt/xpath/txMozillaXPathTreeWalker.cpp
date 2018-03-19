@@ -8,7 +8,6 @@
 #include "nsIAttribute.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMProcessingInstruction.h"
 #include "nsINode.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"

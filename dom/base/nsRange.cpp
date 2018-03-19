@@ -17,14 +17,13 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMText.h"
 #include "nsError.h"
 #include "nsIContentIterator.h"
 #include "nsINodeList.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
-#include "nsGenericDOMDataNode.h"
 #include "nsTextFrame.h"
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/RangeBinding.h"
@@ -32,6 +31,7 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Likely.h"
 #include "nsCSSFrameConstructor.h"
@@ -1897,9 +1897,9 @@ RangeSubtreeIterator::Init(nsRange *aRange)
   nsCOMPtr<nsINode> node = aRange->GetStartContainer(rv);
   if (!node) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMCharacterData> startData = do_QueryInterface(node);
-  if (startData || (node->IsElement() &&
-                    node->AsElement()->GetChildCount() == aRange->GetStartOffset(rv))) {
+  if (node->IsCharacterData() ||
+      (node->IsElement() &&
+       node->AsElement()->GetChildCount() == aRange->GetStartOffset(rv))) {
     mStart = node;
   }
 
@@ -1910,8 +1910,8 @@ RangeSubtreeIterator::Init(nsRange *aRange)
   node = aRange->GetEndContainer(rv);
   if (!node) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMCharacterData> endData = do_QueryInterface(node);
-  if (endData || (node->IsElement() && aRange->GetEndOffset(rv) == 0)) {
+  if (node->IsCharacterData() ||
+      (node->IsElement() && aRange->GetEndOffset(rv) == 0)) {
     mEnd = node;
   }
 
@@ -2171,8 +2171,7 @@ ValidateCurrentNode(nsRange* aRange, RangeSubtreeIterator& aIter)
   NS_ENSURE_SUCCESS(res, false);
 
   if (before || after) {
-    nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(node);
-    if (charData) {
+    if (node->IsCharacterData()) {
       // If we're dealing with the start/end container which is a character
       // node, pretend that the node is in the range.
       if (before && node == aRange->GetStartContainer()) {
@@ -2289,27 +2288,23 @@ nsRange::CutContents(DocumentFragment** aFragment)
     // XXX_kin: We need to also handle ProcessingInstruction
     // XXX_kin: according to the spec.
 
-    nsCOMPtr<nsIDOMCharacterData> charData(do_QueryInterface(node));
-
-    if (charData)
-    {
+    if (auto charData = CharacterData::FromContent(node)) {
       uint32_t dataLength = 0;
 
-      if (node == startContainer)
-      {
-        if (node == endContainer)
-        {
+      if (node == startContainer) {
+        if (node == endContainer) {
           // This range is completely contained within a single text node.
           // Delete or extract the data between startOffset and endOffset.
 
-          if (endOffset > startOffset)
-          {
+          if (endOffset > startOffset) {
             if (retval) {
               nsAutoString cutValue;
-              rv = charData->SubstringData(startOffset, endOffset - startOffset,
-                                           cutValue);
-              NS_ENSURE_SUCCESS(rv, rv);
               ErrorResult err;
+              charData->SubstringData(startOffset, endOffset - startOffset,
+                                      cutValue, err);
+              if (NS_WARN_IF(err.Failed())) {
+                return err.StealNSResult();
+              }
               nsCOMPtr<nsINode> clone = node->CloneNode(false, err);
               if (NS_WARN_IF(err.Failed())) {
                 return err.StealNSResult();
@@ -2322,27 +2317,30 @@ nsRange::CutContents(DocumentFragment** aFragment)
             }
 
             nsMutationGuard guard;
-            rv = charData->DeleteData(startOffset, endOffset - startOffset);
-            NS_ENSURE_SUCCESS(rv, rv);
+            ErrorResult err;
+            charData->DeleteData(startOffset, endOffset - startOffset, err);
+            if (NS_WARN_IF(err.Failed())) {
+              return err.StealNSResult();
+            }
             NS_ENSURE_STATE(!guard.Mutated(0) ||
                             ValidateCurrentNode(this, iter));
           }
 
           handled = true;
         }
-        else
-        {
+        else  {
           // Delete or extract everything after startOffset.
 
-          rv = charData->GetLength(&dataLength);
-          NS_ENSURE_SUCCESS(rv, rv);
+          dataLength = charData->Length();
 
           if (dataLength >= startOffset) {
             if (retval) {
               nsAutoString cutValue;
-              rv = charData->SubstringData(startOffset, dataLength, cutValue);
-              NS_ENSURE_SUCCESS(rv, rv);
               ErrorResult err;
+              charData->SubstringData(startOffset, dataLength, cutValue, err);
+              if (NS_WARN_IF(err.Failed())) {
+                return err.StealNSResult();
+              }
               nsCOMPtr<nsINode> clone = node->CloneNode(false, err);
               if (NS_WARN_IF(err.Failed())) {
                 return err.StealNSResult();
@@ -2355,7 +2353,11 @@ nsRange::CutContents(DocumentFragment** aFragment)
             }
 
             nsMutationGuard guard;
-            rv = charData->DeleteData(startOffset, dataLength);
+            ErrorResult err;
+            charData->DeleteData(startOffset, dataLength, err);
+            if (NS_WARN_IF(err.Failed())) {
+              return err.StealNSResult();
+            }
             NS_ENSURE_SUCCESS(rv, rv);
             NS_ENSURE_STATE(!guard.Mutated(0) ||
                             ValidateCurrentNode(this, iter));
@@ -2364,14 +2366,15 @@ nsRange::CutContents(DocumentFragment** aFragment)
           handled = true;
         }
       }
-      else if (node == endContainer)
-      {
+      else if (node == endContainer) {
         // Delete or extract everything before endOffset.
         if (retval) {
           nsAutoString cutValue;
-          rv = charData->SubstringData(0, endOffset, cutValue);
-          NS_ENSURE_SUCCESS(rv, rv);
           ErrorResult err;
+          charData->SubstringData(0, endOffset, cutValue, err);
+          if (NS_WARN_IF(err.Failed())) {
+            return err.StealNSResult();
+          }
           nsCOMPtr<nsINode> clone = node->CloneNode(false, err);
           if (NS_WARN_IF(err.Failed())) {
             return err.StealNSResult();
@@ -2384,16 +2387,18 @@ nsRange::CutContents(DocumentFragment** aFragment)
         }
 
         nsMutationGuard guard;
-        rv = charData->DeleteData(0, endOffset);
-        NS_ENSURE_SUCCESS(rv, rv);
+        ErrorResult err;
+        charData->DeleteData(0, endOffset, err);
+        if (NS_WARN_IF(err.Failed())) {
+          return err.StealNSResult();
+        }
         NS_ENSURE_STATE(!guard.Mutated(0) ||
                         ValidateCurrentNode(this, iter));
         handled = true;
       }
     }
 
-    if (!handled && (node == endContainer || node == startContainer))
-    {
+    if (!handled && (node == endContainer || node == startContainer)) {
       if (node && node->IsElement() &&
           ((node == endContainer && endOffset == 0) ||
            (node == startContainer &&
@@ -2407,8 +2412,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
       }
     }
 
-    if (!handled)
-    {
+    if (!handled) {
       // node was not handled above, so it must be completely contained
       // within the range. Just remove it from the tree!
       nodeToResult = node;
@@ -2428,8 +2432,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
         NS_ENSURE_STATE(commonAncestor);
 
         nsCOMPtr<nsINode> parentCounterNode = node;
-        while (parentCounterNode && parentCounterNode != commonAncestor)
-        {
+        while (parentCounterNode && parentCounterNode != commonAncestor) {
           ++parentCount;
           parentCounterNode = parentCounterNode->GetParentNode();
           NS_ENSURE_STATE(parentCounterNode);
@@ -2444,8 +2447,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
       NS_ENSURE_SUCCESS(rv, rv);
 
       ErrorResult res;
-      if (farthestAncestor)
-      {
+      if (farthestAncestor) {
         nsCOMPtr<nsINode> n = do_QueryInterface(commonCloneAncestor);
         n->AppendChild(*farthestAncestor, res);
         res.WouldReportJSException();
@@ -2483,8 +2485,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
     if (!iter.IsDone() && retval) {
       // Find the equivalent of commonAncestor in the cloned tree.
       nsCOMPtr<nsINode> newCloneAncestor = nodeToResult;
-      for (uint32_t i = parentCount; i; --i)
-      {
+      for (uint32_t i = parentCount; i; --i) {
         newCloneAncestor = newCloneAncestor->GetParentNode();
         NS_ENSURE_STATE(newCloneAncestor);
       }
@@ -2724,23 +2725,16 @@ nsRange::CloneContents(ErrorResult& aRv)
     // XXX_kin: We need to also handle ProcessingInstruction
     // XXX_kin: according to the spec.
 
-    nsCOMPtr<nsIDOMCharacterData> charData(do_QueryInterface(clone));
-
-    if (charData)
+    if (auto charData = CharacterData::FromContent(clone))
     {
       if (node == mEnd.Container()) {
         // We only need the data before mEndOffset, so get rid of any
         // data after it.
 
-        uint32_t dataLength = 0;
-        aRv = charData->GetLength(&dataLength);
-        if (aRv.Failed()) {
-          return nullptr;
-        }
-
+        uint32_t dataLength = charData->Length();
         if (dataLength > (uint32_t)mEnd.Offset())
         {
-          aRv = charData->DeleteData(mEnd.Offset(), dataLength - mEnd.Offset());
+          charData->DeleteData(mEnd.Offset(), dataLength - mEnd.Offset(), aRv);
           if (aRv.Failed()) {
             return nullptr;
           }
@@ -2753,7 +2747,7 @@ nsRange::CloneContents(ErrorResult& aRv)
 
         if (mStart.Offset() > 0)
         {
-          aRv = charData->DeleteData(0, mStart.Offset());
+          charData->DeleteData(0, mStart.Offset(), aRv);
           if (aRv.Failed()) {
             return nullptr;
           }
@@ -2911,7 +2905,8 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
   nsCOMPtr<nsINode> referenceNode;
   nsCOMPtr<nsINode> referenceParentNode = tStartContainer;
 
-  nsCOMPtr<nsIDOMText> startTextNode(do_QueryInterface(tStartContainer));
+  RefPtr<Text> startTextNode =
+    tStartContainer ? tStartContainer->GetAsText() : nullptr;
   nsCOMPtr<nsINodeList> tChildList;
   if (startTextNode) {
     referenceParentNode = tStartContainer->GetParentNode();
@@ -2926,8 +2921,7 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
       return;
     }
 
-    nsCOMPtr<nsIDOMText> secondPart;
-    aRv = startTextNode->SplitText(tStartOffset, getter_AddRefs(secondPart));
+    RefPtr<Text> secondPart = startTextNode->SplitText(tStartOffset, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -3108,20 +3102,23 @@ nsRange::ToString(nsAString& aReturn)
 
   // effeciency hack for simple case
   if (mStart.Container() == mEnd.Container()) {
-    nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(mStart.Container());
+    Text* textNode = mStart.Container() ? mStart.Container()->GetAsText() : nullptr;
 
     if (textNode)
     {
 #ifdef DEBUG_range
       // If debug, dump it:
-      nsCOMPtr<nsIContent> cN = do_QueryInterface(mStart.Container());
-      if (cN) cN->List(stdout);
+      textNode->List(stdout);
       printf("End Range dump: -----------------------\n");
 #endif /* DEBUG */
 
       // grab the text
-      if (NS_FAILED(textNode->SubstringData(mStart.Offset(),mEnd.Offset()-mStart.Offset(),aReturn)))
+      IgnoredErrorResult rv;
+      textNode->SubstringData(mStart.Offset(), mEnd.Offset() - mStart.Offset(),
+                              aReturn, rv);
+      if (rv.Failed()) {
         return NS_ERROR_UNEXPECTED;
+      }
       return NS_OK;
     }
   }
@@ -3146,16 +3143,16 @@ nsRange::ToString(nsAString& aReturn)
     // If debug, dump it:
     n->List(stdout);
 #endif /* DEBUG */
-    nsCOMPtr<nsIDOMText> textNode(do_QueryInterface(n));
+    Text* textNode = n->GetAsText();
     if (textNode) // if it's a text node, get the text
     {
       if (n == mStart.Container()) { // only include text past start offset
-        uint32_t strLength;
-        textNode->GetLength(&strLength);
-        textNode->SubstringData(mStart.Offset(),strLength-mStart.Offset(),tempString);
+        uint32_t strLength = textNode->Length();
+        textNode->SubstringData(mStart.Offset(), strLength-mStart.Offset(),
+                                tempString, IgnoreErrors());
         aReturn += tempString;
       } else if (n == mEnd.Container()) { // only include text before end offset
-        textNode->SubstringData(0,mEnd.Offset(),tempString);
+        textNode->SubstringData(0, mEnd.Offset(), tempString, IgnoreErrors());
         aReturn += tempString;
       } else { // grab the whole kit-n-kaboodle
         textNode->GetData(tempString);
@@ -3239,7 +3236,7 @@ GetTextFrameForContent(nsIContent* aContent, bool aFlushLayout)
 
   const bool frameWillBeUnsuppressed =
     presShell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
-      static_cast<nsGenericDOMDataNode*>(aContent));
+      static_cast<CharacterData*>(aContent));
   if (aFlushLayout) {
     doc->FlushPendingNotifications(FlushType::Layout);
   } else if (frameWillBeUnsuppressed) {
@@ -3752,7 +3749,7 @@ ElementIsVisibleNoFlush(Element* aElement)
 static void
 AppendTransformedText(InnerTextAccumulator& aResult, nsIContent* aContainer)
 {
-  auto textNode = static_cast<nsGenericDOMDataNode*>(aContainer);
+  auto textNode = static_cast<CharacterData*>(aContainer);
 
   nsIFrame* frame = textNode->GetPrimaryFrame();
   if (!IsVisibleAndNotInReplacedElement(frame)) {
