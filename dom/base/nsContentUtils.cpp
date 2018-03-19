@@ -6715,8 +6715,12 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
   RefPtr<XULCommandEvent> xulCommand = new XULCommandEvent(doc, presContext,
                                                            nullptr);
   xulCommand->InitCommandEvent(NS_LITERAL_STRING("command"), true, true,
-                               doc->GetInnerWindow(), 0, aCtrl, aAlt, aShift,
-                               aMeta, aSourceEvent, aInputSource);
+                               nsGlobalWindowInner::Cast(doc->GetInnerWindow()),
+                               0, aCtrl, aAlt, aShift,
+                               aMeta,
+                               aSourceEvent ?
+                                 aSourceEvent->InternalDOMEvent() : nullptr,
+                               aInputSource, IgnoreErrors());
 
   if (aShell) {
     nsEventStatus status = nsEventStatus_eIgnore;
