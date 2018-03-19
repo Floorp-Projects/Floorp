@@ -753,9 +753,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'skia/src/fonts/SkFontMgr_indirect.cpp',
         'skia/src/fonts/SkRemotableFontMgr.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
-    # Workaround for buggy macOS drivers.
-    DEFINES['SK_DISABLE_EXPLICIT_GPU_RESOURCE_ALLOCATION'] = 1
 
 # We should autogenerate these SSE related flags.
 
