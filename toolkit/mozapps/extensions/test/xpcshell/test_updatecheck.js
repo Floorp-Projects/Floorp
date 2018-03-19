@@ -169,7 +169,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
+  for (let file of ["test_updatecheck.json"]) {
     try {
       await checkUpdates("test_bug378216_15@tests.mozilla.org",
                          file);

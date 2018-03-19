@@ -1,0 +1,257 @@
+{
+  "addons": {
+    "test_bug378216_9@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "http://example.com/broken.xpi",
+          "update_hash": "sha256:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6"
+        }
+      ]
+    },
+    "test_bug378216_7@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "2"
+            }
+          },
+          "version": "2.0",
+          "update_link": "http://example.com/broken.xpi"
+        }
+      ]
+    },
+    "test_bug378216_8@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "http://example.com/broken.xpi"
+        }
+      ]
+    },
+    "test_bug378216_13@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "https://example.com/broken.xpi",
+          "update_hash": "md2:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6"
+        }
+      ]
+    },
+    "compat-override@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.1",
+              "advisory_max_version": "0.2"
+            }
+          },
+          "version": "1.0",
+          "update_link": "https://example.com/addons/test1.xpi"
+        },
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.5",
+              "advisory_max_version": "0.6"
+            }
+          },
+          "version": "2.0",
+          "update_link": "https://example.com/addons/test2.xpi"
+        },
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "2",
+              "advisory_max_version": "3"
+            }
+          },
+          "version": "3.0",
+          "update_link": "https://example.com/addons/test3.xpi"
+        }
+      ]
+    },
+    "compat-strict-optin@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.1",
+              "strict_max_version": "0.2"
+            }
+          },
+          "version": "1.0",
+          "update_link": "https://example.com/addons/test1.xpi"
+        }
+      ]
+    },
+    "ignore-compat@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.1",
+              "advisory_max_version": "0.2"
+            }
+          },
+          "version": "1.0",
+          "update_link": "https://example.com/addons/test1.xpi"
+        },
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "0.5",
+              "advisory_max_version": "0.6"
+            }
+          },
+          "version": "2.0",
+          "update_link": "https://example.com/addons/test2.xpi"
+        },
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "2",
+              "advisory_max_version": "3"
+            }
+          },
+          "version": "3.0",
+          "update_link": "https://example.com/addons/test3.xpi"
+        }
+      ]
+    },
+    "test_bug378216_12@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "http://example.com/broken.xpi",
+          "update_hash": "md2:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6"
+        }
+      ]
+    },
+    "test_bug378216_10@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "https://example.com/broken.xpi"
+        }
+      ]
+    },
+    "updatecheck1@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "1.0",
+          "update_link": "https://example.com/addons/test1.xpi"
+        },
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "2",
+              "advisory_max_version": "2"
+            }
+          },
+          "version": "2.0",
+          "update_link": "https://example.com/addons/test2.xpi"
+        },
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "3.0",
+          "update_link": "https://example.com/addons/test3.xpi"
+        },
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "2"
+            }
+          },
+          "version": "2.0",
+          "update_link": "https://example.com/addons/test2.xpi"
+        },
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "2",
+              "advisory_max_version": "2"
+            }
+          },
+          "version": "4.0",
+          "update_link": "https://example.com/addons/test4.xpi"
+        }
+      ]
+    },
+    "test_bug378216_5@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "http://example.com/broken.xpi"
+        }
+      ]
+    },
+    "test_bug378216_15@tests.mozilla.org": {},
+    "test_bug378216_11@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "https://example.com/broken.xpi",
+          "update_hash": "sha256:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6"
+        }
+      ]
+    }
+  }
+}

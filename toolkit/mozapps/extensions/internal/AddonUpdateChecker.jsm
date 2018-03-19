@@ -12,13 +12,7 @@
 var EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
 
 const TIMEOUT               = 60 * 1000;
-const PREFIX_NS_RDF         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-const PREFIX_NS_EM          = "http://www.mozilla.org/2004/em-rdf#";
-const PREFIX_ITEM           = "urn:mozilla:item:";
-const PREFIX_EXTENSION      = "urn:mozilla:extension:";
-const PREFIX_THEME          = "urn:mozilla:theme:";
 const TOOLKIT_ID            = "toolkit@mozilla.org";
-const XMLURI_PARSE_ERROR    = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
 
@@ -33,6 +27,8 @@ ChromeUtils.defineModuleGetter(this, "AddonRepository",
                                "resource://gre/modules/addons/AddonRepository.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
+ChromeUtils.defineModuleGetter(this, "UpdateRDFConverter",
+                               "resource://gre/modules/addons/UpdateRDFConverter.jsm");
 
 
 // Shared code for suppressing bad cert dialogs.
@@ -41,9 +37,6 @@ XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
   ChromeUtils.import("resource://gre/modules/CertUtils.jsm", certUtils);
   return certUtils;
 });
-
-var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
-           getService(Ci.nsIRDFService);
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.update-checker";
@@ -92,140 +85,6 @@ function sanitizeUpdateURL(aUpdate, aRequest, aHashPattern, aHashString) {
       delete aUpdate.updateHash;
     }
   }
-}
-
-/**
- * Parses an RDF style update manifest into an array of update objects.
- *
- * @param  aId
- *         The ID of the add-on being checked for updates
- * @param  aRequest
- *         The XMLHttpRequest that has retrieved the update manifest
- * @param  aManifestData
- *         The pre-parsed manifest, as a bare XML DOM document
- * @return an array of update objects
- * @throws if the update manifest is invalid in any way
- */
-function parseRDFManifest(aId, aRequest, aManifestData) {
-  if (aManifestData.documentElement.namespaceURI != PREFIX_NS_RDF) {
-    throw Components.Exception("Update manifest had an unrecognised namespace: " +
-                               aManifestData.documentElement.namespaceURI);
-  }
-
-  function EM_R(aProp) {
-    return gRDF.GetResource(PREFIX_NS_EM + aProp);
-  }
-
-  function getValue(aLiteral) {
-    if (aLiteral instanceof Ci.nsIRDFLiteral)
-      return aLiteral.Value;
-    if (aLiteral instanceof Ci.nsIRDFResource)
-      return aLiteral.Value;
-    if (aLiteral instanceof Ci.nsIRDFInt)
-      return aLiteral.Value;
-    return null;
-  }
-
-  function getProperty(aDs, aSource, aProperty) {
-    return getValue(aDs.GetTarget(aSource, EM_R(aProperty), true));
-  }
-
-  function getBooleanProperty(aDs, aSource, aProperty) {
-    let propValue = aDs.GetTarget(aSource, EM_R(aProperty), true);
-    if (!propValue)
-      return undefined;
-    return getValue(propValue) == "true";
-  }
-
-  function getRequiredProperty(aDs, aSource, aProperty) {
-    let value = getProperty(aDs, aSource, aProperty);
-    if (!value)
-      throw Components.Exception("Update manifest is missing a required " + aProperty + " property.");
-    return value;
-  }
-
-  let rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
-                  createInstance(Ci.nsIRDFXMLParser);
-  let ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
-           createInstance(Ci.nsIRDFDataSource);
-  rdfParser.parseString(ds, aRequest.channel.URI, aRequest.responseText);
-
-  // Differentiating between add-on types is deprecated
-  let extensionRes = gRDF.GetResource(PREFIX_EXTENSION + aId);
-  let themeRes = gRDF.GetResource(PREFIX_THEME + aId);
-  let itemRes = gRDF.GetResource(PREFIX_ITEM + aId);
-  let addonRes;
-  if (ds.ArcLabelsOut(extensionRes).hasMoreElements())
-    addonRes = extensionRes;
-  else if (ds.ArcLabelsOut(themeRes).hasMoreElements())
-    addonRes = themeRes;
-  else
-    addonRes = itemRes;
-
-  let updates = ds.GetTarget(addonRes, EM_R("updates"), true);
-
-  // A missing updates property doesn't count as a failure, just as no avialable
-  // update information
-  if (!updates) {
-    logger.warn("Update manifest for " + aId + " did not contain an updates property");
-    return [];
-  }
-
-  if (!(updates instanceof Ci.nsIRDFResource))
-    throw Components.Exception("Missing updates property for " + addonRes.Value);
-
-  let cu = Cc["@mozilla.org/rdf/container-utils;1"].
-           getService(Ci.nsIRDFContainerUtils);
-  if (!cu.IsContainer(ds, updates))
-    throw Components.Exception("Updates property was not an RDF container");
-
-  let results = [];
-  let ctr = Cc["@mozilla.org/rdf/container;1"].
-            createInstance(Ci.nsIRDFContainer);
-  ctr.Init(ds, updates);
-  let items = ctr.GetElements();
-  while (items.hasMoreElements()) {
-    let item = items.getNext().QueryInterface(Ci.nsIRDFResource);
-    let version = getProperty(ds, item, "version");
-    if (!version) {
-      logger.warn("Update manifest is missing a required version property.");
-      continue;
-    }
-
-    logger.debug("Found an update entry for " + aId + " version " + version);
-
-    let targetApps = ds.GetTargets(item, EM_R("targetApplication"), true);
-    while (targetApps.hasMoreElements()) {
-      let targetApp = targetApps.getNext().QueryInterface(Ci.nsIRDFResource);
-
-      let appEntry = {};
-      try {
-        appEntry.id = getRequiredProperty(ds, targetApp, "id");
-        appEntry.minVersion = getRequiredProperty(ds, targetApp, "minVersion");
-        appEntry.maxVersion = getRequiredProperty(ds, targetApp, "maxVersion");
-      } catch (e) {
-        logger.warn(e);
-        continue;
-      }
-
-      let result = {
-        id: aId,
-        version,
-        updateURL: getProperty(ds, targetApp, "updateLink"),
-        updateHash: getProperty(ds, targetApp, "updateHash"),
-        updateInfoURL: getProperty(ds, targetApp, "updateInfoURL"),
-        strictCompatibility: !!getBooleanProperty(ds, targetApp, "strictCompatibility"),
-        targetApplications: [appEntry]
-      };
-
-      // The JSON update protocol requires an SHA-2 hash. RDF still
-      // supports SHA-1, for compatibility reasons.
-      sanitizeUpdateURL(result, aRequest, /^sha/, "sha1 or stronger");
-
-      results.push(result);
-    }
-  }
-  return results;
 }
 
 /**
@@ -335,6 +194,16 @@ function parseJSONManifest(aId, aRequest, aManifestData) {
       appEntry.maxVersion = getProperty(app, "advisory_max_version", "string");
     }
 
+    // Add an app entry for the current API ID, too, so that it overrides any
+    // existing app-specific entries, which would take priority over the toolkit
+    // entry.
+    //
+    // Note: This currently only has any effect on legacy extensions (mainly
+    // those used in tests), since WebExtensions cannot yet specify app-specific
+    // compatibility ranges.
+    result.targetApplications.push(Object.assign({}, appEntry,
+                                                 {id: Services.appinfo.ID}));
+
     // The JSON update protocol requires an SHA-2 hash. RDF still
     // supports SHA-1, for compatibility reasons.
     sanitizeUpdateURL(result, aRequest, /^sha(256|512):/, "sha256 or sha512");
@@ -422,22 +291,16 @@ UpdateParser.prototype = {
 
     // Detect the manifest type by first attempting to parse it as
     // JSON, and falling back to parsing it as XML if that fails.
-    let parser;
+    let json;
     try {
-      try {
-        let json = JSON.parse(request.responseText);
+      let data = request.responseText;
+      if (data.startsWith("<?xml")) {
+        logger.warn(`${this.url}: RDF update manifests are deprecated, ` +
+                    "and support will soon be removed");
 
-        parser = () => parseJSONManifest(this.id, request, json);
-      } catch (e) {
-        if (!(e instanceof SyntaxError))
-          throw e;
-        let domParser = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
-        let xml = domParser.parseFromString(request.responseText, "text/xml");
-
-        if (xml.documentElement.namespaceURI == XMLURI_PARSE_ERROR)
-          throw new Error("Update manifest was not valid XML or JSON");
-
-        parser = () => parseRDFManifest(this.id, request, xml);
+        json = UpdateRDFConverter.convertToJSON(request);
+      } else {
+        json = JSON.parse(data);
       }
     } catch (e) {
       logger.warn("onUpdateCheckComplete failed to determine manifest type");
@@ -447,7 +310,7 @@ UpdateParser.prototype = {
 
     let results;
     try {
-      results = parser();
+      results = parseJSONManifest(this.id, request, json);
     } catch (e) {
       logger.warn("onUpdateCheckComplete failed to parse update manifest", e);
       this.notifyError(AddonManager.ERROR_PARSE_ERROR);

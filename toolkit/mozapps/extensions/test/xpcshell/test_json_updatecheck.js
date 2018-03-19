@@ -88,7 +88,7 @@ add_task(async function test_default_values() {
   equal(updates.length, 1);
   let update = updates[0];
 
-  equal(update.targetApplications.length, 1);
+  equal(update.targetApplications.length, 2);
   let targetApp = update.targetApplications[0];
 
   equal(targetApp.id, TOOLKIT_ID);
@@ -149,7 +149,7 @@ add_task(async function test_explicit_values() {
   equal(updates.length, 1);
   let update = updates[0];
 
-  equal(update.targetApplications.length, 1);
+  equal(update.targetApplications.length, 2);
   let targetApp = update.targetApplications[0];
 
   equal(targetApp.id, TOOLKIT_ID);
