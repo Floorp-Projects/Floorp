@@ -124,9 +124,6 @@ browser.jar:
         content/browser/nsContextMenu.js              (content/nsContextMenu.js)
 # XXX: We should exclude this one as well (bug 71895)
 *       content/browser/hiddenWindow.xul              (content/hiddenWindow.xul)
-#ifdef XP_MACOSX
-*       content/browser/macBrowserOverlay.xul         (content/macBrowserOverlay.xul)
-#endif
 #ifndef XP_MACOSX
 *       content/browser/webrtcIndicator.xul           (content/webrtcIndicator.xul)
         content/browser/webrtcIndicator.js            (content/webrtcIndicator.js)

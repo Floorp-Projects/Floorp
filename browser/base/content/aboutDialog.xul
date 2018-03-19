@@ -14,14 +14,9 @@
 <!ENTITY % aboutDialogDTD SYSTEM "chrome://browser/locale/aboutDialog.dtd" >
 %aboutDialogDTD;
 #ifdef XP_MACOSX
-<!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
-%baseMenuOverlayDTD;
+#include browser-doctype.inc
 #endif
 ]>
-
-#ifdef XP_MACOSX
-<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
-#endif
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -39,7 +34,9 @@
         role="dialog"
         aria-describedby="version distribution distributionId communityDesc contributeDesc trademark"
         >
-
+#ifdef XP_MACOSX
+#include macWindow.inc.xul
+#endif
   <script type="application/javascript" src="chrome://browser/content/aboutDialog.js"/>
 #ifdef MOZ_UPDATER
   <script type="application/javascript" src="chrome://browser/content/aboutDialog-appUpdater.js"/>
@@ -150,7 +147,4 @@
     <key keycode="VK_ESCAPE" oncommand="window.close();"/>
   </keyset>
 
-#ifdef XP_MACOSX
-#include browserMountPoints.inc
-#endif
 </window>
