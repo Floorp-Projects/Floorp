@@ -18,7 +18,9 @@ runNetworkTest(function () {
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
   // No IdP for local.
   // Remote generates a bad assertion, but that only fails to validate
-  test.pcRemote.setIdentityProvider('example.com', 'idp.js#bad-validate', 'nobody');
+  test.pcRemote.setIdentityProvider('example.com',
+                                    { protocol: 'idp.js#bad-validate',
+                                      usernameHint: 'nobody' });
 
   // Save the peerIdentity promises now, since when they reject they are
   // replaced and we expect them to be rejected this time

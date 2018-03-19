@@ -873,8 +873,8 @@ PeerConnectionWrapper.prototype = {
     return this._pc.iceConnectionState;
   },
 
-  setIdentityProvider: function(provider, protocol, identity) {
-    this._pc.setIdentityProvider(provider, protocol, identity);
+  setIdentityProvider: function(provider, options) {
+    this._pc.setIdentityProvider(provider, options);
   },
 
   elementPrefix : direction =>
