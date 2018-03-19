@@ -27,8 +27,7 @@ var EXPORTED_SYMBOLS = ["Utils", "Logger", "PivotContext", "PrefCache"]; // jshi
 var Utils = { // jshint ignore:line
   _buildAppMap: {
     "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}": "browser",
-    "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "mobile/android",
-    "{a23983c0-fd0e-11dc-95ff-0800200c9a66}": "mobile/xul"
+    "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "mobile/android"
   },
 
   init: function Utils_init(aWindow) {
