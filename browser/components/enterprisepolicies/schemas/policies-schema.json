@@ -88,6 +88,23 @@
           "items": {
             "type": "origin"
           }
+        },
+
+        "Default": {
+          "type": "boolean"
+        },
+
+        "AcceptThirdParty": {
+          "type": "string",
+          "enum": ["all", "none", "from-visited"]
+        },
+
+        "ExpireAtSessionEnd": {
+          "type": "boolean"
+        },
+
+        "Locked": {
+          "type": "boolean"
         }
       }
     },
