@@ -588,10 +588,16 @@ nsHttpServer.prototype =
   //
   stop: function(callback)
   {
-    if (!callback)
-      throw Cr.NS_ERROR_NULL_POINTER;
     if (!this._socket)
       throw Cr.NS_ERROR_UNEXPECTED;
+
+    // If no argument was provided to stop, return a promise.
+    let returnValue = undefined;
+    if (!callback) {
+      returnValue = new Promise(resolve => {
+        callback = resolve;
+      });
+    }
 
     this._stopCallback = typeof callback === "function"
                        ? callback
@@ -608,6 +614,8 @@ nsHttpServer.prototype =
     this._doQuit = false;
 
     // socket-close notification and pending request completion happen async
+
+    return returnValue;
   },
 
   //
