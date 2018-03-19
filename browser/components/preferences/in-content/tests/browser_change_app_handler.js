@@ -89,9 +89,7 @@ add_task(async function() {
   ok(!list.selectedItem.handlerApp,
      "No app should be visible as preferred item.");
 
-  let tabRemovedPromise = BrowserTestUtils.tabRemoved(gBrowser.selectedTab);
-  gBrowser.removeCurrentTab();
-  await tabRemovedPromise;
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 registerCleanupFunction(function() {

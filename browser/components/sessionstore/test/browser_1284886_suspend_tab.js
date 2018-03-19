@@ -43,7 +43,7 @@ add_task(async function test() {
   gBrowser.discardBrowser(browser1, true);
   ok(!tab1.linkedPanel, "force suspending a tab with beforeunload handler which would show a prompt");
 
-  await promiseRemoveTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 
   // Open tab containing a page which has a beforeunload handler which does not show a prompt.
   url = "http://example.com/browser/browser/components/sessionstore/test/browser_1284886_suspend_tab_2.html";
@@ -55,7 +55,7 @@ add_task(async function test() {
   gBrowser.discardBrowser(browser1);
   ok(!tab1.linkedPanel, "can suspend a tab with beforeunload handler which would not show a prompt");
 
-  await promiseRemoveTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 
   // Test that non-remote tab is not able to be suspended.
   url = "about:robots";
@@ -67,6 +67,6 @@ add_task(async function test() {
   gBrowser.discardBrowser(tab1.linkedBrowser);
   ok(tab1.linkedPanel, "cannot suspend a remote tab");
 
-  promiseRemoveTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 });
 
