@@ -64,7 +64,7 @@ async function testNewTab(browser) {
   let targetURL = browser.currentURI.spec;
   let dialogAppeared = promiseHelperAppDialog();
   let tabOpened = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen").then((event) => {
-    return [ event.target, BrowserTestUtils.tabRemoved(event.target) ];
+    return [ event.target, BrowserTestUtils.waitForTabClosing(event.target) ];
   });
 
   await BrowserTestUtils.synthesizeMouseAtCenter("#target_blank", {}, browser);
@@ -72,8 +72,8 @@ async function testNewTab(browser) {
   let windowContext = await dialogAppeared;
   is(windowContext.gBrowser.selectedBrowser.currentURI.spec, targetURL,
      "got the right windowContext");
-  let [ tab, closed ] = await tabOpened;
-  await closed;
+  let [ tab, closingPromise ] = await tabOpened;
+  await closingPromise;
   is(tab.linkedBrowser, null, "tab was opened and closed");
 }
 
