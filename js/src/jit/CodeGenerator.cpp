@@ -3036,6 +3036,12 @@ CodeGenerator::visitOsiPoint(LOsiPoint* lir)
 }
 
 void
+CodeGenerator::visitPhi(LPhi* lir)
+{
+    MOZ_CRASH("Unexpected LPhi in CodeGenerator");
+}
+
+void
 CodeGenerator::visitGoto(LGoto* lir)
 {
     jumpToBlock(lir->target());
@@ -5803,9 +5809,11 @@ CodeGenerator::generateBody()
 #endif
 
             switch (iter->op()) {
-#define LIROP(op) case LNode::Opcode::op: visit##op(iter->to##op()); break;
+#ifndef JS_CODEGEN_NONE
+# define LIROP(op) case LNode::Opcode::op: visit##op(iter->to##op()); break;
     LIR_OPCODE_LIST(LIROP)
-#undef LIROP
+# undef LIROP
+#endif
               case LNode::Opcode::Invalid:
               default:
                 MOZ_CRASH("Invalid LIR op");

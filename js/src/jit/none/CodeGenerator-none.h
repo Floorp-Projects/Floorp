@@ -14,7 +14,7 @@ namespace jit {
 
 class CodeGeneratorNone : public CodeGeneratorShared
 {
-  public:
+  protected:
     CodeGeneratorNone(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
       : CodeGeneratorShared(gen, graph, masm)
     {

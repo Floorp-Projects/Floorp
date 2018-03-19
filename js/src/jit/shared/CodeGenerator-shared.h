@@ -349,20 +349,6 @@ class CodeGeneratorShared : public LElementVisitor
     void emitTruncateFloat32(FloatRegister src, Register dest, MTruncateToInt32* mir);
 
     void emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck);
-    void visitWasmCall(LWasmCall* ins) {
-        emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
-    }
-    void visitWasmCallVoid(LWasmCallVoid* ins) {
-        emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
-    }
-    void visitWasmCallI64(LWasmCallI64* ins) {
-        emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
-    }
-
-    void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
-    void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
-    void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);
-    void visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins);
 
     void emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment);
     void emitPreBarrier(Address address);
@@ -394,7 +380,7 @@ class CodeGeneratorShared : public LElementVisitor
         return true;
     }
 
-  public:
+  protected:
     // Save and restore all volatile registers to/from the stack, excluding the
     // specified register(s), before a function call made using callWithABI and
     // after storing the function call's return value to an output register.
@@ -449,6 +435,7 @@ class CodeGeneratorShared : public LElementVisitor
     inline void saveLiveVolatile(LInstruction* ins);
     inline void restoreLiveVolatile(LInstruction* ins);
 
+  public:
     template <typename T>
     void pushArg(const T& t) {
         masm.Push(t);
@@ -478,6 +465,7 @@ class CodeGeneratorShared : public LElementVisitor
         masm.storeCallResultValue(t);
     }
 
+  protected:
     void callVM(const VMFunction& f, LInstruction* ins, const Register* dynStack = nullptr);
 
     template <class ArgSeq, class StoreOutputTo>

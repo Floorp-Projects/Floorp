@@ -36,7 +36,7 @@ CodeGeneratorMIPS64::ToTempValue(LInstruction* ins, size_t pos)
 }
 
 void
-CodeGeneratorMIPS64::visitBox(LBox* box)
+CodeGenerator::visitBox(LBox* box)
 {
     const LAllocation* in = box->getOperand(0);
     const LDefinition* result = box->getDef(0);
@@ -54,7 +54,7 @@ CodeGeneratorMIPS64::visitBox(LBox* box)
 }
 
 void
-CodeGeneratorMIPS64::visitUnbox(LUnbox* unbox)
+CodeGenerator::visitUnbox(LUnbox* unbox)
 {
     MUnbox* mir = unbox->mir();
 
@@ -120,7 +120,7 @@ CodeGeneratorMIPS64::splitTagForTest(const ValueOperand& value, ScratchTagScope&
 }
 
 void
-CodeGeneratorMIPS64::visitCompareB(LCompareB* lir)
+CodeGenerator::visitCompareB(LCompareB* lir)
 {
     MCompare* mir = lir->mir();
 
@@ -142,7 +142,7 @@ CodeGeneratorMIPS64::visitCompareB(LCompareB* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitCompareBAndBranch(LCompareBAndBranch* lir)
+CodeGenerator::visitCompareBAndBranch(LCompareBAndBranch* lir)
 {
     MCompare* mir = lir->cmpMir();
     const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
@@ -162,7 +162,7 @@ CodeGeneratorMIPS64::visitCompareBAndBranch(LCompareBAndBranch* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitCompareBitwise(LCompareBitwise* lir)
+CodeGenerator::visitCompareBitwise(LCompareBitwise* lir)
 {
     MCompare* mir = lir->mir();
     Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
@@ -176,7 +176,7 @@ CodeGeneratorMIPS64::visitCompareBitwise(LCompareBitwise* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
+CodeGenerator::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 {
     MCompare* mir = lir->cmpMir();
     Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
@@ -190,7 +190,7 @@ CodeGeneratorMIPS64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitCompareI64(LCompareI64* lir)
+CodeGenerator::visitCompareI64(LCompareI64* lir)
 {
     MCompare* mir = lir->mir();
     MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
@@ -214,7 +214,7 @@ CodeGeneratorMIPS64::visitCompareI64(LCompareI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
+CodeGenerator::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
 {
     MCompare* mir = lir->cmpMir();
     MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
@@ -238,7 +238,7 @@ CodeGeneratorMIPS64::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitDivOrModI64(LDivOrModI64* lir)
+CodeGenerator::visitDivOrModI64(LDivOrModI64* lir)
 {
     Register lhs = ToRegister(lir->lhs());
     Register rhs = ToRegister(lir->rhs());
@@ -278,7 +278,7 @@ CodeGeneratorMIPS64::visitDivOrModI64(LDivOrModI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitUDivOrModI64(LUDivOrModI64* lir)
+CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir)
 {
     Register lhs = ToRegister(lir->lhs());
     Register rhs = ToRegister(lir->rhs());
@@ -325,13 +325,13 @@ CodeGeneratorMIPS64::emitWasmLoadI64(T* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
+CodeGenerator::visitWasmLoadI64(LWasmLoadI64* lir)
 {
     emitWasmLoadI64(lir);
 }
 
 void
-CodeGeneratorMIPS64::visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir)
+CodeGenerator::visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir)
 {
     emitWasmLoadI64(lir);
 }
@@ -357,19 +357,19 @@ CodeGeneratorMIPS64::emitWasmStoreI64(T* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitWasmStoreI64(LWasmStoreI64* lir)
+CodeGenerator::visitWasmStoreI64(LWasmStoreI64* lir)
 {
     emitWasmStoreI64(lir);
 }
 
 void
-CodeGeneratorMIPS64::visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* lir)
+CodeGenerator::visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* lir)
 {
     emitWasmStoreI64(lir);
 }
 
 void
-CodeGeneratorMIPS64::visitWasmSelectI64(LWasmSelectI64* lir)
+CodeGenerator::visitWasmSelectI64(LWasmSelectI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 
@@ -390,7 +390,7 @@ CodeGeneratorMIPS64::visitWasmSelectI64(LWasmSelectI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir)
+CodeGenerator::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
@@ -398,7 +398,7 @@ CodeGeneratorMIPS64::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitWasmReinterpretToI64(LWasmReinterpretToI64* lir)
+CodeGenerator::visitWasmReinterpretToI64(LWasmReinterpretToI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);
@@ -406,7 +406,7 @@ CodeGeneratorMIPS64::visitWasmReinterpretToI64(LWasmReinterpretToI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
+CodeGenerator::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
 {
     const LAllocation* input = lir->getOperand(0);
     Register output = ToRegister(lir->output());
@@ -418,7 +418,7 @@ CodeGeneratorMIPS64::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
+CodeGenerator::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
 {
     const LAllocation* input = lir->getOperand(0);
     Register output = ToRegister(lir->output());
@@ -434,7 +434,7 @@ CodeGeneratorMIPS64::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitSignExtendInt64(LSignExtendInt64* lir)
+CodeGenerator::visitSignExtendInt64(LSignExtendInt64* lir)
 {
     Register64 input = ToRegister64(lir->getInt64Operand(0));
     Register64 output = ToOutRegister64(lir);
@@ -454,7 +454,7 @@ CodeGeneratorMIPS64::visitSignExtendInt64(LSignExtendInt64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitClzI64(LClzI64* lir)
+CodeGenerator::visitClzI64(LClzI64* lir)
 {
     Register64 input = ToRegister64(lir->getInt64Operand(0));
     Register64 output = ToOutRegister64(lir);
@@ -462,7 +462,7 @@ CodeGeneratorMIPS64::visitClzI64(LClzI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitCtzI64(LCtzI64* lir)
+CodeGenerator::visitCtzI64(LCtzI64* lir)
 {
     Register64 input = ToRegister64(lir->getInt64Operand(0));
     Register64 output = ToOutRegister64(lir);
@@ -470,7 +470,7 @@ CodeGeneratorMIPS64::visitCtzI64(LCtzI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitNotI64(LNotI64* lir)
+CodeGenerator::visitNotI64(LNotI64* lir)
 {
     Register64 input = ToRegister64(lir->getInt64Operand(0));
     Register output = ToRegister(lir->output());
@@ -479,7 +479,7 @@ CodeGeneratorMIPS64::visitNotI64(LNotI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
+CodeGenerator::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
     Register64 output = ToOutRegister64(lir);
@@ -514,7 +514,7 @@ CodeGeneratorMIPS64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
+CodeGenerator::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
 {
     Register64 input = ToRegister64(lir->getInt64Operand(0));
     FloatRegister output = ToFloatRegister(lir->output());
@@ -536,7 +536,7 @@ CodeGeneratorMIPS64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitTestI64AndBranch(LTestI64AndBranch* lir)
+CodeGenerator::visitTestI64AndBranch(LTestI64AndBranch* lir)
 {
     Register64 input = ToRegister64(lir->getInt64Operand(0));
     MBasicBlock* ifTrue = lir->ifTrue();

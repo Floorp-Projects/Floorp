@@ -20,12 +20,9 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
 {
     friend class MoveResolverARM64;
 
-    CodeGeneratorARM64* thisFromCtor() { return this; }
-
-  public:
+  protected:
     CodeGeneratorARM64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 
-  protected:
     NonAssertingLabel deoptLabel_;
 
     MoveOperand toMoveOperand(const LAllocation a) const;
@@ -58,7 +55,6 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
         return bailoutIf(Assembler::Zero, snapshot);
     }
 
-  protected:
     bool generateOutOfLineCode();
 
     void emitRoundDouble(FloatRegister src, Register dest, Label* fail);
@@ -95,68 +91,6 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
 
     void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
 
-  public:
-    // Instruction visitors.
-    void visitMinMaxD(LMinMaxD* ins);
-    void visitMinMaxF(LMinMaxF* math);
-    void visitAbsD(LAbsD* ins);
-    void visitAbsF(LAbsF* ins);
-    void visitSqrtD(LSqrtD* ins);
-    void visitSqrtF(LSqrtF* ins);
-    void visitAddI(LAddI* ins);
-    void visitSubI(LSubI* ins);
-    void visitBitNotI(LBitNotI* ins);
-    void visitBitOpI(LBitOpI* ins);
-
-    void visitMulI(LMulI* ins);
-
-    void visitDivI(LDivI* ins);
-    void visitDivPowTwoI(LDivPowTwoI* ins);
-    void visitModI(LModI* ins);
-    void visitModPowTwoI(LModPowTwoI* ins);
-    void visitModMaskI(LModMaskI* ins);
-    void visitPowHalfD(LPowHalfD* ins);
-    void visitShiftI(LShiftI* ins);
-    void visitUrshD(LUrshD* ins);
-
-    void visitTestIAndBranch(LTestIAndBranch* test);
-    void visitCompare(LCompare* comp);
-    void visitCompareAndBranch(LCompareAndBranch* comp);
-    void visitTestDAndBranch(LTestDAndBranch* test);
-    void visitTestFAndBranch(LTestFAndBranch* test);
-    void visitCompareD(LCompareD* comp);
-    void visitCompareF(LCompareF* comp);
-    void visitCompareDAndBranch(LCompareDAndBranch* comp);
-    void visitCompareFAndBranch(LCompareFAndBranch* comp);
-    void visitCompareB(LCompareB* lir);
-    void visitCompareBAndBranch(LCompareBAndBranch* lir);
-    void visitCompareBitwise(LCompareBitwise* lir);
-    void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir);
-    void visitBitAndAndBranch(LBitAndAndBranch* baab);
-    void visitWasmUint32ToDouble(LWasmUint32ToDouble* lir);
-    void visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir);
-    void visitNotI(LNotI* ins);
-    void visitNotD(LNotD* ins);
-    void visitNotF(LNotF* ins);
-
-    void visitMathD(LMathD* math);
-    void visitMathF(LMathF* math);
-    void visitFloor(LFloor* lir);
-    void visitFloorF(LFloorF* lir);
-    void visitCeil(LCeil* lir);
-    void visitCeilF(LCeilF* lir);
-    void visitRound(LRound* lir);
-    void visitRoundF(LRoundF* lir);
-    void visitTruncateDToInt32(LTruncateDToInt32* ins);
-    void visitTruncateFToInt32(LTruncateFToInt32* ins);
-
-    void visitClzI(LClzI* lir);
-    void visitCtzI(LCtzI* lir);
-    // Out of line visitors.
-    void visitOutOfLineBailout(OutOfLineBailout* ool);
-    void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
-
-  protected:
     ValueOperand ToValue(LInstruction* ins, size_t pos);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
@@ -171,59 +105,17 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
     void modICommon(MMod* mir, Register lhs, Register rhs, Register output, LSnapshot* snapshot,
                     Label& done);
 
-  public:
-    void visitBox(LBox* box);
-    void visitUnbox(LUnbox* unbox);
-    void visitValue(LValue* value);
-    void visitDouble(LDouble* ins);
-    void visitFloat32(LFloat32* ins);
-
-    void visitLoadSlotV(LLoadSlotV* load);
-    void visitLoadSlotT(LLoadSlotT* load);
-    void visitStoreSlotT(LStoreSlotT* load);
-
-    void visitLoadElementT(LLoadElementT* load);
-
-    void visitInterruptCheck(LInterruptCheck* lir);
-
-    void visitNegI(LNegI* lir);
-    void visitNegD(LNegD* lir);
-    void visitNegF(LNegF* lir);
-    void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
-    void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
-    void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir);
-    void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
-    void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
-    void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
-    void visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins);
-    void visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins);
-    void visitWasmStackArg(LWasmStackArg* ins);
-
     void generateInvalidateEpilogue();
 
     void setReturnDoubleRegs(LiveRegisterSet* regs);
 
-  protected:
     void postWasmCall(LWasmCall* lir) {
         MOZ_CRASH("postWasmCall");
     }
 
-    void visitEffectiveAddress(LEffectiveAddress* ins);
-    void visitUDiv(LUDiv* ins);
-    void visitUMod(LUMod* ins);
-
   public:
-    // Unimplemented SIMD instructions.
-    void visitSimdSplatX4(LSimdSplatX4* lir) { MOZ_CRASH("NYI"); }
-    void visitSimd128Int(LSimd128Int* ins) { MOZ_CRASH("NYI"); }
-    void visitSimd128Float(LSimd128Float* ins) { MOZ_CRASH("NYI"); }
-    void visitSimdExtractElementI(LSimdExtractElementI* ins) { MOZ_CRASH("NYI"); }
-    void visitSimdExtractElementF(LSimdExtractElementF* ins) { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryCompIx4(LSimdBinaryCompIx4* lir) { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryCompFx4(LSimdBinaryCompFx4* lir) { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryArithIx4(LSimdBinaryArithIx4* lir) { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryArithFx4(LSimdBinaryArithFx4* lir) { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryBitwise(LSimdBinaryBitwise* lir) { MOZ_CRASH("NYI"); }
+    void visitOutOfLineBailout(OutOfLineBailout* ool);
+    void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
 };
 
 typedef CodeGeneratorARM64 CodeGeneratorSpecific;

@@ -13,6 +13,7 @@ namespace jit {
 class LUnboxFloatingPoint : public LInstruction
 {
   public:
+    LIR_HEADER(UnboxFloatingPoint)
     static const size_t Input = 0;
 
     MUnbox* mir() const { MOZ_CRASH(); }
@@ -24,6 +25,7 @@ class LUnboxFloatingPoint : public LInstruction
 class LTableSwitch : public LInstruction
 {
   public:
+    LIR_HEADER(TableSwitch)
     MTableSwitch* mir() { MOZ_CRASH(); }
 
     const LAllocation* index() { MOZ_CRASH(); }
@@ -34,6 +36,7 @@ class LTableSwitch : public LInstruction
 class LTableSwitchV : public LInstruction
 {
   public:
+    LIR_HEADER(TableSwitchV)
     MTableSwitch* mir() { MOZ_CRASH(); }
 
     const LDefinition* tempInt() { MOZ_CRASH(); }
