@@ -11,7 +11,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 
 class nsAtom;
-class nsGenericDOMDataNode;
 class nsIDocument;
 class nsStyleContext;
 
@@ -21,6 +20,7 @@ namespace css {
 class Rule;
 } // namespace css
 namespace dom {
+class CharacterData;
 class Element;
 class InspectorFontFace;
 } // namespace dom
@@ -164,11 +164,11 @@ public:
                                       ErrorResult& aRv);
 
   static bool IsIgnorableWhitespace(GlobalObject& aGlobalObject,
-                                    nsGenericDOMDataNode& aDataNode)
+                                    CharacterData& aDataNode)
   {
     return IsIgnorableWhitespace(aDataNode);
   }
-  static bool IsIgnorableWhitespace(nsGenericDOMDataNode& aDataNode);
+  static bool IsIgnorableWhitespace(CharacterData& aDataNode);
 
   // Returns the "parent" of a node.  The parent of a document node is the
   // frame/iframe containing that document.  aShowingAnonymousContent says

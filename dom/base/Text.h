@@ -13,15 +13,15 @@
 namespace mozilla {
 namespace dom {
 
-class Text : public nsGenericDOMDataNode
+class Text : public CharacterData
 {
 public:
   explicit Text(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsGenericDOMDataNode(aNodeInfo)
+    : CharacterData(aNodeInfo)
   {}
 
   explicit Text(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericDOMDataNode(aNodeInfo)
+    : CharacterData(aNodeInfo)
   {}
 
   // WebIDL API

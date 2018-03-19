@@ -48,7 +48,7 @@ namespace dom {
 
 ProcessingInstruction::ProcessingInstruction(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                              const nsAString& aData)
-  : nsGenericDOMDataNode(Move(aNodeInfo))
+  : CharacterData(Move(aNodeInfo))
 {
   MOZ_ASSERT(mNodeInfo->NodeType() == nsINode::PROCESSING_INSTRUCTION_NODE,
              "Bad NodeType in aNodeInfo");
@@ -62,7 +62,7 @@ ProcessingInstruction::~ProcessingInstruction()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(ProcessingInstruction, nsGenericDOMDataNode,
+NS_IMPL_ISUPPORTS_INHERITED(ProcessingInstruction, CharacterData,
                             nsIDOMNode, nsIDOMCharacterData)
 
 JSObject*
@@ -86,12 +86,12 @@ ProcessingInstruction::IsNodeOfType(uint32_t aFlags) const
   return !(aFlags & ~(ePROCESSING_INSTRUCTION | eDATA_NODE));
 }
 
-nsGenericDOMDataNode*
+CharacterData*
 ProcessingInstruction::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                                      bool aCloneText) const
 {
   nsAutoString data;
-  nsGenericDOMDataNode::GetData(data);
+  GetData(data);
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   return new ProcessingInstruction(ni.forget(), data);
 }

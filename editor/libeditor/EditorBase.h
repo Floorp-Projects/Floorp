@@ -562,7 +562,7 @@ protected:
                             int32_t* aOffset,
                             int32_t* aLength);
 
-  nsresult DeleteText(nsGenericDOMDataNode& aElement,
+  nsresult DeleteText(dom::CharacterData& aElement,
                       uint32_t aOffset, uint32_t aLength);
 
   /**

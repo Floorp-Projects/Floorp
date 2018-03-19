@@ -26,7 +26,7 @@ namespace dom {
 // data. This is done simply for convenience and should be changed if
 // this restricts what should be done for character data.
 
-class DocumentType final : public nsGenericDOMDataNode,
+class DocumentType final : public CharacterData,
                            public nsIDOMNode
 {
 public:
@@ -55,8 +55,8 @@ public:
   // nsIContent overrides
   virtual const nsTextFragment* GetText() override;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const override;
+  virtual CharacterData* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                                       bool aCloneText) const override;
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 

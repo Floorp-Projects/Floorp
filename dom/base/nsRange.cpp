@@ -3242,7 +3242,7 @@ GetTextFrameForContent(nsIContent* aContent, bool aFlushLayout)
 
   const bool frameWillBeUnsuppressed =
     presShell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
-      static_cast<nsGenericDOMDataNode*>(aContent));
+      static_cast<CharacterData*>(aContent));
   if (aFlushLayout) {
     doc->FlushPendingNotifications(FlushType::Layout);
   } else if (frameWillBeUnsuppressed) {
@@ -3755,7 +3755,7 @@ ElementIsVisibleNoFlush(Element* aElement)
 static void
 AppendTransformedText(InnerTextAccumulator& aResult, nsIContent* aContainer)
 {
-  auto textNode = static_cast<nsGenericDOMDataNode*>(aContainer);
+  auto textNode = static_cast<CharacterData*>(aContainer);
 
   nsIFrame* frame = textNode->GetPrimaryFrame();
   if (!IsVisibleAndNotInReplacedElement(frame)) {

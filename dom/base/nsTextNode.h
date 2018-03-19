@@ -48,14 +48,14 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMCharacterData
-  NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
-  using nsGenericDOMDataNode::SetData; // Prevent hiding overloaded virtual function.
+  NS_FORWARD_NSIDOMCHARACTERDATA(mozilla::dom::CharacterData::)
+  using CharacterData::SetData; // Prevent hiding overloaded virtual function.
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const override;
+  virtual CharacterData* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
+                                       bool aCloneText) const override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,

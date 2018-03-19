@@ -8815,7 +8815,7 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
 
 bool
 nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
-  nsGenericDOMDataNode* aContent)
+  CharacterData* aContent)
 {
   if (!aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE)) {
     return false;

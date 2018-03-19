@@ -78,7 +78,7 @@ void
 XMLStylesheetProcessingInstruction::SetNodeValueInternal(const nsAString& aNodeValue,
                                                          ErrorResult& aError)
 {
-  nsGenericDOMDataNode::SetNodeValueInternal(aNodeValue, aError);
+  CharacterData::SetNodeValueInternal(aNodeValue, aError);
   if (!aError.Failed()) {
     UpdateStyleSheetInternal(nullptr, nullptr, true);
   }
@@ -177,12 +177,12 @@ XMLStylesheetProcessingInstruction::GetStyleSheetInfo(nsAString& aTitle,
   aType.AssignLiteral("text/css");
 }
 
-nsGenericDOMDataNode*
+CharacterData*
 XMLStylesheetProcessingInstruction::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                                                   bool aCloneText) const
 {
   nsAutoString data;
-  nsGenericDOMDataNode::GetData(data);
+  GetData(data);
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   return new XMLStylesheetProcessingInstruction(ni.forget(), data);
 }

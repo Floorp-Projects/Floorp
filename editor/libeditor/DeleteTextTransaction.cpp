@@ -23,7 +23,7 @@ using namespace dom;
 // static
 already_AddRefed<DeleteTextTransaction>
 DeleteTextTransaction::MaybeCreate(EditorBase& aEditorBase,
-                                   nsGenericDOMDataNode& aCharData,
+                                   CharacterData& aCharData,
                                    uint32_t aOffset,
                                    uint32_t aLengthToDelete)
 {
@@ -36,7 +36,7 @@ DeleteTextTransaction::MaybeCreate(EditorBase& aEditorBase,
 already_AddRefed<DeleteTextTransaction>
 DeleteTextTransaction::MaybeCreateForPreviousCharacter(
                          EditorBase& aEditorBase,
-                         nsGenericDOMDataNode& aCharData,
+                         CharacterData& aCharData,
                          uint32_t aOffset)
 {
   if (NS_WARN_IF(!aOffset)) {
@@ -65,7 +65,7 @@ DeleteTextTransaction::MaybeCreateForPreviousCharacter(
 already_AddRefed<DeleteTextTransaction>
 DeleteTextTransaction::MaybeCreateForNextCharacter(
                          EditorBase& aEditorBase,
-                         nsGenericDOMDataNode& aCharData,
+                         CharacterData& aCharData,
                          uint32_t aOffset)
 {
   nsAutoString data;
@@ -87,7 +87,7 @@ DeleteTextTransaction::MaybeCreateForNextCharacter(
 
 DeleteTextTransaction::DeleteTextTransaction(
                          EditorBase& aEditorBase,
-                         nsGenericDOMDataNode& aCharData,
+                         CharacterData& aCharData,
                          uint32_t aOffset,
                          uint32_t aLengthToDelete)
   : mEditorBase(&aEditorBase)
