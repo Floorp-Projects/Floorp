@@ -497,7 +497,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // 1.1. We change frames.
       // 1.2. We change URLs (can happen without changing frames thanks to
       //      source mapping).
-      // 1.3. We change lines.
+      // 1.3. The source has pause points and we change locations.
+      // 1.4  The source does not have pause points and We change lines.
       //
       // Cases when we should always continue execution, even if one of the
       // above cases is true:
@@ -512,10 +513,33 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         return undefined;
       }
 
-      // Cases 1.1, 1.2 and 1.3
-      if (this !== startFrame
-          || startLocation.originalUrl !== newLocation.originalUrl
-          || startLocation.originalLine !== newLocation.originalLine) {
+      // Cases 1.1, 1.2
+      if (this !== startFrame || startLocation.originalUrl !== newLocation.originalUrl) {
+        return pauseAndRespond(this);
+      }
+
+      const pausePoints = newLocation.originalSourceActor.pausePoints;
+
+      if (!pausePoints) {
+        // Case 1.4
+        if (startLocation.originalLine !== newLocation.originalLine) {
+          return pauseAndRespond(this);
+        }
+        return undefined;
+      }
+
+      // Case 1.3
+      if (
+        startLocation.originalLine === newLocation.originalLine
+        && startLocation.originalColumn === newLocation.originalColumn
+      ) {
+        return undefined;
+      }
+
+      // When pause points are specified for the source,
+      // we should pause when we are at a stepOver pause point
+      const pausePoint = findPausePointForLocation(pausePoints, newLocation);
+      if (pausePoint && pausePoint.types.stepOver) {
         return pauseAndRespond(this);
       }
 
@@ -1886,6 +1910,13 @@ function findEntryPointsForLine(scripts, line) {
     }
   }
   return entryPoints;
+}
+
+function findPausePointForLocation(pausePoints, location) {
+  return pausePoints.find(pausePoint =>
+    pausePoint.location.line === location.originalLine
+    && pausePoint.location.column === location.originalColumn
+  );
 }
 
 /**
