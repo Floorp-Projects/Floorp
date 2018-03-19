@@ -21,6 +21,7 @@
  *          promisePrefChangeObserved openContextMenuInFrame
  *          promiseAnimationFrame getCustomizableUIPanelID
  *          awaitEvent BrowserWindowIterator
+ *          navigateTab historyPushState
  */
 
 // There are shutdown issues for which multiple rejections are left uncaught.
@@ -499,4 +500,18 @@ function* BrowserWindowIterator() {
       yield currentWindow;
     }
   }
+}
+
+async function locationChange(tab, url, task) {
+  let locationChanged = BrowserTestUtils.waitForLocationChange(gBrowser, url);
+  await ContentTask.spawn(tab.linkedBrowser, url, task);
+  return locationChanged;
+}
+
+function navigateTab(tab, url) {
+  return locationChange(tab, url, (url) => { content.location.href = url; });
+}
+
+function historyPushState(tab, url) {
+  return locationChange(tab, url, (url) => { content.history.pushState(null, null, url); });
 }

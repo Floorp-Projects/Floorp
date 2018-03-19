@@ -1438,6 +1438,8 @@ WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(KeyNameIndex aKeyNameIndex)
       return dom::KeyboardEventBinding::DOM_VK_META;
     case KEY_NAME_INDEX_AltGraph:
       return dom::KeyboardEventBinding::DOM_VK_ALTGR;
+    case KEY_NAME_INDEX_Process:
+      return dom::KeyboardEventBinding::DOM_VK_PROCESSKEY;
     case KEY_NAME_INDEX_Attn:
       return dom::KeyboardEventBinding::DOM_VK_ATTN;
     case KEY_NAME_INDEX_CrSel:
