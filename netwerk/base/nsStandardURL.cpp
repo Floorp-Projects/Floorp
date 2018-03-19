@@ -2219,14 +2219,12 @@ nsStandardURL::SetPathQueryRef(const nsACString &input)
 }
 
 // When updating this also update SubstitutingURL::Mutator
-// Queries this list of interfaces. If none match, it queries mURI.
-NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsStandardURL::Mutator,
-                                nsIURISetters,
-                                nsIURIMutator,
-                                nsIStandardURLMutator,
-                                nsIURLMutator,
-                                nsIFileURLMutator,
-                                nsISerializable)
+NS_IMPL_ISUPPORTS(nsStandardURL::Mutator,
+                  nsIURISetters,
+                  nsIURIMutator,
+                  nsIStandardURLMutator,
+                  nsIURLMutator,
+                  nsIFileURLMutator)
 
 NS_IMETHODIMP
 nsStandardURL::Mutate(nsIURIMutator** aMutator)
@@ -3388,13 +3386,6 @@ nsStandardURL::SetMutable(bool value)
 
 NS_IMETHODIMP
 nsStandardURL::Read(nsIObjectInputStream *stream)
-{
-    NS_NOTREACHED("Use nsIURIMutator.read() instead");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsStandardURL::ReadPrivate(nsIObjectInputStream *stream)
 {
     NS_PRECONDITION(mDisplayHost.IsEmpty(), "Shouldn't have cached unicode host");
     NS_PRECONDITION(mSpecEncoding == eEncoding_Unknown,

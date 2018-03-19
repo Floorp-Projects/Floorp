@@ -28,16 +28,9 @@ nsSimpleNestedURI::nsSimpleNestedURI(nsIURI* innerURI)
 // nsISerializable
 
 NS_IMETHODIMP
-nsSimpleNestedURI::Read(nsIObjectInputStream *aStream)
+nsSimpleNestedURI::Read(nsIObjectInputStream* aStream)
 {
-    NS_NOTREACHED("Use nsIURIMutator.read() instead");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsSimpleNestedURI::ReadPrivate(nsIObjectInputStream *aStream)
-{
-    nsresult rv = nsSimpleURI::ReadPrivate(aStream);
+    nsresult rv = nsSimpleURI::Read(aStream);
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(!mMutable, "How did that happen?");
@@ -193,11 +186,7 @@ nsSimpleNestedURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     return NS_OK;
 }
 
-// Queries this list of interfaces. If none match, it queries mURI.
-NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsSimpleNestedURI::Mutator,
-                                nsIURISetters,
-                                nsIURIMutator,
-                                nsISerializable)
+NS_IMPL_ISUPPORTS(nsSimpleNestedURI::Mutator, nsIURISetters, nsIURIMutator)
 
 NS_IMETHODIMP
 nsSimpleNestedURI::Mutate(nsIURIMutator** aMutator)

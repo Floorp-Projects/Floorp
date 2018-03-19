@@ -194,7 +194,6 @@ protected:
     virtual nsresult SetQuery(const nsACString &input);
     virtual nsresult SetQueryWithEncoding(const nsACString &input, const Encoding* encoding);
     bool Deserialize(const mozilla::ipc::URIParams&);
-    nsresult ReadPrivate(nsIObjectInputStream *stream);
 
 private:
     nsresult Init(uint32_t urlType, int32_t defaultPort, const nsACString &spec,
@@ -348,7 +347,6 @@ public:
         , public nsIStandardURLMutator
         , public nsIURLMutator
         , public nsIFileURLMutator
-        , public nsISerializable
     {
         NS_FORWARD_SAFE_NSIURISETTERS_RET(BaseURIMutator<T>::mURI)
 
@@ -356,13 +354,6 @@ public:
         Deserialize(const mozilla::ipc::URIParams& aParams) override
         {
             return BaseURIMutator<T>::InitFromIPCParams(aParams);
-        }
-
-        NS_IMETHOD
-        Write(nsIObjectOutputStream *aOutputStream) override
-        {
-            NS_NOTREACHED("Use nsIURIMutator.read() instead");
-            return NS_ERROR_NOT_IMPLEMENTED;
         }
 
         MOZ_MUST_USE NS_IMETHOD

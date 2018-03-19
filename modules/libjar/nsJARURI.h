@@ -114,7 +114,6 @@ private:
     nsresult SetQuery(const nsACString &input);
     nsresult SetQueryWithEncoding(const nsACString &input, const Encoding* encoding);
     bool Deserialize(const mozilla::ipc::URIParams&);
-    nsresult ReadPrivate(nsIObjectInputStream *aStream);
 
     nsresult SetFileNameInternal(const nsACString& fileName);
     nsresult SetFileBaseNameInternal(const nsACString& fileBaseName);
@@ -125,24 +124,11 @@ public:
         : public nsIURIMutator
         , public BaseURIMutator<nsJARURI>
         , public nsIURLMutator
-        , public nsISerializable
     {
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
         NS_DEFINE_NSIMUTATOR_COMMON
         NS_DECL_NSIURLMUTATOR
-
-        NS_IMETHOD
-        Write(nsIObjectOutputStream *aOutputStream) override
-        {
-            return NS_ERROR_NOT_IMPLEMENTED;
-        }
-
-        MOZ_MUST_USE NS_IMETHOD
-        Read(nsIObjectInputStream* aStream) override
-        {
-            return InitFromInputStream(aStream);
-        }
 
         explicit Mutator() { }
     private:
