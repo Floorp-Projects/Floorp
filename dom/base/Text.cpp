@@ -13,8 +13,7 @@ namespace dom {
 already_AddRefed<Text>
 Text::SplitText(uint32_t aOffset, ErrorResult& rv)
 {
-  nsCOMPtr<nsIContent> newChild;
-  rv = SplitData(aOffset, getter_AddRefs(newChild));
+  nsCOMPtr<nsIContent> newChild = SplitData(aOffset, rv);
   if (rv.Failed()) {
     return nullptr;
   }
