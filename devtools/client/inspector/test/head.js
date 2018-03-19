@@ -582,7 +582,7 @@ function waitForStyleEditor(toolbox, href) {
 
       // A helper that resolves the promise once it receives an editor that
       // matches the expected href. Returns false if the editor was not correct.
-      let gotEditor = (event, editor) => {
+      let gotEditor = editor => {
         let currentHref = editor.styleSheet.href;
         if (!href || (href && currentHref.endsWith(href))) {
           info("Stylesheet editor selected");
@@ -603,7 +603,7 @@ function waitForStyleEditor(toolbox, href) {
       // The expected editor may already be selected. Check the if the currently
       // selected editor is the expected one and if not wait for an
       // editor-selected event.
-      if (!gotEditor("styleeditor-selected", panel.UI.selectedEditor)) {
+      if (!gotEditor(panel.UI.selectedEditor)) {
         // The expected editor is not selected (yet). Wait for it.
         panel.UI.on("editor-selected", gotEditor);
       }
