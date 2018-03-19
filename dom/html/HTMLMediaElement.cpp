@@ -12,13 +12,14 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/NotNull.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/MediaEncryptedEvent.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/NotNull.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "AutoplayPolicy.h"
 #include "base/basictypes.h"
@@ -53,7 +54,6 @@
 #include "nsITimer.h"
 
 #include "MediaError.h"
-#include "MediaPrefs.h"
 #include "MediaResource.h"
 
 #include "nsICategoryManager.h"
@@ -4465,7 +4465,8 @@ void HTMLMediaElement::HiddenVideoStart()
   }
   NS_NewTimerWithFuncCallback(getter_AddRefs(mVideoDecodeSuspendTimer),
                               VideoDecodeSuspendTimerCallback, this,
-                              MediaPrefs::MDSMSuspendBackgroundVideoDelay(), nsITimer::TYPE_ONE_SHOT,
+                              StaticPrefs::MediaSuspendBkgndVideoDelayMs(),
+                              nsITimer::TYPE_ONE_SHOT,
                               "HTMLMediaElement::VideoDecodeSuspendTimerCallback",
                               mMainThreadEventTarget);
 }
@@ -4637,7 +4638,8 @@ HTMLMediaElement::ReportTelemetry()
         // Here, we have played *some* of the video, but didn't get more than 1
         // keyframe. Report '0' if we have played for longer than the video-
         // decode-suspend delay (showing recovery would be difficult).
-        uint32_t suspendDelay_ms = MediaPrefs::MDSMSuspendBackgroundVideoDelay();
+        uint32_t suspendDelay_ms =
+          StaticPrefs::MediaSuspendBkgndVideoDelayMs();
         if (uint32_t(playTime * 1000.0) > suspendDelay_ms) {
           Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS,
                                 key,

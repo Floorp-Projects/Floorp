@@ -9,8 +9,8 @@
 #include "DecoderDoctorDiagnostics.h"
 #include "ImageContainer.h"
 #include "MediaInfo.h"
-#include "MediaPrefs.h"
 #include "PDMFactory.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TaskQueue.h"
 #include "AnnexB.h"
 #include "H264.h"
@@ -364,7 +364,7 @@ bool
 H264Converter::CanRecycleDecoder() const
 {
   MOZ_ASSERT(mDecoder);
-  return MediaPrefs::MediaDecoderCheckRecycling() &&
+  return StaticPrefs::MediaDecoderRecycleEnabled() &&
          mDecoder->SupportDecoderRecycling();
 }
 

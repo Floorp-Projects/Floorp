@@ -15,11 +15,11 @@
 #include "MediaContainerType.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
-#include "MediaPrefs.h"
 #include "MediaShutdownManager.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
+#include "mozilla/StaticPrefs.h"
 
 using namespace mozilla::java;
 
@@ -127,7 +127,7 @@ HLSDecoder::CreateStateMachine()
 bool
 HLSDecoder::IsEnabled()
 {
-  return MediaPrefs::HLSEnabled() && (jni::GetAPIVersion() >= 16);
+  return StaticPrefs::MediaHlsEnabled() && (jni::GetAPIVersion() >= 16);
 }
 
 bool

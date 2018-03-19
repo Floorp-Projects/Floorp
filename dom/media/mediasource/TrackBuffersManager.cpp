@@ -6,11 +6,11 @@
 
 #include "TrackBuffersManager.h"
 #include "ContainerParser.h"
-#include "MediaPrefs.h"
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsMimeTypes.h"
 #include "SourceBuffer.h"
 #include "SourceBufferResource.h"
@@ -947,7 +947,7 @@ TrackBuffersManager::OnDemuxerResetDone(const MediaResult& aResult)
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
 
-  if (NS_FAILED(aResult) && MediaPrefs::MediaWarningsAsErrors()) {
+  if (NS_FAILED(aResult) && StaticPrefs::MediaPlaybackWarningsAsErrors()) {
     RejectAppend(aResult, __func__);
     return;
   }
@@ -1055,7 +1055,7 @@ TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
 
   mDemuxerInitRequest.Complete();
 
-  if (NS_FAILED(aResult) && MediaPrefs::MediaWarningsAsErrors()) {
+  if (NS_FAILED(aResult) && StaticPrefs::MediaPlaybackWarningsAsErrors()) {
     RejectAppend(aResult, __func__);
     return;
   }
