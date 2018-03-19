@@ -69,9 +69,9 @@ bool
 DocumentType::IsNodeOfType(uint32_t aFlags) const
 {
   // Don't claim to be eDATA_NODE since we're just inheriting
-  // CharacterData for convinience. Doctypes aren't really
+  // CharacterData for convenience. Doctypes aren't really
   // data nodes (they have a null .nodeValue and don't implement
-  // nsIDOMCharacterData)
+  // the DOM CharacterData interface)
   return false;
 }
 

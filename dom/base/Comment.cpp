@@ -23,8 +23,7 @@ Comment::~Comment()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(Comment, CharacterData, nsIDOMNode,
-                            nsIDOMCharacterData)
+NS_IMPL_ISUPPORTS_INHERITED(Comment, CharacterData, nsIDOMNode)
 
 bool
 Comment::IsNodeOfType(uint32_t aFlags) const

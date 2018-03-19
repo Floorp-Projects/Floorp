@@ -152,7 +152,7 @@ CharacterData::SetNodeValueInternal(const nsAString& aNodeValue,
 
 //----------------------------------------------------------------------
 
-// Implementation of nsIDOMCharacterData
+// Implementation of CharacterData
 
 void
 CharacterData::GetData(nsAString& aData) const
