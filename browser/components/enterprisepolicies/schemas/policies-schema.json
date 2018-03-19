@@ -168,8 +168,7 @@
       "first_available": "60.0",
       "enterprise_only": true,
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DisplayBookmarksToolbar": {
