@@ -182,8 +182,7 @@
       "first_available": "60.0",
       "enterprise_only": true,
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DisplayBookmarksToolbar": {
@@ -287,8 +286,7 @@
       "description": "Don't create the default bookmarks bundled with Firefox, nor the Smart Bookmarks (Most Visited, Recent Tags). Note: this policy is only effective if used before the first run of the profile.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "Popups": {
