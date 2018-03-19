@@ -123,12 +123,15 @@ DeleteTextTransaction::DoTransaction()
   }
 
   // Get the text that we're about to delete
-  nsresult rv = mCharData->SubstringData(mOffset, mLengthToDelete,
-                                         mDeletedText);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  rv = mCharData->DeleteData(mOffset, mLengthToDelete);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ErrorResult err;
+  mCharData->SubstringData(mOffset, mLengthToDelete, mDeletedText, err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
+
+  mCharData->DeleteData(mOffset, mLengthToDelete, err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
   }
 
   mEditorBase->RangeUpdaterRef().

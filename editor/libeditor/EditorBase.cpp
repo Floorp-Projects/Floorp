@@ -3221,7 +3221,7 @@ EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
       // Fix right node
       nsAutoString leftText;
       rightAsText->SubstringData(0, aStartOfRightNode.Offset(),
-                                 leftText);
+                                 leftText, IgnoreErrors());
       rightAsText->DeleteData(0, aStartOfRightNode.Offset());
       // Fix left node
       leftAsText->GetAsText()->SetData(leftText, IgnoreErrors());

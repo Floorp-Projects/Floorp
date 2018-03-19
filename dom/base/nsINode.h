@@ -523,6 +523,19 @@ public:
     return NodeType() == PROCESSING_INSTRUCTION_NODE;
   }
 
+  /*
+   * Return whether the node is a CharacterData node (text, cdata,
+   * comment, processing instruction)
+   */
+  bool IsCharacterData() const
+  {
+    uint32_t nodeType = NodeType();
+    return nodeType == TEXT_NODE ||
+           nodeType == CDATA_SECTION_NODE ||
+           nodeType == PROCESSING_INSTRUCTION_NODE ||
+           nodeType == COMMENT_NODE;
+  }
+
   virtual nsIDOMNode* AsDOMNode() = 0;
 
   /**
