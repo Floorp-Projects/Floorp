@@ -712,9 +712,10 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     maybeClearProfileDurations();
     startProfile(ProfileKey::Total);
 
-    // The hazard analysis thinks doCollection can invalidate pointers in
-    // tenureCounts below.
-    JS::AutoSuppressGCAnalysis nogc;
+    // The analysis marks TenureCount as not problematic for GC hazards because
+    // it is only used here, and ObjectGroup pointers are never
+    // nursery-allocated.
+    MOZ_ASSERT(!IsNurseryAllocable(AllocKind::OBJECT_GROUP));
 
     TenureCountCache tenureCounts;
     previousGC.reason = JS::gcreason::NO_REASON;
