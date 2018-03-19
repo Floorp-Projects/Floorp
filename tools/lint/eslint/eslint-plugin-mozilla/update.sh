@@ -47,20 +47,15 @@ npm install
 echo "Creating eslint-plugin-mozilla.tar.gz..."
 tar cvz -f eslint-plugin-mozilla.tar.gz node_modules
 
-echo "Downloading tooltool..."
-wget https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
-chmod +x tooltool.py
-
 echo "Adding eslint-plugin-mozilla.tar.gz to tooltool..."
 rm -f manifest.tt
-./tooltool.py add --visibility public --unpack eslint-plugin-mozilla.tar.gz
+../../../../python/mozbuild/mozbuild/action/tooltool.py add --visibility public --unpack eslint-plugin-mozilla.tar.gz --url="https://api.pub.build.mozilla.org/tooltool/"
 
 echo "Uploading eslint-plugin-mozilla.tar.gz to tooltool..."
-./tooltool.py upload --authentication-file=~/.tooltool-token --message "node_modules folder update for tools/lint/eslint/eslint-plugin-mozilla"
+../../../../python/mozbuild/mozbuild/action/tooltool.py upload --authentication-file=~/.tooltool-token --message "node_modules folder update for tools/lint/eslint/eslint-plugin-mozilla" --url="https://api.pub.build.mozilla.org/tooltool/"
 
 echo "Cleaning up..."
 rm eslint-plugin-mozilla.tar.gz
-rm tooltool.py
 
 echo ""
 echo "Update complete, please commit and check in your changes."
