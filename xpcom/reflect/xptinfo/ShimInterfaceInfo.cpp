@@ -31,7 +31,6 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMParser.h"
-#include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMScrollAreaEvent.h"
@@ -82,7 +81,6 @@
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/OfflineResourceListBinding.h"
 #include "mozilla/dom/PositionErrorBinding.h"
-#include "mozilla/dom/ProcessingInstructionBinding.h"
 #include "mozilla/dom/RangeBinding.h"
 #ifdef MOZ_WEBRTC
 #include "mozilla/dom/RTCDataChannelBinding.h"
@@ -182,7 +180,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMNSEvent, Event),
   DEFINE_SHIM(OfflineResourceList),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMParser, DOMParser),
-  DEFINE_SHIM(ProcessingInstruction),
   DEFINE_SHIM(Range),
 #ifdef MOZ_WEBRTC
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMDataChannel, RTCDataChannel),

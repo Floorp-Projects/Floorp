@@ -20,7 +20,6 @@ const nsIDOMNode           = I.nsIDOMNode;
 const nsIDOMCharacterData  = I.nsIDOMCharacterData;
 const nsIDOMNodeList       = I.nsIDOMNodeList;
 const nsIDOMXULElement     = I.nsIDOMXULElement;
-const nsIDOMProcessingInstruction = I.nsIDOMProcessingInstruction;
 
 function DOMParser() {
   var parser = C["@mozilla.org/xmlextras/domparser;1"].createInstance(nsIDOMParser);
@@ -100,18 +99,14 @@ function do_compare_attrs(e1, e2) {
 
 function do_check_equiv(dom1, dom2) {
   Assert.equal(dom1.nodeType, dom2.nodeType);
-  // There's no classinfo around, so we'll need to do some QIing to
-  // make sure the right interfaces are flattened as needed.
   switch (dom1.nodeType) {
   case nsIDOMNode.PROCESSING_INSTRUCTION_NODE:
-    Assert.equal(dom1.QueryInterface(nsIDOMProcessingInstruction).target, 
-                 dom2.QueryInterface(nsIDOMProcessingInstruction).target);
+    Assert.equal(dom1.target, dom2.target);
     Assert.equal(dom1.data, dom2.data);
   case nsIDOMNode.TEXT_NODE:
   case nsIDOMNode.CDATA_SECTION_NODE:
   case nsIDOMNode.COMMENT_NODE:
-    Assert.equal(dom1.QueryInterface(nsIDOMCharacterData).data,
-                 dom2.QueryInterface(nsIDOMCharacterData).data);
+    Assert.equal(dom1.data, dom2.data);
     break;
   case nsIDOMNode.ELEMENT_NODE:
     Assert.equal(dom1.namespaceURI, dom2.namespaceURI);
