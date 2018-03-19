@@ -4044,7 +4044,11 @@ nsIPresShell::IsSafeToFlush() const
     return false;
   }
 
-    // Not safe if we are painting
+  if (mDocument && mDocument->GetShell() != this) {
+    return false;
+  }
+
+  // Not safe if we are painting
   if (nsViewManager* viewManager = GetViewManager()) {
     bool isPainting = false;
     viewManager->IsPainting(isPainting);
@@ -4131,7 +4135,6 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   MOZ_DIAGNOSTIC_ASSERT(!mIsDestroying || !isSafeToFlush);
   MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mViewManager);
   MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mDocument->HasShellOrBFCacheEntry());
-  MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mDocument->GetShell() == this);
 
   // Make sure the view manager stays alive.
   RefPtr<nsViewManager> viewManager = mViewManager;
