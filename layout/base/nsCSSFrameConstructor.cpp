@@ -82,7 +82,7 @@
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsTArray.h"
-#include "nsGenericDOMDataNode.h"
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "nsAutoLayoutPhase.h"

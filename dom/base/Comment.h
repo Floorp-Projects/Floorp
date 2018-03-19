@@ -8,8 +8,8 @@
 #define mozilla_dom_Comment_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/CharacterData.h"
 #include "nsIDOMCharacterData.h"
-#include "nsGenericDOMDataNode.h"
 
 namespace mozilla {
 namespace dom {

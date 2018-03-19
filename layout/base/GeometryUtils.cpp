@@ -6,6 +6,7 @@
 
 #include "GeometryUtils.h"
 
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/GeometryUtilsBinding.h"
 #include "mozilla/dom/Element.h"
@@ -15,7 +16,6 @@
 #include "mozilla/dom/DOMRect.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
-#include "nsGenericDOMDataNode.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"

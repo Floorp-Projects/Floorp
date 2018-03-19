@@ -9,8 +9,8 @@
  * CDATASection, and ProcessingInstruction nodes.
  */
 
-#ifndef nsGenericDOMDataNode_h___
-#define nsGenericDOMDataNode_h___
+#ifndef mozilla_dom_CharacterData_h
+#define mozilla_dom_CharacterData_h
 
 #include "mozilla/Attributes.h"
 #include "nsIContent.h"
@@ -270,4 +270,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif /* nsGenericDOMDataNode_h___ */
+#endif /* mozilla_dom_CharacterData_h */
