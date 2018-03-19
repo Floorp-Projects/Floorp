@@ -720,52 +720,49 @@ nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
 static nsIContent*
 FirstLogicallyAdjacentTextNode(nsIContent* aNode)
 {
-  nsCOMPtr<nsIContent> parent = aNode->GetParent();
-
-  while (aNode) {
+  do {
     nsIContent* sibling = aNode->GetPreviousSibling();
-    if (!sibling || !sibling->IsNodeOfType(nsINode::eTEXT)) {
+    if (!sibling || !sibling->IsText()) {
       return aNode;
     }
     aNode = sibling;
-  }
-
-  return parent->GetFirstChild();
+  } while (1);  // Must run out of previous siblings eventually!
 }
 
 static nsIContent*
 LastLogicallyAdjacentTextNode(nsIContent* aNode)
 {
-  nsCOMPtr<nsIContent> parent = aNode->GetParent();
-
-  while (aNode) {
+  do {
     nsIContent* sibling = aNode->GetNextSibling();
-    if (!sibling) break;
-
-    if (!sibling->IsNodeOfType(nsINode::eTEXT)) {
+    if (!sibling || !sibling->IsText()) {
       return aNode;
     }
 
     aNode = sibling;
-  }
-
-  return parent->GetLastChild();
+  } while (1); // Must run out of next siblings eventually!
 }
 
-nsresult
-nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
+void
+nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText,
+                                   ErrorResult& aRv)
 {
   nsIContent* parent = GetParent();
 
   // Handle parent-less nodes
-  if (!parent)
-    return GetData(aWholeText);
+  if (!parent) {
+    GetData(aWholeText);
+    return;
+  }
 
   int32_t index = parent->ComputeIndexOf(this);
   NS_WARNING_ASSERTION(index >= 0,
                        "Trying to use .wholeText with an anonymous"
                        "text node child of a binding parent?");
-  NS_ENSURE_TRUE(index >= 0, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  if (NS_WARN_IF(index < 0)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
   nsCOMPtr<nsIContent> first = FirstLogicallyAdjacentTextNode(this);
   nsCOMPtr<nsIContent> last = LastLogicallyAdjacentTextNode(this);
 
@@ -785,8 +782,6 @@ nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
 
     first = first->GetNextSibling();
   }
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
