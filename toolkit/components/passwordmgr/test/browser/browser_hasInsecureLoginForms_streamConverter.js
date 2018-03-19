@@ -94,7 +94,7 @@ add_task(async function test_streamConverter() {
 
   Assert.ok(!LoginManagerParent.hasInsecureLoginForms(browser));
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await ContentTask.spawn(originalBrowser, null, async function() {
     this.cleanupFunction();

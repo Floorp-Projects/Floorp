@@ -115,8 +115,8 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(gBrowser.selectedTab, loadDivertedInBackground ? tab : testTab, "check selectedTab");
 
-  await BrowserTestUtils.removeTab(testTab);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(testTab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 function clickLink(isFrame, linkId, browser, testBrowser, awaitTabSwitch = false, locationChangeNum = 1) {

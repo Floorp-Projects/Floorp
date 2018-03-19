@@ -44,7 +44,7 @@ add_task(async function() {
     let httpTab = await promiseTabOpened;
     let httpBrowser = httpTab.linkedBrowser;
     registerCleanupFunction(async function() {
-      await BrowserTestUtils.removeTab(httpTab);
+      BrowserTestUtils.removeTab(httpTab);
     });
     await CheckBrowserInPid(httpBrowser, filePid,
       "Check that new http tab opened from file loaded in file content process.");

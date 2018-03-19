@@ -95,7 +95,7 @@ add_task(async function test_inline_options_uninstall() {
   is(gBrowser.selectedBrowser.currentURI.spec, "about:addons",
      "Add-on manager tab should still be open");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

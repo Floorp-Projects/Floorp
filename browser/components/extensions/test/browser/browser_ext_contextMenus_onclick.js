@@ -193,7 +193,7 @@ add_task(async function() {
     }
   }
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab1);
 });
 
 add_task(async function test_onclick_modifiers() {
@@ -242,6 +242,6 @@ add_task(async function test_onclick_modifiers() {
   const altShift = await click({altKey: true, shiftKey: true});
   is(altShift.modifiers.sort().join(), "Alt,Shift", "Correct modifiers: Shift+Alt");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   await extension.unload();
 });

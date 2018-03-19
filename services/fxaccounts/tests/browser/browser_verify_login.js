@@ -24,5 +24,5 @@ add_task(async function() {
   let tab = await waitForTabPromise;
   Assert.ok("Tab successfully opened");
   Assert.equal(tab.linkedBrowser.currentURI.spec, payload.data.url);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

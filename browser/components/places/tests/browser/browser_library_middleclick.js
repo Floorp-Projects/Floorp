@@ -184,7 +184,9 @@ async function runTest(test) {
 
   Assert.ok(true, "Expected tabs were loaded");
 
-  await Promise.all(tabs.map(tab => BrowserTestUtils.removeTab(tab)));
+  for (let tab of tabs) {
+    BrowserTestUtils.removeTab(tab);
+  }
 
   await test.cleanup();
 }

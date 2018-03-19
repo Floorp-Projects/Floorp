@@ -12,7 +12,7 @@ add_UITour_task(async function test_bg_getConfiguration() {
   await loadForegroundTab();
   let data = await getConfigurationPromise("availableTargets");
   ok(data, "Got data from getConfiguration");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_UITour_task(async function test_bg_showInfo() {
@@ -23,7 +23,7 @@ add_UITour_task(async function test_bg_showInfo() {
     () => ok(false, "panel shouldn't have shown from a background tab"),
     () => ok(true, "panel wasn't shown from a background tab"));
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 

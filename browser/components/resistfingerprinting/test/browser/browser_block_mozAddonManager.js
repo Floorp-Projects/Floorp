@@ -29,7 +29,7 @@ add_task(async function test() {
       }
     });
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     await SpecialPowers.popPrefEnv();
   }
 });

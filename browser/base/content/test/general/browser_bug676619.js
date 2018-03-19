@@ -52,7 +52,7 @@ async function testLocation(link, url) {
   });
 
   let tab = await tabPromise;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 async function runTest(url) {
@@ -70,7 +70,7 @@ async function runTest(url) {
   await testLink("link6", "test.blob");
   await testLocation("link7", "http://example.com/");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function() {

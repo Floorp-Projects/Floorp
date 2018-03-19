@@ -18,5 +18,5 @@ add_task(async function test_browser_open_newtab_start_observer_notification() {
 
   ok(true, "browser-open-newtab-start observer not called");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

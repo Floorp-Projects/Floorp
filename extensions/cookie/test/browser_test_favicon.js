@@ -13,7 +13,7 @@ add_task(async function() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 
   // Kick off a favicon load.

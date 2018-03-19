@@ -63,5 +63,5 @@ add_task(async function() {
   await extension.awaitFinish("contentscript_connect.pass");
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

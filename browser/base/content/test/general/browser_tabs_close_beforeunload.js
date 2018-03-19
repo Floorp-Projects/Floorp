@@ -32,17 +32,14 @@ add_task(async function() {
   await secondTabLoadedPromise;
 
   let closeBtn = document.getAnonymousElementByAttribute(secondTab, "anonid", "close-button");
-  let closePromise = BrowserTestUtils.tabRemoved(secondTab);
   info("closing second tab (which will self-close in beforeunload)");
   closeBtn.click();
   ok(secondTab.closing, "Second tab should be marked as closing synchronously.");
-  await closePromise;
-  ok(secondTab.closing, "Second tab should still be marked as closing");
   ok(!secondTab.linkedBrowser, "Second tab's browser should be dead");
   ok(!firstTab.closing, "First tab should not be closing");
   ok(firstTab.linkedBrowser, "First tab's browser should be alive");
   info("closing first tab");
-  await BrowserTestUtils.removeTab(firstTab);
+  BrowserTestUtils.removeTab(firstTab);
 
   ok(firstTab.closing, "First tab should be marked as closing");
   ok(!firstTab.linkedBrowser, "First tab's browser should be dead");

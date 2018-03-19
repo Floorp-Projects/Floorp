@@ -18,7 +18,7 @@ add_task(async function test_metadata() {
   is(pageInfo.description, "og:description", "got the correct description");
   is(pageInfo.previewImageURL.href, "https://test.com/og-image-secure-url.jpg", "got the correct preview image");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
   await PlacesUtils.history.clear();
 });
 
@@ -39,7 +39,7 @@ add_task(async function multiple_tabs() {
   is(pageInfo.description, "og:description", "got the correct description");
   is(pageInfo.previewImageURL.href, "https://test.com/og-image-secure-url.jpg", "got the correct preview image");
 
-  await BrowserTestUtils.removeTab(tab);
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await PlacesUtils.history.clear();
 });

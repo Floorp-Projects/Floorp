@@ -36,7 +36,7 @@ add_task(async function test_reserved_shortcuts() {
 
   document.documentElement.removeChild(container);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // This test checks that Alt+<key> and F10 cannot be blocked when the preference is set.
@@ -83,6 +83,6 @@ if (!navigator.platform.includes("Mac")) {
     filePopup.hidePopup();
     await popupHidden;
 
-    await BrowserTestUtils.removeTab(tab1);
+    BrowserTestUtils.removeTab(tab1);
   });
 }

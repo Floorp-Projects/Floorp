@@ -18,7 +18,7 @@ add_task(async function test() {
     "onTitleChanged", (uri, title) => uri.spec == TEST_URL, "history");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   registerCleanupFunction(async () => {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
   info("Wait for a title change notification.");
   await promiseTitleChanged;

@@ -69,5 +69,5 @@ add_task(async function test_tabs_mediaIndicators() {
   await extension.awaitFinish("done");
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

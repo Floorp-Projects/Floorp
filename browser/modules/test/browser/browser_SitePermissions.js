@@ -89,6 +89,6 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
 
   Services.prefs.clearUserPref("permissions.default.shortcuts");
 
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 

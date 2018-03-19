@@ -15,7 +15,7 @@ add_task(async function() {
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   await evaluateSearchResults("Text Encoding", "fontsGroup");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -24,7 +24,7 @@ add_task(async function() {
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   await evaluateSearchResults("Link Colors", "fontsGroup");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -33,5 +33,5 @@ add_task(async function() {
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   await evaluateSearchResults("sites will not be saved", "passwordsGroup");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -67,7 +67,7 @@ add_task(async function check_default_bookmark_title() {
   });
   await checkBookmark(url, title);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function check_override_bookmark_title() {
@@ -85,7 +85,7 @@ add_task(async function check_override_bookmark_title() {
   // Test that a bookmark of this URI gets the correct title if we provide one
   await checkBookmarkedPageTitle(url, default_title, "An overridden title");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Bookmark a page and confirm that the new bookmark has the expected title.

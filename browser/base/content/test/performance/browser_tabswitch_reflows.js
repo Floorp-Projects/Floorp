@@ -43,5 +43,5 @@ add_task(async function() {
     await switchDone;
   }, EXPECTED_REFLOWS);
 
-  await BrowserTestUtils.removeTab(otherTab);
+  BrowserTestUtils.removeTab(otherTab);
 });

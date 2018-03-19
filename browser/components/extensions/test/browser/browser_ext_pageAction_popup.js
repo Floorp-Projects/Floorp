@@ -198,7 +198,7 @@ add_task(async function testPageActionPopup() {
   let panel = document.getElementById(panelId);
   is(panel, null, "pageAction panel removed from document");
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 

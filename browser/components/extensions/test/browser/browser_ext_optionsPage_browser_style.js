@@ -98,7 +98,7 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
 
   extension.sendMessage("check-style", optionsUI, assertMessage);
   await extension.awaitFinish("options-ui-browser_style");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
 }

@@ -56,7 +56,7 @@ let testcases = [
     testPortalTabSelectedAndButtonNotVisible();
 
     // Close the tab. The button should become visible.
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     ensureNoPortalTab(win);
     testShowLoginPageButtonVisibility(notification, "visible");
 
@@ -73,12 +73,12 @@ let testcases = [
 
     // Close the portal tab and select the arbitrary tab. The button should become
     // visible and when it's clicked, a new portal tab should be opened.
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
     win.gBrowser.selectedTab = anotherTab;
     testShowLoginPageButtonVisibility(notification, "visible");
     tab = await clickButtonAndExpectNewPortalTab();
 
-    await BrowserTestUtils.removeTab(anotherTab);
+    BrowserTestUtils.removeTab(anotherTab);
     await freePortal(true);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);

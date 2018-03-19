@@ -17,7 +17,7 @@ add_task(async function check_history_not_persisted() {
   await TabStateFlusher.flush(browser);
   let state = JSON.parse(ss.getTabState(tab));
   ok(!state.entries[0].persist, "Should have collected the persistence state");
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
   browser = null;
 
   // Open a new tab to restore into.
@@ -44,7 +44,7 @@ add_task(async function check_history_not_persisted() {
   });
 
   // Cleanup.
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -61,7 +61,7 @@ add_task(async function check_history_default_persisted() {
   await TabStateFlusher.flush(browser);
   let state = JSON.parse(ss.getTabState(tab));
   delete state.entries[0].persist;
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
   browser = null;
 
   // Open a new tab to restore into.
@@ -88,5 +88,5 @@ add_task(async function check_history_default_persisted() {
   });
 
   // Cleanup.
-  await promiseRemoveTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

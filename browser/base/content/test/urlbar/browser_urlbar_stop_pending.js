@@ -38,7 +38,7 @@ add_task(async function() {
   ok(sawChange, "The URL bar change handler should have been called by the time the page was loaded");
   obs.disconnect();
   obs = null;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -80,8 +80,8 @@ add_task(async function() {
   await browserStoppedPromise;
 
   is(gURLBar.value, SLOW_HOST, "Should still have slow page in URL bar after stop");
-  await BrowserTestUtils.removeTab(newTab);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(tab);
 });
 /**
  * Check that if we:
@@ -133,7 +133,7 @@ add_task(async function() {
   await browserStoppedPromise;
 
   is(gURLBar.value, SLOW_HOST2, "Should still have second slow page in URL bar after stop");
-  await BrowserTestUtils.removeTab(newTab);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(tab);
 });
 

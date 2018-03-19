@@ -16,7 +16,7 @@ add_task(async function() {
     await BrowserTestUtils.synthesizeMouseAtCenter("#textlink-test", {}, browser);
     let newTab = await awaitNewTab;
     is(newTab.linkedBrowser, gBrowser.selectedBrowser, "selected tab should be example page");
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
     // Test that ctrl+shift+click/meta+shift+click will open tab in background.
     awaitNewTab = BrowserTestUtils.waitForNewTab(gBrowser, newTabURL);
@@ -25,7 +25,7 @@ add_task(async function() {
       browser);
     await awaitNewTab;
     is(gBrowser.selectedBrowser, browser, "selected tab should be original tab");
-    await BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
 
     // Middle-clicking should open tab in foreground.
     awaitNewTab = BrowserTestUtils.waitForNewTab(gBrowser, newTabURL);
@@ -33,6 +33,6 @@ add_task(async function() {
       {button: 1}, browser);
     newTab = await awaitNewTab;
     is(newTab.linkedBrowser, gBrowser.selectedBrowser, "selected tab should be example page");
-    await BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
   });
 });

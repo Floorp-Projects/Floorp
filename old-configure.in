@@ -2831,13 +2831,15 @@ i?86-apple-darwin*|x86_64-apple-darwin*)
     MOZ_CRASHREPORTER=1
   fi
   ;;
+*-android*|*-linuxandroid*)
+  dnl Android/arm is arm-unknown-linux-androideabi, so android condition should
+  dnl be before Linux condition
+  MOZ_CRASHREPORTER=1
+  ;;
 i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
   if test "$MOZ_ENABLE_GTK"; then
     MOZ_CRASHREPORTER=1
   fi
-  ;;
-*-android*|*-linuxandroid*)
-  MOZ_CRASHREPORTER=1
   ;;
 esac
 

@@ -86,7 +86,7 @@ add_task(async function testPluginData() {
     await extension.awaitMessage("pluginDataRemoved");
 
     ok(!stored(null), "All data cleared");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
 
     // Clear history with recent since value.
 
@@ -103,7 +103,7 @@ add_task(async function testPluginData() {
     ok(stored(["bar.com", "qux.com"]), "Data stored for sites");
     ok(!stored(["foo.com"]), "Data cleared for foo.com");
     ok(!stored(["baz.com"]), "Data cleared for baz.com");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
 
     // Clear history with old since value.
 
@@ -118,7 +118,7 @@ add_task(async function testPluginData() {
     await extension.awaitMessage("pluginDataRemoved");
 
     ok(!stored(null), "All data cleared");
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   }
 
   Services.prefs.setBoolPref("plugins.click_to_play", true);

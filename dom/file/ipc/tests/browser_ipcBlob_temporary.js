@@ -109,6 +109,6 @@ add_task(async function test() {
 
   ok(status, "All good for tab2!");
 
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 });

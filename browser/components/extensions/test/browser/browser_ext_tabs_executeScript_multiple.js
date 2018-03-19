@@ -46,5 +46,5 @@ add_task(async function testExecuteScript() {
   await extension.awaitFinish("executeScript-multiple");
 
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

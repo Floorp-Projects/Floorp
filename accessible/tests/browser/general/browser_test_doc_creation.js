@@ -45,8 +45,8 @@ add_task(async function testDocumentCreation() {
     });
   }
 
-  await BrowserTestUtils.removeTab(tab1);
-  await BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 
   accService = null;
   await shutdownAccessibilityService();

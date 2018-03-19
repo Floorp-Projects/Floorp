@@ -77,5 +77,5 @@ add_task(async function test_menus_click_event_sequence() {
   }
 
   await extension.unload();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

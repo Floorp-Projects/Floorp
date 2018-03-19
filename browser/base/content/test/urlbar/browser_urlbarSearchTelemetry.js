@@ -45,7 +45,7 @@ add_task(async function heuristicResultMouse() {
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     gURLBar.popup.richlistbox.getItemAtIndex(0).click();
     await loadPromise;
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });
 
@@ -60,7 +60,7 @@ add_task(async function heuristicResultKeyboard() {
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     EventUtils.sendKey("return");
     await loadPromise;
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });
 
@@ -74,7 +74,7 @@ add_task(async function searchSuggestionMouse() {
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     gURLBar.popup.richlistbox.getItemAtIndex(idx).click();
     await loadPromise;
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });
 
@@ -91,7 +91,7 @@ add_task(async function searchSuggestionKeyboard() {
     }
     EventUtils.sendKey("return");
     await loadPromise;
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });
 

@@ -12,7 +12,7 @@ add_task(async function() {
   }
   registerCleanupFunction(async function() {
     for (let tab of tabs) {
-      await BrowserTestUtils.removeTab(tab);
+      BrowserTestUtils.removeTab(tab);
     }
   });
 

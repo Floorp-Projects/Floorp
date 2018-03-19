@@ -140,6 +140,6 @@ add_task(async function resume_and_suspend_background_video_decoding() {
   await check_should_send_unselected_tab_hover_msg(browser);
 
   info("- remove tabs -");
-  await BrowserTestUtils.removeTab(tab);
-  await BrowserTestUtils.removeTab(blankTab);
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(blankTab);
 });

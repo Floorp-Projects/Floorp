@@ -143,7 +143,7 @@ add_task(async function test_devtools_network_on_navigated() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -198,7 +198,7 @@ add_task(async function test_devtools_network_get_har() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 /**
@@ -251,5 +251,5 @@ add_task(async function test_devtools_network_on_request_finished() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

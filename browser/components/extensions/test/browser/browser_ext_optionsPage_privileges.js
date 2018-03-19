@@ -62,5 +62,5 @@ add_task(async function test_tab_options_privileges() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

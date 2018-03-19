@@ -1,6 +1,6 @@
 registerCleanupFunction(async function cleanup() {
   while (gBrowser.tabs.length > 1) {
-    await BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
   }
   Services.search.currentEngine = originalEngine;
   let engine = Services.search.getEngineByName("MozSearch");
@@ -130,7 +130,7 @@ async function drop(dragData, expectedTabOpenCount = 0) {
     info("Got TabOpen event");
     tabsOpened = true;
     for (let tab of openedTabs) {
-      await BrowserTestUtils.removeTab(tab);
+      BrowserTestUtils.removeTab(tab);
     }
   }
   is(tabsOpened, !!expectedTabOpenCount, `Tabs for ${dragDataString} should only open if any of dropped items are valid`);

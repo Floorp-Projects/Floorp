@@ -7,9 +7,7 @@ function isUndoCloseEnabled() {
   return !document.getElementById("context_undoCloseTab").disabled;
 }
 
-function test() {
-  waitForExplicitFinish();
-
+add_task(async function test() {
   Services.prefs.setIntPref("browser.sessionstore.max_tabs_undo", 0);
   Services.prefs.clearUserPref("browser.sessionstore.max_tabs_undo");
   is(numClosedTabs(), 0, "There should be 0 closed tabs.");
@@ -17,10 +15,11 @@ function test() {
 
   var tab = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/");
   var browser = gBrowser.getBrowserForTab(tab);
-  BrowserTestUtils.browserLoaded(browser).then(() => {
-    BrowserTestUtils.removeTab(tab).then(() => {
-      ok(isUndoCloseEnabled(), "Undo Close Tab should be enabled.");
-      finish();
-    });
-  });
-}
+  await BrowserTestUtils.browserLoaded(browser);
+
+  let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
+  BrowserTestUtils.removeTab(tab);
+  await sessionUpdatePromise;
+
+  ok(isUndoCloseEnabled(), "Undo Close Tab should be enabled.");
+});
