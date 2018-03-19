@@ -19,7 +19,6 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMCharacterData.h"
 #ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"

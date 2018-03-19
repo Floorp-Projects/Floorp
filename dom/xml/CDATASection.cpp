@@ -15,8 +15,7 @@ CDATASection::~CDATASection()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(CDATASection, CharacterData, nsIDOMNode,
-                            nsIDOMCharacterData)
+NS_IMPL_ISUPPORTS_INHERITED(CDATASection, CharacterData, nsIDOMNode)
 
 JSObject*
 CDATASection::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
