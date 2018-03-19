@@ -9,7 +9,6 @@
 #include "nsIChannel.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
