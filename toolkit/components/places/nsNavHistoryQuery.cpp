@@ -807,16 +807,17 @@ nsNavHistoryQuery::nsNavHistoryQuery()
 
 nsNavHistoryQuery::nsNavHistoryQuery(const nsNavHistoryQuery& aOther)
   : mMinVisits(aOther.mMinVisits), mMaxVisits(aOther.mMaxVisits),
-    mBeginTime(aOther.mBeginTime),
-    mBeginTimeReference(aOther.mBeginTimeReference),
+    mBeginTime(aOther.mBeginTime), mBeginTimeReference(aOther.mBeginTimeReference),
     mEndTime(aOther.mEndTime), mEndTimeReference(aOther.mEndTimeReference),
     mSearchTerms(aOther.mSearchTerms), mOnlyBookmarked(aOther.mOnlyBookmarked),
     mDomainIsHost(aOther.mDomainIsHost), mDomain(aOther.mDomain),
-    mUri(aOther.mUri),
-    mAnnotationIsNot(aOther.mAnnotationIsNot),
-    mAnnotation(aOther.mAnnotation), mTags(aOther.mTags),
-    mTagsAreNot(aOther.mTagsAreNot), mTransitions(aOther.mTransitions)
-{}
+    mUri(aOther.mUri), mAnnotationIsNot(aOther.mAnnotationIsNot),
+    mAnnotation(aOther.mAnnotation),
+    mFolders(aOther.mFolders),
+    mTags(aOther.mTags), mTagsAreNot(aOther.mTagsAreNot),
+    mTransitions(aOther.mTransitions)
+{
+}
 
 NS_IMETHODIMP nsNavHistoryQuery::GetBeginTime(PRTime *aBeginTime)
 {
@@ -1214,20 +1215,55 @@ NS_IMETHODIMP nsNavHistoryQuery::SetTransitions(const uint32_t* aTransitions,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
+NS_IMETHODIMP
+nsNavHistoryQuery::Clone(nsINavHistoryQuery** _clone)
 {
-  *_retval = nullptr;
-
-  RefPtr<nsNavHistoryQuery> clone = new nsNavHistoryQuery(*this);
-  NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
-
-  clone.forget(_retval);
+  nsNavHistoryQuery *clone = nullptr;
+  Unused << Clone(&clone);
+  *_clone = clone;
   return NS_OK;
 }
 
+nsresult
+nsNavHistoryQuery::Clone(nsNavHistoryQuery** _clone)
+{
+  *_clone = nullptr;
+  RefPtr<nsNavHistoryQuery> clone = new nsNavHistoryQuery(*this);
+  clone.forget(_clone);
+  return NS_OK;
+}
 
 // nsNavHistoryQueryOptions
 NS_IMPL_ISUPPORTS(nsNavHistoryQueryOptions, nsNavHistoryQueryOptions, nsINavHistoryQueryOptions)
+
+nsNavHistoryQueryOptions::nsNavHistoryQueryOptions()
+: mSort(0)
+, mResultType(0)
+, mExcludeItems(false)
+, mExcludeQueries(false)
+, mExcludeReadOnlyFolders(false)
+, mExpandQueries(true)
+, mIncludeHidden(false)
+, mMaxResults(0)
+, mQueryType(nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
+, mAsyncEnabled(false)
+{
+}
+
+nsNavHistoryQueryOptions::nsNavHistoryQueryOptions(const nsNavHistoryQueryOptions& other)
+: mSort(other.mSort)
+, mSortingAnnotation(other.mSortingAnnotation)
+, mResultType(other.mResultType)
+, mExcludeItems(other.mExcludeItems)
+, mExcludeQueries(other.mExcludeQueries)
+, mExcludeReadOnlyFolders(other.mExcludeReadOnlyFolders)
+, mExpandQueries(other.mExpandQueries)
+, mIncludeHidden(other.mIncludeHidden)
+, mMaxResults(other.mMaxResults)
+, mQueryType(other.mQueryType)
+, mAsyncEnabled(other.mAsyncEnabled)
+{
+}
 
 // sortingMode
 NS_IMETHODIMP
@@ -1398,37 +1434,23 @@ nsNavHistoryQueryOptions::SetAsyncEnabled(bool aAsyncEnabled)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** aResult)
+nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** _clone)
 {
   nsNavHistoryQueryOptions *clone = nullptr;
-  nsresult rv = Clone(&clone);
-  *aResult = clone;
-  return rv;
-}
-
-nsresult
-nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
-{
-  *aResult = nullptr;
-  nsNavHistoryQueryOptions *result = new nsNavHistoryQueryOptions();
-
-  RefPtr<nsNavHistoryQueryOptions> resultHolder(result);
-  result->mSort = mSort;
-  result->mResultType = mResultType;
-  result->mExcludeItems = mExcludeItems;
-  result->mExcludeQueries = mExcludeQueries;
-  result->mExpandQueries = mExpandQueries;
-  result->mMaxResults = mMaxResults;
-  result->mQueryType = mQueryType;
-  result->mParentAnnotationToExclude = mParentAnnotationToExclude;
-  result->mAsyncEnabled = mAsyncEnabled;
-
-  resultHolder.forget(aResult);
+  Unused << Clone(&clone);
+  *_clone = clone;
   return NS_OK;
 }
 
+nsresult
+nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions** _clone)
+{
+  *_clone = nullptr;
+  RefPtr<nsNavHistoryQueryOptions> clone = new nsNavHistoryQueryOptions(*this);
+  clone.forget(_clone);
+  return NS_OK;
+}
 
 // AppendBoolKeyValueIfTrue
 
