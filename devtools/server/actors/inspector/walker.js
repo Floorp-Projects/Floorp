@@ -202,7 +202,16 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     let filter = this.showAllAnonymousContent
                     ? allAnonymousContentTreeWalkerFilter
                     : standardTreeWalkerFilter;
-    return new DocumentWalker(node, this.rootWin, {whatToShow, filter, skipTo});
+
+    return new DocumentWalker(node, this.rootWin,
+      {whatToShow, filter, skipTo, showAnonymousContent: true});
+  },
+
+  getNonAnonymousWalker: function(node, whatToShow, skipTo) {
+    let nodeFilter = standardTreeWalkerFilter;
+
+    return new DocumentWalker(node, this.rootWin,
+      {whatToShow, nodeFilter, skipTo, showAnonymousContent: false});
   },
 
   destroy: function() {
@@ -576,12 +585,32 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       maxNodes = Number.MAX_VALUE;
     }
 
+    let isShadowHost = !!node.rawNode.shadowRoot;
+
+    if (isShadowHost) {
+      let shadowRoot = this._ref(node.rawNode.shadowRoot);
+      return {
+        hasFirst: true,
+        hasLast: true,
+        nodes: [shadowRoot],
+      };
+    }
+
+    let isShadowRoot = !!node.rawNode.host;
     // We're going to create a few document walkers with the same filter,
     // make it easier.
     let getFilteredWalker = documentWalkerNode => {
       let { whatToShow } = options;
       // Use SKIP_TO_SIBLING to force the walker to use a sibling of the provided node
       // in case this one is incompatible with the walker's filter function.
+      if (isShadowRoot) {
+        // Do not fetch anonymous children for shadow roots. If the host element has an
+        // ::after pseudo element, a walker on the last child of the shadow root will
+        // jump to the ::after element, which is not a child of the shadow root.
+        // TODO: Should rather use an anonymous walker with a new dedicated filter.
+        return this.getNonAnonymousWalker(documentWalkerNode, whatToShow,
+          SKIP_TO_SIBLING);
+      }
       return this.getDocumentWalker(documentWalkerNode, whatToShow, SKIP_TO_SIBLING);
     };
 
