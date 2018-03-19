@@ -62,20 +62,20 @@ Text::SplitText(uint32_t aOffset, ErrorResult& aRv)
   return newContent.forget();
 }
 
-static nsIContent*
-FirstLogicallyAdjacentTextNode(nsIContent* aNode)
+static Text*
+FirstLogicallyAdjacentTextNode(Text* aNode)
 {
   do {
     nsIContent* sibling = aNode->GetPreviousSibling();
     if (!sibling || !sibling->IsText()) {
       return aNode;
     }
-    aNode = sibling;
+    aNode = static_cast<Text*>(sibling);
   } while (1);  // Must run out of previous siblings eventually!
 }
 
-static nsIContent*
-LastLogicallyAdjacentTextNode(nsIContent* aNode)
+static Text*
+LastLogicallyAdjacentTextNode(Text* aNode)
 {
   do {
     nsIContent* sibling = aNode->GetNextSibling();
@@ -83,7 +83,7 @@ LastLogicallyAdjacentTextNode(nsIContent* aNode)
       return aNode;
     }
 
-    aNode = sibling;
+    aNode = static_cast<Text*>(sibling);
   } while (1); // Must run out of next siblings eventually!
 }
 
@@ -108,24 +108,25 @@ Text::GetWholeText(nsAString& aWholeText,
     return;
   }
 
-  nsCOMPtr<nsIContent> first = FirstLogicallyAdjacentTextNode(this);
-  nsCOMPtr<nsIContent> last = LastLogicallyAdjacentTextNode(this);
+  Text* first = FirstLogicallyAdjacentTextNode(this);
+  Text* last = LastLogicallyAdjacentTextNode(this);
 
   aWholeText.Truncate();
 
-  nsCOMPtr<nsIDOMText> node;
   nsAutoString tmp;
 
   while (true) {
-    node = do_QueryInterface(first);
-    node->GetData(tmp);
+    first->GetData(tmp);
     aWholeText.Append(tmp);
 
     if (first == last) {
       break;
     }
 
-    first = first->GetNextSibling();
+    nsIContent* next = first->GetNextSibling();
+    MOZ_ASSERT(next && next->IsText(),
+               "How did we run out of text before hitting `last`?");
+    first = static_cast<Text*>(next);
   }
 }
 
