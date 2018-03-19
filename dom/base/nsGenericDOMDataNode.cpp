@@ -717,23 +717,22 @@ nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
 
 // Implementation of the nsIDOMText interface
 
-nsresult
-nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn)
+already_AddRefed<nsIContent>
+nsGenericDOMDataNode::SplitData(uint32_t aOffset, ErrorResult& aRv)
 {
-  *aReturn = nullptr;
-  nsresult rv = NS_OK;
   nsAutoString cutText;
   uint32_t length = TextLength();
 
   if (aOffset > length) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
 
   uint32_t cutStartOffset = aOffset;
   uint32_t cutLength = length - aOffset;
-  rv = SubstringData(cutStartOffset, cutLength, cutText);
-  if (NS_FAILED(rv)) {
-    return rv;
+  SubstringData(cutStartOffset, cutLength, cutText, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
   }
 
   nsIDocument* document = GetComposedDoc();
@@ -743,7 +742,8 @@ nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn)
   // as this node!
   nsCOMPtr<nsIContent> newContent = CloneDataNode(mNodeInfo, false);
   if (!newContent) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
   }
   // nsRange expects the CharacterDataChanged notification is followed
   // by an insertion of |newContent|. If you change this code,
@@ -753,10 +753,11 @@ nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn)
   CharacterDataChangeInfo::Details details = {
     CharacterDataChangeInfo::Details::eSplit, newContent
   };
-  rv = SetTextInternal(cutStartOffset, cutLength, nullptr, 0, true,
-                       &details);
+  nsresult rv = SetTextInternal(cutStartOffset, cutLength, nullptr, 0, true,
+                                &details);
   if (NS_FAILED(rv)) {
-    return rv;
+    aRv.Throw(rv);
+    return nullptr;
   }
 
   nsCOMPtr<nsINode> parent = GetParentNode();
@@ -765,8 +766,7 @@ nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn)
     parent->InsertChildBefore(newContent, beforeNode, true);
   }
 
-  newContent.swap(*aReturn);
-  return rv;
+  return newContent.forget();
 }
 
 static nsIContent*
