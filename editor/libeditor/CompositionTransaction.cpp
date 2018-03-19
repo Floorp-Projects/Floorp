@@ -113,10 +113,10 @@ CompositionTransaction::DoTransaction()
                    SelAdjInsertText(*mTextNode, mOffset, mStringToInsert);
   } else {
     uint32_t replaceableLength = mTextNode->TextLength() - mOffset;
-    nsresult rv =
-      mTextNode->ReplaceData(mOffset, mReplaceLength, mStringToInsert);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    ErrorResult rv;
+    mTextNode->ReplaceData(mOffset, mReplaceLength, mStringToInsert, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
     mEditorBase->RangeUpdaterRef().
                    SelAdjDeleteText(mTextNode, mOffset, mReplaceLength);

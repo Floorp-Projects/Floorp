@@ -241,12 +241,15 @@ CharacterData::DeleteData(uint32_t aOffset, uint32_t aCount, ErrorResult& aRv)
   }
 }
 
-nsresult
+void
 CharacterData::ReplaceData(uint32_t aOffset, uint32_t aCount,
-                           const nsAString& aData)
+                           const nsAString& aData, ErrorResult& aRv)
 {
-  return SetTextInternal(aOffset, aCount, aData.BeginReading(),
-                         aData.Length(), true);
+  nsresult rv = SetTextInternal(aOffset, aCount, aData.BeginReading(),
+                                aData.Length(), true);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }  
 }
 
 nsresult

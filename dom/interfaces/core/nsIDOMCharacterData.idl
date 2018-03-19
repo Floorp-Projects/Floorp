@@ -16,8 +16,4 @@
 [uuid(4109a2d2-e7af-445d-bb72-c7c9b875f35e)]
 interface nsIDOMCharacterData : nsIDOMNode
 {
-  void                      replaceData(in unsigned long offset, 
-                                        in unsigned long count, 
-                                        in DOMString arg)
-                                  raises(DOMException);
 };
