@@ -32,6 +32,7 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Likely.h"
 #include "nsCSSFrameConstructor.h"
@@ -2911,7 +2912,8 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
   nsCOMPtr<nsINode> referenceNode;
   nsCOMPtr<nsINode> referenceParentNode = tStartContainer;
 
-  nsCOMPtr<nsIDOMText> startTextNode(do_QueryInterface(tStartContainer));
+  RefPtr<Text> startTextNode =
+    tStartContainer ? tStartContainer->GetAsText() : nullptr;
   nsCOMPtr<nsINodeList> tChildList;
   if (startTextNode) {
     referenceParentNode = tStartContainer->GetParentNode();
@@ -2926,8 +2928,7 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
       return;
     }
 
-    nsCOMPtr<nsIDOMText> secondPart;
-    aRv = startTextNode->SplitText(tStartOffset, getter_AddRefs(secondPart));
+    RefPtr<Text> secondPart = startTextNode->SplitText(tStartOffset, aRv);
     if (aRv.Failed()) {
       return;
     }

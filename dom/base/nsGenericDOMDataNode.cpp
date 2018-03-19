@@ -773,17 +773,6 @@ nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn,
   return rv;
 }
 
-nsresult
-nsGenericDOMDataNode::SplitText(uint32_t aOffset, nsIDOMText** aReturn)
-{
-  nsCOMPtr<nsIContent> newChild;
-  nsresult rv = SplitData(aOffset, getter_AddRefs(newChild));
-  if (NS_SUCCEEDED(rv)) {
-    rv = CallQueryInterface(newChild, aReturn);
-  }
-  return rv;
-}
-
 static nsIContent*
 FirstLogicallyAdjacentTextNode(nsIContent* aNode)
 {

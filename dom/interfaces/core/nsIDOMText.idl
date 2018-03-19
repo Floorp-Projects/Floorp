@@ -16,9 +16,6 @@
 [uuid(67273994-6aff-4091-9de9-b788a249f783)]
 interface nsIDOMText : nsIDOMCharacterData
 {
-  nsIDOMText                      splitText(in unsigned long offset)
-                                       raises(DOMException);
-
   /**
    * The concatenation of all logically adjacent text nodes with this text
    * node, where "logically adjacent" consists of all text nodes which can be
