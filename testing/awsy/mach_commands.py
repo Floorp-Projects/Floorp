@@ -64,14 +64,6 @@ class MachCommands(MachCommandBase):
             kwargs['perTabPause'] = 1
             kwargs['settleWaitTime'] = 1
 
-        if 'disable_stylo' in kwargs and kwargs['disable_stylo']:
-            if 'single_stylo_traversal' in kwargs and kwargs['single_stylo_traversal']:
-                print("--disable-stylo conflicts with --single-stylo-traversal")
-                return 1
-            if 'enable_stylo' in kwargs and kwargs['enable_stylo']:
-                print("--disable-stylo conflicts with --enable-stylo")
-                return 1
-
         if 'single_stylo_traversal' in kwargs and kwargs['single_stylo_traversal']:
             os.environ['STYLO_THREADS'] = '1'
         else:
@@ -79,8 +71,6 @@ class MachCommands(MachCommandBase):
 
         if 'enable_stylo' in kwargs and kwargs['enable_stylo']:
             os.environ['STYLO_FORCE_ENABLED'] = '1'
-        if 'disable_stylo' in kwargs and kwargs['disable_stylo']:
-            os.environ['STYLO_FORCE_DISABLED'] = '1'
 
         if 'enable_webrender' in kwargs and kwargs['enable_webrender']:
             os.environ['MOZ_WEBRENDER'] = '1'
@@ -218,9 +208,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--enable-stylo', group='AWSY', action='store_true',
                      dest='enable_stylo', default=False,
                      help='Enable Stylo.')
-    @CommandArgument('--disable-stylo', group='AWSY', action='store_true',
-                     dest='disable_stylo', default=False,
-                     help='Disable Stylo.')
     @CommandArgument('--single-stylo-traversal', group='AWSY', action='store_true',
                      dest='single_stylo_traversal', default=False,
                      help='Set STYLO_THREADS=1.')

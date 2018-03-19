@@ -335,8 +335,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
 
         if self.config['enable_stylo']:
             env['STYLO_FORCE_ENABLED'] = '1'
-        if self.config['disable_stylo']:
-            env['STYLO_FORCE_DISABLED'] = '1'
 
         env = self.query_env(partial_env=env, log_level=INFO)
 
