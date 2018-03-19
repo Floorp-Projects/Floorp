@@ -45,8 +45,6 @@
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsTextFrame.h"
 
-#include "nsIDOMText.h"
-
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
@@ -78,6 +76,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -1660,15 +1659,11 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
         // Check to see if theNode is a text node. If it is, translate
         // aOffset into an offset into the text node.
 
-        nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(theNode);
+        RefPtr<Text> textNode = theNode->GetAsText();
         if (textNode) {
           if (theNode->GetPrimaryFrame()) {
             if (aOffset > childIndex) {
-              uint32_t textLength = 0;
-              nsresult rv = textNode->GetLength(&textLength);
-              if (NS_FAILED(rv)) {
-                break;
-              }
+              uint32_t textLength = textNode->Length();
 
               *aReturnOffset = (int32_t)textLength;
             } else {
