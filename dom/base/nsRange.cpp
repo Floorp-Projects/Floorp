@@ -2318,8 +2318,11 @@ nsRange::CutContents(DocumentFragment** aFragment)
             }
 
             nsMutationGuard guard;
-            rv = charData->DeleteData(startOffset, endOffset - startOffset);
-            NS_ENSURE_SUCCESS(rv, rv);
+            ErrorResult err;
+            charData->DeleteData(startOffset, endOffset - startOffset, err);
+            if (NS_WARN_IF(err.Failed())) {
+              return err.StealNSResult();
+            }
             NS_ENSURE_STATE(!guard.Mutated(0) ||
                             ValidateCurrentNode(this, iter));
           }
@@ -2351,7 +2354,11 @@ nsRange::CutContents(DocumentFragment** aFragment)
             }
 
             nsMutationGuard guard;
-            rv = charData->DeleteData(startOffset, dataLength);
+            ErrorResult err;
+            charData->DeleteData(startOffset, dataLength, err);
+            if (NS_WARN_IF(err.Failed())) {
+              return err.StealNSResult();
+            }
             NS_ENSURE_SUCCESS(rv, rv);
             NS_ENSURE_STATE(!guard.Mutated(0) ||
                             ValidateCurrentNode(this, iter));
@@ -2381,8 +2388,11 @@ nsRange::CutContents(DocumentFragment** aFragment)
         }
 
         nsMutationGuard guard;
-        rv = charData->DeleteData(0, endOffset);
-        NS_ENSURE_SUCCESS(rv, rv);
+        ErrorResult err;
+        charData->DeleteData(0, endOffset, err);
+        if (NS_WARN_IF(err.Failed())) {
+          return err.StealNSResult();
+        }
         NS_ENSURE_STATE(!guard.Mutated(0) ||
                         ValidateCurrentNode(this, iter));
         handled = true;
@@ -2725,7 +2735,7 @@ nsRange::CloneContents(ErrorResult& aRv)
         uint32_t dataLength = charData->Length();
         if (dataLength > (uint32_t)mEnd.Offset())
         {
-          aRv = charData->DeleteData(mEnd.Offset(), dataLength - mEnd.Offset());
+          charData->DeleteData(mEnd.Offset(), dataLength - mEnd.Offset(), aRv);
           if (aRv.Failed()) {
             return nullptr;
           }
@@ -2738,7 +2748,7 @@ nsRange::CloneContents(ErrorResult& aRv)
 
         if (mStart.Offset() > 0)
         {
-          aRv = charData->DeleteData(0, mStart.Offset());
+          charData->DeleteData(0, mStart.Offset(), aRv);
           if (aRv.Failed()) {
             return nullptr;
           }

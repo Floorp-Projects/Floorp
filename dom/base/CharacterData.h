@@ -96,7 +96,6 @@ public:
                                     ErrorResult& aError) override;
 
   // Implementation for nsIDOMCharacterData
-  nsresult DeleteData(uint32_t aOffset, uint32_t aCount);
   nsresult ReplaceData(uint32_t aOffset, uint32_t aCount,
                        const nsAString& aArg);
 
@@ -183,10 +182,7 @@ public:
                      ErrorResult& rv);
   void AppendData(const nsAString& aData, ErrorResult& rv);
   void InsertData(uint32_t aOffset, const nsAString& aData, ErrorResult& rv);
-  void DeleteData(uint32_t aOffset, uint32_t aCount, ErrorResult& rv)
-  {
-    rv = DeleteData(aOffset, aCount);
-  }
+  void DeleteData(uint32_t aOffset, uint32_t aCount, ErrorResult& rv);
   void ReplaceData(uint32_t aOffset, uint32_t aCount, const nsAString& aData,
                    ErrorResult& rv)
   {

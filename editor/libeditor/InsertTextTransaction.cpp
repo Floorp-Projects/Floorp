@@ -93,7 +93,9 @@ InsertTextTransaction::DoTransaction()
 NS_IMETHODIMP
 InsertTextTransaction::UndoTransaction()
 {
-  return mTextNode->DeleteData(mOffset, mStringToInsert.Length());
+  ErrorResult rv;
+  mTextNode->DeleteData(mOffset, mStringToInsert.Length(), rv);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
