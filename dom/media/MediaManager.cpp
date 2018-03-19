@@ -80,6 +80,7 @@
 
 #if defined (XP_WIN)
 #include "mozilla/WindowsVersion.h"
+#include <objbase.h>
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <tchar.h>
@@ -1996,6 +1997,31 @@ MediaManager::IsInMediaThread()
 }
 #endif
 
+#ifdef XP_WIN
+class MTAThread : public base::Thread {
+public:
+  explicit MTAThread(const char* aName)
+    : base::Thread(aName)
+    , mResult(E_FAIL)
+  {
+  }
+
+protected:
+  virtual void Init() override {
+    mResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+  }
+
+  virtual void CleanUp() override {
+    if (SUCCEEDED(mResult)) {
+      CoUninitialize();
+    }
+  }
+
+private:
+  HRESULT mResult;
+};
+#endif
+
 // NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
 // thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
 // from MediaManager thread.
@@ -2012,7 +2038,11 @@ MediaManager::Get() {
 
     sSingleton = new MediaManager();
 
+#ifdef XP_WIN
+    sSingleton->mMediaThread = new MTAThread("MediaManager");
+#else
     sSingleton->mMediaThread = new base::Thread("MediaManager");
+#endif
     base::Thread::Options options;
 #if defined(_WIN32)
     options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINUITHREAD;
