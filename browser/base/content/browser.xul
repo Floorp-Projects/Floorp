@@ -20,7 +20,9 @@
 
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
+<!DOCTYPE window [
 #include browser-doctype.inc
+]>
 
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -60,9 +62,9 @@
         retargetdocumentfocus="urlbar"
         persist="screenX screenY width height sizemode">
 
-# All JS files which are not content (only) dependent that browser.xul
-# wishes to include *must* go into the global-scripts.inc file
-# so that they can be shared by macBrowserOverlay.xul.
+# All JS files which are needed by browser.xul and other top level windows to
+# support MacOS specific features *must* go into the global-scripts.inc file so
+# that they can be shared with macWindow.inc.xul.
 #include global-scripts.inc
 
 <script type="application/javascript">
@@ -84,8 +86,9 @@
      "chrome://browser/content/places/controller.js");
 </script>
 
-# All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the
-# browser-sets.inc file for sharing with hiddenWindow.xul.
+# All sets except for popupsets (commands, keys, stringbundles and broadcasters)
+# *must* go into the browser-sets.inc file so that they can be shared with other
+# top level windows in macWindow.inc.xul.
 #define FULL_BROWSER_WINDOW
 #include browser-sets.inc
 #undef FULL_BROWSER_WINDOW
@@ -631,8 +634,8 @@
 #endif
              context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center">
-# The entire main menubar is placed into browser-menubar.inc, so that it can be shared by
-# hiddenWindow.xul.
+# The entire main menubar is placed into browser-menubar.inc, so that it can be
+# shared with other top level windows in macWindow.inc.xul.
 #include browser-menubar.inc
       </toolbaritem>
 

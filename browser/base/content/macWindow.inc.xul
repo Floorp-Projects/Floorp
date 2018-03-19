@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 # -*- Mode: HTML -*-
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,20 +6,15 @@
 
 #define MAC_NON_BROWSER_WINDOW
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
+# This include file should only contain things that are needed to support MacOS
+# specific features that are needed for all top level windows. If the feature is
+# also needed in browser.xul, it should go in one of the various include files
+# below that are shared with browser.xul. When including this file,
+# browser-doctype.inc must also be included.
 
-# All DTD information is stored in a separate file so that it can be shared by
-# hiddenWindow.xul.
-#include browser-doctype.inc
-
-<overlay id="hidden-overlay"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-# All JS files which are not content (only) dependent that browser.xul
-# wishes to include *must* go into the global-scripts.inc file
-# so that they can be shared by this overlay.
+# All JS files which are needed by browser.xul and other top level windows to
+# support MacOS specific features *must* go into the global-scripts.inc file so
+# that they can be shared with browser.xul.
 #include global-scripts.inc
 
 <script type="application/javascript">
@@ -54,12 +48,13 @@
      "chrome://browser/content/places/controller.js");
 </script>
 
-# All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
-# browser-sets.inc file for sharing with hiddenWindow.xul.
+# All sets except for popupsets (commands, keys, stringbundles and broadcasters)
+# *must* go into the browser-sets.inc file so that they can be shared with
+# browser.xul
 #include browser-sets.inc
 
-# The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
-# hiddenWindow.xul.
+# The entire main menubar is placed into browser-menubar.inc, so that it can be
+# shared with browser.xul.
 #include browser-menubar.inc
 
 <!-- Dock menu -->
@@ -73,5 +68,3 @@
               id="macDockMenuNewPrivateWindow" />
   </menupopup>
 </popupset>
-
-</overlay>

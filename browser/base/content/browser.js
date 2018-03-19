@@ -1974,7 +1974,7 @@ var gBrowserInit = {
 if (AppConstants.platform == "macosx") {
   // nonBrowserWindowStartup(), nonBrowserWindowDelayedStartup(), and
   // nonBrowserWindowShutdown() are used for non-browser windows in
-  // macBrowserOverlay
+  // macWindow.inc.xul
   gBrowserInit.nonBrowserWindowStartup = function() {
     // Disable inappropriate commands / submenus
     var disabledItems = ["Browser:SavePage",

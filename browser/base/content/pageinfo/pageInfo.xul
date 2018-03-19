@@ -10,14 +10,9 @@
   <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">
   %pageInfoDTD;
 #ifdef XP_MACOSX
-  <!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
-  %baseMenuOverlayDTD;
+#include ../browser-doctype.inc
 #endif
 ]>
-
-#ifdef XP_MACOSX
-<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
-#endif
 
 <window id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -28,6 +23,10 @@
   screenX="10" screenY="10"
   width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
   persist="screenX screenY width height sizemode">
+
+#ifdef XP_MACOSX
+#include ../macWindow.inc.xul
+#endif
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
@@ -415,9 +414,5 @@
     </vbox>
     <!-- Others added by overlay -->
   </deck>
-
-#ifdef XP_MACOSX
-#include ../browserMountPoints.inc
-#endif
 
 </window>
