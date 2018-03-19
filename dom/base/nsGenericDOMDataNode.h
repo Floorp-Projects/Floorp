@@ -178,8 +178,7 @@ public:
     return NS_OK;
   }
 
-  nsresult SplitData(uint32_t aOffset, nsIContent** aReturn,
-                     bool aCloneAfterOriginal = true);
+  nsresult SplitData(uint32_t aOffset, nsIContent** aReturn);
 
   // WebIDL API
   // Our XPCOM GetData is just fine for WebIDL
