@@ -531,7 +531,7 @@ object TelemetryWrapper {
      */
     @JvmStatic
     fun openFullBrowser() {
-        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FULL_BROWSER)
+        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FULL_BROWSER).queue()
     }
 
     @JvmStatic
