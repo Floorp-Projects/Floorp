@@ -13,11 +13,10 @@
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %updateDTD;
 %brandDTD;
-]>
-
 #if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
-<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+#include ../../../../browser/base/content/browser-doctype.inc
 #endif
+]>
 
 <wizard id="updates"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -34,7 +33,7 @@
   <script type="application/javascript" src="chrome://mozapps/content/update/updates.js"/>
 
 #if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
-#include ../../../../browser/base/content/browserMountPoints.inc
+#include ../../../../browser/base/content/macWindow.inc.xul
 #endif
 
   <stringbundleset id="updateSet">

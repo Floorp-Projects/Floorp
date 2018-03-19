@@ -23,6 +23,7 @@ struct StylePrefs
   static bool sUnprefixedFullscreenApiEnabled;
   static bool sVisitedLinksEnabled;
   static bool sMozDocumentEnabledInContent;
+  static bool sMozDocumentURLPrefixHackEnabled;
   static bool sGridTemplateSubgridValueEnabled;
   static bool sFontVariationsEnabled;
   static bool sEmulateMozBoxWithFlex;

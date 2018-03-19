@@ -12,14 +12,9 @@
 <!ENTITY % setDesktopBackgroundDTD SYSTEM "chrome://browser/locale/setDesktopBackground.dtd">
 %setDesktopBackgroundDTD;
 #ifdef XP_MACOSX
-<!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
-%baseMenuOverlayDTD;
+#include ../../../base/content/browser-doctype.inc
 #endif
 ]>
-
-#ifdef XP_MACOSX
-<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
-#endif
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
@@ -34,6 +29,10 @@
         ondialogaccept="gSetBackground.setDesktopBackground();"
         title="&setDesktopBackground.title;"
         style="width: 30em;">
+
+#ifdef XP_MACOSX
+#include ../../../base/content/macWindow.inc.xul
+#endif
 
     <stringbundle id="backgroundBundle"
                   src="chrome://browser/locale/shellservice.properties"/>
@@ -83,10 +82,6 @@
               oncommand="gSetBackground.showDesktopPrefs();"
               hidden="true"/>
     </hbox>
-#endif
-
-#ifdef XP_MACOSX
-#include ../../../base/content/browserMountPoints.inc
 #endif
 
 </dialog>

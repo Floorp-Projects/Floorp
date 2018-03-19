@@ -185,7 +185,7 @@ task_description_schema = Schema({
     # The `run_on_projects` attribute, defaulting to "all".  This dictates the
     # projects on which this task should be included in the target task set.
     # See the attributes documentation for details.
-    Optional('run-on-projects'): [basestring],
+    Optional('run-on-projects'): optionally_keyed_by('build-platform', [basestring]),
 
     # The `shipping_phase` attribute, defaulting to None. This specifies the
     # release promotion phase that this task belongs to.
@@ -1630,6 +1630,10 @@ def build_task(config, tasks):
         payload_builders[task['worker']['implementation']](config, task, task_def)
 
         attributes = task.get('attributes', {})
+        # Resolve run-on-projects
+        build_platform = attributes.get('build_platform')
+        resolve_keyed_by(task, 'run-on-projects', item_name=task['label'],
+                         **{'build-platform': build_platform})
         attributes['run_on_projects'] = task.get('run-on-projects', ['all'])
         attributes['always_target'] = task['always-target']
         # This logic is here since downstream tasks don't always match their

@@ -4,10 +4,10 @@
   "repository": {},
   "license": "MPL-2.0",
   "dependencies": {
-    "eslint": "4.18.1",
+    "eslint": "4.18.2",
     "eslint-plugin-html": "4.0.2",
     "eslint-plugin-mozilla": "file:tools/lint/eslint/eslint-plugin-mozilla",
-    "eslint-plugin-no-unsanitized": "2.0.2",
+    "eslint-plugin-no-unsanitized": "3.0.0",
     "eslint-plugin-react": "7.1.0",
     "eslint-plugin-spidermonkey-js": "file:tools/lint/eslint/eslint-plugin-spidermonkey-js"
   },

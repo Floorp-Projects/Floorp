@@ -1336,6 +1336,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     } else {
       range.selectNodeContents(rawNode);
     }
+    // eslint-disable-next-line no-unsanitized/method
     let docFrag = range.createContextualFragment(value);
     let newRawNodes = Array.from(docFrag.childNodes);
     switch (position) {

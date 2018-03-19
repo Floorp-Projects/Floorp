@@ -1,6 +1,7 @@
 # lint_ignore=E501
 config = {
     "shipped-locales-url": "https://hg.mozilla.org/%(repo)s/raw-file/%(revision)s/browser/locales/shipped-locales",
+    "locales": ["en-US"],
     "bouncer_prefix": "https://bouncer-bouncer-releng.stage.mozaws.net/",
     "products": {
         "installer": {

@@ -45,6 +45,11 @@ const DOCS_GA_PARAMS = "?utm_source=mozilla" +
 
 flags.testing = true;
 
+Services.prefs.setBoolPref("devtools.browserconsole.new-frontend-enabled", false);
+registerCleanupFunction(async function () {
+  Services.prefs.clearUserPref("devtools.browserconsole.new-frontend-enabled");
+});
+
 function loadTab(url, preferredRemoteType) {
   return addTab(url, { preferredRemoteType }).then( tab => {
     return { tab, browser: tab.linkedBrowser };

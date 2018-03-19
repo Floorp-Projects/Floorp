@@ -68,13 +68,10 @@ GetCSSFloatValue(nsComputedDOMStyle* aComputedStyle,
     return 0;
   }
 
-  MOZ_ASSERT(value.Length() > 2, "Should always have a `px` suffix");
-
+  // We only care about resolved values, not a big deal if the element is
+  // undisplayed, for example, and the value is "auto" or what not.
   int32_t val = value.ToInteger(&rv);
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "These properties should only get resolved values");
-
-  return val;
+  return NS_SUCCEEDED(rv) ? val : 0;
 }
 
 class ElementDeletionObserver final : public nsStubMutationObserver
