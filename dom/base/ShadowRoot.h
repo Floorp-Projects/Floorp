@@ -23,6 +23,10 @@ namespace mozilla {
 
 class EventChainPreVisitor;
 
+namespace css {
+class Rule;
+}
+
 namespace dom {
 
 class Element;
@@ -81,9 +85,13 @@ public:
     return mMode == ShadowRootMode::Closed;
   }
 
-  // [deprecated] Shadow DOM v0
   void InsertSheet(StyleSheet* aSheet, nsIContent* aLinkingContent);
   void RemoveSheet(StyleSheet* aSheet);
+  void RuleAdded(StyleSheet&, css::Rule&);
+  void RuleRemoved(StyleSheet&, css::Rule&);
+  void RuleChanged(StyleSheet&, css::Rule*);
+  void StyleSheetApplicableStateChanged(StyleSheet&, bool aApplicable);
+
   StyleSheetList* StyleSheets()
   {
     return &DocumentOrShadowRoot::EnsureDOMStyleSheets();
@@ -94,6 +102,10 @@ public:
    */
   void CloneInternalDataFrom(ShadowRoot* aOther);
 private:
+  void InsertSheetIntoAuthorData(size_t aIndex, StyleSheet&);
+
+  void InsertSheetAt(size_t aIndex, StyleSheet&);
+  void AppendStyleSheet(StyleSheet&);
 
   /**
    * Try to reassign an element to a slot and returns whether the assignment
@@ -155,9 +167,6 @@ public:
     return mServoStyles.get();
   }
 
-  // FIXME(emilio): This will need to become more fine-grained.
-  void StyleSheetChanged();
-
   mozilla::ServoStyleRuleMap& ServoStyleRuleMap();
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -185,6 +194,9 @@ public:
   nsresult GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
 protected:
+  // FIXME(emilio): This will need to become more fine-grained.
+  void ApplicableRulesChanged();
+
   virtual ~ShadowRoot();
 
   const ShadowRootMode mMode;

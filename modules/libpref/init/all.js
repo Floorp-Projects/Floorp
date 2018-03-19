@@ -225,7 +225,11 @@ pref("dom.gamepad.haptic_feedback.enabled", true);
 // If this is true, TextEventDispatcher dispatches keydown and keyup events
 // even during composition (keypress events are never fired during composition
 // even if this is true).
+#ifdef EARLY_BETA_OR_EARLIER
+pref("dom.keyboardevent.dispatch_during_composition", true);
+#else
 pref("dom.keyboardevent.dispatch_during_composition", false);
+#endif
 
 // If this is true, TextEventDispatcher dispatches keypress event with setting
 // WidgetEvent::mFlags::mOnlySystemGroupDispatchInContent to true if it won't
@@ -2964,6 +2968,14 @@ pref("layout.css.visited_links_enabled", true);
 
 // Pref to control whether @-moz-document rules are enabled in content pages.
 pref("layout.css.moz-document.content.enabled",  false);
+
+// Pref to control whether @-moz-document url-prefix() is parsed in content
+// pages. Only effective when layout.css.moz-document.content.enabled is false.
+#ifdef EARLY_BETA_OR_EARLIER
+pref("layout.css.moz-document.url-prefix-hack.enabled", false);
+#else
+pref("layout.css.moz-document.url-prefix-hack.enabled", true);
+#endif
 
 // Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
 // A value of 0 means use the system DPI. A positive value is used as the DPI.

@@ -218,16 +218,16 @@ UPSTREAM_ARTIFACT_SIGNED_PATHS = {
         "target.tar.bz2.asc",
     ],
     'linux64-source': [
-        "SOURCE",
-        "SOURCE.asc",
+        "source.tar.xz",
+        "source.tar.xz.asc",
     ],
     'linux64-devedition-source': [
-        "SOURCE",
-        "SOURCE.asc",
+        "source.tar.xz",
+        "source.tar.xz.asc",
     ],
     'linux64-fennec-source': [
-        "SOURCE",
-        "SOURCE.asc",
+        "source.tar.xz",
+        "source.tar.xz.asc",
     ],
     'android-x86-nightly': ["en-US/target.apk"],
     'android-aarch64-nightly': ["en-US/target.apk"],

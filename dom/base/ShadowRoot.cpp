@@ -105,8 +105,6 @@ ShadowRoot::CloneInternalDataFrom(ShadowRoot* aOther)
         sheet->Clone(nullptr, nullptr, nullptr, nullptr);
       if (clonedSheet) {
         AppendStyleSheet(*clonedSheet.get());
-        Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(),
-                                            clonedSheet->AsServo());
       }
     }
   }
@@ -241,15 +239,42 @@ ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot)
   }
 }
 
+// FIXME(emilio): There's a bit of code duplication between this and the
+// equivalent ServoStyleSet methods, it'd be nice to not duplicate it...
 void
-ShadowRoot::StyleSheetChanged()
+ShadowRoot::RuleAdded(StyleSheet& aSheet, css::Rule& aRule)
 {
-  // FIXME(emilio): This is not needed to handle sheet additions / removals,
-  // only for CSSOM mutations, we should distinguish both.
+  if (mStyleRuleMap) {
+    mStyleRuleMap->RuleAdded(*aSheet.AsServo(), aRule);
+  }
+
   Servo_AuthorStyles_ForceDirty(mServoStyles.get());
-  // FIXME(emilio): Similarly, we should notify of the particular mutation to
-  // the rule map, instead of this...
-  mStyleRuleMap.reset(nullptr);
+  ApplicableRulesChanged();
+}
+
+void
+ShadowRoot::RuleRemoved(StyleSheet& aSheet, css::Rule& aRule)
+{
+  if (mStyleRuleMap) {
+    mStyleRuleMap->RuleRemoved(*aSheet.AsServo(), aRule);
+  }
+
+  Servo_AuthorStyles_ForceDirty(mServoStyles.get());
+  ApplicableRulesChanged();
+}
+
+void
+ShadowRoot::RuleChanged(StyleSheet&, css::Rule*) {
+  Servo_AuthorStyles_ForceDirty(mServoStyles.get());
+  ApplicableRulesChanged();
+}
+
+void
+ShadowRoot::ApplicableRulesChanged()
+{
+  if (!IsComposedDocParticipant()) {
+    return;
+  }
 
   if (!IsComposedDocParticipant()) {
     return;
@@ -260,6 +285,28 @@ ShadowRoot::StyleSheetChanged()
     doc->BeginUpdate(UPDATE_STYLE);
     shell->RecordShadowStyleChange(*this);
     doc->EndUpdate(UPDATE_STYLE);
+  }
+}
+
+void
+ShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet)
+{
+  DocumentOrShadowRoot::InsertSheetAt(aIndex, aSheet);
+  if (aSheet.IsApplicable()) {
+    InsertSheetIntoAuthorData(aIndex, aSheet);
+  }
+}
+
+void
+ShadowRoot::AppendStyleSheet(StyleSheet& aSheet)
+{
+  DocumentOrShadowRoot::AppendStyleSheet(aSheet);
+  if (aSheet.IsApplicable()) {
+    Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), aSheet.AsServo());
+    if (mStyleRuleMap) {
+      mStyleRuleMap->SheetAdded(*aSheet.AsServo());
+    }
+    ApplicableRulesChanged();
   }
 }
 
@@ -280,22 +327,58 @@ ShadowRoot::InsertSheet(StyleSheet* aSheet, nsIContent* aLinkingContent)
   for (size_t i = 0; i <= SheetCount(); i++) {
     if (i == SheetCount()) {
       AppendStyleSheet(*aSheet);
-      Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), aSheet->AsServo());
-      break;
+      return;
     }
 
     StyleSheet* sheet = SheetAt(i);
     nsINode* sheetOwningNode = sheet->GetOwnerNode();
     if (nsContentUtils::PositionIsBefore(aLinkingContent, sheetOwningNode)) {
       InsertSheetAt(i, *aSheet);
-      Servo_AuthorStyles_InsertStyleSheetBefore(
-        mServoStyles.get(), aSheet->AsServo(), sheet->AsServo());
-      break;
+      return;
     }
   }
+}
 
-  if (aSheet->IsApplicable()) {
-    StyleSheetChanged();
+void
+ShadowRoot::InsertSheetIntoAuthorData(size_t aIndex, StyleSheet& aSheet)
+{
+  MOZ_ASSERT(SheetAt(aIndex) == &aSheet);
+  MOZ_ASSERT(aSheet.IsApplicable());
+
+  if (mStyleRuleMap) {
+    mStyleRuleMap->SheetAdded(*aSheet.AsServo());
+  }
+
+  for (size_t i = aIndex + 1; i < SheetCount(); ++i) {
+    StyleSheet* beforeSheet = SheetAt(i);
+    if (!beforeSheet->IsApplicable()) {
+      continue;
+    }
+
+    Servo_AuthorStyles_InsertStyleSheetBefore(
+      mServoStyles.get(), aSheet.AsServo(), beforeSheet->AsServo());
+    ApplicableRulesChanged();
+    return;
+  }
+
+  Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), aSheet.AsServo());
+  ApplicableRulesChanged();
+}
+
+void
+ShadowRoot::StyleSheetApplicableStateChanged(StyleSheet& aSheet, bool aApplicable)
+{
+  MOZ_ASSERT(mStyleSheets.Contains(&aSheet));
+  if (aApplicable) {
+    int32_t index = IndexOfSheet(aSheet);
+    MOZ_RELEASE_ASSERT(index >= 0);
+    InsertSheetIntoAuthorData(size_t(index), aSheet);
+  } else {
+    if (mStyleRuleMap) {
+      mStyleRuleMap->SheetRemoved(*aSheet.AsServo());
+    }
+    Servo_AuthorStyles_RemoveStyleSheet(mServoStyles.get(), aSheet.AsServo());
+    ApplicableRulesChanged();
   }
 }
 
@@ -303,10 +386,12 @@ void
 ShadowRoot::RemoveSheet(StyleSheet* aSheet)
 {
   DocumentOrShadowRoot::RemoveSheet(*aSheet);
-  Servo_AuthorStyles_RemoveStyleSheet(mServoStyles.get(), aSheet->AsServo());
-
   if (aSheet->IsApplicable()) {
-    StyleSheetChanged();
+    if (mStyleRuleMap) {
+      mStyleRuleMap->SheetRemoved(*aSheet->AsServo());
+    }
+    Servo_AuthorStyles_RemoveStyleSheet(mServoStyles.get(), aSheet->AsServo());
+    ApplicableRulesChanged();
   }
 }
 
