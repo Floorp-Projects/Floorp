@@ -43,11 +43,12 @@ PeerConnectionIdp.prototype = {
     this.idpLoginUrl = null;
   },
 
-  setIdentityProvider(provider, protocol, username) {
+  setIdentityProvider(provider, protocol, usernameHint, peerIdentity) {
     this._resetAssertion();
     this.provider = provider;
-    this.protocol = protocol || "default";
-    this.username = username;
+    this.protocol = protocol;
+    this.username = usernameHint;
+    this.peeridentity = peerIdentity;
     if (this._idp) {
       if (this._idp.isSame(provider, protocol)) {
         return; // noop

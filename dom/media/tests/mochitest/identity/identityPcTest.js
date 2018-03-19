@@ -22,8 +22,8 @@ function identityPcTest(remoteOptions) {
     video: true,
     peerIdentity: id1
   }]);
-  test.pcLocal.setIdentityProvider('test1.example.com', 'idp.js');
-  test.pcRemote.setIdentityProvider('test2.example.com', 'idp.js');
+  test.pcLocal.setIdentityProvider('test1.example.com', { protocol: 'idp.js' });
+  test.pcRemote.setIdentityProvider('test2.example.com', { protocol: 'idp.js' });
   test.chain.append([
     function PEER_IDENTITY_IS_SET_CORRECTLY(test) {
       // no need to wait to check identity in this case,

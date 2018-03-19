@@ -24,8 +24,12 @@ function checkIdentity(peer, prefix, idp, name) {
 function theTest() {
   var test = new PeerConnectionTest();
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
-  test.pcLocal.setIdentityProvider("test1.example.com", "idp.js", "someone");
-  test.pcRemote.setIdentityProvider("test2.example.com", "idp.js", "someone");
+  test.pcLocal.setIdentityProvider("test1.example.com",
+                                   { protocol: "idp.js",
+                                     usernameHint: "someone" });
+  test.pcRemote.setIdentityProvider("test2.example.com",
+                                    { protocol: "idp.js",
+                                      usernameHinte: "someone"});
 
   test.chain.append([
     function PC_LOCAL_PEER_IDENTITY_IS_SET_CORRECTLY(test) {
