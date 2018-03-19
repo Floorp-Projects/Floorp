@@ -18,6 +18,7 @@
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/NodeFilterBinding.h"
+#include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/Unused.h"
@@ -32,7 +33,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
@@ -430,7 +430,7 @@ ResourceReader::OnWalkAttribute(nsIDOMNode* aNode,
 }
 
 static nsresult
-GetXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref)
+GetXMLStyleSheetLink(dom::ProcessingInstruction *aPI, nsAString &aHref)
 {
     nsresult rv;
     nsAutoString data;
@@ -444,14 +444,15 @@ GetXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref)
 nsresult
 ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
 {
-    nsresult rv;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+    if (!content) {
+        return NS_OK;
+    }
 
     // Fixup xml-stylesheet processing instructions
-    nsCOMPtr<nsIDOMProcessingInstruction> nodeAsPI = do_QueryInterface(aNode);
-    if (nodeAsPI) {
+    if (auto nodeAsPI = dom::ProcessingInstruction::FromContent(content)) {
         nsAutoString target;
-        rv = nodeAsPI->GetTarget(target);
-        NS_ENSURE_SUCCESS(rv, rv);
+        nodeAsPI->GetTarget(target);
         if (target.EqualsLiteral("xml-stylesheet")) {
             nsAutoString href;
             GetXMLStyleSheetLink(nodeAsPI, href);
@@ -459,11 +460,6 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
                 return OnWalkURI(NS_ConvertUTF16toUTF8(href));
             }
         }
-        return NS_OK;
-    }
-
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    if (!content) {
         return NS_OK;
     }
 
@@ -601,7 +597,7 @@ private:
                             const char* aAttribute,
                             const char* aNamespaceURI = "");
     nsresult FixupAnchor(nsINode* aNode);
-    nsresult FixupXMLStyleSheetLink(nsIDOMProcessingInstruction* aPI,
+    nsresult FixupXMLStyleSheetLink(dom::ProcessingInstruction* aPI,
                                     const nsAString& aHref);
 
     using IWBP = nsIWebBrowserPersist;
@@ -786,7 +782,7 @@ AppendXMLAttr(const nsAString& key, const nsAString& aValue, nsAString& aBuffer)
 }
 
 nsresult
-PersistNodeFixup::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction* aPI,
+PersistNodeFixup::FixupXMLStyleSheetLink(dom::ProcessingInstruction* aPI,
                                          const nsAString& aHref)
 {
     NS_ENSURE_ARG_POINTER(aPI);
@@ -883,22 +879,25 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
         return NS_OK;
     }
 
+    MOZ_ASSERT(aNodeIn->IsContent());
+
     // Fixup xml-stylesheet processing instructions
-    nsCOMPtr<nsIDOMProcessingInstruction> nodeAsPI = do_QueryInterface(aNodeIn);
-    if (nodeAsPI) {
+    if (auto nodeAsPI =
+          dom::ProcessingInstruction::FromContent(aNodeIn->AsContent())) {
         nsAutoString target;
         nodeAsPI->GetTarget(target);
         if (target.EqualsLiteral("xml-stylesheet"))
         {
             nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
             if (NS_SUCCEEDED(rv) && *aNodeOut) {
-                nsCOMPtr<nsIDOMProcessingInstruction> outNode =
-                    do_QueryInterface(*aNodeOut);
+                MOZ_ASSERT((*aNodeOut)->IsProcessingInstruction());
+                auto nodeAsPI =
+                  static_cast<dom::ProcessingInstruction*>(*aNodeOut);
                 nsAutoString href;
                 GetXMLStyleSheetLink(nodeAsPI, href);
                 if (!href.IsEmpty()) {
                     FixupURI(href);
-                    FixupXMLStyleSheetLink(outNode, href);
+                    FixupXMLStyleSheetLink(nodeAsPI, href);
                 }
             }
         }

@@ -516,6 +516,14 @@ public:
   mozilla::dom::Text* GetAsText();
   const mozilla::dom::Text* GetAsText() const;
 
+  /*
+   * Return whether the node is a ProcessingInstruction node.
+   */
+  bool IsProcessingInstruction() const
+  {
+    return NodeType() == PROCESSING_INSTRUCTION_NODE;
+  }
+
   virtual nsIDOMNode* AsDOMNode() = 0;
 
   /**
