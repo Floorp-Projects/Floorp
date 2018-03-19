@@ -8,12 +8,12 @@
 #define nsTextNode_h
 
 /*
- * Implementation of DOM Core's nsIDOMText node.
+ * Implementation of DOM Core's Text node.
  */
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
-#include "nsIDOMText.h"
+#include "nsIDOMCharacterData.h"
 #include "nsDebug.h"
 
 class nsNodeInfoManager;
@@ -22,7 +22,7 @@ class nsNodeInfoManager;
  * Class used to implement DOM text nodes
  */
 class nsTextNode : public mozilla::dom::Text,
-                   public nsIDOMText
+                   public nsIDOMCharacterData
 {
 private:
   void Init()
@@ -50,9 +50,6 @@ public:
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
   using nsGenericDOMDataNode::SetData; // Prevent hiding overloaded virtual function.
-
-  // nsIDOMText
-  NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;

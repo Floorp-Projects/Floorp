@@ -24,7 +24,6 @@ interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
 interface nsIDOMProcessingInstruction;
-interface nsIDOMText;
 
 // Needed for raises() in our IDL
 %{C++
