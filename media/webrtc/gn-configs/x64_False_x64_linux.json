@@ -30,7 +30,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -59,7 +59,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -94,7 +94,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -105,7 +104,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -125,7 +124,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -154,7 +153,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -189,7 +188,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -205,7 +203,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -225,7 +223,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -254,7 +252,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -289,7 +287,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -298,7 +295,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -318,7 +315,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -347,7 +344,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -382,7 +379,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -395,7 +391,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt"
@@ -422,7 +418,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -451,7 +447,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -486,7 +482,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -499,7 +494,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -520,7 +515,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -568,7 +563,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -594,7 +588,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -606,7 +600,6 @@
             ],
             "libs": [
                 "rt",
-                "dl",
                 "m"
             ],
             "sources": [
@@ -635,7 +628,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -664,7 +657,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -699,7 +692,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -708,7 +700,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -728,7 +720,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -757,7 +749,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -792,7 +784,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -801,7 +792,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -907,7 +898,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -936,7 +927,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -971,7 +962,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -982,7 +972,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1004,7 +994,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1033,7 +1023,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -1068,7 +1058,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_BUILD_LIBEVENT",
                 "WEBRTC_MOZILLA_BUILD",
@@ -1082,7 +1071,7 @@
                 "/ipc/chromium/src/third_party/libevent/include/",
                 "/ipc/chromium/src/third_party/libevent/linux/",
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1110,7 +1099,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1158,7 +1147,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -1180,11 +1168,10 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt",
-                "dl",
                 "m"
             ],
             "sources": [
@@ -1207,7 +1194,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1236,7 +1223,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -1271,7 +1258,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -1280,7 +1266,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1305,7 +1291,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1353,7 +1339,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -1366,7 +1351,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -1430,7 +1415,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1459,7 +1444,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -1494,7 +1479,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -1503,7 +1487,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -1579,7 +1563,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1627,7 +1611,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -1636,7 +1619,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1657,7 +1640,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1705,7 +1688,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -1722,7 +1704,7 @@
                 "//webrtc/modules/interface/",
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -1772,7 +1754,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1801,7 +1783,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -1836,7 +1818,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -1845,7 +1826,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1865,7 +1846,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1913,7 +1894,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -1928,7 +1908,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt"
@@ -1953,7 +1933,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -1982,7 +1962,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2017,7 +1997,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2026,7 +2005,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2051,7 +2030,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -2080,7 +2059,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2117,7 +2096,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2143,7 +2121,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/",
                 "//",
@@ -2192,7 +2170,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -2221,7 +2199,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2256,7 +2234,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2270,7 +2247,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2290,7 +2267,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -2319,7 +2296,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2354,7 +2331,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2366,7 +2342,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2389,7 +2365,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -2418,7 +2394,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2453,7 +2429,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2465,7 +2440,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2486,7 +2461,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -2515,7 +2490,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2550,7 +2525,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2561,7 +2535,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2582,7 +2556,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -2611,7 +2585,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2646,7 +2620,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2659,7 +2632,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2680,7 +2653,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -2709,7 +2682,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2744,7 +2717,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2758,7 +2730,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -2802,7 +2774,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -2831,7 +2803,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2868,7 +2840,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2887,7 +2858,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -2921,7 +2892,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -2950,7 +2921,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2985,7 +2956,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -2999,7 +2969,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3029,7 +2999,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -3058,7 +3028,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3093,7 +3063,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -3108,7 +3077,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/g711/include/"
             ],
@@ -3133,7 +3102,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -3162,7 +3131,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3197,7 +3166,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -3208,7 +3176,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3231,7 +3199,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -3260,7 +3228,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3295,7 +3263,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -3310,7 +3277,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/g722/include/"
             ],
@@ -3335,7 +3302,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -3364,7 +3331,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3399,7 +3366,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -3410,7 +3376,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3434,7 +3400,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -3463,7 +3429,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3498,7 +3464,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -3512,7 +3477,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/"
             ],
@@ -3538,7 +3503,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -3567,7 +3532,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3602,7 +3567,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -3616,7 +3580,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3695,7 +3659,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -3724,7 +3688,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3759,7 +3723,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -3771,7 +3734,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3794,7 +3757,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -3823,7 +3786,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3858,7 +3821,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -3874,7 +3836,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/fix/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3902,7 +3864,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -3931,7 +3893,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3966,7 +3928,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -3983,7 +3944,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/fix/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -4055,7 +4016,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -4084,7 +4045,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4122,7 +4083,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -4149,7 +4109,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -4257,7 +4217,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -4286,7 +4246,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4321,7 +4281,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -4337,7 +4296,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/pcm16b/include/",
                 "//",
@@ -4364,7 +4323,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -4393,7 +4352,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4428,7 +4387,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -4439,7 +4397,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/pcm16b/include/"
             ],
@@ -4462,7 +4420,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -4491,7 +4449,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4528,7 +4486,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -4547,7 +4504,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -4583,7 +4540,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -4612,7 +4569,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4648,7 +4605,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -4668,7 +4624,7 @@
             "include_dirs": [
                 "/include/opus/",
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -4696,7 +4652,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -4725,7 +4681,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4760,7 +4716,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -4773,7 +4728,7 @@
             "include_dirs": [
                 "/media/libopus/include/",
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -4795,7 +4750,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -4843,7 +4798,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -4858,7 +4812,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_conference_mixer/include/",
                 "//webrtc/modules/include/"
             ],
@@ -4892,7 +4846,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -4931,7 +4885,7 @@
                 "-Wundef"
             ],
             "defines": [
-                "LINUX_PULSE",
+                "WEBRTC_DUMMY_AUDIO_BUILD",
                 "V8_DEPRECATION_WARNINGS",
                 "USE_NSS_CERTS=1",
                 "USE_X11=1",
@@ -4941,7 +4895,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -4959,7 +4912,7 @@
             "include_dirs": [
                 "//webrtc/modules/audio_device/linux/",
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/include/",
                 "//webrtc/modules/audio_device/include/",
                 "//webrtc/modules/audio_device/dummy/",
@@ -4968,7 +4921,6 @@
                 "//webrtc/common_audio/vad/include/"
             ],
             "libs": [
-                "dl",
                 "rt",
                 "m"
             ],
@@ -4988,16 +4940,6 @@
                 "//webrtc/modules/audio_device/include/audio_device_defines.h",
                 "//webrtc/modules/audio_device/opensl/single_rw_fifo.cc",
                 "//webrtc/modules/audio_device/opensl/single_rw_fifo.h",
-                "//webrtc/modules/audio_device/audio_device_impl.cc",
-                "//webrtc/modules/audio_device/audio_device_impl.h",
-                "//webrtc/modules/audio_device/linux/latebindingsymboltable_linux.cc",
-                "//webrtc/modules/audio_device/linux/latebindingsymboltable_linux.h",
-                "//webrtc/modules/audio_device/linux/audio_device_pulse_linux.cc",
-                "//webrtc/modules/audio_device/linux/audio_device_pulse_linux.h",
-                "//webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc",
-                "//webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.h",
-                "//webrtc/modules/audio_device/linux/pulseaudiosymboltable_linux.cc",
-                "//webrtc/modules/audio_device/linux/pulseaudiosymboltable_linux.h",
                 "//webrtc/modules/audio_device/dummy/file_audio_device_factory.cc",
                 "//webrtc/modules/audio_device/dummy/file_audio_device_factory.h"
             ],
@@ -5015,7 +4957,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -5044,7 +4986,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5079,7 +5021,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -5091,7 +5032,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -5112,7 +5053,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -5141,7 +5082,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5176,7 +5117,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -5193,7 +5133,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt",
@@ -5220,7 +5160,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -5249,7 +5189,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5287,7 +5227,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -5306,7 +5245,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -5483,7 +5422,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -5512,7 +5451,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5547,7 +5486,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -5561,7 +5499,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -5597,7 +5535,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -5626,7 +5564,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5662,7 +5600,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -5671,7 +5608,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -5693,7 +5630,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -5742,7 +5679,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -5756,7 +5692,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt"
@@ -5782,7 +5718,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -5831,7 +5767,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -5851,7 +5786,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt",
@@ -5889,7 +5824,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -5918,7 +5853,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5954,7 +5889,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -5970,7 +5904,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "X11",
@@ -6041,7 +5975,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -6070,7 +6004,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -6105,7 +6039,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -6114,7 +6047,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -6135,7 +6068,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -6164,7 +6097,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -6199,7 +6132,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -6210,7 +6142,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -6240,7 +6172,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -6288,7 +6220,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -6302,7 +6233,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -6332,7 +6263,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -6380,7 +6311,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -6395,7 +6325,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt"
@@ -6424,7 +6354,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -6473,7 +6403,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -6486,7 +6415,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt"
@@ -6527,7 +6456,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -6576,7 +6505,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -6597,7 +6525,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -6769,7 +6697,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -6817,7 +6745,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -6838,7 +6765,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -6869,7 +6796,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -6917,7 +6844,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -6932,7 +6858,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt",
@@ -6958,7 +6884,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7006,7 +6932,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7022,7 +6947,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7056,7 +6981,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7104,7 +7029,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7128,7 +7052,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7218,7 +7142,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7266,7 +7190,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7282,7 +7205,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7321,7 +7244,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7369,7 +7292,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7383,7 +7305,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt"
@@ -7406,7 +7328,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7454,7 +7376,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7469,7 +7390,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7494,7 +7415,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7542,7 +7463,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7559,7 +7479,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7596,7 +7516,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7644,7 +7564,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7659,7 +7578,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7689,7 +7608,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7737,7 +7656,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7755,7 +7673,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -7793,7 +7711,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7841,7 +7759,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7853,7 +7770,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt"
@@ -7876,7 +7793,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7905,7 +7822,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -7940,7 +7857,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -7949,7 +7865,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -7969,7 +7885,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -7998,7 +7914,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -8033,7 +7949,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8042,7 +7957,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -8063,7 +7978,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -8092,7 +8007,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -8127,7 +8042,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8136,7 +8050,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -8157,7 +8071,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -8186,7 +8100,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -8222,7 +8136,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8235,7 +8148,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "rt"
@@ -8296,7 +8209,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -8344,7 +8257,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8372,7 +8284,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/",
                 "//webrtc/modules/audio_coding/include/",
@@ -8380,8 +8292,7 @@
             ],
             "libs": [
                 "rt",
-                "m",
-                "dl"
+                "m"
             ],
             "sources": [
                 "//webrtc/video/call_stats.cc",
@@ -8437,7 +8348,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -8466,7 +8377,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -8501,7 +8412,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8512,7 +8422,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -8534,7 +8444,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -8582,7 +8492,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8597,7 +8506,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/"
             ],
@@ -8623,7 +8532,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -8671,7 +8580,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8686,7 +8594,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -8713,7 +8621,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -8761,7 +8669,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8777,7 +8684,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -8804,7 +8711,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -8833,7 +8740,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -8868,7 +8775,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8881,7 +8787,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -8907,7 +8813,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -8955,7 +8861,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -8991,7 +8896,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -9005,8 +8910,7 @@
             ],
             "libs": [
                 "rt",
-                "m",
-                "dl"
+                "m"
             ],
             "sources": [
                 "//webrtc/voice_engine/channel.cc",
@@ -9079,7 +8983,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -9108,7 +9012,7 @@
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -9143,7 +9047,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -9172,7 +9075,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/",
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -9188,7 +9091,6 @@
             ],
             "libs": [
                 "rt",
-                "dl",
                 "m",
                 "X11",
                 "X11-xcb",
@@ -9220,7 +9122,7 @@
                 "-funwind-tables",
                 "-fPIC",
                 "-pipe",
-                "-B../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
+                "-B../../../../../media/webrtc/trunk/third_party/binutils/Linux_x64/Release/bin",
                 "-fcolor-diagnostics",
                 "-m64",
                 "-march=x86-64",
@@ -9268,7 +9170,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_MOZILLA_BUILD",
                 "WEBRTC_POSIX",
@@ -9277,7 +9178,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/firefox/obj-x86_64-pc-linux-gnu/gn-output/gen/"
+                "/home/dminor/src/firefox-signaling/obj-x86_64-pc-linux-gnu/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
