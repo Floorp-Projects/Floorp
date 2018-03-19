@@ -17,8 +17,6 @@
 interface nsIDOMCharacterData : nsIDOMNode
 {
   readonly attribute unsigned long        length;
-  void                      appendData(in DOMString arg)
-                                  raises(DOMException);
   void                      insertData(in unsigned long offset, 
                                        in DOMString arg)
                                   raises(DOMException);
