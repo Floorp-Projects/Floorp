@@ -17,7 +17,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=841850
 
   var observer = {
     observe: function(subject, topic, data) {
-      if(topic == "content-document-global-created" && data =="http://example.com") {
+      //Subject location check added for Bug 1391823 to avoid removeAsyncObserver from being called multiple times
+      if(topic == "content-document-global-created" && data =="http://example.com" && subject.location.href == "http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?blankTarget") {
          parent.parent.postMessage({"test": "blankTarget", "msg": "opened an http link with target=_blank from a secure page"}, "http://mochi.test:8888");
          SpecialPowers.removeAsyncObserver(observer, "content-document-global-created");
       }
