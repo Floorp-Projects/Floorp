@@ -42,13 +42,6 @@ window.onload = async function () {
   SimpleTest.finish();
 };
 
-
-function consoleAPICall(debuggerClient, consoleCall) {
-  const onConsoleAPICall = debuggerClient.addOneTimeListener("consoleAPICall");
-  consoleCall();
-  return onConsoleAPICall;
-}
-
   </script>
 </head>
 <body>
