@@ -6,7 +6,7 @@
 
 /*
  * Base class for DOM Core's Comment, DocumentType, Text,
- * CDATASection and nsIDOMProcessingInstruction nodes.
+ * CDATASection and ProcessingInstruction nodes.
  */
 
 #include "mozilla/DebugOnly.h"
