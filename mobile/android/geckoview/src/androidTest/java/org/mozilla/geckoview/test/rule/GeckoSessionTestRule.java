@@ -713,6 +713,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mCallbackProxy = Proxy.newProxyInstance(GeckoSession.class.getClassLoader(),
                                                 classes, recorder);
 
+        GeckoSession.preload(InstrumentationRegistry.getTargetContext(), new String[] { "-purgecaches" }, null, false);
         mMainSession = new GeckoSession(settings);
         prepareSession(mMainSession);
 
