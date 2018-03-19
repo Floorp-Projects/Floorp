@@ -107,12 +107,6 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
 
     void generateInvalidateEpilogue();
 
-    void setReturnDoubleRegs(LiveRegisterSet* regs);
-
-    void postWasmCall(LWasmCall* lir) {
-        MOZ_CRASH("postWasmCall");
-    }
-
   public:
     void visitOutOfLineBailout(OutOfLineBailout* ool);
     void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);

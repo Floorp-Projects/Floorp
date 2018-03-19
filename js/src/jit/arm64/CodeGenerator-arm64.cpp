@@ -647,17 +647,6 @@ CodeGenerator::visitNegF(LNegF* ins)
 }
 
 void
-CodeGeneratorARM64::setReturnDoubleRegs(LiveRegisterSet* regs)
-{
-    MOZ_ASSERT(ReturnFloat32Reg.code_ == FloatRegisters::s0);
-    MOZ_ASSERT(ReturnDoubleReg.code_ == FloatRegisters::d0);
-    FloatRegister s1 = {FloatRegisters::s1, FloatRegisters::Single};
-    regs->add(ReturnFloat32Reg);
-    regs->add(s1);
-    regs->add(ReturnDoubleReg);
-}
-
-void
 CodeGenerator::visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir)
 {
     Register elements = ToRegister(lir->elements());
