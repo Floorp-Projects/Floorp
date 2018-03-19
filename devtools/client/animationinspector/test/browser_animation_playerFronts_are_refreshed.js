@@ -9,27 +9,27 @@ requestLongerTimeout(2);
 // Check that the AnimationPlayerFront objects lifecycle is managed by the
 // AnimationController.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {controller, inspector} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {controller, inspector} = await openAnimationInspector();
 
   info("Selecting an animated node");
   // selectNode waits for the inspector-updated event before resolving, which
   // means the controller.PLAYERS_UPDATED_EVENT event has been emitted before
   // and players are ready.
-  yield selectNodeAndWaitForAnimations(".animated", inspector);
+  await selectNodeAndWaitForAnimations(".animated", inspector);
 
   is(controller.animationPlayers.length, 1,
     "One AnimationPlayerFront has been created");
 
   info("Selecting a node with mutliple animations");
-  yield selectNodeAndWaitForAnimations(".multi", inspector);
+  await selectNodeAndWaitForAnimations(".multi", inspector);
 
   is(controller.animationPlayers.length, 2,
     "2 AnimationPlayerFronts have been created");
 
   info("Selecting a node with no animations");
-  yield selectNodeAndWaitForAnimations(".still", inspector);
+  await selectNodeAndWaitForAnimations(".still", inspector);
 
   is(controller.animationPlayers.length, 0,
     "There are no more AnimationPlayerFront objects");

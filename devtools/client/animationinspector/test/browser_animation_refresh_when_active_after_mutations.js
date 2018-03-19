@@ -14,13 +14,13 @@ const EXPECTED_GRAPH_PATH_SEGMENTS = [{ x: 0, y: 0 },
                                       { x: 99999, y: 0.5 },
                                       { x: 100000, y: 0 }];
 
-add_task(function* () {
+add_task(async function() {
   info("Open animation inspector once so that activate animation mutations listener");
-  yield addTab("data:text/html;charset=utf8,<div id='target'>test</div>");
-  const { controller, inspector, panel } = yield openAnimationInspector();
+  await addTab("data:text/html;charset=utf8,<div id='target'>test</div>");
+  const { controller, inspector, panel } = await openAnimationInspector();
 
   info("Select other tool to hide animation inspector");
-  yield inspector.sidebar.select("ruleview");
+  await inspector.sidebar.select("ruleview");
 
   // Count players-updated event in controller.
   let updatedEventCount = 0;
@@ -29,17 +29,17 @@ add_task(function* () {
   });
 
   info("Make animation by eval in content");
-  yield evalInDebuggee(`document.querySelector('#target').animate(
+  await evalInDebuggee(`document.querySelector('#target').animate(
                         { transform: 'translate(100px)' },
                         { duration: 100000, easing: 'steps(2)' });`);
   info("Wait for animation mutations event");
-  yield controller.animationsFront.once("mutations");
+  await controller.animationsFront.once("mutations");
   info("Check players-updated events count");
   is(updatedEventCount, 0, "players-updated event shoud not be fired");
 
   info("Re-select animation inspector and check the UI");
-  yield inspector.sidebar.select("animationinspector");
-  yield waitForAnimationTimelineRendering(panel);
+  await inspector.sidebar.select("animationinspector");
+  await waitForAnimationTimelineRendering(panel);
 
   const timeBlocks = getAnimationTimeBlocks(panel);
   is(timeBlocks.length, 1, "One animation should display");
