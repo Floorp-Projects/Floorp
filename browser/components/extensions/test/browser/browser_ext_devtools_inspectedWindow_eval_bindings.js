@@ -189,5 +189,5 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -196,7 +196,7 @@ add_task(async function test_EME_forgetThisSite() {
     emeSessionIds[userContextId] = await setupEMEKey(tabs[userContextId].browser);
 
     // Close this tab.
-    await BrowserTestUtils.removeTab(tabs[userContextId].tab);
+    BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 
   // Clear all EME data for a given domain with originAttributes pattern.
@@ -213,6 +213,6 @@ add_task(async function test_EME_forgetThisSite() {
     await checkEMEKey(tabs[userContextId].browser, emeSessionIds[userContextId]);
 
     // Close this tab.
-    await BrowserTestUtils.removeTab(tabs[userContextId].tab);
+    BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 });

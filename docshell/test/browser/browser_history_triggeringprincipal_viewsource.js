@@ -45,6 +45,6 @@ add_task(async function() {
     is(gBrowser.selectedBrowser.currentURI.spec, VIEW_SRC_URI,
       "clicking .back() to view-source of html succeeded");
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 });

@@ -207,7 +207,7 @@ async function loadServiceWorkerTestPage(url) {
     return ContentTask.spawn(tab.linkedBrowser, {}, () =>
       content.document.body.getAttribute("data-test-service-worker-registered") === "true");
   }, `Fail to load service worker test ${url}`);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 function promiseServiceWorkersCleared() {

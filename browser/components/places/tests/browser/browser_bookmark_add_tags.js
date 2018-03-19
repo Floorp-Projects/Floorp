@@ -34,7 +34,7 @@ add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
 
   // Cleanup.
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 
   let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");

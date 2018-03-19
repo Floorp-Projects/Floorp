@@ -50,7 +50,7 @@ async function testSidebarBrowserStyle(sidebarAction, assertMessage) {
 
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function test_sidebar_without_setting_browser_style() {

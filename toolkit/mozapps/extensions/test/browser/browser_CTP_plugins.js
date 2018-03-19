@@ -73,7 +73,7 @@ add_task(async function() {
   let condition = () => PopupNotifications.getNotification("click-to-play-plugins", pluginBrowser);
   await BrowserTestUtils.waitForCondition(condition, "part4: should have a click-to-play notification");
 
-  await BrowserTestUtils.removeTab(pluginTab);
+  BrowserTestUtils.removeTab(pluginTab);
 
   let alwaysActivateItem = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "always-activate-menuitem");
   menu.selectedItem = alwaysActivateItem;
@@ -90,7 +90,7 @@ add_task(async function() {
     ok(objLoadingContent.activated, "part6: plugin should be activated");
   });
 
-  await BrowserTestUtils.removeTab(pluginTab);
+  BrowserTestUtils.removeTab(pluginTab);
 
   let neverActivateItem = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "never-activate-menuitem");
   menu.selectedItem = neverActivateItem;
@@ -106,7 +106,7 @@ add_task(async function() {
     ok(!objLoadingContent.activated, "part7: plugin should not be activated");
   });
 
-  await BrowserTestUtils.removeTab(pluginTab);
+  BrowserTestUtils.removeTab(pluginTab);
 
   let details = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
   is_element_visible(details, "part7: details link should be visible");
@@ -133,7 +133,7 @@ add_task(async function() {
     ok(objLoadingContent.activated, "part10: plugin should be activated");
   });
 
-  await BrowserTestUtils.removeTab(pluginTab);
+  BrowserTestUtils.removeTab(pluginTab);
 
   menu.selectedItem = askToActivateItem;
   askToActivateItem.doCommand();
@@ -144,7 +144,7 @@ add_task(async function() {
   condition = () => PopupNotifications.getNotification("click-to-play-plugins", pluginBrowser);
   await BrowserTestUtils.waitForCondition(condition, "part11: should have a click-to-play notification");
 
-  await BrowserTestUtils.removeTab(pluginTab);
+  BrowserTestUtils.removeTab(pluginTab);
 
   // causes appDisabled to be set
   managerWindow = await new Promise(resolve => {

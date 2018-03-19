@@ -107,8 +107,8 @@ add_task(async function test_switch_tab() {
   await waitForStatus(tab_get, "aborted");
 
   // Close tabs.
-  await BrowserTestUtils.removeTab(tab_create);
-  await BrowserTestUtils.removeTab(tab_get);
+  BrowserTestUtils.removeTab(tab_create);
+  BrowserTestUtils.removeTab(tab_get);
 });
 
 add_task(async function test_new_window_make() {
@@ -142,7 +142,7 @@ add_task(async function test_new_window_get() {
   await BrowserTestUtils.closeWindow(win);
 
   // Close tab.
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_minimize_make() {
@@ -168,7 +168,7 @@ add_task(async function test_minimize_make() {
   await new Promise(resolve => SimpleTest.waitForFocus(resolve, window));
 
   // Close tab.
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_minimize_get() {
@@ -194,5 +194,5 @@ add_task(async function test_minimize_get() {
   await new Promise(resolve => SimpleTest.waitForFocus(resolve, window));
 
   // Close tab.
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

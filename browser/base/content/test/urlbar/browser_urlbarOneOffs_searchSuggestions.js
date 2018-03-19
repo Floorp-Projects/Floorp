@@ -49,7 +49,7 @@ add_task(async function oneOffReturnAfterSuggestion() {
   await resultsPromise;
 
   await PlacesUtils.history.clear();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 // Clicks a one-off engine after selecting a search suggestion.
@@ -77,7 +77,7 @@ add_task(async function oneOffClickAfterSuggestion() {
   await resultsPromise;
 
   await PlacesUtils.history.clear();
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function overridden_engine_not_reused() {
@@ -102,7 +102,7 @@ add_task(async function overridden_engine_not_reused() {
     let newLabel = gURLBar.popup.richlistbox.children[1].label;
     Assert.notEqual(newLabel, label, "The label should have been updated");
 
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
 });
 
 function assertState(result, oneOff, textValue = undefined) {

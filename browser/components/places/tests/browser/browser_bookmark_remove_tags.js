@@ -41,7 +41,7 @@ add_task(async function test_remove_tags_from_BookmarkStar() {
   });
 
   registerCleanupFunction(async () => {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
 
   let bookmarkPanel = document.getElementById("editBookmarkPanel");

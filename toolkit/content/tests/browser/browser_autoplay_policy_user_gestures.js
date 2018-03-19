@@ -71,7 +71,7 @@ async function test_play_without_user_gesture() {
   await ContentTask.spawn(tab.linkedBrowser, null, play_video);
 
   info("- remove tab -");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 async function test_play_with_user_gesture(gesture) {
@@ -99,7 +99,7 @@ async function test_play_with_user_gesture(gesture) {
   await ContentTask.spawn(tab.linkedBrowser, gesture, play_video);
 
   info("- remove tab -");
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function start_test() {

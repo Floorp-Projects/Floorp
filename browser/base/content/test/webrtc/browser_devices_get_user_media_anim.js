@@ -49,7 +49,7 @@ var gTests = [
             "the animated sharing icon of the tab is now visible");
 
       // Ensure the icon disappears when selecting the tab.
-      await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+      BrowserTestUtils.removeTab(gBrowser.selectedTab);
       ok(tab.selected, "the tab with ongoing sharing is selected again");
       is(window.getComputedStyle(icon).display, "none",
          "the animated sharing icon is gone after selecting the tab again");

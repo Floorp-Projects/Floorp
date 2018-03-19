@@ -36,7 +36,7 @@ async function zoomNewTab(changeZoom, message) {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab");
   changeZoom();
   const level = tab.linkedBrowser.fullZoom;
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 
   await checkPreloadedZoom(level, `${message}: ${level}`);
 }

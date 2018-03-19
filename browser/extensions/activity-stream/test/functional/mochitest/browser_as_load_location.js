@@ -20,7 +20,7 @@ async function checkNewtabLoads(selector, message) {
   ok(found, message);
 
   // avoid leakage
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
 
 // Test with activity stream on

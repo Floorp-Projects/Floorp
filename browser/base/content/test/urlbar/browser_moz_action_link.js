@@ -25,7 +25,7 @@ add_task(async function() {
     // Finally, check that directly setting it produces the right results, too:
     URLBarSetURI(makeURI(uri));
     is(gURLBar.value, "about:blank", "URL bar should still be displaying about:blank");
-    await BrowserTestUtils.removeTab(newTab);
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(newTab);
+    BrowserTestUtils.removeTab(tab);
   }
 });

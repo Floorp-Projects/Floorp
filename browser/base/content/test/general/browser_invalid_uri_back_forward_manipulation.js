@@ -31,5 +31,5 @@ add_task(async function checkBackFromInvalidURI() {
     await promiseOtherPageLoaded;
     ok(gBrowser.webNavigation.canGoForward, "Should be able to go forward from previous page.");
   }
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

@@ -28,5 +28,5 @@ add_task(async function webNavigation_getFrameId_of_existing_main_frame() {
   await extension.awaitFinish("frameId checked");
   await extension.unload();
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

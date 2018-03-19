@@ -84,8 +84,8 @@ add_task(async function test_context_menu() {
   checkEvents(events, [["navigation", "search", "contextmenu", null, {engine: "other-MozSearch"}]]);
 
   contextMenu.hidePopup();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_about_newtab() {
@@ -119,5 +119,5 @@ add_task(async function test_about_newtab() {
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "about_newtab", "enter", {engine: "other-MozSearch"}]]);
 
-  await BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab);
 });

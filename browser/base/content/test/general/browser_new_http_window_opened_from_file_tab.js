@@ -12,7 +12,7 @@ add_task(async function() {
   const uriString = Services.io.newFileURI(dir).spec;
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uriString);
   registerCleanupFunction(async function() {
-    await BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(tab);
   });
   let browser = tab.linkedBrowser;
 
