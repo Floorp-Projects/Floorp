@@ -9,6 +9,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -16,7 +17,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIDOMNode.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
@@ -42,7 +42,7 @@ HTMLEditorEventListener::Connect(EditorBase* aEditorBase)
 }
 
 nsresult
-HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
+HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent)
 {
   if (DetachedFromEditor()) {
     return NS_OK;
@@ -53,22 +53,19 @@ HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
   HTMLEditor* htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  nsresult rv = aMouseEvent->AsEvent()->GetTarget(getter_AddRefs(target));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMEventTarget> target = aMouseEvent->GetTarget();
   NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
-  int32_t clientX, clientY;
-  aMouseEvent->GetClientX(&clientX);
-  aMouseEvent->GetClientY(&clientY);
+  int32_t clientX = aMouseEvent->ClientX();
+  int32_t clientY = aMouseEvent->ClientY();
   htmlEditor->OnMouseUp(clientX, clientY, element);
 
   return EditorEventListener::MouseUp(aMouseEvent);
 }
 
 nsresult
-HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
+HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
 {
   if (NS_WARN_IF(!aMouseEvent) || DetachedFromEditor()) {
     return NS_OK;
@@ -83,7 +80,7 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
   }
 
   WidgetMouseEvent* mousedownEvent =
-    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
+    aMouseEvent->WidgetEventPtr()->AsMouseEvent();
 
   HTMLEditor* htmlEditor = mEditorBase->AsHTMLEditor();
   MOZ_ASSERT(htmlEditor);
@@ -108,9 +105,7 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
   rv = aMouseEvent->GetDetail(&clickCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  rv = aMouseEvent->AsEvent()->GetExplicitOriginalTarget(getter_AddRefs(target));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMEventTarget> target = aMouseEvent->GetExplicitOriginalTarget();
   NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
@@ -186,15 +181,14 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
     // Prevent bubbling if we changed selection or
     //   for all context clicks
     if (element || isContextClick) {
-      aMouseEvent->AsEvent()->PreventDefault();
+      aMouseEvent->PreventDefault();
       return NS_OK;
     }
   } else if (!isContextClick && buttonNumber == 0 && clickCount == 1) {
     // if the target element is an image, we have to display resizers
-    int32_t clientX, clientY;
-    aMouseEvent->GetClientX(&clientX);
-    aMouseEvent->GetClientY(&clientY);
-    htmlEditor->OnMouseDown(clientX, clientY, element, aMouseEvent->AsEvent());
+    int32_t clientX = aMouseEvent->ClientX();
+    int32_t clientY = aMouseEvent->ClientY();
+    htmlEditor->OnMouseDown(clientX, clientY, element, aMouseEvent);
   }
 
   return EditorEventListener::MouseDown(aMouseEvent);

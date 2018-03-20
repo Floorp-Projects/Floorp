@@ -366,15 +366,6 @@ MouseEvent::ScreenY(CallerType aCallerType)
   return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).y;
 }
 
-
-NS_IMETHODIMP
-MouseEvent::GetClientX(int32_t* aClientX)
-{
-  NS_ENSURE_ARG_POINTER(aClientX);
-  *aClientX = ClientX();
-  return NS_OK;
-}
-
 int32_t
 MouseEvent::ClientX()
 {
@@ -384,14 +375,6 @@ MouseEvent::ClientX()
 
   return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).x;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetClientY(int32_t* aClientY)
-{
-  NS_ENSURE_ARG_POINTER(aClientY);
-  *aClientY = ClientY();
-  return NS_OK;
 }
 
 int32_t
