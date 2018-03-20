@@ -411,6 +411,7 @@ private:
   NS_FORWARD_NSIDOMEVENT(Event::)                                       \
   using Event::GetTarget; /* Because forwarding shadows. */             \
   using Event::GetOriginalTarget; /* Because forwarding shadows. */     \
+  using Event::GetExplicitOriginalTarget; /* Because forwarding shadows. */ \
   virtual void PreventDefault(JSContext* aCx, CallerType aCallerType) override { Event::PreventDefault(aCx, aCallerType); }
 
 #define NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(_to) \
@@ -431,6 +432,7 @@ private:
   NS_IMETHOD GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget) override { return _to GetOriginalTarget(aOriginalTarget); } \
   using Event::GetOriginalTarget; /* Because forwarding shadows. */     \
   NS_IMETHOD GetExplicitOriginalTarget(nsIDOMEventTarget** aExplicitOriginalTarget) override { return _to GetExplicitOriginalTarget(aExplicitOriginalTarget); } \
+  using Event::GetExplicitOriginalTarget; /* Because forwarding shadows. */ \
   NS_IMETHOD GetIsTrusted(bool* aIsTrusted) override { return _to GetIsTrusted(aIsTrusted); } \
   NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) override { return _to SetTarget(aTarget); } \
   NS_IMETHOD_(bool) IsDispatchStopped(void) override { return _to IsDispatchStopped(); } \

@@ -37,6 +37,7 @@ class EditorBase;
 
 namespace dom {
 class DragEvent;
+class MouseEvent;
 } // namespace dom
 
 class EditorEventListener : public nsIDOMEventListener
@@ -67,8 +68,8 @@ protected:
   nsresult HandleChangeComposition(WidgetCompositionEvent* aCompositionEvent);
   nsresult HandleStartComposition(WidgetCompositionEvent* aCompositionEvent);
   void HandleEndComposition(WidgetCompositionEvent* aCompositionEvent);
-  virtual nsresult MouseDown(nsIDOMMouseEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMMouseEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent);
+  virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) { return NS_OK; }
   virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent);
   nsresult Focus(InternalFocusEvent* aFocusEvent);
   nsresult Blur(InternalFocusEvent* aBlurEvent);
