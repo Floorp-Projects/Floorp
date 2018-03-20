@@ -1050,6 +1050,51 @@ class TestRecursiveMakeBackend(BackendTester):
             for line in lines:
                 self.assertNotIn('LIB_IS_C_ONLY', line)
 
+    def test_linkage(self):
+        env = self._consume('linkage', RecursiveMakeBackend)
+        expected_linkage = {
+            'prog': {
+                'SHARED_LIBS': ['$(DEPTH)/shared/baz', '$(DEPTH)/prog/qux/qux'],
+                'STATIC_LIBS': ['$(DEPTH)/static/bar%s' % env.lib_suffix],
+                'OS_LIBS': ['-lfoo', '-lbaz', '-lbar'],
+            },
+            'shared': {
+                'OS_LIBS': ['-lfoo'],
+                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux'],
+                'STATIC_LIBS': ['$(DEPTH)/shared/baz/shared_baz%s' %
+                                env.lib_suffix],
+            },
+            'static': {
+                'STATIC_LIBS': [
+                    '$(DEPTH)/static/bar/static_bar.a',
+                    '$(DEPTH)/real/foo.a',
+                ],
+                'OS_LIBS': ['-lbar'],
+                'SHARED_LIBS': [],
+            },
+            'real': {
+                'STATIC_LIBS': [
+                    '$(DEPTH)/shared/baz_s%s' % env.lib_suffix,
+                    '$(DEPTH)/real/foo/real_foo%s' % env.lib_suffix,
+                ],
+                'SHARED_LIBS': [],
+                'OS_LIBS': ['-lbaz'],
+            }
+        }
+        actual_linkage = {}
+        for name in expected_linkage.keys():
+            with open(os.path.join(env.topobjdir, name, 'backend.mk'), 'rb') as fh:
+                actual_linkage[name] = [line.rstrip() for line in fh.readlines()]
+        for name in expected_linkage:
+            for var in expected_linkage[name]:
+                for val in expected_linkage[name][var]:
+                    line = '%s += %s' % (var, val)
+                    self.assertIn(line,
+                                  actual_linkage[name])
+                    actual_linkage[name].remove(line)
+                for line in actual_linkage[name]:
+                    self.assertNotIn('%s +=' % var, line)
+
     def test_jar_manifests(self):
         env = self._consume('jar-manifests', RecursiveMakeBackend)
 
