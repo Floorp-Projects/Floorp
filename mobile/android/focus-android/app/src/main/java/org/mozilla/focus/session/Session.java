@@ -20,7 +20,7 @@ import java.util.UUID;
  * Keeping track of state / data of a single browsing session (tab).
  */
 public class Session {
-    private final Source source;
+    private Source source;
     private final String uuid;
     private final NonNullMutableLiveData<String> url;
     private final NonNullMutableLiveData<Integer> progress;
@@ -57,6 +57,10 @@ public class Session {
         this(Source.CUSTOM_TAB, url);
 
         this.customTabConfig = customTabConfig;
+    }
+
+    /* package */ void clearSource() {
+        source = Source.NONE;
     }
 
     public Source getSource() {
@@ -190,7 +194,7 @@ public class Session {
     /**
      * Remove the custom tab configuration. This will transform this session into a regular session.
      */
-    public void stripCustomTabConfiguration() {
+    /* package */ void stripCustomTabConfiguration() {
         customTabConfig = null;
     }
 }

@@ -54,6 +54,11 @@ public class TelemetrySessionObserver extends NonNullObserver<List<Session>> {
                 // interacted with the UI.
                 break;
 
+            case NONE:
+                // NONE is a workaround for testing and sessions that used to have another source
+                // that we needed to remove. We do not want to report telemetry for those here.
+                break;
+
             default:
                 throw new IllegalStateException("Unknown session source: " + source);
         }

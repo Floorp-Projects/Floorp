@@ -15,6 +15,9 @@ import org.mozilla.focus.session.SessionManager
  */
 class CustomTabActivity : MainActivity() {
     private lateinit var customTabId: String
+    private val customTabSession: Session by lazy {
+        SessionManager.getInstance().getCustomTabSessionByCustomTabIdOrThrow(customTabId)
+    }
 
     override fun isCustomTabMode(): Boolean = true
 
@@ -31,15 +34,14 @@ class CustomTabActivity : MainActivity() {
 
         if (isFinishing) {
             // Remove custom tab session
-            val sessionManager = SessionManager.getInstance()
-            val session = sessionManager.getCustomTabSessionByCustomTabId(customTabId)
 
-            if (session != null) {
-                sessionManager.removeSession(session.uuid)
-            }
+            val sessionManager: SessionManager = SessionManager.getInstance()
+
+            sessionManager
+                    .getCustomTabSessionByCustomTabId(customTabId)
+                    ?.let { sessionManager.removeCustomTabSession(it.uuid) }
         }
     }
 
-    override fun getCurrentSessionForActivity(): Session =
-            SessionManager.getInstance().getCustomTabSessionByCustomTabId(customTabId)
+    override fun getCurrentSessionForActivity() = customTabSession
 }

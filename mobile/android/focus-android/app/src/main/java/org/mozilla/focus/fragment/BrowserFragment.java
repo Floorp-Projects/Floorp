@@ -48,6 +48,7 @@ import android.widget.Toast;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.InstallFirefoxActivity;
+import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.animation.TransitionDrawableGroup;
 import org.mozilla.focus.architecture.NonNullObserver;
 import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver;
@@ -897,16 +898,25 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.open_in_firefox_focus: {
-                session.stripCustomTabConfiguration();
 
-                getWebView().saveWebViewState(session);
+                sessionManager.moveCustomTabToRegularSessions(session);
 
-                getActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.container, BrowserFragment.createForSession(session), BrowserFragment.FRAGMENT_TAG)
-                        .commit();
+                final IWebView webView = getWebView();
+                if (webView != null) {
+                    webView.saveWebViewState(session);
+                }
+
+                final Intent intent = new Intent(getContext(), MainActivity.class);
+                intent.setAction(Intent.ACTION_MAIN);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
 
                 TelemetryWrapper.openFullBrowser();
+
+                final Activity activity = getActivity();
+                if (activity != null) {
+                    activity.finish();
+                }
 
                 break;
             }

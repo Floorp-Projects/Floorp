@@ -294,7 +294,7 @@ public class SessionManagerTest {
     @Test
     public void testRemovingUnknownSessionHasNoEffect() {
         final SessionManager sessionManager = SessionManager.getInstance();
-        sessionManager.removeSession(UUID.randomUUID().toString());
+        sessionManager.removeRegularSession(UUID.randomUUID().toString());
 
         assertFalse(sessionManager.hasSession());
         assertEquals(0, sessionManager.getSessions().getValue().size());
@@ -328,6 +328,53 @@ public class SessionManagerTest {
         final String customTabId = "342d6440-760a-43ba-86c4-fe896eb20a29";
 
         final SessionManager sessionManager = SessionManager.getInstance();
-        sessionManager.getCustomTabSessionByCustomTabId(customTabId);
+        sessionManager.getCustomTabSessionByCustomTabIdOrThrow(customTabId);
+    }
+
+    @Test
+    public void testNullReturnedIfCustomTabDoesNotExist() {
+        final String customTabId = "342d6440-760a-43ba-86c4-fe896eb20a29";
+
+        final SessionManager sessionManager = SessionManager.getInstance();
+        assertNull(sessionManager.getCustomTabSessionByCustomTabId(customTabId));
+    }
+
+    @Test
+    public void testTransformingCustomTabIntoRegularSession() {
+        final String customTabId = "342d6440-760a-43ba-86c4-fe896eb20a29";
+
+        final SessionManager sessionManager = SessionManager.getInstance();
+
+        assertFalse(sessionManager.hasSession());
+        assertEquals(0, sessionManager.getCustomTabSessions().getValue().size());
+        assertEquals(0, sessionManager.getSessions().getValue().size());
+
+        final SafeIntent intent = new SafeIntent(new CustomTabsIntent.Builder()
+                .build()
+                .intent
+                .setData(Uri.parse(TEST_URL))
+                .putExtra(CustomTabConfig.EXTRA_CUSTOM_TAB_ID, customTabId));
+
+        sessionManager.handleIntent(RuntimeEnvironment.application, intent, null);
+
+        assertFalse(sessionManager.hasSession());
+        assertEquals(1, sessionManager.getCustomTabSessions().getValue().size());
+        assertEquals(0, sessionManager.getSessions().getValue().size());
+
+        final Session session = sessionManager.getCustomTabSessionByCustomTabId(customTabId);
+        assertNotNull(session);
+        assertTrue(session.isCustomTab());
+        assertEquals(Source.CUSTOM_TAB, session.getSource());
+        assertNotNull(session.getCustomTabConfig());
+
+        sessionManager.moveCustomTabToRegularSessions(session);
+
+        assertTrue(sessionManager.hasSession());
+        assertEquals(0, sessionManager.getCustomTabSessions().getValue().size());
+        assertEquals(1, sessionManager.getSessions().getValue().size());
+
+        assertFalse(session.isCustomTab());
+        assertEquals(Source.NONE, session.getSource());
+        assertNull(session.getCustomTabConfig());
     }
 }
