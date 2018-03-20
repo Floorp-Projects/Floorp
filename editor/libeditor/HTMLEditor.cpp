@@ -376,6 +376,10 @@ HTMLEditor::UpdateRootElement()
 already_AddRefed<nsIContent>
 HTMLEditor::FindSelectionRoot(nsINode* aNode)
 {
+  if (NS_WARN_IF(!aNode)) {
+    return nullptr;
+  }
+
   NS_PRECONDITION(aNode->IsNodeOfType(nsINode::eDOCUMENT) ||
                   aNode->IsContent(),
                   "aNode must be content or document node");
