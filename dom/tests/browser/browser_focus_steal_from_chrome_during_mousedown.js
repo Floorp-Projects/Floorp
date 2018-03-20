@@ -25,7 +25,7 @@ add_task(async function test() {
 
     // Synthesize mouse down event on browser object over the button, such that
     // the event propagates through both processes.
-    EventUtils.synthesizeMouse(tab.linkedBrowser, 20, 20, { "button": button }, null);
+    EventUtils.synthesizeMouse(tab.linkedBrowser, 20, 20, { "button": button });
 
     isnot(fm.focusedElement, document.getElementById("urlbar").inputField,
        "Failed to move focus away from search bar: button=" + button);

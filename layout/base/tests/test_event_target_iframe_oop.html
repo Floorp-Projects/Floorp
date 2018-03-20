@@ -152,14 +152,14 @@ function execTest() {
   // dialer.
   testMouseClick("dialer", 20, 1, "dialer", "correct hit on dialer with mouse input");
   testMouseClick("dialer", 20, 1, "dialer", "correct hit on dialer with touch input", {
-    inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+    inputSource: MouseEvent.MOZ_SOURCE_TOUCH
   });
 
   // Now this is it: we tap inside 'apps', but very close to the border between
   // 'apps' and 'dialer'. Without the fix from this bug, this test will fail.
   testMouseClick("apps", 20, 1, "apps", "apps <iframe mozbrowser remote> hit for mouse input");
   testMouseClick("apps", 20, 1, "apps", "apps <iframe mozbrowser remote> hit for touch input", {
-    inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+    inputSource: MouseEvent.MOZ_SOURCE_TOUCH
   });
 
   // Show small red spots of where the click happened

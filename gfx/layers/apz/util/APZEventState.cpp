@@ -11,6 +11,7 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -20,7 +21,6 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "nsCOMPtr.h"
 #include "nsDocShell.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsINamed.h"
 #include "nsIScrollableFrame.h"
@@ -31,7 +31,6 @@
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
 #include "TouchManager.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
@@ -242,7 +241,7 @@ APZEventState::FireContextmenuEvents(const nsCOMPtr<nsIPresShell>& aPresShell,
   bool eventHandled =
       APZCCallbackHelper::DispatchMouseEvent(aPresShell, NS_LITERAL_STRING("contextmenu"),
                          aPoint, 2, 1, WidgetModifiersToDOMModifiers(aModifiers), true,
-                         nsIDOMMouseEvent::MOZ_SOURCE_TOUCH,
+                         dom::MouseEventBinding::MOZ_SOURCE_TOUCH,
                          0 /* Use the default value here. */);
 
   APZES_LOG("Contextmenu event handled: %d\n", eventHandled);

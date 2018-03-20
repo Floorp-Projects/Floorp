@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/MouseScrollEvent.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/MouseEvents.h"
 #include "prtime.h"
 
@@ -25,7 +26,7 @@ MouseScrollEvent::MouseScrollEvent(EventTarget* aOwner,
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
     static_cast<WidgetMouseEventBase*>(mEvent)->inputSource =
-      nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+      MouseEventBinding::MOZ_SOURCE_UNKNOWN;
   }
 
   mDetail = mEvent->AsMouseScrollEvent()->mDelta;

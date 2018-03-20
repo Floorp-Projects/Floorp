@@ -26,6 +26,7 @@
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/MouseEvent.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
@@ -1855,7 +1856,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       }
 
       uint16_t inputSource = mouseEvent->MozInputSource();
-      bool isSourceTouchEvent = inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+      bool isSourceTouchEvent = inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH;
       if (FireShowDropDownEvent(mContent, !mComboboxFrame->IsDroppedDownOrHasParentPopup(),
                                 isSourceTouchEvent)) {
         return NS_OK;

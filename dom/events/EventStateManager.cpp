@@ -18,6 +18,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/UIEvent.h"
@@ -1892,7 +1893,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       if (aEvent->AsMouseEvent()) {
         startEvent.inputSource = aEvent->AsMouseEvent()->inputSource;
       } else if (aEvent->AsTouchEvent()) {
-        startEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+        startEvent.inputSource = MouseEventBinding::MOZ_SOURCE_TOUCH;
       } else {
         MOZ_ASSERT(false);
       }
@@ -3221,7 +3222,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             uint32_t flags = nsIFocusManager::FLAG_BYMOUSE |
                              nsIFocusManager::FLAG_NOSCROLL;
             // If this was a touch-generated event, pass that information:
-            if (mouseEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+            if (mouseEvent->inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH) {
               flags |= nsIFocusManager::FLAG_BYTOUCH;
             }
             nsCOMPtr<nsIDOMElement> newFocusElement = do_QueryInterface(newFocus);
@@ -3301,7 +3302,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     PointerEventHandler::ImplicitlyReleasePointerCapture(pointerEvent);
 
     if (pointerEvent->mMessage == ePointerCancel ||
-        pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+        pointerEvent->inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH) {
       // After pointercancel, pointer becomes invalid so we can remove relevant
       // helper from table. Regarding pointerup with non-hoverable device, the
       // pointer also becomes invalid. Hoverable (mouse/pen) pointers are valid

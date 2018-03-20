@@ -18,6 +18,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
 
@@ -5298,7 +5299,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     MOZ_ASSERT(aOutGeckoEvent->pressure >= 0.0 &&
                aOutGeckoEvent->pressure <= 1.0);
   }
-  aOutGeckoEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_PEN;
+  aOutGeckoEvent->inputSource = dom::MouseEventBinding::MOZ_SOURCE_PEN;
   aOutGeckoEvent->tiltX = lround([aPointerEvent tilt].x * 90);
   aOutGeckoEvent->tiltY = lround([aPointerEvent tilt].y * 90);
   aOutGeckoEvent->tangentialPressure = [aPointerEvent tangentialPressure];
