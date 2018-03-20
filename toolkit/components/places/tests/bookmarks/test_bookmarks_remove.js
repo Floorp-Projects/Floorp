@@ -137,13 +137,9 @@ add_task(async function remove_bookmark_orphans() {
   // Check there are no orphan annotations.
   let conn = await PlacesUtils.promiseDBConnection();
   let annoAttrs = await conn.execute(`SELECT id, name FROM moz_anno_attributes`);
-  // Bug 1306445 will eventually remove the mobile root anno.
-  Assert.equal(annoAttrs.length, 1);
-  Assert.equal(annoAttrs[0].getResultByName("name"), PlacesUtils.MOBILE_ROOT_ANNO);
+  Assert.equal(annoAttrs.length, 0);
   let annos = await conn.execute(`SELECT item_id, anno_attribute_id FROM moz_items_annos`);
-  Assert.equal(annos.length, 1);
-  Assert.equal(annos[0].getResultByName("item_id"), PlacesUtils.mobileFolderId);
-  Assert.equal(annos[0].getResultByName("anno_attribute_id"), annoAttrs[0].getResultByName("id"));
+  Assert.equal(annos.length, 0);
 });
 
 add_task(async function remove_bookmark_empty_title() {
