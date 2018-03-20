@@ -41,7 +41,8 @@ if CONFIG['MOZ_SANDBOX']:
     DIRS += ['/security/sandbox']
 
 DIRS += [
-    # Depends on NSS and NSPR
+    # Depends on NSS and NSPR, and must be built after sandbox or else B2G emulator
+    # builds fail.
     '/security/certverifier',
     # Depends on certverifier
     '/security/apps',
