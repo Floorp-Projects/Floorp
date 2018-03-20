@@ -37,6 +37,7 @@
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DragEvent.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Unused.h"
 #include "nsFrameLoader.h"
@@ -60,7 +61,7 @@ nsBaseDragService::nsBaseDragService()
     mDragAction(DRAGDROP_ACTION_NONE),
     mDragActionFromChildProcess(DRAGDROP_ACTION_UNINITIALIZED), mTargetSize(0,0),
     mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
-    mSuppressLevel(0), mInputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
+    mSuppressLevel(0), mInputSource(MouseEventBinding::MOZ_SOURCE_MOUSE)
 {
 }
 
@@ -478,7 +479,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
   mImageOffset = CSSIntPoint();
   mScreenPosition = CSSIntPoint();
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
-  mInputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
+  mInputSource = MouseEventBinding::MOZ_SOURCE_MOUSE;
 
   return NS_OK;
 }
