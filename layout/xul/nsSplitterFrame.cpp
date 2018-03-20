@@ -249,15 +249,7 @@ nsSplitterFrame::AttributeChanged(int32_t aNameSpaceID,
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                              aModType);
-  // if the alignment changed. Let the grippy know
-  if (aAttribute == nsGkAtoms::align) {
-    // tell the slider its attribute changed so it can
-    // update itself
-    nsIFrame* grippy = nullptr;
-    nsScrollbarButtonFrame::GetChildWithTag(nsGkAtoms::grippy, this, grippy);
-    if (grippy)
-      grippy->AttributeChanged(aNameSpaceID, aAttribute, aModType);
-  } else if (aAttribute == nsGkAtoms::state) {
+  if (aAttribute == nsGkAtoms::state) {
     mInner->UpdateState();
   }
 
