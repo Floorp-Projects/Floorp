@@ -191,8 +191,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
 
   if (mIsContext) {
 #ifndef NS_CONTEXT_MENU_IS_MOUSEUP
-    uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
-    mouseEvent->GetMozInputSource(&inputSource);
+    uint16_t inputSource = mouseEvent->MozInputSource();
     bool isTouch = inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
     // If the context menu launches on mousedown,
     // we have to fire focus on the content we clicked on

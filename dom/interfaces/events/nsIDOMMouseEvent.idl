@@ -57,7 +57,5 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   const unsigned short    MOZ_SOURCE_TOUCH      = 5;
   const unsigned short    MOZ_SOURCE_KEYBOARD   = 6;
 
-  readonly attribute unsigned short mozInputSource;
-
   bool getModifierState(in DOMString keyArg);
 };

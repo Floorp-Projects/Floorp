@@ -25,6 +25,7 @@
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
@@ -1806,7 +1807,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent != nullptr, "aMouseEvent is null.");
 
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
   UpdateInListState(aMouseEvent);
@@ -1860,10 +1861,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         }
       }
 
-      uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
-      if (NS_FAILED(mouseEvent->GetMozInputSource(&inputSource))) {
-        return NS_ERROR_FAILURE;
-      }
+      uint16_t inputSource = mouseEvent->MozInputSource();
       bool isSourceTouchEvent = inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
       if (FireShowDropDownEvent(mContent, !mComboboxFrame->IsDroppedDownOrHasParentPopup(),
                                 isSourceTouchEvent)) {
