@@ -25,11 +25,9 @@ class AnimatedPropertyList extends PureComponent {
     super(props);
 
     this.state = {
-      // Map which is mapped property name and the keyframes.
-      animatedPropertyMap: null,
-      // Object which is mapped property name and the animation type
-      // such the "color", "discrete", "length" and so on.
-      animationTypes: null,
+      // Array of object which has the property name, the keyframes, its aniamtion type
+      // and unchanged flag.
+      animatedProperties: null,
       // To avoid rendering while the state is updating
       // since we call an async function in updateState.
       isStateUpdating: false,
@@ -68,12 +66,14 @@ class AnimatedPropertyList extends PureComponent {
       emitEventForTest,
     } = this.props;
 
-    let animatedPropertyMap = null;
-    let animationTypes = null;
+    let propertyMap = null;
+    let propertyNames = null;
+    let types = null;
 
     try {
-      animatedPropertyMap = await getAnimatedPropertyMap(animation);
-      animationTypes = await animation.getAnimationTypes(animatedPropertyMap.keys());
+      propertyMap = await getAnimatedPropertyMap(animation);
+      propertyNames = [...propertyMap.keys()];
+      types = await animation.getAnimationTypes(propertyNames);
     } catch (e) {
       // Expected if we've already been destroyed or other node have been selected
       // in the meantime.
@@ -81,10 +81,25 @@ class AnimatedPropertyList extends PureComponent {
       return;
     }
 
+    const animatedProperties = propertyNames.map(name => {
+      const keyframes = propertyMap.get(name);
+      const type = types[name];
+      const isUnchanged =
+        keyframes.every(keyframe => keyframe.value === keyframes[0].value);
+      return { isUnchanged, keyframes, name, type };
+    });
+
+    animatedProperties.sort((a, b) => {
+      if (a.isUnchanged === b.isUnchanged) {
+        return a.name > b.name ? 1 : -1;
+      }
+
+      return a.isUnchanged ? 1 : -1;
+    });
+
     this.setState(
       {
-        animatedPropertyMap,
-        animationTypes,
+        animatedProperties,
         isStateUpdating: false
       }
     );
@@ -98,11 +113,10 @@ class AnimatedPropertyList extends PureComponent {
       simulateAnimation,
     } = this.props;
     const {
-      animatedPropertyMap,
-      animationTypes,
+      animatedProperties,
     } = this.state;
 
-    if (!animatedPropertyMap) {
+    if (!animatedProperties) {
       return null;
     }
 
@@ -110,9 +124,8 @@ class AnimatedPropertyList extends PureComponent {
       {
         className: "animated-property-list"
       },
-      [...animatedPropertyMap.entries()].map(([name, keyframes]) => {
+      animatedProperties.map(({ keyframes, name, type }) => {
         const state = this.getPropertyState(name);
-        const type = animationTypes[name];
         return AnimatedPropertyItem(
           {
             getComputedStyle,
