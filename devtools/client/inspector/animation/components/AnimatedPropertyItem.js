@@ -15,6 +15,7 @@ class AnimatedPropertyItem extends PureComponent {
   static get propTypes() {
     return {
       getComputedStyle: PropTypes.func.isRequired,
+      isUnchanged: PropTypes.bool.isRequired,
       keyframes: PropTypes.array.isRequired,
       name: PropTypes.string.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
@@ -26,6 +27,7 @@ class AnimatedPropertyItem extends PureComponent {
   render() {
     const {
       getComputedStyle,
+      isUnchanged,
       keyframes,
       name,
       simulateAnimation,
@@ -35,7 +37,8 @@ class AnimatedPropertyItem extends PureComponent {
 
     return dom.li(
       {
-        className: "animated-property-item"
+        className: "animated-property-item" +
+                   (isUnchanged ? " unchanged" : ""),
       },
       AnimatedPropertyName(
         {
