@@ -57,13 +57,14 @@ class ProgressDelegateTest : BaseSessionTest() {
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
-            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int): Boolean {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int, response: GeckoSession.Response<Boolean>) {
                 if (sessionRule.currentCall.counter == 1) {
                     assertThat("URI should be " + testUri, uri, equalTo(testUri));
                 } else {
                     assertThat("URI should be about:neterror", uri, startsWith("about:neterror"));
                 }
-                return false
+                response.respond(false)
             }
 
             @AssertCalled(count = 1)
