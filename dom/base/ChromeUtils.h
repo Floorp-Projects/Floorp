@@ -155,10 +155,6 @@ public:
 
   static void ClearRecentJSDevError(GlobalObject& aGlobal);
 
-#ifndef RELEASE_OR_BETA
-  static void RequestPerformanceMetrics(GlobalObject& aGlobal);
-#endif
-
   static void Import(const GlobalObject& aGlobal,
                      const nsAString& aResourceURI,
                      const Optional<JS::Handle<JSObject*>>& aTargetObj,
