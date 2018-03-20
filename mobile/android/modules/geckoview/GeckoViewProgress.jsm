@@ -222,17 +222,19 @@ class GeckoViewProgress extends GeckoViewModule {
   }
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    debug("onStateChange()");
+    debug(`onStateChange() isTopLevel=${aWebProgress.isTopLevel}, stateFlags=${aStateFlags}, state=${aStatus}`);
 
     if (!aWebProgress.isTopLevel) {
       return;
     }
 
+    const uriSpec = aRequest.QueryInterface(Ci.nsIChannel).URI.displaySpec;
+    debug(`onStateChange() URI=${uriSpec}`);
+
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-      let uri = aRequest.QueryInterface(Ci.nsIChannel).URI;
-      let message = {
+      const message = {
         type: "GeckoView:PageStart",
-        uri: uri.displaySpec,
+        uri: uriSpec,
       };
 
       this.eventDispatcher.sendRequest(message);
@@ -248,6 +250,8 @@ class GeckoViewProgress extends GeckoViewModule {
   }
 
   onSecurityChange(aWebProgress, aRequest, aState) {
+    debug("onSecurityChange()");
+
     // Don't need to do anything if the data we use to update the UI hasn't changed
     if (this._state === aState && !this._hostChanged) {
       return;
@@ -267,6 +271,15 @@ class GeckoViewProgress extends GeckoViewModule {
   }
 
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
+    debug(`onLocationChange() location=${aLocationURI.displaySpec}, flags=${aFlags}`);
+
     this._hostChanged = true;
+    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
+      // We apparently don't get a STATE_STOP in onStateChange(), so emit PageStop here
+      this.eventDispatcher.sendRequest({
+        type: "GeckoView:PageStop",
+        success: false
+      });
+    }
   }
 }
