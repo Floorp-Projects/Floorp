@@ -103,7 +103,7 @@ static setLcdFilterFunc setLcdFilter;
 #define MAX_OPEN_FACES 10
 /* This is the maximum font size we allow to be passed to FT_Set_Char_Size
  */
-#define MAX_FONT_SIZE 1000
+#define MAX_FONT_SIZE 2000
 
 extern FT_Face mozilla_NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex);
 extern FT_Face mozilla_NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize, int aFaceIndex);
