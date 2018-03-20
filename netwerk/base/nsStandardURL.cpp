@@ -3590,10 +3590,29 @@ ToIPCSegment(const nsStandardURL::URLSegment& aSegment)
 }
 
 inline
-nsStandardURL::URLSegment
-FromIPCSegment(const ipc::StandardURLSegment& aSegment)
+MOZ_MUST_USE bool
+FromIPCSegment(const nsACString& aSpec, const ipc::StandardURLSegment& aSegment, nsStandardURL::URLSegment& aTarget)
 {
-    return nsStandardURL::URLSegment(aSegment.position(), aSegment.length());
+    // This seems to be just an empty segment.
+    if (aSegment.length() == -1) {
+        aTarget = nsStandardURL::URLSegment();
+        return true;
+    }
+
+    // A value of -1 means an empty segment, but < -1 is undefined.
+    if (NS_WARN_IF(aSegment.length() < -1)) {
+        return false;
+    }
+
+    // Make sure the segment does not extend beyond the spec.
+    if (NS_WARN_IF(aSegment.position() + aSegment.length() > aSpec.Length())) {
+        return false;
+    }
+
+    aTarget.mPos = aSegment.position();
+    aTarget.mLen = aSegment.length();
+
+    return true;
 }
 
 void
@@ -3660,22 +3679,37 @@ nsStandardURL::Deserialize(const URIParams& aParams)
     mPort = params.port();
     mDefaultPort = params.defaultPort();
     mSpec = params.spec();
-    mScheme = FromIPCSegment(params.scheme());
-    mAuthority = FromIPCSegment(params.authority());
-    mUsername = FromIPCSegment(params.username());
-    mPassword = FromIPCSegment(params.password());
-    mHost = FromIPCSegment(params.host());
-    mPath = FromIPCSegment(params.path());
-    mFilepath = FromIPCSegment(params.filePath());
-    mDirectory = FromIPCSegment(params.directory());
-    mBasename = FromIPCSegment(params.baseName());
-    mExtension = FromIPCSegment(params.extension());
-    mQuery = FromIPCSegment(params.query());
-    mRef = FromIPCSegment(params.ref());
+    NS_ENSURE_TRUE(mSpec.Length() <= (uint32_t) net_GetURLMaxLength(), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.scheme(), mScheme), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.authority(), mAuthority), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.username(), mUsername), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.password(), mPassword), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.host(), mHost), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.path(), mPath), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.filePath(), mFilepath), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.directory(), mDirectory), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.baseName(), mBasename), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.extension(), mExtension), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.query(), mQuery), false);
+    NS_ENSURE_TRUE(FromIPCSegment(mSpec, params.ref(), mRef), false);
+
     mMutable = params.isMutable();
     mSupportsFileURL = params.supportsFileURL();
 
     // mSpecEncoding and mDisplayHost are just caches that can be recovered as needed.
+
+    // Some sanity checks
+    NS_ENSURE_TRUE(mScheme.mPos == 0, false);
+    NS_ENSURE_TRUE(mScheme.mLen > 0, false);
+    // Make sure scheme is followed by :// (3 characters)
+    NS_ENSURE_TRUE(mScheme.mLen < INT32_MAX - 3, false); // avoid overflow
+    NS_ENSURE_TRUE(mSpec.Length() >= (uint32_t) mScheme.mLen + 3, false);
+    NS_ENSURE_TRUE(nsDependentCSubstring(mSpec, mScheme.mLen, 3).EqualsLiteral("://"), false);
+    NS_ENSURE_TRUE(mPath.mLen != -1 && mSpec.CharAt(mPath.mPos) == '/', false);
+    NS_ENSURE_TRUE(mPath.mPos == mFilepath.mPos, false);
+    NS_ENSURE_TRUE(mQuery.mLen == -1 || mSpec.CharAt(mQuery.mPos - 1) == '?', false);
+    NS_ENSURE_TRUE(mRef.mLen == -1 || mSpec.CharAt(mRef.mPos - 1) == '#', false);
+
     return true;
 }
 

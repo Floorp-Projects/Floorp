@@ -106,14 +106,10 @@ Would produce the following ``try_task_config.json``:
       "tasks":[
         "test-linux64-qr/debug-reftest-e10s-1",
         "test-linux64-qr/opt-reftest-e10s-1",
-        "test-linux64-stylo-disabled/debug-reftest-e10s-1",
-        "test-linux64-stylo-disabled/opt-reftest-e10s-1",
         "test-linux64/debug-reftest-e10s-1",
         "test-linux64/debug-reftest-no-accel-e10s-1",
-        "test-linux64/debug-reftest-stylo-e10s-1",
         "test-linux64/opt-reftest-e10s-1",
         "test-linux64/opt-reftest-no-accel-e10s-1",
-        "test-linux64/opt-reftest-stylo-e10s-1"
       ]
     }
 

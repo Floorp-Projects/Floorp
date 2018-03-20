@@ -40,7 +40,6 @@ linux64/debug:
     test-sets:
         - common-tests
         - web-platform-tests
-        - reftest-stylo
         - mochitest-headless
 linux64/opt:
     build-platform: linux64/opt
@@ -48,7 +47,6 @@ linux64/opt:
         - common-tests
         - web-platform-tests
         - opt-only-tests
-        - reftest-stylo
         - desktop-screenshot-capture
         - talos
         - awsy
@@ -83,26 +81,6 @@ linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - common-tests
-
-# Stylo disabled mode only runs a subset of tests.
-linux32-stylo-disabled/debug:
-    build-platform: linux/debug
-    test-sets:
-        - stylo-disabled-tests
-linux32-stylo-disabled/opt:
-    build-platform: linux/opt
-    test-sets:
-        - stylo-disabled-tests
-linux64-stylo-disabled/debug:
-    build-platform: linux64/debug
-    test-sets:
-        - stylo-disabled-tests
-        - devtools-tests
-linux64-stylo-disabled/opt:
-    build-platform: linux64/opt
-    test-sets:
-        - stylo-disabled-tests
-        - devtools-tests
 
 # Stylo sequential runs check memory and performance when using a single thread.
 linux64-stylo-sequential/opt:

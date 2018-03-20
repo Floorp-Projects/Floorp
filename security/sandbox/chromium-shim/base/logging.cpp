@@ -28,6 +28,7 @@
 
 #include <algorithm>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Unused.h"
 
 namespace logging {
@@ -115,6 +116,9 @@ LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
 }
 
 LogMessage::~LogMessage() {
+  if (severity_ == LOG_FATAL) {
+    MOZ_CRASH("Hit fatal chromium sandbox condition.");
+  }
 }
 
 SystemErrorCode GetLastSystemErrorCode() {

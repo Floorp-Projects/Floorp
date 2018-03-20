@@ -217,6 +217,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mRequireCORSPreflight(false)
   , mReportCollector(new ConsoleReportCollector())
   , mAltDataLength(0)
+  , mAltDataForChild(false)
   , mForceMainDocumentChannel(false)
   , mIsTrackingResource(false)
   , mLastRedirectFlags(0)
@@ -3689,6 +3690,8 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     // Preserve Integrity metadata.
     rv = httpInternal->SetIntegrityMetadata(mIntegrityMetadata);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    httpInternal->SetAltDataForChild(mAltDataForChild);
   }
 
   // transfer application cache information
@@ -4436,6 +4439,12 @@ HttpBaseChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsafeHe
 
   mRequireCORSPreflight = true;
   mUnsafeHeaders = aUnsafeHeaders;
+}
+
+void
+HttpBaseChannel::SetAltDataForChild(bool aIsForChild)
+{
+  mAltDataForChild = aIsForChild;
 }
 
 NS_IMETHODIMP

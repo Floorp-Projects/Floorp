@@ -179,5 +179,5 @@ fuzzy-if(skiaContent,1,145) == rounded-background-color-width-left-6.html rounde
 
 == iframe-1.html iframe-1-ref.html
 
-fuzzy-if(stylo||styloVsGecko,128,220) == viewport-units-rounding-1.html viewport-units-rounding-1-ref.html
+fuzzy(128,220) == viewport-units-rounding-1.html viewport-units-rounding-1-ref.html
 == viewport-units-rounding-2.html about:blank

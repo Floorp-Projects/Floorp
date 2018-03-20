@@ -231,13 +231,13 @@ class TestTryOptionSyntax(unittest.TestCase):
         ]))
 
     def test_u_platforms_pretty(self):
-        """-u gtest[Ubuntu] selects the linux, linux64, linux64-asan, linux64-stylo-disabled,
+        """-u gtest[Ubuntu] selects the linux, linux64, linux64-asan
         and linux64-stylo-sequential platforms for gtest"""
         parameters = {'try_options': parse_message('try: -u gtest[Ubuntu]')}
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
             {'test': 'gtest', 'platforms': ['linux32', 'linux64', 'linux64-asan',
-                                            'linux64-stylo-disabled', 'linux64-stylo-sequential']},
+                                            'linux64-stylo-sequential']},
         ]))
 
     def test_u_platforms_negated(self):
