@@ -1837,7 +1837,6 @@ class BaseCompiler final : public BaseCompilerInterface
     TempAllocator&              alloc_;
     const ValTypeVector&        locals_;         // Types of parameters and locals
     bool                        deadCode_;       // Flag indicating we should decode & discard the opcode
-    bool                        debugEnabled_;
     BCESet                      bceSafe_;        // Locals that have been bounds checked and not updated since
     ValTypeVector               SigD_;
     ValTypeVector               SigF_;
@@ -1847,7 +1846,6 @@ class BaseCompiler final : public BaseCompilerInterface
     MIRTypeVector               SigPIIL_;
     MIRTypeVector               SigPILL_;
     NonAssertingLabel           returnLabel_;
-    CompileMode                 mode_;
 
     LatentOp                    latentOp_;       // Latent operation for branch (seen next)
     ValType                     latentType_;     // Operand type, if latentOp_ is true
@@ -1879,13 +1877,11 @@ class BaseCompiler final : public BaseCompilerInterface
 
   public:
     BaseCompiler(const ModuleEnvironment& env,
-                 Decoder& decoder,
                  const FuncCompileInput& input,
                  const ValTypeVector& locals,
-                 bool debugEnabled,
+                 Decoder& decoder,
                  TempAllocator* alloc,
-                 MacroAssembler* masm,
-                 CompileMode mode);
+                 MacroAssembler* masm);
 
     MOZ_MUST_USE bool init();
 
@@ -3155,13 +3151,13 @@ class BaseCompiler final : public BaseCompilerInterface
 
         GenerateFunctionPrologue(masm,
                                  env_.funcSigs[func_.index]->id,
-                                 mode_ == CompileMode::Tier1 ? Some(func_.index) : Nothing(),
+                                 env_.mode == CompileMode::Tier1 ? Some(func_.index) : Nothing(),
                                  &offsets_);
 
         // Initialize DebugFrame fields before the stack overflow trap so that
         // we have the invariant that all observable Frames in a debugEnabled
         // Module have valid DebugFrames.
-        if (debugEnabled_) {
+        if (env_.debugEnabled()) {
 #ifdef JS_CODEGEN_ARM64
             static_assert(DebugFrame::offsetOfFrame() % WasmStackAlignment == 0, "aligned");
 #endif
@@ -3205,12 +3201,12 @@ class BaseCompiler final : public BaseCompilerInterface
 
         fr.zeroLocals(&ra);
 
-        if (debugEnabled_)
+        if (env_.debugEnabled())
             insertBreakablePoint(CallSiteDesc::EnterFrame);
     }
 
     void saveResult() {
-        MOZ_ASSERT(debugEnabled_);
+        MOZ_ASSERT(env_.debugEnabled());
         size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
         Address resultsAddress(masm.getStackPointer(), debugFrameOffset + DebugFrame::offsetOfResults());
         switch (sig().ret()) {
@@ -3234,7 +3230,7 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void restoreResult() {
-        MOZ_ASSERT(debugEnabled_);
+        MOZ_ASSERT(env_.debugEnabled());
         size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
         Address resultsAddress(masm.getStackPointer(), debugFrameOffset + DebugFrame::offsetOfResults());
         switch (sig().ret()) {
@@ -3273,7 +3269,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
         masm.bind(&returnLabel_);
 
-        if (debugEnabled_) {
+        if (env_.debugEnabled()) {
             // Store and reload the return value from DebugFrame::return so that
             // it can be clobbered, and/or modified by the debug trap.
             saveResult();
@@ -8109,7 +8105,7 @@ BaseCompiler::emitSetGlobal()
 //
 // Finally, when the debugger allows locals to be mutated we must disable BCE
 // for references via a local, by returning immediately from bceCheckLocal if
-// debugEnabled_ is true.
+// env_.debugEnabled() is true.
 //
 //
 // Alignment check elimination.
@@ -8964,11 +8960,11 @@ BaseCompiler::emitBody()
         OpBytes op;
         CHECK(iter_.readOp(&op));
 
-        // When debugEnabled_, every operator has breakpoint site but Op::End.
-        if (debugEnabled_ && op.b0 != (uint16_t)Op::End) {
+        // When env_.debugEnabled(), every operator has breakpoint site but Op::End.
+        if (env_.debugEnabled() && op.b0 != (uint16_t)Op::End) {
             // TODO sync only registers that can be clobbered by the exit
             // prologue/epilogue or disable these registers for use in
-            // baseline compiler when debugEnabled_ is set.
+            // baseline compiler when env_.debugEnabled() is set.
             sync();
 
             insertBreakablePoint(CallSiteDesc::Breakpoint);
@@ -9711,13 +9707,11 @@ BaseCompiler::emitFunction()
 }
 
 BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
-                           Decoder& decoder,
                            const FuncCompileInput& func,
                            const ValTypeVector& locals,
-                           bool debugEnabled,
+                           Decoder& decoder,
                            TempAllocator* alloc,
-                           MacroAssembler* masm,
-                           CompileMode mode)
+                           MacroAssembler* masm)
     : env_(env),
       iter_(env, decoder),
       func_(func),
@@ -9725,9 +9719,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       alloc_(*alloc),
       locals_(locals),
       deadCode_(false),
-      debugEnabled_(debugEnabled),
       bceSafe_(0),
-      mode_(mode),
       latentOp_(LatentOp::None),
       latentType_(ValType::I32),
       latentIntCmp_(Assembler::Equal),
@@ -9769,7 +9761,7 @@ BaseCompiler::init()
         return false;
     }
 
-    if (!fr.setupLocals(locals_, sig().args(), debugEnabled_, &localInfo_))
+    if (!fr.setupLocals(locals_, sig().args(), env_.debugEnabled(), &localInfo_))
         return false;
 
     return true;
@@ -9849,7 +9841,7 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
 
         // One-pass baseline compilation.
 
-        BaseCompiler f(env, d, func, locals, env.debugEnabled(), &alloc, &masm, env.mode);
+        BaseCompiler f(env, func, locals, d, &alloc, &masm);
         if (!f.init())
             return false;
 
