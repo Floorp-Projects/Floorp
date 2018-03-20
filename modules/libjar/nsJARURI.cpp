@@ -268,7 +268,8 @@ NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsJARURI::Mutator,
                                 nsIURISetters,
                                 nsIURIMutator,
                                 nsIURLMutator,
-                                nsISerializable)
+                                nsISerializable,
+                                nsIJARURIMutator)
 
 NS_IMETHODIMP
 nsJARURI::Mutator::SetFileName(const nsACString& aFileName, nsIURIMutator** aMutator)
