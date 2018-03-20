@@ -16,33 +16,6 @@
 [builtinclass, uuid(5bdab8d8-7933-4c5c-b6d1-ab34481237f7)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
-  readonly attribute long               mozMovementX;
-  readonly attribute long               mozMovementY;
-
-  readonly attribute unsigned short     buttons;
-  readonly attribute nsIDOMEventTarget  relatedTarget;
-
-  void                      initMouseEvent(in DOMString typeArg,
-                                           in boolean canBubbleArg,
-                                           in boolean cancelableArg,
-                                           in mozIDOMWindow viewArg,
-                                           in long detailArg,
-                                           in long screenXArg,
-                                           in long screenYArg,
-                                           in long clientXArg,
-                                           in long clientYArg,
-                                           in boolean ctrlKeyArg,
-                                           in boolean altKeyArg,
-                                           in boolean shiftKeyArg,
-                                           in boolean metaKeyArg,
-                                           in unsigned short buttonArg,
-                                           in nsIDOMEventTarget relatedTargetArg);
-
-
-  // Finger or touch pressure event value
-  // ranges between 0.0 and 1.0
-  readonly attribute float mozPressure;
-
   const unsigned short    MOZ_SOURCE_UNKNOWN    = 0;
   const unsigned short    MOZ_SOURCE_MOUSE      = 1;
   const unsigned short    MOZ_SOURCE_PEN        = 2;
@@ -50,6 +23,4 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   const unsigned short    MOZ_SOURCE_CURSOR     = 4;
   const unsigned short    MOZ_SOURCE_TOUCH      = 5;
   const unsigned short    MOZ_SOURCE_KEYBOARD   = 6;
-
-  bool getModifierState(in DOMString keyArg);
 };
