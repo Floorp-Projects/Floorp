@@ -1001,6 +1001,8 @@ IonCacheIRCompiler::emitMegamorphicLoadSlotResult()
     masm.adjustStack(sizeof(Value));
 
     masm.branchIfFalseBool(scratch2, failure->label());
+    if (JitOptions.spectreJitToCxxCalls)
+        masm.speculationBarrier();
     return true;
 }
 
@@ -1194,6 +1196,9 @@ IonCacheIRCompiler::emitCallNativeGetterResult()
     Address outparam(masm.getStackPointer(), IonOOLNativeExitFrameLayout::offsetOfResult());
     masm.loadValue(outparam, output.valueReg());
 
+    if (JitOptions.spectreJitToCxxCalls)
+        masm.speculationBarrier();
+
     masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
     return true;
 }
@@ -1252,6 +1257,10 @@ IonCacheIRCompiler::emitCallProxyGetResult()
     // Load the outparam vp[0] into output register(s).
     Address outparam(masm.getStackPointer(), IonOOLProxyExitFrameLayout::offsetOfResult());
     masm.loadValue(outparam, output.valueReg());
+
+    // Spectre mitigation in case of speculative execution within C++ code.
+    if (JitOptions.spectreJitToCxxCalls)
+        masm.speculationBarrier();
 
     // masm.leaveExitFrame & pop locals
     masm.adjustStack(IonOOLProxyExitFrameLayout::Size());

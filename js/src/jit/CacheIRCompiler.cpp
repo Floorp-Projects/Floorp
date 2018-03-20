@@ -2706,6 +2706,8 @@ CacheIRCompiler::emitMegamorphicLoadSlotByValueResult()
     masm.jump(failure->label());
 
     masm.bind(&ok);
+    if (JitOptions.spectreJitToCxxCalls)
+        masm.speculationBarrier();
     masm.setFramePushed(framePushed);
     masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
     masm.adjustStack(sizeof(Value));
