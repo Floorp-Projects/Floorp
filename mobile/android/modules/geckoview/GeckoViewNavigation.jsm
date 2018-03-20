@@ -56,7 +56,30 @@ class GeckoViewNavigation extends GeckoViewModule {
         this.browser.goForward();
         break;
       case "GeckoView:LoadUri":
-        this.browser.loadURI(aData.uri, null, null, null);
+        const { uri, referrer, baseUri, flags } = aData;
+
+        let navFlags = 0;
+
+        // These need to match the values in GeckoSession.LOAD_TYPE_*
+        if (flags & (1 << 0)) {
+          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+        }
+
+        if (flags & (1 << 1)) {
+          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
+        }
+
+        if (flags & (1 << 2)) {
+          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_EXTERNAL;
+        }
+
+        if (flags & (1 << 3)) {
+          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
+        }
+
+        this.browser.loadURIWithFlags(uri, navFlags, referrer || null,
+                                      baseUri ? Services.io.newURI(baseUri) : null,
+                                      /* nsIPrincipal */ null);
         break;
       case "GeckoView:Reload":
         this.browser.reload();

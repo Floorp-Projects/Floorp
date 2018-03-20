@@ -16,7 +16,6 @@
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsCSSFrameConstructor.h"

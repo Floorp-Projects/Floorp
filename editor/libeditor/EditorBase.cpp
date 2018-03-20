@@ -75,7 +75,6 @@
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
-#include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
 #include "nsIDOMNodeList.h"             // for nsIDOMNodeList
 #include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener

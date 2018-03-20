@@ -1895,7 +1895,11 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     }
 
     let props = [];
-    if (rawObj instanceof Ci.nsIDOMMouseEvent) {
+    if (obj.class == "MouseEvent" ||
+        obj.class == "DragEvent" ||
+        obj.class == "PointerEvent" ||
+        obj.class == "SimpleGestureEvent" ||
+        obj.class == "WheelEvent") {
       props.push("buttons", "clientX", "clientY", "layerX", "layerY");
     } else if (obj.class == "KeyboardEvent") {
       let modifiers = [];

@@ -18,6 +18,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtils.h"
+#include "mozilla/dom/WheelEventBinding.h"
 #include <algorithm>
 
 #include "GeckoProfiler.h"
@@ -128,8 +129,6 @@ using namespace mozilla::widget;
 #endif
 
 #include "nsShmImage.h"
-
-#include "nsIDOMWheelEvent.h"
 
 #include "NativeKeyBindings.h"
 
@@ -3223,7 +3222,7 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
         return;
 #endif
     WidgetWheelEvent wheelEvent(true, eWheel, this);
-    wheelEvent.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
+    wheelEvent.mDeltaMode = dom::WheelEventBinding::DOM_DELTA_LINE;
     switch (aEvent->direction) {
 #if GTK_CHECK_VERSION(3,4,0)
     case GDK_SCROLL_SMOOTH:

@@ -7,7 +7,6 @@
 #define InputData_h__
 
 #include "nsDebug.h"
-#include "nsIDOMWheelEvent.h"
 #include "nsIScrollableFrame.h"
 #include "nsPoint.h"
 #include "nsTArray.h"

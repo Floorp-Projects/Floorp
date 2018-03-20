@@ -39,7 +39,6 @@ class nsITransferable;
 class nsIClipboard;
 class nsIDOMDocument;
 class nsIDOMElement;
-class nsIDOMMouseEvent;
 class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;
@@ -58,6 +57,7 @@ struct PropItem;
 template<class T> class OwningNonNull;
 namespace dom {
 class DocumentFragment;
+class MouseEvent;
 } // namespace dom
 namespace widget {
 struct IMEState;
@@ -535,7 +535,7 @@ public:
    * event callback when the mouse pointer is moved
    * @param aMouseEvent [IN] the event
    */
-  nsresult OnMouseMove(nsIDOMMouseEvent* aMouseEvent);
+  nsresult OnMouseMove(dom::MouseEvent* aMouseEvent);
 
   /**
    * Modifies the table containing the selection according to the

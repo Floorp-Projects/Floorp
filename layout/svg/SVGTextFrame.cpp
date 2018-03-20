@@ -5083,7 +5083,12 @@ SVGTextFrame::DoTextPathLayout()
     // Get the path itself.
     RefPtr<Path> path = GetTextPath(textPathFrame);
     if (!path) {
+      uint32_t start = it.TextElementCharIndex();
       it.AdvancePastCurrentTextPathFrame();
+      uint32_t end = it.TextElementCharIndex();
+      for (uint32_t i = start; i < end; i++) {
+        mPositions[i].mHidden = true;
+      }
       continue;
     }
 

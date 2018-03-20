@@ -38,6 +38,13 @@ const REPORTED_CATEGORIES = new Set([
   "FrameConstructor",
 ]);
 
+const PLATFORM_NAMES = {
+  linux: "Linux",
+  win: "Windows",
+  macosx: "macOS",
+  android: "Android",
+};
+
 /**
  * Collects nsIScriptError messages logged to the browser console and reports
  * them to a remotely-hosted error collection service.
@@ -66,6 +73,20 @@ class BrowserErrorReporter {
       platform: "javascript",
       release: Services.appinfo.version,
       environment: UpdateUtils.getUpdateChannel(false),
+      contexts: {
+        os: {
+          name: PLATFORM_NAMES[AppConstants.platform],
+          version: (
+            Cc["@mozilla.org/network/protocol;1?name=http"]
+            .getService(Ci.nsIHttpProtocolHandler)
+            .oscpu
+          ),
+        },
+        browser: {
+          name: "Firefox",
+          version: Services.appinfo.version,
+        },
+      },
       tags: {
         appBuildID: Services.appinfo.appBuildID,
         changeset: AppConstants.SOURCE_REVISION_URL,

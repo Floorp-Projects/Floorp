@@ -35,7 +35,6 @@
 #include "nsStyleContext.h"
 #include "nsIBoxObject.h"
 #include "nsIDOMCustomEvent.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULElement.h"

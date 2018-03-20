@@ -450,11 +450,14 @@ gfxWindowsPlatform::GetBackendPrefs()
   data.mCanvasDefault = BackendType::SKIA;
   data.mContentDefault = BackendType::SKIA;
 
-  if (gfxConfig::IsEnabled(Feature::DIRECT2D) && !gfxVars::UseWebRender()) {
+  if (gfxConfig::IsEnabled(Feature::DIRECT2D)) {
     data.mCanvasBitmask |= BackendTypeBit(BackendType::DIRECT2D1_1);
-    data.mContentBitmask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     data.mCanvasDefault = BackendType::DIRECT2D1_1;
-    data.mContentDefault = BackendType::DIRECT2D1_1;
+    // We do not use d2d for content when WebRender is used.
+    if (!gfxVars::UseWebRender()) {
+      data.mContentBitmask |= BackendTypeBit(BackendType::DIRECT2D1_1);
+      data.mContentDefault = BackendType::DIRECT2D1_1;
+    }
   }
   return mozilla::Move(data);
 }

@@ -6,7 +6,6 @@
 
 #include "nsXULTooltipListener.h"
 
-#include "nsIDOMMouseEvent.h"
 #include "nsXULElement.h"
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
@@ -30,6 +29,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/BoxObject.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
@@ -132,12 +132,12 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
   // timer callback. On win32, we'll get a MouseMove event even when a popup goes away --
   // even when the mouse doesn't change position! To get around this, we make sure the
   // mouse has really moved before proceeding.
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aEvent));
-  if (!mouseEvent)
+  MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+  if (!mouseEvent) {
     return;
-  int32_t newMouseX, newMouseY;
-  mouseEvent->GetScreenX(&newMouseX);
-  mouseEvent->GetScreenY(&newMouseY);
+  }
+  int32_t newMouseX = mouseEvent->ScreenX(CallerType::System);
+  int32_t newMouseY = mouseEvent->ScreenY(CallerType::System);
 
   // filter out false win32 MouseMove event
   if (mMouseScreenX == newMouseX && mMouseScreenY == newMouseY)
@@ -330,7 +330,7 @@ nsXULTooltipListener::RemoveTooltipSupport(nsIContent* aNode)
 
 #ifdef MOZ_XUL
 void
-nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
+nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent)
 {
   nsCOMPtr<nsIContent> sourceNode = do_QueryReferent(mSourceNode);
   if (!sourceNode)
@@ -347,9 +347,8 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
   nsCOMPtr<nsITreeBoxObject> obx;
   GetSourceTreeBoxObject(getter_AddRefs(obx));
   if (bx && obx) {
-    int32_t x, y;
-    aMouseEvent->GetScreenX(&x);
-    aMouseEvent->GetScreenY(&y);
+    int32_t x = aMouseEvent->ScreenX(CallerType::System);
+    int32_t y = aMouseEvent->ScreenY(CallerType::System);
 
     int32_t row;
     nsCOMPtr<nsITreeColumn> col;
