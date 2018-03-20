@@ -94,7 +94,7 @@ public class SessionNotificationService extends Service {
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(getString(R.string.notification_erase_text))
                 .setContentIntent(createNotificationIntent())
-                .setVisibility(Notification.VISIBILITY_SECRET)
+                .setVisibility(NotificationCompat.VISIBILITY_SECRET)
                 .setShowWhen(false)
                 .setLocalOnly(true)
                 .setColor(ContextCompat.getColor(this, R.color.colorErase))
