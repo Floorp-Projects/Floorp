@@ -11,6 +11,7 @@ DIRS += [
     'inspector',
     'utils',
     'webconsole',
+    'worker',
 ]
 
 DevToolsModules(
