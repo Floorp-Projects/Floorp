@@ -2459,13 +2459,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     }
   }
 
-  // FIXME: Should this use ResolveStyleContext?  (The calls in this
-  // function are the only case in nsCSSFrameConstructor where we don't
-  // do so for the construction of a style context for an element.)
   RefPtr<nsStyleContext> styleContext =
-    mPresShell->StyleSet()->ResolveStyleFor(aDocElement,
-                                            nullptr,
-                                            LazyComputeBehavior::Assert);
+    mPresShell->StyleSet()->AsServo()->ResolveServoStyle(aDocElement);
 
   const nsStyleDisplay* display = styleContext->StyleDisplay();
 
@@ -2497,11 +2492,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     }
 
     if (resolveStyle) {
-      // FIXME: Should this use ResolveStyleContext?  (The calls in this
-      // function are the only case in nsCSSFrameConstructor where we don't do
-      // so for the construction of a style context for an element.)
-      styleContext = mPresShell->StyleSet()->ResolveStyleFor(
-          aDocElement, nullptr, LazyComputeBehavior::Assert);
+      styleContext =
+        mPresShell->StyleSet()->AsServo()->ResolveServoStyle(aDocElement);
       display = styleContext->StyleDisplay();
     }
   }
@@ -5029,98 +5021,34 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
 }
 
 already_AddRefed<nsStyleContext>
-nsCSSFrameConstructor::ResolveStyleContext(nsIFrame* aParentFrame,
-                                           nsIContent* aContainer,
-                                           nsIContent* aChild)
+nsCSSFrameConstructor::ResolveStyleContext(nsIContent* aContent)
 {
-  MOZ_ASSERT(aContainer, "Must have parent here");
-  // XXX uncomment when bug 1089223 is fixed:
-  // MOZ_ASSERT(aContainer == aChild->GetFlattenedTreeParent());
-  nsStyleContext* parentStyleContext = GetDisplayContentsStyleFor(aContainer);
-  if (MOZ_LIKELY(!parentStyleContext)) {
-    aParentFrame = nsFrame::CorrectStyleParentFrame(aParentFrame, nullptr);
-    if (aParentFrame) {
-      MOZ_ASSERT(aParentFrame->GetContent() == aContainer);
-      // Resolve the style context based on the content object and the parent
-      // style context
-      parentStyleContext = aParentFrame->StyleContext();
-    } else {
-      // Perhaps aParentFrame is a canvasFrame and we're replicating
-      // fixed-pos frames.
-      // XXX should we create a way to tell ConstructFrame which style
-      // context to use, and pass it the style context for the
-      // previous page's fixed-pos frame?
-    }
-  }
+  ServoStyleSet* styleSet = mPresShell->StyleSet()->AsServo();
 
-  return ResolveStyleContext(parentStyleContext, aChild);
-}
-
-already_AddRefed<nsStyleContext>
-nsCSSFrameConstructor::ResolveStyleContext(nsIFrame* aParentFrame,
-                                           nsIContent* aChild)
-{
-  return ResolveStyleContext(aParentFrame, aChild->GetFlattenedTreeParent(), aChild);
-}
-
-already_AddRefed<nsStyleContext>
-nsCSSFrameConstructor::ResolveStyleContext(const InsertionPoint& aInsertion,
-                                           nsIContent* aChild)
-{
-  return ResolveStyleContext(aInsertion.mParentFrame, aInsertion.mContainer,
-                             aChild);
-}
-
-already_AddRefed<nsStyleContext>
-nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
-                                           nsIContent* aContent,
-                                           Element* aOriginatingElementOrNull)
-{
-  StyleSetHandle styleSet = mPresShell->StyleSet();
-
-  RefPtr<nsStyleContext> result;
   if (aContent->IsElement()) {
-    auto pseudoType = aContent->AsElement()->GetPseudoElementType();
-    if (pseudoType == CSSPseudoElementType::NotPseudo) {
-      MOZ_ASSERT(!aOriginatingElementOrNull);
-      result = styleSet->ResolveStyleFor(aContent->AsElement(),
-                                         aParentStyleContext,
-                                         LazyComputeBehavior::Assert);
-    } else {
-      MOZ_ASSERT(aContent->IsInNativeAnonymousSubtree());
-      if (!aOriginatingElementOrNull) {
-        // For pseudo-implementing NAC created by JS using the ChromeOnly
-        // document.createElement(..., { pseudo: ... }) API, we find the
-        // originating element by lookup the tree until we find a non-NAC
-        // ancestor.  (These are the correct semantics for C++-generated pseudo-
-        // implementing NAC as well, but for those cases we already have a
-        // correct originating element passed in.)
-        MOZ_ASSERT(nsCSSPseudoElements::PseudoElementIsJSCreatedNAC(pseudoType));
-        aOriginatingElementOrNull =
-          nsContentUtils::GetClosestNonNativeAnonymousAncestor(aContent->AsElement());
-      }
-      MOZ_ASSERT(aOriginatingElementOrNull);
-      result = styleSet->ResolvePseudoElementStyle(aOriginatingElementOrNull,
-                                                   pseudoType,
-                                                   aParentStyleContext,
-                                                   aContent->AsElement());
-    }
-  } else {
-    MOZ_ASSERT(!aOriginatingElementOrNull);
-    NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
-                 "shouldn't waste time creating style contexts for "
-                 "comments and processing instructions");
-    result = styleSet->ResolveStyleForText(aContent, aParentStyleContext);
+    return styleSet->ResolveServoStyle(aContent->AsElement());
   }
 
-  // ServoRestyleManager does not handle transitions yet, and when it does
-  // it probably won't need to track reframed style contexts to start
-  // transitions correctly.
-  if (RestyleManager()->IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  }
+  MOZ_ASSERT(aContent->IsNodeOfType(nsINode::eTEXT),
+             "shouldn't waste time creating style contexts for "
+             "comments and processing instructions");
 
-  return result.forget();
+  Element* parent = aContent->GetFlattenedTreeParentElement();
+  MOZ_ASSERT(parent, "Text out of the flattened tree?");
+
+  // FIXME(emilio): We can't use ResolveServoStyle properly because this text
+  // node can come from non-lazy frame construction, in which case the style we
+  // inherit from can indeed be out-of-date. After an eventual XBL removal, this
+  // can go. Note that this is not a correctness issue, since we'll restyle
+  // later in any case.
+  //
+  // Also, this probably doesn't need to be a strong ref...
+  //
+  // Do NOT add new callers to this function in this file, ever, or I'll find
+  // out.
+  RefPtr<ServoStyleContext> parentStyle =
+    Servo_Element_GetPrimaryComputedValues(parent).Consume();
+  return styleSet->ResolveStyleForText(aContent, parentStyle);
 }
 
 // MathML Mod - RBS
@@ -5712,8 +5640,7 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
   if (!ShouldCreateItemsForChild(aState, aContent, parentFrame)) {
     return;
   }
-  RefPtr<nsStyleContext> styleContext =
-    ResolveStyleContext(aInsertion, aContent);
+  RefPtr<nsStyleContext> styleContext = ResolveStyleContext(aContent);
   DoAddFrameConstructionItems(aState, aContent, styleContext,
                               aSuppressWhiteSpaceOptimizations, parentFrame,
                               nullptr, aItems);
@@ -5983,8 +5910,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
         continue;
       }
 
-      RefPtr<nsStyleContext> childContext =
-        ResolveStyleContext(styleContext, child);
+      RefPtr<nsStyleContext> childContext = ResolveStyleContext(child);
       DoAddFrameConstructionItems(aState, child, childContext,
                                   aSuppressWhiteSpaceOptimizations,
                                   aParentFrame, aAnonChildren, aItems);
@@ -6527,15 +6453,6 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
       LayoutFrameType::Menu == parentType) {
     // if we haven't already, construct a style context to find the display type of aContent
     if (UNSET_DISPLAY == aDisplay) {
-      nsIFrame* styleParent;
-      aSibling->GetParentStyleContext(&styleParent);
-      if (!styleParent) {
-        styleParent = aSibling->GetParent();
-      }
-      if (!styleParent) {
-        NS_NOTREACHED("Shouldn't happen");
-        return false;
-      }
       if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
           aContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
         // Comments and processing instructions never have frames, so we
@@ -6543,8 +6460,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
         return false;
       }
       // FIXME(emilio): This is buggy some times, see bug 1424656.
-      RefPtr<nsStyleContext> styleContext =
-        ResolveStyleContext(styleParent, aContent);
+      RefPtr<nsStyleContext> styleContext = ResolveStyleContext(aContent);
       const nsStyleDisplay* display = styleContext->StyleDisplay();
       aDisplay = display->mDisplay;
     }
@@ -10422,103 +10338,7 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
     MOZ_ASSERT(!content->IsStyledByServo() || !content->IsElement() ||
                content->AsElement()->HasServoData());
 
-    // Determine whether this NAC is pseudo-implementing.
-    nsAtom* pseudo = nullptr;
-    if (content->IsElement()) {
-      auto pseudoType = content->AsElement()->GetPseudoElementType();
-      if (pseudoType != CSSPseudoElementType::NotPseudo) {
-        pseudo = nsCSSPseudoElements::GetPseudoAtom(pseudoType);
-      }
-    }
-
-    // Determine the appropriate parent style for this NAC, and if the NAC
-    // implements a pseudo-element, the appropriate originating element
-    // (that is to say, the element to the left of the ::pseudo-element in
-    // the selector). This is all rather tricky, and merits some discussion.
-    //
-    // First, it's important to note that author stylesheets generally do not
-    // apply to elements in native-anonymous subtrees. The exceptions to
-    // this are web-exposed pseudo-elements, where authors can style the
-    // pseudo-implementing NAC if the originating element is not itself in a NAC
-    // subtree.
-    //
-    // For this reason, it's very important that we avoid using a style parent
-    // that is inside a NAC subtree together with an originating element that
-    // is not inside a NAC subtree, since that would allow authors to
-    // explicitly inherit styles from internal elements, potentially making
-    // the NAC hierarchy observable. To ensure this, and generally simplify
-    // things, we always set the originating element to the style parent.
-    //
-    // As a consequence of the above, all web-exposed pseudo-elements (which,
-    // by definition, must have a content-accessible originating element) must
-    // also inherit style from that same content-accessible element. To avoid
-    // unintuitive behavior differences between NAC elements that do and don't
-    // correspond to web-exposed pseudo-elements, we follow this protocol for
-    // all NAC, pseudo-implementing or not.
-    //
-    // However, things get tricky with the <video> element, where we have a
-    // bunch of XBL-generated anonymous content descending from a native-
-    // anonymous XULElement. The XBL elements inherit style from their
-    // flattened tree parent, because that's how XBL works. But then we need
-    // to figure out what to do when one of those anonymous XBL elements
-    // (like an <input> element) generates its own (possibly pseudo-element-
-    // implementing) NAC.
-    //
-    // In this case, we inherit style from the XBL-generated NAC-creating
-    // element, rather than the <video> element. There are a number of good
-    // reasons for this. First, inheriting from the great-grandparent while
-    // the parent inherits from the grandparent would be bizarre at best.
-    // Second, exposing pseudo-elements from elements within our particular
-    // XBL implementation would allow content styles to (un)intentionally
-    // alter the video controls, which would be very bad. Third, our UA
-    // stylesheets have selectors like:
-    //
-    // input[type=range][orient=horizontal]::-moz-range-track
-    //
-    // and we need to make sure that the originating element is the <input>,
-    // not the <video>, because that's where the |orient| attribute lives.
-    //
-    // The upshot of all of this is that, to find the style parent (and
-    // originating element, if applicable), we walk up our parent chain to the
-    // first element that is not itself NAC (distinct from whether it happens
-    // to be in a NAC subtree).
-    //
-    // The one exception to all of this is scrollbar content, which we parent
-    // directly to the scrollframe. This is because the special-snowflake
-    // construction of scroll frames doesn't result in the placeholder frame
-    // being constructed until later, which means that GetInFlowParent() doesn't
-    // work right in the case of out-of-flow scrollframes.
-    //
-    // To implement all this, we need to pass the correct parent style context
-    // here because SetPrimaryFrame() may not have been called on the content
-    // yet and thus ResolveStyleContext can't find it otherwise.
-    //
-    // We don't need to worry about display:contents here, because such
-    // elements don't get a frame and thus can't generate NAC. But we do need
-    // to worry about anonymous boxes, which CorrectStyleParentFrame handles
-    // for us.
-    nsIFrame* inheritFrame = aFrame;
-    if (!content->IsNativeScrollbarContent()) {
-      while (inheritFrame->GetContent()->IsNativeAnonymous()) {
-        inheritFrame = inheritFrame->GetInFlowParent();
-      }
-    }
-
-    nsIFrame* styleParentFrame =
-      nsFrame::CorrectStyleParentFrame(inheritFrame, pseudo);
-    // The only way we can not have a style parent now is if inheritFrame is the
-    // canvas frame and we're the NAC parent for all the things added via
-    // nsIDocument::InsertAnonymousContent.
-    MOZ_ASSERT(styleParentFrame || inheritFrame->IsCanvasFrame());
-    // And that anonymous div has no pseudo.
-    MOZ_ASSERT(styleParentFrame || !pseudo);
-
-    Element* originating =
-      pseudo ? styleParentFrame->GetContent()->AsElement() : nullptr;
-    nsStyleContext* parentStyle =
-      styleParentFrame ? styleParentFrame->StyleContext() : nullptr;
-    RefPtr<nsStyleContext> styleContext =
-      ResolveStyleContext(parentStyle, content, originating);
+    RefPtr<nsStyleContext> styleContext = ResolveStyleContext(content);
 
     nsTArray<nsIAnonymousContentCreator::ContentInfo>* anonChildren = nullptr;
     if (!aAnonymousItems[i].mChildren.IsEmpty()) {
@@ -11494,11 +11314,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
                                   GetFloatContainingBlock(aParentFrame),
                                   do_AddRef(mTempFrameTreeState));
 
-    // If we ever initialize the ancestor filter on |state|, make sure
-    // to push the right parent!
-
-    RefPtr<nsStyleContext> styleContext =
-      ResolveStyleContext(aParentFrame, aChild);
+    RefPtr<nsStyleContext> styleContext = ResolveStyleContext(aChild);
 
     // Pre-check for display "none" - only if we find that, do we create
     // any frame at all
@@ -11875,8 +11691,7 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
       // ProcessChildren and for the same reason.
       content->UnsetRestyleFlagsIfGecko();
 
-      RefPtr<nsStyleContext> childContext =
-        ResolveStyleContext(parentStyleContext, content);
+      RefPtr<nsStyleContext> childContext = ResolveStyleContext(content);
 
       AddFrameConstructionItemsInternal(aState, content, nullptr,
                                         content->NodeInfo()->NameAtom(),

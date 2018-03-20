@@ -168,8 +168,7 @@ public:
   // contexts for such content nodes, when text-combine-upright is not
   // present.  However, not doing any rule matching for them is a first step.)
   already_AddRefed<ServoStyleContext>
-  ResolveStyleForText(nsIContent* aTextNode,
-                      ServoStyleContext* aParentContext);
+  ResolveStyleForText(nsIContent* aTextNode, ServoStyleContext* aParentContext);
 
   // Get a style context for a first-letter continuation (which no rules will
   // match).
