@@ -148,7 +148,17 @@ class SummaryGraphPath extends PureComponent {
       timeScale,
     } = this.props;
 
-    const animatedPropertyMap = await getAnimatedPropertyMap(animation);
+    let animatedPropertyMap = null;
+
+    try {
+      animatedPropertyMap = await getAnimatedPropertyMap(animation);
+    } catch (e) {
+      // Expected if we've already been destroyed or other node have been selected
+      // in the meantime.
+      console.error(e);
+      return;
+    }
+
     const keyframesList = this.getOffsetAndEasingOnlyKeyframes(animatedPropertyMap);
 
     const thisEl = ReactDOM.findDOMNode(this);
