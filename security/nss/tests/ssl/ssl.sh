@@ -283,34 +283,30 @@ ssl_cov()
       echo "${testname}" | grep "EXPORT" > /dev/null
       EXP=$?
 
-      if [ "$ectype" = "ECC" ] ; then
-          echo "$SCRIPTNAME: skipping  $testname (ECC only)"
-      else
-          echo "$SCRIPTNAME: running $testname ----------------------------"
-          VMAX="ssl3"
-          if [ "$testmax" = "TLS10" ]; then
-              VMAX="tls1.0"
-          fi
-          if [ "$testmax" = "TLS11" ]; then
-              VMAX="tls1.1"
-          fi
-          if [ "$testmax" = "TLS12" ]; then
-              VMAX="tls1.2"
-          fi
-
-          echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} \\"
-          echo "        -f -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE}"
-
-          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} -f \
-                  -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE} \
-                  >${TMP}/$HOST.tmp.$$  2>&1
-          ret=$?
-          cat ${TMP}/$HOST.tmp.$$
-          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          html_msg $ret 0 "${testname}" \
-                   "produced a returncode of $ret, expected is 0"
+      echo "$SCRIPTNAME: running $testname ----------------------------"
+      VMAX="ssl3"
+      if [ "$testmax" = "TLS10" ]; then
+          VMAX="tls1.0"
       fi
+      if [ "$testmax" = "TLS11" ]; then
+          VMAX="tls1.1"
+      fi
+      if [ "$testmax" = "TLS12" ]; then
+          VMAX="tls1.2"
+      fi
+
+      echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} \\"
+      echo "        -f -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE}"
+
+      rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+      ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} -f \
+              -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE} \
+              >${TMP}/$HOST.tmp.$$  2>&1
+      ret=$?
+      cat ${TMP}/$HOST.tmp.$$
+      rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+      html_msg $ret 0 "${testname}" \
+               "produced a returncode of $ret, expected is 0"
   done
 
   kill_selfserv
@@ -335,8 +331,6 @@ ssl_auth()
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
       elif [ "$ectype" = "SNI" -a "$NORM_EXT" = "Extended Test" ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
-      elif [ "$ectype" = "ECC" ] ; then
-          echo "$SCRIPTNAME: skipping  $testname (ECC only)"
       else
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
           if [ "$ectype" = "SNI" ]; then
@@ -550,8 +544,6 @@ ssl_stress()
 
       if [ "$ectype" = "SNI" -a "$NORM_EXT" = "Extended Test" ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
-      elif [ "$ectype" = "ECC" ] ; then
-          echo "$SCRIPTNAME: skipping  $testname (ECC only)"
       elif [ "${CLIENT_MODE}" = "fips" -a "${CAUTH}" -ne 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
       elif [ "${NOLOGIN}" -eq 0 ] && \
@@ -615,9 +607,7 @@ ssl_crl_ssl()
   ignore_blank_lines ${SSLAUTH} | \
   while read ectype value sparam cparam testname
   do
-    if [ "$ectype" = "ECC" ] ; then
-        echo "$SCRIPTNAME: skipping $testname (ECC only)"
-    elif [ "$ectype" = "SNI" ]; then
+    if [ "$ectype" = "SNI" ]; then
         continue
     else
 	servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`
@@ -729,43 +719,39 @@ ssl_policy()
   do
       VMIN="ssl3"
 
-      if [ "$ectype" = "ECC" ] ; then
-          echo "$SCRIPTNAME: skipping  $testname (ECC only)"
-      else
-          echo "$SCRIPTNAME: running $testname ----------------------------"
-          VMAX="ssl3"
-          if [ "$testmax" = "TLS10" ]; then
-              VMAX="tls1.0"
-          fi
-          if [ "$testmax" = "TLS11" ]; then
-              VMAX="tls1.1"
-          fi
-          if [ "$testmax" = "TLS12" ]; then
-              VMAX="tls1.2"
-          fi
-
-          # load the policy
-          policy=`echo ${policy} | sed -e 's;_; ;g'`
-          setup_policy "$policy" ${P_R_CLIENTDIR}
-
-          echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} \\"
-          echo "        -f -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE}"
-
-          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} -f \
-                  -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE} \
-                  >${TMP}/$HOST.tmp.$$  2>&1
-          ret=$?
-          cat ${TMP}/$HOST.tmp.$$
-          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-
-          #workaround for bug #402058
-          [ $ret -ne 0 ] && ret=1
-          [ ${value} -ne 0 ] && value=1
-
-          html_msg $ret ${value} "${testname}" \
-                   "produced a returncode of $ret, expected is ${value}"
+      echo "$SCRIPTNAME: running $testname ----------------------------"
+      VMAX="ssl3"
+      if [ "$testmax" = "TLS10" ]; then
+          VMAX="tls1.0"
       fi
+      if [ "$testmax" = "TLS11" ]; then
+          VMAX="tls1.1"
+      fi
+      if [ "$testmax" = "TLS12" ]; then
+          VMAX="tls1.2"
+      fi
+
+      # load the policy
+      policy=`echo ${policy} | sed -e 's;_; ;g'`
+      setup_policy "$policy" ${P_R_CLIENTDIR}
+
+      echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} \\"
+      echo "        -f -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE}"
+
+      rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+      ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} -f \
+              -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE} \
+              >${TMP}/$HOST.tmp.$$  2>&1
+      ret=$?
+      cat ${TMP}/$HOST.tmp.$$
+      rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+
+      #workaround for bug #402058
+      [ $ret -ne 0 ] && ret=1
+      [ ${value} -ne 0 ] && value=1
+
+      html_msg $ret ${value} "${testname}" \
+               "produced a returncode of $ret, expected is ${value}"
   done
   cp ${P_R_CLIENTDIR}/pkcs11.txt.sav ${P_R_CLIENTDIR}/pkcs11.txt
 
@@ -1004,9 +990,7 @@ ssl_crl_cache()
     while read ectype value sparam cparam testname
       do
       [ "$ectype" = "" ] && continue
-      if [ "$ectype" = "ECC" ] ; then
-        echo "$SCRIPTNAME: skipping  $testname (ECC only)"
-      elif [ "$ectype" = "SNI" ]; then
+      if [ "$ectype" = "SNI" ]; then
           continue
       else
         servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`

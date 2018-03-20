@@ -383,7 +383,8 @@ class TlsPreCCSHeaderInjector : public TlsRecordFilter {
     std::cerr << "Injecting Finished header before CCS\n";
     const uint8_t hhdr[] = {kTlsHandshakeFinished, 0x00, 0x00, 0x0c};
     DataBuffer hhdr_buf(hhdr, sizeof(hhdr));
-    TlsRecordHeader nhdr(record_header.version(), kTlsHandshakeType, 0);
+    TlsRecordHeader nhdr(record_header.variant(), record_header.version(),
+                         kTlsHandshakeType, 0);
     *offset = nhdr.Write(output, *offset, hhdr_buf);
     *offset = record_header.Write(output, *offset, input);
     return CHANGE;

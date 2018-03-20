@@ -11,7 +11,7 @@
 #include <memory>
 #include <set>
 #include <vector>
-
+#include "sslt.h"
 #include "test_io.h"
 #include "tls_agent.h"
 #include "tls_parser.h"
@@ -27,40 +27,57 @@ class TlsCipherSpec;
 
 class TlsVersioned {
  public:
-  TlsVersioned() : version_(0) {}
-  explicit TlsVersioned(uint16_t v) : version_(v) {}
+  TlsVersioned() : variant_(ssl_variant_stream), version_(0) {}
+  TlsVersioned(SSLProtocolVariant var, uint16_t ver)
+      : variant_(var), version_(ver) {}
 
-  bool is_dtls() const { return IsDtls(version_); }
+  bool is_dtls() const { return variant_ == ssl_variant_datagram; }
+  SSLProtocolVariant variant() const { return variant_; }
   uint16_t version() const { return version_; }
 
   void WriteStream(std::ostream& stream) const;
 
  protected:
+  SSLProtocolVariant variant_;
   uint16_t version_;
 };
 
 class TlsRecordHeader : public TlsVersioned {
  public:
-  TlsRecordHeader() : TlsVersioned(), content_type_(0), sequence_number_(0) {}
-  TlsRecordHeader(uint16_t ver, uint8_t ct, uint64_t seqno)
-      : TlsVersioned(ver), content_type_(ct), sequence_number_(seqno) {}
+  TlsRecordHeader()
+      : TlsVersioned(), content_type_(0), sequence_number_(0), header_() {}
+  TlsRecordHeader(SSLProtocolVariant var, uint16_t ver, uint8_t ct,
+                  uint64_t seqno)
+      : TlsVersioned(var, ver),
+        content_type_(ct),
+        sequence_number_(seqno),
+        header_() {}
 
   uint8_t content_type() const { return content_type_; }
   uint64_t sequence_number() const { return sequence_number_; }
   uint16_t epoch() const {
     return static_cast<uint16_t>(sequence_number_ >> 48);
   }
-  size_t header_length() const { return is_dtls() ? 13 : 5; }
+  size_t header_length() const;
+  const DataBuffer& header() const { return header_; }
 
   // Parse the header; return true if successful; body in an outparam if OK.
-  bool Parse(uint64_t sequence_number, TlsParser* parser, DataBuffer* body);
+  bool Parse(bool is_dtls13, uint64_t sequence_number, TlsParser* parser,
+             DataBuffer* body);
   // Write the header and body to a buffer at the given offset.
   // Return the offset of the end of the write.
   size_t Write(DataBuffer* buffer, size_t offset, const DataBuffer& body) const;
+  size_t WriteHeader(DataBuffer* buffer, size_t offset, size_t body_len) const;
 
  private:
+  static uint64_t RecoverSequenceNumber(uint64_t expected, uint32_t partial,
+                                        size_t partial_bits);
+  static uint64_t ParseSequenceNumber(uint64_t expected, uint32_t raw,
+                                      size_t seq_no_bits, size_t epoch_bits);
+
   uint8_t content_type_;
   uint64_t sequence_number_;
+  DataBuffer header_;
 };
 
 struct TlsRecord {
@@ -126,6 +143,8 @@ class TlsRecordFilter : public PacketFilter {
                                             DataBuffer* changed) {
     return KEEP;
   }
+
+  bool is_dtls13() const;
 
  private:
   static void CipherSpecChanged(void* arg, PRBool sending,
