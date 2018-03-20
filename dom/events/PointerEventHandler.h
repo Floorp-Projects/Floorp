@@ -172,7 +172,7 @@ public:
 private:
   // GetPointerType returns pointer type like mouse, pen or touch for pointer
   // event with pointerId. The return value must be one of
-  // nsIDOMMouseEvent::MOZ_SOURCE_*
+  // MouseEventBinding::MOZ_SOURCE_*
   static uint16_t GetPointerType(uint32_t aPointerId);
 
   // GetPointerPrimaryState returns state of attribute isPrimary for pointer

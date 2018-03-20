@@ -37,6 +37,7 @@
 #include "nsITreeColumns.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLLabelElement.h"
+#include "mozilla/dom/MouseEventBinding.h"
 
 using namespace mozilla;
 
@@ -143,7 +144,7 @@ nsCoreUtils::DispatchMouseEvent(EventMessage aMessage, int32_t aX, int32_t aY,
   event.mClickCount = 1;
   event.button = WidgetMouseEvent::eLeftButton;
   event.mTime = PR_IntervalNow();
-  event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+  event.inputSource = dom::MouseEventBinding::MOZ_SOURCE_UNKNOWN;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   aPresShell->HandleEventWithTarget(&event, aFrame, aContent, &status);

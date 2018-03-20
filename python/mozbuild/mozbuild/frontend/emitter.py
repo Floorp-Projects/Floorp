@@ -784,7 +784,8 @@ class TreeMetadataEmitter(LoggingMixin):
                 self._libs[libname].append(lib)
                 self._linkage.append((context, lib, 'USE_LIBS'))
                 linkables.append(lib)
-                generated_files.add(lib.lib_name)
+                if not lib.installed:
+                    generated_files.add(lib.lib_name)
                 if symbols_file and isinstance(symbols_file, SourcePath):
                     script = mozpath.join(
                         mozpath.dirname(mozpath.dirname(__file__)),

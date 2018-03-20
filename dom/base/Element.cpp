@@ -142,10 +142,11 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
@@ -2298,7 +2299,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
     inputSource = sourceMouseEvent->inputSource;
   } else if (aSourceEvent->mClass == eKeyboardEventClass) {
     event.mFlags.mIsPositionless = true;
-    inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
+    inputSource = MouseEventBinding::MOZ_SOURCE_KEYBOARD;
   }
   event.pressure = pressure;
   event.mClickCount = clickCount;

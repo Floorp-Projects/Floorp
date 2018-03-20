@@ -1,8 +1,13 @@
 <bindings xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml">
-  <binding id="foo">
+  <binding id="foo" simpleScopeChain="true">
     <implementation>
       <field name="bar">baz</field>
+      <constructor>
+      <![CDATA[
+        is(document, this.ownerDocument, "Shouldn't have forms in the scope chain");
+      ]]>
+      </constructor>
     </implementation>
   </binding>
 </bindings>

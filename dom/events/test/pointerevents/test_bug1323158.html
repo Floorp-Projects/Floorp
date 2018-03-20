@@ -67,7 +67,7 @@ function runTests() {
   done.addEventListener("mouseup", () => {
     SimpleTest.finish();
   });
-  let source = SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE;
+  let source = MouseEvent.MOZ_SOURCE_MOUSE;
   synthesizeMouse(target0, 5, 5, { type: "mousemove", inputSource: source },
                   iframe.contentWindow);
   synthesizeMouse(target0, 5, 5, { type: "mousedown", inputSource: source },

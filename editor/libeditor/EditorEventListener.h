@@ -17,7 +17,6 @@
 class nsCaret;
 class nsIContent;
 class nsIDOMEvent;
-class nsIDOMMouseEvent;
 class nsIPresShell;
 class nsPresContext;
 
@@ -37,6 +36,7 @@ class EditorBase;
 
 namespace dom {
 class DragEvent;
+class MouseEvent;
 } // namespace dom
 
 class EditorEventListener : public nsIDOMEventListener
@@ -67,9 +67,9 @@ protected:
   nsresult HandleChangeComposition(WidgetCompositionEvent* aCompositionEvent);
   nsresult HandleStartComposition(WidgetCompositionEvent* aCompositionEvent);
   void HandleEndComposition(WidgetCompositionEvent* aCompositionEvent);
-  virtual nsresult MouseDown(nsIDOMMouseEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMMouseEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent);
+  virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent);
+  virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult MouseClick(dom::MouseEvent* aMouseEvent);
   nsresult Focus(InternalFocusEvent* aFocusEvent);
   nsresult Blur(InternalFocusEvent* aBlurEvent);
   nsresult DragEnter(dom::DragEvent* aDragEvent);
@@ -87,7 +87,7 @@ protected:
   bool EditorHasFocus();
   bool IsFileControlTextBox();
   bool ShouldHandleNativeKeyBindings(WidgetKeyboardEvent* aKeyboardEvent);
-  nsresult HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent);
+  nsresult HandleMiddleClickPaste(dom::MouseEvent* aMouseEvent);
 
   /**
    * DetachedFromEditor() returns true if editor was detached.

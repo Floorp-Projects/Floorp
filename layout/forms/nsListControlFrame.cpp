@@ -12,7 +12,6 @@
 #include "nsGkAtoms.h"
 #include "nsComboboxControlFrame.h"
 #include "nsIPresShell.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIXULRuntime.h"
 #include "nsFontMetrics.h"
 #include "nsIScrollableFrame.h"
@@ -25,6 +24,8 @@
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
+#include "mozilla/dom/MouseEvent.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
@@ -845,15 +846,14 @@ bool
 nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent,
                                         int32_t aClickedIndex)
 {
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-  bool isShift;
+  MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
   bool isControl;
 #ifdef XP_MACOSX
-  mouseEvent->GetMetaKey(&isControl);
+  isControl = mouseEvent->MetaKey();
 #else
-  mouseEvent->GetCtrlKey(&isControl);
+  isControl = mouseEvent->CtrlKey();
 #endif
-  mouseEvent->GetShiftKey(&isShift);
+  bool isShift = mouseEvent->ShiftKey();
   return PerformSelection(aClickedIndex, isShift, isControl); // might destroy us
 }
 
@@ -1564,14 +1564,8 @@ bool
 nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
 {
   // only allow selection with the left button
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-  if (mouseEvent) {
-    int16_t whichButton;
-    if (NS_SUCCEEDED(mouseEvent->GetButton(&whichButton))) {
-      return whichButton != 0?false:true;
-    }
-  }
-  return false;
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  return mouseEvent && mouseEvent->Button() == 0;
 }
 
 nscoord
@@ -1612,7 +1606,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent != nullptr, "aMouseEvent is null.");
 
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
   UpdateInListState(aMouseEvent);
@@ -1806,7 +1800,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent != nullptr, "aMouseEvent is null.");
 
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
   UpdateInListState(aMouseEvent);
@@ -1860,11 +1854,8 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         }
       }
 
-      uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
-      if (NS_FAILED(mouseEvent->GetMozInputSource(&inputSource))) {
-        return NS_ERROR_FAILURE;
-      }
-      bool isSourceTouchEvent = inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+      uint16_t inputSource = mouseEvent->MozInputSource();
+      bool isSourceTouchEvent = inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH;
       if (FireShowDropDownEvent(mContent, !mComboboxFrame->IsDroppedDownOrHasParentPopup(),
                                 isSourceTouchEvent)) {
         return NS_OK;
@@ -1899,7 +1890,7 @@ nsresult
 nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent, "aMouseEvent is null.");
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
   UpdateInListState(aMouseEvent);
@@ -1933,13 +1924,13 @@ nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
       if (selectedIndex == mEndSelectionIndex) {
         return NS_OK;
       }
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-      NS_ASSERTION(mouseEvent, "aMouseEvent is not an nsIDOMMouseEvent!");
+      MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+      NS_ASSERTION(mouseEvent, "aMouseEvent is not a MouseEvent!");
       bool isControl;
 #ifdef XP_MACOSX
-      mouseEvent->GetMetaKey(&isControl);
+      isControl = mouseEvent->MetaKey();
 #else
-      mouseEvent->GetCtrlKey(&isControl);
+      isControl = mouseEvent->CtrlKey();
 #endif
       AutoWeakFrame weakFrame(this);
       // Turn SHIFT on when you are dragging, unless control is on.

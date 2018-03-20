@@ -619,7 +619,7 @@ NS_InitAtomTable()
   // In order to avoid that, we register nsGkAtoms immediately after creating
   // the atom table to guarantee that the empty string atom will always be
   // static.
-  nsGkAtoms::AddRefAtoms();
+  nsGkAtoms::RegisterStaticAtoms();
 }
 
 void

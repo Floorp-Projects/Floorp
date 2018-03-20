@@ -9,7 +9,6 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsCSSAnonBoxes.h"
-#include "nsAtomListUtils.h"
 #include "nsStaticAtom.h"
 
 using namespace mozilla;
@@ -40,15 +39,14 @@ static const nsStaticAtomSetup sCSSAnonBoxAtomSetup[] = {
   #undef CSS_ANON_BOX
 };
 
-void nsCSSAnonBoxes::AddRefAtoms()
+void nsCSSAnonBoxes::RegisterStaticAtoms()
 {
   NS_RegisterStaticAtoms(sCSSAnonBoxAtomSetup);
 }
 
 bool nsCSSAnonBoxes::IsAnonBox(nsAtom *aAtom)
 {
-  return nsAtomListUtils::IsMember(aAtom, sCSSAnonBoxAtomSetup,
-                                   ArrayLength(sCSSAnonBoxAtomSetup));
+  return nsStaticAtomUtils::IsMember(aAtom, sCSSAnonBoxAtomSetup);
 }
 
 #ifdef MOZ_XUL
@@ -65,13 +63,10 @@ nsCSSAnonBoxes::IsTreePseudoElement(nsAtom* aPseudo)
 nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo)
 {
   MOZ_ASSERT(IsNonInheritingAnonBox(aPseudo));
-  for (NonInheritingBase i = 0; i < ArrayLength(sCSSAnonBoxAtomSetup); ++i) {
-    if (*sCSSAnonBoxAtomSetup[i].mAtomp == aPseudo) {
-      return static_cast<NonInheriting>(i);
-    }
-  }
-
-  MOZ_CRASH("Bogus pseudo passed to NonInheritingTypeForPseudoTag");
+  Maybe<uint32_t> index =
+    nsStaticAtomUtils::Lookup(aPseudo, sCSSAnonBoxAtomSetup);
+  MOZ_RELEASE_ASSERT(index.isSome());
+  return static_cast<NonInheriting>(*index);
 }
 
 /* static */ nsAtom*

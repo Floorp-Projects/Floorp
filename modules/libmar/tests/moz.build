@@ -8,5 +8,5 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 if CONFIG['OS_TARGET'] != 'Android':
     TEST_HARNESS_FILES.xpcshell.modules.libmar.tests.unit += [
-        '!../tool/signmar%s' % CONFIG['BIN_SUFFIX'],
+        '!/dist/bin/signmar%s' % CONFIG['BIN_SUFFIX'],
     ]

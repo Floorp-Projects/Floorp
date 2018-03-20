@@ -7,6 +7,7 @@
 package org.mozilla.geckoview;
 
 import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -40,6 +41,7 @@ import android.os.SystemClock;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
+import android.util.Base64;
 import android.util.Log;
 
 public class GeckoSession extends LayerSession
@@ -787,22 +789,176 @@ public class GeckoSession extends LayerSession
         return mTextInput;
     }
 
+    @IntDef(flag = true,
+            value = { LOAD_FLAGS_NONE, LOAD_FLAGS_BYPASS_CACHE, LOAD_FLAGS_BYPASS_PROXY,
+                      LOAD_FLAGS_EXTERNAL, LOAD_FLAGS_ALLOW_POPUPS })
+    public @interface LoadFlags {}
+
+    // These flags follow similarly named ones in Gecko's nsIWebNavigation.idl
+    // https://searchfox.org/mozilla-central/source/docshell/base/nsIWebNavigation.idl
+    //
+    // We do not use the same values directly in order to insulate ourselves from
+    // changes in Gecko. Instead, the flags are converted in GeckoViewNavigation.jsm.
+
     /**
-    * Load the given URI.
-    * @param uri The URI of the resource to load.
-    */
-    public void loadUri(String uri) {
+     * Default load flag, no special considerations.
+     */
+    public static final int LOAD_FLAGS_NONE = 0;
+
+    /**
+     * Bypass the cache.
+     */
+    public static final int LOAD_FLAGS_BYPASS_CACHE = 1 << 0;
+
+    /**
+     * Bypass the proxy, if one has been configured.
+     */
+    public static final int LOAD_FLAGS_BYPASS_PROXY = 1 << 1;
+
+    /**
+     * The load is coming from an external app. Perform additional checks.
+     */
+    public static final int LOAD_FLAGS_EXTERNAL = 1 << 2;
+
+    /**
+     * Popup blocking will be disabled for this load
+     */
+    public static final int LOAD_FLAGS_ALLOW_POPUPS = 1 << 3;
+
+    /**
+     * Load the given URI.
+     * @param uri The URI of the resource to load.
+     */
+    public void loadUri(@NonNull String uri) {
+        loadUri(uri, null, LOAD_FLAGS_NONE);
+    }
+
+    private void loadUri(@NonNull String uri, @Nullable String referrer,
+                         @Nullable String baseUri, int flags) {
         final GeckoBundle msg = new GeckoBundle();
         msg.putString("uri", uri);
+        msg.putInt("flags", flags);
+
+        if (baseUri != null) {
+            msg.putString("baseUri", baseUri);
+        }
+
+        if (referrer != null) {
+            msg.putString("referrer", referrer);
+        }
         mEventDispatcher.dispatch("GeckoView:LoadUri", msg);
     }
 
     /**
-    * Load the given URI.
-    * @param uri The URI of the resource to load.
-    */
-    public void loadUri(Uri uri) {
-        loadUri(uri.toString());
+     * Load the given URI with the specified referrer and load type.
+     *
+     * @param uri the URI to load
+     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     */
+    public void loadUri(@NonNull String uri, @LoadFlags int flags) {
+        loadUri(uri, null, flags);
+    }
+
+    /**
+     * Load the given URI with the specified referrer and load type.
+     *
+     * @param uri the URI to load
+     * @param referrer the referrer, may be null
+     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     */
+    public void loadUri(@NonNull String uri, @Nullable String referrer, @LoadFlags int flags) {
+        loadUri(uri, referrer, null, flags);
+    }
+
+    /**
+     * Load the given URI.
+     * @param uri The URI of the resource to load.
+     */
+    public void loadUri(@NonNull Uri uri) {
+        loadUri(uri, null, LOAD_FLAGS_NONE);
+    }
+
+    /**
+     * Load the given URI with the specified referrer and load type.
+     * @param uri the URI to load
+     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     */
+    public void loadUri(@NonNull Uri uri, @LoadFlags int flags) {
+        loadUri(uri.toString(), null, flags);
+    }
+
+    /**
+     * Load the given URI with the specified referrer and load type.
+     * @param uri the URI to load
+     * @param referrer the Uri to use as the referrer
+     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     */
+    public void loadUri(@NonNull Uri uri, @Nullable Uri referrer, @LoadFlags int flags) {
+        loadUri(uri.toString(), referrer != null ? referrer.toString() : null, flags);
+    }
+
+    /**
+     * Load the specified String data. Internally this is converted to a data URI.
+     *
+     * @param data a String representing the data
+     * @param mimeType the mime type of the data, e.g. "text/plain". Maybe be null, in
+     *                 which case the type is guessed.
+     */
+    public void loadString(@NonNull final String data, @Nullable final String mimeType) {
+        if (data == null) {
+            throw new IllegalArgumentException("data cannot be null");
+        }
+
+        loadData(data.getBytes(Charset.forName("utf-8")), mimeType);
+    }
+
+    /**
+     * Load the specified bytes. Internally this is converted to a data URI.
+     *
+     * @param bytes the data to load
+     * @param mimeType the mime type of the data, e.g. video/mp4. May be null, in which
+     *                 case the type is guessed.
+     */
+    public void loadData(@NonNull final byte[] bytes, @Nullable final String mimeType) {
+        loadData(bytes, mimeType, null);
+    }
+
+    /**
+     * Load the specified bytes. Internally this is converted to a data URI.
+     *
+     * @param bytes    the data to load
+     * @param mimeType the mime type of the data, e.g. video/mp4. May be null, in which
+     *                 case the type is guessed.
+     * @param baseUri  the base URI of the document. Relative paths will be resolved from here.
+     */
+    public void loadData(@NonNull final byte[] bytes, @Nullable final String mimeType,
+                         @Nullable final String baseUri) {
+        if (bytes == null) {
+            throw new IllegalArgumentException("data cannot be null");
+        }
+
+        loadUri(createDataUri(bytes, mimeType), null, baseUri, LOAD_FLAGS_NONE);
+    }
+
+    /**
+     * Creates a data URI of of the form "data:&lt;mime type&gt;,&lt;base64-encoded data&gt;"
+     * @param bytes the bytes that should be contained in the URL
+     * @param mimeType optional mime type, e.g. text/plain
+     * @return a URI String
+     */
+    public static String createDataUri(@NonNull final byte[] bytes, @Nullable final String mimeType) {
+        return String.format("data:%s,%s", mimeType != null ? mimeType : "",
+                             Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP));
+    }
+
+    /**
+     * Creates a data URI of of the form "data:&lt;mime type&gt;,&lt;base64-encoded data&gt;"
+     * @param data the String data that should be contained in the URL
+     * @param mimeType optional mime type, e.g. text/plain
+     * @return a URI String
+     */
+    public static String createDataUri(@NonNull final String data, @Nullable final String mimeType) {
+        return createDataUri(data.getBytes(Charset.forName("utf-8")), mimeType);
     }
 
     /**

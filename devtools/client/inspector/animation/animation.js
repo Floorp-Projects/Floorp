@@ -191,15 +191,8 @@ class AnimationInspector {
    *         }
    */
   async getAnimatedPropertyMap(animation) {
-    let properties = [];
-
-    try {
-      properties = await animation.getProperties();
-    } catch (e) {
-      // Expected if we've already been destroyed in the meantime.
-      console.error(e);
-    }
-
+    // getProperties might throw an error.
+    const properties = await animation.getProperties();
     const animatedPropertyMap = new Map();
 
     for (const { name, values } of properties) {
@@ -322,8 +315,17 @@ class AnimationInspector {
 
     const animations = this.state.animations;
     this.isCurrentTimeSet = true;
-    await this.animationsFront.setCurrentTimes(animations, currentTime, true);
-    await this.updateAnimations(animations);
+
+    try {
+      await this.animationsFront.setCurrentTimes(animations, currentTime, true);
+      await this.updateAnimations(animations);
+    } catch (e) {
+      // Expected if we've already been destroyed or other node have been selected
+      // in the meantime.
+      console.error(e);
+      return;
+    }
+
     this.isCurrentTimeSet = false;
 
     if (shouldRefresh) {
@@ -333,19 +335,36 @@ class AnimationInspector {
 
   async setAnimationsPlaybackRate(playbackRate) {
     const animations = this.state.animations;
-    await this.animationsFront.setPlaybackRates(animations, playbackRate);
-    await this.updateAnimations(animations);
+
+    try {
+      await this.animationsFront.setPlaybackRates(animations, playbackRate);
+      await this.updateAnimations(animations);
+    } catch (e) {
+      // Expected if we've already been destroyed or other node have been selected
+      // in the meantime.
+      console.error(e);
+      return;
+    }
+
     await this.updateState([...animations]);
   }
 
   async setAnimationsPlayState(doPlay) {
-    if (doPlay) {
-      await this.animationsFront.playAll();
-    } else {
-      await this.animationsFront.pauseAll();
+    try {
+      if (doPlay) {
+        await this.animationsFront.playAll();
+      } else {
+        await this.animationsFront.pauseAll();
+      }
+
+      await this.updateAnimations(this.state.animations);
+    } catch (e) {
+      // Expected if we've already been destroyed or other node have been selected
+      // in the meantime.
+      console.error(e);
+      return;
     }
 
-    await this.updateAnimations(this.state.animations);
     await this.updateState([...this.state.animations]);
   }
 
@@ -461,12 +480,27 @@ class AnimationInspector {
     done();
   }
 
-  async updateAnimations(animations) {
-    const promises = animations.map(animation => {
-      return animation.refreshState();
-    });
+  updateAnimations(animations) {
+    return new Promise((resolve, reject) => {
+      let count = 0;
+      let error = null;
 
-    await Promise.all(promises);
+      for (const animation of animations) {
+        animation.refreshState().catch(e => {
+          error = e;
+        }).finally(() => {
+          count += 1;
+
+          if (count === animations.length) {
+            if (error) {
+              reject(error);
+            } else {
+              resolve();
+            }
+          }
+        });
+      }
+    });
   }
 
   updateState(animations) {
