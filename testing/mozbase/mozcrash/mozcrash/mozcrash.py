@@ -94,20 +94,23 @@ def check_for_crashes(dump_directory,
     for info in crash_info:
         crash_count += 1
         if not quiet:
-            stackwalk_output = ["Crash dump filename: %s" % info.minidump_path]
+            stackwalk_output = [u"Crash dump filename: {}".format(info.minidump_path)]
             if info.stackwalk_stderr:
                 stackwalk_output.append("stderr from minidump_stackwalk:")
                 stackwalk_output.append(info.stackwalk_stderr)
             elif info.stackwalk_stdout is not None:
                 stackwalk_output.append(info.stackwalk_stdout)
             if info.stackwalk_retcode is not None and info.stackwalk_retcode != 0:
-                stackwalk_output.append("minidump_stackwalk exited with return code %d" %
-                                        info.stackwalk_retcode)
+                stackwalk_output.append("minidump_stackwalk exited with return code {}".format(
+                                        info.stackwalk_retcode))
             signature = info.signature if info.signature else "unknown top frame"
-            print("PROCESS-CRASH | %s | application crashed [%s]" % (test_name,
-                                                                     signature))
-            print('\n'.join(stackwalk_output))
-            print('\n'.join(info.stackwalk_errors))
+
+            output = u"PROCESS-CRASH | {name} | application crashed [{sig}]\n{out}\n{err}".format(
+                name=test_name,
+                sig=signature,
+                out="\n".join(stackwalk_output),
+                err="\n".join(info.stackwalk_errors))
+            print(output.encode("utf-8"))
 
     return crash_count
 
@@ -247,7 +250,7 @@ class CrashInfo(object):
                 path,
                 self.symbols_path
             ]
-            self.logger.info('Copy/paste: ' + ' '.join(command))
+            self.logger.info(u"Copy/paste: {}".format(' '.join(command)))
             # run minidump_stackwalk
             p = subprocess.Popen(
                 command,
@@ -313,13 +316,15 @@ class CrashInfo(object):
                 pass
 
         shutil.move(path, self.dump_save_path)
-        self.logger.info("Saved minidump as %s" %
-                         os.path.join(self.dump_save_path, os.path.basename(path)))
+        self.logger.info(u"Saved minidump as {}".format(
+            os.path.join(self.dump_save_path, os.path.basename(path))
+        ))
 
         if os.path.isfile(extra):
             shutil.move(extra, self.dump_save_path)
-            self.logger.info("Saved app info as %s" %
-                             os.path.join(self.dump_save_path, os.path.basename(extra)))
+            self.logger.info(u"Saved app info as {}".format(
+                os.path.join(self.dump_save_path, os.path.basename(extra))
+            ))
 
 
 def check_for_java_exception(logcat, test_name=None, quiet=False):
@@ -370,12 +375,15 @@ def check_for_java_exception(logcat, test_name=None, quiet=False):
                 if m and m.group(1):
                     exception_location = m.group(1)
                 if not quiet:
-                    print("PROCESS-CRASH | %s | java-exception %s %s" % (test_name,
-                                                                         exception_type,
-                                                                         exception_location))
+                    output = u"PROCESS-CRASH | {name} | java-exception {type} {loc}".format(
+                        name=test_name,
+                        type=exception_type,
+                        loc=exception_location
+                    )
+                    print(output.encode("utf-8"))
             else:
-                print("Automation Error: java exception in logcat at line "
-                      "%d of %d: %s" % (i, len(logcat), line))
+                print(u"Automation Error: java exception in logcat at line "
+                      "{0} of {1}: {2}".format(i, len(logcat), line))
             break
 
     return found_exception
@@ -416,10 +424,10 @@ if mozinfo.isWin:
             log = get_logger()
             minidumpwriter = os.path.normpath(os.path.join(utility_path,
                                                            "minidumpwriter.exe"))
-            log.info("Using %s to write a dump to %s for [%d]" %
-                     (minidumpwriter, file_name, pid))
+            log.info(u"Using {} to write a dump to {} for [{}]".format(
+                minidumpwriter, file_name, pid))
             if not os.path.exists(minidumpwriter):
-                log.error("minidumpwriter not found in %s" % utility_path)
+                log.error(u"minidumpwriter not found in {}".format(utility_path))
                 return
 
             if isinstance(file_name, unicode):

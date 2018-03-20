@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=UTF-8
 
 from __future__ import absolute_import
 
@@ -9,10 +10,23 @@ import StringIO
 import mozhttpd
 import mozunit
 
+from conftest import fspath
+
 
 def test_symbols_path_not_present(check_for_crashes, minidump_files):
     """Test that no symbols path let mozcrash try to find the symbols."""
     assert 1 == check_for_crashes(symbols_path=None)
+
+
+def test_symbols_path_unicode(check_for_crashes, minidump_files, tmpdir, capsys):
+    """Test that check_for_crashes can handle unicode in dump_directory."""
+    symbols_path = tmpdir.mkdir(u"🍪")
+
+    assert 1 == check_for_crashes(symbols_path=fspath(symbols_path),
+                                  quiet=False)
+
+    out, _ = capsys.readouterr()
+    assert fspath(symbols_path) in out
 
 
 def test_symbols_path_url(check_for_crashes, minidump_files):
