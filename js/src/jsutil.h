@@ -266,6 +266,7 @@ PodSet(T* aDst, const T& aSrc, size_t aNElem)
 #define JS_SWEPT_TENURED_PATTERN 0x4B
 #define JS_ALLOCATED_TENURED_PATTERN 0x4D
 #define JS_FREED_HEAP_PTR_PATTERN 0x6B
+#define JS_SWEPT_TI_PATTERN 0x6F
 
 /*
  * Ensure JS_SWEPT_CODE_PATTERN is a byte pattern that will crash immediately

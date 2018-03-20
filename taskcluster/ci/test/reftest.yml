@@ -170,10 +170,3 @@ reftest-no-accel:
         by-test-platform:
             windows10-64-asan.*: 3
             default: default
-
-reftest-stylo:
-    description: "Reftest run in Stylo vs. Gecko mode"
-    suite: reftest/reftest-stylo
-    treeherder-symbol: R(Rs)
-    virtualization: virtual-with-gpu
-    chunks: 8
