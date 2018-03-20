@@ -169,12 +169,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": False,
             "help": "Run tests with Stylo enabled"}
          ],
-        [["--disable-stylo"], {
-            "action": "store_true",
-            "dest": "disable_stylo",
-            "default": False,
-            "help": "Run tests with Stylo disabled"}
-         ],
         [["--enable-webrender"], {
             "action": "store_true",
             "dest": "enable_webrender",
@@ -243,8 +237,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
         if c['enable_stylo']:
             perfherder_options.append('stylo')
-        if c['disable_stylo']:
-            perfherder_options.append('stylo_disabled')
 
         self.resource_monitor_perfherder_id = ('.'.join(perfherder_parts),
                                                perfherder_options)
@@ -858,12 +850,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     env['MOZ_WEBRENDER'] = '1'
                     env['MOZ_ACCELERATED'] = '1'
 
-                if self.config['disable_stylo']:
-                    if self.config['single_stylo_traversal']:
-                        self.fatal("--disable-stylo conflicts with --single-stylo-traversal")
-                    if self.config['enable_stylo']:
-                        self.fatal("--disable-stylo conflicts with --enable-stylo")
-
                 if self.config['single_stylo_traversal']:
                     env['STYLO_THREADS'] = '1'
                 else:
@@ -871,8 +857,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
                 if self.config['enable_stylo']:
                     env['STYLO_FORCE_ENABLED'] = '1'
-                if self.config['disable_stylo']:
-                    env['STYLO_FORCE_DISABLED'] = '1'
 
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)
