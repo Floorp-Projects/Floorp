@@ -36,12 +36,3 @@ interface nsIJARURI : nsIURL {
      */
     nsIJARURI cloneWithJARFile(in nsIURI jarFile);
 };
-
-[builtinclass, uuid(d66df117-eda7-4324-b4e4-1f670ff6718e)]
-interface nsIJARURIMutator : nsISupports
-{
-    /**
-     * Will initalize a URI using the passed spec, baseURI and charset.
-     */
-    void setSpecBaseCharset(in AUTF8String aSpec, in nsIURI aBase, in string aCharset);
-};

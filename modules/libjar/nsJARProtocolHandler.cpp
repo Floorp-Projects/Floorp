@@ -118,11 +118,21 @@ nsJARProtocolHandler::NewURI(const nsACString &aSpec,
                              nsIURI *aBaseURI,
                              nsIURI **result)
 {
-    nsCOMPtr<nsIURI> base(aBaseURI);
-    return NS_MutateURI(new nsJARURI::Mutator())
-             .Apply(NS_MutatorMethod(&nsIJARURIMutator::SetSpecBaseCharset,
-                                     nsCString(aSpec), base, aCharset))
-             .Finalize(result);
+    nsresult rv = NS_OK;
+
+    RefPtr<nsJARURI> jarURI = new nsJARURI();
+    if (!jarURI)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = jarURI->Init(aCharset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = jarURI->SetSpecWithBase(aSpec, aBaseURI);
+    if (NS_FAILED(rv))
+        return rv;
+
+    NS_ADDREF(*result = jarURI);
+    return rv;
 }
 
 NS_IMETHODIMP

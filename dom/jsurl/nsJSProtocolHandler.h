@@ -14,7 +14,6 @@
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
 #include "nsSimpleURI.h"
-#include "nsINestedURI.h"
 
 #define NS_JSPROTOCOLHANDLER_CID                     \
 { /* bfc310d2-38a0-11d3-8cd3-0060b0fc14a3 */         \
@@ -69,12 +68,17 @@ protected:
     nsCOMPtr<nsITextToSubURI>  mTextToSubURI;
 };
 
+
 class nsJSURI final
     : public mozilla::net::nsSimpleURI
 {
 public:
     using mozilla::net::nsSimpleURI::Read;
     using mozilla::net::nsSimpleURI::Write;
+
+    nsJSURI() {}
+
+    explicit nsJSURI(nsIURI* aBaseURI) : mBaseURI(aBaseURI) {}
 
     nsIURI* GetBaseURI() const
     {
@@ -101,9 +105,6 @@ public:
     //NS_IMETHOD QueryInterface( const nsIID& aIID, void** aInstancePtr ) override;
 
 protected:
-    nsJSURI() {}
-    explicit nsJSURI(nsIURI* aBaseURI) : mBaseURI(aBaseURI) {}
-
     virtual ~nsJSURI() {}
 
     virtual nsresult EqualsInternal(nsIURI* other,
@@ -120,7 +121,6 @@ public:
         : public nsIURIMutator
         , public BaseURIMutator<nsJSURI>
         , public nsISerializable
-        , public nsIJSURIMutator
     {
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
@@ -136,13 +136,6 @@ public:
         Read(nsIObjectInputStream* aStream) override
         {
             return InitFromInputStream(aStream);
-        }
-
-        MOZ_MUST_USE NS_IMETHOD
-        SetBase(nsIURI* aBaseURI) override
-        {
-            mURI = new nsJSURI(aBaseURI);
-            return NS_OK;
         }
 
         explicit Mutator() { }

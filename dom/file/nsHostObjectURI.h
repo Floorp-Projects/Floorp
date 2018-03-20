@@ -31,7 +31,7 @@ class nsHostObjectURI final
   , public nsIURIWithBlobImpl
   , public nsSupportsWeakReference
 {
-private:
+public:
   nsHostObjectURI(nsIPrincipal* aPrincipal,
                   mozilla::dom::BlobImpl* aBlobImpl)
     : mozilla::net::nsSimpleURI()
@@ -42,7 +42,6 @@ private:
   // For use only from deserialization
   nsHostObjectURI() : mozilla::net::nsSimpleURI() {}
 
-public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIURIWITHBLOBIMPL
   NS_DECL_NSIURIWITHPRINCIPAL
