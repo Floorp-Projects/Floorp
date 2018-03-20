@@ -151,8 +151,10 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
         rv = NS_NewURI(getter_AddRefs(inner), spec);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        RefPtr<nsSimpleNestedURI> outer = new nsNestedAboutURI(inner, aBaseURI);
-        rv = NS_MutateURI(outer)
+        nsCOMPtr<nsIURI> base(aBaseURI);
+        rv = NS_MutateURI(new nsNestedAboutURI::Mutator())
+               .Apply(NS_MutatorMethod(&nsINestedAboutURIMutator::InitWithBase,
+                                       inner, base))
                .SetSpec(aSpec)
                .Finalize(url);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -451,7 +453,8 @@ nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
 NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsNestedAboutURI::Mutator,
                                 nsIURISetters,
                                 nsIURIMutator,
-                                nsISerializable)
+                                nsISerializable,
+                                nsINestedAboutURIMutator)
 
 NS_IMETHODIMP
 nsNestedAboutURI::Mutate(nsIURIMutator** aMutator)

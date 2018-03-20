@@ -55,6 +55,7 @@ class nsStandardURL : public nsIFileURL
 {
 protected:
     virtual ~nsStandardURL();
+    explicit nsStandardURL(bool aSupportsFileURL = false, bool aTrackURL = true);
 
 public:
     NS_DECL_ISUPPORTS
@@ -71,8 +72,6 @@ public:
     // nsISizeOf
     virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
     virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
-
-    explicit nsStandardURL(bool aSupportsFileURL = false, bool aTrackURL = true);
 
     static void InitGlobalObjects();
     static void ShutdownGlobalObjects();
