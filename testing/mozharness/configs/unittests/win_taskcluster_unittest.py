@@ -204,11 +204,6 @@ config = {
                         "--setpref=layers.acceleration.disabled=true"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
-        "reftest-stylo": {
-            "options": ["--suite=reftest",
-                        "--setpref=reftest.compareStyloToGecko=true"],
-            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"],
-        },
     },
     "all_xpcshell_suites": {
         "xpcshell": {

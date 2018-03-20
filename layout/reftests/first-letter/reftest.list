@@ -22,7 +22,7 @@ fails == quote-1d.html quote-1-ref.html
 fails == quote-1e.html quote-1-ref.html # bug 509685
 == quote-1e.html quote-1b.html
 == quote-1f.html quote-1-ref.html
-fails-if(!stylo) fails-if(styloVsGecko) == dynamic-1.html dynamic-1-ref.html # bug 8253
+== dynamic-1.html dynamic-1-ref.html
 random-if(d2d) == dynamic-2.html dynamic-2-ref.html
 == dynamic-3a.html dynamic-3-ref.html
 == dynamic-3b.html dynamic-3-ref.html

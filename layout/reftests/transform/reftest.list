@@ -142,8 +142,6 @@ pref(svg.transform-box.enabled,true) == transform-box-svg-3a.svg pass.svg
 # Bug 1301500
 == dynamic-add-without-change-cb-1.html dynamic-add-without-change-cb-1-ref.html
 fuzzy-if(d2d,1,5) fuzzy-if(skiaContent,26,208) == table-overflowed-by-animation.html table-overflowed-by-animation-ref.html
-# Bug 1392161. These tests are failed on Gecko (Bug 1396535). The viewport
-# length transform test is also failed on Servo backend.
-fails-if(!stylo) == translate-rounding-1.html translate-rounding-ref.html
-fails-if(!stylo) == translate-rounding-2.html translate-rounding-ref.html
-fails == translate-rounding-3.html translate-rounding-viewport-ref.html
+== translate-rounding-1.html translate-rounding-ref.html
+== translate-rounding-2.html translate-rounding-ref.html
+fails == translate-rounding-3.html translate-rounding-viewport-ref.html # bug 1397146

@@ -25,7 +25,7 @@ class nsIWindowMediatorListener;
 struct nsWindowInfo;
 
 class nsWindowMediator :
-  public nsIWindowMediator_44,
+  public nsIWindowMediator,
   public nsIObserver,
   public nsSupportsWeakReference
 {
@@ -47,7 +47,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWMEDIATOR
-  NS_DECL_NSIWINDOWMEDIATOR_44
   NS_DECL_NSIOBSERVER
 
   static nsresult GetDOMWindow(nsIXULWindow* inWindow,
