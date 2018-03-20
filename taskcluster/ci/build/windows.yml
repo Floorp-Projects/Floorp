@@ -662,6 +662,7 @@ win32-mingw32/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_windows_32_mingw_builds.py
         need-xvfb: false
+    run-on-projects: []
     toolchains:
         - mingw32-rust
         - linux64-upx
@@ -695,6 +696,7 @@ win32-mingw32/debug:
             - builds/releng_base_windows_32_mingw_builds.py
             - builds/releng_sub_windows_configs/32_mingw_debug.py
         need-xvfb: false
+    run-on-projects: []
     toolchains:
         - mingw32-rust
         - linux64-upx
