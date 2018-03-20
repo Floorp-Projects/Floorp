@@ -30,6 +30,11 @@ interface nsIFileURL : nsIURL
 interface nsIFileURLMutator : nsISupports
 {
     /*
+     *  - Marks the inner URI implementation as one that supports nsIFileURL.
+     */
+    [must_use, noscript] void markFileURL();
+
+    /*
      *  - Setter clones the nsIFile object (allowing the caller to safely modify
      *    the nsIFile object after setting it on this interface).
      */
