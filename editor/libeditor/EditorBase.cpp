@@ -123,6 +123,31 @@ using namespace widget;
  * mozilla::EditorBase
  *****************************************************************************/
 
+template already_AddRefed<Element>
+EditorBase::CreateNode(nsAtom* aTag, const EditorDOMPoint& aPointToInsert);
+template already_AddRefed<Element>
+EditorBase::CreateNode(nsAtom* aTag, const EditorRawDOMPoint& aPointToInsert);
+template nsresult
+EditorBase::InsertNode(nsIContent& aContentToInsert,
+                       const EditorDOMPoint& aPointToInsert);
+template nsresult
+EditorBase::InsertNode(nsIContent& aContentToInsert,
+                       const EditorRawDOMPoint& aPointToInsert);
+template already_AddRefed<nsIContent>
+EditorBase::SplitNode(const EditorDOMPoint& aStartOfRightNode,
+                      ErrorResult& aError);
+template already_AddRefed<nsIContent>
+EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
+                      ErrorResult& aError);
+template SplitNodeResult
+EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
+                          const EditorDOMPoint& aStartOfDeepestRightNode,
+                          SplitAtEdges aSplitAtEdges);
+template SplitNodeResult
+EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
+                          const EditorRawDOMPoint& aStartOfDeepestRightNode,
+                          SplitAtEdges aSplitAtEdges);
+
 EditorBase::EditorBase()
   : mPlaceholderName(nullptr)
   , mModCount(0)
@@ -1417,9 +1442,10 @@ EditorBase::SetSpellcheckUserOverride(bool enable)
   return SyncRealTimeSpell();
 }
 
+template<typename PT, typename CT>
 already_AddRefed<Element>
 EditorBase::CreateNode(nsAtom* aTag,
-                       const EditorRawDOMPoint& aPointToInsert)
+                       const EditorDOMPointBase<PT, CT>& aPointToInsert)
 {
   MOZ_ASSERT(aTag);
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
@@ -1489,9 +1515,10 @@ EditorBase::InsertNode(nsIDOMNode* aNodeToInsert,
   return InsertNode(*contentToInsert, EditorRawDOMPoint(container, offset));
 }
 
+template<typename PT, typename CT>
 nsresult
 EditorBase::InsertNode(nsIContent& aContentToInsert,
-                       const EditorRawDOMPoint& aPointToInsert)
+                       const EditorDOMPointBase<PT, CT>& aPointToInsert)
 {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return NS_ERROR_INVALID_ARG;
@@ -1504,7 +1531,7 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
     InsertNodeTransaction::Create(*this, aContentToInsert, aPointToInsert);
   nsresult rv = DoTransaction(transaction);
 
-  mRangeUpdater.SelAdjInsertNode(aPointToInsert.AsRaw());
+  mRangeUpdater.SelAdjInsertNode(aPointToInsert);
 
   if (mRules && mRules->AsHTMLEditRules()) {
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
@@ -1543,8 +1570,9 @@ EditorBase::SplitNode(nsIDOMNode* aNode,
   return NS_OK;
 }
 
+template<typename PT, typename CT>
 already_AddRefed<nsIContent>
-EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
+EditorBase::SplitNode(const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
                       ErrorResult& aError)
 {
   if (NS_WARN_IF(!aStartOfRightNode.IsSet()) ||
@@ -1775,7 +1803,7 @@ EditorBase::ReplaceContainer(Element* aOldContainer,
   // Insert new container into tree.
   NS_WARNING_ASSERTION(atOldContainer.IsSetAndValid(),
     "The old container might be moved by mutation observer");
-  nsresult rv = InsertNode(*newContainer, atOldContainer.AsRaw());
+  nsresult rv = InsertNode(*newContainer, atOldContainer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -1889,7 +1917,7 @@ EditorBase::InsertContainerAbove(nsIContent* aNode,
   }
 
   // Put the new container where aNode was.
-  rv = InsertNode(*newContainer, pointToInsertNewContainer.AsRaw());
+  rv = InsertNode(*newContainer, pointToInsertNewContainer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -4132,10 +4160,12 @@ EditorBase::IsPreformatted(nsIDOMNode* aNode,
   return NS_OK;
 }
 
+template<typename PT, typename CT>
 SplitNodeResult
-EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
-                          const EditorRawDOMPoint& aStartOfDeepestRightNode,
-                          SplitAtEdges aSplitAtEdges)
+EditorBase::SplitNodeDeep(
+              nsIContent& aMostAncestorToSplit,
+              const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode,
+              SplitAtEdges aSplitAtEdges)
 {
   MOZ_ASSERT(aStartOfDeepestRightNode.IsSetAndValid());
   MOZ_ASSERT(aStartOfDeepestRightNode.GetContainer() == &aMostAncestorToSplit ||
@@ -4174,8 +4204,7 @@ EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
       ErrorResult error;
-      nsCOMPtr<nsIContent> newLeftNode =
-        SplitNode(atStartOfRightNode.AsRaw(), error);
+      nsCOMPtr<nsIContent> newLeftNode = SplitNode(atStartOfRightNode, error);
       if (NS_WARN_IF(error.Failed())) {
         return SplitNodeResult(error.StealNSResult());
       }
@@ -4522,7 +4551,7 @@ EditorBase::DeleteSelectionAndPrepareToCreateNode()
   }
 
   ErrorResult error;
-  nsCOMPtr<nsIContent> newLeftNode = SplitNode(atAnchor.AsRaw(), error);
+  nsCOMPtr<nsIContent> newLeftNode = SplitNode(atAnchor, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }

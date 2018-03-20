@@ -108,8 +108,10 @@ public:
   // if you move a node, that corresponds to deleting it and reinserting it.
   // DOM Range gravity will promote the selection out of the node on deletion,
   // which is not what you want if you know you are reinserting it.
-  nsresult SelAdjCreateNode(const EditorRawDOMPoint& aPoint);
-  nsresult SelAdjInsertNode(const EditorRawDOMPoint& aPoint);
+  template<typename PT, typename CT>
+  nsresult SelAdjCreateNode(const EditorDOMPointBase<PT, CT>& aPoint);
+  template<typename PT, typename CT>
+  nsresult SelAdjInsertNode(const EditorDOMPointBase<PT, CT>& aPoint);
   void SelAdjDeleteNode(nsINode* aNode);
   nsresult SelAdjSplitNode(nsIContent& aRightNode, nsIContent* aNewLeftNode);
   nsresult SelAdjJoinNodes(nsINode& aLeftNode,
