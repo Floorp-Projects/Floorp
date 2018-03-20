@@ -23,8 +23,6 @@ namespace mozilla {
 class AbstractThread;
 namespace dom {
 
-class PerformanceInfo;
-
 // Two browsing contexts are considered "related" if they are reachable from one
 // another through window.opener, window.parent, or window.frames. This is the
 // spec concept of a "unit of related browsing contexts"
@@ -63,9 +61,6 @@ public:
   {
     return mPerformanceCounter;
   }
-
-  PerformanceInfo
-  ReportPerformanceInfo();
 #endif
   TabGroup* GetTabGroup()
   {

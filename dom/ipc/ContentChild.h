@@ -190,9 +190,6 @@ public:
     nsTArray<uint32_t>&& namespaces) override;
 
   mozilla::ipc::IPCResult
-  RecvRequestPerformanceMetrics() override;
-
-  mozilla::ipc::IPCResult
   RecvReinitRendering(
     Endpoint<PCompositorManagerChild>&& aCompositor,
     Endpoint<PImageBridgeChild>&& aImageBridge,

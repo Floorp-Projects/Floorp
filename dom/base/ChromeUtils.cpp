@@ -13,7 +13,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowBinding.h" // For IdleRequestCallback/Options
@@ -653,19 +652,6 @@ ChromeUtils::ClearRecentJSDevError(GlobalObject&)
   runtime->ClearRecentDevError();
 }
 #endif // NIGHTLY_BUILD
-
-#ifndef RELEASE_OR_BETA
-/* static */ void
-ChromeUtils::RequestPerformanceMetrics(GlobalObject&)
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-  nsTArray<ContentParent*> children;
-  ContentParent::GetAll(children);
-  for (uint32_t i = 0; i < children.Length(); i++) {
-    mozilla::Unused << children[i]->SendRequestPerformanceMetrics();
-  }
-}
-#endif
 
 constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
 
